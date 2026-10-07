@@ -1,4 +1,4 @@
-"""Tests for src/services/marketing/loops.py — the API-side Loops admin sync.
+"""Tests for src/services/marketing/loops.py, the API-side Loops admin sync.
 
 The helper must:
   - be a no-op outside SaaS mode or when LOOPS_API_KEY is unset,

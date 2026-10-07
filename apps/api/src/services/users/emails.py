@@ -17,7 +17,7 @@ def _send_notification_email(**kwargs):
     """Send mail whose failure must not fail the caller's request.
 
     Welcome/lifecycle notifications are a side effect of an action that has
-    already happened and been committed — the account exists, the org was
+    already happened and been committed: the account exists, the org was
     created, the role changed. When the provider is rate-limited or times out,
     raising here turned "no welcome email" into "signup returned 503", which the
     user then retried. Delivery failures are logged and swallowed instead.
@@ -32,7 +32,7 @@ def _send_notification_email(**kwargs):
         return False
 
 
-# Public academy — footer "learn more" target, and last-resort CTA fallback.
+# Public academy: footer "learn more" target, and last-resort CTA fallback.
 ACADEMY_URL = "https://university.learnhouse.io"
 
 
@@ -74,7 +74,7 @@ def _org_logo_img(logo_url: str, alt: str) -> str:
     ``square_logos/``) sits in a 56px rounded box; a wide logo is letterboxed
     into the same footprint as the LearnHouse wordmark. Raster logos (PNG/JPG)
     render in every mail client; an SVG logo may be stripped by some (e.g.
-    Gmail), in which case the ``alt`` (the org name) shows instead — still
+    Gmail), in which case the ``alt`` (the org name) shows instead: still
     org-branded, never a broken LearnHouse mark.
 
     The ``height``/``width`` attributes are for desktop Outlook, whose
@@ -100,7 +100,7 @@ def _org_logo_img(logo_url: str, alt: str) -> str:
 def _org_wordmark(org_name: str) -> str:
     """The org's name set as a wordmark, for orgs that have not uploaded a logo.
 
-    An org-scoped email must never open with the LearnHouse mark — the
+    An org-scoped email must never open with the LearnHouse mark. The
     recipient has a relationship with the academy, not the platform, and a
     foreign logo above "Reset your Acme Academy password" reads as phishing.
     """
@@ -121,7 +121,7 @@ def _brand_logo_html(logo_url: str | None, org_name: str) -> str:
 def _button_style(brand_color: str | None) -> str:
     """CTA button style, tinted with the org's brand color when it has one.
 
-    ``brand_color`` must already be normalized (``#rrggbb``) — see
+    ``brand_color`` must already be normalized (``#rrggbb``); see
     ``services.email.branding.normalize_brand_color``; anything else keeps the
     default black button rather than risk an unbalanced ``style`` attribute.
     """
@@ -151,8 +151,8 @@ def _powered_by_html(lang: str) -> str:
 def _first_sentence(text: str, limit: int = 110) -> str:
     """Opening sentence of a body string, for use as preheader text.
 
-    Handles the full stops of every locale we ship — the CJK ideographic
-    period, the Arabic and Devanagari terminators — then falls back to a word
+    Handles the full stops of every locale we ship (the CJK ideographic
+    period, the Arabic and Devanagari terminators), then falls back to a word
     boundary. Inbox previews are cut around 100 characters anyway.
     """
     if not text:
@@ -182,7 +182,7 @@ def _stat_strip(stats: list[tuple[str, int]]) -> str:
     """A row of label/value pairs, e.g. "LESSONS 8   LEARNERS 0".
 
     Deliberately not prose. Writing "8 lessons" into copy means solving plural
-    agreement in twenty languages — Russian has three forms, Arabic six — and
+    agreement in twenty languages (Russian has three forms, Arabic six), and
     without an ICU library the result is "1 lessons" in production. A label
     beside a bare figure needs no agreement in any of them, and it reads faster
     than a sentence anyway.
@@ -213,7 +213,7 @@ def _stat_strip(stats: list[tuple[str, int]]) -> str:
 def _preheader_block(text: str) -> str:
     """The grey line an inbox list shows after the subject.
 
-    Without one, clients scrape the first visible text — which here is the
+    Without one, clients scrape the first visible text, which here is the
     heading, so the list entry reads as the subject said twice. Setting it
     explicitly buys a second line of information in the only place a reader
     looks before deciding to open.
@@ -251,12 +251,12 @@ def _email_layout(
     org's logo <img> (or its name as a wordmark) instead.
 
     ``powered_by`` adds the "Powered by LearnHouse" line to the footer. Only
-    org-branded mail sets it, and only when the org's watermark is on — a
+    org-branded mail sets it, and only when the org's watermark is on; a
     platform email already carries the LearnHouse mark up top.
 
     ``unsubscribe_url`` is set only by bulk lifecycle mail. Transactional email
     (password reset, invitation, verification) leaves it empty and renders
-    byte-identically to before — you cannot unsubscribe from a password reset.
+    byte-identically to before; you cannot unsubscribe from a password reset.
     The link is deliberately legible rather than hidden: someone who wants out
     and can't find the exit reports spam instead, which costs the sending domain
     far more than the opt-out does.
@@ -284,7 +284,7 @@ def _email_layout(
         </div>"""
 
     # Prefixed with its own newline so that an absent preheader leaves the
-    # document byte-identical to before — the twelve transactional emails
+    # document byte-identical to before; the twelve transactional emails
     # share this layout and none of their output may shift.
     block = _preheader_block(preheader)
     preheader_html = f"\n    {block}" if block else ""
@@ -635,8 +635,8 @@ def send_org_join_email(
     (invite code, open join, OAuth invite, admin provisioning) previously got no
     mail at all and had to find their way to the org on their own.
 
-    Always white-labeled to the org — the user is being welcomed into that
-    academy, not onto LearnHouse — with the org's logo (or name) up top.
+    Always white-labeled to the org (the user is being welcomed into that
+    academy, not onto LearnHouse), with the org's logo (or name) up top.
     """
     safe_username = html.escape(email_user_name(username))
     safe_org_name = html.escape(email_org_name(org_name))
@@ -826,7 +826,7 @@ def send_nudge_email(
     Generic over the catalog: the nudge id selects its copy from the
     ``nudge.<id>.*`` namespace, so adding a nudge never means adding a function
     here. ``copy_vars`` fills the placeholders that nudge's strings declare
-    (course name, plan name, and so on) — every value is escaped before it
+    (course name, plan name, and so on); every value is escaped before it
     reaches the template.
 
     ``track`` selects the illustration. It is drawn as a table mosaic rather

@@ -133,7 +133,7 @@ async def api_get_communities_by_org(
     org_id: int,
     page: int = Path(ge=1),
     # Upper bound guards against negative/absurd values (the original 500 bug)
-    # while staying above real callers — the sitemap requests limit=1000.
+    # while staying above real callers; the sitemap requests limit=1000.
     limit: int = Path(ge=1, le=1000),
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),

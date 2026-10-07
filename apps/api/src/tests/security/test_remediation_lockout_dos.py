@@ -18,7 +18,7 @@ from src.services.security import account_lockout
 async def test_single_ip_does_not_lock_account_even_past_threshold():
     """
     F-08: 10 failed attempts from the SAME IP must not trigger the lockout
-    (distinct_ips < 2). Previously this was the DoS primitive — any attacker
+    (distinct_ips < 2). Previously this was the DoS primitive: any attacker
     could lock any victim's account with 10 requests to /auth/login.
     """
     user = SimpleNamespace(id=7, locked_until=None)
@@ -33,7 +33,7 @@ async def test_single_ip_does_not_lock_account_even_past_threshold():
                 user, db_session, ip_address="1.2.3.4"
             )
 
-    # db_session.refresh is an AsyncMock — so user.locked_until stays None —
+    # db_session.refresh is an AsyncMock, so user.locked_until stays None,
     # and we expect no lock.
     assert user.locked_until is None
     assert is_locked is False

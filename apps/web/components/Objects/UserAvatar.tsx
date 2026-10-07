@@ -32,7 +32,7 @@ function UserAvatar(props: UserAvatarProps) {
     const fetchUserData = async () => {
       // Skip fetching if no access token (user not authenticated)
       if (!access_token) return
-      // Skip fetching if avatar is already determined — the popup will fetch its own data
+      // Skip fetching if avatar is already determined; the popup will fetch its own data
       if (props.avatar_url || props.predefined_avatar) return
 
       if (props.username) {

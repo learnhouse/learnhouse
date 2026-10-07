@@ -359,7 +359,7 @@
     "image_title_forgot": "비밀번호를 재설정하세요.",
     "image_subtitle_forgot": "금방 계정에 다시 접근할 수 있도록 도와드릴게요.",
     "image_title_login": "LearnHouse에 다시 오신 것을 환영합니다.",
-    "image_subtitle_login": "멈췄던 곳에서 이어가세요 — 코스, 학습자, 도구가 기다리고 있습니다.",
+    "image_subtitle_login": "멈췄던 곳에서 이어가세요. 코스, 학습자, 도구가 기다리고 있습니다.",
     "image_title_reset": "거의 다 왔어요.",
     "image_subtitle_reset": "강력한 비밀번호를 만들어 계정을 안전하게 보호하세요.",
     "image_title_signup": "LearnHouse로 가르치기를 시작하세요.",
@@ -626,7 +626,7 @@
         "plan_generated": "계획이 업데이트됨",
         "plan_generated_hint": "계획 탭에서 검토하고 편집하세요.",
         "describe_course": "코스 설명",
-        "describe_course_hint": "오른쪽 채팅으로 원하는 코스를 설명하세요 — 주제, 대상, 목표.",
+        "describe_course_hint": "오른쪽 채팅으로 원하는 코스를 설명하세요: 주제, 대상, 목표.",
         "generating_plan": "코스 계획 생성 중...",
         "chapters": "챕터",
         "activities": "활동",
@@ -988,7 +988,7 @@
     "link_copied": "링크가 복사되었습니다!",
     "share": "공유",
     "autosave_blocked": "아직 저장할 수 없습니다",
-    "autosave_retry": "저장하지 못했습니다 — 다시 시도하는 중…",
+    "autosave_retry": "저장하지 못했습니다. 다시 시도하는 중…",
     "autosave_unsaved": "저장되지 않은 변경사항",
     "autosaved": "저장됨",
     "autosaving": "저장 중…",
@@ -1035,8 +1035,8 @@
     "retry_assignment_title": "이 과제를 다시 시도하시겠어요?",
     "retry_assignment_confirm": "현재 제출물과 답안이 초기화되어 처음부터 다시 시작할 수 있습니다. 다시 제출하면 이전 성적이 대체됩니다.",
     "retry_assignment_remaining": "이번 시도 이후 {{remaining}}번의 시도가 남습니다.",
-    "retry_assignment_last": "마지막 시도입니다 — 신중하게 작성하세요.",
-    "retry_assignment_success": "작업이 초기화되었습니다 — 다시 도전해 보세요.",
+    "retry_assignment_last": "마지막 시도입니다. 신중하게 작성하세요.",
+    "retry_assignment_success": "작업이 초기화되었습니다. 다시 도전해 보세요.",
     "retry_assignment_failed": "제출물을 초기화하지 못했습니다. 다시 시도해 주세요.",
     "retry_no_attempts_left": "남은 재시도가 없습니다",
     "quick_grade": {
@@ -3619,9 +3619,9 @@
             "auth_required_submit": "인증이 필요합니다. 태스크를 제출하려면 로그인하세요.",
             "hint_optional": "힌트 (선택 사항)",
             "paste_blocked": "이 과제에서는 붙여넣기가 비활성화됩니다",
-            "paste_blocked_hint": "붙여넣기가 비활성화됨 — 답을 직접 입력하세요.",
-            "upload_locked_graded": "이 제출물은 채점되었습니다 — 더 이상 파일을 변경할 수 없습니다.",
-            "upload_locked_submitted": "이 과제를 제출했습니다 — 더 이상 파일을 변경할 수 없습니다."
+            "paste_blocked_hint": "붙여넣기가 비활성화됨. 답을 직접 입력하세요.",
+            "upload_locked_graded": "이 제출물은 채점되었습니다. 더 이상 파일을 변경할 수 없습니다.",
+            "upload_locked_submitted": "이 과제를 제출했습니다. 더 이상 파일을 변경할 수 없습니다."
           },
           "code": {
             "student_behavior_label": "학생 동작",
@@ -3638,9 +3638,9 @@
             "show_solution_label": "제출 후 솔루션 공개",
             "show_solution_description": "학생이 작업을 저장한 후 교사의 참조 솔루션을 표시합니다.",
             "reference_solution_label": "참조 솔루션",
-            "locked_graded_hint": "이 제출물은 채점되었습니다 — 코드는 읽기 전용입니다.",
-            "locked_submitted_hint": "이 과제를 제출했습니다 — 코드는 읽기 전용입니다.",
-            "no_runnable_tests": "이 과제에는 실행할 수 있는 테스트가 없습니다 — 코드는 채점 시 확인됩니다."
+            "locked_graded_hint": "이 제출물은 채점되었습니다. 코드는 읽기 전용입니다.",
+            "locked_submitted_hint": "이 과제를 제출했습니다. 코드는 읽기 전용입니다.",
+            "no_runnable_tests": "이 과제에는 실행할 수 있는 테스트가 없습니다. 코드는 채점 시 확인됩니다."
           },
           "short_answer": {
             "prompt_label": "문제 내용",
@@ -3657,13 +3657,13 @@
               "regex": "정규 표현식"
             },
             "explanation_label": "설명 (정답 시 표시)",
-            "explanation_placeholder": "선택 — 왜 정답인지 설명",
+            "explanation_placeholder": "선택: 왜 정답인지 설명",
             "your_answer_placeholder": "답변을 입력...",
             "student_answer_label": "학생 답변",
             "accepted_answers_label": "허용된 답변",
             "no_answer": "제출된 답변 없음",
             "correct": "정답",
-            "incorrect": "틀렸어요 — 다시 시도하세요"
+            "incorrect": "틀렸어요. 다시 시도하세요"
           },
           "number_answer": {
             "prompt_label": "문제 내용",
@@ -3674,14 +3674,14 @@
             "unit_placeholder": "m/s², kg, °C...",
             "unit_hint": "답변 필드 옆에 표시됩니다. 강제되지 않음.",
             "explanation_label": "설명 (정답 시 표시)",
-            "explanation_placeholder": "선택 — 답을 구하는 방법을 설명",
+            "explanation_placeholder": "선택: 답을 구하는 방법을 설명",
             "preview_label": "허용",
             "your_answer_placeholder": "숫자를 입력...",
             "student_answer_label": "학생 답변",
             "accepted_range_label": "허용 범위",
             "no_answer": "제출된 답변 없음",
             "correct": "정답",
-            "incorrect": "틀렸어요 — 다시 시도하세요"
+            "incorrect": "틀렸어요. 다시 시도하세요"
           }
         },
         "generate_ai": "AI로 과제 생성",
@@ -3790,7 +3790,7 @@
         },
         "tasks": {
           "title": "과제별 성과",
-          "subtitle": "과제별 평균 점수 — 낮은 막대는 학생들이 어려워하는 부분을 보여줍니다",
+          "subtitle": "과제별 평균 점수: 낮은 막대는 학생들이 어려워하는 부분을 보여줍니다",
           "empty": "채점 후 과제별 성과가 표시됩니다",
           "avg_grade": "평균 점수",
           "attempts": "시도"
@@ -3802,7 +3802,7 @@
         },
         "attention": {
           "title": "지원이 필요할 수 있음",
-          "subtitle": "합격하지 못한 학생 — 연락해 보세요",
+          "subtitle": "합격하지 못한 학생: 연락해 보세요",
           "empty": "채점된 모든 학생이 합격했습니다. 잘하셨어요!"
         }
       },
@@ -3841,7 +3841,7 @@
             "auto_grading_description": "학생이 제출하면 자동으로 활동을 채점하고 완료합니다. 모든 과제가 사람의 검토 없이 채점 가능할 때만 작동합니다.",
             "anti_copy_paste_label": "복사 및 붙여넣기 차단",
             "anti_copy_paste_description": "붙여넣기 이벤트를 차단하여 AI 생성 답변 붙여넣기를 억제합니다. 참고: 이것은 억제책입니다.",
-            "auto_grading_disabled_file": "자동 채점을 사용할 수 없습니다 — 이 과제에는 사람의 검토가 필요한 파일 제출 과제가 있습니다.",
+            "auto_grading_disabled_file": "자동 채점을 사용할 수 없습니다. 이 과제에는 사람의 검토가 필요한 파일 제출 과제가 있습니다.",
             "grading_type_hint": "학생에게 성적이 표시되는 방식",
             "grading_options_hint": "제출 시 동작",
             "show_correct_answers_description": "제출물이 채점되면 학생에게 자신의 답변과 함께 정답을 표시합니다. 어떤 퀴즈 선택지가 정답이었는지, 예상되는 단답형 또는 숫자 답변, 그리고 양식 빈칸의 정답이 표시됩니다.",
@@ -4561,7 +4561,7 @@
         "avg_rate": "평균 비율",
         "needs_attention": "주의 필요",
         "total_samples": "총 샘플 수",
-        "more_expand": "+{{count}}개 더 — 클릭하여 펼치기",
+        "more_expand": "+{{count}}개 더 (클릭하여 펼치기)",
         "activities_count": "{{count}}개 활동",
         "pct_of_total": "전체 대비 %",
         "bar_width_hint": "막대 너비 = 상대적 조회수",
@@ -4681,7 +4681,7 @@
       },
       "activity_dropoff": {
         "title": "이탈 지점",
-        "subtitle": "학습자가 진행을 멈추는 곳 — 마지막으로 완료한 활동",
+        "subtitle": "학습자가 진행을 멈추는 곳: 마지막으로 완료한 활동",
         "total_dropoffs": "총 이탈수",
         "dropoff_points": "이탈 지점"
       },
@@ -4715,7 +4715,7 @@
         "avg_between": "완료 간 평균 {{unit}}",
         "transitions_tracked": "추적된 전환",
         "raw_hours_avg": "원시 시간 평균",
-        "description": "학습자가 다음 활동으로 얼마나 빨리 진행하는지 측정합니다. 낮을수록 좋습니다 — 학습자가 콘텐츠를 더 빠르게 진행하고 있다는 의미입니다."
+        "description": "학습자가 다음 활동으로 얼마나 빨리 진행하는지 측정합니다. 낮을수록 좋습니다. 학습자가 콘텐츠를 더 빠르게 진행하고 있다는 의미입니다."
       },
       "time_to_completion": {
         "title": "완료까지 소요 시간",
@@ -4819,7 +4819,7 @@
       },
       "add_content": {
         "title": "찾아올 만한 가치가 있는 레슨",
-        "description": "영상, 페이지 또는 퀴즈를 추가하세요 — 학습자에게 등록할 진짜 이유를 주세요.",
+        "description": "영상, 페이지 또는 퀴즈를 추가하세요. 학습자에게 등록할 진짜 이유를 주세요.",
         "action": "콘텐츠 추가"
       },
       "brand_school": {
@@ -4829,12 +4829,12 @@
       },
       "share_grow": {
         "title": "학교의 현관문",
-        "description": "공개로 전환하고 공유 링크를 받으세요 — 모든 학습자를 안내할 바로 그곳입니다.",
+        "description": "공개로 전환하고 공유 링크를 받으세요. 모든 학습자를 안내할 바로 그곳입니다.",
         "action": "내 학교 열기"
       },
       "invite_learners": {
         "title": "첫 학습자를 맞이하세요",
-        "description": "참여 링크를 공유하거나 사람들을 초대하세요 — 첫 학습자가 들어오게 하세요.",
+        "description": "참여 링크를 공유하거나 사람들을 초대하세요. 첫 학습자가 들어오게 하세요.",
         "action": "학습자 초대"
       },
       "build_community": {
@@ -5193,7 +5193,7 @@
         "goal": "코스 수익화를 시작하고 학습 커뮤니티를 구축하세요.",
         "highlights": {
           "courses": "무제한 코스",
-          "courses_desc": "필요한 만큼 코스를 만드세요 — 커리큘럼에 제한이 없습니다.",
+          "courses_desc": "필요한 만큼 코스를 만드세요. 커리큘럼에 제한이 없습니다.",
           "members": "최대 500명 멤버",
           "members_desc": "학습자를 늘리고 한곳에서 관리하세요.",
           "payments": "결제 수락",
@@ -5251,7 +5251,7 @@
       "trigger_authenticated_title": "접근: 로그인한 사용자만",
       "trigger_restricted_title": "접근: 특정 사용자 그룹만",
       "usergroups_header": "사용자 그룹",
-      "usergroups_none_assigned": "지정된 그룹 없음 — 관리자만 열 수 있습니다.",
+      "usergroups_none_assigned": "지정된 그룹 없음: 관리자만 열 수 있습니다.",
       "usergroups_remove_title": "제거",
       "usergroups_loading": "그룹 로드 중…",
       "usergroups_none_in_org": "이 조직에는 아직 사용자 그룹이 없습니다.",
@@ -5522,7 +5522,7 @@
     "recurring_subscription": "정기 구독",
     "what_youre_getting": "받게 되는 혜택",
     "pack_immediate": "결제 후 즉시 적용됩니다",
-    "pack_cancel_anytime": "언제든지 취소 가능 — 결제 기간이 끝날 때까지 유지됩니다",
+    "pack_cancel_anytime": "언제든지 취소 가능: 결제 기간이 끝날 때까지 유지됩니다",
     "pack_credits_reset": "크레딧은 결제 주기마다 초기화됩니다",
     "after_purchase": "구매 후",
     "unlimited": "무제한",
@@ -5572,9 +5572,9 @@
     "canceled_desc": "구독은 현재 결제 기간이 끝날 때 취소됩니다. 그때까지 전체 접근 권한이 유지됩니다.",
     "back_to_plan_usage": "플랜 및 사용량으로 돌아가기",
     "back_to_orgs": "조직으로 돌아가기",
-    "pack_purchased": "애드온 구매됨 — 한도가 업데이트되었습니다.",
-    "checkout_success": "구독 업데이트됨 — 새 요금제에 오신 것을 환영합니다!",
-    "checkout_cancelled": "결제 취소됨 — 변경사항이 없습니다.",
+    "pack_purchased": "애드온 구매됨: 한도가 업데이트되었습니다.",
+    "checkout_success": "구독 업데이트됨: 새 요금제에 오신 것을 환영합니다!",
+    "checkout_cancelled": "결제 취소됨: 변경사항이 없습니다.",
     "load_failed": "조직을 로드할 수 없습니다.",
     "no_permission": "이 조직의 결제를 관리할 권한이 없습니다.",
     "no_permission_hint": "조직 관리자만 요금제를 보거나 변경할 수 있습니다.",
@@ -5688,7 +5688,7 @@
     "toast": {
       "creating": "조직 생성 중…",
       "created": "조직이 생성되었습니다!",
-      "checkoutFailed": "조직이 생성되었습니다 — 플랜 및 사용량에서 업그레이드할 수 있습니다.",
+      "checkoutFailed": "조직이 생성되었습니다. 플랜 및 사용량에서 업그레이드할 수 있습니다.",
       "failed": "조직 생성에 실패했습니다"
     },
     "steps": {

@@ -24,7 +24,7 @@ function CourseShare({ courseName, courseUrl }: CourseShareProps) {
   const [copied, setCopied] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // courseUrl may be a relative path — getUriWithOrg returns a relative URL when
+  // courseUrl may be a relative path; getUriWithOrg returns a relative URL when
   // the user is already on the org's host (the common case on the course page).
   // Resolve it to an absolute URL so shared/copied links include the protocol
   // and base domain. No-op if an absolute URL was already passed. See issue #923.

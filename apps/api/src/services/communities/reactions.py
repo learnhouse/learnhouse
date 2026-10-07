@@ -64,7 +64,7 @@ async def get_reactions(
         emoji_groups[reaction.emoji].append(reaction)
 
     # Batch-fetch all users referenced by any reaction in a single query,
-    # then look them up by id in the per-emoji loop — eliminates N+1.
+    # then look them up by id in the per-emoji loop. This eliminates the N+1.
     all_user_ids = list({r.user_id for r in reactions})
     user_map: dict[int, User] = {}
     if all_user_ids:

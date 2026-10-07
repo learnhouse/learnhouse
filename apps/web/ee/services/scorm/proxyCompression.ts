@@ -2,7 +2,7 @@
  * Compression decisions for the SCORM content proxy.
  *
  * The proxy exists so SCORM assets are same-origin with the player, which means
- * every file in a package — often hundreds of them — crosses this hop. Getting
+ * every file in a package (often hundreds of them) crosses this hop. Getting
  * the encoding wrong here does not fail loudly in one place; it either inflates
  * the whole package on the slowest leg of the path, or hands the browser bytes
  * that contradict their headers. Both decisions live here so they can be tested
@@ -55,7 +55,7 @@ export function acceptsGzip(header: string | null | undefined): boolean {
  * When the API compresses a response there is no way to keep the compression
  * across this hop: undici decodes even when the outgoing request carries an
  * explicit `accept-encoding: gzip`, while still reporting `content-encoding:
- * gzip` on the response — so forwarding that header would ship gzip-labelled
+ * gzip` on the response, so forwarding that header would ship gzip-labelled
  * plaintext and every text asset would fail with ERR_CONTENT_DECODING_FAILED.
  * Next does not compress App Router route-handler streams either. Re-compressing
  * here is what keeps the package from crossing the last mile as raw bytes.

@@ -1,8 +1,8 @@
 """Resolve raw analytics identifiers into human-readable names.
 
 Analytics rows come out of the event pipeline carrying only ``course_uuid`` /
-``activity_uuid``. Nothing downstream — dashboards, exports, the per-student audit
-dossier — should ever show a caller a bare UUID, so every consumer runs its rows
+``activity_uuid``. Nothing downstream (dashboards, exports, the per-student audit
+dossier) should ever show a caller a bare UUID, so every consumer runs its rows
 through :func:`enrich_with_metadata` first.
 
 Lives in ``services`` rather than in the analytics router because the audit dossier

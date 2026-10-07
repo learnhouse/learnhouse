@@ -79,7 +79,7 @@ export default function UsageOverview() {
     staleTime: 60_000,
   })
 
-  // The backend sends `mode`, never `oss_mode` — reading the latter made this
+  // The backend sends `mode`, never `oss_mode`; reading the latter made this
   // permanently false, so non-SaaS deployments were shown plan limits.
   const ossMode = usageData?.mode !== undefined && usageData.mode !== 'saas'
   const plan = usePlan()

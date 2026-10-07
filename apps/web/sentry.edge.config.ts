@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 
-// Edge runtime can't use fs — use process.env with non-NEXT_PUBLIC fallback (available at runtime)
+// Edge runtime can't use fs, so use process.env with non-NEXT_PUBLIC fallback (available at runtime)
 const SENTRY_DSN = process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN || process.env.LEARNHOUSE_SENTRY_DSN;
 const LEARNHOUSE_ENV = process.env.NEXT_PUBLIC_LEARNHOUSE_ENV || process.env.LEARNHOUSE_ENV || "dev";
 

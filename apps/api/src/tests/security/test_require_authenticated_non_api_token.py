@@ -91,7 +91,7 @@ async def test_authenticated_public_user_is_accepted(mock_request_and_db):
 async def test_old_dependency_still_admits_anonymous():
     """Regression sanity check: the legacy helper still admits anonymous.
 
-    This confirms we did not change the legacy path — routers with
+    This confirms we did not change the legacy path: routers with
     intentionally-public endpoints (e.g. /users, /orgs, /courses) keep the
     legacy behaviour so their public routes continue to work.
     """

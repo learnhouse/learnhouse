@@ -40,4 +40,4 @@ export async function sendContactMail(args: {
 // NOTE: org-created / org-deleted / account-deleted confirmation emails are
 // deliberately NOT sent from here. Unlike Stripe/billing mails (which the web
 // webhook owns), user/org lifecycle is owned by apps/api, which has its own
-// email service — those confirmations belong there to avoid duplicate sends.
+// email service; those confirmations belong there to avoid duplicate sends.

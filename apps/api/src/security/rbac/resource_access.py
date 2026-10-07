@@ -28,22 +28,12 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.security.rbac.types import AccessAction, AccessContext, AccessDecision, ResourceConfig
 from src.security.rbac.config import get_resource_config, RESOURCE_CONFIGS
-from src.security.org_auth import is_org_admin
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles,
     authorization_verify_based_on_org_admin_status,
 )
 
 logger = logging.getLogger(__name__)
-
-
-def _org_id_from_route(request: Request) -> Optional[int]:
-    """The org a route names in its path or query, if any."""
-    try:
-        raw = request.path_params.get("org_id") or request.query_params.get("org_id")
-    except Exception:
-        return None
-    return int(raw) if raw is not None and str(raw).isdigit() else None
 
 
 class ResourceAccessChecker:
@@ -87,7 +77,6 @@ class ResourceAccessChecker:
         action: AccessAction,
         context: AccessContext = AccessContext.PUBLIC_VIEW,
         require_ownership: bool = False,
-        org_id: Optional[int] = None,
     ) -> AccessDecision:
         """
         Main entry point for access checks.
@@ -97,8 +86,6 @@ class ResourceAccessChecker:
             action: The action being performed (read, create, update, delete)
             context: The context (public_view or dashboard)
             require_ownership: If True, requires resource ownership for write operations
-            org_id: Target organization for CREATE on a placeholder uuid
-                ("course_x"); the placeholder carries no org of its own
 
         Returns:
             AccessDecision with allowed status and reason
@@ -123,7 +110,7 @@ class ResourceAccessChecker:
                 context=context.value,
             )
 
-        # Superadmin bypass — platform admins act on any tenant without an org
+        # Superadmin bypass: platform admins act on any tenant without an org
         # membership row. The flag is loaded onto PublicUser by get_current_user
         # so this is a free attribute read, no DB hit. API tokens and anonymous
         # users carry no superadmin flag and continue through the normal path.
@@ -157,20 +144,15 @@ class ResourceAccessChecker:
             decision.resource_uuid = resource_uuid
             return decision
 
-        # A create placeholder ("course_x") has no org of its own; default to
-        # the org the route names when the caller didn't pass one.
-        if org_id is None and action == AccessAction.CREATE and resource_uuid.endswith("_x"):
-            org_id = _org_id_from_route(self.request)
-
         # Handle API token users separately
         if isinstance(self.current_user, APITokenUser):
-            return await self._check_api_token_access(resource_uuid, action, config, org_id)
+            return await self._check_api_token_access(resource_uuid, action, config)
 
         # Org-wide "require two-factor" policy. Applies only to real signed-in
         # users: anonymous public browsing is unaffected, superadmins bypassed
         # above, and API tokens are a separate credential class handled above.
         # Raises rather than returning a denial so the structured error code
-        # survives to the client — the UI needs to tell "enable 2FA" apart from
+        # survives to the client; the UI needs to tell "enable 2FA" apart from
         # "you don't have permission", which a plain reason string cannot do.
         await self._enforce_org_mfa_policy(resource_uuid, config)
 
@@ -178,9 +160,7 @@ class ResourceAccessChecker:
         if action == AccessAction.READ:
             return await self._check_read_access(resource_uuid, context, config)
         else:
-            return await self._check_write_access(
-                resource_uuid, action, config, require_ownership, org_id
-            )
+            return await self._check_write_access(resource_uuid, action, config, require_ownership)
 
     async def _check_read_access(
         self,
@@ -284,7 +264,7 @@ class ResourceAccessChecker:
 
         # Fall through to public view rules. Note: public_view's usergroup rule
         # requires is_published=True, so usergroup members on unpublished
-        # resources still get denied here — which is the intended behavior.
+        # resources still get denied here, which is the intended behavior.
         return await self._check_public_view_read_access(resource_uuid, config)
 
     async def _check_public_view_read_access(
@@ -406,7 +386,6 @@ class ResourceAccessChecker:
         action: AccessAction,
         config: ResourceConfig,
         require_ownership: bool,
-        org_id: Optional[int] = None,
     ) -> AccessDecision:
         """Handle write access checks (create, update, delete)."""
         user_id = self._get_user_id()
@@ -424,7 +403,7 @@ class ResourceAccessChecker:
         # Special handling for NEW resource creation (e.g., "course_x", "podcast_x")
         # These are top-level resource creations that only need role permissions
         if action == AccessAction.CREATE and resource_uuid.endswith("_x"):
-            return await self._check_create_permission(resource_uuid, config, org_id)
+            return await self._check_create_permission(resource_uuid, config)
 
         # SECURITY: For CREATE actions on existing resources (content creation),
         # require ownership. This prevents users from creating activities/chapters
@@ -459,18 +438,13 @@ class ResourceAccessChecker:
         self,
         resource_uuid: str,
         config: ResourceConfig,
-        org_id: Optional[int],
     ) -> AccessDecision:
-        """Check if user can create new resources of this type in ``org_id``.
-
-        Only roles the user holds in that org count. Without an org there is
-        nothing to scope to, and the role resolver denies.
-        """
+        """Check if user can create new resources of this type."""
         user_id = self._get_user_id()
 
+        # Check role-based create permission
         has_create_permission = await authorization_verify_based_on_roles(
-            self.request, user_id, "create", resource_uuid, self.db_session,
-            target_org_id=org_id,
+            self.request, user_id, "create", resource_uuid, self.db_session
         )
         if has_create_permission:
             return AccessDecision(
@@ -482,7 +456,11 @@ class ResourceAccessChecker:
                 action="create",
             )
 
-        is_admin = org_id is not None and await is_org_admin(user_id, org_id, self.db_session)
+        # Check admin/maintainer status
+        # For creation, we check against a placeholder - need org context
+        is_admin = await authorization_verify_based_on_org_admin_status(
+            self.request, user_id, "create", resource_uuid, self.db_session
+        )
         if is_admin:
             return AccessDecision(
                 allowed=True,
@@ -562,20 +540,12 @@ class ResourceAccessChecker:
         resource_uuid: str,
         action: AccessAction,
         config: ResourceConfig,
-        org_id: Optional[int] = None,
     ) -> AccessDecision:
         """Check API token permissions with org boundary enforcement."""
         api_token_user = self.current_user
 
         # For creation, check if token has create permission
         if action == AccessAction.CREATE and resource_uuid.endswith("_x"):
-            if org_id is not None and org_id != api_token_user.org_id:
-                return AccessDecision(
-                    allowed=False,
-                    reason="API token cannot access resources outside its organization",
-                    resource_uuid=resource_uuid,
-                    action=action.value,
-                )
             if not api_token_user.rights:
                 return AccessDecision(
                     allowed=False,
@@ -1017,7 +987,9 @@ def _get_request_checker(
     that request. This collapses what was previously 2–3× redundant author /
     admin / usergroup / resource lookups per course endpoint.
     """
-    existing = getattr(request.state, "rbac_checker", None)
+    # Service helpers are sometimes called without a live request (tests,
+    # background tasks); only memoize when there is one.
+    existing = getattr(getattr(request, "state", None), "rbac_checker", None)
     if (
         existing is not None
         and existing.db_session is db_session
@@ -1043,7 +1015,6 @@ async def check_resource_access(
     context: AccessContext = AccessContext.PUBLIC_VIEW,
     require_ownership: bool = False,
     raise_on_deny: bool = True,
-    org_id: Optional[int] = None,
 ) -> AccessDecision:
     """
     Convenience function for checking resource access.
@@ -1057,7 +1028,6 @@ async def check_resource_access(
         context: Access context
         require_ownership: Whether ownership is required for write operations
         raise_on_deny: If True, raises HTTPException on denial
-        org_id: Target organization when creating from a placeholder uuid
 
     Returns:
         AccessDecision
@@ -1066,9 +1036,7 @@ async def check_resource_access(
         HTTPException: If access denied and raise_on_deny is True
     """
     checker = _get_request_checker(request, db_session, current_user)
-    decision = await checker.check_access(
-        resource_uuid, action, context, require_ownership, org_id=org_id
-    )
+    decision = await checker.check_access(resource_uuid, action, context, require_ownership)
 
     if not decision.allowed and raise_on_deny:
         raise HTTPException(

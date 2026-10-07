@@ -261,7 +261,7 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
     >
       <DragHandle onMouseDown={handleDragStart} dark />
 
-      {/* YouTube player — full block */}
+      {/* YouTube player: full block */}
       <div
         className="overflow-hidden rounded-2xl"
         style={{ width: '100%', height: '100%', overscrollBehavior: 'contain', pointerEvents: isBlockSelected ? 'auto' : 'none' }}

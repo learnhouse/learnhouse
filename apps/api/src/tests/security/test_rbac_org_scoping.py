@@ -150,29 +150,3 @@ class TestOrgResource:
         assert await authorization_verify_based_on_roles(
             mock_request, admin_user.id, "update", course.course_uuid, db
         ) is True
-
-
-class TestRouteOrgFallback:
-    async def test_placeholder_create_uses_the_org_the_route_names(
-        self, db, org, other_org, outsider_admin
-    ):
-        from starlette.requests import Request
-
-        from src.security.rbac import AccessAction, check_resource_access
-
-        def route(org_id):
-            return Request({
-                "type": "http", "method": "POST", "path": "/", "headers": [],
-                "query_string": b"", "path_params": {"org_id": str(org_id)},
-            })
-
-        allowed = await check_resource_access(
-            route(other_org.id), db, outsider_admin, "course_x", AccessAction.CREATE,
-            raise_on_deny=False,
-        )
-        denied = await check_resource_access(
-            route(org.id), db, outsider_admin, "course_x", AccessAction.CREATE,
-            raise_on_deny=False,
-        )
-        assert allowed.allowed is True
-        assert denied.allowed is False

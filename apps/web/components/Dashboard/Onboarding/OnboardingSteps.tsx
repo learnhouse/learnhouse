@@ -21,7 +21,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
-// Shared easing — the same curve used across all onboarding animations.
+// Shared easing: the same curve used across all onboarding animations.
 export const ease = [0.25, 0.1, 0.25, 1] as const
 
 const STEP_ICON: Record<string, { icon: React.ElementType; color: string }> = {
@@ -36,7 +36,7 @@ const STEP_ICON: Record<string, { icon: React.ElementType; color: string }> = {
 /**
  * Numbered step-by-step growth guide (full-page). A left timeline (numbered
  * nodes + connecting line) makes the sequence explicit; the cards on the right
- * are an accordion — only one step open at a time (the current step by default)
+ * are an accordion: only one step open at a time (the current step by default)
  * showing its walkthrough video + action. Matches the app's card styling.
  */
 export default function OnboardingSteps() {

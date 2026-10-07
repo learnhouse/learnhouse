@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 async def teardown_demo(db_session: AsyncSession) -> list[str]:
     """Delete every demo organization and everything belonging to it.
 
-    Returns one human-readable line per organization removed. Does not commit —
+    Returns one human-readable line per organization removed. Does not commit;
     the caller owns the transaction.
     """
     from src.services.courses.transfer.storage_utils import delete_storage_directory

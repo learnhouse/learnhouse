@@ -20,8 +20,10 @@ const FETCH_TIMEOUT_MS = 10_000
 
 // Debounce interval before flushing ydoc state to the database (ms)
 const DB_FLUSH_DELAY = 5000
-// Redis TTL for cached ydoc state (seconds) — 1 hour
+// Redis TTL for cached ydoc state (seconds): 1 hour
 const REDIS_YDOC_TTL = 3600
+// Largest Yjs state we persist (bytes): 5 MB
+const MAX_YDOC_BYTES = 5 * 1024 * 1024
 
 // ── Startup validation ──────────────────────────────────────────────────────
 
@@ -75,8 +77,9 @@ const rateLimitCleanupInterval = setInterval(() => {
 }, 5 * 60_000)
 
 function extractBoardUuid(documentName: string): string | null {
-  // Room naming: board:{board_uuid}
-  const match = documentName.match(/^board:(.+)$/)
+  // Room naming: board:{board_uuid}. The uuid goes straight into API paths
+  // and Redis keys, so only the exact shape the API mints is accepted.
+  const match = documentName.match(/^board:(board_[0-9a-f-]{36})$/)
   return match ? match[1] : null
 }
 
@@ -157,7 +160,7 @@ const server = new Server({
   port: PORT,
 
   async onRequest({ request, response }: onRequestPayload) {
-    // Health check endpoint — handles both "/" (k8s probe) and "/health"
+    // Health check endpoint. Handles both "/" (k8s probe) and "/health"
     if (request.url === '/' || request.url === '/health') {
       response.writeHead(200, { 'Content-Type': 'application/json' })
       response.end(JSON.stringify({ status: 'ok' }))
@@ -183,7 +186,7 @@ const server = new Server({
     }
   },
 
-  async onAuthenticate({ token, documentName }: onAuthenticatePayload) {
+  async onAuthenticate({ token, documentName, connectionConfig }: onAuthenticatePayload) {
     if (!token) {
       throw new Error('Authentication required')
     }
@@ -225,6 +228,10 @@ const server = new Server({
     }
 
     const membership = await response.json()
+
+    // The API answers "viewer" for anyone who may only read the board (public
+    // boards, org admins without membership). Their socket must not write.
+    connectionConfig.readOnly = membership.role === 'viewer'
 
     return {
       user: {
@@ -322,6 +329,12 @@ const server = new Server({
       async store({ documentName, state }) {
         const boardUuid = extractBoardUuid(documentName)
         if (!boardUuid) return
+        if (state.byteLength > MAX_YDOC_BYTES) {
+          console.warn(
+            `[collab] Refusing to persist ${boardUuid}: ${state.byteLength} bytes exceeds the cap`,
+          )
+          return
+        }
 
         // 1. Write to Redis immediately (fast)
         try {

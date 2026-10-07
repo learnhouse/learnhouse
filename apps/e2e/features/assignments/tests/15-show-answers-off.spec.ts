@@ -1,6 +1,6 @@
 /**
  * Goal: prove the "reveal correct answers after grading" setting is honored in
- * the NEGATIVE case — when show_correct_answers is OFF, a graded student must
+ * the NEGATIVE case: when show_correct_answers is OFF, a graded student must
  * NOT see the accepted answer. (The positive case is 11-show-correct-answers.)
  */
 import { test, expect } from '../../../core/fixtures'

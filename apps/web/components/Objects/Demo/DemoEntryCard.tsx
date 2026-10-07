@@ -25,7 +25,7 @@ function formatInterval(minutes: number): string {
 }
 
 /**
- * "Explore a live demo" — a side path into the shared demo organization.
+ * "Explore a live demo": a side path into the shared demo organization.
  *
  * Renders nothing when the instance has no demo, so it can be dropped onto any
  * page without a guard. It never blocks what it sits next to: the status call
@@ -59,7 +59,7 @@ export default function DemoEntryCard({ className = '' }: { className?: string }
         // "Ready" is not the only terminal state: getDemoStatus answers null on
         // a network error and enabled:false on an instance with no demo at all,
         // and polling either of those every five seconds for the life of the
-        // page buys nothing — the card renders nothing in both cases.
+        // page buys nothing; the card renders nothing in both cases.
         if (!result || !result.enabled || result.ready) {
           stop()
         }
@@ -124,13 +124,13 @@ export default function DemoEntryCard({ className = '' }: { className?: string }
             {t('demo.entry_body', {
               interval: formatInterval(status.refresh_minutes),
               defaultValue:
-                'A full academy with courses, learners, progress and grading — already filled in. Shared with everyone, and reset every {{interval}}.',
+                'A full academy with courses, learners, progress and grading, already filled in. Shared with everyone, and reset every {{interval}}.',
             })}
           </p>
           {!status.ready && (
             <p className="mt-2 text-xs font-medium text-gray-400">
               {t('demo.entry_preparing', {
-                defaultValue: 'Being prepared — try again in a moment.',
+                defaultValue: 'Being prepared. Try again in a moment.',
               })}
             </p>
           )}

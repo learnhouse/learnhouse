@@ -168,7 +168,7 @@ async def send_reset_password_code(
     org_config = (await db_session.execute(org_config_stmt)).scalars().first()
 
     # Send reset code via email. Use the org-aware base URL so the link points at
-    # the org's own host — including a verified CUSTOM DOMAIN (learn.acme.org) —
+    # the org's own host, including a verified CUSTOM DOMAIN (learn.acme.org),
     # not the org-less platform apex (where /reset can't resolve the org). Mirrors
     # the invitation flow (services/orgs/invites.py).
     from src.services.email.utils import get_org_signup_base_url
@@ -277,7 +277,7 @@ async def change_password_with_reset_code(
             detail="Invalid or expired reset code",
         )
 
-    # Direct deterministic key lookup — no wildcards or scan_iter needed
+    # Direct deterministic key lookup; no wildcards or scan_iter needed
     reset_key = f"pwd_reset:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
     reset_code_value = r.get(reset_key)
 
@@ -428,7 +428,7 @@ async def change_password_with_reset_code_platform(
             detail="Invalid or expired reset code",
         )
 
-    # Direct deterministic key lookup — no wildcards or scan_iter needed
+    # Direct deterministic key lookup; no wildcards or scan_iter needed
     reset_key = f"pwd_reset:user:{user.user_uuid}:platform:code:{reset_code}"
     reset_code_value = r.get(reset_key)
 

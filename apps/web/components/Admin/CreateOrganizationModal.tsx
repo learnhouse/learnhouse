@@ -132,7 +132,7 @@ export default function CreateOrganizationModal({
           <Field
             label="Slug"
             required
-            hint="Lowercase, hyphens — used in the org URL."
+            hint="Lowercase, hyphens. Used in the org URL."
           >
             <input
               type="text"

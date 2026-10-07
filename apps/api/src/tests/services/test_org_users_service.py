@@ -195,7 +195,7 @@ class TestOrgUsersService:
 
         The scrub rewrites the address to a reserved-domain placeholder. When
         UserRead still typed email as EmailStr, model_validate raised on that
-        row and the endpoint answered 500 — so one deleted account emptied the
+        row and the endpoint answered 500, so one deleted account emptied the
         members page for its entire organization. Rows scrubbed before the
         placeholder domain changed still carry ".local", so the listing has to
         stay tolerant of them.
@@ -463,7 +463,7 @@ class TestOrgUsersService:
         await _link_user(db, other_user.id, other_org.id, other_role.id)
 
         with patch(
-            "src.services.orgs.users.require_org_admin_role",
+            "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ):
             with pytest.raises(Exception) as role_missing_exc:
@@ -473,7 +473,7 @@ class TestOrgUsersService:
         assert role_missing_exc.value.status_code == 404
 
         with patch(
-            "src.services.orgs.users.require_org_admin_role",
+            "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ):
             with pytest.raises(Exception) as org_missing_exc:
@@ -483,7 +483,7 @@ class TestOrgUsersService:
         assert org_missing_exc.value.status_code == 404
 
         with patch(
-            "src.services.orgs.users.require_org_admin_role",
+            "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ):
             with pytest.raises(Exception) as no_admin_exc:
@@ -500,9 +500,9 @@ class TestOrgUsersService:
         role = await _make_role(db, org, id=11, name="Instructor", role_uuid="role_instructor")
 
         # Only a superadmin may change their own role, so the last-admin guard
-        # is reached through that path.
+        # is reached as one.
         with patch(
-            "src.services.orgs.users.require_org_admin_role",
+            "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
             "src.security.superadmin.is_user_superadmin",
@@ -516,7 +516,7 @@ class TestOrgUsersService:
         assert last_admin_exc.value.status_code == 400
 
         with patch(
-            "src.services.orgs.users.require_org_admin_role",
+            "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ):
             with pytest.raises(Exception) as user_missing_exc:
@@ -526,7 +526,7 @@ class TestOrgUsersService:
         assert user_missing_exc.value.status_code == 404
 
         with patch(
-            "src.services.orgs.users.require_org_admin_role",
+            "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
         ), patch(
             "src.routers.users._invalidate_session_cache"
@@ -1026,7 +1026,7 @@ class TestOrgUsersService:
                 mock_request,
                 org.id,
                 # The `None` is the org-config lookup for custom signup field
-                # columns — no config row, so no extra columns.
+                # columns: no config row, so no extra columns.
                 _Session([fake_org, [fake_user], None, [], []]),
                 admin_user,
             )

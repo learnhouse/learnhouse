@@ -51,7 +51,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
   const { track } = useLHAnalytics()
   const colors = getMenuColorClasses(primaryColor)
 
-  // The user's organizations (deduped) from the session roles — used by the
+  // The user's organizations (deduped) from the session roles, used by the
   // "My Organizations" submenu. Only relevant in multi-org (SaaS) mode, where
   // the apex hub (/home, /new, /billing) exists.
   const multiOrg = isMultiOrgModeEnabled()

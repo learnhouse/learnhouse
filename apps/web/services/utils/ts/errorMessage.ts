@@ -23,10 +23,10 @@ export function getErrorMessage(detail: unknown, fallback: string): string {
 // A backend 403 that an upgrade (or, for a brand-new free org, waiting) would
 // resolve. Detecting these lets the UI offer a contextual upgrade prompt at the
 // moment of value instead of a dead-end error toast. Covers:
-//   - "Usage Limit has been reached for {Feature}" — plan quota hit
-//   - "{Feature} is not enabled for this organization" — feature gated to a
+//   - "Usage Limit has been reached for {Feature}": plan quota hit
+//   - "{Feature} is not enabled for this organization": feature gated to a
 //     higher plan
-//   - { code: "ACCOUNT_TOO_NEW" } — free-tier age gate (upgrading lifts it)
+//   - { code: "ACCOUNT_TOO_NEW" }: free-tier age gate (upgrading lifts it)
 export function isPlanLimitError(detail: unknown): boolean {
   if (typeof detail === 'string') {
     return (

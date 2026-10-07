@@ -46,6 +46,7 @@ from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.auth import create_access_token
+from src.security.org_auth import org_owns_account
 from src.security.session_context import AUTH_METHOD_API_TOKEN, session_claims
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -140,7 +141,7 @@ async def _check_token_can_impersonate(
 
     Same reasoning as :func:`_check_token_can_assign_role`: elevated authority
     only comes from an interactive admin flow, so a leaked token cannot borrow
-    an org Admin/Maintainer's — or a platform superadmin's — session and inherit
+    an org Admin/Maintainer's (or a platform superadmin's) session and inherit
     every check that trusts it.
     """
     if user.is_superadmin:
@@ -175,14 +176,8 @@ async def _check_not_member_elsewhere(
     *,
     detail: str,
 ) -> None:
-    """Refuse when the global account also belongs to another org."""
-    other = (await db_session.execute(
-        select(UserOrganization.id).where(
-            UserOrganization.user_id == user.id,
-            UserOrganization.org_id != org_id,
-        ).limit(1)
-    )).scalars().first()
-    if other is not None:
+    """Refuse when the global account is not the token org's alone."""
+    if not await org_owns_account(user.id, org_id, db_session):
         raise HTTPException(status_code=403, detail=detail)
 
 
@@ -234,11 +229,11 @@ async def _check_token_can_assign_role(
 ) -> None:
     """Defense-in-depth guard for role assignment via API tokens.
 
-    Layer 3 — API tokens never grant Admin or Maintainer. Elevated roles must
+    Layer 3: API tokens never grant Admin or Maintainer. Elevated roles must
     be assigned through interactive admin flows so a leaked token cannot mint
     org admins.
 
-    Layer 2 — The token's creator must still be a member of the org and must
+    Layer 2: The token's creator must still be a member of the org and must
     hold privilege at least as high as the role being granted. Stops a
     demoted/removed user's still-valid token from being used to escalate.
     """
@@ -276,7 +271,7 @@ async def issue_user_token(
 ) -> dict:
     """Issue a JWT access token on behalf of a user in the token's org.
 
-    Refuses privileged targets: without that, any token — whatever its rights —
+    Refuses privileged targets: without that, any token, whatever its rights,
     could mint a full session for the org's administrator and inherit every
     permission the token itself was never granted.
 
@@ -290,11 +285,11 @@ async def issue_user_token(
 
     await _check_token_can_impersonate(user, token_user.org_id, db_session)
 
-    # Issue a short-lived token (1 hour) for headless use — shorter than the
+    # Issue a short-lived token (1 hour) for headless use, shorter than the
     # default 8-hour session token to limit blast radius if leaked.
     from datetime import timedelta
-    # ``purpose`` has to stay "session" — get_current_user rejects every other
-    # value — so the machine origin is recorded in ``amr`` instead: the session
+    # ``purpose`` has to stay "session" (get_current_user rejects every other
+    # value), so the machine origin is recorded in ``amr`` instead: the session
     # is auditable as API-token-minted rather than indistinguishable from a
     # human login, and stays bound to the token's org via ``sorg``.
     access_token = create_access_token(
@@ -646,7 +641,7 @@ async def complete_activity(
 
     # Check course completion. The completion signal must come from actual
     # completion (is_course_fully_completed), NOT from the certificate helper's
-    # return value — that is True only when it creates a *new* certificate row,
+    # return value, which is True only when it creates a *new* certificate row,
     # so a course with no certification, an already-issued certificate, or an
     # unpassed assignment would wrongly report course_completed=False and drop
     # the COURSE_COMPLETED event. The cert helper is still called for its side
@@ -708,7 +703,7 @@ async def uncomplete_activity(
     if step:
         await db_session.delete(step)
         await db_session.commit()
-        # Completion may have been lost — demote the enrollment so analytics
+        # Completion may have been lost; demote the enrollment so analytics
         # stop counting it as completed.
         if course.id:
             await sync_trailrun_status(user_id, course.id, db_session)
@@ -818,7 +813,7 @@ async def complete_course(
     await db_session.commit()
 
     # Create the certificate if eligible. Its return value means "a NEW
-    # certificate row was created", so it maps to certificate_awarded — NOT to
+    # certificate row was created", so it maps to certificate_awarded, NOT to
     # course_completed. The completion signal must come from actual completion,
     # otherwise a course with no certification (or an already-issued one) would
     # report course_completed=False and drop the COURSE_COMPLETED event.
@@ -925,7 +920,7 @@ async def get_user_trail_detail(
     db_session: AsyncSession,
     course_uuid: Optional[str] = None,
 ) -> dict:
-    """Build a full trail breakdown for a user — every chapter + every activity
+    """Build a full trail breakdown for a user: every chapter + every activity
     with per-activity completion status. Optionally filtered to a single course."""
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
@@ -1118,7 +1113,7 @@ async def provision_user(
 ) -> UserRead:
     """Create a user and attach them to the token's org in one call.
 
-    Designed for SSO/JIT provisioning — email is auto-verified and the user
+    Designed for SSO/JIT provisioning: email is auto-verified and the user
     bypasses the normal email-verification flow.
     """
 
@@ -1164,7 +1159,7 @@ async def provision_user(
     await check_limits_with_usage("members", token_user.org_id, db_session)
 
     # Provisioning always creates a NET-NEW membership, so a dashboard-access
-    # role consumes a fresh admin seat — enforce the plan's seat cap.
+    # role consumes a fresh admin seat; enforce the plan's seat cap.
     if _role_grants_dashboard_access(role):
         await check_admin_seat_limit(token_user.org_id, db_session)
 
@@ -1321,7 +1316,7 @@ def _validate_magic_link_redirect(redirect_to: Optional[str]) -> Optional[str]:
     """Validate that a magic-link redirect_to is a same-origin path.
 
     Rejects anything that contains a scheme or looks like a protocol-relative
-    URL — only allows paths like "/course/foo" that resolve on the same host
+    URL. Only allows paths like "/course/foo" that resolve on the same host
     the consume endpoint was hit on. Prevents open-redirect phishing.
     """
     if redirect_to is None or redirect_to == "":
@@ -1439,7 +1434,7 @@ async def consume_magic_link_token(
 
     # Enforce single-use: the first consume claims the jti; any replay hits
     # an existing key and is rejected. Tokens minted before jti was added
-    # have none — let them through; the JWT exp (max 15 min) bounds them.
+    # have none, so let them through; the JWT exp (max 15 min) bounds them.
     # A Redis outage also falls through for the same reason.
     if jti:
         try:
@@ -1978,7 +1973,7 @@ async def update_user_profile(
     updates: dict,
     db_session: AsyncSession,
 ) -> UserRead:
-    """Update a user's profile fields. Org-scoped — user must be a member."""
+    """Update a user's profile fields. Org-scoped: user must be a member."""
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
     await _check_token_can_edit_account(user, token_user.org_id, db_session)
@@ -1997,7 +1992,7 @@ async def update_user_profile(
         if existing:
             raise HTTPException(status_code=400, detail="Username already in use")
 
-    # Reject phishing links in display-name fields here too — the admin API
+    # Reject phishing links in display-name fields here too; the admin API
     # token path must not be a way around the signup/profile-update guard.
     name_check = validate_profile_fields({
         "username": updates.get("username"),
@@ -2066,7 +2061,7 @@ async def change_user_role(
         raise HTTPException(status_code=404, detail="User not in org")
 
     # Defense-in-depth: API tokens must never be able to mint Admin/Maintainer
-    # or grant a role above their creator's privilege — same guard enforced at
+    # or grant a role above their creator's privilege, the same guard enforced at
     # provisioning time. Without this, a low-privilege token could escalate any
     # member to org Admin via this endpoint.
     await _check_token_can_assign_role(token_user, role, db_session)
@@ -2407,7 +2402,7 @@ async def export_user_data(
 ) -> dict:
     """Full GDPR data export scoped to the token's org.
 
-    Only returns data that belongs to the token's organization — other-org
+    Only returns data that belongs to the token's organization. Other-org
     memberships and certificates are intentionally excluded so a token for
     org A cannot read a user's history in org B.
     """

@@ -4,12 +4,12 @@ All four issues covered here shared one shape: a bare org-membership check was
 standing in for a real permission check. Membership answers "are you in this
 tenant", never "may you do this thing", so any learner in the org sailed through.
 
-- F7  ``save_activity_content``   — overwrote any activity in the org.
-- F14 ``generate_activity_content`` — read another tenant's activity content back
+- F7  ``save_activity_content``: overwrote any activity in the org.
+- F14 ``generate_activity_content``: read another tenant's activity content back
       out over SSE, billed to the attacker's own org.
-- F33 ``finalize_course_plan``    — created courses (and CREATOR authorship) with
+- F33 ``finalize_course_plan``: created courses (and CREATOR authorship) with
       no create right and no plan-limit check.
-- F25 ``/courses/migrate/*``      — org_id was accepted and ignored entirely, so
+- F25 ``/courses/migrate/*``: org_id was accepted and ignored entirely, so
       the endpoints burned the server's provider key with no tenant, no rights,
       no credits and no rate limit.
 
@@ -149,7 +149,7 @@ async def _drain(response) -> str:
 
 
 # ===========================================================================
-# F7 — save_activity_content
+# F7: save_activity_content
 # ===========================================================================
 
 
@@ -220,15 +220,15 @@ class TestSaveActivityContentRequiresWriteAccess:
 
 
 # ===========================================================================
-# F14 — generate_activity_content
+# F14: generate_activity_content
 # ===========================================================================
 
 
 def _stream_spy(session: CoursePlanningSessionData):
     """Stand-in for generate_activity_content_stream.
 
-    Echoes whatever ``current_content`` the router hands it — the real service
-    does the same thing via the prompt — and bumps the per-activity iteration
+    Echoes whatever ``current_content`` the router hands it (the real service
+    does the same thing via the prompt) and bumps the per-activity iteration
     count exactly like the real one, so a second call reaches the branch where
     existing content is fed back in.
     """
@@ -267,7 +267,7 @@ class TestGenerateActivityContentIsTenantScoped:
     ):
         """Cross-tenant read: two sequential calls, both refused, nothing leaked.
 
-        The second call matters — under the old code the first call only bumped
+        The second call matters: under the old code the first call only bumped
         ``iteration_count`` to 1, and it was the *second* that serialized the
         victim's content into the prompt and streamed it straight back.
         """
@@ -367,14 +367,14 @@ class TestGenerateActivityContentIsTenantScoped:
             body = await _drain(second)
 
         # First call has nothing to iterate on; the second feeds the existing
-        # content back in — the exact branch the cross-tenant test must not reach.
+        # content back in, the exact branch the cross-tenant test must not reach.
         assert stream.calls[0]["current_content"] is None
         assert stream.calls[1]["current_content"] == json.dumps(content)
         assert "doc" in body
 
 
 # ===========================================================================
-# F33 — finalize_course_plan
+# F33: finalize_course_plan
 # ===========================================================================
 
 
@@ -433,7 +433,9 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
-             patch.object(cp, "save_course_planning_session"):
+             patch.object(cp, "save_course_planning_session"), \
+             patch.object(cp, "check_limits_with_usage", new=AsyncMock()), \
+             patch.object(cp, "increase_feature_usage", new=AsyncMock()):
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -460,33 +462,30 @@ class TestFinalizeCoursePlanRequiresCreateRight:
     async def test_plan_course_limit_is_enforced(
         self, db, org, admin_role, admin_user, mock_request
     ):
-        """Finalize applies the same plan course limit as `create_course`."""
+        """Finalizing creates a real course, so it counts against the plan's
+        course limit exactly like `create_course`."""
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
-             patch.object(
-                 cp,
-                 "check_limits_with_usage",
-                 AsyncMock(side_effect=HTTPException(status_code=403, detail="limit")),
-             ):
-            with pytest.raises(HTTPException) as exc:
-                await cp.finalize_course_plan(
-                    mock_request,
-                    FinalizeCoursePlanRequest(
-                        session_uuid=session.session_uuid, plan=_plan()
-                    ),
-                    admin_user,
-                    db,
-                )
+             patch.object(cp, "check_limits_with_usage", new=AsyncMock()) as limits, \
+             patch.object(cp, "increase_feature_usage", new=AsyncMock()) as usage:
+            result = await cp.finalize_course_plan(
+                mock_request,
+                FinalizeCoursePlanRequest(
+                    session_uuid=session.session_uuid, plan=_plan()
+                ),
+                admin_user,
+                db,
+            )
 
-        assert exc.value.status_code == 403
-        assert (await db.execute(select(Course))).scalars().all() == []
-
+        assert result.course_uuid.startswith("course_")
+        limits.assert_awaited_once_with("courses", org.id, db)
+        usage.assert_awaited_once()
 
 
 # ===========================================================================
-# F25 — /courses/migrate/*
+# F25: /courses/migrate/*
 # ===========================================================================
 
 
@@ -610,7 +609,7 @@ class TestSuggestStructureIsGated:
 
         assert result.course_name == "Suggested Course"
         llm_generate.assert_awaited_once()
-        # Rate limited per user+org — that is what bounds the spend the missing
+        # Rate limited per user+org; that is what bounds the spend the missing
         # authorization allowed.
         rate.assert_called_once_with(admin_user.id, org.id)
 

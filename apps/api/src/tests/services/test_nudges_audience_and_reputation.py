@@ -2,7 +2,7 @@
 
 Two invariants worth a dedicated file:
 
-* only organization admins are ever mailed — never members, never learners;
+* only organization admins are ever mailed, never members, never learners;
 * an address a provider has told us is bad is never mailed again.
 """
 
@@ -161,7 +161,7 @@ class TestOnlyAdminsAreMailed:
     async def test_promoting_a_member_brings_them_in(
         self, db, populated_org, admin_role, sender
     ):
-        """The gate is the role, not a static list — a promotion takes effect."""
+        """The gate is the role, not a static list, so a promotion takes effect."""
         link = (
             await db.execute(
                 select(UserOrganization).where(UserOrganization.user_id == 40)

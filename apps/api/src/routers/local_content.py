@@ -22,11 +22,11 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
-from src.db.courses.courses import Course
 from src.db.podcasts.podcasts import Podcast
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.db.user_organizations import UserOrganization
 from src.security.auth import get_current_user
+from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
 from src.security.submission_file_access import (
     is_submission_file,
     enforce_submission_file_access,
@@ -41,7 +41,7 @@ def _normalize_content_relpath(file_path: str) -> str | None:
     """Decode and vet the request path, returning a safe CONTENT_DIR-relative
     string, or None if it is unsafe.
 
-    Pure string handling only — no filesystem access. Each handler does the
+    Pure string handling only, no filesystem access. Each handler does the
     realpath + containment check inline against this value (see
     ``serve_local_content``); keeping the resolve-and-guard together with the
     filesystem sink, from the tainted input, is what makes the guard hold at
@@ -55,8 +55,6 @@ def _normalize_content_relpath(file_path: str) -> str | None:
     if '..' in normalized or normalized.startswith('/'):
         return None
     return normalized
-
-
 
 
 async def _check_content_access(
@@ -76,7 +74,7 @@ async def _check_content_access(
     """
     parts = file_path.split('/')
 
-    # Assignment submission files must be gated to the owner or an instructor —
+    # Assignment submission files must be gated to the owner or an instructor,
     # not the generic activity-content grant below (which would let any org
     # member, or anyone on a public course, download another learner's work).
     if is_submission_file(parts):
@@ -90,30 +88,13 @@ async def _check_content_access(
         and parts[2] == 'courses'
         and parts[4] == 'activities'
     ):
-        course_uuid = parts[3]
-        course = (await db_session.execute(
-            select(Course).where(Course.course_uuid == course_uuid)
-        )).scalars().first()
-        if not course:
-            raise HTTPException(status_code=403, detail="Access denied")
-        if course.public:
-            return  # Public course — allow anonymous
-        if isinstance(current_user, AnonymousUser):
-            raise HTTPException(status_code=401, detail="Authentication required")
-        # Verify API token is scoped to the correct org
-        if isinstance(current_user, APITokenUser):
-            if current_user.org_id != course.org_id:
-                raise HTTPException(status_code=403, detail="Access denied")
-            return
-        # Verify user belongs to the org that owns this course
-        membership = (await db_session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == current_user.id,
-                UserOrganization.org_id == course.org_id,
-            )
-        )).scalars().first()
-        if not membership:
-            raise HTTPException(status_code=403, detail="Access denied")
+        # The files under an activity (HLS segments and key, captions, block
+        # uploads) are the activity: apply the activity's own gate (course
+        # read, published, paywall, locks), not just "public course or member".
+        course_uuid, activity_uuid = parts[3], parts[5]
+        await verify_activity_reader_access_by_uuid(
+            request, activity_uuid, current_user, db_session, course_uuid=course_uuid
+        )
         return
 
     # Podcast episode content: requires podcast to be public or user to be org member
@@ -130,7 +111,7 @@ async def _check_content_access(
         if not podcast:
             raise HTTPException(status_code=403, detail="Access denied")
         if podcast.public:
-            return  # Public podcast — allow anonymous
+            return  # Public podcast: allow anonymous
         if isinstance(current_user, AnonymousUser):
             raise HTTPException(status_code=401, detail="Authentication required")
         # Verify API token is scoped to the correct org
@@ -163,17 +144,17 @@ async def _check_content_access(
         # access (these are only served via /media/{uuid}/file).
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Course metadata (thumbnails, etc.) and org-level content — always public
+    # Course metadata (thumbnails, etc.) and org-level content: always public
     # These are displayed on listing pages to all users
     if len(parts) >= 2 and parts[0] == 'orgs':
         return
 
-    # User content (avatars, profile images) — always public
+    # User content (avatars, profile images): always public
     # Paths: users/{user_uuid}/avatars/...
     if len(parts) >= 2 and parts[0] == 'users':
         return
 
-    # Unknown path pattern — deny by default. Previously this only blocked
+    # Unknown path pattern: deny by default. Previously this only blocked
     # anonymous users and silently served the file to any authenticated user,
     # which leaked content across tenants for any path layout that didn't match
     # the recognised org/user prefixes. Mirror the S3 router and deny.
@@ -288,7 +269,7 @@ async def head_local_content(
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
-    """HEAD request for content files — returns metadata without body."""
+    """HEAD request for content files; returns metadata without body."""
     rel_path = _normalize_content_relpath(file_path)
     if rel_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
@@ -301,7 +282,7 @@ async def head_local_content(
         raise HTTPException(status_code=400, detail="Invalid path")
 
     # Access check against the CANONICAL path from safe_real, not the request
-    # string — see serve_local_content: a `.`/`//` segment would otherwise slip
+    # string; see serve_local_content: a `.`/`//` segment would otherwise slip
     # private content past the pattern matching (auth bypass / IDOR).
     canonical_rel = os.path.relpath(safe_real, base_real).replace(os.sep, '/')
     await _check_content_access(canonical_rel, current_user, db_session, request=request)

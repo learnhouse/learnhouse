@@ -203,7 +203,7 @@ async def _upload_migration_files_inner(
                         break
                     f.write(chunk)
         except OSError as e:
-            # Disk full or I/O error — clean up partial file
+            # Disk full or I/O error: clean up the partial file
             if os.path.exists(file_real):
                 os.remove(file_real)
             raise ValueError(f"Disk write failed: {e}") from e
@@ -403,7 +403,7 @@ async def create_course_from_migration(
 
     org_uuid = organization.org_uuid
 
-    # Enforce the course plan limit on the migration path too — this creates a
+    # Enforce the course plan limit on the migration path too. This creates a
     # real course and previously bypassed the cap other create paths enforce.
     # Skip only if the org has no config (a prod impossibility) so a config
     # anomaly can't hard-fail a migration.
@@ -440,7 +440,7 @@ async def create_course_from_migration(
         db_session.add(course)
         await db_session.flush()
 
-        # Create resource author — resolve through helper so API-token
+        # Create resource author. Resolve through the helper so API-token
         # callers record their creator as the author instead of user_id=0.
         author = ResourceAuthor(
             resource_uuid=course_uuid,
@@ -652,7 +652,7 @@ async def create_course_from_migration(
         # Track course usage for billing, consistent with the other create paths.
         await increase_feature_usage("courses", org_id, db_session)
 
-        # Clean up temp directory — temp_real already validated above
+        # Clean up temp directory (temp_real already validated above)
         shutil.rmtree(temp_real, ignore_errors=True)
 
         return MigrationCreateResult(

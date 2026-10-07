@@ -2,7 +2,7 @@
   "slug": "data-literacy",
   "name": "Working with Numbers",
   "description": "Reading a report without being misled by it.",
-  "about": "Most people at Riverbend read numbers every week and were never taught how. This course is not statistics — it is the practical business of knowing what a figure covers, what it leaves out, and when a chart is quietly telling you something untrue.",
+  "about": "Most people at Riverbend read numbers every week and were never taught how. This course is not statistics; it is the practical business of knowing what a figure covers, what it leaves out, and when a chart is quietly telling you something untrue.",
   "learnings": "Read a report critically; spot the common ways numbers mislead; ask the right question about an average; present a figure honestly.",
   "tags": "data,reporting,analysis",
   "thumbnail": "data-literacy.webp",
@@ -106,7 +106,7 @@
               "Better: are complaints going up?",
               "Answerable: has the number of complaints per hundred shipped orders changed over the last six months, compared with the six before?"
             ]},
-            "p:The third version specifies what is counted, what it is divided by, and what it is compared against. It is also the only one that produces an answer you could disagree with — which is what makes it worth asking.",
+            "p:The third version specifies what is counted, what it is divided by, and what it is compared against. It is also the only one that produces an answer you could disagree with, which is what makes it worth asking.",
             {"quiz": {
               "q": "What makes a question about data answerable?",
               "a": [
@@ -195,7 +195,7 @@
           "body": [
             "h2:Find what is wrong with this report",
             "p:You will be given a one-page summary containing several of the problems in this course: a truncated axis, a metric whose definition changed, an average concealing a skew, and a causal claim resting on a coincidence.",
-            "p:Identify each one and say what you would ask for to check it. Marked on the problems you find and on the quality of the follow-up question — spotting a flaw without knowing what to ask next is only half the job."
+            "p:Identify each one and say what you would ask for to check it. Marked on the problems you find and on the quality of the follow-up question; spotting a flaw without knowing what to ask next is only half the job."
           ]
         }
       ]

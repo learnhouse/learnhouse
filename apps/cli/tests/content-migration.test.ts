@@ -11,7 +11,7 @@ vi.mock('node:child_process', () => ({ execFileSync: vi.fn(() => Buffer.from('')
 import { migrateContentVolume, patchComposeAddContentVolume } from '../src/services/content-volume-migration.js'
 import { execFileSync } from 'node:child_process'
 
-describe('migrateContentVolume — migrated path (container present)', () => {
+describe('migrateContentVolume: migrated path (container present)', () => {
   let dir: string
   beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-cvm2-')) })
   afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); vi.restoreAllMocks() })
@@ -50,7 +50,7 @@ describe('migrateContentVolume — migrated path (container present)', () => {
     ;(execFileSync as unknown as ReturnType<typeof vi.fn>).mockImplementation(((_cmd: string, argv: string[]) => {
       // Only the EXTRACT step (`docker cp <container>:path/. <tmpDir>/`) populates a
       // real local dir. Skip the UPLOAD step (`docker cp <tmpDir>/. <helper>:/dst/`)
-      // whose destination is a container path — writing it would litter the cwd.
+      // whose destination is a container path; writing it would litter the cwd.
       if (Array.isArray(argv) && argv[0] === 'cp' && path.isAbsolute(argv[2].replace(/\/$/, ''))) {
         const dst = argv[2].replace(/\/$/, '') // tmpDir (absolute)
         fs.mkdirSync(path.join(dst, 'avatars'), { recursive: true })
@@ -65,7 +65,7 @@ describe('migrateContentVolume — migrated path (container present)', () => {
   })
 })
 
-describe('patchComposeAddContentVolume — guard', () => {
+describe('patchComposeAddContentVolume: guard', () => {
   it('throws when the compose file has no learnhouse-app service', () => {
     expect(() => patchComposeAddContentVolume('services:\n  other:\n', 'dep1'))
       .toThrow(/learnhouse-app service not found/)

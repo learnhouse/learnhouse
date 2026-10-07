@@ -172,7 +172,7 @@ class TestFoldersRouter:
         a = (await client.post("/api/v1/folders/", json={"name": "A", "org_id": org.id})).json()
         b = (await client.post("/api/v1/folders/", json={"name": "B", "org_id": org.id})).json()
 
-        # Move B under A (real parent) — exercises the cycle check on a clean path.
+        # Move B under A (real parent); exercises the cycle check on a clean path.
         moved = await client.put(
             f"/api/v1/folders/{b['folder_uuid']}",
             json={"parent_folder_uuid": a["folder_uuid"]},

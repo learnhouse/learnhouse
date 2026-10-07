@@ -37,7 +37,7 @@ def _check_mode_bypass(feature_name: str) -> bool | None:
                 detail=f"{feature_name} is not available in OSS mode. Enterprise Edition is required.",
             )
         return True
-    return None  # SaaS — proceed with plan check
+    return None  # SaaS: proceed with plan check
 
 
 def _client_org_id(request: Request) -> int | None:

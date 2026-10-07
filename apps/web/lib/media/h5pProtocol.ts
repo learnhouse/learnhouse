@@ -10,7 +10,7 @@
  *   parent -> resizePrepared  after shrinking the frame back to that height
  *   child  -> resize          the real content height
  *
- * Answering only the last step — which is the obvious reading of H5P's docs —
+ * Answering only the last step (which is the obvious reading of H5P's docs)
  * means no conformant host ever sends one, and the frame never resizes.
  *
  * Everything here is pure so the protocol can be tested without a live
@@ -54,7 +54,7 @@ function toFiniteNumber(value: unknown): number | null {
 /**
  * Recognise a message from H5P content. Anything on the page can postMessage
  * at us, so this accepts only the exact shapes the protocol defines and
- * returns null for everything else — the caller has already checked that the
+ * returns null for everything else; the caller has already checked that the
  * message came from its own frame.
  *
  * Some hosts post the payload as a JSON string rather than a structured
@@ -99,7 +99,7 @@ export function parseH5PMessage(data: unknown): H5PMessage | null {
  * Whether to act on a `prepareResize` at all.
  *
  * Answering it means shrinking the frame to the content's own height so the
- * content can re-measure — which itself makes the content resize, which makes
+ * content can re-measure, which itself makes the content resize, which makes
  * it ask again. H5P's own h5p-resizer.js breaks that cycle by staying silent
  * when the three heights already agree, and so do we. Staying silent is the
  * intended end state of the handshake, not a dropped message.
@@ -124,8 +124,8 @@ export function replyTarget(origin: string | undefined): string {
  *
  * The handshake above only works when the embedded activity plays its part.
  * Plenty do not: a host that never loaded h5p-resizer.js, or content whose own
- * reported height is smaller than the media inside it — an interactive video
- * measured from its poster frame is the usual one — leaves the frame short and
+ * reported height is smaller than the media inside it (an interactive video
+ * measured from its poster frame is the usual one) leaves the frame short and
  * the learner has to open fullscreen to see anything at all.
  *
  * So the author can take the height over. A manual mode deliberately skips the

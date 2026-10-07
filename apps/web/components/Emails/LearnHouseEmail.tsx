@@ -13,7 +13,7 @@ import {
 import * as React from 'react'
 
 // Shared transactional email layout (React Email). One flexible template drives
-// every message — welcome, purchase, plan change, payment failed, etc. — via an
+// every message (welcome, purchase, plan change, payment failed, etc.) via an
 // accent color plus optional card / transition / bullet blocks. Ported from the
 // platform repo's templates/shared.tsx and kept provider-agnostic (rendered to
 // HTML by services/emails/resend.ts).
@@ -133,7 +133,7 @@ export function LearnHouseEmail({
           <Hr style={{ borderColor: '#eee', margin: '24px 40px 0' }} />
           <Section style={{ padding: '16px 40px 32px' }}>
             <Text style={{ fontSize: 12, color: '#a3a3a3', margin: 0 }}>
-              LearnHouse — the open-source learning platform.
+              LearnHouse, the open-source learning platform.
             </Text>
           </Section>
         </Container>

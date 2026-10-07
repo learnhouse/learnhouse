@@ -174,7 +174,7 @@ async def create_role(
 
     # ============================================================================
     # VERIFICATION 8: Ensure user cannot create a role with higher permissions than they have
-    # (superadmins skip this check — they can grant any permission)
+    # (superadmins skip this check; they can grant any permission)
     # ============================================================================
     create_role_user_id = resolve_acting_user_id(current_user)
     if not await is_user_superadmin(create_role_user_id, db_session):
@@ -186,16 +186,19 @@ async def create_role(
                 # AttributeError (HTTP 500). Skip anything that isn't a dict.
                 if not isinstance(right_permissions, dict):
                     continue
-                # A bucket missing from the creator's rights grants nothing.
                 user_right_permissions = user_role.rights.get(right_key)
                 for perm_key, perm_value in right_permissions.items():
                     if isinstance(perm_value, bool) and perm_value:
-                        if isinstance(user_right_permissions, dict) and user_right_permissions.get(perm_key):
-                            continue
-                        raise HTTPException(
-                            status_code=403,
-                            detail=f"You cannot create a role with '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
+                        # Absent from the creator's rights means not held.
+                        user_has_perm = (
+                            isinstance(user_right_permissions, dict)
+                            and bool(user_right_permissions.get(perm_key))
                         )
+                        if not user_has_perm:
+                            raise HTTPException(
+                                status_code=403,
+                                detail=f"You cannot create a role with '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
+                            )
 
     # Complete the role object
     role.role_uuid = f"role_{uuid4()}"
@@ -336,7 +339,7 @@ async def read_role(
             detail="Role not found",
         )
 
-    # RBAC check — scope permission to the role's own org to prevent cross-org IDOR.
+    # RBAC check: scope permission to the role's own org to prevent cross-org IDOR.
     # Global roles (org_id=None) are readable by any authenticated user.
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
@@ -374,7 +377,7 @@ async def update_role(
             detail="Global roles cannot be updated. These are system-defined roles that must remain unchanged.",
         )
 
-    # RBAC check — scope to the role's own org to prevent cross-org IDOR.
+    # RBAC check: scope to the role's own org to prevent cross-org IDOR.
     # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
     await require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_update")
 
@@ -559,7 +562,7 @@ async def delete_role(
             detail="Global roles cannot be deleted. These are system-defined roles that must remain unchanged.",
         )
 
-    # RBAC check — scope to the role's own org to prevent cross-org IDOR.
+    # RBAC check: scope to the role's own org to prevent cross-org IDOR.
     # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
     await require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_delete")
 
@@ -589,7 +592,7 @@ async def rbac_check(
     db_session: AsyncSession,
 ):
     # Resolve the real acting user id. For API tokens, current_user.id is the
-    # token id (0), not a user id — using it directly makes the anon check
+    # token id (0), not a user id. Using it directly makes the anon check
     # reject every API token and runs the role/authorship check against id 0.
     acting_user_id = resolve_acting_user_id(current_user)
 

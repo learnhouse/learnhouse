@@ -151,7 +151,7 @@ async def test_unauth_billing_rejected(client, method, path, body):
 
 
 async def test_unauth_migrate_upload_rejected(client):
-    # Multipart request, not JSON — exercised separately so FastAPI does not
+    # Multipart request, not JSON. Exercised separately so FastAPI does not
     # 422 on the missing file body before the auth dep runs.
     resp = await client.post(
         "/api/v1/courses/migrate/upload?org_id=1",

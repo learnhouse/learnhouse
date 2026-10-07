@@ -4,7 +4,7 @@ Split by locale rather than kept in a single dict: thirty nudges across twenty
 languages is a few thousand strings, and a reviewer looking at a translation
 change should see one language's diff, not a wall of unrelated scripts.
 
-The English module is the source text — every other locale translates from it,
+The English module is the source text: every other locale translates from it,
 and ``t()`` falls back to English per key, so a locale that lags behind renders
 correct English for the missing entries while keeping its own translations for
 the rest.
@@ -12,7 +12,7 @@ the rest.
 Copy conventions, because these go to teachers and trainers rather than funnel
 targets: plain subject lines, no emoji, no manufactured urgency, name the
 reader's own course instead of describing it generically, and never write a
-plan name, limit or price into a string — those arrive as placeholders filled
+plan name, limit or price into a string; those arrive as placeholders filled
 from ``plans.py`` at render time.
 
 Placeholders available to every nudge: ``{org_name}``, ``{course_name}``,

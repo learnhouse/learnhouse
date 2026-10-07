@@ -1,6 +1,6 @@
 import type { ErrorCategory } from './types'
 
-// The meaningful-error catalog. Ordered MOST-SPECIFIC first — classifyError()
+// The meaningful-error catalog. Ordered MOST-SPECIFIC first: classifyError()
 // walks this list and the first category whose matchers hit wins, so narrow
 // signatures (version mismatch, auth, plan limits, a specific 503 detail) sit
 // above broad ones (generic 5xx, unknown). Strings in `messageIncludes` are
@@ -8,7 +8,7 @@ import type { ErrorCategory } from './types'
 //
 // Grounded in a sweep of 221 real failure scenarios across the service layer,
 // the FastAPI backend, the UI surfaces, and the browser runtime. This catalog
-// is the single source of truth for what users read when something breaks —
+// is the single source of truth for what users read when something breaks;
 // keep titles human and non-alarming, descriptions short and honest, and
 // resolutions limited to actions that actually help for that failure.
 
@@ -155,7 +155,7 @@ export const ERROR_CATALOG: ErrorCategory[] = [
     kind: 'conflict',
     title: 'That already exists',
     description:
-      "This conflicts with something that's already there — for example an account or item with the same name or email already exists.",
+      "This conflicts with something that's already there; for example an account or item with the same name or email already exists.",
     matchers: {
       statuses: [409],
       messageIncludes: ['already exists', 'already taken', 'already registered', 'already a member', 'duplicate', 'conflict'],
@@ -281,7 +281,7 @@ export const ERROR_CATALOG: ErrorCategory[] = [
         'could not reach the backend',
         'could not reach the main platform',
         'connection issue',
-        "isn't saving — check your connection",
+        "isn't saving. check your connection",
         'load failed',
         'err_internet_disconnected',
         'err_network',
@@ -315,7 +315,7 @@ export const ERROR_CATALOG: ErrorCategory[] = [
     kind: 'timeout',
     title: 'That took too long',
     description:
-      'The request timed out before it finished. The server may be busy — trying again usually works.',
+      'The request timed out before it finished. The server may be busy; trying again usually works.',
     matchers: {
       statuses: [408, 504],
       messageIncludes: ['timeout', 'timed out', 'deadline exceeded', 'gateway timeout'],
@@ -346,14 +346,14 @@ export const ERROR_CATALOG: ErrorCategory[] = [
   },
 ]
 
-// Catch-all. Has NO matchers (never matched by the loop) — classifyError()
+// Catch-all. Has NO matchers (never matched by the loop); classifyError()
 // returns it explicitly when nothing else fits. Still meaningfully better than
 // a bare "Something went wrong": it owns the problem and offers real next steps.
 export const UNKNOWN_CATEGORY: ErrorCategory = {
   kind: 'unknown',
   title: "Something didn't go as planned",
   description:
-    "We ran into an unexpected problem completing your request. It's been logged automatically and is likely temporary — trying again often clears it. If it keeps happening, tell us exactly what you were doing below.",
+    "We ran into an unexpected problem completing your request. It's been logged automatically and is likely temporary; trying again often clears it. If it keeps happening, tell us exactly what you were doing below.",
   matchers: { statuses: [], messageIncludes: [], names: [] },
   resolutions: ['retry', 'report', 'home', 'signout'],
 }

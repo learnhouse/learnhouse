@@ -4,7 +4,7 @@ An organization can declare extra fields to collect on its signup form. The
 answers are stored on the user's ``extra_metadata`` JSON, keyed by each field's
 ``key``.
 
-SECURITY — why the server builds the stored dict itself:
+SECURITY (why the server builds the stored dict itself):
 
 ``UserCreate`` inherits ``extra_metadata`` from ``UserBase``, and the signup
 endpoints are public. If the submitted blob were written straight through, an
@@ -15,7 +15,7 @@ not declare is dropped rather than rejected, so a stale cached form does not
 break signup for a real user.
 
 The field definitions live in the org config JSON, which is served publicly by
-``GET /orgs/slug/{slug}`` — labels and options are public strings.
+``GET /orgs/slug/{slug}``, so labels and options are public strings.
 """
 
 from typing import Any, Optional
@@ -38,7 +38,7 @@ def get_signup_fields(config: Optional[dict]) -> list[SignupFieldItem]:
     Handles both config shapes: v2 keeps customization under ``customization``,
     v1 under ``general`` (same dual lookup the signup-mode read already does).
     Returns only enabled fields, in display order. Malformed entries are skipped
-    rather than raising — a bad config must not take signup down.
+    rather than raising; a bad config must not take signup down.
     """
     if not config:
         return []
@@ -169,7 +169,7 @@ def validate_signup_field_values(
     rules. Keys the org did not declare are ignored.
 
     ``enforce_required`` is False on the OAuth path, which never renders the
-    signup form and so cannot supply required answers up front — those users are
+    signup form and so cannot supply required answers up front; those users are
     asked to complete their profile afterwards. Values that ARE supplied are
     still validated either way.
     """
@@ -184,7 +184,7 @@ def validate_signup_field_values(
 
         if field.type == "checkbox":
             checked = _coerce_checkbox(raw)
-            # A required checkbox is a consent gate — unticked means not given.
+            # A required checkbox is a consent gate: unticked means not given.
             if field.required and enforce_required and not checked:
                 raise _field_error(field, f"{field.label or field.key} is required")
             cleaned[field.key] = checked
@@ -249,7 +249,7 @@ async def complete_signup_fields_for_user(
 
     This is the post-OAuth completion path: Google sign-in skips the signup
     form, so those users answer here instead. The caller must already be
-    authenticated and a member of the org — the router enforces both.
+    authenticated and a member of the org; the router enforces both.
 
     Values go through the same validation as signup, so this endpoint is not a
     way around it. Existing answers are merged, not replaced, so a partial

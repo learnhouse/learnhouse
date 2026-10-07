@@ -47,7 +47,7 @@ const OLD_IMAGE = 'ghcr.io/learnhouse/app:1.0.1'
 const RUN = 'docker compose run --rm --no-deps -T learnhouse-app sh -c "cd /app/api && uv run alembic '
 const EXEC = 'docker compose exec -T learnhouse-app sh -c "cd /app/api && uv run alembic '
 
-describe('update — migrates with the new image before restarting', () => {
+describe('update: migrates with the new image before restarting', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined

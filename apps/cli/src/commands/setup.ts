@@ -180,14 +180,14 @@ export async function setupCommand(options: SetupOptions) {
 
     const pwErr = validatePassword(options.adminPassword)
     if (pwErr) {
-      console.error(`Error: --admin-password — ${pwErr}`)
+      console.error(`Error: --admin-password: ${pwErr}`)
       process.exit(1)
     }
 
     if (options.adminEmail) {
       const emailErr = validateEmail(options.adminEmail)
       if (emailErr) {
-        console.error(`Error: --admin-email "${options.adminEmail}" — ${emailErr}`)
+        console.error(`Error: --admin-email "${options.adminEmail}": ${emailErr}`)
         process.exit(1)
       }
     }
@@ -195,7 +195,7 @@ export async function setupCommand(options: SetupOptions) {
     if (options.domain && options.domain !== 'localhost') {
       const domainErr = validateDomain(options.domain)
       if (domainErr) {
-        console.error(`Error: --domain "${options.domain}" — ${domainErr}`)
+        console.error(`Error: --domain "${options.domain}": ${domainErr}`)
         process.exit(1)
       }
     }
@@ -203,7 +203,7 @@ export async function setupCommand(options: SetupOptions) {
     if (options.port !== undefined) {
       const portErr = validatePort(String(options.port))
       if (portErr) {
-        console.error(`Error: --port ${options.port} — ${portErr}`)
+        console.error(`Error: --port ${options.port}: ${portErr}`)
         process.exit(1)
       }
     }
@@ -220,13 +220,13 @@ export async function setupCommand(options: SetupOptions) {
     const dbPassword = crypto.randomBytes(24).toString('base64url')
 
     // If the user didn't pin a port, prefer 80 but fall back automatically
-    // when it's taken — CI shouldn't fail just because the runner has another
+    // when it's taken; CI shouldn't fail just because the runner has another
     // service on port 80.
     let httpPort = options.port || 80
     if (!options.port) {
       const available = await findAvailablePort(httpPort)
       if (available && available !== httpPort) {
-        console.log(`Port ${httpPort} is in use — falling back to ${available}.`)
+        console.log(`Port ${httpPort} is in use, falling back to ${available}.`)
         httpPort = available
       } else if (!available) {
         console.error('No common port is available. Pass --port=<port> explicitly.')
@@ -245,7 +245,7 @@ export async function setupCommand(options: SetupOptions) {
       useHttps: false,
       httpPort,
       autoSsl: false,
-      // External DB/Redis work for the Community stack too — when a connection
+      // External DB/Redis work for the Community stack too: when a connection
       // string is supplied, the in-container service is omitted from the compose.
       useExternalDb: !!options.externalDb,
       externalDbConnectionString: options.externalDb,
@@ -297,13 +297,13 @@ export async function setupCommand(options: SetupOptions) {
             process.exit(1)
           }
         } else {
-          console.log('Health check timed out — services may still be starting')
+          console.log('Health check timed out; services may still be starting')
         }
       } catch (err) {
         const stderr = (err as { stderr?: Buffer; message?: string })?.stderr?.toString?.() ?? ''
         const message = (err as { message?: string })?.message ?? ''
         if (/port is already allocated/i.test(stderr) || /address already in use/i.test(stderr) || /port is already allocated/i.test(message)) {
-          console.error(`Port ${config.httpPort} is already bound — pass --port=<other> and re-run.`)
+          console.error(`Port ${config.httpPort} is already bound; pass --port=<other> and re-run.`)
         } else {
           console.error('Failed to start services')
         }
@@ -328,8 +328,8 @@ export async function setupCommand(options: SetupOptions) {
     const choice = await p.select({
       message: 'Which edition do you want to deploy?',
       options: [
-        { value: 'community', label: 'Community', hint: 'free, open-source — single organization' },
-        { value: 'enterprise', label: 'Enterprise', hint: 'license key — SSO, payments, multi-tenant' },
+        { value: 'community', label: 'Community', hint: 'free, open-source; single organization' },
+        { value: 'enterprise', label: 'Enterprise', hint: 'license key; SSO, payments, multi-tenant' },
       ],
     })
     if (p.isCancel(choice)) { p.cancel(); process.exit(0) }
@@ -350,7 +350,7 @@ export async function setupCommand(options: SetupOptions) {
       {
         value: 'stable',
         label: 'Stable',
-        hint: 'recommended — versioned release or :latest',
+        hint: 'recommended: versioned release or :latest',
       },
       {
         value: 'dev',
@@ -542,7 +542,7 @@ export async function setupCommand(options: SetupOptions) {
   const { image: appImage, isLatest } = await resolveAppImage(config.channel)
   s0.stop(`Using image: ${appImage}`)
   if (isLatest) {
-    p.log.warn('No versioned image found — using :latest tag. Pin to a version for stability.')
+    p.log.warn('No versioned image found, using :latest tag. Pin to a version for stability.')
   }
 
   // Generate files
@@ -602,7 +602,7 @@ export async function setupCommand(options: SetupOptions) {
         /bind:.*address already in use/i.test(stderr)
       if (portAllocated) {
         p.log.error(
-          `Port ${config.httpPort} is already bound by another process or container — ` +
+          `Port ${config.httpPort} is already bound by another process or container; ` +
           `Docker couldn't publish to it.`
         )
         p.log.info(

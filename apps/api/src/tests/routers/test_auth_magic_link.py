@@ -336,7 +336,7 @@ class TestMagicLinkVerify:
 
 class TestRefreshPreservesProvenance:
     """Rotation must not launder a method-bound/org-bound session into a
-    claim-less one — otherwise a refresh would silently bypass the org
+    claim-less one; otherwise a refresh would silently bypass the org
     auth-method / session-sharing policy. Tokens are minted for real here (not
     mocked) so the carried claims are asserted on the actual rotated token."""
 

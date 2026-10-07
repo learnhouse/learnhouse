@@ -38,8 +38,7 @@ async def create_update(
     # Generate UUID
     courseupdate_uuid = str(f"courseupdate_{uuid4()}")
 
-    # SECURITY: the update belongs to the course's org; ignore any org_id in
-    # the body so it can't be filed (or webhooked) under another org.
+    # The update belongs to the course's org, whatever the body says.
     update = CourseUpdate(
         **update_object.model_dump(exclude={"org_id"}),
         org_id=course.org_id,
@@ -145,7 +144,7 @@ async def get_updates_by_course_uuid(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
         )
 
-    # RBAC check — course updates inherit the course's visibility. Without this
+    # RBAC check: course updates inherit the course's visibility. Without this
     # any caller (including anonymous users) could read the update feed of a
     # private / unpublished course just by knowing its uuid.
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)

@@ -24,7 +24,7 @@ export default function MagicLinkConsumePage() {
   const [error, setError] = useState<string | null>(null)
   const ranRef = useRef(false)
 
-  // Honor a sanitized ?next / ?redirect through the cross-domain handoff — same
+  // Honor a sanitized ?next / ?redirect through the cross-domain handoff, the same
   // rule the login page applies (internal same-origin path only, default /home).
   const buildCallbackUrl = () => {
     const params = new URLSearchParams(window.location.search)
@@ -51,7 +51,7 @@ export default function MagicLinkConsumePage() {
       const callbackUrl = buildCallbackUrl()
       const res = await completeMagicLink(token, { callbackUrl, redirect: false })
 
-      // 2FA account — the login page already knows how to finish from an mfa_token.
+      // 2FA account: the login page already knows how to finish from an mfa_token.
       if (res.mfa_required && res.mfa_token) {
         const raw =
           params.get('next') ?? params.get('redirect') ?? params.get('redirect_to')

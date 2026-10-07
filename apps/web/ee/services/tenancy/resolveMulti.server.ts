@@ -33,17 +33,17 @@ export async function resolveMultiFromServer(
 /**
  * Lightweight slug-only variant for callers that don't need the full result.
  * Returns null if no slug can be resolved from the request alone (no cookie
- * fallback, no default-org fallback) — caller decides what to do.
+ * fallback, no default-org fallback); caller decides what to do.
  */
 export async function getOrgSlugFromHost(domain: string): Promise<string | null> {
   const headersList = await headers()
   const host = headersList.get('host')
 
-  // Subdomain org ({slug}.platform.tld) — cheap, synchronous.
+  // Subdomain org ({slug}.platform.tld): cheap, synchronous.
   const sub = extractOrgSubdomain(host, domain)
   if (sub) return sub
 
-  // Custom domain (e.g. learn.acme.org) — NOT a subdomain of the platform domain,
+  // Custom domain (e.g. learn.acme.org) is NOT a subdomain of the platform domain,
   // so it must be resolved to its org via the backend. Without this, auth pages on
   // a custom domain fail to resolve the org and fall back to the generic org-less
   // page instead of the org-branded one.

@@ -130,7 +130,7 @@ function CalloutComponent(props: any) {
         contentEditable={isEditable || undefined}
         suppressContentEditableWarning={true}
       >
-        {/* Icon — clickable type-switcher trigger in edit mode */}
+        {/* Icon: clickable type-switcher trigger in edit mode */}
         <div className="relative shrink-0">
           {isEditable ? (
             <button

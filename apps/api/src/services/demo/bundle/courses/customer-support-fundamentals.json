@@ -87,7 +87,7 @@
               ]
             },
             "h2:Never say this",
-            "p:Avoid telling a customer the system is working as intended. It may be true and it is never useful — it tells someone with a problem that their problem is not going to be solved. Describe what you can do instead.",
+            "p:Avoid telling a customer the system is working as intended. It may be true and it is never useful; it tells someone with a problem that their problem is not going to be solved. Describe what you can do instead.",
             {
               "quiz": {
                 "q": "Which of these is a real commitment in a first reply?",
@@ -191,7 +191,7 @@
                 "The nearest thing we can do instead."
               ]
             },
-            "p:That third step is the whole job. Almost every refusal has an adjacent yes — a partial refund instead of a full one, a substitute item, an earlier delivery slot. Find it before you reply.",
+            "p:That third step is the whole job. Almost every refusal has an adjacent yes: a partial refund instead of a full one, a substitute item, an earlier delivery slot. Find it before you reply.",
             {
               "quiz": {
                 "q": "What is the most important part of refusing a customer request?",

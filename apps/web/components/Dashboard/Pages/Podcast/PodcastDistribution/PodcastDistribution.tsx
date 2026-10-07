@@ -100,7 +100,7 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">4.</span>
-                <span>Apple will validate your feed — review typically takes 1-5 business days</span>
+                <span>Apple will validate your feed; review typically takes 1-5 business days</span>
               </li>
             </ol>
           </div>
@@ -131,7 +131,7 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">4.</span>
-                <span>Verify ownership, fill in details, and submit — usually live within hours</span>
+                <span>Verify ownership, fill in details, and submit (usually live within hours)</span>
               </li>
             </ol>
           </div>
@@ -210,7 +210,7 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
           </li>
           <li className="flex items-start space-x-2">
             <span className="text-green-500 shrink-0 mt-0.5">&#10003;</span>
-            <span>Fill in a descriptive <strong>podcast description</strong> — this helps with discoverability</span>
+            <span>Fill in a descriptive <strong>podcast description</strong>; this helps with discoverability</span>
           </li>
           <li className="flex items-start space-x-2">
             <span className="text-green-500 shrink-0 mt-0.5">&#10003;</span>

@@ -61,7 +61,7 @@ export interface VideoSource {
  */
 export function resolveActivityVideoSource(args: VideoSourceArgs): VideoSource {
   const { hlsReady, orgUuid, courseUuid, activityUuid, filename } = args
-  // Guard against a missing filename (incl. whitespace-only) or any missing id —
+  // Guard against a missing filename (incl. whitespace-only) or any missing id;
   // otherwise we'd build a URL containing the literal string "undefined".
   if (!filename || !filename.trim()) return { src: '', isHls: false }
   if (!orgUuid || !courseUuid || !activityUuid) return { src: '', isHls: false }
@@ -80,7 +80,7 @@ export function resolveActivityVideoSource(args: VideoSourceArgs): VideoSource {
  * must stay uncredentialed (R2 CORS rejects credentialed wildcard requests).
  */
 export function shouldSendHlsCredentials(url: string): boolean {
-  // Our authed playlist/key endpoints (activity + video block) — but NEVER a
+  // Our authed playlist/key endpoints (activity + video block), but NEVER a
   // presigned object-storage URL (those always carry X-Amz-* query params).
   // Sending the cookie cross-origin to R2 would fail CORS and leak the cookie.
   const isApiPlaylist =

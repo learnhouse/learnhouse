@@ -29,7 +29,7 @@ function VersionHistoryPanel({
   courseUuid,
 }: VersionHistoryPanelProps) {
   const { t } = useTranslation()
-  // Drawer enters from the inline end — '100%' is a physical offset.
+  // Drawer enters from the inline end; '100%' is a physical offset.
   const { x: dx } = useDirection()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token

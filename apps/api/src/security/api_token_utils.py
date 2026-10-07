@@ -82,7 +82,7 @@ async def get_authenticated_non_api_token_user(
 
     SECURITY: Use this as the router-level dependency on any router that has
     *no* public endpoints. The historical ``get_non_api_token_user`` helper
-    only rejects API tokens — it silently admits ``AnonymousUser``. Swapping
+    only rejects API tokens; it silently admits ``AnonymousUser``. Swapping
     to this dependency closes that gap for routers that should always
     require an active session.
 
@@ -110,7 +110,7 @@ async def require_authenticated_user_or_api_token(
     """
     FastAPI dependency that requires an authenticated session OR a valid API token.
 
-    Rejects anonymous callers (401) but — unlike ``get_authenticated_non_api_token_user`` —
+    Rejects anonymous callers (401) but, unlike ``get_authenticated_non_api_token_user``,
     admits API tokens. Use as the router-level dependency on routers that expose some
     endpoints to headless API-token clients while still gating individual handlers
     internally (e.g. assignments: authoring + grading are token-accessible, but the

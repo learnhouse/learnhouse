@@ -382,7 +382,7 @@
     "image_title_forgot": "Şifrenizi sıfırlayın.",
     "image_subtitle_forgot": "Kısa sürede hesabınıza yeniden erişmenize yardımcı olacağız.",
     "image_title_login": "LearnHouse'a tekrar hoş geldiniz.",
-    "image_subtitle_login": "Kaldığınız yerden devam edin — kurslarınız, öğrencileriniz ve araçlarınız sizi bekliyor.",
+    "image_subtitle_login": "Kaldığınız yerden devam edin; kurslarınız, öğrencileriniz ve araçlarınız sizi bekliyor.",
     "image_title_reset": "Neredeyse tamam.",
     "image_subtitle_reset": "Hesabınızı güvende tutmak için güçlü bir şifre oluşturun.",
     "image_title_signup": "LearnHouse ile eğitime başlayın.",
@@ -638,7 +638,7 @@
         "plan_generated": "Plan güncellendi",
         "plan_generated_hint": "İncelemek ve düzenlemek için Plan sekmesine bakın.",
         "describe_course": "Kursunuzu Tanımlayın",
-        "describe_course_hint": "Sağdaki sohbeti kullanarak istediğiniz kursu tanımlayın — konu, hedef kitle ve hedefler.",
+        "describe_course_hint": "Sağdaki sohbeti kullanarak istediğiniz kursu tanımlayın: konu, hedef kitle ve hedefler.",
         "generating_plan": "Kurs planınız oluşturuluyor...",
         "chapters": "Bölümler",
         "activities": "aktiviteler",
@@ -1000,7 +1000,7 @@
     "link_copied": "Bağlantı kopyalandı!",
     "share": "Paylaş",
     "autosave_blocked": "Henüz kaydedilemiyor",
-    "autosave_retry": "Kaydedilemedi — yeniden deneniyor…",
+    "autosave_retry": "Kaydedilemedi, yeniden deneniyor…",
     "autosave_unsaved": "Kaydedilmemiş değişiklikler",
     "autosaved": "Kaydedildi",
     "autosaving": "Kaydediliyor…",
@@ -1047,8 +1047,8 @@
     "retry_assignment_title": "Bu ödevi tekrar denemek ister misiniz?",
     "retry_assignment_confirm": "Mevcut gönderiminiz ve yanıtlarınız sıfırlanacak, böylece baştan başlayabilirsiniz. Yeniden gönderdiğinizde önceki notunuz değiştirilecektir.",
     "retry_assignment_remaining": "Bu denemeden sonra {{remaining}} deneme hakkınız kalıyor.",
-    "retry_assignment_last": "Bu son denemeniz — iyi değerlendirin.",
-    "retry_assignment_success": "Çalışmanız sıfırlandı — bir kez daha deneyin.",
+    "retry_assignment_last": "Bu son denemeniz; iyi değerlendirin.",
+    "retry_assignment_success": "Çalışmanız sıfırlandı; bir kez daha deneyin.",
     "retry_assignment_failed": "Gönderiminiz sıfırlanamadı. Lütfen tekrar deneyin.",
     "retry_no_attempts_left": "Deneme hakkı kalmadı",
     "quick_grade": {
@@ -1175,7 +1175,7 @@
       "confirm_label": "Onaylamak için {{username}} yazın",
       "deleting": "Siliniyor…",
       "zone_subtitle": "Hesabınızı kalıcı olarak silin. Bu işlem geri alınamaz.",
-      "zone_body": "Bu işlem hesabınızı ve erişiminizi kaldırır. Tek yöneticisi olduğunuz tüm kuruluşlar — bunların tüm kursları ve içerikleriyle birlikte — silinir. Başka yöneticileri olan kuruluşlar korunur; yalnızca bu kuruluşlardan çıkarılırsınız."
+      "zone_body": "Bu işlem hesabınızı ve erişiminizi kaldırır. Tek yöneticisi olduğunuz tüm kuruluşlar (bunların tüm kursları ve içerikleriyle birlikte) silinir. Başka yöneticileri olan kuruluşlar korunur; yalnızca bu kuruluşlardan çıkarılırsınız."
     }
   },
   "user": {
@@ -3631,9 +3631,9 @@
             "auth_required_submit": "Kimlik doğrulaması gerekiyor. Görevi göndermek için giriş yapın.",
             "hint_optional": "İpucu (isteğe bağlı)",
             "paste_blocked": "Bu ödev için yapıştırma devre dışı",
-            "paste_blocked_hint": "Yapıştırma devre dışı — cevabınızı doğrudan yazın.",
-            "upload_locked_graded": "Bu teslim değerlendirildi — dosyanız artık değiştirilemez.",
-            "upload_locked_submitted": "Bu ödevi teslim ettiniz — dosyanız artık değiştirilemez."
+            "paste_blocked_hint": "Yapıştırma devre dışı; cevabınızı doğrudan yazın.",
+            "upload_locked_graded": "Bu teslim değerlendirildi; dosyanız artık değiştirilemez.",
+            "upload_locked_submitted": "Bu ödevi teslim ettiniz; dosyanız artık değiştirilemez."
           },
           "code": {
             "student_behavior_label": "Öğrenci davranışı",
@@ -3650,9 +3650,9 @@
             "show_solution_label": "Gönderimden sonra çözümü göster",
             "show_solution_description": "Öğrenci çalışmasını kaydettikten sonra öğretmenin referans çözümünü göster.",
             "reference_solution_label": "Referans çözüm",
-            "locked_graded_hint": "Bu teslim değerlendirildi — kodunuz salt okunur.",
-            "locked_submitted_hint": "Bu ödevi teslim ettiniz — kodunuz salt okunur.",
-            "no_runnable_tests": "Bu görevde çalıştırabileceğiniz test yok — kodunuz değerlendirme sırasında kontrol edilir."
+            "locked_graded_hint": "Bu teslim değerlendirildi; kodunuz salt okunur.",
+            "locked_submitted_hint": "Bu ödevi teslim ettiniz; kodunuz salt okunur.",
+            "no_runnable_tests": "Bu görevde çalıştırabileceğiniz test yok; kodunuz değerlendirme sırasında kontrol edilir."
           },
           "short_answer": {
             "prompt_label": "Soru metni",
@@ -3669,13 +3669,13 @@
               "regex": "Düzenli ifade"
             },
             "explanation_label": "Açıklama (doğru cevapta gösterilir)",
-            "explanation_placeholder": "İsteğe bağlı — cevabın neden doğru olduğunu açıklayın",
+            "explanation_placeholder": "İsteğe bağlı: cevabın neden doğru olduğunu açıklayın",
             "your_answer_placeholder": "Cevabınızı yazın...",
             "student_answer_label": "Öğrenci cevabı",
             "accepted_answers_label": "Kabul edilen cevaplar",
             "no_answer": "Cevap gönderilmedi",
             "correct": "Doğru",
-            "incorrect": "Pek değil — tekrar deneyin"
+            "incorrect": "Pek değil, tekrar deneyin"
           },
           "number_answer": {
             "prompt_label": "Soru metni",
@@ -3686,14 +3686,14 @@
             "unit_placeholder": "m/s², kg, °C...",
             "unit_hint": "Cevap alanının yanında gösterilir. Zorunlu değildir.",
             "explanation_label": "Açıklama (doğru cevapta gösterilir)",
-            "explanation_placeholder": "İsteğe bağlı — cevaba nasıl ulaşılacağını açıklayın",
+            "explanation_placeholder": "İsteğe bağlı: cevaba nasıl ulaşılacağını açıklayın",
             "preview_label": "Kabul eder",
             "your_answer_placeholder": "Bir sayı girin...",
             "student_answer_label": "Öğrenci cevabı",
             "accepted_range_label": "Kabul edilen aralık",
             "no_answer": "Cevap gönderilmedi",
             "correct": "Doğru",
-            "incorrect": "Pek değil — tekrar deneyin"
+            "incorrect": "Pek değil, tekrar deneyin"
           }
         },
         "generate_ai": "AI ile görev oluştur",
@@ -3802,7 +3802,7 @@
         },
         "tasks": {
           "title": "Görev performansı",
-          "subtitle": "Görev başına ortalama puan — düşük çubuklar öğrencilerin zorlandığı yerleri gösterir",
+          "subtitle": "Görev başına ortalama puan; düşük çubuklar öğrencilerin zorlandığı yerleri gösterir",
           "empty": "Görev performansı ilk notlardan sonra görünecek",
           "avg_grade": "Ortalama not",
           "attempts": "deneme"
@@ -3814,7 +3814,7 @@
         },
         "attention": {
           "title": "Destek gerekebilir",
-          "subtitle": "Geçemeyen öğrenciler — iletişime geçmeyi düşünün",
+          "subtitle": "Geçemeyen öğrenciler; iletişime geçmeyi düşünün",
           "empty": "Notlanan herkes geçti. Harika iş!"
         }
       },
@@ -3853,10 +3853,10 @@
             "auto_grading_description": "Öğrenci gönderdiğinde aktiviteyi otomatik olarak notlandır ve tamamla. Sadece her görevin insan incelemesi olmadan notlandırılabileceği durumlarda çalışır.",
             "anti_copy_paste_label": "Kopyala ve yapıştır engelle",
             "anti_copy_paste_description": "Yapıştır olaylarını engelleyerek AI tarafından oluşturulan yanıtları yapıştırmayı caydırın. Not: bu caydırıcıdır.",
-            "auto_grading_disabled_file": "Otomatik notlandırma kullanılamaz — bu ödevde insan incelemesi gerektiren bir dosya gönderim görevi var.",
+            "auto_grading_disabled_file": "Otomatik notlandırma kullanılamaz; bu ödevde insan incelemesi gerektiren bir dosya gönderim görevi var.",
             "grading_type_hint": "Notların öğrencilere nasıl gösterildiği",
             "grading_options_hint": "Gönderimde davranış",
-            "show_correct_answers_description": "Gönderim notlandırıldıktan sonra, öğrencilere kendi cevaplarının yanında doğru cevapları gösterin — hangi quiz seçeneklerinin doğru olduğunu, beklenen kısa veya sayısal cevabı ve doğru form boşluklarını.",
+            "show_correct_answers_description": "Gönderim notlandırıldıktan sonra, öğrencilere kendi cevaplarının yanında doğru cevapları gösterin: hangi quiz seçeneklerinin doğru olduğunu, beklenen kısa veya sayısal cevabı ve doğru form boşluklarını.",
             "show_correct_answers_label": "Notlandırmadan sonra doğru cevapları göster",
             "allow_retries_label": "Tekrar denemelere izin ver",
             "allow_retries_description": "Öğrencilerin ödevi notlandırıldıktan sonra sıfırlayıp yeniden denemesine izin verin. Her tekrar deneme önceki yanıtlarını siler ve yeni bir deneme olarak sayılır.",
@@ -4573,7 +4573,7 @@
         "avg_rate": "Ort. Oran",
         "needs_attention": "Dikkat Gerekli",
         "total_samples": "Toplam Örnek",
-        "more_expand": "+{{count}} daha — genişletmek için tıklayın",
+        "more_expand": "+{{count}} daha, genişletmek için tıklayın",
         "activities_count": "{{count}} etkinlik",
         "pct_of_total": "Toplam %",
         "bar_width_hint": "Çubuk genişliği = göreli görüntüleme",
@@ -4693,7 +4693,7 @@
       },
       "activity_dropoff": {
         "title": "Ayrılma Noktaları",
-        "subtitle": "Öğrencilerin ilerlemeyi bıraktığı yerler — son tamamlanan etkinlik",
+        "subtitle": "Öğrencilerin ilerlemeyi bıraktığı yerler: son tamamlanan etkinlik",
         "total_dropoffs": "Toplam Ayrılma",
         "dropoff_points": "Ayrılma Noktaları"
       },
@@ -4727,7 +4727,7 @@
         "avg_between": "tamamlamalar arası ort. {{unit}}",
         "transitions_tracked": "izlenen geçişler",
         "raw_hours_avg": "ham saat ortalaması",
-        "description": "Öğrencilerin bir etkinlikten diğerine ne kadar hızlı ilerlediğini ölçer. Düşük daha iyidir — öğrencilerin içerikten daha hızlı geçtiği anlamına gelir."
+        "description": "Öğrencilerin bir etkinlikten diğerine ne kadar hızlı ilerlediğini ölçer. Düşük daha iyidir; öğrencilerin içerikten daha hızlı geçtiği anlamına gelir."
       },
       "time_to_completion": {
         "title": "Tamamlama Süresi",
@@ -4831,7 +4831,7 @@
       },
       "add_content": {
         "title": "Uğruna gelmeye değer bir ders",
-        "description": "Bir video, sayfa veya quiz ekleyin — öğrencilere kaydolmaları için gerçek bir neden verin.",
+        "description": "Bir video, sayfa veya quiz ekleyin; öğrencilere kaydolmaları için gerçek bir neden verin.",
         "action": "İçerik ekle"
       },
       "brand_school": {
@@ -4841,17 +4841,17 @@
       },
       "share_grow": {
         "title": "Okulunuzun ön kapısı",
-        "description": "Yayına geçin ve paylaşılabilir bağlantınızı alın — her öğrenciyi göndereceğiniz yer.",
+        "description": "Yayına geçin ve paylaşılabilir bağlantınızı alın: her öğrenciyi göndereceğiniz yer.",
         "action": "Okulumu aç"
       },
       "invite_learners": {
         "title": "İlk öğrencinizi karşılayın",
-        "description": "Katılım bağlantınızı paylaşın veya insanları davet edin — o ilk öğrenciyi kapıdan içeri alın.",
+        "description": "Katılım bağlantınızı paylaşın veya insanları davet edin; o ilk öğrenciyi kapıdan içeri alın.",
         "action": "Öğrenci davet et"
       },
       "build_community": {
         "title": "Öğrencileri geri getirmeye devam edin",
-        "description": "Bir topluluk alanı açın; böylece öğrencileriniz aktif kalsın — ve arkadaşlarını getirsin.",
+        "description": "Bir topluluk alanı açın; böylece öğrencileriniz aktif kalsın ve arkadaşlarını getirsin.",
         "action": "Topluluğu aç"
       }
     },
@@ -5205,7 +5205,7 @@
         "goal": "Kurslarınızdan gelir elde etmeye başlayın ve bir öğrenme topluluğu oluşturun.",
         "highlights": {
           "courses": "Sınırsız kurs",
-          "courses_desc": "İhtiyacınız kadar kurs oluşturun — müfredatınızda sınır yok.",
+          "courses_desc": "İhtiyacınız kadar kurs oluşturun; müfredatınızda sınır yok.",
           "members": "500 üyeye kadar",
           "members_desc": "Öğrenci tabanınızı büyütün ve tek bir yerden yönetin.",
           "payments": "Ödeme kabul edin",
@@ -5263,7 +5263,7 @@
       "trigger_authenticated_title": "Erişim: yalnızca giriş yapanlar",
       "trigger_restricted_title": "Erişim: belirli kullanıcı grupları",
       "usergroups_header": "Kullanıcı grupları",
-      "usergroups_none_assigned": "Atanmış grup yok — yalnızca yöneticiler açabilir.",
+      "usergroups_none_assigned": "Atanmış grup yok; yalnızca yöneticiler açabilir.",
       "usergroups_remove_title": "Kaldır",
       "usergroups_loading": "Gruplar yükleniyor…",
       "usergroups_none_in_org": "Bu kuruluşta henüz kullanıcı grubu yok.",
@@ -5534,7 +5534,7 @@
     "recurring_subscription": "yinelenen abonelik",
     "what_youre_getting": "Neler elde ediyorsunuz",
     "pack_immediate": "Ödemeden hemen sonra geçerli olur",
-    "pack_cancel_anytime": "İstediğiniz zaman iptal edin — faturalandırma döneminin sonuna kadar aktif kalır",
+    "pack_cancel_anytime": "İstediğiniz zaman iptal edin; faturalandırma döneminin sonuna kadar aktif kalır",
     "pack_credits_reset": "Krediler her faturalandırma döneminde sıfırlanır",
     "after_purchase": "Satın alma sonrası",
     "unlimited": "Sınırsız",
@@ -5584,9 +5584,9 @@
     "canceled_desc": "Aboneliğiniz mevcut faturalandırma döneminin sonunda iptal edilecek. O zamana kadar tam erişiminizi koruyacaksınız.",
     "back_to_plan_usage": "Plan ve Kullanım'a dön",
     "back_to_orgs": "Organizasyonlara dön",
-    "pack_purchased": "Ek satın alındı — sınırlarınız güncellendi.",
-    "checkout_success": "Abonelik güncellendi — yeni planınıza hoşgeldiniz!",
-    "checkout_cancelled": "Ödeme iptal edildi — hiçbir değişiklik yapılmadı.",
+    "pack_purchased": "Ek satın alındı; sınırlarınız güncellendi.",
+    "checkout_success": "Abonelik güncellendi; yeni planınıza hoşgeldiniz!",
+    "checkout_cancelled": "Ödeme iptal edildi; hiçbir değişiklik yapılmadı.",
     "load_failed": "Kuruluşlarınız yüklenemedi.",
     "no_permission": "Bu kuruluş için faturalandırmayı yönetme izniniz yok.",
     "no_permission_hint": "Yalnızca kuruluş yöneticisi planı görüntüleyebilir veya değiştirebilir.",
@@ -5700,7 +5700,7 @@
     "toast": {
       "creating": "Organizasyon oluşturuluyor…",
       "created": "Organizasyon oluşturuldu!",
-      "checkoutFailed": "Organizasyon oluşturuldu — Plan ve Kullanım'dan yükseltebilirsiniz.",
+      "checkoutFailed": "Organizasyon oluşturuldu; Plan ve Kullanım'dan yükseltebilirsiniz.",
       "failed": "Organizasyon oluşturulamadı"
     },
     "steps": {

@@ -72,7 +72,6 @@ async def _users_map(
     }
 
 
-
 # -------------------------------------------------------------------
 # Request / response models
 # -------------------------------------------------------------------
@@ -163,7 +162,7 @@ async def _execute_tinybird_query(
         logger.warning("Tinybird query '%s' failed: %s", query_name, str(exc)[:500])
         raise HTTPException(status_code=502, detail="Analytics query failed")
 
-    # Tinybird returns {"data": [...], "rows": N, "meta": [...]} — same shape as frontend expects.
+    # Tinybird returns {"data": [...], "rows": N, "meta": [...]}, the same shape the frontend expects.
     # Safety net: sanitize NaN/Inf values in the response
     rows = result.get("data", [])
     for row in rows:
@@ -209,7 +208,7 @@ async def _verify_org_admin(user_id: int, org_id: int, db_session: AsyncSession)
     organizations.action_update permission in the specific organization.
 
     Unlike the old 'org_x' check, this ensures admin status is scoped
-    to the actual organization being accessed — not any org the user belongs to.
+    to the actual organization being accessed, not any org the user belongs to.
     Superadmins bypass this check.
     """
     if await is_user_superadmin(user_id, db_session):
@@ -256,6 +255,8 @@ def _parse_safe_params(
         safe_days = int(days_param) if days_param else default_days
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Invalid parameter")
+    # Cap the window: an unbounded interval only costs query time.
+    safe_days = max(1, min(safe_days, 3650))
     return safe_org_id, safe_days
 
 
@@ -266,7 +267,7 @@ _enrich_with_metadata = enrich_with_metadata
 
 
 # -------------------------------------------------------------------
-# GET /status — Whether analytics (Tinybird) is configured
+# GET /status: whether analytics (Tinybird) is configured
 # -------------------------------------------------------------------
 @router.get(
     "/status",
@@ -288,7 +289,7 @@ async def analytics_status(
 
 
 # -------------------------------------------------------------------
-# POST /events — Frontend event proxy
+# POST /events: frontend event proxy
 # -------------------------------------------------------------------
 @router.post(
     "/events",
@@ -317,7 +318,7 @@ async def ingest_frontend_event(
 
     ip = request.client.host if request.client else ""
 
-    # Sanitize seconds_spent — cap at 4 hours, reject negatives
+    # Sanitize seconds_spent: cap at 4 hours, reject negatives
     properties = dict(body.properties)
     if "seconds_spent" in properties:
         try:
@@ -351,7 +352,7 @@ async def ingest_frontend_event(
 
 
 # -------------------------------------------------------------------
-# GET /dashboard/detail/{query_name} — Tinybird + PostgreSQL enrichment
+# GET /dashboard/detail/{query_name}: Tinybird + PostgreSQL enrichment
 # -------------------------------------------------------------------
 @router.get(
     "/dashboard/detail/{query_name}",
@@ -411,7 +412,7 @@ async def query_dashboard_detail(
 
 
 # -------------------------------------------------------------------
-# GET /dashboard/{query_name} — Run analytics query via Tinybird
+# GET /dashboard/{query_name}: run analytics query via Tinybird
 # -------------------------------------------------------------------
 @router.get(
     "/dashboard/{query_name}",
@@ -449,7 +450,7 @@ async def query_dashboard(
     if query_name in ADVANCED_QUERIES:
         from src.security.features_utils.plan_check import _check_mode_bypass
         bypass = _check_mode_bypass("analytics_advanced")
-        if bypass is None:  # SaaS mode — check plan
+        if bypass is None:  # SaaS mode: check plan
             current_plan = await get_org_plan(org_id, db_session)
             if not plan_meets_requirement(current_plan, "enterprise"):
                 raise HTTPException(
@@ -468,7 +469,7 @@ async def query_dashboard(
 
 
 # -------------------------------------------------------------------
-# GET /dashboard/db/{query_name} — PostgreSQL-based queries
+# GET /dashboard/db/{query_name}: PostgreSQL-based queries
 # -------------------------------------------------------------------
 @router.get(
     "/dashboard/db/{query_name}",
@@ -573,7 +574,7 @@ def _build_sql(
     params: dict = {"org_id": org_id, "days": days}
 
     if course_uuid is not None:
-        # Re-validate even if caller already did — defense in depth
+        # Re-validate even if caller already did (defense in depth)
         if not _SAFE_COURSE_UUID.match(course_uuid) or len(course_uuid) > 100:
             raise HTTPException(status_code=400, detail="Invalid course_uuid")
         params["course_uuid"] = course_uuid
@@ -582,7 +583,7 @@ def _build_sql(
 
 
 # -------------------------------------------------------------------
-# GET /dashboard/course/detail/{query_name} — Course-level detail with enrichment
+# GET /dashboard/course/detail/{query_name}: course-level detail with enrichment
 # -------------------------------------------------------------------
 @router.get(
     "/dashboard/course/detail/{query_name}",
@@ -677,7 +678,7 @@ async def query_course_dashboard_detail(
 
 
 # -------------------------------------------------------------------
-# GET /dashboard/course/{query_name} — Course-level analytics (Pro only)
+# GET /dashboard/course/{query_name}: course-level analytics (Pro only)
 # -------------------------------------------------------------------
 @router.get(
     "/dashboard/course/{query_name}",
@@ -735,7 +736,7 @@ async def query_course_dashboard(
 
 
 # -------------------------------------------------------------------
-# GET /export — Export analytics data as JSON or CSV
+# GET /export: export analytics data as JSON or CSV
 # -------------------------------------------------------------------
 @router.get(
     "/export",
@@ -778,7 +779,7 @@ async def export_analytics(
 
     # Only treat ``days`` as an explicit override when the caller actually
     # passed it. Otherwise each query must fall back to its own default
-    # window (e.g. advanced queries default to 90/180 days) — hard-coding a
+    # window (e.g. advanced queries default to 90/180 days); hard-coding a
     # 30-day default here silently truncated long-window exports.
     days_param = request.query_params.get("days")
     try:
@@ -793,7 +794,7 @@ async def export_analytics(
     else:
         allowed = {**ALL_QUERIES}
 
-    # Plan gating — /export must enforce the same plan limits as the
+    # Plan gating: /export must enforce the same plan limits as the
     # individual dashboard endpoints, otherwise an admin on a free/lower
     # plan could exfiltrate course-level (Pro) and advanced (Enterprise)
     # analytics simply by exporting them.
@@ -868,7 +869,7 @@ async def export_analytics(
 
 
 # -------------------------------------------------------------------
-# GET /plan-info — Returns analytics tier for the org
+# GET /plan-info: returns analytics tier for the org
 # -------------------------------------------------------------------
 @router.get(
     "/plan-info",

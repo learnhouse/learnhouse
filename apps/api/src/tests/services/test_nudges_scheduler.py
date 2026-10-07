@@ -46,7 +46,7 @@ class TestDayLock:
 
     async def test_absent_redis_still_runs(self, monkeypatch):
         """The ledger already guarantees a nudge is sent once, so running
-        without the lock is wasteful rather than wrong — and silently doing
+        without the lock is wasteful rather than wrong, and silently doing
         nothing would be worse."""
         monkeypatch.setattr("src.core.redis.get_redis_client", lambda: None)
 
@@ -329,7 +329,7 @@ class TestLoop:
         assert "sent=3" in caplog.text
 
     async def test_cancelling_mid_run_stops_the_loop(self, monkeypatch):
-        """Shutdown must actually stop it — the cancellation has to propagate
+        """Shutdown must actually stop it: the cancellation has to propagate
         rather than be swallowed by the retry handler."""
         import asyncio
 

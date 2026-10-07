@@ -275,7 +275,7 @@ class TestExportCoursesBatchValidation:
             db,
             admin_user,
             course.course_uuid,
-            AccessAction.READ,
+            AccessAction.UPDATE,
         )
         mock_loader.assert_called_once_with(course, db)
         mock_to_thread.assert_awaited_once()

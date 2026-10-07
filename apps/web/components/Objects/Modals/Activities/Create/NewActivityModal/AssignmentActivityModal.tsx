@@ -81,7 +81,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
         grading_type: gradingType,
         ungraded: ungraded,
         // An ungraded assignment never auto-grades and has no answer key to
-        // reveal — send the consistent state instead of dead flags.
+        // reveal, so send the consistent state instead of dead flags.
         auto_grading: ungraded ? false : autoGrading,
         anti_copy_paste: antiCopyPaste,
         show_correct_answers: ungraded ? false : showCorrectAnswers,
@@ -218,7 +218,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
         </Form.Field>
       </div>
 
-      {/* Grading type — irrelevant on a formative assignment, which never
+      {/* Grading type: irrelevant on a formative assignment, which never
           produces a grade to display in any scale. */}
       {!ungraded && (
       <div className="rounded-xl nice-shadow p-4 space-y-3">
@@ -251,7 +251,7 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
         <div className="space-y-2">
           <SmallToggleRow
             icon={<ClipboardCheck size={16} className="text-teal-500" />}
-            label={t('dashboard.assignments.modals.edit.form.ungraded_label', { defaultValue: 'Formative — no grading' })}
+            label={t('dashboard.assignments.modals.edit.form.ungraded_label', { defaultValue: 'Formative (no grading)' })}
             description={t('dashboard.assignments.modals.create.form.ungraded_description', { defaultValue: 'Learners hand their work in and it is never marked. Add a model answer in the assignment editor to unlock on hand-in.' })}
             checked={ungraded}
             onChange={setUngraded}
@@ -404,10 +404,10 @@ const GRADING_TYPE_OPTIONS: {
   illustration: string
 }[] = [
   { value: 'ALPHABET', labelKey: 'grading_types.alphabet', descriptionKey: 'grading_type_descriptions.alphabet', icon: <ALargeSmall size={18} />, color: 'text-violet-600', selectedBorder: 'border-violet-400', selectedBg: 'bg-violet-50', illustration: 'A  B  C' },
-  { value: 'NUMERIC', labelKey: 'grading_types.numeric', descriptionKey: 'grading_type_descriptions.numeric', icon: <Hash size={18} />, color: 'text-blue-600', selectedBorder: 'border-blue-400', selectedBg: 'bg-blue-50', illustration: '0 — 100' },
+  { value: 'NUMERIC', labelKey: 'grading_types.numeric', descriptionKey: 'grading_type_descriptions.numeric', icon: <Hash size={18} />, color: 'text-blue-600', selectedBorder: 'border-blue-400', selectedBg: 'bg-blue-50', illustration: '0 to 100' },
   { value: 'PERCENTAGE', labelKey: 'grading_types.percentage', descriptionKey: 'grading_type_descriptions.percentage', icon: <Percent size={18} />, color: 'text-emerald-600', selectedBorder: 'border-emerald-400', selectedBg: 'bg-emerald-50', illustration: '85%' },
   { value: 'PASS_FAIL', labelKey: 'grading_types.pass_fail', descriptionKey: 'grading_type_descriptions.pass_fail', icon: <ThumbsUp size={18} />, color: 'text-amber-600', selectedBorder: 'border-amber-400', selectedBg: 'bg-amber-50', illustration: 'P / F' },
-  { value: 'GPA_SCALE', labelKey: 'grading_types.gpa_scale', descriptionKey: 'grading_type_descriptions.gpa_scale', icon: <GraduationCap size={18} />, color: 'text-rose-600', selectedBorder: 'border-rose-400', selectedBg: 'bg-rose-50', illustration: '0.0 — 4.0' },
+  { value: 'GPA_SCALE', labelKey: 'grading_types.gpa_scale', descriptionKey: 'grading_type_descriptions.gpa_scale', icon: <GraduationCap size={18} />, color: 'text-rose-600', selectedBorder: 'border-rose-400', selectedBg: 'bg-rose-50', illustration: '0.0 to 4.0' },
 ]
 
 function GradingTypeSelector({ value, onChange, translationPrefix }: { value: string; onChange: (_v: string) => void; translationPrefix: string }) {

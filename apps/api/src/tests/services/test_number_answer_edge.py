@@ -1,5 +1,5 @@
 """
-Exhaustive EDGE-CASE tests for ``_check_number_answer`` — the server-side
+Exhaustive EDGE-CASE tests for ``_check_number_answer``, the server-side
 numeric-answer grader in
 ``src.services.courses.activities.assignments``.
 
@@ -113,7 +113,7 @@ class TestCommaAndSeparators:
 
         The parser recognizes the ``\\d{1,3}(,\\d{3})+`` thousands-separator
         shape and strips the commas, so a student meaning one thousand is
-        graded as 1000 — not misread as 1.0 by a naive ``replace(',', '.')``.
+        graded as 1000, not misread as 1.0 by a naive ``replace(',', '.')``.
         """
         assert _check_number_answer("1,000", 1000, 0) is True
         assert _check_number_answer("1,000", 1, 0) is False

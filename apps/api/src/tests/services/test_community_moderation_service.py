@@ -164,7 +164,7 @@ class TestParseIsoDatetime:
         assert result.tzinfo == timezone.utc
 
     def test_naive_datetime_gets_utc_attached(self):
-        # No timezone info — should be assigned UTC
+        # No timezone info, so UTC should be assigned
         result = _parse_iso_datetime("2024-03-20T12:00:00")
         assert result is not None
         assert result.tzinfo is not None
@@ -244,7 +244,7 @@ class TestEnforcePostingLimits:
 
     @pytest.mark.asyncio
     async def test_no_community_returns_early(self, db):
-        # Should not raise — community=None is a no-op
+        # Should not raise: community=None is a no-op
         await enforce_posting_limits(user_id=1, community=None, db_session=db)
 
     @pytest.mark.asyncio
@@ -271,7 +271,7 @@ class TestEnforcePostingLimits:
             settings={"min_account_age_days": 30},
             uuid_suffix="acct_age",
         )
-        # Account created 1 day ago — younger than 30-day requirement
+        # Account created 1 day ago, younger than the 30-day requirement
         recent_creation = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
         user = self._make_user(db, user_id=11, email_verified=True, creation_date=recent_creation)
 
@@ -392,7 +392,7 @@ class TestEnforceAutoLock:
         db.add(author)
         db.commit()
 
-        # Discussion last updated 10 days ago — older than the 7-day threshold
+        # Discussion last updated 10 days ago, older than the 7-day threshold
         old_date = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
         discussion = Discussion(
             id=300,
@@ -462,11 +462,11 @@ class TestEnforceAutoLock:
 
 class TestExtractTextEdgeCases:
     def test_non_dict_non_str_node_returns_empty(self):
-        # An integer node is not a dict and not a str — hits `return ""`
+        # An integer node is not a dict and not a str, so it hits `return ""`
         assert extract_text_from_tiptap(123) == ""
 
     def test_list_node_returns_empty(self):
-        # A plain list is not a dict and not a str — hits `return ""`
+        # A plain list is not a dict and not a str, so it hits `return ""`
         assert extract_text_from_tiptap([1, 2, 3]) == ""
 
 

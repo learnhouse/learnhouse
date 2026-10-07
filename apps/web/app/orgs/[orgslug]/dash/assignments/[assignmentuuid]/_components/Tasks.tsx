@@ -159,7 +159,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
                                 <div className='mt-2.5 pt-2 border-t border-gray-50 flex items-center justify-between text-[11px] text-gray-400'>
                                     <div className='flex items-center gap-1'>
                                         <Clock size={10} />
-                                        <span>{createdLabel ?? '—'}</span>
+                                        <span>{createdLabel ?? 'n/a'}</span>
                                     </div>
                                     {typeof task.max_grade_value === 'number' && task.max_grade_value !== 100 && (
                                         <span className='font-medium text-gray-500'>out of {task.max_grade_value}</span>
@@ -172,7 +172,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
 
                 {tasks.length === 0 && assignments && (
                     <div className='rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-8 text-center'>
-                        <div className='text-xs text-gray-400'>No tasks yet — add one to get started.</div>
+                        <div className='text-xs text-gray-400'>No tasks yet. Add one to get started.</div>
                     </div>
                 )}
             </div>

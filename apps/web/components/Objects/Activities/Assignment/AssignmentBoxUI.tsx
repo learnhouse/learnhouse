@@ -51,8 +51,8 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
     const assignmentCtx = useAssignments() as any
     const session = useLHSession() as any
 
-    // A formative assignment carries no grade at all — the API refuses to grade
-    // it — so every scoring affordance in this box is hidden rather than left
+    // A formative assignment carries no grade at all (the API refuses to grade
+    // it), so every scoring affordance in this box is hidden rather than left
     // wired to an endpoint that 400s. One check here covers the learner view,
     // the teacher view and both grading views for all six task types.
     const isUngraded = !!assignmentCtx?.assignment_object?.ungraded
@@ -68,7 +68,7 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
 
     // Value-driven auto-save. "Dirty" is a pure content predicate
     // (dirtyValue !== savedValue) so it is immune to query refetches, window
-    // focus, submission-status churn, and unrelated re-renders — the failure
+    // focus, submission-status churn, and unrelated re-renders: the failure
     // modes of the previous flag+poller design.
     const autoSaveEnabled = view === 'student' && !!taskUUID && !!submitFC && canStudentSave
     const auto = useAutoSave({
@@ -166,11 +166,11 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
 
                 {/* Right side with buttons and actions */}
                 <div className='flex flex-wrap gap-2 items-center'>
-                    {/* Auto-save status — answers persist automatically. */}
+                    {/* Auto-save status: answers persist automatically. */}
                     {autoSaveEnabled && (auto.isDirty || auto.status !== 'idle') && (
                         <div className='flex space-x-1.5 items-center font-medium px-2 py-1 text-xs text-slate-400 sm:me-2'>
                             {auto.isBlocked ? (
-                                // Refused by policy, not a transient failure — no retry
+                                // Refused by policy, not a transient failure. No retry
                                 // is coming, so promising one would be a lie. The task
                                 // itself explains what needs to change (e.g. tests must
                                 // pass before the answer can be saved).
@@ -183,7 +183,7 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                                 // is already scheduled) instead of a stuck spinner.
                                 <>
                                     <TriangleAlert size={13} className='text-amber-500' />
-                                    <p className='text-amber-600'>{t('activities.autosave_retry', { defaultValue: "Couldn't save — retrying…" })}</p>
+                                    <p className='text-amber-600'>{t('activities.autosave_retry', { defaultValue: "Couldn't save, retrying…" })}</p>
                                 </>
                             ) : auto.isSaving ? (
                                 <>
@@ -229,7 +229,7 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                         </div>
                     }
 
-                    {/* Grading controls — shared between 'grading' and 'custom-grading' views */}
+                    {/* Grading controls, shared between 'grading' and 'custom-grading' views */}
                     {isGradingMode && maxPoints !== undefined && gradeCustomFC && (
                         <div className='flex flex-wrap sm:flex-nowrap w-full sm:w-auto px-0.5 py-0.5 rounded-md gap-2 sm:space-x-2 items-center'>
                             {currentPoints !== undefined && currentPoints > 0 && (
@@ -288,7 +288,7 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                 </div>
             </div>
 
-            {/* Per-task feedback — saved together with the manual grade. */}
+            {/* Per-task feedback, saved together with the manual grade. */}
             {isGradingMode && gradeCustomFC && (
                 <div className='flex items-start gap-2 mb-3 px-1'>
                     <MessageSquare size={14} className='text-gray-400 mt-2 flex-none' />

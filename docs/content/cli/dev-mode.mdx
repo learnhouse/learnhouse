@@ -27,12 +27,12 @@ The command splits infrastructure and application services:
 
 ## Startup Flow
 
-1. **Detect project root** — Looks for the monorepo structure (`apps/api`, `apps/web`, `apps/collab`)
-2. **Start infrastructure** — Launches PostgreSQL and Redis containers (reuses existing ones if running)
-3. **Health checks** — Waits for database and Redis to be ready
-4. **Admin setup** — When the database and Redis containers are created for the first time, prompts for an admin email and password. On subsequent runs with existing containers, the prompt is skipped and the existing credentials remain valid. You can also pass `--admin-email` and `--admin-password` to skip the prompt.
-5. **Install dependencies** — Runs `bun install` and `uv sync` if needed
-6. **Start services** — Launches API, Web, and Collab with color-coded output
+1. **Detect project root**: Looks for the monorepo structure (`apps/api`, `apps/web`, `apps/collab`)
+2. **Start infrastructure**: Launches PostgreSQL and Redis containers (reuses existing ones if running)
+3. **Health checks**: Waits for database and Redis to be ready
+4. **Admin setup**: When the database and Redis containers are created for the first time, prompts for an admin email and password. On subsequent runs with existing containers, the prompt is skipped and the existing credentials remain valid. You can also pass `--admin-email` and `--admin-password` to skip the prompt.
+5. **Install dependencies**: Runs `bun install` and `uv sync` if needed
+6. **Start services**: Launches API, Web, and Collab with color-coded output
 
 ## Services
 

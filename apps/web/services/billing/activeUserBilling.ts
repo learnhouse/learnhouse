@@ -5,7 +5,7 @@ import "server-only";
  * The backend (apps/api) computes the number of active users (members seen on
  * >=2 distinct UTC days in a month) and the billable overage beyond the plan's
  * included member limit. This module pulls that number and adds it as a single
- * line on the org's existing subscription invoice — no separate charge.
+ * line on the org's existing subscription invoice, with no separate charge.
  *
  * The `invoice.created` webhook (billOverageForInvoice) adds the line to that
  * specific draft invoice before Stripe finalizes it. Each renewal invoice
@@ -85,7 +85,7 @@ export async function fetchActiveUserOverage(
 /** True if this org/period was already billed, so webhook retries and the
  *  lookback overlap between consecutive invoices never double-charge.
  *  A period's item can only be created after that month ends, so scanning from
- *  the start of the month is complete — and keeps the page count small. */
+ *  the start of the month is complete, and keeps the page count small. */
 async function alreadyBilled(
   customerId: string,
   year: number,
@@ -141,7 +141,7 @@ async function billOverage(params: {
       currency,
       unit_amount: OVERAGE_UNIT_AMOUNT,
       quantity: summary.overage_units,
-      description: `Active members beyond plan — ${monthName} ${year} (${summary.members_beyond_included} beyond the ${summary.plan_limit} included, ${summary.overage_units} active)`,
+      description: `Active members beyond plan, ${monthName} ${year} (${summary.members_beyond_included} beyond the ${summary.plan_limit} included, ${summary.overage_units} active)`,
       metadata: {
         org_id: orgId,
         type: "au_overage",
@@ -164,7 +164,7 @@ async function billOverage(params: {
  * active-user overage and isn't billed yet, on the draft invoice before it
  * finalizes. Monthly subscriptions bill last month (plus a buffer); annual ones
  * reconcile the whole year. A missed invoice.created webhook is caught up
- * automatically on the next renewal invoice — no cron needed. Only acts on
+ * automatically on the next renewal invoice, so no cron is needed. Only acts on
  * subscription-cycle (renewal) invoices.
  */
 export async function billOverageForInvoice(invoice: any): Promise<void> {

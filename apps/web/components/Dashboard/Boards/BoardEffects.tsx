@@ -80,13 +80,13 @@ function spawnInferno() {
     'inferno-pulse 0.4s ease-in-out infinite alternate'
   )
 
-  // Second layer — flickering orange glow
+  // Second layer: flickering orange glow
   addTint(container,
     'radial-gradient(ellipse 120% 60% at 50% 100%, rgba(255,100,0,0.3) 0%, transparent 70%)',
     'inferno-flicker 0.2s ease-in-out infinite alternate'
   )
 
-  // Fire wall — dense particles from bottom
+  // Fire wall: dense particles from bottom
   for (let i = 0; i < 120; i++) {
     const el = document.createElement('div')
     const x = Math.random() * 100
@@ -138,7 +138,7 @@ function spawnInferno() {
 }
 
 // ─── BLIZZARD ────────────────────────────────────────────────────────────────
-// Whiteout conditions — heavy snow, wind, frost overlay, visibility drop
+// Whiteout conditions: heavy snow, wind, frost overlay, visibility drop
 
 function spawnBlizzard() {
   const container = createOverlay()
@@ -149,12 +149,12 @@ function spawnBlizzard() {
     'blizzard-whiteout 1s ease-in-out infinite alternate'
   )
 
-  // Frost edges — vignette
+  // Frost edges: vignette
   addTint(container,
     'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, rgba(180,210,255,0.3) 100%)',
   )
 
-  // Dense snow — 150 particles with strong wind
+  // Dense snow: 150 particles with strong wind
   for (let i = 0; i < 150; i++) {
     const el = document.createElement('div')
     const x = -10 + Math.random() * 120
@@ -199,12 +199,12 @@ function spawnBlizzard() {
 }
 
 // ─── MATRIX ──────────────────────────────────────────────────────────────────
-// Full digital rain — screen goes dark, green characters stream, glitch flashes
+// Full digital rain: screen goes dark, green characters stream, glitch flashes
 
 function spawnMatrix() {
   const container = createOverlay()
 
-  // Dark overlay — screen dims dramatically
+  // Dark overlay: screen dims dramatically
   addTint(container, 'rgba(0,0,0,0.75)', 'matrix-darken 0.6s ease-out forwards')
 
   // Scanlines
@@ -285,7 +285,7 @@ function spawnFireworks() {
     } as any)
     container.appendChild(trail)
 
-    // Core flash — big dramatic glow
+    // Core flash: big dramatic glow
     const flash = document.createElement('div')
     Object.assign(flash.style, {
       position: 'absolute',
@@ -300,7 +300,7 @@ function spawnFireworks() {
     })
     container.appendChild(flash)
 
-    // Particles — explode outward
+    // Particles: explode outward
     for (let i = 0; i < particleCount; i++) {
       const angle = (i / particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4
       const dist = 100 + Math.random() * 220
@@ -325,7 +325,7 @@ function spawnFireworks() {
       container.appendChild(p)
     }
 
-    // Sparkle trails — smaller secondary particles
+    // Sparkle trails: smaller secondary particles
     for (let i = 0; i < 20; i++) {
       const angle = Math.random() * Math.PI * 2
       const dist = 40 + Math.random() * 100
@@ -442,7 +442,7 @@ function spawnBlackhole() {
   })
   container.appendChild(core)
 
-  // Accretion disk — ring of light
+  // Accretion disk: ring of light
   const disk = document.createElement('div')
   Object.assign(disk.style, {
     position: 'absolute',
@@ -488,7 +488,7 @@ function spawnBlackhole() {
 }
 
 // ─── AURORA ──────────────────────────────────────────────────────────────────
-// Dramatic northern lights filling the sky — ribbons of color sweeping across
+// Dramatic northern lights filling the sky, ribbons of color sweeping across
 
 function spawnAurora() {
   const container = createOverlay()
@@ -559,7 +559,7 @@ function spawnLightning() {
     const delay = s * 600 + Math.random() * 500
     const x = 15 + Math.random() * 70
 
-    // White flash — entire screen
+    // White flash: entire screen
     const flash = document.createElement('div')
     Object.assign(flash.style, {
       position: 'absolute', inset: '0',
@@ -569,7 +569,7 @@ function spawnLightning() {
     })
     container.appendChild(flash)
 
-    // Lightning bolt — jagged SVG path
+    // Lightning bolt: jagged SVG path
     const bolt = document.createElement('div')
     const boltPath = generateLightningPath(x)
     bolt.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0">
@@ -586,7 +586,7 @@ function spawnLightning() {
     }
   }
 
-  // Rumble — low intensity sustained shake
+  // Rumble: low intensity sustained shake
   setTimeout(() => shakeBoard(1500, 2), 800)
 
   // Afterglow ambient
@@ -775,7 +775,7 @@ function spawnNuke() {
     container.appendChild(el)
   }
 
-  // Mushroom stem — vertical column of fire
+  // Mushroom stem: vertical column of fire
   const stem = document.createElement('div')
   Object.assign(stem.style, {
     position: 'absolute',

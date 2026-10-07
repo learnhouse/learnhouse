@@ -75,8 +75,7 @@ async def create_media(
         "action_create",
     )
     await check_resource_access(
-        request, db_session, current_user, "media_x", AccessAction.CREATE,
-        org_id=media_object.org_id,
+        request, db_session, current_user, "media_x", AccessAction.CREATE
     )
 
     media = Media(
@@ -252,7 +251,7 @@ async def get_media_list(
 ) -> List[MediaRead]:
     org_id_int = int(org_id)
     user_id = resolve_acting_user_id(current_user)
-    # Membership in the requested org — not merely being signed in — is what
+    # Membership in the requested org, not merely being signed in, is what
     # opens up the private library. A logged-in non-member sees exactly what an
     # anonymous visitor sees, so `org_id` in the URL is not a way in.
     restricted = not user_id or not await is_org_member(user_id, org_id_int, db_session)

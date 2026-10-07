@@ -89,7 +89,7 @@ function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
             defaultValue: "We'll help you get back into your account in no time.",
           })}
         >
-                {/* Notification — soft, rounded, inset to match the auth page style */}
+                {/* Notification: soft, rounded, inset to match the auth page style */}
                 {showMessage && (error || message) && (
                     <div className={`
                         mx-6 md:mx-12 lg:mx-20 mt-6 rounded-xl border px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200

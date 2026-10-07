@@ -1,7 +1,7 @@
 /**
  * Recorded walkthrough of the formative-assignment flow.
  *
- * This is a *demo*, not a test — `playwright.config.ts` only collects specs
+ * This is a *demo*, not a test. `playwright.config.ts` only collects specs
  * under `features/`, so nothing here runs in CI. It drives the same UI the
  * `24-formative` spec asserts on, but slowly and with an on-screen caption for
  * each step, and writes a video you can watch end to end.
@@ -32,7 +32,7 @@ const OUT_DIR = join(HERE, 'output')
 const FIXTURE = join(HERE, '..', 'features', 'assignments', 'fixtures', 'submission.png')
 
 const SOLUTION =
-  "Corrigé — Étape 1 : reformuler la consigne. Étape 2 : citer deux sources par argument. " +
+  "Corrigé. Étape 1 : reformuler la consigne. Étape 2 : citer deux sources par argument. " +
   'Étape 3 : conclure en trois phrases.'
 
 const VIEWPORT = { width: 1280, height: 720 }
@@ -66,7 +66,7 @@ async function caption(page: Page, step: string, text: string, holdMs = 2600): P
  *
  * `scrollIntoViewIfNeeded` was not enough here: the panel lands above the fold
  * inside an inner scroll container, and the refetch that follows a hand-in
- * re-renders it, so the scroll has to happen after that settles — hence the
+ * re-renders it, so the scroll has to happen after that settles, hence the
  * second pass.
  */
 async function scrollTo(page: Page, text: string): Promise<void> {
@@ -163,15 +163,15 @@ async function main(): Promise<void> {
     const activity = new AssignmentPage(learner)
     await activity.open(bareCourse, bareActivity)
     await scrollTo(learner, 'Model answer locked')
-    await caption(learner, 'Learner', 'The corrigé exists — but it is locked, and the server withholds it.')
+    await caption(learner, 'Learner', 'The corrigé exists, but it is locked, and the server withholds it.')
     await activity.uploadFile(FIXTURE)
     await caption(learner, 'Learner', 'The document is deposited.', 1800)
     await activity.saveProgress()
     await activity.handIn()
-    // The corrigé panel sits above the tasks, so bring it into frame — it is
+    // The corrigé panel sits above the tasks, so bring it into frame; it is
     // the whole point of the flow.
     await scrollTo(learner, 'Model answer')
-    await caption(learner, 'Learner', 'Handed in — and the corrigé unlocks immediately.', 4200)
+    await caption(learner, 'Learner', 'Handed in, and the corrigé unlocks immediately.', 4200)
     await caption(learner, 'Learner', 'No score, no pass/fail, no "grading in progress". Nothing is marked.', 3600)
     videos.push(await finishRecording(learner, '2-learner-handin'))
 
@@ -184,7 +184,7 @@ async function main(): Promise<void> {
     await caption(
       reviewer,
       'Teacher',
-      'Review only: "Formative — not graded", and no grading actions to click.',
+      'Review only: "Formative (not graded)", and no grading actions to click.',
       3600,
     )
     videos.push(await finishRecording(reviewer, '3-teacher-review'))

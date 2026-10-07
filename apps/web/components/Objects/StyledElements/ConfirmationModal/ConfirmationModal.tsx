@@ -24,7 +24,7 @@ const ConfirmationModal = (params: ModalParams) => {
     ? 'text-white bg-red-500 hover:bg-red-600'
     : 'text-white bg-blue-500 hover:bg-blue-600'
 
-  // Confirmed actions can be slow — submitting an assignment saves every
+  // Confirmed actions can be slow: submitting an assignment saves every
   // pending answer and then grades it server-side. The modal used to close the
   // instant you clicked, leaving the user staring at an unchanged page with no
   // sign anything was happening, free to click through and fire it again. So
@@ -32,7 +32,7 @@ const ConfirmationModal = (params: ModalParams) => {
   // twice, and the modal stays up until it finishes. `await` on a non-promise
   // is a no-op, so callers that pass a synchronous function behave as before.
   //
-  // The modal always closes once the action settles, success or failure — many
+  // The modal always closes once the action settles, success or failure. Many
   // confirm handlers report their own errors with a toast and never throw, and
   // the few that let a network error propagate previously still closed the
   // modal. Keeping it open on an unexpected throw would strand those on a modal

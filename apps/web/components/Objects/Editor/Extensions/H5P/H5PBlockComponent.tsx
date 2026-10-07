@@ -37,7 +37,7 @@ const ERROR_KEYS: Record<H5PUrlErrorReason, string> = {
 // How far one arrow-key press moves the resize handle.
 const KEYBOARD_RESIZE_STEP = 20
 // A pointer that never really moved was a click, not a drag. Committing one
-// would flip the block to a custom size — and reload the frame — because the
+// would flip the block to a custom size (and reload the frame) because the
 // author brushed the handle.
 const DRAG_THRESHOLD = 3
 
@@ -89,7 +89,7 @@ function H5PBlockComponent(props: any) {
   })
 
   // The ratio modes size the frame from the block's own width, so the block
-  // has to know it — and has to notice when it changes, which happens without
+  // has to know it, and has to notice when it changes, which happens without
   // a re-render (window resize, sidebar opening, the editor going full width).
   const [containerWidth, setContainerWidth] = useState(0)
   useLayoutEffect(() => {
@@ -111,8 +111,8 @@ function H5PBlockComponent(props: any) {
 
   // The height is reported by the embedded content, not chosen by the author,
   // so it must never become an undo step: otherwise Ctrl+Z answers a resize
-  // instead of the author's last edit, and the frame — which follows the
-  // attribute — immediately writes the old height back, wiping the redo
+  // instead of the author's last edit, and the frame (which follows the
+  // attribute) immediately writes the old height back, wiping the redo
   // branch. Write it straight into the document with history switched off.
   const persistHeight = useCallback((next: number) => {
     const editor = editorRef.current
@@ -152,7 +152,7 @@ function H5PBlockComponent(props: any) {
   // A manually sized block stays out of the handshake on purpose. Answering it
   // is what makes the content hand its scrolling over to us, and content that
   // has done that inside a frame it did not choose the height of is simply
-  // clipped — which is the problem manual sizing exists to solve.
+  // clipped, which is the problem manual sizing exists to solve.
   useEffect(() => {
     if (!h5pUrl || !isAuto) return
 
@@ -173,7 +173,7 @@ function H5PBlockComponent(props: any) {
           if (message.clientHeight > 0) {
             const shrunk = clampHeight(message.clientHeight)
             // The content re-measures the moment it receives our reply, so the
-            // frame has to be that height *now* — a React state update is not
+            // frame has to be that height *now*; a React state update is not
             // guaranteed to have committed by then. Write the style directly
             // and let state catch up for the next render.
             frame.style.height = `${shrunk}px`
@@ -281,7 +281,7 @@ function H5PBlockComponent(props: any) {
     setDragHeight(null)
   }, [])
 
-  // The handle is a real control, so it answers the arrow keys too — dragging
+  // The handle is a real control, so it answers the arrow keys too; dragging
   // is not available to anyone working without a pointer.
   const handleResizeKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -294,8 +294,8 @@ function H5PBlockComponent(props: any) {
       if (!step) return
       event.preventDefault()
       const next = clampHeight(displayHeight + step)
-      // Already against MIN_HEIGHT or MAX_HEIGHT: don't spend an undo step —
-      // or a frame reload, if the block is still on auto — on nothing.
+      // Already against MIN_HEIGHT or MAX_HEIGHT: don't spend an undo step,
+      // or a frame reload if the block is still on auto, on nothing.
       if (next === displayHeight) return
       commitHeight('custom', next)
     },
@@ -350,7 +350,7 @@ function H5PBlockComponent(props: any) {
   const frame = (
     <iframe
       // Whether we take part in the handshake is decided when the content
-      // loads, so switching between auto and a manual size has to reload it —
+      // loads, so switching between auto and a manual size has to reload it;
       // content that already handed its scrolling over never takes it back.
       key={isAuto ? 'h5p-auto' : 'h5p-manual'}
       ref={iframeRef}
@@ -362,7 +362,7 @@ function H5PBlockComponent(props: any) {
       /*
         H5P needs allow-same-origin: its own JavaScript reads resources from
         its own origin. That means the frame is isolated from US, not from
-        itself — it keeps its own cookies and storage. Which is exactly why
+        itself; it keeps its own cookies and storage. Which is exactly why
         this block only ever points at an author-supplied URL on someone
         else's host and carries no LearnHouse credentials of any kind.
       */
@@ -463,7 +463,7 @@ function H5PBlockComponent(props: any) {
                 aria-orientation="horizontal"
                 aria-label={t('editor.blocks.h5p_block.resize_handle')}
                 // A focusable separator is a splitter widget, and its value
-                // defaults to a 0-100 range — a bare pixel height would be
+                // defaults to a 0-100 range, so a bare pixel height would be
                 // announced as a percentage of nothing.
                 aria-valuenow={displayHeight}
                 aria-valuemin={MIN_HEIGHT}

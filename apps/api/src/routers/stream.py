@@ -25,6 +25,7 @@ from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
 from src.security.rbac.resource_access import ResourceAccessChecker, AccessAction, AccessContext
+from src.services.courses.activities.access import verify_activity_reader_access
 from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
     generate_presigned_get_url,
@@ -47,7 +48,7 @@ CONTENT_DIR = "content"
 
 # HLS MIME types (not covered by the generic media maps). Includes the
 # hover-preview sprite (.jpg, served like a segment) and the AES-128 key (.key,
-# served ONLY server-side after RBAC — never presigned/redirected).
+# served ONLY server-side after RBAC, never presigned/redirected).
 _HLS_MIME = {
     ".m3u8": "application/vnd.apple.mpegurl",
     ".ts": "video/mp2t",
@@ -73,9 +74,10 @@ def _safe_hls_relpath(hls_path: str) -> str | None:
         return None
     return "/".join(parts)
 
+
 # The 302 to the presigned URL is cacheable for a bounded window. This is
 # critical for smooth playback: without it (no-store) the browser re-resolves
-# the redirect — re-running RBAC + presign (~0.3–1.3s) — on every seek and
+# the redirect, re-running RBAC + presign (~0.3–1.3s), on every seek and
 # reconnect, starving the buffer and causing periodic stalls. Caching lets the
 # browser resolve once and reuse the same R2 URL for all Range requests. The
 # 6h window stays well under the 24h presign TTL so a cached 302 never points
@@ -93,7 +95,7 @@ def _redirect_to_storage(file_path: str) -> RedirectResponse | None:
     Returns None when S3 isn't enabled or signing fails, so the caller falls
     back to streaming the file through the API.
 
-    SECURITY: callers MUST run their RBAC check before calling this — the
+    SECURITY: callers MUST run their RBAC check before calling this. The
     presigned URL grants temporary unauthenticated read access to the object.
     """
     if not is_s3_enabled():
@@ -137,12 +139,9 @@ async def _verify_course_activity_access(
     if not course or course.course_uuid != course_uuid:
         raise HTTPException(status_code=404, detail="Course not found or activity doesn't belong to course")
 
-    # RBAC check - verify user can read this course
-    checker = ResourceAccessChecker(request, db_session, current_user)
-    decision = await checker.check_access(course_uuid, AccessAction.READ, AccessContext.PUBLIC_VIEW)
-
-    if not decision.allowed:
-        raise HTTPException(status_code=403, detail=decision.reason)
+    # Course read, published state, paywall and locks: the same gate the
+    # activity read applies, or the files are a way around it.
+    await verify_activity_reader_access(request, activity, course, current_user, db_session)
 
 
 async def _verify_podcast_episode_access(
@@ -368,7 +367,7 @@ async def stream_activity_hls(
         )
 
     # Segment request. In S3 mode the player uses presigned URLs directly, so
-    # this is only hit in local mode — but redirect defensively if S3 is on.
+    # this is only hit in local mode, but redirect defensively if S3 is on.
     redirect = _redirect_to_storage(asset_key)
     if redirect:
         return redirect
@@ -390,7 +389,7 @@ async def stream_activity_hls(
     summary="Serve an HLS playlist or segment for a video block",
     description=(
         "Serves the adaptive-bitrate HLS assets for a video block inside a dynamic "
-        "activity — identical behavior to the activity HLS endpoint (RBAC-gated "
+        "activity; identical behavior to the activity HLS endpoint (RBAC-gated "
         "playlists with segment URLs presigned to R2), keyed off the block's dir."
     ),
     responses={

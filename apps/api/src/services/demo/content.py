@@ -1,8 +1,8 @@
 """Compact authoring DSL for demo activity bodies, compiled to ProseMirror.
 
 Activity content in LearnHouse is a ProseMirror document. Writing ~90 of those
-by hand as raw JSON would be unreviewable — a reader could not tell good course
-copy from bad through four levels of node nesting — so the bundle authors
+by hand as raw JSON would be unreviewable (a reader could not tell good course
+copy from bad through four levels of node nesting), so the bundle authors
 content in a compact form and compiles it here:
 
     [
@@ -19,7 +19,7 @@ Every id this module emits is derived with uuid5 from the text it belongs to.
 That is not a stylistic choice: the demo is refreshed in place and compared
 against its bundle, so if quiz ids were random the compiled content would
 differ on every single refresh and each one would rewrite every activity in
-the database — exactly the churn the design exists to avoid.
+the database, exactly the churn the design exists to avoid.
 """
 
 import uuid

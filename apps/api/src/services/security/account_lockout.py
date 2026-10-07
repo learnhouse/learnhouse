@@ -1,7 +1,7 @@
 """
 Account lockout service.
 
-Locks an account after 10 failed login attempts for 5 minutes — but only
+Locks an account after 10 failed login attempts for 5 minutes, but only
 when the attempts span multiple source IPs. Per-account lockout paired with
 IP-only login rate limiting would otherwise be a DoS amplifier: a single
 attacker rotating IPs could lock any account with 10 requests while staying
@@ -95,7 +95,7 @@ async def record_failed_login(
     bypass the lockout by both reading the counter before either increments.
 
     The lockout only engages when ``distinct_ips >= 2`` in the tracking
-    window — see the module docstring for why single-IP lockouts would be
+    window; see the module docstring for why single-IP lockouts would be
     a DoS amplifier. The failure counter still increments for single-IP
     attacks so the audit trail is preserved, but ``locked_until`` stays
     unset; the existing per-IP login rate limiter handles that case.
@@ -231,7 +231,7 @@ def format_lockout_message(remaining_seconds: int) -> str:
         Generic message string that does not reveal the remaining lock duration
     """
     # SECURITY: Do not include the exact remaining duration in the user-facing
-    # message — it leaks information that could help an attacker time requests
+    # message. It leaks information that could help an attacker time requests
     # to avoid triggering the lockout check.  The remaining_seconds argument is
     # retained so callers can still log the actual value for operations purposes.
     return "Account is temporarily locked due to too many failed login attempts. Please try again later."

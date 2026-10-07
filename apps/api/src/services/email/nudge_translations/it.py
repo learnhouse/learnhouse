@@ -173,7 +173,7 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "Vedi le novità",
     "nudge.reactivation.need_a_hand.subject": "Ti serve una mano per tornare su {org_name}?",
     "nudge.reactivation.need_a_hand.heading": "C'era qualcosa di mezzo?",
-    "nudge.reactivation.need_a_hand.body": "Se c'è stato un motivo per cui {org_name} si è fermata — qualcosa di poco chiaro, qualcosa che mancava, o semplicemente il tempo — ci farebbe piacere saperlo. Rispondi a questa email, arriva direttamente a noi.",
+    "nudge.reactivation.need_a_hand.body": "Se c'è stato un motivo per cui {org_name} si è fermata (qualcosa di poco chiaro, qualcosa che mancava, o semplicemente il tempo), ci farebbe piacere saperlo. Rispondi a questa email, arriva direttamente a noi.",
     "nudge.reactivation.closing.subject": "Ultimo messaggio su {org_name}",
     "nudge.reactivation.closing.heading": "Ci fermiamo qui",
     "nudge.reactivation.closing.body": "Questa è l'ultima di queste email. {org_name} resta esattamente com'è e nulla scade: se un giorno vorrai tornare, troverai tutto ad aspettarti.",

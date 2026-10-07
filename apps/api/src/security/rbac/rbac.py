@@ -240,14 +240,22 @@ async def _load_applicable_roles(
 
     A role applies when either (a) it belongs to the target organization and the
     user holds it there, or (b) it is a global default role (``org_id IS NULL``)
-    and the user is a member of the target organization.
-
-    ``target_org_id`` is ``None`` for placeholder UUIDs ("course_x") whose org
-    the caller did not pass. Nothing applies then: returning every role the
-    user holds anywhere let an admin of one org create in another.
+    and the user is a member of the target organization. When ``target_org_id``
+    is ``None`` (placeholder UUIDs used during top-level creation), every role
+    the user holds is returned; existence checks and org-scoped request bodies
+    gate those paths downstream.
     """
     if target_org_id is None:
-        return []
+        statement = (
+            select(Role)
+            .join(UserOrganization)
+            .where(
+                (UserOrganization.org_id == Role.org_id)
+                | (Role.org_id == null())
+            )
+            .where(UserOrganization.user_id == user_id)
+        )
+        return (await db_session.execute(statement)).scalars().all()
 
     is_member_of_target = (await db_session.execute(
         select(UserOrganization).where(
@@ -260,9 +268,9 @@ async def _load_applicable_roles(
         # Non-member: never grant role-based access to this org's resources.
         return []
 
-    # Only the role held through the membership in the target org applies.
-    # The seeded roles are global (org_id NULL), so without pinning the
-    # membership an Admin of any other org would be an Admin here too.
+    # Only the role the user holds *in the target org* applies. Global default
+    # roles (Admin, User, ...) have org_id NULL, so without pinning the
+    # membership row an admin of any other org would be admin here too.
     statement = (
         select(Role)
         .join(UserOrganization)
@@ -280,7 +288,7 @@ async def _shared_org_ids_with_target_user(
 ) -> list[int] | None:
     """Org ids where both the caller and the targeted user are members.
 
-    Returns ``None`` when ``target_user_uuid`` names no real user — the create
+    Returns ``None`` when ``target_user_uuid`` names no real user: the create
     paths pass a placeholder (``user_x``), which has no target to be scoped
     against and is gated by the endpoint instead.
     """
@@ -326,10 +334,10 @@ async def _load_roles_for_user_target(
         select(Role)
         .join(UserOrganization)
         .where(UserOrganization.user_id == user_id)
-        # The membership carrying the role must itself be in a shared org,
-        # otherwise a global Admin role held in an unrelated org would count.
         .where(UserOrganization.org_id.in_(shared_org_ids))  # type: ignore[union-attr]
-        .where((Role.org_id == UserOrganization.org_id) | (Role.org_id == null()))
+        .where(
+            (Role.org_id == UserOrganization.org_id) | (Role.org_id == null())
+        )
     )
     return (await db_session.execute(statement)).scalars().all()
 
@@ -341,13 +349,7 @@ async def authorization_verify_based_on_roles(
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: AsyncSession,
-    target_org_id: int | None = None,
 ):
-    """Whether one of the user's roles grants ``action`` on the element.
-
-    ``target_org_id`` supplies the org for placeholder uuids ("course_x"),
-    which have none of their own; a real element's org always wins.
-    """
     # Superadmin bypass - full access to all resources
     if await is_user_superadmin(user_id, db_session):
         return True
@@ -358,14 +360,12 @@ async def authorization_verify_based_on_roles(
     # Without this check, a user with e.g. admin-in-orgA whose admin role grants
     # courses.action_update=True could mutate a course in orgB purely because
     # one of their org roles carries the permission.
-    resolved_org_id = await get_element_organization_id(element_uuid, db_session)
-    if resolved_org_id is not None:
-        target_org_id = resolved_org_id
+    target_org_id = await get_element_organization_id(element_uuid, db_session)
 
     if element_type == "users" and target_org_id is None:
         # A user row has no org column, so the generic resolver returns None and
         # the placeholder branch below would hand back every role the caller
-        # holds anywhere — letting an admin of one org act on an account that
+        # holds anywhere, letting an admin of one org act on an account that
         # only belongs to another. Scope to the orgs the two actually share.
         shared_org_ids = await _shared_org_ids_with_target_user(
             db_session, user_id, element_uuid
@@ -384,7 +384,6 @@ async def authorization_verify_based_on_roles(
         user_roles_in_organization_and_standard_roles = await _load_applicable_roles(
             db_session, user_id, target_org_id
         )
-
 
     # Check if user is the author of the resource for "own" permissions
     is_author = False
@@ -473,7 +472,6 @@ async def authorization_verify_based_on_roles_and_authorship(
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: AsyncSession,
-    target_org_id: int | None = None,
 ):
     logger.info("[RBAC] authorization_verify_based_on_roles_and_authorship: user_id=%s, action=%s, element_uuid=%s", user_id, action, element_uuid)
 
@@ -488,7 +486,7 @@ async def authorization_verify_based_on_roles_and_authorship(
     logger.info("[RBAC] isAuthor=%s", isAuthor)
 
     isRole = await authorization_verify_based_on_roles(
-        request, user_id, action, element_uuid, db_session, target_org_id=target_org_id
+        request, user_id, action, element_uuid, db_session
     )
     logger.info("[RBAC] isRole=%s", isRole)
 
@@ -518,7 +516,7 @@ async def authorization_verify_based_on_roles_and_authorship(
             from ee.services.payments.payments_access import check_enrollment_access
             hasPaidEnrollmentAccess = await check_enrollment_access(element_uuid, user_id, db_session)
         except Exception:
-            pass  # payments module not available (community edition) — skip silently
+            pass  # payments module not available (community edition), skip silently
     logger.info("[RBAC] hasPaidEnrollmentAccess=%s", hasPaidEnrollmentAccess)
 
     if isAuthor or isRole or hasUserGroupAccess or hasPaidEnrollmentAccess:

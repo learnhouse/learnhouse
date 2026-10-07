@@ -33,11 +33,17 @@ from src.services.security.rate_limiting import (
     enforce_batch_size_limit,
     enforce_invite_rate_limit,
 )
-from src.security.org_auth import is_org_member, enforce_org_mfa
-from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.security.org_auth import (
+    enforce_org_mfa,
+    get_user_org,
+    is_org_member,
+    require_org_destroy_right,
+)
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
+from src.security.superadmin import is_user_superadmin
 from src.services.orgs.invites import send_invite_email
 from src.services.demo.guards import hide_other_visitors
-from src.services.orgs.orgs import is_org_admin_role, rbac_check, require_org_admin_role
+from src.services.orgs.orgs import is_org_admin_role, rbac_check
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.users.emails import send_role_changed_email
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -61,7 +67,7 @@ def _csv_safe(value):
 # Deliberately permissive email shape check: exactly one "@", a dotted domain,
 # no whitespace/control chars, bounded length. The goal is to reject malformed
 # input (and ":"/whitespace that would shape the Redis invite key), not to
-# fully validate deliverability — the mail provider is the source of truth.
+# fully validate deliverability; the mail provider is the source of truth.
 _EMAIL_RE = re.compile(r"^[^@\s:]{1,64}@[^@\s:]{1,255}\.[a-zA-Z]{2,}$")
 
 
@@ -213,7 +219,7 @@ async def get_organization_users(
             .join(UserGroupUser, (UserGroupUser.user_id == User.id) & (UserGroupUser.usergroup_id == usergroup_id))
         )
         # This count is built from its own query rather than from
-        # base_statement, so it needs the demo filter applied again — otherwise
+        # base_statement, so it needs the demo filter applied again. Otherwise
         # the page hides the visitors but the tally above it still counts them,
         # which both looks broken and leaks how many people are in there.
         in_group_count_stmt = _hide_other_visitors(
@@ -246,7 +252,7 @@ async def get_organization_users(
     # Get total count using SQL COUNT
     total = (await db_session.execute(select(func.count()).select_from(base_statement.subquery()))).scalar_one()
 
-    # Sort by join date — use UserOrganization.id as it's auto-increment
+    # Sort by join date. Use UserOrganization.id as it's auto-increment
     # and directly correlates with join order (creation_date is a str, unreliable for sorting)
     if sort_order == "asc":
         base_statement = base_statement.order_by(UserOrganization.id.asc())
@@ -623,7 +629,7 @@ async def leave_org(
     current_user: PublicUser,
 ):
     """Let the CURRENT user leave an org they belong to (self-service, no admin
-    rights needed). They can only remove their OWN membership — the acting user
+    rights needed). They can only remove their OWN membership; the acting user
     id comes from the authenticated session, never a request field."""
     user_id = current_user.id
 
@@ -641,7 +647,7 @@ async def leave_org(
     if not user_org:
         raise HTTPException(status_code=404, detail="You are not a member of this organization")
 
-    # The last admin can't just walk away — they'd orphan the org.
+    # The last admin can't just walk away; they'd orphan the org.
     admins = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.org_id == org.id, UserOrganization.role_id == ADMIN_ROLE_ID
@@ -756,7 +762,10 @@ async def remove_all_users_from_org(
             detail="Organization not found",
         )
 
-    await require_org_admin_role(request, org, current_user, "delete", db_session)
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    # Keeping only the caller would leave a maintainer-run org with no admin.
+    await require_org_destroy_right(resolve_acting_user_id(current_user), org.id, db_session)
 
     # Keep the caller so the org always retains at least one admin.
     keep_user_id = resolve_acting_user_id(current_user)
@@ -819,9 +828,7 @@ async def update_user_role(
             detail="Role not found",
         )
 
-    # Role assignment is Admin-only: a Maintainer could otherwise promote
-    # anyone, themselves included, to Admin.
-    await require_org_admin_role(request, org, current_user, "update", db_session)
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     from src.security.superadmin import is_user_superadmin
     if (
@@ -833,6 +840,18 @@ async def update_user_role(
             status_code=403,
             detail="You cannot change your own role",
         )
+
+    # Handing out Admin or Maintainer is reserved for Admins: a maintainer
+    # must not be able to promote themselves (or anyone) past their own role.
+    if role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+        acting_user_id = resolve_acting_user_id(current_user)
+        if not await is_user_superadmin(acting_user_id, db_session):
+            caller_membership = await get_user_org(acting_user_id, org.id, db_session)
+            if caller_membership is None or caller_membership.role_id != ADMIN_ROLE_ID:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Only organization administrators can assign the Admin or Maintainer role",
+                )
 
     # Check if user is the last admin and if the new role is not admin
     statement = select(UserOrganization).where(
@@ -982,7 +1001,7 @@ async def invite_batch_users(
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
     # This is the endpoint that actually sends the mail, so it needs the demo
-    # guard even though create_invite_code already has one — an invite code is
+    # guard even though create_invite_code already has one: an invite code is
     # optional here, and without one send_invite_email still delivers, pointing
     # at the org's /signup. Every visitor to the shared demo holds admin on it,
     # and the free-tier age gate below exempts paid plans, which the demo is by
@@ -1057,8 +1076,8 @@ async def invite_batch_users(
     #
     # Only the ones still PENDING, though. Accepted invites keep their Redis key
     # (flipped to pending=False) for the full 60 day TTL, so counting every key
-    # charged an accepted invitee twice — once as a real member and once as a
-    # phantom pending invite — and an org that had filled its seats through
+    # charged an accepted invitee twice (once as a real member and once as a
+    # phantom pending invite), and an org that had filled its seats through
     # invitations was told it had hit the member limit while well under it.
     existing_pending = 0
     for key in r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=1000):
@@ -1188,7 +1207,7 @@ async def get_list_of_invited_users(
         )
 
     # SECURITY: pending invites carry the invitee's email address and the
-    # invite code — a ready-made phishing list. rbac_check short-circuits every
+    # invite code, a ready-made phishing list. rbac_check short-circuits every
     # "read" to True, so it is no gate at all here: mirror the member-listing
     # path instead and require an admin/maintainer of *this* org.
     if isinstance(current_user, AnonymousUser):
@@ -1279,7 +1298,7 @@ async def remove_invited_user(
         )
 
     # Invites are keyed on the lower-cased address (see invite_batch_users), so
-    # normalise here too — otherwise an admin who typed the address with any
+    # normalise here too. Otherwise an admin who typed the address with any
     # capitals could never withdraw the invitation they had just sent.
     email = email.strip().lower()
 

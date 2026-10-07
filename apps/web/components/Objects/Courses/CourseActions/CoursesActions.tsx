@@ -77,7 +77,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     }
   ) ?? false;
 
-  // Public endpoint — no auth needed, works for unauthenticated visitors too
+  // Public endpoint: no auth needed, works for unauthenticated visitors too
   const { data: offersResult, isLoading } = useQuery({
     queryKey: ['offers', 'by-resource', org?.id, resourceUuid],
     queryFn: () => getOffersByResource(org.id, resourceUuid!),
@@ -412,7 +412,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   }
 
   if (linkedOffers.length > 0) {
-    // User already enrolled / started — show "you own this" notice + leave button
+    // User already enrolled / started: show "you own this" notice + leave button
     if (isStarted) {
       return (
         <div className="bg-white nice-shadow rounded-lg overflow-hidden p-4">
@@ -443,7 +443,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       )
     }
 
-    // Not enrolled — show all available offers
+    // Not enrolled: show all available offers
     return (
       <div className="space-y-3">
         {linkedOffers.length > 1 && (

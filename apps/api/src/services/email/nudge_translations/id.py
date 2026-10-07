@@ -35,41 +35,41 @@ STRINGS: dict[str, str] = {
 
     "nudge.activation.setup_checklist_d7.subject": "Lima belas menit menuju akademi yang jalan",
     "nudge.activation.setup_checklist_d7.heading": "Daftar singkat",
-    "nudge.activation.setup_checklist_d7.body": "{org_name} masih menunggu kursus pertamanya. Daftar penyiapan memandu Anda dalam beberapa langkah singkat — kebanyakan orang selesai dalam seperempat jam.",
+    "nudge.activation.setup_checklist_d7.body": "{org_name} masih menunggu kursus pertamanya. Daftar penyiapan memandu Anda dalam beberapa langkah singkat; kebanyakan orang selesai dalam seperempat jam.",
     "nudge.activation.setup_checklist_d7.cta": "Buka daftarnya",
 
     "nudge.activation.whats_blocking_d14.subject": "Apa yang menghalangi?",
     "nudge.activation.whats_blocking_d14.heading": "Boleh kami tanya apa yang membuat Anda berhenti?",
-    "nudge.activation.whats_blocking_d14.body": "Anda membuat {org_name} dua minggu lalu dan belum menambahkan kursus. Kalau ada yang membingungkan atau kurang, kami ingin tahu — balas saja email ini, langsung sampai ke kami.",
+    "nudge.activation.whats_blocking_d14.body": "Anda membuat {org_name} dua minggu lalu dan belum menambahkan kursus. Kalau ada yang membingungkan atau kurang, kami ingin tahu: balas saja email ini, langsung sampai ke kami.",
 
     "nudge.activation.last_call_d30.subject": "Email terakhir soal {org_name}",
     "nudge.activation.last_call_d30.heading": "Ini yang terakhir",
-    "nudge.activation.last_call_d30.body": "{org_name} sudah sebulan sepi, jadi kami berhenti mengirim email seperti ini. Akun dan semua isinya tetap ada — kalau Anda kembali, semuanya masih di tempatnya.",
+    "nudge.activation.last_call_d30.body": "{org_name} sudah sebulan sepi, jadi kami berhenti mengirim email seperti ini. Akun dan semua isinya tetap ada; kalau Anda kembali, semuanya masih di tempatnya.",
     "nudge.activation.last_call_d30.cta": "Buka dasbor Anda",
 
     "nudge.content.course_no_chapter_d1.subject": "«{course_name}» butuh bab pertamanya",
     "nudge.content.course_no_chapter_d1.heading": "Tinggal satu bab",
-    "nudge.content.course_no_chapter_d1.body": "«{course_name}» sudah ada tapi belum punya bab, jadi belum ada yang bisa dibuka. Bab hanyalah bagian — satu per topik biasanya pas.",
+    "nudge.content.course_no_chapter_d1.body": "«{course_name}» sudah ada tapi belum punya bab, jadi belum ada yang bisa dibuka. Bab hanyalah bagian; satu per topik biasanya pas.",
     "nudge.content.course_no_chapter_d1.cta": "Tambah bab",
 
     "nudge.content.chapter_no_activity_d1.subject": "Tambahkan pelajaran pertama ke «{course_name}»",
     "nudge.content.chapter_no_activity_d1.heading": "Babnya sudah siap",
-    "nudge.content.chapter_no_activity_d1.body": "«{course_name}» punya bab, tapi isinya masih kosong. Pelajaran bisa berupa halaman teks, video, atau kuis — apa pun yang cocok dengan topiknya.",
+    "nudge.content.chapter_no_activity_d1.body": "«{course_name}» punya bab, tapi isinya masih kosong. Pelajaran bisa berupa halaman teks, video, atau kuis, apa pun yang cocok dengan topiknya.",
     "nudge.content.chapter_no_activity_d1.cta": "Tambah pelajaran",
 
     "nudge.content.activity_unpublished_d2.subject": "Pelajaran Anda di «{course_name}» belum terlihat",
     "nudge.content.activity_unpublished_d2.heading": "Pelajarannya masih tersembunyi",
-    "nudge.content.activity_unpublished_d2.body": "Anda sudah menulis pelajaran di «{course_name}», tapi belum ada yang diterbitkan, jadi peserta melihat kursus kosong. Menerbitkan tidak mengunci apa pun — Anda tetap bisa menyunting.",
+    "nudge.content.activity_unpublished_d2.body": "Anda sudah menulis pelajaran di «{course_name}», tapi belum ada yang diterbitkan, jadi peserta melihat kursus kosong. Menerbitkan tidak mengunci apa pun; Anda tetap bisa menyunting.",
     "nudge.content.activity_unpublished_d2.cta": "Terbitkan pelajaran Anda",
 
     "nudge.content.course_draft_d3.subject": "«{course_name}» masih berupa draf",
     "nudge.content.course_draft_d3.heading": "«{course_name}» hampir jadi",
-    "nudge.content.course_draft_d3.body": "Anda sudah menambahkan pelajaran ke «{course_name}», tapi belum diterbitkan sehingga tak ada yang bisa membukanya. Tidak harus selesai — menerbitkan hanya membuatnya terlihat, dan Anda tetap bisa menyunting sesudahnya.",
+    "nudge.content.course_draft_d3.body": "Anda sudah menambahkan pelajaran ke «{course_name}», tapi belum diterbitkan sehingga tak ada yang bisa membukanya. Tidak harus selesai; menerbitkan hanya membuatnya terlihat, dan Anda tetap bisa menyunting sesudahnya.",
     "nudge.content.course_draft_d3.cta": "Terbitkan",
 
     "nudge.content.course_draft_d10.subject": "«{course_name}» sudah lama jadi draf",
     "nudge.content.course_draft_d10.heading": "Kemungkinan sudah siap",
-    "nudge.content.course_draft_d10.body": "«{course_name}» belum diterbitkan selama lebih dari seminggu. Kursus jarang terasa selesai — menerbitkan membuatnya terlihat, dan Anda bisa terus memperbaiki sambil orang sudah membaca.",
+    "nudge.content.course_draft_d10.body": "«{course_name}» belum diterbitkan selama lebih dari seminggu. Kursus jarang terasa selesai; menerbitkan membuatnya terlihat, dan Anda bisa terus memperbaiki sambil orang sudah membaca.",
     "nudge.content.course_draft_d10.cta": "Terbitkan",
 
     "nudge.content.thin_course_d5.subject": "«{course_name}» bisa ditambah sedikit lagi",
@@ -94,10 +94,10 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.members_no_enrollment_d3.subject": "Peserta Anda belum mulai",
     "nudge.audience.members_no_enrollment_d3.heading": "Sudah bergabung tapi belum membuka apa pun",
-    "nudge.audience.members_no_enrollment_d3.body": "Ada yang sudah bergabung ke {org_name} tapi belum ada yang memulai kursus. Pesan singkat dengan tautan langsung biasanya cukup — kebanyakan hanya belum menemukan pintunya.",
+    "nudge.audience.members_no_enrollment_d3.body": "Ada yang sudah bergabung ke {org_name} tapi belum ada yang memulai kursus. Pesan singkat dengan tautan langsung biasanya cukup; kebanyakan hanya belum menemukan pintunya.",
     "nudge.audience.members_no_enrollment_d3.cta": "Lihat anggota Anda",
 
-    "nudge.audience.share_public_page_d14.subject": "Halaman kursus Anda publik — ini tautannya",
+    "nudge.audience.share_public_page_d14.subject": "Halaman kursus Anda publik: ini tautannya",
     "nudge.audience.share_public_page_d14.heading": "Siapa pun dengan tautannya bisa membaca",
     "nudge.audience.share_public_page_d14.body": "«{course_name}» bersifat publik, jadi bisa Anda bagikan di mana saja tanpa perlu undangan. Tautan di bawah inilah yang perlu dikirim.",
     "nudge.audience.share_public_page_d14.cta": "Lihat halaman publik",
@@ -124,7 +124,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.monetization.upgrade_recap_d21.subject": "Apa yang {next_plan} tambahkan untuk {org_name}",
     "nudge.monetization.upgrade_recap_d21.heading": "Anda sudah membangun sesuatu yang nyata",
-    "nudge.monetization.upgrade_recap_d21.body": "{org_name} punya kursus yang terbit dan orang yang membacanya. Paket {next_plan} memberi ruang untuk tumbuh dan beberapa hal yang tidak ada di paket {plan_name} — layak dilihat kalau Anda berencana memperluas.",
+    "nudge.monetization.upgrade_recap_d21.body": "{org_name} punya kursus yang terbit dan orang yang membacanya. Paket {next_plan} memberi ruang untuk tumbuh dan beberapa hal yang tidak ada di paket {plan_name}; layak dilihat kalau Anda berencana memperluas.",
     "nudge.monetization.upgrade_recap_d21.cta": "Bandingkan paket",
 
     "nudge.dormancy.no_login_14d.subject": "{org_name} sedang sepi",
@@ -134,7 +134,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.dormancy.no_login_30d.subject": "Kursus Anda di {org_name} masih ada",
     "nudge.dormancy.no_login_30d.heading": "Sudah beberapa minggu",
-    "nudge.dormancy.no_login_30d.body": "Tidak ada yang berubah selama Anda pergi — {org_name} dan semua isinya persis di tempat Anda tinggalkan. Melanjutkan hanya butuh satu klik.",
+    "nudge.dormancy.no_login_30d.body": "Tidak ada yang berubah selama Anda pergi: {org_name} dan semua isinya persis di tempat Anda tinggalkan. Melanjutkan hanya butuh satu klik.",
     "nudge.dormancy.no_login_30d.cta": "Buka dasbor Anda",
 
     "nudge.dormancy.no_login_60d.subject": "Pesan terakhir soal {org_name}",
@@ -149,7 +149,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_course_published.subject": "«{course_name}» sudah tayang",
     "nudge.milestone.first_course_published.heading": "Anda menerbitkan kursus pertama",
-    "nudge.milestone.first_course_published.body": "«{course_name}» sudah tayang dan bisa dibaca. Yang membuat perbedaan sekarang adalah ada yang membacanya — satu dua orang untuk awal pun cukup.",
+    "nudge.milestone.first_course_published.body": "«{course_name}» sudah tayang dan bisa dibaca. Yang membuat perbedaan sekarang adalah ada yang membacanya; satu dua orang untuk awal pun cukup.",
     "nudge.milestone.first_course_published.cta": "Undang peserta pertama Anda",
 
     "nudge.milestone.first_learner_enrolled.subject": "Ada yang memulai «{course_name}»",
@@ -159,13 +159,13 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_completion.subject": "Ada yang menyelesaikan kursus di {org_name}",
     "nudge.milestone.first_completion.heading": "Penyelesaian pertama",
-    "nudge.milestone.first_completion.body": "Seorang peserta menyelesaikan kursus di {org_name} dari awal sampai akhir. Kalau ingin mencatatnya dengan pantas, Anda bisa menambahkan sertifikat — atau mulai menyiapkan kursus berikutnya.",
+    "nudge.milestone.first_completion.body": "Seorang peserta menyelesaikan kursus di {org_name} dari awal sampai akhir. Kalau ingin mencatatnya dengan pantas, Anda bisa menambahkan sertifikat, atau mulai menyiapkan kursus berikutnya.",
     "nudge.milestone.first_completion.cta": "Buka dasbor Anda",
 
     # -- reactivation ------------------------------------------------------
     "nudge.reactivation.opener.subject": "Akademi Anda di {org_name} masih ada",
     "nudge.reactivation.opener.heading": "Masih di sini, persis seperti Anda tinggalkan",
-    "nudge.reactivation.opener.body": "Tak ada yang menyentuh {org_name} sejak kunjungan terakhir Anda — setiap kursus, bab, dan pelajaran ada di tempatnya. Melanjutkan hanya butuh satu klik.",
+    "nudge.reactivation.opener.body": "Tak ada yang menyentuh {org_name} sejak kunjungan terakhir Anda; setiap kursus, bab, dan pelajaran ada di tempatnya. Melanjutkan hanya butuh satu klik.",
     "nudge.reactivation.opener.cta": "Buka dasbor Anda",
     "nudge.reactivation.whats_changed.subject": "Ada beberapa perubahan di LearnHouse",
     "nudge.reactivation.whats_changed.heading": "Sejak terakhir Anda ke sini",
@@ -173,9 +173,9 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "Lihat apa yang baru",
     "nudge.reactivation.need_a_hand.subject": "Perlu bantuan untuk kembali ke {org_name}?",
     "nudge.reactivation.need_a_hand.heading": "Ada yang menghalangi?",
-    "nudge.reactivation.need_a_hand.body": "Kalau ada alasan {org_name} berhenti — sesuatu yang membingungkan, ada yang kurang, atau memang tidak sempat — kami sungguh ingin mendengarnya. Balas email ini, langsung sampai ke kami.",
+    "nudge.reactivation.need_a_hand.body": "Kalau ada alasan {org_name} berhenti (sesuatu yang membingungkan, ada yang kurang, atau memang tidak sempat), kami sungguh ingin mendengarnya. Balas email ini, langsung sampai ke kami.",
     "nudge.reactivation.closing.subject": "Catatan terakhir soal {org_name}",
     "nudge.reactivation.closing.heading": "Kami berhenti di sini",
-    "nudge.reactivation.closing.body": "Ini yang terakhir dari email semacam ini. {org_name} tetap apa adanya dan tidak ada yang kedaluwarsa — kalau suatu saat ingin kembali, semuanya menunggu.",
+    "nudge.reactivation.closing.body": "Ini yang terakhir dari email semacam ini. {org_name} tetap apa adanya dan tidak ada yang kedaluwarsa; kalau suatu saat ingin kembali, semuanya menunggu.",
     "nudge.reactivation.closing.cta": "Buka dasbor Anda",
 }

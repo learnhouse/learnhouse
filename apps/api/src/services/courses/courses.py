@@ -27,7 +27,7 @@ from src.db.courses.courses import (
     ThumbnailType,
 )
 from src.security.auth import resolve_acting_user_id
-from src.security.org_auth import require_org_membership
+from src.security.org_auth import require_org_create_permission
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
@@ -202,7 +202,7 @@ async def get_course_meta(
         context=AccessContext.DASHBOARD,
     )
 
-    # Permission check passed — try Redis cache for the heavy data.
+    # Permission check passed. Try the Redis cache for the heavy data.
     # SECURITY: chapter/activity content is lock-stripped PER USER in
     # _apply_locks_to_chapters (restricted items are blanked for users not in
     # the right usergroup, while admins/members see everything). The meta cache
@@ -218,7 +218,7 @@ async def get_course_meta(
         if cached is not None:
             return FullCourseRead.model_validate(cached)
 
-    # Get course chapters — pass the already-loaded course to skip the
+    # Get course chapters. Pass the already-loaded course to skip the
     # duplicate SELECT inside get_course_chapters.
     chapters = []
     if course.id is not None:
@@ -353,13 +353,20 @@ async def get_courses_orgslug(
                 ))  # type: ignore
                 .where(or_(
                     and_(Course.published == True, Course.public == True),  # Published public courses
-                    and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
+                    and_(  # Published courses not in any UserGroup: org-wide, so members of its org only
+                        Course.published == True,
+                        UserGroupResource.resource_uuid.is_(None),
+                        select(UserOrganization.id).where(
+                            UserOrganization.user_id == acting_user_id,
+                            UserOrganization.org_id == Course.org_id,
+                        ).exists(),
+                    ),
                     UserGroupUser.user_id == acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
                     ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
                 ))
             )
 
-    # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
+    # Apply ordering and pagination; only use DISTINCT when outerjoins may produce duplicates
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
     if needs_distinct:
         query = query.distinct()
@@ -371,7 +378,7 @@ async def get_courses_orgslug(
 
     # Get all course UUIDs
     course_uuids = [course.course_uuid for course in courses]
-    
+
     # Fetch all authors for all courses in a single query
     authors_query = (
         select(ResourceAuthor, User)
@@ -381,9 +388,9 @@ async def get_courses_orgslug(
             ResourceAuthor.id.asc() # type: ignore
         )
     )
-    
+
     author_results = (await db_session.execute(authors_query)).all()
-    
+
     # Create a dictionary mapping course_uuid to list of authors
     course_authors = {}
     for resource_author, user in author_results:
@@ -398,7 +405,7 @@ async def get_courses_orgslug(
                 update_date=resource_author.update_date
             )
         )
-    
+
     # Create CourseRead objects with authors
     course_reads = []
     for course in courses:
@@ -464,7 +471,14 @@ async def get_courses_count_orgslug(
             ))  # type: ignore
             .where(or_(
                 and_(Course.published == True, Course.public == True),  # Published public courses
-                and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
+                and_(  # Published courses not in any UserGroup: org-wide, so members of its org only
+                    Course.published == True,
+                    UserGroupResource.resource_uuid.is_(None),
+                    select(UserOrganization.id).where(
+                        UserOrganization.user_id == acting_user_id,
+                        UserOrganization.org_id == Course.org_id,
+                    ).exists(),
+                ),
                 UserGroupUser.user_id == acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
                 ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
@@ -540,13 +554,20 @@ async def search_courses(
             ))  # type: ignore
             .where(or_(
                 and_(Course.published == True, Course.public == True),  # Published public courses
-                and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
+                and_(  # Published courses not in any UserGroup: org-wide, so members of its org only
+                    Course.published == True,
+                    UserGroupResource.resource_uuid.is_(None),
+                    select(UserOrganization.id).where(
+                        UserOrganization.user_id == search_acting_user_id,
+                        UserOrganization.org_id == Course.org_id,
+                    ).exists(),
+                ),
                 UserGroupUser.user_id == search_acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
                 ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
         )
 
-    # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
+    # Apply ordering and pagination; only use DISTINCT when outerjoins may produce duplicates
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
     if needs_distinct:
         query = query.distinct()
@@ -614,11 +635,9 @@ async def create_course(
     # SECURITY: Check if user has permission to create courses in this organization
     # Since this is a new course, we need to check organization-level permissions
     # For now, we'll use the existing RBAC check but with proper organization context
-    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE, org_id=org_id)
-
-    await require_org_membership(
-        resolve_acting_user_id(current_user), org_id, db_session
-    )
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    # course_x has no org: pin the create right (and membership) to this org.
+    await require_org_create_permission(current_user, org_id, db_session, "courses")
 
     # Usage check
     await check_limits_with_usage("courses", org_id, db_session)
@@ -828,13 +847,13 @@ async def update_course(
 
     # SECURITY: Additional checks for sensitive access control fields
     sensitive_fields_updated = []
-    
+
     # Check if sensitive fields are being updated
     if course_object.public is not None:
         sensitive_fields_updated.append("public")
     if course_object.open_to_contributors is not None:
         sensitive_fields_updated.append("open_to_contributors")
-    
+
     # If sensitive fields are being updated, require additional validation
     if sensitive_fields_updated:
         # API tokens carry their own per-resource rights and have already passed
@@ -862,7 +881,7 @@ async def update_course(
         is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
             request, acting_user_id, "update", course_uuid, db_session
         )
-        
+
         # SECURITY: Only course owners (CREATOR, MAINTAINER) or admins can change access settings
         if not (is_course_owner or is_admin_or_maintainer):
             raise HTTPException(
@@ -1031,7 +1050,7 @@ async def delete_course(
         logger.exception("Failed to remove deleted course %s from org landing", course_uuid_val)
         await db_session.rollback()
 
-    # Feature usage — decrement only AFTER the row is actually gone. The usage
+    # Feature usage: decrement only AFTER the row is actually gone. The usage
     # counter lives in Redis and is written immediately/irreversibly; doing it
     # before the delete meant a failed delete/commit (or storage error) left the
     # org's course count permanently under-counted, letting them create an extra
@@ -1088,9 +1107,9 @@ async def get_user_courses(
         .offset((page - 1) * limit)
         .limit(limit)
     )
-    
+
     courses = (await db_session.execute(statement)).scalars().all()
-    
+
     if not courses:
         return []
 
@@ -1247,10 +1266,8 @@ async def clone_course(
     # so require edit rights on the source (same bar as export).
     await check_resource_access(request, db_session, current_user, original_course.course_uuid, AccessAction.UPDATE)
 
-    # Also check if user can create courses in the clone's org
-    await check_resource_access(
-        request, db_session, current_user, "course_x", AccessAction.CREATE, org_id=original_course.org_id
-    )
+    # Also check if user can create courses
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # SECURITY: The clone is written into the ORIGINAL course's org. READ access
     # to that course can come from it simply being public, and the "course_x"
@@ -1258,9 +1275,7 @@ async def clone_course(
     # check, a user from org A who can merely view a public course in org B could
     # clone it (with all its content + files) into org B and make themselves its
     # creator. Require membership in the target org, consistent with create_course.
-    await require_org_membership(
-        resolve_acting_user_id(current_user), original_course.org_id, db_session
-    )
+    await require_org_create_permission(current_user, original_course.org_id, db_session, "courses")
 
     # Usage check for creating new course
     await check_limits_with_usage("courses", original_course.org_id, db_session)
@@ -1646,10 +1661,10 @@ async def get_course_user_rights(
         ResourceAuthor.user_id == rights_acting_user_id
     )
     resource_author = (await db_session.execute(statement)).scalars().first()
-    
+
     if resource_author:
         rights["ownership"]["authorship_status"] = resource_author.authorship_status
-        
+
         if resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE:
             if resource_author.authorship == ResourceAuthorshipEnum.CREATOR:
                 rights["ownership"]["is_creator"] = True
@@ -1664,7 +1679,7 @@ async def get_course_user_rights(
     # Check user roles
     from src.security.rbac.rbac import authorization_verify_based_on_org_admin_status
     from src.security.rbac.rbac import authorization_verify_based_on_roles
-    
+
     # Check admin/maintainer role
     is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
         request, rights_acting_user_id, "update", course_uuid, db_session
@@ -1676,8 +1691,7 @@ async def get_course_user_rights(
 
     # Check instructor role
     has_instructor_permissions = await authorization_verify_based_on_roles(
-        request, rights_acting_user_id, "create", "course_x", db_session,
-        target_org_id=course.org_id,
+        request, rights_acting_user_id, "create", "course_x", db_session
     )
 
     if has_instructor_permissions:
@@ -1687,7 +1701,7 @@ async def get_course_user_rights(
     has_user_permissions = await authorization_verify_based_on_roles(
         request, rights_acting_user_id, "read", course_uuid, db_session
     )
-    
+
     if has_user_permissions:
         rights["roles"]["is_user"] = True
 
@@ -1730,7 +1744,7 @@ async def get_course_user_rights(
         rights["permissions"]["manage_contributors"] = True
 
     # ACCESS MANAGEMENT permissions (public, open_to_contributors)
-    if (rights["ownership"]["is_creator"] or rights["ownership"]["is_maintainer"] or 
+    if (rights["ownership"]["is_creator"] or rights["ownership"]["is_maintainer"] or
         is_admin or is_maintainer_role):
         rights["permissions"]["manage_access"] = True
 

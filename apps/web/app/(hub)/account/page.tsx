@@ -45,7 +45,7 @@ function AccountClient() {
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
       <Toaster />
       <div className="relative min-h-screen">
-        {/* Blueprint grid — fades in from bottom */}
+        {/* Blueprint grid, fades in from bottom */}
         <div
           className="absolute inset-0 pointer-events-none z-0"
           style={{
@@ -97,7 +97,7 @@ function AccountClient() {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* A. Profile — identity (first/last name, username, bio, avatar) */}
+                {/* A. Profile: identity (first/last name, username, bio, avatar) */}
                 <section className="space-y-2.5">
                   <div className="flex items-center gap-2 px-1">
                     <UserCog size={15} className="text-black/40" />
@@ -108,7 +108,7 @@ function AccountClient() {
                   <AccountGeneral />
                 </section>
 
-                {/* B. Security — change password */}
+                {/* B. Security: change password */}
                 <section className="space-y-2.5">
                   <div className="flex items-center gap-2 px-1">
                     <KeyRound size={15} className="text-black/40" />
@@ -119,7 +119,7 @@ function AccountClient() {
                   <AccountSecurity />
                 </section>
 
-                {/* C. Danger zone — delete account */}
+                {/* C. Danger zone: delete account */}
                 <section className="space-y-2.5">
                   <div className="flex items-center gap-2 px-1">
                     <ShieldAlert size={15} className="text-red-500/70" />

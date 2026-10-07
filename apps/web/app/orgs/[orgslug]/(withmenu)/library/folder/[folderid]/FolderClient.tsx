@@ -33,7 +33,7 @@ function FolderClient({
 
   // Same org-level sort mode the dashboard reads, so learners see the folder in
   // the exact order an admin arranged it in. The folder query is independent of
-  // the org query, so the content can arrive first — until the org config is
+  // the org query, so the content can arrive first. Until the org config is
   // actually here, 'manual' keeps the (already correctly sorted) API order
   // instead of flashing A→Z or destroying a manual-mode drag order.
   const sortMode: FolderSortMode = org

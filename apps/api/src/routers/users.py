@@ -14,6 +14,7 @@ from src.services.users.password_reset import (
 from src.services.security.rate_limiting import (
     check_password_reset_rate_limit,
     check_invite_acceptance_rate_limit,
+    check_signup_rate_limit,
 )
 from src.services.orgs.orgs import get_org_join_mechanism
 from src.security.auth import get_current_user, get_authenticated_user
@@ -49,6 +50,22 @@ from src.services.courses.courses import get_user_courses
 _get_redis_client = _get_redis_pool_client
 
 logger = logging.getLogger(__name__)
+
+
+def _enforce_signup_rate_limit(request: Request) -> None:
+    # Plain-string ``detail`` and ``Retry-After``, like the invite limiter.
+    is_allowed, retry_after = check_signup_rate_limit(request)
+    if not is_allowed:
+        minutes = max(1, retry_after // 60)
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"Too many signups from this address. Please try again in about "
+                f"{minutes} minute{'s' if minutes != 1 else ''}."
+            ),
+            headers={"Retry-After": str(retry_after)},
+        )
+
 
 router = APIRouter()
 
@@ -179,7 +196,7 @@ async def _enforce_password_signup_allowed(db_session: AsyncSession, org_id: int
     response_model=UserRead,
     tags=["users"],
     summary="Create user in organization",
-    description="Create a user and attach them to the given organization. Rejected if the organization is invite-only — use the invite-code endpoint instead.",
+    description="Create a user and attach them to the given organization. Rejected if the organization is invite-only; use the invite-code endpoint instead.",
     responses={
         200: {"description": "User created and attached to the organization.", "model": UserRead},
         403: {"description": "Organization is invite-only; an invite code is required"},
@@ -196,8 +213,9 @@ async def api_create_user_with_orgid(
     """
     Create User with Org ID
     """
+    _enforce_signup_rate_limit(request)
     # An org that has turned email+password off must not hand out password
-    # accounts for itself — they could never be used to sign in to it.
+    # accounts for itself; they could never be used to sign in to it.
     await _enforce_password_signup_allowed(db_session, org_id)
 
     # TODO(fix) : This is temporary, logic should be moved to service
@@ -236,6 +254,7 @@ async def api_create_user_with_orgid_and_invite(
     """
     Create User with Org ID and invite code
     """
+    _enforce_signup_rate_limit(request)
     await _enforce_password_signup_allowed(db_session, org_id)
 
     # Throttle invite-code guessing per IP+org. ``detail`` is a plain string
@@ -289,6 +308,7 @@ async def api_create_user_without_org(
     """
     Create User
     """
+    _enforce_signup_rate_limit(request)
     return await create_user_without_org(request, db_session, current_user, user_object)
 
 
@@ -315,7 +335,7 @@ async def api_get_user_by_id(
 
     SECURITY: Requires authentication to prevent user enumeration attacks.
     Anonymous users cannot access this endpoint.
-    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_id(request, db_session, current_user, user_id)
 
@@ -342,7 +362,7 @@ async def api_get_user_by_uuid(
     Get User by UUID.
 
     SECURITY: Requires authentication to prevent user enumeration attacks.
-    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_uuid(request, db_session, current_user, user_uuid)
 
@@ -369,7 +389,7 @@ async def api_get_user_by_username(
     Get User by Username.
 
     SECURITY: Requires authentication to prevent username enumeration attacks.
-    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
+    Returns a restricted view: sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_username(request, db_session, current_user, username)
 

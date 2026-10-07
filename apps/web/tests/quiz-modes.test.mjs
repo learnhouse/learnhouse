@@ -9,7 +9,7 @@ import {
 
 // These mirror apps/api/src/services/courses/activities/quiz_modes.py. The
 // learner sees the grade this module computes (gradeFC's preview) and the
-// server stores the grade the Python side computes, so the two must agree —
+// server stores the grade the Python side computes, so the two must agree;
 // the cases below are the same ones pinned in test_quiz_grading_edge.py.
 
 const outcome = (correct, selected) => ({ correct, selected });
@@ -53,7 +53,7 @@ describe("resolveQuizGradingMode", () => {
   });
 });
 
-describe("scoreQuizQuestion — all or nothing", () => {
+describe("scoreQuizQuestion: all or nothing", () => {
   const key = (a, b, c, d) => [
     outcome(true, a),
     outcome(true, b),
@@ -80,7 +80,7 @@ describe("scoreQuizQuestion — all or nothing", () => {
   });
 });
 
-describe("scoreQuizQuestion — partial credit", () => {
+describe("scoreQuizQuestion: partial credit", () => {
   const key = (a, b, c, d) => [
     outcome(true, a),
     outcome(true, b),

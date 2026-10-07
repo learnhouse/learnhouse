@@ -173,7 +173,7 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "変更点を見る",
     "nudge.reactivation.need_a_hand.subject": "{org_name} に戻るお手伝いをしましょうか",
     "nudge.reactivation.need_a_hand.heading": "何か引っかかりましたか",
-    "nudge.reactivation.need_a_hand.body": "{org_name} が止まった理由があれば — 分かりにくかった、足りなかった、単に時間がなかった — ぜひ伺いたいです。このメールにそのまま返信してください。私たちに直接届きます。",
+    "nudge.reactivation.need_a_hand.body": "{org_name} が止まった理由があれば（分かりにくかった、足りなかった、単に時間がなかった）、ぜひ伺いたいです。このメールにそのまま返信してください。私たちに直接届きます。",
     "nudge.reactivation.closing.subject": "{org_name} についての最後のご連絡",
     "nudge.reactivation.closing.heading": "ここで失礼します",
     "nudge.reactivation.closing.body": "この種のご連絡はこれで最後です。{org_name} はそのまま残り、期限もありません。戻りたくなったときには、すべてお待ちしています。",

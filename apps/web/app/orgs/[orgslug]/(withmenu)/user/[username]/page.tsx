@@ -49,7 +49,7 @@ async function UserPage({ params }: UserPageProps) {
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
-  // Require authentication to view user profiles. Browser-relative path only —
+  // Require authentication to view user profiles. Browser-relative path only;
   // the proxy adds /orgs/{slug} and rewrites /login → /auth/login; an
   // org-prefixed path would be double-prefixed → 404.
   if (!access_token) {

@@ -5,12 +5,12 @@ Adds everything introduced by the grading refactor in one shot:
 1. Two new values in the gradingtypeenum enum: PASS_FAIL, GPA_SCALE
 2. assignmentusersubmission.overall_feedback: nullable TEXT column for
    instructor overall notes
-3. assignment.auto_grading: nullable BOOL column, defaults to false — when
+3. assignment.auto_grading: nullable BOOL column, defaults to false; when
    true and all tasks are auto-gradable, submissions are graded automatically
-4. assignment.anti_copy_paste: nullable BOOL column, defaults to false — when
+4. assignment.anti_copy_paste: nullable BOOL column, defaults to false; when
    true, student-facing task views block paste events
 5. Two new values in the assignmenttasktypeenum enum: SHORT_ANSWER,
-   NUMBER_ANSWER — auto-gradable text / numeric task types
+   NUMBER_ANSWER (auto-gradable text / numeric task types)
 
 Revision ID: x3y4z5a6b7c8
 Revises: w2x3y4z5a6b7
@@ -35,7 +35,7 @@ def upgrade() -> None:
     # --- Enum additions ---------------------------------------------------
     # ALTER TYPE ... ADD VALUE cannot run inside a transaction block in
     # Postgres. Alembic wraps every migration in a transaction, so we commit
-    # first and rely on IF NOT EXISTS to make every ALTER idempotent — this
+    # first and rely on IF NOT EXISTS to make every ALTER idempotent; this
     # lets the migration be re-run safely on databases that already have
     # some of these enum values.
     op.execute("COMMIT")

@@ -879,7 +879,7 @@ async def api_retry_assignment_submission(
 ):
     """
     Reset the current user's submission so they can re-attempt the
-    assignment. Strictly self-service — instructors who want to force a
+    assignment. Strictly self-service; instructors who want to force a
     retry should reject the submission via the existing delete endpoint.
     """
     return await retry_assignment_submission(

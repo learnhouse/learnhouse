@@ -8,6 +8,7 @@ from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
+from src.tests.fixtures.rows import activity_row
 from src.db.podcasts.podcasts import Podcast
 from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, AnonymousUser
@@ -78,6 +79,7 @@ class TestLocalContentRouter:
             update_date="2024-01-01",
         )
         db.add(course)
+        db.add(activity_row(10, org.id, 10, "activity_x"))
         await db.commit()
 
         content_root = tmp_path / "content"
@@ -136,7 +138,7 @@ class TestLocalContentRouter:
     ):
         # A `.` segment survives normalization (only `..` is rejected) but is
         # collapsed by realpath. The access check must run on the CANONICAL path
-        # derived from the resolved file, not the request string — otherwise
+        # derived from the resolved file, not the request string. Otherwise
         # `orgs/./{uuid}/courses/...` shifts the segment indices, misses the
         # private-course pattern, falls through to the public branch, and serves
         # a private file to an anonymous user.
@@ -153,6 +155,7 @@ class TestLocalContentRouter:
             update_date="2024-01-01",
         )
         db.add(course)
+        db.add(activity_row(11, org.id, 11, "activity_x"))
         await db.commit()
 
         content_root = tmp_path / "content"
@@ -246,7 +249,7 @@ class TestLocalContentRouter:
         assert missing_file_response.status_code == 404
 
     async def test_helper_branches_and_missing_file_routes(
-        self, client, db, org, course, regular_user, anonymous_user, tmp_path
+        self, client, db, org, course, activity, regular_user, anonymous_user, tmp_path
     ):
         from src.routers import local_content
 
@@ -277,6 +280,7 @@ class TestLocalContentRouter:
                 update_date="2024-01-01",
             )
             db.add(private_course)
+            db.add(activity_row(50, org.id, 50, "activity_private_router"))
             await db.commit()
 
             public_podcast = Podcast(
@@ -331,8 +335,11 @@ class TestLocalContentRouter:
 
             assert (
                 await local_content._check_content_access(
-                    "orgs/org_test/courses/course_private_router/activities/activity_test/file.txt",
-                    APITokenUser(org_id=org.id, created_by_user_id=1),
+                    "orgs/org_test/courses/course_private_router/activities/activity_private_router/file.txt",
+                    APITokenUser(
+                        org_id=org.id, created_by_user_id=1,
+                        rights={"courses": {"action_read": True}},
+                    ),
                     db,
                 )
                 is None
@@ -340,7 +347,7 @@ class TestLocalContentRouter:
 
             with pytest.raises(HTTPException) as token_course_exc:
                 await local_content._check_content_access(
-                    "orgs/org_test/courses/course_private_router/activities/activity_test/file.txt",
+                    "orgs/org_test/courses/course_private_router/activities/activity_private_router/file.txt",
                     APITokenUser(org_id=999, created_by_user_id=1),
                     db,
                 )
@@ -348,7 +355,7 @@ class TestLocalContentRouter:
 
             with pytest.raises(HTTPException) as anon_course_exc:
                 await local_content._check_content_access(
-                    "orgs/org_test/courses/course_private_router/activities/activity_test/file.txt",
+                    "orgs/org_test/courses/course_private_router/activities/activity_private_router/file.txt",
                     anonymous_user,
                     db,
                 )
@@ -372,7 +379,7 @@ class TestLocalContentRouter:
                     regular_user,
                     db,
                 )
-            assert missing_course_exc.value.status_code == 403
+            assert missing_course_exc.value.status_code == 404
 
             with pytest.raises(HTTPException) as missing_podcast_exc:
                 await local_content._check_content_access(
@@ -391,7 +398,7 @@ class TestLocalContentRouter:
             assert podcast_member_exc.value.status_code == 403
 
             missing_response = await client.get(
-                "/content/orgs/org_test/courses/course_private_router/activities/activity_test/missing.txt"
+                "/content/orgs/org_test/courses/course_private_router/activities/activity_private_router/missing.txt"
             )
             invalid_response = await client.get("/content/%2E%2E/escape.txt")
             head_missing_response = await client.head(

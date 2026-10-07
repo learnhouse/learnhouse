@@ -1,4 +1,4 @@
-# LearnHouse E2E — UI acceptance tests
+# LearnHouse E2E: UI acceptance tests
 
 Browser-driven, human-like end-to-end tests for LearnHouse. The suite boots a
 real **self-host via the LearnHouse CLI** (`setup --ci`, pulling the published
@@ -41,13 +41,13 @@ feature-local things relatively. Specs never reach into another feature.
 ## Adding a new feature module
 
 1. `mkdir -p features/<area>/{pages,tests,fixtures}`.
-2. Add `features/<area>/api.ts` for that feature's API seeding — `import { req, login, getOrg, createStudent } from '../../core/client'` and build feature calls on top.
+2. Add `features/<area>/api.ts` for that feature's API seeding. `import { req, login, getOrg, createStudent } from '../../core/client'` and build feature calls on top.
 3. Add page objects under `features/<area>/pages/` (import `BASE_URL` from `../../../core/instance`).
 4. Optionally add a `scenario.ts` for one-call setup.
 5. Write specs in `features/<area>/tests/*.spec.ts`:
    - `import { test, expect } from '../../../core/fixtures'` (onboarding-suppressed).
    - Reuse the shared sessions: `import { ADMIN_STATE, STUDENT_STATE } from '../../../core/sharedAuth'` then `test.use({ storageState: ADMIN_STATE })` (teacher) or `STUDENT_STATE` (student). This keeps the suite under the login rate limit.
-6. That's it — `playwright.config.ts` (`testDir: './features'`) discovers the new specs automatically.
+6. `playwright.config.ts` (`testDir: './features'`) discovers the new specs automatically.
 
 ## Running locally
 
@@ -74,13 +74,13 @@ bunx playwright test 06-manual-grading            # one spec by name
 
 | Var | Default | Purpose |
 | --- | --- | --- |
-| `E2E_BASE_URL` | — | Use an existing instance; skips boot + teardown. |
+| `E2E_BASE_URL` | unset | Use an existing instance; skips boot + teardown. |
 | `E2E_PORT` | `8080` | HTTP port for the self-host. |
 | `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` | `admin@school.dev` / `E2eTestAdmin!234` | Bootstrapped admin. |
 | `E2E_ORG_SLUG` | `default` | Bootstrapped org slug. |
 | `E2E_CLI` | `npx --yes learnhouse@latest` | CLI used to boot (override for a local build). |
-| `E2E_SKIP_BOOT` | — | `1` to skip booting (assumes instance already up). |
-| `E2E_KEEP` | — | `1` to keep the instance running after the suite. |
+| `E2E_SKIP_BOOT` | unset | `1` to skip booting (assumes instance already up). |
+| `E2E_KEEP` | unset | `1` to keep the instance running after the suite. |
 
 ### Reliability notes
 
@@ -89,7 +89,7 @@ bunx playwright test 06-manual-grading            # one spec by name
   caches tokens per email + retries on 429. A full run does only a handful of
   logins (the API rate-limits logins to **30 / 5 min / IP**).
 
-## Feature coverage — assignments (32 tests)
+## Feature coverage: assignments (32 tests)
 
 Driven through the UI, verified against the REST API (`features/assignments/verify.ts`):
 

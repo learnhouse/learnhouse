@@ -88,7 +88,7 @@ class TestAuthDispatch:
         assert request.state.is_superadmin_api_token is True
 
     async def test_lh_sa_skips_org_boundary_check(self):
-        """Superadmin tokens are cross-org by design — boundary check must NOT run."""
+        """Superadmin tokens are cross-org by design, so the boundary check must NOT run."""
         request = _mock_request(auth_header="Bearer lh_sa_validvalue")
         db = Mock(spec=Session)
 

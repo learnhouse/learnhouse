@@ -174,7 +174,7 @@ def test_enough_avatars_for_the_students_who_have_one(bundle):
     avatars = os.listdir(bundle.media_path("avatars"))
     assert len(avatars) >= students.avatar_count
     assert students.with_avatar <= students.count
-    # Some students deliberately have no avatar — a directory where everyone
+    # Some students deliberately have no avatar; a directory where everyone
     # uploaded a photo does not look like a real organisation.
     assert students.with_avatar < students.count
 
@@ -254,7 +254,7 @@ def test_correct_templates_actually_score_full_marks(bundle):
     """The 'correct' template must be correct against the answer key.
 
     Without this, a persona meant to be a high achiever can be graded as
-    failing — the demo's grade distribution would be wrong in a way that is
+    failing, and the demo's grade distribution would be wrong in a way that is
     invisible until someone opens a submission and checks it by hand.
     """
     checked = 0
@@ -270,7 +270,7 @@ def test_correct_templates_actually_score_full_marks(bundle):
                 f"template scored {scored}/{max_grade}"
             )
 
-    # Guard against the dispatch silently skipping everything — which is how an
+    # Guard against the dispatch silently skipping everything, which is how an
     # earlier version of this test passed while three of the bundle's answer
     # keys were unmatchable.
     assert checked >= len(bundle.assignments), (
@@ -499,7 +499,7 @@ def test_an_assignment_sidecar_for_an_unknown_course_is_rejected(bundle):
 
 
 def test_an_assignment_sidecar_pointing_at_a_document_is_rejected(bundle):
-    """It would produce an assignment nothing links to — invisible until opened."""
+    """It would produce an assignment nothing links to, invisible until opened."""
     course_key = next(iter(bundle.assignments))
     sidecar = dict(bundle.assignments[course_key])
     sidecar["activity_key"] = "definitely-not-an-assignment"
@@ -596,7 +596,7 @@ def test_the_bundle_is_cached_after_the_first_read():
 def test_a_video_activity_compiles_to_an_empty_document(bundle):
     """The player is driven by the activity's own fields, not by its body.
 
-    So the document is deliberately empty — and must still be a valid one,
+    So the document is deliberately empty, and must still be a valid one,
     since the editor loads it either way.
     """
     from src.services.demo.bundle_loader import ActivitySpec
@@ -834,7 +834,7 @@ def test_headings_and_code_can_be_written_in_object_form():
 
 
 def test_word_count_includes_code_blocks(bundle):
-    """Code counts as content — an activity that is only code is not blank."""
+    """Code counts as content; an activity that is only code is not blank."""
     from src.services.demo.bundle_loader import ActivitySpec
 
     spec = ActivitySpec(
@@ -859,7 +859,7 @@ def test_duplicate_section_keys_are_rejected(bundle):
 
 
 def test_a_duplicate_activity_key_anywhere_is_rejected(bundle):
-    """Activity keys are global, not per chapter — the registry matches on them."""
+    """Activity keys are global, not per chapter; the registry matches on them."""
     course = bundle.courses[0]
     chapter = course.chapters[0]
     activity = chapter.activities[0]

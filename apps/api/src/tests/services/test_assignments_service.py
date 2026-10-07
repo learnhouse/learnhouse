@@ -671,7 +671,7 @@ class TestHandleAssignmentTaskSubmission:
         self, mock_request, db, assignment_task, regular_user
     ):
         # SECURITY: a non-instructor submitting with a non-zero grade is
-        # rejected — students cannot grade their own work.
+        # rejected; students cannot grade their own work.
         obj = AssignmentTaskSubmissionUpdate(
             task_submission={"answer": "x"},
             grade=50,
@@ -691,7 +691,7 @@ class TestHandleAssignmentTaskSubmission:
     ):
         # An instructor taking their own course autosaves quiz answers through
         # this path with no target uuid. The quiz autosave sends grade=0 and
-        # feedback="" — a placeholder, not a grade — and it must save, not raise
+        # feedback="" (a placeholder, not a grade) and it must save, not raise
         # "the learner has no submission for it".
         obj = AssignmentTaskSubmissionUpdate(
             task_submission={"answer": "hello"},
@@ -1020,7 +1020,7 @@ class TestManuallyGradedSkipsVerification:
     ):
         # SHORT_ANSWER task expects "4"; student submitted "5" (wrong). The
         # auto-verifier would compute 0, but the teacher set grade=100 with
-        # manually_graded=True — the override must hold.
+        # manually_graded=True; the override must hold.
         ts = await self._make_task_submission(
             db, assignment_task, regular_user,
             ts_id=41, uuid_suffix="manual",
@@ -1319,7 +1319,7 @@ class TestPutAssignmentTaskSubmissionFile:
 
 
 # ---------------------------------------------------------------------------
-# handle_assignment_task_submission — UUID fallback branch (line 1342)
+# handle_assignment_task_submission: UUID fallback branch (line 1342)
 # ---------------------------------------------------------------------------
 
 
@@ -1694,7 +1694,7 @@ class TestDeleteAssignmentTaskSubmission:
 
 
 # ---------------------------------------------------------------------------
-# create_assignment_submission — new TrailRun / TrailStep branches + auto_grading
+# create_assignment_submission: new TrailRun / TrailStep branches + auto_grading
 # ---------------------------------------------------------------------------
 
 _PATCH_TRAIL_PRESENCE = "src.services.courses.activities.assignments.check_trail_presence"
@@ -1773,7 +1773,7 @@ class TestCreateAssignmentSubmission:
 
 
 # ---------------------------------------------------------------------------
-# delete_assignment_submission — certification revocation branch (lines 2292-2297)
+# delete_assignment_submission: certification revocation branch (lines 2292-2297)
 # ---------------------------------------------------------------------------
 
 
@@ -1982,7 +1982,7 @@ class TestDueDateEnforcement:
 
 
 # ---------------------------------------------------------------------------
-# update_assignment_submission — protected-field stripping (lines 2252-2254)
+# update_assignment_submission: protected-field stripping (lines 2252-2254)
 # ---------------------------------------------------------------------------
 
 
@@ -2046,7 +2046,7 @@ class TestUpdateAssignmentSubmissionProtectedFields:
         # SECURITY: the row's assignment_id is fixed by the URL/lookup keys.
         # Even an instructor must NOT be able to reparent a submission onto a
         # different assignment via the request body (assignment ids are global
-        # integers — this would be a cross-tenant write).
+        # integers, so this would be a cross-tenant write).
         other = Assignment(
             id=12,
             title="Other Assignment 2",
@@ -2113,7 +2113,7 @@ class TestAssignmentIntegrityGuards:
 
         Otherwise a learner who has been shown the answer key (show_correct_answers
         reveals it post-grade) could replay the correct answers, and the next
-        re-grade — which re-derives from the CURRENT stored answers — would score
+        re-grade (which re-derives from the CURRENT stored answers) would score
         the tampered version.
         """
         await self._user_submission(
@@ -2132,7 +2132,7 @@ class TestAssignmentIntegrityGuards:
     async def test_learner_can_still_edit_answers_while_pending(
         self, mock_request, db, assignment, assignment_task, regular_user
     ):
-        """A PENDING row is an attempt in progress — saving must keep working."""
+        """A PENDING row is an attempt in progress, so saving must keep working."""
         await self._user_submission(
             db, assignment, regular_user, AssignmentUserSubmissionStatus.PENDING
         )
@@ -2163,7 +2163,7 @@ class TestAssignmentIntegrityGuards:
         self, mock_request, db, assignment_task, admin_user
     ):
         """An instructor taking their own course saves ANSWERS through the same
-        path with no target uuid — the grade guard must not catch that."""
+        path with no target uuid; the grade guard must not catch that."""
         obj = AssignmentTaskSubmissionUpdate(task_submission={"answer": "x"})
         with patch(_PATCH_RBAC, new_callable=AsyncMock), \
              patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):

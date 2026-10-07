@@ -20,8 +20,8 @@ def test_get_deployment_mode_fails_closed_when_ee_hooks_do_not_load():
     """An unimportable EE package must NOT grant EE.
 
     This used to assert "ee". is_ee_available() only checks that an `ee`
-    directory exists, so any import error in the EE tree — a missing
-    dependency, a broken submodule, a stray empty directory — reached this
+    directory exists, so any import error in the EE tree (a missing
+    dependency, a broken submodule, a stray empty directory) reached this
     branch and unlocked every EE feature with the license check never run and
     verify_manifest() never called, since its only caller lives inside the
     module that failed to import.
@@ -66,7 +66,7 @@ def test_get_deployment_mode_fails_closed_for_hooks_without_license_check():
     """Hooks lacking is_license_active must NOT grant EE.
 
     This also used to assert "ee", to keep pre-licensing EE builds working.
-    That grace period is over — the license client shipped in 1.2.2 — and the
+    That grace period is over (the license client shipped in 1.2.2), and the
     branch was a license bypass anyone could reach by removing one function
     from an unsigned file. Deliberate behaviour change: an EE build older than
     1.2.2 now runs as OSS instead of unlicensed EE.

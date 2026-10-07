@@ -22,28 +22,28 @@ import {
 } from './helpers.js'
 
 /**
- * CLI integration tests — run the real binary against live Docker containers.
+ * CLI integration tests: run the real binary against live Docker containers.
  *
  * Every install lives under its own throwaway $HOME (mkdtemp), so these tests
- * never touch — or get confused by — installations on the host machine. They
+ * never touch (or get confused by) installations on the host machine. They
  * are organised into three independent sections:
  *
- *   1. Live install          — boot one fresh install and exercise every
+ *   1. Live install:           boot one fresh install and exercise every
  *                              non-interactive command against it.
- *   2. Upgrade old → new     — boot a pinned OLD image and upgrade via the CLI,
+ *   2. Upgrade old → new:      boot a pinned OLD image and upgrade via the CLI,
  *                              proving `learnhouse update` actually pulls and
  *                              the database survives (the LEA-47 fixes).
- *   3. No installation       — error paths when no install exists.
+ *   3. No installation:        error paths when no install exists.
  *
  * Requires Docker with internet access (pulls from ghcr.io).
  * Run with: bun run test:integration
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Section 1 — Live install: command coverage on a single fresh deployment
+// Section 1. Live install: command coverage on a single fresh deployment
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('CLI integration — live install (command coverage)', () => {
+describe('CLI integration: live install (command coverage)', () => {
   let home: string
   let installDir: string
   let deploymentId: string
@@ -445,7 +445,7 @@ describe('CLI integration — live install (command coverage)', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Section 2 — Upgrade an old image to a new one via `learnhouse update`
+// Section 2. Upgrade an old image to a new one via `learnhouse update`
 //
 // This is the LEA-47 regression surface: the update command used to rewrite
 // the compose tag but never pull, so the container restarted on the cached old
@@ -453,7 +453,7 @@ describe('CLI integration — live install (command coverage)', () => {
 // running image actually changed and the database survived.
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('CLI integration — upgrade (old → new image)', () => {
+describe('CLI integration: upgrade (old → new image)', () => {
   // 1.0.1 is the oldest stable GHCR tag carrying alembic migrations; upgrading
   // to latest applies the full delta of migrations.
   const OLD_VERSION = '1.0.1'
@@ -611,7 +611,7 @@ describe('CLI integration — upgrade (old → new image)', () => {
 
   describe('default update path (backup taken, already up to date)', () => {
     // Every other update test passes --no-backup; this exercises the DEFAULT
-    // path that takes a pre-upgrade DB dump (db-pre-upgrade-*.sql.gz — distinct
+    // path that takes a pre-upgrade DB dump (db-pre-upgrade-*.sql.gz, distinct
     // from the `backup` command's .tar.gz archives), while the install is
     // already on latest (a no-op re-pull that must still succeed and stay up).
     const preUpgrade = (dir: string) =>
@@ -633,10 +633,10 @@ describe('CLI integration — upgrade (old → new image)', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Section 3 — Commands run without an installation must fail clearly
+// Section 3. Commands run without an installation must fail clearly
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('CLI integration — no installation (error paths)', () => {
+describe('CLI integration: no installation (error paths)', () => {
   let emptyHome: string
   const cli = (args: string) => cliWithHome(emptyHome, args, 15_000)
 

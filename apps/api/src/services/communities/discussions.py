@@ -136,7 +136,7 @@ async def create_discussion(
     # author's auto-upvote vote row is written atomically with the discussion.
     # Previously the vote was committed in a *second* transaction after the
     # discussion was already persisted; if that second commit failed the
-    # discussion was left with upvote_count=1 but no matching vote row — a
+    # discussion was left with upvote_count=1 but no matching vote row, a
     # permanently inflated, unremovable phantom upvote.
     await db_session.flush()
 

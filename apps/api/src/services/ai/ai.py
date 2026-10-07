@@ -17,6 +17,7 @@ from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.org_auth import enforce_org_mfa, is_org_member
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.base import (
+    chat_session_belongs_to_user,
     ask_ai,
     get_chat_session_history,
     save_message_to_history,
@@ -46,7 +47,7 @@ async def _authorize_activity_ai_access(
     """Gate activity AI chat on the owning organization and course.
 
     ``activity_uuid`` is client-supplied, so without this any authenticated
-    user could stream another org's activity content back through the model —
+    user could stream another org's activity content back through the model,
     and have that org billed for the credit. Must run before rate limiting and
     credit reservation so an unauthorized caller never spends the victim's quota.
     """
@@ -204,11 +205,14 @@ async def ai_start_activity_chat_session(
         logger.error("AI service error in ai_start_activity_chat_session: %s", e)
         raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
 
-    # Save the message exchange to history
+    # Save the message exchange to history (and record who owns the session)
     save_message_to_history(
         chat_session["aichat_uuid"],
         chat_session_object.message,
-        response["output"]
+        response["output"],
+        user_id=resolve_acting_user_id(current_user),
+        course_uuid=course.course_uuid,
+        org_id=course.org_id,
     )
 
     return ActivityAIChatSessionResponse(
@@ -323,6 +327,10 @@ async def ai_send_activity_chat_message(
     # Default chat model (provider-agnostic; resolved from AI config)
     ai_model = model_for_tier("standard")
 
+    acting_user_id = resolve_acting_user_id(current_user)
+    if not chat_session_belongs_to_user(chat_session_object.aichat_uuid, acting_user_id):
+        refund_ai_credit(course.org_id)
+        raise HTTPException(status_code=404, detail="Chat session not found")
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
     message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
@@ -348,11 +356,14 @@ async def ai_send_activity_chat_message(
         logger.error("AI service error in ai_send_activity_chat_message: %s", e)
         raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
 
-    # Save the message exchange to history
+    # Save the message exchange to history (and record who owns the session)
     save_message_to_history(
         chat_session["aichat_uuid"],
         chat_session_object.message,
-        response["output"]
+        response["output"],
+        user_id=resolve_acting_user_id(current_user),
+        course_uuid=course.course_uuid,
+        org_id=course.org_id,
     )
 
     return ActivityAIChatSessionResponse(
@@ -436,7 +447,7 @@ async def _get_activity_and_course_info(
         )
 
     # F5: authorize before serializing any of the activity's content into the
-    # model context — and before the callers rate-limit / reserve credits.
+    # model context, and before the callers rate-limit / reserve credits.
     await _authorize_activity_ai_access(
         request, course, org.id, current_user, db_session
     )
@@ -539,6 +550,10 @@ async def ai_send_activity_chat_message_stream(
     await reserve_ai_credit(org.id, db_session)
 
     try:
+        if not chat_session_belongs_to_user(
+            chat_session_object.aichat_uuid, resolve_acting_user_id(current_user)
+        ):
+            raise HTTPException(status_code=404, detail="Chat session not found")
         chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
         message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "

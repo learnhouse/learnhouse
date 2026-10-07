@@ -26,7 +26,7 @@ export function AssignmentTaskGeneralEdit() {
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
     const assignment = useAssignments() as any
 
-    // No validate function — the teacher no longer configures points per task.
+    // No validate function: the teacher no longer configures points per task.
     // All tasks are graded out of 100 (a percentage). max_grade_value is still
     // sent in the update payload for backwards compatibility with legacy tasks
     // but is fixed at 100 for any edit from this screen.

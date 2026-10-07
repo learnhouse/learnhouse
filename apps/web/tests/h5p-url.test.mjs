@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { extractIframeSrc, normalizeH5PUrl } from "../lib/media/h5pUrl.ts";
 
-describe("normalizeH5PUrl — H5P.com", () => {
+describe("normalizeH5PUrl: H5P.com", () => {
   test("content page URL becomes its embed form", () => {
     const result = normalizeH5PUrl("https://team.h5p.com/content/1291234567890123456");
     expect(result.ok).toBe(true);
@@ -26,7 +26,7 @@ describe("normalizeH5PUrl — H5P.com", () => {
   });
 });
 
-describe("normalizeH5PUrl — self-hosted shapes", () => {
+describe("normalizeH5PUrl: self-hosted shapes", () => {
   test("Drupal/standalone /h5p/embed/<id> passes through", () => {
     const url = "https://learning.example.org/h5p/embed/42";
     expect(normalizeH5PUrl(url)).toEqual({ ok: true, url });
@@ -58,7 +58,7 @@ describe("normalizeH5PUrl — self-hosted shapes", () => {
   });
 });
 
-describe("normalizeH5PUrl — iframe snippets", () => {
+describe("normalizeH5PUrl: iframe snippets", () => {
   test("extracts src from a full iframe snippet", () => {
     const snippet =
       '<iframe src="https://team.h5p.com/content/123/embed" width="1090" height="694" frameborder="0" allowfullscreen="allowfullscreen" allow="autoplay *; geolocation *"></iframe>';
@@ -94,7 +94,7 @@ describe("normalizeH5PUrl — iframe snippets", () => {
   });
 });
 
-describe("normalizeH5PUrl — rejections", () => {
+describe("normalizeH5PUrl: rejections", () => {
   test("javascript: is rejected", () => {
     expect(normalizeH5PUrl("javascript:alert(document.cookie)")).toEqual({
       ok: false,
@@ -126,7 +126,7 @@ describe("normalizeH5PUrl — rejections", () => {
   });
 });
 
-describe("normalizeH5PUrl — schemeless input", () => {
+describe("normalizeH5PUrl: schemeless input", () => {
   test("schemeless host gets https://", () => {
     expect(normalizeH5PUrl("team.h5p.com/content/123")).toEqual({
       ok: true,
@@ -163,7 +163,7 @@ describe("normalizeH5PUrl — schemeless input", () => {
   });
 
   test("a scheme followed by digits never reaches the frame as that scheme", () => {
-    // It parses as host `javascript`, port 8080 — harmless, and crucially not
+    // It parses as host `javascript`, port 8080: harmless, and crucially not
     // a javascript: URL.
     expect(normalizeH5PUrl("javascript:8080/x").url.startsWith("https://")).toBe(true);
   });

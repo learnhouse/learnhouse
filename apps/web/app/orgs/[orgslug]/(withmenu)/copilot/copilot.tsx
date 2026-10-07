@@ -378,7 +378,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
 
   return (
     <div className="flex h-[calc(100vh-72px)] w-full max-w-(--breakpoint-2xl) mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-      {/* Sidebar — overlay on mobile, inline on desktop */}
+      {/* Sidebar: overlay on mobile, inline on desktop */}
       {sidebarOpen && (
       <>
         {/* Mobile backdrop */}
@@ -436,7 +436,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
       </>
       )}
 
-      {/* Toggle sidebar button (when closed, desktop only — mobile uses top bar button) */}
+      {/* Toggle sidebar button (when closed, desktop only; mobile uses top bar button) */}
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
@@ -813,7 +813,7 @@ export const AssistantMessage = React.memo(function AssistantMessage({ content, 
         </div>
       )}
 
-      {/* Message bubble — full width, relative for badge positioning */}
+      {/* Message bubble: full width, relative for badge positioning */}
       <div className="relative rounded-2xl px-4 py-3 bg-neutral-50 dark:bg-neutral-800/60 nice-shadow">
         {isWaiting ? (
           <ThinkingIndicator />
@@ -960,8 +960,8 @@ export function normalizeMathDelimiters(markdown: string): string {
         ? segment
         : segment
             // A \[ that opens its own line is a display equation, so it keeps the
-            // fenced form. Anywhere else — inside a list item, a table cell, a
-            // blockquote — it has to stay on one line, or the blank lines around
+            // fenced form. Anywhere else (inside a list item, a table cell, a
+            // blockquote) it has to stay on one line, or the blank lines around
             // the fence would close the block it sits in.
             .replace(
               /(^|\n)\\\[([\s\S]+?)\\\][ \t]*(?=\n|$)/g,

@@ -366,6 +366,10 @@ class TestCommunitiesService:
         ), patch(
             "src.services.communities.communities.check_resource_access",
             new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.communities.require_org_create_permission",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=403, detail="denied"),
         ):
             with pytest.raises(HTTPException) as create_denied_exc:
                 await create_community(
@@ -506,9 +510,9 @@ class TestCommunitiesService:
             "src.services.communities.communities.authorization_verify_if_user_is_anon",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.communities.communities.authorization_verify_based_on_roles",
+            "src.services.communities.communities.require_org_create_permission",
             new_callable=AsyncMock,
-            return_value=False,
+            side_effect=HTTPException(status_code=403, detail="denied"),
         ):
             with pytest.raises(HTTPException) as create_exc:
                 await create_community(

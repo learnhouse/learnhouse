@@ -8,7 +8,7 @@
 // icon; the .io catalog has no feature icons, so each row uses a single phosphor
 // `Check` instead.
 //
-// Pure presentational client component — pricing/limits arrive as props
+// Pure presentational client component: pricing/limits arrive as props
 // (priceOverrides / planLimits); it never imports @services/billing/*.
 import React from 'react'
 import { motion } from 'motion/react'

@@ -7,7 +7,7 @@ membership → rate limit → reserve credit → generate → refund on failure.
 Refinement reads the prior image server-side by ``source_file_id`` (a client
 base64 data URL is only a fallback), so the edit is reliable without a client
 re-fetch. Durable history rows are grouped by ``session_uuid`` to reconstruct the
-thread — so no Redis session is needed for images (the hybrid model's Redis half
+thread, so no Redis session is needed for images (the hybrid model's Redis half
 is used by the streaming quiz/assignment refine chats instead).
 """
 
@@ -26,7 +26,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
-from src.security.org_auth import is_org_member, enforce_org_mfa
+from src.security.org_auth import is_org_member, enforce_org_mfa, require_org_create_permission
 from src.services.ai.generations import (
     delete_generation,
     list_generations,
@@ -81,6 +81,8 @@ async def _load_org_and_authorize(
         )
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(user.id, org.id, db_session)
+    # Image generation is an authoring tool paid from the org's credits.
+    await require_org_create_permission(user, org.id, db_session, "courses")
     return org
 
 

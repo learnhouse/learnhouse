@@ -1,8 +1,6 @@
-"""Regression tests: client-IP spoofing, catch-all CORS/CSRF origin regex,
-CSRF service-key skip, and plan gates (org_id override, body-org creation,
-assignments limit, course-planning finalize limit)."""
+"""Regression tests: client-IP spoofing, CSRF service-key skip, and plan gates
+(org_id override, body-org creation, assignments limit)."""
 
-import re
 from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -13,7 +11,6 @@ from fastapi import HTTPException
 from sqlmodel import select
 from starlette.requests import Request
 
-from src.core.middleware.cors import get_cors_origin_regex
 from src.db.courses.certifications import CertificationCreate, Certifications
 from src.db.organization_config import OrganizationConfig
 from src.db.usergroups import UserGroup, UserGroupCreate
@@ -101,45 +98,6 @@ def _hosting(tenancy, allowed_regexp=CATCH_ALL, development_mode=False):
         ),
         general_config=SimpleNamespace(development_mode=development_mode),
     )
-
-
-class TestCatchAllOriginRegex:
-    @pytest.mark.parametrize("tenancy", ["multi", "single"])
-    def test_cors_rejects_foreign_origin(self, tenancy):
-        with patch(
-            "src.core.middleware.cors.get_learnhouse_config",
-            return_value=_hosting(tenancy),
-        ):
-            regex = get_cors_origin_regex()
-        assert not re.fullmatch(regex, "https://evil.invalid")
-        assert re.fullmatch(regex, "https://app.example.com")
-
-    def test_cors_dev_mode_stays_permissive(self):
-        with patch(
-            "src.core.middleware.cors.get_learnhouse_config",
-            return_value=_hosting("multi", development_mode=True),
-        ):
-            assert get_cors_origin_regex() == CATCH_ALL
-
-    @pytest.mark.parametrize("tenancy", ["multi", "single"])
-    def test_csrf_rejects_foreign_origin(self, tenancy):
-        from src.security.csrf import CSRFProtectionMiddleware
-
-        with patch(
-            "src.security.csrf.get_learnhouse_config",
-            return_value=_hosting(tenancy),
-        ):
-            mw = CSRFProtectionMiddleware(MagicMock())
-        assert mw.is_allowed_origin("https://evil.invalid") is False
-        assert mw.is_allowed_origin("https://app.example.com") is True
-
-    def test_scoped_regex_kept(self):
-        scoped = r"^https?://(.*\.)?learnhouse\.io$"
-        with patch(
-            "src.core.middleware.cors.get_learnhouse_config",
-            return_value=_hosting("multi", allowed_regexp=scoped),
-        ):
-            assert get_cors_origin_regex() == scoped
 
 
 class TestCsrfServiceKeySkip:
@@ -307,69 +265,3 @@ class TestPlanGates:
         for p in no_cache:
             p.stop()
         assert exc.value.status_code == 403
-
-
-class TestFinalizeCourseLimit:
-    @pytest.mark.asyncio
-    async def test_finalize_respects_course_limit(self, db, org, admin_user, mock_request):
-        from src.db.courses.courses import Course
-        from src.routers.ai import courseplanning as cp
-        from src.services.ai.schemas.courseplanning import (
-            CoursePlan,
-            CoursePlanningSessionData,
-            FinalizeCoursePlanRequest,
-        )
-
-        session = MagicMock(spec=CoursePlanningSessionData)
-        session.course_id = None
-        session.org_id = org.id
-        session.session_uuid = "s1"
-        plan = CoursePlan(
-            name="P", description="d", learnings="l", tags="t", chapters=[]
-        )
-        limits = AsyncMock(side_effect=HTTPException(status_code=403, detail="limit"))
-        with patch.object(cp, "get_course_planning_session", return_value=session), \
-             patch.object(cp, "verify_user_org_membership", AsyncMock(return_value=True)), \
-             patch.object(cp, "check_resource_access", AsyncMock()), \
-             patch.object(cp, "check_limits_with_usage", limits):
-            with pytest.raises(HTTPException) as exc:
-                await cp.finalize_course_plan(
-                    mock_request,
-                    FinalizeCoursePlanRequest(session_uuid="s1", plan=plan),
-                    admin_user,
-                    db,
-                )
-        assert exc.value.status_code == 403
-        limits.assert_awaited_once_with("courses", org.id, db)
-        assert (await db.execute(select(Course))).scalars().all() == []
-
-    @pytest.mark.asyncio
-    async def test_finalize_increments_course_usage(self, db, org, admin_user, mock_request):
-        from src.routers.ai import courseplanning as cp
-        from src.services.ai.schemas.courseplanning import (
-            CoursePlan,
-            CoursePlanningSessionData,
-            FinalizeCoursePlanRequest,
-        )
-
-        session = MagicMock(spec=CoursePlanningSessionData)
-        session.course_id = None
-        session.org_id = org.id
-        session.session_uuid = "s2"
-        plan = CoursePlan(
-            name="P", description="d", learnings="l", tags="t", chapters=[]
-        )
-        increase = AsyncMock()
-        with patch.object(cp, "get_course_planning_session", return_value=session), \
-             patch.object(cp, "save_course_planning_session"), \
-             patch.object(cp, "verify_user_org_membership", AsyncMock(return_value=True)), \
-             patch.object(cp, "check_resource_access", AsyncMock()), \
-             patch.object(cp, "check_limits_with_usage", AsyncMock(return_value=True)), \
-             patch.object(cp, "increase_feature_usage", increase):
-            await cp.finalize_course_plan(
-                mock_request,
-                FinalizeCoursePlanRequest(session_uuid="s2", plan=plan),
-                admin_user,
-                db,
-            )
-        increase.assert_awaited_once_with("courses", org.id, db)

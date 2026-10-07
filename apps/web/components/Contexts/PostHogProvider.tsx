@@ -32,7 +32,7 @@ function initPostHog(key: string) {
 
 /**
  * Disables ALL PostHog capture (autocapture, pageviews, session replay) while
- * the user is in the super-admin area (/admin) — that's the platform owner's
+ * the user is in the super-admin area (/admin); that's the platform owner's
  * internal dashboard and is intentionally untracked. Re-enables elsewhere.
  */
 function PostHogAdminGuard() {

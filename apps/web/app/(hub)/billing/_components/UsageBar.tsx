@@ -2,7 +2,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-/** Horizontal usage meter — ports the platform plan page's UsageBar. */
+/** Horizontal usage meter; ports the platform plan page's UsageBar. */
 export default function UsageBar({
   label,
   icon,
@@ -18,7 +18,7 @@ export default function UsageBar({
   limit: number | string
   color: string
   /**
-   * Soft limits are billed, not blocked — paid plans allow going past the
+   * Soft limits are billed, not blocked: paid plans allow going past the
    * member limit and charge for it. A soft bar never turns red and never says
    * "limit reached", because nothing is actually stopped.
    */
@@ -70,10 +70,10 @@ export default function UsageBar({
           }`}
         >
           {isFull
-            ? t('billing.limit_reached_upgrade', { defaultValue: 'Limit reached — upgrade to continue' })
+            ? t('billing.limit_reached_upgrade', { defaultValue: 'Limit reached: upgrade to continue' })
             : isHigh
               ? t('billing.remaining_nearing', {
-                  defaultValue: `${numericLimit - usage} remaining — nearing limit`,
+                  defaultValue: `${numericLimit - usage} remaining, nearing limit`,
                   n: numericLimit - usage,
                 })
               : t('billing.remaining', {

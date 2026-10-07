@@ -22,6 +22,8 @@ from src.services.audit.audit import record_audit_event
 from src.db.user_audit_events import UserAuditEventType
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.rbac import check_resource_access, AccessAction
+from src.security.org_auth import require_org_membership
+from src.services.courses.activities.access import verify_activity_reader_access
 
 
 async def _build_trail_read(
@@ -124,11 +126,15 @@ async def create_user_trail(
             detail="Trail already exists",
         )
 
+    await require_org_membership(user.id, trail_object.org_id, db_session)
+
     trail = Trail.model_validate(trail_object)
 
     trail.creation_date = str(datetime.now())
     trail.update_date = str(datetime.now())
     trail.org_id = trail_object.org_id
+    # A trail belongs to the caller, whatever user_id the body carries.
+    trail.user_id = user.id
     trail.trail_uuid = str(f"trail_{uuid4()}")
 
     # create trail
@@ -242,9 +248,9 @@ async def add_activity_to_trail(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
 
-    await check_resource_access(
-        request, db_session, user, course.course_uuid, AccessAction.READ
-    )
+    # Completing an activity leads to the certificate: only an activity the
+    # learner may actually consume (published, paid for, unlocked) counts.
+    await verify_activity_reader_access(request, activity, course, user, db_session)
 
     trail = await check_trail_presence(
         org_id=course.org_id,
@@ -296,7 +302,7 @@ async def add_activity_to_trail(
         await db_session.commit()
         await db_session.refresh(trailstep)
 
-    # Only track on first completion — avoid duplicates on re-visits
+    # Only track on first completion to avoid duplicates on re-visits
     if is_new_completion:
         await track(
             event_name=analytics_events.ACTIVITY_COMPLETED,
@@ -331,14 +337,14 @@ async def add_activity_to_trail(
 
     # Fire COURSE_COMPLETED when this specific activity completion pushed the
     # course over the finish line. Two conditions:
-    #   1. This call actually added a new TrailStep (is_new_completion) — so
+    #   1. This call actually added a new TrailStep (is_new_completion), so
     #      it represents a real transition, not a re-visit of an already-done
     #      activity.
     #   2. All activities in the course now have completed TrailSteps.
     #
     # We intentionally do NOT use ``check_course_completion_and_create_certificate``'s
     # return value here because it only reports True when a new certificate
-    # row is created — courses without a configured certification would never
+    # row is created; courses without a configured certification would never
     # fire this webhook otherwise. See that function's docstring for context.
     course_was_completed = False
     if is_new_completion and course and course.id:
@@ -387,6 +393,7 @@ async def add_activity_to_trail(
     trail_runs_raw = (await db_session.execute(statement)).scalars().all()
 
     return await _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)
+
 
 async def remove_activity_from_trail(
     request: Request,
@@ -438,7 +445,7 @@ async def remove_activity_from_trail(
     if trail_step:
         await db_session.delete(trail_step)
         await db_session.commit()
-        # Completion may have been lost — demote the enrollment back to
+        # Completion may have been lost, so demote the enrollment back to
         # in-progress so counts stay accurate.
         if course.id:
             await sync_trailrun_status(user.id, course.id, db_session)

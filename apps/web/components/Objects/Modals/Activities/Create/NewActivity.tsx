@@ -141,7 +141,7 @@ export const activityTypes: ActivityTypeCard[] = [
   },
 ]
 
-// SCORM authoring card — only shown when the org has the SCORM feature enabled.
+// SCORM authoring card, only shown when the org has the SCORM feature enabled.
 const scormActivityType: ActivityTypeCard = {
   key: 'scorm',
   icon: Package,

@@ -53,10 +53,11 @@ def test_sprite_interval_shrinks_for_short_and_caps_for_long():
 
 
 async def test_probe_missing_ffprobe_safe_fallback(monkeypatch):
-    # No ffprobe → (0, False, 0.0): no forced 1080 upscale, no audio map.
+    # No ffprobe → (0, False, 0.0, None): no forced 1080 upscale, no audio
+    # map, and video presence unknown (so the transcode is still attempted).
     monkeypatch.setattr(ht, "_ffprobe", lambda: None)
-    height, has_audio, duration = await ht._probe("whatever.mp4")
-    assert (height, has_audio, duration) == (0, False, 0.0)
+    height, has_audio, duration, has_video = await ht._probe("whatever.mp4")
+    assert (height, has_audio, duration, has_video) == (0, False, 0.0, None)
     # And that height selects a single lowest rung (never upscales).
     assert [r.name for r in ht.select_ladder(height)] == ["360p"]
 
@@ -194,7 +195,7 @@ def test_transcode_missing_source_returns_none(tmp_path):
 # --- Error-path coverage (no real hang/ffmpeg needed) ----------------------
 
 async def test_run_subprocess_returns_output():
-    # Uses a real trivial process (python) — no ffmpeg needed.
+    # Uses a real trivial process (python), so no ffmpeg is needed.
     import sys
     rc, out, _ = await ht._run_subprocess([sys.executable, "-c", "print('ok')"], 30)
     assert rc == 0 and out.strip() == b"ok"
@@ -228,8 +229,9 @@ async def test_transcode_bogus_source_returns_none(tmp_path):
 async def test_probe_non_media_returns_safe_defaults(tmp_path):
     p = tmp_path / "notvideo.mp4"
     p.write_bytes(b"just text, not a video")
-    height, has_audio, duration = await ht._probe(str(p))
+    height, has_audio, duration, has_video = await ht._probe(str(p))
     assert height == 0 and has_audio is False and duration == 0.0
+    assert has_video is None
 
 
 async def test_transcode_skips_source_without_video_stream(monkeypatch, tmp_path):
@@ -248,7 +250,3 @@ async def test_transcode_skips_source_without_video_stream(monkeypatch, tmp_path
     result = await ht.transcode_source_to_hls(str(src), str(tmp_path / "out"))
     assert result == {"unsupported": "no_video_stream"}
 
-
-async def test_probe_streams_unknown_when_probe_fails(monkeypatch):
-    monkeypatch.setattr(ht, "_ffprobe", lambda: None)
-    assert await ht._probe_streams("x.mp4") == (0, False, 0.0, None)

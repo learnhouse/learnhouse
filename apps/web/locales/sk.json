@@ -359,7 +359,7 @@
     "image_title_forgot": "Obnovte si heslo.",
     "image_subtitle_forgot": "Pomôžeme vám rýchlo sa vrátiť do vášho účtu.",
     "image_title_login": "Vitajte späť v LearnHouse.",
-    "image_subtitle_login": "Pokračujte tam, kde ste skončili — vaše kurzy, študenti a nástroje čakajú.",
+    "image_subtitle_login": "Pokračujte tam, kde ste skončili: vaše kurzy, študenti a nástroje čakajú.",
     "image_title_reset": "Už takmer hotovo.",
     "image_subtitle_reset": "Vytvorte si silné heslo, aby bol váš účet v bezpečí.",
     "image_title_signup": "Začnite učiť s LearnHouse.",
@@ -623,7 +623,7 @@
         "plan_generated": "Plán aktualizovaný",
         "plan_generated_hint": "Skontrolujte záložku Plán pre kontrolu a úpravu.",
         "describe_course": "Opíšte svoj kurz",
-        "describe_course_hint": "Použite chat vpravo na opis kurzu — téma, publikum a ciele.",
+        "describe_course_hint": "Použite chat vpravo na opis kurzu: téma, publikum a ciele.",
         "generating_plan": "Generuje sa plán kurzu...",
         "chapters": "Kapitoly",
         "activities": "aktivity",
@@ -1234,7 +1234,7 @@
     "embed": "Vložiť",
     "embed_code_copied": "Kód na vloženie skopírovaný!",
     "autosave_blocked": "Zatiaľ sa nedá uložiť",
-    "autosave_retry": "Nepodarilo sa uložiť — skúšame znova…",
+    "autosave_retry": "Nepodarilo sa uložiť, skúšame znova…",
     "autosave_unsaved": "Neuložené zmeny",
     "autosaved": "Uložené",
     "autosaving": "Ukladanie…",
@@ -1277,8 +1277,8 @@
     "retry_assignment_title": "Skúsiť túto úlohu znova?",
     "retry_assignment_confirm": "Vaše aktuálne odovzdanie a odpovede budú vymazané, aby ste mohli začať odznova. Vaša predchádzajúca známka bude nahradená po opätovnom odovzdaní.",
     "retry_assignment_remaining": "Po tomto vám zostáva {{remaining}} pokus{{plural}}.",
-    "retry_assignment_last": "Toto je váš posledný pokus — využite ho naplno.",
-    "retry_assignment_success": "Vaša práca bola vymazaná — skúste to znova.",
+    "retry_assignment_last": "Toto je váš posledný pokus. Využite ho naplno.",
+    "retry_assignment_success": "Vaša práca bola vymazaná. Skúste to znova.",
     "retry_assignment_failed": "Nepodarilo sa resetovať odovzdanie. Skúste to znova.",
     "retry_no_attempts_left": "Žiadne ďalšie pokusy",
     "quiz": {
@@ -1412,7 +1412,7 @@
       "confirm_label": "Na potvrdenie napíšte {{username}}",
       "deleting": "Odstraňuje sa…",
       "zone_subtitle": "Natrvalo odstráňte svoj účet. Túto akciu nemožno vrátiť späť.",
-      "zone_body": "Odstráni sa váš účet a prístup. Organizácia, ktorej ste jediným administrátorom — spolu so všetkými jej kurzami a obsahom — bude tiež odstránená. Organizácie s ďalšími administrátormi zostanú zachované; budete z nich iba odstránení."
+      "zone_body": "Odstráni sa váš účet a prístup. Organizácia, ktorej ste jediným administrátorom (spolu so všetkými jej kurzami a obsahom), bude tiež odstránená. Organizácie s ďalšími administrátormi zostanú zachované; budete z nich iba odstránení."
     }
   },
   "user": {
@@ -3865,9 +3865,9 @@
             "auth_required_submit": "Vyžaduje sa autentifikácia. Pre odovzdanie úlohy sa prihláste.",
             "hint_optional": "Nápoveda (voliteľné)",
             "paste_blocked": "Vkladanie je pre túto úlohu zakázané",
-            "paste_blocked_hint": "Vkladanie je zakázané — napíšte odpoveď priamo.",
-            "upload_locked_graded": "Táto práca už bola ohodnotená — súbor už nemožno zmeniť.",
-            "upload_locked_submitted": "Túto úlohu ste odovzdali — súbor už nemožno zmeniť."
+            "paste_blocked_hint": "Vkladanie je zakázané. Napíšte odpoveď priamo.",
+            "upload_locked_graded": "Táto práca už bola ohodnotená. Súbor už nemožno zmeniť.",
+            "upload_locked_submitted": "Túto úlohu ste odovzdali. Súbor už nemožno zmeniť."
           },
           "short_answer": {
             "prompt_label": "Otázka",
@@ -3884,13 +3884,13 @@
               "regex": "Regulárny výraz"
             },
             "explanation_label": "Vysvetlenie (zobrazené pri správnej odpovedi)",
-            "explanation_placeholder": "Voliteľné — vysvetlite, prečo je odpoveď správna",
+            "explanation_placeholder": "Voliteľné: vysvetlite, prečo je odpoveď správna",
             "your_answer_placeholder": "Napíšte svoju odpoveď...",
             "student_answer_label": "Odpoveď študenta",
             "accepted_answers_label": "Akceptované odpovede",
             "no_answer": "Žiadna odpoveď odovzdaná",
             "correct": "Správne",
-            "incorrect": "Nie celkom — skúste znova"
+            "incorrect": "Nie celkom, skúste znova"
           },
           "number_answer": {
             "prompt_label": "Otázka",
@@ -3899,16 +3899,16 @@
             "tolerance_label": "Tolerancia (±)",
             "unit_label": "Jednotka (voliteľné)",
             "unit_placeholder": "m/s², kg, °C...",
-            "unit_hint": "Zobrazené vedľa poľa odpovede. Nevynucované — študenti zadávajú len čísla.",
+            "unit_hint": "Zobrazené vedľa poľa odpovede. Nevynucované: študenti zadávajú len čísla.",
             "explanation_label": "Vysvetlenie (zobrazené pri správnej odpovedi)",
-            "explanation_placeholder": "Voliteľné — vysvetlite, ako dospieť k odpovedi",
+            "explanation_placeholder": "Voliteľné: vysvetlite, ako dospieť k odpovedi",
             "preview_label": "Akceptuje",
             "your_answer_placeholder": "Zadajte číslo...",
             "student_answer_label": "Odpoveď študenta",
             "accepted_range_label": "Akceptovaný rozsah",
             "no_answer": "Žiadna odpoveď odovzdaná",
             "correct": "Správne",
-            "incorrect": "Nie celkom — skúste znova"
+            "incorrect": "Nie celkom, skúste znova"
           },
           "code": {
             "student_behavior_label": "Správanie študenta",
@@ -3925,9 +3925,9 @@
             "show_solution_label": "Zobraziť riešenie po odovzdaní",
             "show_solution_description": "Po uložení práce študentom zobraziť referenčné riešenie učiteľa ako zbaliteľný panel.",
             "reference_solution_label": "Referenčné riešenie",
-            "locked_graded_hint": "Táto práca už bola ohodnotená — kód je len na čítanie.",
-            "locked_submitted_hint": "Túto úlohu ste odovzdali — kód je len na čítanie.",
-            "no_runnable_tests": "Táto úloha nemá testy, ktoré môžete spustiť — váš kód sa skontroluje pri hodnotení."
+            "locked_graded_hint": "Táto práca už bola ohodnotená. Kód je len na čítanie.",
+            "locked_submitted_hint": "Túto úlohu ste odovzdali. Kód je len na čítanie.",
+            "no_runnable_tests": "Táto úloha nemá testy, ktoré môžete spustiť. Váš kód sa skontroluje pri hodnotení."
           }
         },
         "generate_ai": "Generovať úlohy pomocou AI",
@@ -4036,7 +4036,7 @@
         },
         "tasks": {
           "title": "Výkon úloh",
-          "subtitle": "Priemerné skóre na úlohu — nízke stĺpce ukazujú, kde majú študenti problémy",
+          "subtitle": "Priemerné skóre na úlohu; nízke stĺpce ukazujú, kde majú študenti problémy",
           "empty": "Výkon na úlohu sa zobrazí po ohodnotení odovzdaní",
           "avg_grade": "Priemerná známka",
           "attempts": "pokusov"
@@ -4048,7 +4048,7 @@
         },
         "attention": {
           "title": "Môžu potrebovať pomoc",
-          "subtitle": "Študenti, ktorí neprešli — zvážte kontaktovanie",
+          "subtitle": "Študenti, ktorí neprešli; zvážte kontaktovanie",
           "empty": "Všetci ohodnotení prešli. Skvelá práca!"
         }
       },
@@ -4135,7 +4135,7 @@
             "auto_grading_label": "Automatické hodnotenie",
             "auto_grading_description": "Ohodnotiť a dokončiť aktivitu automaticky po odovzdaní. Funguje len keď každú úlohu možno ohodnotiť bez človeka.",
             "anti_copy_paste_label": "Blokovať kopírovanie a vkladanie",
-            "anti_copy_paste_description": "Odradiť od vkladania AI odpovedi blokovaním vkladania. Poznámka: toto je odstrašujúci prostriedok — dá sa obísť.",
+            "anti_copy_paste_description": "Odradiť od vkladania AI odpovedi blokovaním vkladania. Poznámka: toto je odstrašujúci prostriedok; dá sa obísť.",
             "show_correct_answers_label": "Zobraziť správne odpovede po hodnotení",
             "show_correct_answers_description": "Po ohodnotení študenti vidia správne odpovede vedľa svojich.",
             "submit": "Vytvoriť aktivitu"
@@ -4813,7 +4813,7 @@
         "avg_rate": "Priem. miera",
         "needs_attention": "Vyžaduje pozornosť",
         "total_samples": "Celkové vzorky",
-        "more_expand": "+{{count}} ďalších — kliknite pre rozbalenie",
+        "more_expand": "+{{count}} ďalších, kliknite pre rozbalenie",
         "activities_count": "{{count}} aktivít",
         "pct_of_total": "% z celku",
         "bar_width_hint": "Šírka stĺpca = relatívne zobrazenia",
@@ -5101,7 +5101,7 @@
       },
       "add_content": {
         "title": "Lekcia, kvôli ktorej sa oplatí prísť",
-        "description": "Pridajte video, stránku alebo kvíz — dajte študentom skutočný dôvod sa zapísať.",
+        "description": "Pridajte video, stránku alebo kvíz. Dajte študentom skutočný dôvod sa zapísať.",
         "action": "Pridať obsah"
       },
       "brand_school": {
@@ -5111,17 +5111,17 @@
       },
       "share_grow": {
         "title": "Vstupné dvere vašej školy",
-        "description": "Spustite ju naživo a získajte zdieľateľný odkaz — miesto, kam pošlete každého študenta.",
+        "description": "Spustite ju naživo a získajte zdieľateľný odkaz: miesto, kam pošlete každého študenta.",
         "action": "Otvoriť moju školu"
       },
       "invite_learners": {
         "title": "Privítajte svojho prvého študenta",
-        "description": "Zdieľajte odkaz na pripojenie alebo pozvite ľudí — dostaňte prvého študenta dnu.",
+        "description": "Zdieľajte odkaz na pripojenie alebo pozvite ľudí. Dostaňte prvého študenta dnu.",
         "action": "Pozvať študentov"
       },
       "build_community": {
         "title": "Udržte študentov, aby sa vracali",
-        "description": "Otvorte komunitný priestor, aby vaši študenti zostali aktívni — a priviedli aj svojich priateľov.",
+        "description": "Otvorte komunitný priestor, aby vaši študenti zostali aktívni a priviedli aj svojich priateľov.",
         "action": "Otvoriť komunitu"
       }
     },
@@ -5177,7 +5177,7 @@
         "goal": "Začnite monetizovať kurzy a budujte vzdelávaciu komunitu.",
         "highlights": {
           "courses": "Neobmedzené kurzy",
-          "courses_desc": "Vytvárajte toľko kurzov, koľko potrebujete — bez obmedzení.",
+          "courses_desc": "Vytvárajte toľko kurzov, koľko potrebujete: bez obmedzení.",
           "members": "Až 500 členov",
           "members_desc": "Rozrastajte svoju základňu študentov a spravujte ich na jednom mieste.",
           "payments": "Prijímajte platby",
@@ -5235,7 +5235,7 @@
       "trigger_authenticated_title": "Prístup: len prihlásení používatelia",
       "trigger_restricted_title": "Prístup: len konkrétne skupiny používateľov",
       "usergroups_header": "Skupiny používateľov",
-      "usergroups_none_assigned": "Žiadne skupiny nie sú priradené — nikto okrem administrátorov to nemôže otvoriť.",
+      "usergroups_none_assigned": "Žiadne skupiny nie sú priradené. Nikto okrem administrátorov to nemôže otvoriť.",
       "usergroups_remove_title": "Odstrániť",
       "usergroups_loading": "Načítavajú sa skupiny…",
       "usergroups_none_in_org": "V tejto organizácii zatiaľ neexistujú žiadne skupiny.",
@@ -5498,7 +5498,7 @@
     "recurring_subscription": "opakované predplatné",
     "what_youre_getting": "Čo získate",
     "pack_immediate": "Platí ihneď po zaplatení",
-    "pack_cancel_anytime": "Zrušte kedykoľvek — zostáva aktívne do konca fakturačného obdobia",
+    "pack_cancel_anytime": "Zrušte kedykoľvek; zostáva aktívne do konca fakturačného obdobia",
     "pack_credits_reset": "Kredity sa obnovujú každý fakturačný cyklus",
     "after_purchase": "Po nákupe",
     "unlimited": "Neobmedzené",
@@ -5548,9 +5548,9 @@
     "canceled_desc": "Vaše predplatné bude zrušené na konci aktuálneho fakturačného obdobia. Dovtedy si zachováte plný prístup.",
     "back_to_plan_usage": "Späť na Plán a využitie",
     "back_to_orgs": "Späť na organizácie",
-    "pack_purchased": "Doplnok zakúpený — vaše limity sú aktualizované.",
-    "checkout_success": "Predplatné aktualizované — vitajte na vašom novom pláne!",
-    "checkout_cancelled": "Pokladňa zrušená — neboli vykonané žiadne zmeny.",
+    "pack_purchased": "Doplnok zakúpený. Vaše limity sú aktualizované.",
+    "checkout_success": "Predplatné aktualizované. Vitajte na vašom novom pláne!",
+    "checkout_cancelled": "Pokladňa zrušená. Neboli vykonané žiadne zmeny.",
     "load_failed": "Nepodarilo sa nám načítať vaše organizácie.",
     "no_permission": "Nemáte oprávnenie spravovať fakturáciu tejto organizácie.",
     "no_permission_hint": "Iba správca organizácie môže zobraziť alebo zmeniť plán.",
@@ -5664,7 +5664,7 @@
     "toast": {
       "creating": "Vytvára sa organizácia…",
       "created": "Organizácia vytvorená!",
-      "checkoutFailed": "Organizácia vytvorená — inováciu môžete vykonať v sekcii Plán a využitie.",
+      "checkoutFailed": "Organizácia vytvorená. Inováciu môžete vykonať v sekcii Plán a využitie.",
       "failed": "Organizáciu sa nepodarilo vytvoriť"
     },
     "steps": {

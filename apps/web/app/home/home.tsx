@@ -62,7 +62,7 @@ function HomeClient() {
     }
   }, [isLoading, isAuthenticated, router])
 
-  // A brand-new (org-less) user has no orgs yet — send them straight to create
+  // A brand-new (org-less) user has no orgs yet, so send them straight to create
   // their first org rather than a confusing empty hub. Mirrors the platform's
   // post-signup onboarding hop.
   useEffect(() => {
@@ -74,7 +74,7 @@ function HomeClient() {
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
       <div className="relative min-h-screen">
-        {/* Blueprint grid — fades in from bottom */}
+        {/* Blueprint grid: fades in from bottom */}
         <div
           className="absolute inset-0 pointer-events-none z-0"
           style={{
@@ -218,7 +218,7 @@ function HomeClient() {
                   <OrgRow key={org.id ?? org.slug} org={org} access_token={access_token} />
                 ))}
 
-              {/* Create organization — prominent entry into the hub */}
+              {/* Create organization: prominent entry into the hub */}
               {isAuthenticated && orgs && (
                 <Link
                   href="/new"

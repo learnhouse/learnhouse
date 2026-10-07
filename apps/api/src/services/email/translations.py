@@ -15,7 +15,7 @@ SUPPORTED_LANGUAGES: Final[tuple[str, ...]] = (
 
 # Locales selectable as an organisation's UI language; mirrors
 # apps/web/lib/languages.ts. A UI locale need not have an email-translation
-# bundle — emails for any locale without one fall back to English (see `t()`).
+# bundle; emails for any locale without one fall back to English (see `t()`).
 SUPPORTED_UI_LANGUAGES: Final[tuple[str, ...]] = (
     "en", "fr", "de", "es", "ar", "ja", "pt", "ru", "zh", "hi",
     "ko", "it", "tr", "vi", "id", "pl", "uk", "nl", "th", "bn", "sk", "fa",
@@ -449,7 +449,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "email_verification.body": "Здравствуйте, {username}, добро пожаловать в {brand}! Нажмите на кнопку ниже, чтобы подтвердить адрес электронной почты и активировать аккаунт.",
         "email_verification.cta": "Подтвердить адрес почты",
         "email_verification.copy_paste": "Либо скопируйте эту ссылку:",
-        "email_verification.footer": "Срок действия ссылки — 1 час. Если вы не создавали аккаунт {brand}, проигнорируйте это письмо.",
+        "email_verification.footer": "Срок действия ссылки: 1 час. Если вы не создавали аккаунт {brand}, проигнорируйте это письмо.",
 
         "magic_login.subject": "Ваша ссылка для входа в {brand}",
         "magic_login.heading": "Войти в {brand}",

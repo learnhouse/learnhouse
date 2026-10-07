@@ -1,5 +1,5 @@
 /**
- * Goal: prove the submissions dashboard SORT control reorders rows — sorting by
+ * Goal: prove the submissions dashboard SORT control reorders rows: sorting by
  * Grade puts the higher-scoring student above the lower-scoring one. Seeds two
  * students (one fully correct → 100, one wrong → 0) and asserts their on-screen
  * order via vertical position. Uses the shared admin session.

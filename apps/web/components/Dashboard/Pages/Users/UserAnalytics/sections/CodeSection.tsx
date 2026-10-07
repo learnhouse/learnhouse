@@ -38,14 +38,14 @@ export default function CodeSection({ submissions }: { submissions: any[] }) {
                     <div className="truncate text-xs text-gray-400">{s.course_name}</div>
                   )}
                 </TableCell>
-                <TableCell className="text-xs">{s.language || '—'}</TableCell>
+                <TableCell className="text-xs">{s.language || 'n/a'}</TableCell>
                 <TableCell>
                   <span className={s.passed ? 'text-green-600' : 'text-red-600'}>
                     {s.passed ? t(`${P}.code.passed`) : t(`${P}.code.failed`)}
                   </span>
                 </TableCell>
                 <TableCell>{s.tests_summary || `${s.passed_tests}/${s.total_tests}`}</TableCell>
-                <TableCell>{s.execution_time_ms != null ? `${s.execution_time_ms}ms` : '—'}</TableCell>
+                <TableCell>{s.execution_time_ms != null ? `${s.execution_time_ms}ms` : 'n/a'}</TableCell>
                 <TableCell className="text-xs text-gray-500">{fmtDateTime(s.created_at)}</TableCell>
               </TableRow>
             ))}

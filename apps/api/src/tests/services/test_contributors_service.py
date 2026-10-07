@@ -12,6 +12,7 @@ import pytest
 from fastapi import HTTPException
 from sqlmodel import select
 
+from src.security.rbac import AccessAction
 from src.db.courses.courses import Course
 from src.db.resource_authors import (
     ResourceAuthor,
@@ -303,7 +304,8 @@ class TestGetCourseContributors:
                 db,
             )
 
-        mock_access.assert_awaited_once()
+        # READ to list, then UPDATE (non-raising) to decide whether emails show.
+        assert mock_access.await_count == 2
         assert len(result) == 1
         assert result[0]["user_id"] == contributor_user.id
         assert result[0]["authorship"] == ResourceAuthorshipEnum.CONTRIBUTOR
@@ -614,3 +616,21 @@ class TestRemoveBulkCourseContributors:
         assert len(result["failed"]) == 1
         assert result["failed"][0]["username"] == "boom"
         assert "boom" in result["failed"][0]["reason"]
+
+
+class TestContributorEmailsAreForManagers:
+    @pytest.mark.asyncio
+    async def test_reader_gets_public_profile_only(self, db, course, admin_user, mock_request):
+        from src.security.rbac.resource_access import AccessDecision
+
+        contributor_user = await _make_user(db, user_id=31, username="writer")
+        await _make_contributor(db, course, contributor_user.id)
+
+        async def access(*args, **kwargs):
+            # Readers pass READ but not UPDATE.
+            return AccessDecision(allowed=args[4] == AccessAction.READ, reason="")
+
+        with patch("src.services.courses.contributors.check_resource_access", side_effect=access):
+            result = await get_course_contributors(mock_request, course.course_uuid, admin_user, db)
+
+        assert "email" not in result[0]["user"]

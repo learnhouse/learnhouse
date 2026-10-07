@@ -1,6 +1,7 @@
 'use client'
 
 import { use } from 'react'
+import type React from 'react'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import OrgLanguageSync from '@components/Contexts/OrgLanguageSync'
 import '@styles/globals.css'
@@ -18,7 +19,7 @@ export default function EmbedLayout(
     <OrgProvider orgslug={params.orgslug}>
       <OrgLanguageSync />
       {/* Suppress the root layout fade-in animation for embeds */}
-      {/* Force light color scheme — prevents browsers in OS dark mode from auto-inverting text colors */}
+      {/* Force light color scheme: prevents browsers in OS dark mode from auto-inverting text colors */}
       <style>{`.animate-fade-in{animation:none!important;opacity:1!important}:root{color-scheme:light}html,body{color:#09090b}`}</style>
       <div className="min-h-screen">
         {children}

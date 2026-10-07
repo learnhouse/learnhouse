@@ -3,7 +3,7 @@
 Adds a ``lock_type`` column (native PG enum) to ``chapter`` and ``activity``
 that defaults to ``PUBLIC``. Values mirror the Playground access tiers:
 ``PUBLIC`` (anyone), ``AUTHENTICATED`` (signed-in only), ``RESTRICTED``
-(usergroup membership required — reuses the existing ``usergroupresource``
+(usergroup membership required; reuses the existing ``usergroupresource``
 table keyed by chapter_uuid/activity_uuid).
 
 Revision ID: a6b7c8d9e0f1
@@ -69,7 +69,7 @@ def _install_lock_column(bind, table: str, enum_name: str) -> None:
     if current and enum_name in current:
         return
 
-    # Existing column is VARCHAR (from an earlier partial run) — coerce any
+    # Existing column is VARCHAR (from an earlier partial run), so coerce any
     # lowercase values to the enum's uppercase labels, then swap the type.
     bind.exec_driver_sql(f"UPDATE {table} SET lock_type = UPPER(lock_type)")
     bind.exec_driver_sql(f"ALTER TABLE {table} ALTER COLUMN lock_type DROP DEFAULT")

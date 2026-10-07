@@ -17,7 +17,7 @@ def init_logging() -> None:
     """Send application logs to stdout.
 
     Without this the root logger has no handler, so Python's fallback emits
-    WARNING and above only — every ``logger.info`` in the codebase disappears,
+    WARNING and above only; every ``logger.info`` in the codebase disappears,
     including the ones a background job relies on to show it ran at all.
 
     Deliberately additive rather than ``basicConfig``: uvicorn installs its own

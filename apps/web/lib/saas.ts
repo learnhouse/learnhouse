@@ -4,7 +4,7 @@ import { getServerAPIUrl } from '@services/config/config'
 
 // Server-side deployment-mode check. The consolidated "bells and whistles"
 // (Turnstile, Loops, disposable-email, Resend) must only ever run on the SaaS
-// deployment — never on OSS / self-hosted — even if a stray env var is set.
+// deployment, never on OSS / self-hosted, even if a stray env var is set.
 // Callers pair this with the per-integration env check, so an integration is
 // active only when: mode === 'saas'  AND  its key/secret is configured.
 //
@@ -30,7 +30,7 @@ export async function getInstanceMode(): Promise<DeploymentMode> {
     const fromCookie = coerce(store.get('LH_mode')?.value)
     if (fromCookie) return fromCookie
   } catch {
-    // cookies() throws outside a request scope — fall through to the fetch.
+    // cookies() throws outside a request scope; fall through to the fetch.
   }
 
   // 2. Cached backend instance/info (for non-request contexts).
@@ -57,7 +57,7 @@ export async function isSaaSMode(): Promise<boolean> {
  * add-ons skip Turnstile on custom domains (the client widget is hidden to match).
  *
  * SECURITY: this gates a bot-protection control, so it is derived from the
- * non-forgeable request Host (routed by the ingress) — NOT the client-settable
+ * non-forgeable request Host (routed by the ingress), NOT the client-settable
  * LH_custom_domain cookie. A host that is the platform apex/subdomain is never a
  * custom domain (Turnstile stays on); any other host is only trusted after the
  * backend confirms it's a REGISTERED custom domain, so a spoofed Host can't

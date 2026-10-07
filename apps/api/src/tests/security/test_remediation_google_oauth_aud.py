@@ -2,12 +2,12 @@
 F-07: Google OAuth access-token audience verification.
 
 When ``LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID`` is set, tokens minted for a
-different OAuth client (``aud`` mismatch) must be rejected with 401 —
+different OAuth client (``aud`` mismatch) must be rejected with 401; this
 blocks the classic OAuth confused-deputy attack.
 
 When neither ``LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID`` nor its
 ``LEARNHOUSE_GOOGLE_CLIENT_ID`` alias is set we cannot check ``aud`` at
-all, so sign-in is refused rather than accepted unverified — falling
+all, so sign-in is refused rather than accepted unverified, since falling
 through would leave the confused-deputy attack open by default.
 """
 
@@ -87,7 +87,7 @@ async def test_accepts_token_minted_for_our_client(monkeypatch):
 @pytest.mark.asyncio
 async def test_refuses_when_no_client_id_is_configured(monkeypatch):
     """
-    Neither env spelling set — refuse rather than accept an unverifiable
+    Neither env spelling set: refuse rather than accept an unverifiable
     token. Both names must be cleared: either one alone is enough to
     configure the check.
     """

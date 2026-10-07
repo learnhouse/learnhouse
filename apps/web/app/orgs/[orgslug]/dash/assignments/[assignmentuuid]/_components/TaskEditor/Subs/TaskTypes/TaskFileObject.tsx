@@ -41,7 +41,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
     const taskSubmissionsMap = useAssignmentTaskSubmissions();
     const queryClient = useQueryClient();
 
-    // Student lock — same derivation as AssignmentBoxUI's `canStudentSave` and
+    // Student lock: same derivation as AssignmentBoxUI's `canStudentSave` and
     // the sibling task types (see TaskShortAnswerObject). The upload endpoint
     // only enforces the deadline: it returns a file_uuid and writes NO
     // submission row, so the new file is persisted purely by auto-save. Once
@@ -104,7 +104,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
             setIsLoading(false)
         } else {
             assignmentTaskStateHook({ type: 'reload' })
-            // Only the file uuid comes back from this endpoint — it uploads the
+            // Only the file uuid comes back from this endpoint: it uploads the
             // file and does NOT create/return a submission row. Reading
             // `assignment_task_submission_uuid` off this response yielded
             // undefined and wiped the existing submission uuid, so the follow-up
@@ -132,7 +132,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                 assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
             });
             if (preserveLiveAnswers) {
-                // Learner interacted before the batch resolved — keep their live
+                // Learner interacted before the batch resolved, so keep their live
                 // answer but adopt the server submission uuid so a save updates
                 // the existing row instead of creating a duplicate.
                 setUserSubmissions((prev: any) => ({
@@ -191,7 +191,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
         return true;
     };
 
-    // Used only by grading view — student view hydrates from useAssignments() context
+    // Used only by grading view; student view hydrates from useAssignments() context
     async function getAssignmentTaskUI() {
         if (!access_token) {
             return;
@@ -247,7 +247,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
         // Same guard as the sibling task types (TaskShortAnswerObject:259).
         // Without an existing submission uuid the grade is written against the
         // INSTRUCTOR's own row, where it is silently forced to 0 while the UI
-        // reports success — so refuse instead of grading a phantom submission.
+        // reports success, so refuse instead of grading a phantom submission.
         if (!userSubmissions?.assignment_task_submission_uuid) {
             toast.error(t('assignments.no_task_submission_to_grade', {
                 defaultValue: 'This student has not submitted a file for this task yet.',
@@ -408,10 +408,10 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                                             <div className="text-xs sm:text-sm font-medium">
                                                 {submissionIsGraded
                                                     ? t('dashboard.assignments.editor.task_editor.general.upload_locked_graded', {
-                                                        defaultValue: 'This submission has been graded — your file can no longer be changed.',
+                                                        defaultValue: 'This submission has been graded; your file can no longer be changed.',
                                                     })
                                                     : t('dashboard.assignments.editor.task_editor.general.upload_locked_submitted', {
-                                                        defaultValue: 'You have submitted this assignment — your file can no longer be changed.',
+                                                        defaultValue: 'You have submitted this assignment; your file can no longer be changed.',
                                                     })}
                                             </div>
                                         </div>

@@ -93,7 +93,7 @@ function DashMobileMenu() {
           className="flex items-center gap-0.5 px-1.5 py-1.5 bg-[#111113]/90 backdrop-blur-xl rounded-full"
           style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}
         >
-          {/* LearnHouse logo — links to home */}
+          {/* LearnHouse logo, links to home */}
           <Link
             href="/dash"
             className="flex items-center justify-center px-2.5 py-2.5 rounded-full transition-all duration-200"
@@ -106,7 +106,7 @@ function DashMobileMenu() {
               style={{ filter: 'brightness(0) invert(1)' }}
             />
           </Link>
-          {/* Progressive reveal — more icons as viewport widens */}
+          {/* Progressive reveal: more icons as viewport widens */}
           <PillLink href="/dash/courses" icon={<BookOpen size={18} weight="fill" />} active={isActive('/dash/courses')} className="hidden min-[340px]:flex" />
           <PillLink href="/dash/assignments" icon={<Files size={18} weight="fill" />} active={isActive('/dash/assignments')} className="hidden min-[390px]:flex" />
           <PillLink href="/dash/users/settings/users" icon={<Users size={18} weight="fill" />} active={isActive('/dash/users')} className="hidden min-[430px]:flex" />

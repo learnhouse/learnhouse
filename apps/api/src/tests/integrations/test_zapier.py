@@ -40,7 +40,7 @@ from src.routers.integrations.zapier import (
 
 @pytest.fixture
 async def role(db):
-    # Prerequisite row for UserOrganization.role_id FK. Kept minimal — tests
+    # Prerequisite row for UserOrganization.role_id FK. Kept minimal; tests
     # don't exercise role-based authorization, only that the membership row
     # can be inserted under FK enforcement.
     r = Role(
@@ -93,6 +93,7 @@ def token_user(org, user):
         org_id=org.id,
         token_name="Test Token",
         created_by_user_id=user.id,
+        rights={r: {"action_read": True} for r in ("courses", "users", "usergroups")},
     )
 
 
@@ -302,6 +303,15 @@ class TestZapierUsers:
         assert result[0].email == "test@example.com"
 
 
+class TestZapierTokenRights:
+    async def test_token_without_read_rights_cannot_list_members(self, db, token_user, user):
+        """A token scoped to, say, webhooks only must not export member emails."""
+        no_rights = token_user.model_copy(update={"rights": {}})
+        with _patch_plan_pro(), pytest.raises(HTTPException) as exc:
+            await zapier_list_users(limit=100, ctx=(no_rights, db))
+        assert exc.value.status_code == 403
+
+
 class TestZapierUsergroups:
     async def test_lists_org_groups(self, db, token_user, usergroup):
         with _patch_plan_pro():
@@ -380,7 +390,7 @@ class TestZapierSubscriptions:
                 ctx=(token_user, db),
             )
 
-        # A manual (non-Zapier) webhook in the same org — should NOT appear
+        # A manual (non-Zapier) webhook in the same org, which should NOT appear
         db.add(
             WebhookEndpoint(
                 webhook_uuid="webhook_manual",
@@ -396,7 +406,7 @@ class TestZapierSubscriptions:
                 update_date=str(datetime.now()),
             )
         )
-        # A Zapier webhook in another org — should NOT appear
+        # A Zapier webhook in another org, which should NOT appear
         db.add(
             WebhookEndpoint(
                 webhook_uuid="webhook_other",
@@ -459,7 +469,7 @@ class TestZapierSubscriptions:
                     ctx=(other_token, db),
                 )
 
-        # Our token tries to delete — should 404 (not leak existence)
+        # Our token tries to delete; should 404 (not leak existence)
         with _patch_plan_pro():
             with pytest.raises(HTTPException) as exc:
                 await zapier_delete_subscription(

@@ -33,7 +33,7 @@ The token-swap endpoint requires the API token to have the `users.action_read` p
 | You want to author rich-text dynamic pages | Programmatic (AI-assisted produces media-only activities) |
 
 <Callout type="warning">
-The assisted flow only handles **media files** -- video, PDF, image, and audio. It does not import HTML, Markdown, or rich-text content into dynamic pages. For text-heavy migrations, write a programmatic script.
+The assisted flow only handles **media files**: video, PDF, image, and audio. It does not import HTML, Markdown, or rich-text content into dynamic pages. For text-heavy migrations, write a programmatic script.
 </Callout>
 
 ## Supported file types
@@ -57,12 +57,12 @@ Files with any other extension are skipped. Per-file size limit is **5 GB**, and
 
 Temporary uploads older than 60 minutes are garbage-collected automatically, so finish a migration in one sitting.
 
-## Step 1 -- Upload files
+## Step 1: Upload files
 
 Upload up to 20 GB of files in one or more requests. Pass `temp_id` on subsequent requests to append to the same migration package:
 
 ```bash
-# First batch -- creates a new temp_id
+# First batch: creates a new temp_id
 curl -X POST "http://localhost:1338/api/v1/courses/migrate/upload?org_id=1" \
   -H "Authorization: Bearer lh_your_api_token" \
   -F 'files=@./lectures/lesson-01.mp4' \
@@ -103,7 +103,7 @@ curl -X POST "http://localhost:1338/api/v1/courses/migrate/upload?org_id=1&temp_
 The server limits concurrent uploads to **3 simultaneous requests per process**. If you parallelise the upload of a large package, throttle yourself accordingly.
 </Callout>
 
-## Step 2 -- Ask for a suggested structure
+## Step 2: Ask for a suggested structure
 
 Send the `temp_id` and a course name; Gemini groups the files into chapters and proposes activity titles:
 
@@ -135,7 +135,7 @@ Response:
           "file_ids": ["f3c4d5..."]
         },
         {
-          "name": "Lecture 1 -- The night sky",
+          "name": "Lecture 1: The night sky",
           "activity_type": "TYPE_VIDEO",
           "activity_sub_type": "SUBTYPE_VIDEO_HOSTED",
           "file_ids": ["f1a2b3..."]
@@ -152,23 +152,23 @@ Response:
 
 The AI prompt is parameterised by file extensions (see the table at the top of this page), so the suggested types are deterministic per extension; only the **names**, **chapter grouping**, and **ordering** are AI-generated.
 
-If the AI call fails or quota is exhausted, the endpoint falls back to a **flat structure** -- a single chapter named "Content" containing one activity per file, with names derived from filenames. This guarantees you can still complete the migration even if the AI service is degraded.
+If the AI call fails or quota is exhausted, the endpoint falls back to a **flat structure**: a single chapter named "Content" containing one activity per file, with names derived from filenames. This way you can still complete the migration even if the AI service is degraded.
 
 ### Editing the suggestion
 
-The structure is just JSON -- mutate it in your client however you like before posting to step 3. Common edits:
+The structure is plain JSON. Edit it in your client however you like before posting to step 3. Common edits:
 
 - Rename chapters and activities
 - Move activities between chapters (move a `file_ids` entry between activities, or duplicate the activity object)
 - Split or merge chapters
 - Reorder activities (the order in the array becomes the activity order)
-- Drop an activity by removing it from the array (its file will simply not be imported)
+- Drop an activity by removing it from the array (its file will not be imported)
 
 The only constraints are that every `file_id` you reference must exist in the manifest, every `activity_type` / `activity_sub_type` must be a valid enum value, and every file should be referenced by **at most one activity** (referencing the same file twice will fail on the second copy).
 
-## Step 3 -- Create the course
+## Step 3: Create the course
 
-Post the (possibly edited) structure back with the same `temp_id`. The server creates the course, chapters, activities, and copies each file from the temporary upload area to its final location -- all in a single database transaction:
+Post the (possibly edited) structure back with the same `temp_id`. The server creates the course, chapters, activities, and copies each file from the temporary upload area to its final location, all in a single database transaction:
 
 ```bash
 curl -X POST "http://localhost:1338/api/v1/courses/migrate/create?org_id=1" \
@@ -211,7 +211,7 @@ Response:
 
 The created course is **unpublished and private** by default (`public: false`, `published: false`). Visit `/{org_slug}/courses/{course_uuid}/edit` in the dashboard to review and publish it, or use `PUT /api/v1/courses/{course_uuid}` to publish programmatically.
 
-If anything fails (database error, file copy failure, missing files), the entire transaction is rolled back and `success` is `false` with the error in `error`. The temporary upload directory is cleaned up either way -- start over from step 1 with a fresh upload.
+If anything fails (database error, file copy failure, missing files), the entire transaction is rolled back and `success` is `false` with the error in `error`. The temporary upload directory is cleaned up either way, so start over from step 1 with a fresh upload.
 
 ## End-to-end script (bash)
 
@@ -244,7 +244,7 @@ STRUCTURE=$(curl -fsS -X POST "$API/courses/migrate/suggest?org_id=$ORG_ID" \
   -H "Content-Type: application/json" \
   -d "{\"temp_id\":\"$TEMP_ID\",\"course_name\":\"$COURSE_NAME\"}")
 
-# 3. (Optional) Edit the structure here, e.g. with `jq` -- skipped in this example.
+# 3. (Optional) Edit the structure here, e.g. with `jq` (skipped in this example).
 
 # 4. Create the course
 curl -fsS -X POST "$API/courses/migrate/create?org_id=$ORG_ID" \
@@ -255,7 +255,7 @@ curl -fsS -X POST "$API/courses/migrate/create?org_id=$ORG_ID" \
 
 ## Cleaning up
 
-If you abandon a migration mid-way, the temporary directory is deleted automatically after 60 minutes by the periodic cleanup task. There is no public endpoint to delete a `temp_id` early -- if you need to retry immediately, just start a new upload (you will get a new `temp_id`).
+If you abandon a migration mid-way, the temporary directory is deleted automatically after 60 minutes by the periodic cleanup task. There is no public endpoint to delete a `temp_id` early. If you need to retry immediately, start a new upload (you will get a new `temp_id`).
 
 A successfully completed migration leaves no temporary state behind: step 3 deletes the temp directory once the transaction commits.
 
@@ -266,4 +266,4 @@ A successfully completed migration leaves no temporary state behind: step 3 dele
 - **No assignments / quizzes / SCORM.** The flow does not infer interactive content from media. Create those separately via the programmatic flow.
 - **One file per activity.** Each migrated activity references exactly one source file. If you need an activity that combines multiple files (e.g. a dynamic page with several images), build that with the programmatic flow.
 
-For anything beyond the limits above, drop down to [Programmatic Migration](/developers/migration/programmatic) -- you can also use the assisted flow for the bulk of media and follow up with programmatic calls to add rich-text pages, assignments, and quizzes.
+For anything beyond the limits above, drop down to [Programmatic Migration](/developers/migration/programmatic). You can also use the assisted flow for the bulk of media and follow up with programmatic calls to add rich-text pages, assignments, and quizzes.

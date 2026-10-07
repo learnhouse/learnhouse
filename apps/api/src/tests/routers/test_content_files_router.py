@@ -9,6 +9,7 @@ from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
+from src.tests.fixtures.rows import activity_row
 from src.db.podcasts.podcasts import Podcast
 from src.db.users import APITokenUser, AnonymousUser, PublicUser
 from src.routers import content_files
@@ -167,6 +168,8 @@ class TestContentFilesRouter:
         db.add(public_course)
         db.add(private_podcast)
         db.add(public_podcast)
+        db.add(activity_row(31, org.id, 31, "act_private"))
+        db.add(activity_row(32, org.id, 32, "act_public"))
         await db.commit()
 
         outsider = PublicUser(
@@ -184,17 +187,17 @@ class TestContentFilesRouter:
                 admin_user,
                 db,
             )
-        assert not_found.value.status_code == 403
+        assert not_found.value.status_code == 404
 
         await content_files._check_content_access(
-            f"orgs/{org.org_uuid}/courses/{public_course.course_uuid}/activities/a/video.mp4",
+            f"orgs/{org.org_uuid}/courses/{public_course.course_uuid}/activities/act_public/video.mp4",
             AnonymousUser(),
             db,
         )
 
         with pytest.raises(Exception) as anon_private_course:
             await content_files._check_content_access(
-                f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/a/video.mp4",
+                f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/act_private/video.mp4",
                 AnonymousUser(),
                 db,
             )
@@ -202,28 +205,28 @@ class TestContentFilesRouter:
 
         with pytest.raises(Exception) as wrong_org_token:
             await content_files._check_content_access(
-                f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/a/video.mp4",
+                f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/act_private/video.mp4",
                 APITokenUser(org_id=org.id + 1),
                 db,
             )
         assert wrong_org_token.value.status_code == 403
 
         await content_files._check_content_access(
-            f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/a/video.mp4",
-            APITokenUser(org_id=org.id),
+            f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/act_private/video.mp4",
+            APITokenUser(org_id=org.id, rights={"courses": {"action_read": True}}),
             db,
         )
 
         with pytest.raises(Exception) as no_membership_course:
             await content_files._check_content_access(
-                f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/a/video.mp4",
+                f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/act_private/video.mp4",
                 outsider,
                 db,
             )
         assert no_membership_course.value.status_code == 403
 
         await content_files._check_content_access(
-            f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/a/video.mp4",
+            f"orgs/{org.org_uuid}/courses/{private_course.course_uuid}/activities/act_private/video.mp4",
             admin_user,
             db,
         )
@@ -272,7 +275,7 @@ class TestContentFilesRouter:
 
         await content_files._check_content_access(
             f"orgs/{org.org_uuid}/podcasts/{private_podcast.podcast_uuid}/episodes/a/audio.mp3",
-            APITokenUser(org_id=org.id),
+            APITokenUser(org_id=org.id, rights={"courses": {"action_read": True}}),
             db,
         )
 
@@ -476,6 +479,7 @@ class TestContentFilesRouter:
             update_date="2024-01-01",
         )
         db.add(course)
+        db.add(activity_row(30, org.id, 30, "activity_x"))
         await db.commit()
 
         from src.routers import content_files

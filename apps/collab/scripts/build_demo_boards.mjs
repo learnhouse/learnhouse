@@ -6,7 +6,7 @@
  * Yjs binary state rather than in ordinary columns. The collaboration server
  * loads that state from `Board.ydoc_state` (via GET /boards/{uuid}/ydoc) the
  * first time someone opens a board, which is what makes seeding it possible at
- * all — otherwise every demo board opens on a blank canvas and reads as a
+ * all. Otherwise every demo board opens on a blank canvas and reads as a
  * feature nobody uses.
  *
  * This lives in apps/collab because that is where `yjs` already is. It writes
@@ -73,7 +73,7 @@ function card({ x, y, width = 300, height = 200, color = '#ffffff', title, body 
   return block('boardCard', { x, y, width, height, color, zIndex: 1 }, children)
 }
 
-/** A checklist. This one is an atom — its items live entirely in attributes. */
+/** A checklist. This one is an atom: its items live entirely in attributes. */
 function todo({ x, y, width = 280, height = 260, color = 'blue', title, items }) {
   return block('todoBlock', {
     x,
@@ -129,7 +129,7 @@ const BOARDS = {
     card({
       x: 80, y: 60, width: 420, height: 150,
       title: 'Escalation triggers',
-      body: ['Any one of these is enough. They are deliberately mechanical — no judgement call required.'],
+      body: ['Any one of these is enough. They are deliberately mechanical; no judgement call required.'],
     }),
     note({ x: 80, y: 250, color: 'pink', title: 'Two or more', body: ['Same fault reported by more than one customer within an hour. This is an incident, not a ticket.'] }),
     note({ x: 370, y: 250, color: 'pink', title: 'Legal', body: ['Legal action, a regulator or the press is mentioned. Escalate before replying.'] }),
@@ -154,7 +154,7 @@ const BOARDS = {
     card({ x: 80, y: 60, width: 340, height: 120, title: 'Went well', body: ['Kept short on purpose. Detail lives in the notes.'] }),
     note({ x: 80, y: 210, color: 'green', body: ['Response times held through the seasonal peak.'] }),
     note({ x: 80, y: 380, color: 'green', body: ['The new starters shipped real work in week three.'] }),
-    card({ x: 450, y: 60, width: 340, height: 120, title: 'Did not', body: ['No blame — these are process problems.'] }),
+    card({ x: 450, y: 60, width: 340, height: 120, title: 'Did not', body: ['No blame; these are process problems.'] }),
     note({ x: 450, y: 210, color: 'pink', body: ['A definition changed mid-quarter and nobody noticed for a month.'] }),
     note({ x: 450, y: 380, color: 'pink', body: ['Two people promised the same last unit.'] }),
     card({ x: 820, y: 60, width: 340, height: 120, title: 'Changing', body: ['Owners named, or it does not count.'] }),

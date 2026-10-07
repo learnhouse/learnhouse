@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
 
-// Real tar runs (execSync is NOT mocked here — tar is a deterministic system
+// Real tar runs (execSync is NOT mocked here; tar is a deterministic system
 // tool, no daemon needed). Only the database exec calls are stubbed: the dump
 // writer produces a real database.sql so the archive is genuine.
 const promptStub = vi.hoisted(() => {
@@ -38,7 +38,7 @@ class ProcessExit extends Error {
   constructor(code: number) { super(`process.exit(${code})`); this.code = code }
 }
 
-describe('backup / restore — real tar, stubbed database', () => {
+describe('backup / restore: real tar, stubbed database', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined
@@ -87,7 +87,7 @@ describe('backup / restore — real tar, stubbed database', () => {
     const archives = fs.readdirSync(backupsDir).filter((f) => f.endsWith('.tar.gz'))
     expect(archives).toHaveLength(1)
 
-    // The temp working dir must have been cleaned up — only the archive remains.
+    // The temp working dir must have been cleaned up; only the archive remains.
     expect(fs.readdirSync(backupsDir).filter((e) => !e.endsWith('.tar.gz'))).toHaveLength(0)
 
     // Extract for real and verify contents.
@@ -240,7 +240,7 @@ describe('backup / restore — real tar, stubbed database', () => {
     dockerMock.dockerExecFromFile.mockClear()
     try {
       await backupCommand()
-      // Prove the menu actually ROUTED to restore (ran psql) rather than no-opping —
+      // Prove the menu actually ROUTED to restore (ran psql) rather than no-opping;
       // the previous version of this test had no assertion at all.
       expect(dockerMock.dockerExecFromFile).toHaveBeenCalledWith(
         'learnhouse-db-dep1', 'psql -U learnhouse -d learnhouse', expect.stringMatching(/database\.sql$/),
@@ -257,7 +257,7 @@ describe('backup / restore — real tar, stubbed database', () => {
     dockerMock.dockerExecFromFile.mockClear()
     await expect(backupCommand(archive, { restore: true })).resolves.toBeUndefined()
     // Prove the restore ACTUALLY ran psql against the right container with the
-    // extracted dump — not merely that the command returned without throwing.
+    // extracted dump, not merely that the command returned without throwing.
     expect(dockerMock.dockerExecFromFile).toHaveBeenCalledWith(
       'learnhouse-db-dep1',
       'psql -U learnhouse -d learnhouse',
@@ -371,7 +371,7 @@ describe('backup / restore — real tar, stubbed database', () => {
     await backupCommand()
     const backupsDir = path.join(installDir, 'backups')
     const archive = path.join(backupsDir, fs.readdirSync(backupsDir).find((f) => f.endsWith('.tar.gz'))!)
-    // Change the live .env, then restore — the archived .env should come back.
+    // Change the live .env, then restore; the archived .env should come back.
     fs.writeFileSync(path.join(installDir, '.env'), 'LEARNHOUSE_DOMAIN=changed\n')
     await backupCommand(archive, { restore: true })
     expect(fs.readFileSync(path.join(installDir, '.env'), 'utf-8')).toContain('LEARNHOUSE_DOMAIN=localhost')

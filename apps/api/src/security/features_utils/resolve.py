@@ -12,7 +12,7 @@ from src.security.features_utils.plans import (
 )
 
 
-# Features that are always on (no admin toggle — cannot be disabled)
+# Features that are always on (no admin toggle, cannot be disabled)
 ALWAYS_ON_FEATURES = {"courses", "usergroups", "assignments"}
 
 # Always-on features that have plan-based limits (not unlimited)
@@ -110,7 +110,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
 
     - "available" = the feature is part of the org's PLAN entitlement (what the
       plan makes usable), independent of any admin toggle.
-    - "enabled" = whether it is actually ON, after the per-org admin toggle — but
+    - "enabled" = whether it is actually ON, after the per-org admin toggle, but
       a feature included in a PAID plan is always kept enabled (paying users can
       never have their plan features toggled off).
     - limit=0 means unlimited.
@@ -155,7 +155,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
     # SaaS mode: full resolution
     plan = _get_plan_from_config(config)
 
-    # Layer 1: Plan — what the org's plan makes AVAILABLE
+    # Layer 1: Plan (what the org's plan makes AVAILABLE)
     plan_config = get_plan_feature_config(plan, feature)
     plan_enabled = plan_config.get("enabled", False)
     plan_limit = plan_config.get("limit", 0)
@@ -165,7 +165,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
     force_enabled = overrides.get("force_enabled", False)
     extra_limit = overrides.get("extra_limit", 0)
 
-    # "available" = the org is entitled to this feature — the plan includes it,
+    # "available" = the org is entitled to this feature: the plan includes it,
     # or it was comp-granted via an override. This is kept SEPARATE from whether
     # an admin has toggled it on/off for the org.
     available = plan_enabled or force_enabled
@@ -179,7 +179,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
     else:
         effective_limit = plan_limit + extra_limit + purchased_extra
 
-    # Layer 5: Admin toggle. The superadmin can turn a feature off for an org —
+    # Layer 5: Admin toggle. The superadmin can turn a feature off for an org,
     # EXCEPT it can never take away a feature the org is PAYING for: anything
     # included in a paid plan stays enabled regardless of the toggle. The toggle
     # still governs free orgs and comp-granted extras.

@@ -40,7 +40,7 @@ let _cached: SharedStudent | null = null
 export function sharedStudent(): SharedStudent {
   if (_cached) return _cached
   if (!existsSync(SHARED_FILE)) {
-    throw new Error(`shared student file missing at ${SHARED_FILE} — did global-setup run?`)
+    throw new Error(`shared student file missing at ${SHARED_FILE}; did global-setup run?`)
   }
   _cached = JSON.parse(readFileSync(SHARED_FILE, 'utf8')) as SharedStudent
   return _cached

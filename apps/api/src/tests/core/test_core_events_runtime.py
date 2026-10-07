@@ -56,7 +56,7 @@ class _FakeAsyncSession:
 def _patch_session_factory(monkeypatch, row):
     """Point autoinstall at a fake application session factory.
 
-    The real one is the app-wide engine — the whole point of the module is that
+    The real one is the app-wide engine, and the whole point of the module is that
     it must not build a second one.
     """
     opened = []

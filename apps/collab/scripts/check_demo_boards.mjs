@@ -5,7 +5,7 @@
  * The board stores card positions as node attributes and then does arithmetic
  * on them while dragging (`nodeX + dx`). If an attribute comes back as the
  * string "120" instead of the number 120, the first drag concatenates instead
- * of adding and the card jumps somewhere absurd — a failure that is invisible
+ * of adding and the card jumps somewhere absurd, a failure that is invisible
  * until someone actually drags a seeded card.
  */
 

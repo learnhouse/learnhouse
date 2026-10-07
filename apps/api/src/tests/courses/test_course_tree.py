@@ -308,7 +308,7 @@ async def test_non_slim_matches_slim_on_navigation_fields(
     second_activity,
     bypass_rbac,
 ):
-    """Slim and non-slim must agree on every navigation field — only
+    """Slim and non-slim must agree on every navigation field; only
     content/details should differ."""
     slim_tree = await get_course_chapters(
         mock_request,
@@ -349,7 +349,7 @@ async def test_non_slim_matches_slim_on_navigation_fields(
         assert s.content == {}
         assert s.details is None
 
-    # And at least one of the full activities must carry real content/details —
+    # And at least one of the full activities must carry real content/details,
     # otherwise this test would pass vacuously.
     assert any(f.content for f in full_acts)
     assert any(f.details for f in full_acts)

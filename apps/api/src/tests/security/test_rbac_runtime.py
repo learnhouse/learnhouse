@@ -295,9 +295,8 @@ class TestRBACRuntime:
     async def test_authorization_verify_based_on_roles_covers_dict_and_object_rights(self):
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="users"), \
             patch("src.security.rbac.rbac.is_user_superadmin", return_value=False), \
-            patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock, return_value=False), \
-            patch("src.security.rbac.rbac._load_applicable_roles", new_callable=AsyncMock, return_value=[_role_with_dict_rights()]):
-            session = _session_with_results(_result(first=None))
+            patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock, return_value=False):
+            session = _session_with_results(_result(all=[_role_with_dict_rights()]))
 
             assert (
                 await authorization_verify_based_on_roles(
@@ -312,9 +311,8 @@ class TestRBACRuntime:
 
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="users"), \
             patch("src.security.rbac.rbac.is_user_superadmin", return_value=False), \
-            patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock, return_value=False), \
-            patch("src.security.rbac.rbac._load_applicable_roles", new_callable=AsyncMock, return_value=[_role_with_object_rights()]):
-            session = _session_with_results(_result(first=None))
+            patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock, return_value=False):
+            session = _session_with_results(_result(all=[_role_with_object_rights()]))
 
             assert (
                 await authorization_verify_based_on_roles(

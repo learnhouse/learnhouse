@@ -8,7 +8,7 @@ class MediaShareToken(SQLModel, table=True):
     """A random, opaque, revocable token for a copyable media share link.
 
     Each "Copy link" mints a NEW row, so the link is unique every time and is not
-    derivable from the media_uuid. The token is NOT an access bypass — the resolve
+    derivable from the media_uuid. The token is NOT an access bypass; the resolve
     endpoint still enforces the requesting user's access to the media.
     """
     id: Optional[int] = Field(default=None, primary_key=True)

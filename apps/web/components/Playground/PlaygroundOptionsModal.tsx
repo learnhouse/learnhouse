@@ -332,7 +332,7 @@ function AccessTab({
         })}
       </div>
 
-      {/* User groups — only for restricted */}
+      {/* User groups, only for restricted */}
       {accessType === 'restricted' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -583,7 +583,7 @@ function LinkUserGroupForm({
     enabled: !!accessToken && !!orgId,
     staleTime: 60_000,
   })
-  // Store usergroup_uuid (string) — needed by the playground endpoint
+  // Store usergroup_uuid (string); the playground endpoint needs it
   const [selected, setSelected] = useState<string>('')
 
   useEffect(() => {

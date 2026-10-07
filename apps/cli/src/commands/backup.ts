@@ -211,7 +211,7 @@ export async function backupCommand(archivePath?: string, options?: { restore?: 
     return
   }
 
-  // No flag — in non-interactive mode default to create, otherwise prompt
+  // No flag: in non-interactive mode default to create, otherwise prompt
   p.intro(pc.cyan('LearnHouse Backup'))
 
   if (!process.stdout.isTTY) {

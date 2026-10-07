@@ -517,7 +517,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           const { autocompletion } = await import('@codemirror/autocomplete')
           exts.push(autocompletion())
         } catch {
-          // Package not installed yet — skip
+          // Package not installed yet; skip
         }
 
         // Feature 6: Locked regions (viewer mode only)
@@ -1695,7 +1695,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             className="flex flex-col min-w-0 bg-[#1a1b26] relative"
           >
             <div className="absolute right-0 top-0 bottom-0 w-[3px] z-10 hover:bg-blue-500/40 transition-colors bg-white/[0.06]" />
-            {/* Header bar — dark */}
+            {/* Header bar (dark) */}
             <div className="flex items-center justify-between px-4 border-b border-white/[0.06] shrink-0">
               <div className="flex items-center gap-2.5 py-3">
                 <Code weight="duotone" size={14} className="text-neutral-500" />
@@ -1751,7 +1751,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 )}
               </div>
             </div>
-            {/* File tabs — VS Code style */}
+            {/* File tabs, VS Code style */}
             {additionalFiles.length > 0 && (
               <div className="flex items-center bg-[#16161e] border-b border-white/[0.06] overflow-x-auto shrink-0">
                 <button
@@ -1781,7 +1781,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 ))}
               </div>
             )}
-            {/* Editor — dark Tokyo Night theme area */}
+            {/* Editor: dark Tokyo Night theme area */}
             <div dir="ltr" className={`flex-1 overflow-hidden ${cmClassName}`}>
               {activeFileTab === 'main' ? (
                 extensions.length > 0 && (
@@ -1820,7 +1820,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 />
               )}
             </div>
-            {/* Run bar — dark */}
+            {/* Run bar (dark) */}
             <div className="border-t border-white/[0.06]">
               {(isRunning || (results && !isRunning)) && (
                 <div className="h-0.5 w-full bg-white/[0.06] overflow-hidden">

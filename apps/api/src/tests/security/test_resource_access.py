@@ -213,7 +213,7 @@ class TestResourceAccessChecker:
         assert decision.allowed is True
         assert decision.via_admin is True
         assert decision.user_id == mock_public_user.id
-        # Bypass reads the flag off the user object — no DB calls.
+        # Bypass reads the flag off the user object, so no DB calls.
         mock_db_session.execute.assert_not_called()
 
     @pytest.mark.asyncio

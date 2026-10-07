@@ -3,7 +3,7 @@
 The AI emits a strict, schema-validated ``GeneratedQuiz``; the service then
 stamps the ids the editor's ``blockQuiz`` node expects (quizId / question_id /
 answer_id) so the frontend can insert it verbatim. This targets the *editor*
-quiz block — NOT the graded assignment QUIZ task, which has a different shape.
+quiz block, NOT the graded assignment QUIZ task, which has a different shape.
 """
 
 from typing import List, Literal, Optional

@@ -1,7 +1,7 @@
 """
 Authenticated serving of Library media file bytes.
 
-The client never receives a direct storage URL — media bytes are streamed
+The client never receives a direct storage URL; media bytes are streamed
 through the API after an access check (see the /media/{uuid}/file endpoint).
 Handles both filesystem and s3/R2 delivery, with HTTP Range support.
 """
@@ -61,8 +61,8 @@ def _serve_mime(media: Media, rel_key: str) -> str:
 
     The stored extension is server-derived (`get_safe_filename` builds it from
     the validated content type), so it is the authoritative signal.
-    `media.file_mime` is consulted only when the extension is unknown — legacy
-    rows, mostly — and even then only if it names a type on the servable list.
+    `media.file_mime` is consulted only when the extension is unknown (legacy
+    rows, mostly), and even then only if it names a type on the servable list.
     """
     by_extension = _mime_for(rel_key)
     if by_extension != 'application/octet-stream':
@@ -189,7 +189,7 @@ def _serve_fs(rel_key, mime, headers, range_header, head):
             stream(), status_code=206, media_type=mime,
             headers={**headers, "Content-Range": f"bytes {start}-{end}/{file_size}", "Content-Length": str(length)},
         )
-    # Full file — FileResponse handles efficient sending.
+    # Full file: FileResponse handles efficient sending.
     return FileResponse(path=str(path), media_type=mime, headers=headers)
 
 

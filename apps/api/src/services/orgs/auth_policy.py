@@ -2,12 +2,12 @@
 
 Two independent controls, both living in the org config blob (no migration):
 
-* **allowed_auth_methods** — the set of sign-in methods a member may use to
+* **allowed_auth_methods**: the set of sign-in methods a member may use to
   access this org. A session records *how* it was established (``amr``); if that
   method is not on the org's list, the member is refused and must sign in again
   with an allowed one. The default lists every method, i.e. no restriction.
 
-* **allow_central_session_sharing** — whether a session established on the
+* **allow_central_session_sharing**: whether a session established on the
   central apex (``learnhouse.io``) or for a *different* org may be used to reach
   this org directly. A session records which org it was minted for (``sorg``).
   When sharing is off, a member arriving with a foreign/central session is
@@ -18,7 +18,7 @@ Why per-org-access rather than at login: like the 2FA policy (see
 cannot be a login-time gate. It is evaluated per request against the session's
 provenance, which is published on a contextvar by ``get_current_user``.
 
-Fail-open: an evaluation error must never take down access — RBAC has already
+Fail-open: an evaluation error must never take down access. RBAC has already
 run; this is an additional restriction, not the wall between a stranger and the
 data.
 """
@@ -52,7 +52,7 @@ def _legacy_session_within_grace(provenance: SessionProvenance) -> bool:
 
     The deadline rides on the session itself, stamped the first time the session
     is rotated. A session old enough to predate that stamping has no deadline
-    yet and is admitted — it acquires one within an access token's lifetime, so
+    yet and is admitted; it acquires one within an access token's lifetime, so
     the exemption cannot outlive a single rotation.
     """
     expires = provenance.legacy_grace_expires
@@ -135,8 +135,8 @@ async def evaluate_org_auth(
             policy = await get_org_auth_policy(db_session, org_id)
 
             # Fast path: default config (all methods, sharing on) is a pure no-op,
-            # so unmodified orgs — and every existing test that never sets
-            # provenance — are unaffected.
+            # so unmodified orgs (and every existing test that never sets
+            # provenance) are unaffected.
             if policy.method_restricted or not policy.allow_central_session_sharing:
                 provenance = get_session_provenance() or SessionProvenance()
 
@@ -152,7 +152,7 @@ async def evaluate_org_auth(
                 # user signed in", not "they used a forbidden method".
                 # Treating unknown as a violation locked out every member
                 # holding a session minted before this feature existed the
-                # moment an admin unchecked a single method — they kept
+                # moment an admin unchecked a single method: they kept
                 # seeing the org, but every authorized request 403'd.
                 #
                 # So a method-less session is admitted, but only until the
@@ -228,7 +228,7 @@ async def is_login_method_allowed(
     """Whether ``method`` may be used to sign in *to* ``org_id``.
 
     ``org_id`` is None for the org-less apex login, which no single org's policy
-    governs — that session is caught later by the per-request gate instead.
+    governs; that session is caught later by the per-request gate instead.
     """
     if org_id is None:
         return True
@@ -252,7 +252,7 @@ async def enforce_login_auth_method(
     :func:`enforce_org_auth_policy` is what actually protects the org's data, but
     it only runs *after* a session exists. Letting a disallowed sign-in succeed
     and then refusing every page afterwards is indistinguishable from a broken
-    product, so when the sign-in names an org we refuse it at the door — which is
+    product, so when the sign-in names an org we refuse it at the door, which is
     also what the login page renders.
     """
     if await is_login_method_allowed(db_session, org_id, method):

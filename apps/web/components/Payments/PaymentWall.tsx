@@ -24,7 +24,7 @@ interface PaymentWallProps {
 }
 
 /**
- * Universal payment wall — displayed when any resource returns HTTP 402.
+ * Universal payment wall, displayed when any resource returns HTTP 402.
  * Works for courses, podcasts, playgrounds, or any future resource
  * type without any per-type code changes.
  *
