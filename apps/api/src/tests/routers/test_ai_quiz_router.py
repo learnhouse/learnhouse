@@ -41,7 +41,8 @@ def _http_req():
 
 @pytest.fixture(autouse=True)
 def _allow_rbac():
-    with patch.object(qz, "check_resource_access", new=AsyncMock()):
+    with patch.object(qz, "check_resource_access", new=AsyncMock()), \
+         patch.object(qz, "require_org_create_permission", new=AsyncMock()):
         yield
 
 
@@ -115,18 +116,15 @@ async def test_activity_grounding_denied_by_rbac():
     reserve.assert_not_called()
 
 
-async def test_activity_missing_grounding_skipped():
-    body = GenerateQuizRequest(org_id=5, prompt="p", activity_uuid="act_missing")
-    record = SimpleNamespace(ai_generation_uuid="aigen_3")
+async def test_activity_missing_is_404_not_ungated():
+    """An activity uuid that doesn't resolve must not skip both gates."""
     with patch.object(qz, "is_org_member", new=AsyncMock(return_value=True)), \
-         patch.object(qz, "enforce_ai_rate_limit"), \
-         patch.object(qz, "reserve_ai_credit", new=AsyncMock()), \
-         patch.object(qz, "resolve_model_for_org", new=AsyncMock(return_value="m")), \
-         patch.object(qz, "generate_quiz", new=AsyncMock(return_value=(_QUIZ, "s1"))), \
-         patch.object(qz, "record_generation", new=AsyncMock(return_value=record)):
-        # org, then activity None
-        resp = await qz.api_generate_quiz(body, _http_req(), _user(), _db_returning(_org(), None))
-    assert resp.quiz["quizId"] == "quiz_1"
+         patch.object(qz, "_load_activity_content", new=AsyncMock(return_value=(None, None, None))), \
+         patch.object(qz, "reserve_ai_credit", new=AsyncMock()) as reserve:
+        with pytest.raises(HTTPException) as exc:
+            await qz.api_generate_quiz(GenerateQuizRequest(org_id=5, prompt="p", activity_uuid="act_missing"), MagicMock(), _user(), _db_returning(_org()))
+    assert exc.value.status_code == 404
+    reserve.assert_not_awaited()
 
 
 async def test_empty_quiz_refunds_and_502():

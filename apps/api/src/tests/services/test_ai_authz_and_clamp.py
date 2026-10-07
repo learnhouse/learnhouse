@@ -264,6 +264,8 @@ class TestActivityChatAuthorization:
         )
 
         with patch.object(
+            ai_service, "chat_session_belongs_to_user", return_value=True
+        ), patch.object(
             ai_service, "check_resource_access", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH

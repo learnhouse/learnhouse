@@ -42,17 +42,28 @@ async def _seed_course_update(
 class TestCourseUpdatesService:
     @pytest.mark.asyncio
     async def test_create_update_validates_org_and_course(self, db, org, course, admin_user, mock_request):
-        with pytest.raises(HTTPException) as org_exc:
-            await create_update(
+        # A caller-supplied org_id is ignored: the update (and its webhook) go
+        # to the course's own org, never to another tenant's.
+        with patch(
+            "src.services.courses.updates.check_resource_access", new_callable=AsyncMock
+        ), patch(
+            "src.services.courses.updates.dispatch_webhooks", new_callable=AsyncMock
+        ) as hooks:
+            created = await create_update(
                 mock_request,
                 course.course_uuid,
                 CourseUpdateCreate(title="New update", content="Body", org_id=999),
                 admin_user,
                 db,
             )
+        from sqlmodel import select
+        from src.db.courses.course_updates import CourseUpdate
 
-        assert org_exc.value.status_code == 409
-        assert org_exc.value.detail == "Organization does not exist"
+        stored = (await db.execute(
+            select(CourseUpdate).where(CourseUpdate.courseupdate_uuid == created.courseupdate_uuid)
+        )).scalars().first()
+        assert stored.org_id == course.org_id
+        assert hooks.await_args.kwargs["org_id"] == course.org_id
 
         with pytest.raises(HTTPException) as course_exc:
             await create_update(

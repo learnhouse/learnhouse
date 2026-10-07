@@ -72,7 +72,6 @@ async def _users_map(
     }
 
 
-
 # -------------------------------------------------------------------
 # Request / response models
 # -------------------------------------------------------------------
@@ -256,6 +255,8 @@ def _parse_safe_params(
         safe_days = int(days_param) if days_param else default_days
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Invalid parameter")
+    # Cap the window: an unbounded interval only costs query time.
+    safe_days = max(1, min(safe_days, 3650))
     return safe_org_id, safe_days
 
 

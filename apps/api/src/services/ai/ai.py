@@ -17,6 +17,7 @@ from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.org_auth import enforce_org_mfa, is_org_member
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.base import (
+    chat_session_belongs_to_user,
     ask_ai,
     get_chat_session_history,
     save_message_to_history,
@@ -204,11 +205,14 @@ async def ai_start_activity_chat_session(
         logger.error("AI service error in ai_start_activity_chat_session: %s", e)
         raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
 
-    # Save the message exchange to history
+    # Save the message exchange to history (and record who owns the session)
     save_message_to_history(
         chat_session["aichat_uuid"],
         chat_session_object.message,
-        response["output"]
+        response["output"],
+        user_id=resolve_acting_user_id(current_user),
+        course_uuid=course.course_uuid,
+        org_id=course.org_id,
     )
 
     return ActivityAIChatSessionResponse(
@@ -323,6 +327,10 @@ async def ai_send_activity_chat_message(
     # Default chat model (provider-agnostic; resolved from AI config)
     ai_model = model_for_tier("standard")
 
+    acting_user_id = resolve_acting_user_id(current_user)
+    if not chat_session_belongs_to_user(chat_session_object.aichat_uuid, acting_user_id):
+        refund_ai_credit(course.org_id)
+        raise HTTPException(status_code=404, detail="Chat session not found")
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
     message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
@@ -348,11 +356,14 @@ async def ai_send_activity_chat_message(
         logger.error("AI service error in ai_send_activity_chat_message: %s", e)
         raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
 
-    # Save the message exchange to history
+    # Save the message exchange to history (and record who owns the session)
     save_message_to_history(
         chat_session["aichat_uuid"],
         chat_session_object.message,
-        response["output"]
+        response["output"],
+        user_id=resolve_acting_user_id(current_user),
+        course_uuid=course.course_uuid,
+        org_id=course.org_id,
     )
 
     return ActivityAIChatSessionResponse(
@@ -539,6 +550,10 @@ async def ai_send_activity_chat_message_stream(
     await reserve_ai_credit(org.id, db_session)
 
     try:
+        if not chat_session_belongs_to_user(
+            chat_session_object.aichat_uuid, resolve_acting_user_id(current_user)
+        ):
+            raise HTTPException(status_code=404, detail="Chat session not found")
         chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
         message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "

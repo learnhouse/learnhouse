@@ -93,6 +93,7 @@ def token_user(org, user):
         org_id=org.id,
         token_name="Test Token",
         created_by_user_id=user.id,
+        rights={r: {"action_read": True} for r in ("courses", "users", "usergroups")},
     )
 
 
@@ -300,6 +301,15 @@ class TestZapierUsers:
             result = await zapier_list_users(limit=100, ctx=(token_user, db))
         assert len(result) == 1
         assert result[0].email == "test@example.com"
+
+
+class TestZapierTokenRights:
+    async def test_token_without_read_rights_cannot_list_members(self, db, token_user, user):
+        """A token scoped to, say, webhooks only must not export member emails."""
+        no_rights = token_user.model_copy(update={"rights": {}})
+        with _patch_plan_pro(), pytest.raises(HTTPException) as exc:
+            await zapier_list_users(limit=100, ctx=(no_rights, db))
+        assert exc.value.status_code == 403
 
 
 class TestZapierUsergroups:

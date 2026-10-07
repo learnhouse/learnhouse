@@ -8,6 +8,7 @@ from fastapi import HTTPException, Request
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import resolve_acting_user_id
 from src.db.organizations import Organization
+from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
 from src.security.superadmin import is_user_superadmin
 from src.db.communities.communities import (
@@ -181,7 +182,13 @@ async def get_communities_by_org(
         ))
         .where(or_(
             Community.public == True,
-            UserGroupResource.resource_uuid.is_(None),  # Not in any UserGroup
+            and_(  # Not in any UserGroup: org-wide, so members of this org only
+                UserGroupResource.resource_uuid.is_(None),
+                select(UserOrganization.id).where(
+                    UserOrganization.user_id == acting_user_id,
+                    UserOrganization.org_id == Community.org_id,
+                ).exists(),
+            ),
             UserGroupUser.user_id == acting_user_id,  # User in linked UserGroup
         ))
         .distinct()

@@ -21,7 +21,6 @@ from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.db.user_organizations import UserOrganization
 from src.security.auth import get_current_user, resolve_acting_user_id
-from src.security.superadmin import is_user_superadmin
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.services.orgs.users import _csv_safe
@@ -99,9 +98,11 @@ async def _org_member_ids(
 async def _verify_target_in_org(
     user_id: int, org_id: int, db_session: AsyncSession, acting_user_id: int
 ) -> None:
-    """Ensure the TARGET user belongs to this org (no cross-org disclosure)."""
-    if await is_user_superadmin(user_id, db_session):
-        return
+    """Ensure the TARGET user belongs to this org (no cross-org disclosure).
+
+    No exception for superadmin targets: being a platform operator is not a
+    reason to hand an org admin that person's email, login IPs and history.
+    """
     if not await _org_member_ids([user_id], org_id, db_session, acting_user_id):
         raise HTTPException(status_code=404, detail="User is not a member of this organization")
 
