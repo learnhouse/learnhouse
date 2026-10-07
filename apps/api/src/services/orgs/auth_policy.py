@@ -142,40 +142,44 @@ async def evaluate_org_auth(
 
                 # Machine credentials carry their own org boundary
                 # (_verify_api_token_org_boundary) and are exempt from the human
-                # auth-method policy.
-                if provenance.amr != AUTH_METHOD_API_TOKEN:
-                    allowed = set(policy.allowed_auth_methods)
-                    # A session with no ``amr`` means "we don't know how this
-                    # user signed in", not "they used a forbidden method".
-                    # Treating unknown as a violation locked out every member
-                    # holding a session minted before this feature existed the
-                    # moment an admin unchecked a single method — they kept
-                    # seeing the org, but every authorized request 403'd.
-                    #
-                    # So a method-less session is admitted, but only until the
-                    # grace deadline carried on the session itself. It cannot be
-                    # indefinite: rotation copies the missing claim forward, so
-                    # these sessions never age out on their own and would
-                    # otherwise skip the policy for good. Past the deadline they
-                    # are refused like any other unapproved session, and signing
-                    # in again replaces them with a method-bearing session.
-                    #
-                    # A session that positively names a method outside the
-                    # allow-list is refused immediately, grace or not.
-                    if policy.method_restricted and (
-                        provenance.amr not in allowed
-                        if provenance.amr is not None
-                        else not _legacy_session_within_grace(provenance)
-                    ):
-                        result = {
-                            "code": METHOD_NOT_ALLOWED_CODE,
-                            "allowed_methods": sorted(allowed),
-                        }
-                    elif (
-                        not policy.allow_central_session_sharing
-                        and provenance.org_id != org_id
-                    ):
-                        result = {"code": SESSION_NOT_BOUND_CODE}
+                # auth-method policy. Org tokens and the sessions they mint are
+                # still bound to their org below; only superadmin tokens (no
+                # org) are cross-org by design.
+                is_api_token = provenance.amr == AUTH_METHOD_API_TOKEN
+                cross_org_token = is_api_token and provenance.org_id is None
+                allowed = set(policy.allowed_auth_methods)
+                # A session with no ``amr`` means "we don't know how this
+                # user signed in", not "they used a forbidden method".
+                # Treating unknown as a violation locked out every member
+                # holding a session minted before this feature existed the
+                # moment an admin unchecked a single method — they kept
+                # seeing the org, but every authorized request 403'd.
+                #
+                # So a method-less session is admitted, but only until the
+                # grace deadline carried on the session itself. It cannot be
+                # indefinite: rotation copies the missing claim forward, so
+                # these sessions never age out on their own and would
+                # otherwise skip the policy for good. Past the deadline they
+                # are refused like any other unapproved session, and signing
+                # in again replaces them with a method-bearing session.
+                #
+                # A session that positively names a method outside the
+                # allow-list is refused immediately, grace or not.
+                if not is_api_token and policy.method_restricted and (
+                    provenance.amr not in allowed
+                    if provenance.amr is not None
+                    else not _legacy_session_within_grace(provenance)
+                ):
+                    result = {
+                        "code": METHOD_NOT_ALLOWED_CODE,
+                        "allowed_methods": sorted(allowed),
+                    }
+                elif (
+                    not policy.allow_central_session_sharing
+                    and not cross_org_token
+                    and provenance.org_id != org_id
+                ):
+                    result = {"code": SESSION_NOT_BOUND_CODE}
     except HTTPException:  # pragma: no cover - defensive: surface a policy 403 unchanged
         raise
     except Exception:

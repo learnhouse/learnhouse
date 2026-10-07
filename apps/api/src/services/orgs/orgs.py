@@ -14,6 +14,9 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
 from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.security.org_auth import get_user_org
+from src.security.superadmin import is_user_superadmin
+from src.services.security.profile_validation import validate_profile_fields
 from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
@@ -266,6 +269,8 @@ async def create_org(
             detail=f"The slug '{org_object.slug}' is already taken. Please choose a different slug.",
         )
 
+    reject_url_in_org_name(org_object.name)
+
     org = Organization.model_validate(org_object)
 
     if isinstance(current_user, AnonymousUser):
@@ -362,6 +367,8 @@ async def create_org_with_config(
             detail=f"The slug '{org_object.slug}' is already taken. Please choose a different slug.",
         )
 
+    reject_url_in_org_name(org_object.name)
+
     org = Organization.model_validate(org_object)
 
     if isinstance(current_user, AnonymousUser):
@@ -450,6 +457,8 @@ async def update_org(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
+    reject_url_in_org_name(org_object.name)
+
     # Everything else on the demo org is fair game — editing the name or logo
     # is part of what a prospect is here to try, and the refresh puts it back.
     # Two fields are not:
@@ -475,6 +484,17 @@ async def update_org(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Custom scripts cannot be set on the demo organization.",
             )
+
+    # Custom scripts run on every org page, and slug/email are the org's
+    # identity: Admin only, not Maintainers. Unchanged values pass so the
+    # general settings form can resubmit the whole org.
+    admin_only_changes = (
+        (org_object.scripts is not None and org_object.scripts != (org.scripts or {}))
+        or (org_object.slug is not None and org_object.slug != org.slug)
+        or (org_object.email is not None and org_object.email != org.email)
+    )
+    if admin_only_changes:
+        await require_org_admin_role(request, org, current_user, "update", db_session)
 
     # Verify if the new slug is already in use
     statement = select(Organization).where(Organization.slug == org_object.slug)
@@ -782,8 +802,8 @@ async def delete_org(
     org_uuid = org.org_uuid
     org_name = org.name
 
-    # RBAC check - verifies user is admin of THIS specific organization
-    await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    # Admin of THIS specific organization; Maintainers are not enough.
+    await require_org_admin_role(request, org, current_user, "delete", db_session)
 
     # AUDIT LOG: Record the deletion for security audit trail
     user_id = current_user.id if hasattr(current_user, 'id') else 'unknown'
@@ -850,8 +870,8 @@ async def wipe_org_content(
             detail="Organization not found",
         )
 
-    # RBAC check - verifies the caller is an admin of THIS organization
-    await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    # Admin of THIS organization; Maintainers are not enough.
+    await require_org_admin_role(request, org, current_user, "delete", db_session)
 
     courses = (await db_session.execute(
         select(Course).where(Course.org_id == org_id)
@@ -1405,6 +1425,7 @@ async def update_org_email_sender_name_config(
             status_code=400,
             detail="Sender name contains no usable characters",
         )
+    reject_url_in_org_name(sanitized, field="email_sender_name")
 
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
@@ -2151,6 +2172,55 @@ async def rbac_check(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User rights (admin status) : You don't have the right to perform this action",
             )
+
+
+async def is_org_admin_role(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """True if the user holds the Admin role in the org, or is a superadmin.
+
+    Unlike ``is_org_admin`` this excludes Maintainers, whose seeded role has no
+    organization update/delete rights.
+    """
+    if await is_user_superadmin(user_id, db_session):
+        return True
+    user_org = await get_user_org(user_id, org_id, db_session)
+    return user_org is not None and user_org.role_id == ADMIN_ROLE_ID
+
+
+async def require_org_admin_role(
+    request: Request,
+    org: Organization,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
+    action: Literal["create", "update", "delete"],
+    db_session: AsyncSession,
+):
+    """``rbac_check`` plus, for human users, the Admin role specifically.
+
+    Internal users and API tokens keep the ``rbac_check`` semantics (tokens are
+    scoped by their own rights).
+    """
+    await rbac_check(request, org.org_uuid, current_user, action, db_session)
+    if isinstance(current_user, (InternalUser, APITokenUser)):
+        return
+    if not await is_org_admin_role(current_user.id, org.id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only organization administrators can perform this action",
+        )
+
+
+def reject_url_in_org_name(name: Optional[str], field: str = "name") -> None:
+    """Org names are relayed in invite/role emails; links in them are phishing bait."""
+    result = validate_profile_fields({field: name})
+    if not result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Organization names may not contain URLs or links",
+                "errors": result.errors,
+                "invalid_fields": result.invalid_fields,
+            },
+        )
 
 
 ## 🔒 RBAC Utils ##

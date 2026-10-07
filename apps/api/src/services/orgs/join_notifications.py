@@ -57,6 +57,7 @@ async def notify_user_joined_org(
 
         # Imported here: these modules pull in org services that import this one.
         from src.services.email.branding import resolve_org_email_branding
+        from src.services.email.safe_text import email_org_name, email_user_name
         from src.services.email.utils import get_org_signup_base_url
         from src.services.users.emails import send_org_join_email
 
@@ -66,8 +67,8 @@ async def notify_user_joined_org(
 
         send_org_join_email(
             email=user.email,
-            username=user.username,
-            org_name=org.name,
+            username=email_user_name(user.username),
+            org_name=email_org_name(org.name),
             # Org landing page, not `/home` — `/home` is the platform org
             # picker on every host and would deroute the user straight back
             # out of the org they just joined.

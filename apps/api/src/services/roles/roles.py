@@ -186,22 +186,16 @@ async def create_role(
                 # AttributeError (HTTP 500). Skip anything that isn't a dict.
                 if not isinstance(right_permissions, dict):
                     continue
-                if right_key in user_role.rights:
-                    user_right_permissions = user_role.rights[right_key]
-                    for perm_key, perm_value in right_permissions.items():
-                        if isinstance(perm_value, bool) and perm_value:
-                            if isinstance(user_right_permissions, dict) and perm_key in user_right_permissions:
-                                user_has_perm = user_right_permissions[perm_key]
-                                if not user_has_perm:
-                                    raise HTTPException(
-                                        status_code=403,
-                                        detail=f"You cannot create a role with '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
-                                    )
-                            else:
-                                raise HTTPException(
-                                    status_code=403,
-                                    detail=f"You cannot create a role with '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
-                                )
+                # A bucket missing from the creator's rights grants nothing.
+                user_right_permissions = user_role.rights.get(right_key)
+                for perm_key, perm_value in right_permissions.items():
+                    if isinstance(perm_value, bool) and perm_value:
+                        if isinstance(user_right_permissions, dict) and user_right_permissions.get(perm_key):
+                            continue
+                        raise HTTPException(
+                            status_code=403,
+                            detail=f"You cannot create a role with '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
+                        )
 
     # Complete the role object
     role.role_uuid = f"role_{uuid4()}"

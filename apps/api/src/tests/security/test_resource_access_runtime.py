@@ -249,11 +249,11 @@ class TestResourceAccessRuntime:
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
-            "src.security.rbac.resource_access.authorization_verify_based_on_org_admin_status",
+            "src.security.rbac.resource_access.is_org_admin",
             new_callable=AsyncMock,
             return_value=False,
         ):
-            create_allowed = await checker._check_write_access("course_x", AccessAction.CREATE, course_cfg, False)
+            create_allowed = await checker._check_write_access("course_x", AccessAction.CREATE, course_cfg, False, org_id=1)
             assert create_allowed.allowed is True and create_allowed.via_role is True
 
         with patch(
@@ -261,11 +261,11 @@ class TestResourceAccessRuntime:
             new_callable=AsyncMock,
             return_value=False,
         ), patch(
-            "src.security.rbac.resource_access.authorization_verify_based_on_org_admin_status",
+            "src.security.rbac.resource_access.is_org_admin",
             new_callable=AsyncMock,
             return_value=True,
         ):
-            create_admin = await checker._check_write_access("course_x", AccessAction.CREATE, course_cfg, False)
+            create_admin = await checker._check_write_access("course_x", AccessAction.CREATE, course_cfg, False, org_id=1)
             assert create_admin.allowed is True and create_admin.via_admin is True
 
         with patch(
@@ -273,11 +273,11 @@ class TestResourceAccessRuntime:
             new_callable=AsyncMock,
             return_value=False,
         ), patch(
-            "src.security.rbac.resource_access.authorization_verify_based_on_org_admin_status",
+            "src.security.rbac.resource_access.is_org_admin",
             new_callable=AsyncMock,
             return_value=False,
         ):
-            create_denied = await checker._check_write_access("course_x", AccessAction.CREATE, course_cfg, False)
+            create_denied = await checker._check_write_access("course_x", AccessAction.CREATE, course_cfg, False, org_id=1)
             assert create_denied.allowed is False
 
         checker._is_resource_author = AsyncMock(return_value=True)
@@ -334,33 +334,33 @@ class TestResourceAccessRuntime:
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
-            "src.security.rbac.resource_access.authorization_verify_based_on_org_admin_status",
+            "src.security.rbac.resource_access.is_org_admin",
             new_callable=AsyncMock,
             return_value=False,
         ):
-            allowed = await checker._check_create_permission("course_x", course_cfg)
+            allowed = await checker._check_create_permission("course_x", course_cfg, 1)
 
         with patch(
             "src.security.rbac.resource_access.authorization_verify_based_on_roles",
             new_callable=AsyncMock,
             return_value=False,
         ), patch(
-            "src.security.rbac.resource_access.authorization_verify_based_on_org_admin_status",
+            "src.security.rbac.resource_access.is_org_admin",
             new_callable=AsyncMock,
             return_value=True,
         ):
-            admin_allowed = await checker._check_create_permission("course_x", course_cfg)
+            admin_allowed = await checker._check_create_permission("course_x", course_cfg, 1)
 
         with patch(
             "src.security.rbac.resource_access.authorization_verify_based_on_roles",
             new_callable=AsyncMock,
             return_value=False,
         ), patch(
-            "src.security.rbac.resource_access.authorization_verify_based_on_org_admin_status",
+            "src.security.rbac.resource_access.is_org_admin",
             new_callable=AsyncMock,
             return_value=False,
         ):
-            denied = await checker._check_create_permission("course_x", course_cfg)
+            denied = await checker._check_create_permission("course_x", course_cfg, 1)
 
         assert allowed.allowed is True and allowed.via_role is True
         assert admin_allowed.allowed is True and admin_allowed.via_admin is True

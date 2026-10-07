@@ -463,7 +463,7 @@ class TestOrgUsersService:
         await _link_user(db, other_user.id, other_org.id, other_role.id)
 
         with patch(
-            "src.services.orgs.users.rbac_check",
+            "src.services.orgs.users.require_org_admin_role",
             new_callable=AsyncMock,
         ):
             with pytest.raises(Exception) as role_missing_exc:
@@ -473,7 +473,7 @@ class TestOrgUsersService:
         assert role_missing_exc.value.status_code == 404
 
         with patch(
-            "src.services.orgs.users.rbac_check",
+            "src.services.orgs.users.require_org_admin_role",
             new_callable=AsyncMock,
         ):
             with pytest.raises(Exception) as org_missing_exc:
@@ -483,7 +483,7 @@ class TestOrgUsersService:
         assert org_missing_exc.value.status_code == 404
 
         with patch(
-            "src.services.orgs.users.rbac_check",
+            "src.services.orgs.users.require_org_admin_role",
             new_callable=AsyncMock,
         ):
             with pytest.raises(Exception) as no_admin_exc:
@@ -499,9 +499,15 @@ class TestOrgUsersService:
 
         role = await _make_role(db, org, id=11, name="Instructor", role_uuid="role_instructor")
 
+        # Only a superadmin may change their own role, so the last-admin guard
+        # is reached through that path.
         with patch(
-            "src.services.orgs.users.rbac_check",
+            "src.services.orgs.users.require_org_admin_role",
             new_callable=AsyncMock,
+        ), patch(
+            "src.security.superadmin.is_user_superadmin",
+            new_callable=AsyncMock,
+            return_value=True,
         ):
             with pytest.raises(Exception) as last_admin_exc:
                 await update_user_role(
@@ -510,7 +516,7 @@ class TestOrgUsersService:
         assert last_admin_exc.value.status_code == 400
 
         with patch(
-            "src.services.orgs.users.rbac_check",
+            "src.services.orgs.users.require_org_admin_role",
             new_callable=AsyncMock,
         ):
             with pytest.raises(Exception) as user_missing_exc:
@@ -520,7 +526,7 @@ class TestOrgUsersService:
         assert user_missing_exc.value.status_code == 404
 
         with patch(
-            "src.services.orgs.users.rbac_check",
+            "src.services.orgs.users.require_org_admin_role",
             new_callable=AsyncMock,
         ), patch(
             "src.routers.users._invalidate_session_cache"

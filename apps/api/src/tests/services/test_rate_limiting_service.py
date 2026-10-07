@@ -70,8 +70,9 @@ def test_get_redis_connection_success_and_missing_config():
     [
         (
             "127.0.0.1",
-            {"X-Forwarded-For": "203.0.113.9, 10.0.0.2"},
-            "203.0.113.9",
+            # TEST-NET ranges count as private, so use a public address
+            {"X-Forwarded-For": "1.0.0.9, 10.0.0.2"},
+            "1.0.0.9",
         ),
         (
             "127.0.0.1",

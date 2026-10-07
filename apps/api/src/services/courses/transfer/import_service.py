@@ -33,6 +33,8 @@ from src.db.resource_authors import (
 )
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.file_validation import EXT_TO_CANONICAL_MIME, MIME_TO_SAFE_EXT
+from src.security.auth import resolve_acting_user_id
+from src.security.org_auth import require_org_membership
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
 
@@ -77,6 +79,17 @@ IMPORTABLE_EXTENSIONS = frozenset(MIME_TO_SAFE_EXT.values()) | {
     'jpeg', 'ico', 'mov', 'avi', 'mkv', 'aac', 'flac',
     'm3u8', 'ts', 'vtt', 'srt', 'txt', 'json',
 }
+
+
+async def _require_import_target_org(
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    org_id: int,
+    db_session: AsyncSession,
+) -> None:
+    """Same org gate as create_course: the caller must belong to the target org."""
+    if isinstance(current_user, APITokenUser) and current_user.org_id != org_id:
+        raise HTTPException(status_code=403, detail="API token is not scoped to this organization")
+    await require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
 
 def _require_temp_id(temp_id: str) -> None:
@@ -209,7 +222,8 @@ async def analyze_import_package(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # RBAC check - user needs create permission for courses
-    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE, org_id=org_id)
+    await _require_import_target_org(current_user, org_id, db_session)
 
     # Create temp directory for extraction
     temp_id = str(uuid4())
@@ -454,7 +468,8 @@ async def import_courses(
     organization_uuid = organization.org_uuid
 
     # RBAC check - user needs create permission for courses
-    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE, org_id=org_id)
+    await _require_import_target_org(current_user, org_id, db_session)
 
     # temp_id is client-supplied here: validate it as the UUID analyze minted
     # and resolve every derived path back into TEMP_IMPORT_DIR before it reaches

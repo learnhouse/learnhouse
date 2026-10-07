@@ -21,6 +21,8 @@ from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import (
+    check_limits_with_usage,
+    increase_feature_usage,
     reserve_ai_credit,
 )
 from src.services.ai.llm import resolve_model_for_org, model_for_tier
@@ -311,12 +313,12 @@ async def finalize_course_plan(
     # and makes the caller its CREATOR — which by itself grants update/delete
     # rights — so require the same courses.action_create right every other
     # course-creation path enforces.
-    #
-    # The plan's course limit is deliberately NOT enforced here. This path does
-    # skip the limit that `create_course` applies, but that is a billing gap
-    # rather than an authorization one, and adding it would start refusing a
-    # call that works today. Worth closing separately, on its own terms.
-    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    await check_resource_access(
+        request, db_session, current_user, "course_x", AccessAction.CREATE, org_id=org.id
+    )
+
+    # Same plan course limit as create_course
+    await check_limits_with_usage("courses", org.id, db_session)
 
     plan = finalize_request.plan
 
@@ -352,6 +354,8 @@ async def finalize_course_plan(
     )
     db_session.add(resource_author)
     await db_session.commit()
+
+    await increase_feature_usage("courses", org.id, db_session)
 
     created_chapters = []
 

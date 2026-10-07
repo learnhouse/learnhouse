@@ -199,7 +199,7 @@ async def create_user(
     user = User.model_validate(user_object)
 
     # RBAC check
-    await rbac_check(request, current_user, "create", "user_x", db_session)
+    await rbac_check(request, current_user, "create", "user_x", db_session, org_id=org_id)
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
@@ -1019,14 +1019,18 @@ async def rbac_check(
     action: Literal["create", "read", "update", "delete"],
     user_uuid: str,
     db_session: AsyncSession,
+    org_id: int | None = None,
 ):
     if action == "create" or action == "read":
-        if current_user.id == 0:  # if user is anonymous
+        # Signup is open to anonymous visitors, so a signed-in caller needs no
+        # more than that when no org is involved. Creating into an org needs
+        # users.create in that org.
+        if current_user.id == 0 or org_id is None:
             return True
-        else:
-            await authorization_verify_based_on_roles_and_authorship(
-                request, current_user.id, "create", "user_x", db_session
-            )
+        await authorization_verify_based_on_roles_and_authorship(
+            request, current_user.id, "create", "user_x", db_session,
+            target_org_id=org_id,
+        )
 
     else:
         await authorization_verify_if_user_is_anon(current_user.id)

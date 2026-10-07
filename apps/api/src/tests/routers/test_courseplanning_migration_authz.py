@@ -422,6 +422,14 @@ class TestFinalizeCoursePlanRequiresCreateRight:
     async def test_admin_still_finalizes_and_becomes_the_creator(
         self, db, org, admin_role, admin_user, mock_request
     ):
+        from src.db.organization_config import OrganizationConfig
+
+        # Finalize now applies the course limit, which needs an org config.
+        db.add(OrganizationConfig(
+            org_id=org.id, config={"config_version": "2.0", "plan": "free"},
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
@@ -449,29 +457,31 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         assert author.user_id == admin_user.id
         assert author.authorship == ResourceAuthorshipEnum.CREATOR
 
-    async def test_plan_course_limit_is_not_enforced_here(
+    async def test_plan_course_limit_is_enforced(
         self, db, org, admin_role, admin_user, mock_request
     ):
-        """This path skips the plan's course limit that `create_course` applies.
-        That is a billing gap, not an authorization one, and enforcing it would
-        start refusing a call that works today — so it stays out of the fix and
-        is pinned here so the choice is visible rather than accidental."""
+        """Finalize applies the same plan course limit as `create_course`."""
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
-             patch("src.security.features_utils.usage.check_limits_with_usage") as limits:
-            result = await cp.finalize_course_plan(
-                mock_request,
-                FinalizeCoursePlanRequest(
-                    session_uuid=session.session_uuid, plan=_plan()
-                ),
-                admin_user,
-                db,
-            )
+             patch.object(
+                 cp,
+                 "check_limits_with_usage",
+                 AsyncMock(side_effect=HTTPException(status_code=403, detail="limit")),
+             ):
+            with pytest.raises(HTTPException) as exc:
+                await cp.finalize_course_plan(
+                    mock_request,
+                    FinalizeCoursePlanRequest(
+                        session_uuid=session.session_uuid, plan=_plan()
+                    ),
+                    admin_user,
+                    db,
+                )
 
-        assert result.course_uuid.startswith("course_")
-        limits.assert_not_called()
+        assert exc.value.status_code == 403
+        assert (await db.execute(select(Course))).scalars().all() == []
 
 
 

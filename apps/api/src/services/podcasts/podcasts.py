@@ -468,7 +468,9 @@ async def create_podcast(
     podcast = Podcast.model_validate(podcast_object)
 
     # SECURITY: Check if user has permission to create podcasts
-    await check_resource_access(request, db_session, current_user, "podcast_x", AccessAction.CREATE)
+    await check_resource_access(
+        request, db_session, current_user, "podcast_x", AccessAction.CREATE, org_id=org_id
+    )
 
     await require_org_membership(
         resolve_acting_user_id(current_user), org_id, db_session
@@ -847,7 +849,8 @@ async def get_podcast_user_rights(
         rights["roles"]["is_maintainer_role"] = True
 
     has_instructor_permissions = await authorization_verify_based_on_roles(
-        request, acting_user_id, "create", "podcast_x", db_session
+        request, acting_user_id, "create", "podcast_x", db_session,
+        target_org_id=podcast.org_id,
     )
 
     if has_instructor_permissions:

@@ -75,7 +75,8 @@ async def create_media(
         "action_create",
     )
     await check_resource_access(
-        request, db_session, current_user, "media_x", AccessAction.CREATE
+        request, db_session, current_user, "media_x", AccessAction.CREATE,
+        org_id=media_object.org_id,
     )
 
     media = Media(

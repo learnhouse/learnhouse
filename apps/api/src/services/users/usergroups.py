@@ -145,6 +145,7 @@ async def create_usergroup(
         current_user=current_user,
         action="create",
         db_session=db_session,
+        org_id=usergroup_create.org_id,
     )
 
     # Check if Organization exists
@@ -156,6 +157,10 @@ async def create_usergroup(
             status_code=400,
             detail="Organization does not exist",
         )
+
+    # Plan gate: the router wrapper can't see the org (it's in the body)
+    from src.security.features_utils.plan_check import check_org_plan
+    await check_org_plan(org.id, "standard", "User Groups", db_session)
 
     # Usage check — this is the usergroups limit, not courses. (Previously
     # keyed "courses", so the usergroups cap was never actually enforced.)
@@ -279,6 +284,7 @@ async def read_usergroups_by_org_id(
         current_user=current_user,
         action="read",
         db_session=db_session,
+        org_id=org_id,
     )
 
     usergroups = [UserGroupRead.model_validate(usergroup) for usergroup in usergroups]
@@ -298,30 +304,21 @@ async def get_usergroups_by_resource(
     )
     usergroup_resources = (await db_session.execute(statement)).scalars().all()
 
-    # Authorize unconditionally, before the empty-result shortcut below, so an
-    # absent/unlinked resource cannot be used as an unauthenticated existence
-    # oracle (an anonymous caller must get 403, not an empty 200).
-    await rbac_check(
-        request,
-        usergroup_uuid="usergroup_X",
-        current_user=current_user,
-        action="read",
-        db_session=db_session,
-    )
+    from src.security.auth import resolve_acting_user_id
+
+    # Refuse anonymous callers before the empty-result shortcut, so an
+    # absent/unlinked resource is not an unauthenticated existence oracle.
+    await authorization_verify_if_user_is_anon(resolve_acting_user_id(current_user))
 
     if not usergroup_resources:
         return []
-
-    from src.security.auth import resolve_acting_user_id
 
     target_org_id = usergroup_resources[0].org_id
 
     # SECURITY: enforce the API-token org boundary. The org is derived from the
     # resource here, not from an org_id path/query param, so the global boundary
-    # net cannot see it, and the RBAC check above ran against the placeholder
-    # "usergroup_X" (org None → boundary skipped). Refuse cross-org reads so a
-    # token cannot enumerate another org's usergroups via a resource its creator
-    # happens to be able to reach.
+    # net cannot see it. Refuse cross-org reads so a token cannot enumerate
+    # another org's usergroups via a resource its creator can reach.
     if isinstance(current_user, APITokenUser) and target_org_id != current_user.org_id:
         raise HTTPException(
             status_code=403,
@@ -330,6 +327,14 @@ async def get_usergroups_by_resource(
 
     await require_org_membership(
         resolve_acting_user_id(current_user), target_org_id, db_session
+    )
+    await rbac_check(
+        request,
+        usergroup_uuid="usergroup_X",
+        current_user=current_user,
+        action="read",
+        db_session=db_session,
+        org_id=target_org_id,
     )
 
     # Batch fetch all usergroups in a single query

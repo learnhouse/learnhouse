@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import rehypeRaw from 'rehype-raw'
 import { WarningCircle, ArrowClockwise, FloppyDisk, MarkdownLogo, SpinnerGap } from '@phosphor-icons/react'
 import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -31,6 +30,18 @@ function toRawUrl(url: string): string {
     return `${bbMatch[1]}/raw/${bbMatch[2]}`
   }
   return url
+}
+
+// Only fetch from the raw hosts toRawUrl targets, over https.
+const RAW_MARKDOWN_HOSTS = new Set(['raw.githubusercontent.com', 'gitlab.com', 'bitbucket.org'])
+
+function isAllowedMarkdownUrl(url: string): boolean {
+  try {
+    const u = new URL(url)
+    return u.protocol === 'https:' && !u.username && !u.password && RAW_MARKDOWN_HOSTS.has(u.hostname)
+  } catch {
+    return false
+  }
 }
 
 interface MarkdownActivityProps {
@@ -62,6 +73,9 @@ function MarkdownActivity({ activity, editable = false, style }: MarkdownActivit
     setError(null)
     try {
       const rawUrl = toRawUrl(url)
+      if (!isAllowedMarkdownUrl(rawUrl)) {
+        throw new Error('Only https GitHub, GitLab or Bitbucket markdown URLs are supported')
+      }
       const res = await fetch(rawUrl)
       if (!res.ok) {
         throw new Error(`Failed to fetch markdown (${res.status})`)
@@ -149,7 +163,7 @@ function MarkdownActivity({ activity, editable = false, style }: MarkdownActivit
       )}
 
       <div className="markdown-body" style={style ? { backgroundColor: 'transparent', color: 'inherit' } : undefined}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
           {markdown || ''}
         </ReactMarkdown>
       </div>

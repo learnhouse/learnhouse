@@ -441,11 +441,9 @@ async def test_change_user_role_invalidate_cache_raises_is_swallowed(db, org, ad
     creator = await _create_user(db, user_id=1, username="creator1", email="creator1@test.com")
     await _add_user_to_org(db, creator, org, role_id=admin_role.id)
 
-    # Need at least two admins so we can demote without triggering last-admin guard
-    admin1 = await _create_user(db, user_id=81, username="admin81", email="admin81@test.com")
-    await _add_user_to_org(db, admin1, org, role_id=admin_role.id)
-    admin2 = await _create_user(db, user_id=82, username="admin82", email="admin82@test.com")
-    await _add_user_to_org(db, admin2, org, role_id=admin_role.id)
+    # Tokens may not change an Admin's role, so the target is a plain member.
+    admin1 = await _create_user(db, user_id=81, username="member81", email="member81@test.com")
+    await _add_user_to_org(db, admin1, org, role_id=user_role.id)
 
     with patch("src.routers.users._invalidate_session_cache", side_effect=RuntimeError("cache fail")):
         result = await change_user_role(token_user, admin1.id, user_role.id, db)

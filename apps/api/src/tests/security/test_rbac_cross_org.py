@@ -176,21 +176,25 @@ class TestCrossOrgRoleFallback:
         assert allowed is False
 
     @pytest.mark.asyncio
-    async def test_placeholder_create_target_still_works(
-        self, db, org, admin_role, mock_request
+    async def test_placeholder_create_is_scoped_to_the_target_org(
+        self, db, org, other_org, admin_role, mock_request
     ):
         """
-        For top-level create placeholders (``course_x``) ``target_org_id`` is
-        ``None``; role-based checks must still work so create flows are
-        unaffected by the cross-org fix.
+        A create placeholder (``course_x``) has no org of its own: roles count
+        only in the org the caller names, and nowhere when none is named.
         """
         alice = _mk_user(db, uid=46, username="alice_create", email="alice3@test.com")
         _attach_role(db, user_id=alice.id, org_id=org.id, role_id=admin_role.id)
 
-        allowed = await authorization_verify_based_on_roles(
+        assert await authorization_verify_based_on_roles(
+            mock_request, alice.id, "create", "course_x", db, target_org_id=org.id
+        ) is True
+        assert await authorization_verify_based_on_roles(
+            mock_request, alice.id, "create", "course_x", db, target_org_id=other_org.id
+        ) is False
+        assert await authorization_verify_based_on_roles(
             mock_request, alice.id, "create", "course_x", db
-        )
-        assert allowed is True
+        ) is False
 
 
 class TestUsersOnlyIsOrgScoped:

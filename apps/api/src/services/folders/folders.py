@@ -333,11 +333,9 @@ async def create_folder(
     db_session: AsyncSession,
 ) -> FolderRead:
     await check_resource_access(
-        request, db_session, current_user, "folder_x", AccessAction.CREATE
+        request, db_session, current_user, "folder_x", AccessAction.CREATE,
+        org_id=folder_object.org_id,
     )
-    # The "folder_x" placeholder has no organization of its own, so the RBAC
-    # check above accepts any role the caller holds in ANY org. The target org
-    # comes from the request body — gate it explicitly.
     await require_org_membership(
         resolve_acting_user_id(current_user), folder_object.org_id, db_session
     )
@@ -981,10 +979,9 @@ async def add_org_root_content(
 ) -> FolderContentItem | None:
     """Place a resource at the org library root (folder_id NULL)."""
     await check_resource_access(
-        request, db_session, current_user, "folder_x", AccessAction.CREATE
+        request, db_session, current_user, "folder_x", AccessAction.CREATE,
+        org_id=int(org_id),
     )
-    # "folder_x" carries no organization, so the check above is satisfied by any
-    # role the caller holds anywhere. org_id is caller-supplied — gate it.
     await require_org_membership(
         resolve_acting_user_id(current_user), int(org_id), db_session
     )
@@ -1025,11 +1022,12 @@ async def remove_org_root_content(
     current_user: PublicUser,
     db_session: AsyncSession,
 ):
+    # Removing from the org root is the inverse of adding to it, so it needs
+    # the same org-scoped create right.
     await check_resource_access(
-        request, db_session, current_user, "folder_x", AccessAction.UPDATE
+        request, db_session, current_user, "folder_x", AccessAction.CREATE,
+        org_id=int(org_id),
     )
-    # Same "folder_x" placeholder caveat as add_org_root_content: the target org
-    # is only ever checked here.
     await require_org_membership(
         resolve_acting_user_id(current_user), int(org_id), db_session
     )

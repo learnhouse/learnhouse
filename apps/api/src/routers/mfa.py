@@ -42,6 +42,7 @@ from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_au
 from src.services.orgs.mfa_policy import evaluate_mfa_compliance, get_org_mfa_policy
 from src.services.security.rate_limiting import check_rate_limit, get_client_ip
 from src.security.org_auth import is_org_admin
+from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.db.organization_config import OrganizationConfig
 from src.db.user_organizations import UserOrganization
 from src.routers.auth import get_token_expiry_ms, set_auth_cookies
@@ -752,7 +753,7 @@ async def api_org_mfa_compliance_list(
     "/mfa/org-reset/{org_id}/{user_id}",
     summary="Reset (clear) a member's two-factor factor",
     description=(
-        "Admin/maintainer recovery tool. Removes a member's TOTP factor and all "
+        "Admin-only recovery tool. Removes a member's TOTP factor and all "
         "their backup codes so they can re-enroll — the supported path for a "
         "member who lost their device with no backup codes left. Does not enroll "
         "anything on their behalf; if the org requires 2FA the member re-enters "
@@ -760,7 +761,7 @@ async def api_org_mfa_compliance_list(
     ),
     tags=["auth"],
     responses={
-        403: {"description": "Not an org admin, or target is a platform superadmin"},
+        403: {"description": "Not an org admin, or target is an org admin or platform superadmin"},
         404: {"description": "Target user is not a member of this org"},
         400: {"description": "Cannot reset your own factor here — use /mfa/disable"},
     },
@@ -775,9 +776,13 @@ async def api_org_reset_member_mfa(
     from src.security.superadmin import is_user_superadmin
     from src.services.auth.mfa import disable_mfa
 
+    from src.services.orgs.orgs import is_org_admin_role
+
     admin = await _require_human_user(current_user, db_session)
 
-    if not await is_org_admin(admin.id, org_id, db_session):
+    # Admin role specifically: stripping a colleague's factor is an account
+    # takeover aid, so Maintainers don't get it.
+    if not await is_org_admin_role(admin.id, org_id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"code": "NOT_ORG_ADMIN", "message": "Only org admins can reset a member's two-factor."},
@@ -803,10 +808,18 @@ async def api_org_reset_member_mfa(
             detail={"code": "CANNOT_RESET_SELF", "message": "Use the disable flow (with a code) to reset your own two-factor."},
         )
 
-    if await get_user_org(user_id, org_id, db_session) is None:
+    target_membership = await get_user_org(user_id, org_id, db_session)
+    if target_membership is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"code": "NOT_A_MEMBER", "message": "That user is not a member of this organization."},
+        )
+
+    # One admin must not be able to strip another admin's factor.
+    if target_membership.role_id == ADMIN_ROLE_ID and not await is_user_superadmin(admin.id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "TARGET_IS_ADMIN", "message": "You cannot reset another administrator's two-factor."},
         )
 
     # An org admin must not be able to clear a platform superadmin's factor.

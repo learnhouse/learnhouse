@@ -41,19 +41,7 @@ async def _seed_course_update(
 
 class TestCourseUpdatesService:
     @pytest.mark.asyncio
-    async def test_create_update_validates_org_and_course(self, db, org, course, admin_user, mock_request):
-        with pytest.raises(HTTPException) as org_exc:
-            await create_update(
-                mock_request,
-                course.course_uuid,
-                CourseUpdateCreate(title="New update", content="Body", org_id=999),
-                admin_user,
-                db,
-            )
-
-        assert org_exc.value.status_code == 409
-        assert org_exc.value.detail == "Organization does not exist"
-
+    async def test_create_update_validates_course(self, db, org, course, admin_user, mock_request):
         with pytest.raises(HTTPException) as course_exc:
             await create_update(
                 mock_request,

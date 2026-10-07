@@ -15,6 +15,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from fastapi import HTTPException
 from sqlmodel import select
 
 from src.db.user_organizations import UserOrganization
@@ -105,7 +106,7 @@ class TestProvisionUserExtraMetadata:
         assert membership is not None
 
     @pytest.mark.asyncio
-    async def test_provision_user_attach_existing_user_does_not_overwrite_metadata(
+    async def test_provision_user_existing_user_refused_metadata_untouched(
         self,
         token_user,
         other_org,
@@ -139,25 +140,24 @@ class TestProvisionUserExtraMetadata:
         )
         await db.commit()
 
-        # Call provision_user with a *different* extra_metadata payload.
-        result = await provision_user(
-            token_user=token_user,
-            email="existing@example.com",
-            username="ignored",
-            first_name="ignored",
-            last_name="ignored",
-            password=None,
-            role_id=user_role.id,
-            request=mock_request,
-            db_session=db,
-            extra_metadata={"new": "value"},
-        )
+        # Existing accounts are refused, so their metadata is never touched.
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="existing@example.com",
+                username="ignored",
+                first_name="ignored",
+                last_name="ignored",
+                password=None,
+                role_id=user_role.id,
+                request=mock_request,
+                db_session=db,
+                extra_metadata={"new": "value"},
+            )
+        assert exc.value.status_code == 409
 
-        # documents current behavior: attach path leaves existing metadata intact.
         await db.refresh(existing)
         assert existing.extra_metadata == {"keep": True}
-        assert result.id == existing.id
-        assert result.extra_metadata == {"keep": True}
 
     @pytest.mark.asyncio
     async def test_update_user_ignores_extra_metadata(

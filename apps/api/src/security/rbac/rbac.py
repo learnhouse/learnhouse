@@ -240,22 +240,14 @@ async def _load_applicable_roles(
 
     A role applies when either (a) it belongs to the target organization and the
     user holds it there, or (b) it is a global default role (``org_id IS NULL``)
-    and the user is a member of the target organization. When ``target_org_id``
-    is ``None`` (placeholder UUIDs used during top-level creation), every role
-    the user holds is returned — existence checks and org-scoped request bodies
-    gate those paths downstream.
+    and the user is a member of the target organization.
+
+    ``target_org_id`` is ``None`` for placeholder UUIDs ("course_x") whose org
+    the caller did not pass. Nothing applies then: returning every role the
+    user holds anywhere let an admin of one org create in another.
     """
     if target_org_id is None:
-        statement = (
-            select(Role)
-            .join(UserOrganization)
-            .where(
-                (UserOrganization.org_id == Role.org_id)
-                | (Role.org_id == null())
-            )
-            .where(UserOrganization.user_id == user_id)
-        )
-        return (await db_session.execute(statement)).scalars().all()
+        return []
 
     is_member_of_target = (await db_session.execute(
         select(UserOrganization).where(
@@ -268,10 +260,14 @@ async def _load_applicable_roles(
         # Non-member: never grant role-based access to this org's resources.
         return []
 
+    # Only the role held through the membership in the target org applies.
+    # The seeded roles are global (org_id NULL), so without pinning the
+    # membership an Admin of any other org would be an Admin here too.
     statement = (
         select(Role)
         .join(UserOrganization)
         .where(UserOrganization.user_id == user_id)
+        .where(UserOrganization.org_id == target_org_id)
         .where((Role.org_id == target_org_id) | (Role.org_id == null()))
     )
     return (await db_session.execute(statement)).scalars().all()
@@ -330,7 +326,10 @@ async def _load_roles_for_user_target(
         select(Role)
         .join(UserOrganization)
         .where(UserOrganization.user_id == user_id)
-        .where(Role.org_id.in_(shared_org_ids) | (Role.org_id == null()))  # type: ignore[union-attr]
+        # The membership carrying the role must itself be in a shared org,
+        # otherwise a global Admin role held in an unrelated org would count.
+        .where(UserOrganization.org_id.in_(shared_org_ids))  # type: ignore[union-attr]
+        .where((Role.org_id == UserOrganization.org_id) | (Role.org_id == null()))
     )
     return (await db_session.execute(statement)).scalars().all()
 
@@ -342,7 +341,13 @@ async def authorization_verify_based_on_roles(
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: AsyncSession,
+    target_org_id: int | None = None,
 ):
+    """Whether one of the user's roles grants ``action`` on the element.
+
+    ``target_org_id`` supplies the org for placeholder uuids ("course_x"),
+    which have none of their own; a real element's org always wins.
+    """
     # Superadmin bypass - full access to all resources
     if await is_user_superadmin(user_id, db_session):
         return True
@@ -353,7 +358,9 @@ async def authorization_verify_based_on_roles(
     # Without this check, a user with e.g. admin-in-orgA whose admin role grants
     # courses.action_update=True could mutate a course in orgB purely because
     # one of their org roles carries the permission.
-    target_org_id = await get_element_organization_id(element_uuid, db_session)
+    resolved_org_id = await get_element_organization_id(element_uuid, db_session)
+    if resolved_org_id is not None:
+        target_org_id = resolved_org_id
 
     if element_type == "users" and target_org_id is None:
         # A user row has no org column, so the generic resolver returns None and
@@ -466,6 +473,7 @@ async def authorization_verify_based_on_roles_and_authorship(
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: AsyncSession,
+    target_org_id: int | None = None,
 ):
     logger.info("[RBAC] authorization_verify_based_on_roles_and_authorship: user_id=%s, action=%s, element_uuid=%s", user_id, action, element_uuid)
 
@@ -480,7 +488,7 @@ async def authorization_verify_based_on_roles_and_authorship(
     logger.info("[RBAC] isAuthor=%s", isAuthor)
 
     isRole = await authorization_verify_based_on_roles(
-        request, user_id, action, element_uuid, db_session
+        request, user_id, action, element_uuid, db_session, target_org_id=target_org_id
     )
     logger.info("[RBAC] isRole=%s", isRole)
 

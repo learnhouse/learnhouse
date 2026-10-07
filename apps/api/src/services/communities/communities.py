@@ -51,7 +51,8 @@ async def create_community(
     # Check if user has permission to create communities using role-based permissions
     # This checks the actual database permissions (communities.action_create) instead of hardcoded role IDs
     has_create_permission = await authorization_verify_based_on_roles(
-        request, current_user.id, "create", f"community_{org.org_uuid}", db_session
+        request, current_user.id, "create", "community_x", db_session,
+        target_org_id=org.id,
     )
 
     if not has_create_permission:
@@ -154,7 +155,8 @@ async def get_communities_by_org(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     has_admin_read = await authorization_verify_based_on_roles(
-        request, acting_user_id, "update", f"community_{org_lookup.org_uuid}", db_session
+        request, acting_user_id, "update", "community_x", db_session,
+        target_org_id=org_lookup.id,
     )
     is_admin_or_maintainer = has_admin_read or await authorization_verify_based_on_org_admin_status(
         request, acting_user_id, "read", org_lookup.org_uuid, db_session

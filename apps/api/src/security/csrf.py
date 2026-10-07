@@ -5,7 +5,9 @@ Validates Origin header on state-changing requests (POST, PUT, DELETE, PATCH)
 to protect against Cross-Site Request Forgery attacks.
 """
 
+import hmac
 import logging
+import os
 import re
 import time
 from typing import Callable
@@ -14,6 +16,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 from config.config import get_learnhouse_config
+from src.core.middleware.cors import get_trusted_origin_regex
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +33,19 @@ _CUSTOM_DOMAIN_TTL_SECONDS = 60.0
 _CUSTOM_DOMAIN_CACHE_MAX = 2048
 
 
+def _matches_any_key(provided: str | None, env_names: tuple[str, ...]) -> bool:
+    """Constant-time compare of ``provided`` against each non-empty env key."""
+    if not provided:
+        return False
+    provided_b = provided.encode()
+    matched = False
+    for name in env_names:
+        expected = os.getenv(name, "")
+        if expected and hmac.compare_digest(provided_b, expected.encode()):
+            matched = True
+    return matched
+
+
 class CSRFProtectionMiddleware(BaseHTTPMiddleware):
     """
     Middleware that validates Origin header on state-changing requests.
@@ -42,7 +58,11 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         config = get_learnhouse_config()
         self.allowed_origins = config.hosting_config.allowed_origins
-        self.allowed_regexp = config.hosting_config.allowed_regexp
+        # A catch-all regexp (the shipped default) falls back to the
+        # tenancy-derived regex instead of accepting every origin.
+        self.allowed_regexp = get_trusted_origin_regex(
+            config, config.hosting_config.allowed_regexp
+        )
         self.development_mode = config.general_config.development_mode
 
         # Compile the regexp for performance
@@ -169,12 +189,18 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if request.headers.get("stripe-signature"):
             return True
 
-        # Internal service-to-service calls (collab server) use a shared key, not cookies
-        if request.headers.get("x-internal-key"):
+        # Service-to-service calls use a shared key, not cookies; only a valid
+        # key exempts (a bare header would let any page skip CSRF).
+        if _matches_any_key(
+            request.headers.get("x-internal-key"),
+            ("COLLAB_INTERNAL_KEY", "CLOUD_INTERNAL_KEY"),
+        ):
             return True
 
-        # Platform service-to-service calls use a shared key, not cookies
-        if request.headers.get("x-platform-key"):
+        if _matches_any_key(
+            request.headers.get("x-platform-key"),
+            ("LEARNHOUSE_PLATFORM_API_KEY",),
+        ):
             return True
 
         return False

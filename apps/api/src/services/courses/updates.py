@@ -11,7 +11,6 @@ from src.db.courses.course_updates import (
     CourseUpdateUpdate,
 )
 from src.db.courses.courses import Course
-from src.db.organizations import Organization
 from src.db.users import AnonymousUser, PublicUser
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -24,15 +23,6 @@ async def create_update(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ) -> CourseUpdateRead:
-
-    # CHekc if org exists
-    statement_org = select(Organization).where(Organization.id == update_object.org_id)
-    org = (await db_session.execute(statement_org)).scalars().first()
-
-    if not org or org.id is None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
-        )
 
     statement = select(Course).where(Course.course_uuid == course_uuid)
     course = (await db_session.execute(statement)).scalars().first()
@@ -48,8 +38,11 @@ async def create_update(
     # Generate UUID
     courseupdate_uuid = str(f"courseupdate_{uuid4()}")
 
+    # SECURITY: the update belongs to the course's org; ignore any org_id in
+    # the body so it can't be filed (or webhooked) under another org.
     update = CourseUpdate(
-        **update_object.model_dump(),
+        **update_object.model_dump(exclude={"org_id"}),
+        org_id=course.org_id,
         course_id=course.id,
         courseupdate_uuid=courseupdate_uuid,
         creation_date=str(datetime.now()),
@@ -63,7 +56,7 @@ async def create_update(
 
     await dispatch_webhooks(
         event_name="course_update_published",
-        org_id=update_object.org_id,
+        org_id=course.org_id,
         data={
             "courseupdate_uuid": update.courseupdate_uuid,
             "course_uuid": course_uuid,

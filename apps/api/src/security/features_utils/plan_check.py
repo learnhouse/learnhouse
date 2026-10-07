@@ -40,6 +40,33 @@ def _check_mode_bypass(feature_name: str) -> bool | None:
     return None  # SaaS — proceed with plan check
 
 
+def _client_org_id(request: Request) -> int | None:
+    """org_id from the path, else the query string (both client-supplied)."""
+    for raw in (
+        request.path_params.get("org_id"),
+        request.query_params.get("org_id"),
+    ):
+        if raw is not None:
+            try:
+                return int(raw)
+            except (ValueError, TypeError):
+                pass
+    return None
+
+
+def _reconcile_org_id(client_org_id: int | None, resource_org_id: int | None) -> int | None:
+    """The resource's own org wins; a mismatching client org_id is rejected
+    so a paid org's id can't unlock another org's resource."""
+    if resource_org_id is None:
+        return client_org_id
+    if client_org_id is not None and client_org_id != resource_org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="org_id does not match the requested resource",
+        )
+    return resource_org_id
+
+
 async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     """
     Query the organization's current plan from OrganizationConfig.
@@ -69,6 +96,28 @@ async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     if version.startswith("2"):
         return config.get("plan", "free")
     return config.get("cloud", {}).get("plan", "free")
+
+
+async def check_org_plan(
+    org_id: int,
+    required_plan: PlanLevel,
+    feature_name: str,
+    db_session: AsyncSession,
+) -> bool:
+    """Service-level equivalent of the router plan dependencies, for routes
+    whose target org only appears in the request body."""
+    bypass = _check_mode_bypass(feature_name)
+    if bypass is not None:
+        return bypass
+
+    current_plan = await get_org_plan(org_id, db_session)
+    if not plan_meets_requirement(current_plan, required_plan):
+        raise HTTPException(
+            status_code=403,
+            detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+            f"Your organization is currently on the {current_plan.capitalize()} plan.",
+        )
+    return True
 
 
 def require_plan(required_plan: PlanLevel, feature_name: str):
@@ -147,38 +196,20 @@ def require_plan_for_usergroups(required_plan: PlanLevel, feature_name: str):
         if bypass is not None:
             return bypass
 
-        org_id = None
-
-        # Try to get org_id from path parameters first
-        org_id_param = request.path_params.get("org_id")
-        if org_id_param is not None:
+        # Resource-derived org (usergroup_id) wins over client org_id
+        resource_org_id = None
+        usergroup_id_param = request.path_params.get("usergroup_id")
+        if usergroup_id_param:
+            from src.db.usergroups import UserGroup
             try:
-                org_id = int(org_id_param)
+                usergroup_id = int(usergroup_id_param)
+                statement = select(UserGroup).where(UserGroup.id == usergroup_id)
+                usergroup = (await db_session.execute(statement)).scalars().first()
+                if usergroup:
+                    resource_org_id = usergroup.org_id
             except (ValueError, TypeError):
                 pass
-
-        # Try to get org_id from query parameters
-        if org_id is None:
-            org_id_query = request.query_params.get("org_id")
-            if org_id_query is not None:
-                try:
-                    org_id = int(org_id_query)
-                except (ValueError, TypeError):
-                    pass
-
-        # If no org_id, try to get it from usergroup_id in path
-        if org_id is None:
-            usergroup_id_param = request.path_params.get("usergroup_id")
-            if usergroup_id_param:
-                from src.db.usergroups import UserGroup
-                try:
-                    usergroup_id = int(usergroup_id_param)
-                    statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-                    usergroup = (await db_session.execute(statement)).scalars().first()
-                    if usergroup:
-                        org_id = usergroup.org_id
-                except (ValueError, TypeError):
-                    pass
+        org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
 
         if org_id is None:
             # Fall through: these specialised wrappers are used on routers
@@ -218,28 +249,11 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
         if bypass is not None:
             return bypass
 
-        org_id = None
         path_params = request.path_params
 
-        # Try to get org_id from path parameters first
-        org_id_param = path_params.get("org_id")
-        if org_id_param is not None:
-            try:
-                org_id = int(org_id_param)
-            except (ValueError, TypeError):
-                pass
-
-        # Try to get org_id from query parameters
-        if org_id is None:
-            org_id_query = request.query_params.get("org_id")
-            if org_id_query is not None:
-                try:
-                    org_id = int(org_id_query)
-                except (ValueError, TypeError):
-                    pass
-
-        # Try certification_uuid -> course -> org_id
-        if org_id is None and "certification_uuid" in path_params:
+        # Resource-derived org wins over client org_id
+        resource_org_id = None
+        if "certification_uuid" in path_params:
             from src.db.courses.certifications import Certifications
             from src.db.courses.courses import Course
             statement = select(Certifications).where(
@@ -251,20 +265,20 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
                     select(Course).where(Course.id == cert.course_id)
                 )).scalars().first()
                 if course:
-                    org_id = course.org_id
+                    resource_org_id = course.org_id
 
         # Try course_uuid -> org_id
-        if org_id is None and "course_uuid" in path_params:
+        if resource_org_id is None and "course_uuid" in path_params:
             from src.db.courses.courses import Course
             statement = select(Course).where(
                 Course.course_uuid == path_params["course_uuid"]
             )
             course = (await db_session.execute(statement)).scalars().first()
             if course:
-                org_id = course.org_id
+                resource_org_id = course.org_id
 
         # Try user_certification_uuid -> certification -> course -> org_id
-        if org_id is None and "user_certification_uuid" in path_params:
+        if resource_org_id is None and "user_certification_uuid" in path_params:
             from src.db.courses.certifications import Certifications, CertificateUser
             from src.db.courses.courses import Course
             statement = select(CertificateUser).where(
@@ -280,7 +294,9 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
                         select(Course).where(Course.id == cert.course_id)
                     )).scalars().first()
                     if course:
-                        org_id = course.org_id
+                        resource_org_id = course.org_id
+
+        org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
 
         if org_id is None:
             # Fall through: these specialised wrappers are used on routers
@@ -322,34 +338,16 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
         if bypass is not None:
             return bypass
 
-        org_id = None
-
-        # Try to get org_id from path parameters first
-        org_id_param = request.path_params.get("org_id")
-        if org_id_param is not None:
-            try:
-                org_id = int(org_id_param)
-            except (ValueError, TypeError):
-                pass
-
-        # Try to get org_id from query parameters
-        if org_id is None:
-            org_id_query = request.query_params.get("org_id")
-            if org_id_query is not None:
-                try:
-                    org_id = int(org_id_query)
-                except (ValueError, TypeError):
-                    pass
-
-        # If no org_id, try to get it from board_uuid in path
-        if org_id is None:
-            board_uuid = request.path_params.get("board_uuid")
-            if board_uuid:
-                from src.db.boards import Board
-                statement = select(Board).where(Board.board_uuid == board_uuid)
-                board = (await db_session.execute(statement)).scalars().first()
-                if board:
-                    org_id = board.org_id
+        # Resource-derived org (board_uuid) wins over client org_id
+        resource_org_id = None
+        board_uuid = request.path_params.get("board_uuid")
+        if board_uuid:
+            from src.db.boards import Board
+            statement = select(Board).where(Board.board_uuid == board_uuid)
+            board = (await db_session.execute(statement)).scalars().first()
+            if board:
+                resource_org_id = board.org_id
+        org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
 
         if org_id is None:
             # Fall through: these specialised wrappers are used on routers
@@ -391,34 +389,16 @@ def require_plan_for_playgrounds(required_plan: PlanLevel, feature_name: str):
         if bypass is not None:
             return bypass
 
-        org_id = None
-
-        # Try to get org_id from path parameters first
-        org_id_param = request.path_params.get("org_id")
-        if org_id_param is not None:
-            try:
-                org_id = int(org_id_param)
-            except (ValueError, TypeError):
-                pass
-
-        # Try to get org_id from query parameters
-        if org_id is None:
-            org_id_query = request.query_params.get("org_id")
-            if org_id_query is not None:
-                try:
-                    org_id = int(org_id_query)
-                except (ValueError, TypeError):
-                    pass
-
-        # If no org_id, try to get it from playground_uuid in path
-        if org_id is None:
-            playground_uuid = request.path_params.get("playground_uuid")
-            if playground_uuid:
-                from src.db.playgrounds import Playground
-                statement = select(Playground).where(Playground.playground_uuid == playground_uuid)
-                playground = (await db_session.execute(statement)).scalars().first()
-                if playground:
-                    org_id = playground.org_id
+        # Resource-derived org (playground_uuid) wins over client org_id
+        resource_org_id = None
+        playground_uuid = request.path_params.get("playground_uuid")
+        if playground_uuid:
+            from src.db.playgrounds import Playground
+            statement = select(Playground).where(Playground.playground_uuid == playground_uuid)
+            playground = (await db_session.execute(statement)).scalars().first()
+            if playground:
+                resource_org_id = playground.org_id
+        org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
 
         if org_id is None:
             # Fall through: these specialised wrappers are used on routers
@@ -468,35 +448,15 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
         if bypass is not None:
             return bypass
 
-        org_id = None
-
-        # Try to get org_id from path parameters first
-        org_id_param = request.path_params.get("org_id")
-        if org_id_param is not None:
-            try:
-                org_id = int(org_id_param)
-            except (ValueError, TypeError):
-                pass
-
-        # Try to get org_id from query parameters
-        if org_id is None:
-            org_id_query = request.query_params.get("org_id")
-            if org_id_query is not None:
-                try:
-                    org_id = int(org_id_query)
-                except (ValueError, TypeError):
-                    pass
-
-        # If no org_id, try to get it from community_uuid in path
-        if org_id is None:
-            community_uuid = request.path_params.get("community_uuid")
-            if community_uuid:
-                # Look up the community to get its org_id
-                statement = select(Community).where(Community.community_uuid == community_uuid)
-                community = (await db_session.execute(statement)).scalars().first()
-
-                if community:
-                    org_id = community.org_id
+        # Resource-derived org (community_uuid) wins over client org_id
+        resource_org_id = None
+        community_uuid = request.path_params.get("community_uuid")
+        if community_uuid:
+            statement = select(Community).where(Community.community_uuid == community_uuid)
+            community = (await db_session.execute(statement)).scalars().first()
+            if community:
+                resource_org_id = community.org_id
+        org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
 
         if org_id is None:
             # Fall through: these specialised wrappers are used on routers

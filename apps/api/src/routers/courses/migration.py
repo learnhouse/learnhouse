@@ -63,7 +63,9 @@ async def require_migration_org_access(
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
     await enforce_org_mfa(user_id, org.id, db_session)
 
-    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
+    await check_resource_access(
+        request, db_session, current_user, "course_x", AccessAction.CREATE, org_id=org.id
+    )
     return user_id
 
 
