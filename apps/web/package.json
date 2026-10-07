@@ -11,7 +11,7 @@
     "lint": "eslint . || true",
     "lint:fix": "eslint --fix . || true",
     "lint:strict": "eslint",
-    "test": "bun test tests"
+    "test": "bun test --isolate tests"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.4",
