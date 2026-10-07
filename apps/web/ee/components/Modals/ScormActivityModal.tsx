@@ -61,7 +61,7 @@ interface ScormActivityModalProps {
   onImportComplete: () => void
   // When set (e.g. launched from a chapter's "Add activity" picker), all SCOs
   // are imported directly into this chapter and the per-SCO chapter selector is
-  // hidden — a streamlined single-chapter upload.
+  // hidden: a plain single-chapter upload.
   chapterId?: string | number
 }
 
@@ -440,7 +440,7 @@ function ScormActivityModal({ course, closeModal, onImportComplete, chapterId }:
                       />
                     </div>
 
-                    {/* Chapter Dropdown — hidden when a target chapter is fixed */}
+                    {/* Chapter Dropdown, hidden when a target chapter is fixed */}
                     {chapterId == null && (
                       <div className="flex items-center gap-2">
                         <label className="text-xs text-gray-500 w-16">Chapter:</label>

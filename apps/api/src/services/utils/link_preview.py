@@ -77,7 +77,7 @@ async def _fetch_html(url: str) -> Optional[str]:
     """Fetch ``url`` and return its HTML, or ``None`` when there is nothing to parse.
 
     Redirects are followed manually so every hop is SSRF-validated, and the body
-    is streamed under a hard byte cap — status, Content-Type and Content-Length
+    is streamed under a hard byte cap; status, Content-Type and Content-Length
     are all decided from the headers, before a single body byte is consumed.
     """
     async with httpx.AsyncClient(

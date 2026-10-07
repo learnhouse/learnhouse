@@ -73,7 +73,7 @@ async def activate_pack(
             )
 
         if existing.status == PackStatusEnum.active:
-            # Already active — idempotent success, no Redis changes
+            # Already active: idempotent success, no Redis changes
             return existing
 
         # Was cancelled, now reactivated via Stripe
@@ -86,7 +86,7 @@ async def activate_pack(
         db_session.add(existing)
         await db_session.flush()
 
-        # Add credits/seats to Redis — use stored quantity/type from DB record
+        # Add credits/seats to Redis, using the stored quantity/type from the DB record
         # (the DB record is the source of truth; pack_def may have drifted or
         # a different pack_id may have been supplied for the same subscription).
         if existing.pack_type == PackTypeEnum.ai_credits:
@@ -151,7 +151,7 @@ async def deactivate_pack(
             detail="No pack found for this subscription",
         )
 
-    # Idempotent — already cancelled
+    # Idempotent: already cancelled
     if org_pack.status == PackStatusEnum.cancelled:
         return org_pack
 

@@ -191,7 +191,7 @@ export default function EphemeralChat({ ydoc, provider }: EphemeralChatProps) {
         }
       `}</style>
 
-      {/* Floating emoji bursts — positioned absolutely relative to the board */}
+      {/* Floating emoji bursts, positioned absolutely relative to the board */}
       <div className="fixed bottom-36 end-5 z-30 pointer-events-none" style={{ width: 280, height: 250 }}>
         {reactions.map((r) => (
           <div
@@ -221,7 +221,7 @@ export default function EphemeralChat({ ydoc, provider }: EphemeralChatProps) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Messages area — preview when idle, full list on hover */}
+        {/* Messages area: preview when idle, full list on hover */}
         {recentMessages.length > 0 && (
           <div
             ref={scrollRef}

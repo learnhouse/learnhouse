@@ -20,9 +20,9 @@ const FETCH_TIMEOUT_MS = 10_000
 
 // Debounce interval before flushing ydoc state to the database (ms)
 const DB_FLUSH_DELAY = 5000
-// Redis TTL for cached ydoc state (seconds) — 1 hour
+// Redis TTL for cached ydoc state (seconds): 1 hour
 const REDIS_YDOC_TTL = 3600
-// Largest Yjs state we persist (bytes) — 5 MB
+// Largest Yjs state we persist (bytes): 5 MB
 const MAX_YDOC_BYTES = 5 * 1024 * 1024
 
 // ── Startup validation ──────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ const server = new Server({
   port: PORT,
 
   async onRequest({ request, response }: onRequestPayload) {
-    // Health check endpoint — handles both "/" (k8s probe) and "/health"
+    // Health check endpoint. Handles both "/" (k8s probe) and "/health"
     if (request.url === '/' || request.url === '/health') {
       response.writeHead(200, { 'Content-Type': 'application/json' })
       response.end(JSON.stringify({ status: 'ok' }))

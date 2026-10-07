@@ -30,7 +30,7 @@ const SETS = {
       desc: 'Drive the API with tokens, automate with webhooks, and extend LearnHouse with your own integrations.',
     },
   ],
-  // build-learning-platform landing — the two paths
+  // build-learning-platform landing: the two paths
   build: [
     {
       href: '/guides/build-learning-platform/do-it-yourself',

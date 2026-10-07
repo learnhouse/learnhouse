@@ -8,7 +8,7 @@ import { dockerComposeExec, dockerComposeRun } from '../services/docker.js'
 
 // Shared upgrade helpers used by BOTH the Community and Enterprise update paths:
 // a pre-upgrade DB backup, Alembic baseline stamping (for create_all installs),
-// and migration execution — parameterized by where each edition keeps things.
+// and migration execution, parameterized by where each edition keeps things.
 
 export interface UpdateLog {
   log: (m: string) => void
@@ -124,13 +124,13 @@ export function ensureAlembicBaseline(dir: string, layout: EditionLayout, ui: Up
 
 /** Bring the DB up to head(s). Returns true on success.
  *  Skips the upgrade when the DB already carries every head (e.g. a freshly
- *  create_all'd schema we just stamped) — that's a no-op and avoids erroring on
+ *  create_all'd schema we just stamped); that's a no-op and avoids erroring on
  *  images whose migration tree exposes multiple/overlapping heads. */
 export function runAlembicUpgrade(dir: string, layout: EditionLayout, ui: UpdateLog): boolean {
   try {
     // Alembic marks the current revision "(head)" when the DB is at the tip of
     // its lineage. If every current revision is a head, there's nothing to apply
-    // — skip. This is more reliable than diffing `current` against `heads` (alembic
+    // and we skip. This is more reliable than diffing `current` against `heads` (alembic
     // collapses `current` to the effective tip) and avoids erroring on images that
     // expose a stray/duplicate extra head, where `upgrade heads` reports
     // "overlaps with other requested revisions".
@@ -180,7 +180,7 @@ export function runAlembicUpgrade(dir: string, layout: EditionLayout, ui: Update
 }
 
 /** Migration heads shipped by the *running* image, read from its migration
- *  scripts alone — no database round-trip. Older images ship an alembic env.py
+ *  scripts alone, with no database round-trip. Older images ship an alembic env.py
  *  that ignores LEARNHOUSE_SQL_CONNECTION_STRING and dials localhost, so
  *  `current` and `stamp` fail inside them, but `heads` still answers, and it is
  *  exactly the revision their create_all schema corresponds to. */
@@ -200,7 +200,7 @@ export function readAlembicHeads(dir: string, layout: EditionLayout): string[] {
  *  the freshly pulled image runs alembic against the database while the old
  *  version keeps serving. A database with no alembic_version (built by the
  *  old image's create_all) is first stamped at the old image's heads, so only
- *  the real delta is applied — stamping it at the *new* heads would skip every
+ *  the real delta is applied; stamping it at the *new* heads would skip every
  *  column migration in between. */
 export function migrateBeforeBoot(dir: string, layout: EditionLayout, previousHeads: string[], ui: UpdateLog): boolean {
   const run = (args: string) =>

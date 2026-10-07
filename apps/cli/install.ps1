@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────
-# LearnHouse — Install Script (Windows PowerShell)
+# LearnHouse Install Script (Windows PowerShell)
 # Installs Docker and Node.js if missing, then runs the CLI.
 #
 # Usage:

@@ -157,7 +157,7 @@ async def _resolve(activity_uuid: str) -> Optional[dict]:
 
 async def generate_activity_captions(activity_uuid: str) -> bool:
     """Full caption job: transcribe + translate + upload. Returns True on (partial)
-    success. Never raises for expected failures — records status instead."""
+    success. Never raises for expected failures; records status instead."""
     info = await _resolve(activity_uuid)
     if not info:
         logger.warning("Captions: nothing to generate for %s", activity_uuid)
@@ -266,7 +266,7 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
         logger.info("Captions ready for %s (%s/%s langs)", activity_uuid, done, len(targets))
         return True
     except HTTPException as e:
-        # e.g. AI disabled or quota exceeded (reserve raises 403) — do NOT refund
+        # e.g. AI disabled or quota exceeded (reserve raises 403): do NOT refund
         # (nothing was reserved on a 403), record a clear status.
         detail = getattr(e, "detail", "ai_error")
         await _patch_captions(activity_uuid, status="failed", error=str(detail)[:200])
@@ -315,7 +315,7 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
             _inflight.discard(uuid)
             sem.release()
 
-    # A single failed poll means nothing — Redis read timeouts happen on an idle
+    # A single failed poll means nothing. Redis read timeouts happen on an idle
     # connection and the next poll reconnects. Only a *run* of failures means
     # Redis is actually down.
     poll_failures = 0

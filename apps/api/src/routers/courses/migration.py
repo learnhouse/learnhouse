@@ -30,7 +30,7 @@ from src.services.courses.migration.migration_service import (
 router = APIRouter()
 
 # Migration packages live under a random temp_id, but the id alone must not be
-# the only thing standing between two accounts — bind each package to the user
+# the only thing standing between two accounts, so bind each package to the user
 # who created it. Kept in Redis next to the on-disk temp dir, which is itself
 # swept after an hour.
 MIGRATION_OWNER_KEY = "migration_upload_owner:{temp_id}"
@@ -48,7 +48,7 @@ async def require_migration_org_access(
     ``org_id`` used to be accepted and then ignored, so these handlers ran with
     no tenant check at all. Every migration step exists only to end in a course,
     so require org membership (which also applies the org's session policy) plus
-    the courses create right — the same gate ``create_course`` applies.
+    the courses create right, the same gate ``create_course`` applies.
 
     Returns the acting user id, for callers that need it.
     """
@@ -179,7 +179,7 @@ async def api_suggest_structure(
     #
     # It deliberately does NOT reserve an AI credit. Metering it would be
     # consistent with the /ai routers, but it would also start refusing a call
-    # that is free today — for orgs out of credits, and (via a 404 from
+    # that is free today: for orgs out of credits, and (via a 404 from
     # reserve_ai_credit) for orgs with no config row. Billing this belongs in
     # its own change, not in an authorization fix.
     enforce_ai_rate_limit(user_id, org_id)

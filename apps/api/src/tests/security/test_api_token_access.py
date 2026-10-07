@@ -327,8 +327,8 @@ class TestAllowedEndpoints:
         ``require_authenticated_user``: tokens reach the handlers, where every
         operation authorizes through ``usergroups.rbac_check`` (the
         ``usergroups`` rights bucket + org boundary). The two handlers that
-        authorize against the ``usergroup_X`` placeholder — create and
-        get-by-resource — additionally enforce an explicit token org-boundary
+        authorize against the ``usergroup_X`` placeholder (create and
+        get-by-resource) additionally enforce an explicit token org-boundary
         check in the service layer, since the placeholder's org resolves to
         None and would otherwise skip the boundary comparison.
         """

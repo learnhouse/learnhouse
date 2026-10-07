@@ -13,7 +13,7 @@ import {
 import * as React from 'react'
 
 // Shared transactional email layout (React Email). One flexible template drives
-// every message — welcome, purchase, plan change, payment failed, etc. — via an
+// every message (welcome, purchase, plan change, payment failed, etc.) via an
 // accent color plus optional card / transition / bullet blocks. Ported from the
 // platform repo's templates/shared.tsx and kept provider-agnostic (rendered to
 // HTML by services/emails/resend.ts).

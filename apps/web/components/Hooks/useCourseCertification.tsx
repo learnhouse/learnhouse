@@ -12,7 +12,7 @@ import type { CourseCertificationStatus } from '@/lib/certifications/enabled'
  *
  * Learner-facing surfaces use this to avoid promising a certificate the course
  * never had. Only `isEnabled === false && isUnknown === false` means "no
- * certification" — while the answer is loading or the request failed, callers
+ * certification"; while the answer is loading or the request failed, callers
  * must keep showing whatever they show today.
  */
 export function useCourseCertification(course_uuid?: string) {

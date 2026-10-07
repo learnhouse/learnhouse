@@ -89,7 +89,7 @@ export default function OrgEditUsage() {
     staleTime: 60_000,
   })
 
-  // The backend sends `mode`, never `oss_mode` — reading the latter made this
+  // The backend sends `mode`, never `oss_mode`; reading the latter made this
   // permanently false, so non-SaaS deployments were shown plan limits.
   const ossMode = usageData?.mode !== undefined && usageData.mode !== 'saas'
   const mode = getDeploymentMode()
@@ -108,7 +108,7 @@ export default function OrgEditUsage() {
 
   return (
     <div className="sm:mx-10 mx-0 space-y-6 pb-10">
-      {/* Upgrade upsell — easy way to move up + see what each plan offers */}
+      {/* Upgrade upsell: easy way to move up + see what each plan offers */}
       <PlanUpsell orgSlug={org?.slug ?? ''} currentPlan={plan} />
 
       {/* Plan & Resource Usage */}
@@ -265,7 +265,7 @@ export default function OrgEditUsage() {
         </div>
       )}
 
-      {/* Buy More — SaaS only */}
+      {/* Buy More, SaaS only */}
       {isSaaS && (
         <div className="bg-white rounded-xl nice-shadow">
           <div className="p-6 flex items-center justify-between">
@@ -387,7 +387,7 @@ function AICreditsDetail({ credits }: { credits: AICreditsSummary }) {
   )
 }
 
-// Plan ranking for the usage-page upsell — only surface plans ABOVE the current
+// Plan ranking for the usage-page upsell: only surface plans ABOVE the current
 // one. personal/family sit at the entry rank; oss/enterprise never upsell.
 const PLAN_RANK: Record<string, number> = {
   free: 0, personal: 0, 'personal-family': 0, standard: 1, pro: 2, enterprise: 3, oss: 99,

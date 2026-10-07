@@ -14,7 +14,7 @@ mock.module("server-only", () => ({}));
 
 const { updateOrganizationConfigInternally } = await import("../services/billing/orgPlan.ts");
 
-const ORG_ID = 4242; // synthetic — never a real org
+const ORG_ID = 4242; // synthetic, never a real org
 const BOTH_NAMES = ["CLOUD_INTERNAL_KEY", "LEARNHOUSE_CLOUD_INTERNAL_KEY"];
 
 let calls;

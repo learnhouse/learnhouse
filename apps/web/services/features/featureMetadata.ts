@@ -3,7 +3,7 @@
  *
  * Drives the FeatureGate component (locked/disabled views) and any UI that
  * needs the canonical icon + label + upsell plan for a feature. The gate's
- * actual `required_plan` still comes from the backend's resolved_features —
+ * actual `required_plan` still comes from the backend's resolved_features;
  * this file only owns presentation + the *upsell* plan we suggest in the UI
  * (which may differ from the gate's minimum requirement, e.g. Boards gates at
  * Personal but we upsell Free users to Standard).
@@ -69,7 +69,7 @@ export interface FeatureMeta {
   Icon: ComponentType<IconProps>
   /**
    * Plan tier displayed in the upsell badge. Independent of the gate's actual
-   * minimum requirement — used for marketing alignment (e.g. Boards gates at
+   * minimum requirement; used for marketing alignment (e.g. Boards gates at
    * Personal but we suggest Standard so the user lands on the tier the
    * pricing page presents as the "real" plan for those features).
    */

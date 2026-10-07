@@ -49,7 +49,7 @@ export default function CreateTokenModal({
       const body: Record<string, unknown> = { name: name.trim() }
       if (description.trim()) body.description = description.trim()
       if (!neverExpires && expiresAt) {
-        // <input type="datetime-local"> emits "YYYY-MM-DDTHH:mm" — send as ISO.
+        // <input type="datetime-local"> emits "YYYY-MM-DDTHH:mm"; send as ISO.
         body.expires_at = new Date(expiresAt).toISOString()
       }
 

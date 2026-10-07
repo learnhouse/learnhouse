@@ -18,8 +18,8 @@ import {
 } from '@components/ui/dialog'
 
 // Self-service "delete my account" for the account settings pages. Deleting the
-// account also deletes any organization the user is the sole admin of — and all
-// of that org's content — server-side (users.py::delete_user_by_id). We surface
+// account also deletes any organization the user is the sole admin of (and all
+// of that org's content) server-side (users.py::delete_user_by_id). We surface
 // that consequence prominently and require typing the username to confirm.
 export default function AccountDangerZone() {
   const { t } = useTranslation()

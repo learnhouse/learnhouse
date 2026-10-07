@@ -30,7 +30,7 @@ export default function CodeSnippetTabs({
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
     } catch {
-      // Clipboard unavailable — silently no-op.
+      // Clipboard unavailable; silently no-op.
     }
   }
 

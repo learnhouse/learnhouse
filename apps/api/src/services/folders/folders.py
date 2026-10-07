@@ -34,7 +34,7 @@ from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 # ----------------------------------------------------------------------------
-# Folder ordering — org-scoped, admin-controlled sort mode
+# Folder ordering: org-scoped, admin-controlled sort mode
 # ----------------------------------------------------------------------------
 
 VALID_SORT_MODES = ("name_asc", "name_desc", "newest", "oldest", "manual")
@@ -82,7 +82,7 @@ def _apply_folder_sort(statement, sort_mode: str):
 
 
 def _item_name(item: FolderContentItem) -> str:
-    """Display name of a resolved item — courses/media expose `name`, some
+    """Display name of a resolved item. Courses/media expose `name`, some
     resources only carry a `title`. Lowercased to match the client comparator."""
     resource = item.resource or {}
     return str(resource.get("name") or resource.get("title") or "").lower()
@@ -91,7 +91,7 @@ def _item_name(item: FolderContentItem) -> str:
 def _item_date(item: FolderContentItem) -> str:
     """Creation timestamp of a resolved item, in the same fallback order the
     client comparator uses (creation_date -> created_at -> update_date).
-    'newest'/'oldest' mean creation date on both sides — every course carries a
+    'newest'/'oldest' mean creation date on both sides; every course carries a
     non-empty update_date, so preferring it would put the API and the browser in
     permanent disagreement. Timestamps are stored as sortable strings."""
     resource = item.resource or {}
@@ -110,7 +110,7 @@ def _sort_items(
     _apply_folder_sort so folders and their content agree.
 
     FolderContent.position is applied first and Python's sort is stable, so the
-    admin's drag order stays the tiebreaker for the name modes — and is the only
+    admin's drag order stays the tiebreaker for the name modes, and is the only
     key in 'manual' mode. The date modes break ties by name instead, the way the
     client comparator does (`_dateOf(b) - _dateOf(a) || byName(a, b)`).
     """
@@ -131,7 +131,7 @@ def _sort_items(
 
 
 # ----------------------------------------------------------------------------
-# Resource resolution — folders are polymorphic containers
+# Resource resolution: folders are polymorphic containers
 # ----------------------------------------------------------------------------
 
 def _resource_registry():
@@ -177,7 +177,7 @@ async def _resolve_items(
     """Resolve FolderContent rows into typed items, batching per resource type.
 
     The resolved items are ordered by the org's sort mode, the same mode the
-    sibling folders are ordered by — otherwise a folder's content would render
+    sibling folders are ordered by; otherwise a folder's content would render
     in a different order than the dashboard shows.
     """
     registry = _resource_registry()
@@ -341,7 +341,7 @@ async def create_folder(
     )
     # The "folder_x" placeholder has no organization of its own, so the RBAC
     # check above accepts any role the caller holds in ANY org. The target org
-    # comes from the request body — gate it explicitly.
+    # comes from the request body, so gate it explicitly.
     await require_org_create_permission(current_user, folder_object.org_id, db_session, "folders")
 
     parent_folder_id = None
@@ -655,7 +655,7 @@ async def reorder_folder_content(
     db_session: AsyncSession,
 ) -> dict:
     """Persist the manual (admin drag) ordering of a folder's CONTENT items
-    (courses, media, …). Position is derived from the array index — matching how
+    (courses, media, …). Position is derived from the array index, matching how
     `_sort_items` orders items by FolderContent.position in 'manual' mode (and
     uses it as the tiebreaker in every other mode). Admin only.
     """
@@ -843,7 +843,7 @@ async def move_folder_content(
 
 
 # ----------------------------------------------------------------------------
-# Library search — across the WHOLE tree, with folder-path context per result
+# Library search: across the WHOLE tree, with folder-path context per result
 # ----------------------------------------------------------------------------
 
 async def search_library(
@@ -986,7 +986,7 @@ async def add_org_root_content(
         request, db_session, current_user, "folder_x", AccessAction.CREATE
     )
     # "folder_x" carries no organization, so the check above is satisfied by any
-    # role the caller holds anywhere. org_id is caller-supplied — gate it.
+    # role the caller holds anywhere. org_id is caller-supplied, so gate it.
     await require_org_create_permission(current_user, int(org_id), db_session, "folders")
     await check_resource_access(
         request, db_session, current_user, resource_uuid, AccessAction.READ

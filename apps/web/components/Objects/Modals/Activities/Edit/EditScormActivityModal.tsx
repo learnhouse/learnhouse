@@ -8,7 +8,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 
-// EE component — dynamically imported so OSS builds (no ee/) degrade gracefully,
+// EE component, dynamically imported so OSS builds (no ee/) degrade gracefully,
 // mirroring how the activity page lazy-loads ScormActivity.
 const ScormResults = dynamic(
   () => import('../../../../../ee/components/Activities/ScormResults'),

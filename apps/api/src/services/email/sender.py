@@ -11,7 +11,7 @@ authenticates, which is exactly why it is the part we hand out.
 
 The display name is attacker-controllable: an org admin types it into a
 settings form and it lands verbatim in an RFC 5322 header. A bare CR or LF in a
-header value is header injection — enough to append a ``Bcc:`` of the
+header value is header injection, enough to append a ``Bcc:`` of the
 attacker's choosing or to end the header block early and take over the body.
 ``email.utils.formataddr`` quotes specials and RFC 2047-encodes non-ASCII, but
 it will carry a newline straight through, so sanitizing has to happen *before*
@@ -34,7 +34,7 @@ MAX_SENDER_NAME_LENGTH = 64
 # deliberately: it is a header *folding* character, not content.
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f]")
 
-# Unicode line/paragraph separators — not C0 controls, but still line breaks to
+# Unicode line/paragraph separators: not C0 controls, but still line breaks to
 # anything that later re-encodes the header.
 _UNICODE_BREAKS = re.compile(r"[\u2028\u2029]")
 
@@ -76,7 +76,7 @@ def format_sender(
 
     ``address`` is the platform's system email address and is never derived
     from user input (see the module docstring). ``default_name`` is the
-    platform-level fallback — ``None`` means "use the built-in default", while
+    platform-level fallback: ``None`` means "use the built-in default", while
     an explicit empty string means the deployment cleared it on purpose, in
     which case the bare address is emitted with no display name at all.
 

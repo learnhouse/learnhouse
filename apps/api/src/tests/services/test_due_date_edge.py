@@ -3,13 +3,13 @@
 Targets two pieces of behavior in
 ``src/services/courses/activities/assignments.py``:
 
-  * ``_is_assignment_past_due`` — the defensive parser that decides whether an
+  * ``_is_assignment_past_due``: the defensive parser that decides whether an
     assignment's free-form ``due_date`` string is in the past.
-  * the deadline gate inside ``create_assignment_submission`` — for a
+  * the deadline gate inside ``create_assignment_submission``: for a
     non-instructor, a past-due assignment is REJECTED with HTTP 403
     ("deadline has passed"); otherwise the submission is recorded as SUBMITTED.
 
-IMPORTANT — pinned real behavior (verified against the source, not assumed):
+IMPORTANT: pinned real behavior (verified against the source, not assumed):
 
   * ``submission_status`` is NEVER set to ``LATE`` by ``create_assignment_submission``.
     The ``LATE`` enum value exists (``AssignmentUserSubmissionStatus.LATE``) but is
@@ -106,7 +106,7 @@ _PATCH_CERT_CHECK = (
 
 
 # ---------------------------------------------------------------------------
-# _is_assignment_past_due — net-new parsing edge cases
+# _is_assignment_past_due: net-new parsing edge cases
 # ---------------------------------------------------------------------------
 
 
@@ -209,7 +209,7 @@ class TestIsAssignmentPastDueEdge:
 
 
 # ---------------------------------------------------------------------------
-# create_assignment_submission — deadline gate (SUBMITTED vs 403)
+# create_assignment_submission: deadline gate (SUBMITTED vs 403)
 # ---------------------------------------------------------------------------
 
 
@@ -326,7 +326,7 @@ class TestCreateSubmissionDeadlineGate:
 
         Existing tests cover the empty-string variant on the create path; this
         pins the whitespace-only variant. (NB: the due_date column is NOT NULL,
-        so a literal None cannot be persisted on a real assignment row — the
+        so a literal None cannot be persisted on a real assignment row; the
         None case is exercised at the unit level instead.)
         """
         await self._set_due(db, assignment, "   ")

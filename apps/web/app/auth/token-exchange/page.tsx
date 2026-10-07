@@ -21,7 +21,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 }
 
 // Only allow same-origin relative paths. Rejects `//evil.com`, `https://evil.com`,
-// and backslash tricks — prevents the `?redirect=` param from becoming an open
+// and backslash tricks, which prevents the `?redirect=` param from becoming an open
 // redirect after a successful exchange.
 function sanitizeRedirect(raw: string | null): string {
   const fallback = '/dash'

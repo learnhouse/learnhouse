@@ -71,7 +71,7 @@ def attachments_to_parts(attachments: Any) -> list:
 
     Replaces the Gemini-specific ``inline_data``/``file_data`` dicts. Note: video/YouTube and
     URL-based documents are only honored by providers that support them (e.g. Gemini); other
-    providers will ignore or reject them — an inherent provider capability difference.
+    providers will ignore or reject them, an inherent provider capability difference.
     """
     parts: list = []
     for att in attachments or []:

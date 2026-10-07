@@ -10,7 +10,7 @@ class FolderContent(SQLModel, table=True):
     `resource_uuid` holds a prefixed UUID (course_/podcast_/community_/board_/
     playground_/media_); the resource type is inferred from the prefix, mirroring
     the existing UserGroupResource / ResourceAuthor convention. Sub-folders are NOT
-    stored here — they live in Folder.parent_folder_id.
+    stored here; they live in Folder.parent_folder_id.
     """
 
     __table_args__ = (

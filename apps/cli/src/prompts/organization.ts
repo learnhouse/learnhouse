@@ -15,7 +15,7 @@ export async function promptOrganization(): Promise<OrgConfig> {
   })
   if (p.isCancel(orgName)) { p.cancel(); process.exit(0) }
 
-  // Slug defaults to "default" — the value the published API image hard-codes
+  // Slug defaults to "default", the value the published API image hard-codes
   // until the LEARNHOUSE_INITIAL_ORG_SLUG-aware build ships. Users can opt
   // into a custom slug, but the prompt doesn't push them off the safe path.
   const orgSlug = await p.text({

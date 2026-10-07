@@ -4,7 +4,7 @@ Secret storage
 --------------
 TOTP shared secrets are symmetric credentials: anyone holding one can mint
 valid codes forever. They are therefore encrypted at rest with Fernet
-(AES-128-CBC + HMAC) rather than hashed — verification needs the original
+(AES-128-CBC + HMAC) rather than hashed: verification needs the original
 value back, so hashing is not an option.
 
 The encryption key is derived via HKDF from ``LEARNHOUSE_MFA_ENCRYPTION_KEY``
@@ -16,7 +16,7 @@ zero-config for existing deployments, but it couples the two:
         who has 2FA on. Set the dedicated key before rotating.
 
 Enrolled users whose secret fails to decrypt are treated as "MFA broken" and
-must recover via backup code — never as "MFA not enabled", which would
+must recover via backup code, never as "MFA not enabled", which would
 silently downgrade them to single-factor.
 """
 
@@ -52,7 +52,7 @@ TOTP_DRIFT_STEPS = 1
 
 BACKUP_CODE_COUNT = 10
 BACKUP_CODE_LENGTH = 10
-# Excludes 0/O and 1/I/L — these get transcribed by hand off a printout.
+# Excludes 0/O and 1/I/L; these get transcribed by hand off a printout.
 _BACKUP_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
 _MFA_KEY_INFO = b"learnhouse-mfa-secret-encryption-v1"
@@ -118,7 +118,7 @@ def verify_totp_code(secret: str, code: str, last_used_timestep: Optional[int]) 
 
     Returns ``(is_valid, timestep)``. ``timestep`` is the counter value the code
     matched and must be persisted by the caller as the new ``last_used_timestep``
-    so the same code cannot be replayed while it is still within its window —
+    so the same code cannot be replayed while it is still within its window,
     the realistic attack being a code shoulder-surfed or phished seconds ago.
     """
     digits = _normalize_code(code)
@@ -145,7 +145,7 @@ async def claim_totp_timestep(db_session: AsyncSession, user_id: int, step: int)
     Returns True only if this call won the claim. The conditional UPDATE succeeds
     for exactly one of any set of concurrent requests carrying the same code:
     everyone reads the same old ``last_used_timestep`` in :func:`verify_totp_code`,
-    but only the first to commit satisfies ``last_used_timestep < step`` — the
+    but only the first to commit satisfies ``last_used_timestep < step``; the
     rest match zero rows and get False. That closes the replay window that a plain
     read-verify-then-write would leave open under parallel submission.
     """
@@ -177,8 +177,8 @@ async def verify_and_consume_totp(
     """Verify a TOTP ``code`` and atomically burn the timestep it matched.
 
     Returns True only when the code is valid *and* this request won the race to
-    claim that timestep. Use this — never bare :func:`verify_totp_code` followed
-    by an ORM write — anywhere a code authorises an action, so a single code can
+    claim that timestep. Use this, never bare :func:`verify_totp_code` followed
+    by an ORM write, anywhere a code authorises an action, so a single code can
     mint at most one session / perform at most one privileged operation.
     """
     is_valid, step = verify_totp_code(secret, code, last_used_timestep)
@@ -218,7 +218,7 @@ async def get_user_mfa(db_session: AsyncSession, user_id: int) -> Optional[UserM
 async def is_mfa_active(db_session: AsyncSession, user_id: int) -> bool:
     """True when the user has a *confirmed* TOTP factor.
 
-    Unconfirmed enrollment rows deliberately do not count — a half-finished
+    Unconfirmed enrollment rows deliberately do not count: a half-finished
     setup must never gate login, or a user who closes the tab mid-enrollment is
     locked out with a factor they never registered in their app.
     """
@@ -228,7 +228,7 @@ async def is_mfa_active(db_session: AsyncSession, user_id: int) -> bool:
 
 async def replace_backup_codes(db_session: AsyncSession, user_id: int) -> List[str]:
     """Regenerate the batch, invalidating all previous codes. Returns plaintext
-    codes — the only time they exist outside the user's hands."""
+    codes, the only time they exist outside the user's hands."""
     existing = (
         await db_session.execute(
             select(UserMFABackupCode).where(UserMFABackupCode.user_id == user_id)
@@ -255,7 +255,7 @@ async def consume_backup_code(db_session: AsyncSession, user_id: int, code: str)
     The claim is a single conditional UPDATE (``... WHERE used_at IS NULL``) so a
     code is consumed exactly once even under concurrent requests: two racers
     targeting the same unused code both match the row, but only the first commit
-    flips ``used_at`` — the second matches zero rows and returns False. A prior
+    flips ``used_at``; the second matches zero rows and returns False. A prior
     select-then-update left a window where both could read it unused and both
     succeed, turning a recovery code into a replayable credential.
     """

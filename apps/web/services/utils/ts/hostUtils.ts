@@ -2,7 +2,7 @@
  * Centralized host/domain/port utility functions.
  * All functions strip ports internally before comparing.
  * IPv6 bracket-aware (e.g. [::1]:3000).
- * Zero dependencies — safe for Edge Runtime middleware.
+ * Zero dependencies, so safe for Edge Runtime middleware.
  */
 
 /**
@@ -34,7 +34,7 @@ export function stripPort(host: string | null | undefined): string {
 
 /**
  * Is `host` a subdomain of `domain`?
- * Both may include ports — ports are stripped before comparison.
+ * Both may include ports; ports are stripped before comparison.
  * isSubdomainOf("acme.learnhouse.io:3000", "learnhouse.io") -> true
  * isSubdomainOf("learnhouse.io", "learnhouse.io") -> false (same host, not a subdomain)
  */
@@ -59,7 +59,7 @@ export function isSameHost(a: string | null | undefined, b: string | null | unde
 
 /**
  * Extract subdomain from host given a parent domain.
- * Both may include ports — ports are stripped before comparison.
+ * Both may include ports; ports are stripped before comparison.
  * extractSubdomain("acme.learnhouse.io:3000", "learnhouse.io") -> "acme"
  * extractSubdomain("learnhouse.io", "learnhouse.io") -> null
  * extractSubdomain("localhost", "learnhouse.io") -> null

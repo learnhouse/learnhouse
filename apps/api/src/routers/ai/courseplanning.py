@@ -165,7 +165,7 @@ async def start_course_planning_session(
     # same create right finalize requires, so a learner can't drain the quota.
     await require_org_create_permission(current_user, org.id, db_session, "courses")
 
-    # Get AI model — pro models cost more credits
+    # Get AI model; pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
@@ -249,7 +249,7 @@ async def iterate_course_planning_session(
     # same create right finalize requires, so a learner can't drain the quota.
     await require_org_create_permission(current_user, org.id, db_session, "courses")
 
-    # Get AI model — pro models cost more credits
+    # Get AI model; pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
@@ -324,8 +324,8 @@ async def finalize_course_plan(
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Membership is not permission to create. Finalizing writes a real Course
-    # and makes the caller its CREATOR — which by itself grants update/delete
-    # rights — so require the same courses.action_create right every other
+    # and makes the caller its CREATOR (which by itself grants update/delete
+    # rights), so require the same courses.action_create right every other
     # course-creation path enforces.
     #
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
@@ -516,7 +516,7 @@ async def generate_activity_content(
         raise HTTPException(status_code=404, detail="Activity not found")
 
     # The activity is looked up globally, so authorization must follow the
-    # activity's org — not the org the caller chose when creating the planning
+    # activity's org, not the org the caller chose when creating the planning
     # session. A planning session never legitimately reaches across tenants,
     # and on an iteration the existing content is fed back into the prompt and
     # streamed to the caller, so this is a read of the victim's material.
@@ -537,7 +537,7 @@ async def generate_activity_content(
     # ...and that they may actually write this activity's course.
     await require_activity_write_access(request, activity, current_user, db_session)
 
-    # Get AI model — pro models cost more credits
+    # Get AI model; pro models cost more credits
     ai_model = await get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == model_for_tier("pro") else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
@@ -707,7 +707,7 @@ async def save_activity_content(
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Both the activity uuid and the content are caller-supplied, so membership
-    # alone let any org member — a learner included — overwrite the body of
+    # alone let any org member (a learner included) overwrite the body of
     # every activity in the org. Demand the same rights the regular activity
     # update path does.
     await require_activity_write_access(request, activity, current_user, db_session)
@@ -777,7 +777,7 @@ async def get_session_state(
     session = _load_owned_session(session_uuid, current_user)
 
     # Cross-tenant IDOR guard: without this, any authenticated user can read
-    # ANY planning session by UUID — leaking another org's full course plan and
+    # ANY planning session by UUID, leaking another org's full course plan and
     # the entire AI message history. Require membership of the session's org.
     if not await verify_user_org_membership(
         resolve_acting_user_id(current_user), session.org_id, db_session

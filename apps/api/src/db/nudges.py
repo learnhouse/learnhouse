@@ -19,7 +19,7 @@ class NudgeSendStatus:
     """Lifecycle of one ledger row.
 
     ``CLAIMED`` exists because the row is written *before* the send is
-    attempted — a row stuck in this state means a process died mid-send, which
+    attempted; a row stuck in this state means a process died mid-send, which
     is visible for reconciliation rather than silently retried.
     """
 
@@ -32,7 +32,7 @@ class NudgeSendStatus:
 
 class NudgeSend(SQLModel, table=True):
     """
-    One row per (nudge, org, admin, period) — the send ledger.
+    One row per (nudge, org, admin, period): the send ledger.
 
     ``dedupe_key`` is the idempotency boundary and the reason a backfill over
     every historical org is safe to re-run: the row is inserted before the
@@ -106,7 +106,7 @@ class EmailPreference(SQLModel, table=True):
     """
     Per-user opt-out state for non-transactional email.
 
-    Created lazily — the absence of a row means "opted in, never asked", which
+    Created lazily: the absence of a row means "opted in, never asked", which
     is why this is a table rather than a column on ``user``: it needs a
     tri-state, and adding a column to the hottest table in the schema for it
     would be a poor trade.
@@ -142,7 +142,7 @@ class EmailPreference(SQLModel, table=True):
     # "email_link" | "dashboard" | "admin" | "bounce" | "complaint"
     source: Optional[str] = Field(default=None, sa_column=Column(String(32), nullable=True))
     # Set by a hard bounce or a spam complaint. Unlike lifecycle_opt_out this is
-    # not the reader's preference — it is a delivery fact, and it must survive
+    # not the reader's preference; it is a delivery fact, and it must survive
     # any later re-subscribe, because continuing to mail a dead address or a
     # complainant is what actually costs a sending domain its reputation.
     suppressed: bool = Field(

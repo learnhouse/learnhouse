@@ -171,7 +171,7 @@ async def get_editor_bootstrap(
     OrganizationConfig and the parent Chapter (for lock checks) so the lock
     helper does not need a follow-up query.
 
-    Intentionally not cached — activity content must always reflect the latest
+    Intentionally not cached: activity content must always reflect the latest
     saved state for collaborators to avoid editing against stale data.
     """
     statement = (
@@ -289,7 +289,7 @@ async def update_activity(
     # This preserves the current state for version history.
     # resolve_acting_user_id unwraps APITokenUser → the creating human's id,
     # because current_user.id on a token is 0 (the token id, not a user id)
-    # and created_by_id is an FK to user.id — writing 0 triggers a FK
+    # and created_by_id is an FK to user.id, so writing 0 triggers a FK
     # violation and the whole update 500s.
     if 'content' in update_data and activity.content:
         user_id = resolve_acting_user_id(current_user)

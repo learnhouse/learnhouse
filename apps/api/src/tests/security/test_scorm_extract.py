@@ -40,7 +40,7 @@ class TestSymlink:
         zip_path, extract_dir = _write(tmp_path, pkg.zip_with_symlink("/etc/passwd"))
         scorm._safe_extract_zip(zip_path, extract_dir)
         link = os.path.join(extract_dir, "evil_link")
-        # Symlink entries are skipped entirely — not created as a symlink.
+        # Symlink entries are skipped entirely, not created as a symlink.
         assert not os.path.islink(link)
 
 

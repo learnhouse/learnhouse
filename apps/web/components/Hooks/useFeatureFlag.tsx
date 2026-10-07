@@ -9,7 +9,7 @@ type FeatureType = {
 function useFeatureFlag(feature: FeatureType) {
   const org = useOrg() as any
 
-  // Derived directly from org config — computing during render avoids the
+  // Derived directly from org config. Computing during render avoids the
   // extra "stale then corrected" render cycle the old effect+setState caused.
   return useMemo(() => {
     if (org?.config?.config) {

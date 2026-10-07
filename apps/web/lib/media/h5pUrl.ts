@@ -6,12 +6,12 @@
  load as-is. Hosts hand out a few different shapes: a content page URL, a
  ready-made embed URL, or a whole <iframe> snippet.
 
- There is deliberately NO host allowlist — self-hosted H5P (Drupal, Moodle,
+ There is deliberately NO host allowlist: self-hosted H5P (Drupal, Moodle,
  WordPress) is the common case and an allowlist would break every one of them.
  The only hard rule is the scheme: http/https, so `javascript:`, `data:` and
  `file:` can never reach the iframe src.
 
- Pure functions, no React — unit tested in apps/web/tests/h5p-url.test.mjs.
+ Pure functions, no React. Unit tested in apps/web/tests/h5p-url.test.mjs.
 */
 
 export type H5PUrlErrorReason =
@@ -26,7 +26,7 @@ export type H5PUrlResult =
 const IFRAME_SRC_QUOTED = /<iframe[^>]*\ssrc\s*=\s*("([^"]*)"|'([^']*)')/i
 const IFRAME_SRC_BARE = /<iframe[^>]*\ssrc\s*=\s*([^\s>]+)/i
 
-/** Minimal HTML entity decode — embed snippets ship `&amp;` inside the src. */
+/** Minimal HTML entity decode; embed snippets ship `&amp;` inside the src. */
 function decodeEntities(value: string): string {
   return value
     .replace(/&quot;/gi, '"')
@@ -98,13 +98,13 @@ export function normalizeH5PUrl(input: string): H5PUrlResult {
   // A URL never contains raw whitespace; this catches pasted prose early.
   if (/\s/.test(candidate)) return { ok: false, reason: 'unparseable' }
 
-  // `host:8080/embed` is a schemeless host with a port, not a scheme — the
+  // `host:8080/embed` is a schemeless host with a port, not a scheme. The
   // negative lookahead keeps it out of the scheme branch so a self-hosted
   // intranet URL isn't rejected as an unsupported protocol. Real schemes we
   // refuse (javascript:, data:, file:) never start with a digit.
   const hasScheme =
     /^[a-zA-Z][a-zA-Z0-9+.-]*:(?!\d)/.test(candidate) || candidate.startsWith('//')
-  // `host:port/path` — a host-shaped label, a plausible port, and a path. The
+  // `host:port/path`: a host-shaped label, a plausible port, and a path. The
   // path is what separates an intranet URL (`h5p-server:8080/h5p/embed/1`)
   // from prose that happens to contain a colon (`step:1`), which the scheme
   // lookahead above no longer catches.
@@ -134,7 +134,7 @@ export function normalizeH5PUrl(input: string): H5PUrlResult {
 
   // A bare word ("hello") parses fine once we prefix https://, which would
   // leave the author staring at a dead frame. Require a dotted host unless
-  // they typed a scheme themselves — intranet hosts like
+  // they typed a scheme themselves, so intranet hosts like
   // `http://h5p-server/h5p/embed/1` stay valid that way.
   const isDotted = parsed.hostname.includes('.')
   const isLocal = parsed.hostname === 'localhost' || parsed.hostname.startsWith('[')

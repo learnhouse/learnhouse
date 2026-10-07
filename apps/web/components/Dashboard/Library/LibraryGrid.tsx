@@ -111,7 +111,7 @@ export default function LibraryGrid({
 
   return (
     <div className="flex flex-col gap-7">
-      {/* Folders — always on top, in their own compact grid (Drive-like) */}
+      {/* Folders: always on top, in their own compact grid (Drive-like) */}
       {folders.length > 0 && (
         <section>
           {dragEnabled ? (
@@ -172,7 +172,7 @@ export default function LibraryGrid({
         </section>
       )}
 
-      {/* Resources — a separate grid of full-size cards below */}
+      {/* Resources: a separate grid of full-size cards below */}
       {items.length > 0 && (
         <section>
           {itemsDragEnabled ? (

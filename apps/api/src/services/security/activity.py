@@ -10,7 +10,7 @@ Recording runs on SaaS and on self-hosted enterprise deployments. It used to
 be SaaS-only, on the assumption that active-user counts existed purely for
 overage billing. They are also what an enterprise deployment reports as its
 own usage, and with recording disabled that number was structurally zero on
-every self-hosted install. Plain OSS still skips it — nothing there consumes
+every self-hosted install. Plain OSS still skips it; nothing there consumes
 the table, so the write would buy nothing.
 
 The rows never leave the deployment's own database. Only aggregate counts are
@@ -55,7 +55,7 @@ async def _insert_activity_row(org_id: int, user_id: int, day: date) -> None:
     Uses a dedicated session (not the request's mid-transaction session) so
     committing the activity row never flushes/commits request work. Idempotent
     across dialects: a duplicate (same org/user/day) hits the unique constraint
-    and is silently ignored — the row already exists.
+    and is silently ignored, since the row already exists.
     """
     from sqlalchemy.exc import IntegrityError
     from src.core.events.database import _async_session_factory
@@ -68,7 +68,7 @@ async def _insert_activity_row(org_id: int, user_id: int, day: date) -> None:
         try:
             await session.commit()
         except IntegrityError:
-            await session.rollback()  # already recorded today — no-op
+            await session.rollback()  # already recorded today, no-op
 
 
 async def _resolve_org_id(
@@ -126,7 +126,7 @@ async def record_user_activity(
     Mark (org, user) active for today's UTC date. Best-effort, never raises.
 
     The org may be given directly (org_id) or resolved from a slug/uuid route
-    param (learner content routes are slug/uuid-scoped) — resolution happens
+    param (learner content routes are slug/uuid-scoped); resolution happens
     here in the background task, off the request critical path. A cheap Redis
     SETNX day-key then guards the DB so the insert runs at most once per
     user/org/day. When Redis is unavailable the DB insert still runs

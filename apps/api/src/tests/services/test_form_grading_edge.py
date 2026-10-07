@@ -172,7 +172,7 @@ class TestMatchingSemantics:
 
     def test_bool_correct_answer_stringifies_to_python_repr(self):
         """SURPRISING: a boolean True correctAnswer stringifies to 'true'
-        after .lower() — so the literal student answer 'true' matches, but
+        after .lower(), so the literal student answer 'true' matches, but
         '1' or 'yes' would not."""
         contents = {"questions": [_q("q1", [_blank("b1", True)])]}
         match = {"submissions": [_sub("q1", "b1", "TRUE")]}
@@ -236,7 +236,7 @@ class TestNoneAndEmpty:
         assert _grade_form_task(contents, sub, 100) == 0
 
     def test_empty_key_blank_skipped_but_real_blank_still_scored(self):
-        """A mix: the empty-key blank is skipped, the real blank is graded — the
+        """A mix: the empty-key blank is skipped, the real blank is graded, and the
         student's correct answer to the real blank earns full marks (1/1)."""
         contents = {"questions": [_q("q1", [_blank("b1", ""), _blank("b2", "Paris")])]}
         sub = {"submissions": [_sub("q1", "b2", "paris")]}
@@ -287,7 +287,7 @@ class TestPartialCreditAndRounding:
 
     def test_bankers_rounding_half_rounds_to_even(self):
         """SURPRISING: Python's round() uses banker's rounding. 1/2*5 = 2.5
-        rounds to 2 (nearest even), NOT 3 — differs from JS Math.round on the
+        rounds to 2 (nearest even), NOT 3. This differs from JS Math.round on the
         client, which would give 3."""
         contents = {
             "questions": [_q("q1", [_blank("b1", "a"), _blank("b2", "b")])]
@@ -301,7 +301,7 @@ class TestPartialCreditAndRounding:
         assert _grade_form_task(contents, sub, 5) == 2
 
     def test_bankers_rounding_three_point_five_rounds_to_four(self):
-        """3.5 rounds to 4 (nearest even) — confirms banker's rounding direction."""
+        """3.5 rounds to 4 (nearest even), which confirms banker's rounding direction."""
         # 7 blanks, 1 correct, max 24.5 isn't an int max; use 1/2 of 7 ~ build
         # a clean .5: 1/8 * 28 = 3.5
         blanks = [_blank(f"b{i}", str(i)) for i in range(8)]
@@ -410,7 +410,7 @@ class TestMalformedQuestionsAndBlanks:
     def test_blank_missing_blank_uuid_keys_on_none(self):
         """A blank with no blankUUID keys lookup on (q_uuid, None). Since no
         submission can be indexed with a None blankUUID, the student defaults
-        to '' — so it only scores when correctAnswer is also ''."""
+        to '', so it only scores when correctAnswer is also ''."""
         contents = {"questions": [_q("q1", [{"correctAnswer": "Paris"}])]}
         sub = {"submissions": [_sub("q1", "b1", "Paris")]}
         # correctAnswer 'Paris' vs default '' → wrong, but counted → 0
@@ -418,7 +418,7 @@ class TestMalformedQuestionsAndBlanks:
 
     def test_blank_with_empty_correct_answer_is_skipped_not_scored(self):
         """A blank with correctAnswer='' can't be auto-scored, so it is skipped
-        (no free credit) — with it as the only blank, grade is 0."""
+        (no free credit); with it as the only blank, grade is 0."""
         contents = {"questions": [_q("q1", [{"correctAnswer": ""}])]}
         sub = {"submissions": []}
         assert _grade_form_task(contents, sub, 100) == 0
@@ -442,7 +442,7 @@ class TestMalformedQuestionsAndBlanks:
 # --------------------------------------------------------------------------- #
 class TestWhitespaceAndLongAnswers:
     def test_whitespace_only_correct_answer_is_skipped(self):
-        """A whitespace-only correctAnswer trims to '' — it's effectively an
+        """A whitespace-only correctAnswer trims to '': it's effectively an
         empty key, so it is skipped (no free credit for a whitespace answer)."""
         contents = {"questions": [_q("q1", [_blank("b1", "   ")])]}
         sub = {"submissions": [_sub("q1", "b1", "\t  \n")]}

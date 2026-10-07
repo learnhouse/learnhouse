@@ -102,7 +102,7 @@ export class AssignmentEditorPage {
 
   /**
    * Turn the assignment into a formative one through the Edit modal: switch on
-   * "Formative — no grading", write the model answer, and choose when it
+   * the "Formative" option (no grading), write the model answer, and choose when it
    * unlocks. Drives the real form rather than the API so the spec proves the
    * authoring surface works, not just the endpoint behind it.
    */

@@ -244,7 +244,7 @@ async def api_rag_chat(
     ):
         raise HTTPException(status_code=404, detail="Chat session not found")
 
-    # Atomic credit reservation — RAG chat makes 2 API calls (embedding + generation)
+    # Atomic credit reservation: RAG chat makes 2 API calls (embedding + generation)
     await reserve_ai_credit(org_id, db_session, amount=2)
 
     # Get or create chat session

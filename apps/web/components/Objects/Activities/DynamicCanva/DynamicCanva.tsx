@@ -38,7 +38,7 @@ import LibraryBlock from '@components/Objects/Editor/Extensions/Library/LibraryB
 import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
 import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicBlock'
 
-// Lowlight — slim grammar set; see editorLowlight.ts
+// Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from '@components/Objects/Editor/editorLowlight'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { NoTextInput } from '@components/Objects/Editor/Extensions/NoTextInput/NoTextInput'
@@ -119,7 +119,7 @@ function Canva(props: Editor) {
       NoTextInput,
       // Custom Extensions
       Callout,
-      // Legacy nodes — backward compat with existing calloutInfo/calloutWarning content
+      // Legacy nodes: backward compat with existing calloutInfo/calloutWarning content
       InfoCallout.configure({ editable: isEditable }),
       WarningCallout.configure({ editable: isEditable }),
       ImageBlock.configure({

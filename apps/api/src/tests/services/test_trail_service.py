@@ -413,7 +413,7 @@ class TestTrailService:
 
         trail = await _make_trail(db, org, admin_user)
         trail_run = await _make_trail_run(db, trail, course, admin_user)
-        # One completion step per (run, activity, user) — enforced by a UNIQUE
+        # One completion step per (run, activity, user), enforced by a UNIQUE
         # constraint. A single step is enough to verify removal deletes it.
         await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
 

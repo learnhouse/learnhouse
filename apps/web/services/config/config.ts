@@ -105,7 +105,7 @@ const getLEARNHOUSE_TOP_DOMAIN = () => {
   const domain = getLEARNHOUSE_DOMAIN()
   return domain.split(':')[0]
 }
-// PostHog product analytics — opt-in. Telemetry is OFF unless this key is set
+// PostHog product analytics, opt-in. Telemetry is OFF unless this key is set
 // in the deployment env. No separate enable flag: presence of the key IS the switch.
 const getPOSTHOG_KEY = () => getConfig('NEXT_PUBLIC_POSTHOG_KEY', '');
 const getLEARNHOUSE_PLATFORM_URL = (): string | null => {
@@ -174,11 +174,11 @@ export const getBackendUrl = () => getLEARNHOUSE_BACKEND_URL()
  * Get the upgrade/plan URL for a given org.
  *
  * In SaaS the billing/upgrade hub lives IN-APP on the apex (learnhouse.io
- * /billing) — see app/(hub)/billing. We return an absolute apex URL so an
+ * /billing); see app/(hub)/billing. We return an absolute apex URL so an
  * upgrade CTA rendered inside an org subdomain ({slug}.learnhouse.io) crosses
  * to the root hub; the `.{top_domain}`-scoped session cookie carries the login
  * across the hop. Returns null in OSS/EE, where there is no SaaS billing
- * surface — callers MUST treat null as "hide the upgrade CTA".
+ * surface; callers MUST treat null as "hide the upgrade CTA".
  */
 export const getUpgradeUrl = (orgSlug: string, plan?: string | null): string | null => {
   const mode = getDeploymentMode()
@@ -202,14 +202,14 @@ export const getPlatformUrl = (path: string): string | null => {
   return `${platformUrl}${path}`
 }
 
-// Tenancy mode — the authoritative client-side getter.
+// Tenancy mode: the authoritative client-side getter.
 //
 // Reads the `LH_tenancy` cookie set by the middleware on every request. The
 // cookie is sourced from the backend's instance/info endpoint, so it always
 // reflects the current deployment configuration. Defaults to 'single' when
 // the cookie isn't present (e.g. very first request before middleware runs).
 //
-// We deliberately do NOT consult `NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG` here —
+// We deliberately do NOT consult `NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG` here;
 // stale env vars from older deploys used to override the runtime cookie and
 // produce broken URLs like `default.localhost:3000`. The env var still has
 // effect at backend boot time; that's the only place it should influence
@@ -222,7 +222,7 @@ export const getTenancy = (): TenancyMode => {
   return 'single'
 }
 
-// Backward-compat shim — prefer getTenancy() in new code.
+// Backward-compat shim; prefer getTenancy() in new code.
 export const isMultiOrgModeEnabled = () => getTenancy() === 'multi'
 
 /**
@@ -269,7 +269,7 @@ export const getCustomDomainFromContext = (): string | null => {
 /**
  * Build a URL for a given org's path.
  *
- * Returns a RELATIVE path whenever navigation stays on the current origin —
+ * Returns a RELATIVE path whenever navigation stays on the current origin,
  * which is always the case in single tenancy and almost always in multi
  * tenancy (the user is already on the right subdomain or custom domain).
  * Only when crossing subdomains in multi tenancy do we build an absolute
@@ -304,8 +304,8 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
 
     // Safety net: only synthesize an absolute subdomain URL when the user is
     // on the apex base domain itself (e.g. the org-selection screen) or on
-    // some subdomain of it. On any other host — localhost, a host that
-    // doesn't end in `.{baseDomain}` — building `${slug}.${baseDomain}` would
+    // some subdomain of it. On any other host (localhost, a host that
+    // doesn't end in `.{baseDomain}`) building `${slug}.${baseDomain}` would
     // land them on a hostname that may not resolve (e.g. `default.localhost`),
     // so we return a relative path and keep navigation on the current origin.
     //
@@ -318,7 +318,7 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
       return path
     }
 
-    // Crossing subdomains — build an absolute URL with current scheme/port.
+    // Crossing subdomains: build an absolute URL with current scheme/port.
     const protocol = window.location.protocol + '//'
     const port = window.location.port
     const portSuffix = port && port !== '80' && port !== '443' ? `:${port}` : ''
@@ -410,21 +410,21 @@ export type DeploymentMode = 'saas' | 'oss' | 'ee'
 /**
  * Get the current deployment mode from the LH_mode cookie set by middleware.
  * Single source of truth for mode detection on the frontend.
- * Defaults to 'oss' when cookie is absent (safe fallback — blocks EE features).
+ * Defaults to 'oss' when cookie is absent (safe fallback, blocks EE features).
  */
 export const getDeploymentMode = (): DeploymentMode => {
   return (getCookieValue('LH_mode') as DeploymentMode) || 'oss'
 }
 
 /**
- * OSS mode — thin wrapper over getDeploymentMode() for backward compatibility.
+ * OSS mode: thin wrapper over getDeploymentMode() for backward compatibility.
  */
 export const isOSSMode = (): boolean => {
   return getDeploymentMode() === 'oss'
 }
 
 /**
- * EE (Enterprise Edition) availability — thin wrapper over getDeploymentMode() for backward compatibility.
+ * EE (Enterprise Edition) availability: thin wrapper over getDeploymentMode() for backward compatibility.
  */
 export const isEEAvailable = (): boolean => {
   return getDeploymentMode() === 'ee'

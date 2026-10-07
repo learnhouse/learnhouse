@@ -23,7 +23,7 @@ TAG="${VERSION}"
 # is mutated, so a failed precondition leaves the repository exactly as it was.
 die() { printf '\n  ❌ %s\n\n' "$*" >&2; exit 1; }
 
-# Files that carry the version number — also the only files expected to conflict on
+# Files that carry the version number. These are also the only files expected to conflict on
 # the dev → main release merge (main still holds the previous version).
 VERSION_FILES=(
   "apps/web/package.json"
@@ -56,7 +56,7 @@ GIT_DIR="$(git rev-parse --git-dir)"
 [ -f "$GIT_DIR/MERGE_HEAD" ] && die "A merge is already in progress. Finish it or run 'git merge --abort' first."
 { [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_DIR/rebase-apply" ]; } && die "A rebase is in progress. Finish or abort it first."
 
-# Clean working tree — never release uncommitted local changes
+# Clean working tree: never release uncommitted local changes
 git diff --quiet && git diff --cached --quiet \
   || die "Working tree has uncommitted changes. Commit or stash them before releasing."
 
@@ -99,7 +99,7 @@ done
 # ─── Commit version bump on dev ─────────────────────────────
 echo "  📦 Committing version bump on dev..."
 
-# If apps/api/ee is a symlink, the EE codebase lives in a separate repo —
+# If apps/api/ee is a symlink, the EE codebase lives in a separate repo:
 # the sed bump already updated it there, but we can't stage it here.
 FILES_TO_ADD=(
   "$REPO_ROOT/apps/web/package.json"
@@ -193,7 +193,7 @@ REFACTOR=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^refactor" |
 DOCS=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^docs" || true)
 CHORE=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^chore" || true)
 
-# Resolve GitHub usernames — one API call per unique author email
+# Resolve GitHub usernames, one API call per unique author email
 resolve_usernames() {
   local range="$1"
   local emails

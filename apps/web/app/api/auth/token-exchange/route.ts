@@ -12,7 +12,7 @@ const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://
 // Dormant cross-domain handoff safety valve. Post learnhouse.app deprecation the
 // .io apex and org subdomains share .{top_domain} cookies, so this route is no
 // longer used by the app (handleGoToOrg navigates directly). No hardcoded .app
-// default — if a legacy code is presented and PLATFORM_URL isn't configured, the
+// default: if a legacy code is presented and PLATFORM_URL isn't configured, the
 // fetch fails and the route returns a clean 502 instead of silently calling .app.
 const PLATFORM_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_PLATFORM_URL') || getConfig('LEARNHOUSE_PLATFORM_URL') || '').replace(/\/+$/, '')
 
@@ -21,7 +21,7 @@ const PLATFORM_TIMEOUT_MS = 10_000
 const BACKEND_TIMEOUT_MS = 5_000
 
 // Fetch with one retry on transient errors (network errors, 5xx). Creates a
-// FRESH timeout signal for each attempt — reusing the same signal would leave
+// FRESH timeout signal for each attempt. Reusing the same signal would leave
 // the retry with zero budget after the first attempt nearly timed out.
 async function fetchWithRetry(
   url: string,
@@ -62,7 +62,7 @@ function backendHeaders(request: NextRequest, extra: Record<string, string> = {}
   return headers
 }
 
-// CSRF defense. Compare HOST, not full origin — protocol detection behind a
+// CSRF defense. Compare HOST, not full origin: protocol detection behind a
 // TLS-terminating proxy is unreliable (nextUrl.protocol depends on whether
 // X-Forwarded-Proto is forwarded). The host check alone is sufficient because
 // a cross-origin attacker cannot spoof the browser-set Origin header.
@@ -96,8 +96,8 @@ function isSameOrigin(request: NextRequest): boolean {
  * Flow:
  *   1. Decrypt the code via the platform to get {access_token, refresh_token}.
  *   2. If we have a refresh_token, exchange it on THIS backend for a fresh
- *      access_token — this catches a JWT-secret mismatch loudly.
- *   3. ALWAYS validate the resulting access_token against /users/session —
+ *      access_token. This catches a JWT-secret mismatch loudly.
+ *   3. ALWAYS validate the resulting access_token against /users/session:
  *      refresh only checks the JWT signature, not user existence, so a valid
  *      signature for a user missing on this tenant would otherwise produce a
  *      silent half-logged-in state (cookies set → /session 401 on next page).
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: ALWAYS validate via /session. Refresh only checks the JWT
-    // signature — this call also confirms the user exists on THIS tenant, so
+    // signature. This call also confirms the user exists on THIS tenant, so
     // we never set cookies for a half-logged-in state.
     let sessionRes: Response
     try {
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
       //         valid but the user row is missing on this tenant, or when the
       //         token has a non-session purpose claim.
       //   400 → get_current_user returned AnonymousUser (token could not be
-      //         decoded — bad signature, expired, or malformed), then
+      //         decoded: bad signature, expired, or malformed), then
       //         get_user_session raised "User does not exist".
       if (sessionRes.status === 401) {
         return NextResponse.json(

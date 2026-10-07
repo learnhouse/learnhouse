@@ -62,7 +62,7 @@ function normalizeContents(raw: any): NumberAnswerContents {
 // Did the answer key actually reach the client?
 //
 // The API strips `correct_value` from the task payload whenever the student
-// isn't allowed to see it yet — notably while retry attempts remain (see
+// isn't allowed to see it yet, notably while retry attempts remain (see
 // _student_may_see_answer_key; max_retries=0 means unlimited, so it never
 // reveals). The client can't re-derive that rule (it has no attempt_number
 // here), so `showCorrectAnswers` can be true while the key is absent. In that
@@ -100,7 +100,7 @@ function TaskNumberAnswerObject({
   // Tracks whether the server actually sent the answer key (see hasAnswerKey).
   const [answerKeyPresent, setAnswerKeyPresent] = useState(false)
   // The server applies a third reveal condition the client can't reproduce, so
-  // the opt-in gate alone isn't enough — only reveal when the key is really here.
+  // the opt-in gate alone isn't enough; only reveal when the key is really here.
   const revealAnswerKey = showCorrectAnswers && answerKeyPresent
   const [studentAnswer, setStudentAnswer] = useState<string>('')
   const [initialAnswer, setInitialAnswer] = useState<string>('')
@@ -149,7 +149,7 @@ function TaskNumberAnswerObject({
     if (res.success && res.data) {
       setUserSubmissions(res.data)
       const saved = String(res.data.task_submission?.answer ?? '')
-      // The interaction guard has to be checked HERE, after the await — not
+      // The interaction guard has to be checked HERE, after the await, not
       // before it. If the learner starts typing during the round trip, a
       // pre-await check still lets the late response overwrite their text AND
       // reset the dirty baseline, so auto-save never fires and the answer is
@@ -212,7 +212,7 @@ function TaskNumberAnswerObject({
   // --- SAVE PROGRESS (student) ---
   // Matches the QUIZ / FORM pattern: persist the draft answer only. Grading
   // is done server-side via _server_verified_task_grade when the assignment
-  // is finalized — either by the auto-grade path on submission or by the
+  // is finalized, either by the auto-grade path on submission or by the
   // teacher clicking "Set final grade". Keeping the client out of the
   // grading loop also means DevTools tampering can't inflate the score.
   async function submitFC(opts?: { silent?: boolean }) {
@@ -402,7 +402,7 @@ function TaskNumberAnswerObject({
         )}
 
         {/* === STUDENT VIEW === */}
-        {/* Saving is just persisting a draft — no Correct/Incorrect feedback
+        {/* Saving is just persisting a draft, so there is no Correct/Incorrect feedback
             here. The student sees their grade after the whole assignment is
             graded (visible in the activity header badge). */}
         {view === 'student' && (
@@ -426,7 +426,7 @@ function TaskNumberAnswerObject({
                 <span className="text-sm font-medium text-slate-500">{contents.unit}</span>
               )}
             </div>
-            {/* No answer-key panel at all when the key was withheld — the
+            {/* No answer-key panel at all when the key was withheld; the
                 learner still sees their own answer and their score. A
                 fabricated "Accepted range: 0" would be worse than nothing. */}
             {revealAnswerKey && (

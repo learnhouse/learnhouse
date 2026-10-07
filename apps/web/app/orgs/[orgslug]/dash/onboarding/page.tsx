@@ -19,10 +19,10 @@ export default function OnboardingPage() {
   return (
     <div className="flex w-full">
       <div className="w-full px-4 sm:px-10 tracking-tighter flex flex-col space-y-6 pb-16">
-        {/* Header — inspired by the sidebar onboarding box, in light mode:
+        {/* Header, inspired by the sidebar onboarding box, in light mode:
             violet label, blueprint-grid pattern, neon purple progress. */}
         <div className="relative overflow-hidden -mx-4 sm:-mx-10 px-4 sm:px-10 pt-6 pb-1">
-          {/* Blueprint grid — purple, fading down */}
+          {/* Blueprint grid: purple, fading down */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -45,7 +45,7 @@ export default function OnboardingPage() {
           />
 
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
-            {/* Left — eyebrow + title */}
+            {/* Left: eyebrow + title */}
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <ListChecks size={15} weight="bold" className="text-violet-500" />
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
               </h1>
             </div>
 
-            {/* Right — compact neon progress */}
+            {/* Right: compact neon progress */}
             <div className="w-full sm:w-72 shrink-0 sm:pb-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-gray-700">
@@ -103,7 +103,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Steps — centered */}
+        {/* Steps, centered */}
         <div className="w-full max-w-3xl mx-auto">
           <OnboardingSteps />
         </div>

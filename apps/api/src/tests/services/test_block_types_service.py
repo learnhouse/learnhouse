@@ -56,7 +56,7 @@ def _fake_block_file(file_type: str, ext: str, activity_uuid: str) -> BlockFile:
 
 
 def _mock_upload_file() -> MagicMock:
-    """Minimal UploadFile mock — content is not read by the create_* functions."""
+    """Minimal UploadFile mock; content is not read by the create_* functions."""
     uf = MagicMock(spec=UploadFile)
     uf.filename = "test.bin"
     return uf

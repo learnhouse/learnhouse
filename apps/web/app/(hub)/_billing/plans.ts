@@ -14,7 +14,7 @@
 // display/badge styling, static fallback prices, and the add-on packs.
 //
 // Live prices/limits come from GET /api/billing/prices and are layered on top
-// of these static values via `applyPlanLimits` / the PriceOverrides props — the
+// of these static values via `applyPlanLimits` / the PriceOverrides props; the
 // static catalog is only the fallback when Stripe prices are unavailable.
 
 export type Billing = "monthly" | "annual";
@@ -248,7 +248,7 @@ export function findPlan(planId: string): Plan | undefined {
 }
 
 /**
- * The org's effective plan id — the SINGLE source of truth for the billing UI.
+ * The org's effective plan id: the SINGLE source of truth for the billing UI.
  *
  * MUST match the backend's `_get_plan_from_config` (and the app's `usePlan`):
  * the plan lives at `config.plan` on v2 configs and `config.cloud.plan` on v1

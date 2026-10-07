@@ -60,7 +60,7 @@ def _block_api_tokens(current_user) -> None:
     """Block API tokens from managing other API tokens.
 
     SECURITY: Allowing a token to create / read / update / revoke other tokens
-    is a privilege-escalation surface — a low-rights token could spawn a
+    is a privilege-escalation surface: a low-rights token could spawn a
     higher-rights one, or revoke the admin's active token. Token management
     is a human/admin action and must stay behind user authentication.
     """

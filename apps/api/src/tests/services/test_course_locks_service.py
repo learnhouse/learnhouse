@@ -90,7 +90,7 @@ class TestIsOrgAdmin:
         assert await is_org_admin(999, org.id, db) is False
 
     async def test_maintainer_role_returns_true(self, db, org):
-        # role_id=2 is MAINTAINER_ROLE_ID — create a user+UO with that role
+        # role_id=2 is MAINTAINER_ROLE_ID; create a user+UO with that role
         from src.db.users import User
         from src.db.user_organizations import UserOrganization
 
@@ -244,14 +244,14 @@ class TestIsLockedForUser:
         assert await is_locked_for_user("restricted", "any_uuid", org.id, admin_user, db) is False
 
     async def test_restricted_lock_precomputed_is_admin_true_bypasses(self, db, org, regular_user):
-        # Lines 99-101: caller pre-computed is_admin=True — skips DB lookup
+        # Lines 99-101: caller pre-computed is_admin=True, which skips the DB lookup
         result = await is_locked_for_user(
             "restricted", "any_uuid", org.id, regular_user, db, is_admin=True
         )
         assert result is False
 
     async def test_restricted_lock_precomputed_is_admin_false_falls_through(self, db, org, regular_user):
-        # is_admin=False passed explicitly — skips DB lookup, goes on to check groups
+        # is_admin=False passed explicitly: skips DB lookup, goes on to check groups
         # No UGR rows exist, so user has no access → locked
         result = await is_locked_for_user(
             "restricted", "no_group_uuid", org.id, regular_user, db, is_admin=False
@@ -296,7 +296,7 @@ class TestIsLockedForUser:
         )
         assert result is True
 
-    # --- restricted lock: no precomputed set — queries DB (lines 106-109) ---
+    # --- restricted lock: no precomputed set, so it queries the DB (lines 106-109) ---
 
     async def test_restricted_no_precomputed_user_in_group_not_locked(self, db, org, regular_user):
         # Lines 106-109: no precomputed set; user IS in a group that has this resource

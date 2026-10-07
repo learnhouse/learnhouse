@@ -50,7 +50,7 @@ describe('migrateContentVolume — migrated path (container present)', () => {
     ;(execFileSync as unknown as ReturnType<typeof vi.fn>).mockImplementation(((_cmd: string, argv: string[]) => {
       // Only the EXTRACT step (`docker cp <container>:path/. <tmpDir>/`) populates a
       // real local dir. Skip the UPLOAD step (`docker cp <tmpDir>/. <helper>:/dst/`)
-      // whose destination is a container path — writing it would litter the cwd.
+      // whose destination is a container path; writing it would litter the cwd.
       if (Array.isArray(argv) && argv[0] === 'cp' && path.isAbsolute(argv[2].replace(/\/$/, ''))) {
         const dst = argv[2].replace(/\/$/, '') // tmpDir (absolute)
         fs.mkdirSync(path.join(dst, 'avatars'), { recursive: true })

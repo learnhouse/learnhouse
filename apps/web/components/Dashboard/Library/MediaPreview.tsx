@@ -119,7 +119,7 @@ function UploadVideoPreview({ src }: { src: string }) {
 }
 
 /**
- * Website/link embed preview. Tries the backend link-preview (og:image — reliable,
+ * Website/link embed preview. Tries the backend link-preview (og:image; reliable,
  * server-side) first, then a screenshot service, then a clean link/video tile.
  */
 function EmbedPreview({ url, video }: { url: string; video?: boolean }) {

@@ -33,7 +33,7 @@ async def demo_org(db):
     )
     db.add(o)
     await db.flush()
-    # On the pro plan, exactly as the sync configures it — the paid plan is
+    # On the pro plan, exactly as the sync configures it; the paid plan is
     # what makes several of the tests below meaningful.
     db.add(
         OrganizationConfig(
@@ -72,7 +72,7 @@ async def test_demo_org_ids_returns_only_demo_orgs(db, org, other_org, demo_org)
 
 
 # ---------------------------------------------------------------------------
-# free-org cap — the exclusion that blocks real signups if it regresses
+# free-org cap: the exclusion that blocks real signups if it regresses
 # ---------------------------------------------------------------------------
 
 async def _make_admin_of(db, user_id: int, org_id: int) -> None:
@@ -105,14 +105,14 @@ async def test_free_org_cap_ignores_demo_membership(db, org, other_org, demo_org
     await _make_admin_of(db, 7, other_org.id)
     await _make_admin_of(db, 7, demo_org.id)
 
-    # Must not raise — the user is at 2 of 3, not 3 of 3.
+    # Must not raise: the user is at 2 of 3, not 3 of 3.
     await _enforce_free_org_cap(_User(), db)
 
 
 async def test_paid_demo_does_not_exempt_a_user_from_the_free_org_cap(db, demo_org):
     """The exclusion that lets the demo run on a paid plan at all.
 
-    The cap exempts anyone who owns at least one paid organization — "a
+    The cap exempts anyone who owns at least one paid organization, "a
     customer, not free-tier". The demo is on pro and every visitor is an admin
     of it, so without the is_demo filter in the admin-org query, merely looking
     at the demo would grant that exemption permanently: unlimited free
@@ -181,7 +181,7 @@ async def test_free_org_cap_still_fires_on_real_orgs(db):
 
 
 # ---------------------------------------------------------------------------
-# active-user overage — the money path
+# active-user overage: the money path
 # ---------------------------------------------------------------------------
 
 async def test_active_user_summary_is_zeroed_for_demo(db, demo_org):
@@ -200,7 +200,7 @@ async def test_active_user_summary_is_zeroed_for_demo(db, demo_org):
     assert summary["members_beyond_included"] == 0
     # Second, independent barrier: the frontend only bills plans in
     # BILLABLE_PLANS ({standard, pro}). The demo runs on pro, so reporting the
-    # real plan here would put it in that set — it reports "demo" instead.
+    # real plan here would put it in that set, so it reports "demo" instead.
     assert summary["plan"] == "demo"
 
 
@@ -224,7 +224,7 @@ def test_demo_addresses_are_recognised():
 
     assert is_demo_email("demo-01@demo.example.com") is True
     assert is_demo_email("DEMO-01@DEMO.EXAMPLE.COM") is True
-    # The parent domain is not the demo domain — only the demo subdomain is.
+    # The parent domain is not the demo domain; only the demo subdomain is.
     assert is_demo_email("someone@example.com") is False
     assert is_demo_email("") is False
     assert is_demo_email(None) is False
@@ -361,7 +361,7 @@ async def test_members_page_hides_other_visitors_in_the_demo(
     """Every visitor is an admin here, so the members page is a mailing list.
 
     The seeded students are the point of the page and stay visible. Other
-    visitors — real people, real addresses — must not be.
+    visitors (real people, real addresses) must not be.
     """
     from unittest.mock import patch
 

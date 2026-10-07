@@ -9,7 +9,7 @@ import {
 
 // These mirror apps/api/src/services/courses/activities/quiz_modes.py. The
 // learner sees the grade this module computes (gradeFC's preview) and the
-// server stores the grade the Python side computes, so the two must agree —
+// server stores the grade the Python side computes, so the two must agree;
 // the cases below are the same ones pinned in test_quiz_grading_edge.py.
 
 const outcome = (correct, selected) => ({ correct, selected });

@@ -192,7 +192,7 @@ async def add_org_ai_credits(
     # client-supplied amount with NO payment verification. Allowing any org
     # admin here lets a tenant mint unlimited free AI credits for itself
     # (revenue/quota bypass), so this must be a billing-platform / superadmin
-    # operation — same posture as the /set endpoint.
+    # operation, same posture as the /set endpoint.
     ensure_ee_superadmin_surface()
     user_id = resolve_acting_user_id(current_user)
     if not user_id or not await is_user_superadmin(user_id, db_session):

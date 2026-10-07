@@ -10,7 +10,7 @@ Security posture mirrors the admin link:
 * short TTL,
 * a random ``jti`` enforced single-use via a Redis ``SETNX`` marker at consume,
 * consumption goes through :func:`issue_session_or_challenge`, so a user with 2FA
-  still gets a second-factor challenge — a magic link is a first factor, not a
+  still gets a second-factor challenge; a magic link is a first factor, not a
   bypass.
 
 The request endpoint never reveals whether an address has an account (always a

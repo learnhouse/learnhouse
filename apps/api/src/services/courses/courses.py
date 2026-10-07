@@ -192,7 +192,7 @@ async def get_course_meta(
         context=AccessContext.DASHBOARD,
     )
 
-    # Permission check passed — try Redis cache for the heavy data.
+    # Permission check passed. Try the Redis cache for the heavy data.
     # SECURITY: chapter/activity content is lock-stripped PER USER in
     # _apply_locks_to_chapters (restricted items are blanked for users not in
     # the right usergroup, while admins/members see everything). The meta cache
@@ -208,7 +208,7 @@ async def get_course_meta(
         if cached is not None:
             return FullCourseRead.model_validate(cached)
 
-    # Get course chapters — pass the already-loaded course to skip the
+    # Get course chapters. Pass the already-loaded course to skip the
     # duplicate SELECT inside get_course_chapters.
     chapters = []
     if course.id is not None:
@@ -356,7 +356,7 @@ async def get_courses_orgslug(
                 ))
             )
 
-    # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
+    # Apply ordering and pagination; only use DISTINCT when outerjoins may produce duplicates
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
     if needs_distinct:
         query = query.distinct()
@@ -557,7 +557,7 @@ async def search_courses(
             ))
         )
 
-    # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
+    # Apply ordering and pagination; only use DISTINCT when outerjoins may produce duplicates
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
     if needs_distinct:
         query = query.distinct()
@@ -1029,7 +1029,7 @@ async def delete_course(
         logger.exception("Failed to remove deleted course %s from org landing", course_uuid_val)
         await db_session.rollback()
 
-    # Feature usage — decrement only AFTER the row is actually gone. The usage
+    # Feature usage: decrement only AFTER the row is actually gone. The usage
     # counter lives in Redis and is written immediately/irreversibly; doing it
     # before the delete meant a failed delete/commit (or storage error) left the
     # org's course count permanently under-counted, letting them create an extra

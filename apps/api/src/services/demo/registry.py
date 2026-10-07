@@ -4,9 +4,9 @@ Every row the demo creates is registered here against the stable
 ``(kind, bundle_key)`` identity the manifest declares. That makes two
 otherwise-hard questions cheap:
 
-* *Does this bundle entry already exist?* — so the sync can update in place
+* *Does this bundle entry already exist?* This lets the sync update in place
   instead of creating a duplicate.
-* *Was this row created by a visitor?* — anything in the demo org with no
+* *Was this row created by a visitor?* Anything in the demo org with no
   registry entry was, and gets deleted as drift.
 """
 
@@ -115,7 +115,7 @@ class Registry:
         forever: nothing recreates it, but its registry entry still claims its
         uuid as bundle-owned, so drift deletion skips it too. Forgetting the
         entry hands the row to the drift pass, which removes it along with its
-        stored media — so this must run *before* drift deletion.
+        stored media, so this must run *before* drift deletion.
 
         Restricted to kinds this run actually claimed something in. Several
         phases are conditional (the storefront needs the Enterprise Edition,

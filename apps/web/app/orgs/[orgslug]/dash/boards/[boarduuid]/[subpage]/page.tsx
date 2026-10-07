@@ -41,7 +41,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
     staleTime: 60_000,
   })
 
-  // boardKey passed as null — tabs use queryKeys directly now
+  // boardKey passed as null; tabs use queryKeys directly now
   const boardKey = null
 
   const tabs: DashTabItem[] = [

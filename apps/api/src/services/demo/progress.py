@@ -1,7 +1,7 @@
 """Deriving the demo's learners and their progress.
 
 Pure functions with no database access. Everything is a deterministic function
-of the student's index, the bundle, and the ``content_epoch`` — which is what
+of the student's index, the bundle, and the ``content_epoch``, which is what
 makes an hourly refresh a no-op: recomputing the target state produces exactly
 the values already stored, so the reconcile writes nothing.
 
@@ -206,7 +206,7 @@ def grade_for(plan: StudentPlan, epoch: str, course_key: str, max_grade: int) ->
 def submission_template_for(plan: StudentPlan, epoch: str, course_key: str) -> str:
     """Which authored answer this learner gave: correct, partial or incorrect.
 
-    Chosen to match the grade band so the grading UI and the score agree — a
+    Chosen to match the grade band so the grading UI and the score agree; a
     submission showing three right answers next to a mark of 38% is the kind of
     detail that makes a demo feel fake.
     """
@@ -247,7 +247,7 @@ def activity_days(epoch: str, plan: StudentPlan) -> list[date]:
     """The distinct days this learner was seen.
 
     Feeds UserActivityDay, which drives the members table's visit counts. Demo
-    orgs are excluded from active-user billing, so these rows are safe — that
+    orgs are excluded from active-user billing, so these rows are safe; that
     exclusion is not optional.
     """
     rng = random.Random(_seed_for(epoch, f"days-{plan.index}"))

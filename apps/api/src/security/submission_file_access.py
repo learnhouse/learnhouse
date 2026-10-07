@@ -2,7 +2,7 @@
 
 Submission files live under a course-content path
 (``orgs/{org}/courses/{course}/activities/{act}/assignments/{asgn}/tasks/{task}/subs/{file}``)
-and would otherwise be served by the generic activity-content grant — which
+and would otherwise be served by the generic activity-content grant, which
 allows any org member (or anyone at all on a public course) to download them.
 That is an IDOR: one learner could read another learner's submitted work.
 
@@ -58,8 +58,8 @@ async def enforce_submission_file_access(
     """Raise 401/403 unless the caller may read this submission file.
 
     Allowed: a course instructor (course UPDATE right), or the student who owns a
-    submission referencing this exact file. Everyone else — including anonymous
-    users and other enrolled learners — is denied. Assumes ``is_submission_file``
+    submission referencing this exact file. Everyone else, including anonymous
+    users and other enrolled learners, is denied. Assumes ``is_submission_file``
     already matched ``parts``.
     """
     course_uuid = parts[3]
@@ -72,14 +72,14 @@ async def enforce_submission_file_access(
     if not course:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Submission files are never public — authentication is always required.
+    # Submission files are never public; authentication is always required.
     if isinstance(current_user, AnonymousUser) or getattr(current_user, "id", None) is None:
         raise HTTPException(status_code=401, detail="Authentication required")
 
     # An API token must never reach the identity checks below: its ``.id`` is the
     # token's own primary key, not a user id, so the owner query
     # (``user_id == current_user.id``) and the RBAC subject would both treat it
-    # as a same-numbered learner — letting a token read another user's submission
+    # as a same-numbered learner, letting a token read another user's submission
     # file, across orgs. There is no token-integration use case for downloading
     # raw submission files, so deny outright.
     if isinstance(current_user, APITokenUser):

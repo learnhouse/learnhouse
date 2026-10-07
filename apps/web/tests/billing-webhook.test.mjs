@@ -165,7 +165,7 @@ describe("checkout.session.completed", () => {
   });
 
   test("asks Stripe to redeliver when the price maps to no known plan", async () => {
-    // This is a missing STRIPE_PRICE_* env, not a foreign checkout — the
+    // This is a missing STRIPE_PRICE_* env, not a foreign checkout: the
     // session carries our org_id, so the upgrade is owed.
     sessionRetrieveQueue = [
       {

@@ -1,16 +1,16 @@
 """
 Free-tier abuse mitigation: minimum account + organization age gate.
 
-After a phishing-relay incident — a freshly-registered free org blasted
+After a phishing-relay incident (a freshly-registered free org blasted
 hundreds of phishing invite emails within minutes of signup, exhausting the
-shared email quota and taking down platform email — several abuse-prone
+shared email quota and taking down platform email), several abuse-prone
 surfaces now require BOTH the acting user's account AND their organization to
 be at least ``FREE_TIER_MIN_AGE_DAYS`` old before the action is allowed.
 
 Design notes:
 - Paid orgs are exempt: the age gate only applies to the ``free`` plan, where
   signup is free and disposable. Upgrading lifts the gate immediately.
-- Non-SaaS deployments (self-hosted EE/OSS) skip the gate entirely — there is
+- Non-SaaS deployments (self-hosted EE/OSS) skip the gate entirely; there is
   no free-tier abuse economics to defend against.
 - ``creation_date`` is persisted as ``str(datetime.now())`` (a naive,
   space-separated server-local timestamp like ``2026-07-09 11:47:21.155477``),
@@ -84,7 +84,7 @@ async def is_free_tier_age_gated(
     """Return the list of subjects (``"organization"`` / ``"account"``) that
     are younger than ``min_age_days`` and would block a gated free-tier action.
 
-    Returns an empty list when the action should be allowed — i.e. the org is
+    Returns an empty list when the action should be allowed, i.e. the org is
     on a paid plan, the deployment is non-SaaS, or both the org and account are
     old enough (or have unparseable/legacy dates that fail open).
     """

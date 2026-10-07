@@ -81,7 +81,7 @@ function ParamInputs({ values, onChange }) {
 /**
  * Live "Try it" panel. Requests are sent through the docs-site proxy
  * (/api/reference-proxy) because the API's CORS policy is pinned to tenant
- * domains — the proxy forwards only the Authorization header, never cookies.
+ * domains; the proxy forwards only the Authorization header, never cookies.
  * Multipart endpoints send FormData with method/path carried as query params.
  */
 export default function Playground({ method, path, playground, auth, opId }) {

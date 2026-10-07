@@ -3,10 +3,10 @@
 `test_resource_exhaustion_limits.py` proves the logic with mock transports and
 in-memory streams. That leaves the two things mocks cannot answer:
 
-  * F17 — does the pre-read size check actually work against the
+  * F17: does the pre-read size check actually work against the
     ``SpooledTemporaryFile`` that Starlette hands a real multipart upload,
     including once the upload has rolled over onto disk?
-  * F26/F41 — does the streamed read really stop early against a live socket
+  * F26/F41: does the streamed read really stop early against a live socket
     speaking chunked transfer encoding, where the body arrives over several
     TCP reads rather than one ``BytesIO`` slice?
 
@@ -32,7 +32,7 @@ _PNG_HEADER = b"\x89PNG\r\n\x1a\n"
 
 
 # ---------------------------------------------------------------------------
-# F17 — a real Starlette UploadFile over a real SpooledTemporaryFile
+# F17: a real Starlette UploadFile over a real SpooledTemporaryFile
 # ---------------------------------------------------------------------------
 
 
@@ -93,7 +93,7 @@ class TestRealMultipartUpload:
 
 
 # ---------------------------------------------------------------------------
-# F26 / F41 — real sockets, real chunked transfer
+# F26 / F41: real sockets, real chunked transfer
 # ---------------------------------------------------------------------------
 
 

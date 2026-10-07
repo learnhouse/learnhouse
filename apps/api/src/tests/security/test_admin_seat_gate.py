@@ -183,4 +183,4 @@ async def test_rights_flip_allows_when_role_held_by_nobody():
     with patch.object(usage, "_is_non_saas", return_value=False):
         await enforce_admin_seat_limit_for_role_rights_change(
             1, 5, will_grant_dashboard=True, currently_grants_dashboard=False, db_session=db
-        )  # no raise — assignment is gated separately
+        )  # no raise; assignment is gated separately

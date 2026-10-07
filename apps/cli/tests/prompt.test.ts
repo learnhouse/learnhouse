@@ -41,7 +41,7 @@ describe('utils/prompt — custom text()', () => {
     await text({ message: 'Name', placeholder: 'fill-me' })
     const inst = core.instances.at(-1) as any
     expect(typeof inst.handlers.key).toBe('function')
-    // Simulate Tab on empty input — fills the placeholder via the closure prompt.
+    // Simulate Tab on empty input; it fills the placeholder via the closure prompt.
     ;(inst.handlers.key as (k: string, i: { name: string }) => void)('\t', { name: 'tab' })
     expect(inst.setCalls).toContainEqual(['fill-me', true])
   })

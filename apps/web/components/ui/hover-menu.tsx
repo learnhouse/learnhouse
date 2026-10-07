@@ -36,7 +36,7 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
         }
 
         // The flyout opens toward the inline end: right of the trigger in LTR,
-        // left of it in RTL. Read direction from the DOM rather than a hook —
+        // left of it in RTL. Read direction from the DOM rather than a hook;
         // this only runs on hover, so it is always client-side and always sees
         // the direction the user is actually looking at.
         const isRTL = document.documentElement.dir === 'rtl'

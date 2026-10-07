@@ -95,7 +95,7 @@ async def test_auto_install_refreshes_default_roles_when_any_org_exists(monkeypa
     assert installs == []
     # Existing install: role refresh always runs so new permission keys land.
     assert len(refreshes) == 1
-    # Both steps borrow the application engine — no private pool is opened here.
+    # Both steps borrow the application engine; no private pool is opened here.
     assert len(opened) == 2
 
 

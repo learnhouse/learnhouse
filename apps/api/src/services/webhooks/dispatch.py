@@ -68,7 +68,7 @@ async def close_webhook_client() -> None:
 async def _read_capped_body(response: httpx.Response) -> str:
     """Read at most MAX_RESPONSE_BYTES of a streamed response body.
 
-    Breaking out of the iterator aborts the transfer — the surrounding
+    Breaking out of the iterator aborts the transfer; the surrounding
     ``client.stream`` context closes the connection on exit.
     """
     declared = response.headers.get("content-length")

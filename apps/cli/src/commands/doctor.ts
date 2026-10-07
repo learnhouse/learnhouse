@@ -161,7 +161,7 @@ export async function doctorCommand() {
       cwd: installDir,
     }).toString().trim()
     const sizeStr = dfOutput.toLowerCase()
-    // Parse available space — warn if under 1G
+    // Parse available space and warn if under 1G
     const numericVal = parseFloat(sizeStr)
     if (sizeStr.includes('g') && numericVal < 1) {
       warn(`Low disk space: ${dfOutput} available`, 'Free up disk space or docker system prune')

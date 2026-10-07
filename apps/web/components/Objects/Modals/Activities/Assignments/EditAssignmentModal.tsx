@@ -154,7 +154,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
     const { t } = useTranslation()
     const queryClient = useQueryClient()
 
-    // Auto-grading is incompatible with file-submission tasks — those need
+    // Auto-grading is incompatible with file-submission tasks; those need
     // human review. If any such task exists, we force the toggle off and
     // show a note explaining why.
     const hasFileSubmissionTask = (assignment.assignment_tasks || []).some(
@@ -172,7 +172,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             description: assignment.description || '',
             // `<input type="date">` shows nothing for a value carrying a time
             // component, so a stored "2026-01-01T09:00:00" would render as an
-            // empty field the teacher reads as "no deadline" — and, now that
+            // empty field the teacher reads as "no deadline" and, now that
             // the field is optional and no longer blocks submit, quietly save
             // the old deadline straight back. Trim it to the day the input can
             // actually display.
@@ -182,7 +182,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             anti_copy_paste: assignment.anti_copy_paste || false,
             show_correct_answers: assignment.show_correct_answers || false,
             allow_retries: assignment.allow_retries || false,
-            // 0 means unlimited — kept as a number so the input below stays
+            // 0 means unlimited. Kept as a number so the input below stays
             // numeric and the backend doesn't have to coerce strings.
             max_retries:
                 typeof assignment.max_retries === 'number' ? assignment.max_retries : 0,
@@ -220,7 +220,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                 payload.auto_grading = false;
                 payload.show_correct_answers = false;
                 // AFTER_GRADING can never fire on something that is never
-                // graded — fall back to unlocking on hand-in.
+                // graded, so fall back to unlocking on hand-in.
                 if (payload.solution_reveal === 'AFTER_GRADING') {
                     payload.solution_reveal = 'ON_SUBMISSION';
                 }
@@ -587,7 +587,7 @@ function UngradedRow({
 
 // The model answer ("corrigé"): free text plus an optional document, and the
 // rule that decides when a learner may read either. The API enforces that rule
-// server-side — this form only chooses it.
+// server-side; this form only chooses it.
 function SolutionSection({
     ungraded,
     solution,

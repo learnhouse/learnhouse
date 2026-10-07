@@ -59,13 +59,13 @@ GIT_DIR="$(git rev-parse --git-dir)"
 [ -f "$GIT_DIR/MERGE_HEAD" ] && die "A merge is in progress. Finish it or run 'git merge --abort' first."
 { [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_DIR/rebase-apply" ]; } && die "A rebase is in progress. Finish or abort it first."
 
-# 5) Must be ON dev — the bump + tag have to land on dev, not on whatever branch
+# 5) Must be ON dev: the bump + tag have to land on dev, not on whatever branch
 #    you happen to be sitting on. (This was the biggest footgun of the old script.)
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 [ "$CURRENT_BRANCH" = "dev" ] \
   || die "You are on '$CURRENT_BRANCH', not 'dev'. Releases must be cut from dev — run: git checkout dev"
 
-# 6) Clean working tree — never release uncommitted local changes.
+# 6) Clean working tree: never release uncommitted local changes.
 git diff --quiet && git diff --cached --quiet \
   || die "Working tree has uncommitted changes. Commit or stash them before releasing."
 

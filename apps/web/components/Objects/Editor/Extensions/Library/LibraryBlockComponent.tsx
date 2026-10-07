@@ -88,7 +88,7 @@ function LibraryBlockComponent(props: NodeViewProps) {
         }
       })
       .catch(() => {
-        /* no access or deleted — the viewer renders its own fallback */
+        /* no access or deleted; the viewer renders its own fallback */
       })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps

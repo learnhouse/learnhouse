@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────
-# LearnHouse — Install Script (macOS & Linux)
+# LearnHouse Install Script (macOS & Linux)
 # Installs Docker and Node.js if missing, then runs the CLI.
 #
 # Usage:
@@ -296,7 +296,7 @@ echo ""
 echo -e "${CYAN}Launching LearnHouse setup...${RESET}"
 echo ""
 
-# Build the launch command — reattach stdin from /dev/tty when piped from curl
+# Build the launch command; reattach stdin from /dev/tty when piped from curl
 if [ ! -t 0 ]; then
   LAUNCH_CMD="npx learnhouse@latest setup </dev/tty"
 else

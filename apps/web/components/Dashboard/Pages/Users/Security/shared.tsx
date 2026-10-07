@@ -56,7 +56,7 @@ export type OrgSecurityPolicy = {
   allow_central_session_sharing: boolean
 }
 
-// The CALLING user's own compliance state — context only, not the policy.
+// The CALLING user's own compliance state: context only, not the policy.
 export type SelfComplianceState = {
   required: boolean
   satisfied: boolean
@@ -203,7 +203,7 @@ export function useOrgSecurityPolicy() {
 
   // First paint only. The org payload is served from a slug-keyed cache and is
   // held by react-query for minutes after a save, so it is a hint, never the
-  // answer — the authoritative policy is fetched below.
+  // answer; the authoritative policy is fetched below.
   const hintPolicy: OrgSecurityPolicy = React.useMemo(() => {
     const security = org?.config?.config?.admin_toggles?.security
     return security ? normalizePolicy(security) : DEFAULT_POLICY
@@ -213,14 +213,14 @@ export function useOrgSecurityPolicy() {
   const [saving, setSaving] = React.useState(false)
   const [saveError, setSaveError] = React.useState<string | null>(null)
   // Set when the backend refuses because the admin has no second factor of
-  // their own — drives the "enable it on your account first" call to action.
+  // their own; drives the "enable it on your account first" call to action.
   const [needsOwnMfa, setNeedsOwnMfa] = React.useState(false)
   // Bumped whenever an authoritative policy lands, so each tab knows to reset
   // its drafts to it.
   const [seedVersion, setSeedVersion] = React.useState(0)
 
   // Same call shape as the account-level two-factor section: getAPIUrl() +
-  // RequestBodyWithAuthHeader + getResponseMetadata. Deliberately NOT apiFetch —
+  // RequestBodyWithAuthHeader + getResponseMetadata. Deliberately NOT apiFetch:
   // its errorHandling() turns a 401 into a global "session expired" event, and
   // we want to read the structured `detail.code` on 403 ourselves.
   const mfaFetch = React.useCallback(

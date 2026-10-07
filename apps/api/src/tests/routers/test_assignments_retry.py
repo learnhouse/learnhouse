@@ -372,7 +372,7 @@ class TestRetryAssignmentSubmissionService:
     ):
         """Orphan assignment whose course_id points at a non-existent row.
         Exercises the defensive 'Course not found' 404 inside the retry
-        service — unlikely in production but the branch should still be
+        service; unlikely in production but the branch should still be
         covered to keep patch coverage above the codecov target."""
         orphan = Assignment(
             id=999,

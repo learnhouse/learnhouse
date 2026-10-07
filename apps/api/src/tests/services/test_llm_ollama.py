@@ -1,7 +1,7 @@
 """Live, local provider-agnostic tests against Ollama (no cloud keys).
 
 These prove that text generation, streaming, and structured output run through the same
-``src.services.ai.llm`` layer on a NON-Gemini provider with zero code changes — the whole
+``src.services.ai.llm`` layer on a NON-Gemini provider with zero code changes, which is the whole
 point of the refactor. They are opt-in and skipped automatically when Ollama isn't running.
 
 Run locally with:

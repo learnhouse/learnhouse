@@ -28,9 +28,9 @@ import path from 'node:path'
 // Every entry verified to compile against tailwindcss@4.2.1.
 //
 // NOT converted, deliberately:
-//   space-x-*, divide-x*  — already emit margin-inline-* / border-inline-* in v4
-//   inset-x-*             — already emits inset-inline (symmetric)
-//   translate-x-*         — physical, but a rename is wrong; needs rtl: pairs
+//   space-x-*, divide-x*    already emit margin-inline-* / border-inline-* in v4
+//   inset-x-*               already emits inset-inline (symmetric)
+//   translate-x-*           physical, but a rename is wrong; needs rtl: pairs
 //                           or a direction multiplier. Handled by hand.
 
 /** Ordered: longer prefixes first, so `rounded-tl-` wins over `rounded-t`. */
@@ -71,7 +71,7 @@ const EXACT_MAP = new Map([
  * ⚠ THE CENTERING TRAP
  *
  * `left-1/2` paired with a -50% translate is a centering idiom: the inset and
- * the transform cancel out, and it is correct in BOTH directions — but only
+ * the transform cancel out, and it is correct in BOTH directions, but only
  * while it stays physical. Convert `left-1/2` to `start-1/2` and in RTL the
  * inset measures from the right edge while the transform still shifts left, so
  * the element lands off-centre. No lint error, no build error, no test failure.
@@ -89,12 +89,12 @@ const CENTERING_INSET = /^-?(left|right)-(1\/2|\[50%\])$/
 
 /**
  * Paths that are LTR by design. Flipping these produces worse output than
- * leaving them physical — see the DENY list rationale in each comment.
+ * leaving them physical; see the DENY list rationale in each comment.
  */
 const DENY = [
   // CodeMirror computes gutter/cursor/selection geometry from physical
   // left/right and ships its own .cm-* stylesheet. Code is LTR by language
-  // spec anyway — same choice VS Code and GitHub make.
+  // spec anyway, the same choice VS Code and GitHub make.
   'components/Objects/Editor/Extensions/CodePlayground/',
   // video.js vjs-* CSS is physical throughout. A half-flipped player fills the
   // progress bar one way and the buffered overlay the other.
@@ -158,7 +158,7 @@ function rewriteClassString(value) {
   let changed = false
   let skippedCentering = false
 
-  // Preserve original whitespace exactly — these strings are often multi-line
+  // Preserve original whitespace exactly: these strings are often multi-line
   // and hand-formatted, and a reformat would bury the real diff.
   const out = value.replace(/\S+/g, (token) => {
     const next = rewriteToken(token)
@@ -182,7 +182,7 @@ const CLASS_FNS = new Set(['cn', 'clsx', 'classNames', 'cva', 'twMerge', 'twJoin
 /**
  * Cheap file-level gate: does this source mention any utility we'd convert?
  *
- * Must be LOOSER than the per-token check, not stricter — a false positive
+ * Must be LOOSER than the per-token check, not stricter. A false positive
  * only costs a parse, whereas a false negative silently skips the whole file.
  * (Splitting the raw source on whitespace does not work: the last class in an
  * attribute arrives as `text-left">`, which matches nothing.)
@@ -266,7 +266,7 @@ function listFiles() {
   })
   let files = out.split('\n').filter(Boolean)
   if (INCLUDE) {
-    // Simple prefix/glob match — enough for the batch slicing we do.
+    // Simple prefix/glob match, enough for the batch slicing we do.
     const prefix = INCLUDE.replace(/\*+$/, '').replace(/\/$/, '')
     files = files.filter((f) => f.startsWith(prefix))
   }

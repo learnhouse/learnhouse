@@ -1,6 +1,6 @@
 """Tests for the audit answer humanizer.
 
-Pure functions — no db, no client. The cases that matter most are the tri-state
+Pure functions: no db, no client. The cases that matter most are the tri-state
 verdict rules: a missing answer key must produce "no verdict", never "wrong", and the
 questions the graders refuse to auto-score must be excluded from the score rather than
 counted as failures.
@@ -134,7 +134,7 @@ class TestForm:
         assert out["total_count"] == 1
 
     def test_blank_count_is_capped_across_questions(self):
-        """The cap is on rendered rows, not per question — two full questions hit it."""
+        """The cap is on rendered rows, not per question, so two full questions hit it."""
         contents = {"questions": [
             {
                 "questionUUID": f"q{q}", "questionText": f"Question {q}",
@@ -300,7 +300,7 @@ class TestHelpers:
         assert answer_digest(None) is None
 
     def test_digest_survives_unserializable_payloads(self):
-        """A digest is an attestation — it must never be the thing that 500s."""
+        """A digest is an attestation; it must never be the thing that 500s."""
         circular: dict = {}
         circular["self"] = circular
         assert answer_digest(circular).startswith("sha256:")

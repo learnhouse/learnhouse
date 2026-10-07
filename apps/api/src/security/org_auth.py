@@ -2,7 +2,7 @@
 Centralized organization authorization helpers.
 
 All org membership and admin checks go through this module.
-Superadmin bypass is baked in — superadmins pass every check automatically.
+Superadmin bypass is baked in: superadmins pass every check automatically.
 """
 
 import logging
@@ -78,7 +78,7 @@ async def enforce_org_mfa(user_id: int, org_id: int, db_session: AsyncSession) -
 
     * the "require two-factor" policy (:mod:`src.services.orgs.mfa_policy`), and
     * the auth-method / session-sharing policy
-      (:mod:`src.services.orgs.auth_policy`) — which methods may access the org
+      (:mod:`src.services.orgs.auth_policy`): which methods may access the org
       and whether a central/foreign session is accepted.
 
     Every ``require_*`` gate and every additive call site funnels through here,
@@ -200,7 +200,7 @@ async def org_owns_account(user_id: int, org_id: int, db_session: AsyncSession) 
     A user row is global. An org that is the account's only organization is
     effectively its home and may change its email, reset its two-factor or
     scrub it; an account that also belongs to other orgs (or is a platform
-    superadmin) is not any one org's to rewrite — otherwise joining a second
+    superadmin) is not any one org's to rewrite; otherwise joining a second
     org would hand that org's admins the keys to the first.
     """
     if await is_user_superadmin(user_id, db_session):

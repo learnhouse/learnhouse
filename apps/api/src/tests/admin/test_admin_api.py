@@ -166,7 +166,7 @@ async def user(db, org):
 
 @pytest.fixture
 async def learner_user(db, org):
-    """A plain member — a legitimate magic-link target.
+    """A plain member, a legitimate magic-link target.
 
     issue_magic_link refuses Admins, Maintainers and superadmins, the same rule
     issue_user_token applies: a leaked API token must not be able to borrow an
@@ -385,7 +385,7 @@ async def second_user(db, org):
 
 @pytest.fixture
 async def org_admin_user(db, org):
-    """A user with the admin role in the org — required for last-admin tests."""
+    """A user with the admin role in the org, required for last-admin tests."""
     u = User(
         id=30,
         username="orgadmin",
@@ -444,7 +444,7 @@ async def usergroup(db, org):
 
 @pytest.fixture
 async def other_org_usergroup(db, other_org):
-    """A user group in a DIFFERENT org — used for cross-org tests."""
+    """A user group in a DIFFERENT org, used for cross-org tests."""
     group = UserGroup(
         id=2,
         name="Other Cohort",
@@ -462,7 +462,7 @@ async def other_org_usergroup(db, other_org):
 
 @pytest.fixture
 async def student_role(db, org):
-    """A student role in the test org — used for role-change tests."""
+    """A student role in the test org, used for role-change tests."""
     role = Role(
         id=4,
         name="Student",
@@ -1097,7 +1097,7 @@ class TestIssueUserToken:
 
     @pytest.fixture
     async def member(self, org, db):
-        """A non-privileged target — admins/maintainers cannot be impersonated."""
+        """A non-privileged target; admins/maintainers cannot be impersonated."""
         u = User(
             id=77,
             username="member",
@@ -1261,7 +1261,7 @@ class TestProvisionUser:
 
     async def test_orphan_user_is_attached(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
         # An orphan user (in users table, no UserOrganization anywhere)
-        # — created by the pre-fix bug — should be recoverable by re-calling
+        # left behind by the pre-fix bug should be recoverable by re-calling
         # provision_user with the same email.
         orphan = User(
             id=99,
@@ -1329,7 +1329,7 @@ class TestProvisionUser:
         assert exc.value.status_code == 403
 
     async def test_unknown_role_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
-        # No role with id=999 exists — must 400 before any user record is created.
+        # No role with id=999 exists, so this must 400 before any user record is created.
         with pytest.raises(HTTPException) as exc:
             await provision_user(
                 token_user=token_user,
@@ -1442,7 +1442,7 @@ class TestProvisionUser:
 
     async def test_creator_no_longer_member_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
         # If the user who created the token is no longer a member of the org,
-        # the token can't be used to provision anyone — even into a low-priv role.
+        # the token can't be used to provision anyone, even into a low-priv role.
         creator_membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == token_user.created_by_user_id,
@@ -1467,7 +1467,7 @@ class TestProvisionUser:
 
     async def test_creator_privilege_cap_rejects_higher_role(self, token_user, user, mock_request, db, mock_admin_side_effects):
         # Demote the token creator to role 4 (User), then attempt to grant role 3
-        # (Instructor — higher privilege). Must be rejected by the creator-cap layer.
+        # (Instructor, higher privilege). Must be rejected by the creator-cap layer.
         creator_membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == token_user.created_by_user_id,
@@ -1886,7 +1886,7 @@ class TestBulkEnroll:
             token_user=token_user, course_uuid=course.course_uuid,
             user_ids=[user.id], request=mock_request, db_session=db,
         )
-        # Second enroll — should be flagged as already_enrolled
+        # Second enroll should be flagged as already_enrolled
         result = await bulk_enroll_users(
             token_user=token_user, course_uuid=course.course_uuid,
             user_ids=[user.id], request=mock_request, db_session=db,

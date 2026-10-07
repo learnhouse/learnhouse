@@ -92,7 +92,7 @@ _REGEX_TIMEOUT_SECONDS = 0.5
 # comma-as-decimal when parsing NUMBER_ANSWER submissions.
 # The optional sign matters: anchoring at ^\d meant a negative grouped number
 # ("-1,000") never matched here and fell through to the European-decimal branch,
-# where the comma became a decimal point and -1,000 parsed as -1.0 — marking a
+# where the comma became a decimal point and -1,000 parsed as -1.0, marking a
 # correct answer wrong. Negative correct values are authorable and the student
 # input is free text, so this was reachable.
 _THOUSANDS_INT = re.compile(r"^[+-]?\d{1,3}(,\d{3})+$")          # 1,000 / -1,000,000
@@ -237,7 +237,7 @@ def _strip_answer_key(contents, keep_answer_keys: bool = False):
     allowed to see which answers were right (``show_correct_answers``): the
     per-answer keys above are kept, but the CODE reference ``solution_code`` and
     hidden test-case I/O are STILL removed. Those are never appropriate to
-    expose to a student — revealing them would hand over the full solution and
+    expose to a student; revealing them would hand over the full solution and
     every hidden test, defeating the point of hidden tests entirely.
     """
     if not isinstance(contents, dict):
@@ -246,7 +246,7 @@ def _strip_answer_key(contents, keep_answer_keys: bool = False):
 
     # Stamp the resolved quiz response mode onto this COPY before anything is
     # removed. A question authored before `response_type` existed carries no
-    # mode, and the client can only infer one from the answer key — which is
+    # mode, and the client can only infer one from the answer key, which is
     # about to be stripped. Without this the learner would get radio semantics
     # on every legacy select-all-that-apply question. Stored data is untouched;
     # only the outgoing payload gains the field.
@@ -257,7 +257,7 @@ def _strip_answer_key(contents, keep_answer_keys: bool = False):
         if isinstance(options, list) and options:
             q["response_type"] = resolve_response_type(q)
 
-    # Always removed — even in reveal mode — because these expose the full
+    # Always removed, even in reveal mode, because these expose the full
     # solution / hidden grader inputs rather than just "which answer was right".
     c.pop("solution_code", None)
     test_cases = c.get("test_cases")
@@ -278,7 +278,7 @@ def _strip_answer_key(contents, keep_answer_keys: bool = False):
     # `explanation` is reveal-gated content too: the authoring placeholder is
     # "explain why the answer is correct", and both the SHORT_ANSWER and
     # NUMBER_ANSWER student views render it only inside the reveal panel.
-    # Leaving it in leaked the answer in prose — readable straight from the
+    # Leaving it in leaked the answer in prose, readable straight from the
     # tasks GET before submitting, and still visible while retries remain even
     # though correct_value/correct_answers were withheld.
     c.pop("explanation", None)
@@ -289,8 +289,8 @@ def _strip_answer_key(contents, keep_answer_keys: bool = False):
             if not isinstance(q, dict):
                 continue
             # NOTE: `response_type` (single vs multiple response) is deliberately
-            # NOT stripped. It is not an answer key — it says how many options
-            # may be picked, not which ones — and the learner's UI needs it to
+            # NOT stripped. It is not an answer key (it says how many options
+            # may be picked, not which ones), and the learner's UI needs it to
             # render radio vs checkbox semantics. Same for the task-level
             # `grading_mode`. Removing either would silently drop every quiz
             # back to the inferred mode, and the inference reads the answer key
@@ -309,7 +309,7 @@ async def _student_may_see_answer_key(
     current_user, assignment, db_session: AsyncSession
 ) -> bool:
     """A student may see the answer key only after their own submission is GRADED
-    AND the teacher opted into ``show_correct_answers`` — the same gate the
+    AND the teacher opted into ``show_correct_answers``, the same gate the
     student UI uses to reveal answers. Everyone else (pre-grade, opt-out,
     anonymous) gets the key stripped."""
     if not getattr(assignment, "show_correct_answers", False):
@@ -327,7 +327,7 @@ async def _student_may_see_answer_key(
 
     # While the student can still retry, revealing the key is a trivial 100%
     # bypass: read the correct answers now, then hit "Try again" and resubmit
-    # them for full marks. Only reveal once no retry attempt remains — i.e.
+    # them for full marks. Only reveal once no retry attempt remains, i.e.
     # retries are disabled, or the attempt cap has been reached. This mirrors the
     # retry endpoint's own eligibility check (max_retries=0 means unlimited).
     if getattr(assignment, "allow_retries", False):
@@ -366,7 +366,7 @@ async def _student_may_see_solution(
     available, handing over the corrige is a free 100% (read it, hit "Try
     again", resubmit it). So we withhold it until no attempt remains, mirroring
     ``_student_may_see_answer_key``. An ungraded (formative) assignment has no
-    score to game, so the retry guard does not apply there — seeing the worked
+    score to game, so the retry guard does not apply there: seeing the worked
     solution and trying again is exactly the intended loop.
     """
     reveal = getattr(assignment, "solution_reveal", None) or SolutionRevealEnum.NEVER
@@ -412,8 +412,8 @@ async def _resolve_solution_visibility(
     """Whether this reader may see the assignment's model answer.
 
     Short-circuits when the assignment has no corrige at all, so every
-    assignment that never uses the feature — which is all of them until a
-    teacher opts in — pays neither the instructor-role lookup nor the
+    assignment that never uses the feature (which is all of them until a
+    teacher opts in) pays neither the instructor-role lookup nor the
     submission query on a read.
     """
     if not ((assignment.solution or "").strip() or assignment.solution_file):
@@ -429,7 +429,7 @@ def _apply_solution_visibility(
     """Stamp the reveal flags on an outgoing AssignmentRead and, when the
     reader has not unlocked it, strip the corrige from the payload.
 
-    The strip is what actually enforces the reveal — a client-side gate would
+    The strip is what actually enforces the reveal; a client-side gate would
     ship the solution to every learner in the assignment GET and lose the whole
     point of the feature.
     """
@@ -446,7 +446,7 @@ def _apply_solution_visibility(
 ## > Grade computation
 
 # Default passing threshold as a percentage (0-100). Used for PASS_FAIL,
-# NUMERIC, and PERCENTAGE grading types — any type where the pass/fail line
+# NUMERIC, and PERCENTAGE grading types, i.e. any type where the pass/fail line
 # isn't implied by the display format itself.
 DEFAULT_PASSING_THRESHOLD_PERCENTAGE = 50.0
 
@@ -464,7 +464,7 @@ LETTER_PASSING_THRESHOLD_PERCENTAGE = 60.0
 ## to requiring human review until they're explicitly opted in here.
 
 # Tasks whose grade can be computed without teacher review. FILE_SUBMISSION
-# and OTHER are deliberately excluded — files need human eyes, and OTHER is
+# and OTHER are deliberately excluded: files need human eyes, and OTHER is
 # a legacy catch-all with no grading logic.
 AUTO_GRADABLE_TASK_TYPES = frozenset(
     {
@@ -598,7 +598,7 @@ def _grade_quiz_task(contents: dict, submission_data: dict, task_max: int) -> in
     option selected).
 
     Under ``contents["grading_mode"] == "partial_credit"`` a select-all-that-
-    apply question instead scores a fraction — see
+    apply question instead scores a fraction; see
     ``quiz_modes.score_question``. Single-response questions score 1 or 0 under
     either mode. The task score is
     ``round(sum(question_scores) / total_questions * task_max)``, which reduces
@@ -640,7 +640,7 @@ def _grade_quiz_task(contents: dict, submission_data: dict, task_max: int) -> in
         # A question whose answer key marks NO option correct can't be auto-scored:
         # under exact-set matching a blank submission would "match" the all-false
         # key and score full credit for doing nothing (a real risk with
-        # AI-generated or misconfigured quizzes). Skip it entirely — it neither
+        # AI-generated or misconfigured quizzes). Skip it entirely: it neither
         # awards free credit nor unfairly penalizes the student.
         if not any(bool(o.get("assigned_right_answer")) for o in options):
             logger.warning(
@@ -722,7 +722,7 @@ def _grade_form_task(contents: dict, submission_data: dict, task_max: int) -> in
 def _normalize_code_output(s):
     """
     Normalization for Judge0 stdout comparison. Same logic as the client
-    and as the one-off version in code_execution.py — strips trailing
+    and as the one-off version in code_execution.py: strips trailing
     whitespace per line and drops trailing blank lines so ``print("x")``
     matches ``x`` and Windows line endings don't cause false failures.
     """
@@ -745,7 +745,7 @@ async def _grade_code_task_async(task, task_submission):
     - ``equal_weight`` (default): ``round(passed / total * max)``.
 
     Returns an int grade in [0, max_grade_value]. Returns ``None`` when the
-    grade can't be trusted — Judge0 isn't configured, or *any* test case
+    grade can't be trusted: Judge0 isn't configured, or *any* test case
     couldn't actually be executed (transport error, timeout, Judge0 internal
     error, or a submission still queued/processing). In that case the caller
     leaves the submission pending rather than finalizing a bogus 0, so a
@@ -764,7 +764,7 @@ async def _grade_code_task_async(task, task_submission):
         # Student hasn't written any code yet → zero, consistent with other types
         return 0
 
-    # Prefer the language_id the student actually submitted with — falls back
+    # Prefer the language_id the student actually submitted with; falls back
     # to the task's configured language if missing.
     language_id = submission_data.get("language_id") or contents.get("language_id")
     if language_id is None:
@@ -781,7 +781,7 @@ async def _grade_code_task_async(task, task_submission):
     try:
         judge0_cfg = _get_judge0_config()
     except HTTPException:
-        # Judge0 not configured — can't verify; leave the stored grade alone
+        # Judge0 not configured, so we can't verify; leave the stored grade alone
         logger.warning(
             "Judge0 not configured; skipping server-side CODE grading for task %s",
             getattr(task, "assignment_task_uuid", "?"),
@@ -808,7 +808,7 @@ async def _grade_code_task_async(task, task_submission):
                 "Judge0 call failed during CODE grading for task %s",
                 getattr(task, "assignment_task_uuid", "?"),
             )
-            # Could-not-execute — signalled as None (distinct from a real fail)
+            # Could-not-execute, signalled as None (distinct from a real fail)
             return (tc, None)
         status = r.get("status") or {}
         status_id = status.get("id")
@@ -864,7 +864,7 @@ async def _server_verified_task_grade(task, task_submission):
     If this task type is in SERVER_VERIFIED_TASK_TYPES, re-compute its
     grade from the stored task contents + submission data and return it.
     Returns ``None`` for task types we don't verify, or when the CODE
-    grader can't reach Judge0 — the caller should fall back to
+    grader can't reach Judge0; the caller should fall back to
     ``task_submission.grade`` in both cases.
     """
     if task.assignment_type not in SERVER_VERIFIED_TASK_TYPES:
@@ -956,7 +956,7 @@ def _build_tasks_breakdown(
     path (``get_grade_assignment_submission``) so both sides always agree on
     the numbers. Each row includes the raw grade, the task's max, the
     percentage, and a ``passed`` flag computed against the assignment's
-    grading-type-aware passing threshold — that way the student's activity
+    grading-type-aware passing threshold. That way the student's activity
     view and the teacher's evaluate modal can render consistent pass/fail
     chips without each one re-deriving its own threshold.
     """
@@ -1035,7 +1035,7 @@ def compute_assignment_grade(
         else (grading_type or "NUMERIC")
     )
 
-    # Mode-aware passing threshold — keeps `passed` aligned with the display.
+    # Mode-aware passing threshold; keeps `passed` aligned with the display.
     # A per-assignment override (0-100) wins when configured; None falls back to
     # the grading-type default so existing assignments are unchanged.
     if gt_value in ("ALPHABET", "GPA_SCALE"):
@@ -1046,7 +1046,7 @@ def compute_assignment_grade(
         passing_threshold = max(0.0, min(float(pass_threshold_percentage), 100.0))
     passed = percentage >= passing_threshold
 
-    # Secondary formats — always available regardless of grading_type so the
+    # Secondary formats, always available regardless of grading_type so the
     # UI can render e.g. "B (85/100 · 85%)" without recomputing anything.
     letter_grade = _percentage_to_letter_grade(percentage)
     points_summary = f"{clamped_grade}/{clamped_max} pts"
@@ -1121,7 +1121,7 @@ async def create_assignment(
     # Usage check
     await check_limits_with_usage("assignments", course.org_id, db_session)
 
-    # Validate the parent activity actually belongs to the authorized course —
+    # Validate the parent activity actually belongs to the authorized course.
     # RBAC only checked the course, so a client-supplied activity_id pointing at
     # another course/org would otherwise create a dangling/cross-course
     # assignment. chapter_id is derived from the activity's own row (not trusted
@@ -1239,7 +1239,7 @@ async def read_assignment_from_activity_uuid(
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
     result.activity_uuid = activity_uuid_val
-    # Same reveal gate as read_assignment — this is the endpoint the learner's
+    # Same reveal gate as read_assignment: this is the endpoint the learner's
     # activity page actually calls, so skipping it here would leak the corrige.
     unlocked = await _resolve_solution_visibility(
         request, db_session, current_user, course_uuid, assignment
@@ -1303,7 +1303,7 @@ async def update_assignment(
             setattr(assignment, var, value)
         elif var in CLEARABLE_FIELDS and var in provided:
             setattr(assignment, var, None)
-    # Turning on formative mode turns auto-grading off — see create_assignment.
+    # Turning on formative mode turns auto-grading off; see create_assignment.
     if assignment.ungraded:
         assignment.auto_grading = False
     assignment.update_date = str(datetime.now())
@@ -2025,7 +2025,7 @@ async def _reconcile_certificate_after_grade_change(
             )
             await sync_trailrun_status(user_id, course.id, db_session)
         elif request is not None:
-            # Now passing — re-issue if the course is otherwise complete. Safe to
+            # Now passing: re-issue if the course is otherwise complete. Safe to
             # call when a cert already exists (it no-ops on a duplicate).
             await check_course_completion_and_create_certificate(
                 request, user_id, course.id, db_session
@@ -2051,7 +2051,7 @@ async def _regrade_graded_submissions(
     learner's failure must not abort the teacher's edit.
 
     Recomputing can move a learner across the passing threshold, so each
-    regraded learner's certificate is reconciled — revoked if they now fail,
+    regraded learner's certificate is reconciled: revoked if they now fail,
     reissued if they now pass. Pass ``request`` to enable reissue.
     """
     graded = (await db_session.execute(
@@ -2205,7 +2205,7 @@ async def handle_assignment_task_submission(
     if not is_instructor:
         if not is_token_submit:
             # Session students must be enrolled and within the deadline. A token
-            # acting for a learner is an authorized external writer — the custom
+            # acting for a learner is an authorized external writer; the custom
             # frontend owns enrollment/deadline, so those gates are skipped.
             if not await authorization_verify_based_on_roles(request, current_user.id, "read", course.course_uuid, db_session):
                 raise HTTPException(
@@ -2223,8 +2223,8 @@ async def handle_assignment_task_submission(
             # Without this, a learner could keep PUTting task answers after
             # SUBMITTED/GRADED. Combined with show_correct_answers (which hands
             # the key over post-grade), they could replay the correct answers and
-            # any later re-grade — which re-derives every non-manually-graded task
-            # from the CURRENT stored answers — would score the tampered version.
+            # any later re-grade, which re-derives every non-manually-graded task
+            # from the CURRENT stored answers, would score the tampered version.
             # Editing an existing attempt in place is exactly what the retry flow
             # exists to prevent; retry deletes the task rows first and re-opens
             # the submission as PENDING.
@@ -2262,7 +2262,7 @@ async def handle_assignment_task_submission(
         assignment_task_submission_object.assignment_task_id = None
         assignment_task_submission_object.assignment_type = None
 
-        # Neither students nor tokens can flag a submission as manually graded —
+        # Neither students nor tokens can flag a submission as manually graded;
         # that's exclusively a teacher action. Also force-clear any prior flag so
         # a new answer invalidates the teacher's earlier manual grade and the
         # task re-enters the server-verified pool on the next grading pass.
@@ -2295,7 +2295,7 @@ async def handle_assignment_task_submission(
     ):
         # An instructor writing a GRADE without naming a target submission has
         # nothing to grade. Falling through to the save-progress lookup below
-        # keyed the write on submitter.id — the TEACHER — so grading a task the
+        # keyed the write on submitter.id (the TEACHER), so grading a task the
         # learner never submitted created a phantom instructor-owned row (scored
         # 0 by the create branch) while the UI reported success and the learner's
         # grade never moved. There is no safe target to guess: fail loudly.
@@ -2304,7 +2304,7 @@ async def handle_assignment_task_submission(
         # this same path with no uuid, and that must keep working. The quiz
         # autosave sends grade=0 and feedback="" on every keystroke, so match the
         # "actual value" test the student branch above uses (grade != 0, feedback
-        # != "") — a zeroed placeholder is a save, only a real grade or real
+        # != ""): a zeroed placeholder is a save, only a real grade or real
         # feedback is a grading attempt. Every UI grading path always carries a
         # target uuid and is handled by the branch above, so this stays a
         # defense-in-depth guard, never the normal grade route.
@@ -2372,7 +2372,7 @@ async def handle_assignment_task_submission(
 
         # Insert Assignment Task Submission in DB. On a concurrent save race the
         # unique (user_id, assignment_task_id) constraint rejects the second
-        # INSERT — recover by turning it into an update of the existing row.
+        # INSERT; recover by turning it into an update of the existing row.
         db_session.add(assignment_task_submission)
         try:
             await db_session.commit()
@@ -2380,7 +2380,7 @@ async def handle_assignment_task_submission(
         except IntegrityError:  # pragma: no cover - concurrent-save race recovery
             # Backed by the unique (user_id, assignment_task_id) constraint
             # (verified in test_submission_uniqueness.py). Only fires under a real
-            # DB race, which the aiosqlite harness can't simulate — excluded from
+            # DB race, which the aiosqlite harness can't simulate, so it is excluded from
             # coverage; prod asyncpg recovers by turning the INSERT into an update.
             await db_session.rollback()
             existing = (await db_session.execute(
@@ -2507,8 +2507,8 @@ async def read_user_assignment_task_submissions_me_batch(
         )
         .where(AssignmentTask.assignment_id == assignment.id)
         # ASC ordering means that if legacy data has multiple submissions per
-        # (task,user) — handle_assignment_task_submission is upsert so this
-        # shouldn't happen in normal flow — the dict comprehension below
+        # (task,user), something the upsert in handle_assignment_task_submission
+        # should prevent in normal flow, the dict comprehension below
         # overwrites lower ids with higher ones, leaving the most recent
         # submission as the winning value.
         .order_by(AssignmentTaskSubmission.id.asc())  # type: ignore
@@ -2779,7 +2779,7 @@ async def delete_assignment_task_submission(
 
     # Removing one per-task answer changes the learner's aggregate for this
     # assignment. If their overall submission was already GRADED, its stored
-    # grade (and any certificate that depended on it) is now stale — recompute
+    # grade (and any certificate that depended on it) is now stale. Recompute
     # and reconcile, the same as when a whole task is deleted.
     if deleted_user_id is not None:
         graded_submission = (await db_session.execute(
@@ -2881,8 +2881,8 @@ async def create_assignment_submission(
     # NOT_SUBMITTED state means the learner previously hit "Try again":
     # retry_assignment_submission left the row in place so the attempt
     # counter survives, but cleared everything else. Treat that as a
-    # fresh-submission slot — flip status to SUBMITTED and reuse the row
-    # — instead of erroring out on the existing row.
+    # fresh-submission slot (flip status to SUBMITTED and reuse the row)
+    # instead of erroring out on the existing row.
     statement = select(AssignmentUserSubmission).where(
         AssignmentUserSubmission.assignment_id == assignment.id,
         AssignmentUserSubmission.user_id == submitter.id,
@@ -2905,7 +2905,7 @@ async def create_assignment_submission(
     # submission. On the retry path we keep the original
     # assignmentusersubmission_uuid so external systems that already store a
     # reference don't break. The creation_date IS refreshed to the time of
-    # this new attempt — the teacher's submissions list sorts by submitted-at
+    # this new attempt, because the teacher's submissions list sorts by submitted-at
     # and a stale original date would put a brand-new retry at the bottom
     # next to old submissions.
     if assignment_user_submission:
@@ -2967,7 +2967,7 @@ async def create_assignment_submission(
             await db_session.commit()
 
     # Track assignment submission. attempt_number lets downstream consumers
-    # (analytics, webhooks) tell a retry resubmit from the original — without
+    # (analytics, webhooks) tell a retry resubmit from the original; without
     # it, retries would silently double-count. Skipped when this request lost
     # the concurrent-submit race, so a duplicate submit fires the event once.
     submitted_attempt_number = int(assignment_user_submission.attempt_number or 1)
@@ -2982,7 +2982,7 @@ async def create_assignment_submission(
                 "attempt_number": submitted_attempt_number,
             },
         )
-        # Durable audit row — retries reset the live submission in place, so each
+        # Durable audit row. Retries reset the live submission in place, so each
         # attempt only survives permanently here.
         await record_audit_event(
             event_type=UserAuditEventType.ASSIGNMENT_SUBMITTED,
@@ -3063,7 +3063,7 @@ async def create_assignment_submission(
     trailstep = (await db_session.execute(statement)).scalars().first()
 
     # Whether this submission is what completes the activity (a brand-new step,
-    # or a step that was incomplete — e.g. after a retry). Used below to fire
+    # or a step that was incomplete, e.g. after a retry). Used below to fire
     # COURSE_COMPLETED only on a genuine transition, never on a plain resubmit of
     # an already-complete activity.
     is_new_activity_completion = (trailstep is None) or (not trailstep.complete)
@@ -3086,7 +3086,7 @@ async def create_assignment_submission(
         await db_session.commit()
         await db_session.refresh(trailstep)
     else:
-        # Existing trail step — either from prior progress saves, or because
+        # Existing trail step, either from prior progress saves, or because
         # the student just hit "Try again" (the retry endpoint flipped it to
         # incomplete). Re-flip it to complete now that the assignment is
         # back in SUBMITTED state. The first-submission branch above sets
@@ -3098,7 +3098,7 @@ async def create_assignment_submission(
         await db_session.refresh(trailstep)
 
     # Auto-grading path: if the teacher enabled auto_grading on this assignment
-    # AND every task is in AUTO_GRADABLE_TASK_TYPES (explicit allow-list —
+    # AND every task is in AUTO_GRADABLE_TASK_TYPES (explicit allow-list;
     # FILE_SUBMISSION and OTHER are deliberately excluded), compute the grade
     # now and flip the submission to GRADED. The student's per-task submissions
     # already exist at this point because they were persisted as the student
@@ -3143,12 +3143,12 @@ async def create_assignment_submission(
     # Check if all activities in the course are completed and create certificate
     # if so. Wrapped defensively: the submission is already committed above, so a
     # certificate hiccup (race on a duplicate cert, transient DB error) must not
-    # 500 the request and make the student think their submission failed — they
+    # 500 the request and make the student think their submission failed; they
     # can always re-trigger the cert check on the next read/grade.
     if course and course.id and user and user.id:
         # One completion check for the whole request. It answers both questions
-        # asked below — should a certificate be issued, and did THIS submission
-        # finish the course — and is threaded into the certificate helper so it
+        # asked below (should a certificate be issued, and did THIS submission
+        # finish the course) and is threaded into the certificate helper so it
         # doesn't re-run the same aggregates (nor let sync_trailrun_status run
         # them a third time).
         course_complete = await is_course_fully_completed(user.id, course.id, db_session)
@@ -3255,7 +3255,7 @@ async def read_assignment_submissions(
     # formatted display_grade (e.g. "A", "85/100") rather than just the raw
     # integer sum from AssignmentUserSubmission.grade. Without this the
     # submissions list shows "80" while the evaluate modal and the student's
-    # own view show "B" / "80/100" — three places, three formats.
+    # own view show "B" / "80/100": three places, three formats.
     tasks_statement = select(AssignmentTask).where(
         AssignmentTask.assignment_id == assignment.id
     )
@@ -3266,7 +3266,7 @@ async def read_assignment_submissions(
 
     # Per-task breakdown for the whole page in ONE query, keyed by (user, task).
     # The analytics "task difficulty" chart reads grade_display.tasks, but this
-    # endpoint never populated it — only the single-submission endpoints did —
+    # endpoint never populated it (only the single-submission endpoints did),
     # so that chart rendered its empty state for every assignment ever shipped.
     # Batched deliberately: a per-row query here would be N+1 over the page.
     task_ids = [t.id for t in assignment_tasks if t.id is not None]
@@ -3434,7 +3434,7 @@ async def update_assignment_submission(
                 setattr(assignment_user_submission_object, protected_field, None)
 
     # The row's identity (which user, which assignment) is fixed by the lookup
-    # keys above — never let the request body reassign them. Left writable, an
+    # keys above; never let the request body reassign them. Left writable, an
     # instructor (or student) could reparent the submission onto another
     # assignment/org (assignment ids are global integers) or onto another user.
     for identity_field in ("user_id", "assignment_id"):
@@ -3501,7 +3501,7 @@ async def delete_assignment_submission(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Rejecting a submission means the student is no longer "done" with this
-    # activity — reset the TrailStep so the activity is no longer complete,
+    # activity: reset the TrailStep so the activity is no longer complete,
     # clear the teacher-verification flag, and drop any stored grade string.
     # Leave the per-task AssignmentTaskSubmission rows intact so the student
     # keeps the work they did and can edit + resubmit rather than starting
@@ -3523,7 +3523,7 @@ async def delete_assignment_submission(
     await db_session.commit()
 
     # If a course certificate was already issued to this user (the activity was
-    # previously counted as complete and this was the final one), revoke it — the
+    # previously counted as complete and this was the final one), revoke it: the
     # student can't hold a certificate while a gating assignment is rejected. A
     # new certificate is re-issued automatically once the rework is accepted.
     # revoke_user_certificate emits a certificate_revoked event so consumers
@@ -3532,7 +3532,7 @@ async def delete_assignment_submission(
         await revoke_user_certificate(
             user_id, course.id, db_session, reason="assignment_rejected"
         )
-        # The activity is no longer complete — demote the enrollment status so
+        # The activity is no longer complete; demote the enrollment status so
         # analytics/enrollment stop reporting this learner as "completed".
         await sync_trailrun_status(user_id, course.id, db_session)
 
@@ -3588,7 +3588,7 @@ async def retry_assignment_submission(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Row-level lock on the user's submission so two concurrent retries can't
-    # both read attempt_number=N, pass the cap check, and increment to N+1 —
+    # both read attempt_number=N, pass the cap check, and increment to N+1,
     # which would let students sneak past max_retries on a double-click. The
     # lock is released on commit/rollback at the end of the function.
     # SQLite (used in tests) ignores FOR UPDATE and falls back to its own
@@ -3614,7 +3614,7 @@ async def retry_assignment_submission(
     #
     # A formative (ungraded) assignment is the exception: it is never GRADED, so
     # requiring that status would make `allow_retries` unreachable there. Its
-    # submissions become retryable as soon as they are handed in — which is the
+    # submissions become retryable as soon as they are handed in, which is the
     # point of a formative loop (read the corrige, try again).
     retryable_statuses = (
         _HANDED_IN_STATUSES
@@ -3633,8 +3633,8 @@ async def retry_assignment_submission(
 
     # Retry is destructive and irreversible: it deletes every task submission,
     # zeroes the grade, reopens the trail step, revokes the certificate and
-    # demotes the enrollment. Past the deadline the student cannot resubmit —
-    # every write path 403s — so allowing it here destroyed graded work with no
+    # demotes the enrollment. Past the deadline the student cannot resubmit
+    # (every write path 403s), so allowing it here destroyed graded work with no
     # way back. Every other learner write is deadline-gated (file upload, task
     # submission, submit-for-grading); this one was the sole gap.
     if _is_assignment_past_due(assignment) and not await _is_assignment_instructor(
@@ -3710,7 +3710,7 @@ async def retry_assignment_submission(
             int(current_user.id), course.id, db_session, reason="assignment_retried"
         )
 
-    # The activity is reset to incomplete for this attempt — demote the
+    # The activity is reset to incomplete for this attempt; demote the
     # enrollment status so a retrying learner isn't still counted as completed.
     if course.id:
         await sync_trailrun_status(int(current_user.id), course.id, db_session)
@@ -3747,7 +3747,7 @@ async def _apply_grade_and_finalize(
 
     ``dispatch_webhook=False`` is for bulk recomputation (e.g. after a teacher
     deletes a task) where the grade is being corrected rather than newly
-    awarded — firing ``assignment_graded`` once per enrolled learner on an
+    awarded. Firing ``assignment_graded`` once per enrolled learner on an
     admin edit would be a webhook storm, and integrations would read it as a
     fresh grading event.
 
@@ -3758,8 +3758,8 @@ async def _apply_grade_and_finalize(
     can share one implementation.
 
     Refuses to run on a formative (``ungraded``) assignment. The guard lives
-    here rather than only in the grading endpoint so every route into grading —
-    manual, auto, and the bulk regrade after a task edit — is covered by one
+    here rather than only in the grading endpoint so every route into grading
+    (manual, auto, and the bulk regrade after a task edit) is covered by one
     check, and a formative submission can never be flipped to GRADED.
     """
     if assignment.ungraded:
@@ -3798,14 +3798,14 @@ async def _apply_grade_and_finalize(
     # it so tampering is caught and future reads see the correct number.
     #
     # Tasks that a teacher has manually graded (``manually_graded``) are skipped
-    # so the deliberate override is not clobbered by the auto-grader — e.g. a
+    # so the deliberate override is not clobbered by the auto-grader, e.g. a
     # teacher awarding credit for a short-answer the exact matcher would mark
     # wrong. This is the per-task replacement for the old whole-pass
     # ``auto_graded`` gate: non-manual tasks are still re-verified even when a
     # teacher is grading the submission, while manual overrides always win.
     # When a CODE task can't be server-verified (Judge0 down/unconfigured), the
     # grader returns None. In that case we must NOT finalize an auto-graded
-    # submission — doing so would stamp a bogus 0 on a learner whose code may be
+    # submission; doing so would stamp a bogus 0 on a learner whose code may be
     # correct. We track it here and leave the submission SUBMITTED (pending) for
     # a later re-grade instead. Manual grading (auto_graded=False) is unaffected:
     # the teacher is deliberately grading, so we keep existing per-task grades.
@@ -3881,7 +3881,7 @@ async def _apply_grade_and_finalize(
 
     # Durable audit row for the grade the STUDENT received. This is the single
     # grading choke point (both manual and auto paths), and retries reset the
-    # live submission grade in place — so this permanent row is the only record
+    # live submission grade in place, so this permanent row is the only record
     # that survives a resubmit. Always recorded, independent of webhook dispatch.
     await record_audit_event(
         event_type=UserAuditEventType.ASSIGNMENT_GRADED,
@@ -3973,7 +3973,7 @@ async def grade_assignment_submission(
     # A PENDING row is a retry in flight: the previous task submissions have
     # been deleted and the learner has not handed anything in yet. Grading it
     # sums an empty set, writes 0, flips the row to GRADED and fires the graded
-    # webhook — after which the learner's resubmit 400s (only PENDING /
+    # webhook, after which the learner's resubmit 400s (only PENDING /
     # NOT_SUBMITTED are resubmittable), permanently at the retry cap. The retry
     # path has the mirror guard ("Only graded submissions can be retried"); this
     # side was missing it. The submissions list rendering PENDING as "Submitted"
@@ -3999,7 +3999,7 @@ async def grade_assignment_submission(
 
     # Grading this submission may have made the course fully passed (e.g. the
     # teacher just graded the last outstanding assignment). The activities are
-    # already complete, so no other trigger would fire — re-run the certificate
+    # already complete, so no other trigger would fire; re-run the certificate
     # check here so a now-eligible learner is certified. No-ops when the course
     # has no certification, isn't complete, or an assignment still isn't passed.
     if course.id:
@@ -4008,7 +4008,7 @@ async def grade_assignment_submission(
                 request, user_id, course.id, db_session
             )
             # Conversely, a regrade DOWN below the pass threshold must pull a
-            # previously issued certificate — the create path only ever adds one,
+            # previously issued certificate; the create path only ever adds one,
             # so without this a learner keeps a valid certificate after failing a
             # gating assignment on re-grade. No-op when they still pass or hold none.
             if not await are_course_assignments_passed(user_id, course.id, db_session):
@@ -4230,7 +4230,7 @@ async def get_assignments_from_course(
     # enumerated every draft to anyone with course READ, and the tasks endpoint
     # then handed over next week's exam questions. Answer keys are stripped
     # separately, so this is unreleased-content exposure rather than key
-    # exposure — but the parent Activity's `published` flag is what hides drafts
+    # exposure, but the parent Activity's `published` flag is what hides drafts
     # in navigation, and these direct endpoints bypassed it.
     statement = select(Assignment).where(Assignment.course_id == course.id)
     is_instructor = await _is_assignment_instructor(

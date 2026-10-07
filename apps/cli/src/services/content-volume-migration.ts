@@ -76,7 +76,7 @@ function copyContainerContentIntoVolume(
       { stdio: 'pipe' },
     )
 
-    // `docker run -v <named-vol>` lazily creates the volume — avoids the
+    // `docker run -v <named-vol>` lazily creates the volume, which avoids the
     // "volume not created by Docker Compose" warning on the next compose up.
     execFileSync(
       'docker',

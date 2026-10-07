@@ -1,5 +1,5 @@
 /**
- * Goal: prove the formative-assessment flow end to end — a learner deposits a
+ * Goal: prove the formative-assessment flow end to end: a learner deposits a
  * document, that hand-in unlocks the model answer ("corrigé") for them right
  * away, and no grade exists anywhere in the process.
  *
@@ -72,7 +72,7 @@ test('handing in a document unlocks the model answer, and nothing is graded', as
   // --- Student: before handing in, the corrigé is withheld ------------------
   const studentToken = await login(s.student.email, s.student.password)
   const beforeHandIn = await getAssignment(studentToken, s.seeded.assignmentUuid)
-  // Withheld by the server, not just hidden by the UI — but the learner is
+  // Withheld by the server, not just hidden by the UI. But the learner is
   // still told a model answer exists, which is what makes the hand-in worth it.
   expect(beforeHandIn.solution).toBeNull()
   expect(beforeHandIn.has_solution).toBe(true)
@@ -131,7 +131,7 @@ test('a retry re-locks the model answer until the next hand-in', async ({ page }
     allowRetries: true,
     tasks: [{ title: 'Deposit your document', assignment_type: 'FILE_SUBMISSION', contents: {} }],
   })
-  // Retries with no cap, so the learner always has an attempt left — the case
+  // Retries with no cap, so the learner always has an attempt left, the case
   // where a *graded* assignment would deliberately withhold the answer key.
   await enableRetries(r.adminToken, r.seeded.assignmentUuid, 0)
   await setFormative(r.adminToken, r.seeded.assignmentUuid, { ungraded: true })
@@ -151,7 +151,7 @@ test('a retry re-locks the model answer until the next hand-in', async ({ page }
   await assignment.expectSolutionVisible(SOLUTION)
   await assignment.retry()
 
-  // Back to a fresh attempt — and the corrigé is withheld again until it is
+  // Back to a fresh attempt, and the corrigé is withheld again until it is
   // earned a second time.
   await assignment.expectSolutionLocked()
   expect((await getAssignment(studentToken, r.seeded.assignmentUuid)).solution).toBeNull()

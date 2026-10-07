@@ -69,7 +69,7 @@ type Submission = {
 
 // The submissions endpoint pages server-side (`limit` defaults to 50, caps at
 // 500) and returns a bare array. Analytics computed over an unpaginated call
-// silently described only the newest 50 submissions — the average, median,
+// silently described only the newest 50 submissions; the average, median,
 // pass rate and distribution were all wrong for any real cohort.
 const SUBMISSIONS_PAGE_SIZE = 500;
 // Hard stop so a server that ignores `offset` can't spin this loop forever.
@@ -106,7 +106,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
 
     const { data: submissions } = useQuery<Submission[]>({
         queryKey: queryKeys.assignments.analytics(assignment_uuid),
-        // Paged fetch — stats over a newest-50 slice are not stats.
+        // Paged fetch: stats over a newest-50 slice are not stats.
         queryFn: () => fetchAllAssignmentSubmissions(assignment_uuid, access_token),
         enabled: !!(assignment_uuid && access_token),
         staleTime: 10_000,
@@ -128,7 +128,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
             (s) => (s.overall_feedback || '').trim().length > 0
         ).length;
 
-        // Work in percentage space — the raw `grade` field is a points sum
+        // Work in percentage space: the raw `grade` field is a points sum
         // (e.g. 267/500), not a 0–100 value, so it can't drive stats or
         // distribution buckets directly.
         const pctValues = graded
@@ -807,7 +807,7 @@ function submissionPct(s: Submission): number | null {
 }
 
 // Extract a 0–100 percentage from one per-task breakdown entry. Returns null
-// when the payload carries no usable number — the submissions list endpoint
+// when the payload carries no usable number; the submissions list endpoint
 // hasn't always exposed a per-task breakdown, and the difficulty card must
 // fall back to its empty state rather than plot a flat row of zeroes.
 function taskEntryPct(ts: any): number | null {

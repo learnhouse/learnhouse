@@ -4,7 +4,7 @@ noticed without anyone configuring a webhook.
 
 Resend records the state of each message and exposes it as ``last_event`` on
 the email object, so the ledger can simply ask. That costs one API call per
-message sent, once, a day or two later — trivial at any volume this job
+message sent, once, a day or two later, which is trivial at any volume this job
 produces, and it means the feature protects the sending domain from a deploy
 alone rather than a deploy plus a dashboard step somebody has to remember.
 
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # `last_event` values meaning the address should not be mailed again.
 # Only `complained` suppresses on this path. Polling returns a bare "bounced"
-# with no sub-type, so a full mailbox is indistinguishable from a dead address —
+# with no sub-type, so a full mailbox is indistinguishable from a dead address,
 # and the webhook path refuses to suppress on that for exactly this reason
 # (routers/nudges.py checks bounce.type). Suppressing here would throw away good
 # addresses permanently, with no way to undo it.
@@ -42,7 +42,7 @@ OBSERVED_EVENTS = {"bounced", "delivered", "sent", "opened", "clicked"}
 
 # Wait before judging a message. A receiving server retries a transient failure
 # for a while, and a message read too early can look bounced when it is only
-# delayed — which would throw away a good address.
+# delayed, which would throw away a good address.
 MIN_AGE_HOURS = 36
 
 # Past this there is nothing useful left to learn.
@@ -56,7 +56,7 @@ async def _last_event(provider_id: str) -> Optional[str]:
     """Ask the provider what became of one message.
 
     The key is set here rather than assumed: `resend.api_key` is otherwise
-    only assigned inside the send path, and this runs *before* the send loop —
+    only assigned inside the send path, and this runs *before* the send loop,
     so in a one-shot CLI process every lookup would 401, be swallowed per row,
     and report zero checked while bounces went unnoticed.
     """

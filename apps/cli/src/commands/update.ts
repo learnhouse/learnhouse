@@ -85,7 +85,7 @@ export async function updateCommand(options: { version?: string; migrate?: boole
   }
   const s = p.spinner()
   try {
-    // 1) Back up the database first (safety net for migrations) — works for the
+    // 1) Back up the database first (safety net for migrations). Works for the
     //    in-container db AND an external one via the .env string.
     if (options.backup !== false) {
       s.start('Backing up the database')

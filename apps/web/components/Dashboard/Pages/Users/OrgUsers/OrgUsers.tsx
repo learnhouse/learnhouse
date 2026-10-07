@@ -292,7 +292,7 @@ function OrgUsers() {
                   </div>
                 )}
                 {/* Only surfaces once the org holds more members than its plan
-                    includes — within the included seats there is nothing to
+                    includes; within the included seats there is nothing to
                     report. No amounts here: billing owns the numbers. */}
                 {data?.active_users_summary &&
                   data.active_users_summary.members_beyond_included > 0 && (

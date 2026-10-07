@@ -31,14 +31,14 @@ from src.routers.local_content import router as local_content_router
 
 learnhouse_config: LearnHouseConfig = get_learnhouse_config()
 
-# Health probes fail loudly on purpose — a 503 from /health is how Kubernetes
+# Health probes fail loudly on purpose: a 503 from /health is how Kubernetes
 # learns to take the pod out of rotation. It is not a second, separate incident
 # to report, and during an outage every probe on every pod files one.
 _HEALTH_TRANSACTIONS = ("/api/v1/health", "/health")
 
 
-# Content types worth compressing. Everything else — video, audio, images,
-# PDFs, zips — is already compressed, so gzipping it burns CPU for ~0 bytes
+# Content types worth compressing. Everything else (video, audio, images,
+# PDFs, zips) is already compressed, so gzipping it burns CPU for ~0 bytes
 # saved. That matters here because Starlette compresses inline in the ASGI
 # `send` coroutine, on the event loop: a few concurrent range-less GETs of a
 # course video would otherwise pin the workers for the whole transfer.
@@ -107,7 +107,7 @@ def _before_send(event, hint):
 if learnhouse_config.general_config.sentry_config.dsn:
     # OpenTelemetry logs "Failed to detach context" at ERROR when a span's
     # context token is reset from a different asyncio context than the one that
-    # created it — which is exactly what streaming AI endpoints do. It is
+    # created it, which is exactly what streaming AI endpoints do. It is
     # instrumentation bookkeeping, not an application fault, and the request it
     # is attached to succeeds.
     ignore_logger("opentelemetry.context")
@@ -154,7 +154,7 @@ configure_cors(app)
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000, compresslevel=6)
 register_ee_middlewares(app)
 
-# Content delivery — S3-aware router when S3 is enabled, local otherwise.
+# Content delivery: S3-aware router when S3 is enabled, local otherwise.
 # Both paths enforce access control; neither serves raw StaticFiles.
 if learnhouse_config.hosting_config.content_delivery.type == "s3api":
     app.include_router(content_files_router)

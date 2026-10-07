@@ -195,7 +195,7 @@ class TestOrgUsersService:
 
         The scrub rewrites the address to a reserved-domain placeholder. When
         UserRead still typed email as EmailStr, model_validate raised on that
-        row and the endpoint answered 500 — so one deleted account emptied the
+        row and the endpoint answered 500, so one deleted account emptied the
         members page for its entire organization. Rows scrubbed before the
         placeholder domain changed still carry ".local", so the listing has to
         stay tolerant of them.
@@ -1020,7 +1020,7 @@ class TestOrgUsersService:
                 mock_request,
                 org.id,
                 # The `None` is the org-config lookup for custom signup field
-                # columns — no config row, so no extra columns.
+                # columns: no config row, so no extra columns.
                 _Session([fake_org, [fake_user], None, [], []]),
                 admin_user,
             )

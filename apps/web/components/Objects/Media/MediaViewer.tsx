@@ -17,7 +17,7 @@ const LearnHousePlayer = dynamic(
 )
 
 /*
- The actual in-app player/reader for a Library media asset — no modal chrome,
+ The actual in-app player/reader for a Library media asset: no modal chrome,
  no card. Used by MediaLightbox (library views) and by the Library editor block,
  so "watch / read / listen / download" behaves identically in both.
 */

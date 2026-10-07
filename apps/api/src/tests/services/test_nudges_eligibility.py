@@ -106,7 +106,7 @@ class TestSnapshotShape:
 class TestMailableAdmins:
     async def test_unverified_admins_are_excluded(self, db, org, admin_user):
         """Mailing unconfirmed addresses is the fastest way to lose a sending
-        domain — and it takes the transactional mail down with it."""
+        domain, and it takes the transactional mail down with it."""
         row = await _db_user(db, admin_user.id)
         row.email_verified = False
         db.add(row)
@@ -307,7 +307,7 @@ class TestAssignmentFacts:
     async def test_assignments_and_submissions_are_counted(
         self, db, org, course, chapter, activity, admin_user
     ):
-        """Submissions carry no org_id of their own — they are counted through
+        """Submissions carry no org_id of their own; they are counted through
         AssignmentTask, which does."""
         from src.db.courses.assignments import (
             Assignment,
@@ -385,7 +385,7 @@ class TestAssignmentFacts:
 
 class TestAiCreditUsage:
     async def test_absent_redis_reads_as_no_usage(self, db, org, monkeypatch):
-        """A background job must not depend on a cache being up — the credit
+        """A background job must not depend on a cache being up; the credit
         nudge simply never fires instead."""
         from src.services.nudges import eligibility
 

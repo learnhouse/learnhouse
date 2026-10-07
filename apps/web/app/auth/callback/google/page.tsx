@@ -49,16 +49,16 @@ export default function GoogleCallbackPage() {
         const stateData = JSON.parse(atob(state))
         // Validate returnOrigin strictly before bouncing the OAuth code there.
         // Parse it as a URL and use ONLY its origin (drops any path/query
-        // injection); require an http(s) scheme — rejects `javascript:`/`data:`,
+        // injection); require an http(s) scheme, which rejects `javascript:`/`data:`,
         // protocol-relative `//evil`, and malformed values that would otherwise
         // be an open redirect / OAuth-code leak. (Full forgery protection needs
-        // HMAC-signed state — tracked as a follow-up.)
+        // HMAC-signed state, tracked as a follow-up.)
         // Only bounce the OAuth code to a TRUSTED host: the platform apex / a
         // platform subdomain (sync), or a REGISTERED custom domain (verified
         // against the backend). A scheme check alone still allows any https host
         // (e.g. attacker.com) → open redirect / OAuth-code leak. Anything not
         // proven trusted is ignored; we fall through to CSRF validation on the
-        // current origin. (HMAC-signed state is the fuller fix — follow-up.)
+        // current origin. (HMAC-signed state is the fuller fix; follow-up.)
         let bounceOrigin: string | null = null
         if (typeof stateData.returnOrigin === 'string') {
           try {
@@ -79,12 +79,12 @@ export default function GoogleCallbackPage() {
                   )
                   if (r.ok) bounceOrigin = u.origin
                 } catch {
-                  /* verification failed — do not bounce */
+                  /* verification failed, do not bounce */
                 }
               }
             }
           } catch {
-            /* malformed returnOrigin — ignore, fall through to CSRF validation */
+            /* malformed returnOrigin: ignore, fall through to CSRF validation */
           }
         }
         if (bounceOrigin && bounceOrigin !== window.location.origin) {
@@ -162,7 +162,7 @@ export default function GoogleCallbackPage() {
 
         if (!tokenResponse.ok) {
           // Surface the real token-exchange error. (There is no
-          // /api/auth/oauth/google/callback route — the old fallback here just
+          // /api/auth/oauth/google/callback route; the old fallback here just
           // 404'd and masked the actual error with a misleading one.)
           const err = await tokenResponse.json().catch(() => ({}))
           throw new Error(typeof err.error === 'string' && err.error ? err.error : getErrorMessage(err.detail, 'Failed to exchange the Google authorization code.'))
@@ -225,7 +225,7 @@ export default function GoogleCallbackPage() {
         const data = await oauthResponse.json()
 
         // A Google account with 2FA enrolled gets a pending challenge instead of
-        // a session. Hand it to the login page, which owns the code form — same
+        // a session. Hand it to the login page, which owns the code form, the same
         // handoff the admin magic-link consume endpoint uses.
         if (data.mfa_required && data.mfa_token) {
           const mfaParams = new URLSearchParams({ mfa_token: data.mfa_token })

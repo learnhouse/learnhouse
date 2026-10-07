@@ -47,7 +47,7 @@ REDIS_TRACKED_FEATURES = {"ai", "analytics", "api", "assignments", "collaboratio
 # Count-limited features whose usage is enforced by counting ACTUAL DB rows
 # rather than a mutable Redis counter. Counting rows makes enforcement
 # self-healing: the Redis usage counter could drift or be lost (it is an
-# ephemeral cache), which silently disabled these limits — e.g. a free org
+# ephemeral cache), which silently disabled these limits, e.g. a free org
 # could exceed its 5-assignment cap once the counter was gone. usergroups,
 # podcasts and assignments are all org-scoped DB entities, so their live count
 # is authoritative. (usergroups/podcasts are also disabled on the free plan, so
@@ -56,7 +56,7 @@ DB_COUNTED_FEATURES = PLAN_BASED_FEATURES | {"usergroups", "podcasts", "assignme
 
 
 def _is_non_saas() -> bool:
-    """Check if deployment is in a non-SaaS mode (EE or OSS) — disables plan-based limits."""
+    """Check if deployment is in a non-SaaS mode (EE or OSS), which disables plan-based limits."""
     return get_deployment_mode() != 'saas'
 
 
@@ -314,14 +314,14 @@ async def check_limits_with_usage(
             detail=f"{feature.capitalize()} is not enabled for this organization",
         )
 
-    # Unlimited (limit=0) — no usage check needed
+    # Unlimited (limit=0): no usage check needed
     if resolved["limit"] == 0:
         return True
 
     org_plan = _get_org_plan(org_config)
     feature_limit = resolved["limit"]
 
-    # DB-counted features — enforce against the live row count so the limit
+    # DB-counted features: enforce against the live row count so the limit
     # cannot be bypassed by a drifted/lost Redis usage counter.
     if feature in DB_COUNTED_FEATURES:
         current_usage = await _get_actual_usage(feature, org_id, db_session)
@@ -769,7 +769,7 @@ async def check_admin_seat_limit(
     Raises:
         HTTPException 403 if the plan's admin-seat limit is already reached.
 
-    NOTE: ``admin_seats`` is NOT a resolvable feature — it has no plan
+    NOTE: ``admin_seats`` is NOT a resolvable feature; it has no plan
     ``enabled`` flag of its own (it is derived from ``members.admin_limit``).
     Routing it through ``check_limits_with_usage``/``resolve_feature`` therefore
     resolved it as "disabled" for EVERY SaaS org and 403'd every admin promotion
@@ -785,7 +785,7 @@ async def check_admin_seat_limit(
         return True
 
     org_plan = _get_org_plan(org_config)
-    # Paid plans allow tracked overage — only the free tier is hard-capped. This
+    # Paid plans allow tracked overage; only the free tier is hard-capped. This
     # matches the sibling enforcers (enforce_admin_seat_limit_for_role_rights_change
     # and the bulk role-change check), so a Pro/Enterprise admin promotion is
     # never blocked here.
@@ -836,7 +836,7 @@ async def enforce_admin_seat_limit_for_role_rights_change(
     turned ON (false -> true).
 
     Because seats are derived from role rights, flipping a role that N members
-    already hold instantly converts all N into admin seats — a bulk grant that
+    already hold instantly converts all N into admin seats, a bulk grant that
     the per-assignment gate cannot see. This validates the projected seat total
     (current seats + the holders about to be converted) against the plan limit.
     No-op for non-SaaS, paid plans, unlimited seats, or a role held by nobody.
@@ -887,7 +887,7 @@ async def enforce_admin_seat_limit_for_role_change(
 
     Only a NET-NEW seat is checked:
     - Granting a non-dashboard role (a demotion, or a normal-member role) never
-      raises — you can always remove admins or add regular members.
+      raises; you can always remove admins or add regular members.
     - Moving a user who already occupies an admin seat between two
       dashboard-access roles consumes no new seat, so it is not blocked.
     - Granting a dashboard-access role to a user who does not already hold one
@@ -1115,7 +1115,7 @@ async def reserve_ai_credit(
     if base_credits == 0:
         # The plan grants no base credits, but the org may still have *purchased*
         # AI credit packs (or been granted an override extra_limit). Only reject
-        # when there is genuinely no available capacity — otherwise a paying
+        # when there is genuinely no available capacity, otherwise a paying
         # customer would be denied access to credits they already bought.
         purchased = int(r.get(f"ai_credits_purchased:{org_id}") or 0)
         if extra + purchased <= 0:
@@ -1141,7 +1141,7 @@ async def reserve_ai_credit(
             ],
         )
     except Exception:
-        # Fail closed — prefer quota denial over silent over-use.
+        # Fail closed: prefer quota denial over silent over-use.
         raise HTTPException(
             status_code=503,
             detail="AI credit store temporarily unavailable. Please retry.",

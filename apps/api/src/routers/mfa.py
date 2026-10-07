@@ -198,7 +198,7 @@ async def api_mfa_setup(
     now = str(datetime.now())
 
     if existing is not None:
-        # Restarting an abandoned enrollment — overwrite the unconfirmed secret
+        # Restarting an abandoned enrollment: overwrite the unconfirmed secret
         # so the QR the user is looking at is the one we will verify against.
         existing.secret_encrypted = encrypt_secret(secret)
         existing.last_used_timestep = None
@@ -429,7 +429,7 @@ async def api_login_mfa(
                 )
             if not accepted:
                 # Let a backup code through even if the user didn't tick the
-                # box — they are unambiguously distinguishable from 6 digits.
+                # box; they are unambiguously distinguishable from 6 digits.
                 accepted = await consume_backup_code(db_session, user.id, form.code)
 
         if not accepted:
@@ -460,7 +460,7 @@ async def api_login_mfa(
 
 
 class OrgMFAPolicyUpdate(BaseModel):
-    """Partial update — every field is optional and an omitted one is left as-is.
+    """Partial update: every field is optional and an omitted one is left as-is.
 
     The dashboard splits this policy across two tabs (two-factor / sign-in
     methods); each must be able to save its own fields without resetting the
@@ -493,7 +493,7 @@ async def api_org_mfa_compliance(
     # The org's auth-method / session-sharing policy is enforced per request all
     # over the API, but this endpoint is the one the dashboard polls to decide
     # what to tell the user. Evaluating it here is what turns a scattering of
-    # 403s into the single "sign in to this org again" screen — without it the
+    # 403s into the single "sign in to this org again" screen; without it the
     # restriction is enforced but never explained, which reads as "the setting
     # does nothing unless two-factor is also on".
     block = await evaluate_org_auth(db_session, user.id, org_id)
@@ -575,7 +575,7 @@ async def api_set_org_mfa_policy(
         )
 
     # Self-lockout guard. With grace_days=0 an admin without a second factor
-    # would be blocked from their own org the instant this saves — and there
+    # would be blocked from their own org the instant this saves, and there
     # would be no admin left able to turn it back off.
     if form.require_2fa:
         mfa = await get_user_mfa(db_session, user.id)
@@ -630,7 +630,7 @@ async def api_set_org_mfa_policy(
         # A session with no recorded method is refused by the gate exactly like a
         # disallowed one, so it has to trip this guard too. Sessions minted before
         # the policy shipped carry no `amr`, and a refresh copies the missing
-        # claim forward — so without this the admin saves, is locked out on the
+        # claim forward, so without this the admin saves, is locked out on the
         # next request, and no re-login prompt can be reached from inside.
         unknown_method = provenance is None or provenance.amr is None
         if (
@@ -787,7 +787,7 @@ async def api_org_reset_member_mfa(
     # UserMFABackupCode have no org column, so disable_mfa below strips the
     # target's factor everywhere they log in. That is the right tool for a real
     # organization recovering a colleague's account, and completely wrong for a
-    # sandbox that hands admin to anyone who clicks into it — an attacker could
+    # sandbox that hands admin to anyone who clicks into it: an attacker could
     # clear the two-factor of any other person who had ever opened the demo,
     # then attack their password with the second factor gone.
     from src.services.demo.guards import require_not_demo_org

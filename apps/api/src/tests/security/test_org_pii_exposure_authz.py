@@ -1,11 +1,11 @@
 """Authorization regression tests for three PII-exposure findings.
 
-F9  — GET /orgs/{org_id}/invites/users leaked every pending invitee's email
+F9:  GET /orgs/{org_id}/invites/users leaked every pending invitee's email
       address to anyone, including unauthenticated callers, because the only
       gate was ``rbac_check(..., "read", ...)`` which short-circuits to True.
-F29 — GET /playgrounds/{uuid}/usergroups returned another tenant's cohort
+F29: GET /playgrounds/{uuid}/usergroups returned another tenant's cohort
       names and usergroup uuids to any authenticated principal.
-F35 — GET /search/org_slug/{slug} serialized user hits with ``UserRead``,
+F35: GET /search/org_slug/{slug} serialized user hits with ``UserRead``,
       handing every org member the full PII projection (email,
       ``extra_metadata`` signup-field answers, ``is_superadmin``).
 """
@@ -78,7 +78,7 @@ async def _outsider(db):
 
 
 # ---------------------------------------------------------------------------
-# F9 — pending invite list
+# F9: pending invite list
 # ---------------------------------------------------------------------------
 
 
@@ -185,7 +185,7 @@ class TestInvitedUsersListAuthz:
 
 
 # ---------------------------------------------------------------------------
-# F29 — playground usergroup listing
+# F29: playground usergroup listing
 # ---------------------------------------------------------------------------
 
 
@@ -248,7 +248,7 @@ class TestPlaygroundUsergroupsAuthz:
         playground, _ = await _playground_with_usergroup(db, org, admin_user.id)
         outsider = await _outsider(db)
 
-        # AUTHENTICATED access type, so _check_read_access lets them through —
+        # AUTHENTICATED access type, so _check_read_access lets them through;
         # the new rights gate is what refuses the cross-tenant read.
         with pytest.raises(HTTPException) as exc:
             await get_playground_usergroups(
@@ -297,7 +297,7 @@ class TestPlaygroundUsergroupsAuthz:
 
 
 # ---------------------------------------------------------------------------
-# F35 — org search user projection
+# F35: org search user projection
 # ---------------------------------------------------------------------------
 
 PII_FIELDS = ("email", "extra_metadata", "is_superadmin", "signup_method")
@@ -351,7 +351,7 @@ class TestSearchUserProjection:
         assert result.total_users >= 1
 
         # ...but the projection is the stripped public one. Assert on absence
-        # explicitly — this is the regression guard for F35.
+        # explicitly; this is the regression guard for F35.
         for hit in result.users:
             dumped = hit.model_dump()
             for field in PII_FIELDS:

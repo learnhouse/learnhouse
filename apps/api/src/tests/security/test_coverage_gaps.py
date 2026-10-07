@@ -34,7 +34,7 @@ def test_mark_refresh_jti_used_returns_set_result_from_redis():
         assert auth._mark_refresh_jti_used(user_id=1, jti="jti_first") is True
     fake_redis.set.assert_called_once()
 
-    fake_redis.set.return_value = None  # replay — key already exists
+    fake_redis.set.return_value = None  # replay: key already exists
     with patch.object(auth, "_get_revocation_redis_client", return_value=fake_redis):
         assert auth._mark_refresh_jti_used(user_id=1, jti="jti_first") is False
 
@@ -50,7 +50,7 @@ def test_mark_refresh_jti_used_fails_open_on_redis_exception():
 
 
 # ---------------------------------------------------------------------------
-# src/security/auth.py::get_current_user — edge branches
+# src/security/auth.py::get_current_user (edge branches)
 # ---------------------------------------------------------------------------
 
 def _make_request_with_token(token: str) -> Request:
@@ -69,7 +69,7 @@ def _make_request_with_token(token: str) -> Request:
 @pytest.mark.asyncio
 async def test_get_current_user_tolerates_bad_iat_claim(db):
     """A token with a corrupt ``iat`` (raises OSError in fromtimestamp) must
-    not crash — the helper should swallow the error and continue with
+    not crash; the helper should swallow the error and continue with
     ``issued_at=None``."""
     from unittest.mock import AsyncMock
 
@@ -175,7 +175,7 @@ async def test_load_org_config_for_ai_returns_none_for_missing_org(db):
 
 
 # ---------------------------------------------------------------------------
-# src/services/courses/transfer/import_service.py — uncompressed size cap
+# src/services/courses/transfer/import_service.py: uncompressed size cap
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio

@@ -257,7 +257,7 @@ class TestFeatureUsage:
         await _make_org_config(db, org.id, {"config_version": "2.0", "plan": "standard"})
 
         # admin_seats resolves its limit straight from the plan (get_plan_limit),
-        # NOT through resolve_feature — otherwise every SaaS org is wrongly told
+        # NOT through resolve_feature; otherwise every SaaS org is wrongly told
         # "Admin_seats is not enabled". Paid plans allow overage (never blocked);
         # only the free tier is capped, and it 403s with "limit reached" (never a
         # spurious "not enabled").

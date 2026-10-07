@@ -51,7 +51,7 @@ async function buildPdf(dossiers: any[]) {
     pdf.setFontSize(size)
     pdf.setFont('helvetica', bold ? 'bold' : 'normal')
     const wrapped = pdf.splitTextToSize(text || '', pageWidth - margin * 2 - indent)
-    // Measure before deciding on the page break — checking only the current y let a
+    // Measure before deciding on the page break: checking only the current y let a
     // wrapped paragraph start near the bottom and run off the page.
     const height = wrapped.length * (size * 0.45) + 1.5
     breakIfNeeded(height)
@@ -206,7 +206,7 @@ export default function UserAuditExport({ userIds, days = 365, defaultDossier, l
         user_ids: ids.join(','),
         days: String(days),
       })
-      // Off by default — the readable rendering is what a reader wants, and the raw
+      // Off by default: the readable rendering is what a reader wants, and the raw
       // payloads roughly double the file.
       if (includeRaw) params.set('include_raw', 'true')
 

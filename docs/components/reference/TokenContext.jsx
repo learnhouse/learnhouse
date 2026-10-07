@@ -5,7 +5,7 @@ import { TOKEN_STORAGE_KEY } from '../../lib/reference/config'
 
 /**
  * Holds the visitor's API token (paste once, used everywhere).
- * Stored only in localStorage — never sent anywhere except as the
+ * Stored only in localStorage, never sent anywhere except as the
  * Authorization header of playground requests the visitor triggers.
  */
 const TokenContext = createContext({ token: '', setToken: () => {}, clearToken: () => {} })

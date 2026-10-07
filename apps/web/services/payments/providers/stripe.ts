@@ -45,7 +45,7 @@ export async function verifyStripeConnection(
 }
 
 /**
- * Easy Mode — create a Stripe Express account (if not yet created) and
+ * Easy Mode: create a Stripe Express account (if not yet created) and
  * return an onboarding link. The org owner opens this URL to complete setup.
  */
 export async function getStripeExpressOnboardingLink(
@@ -62,7 +62,7 @@ export async function getStripeExpressOnboardingLink(
 }
 
 /**
- * Easy Mode — generate a fresh onboarding link when the previous one has expired.
+ * Easy Mode: generate a fresh onboarding link when the previous one has expired.
  */
 export async function refreshStripeExpressOnboardingLink(
   orgId: number,
@@ -78,7 +78,7 @@ export async function refreshStripeExpressOnboardingLink(
 }
 
 /**
- * Easy Mode — get a Stripe Express hosted dashboard URL for the connected account.
+ * Easy Mode: get a Stripe Express hosted dashboard URL for the connected account.
  */
 export async function getStripeExpressDashboardLink(
   orgId: number,

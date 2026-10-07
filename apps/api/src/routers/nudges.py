@@ -114,7 +114,7 @@ async def unsubscribe_confirm(
     """Apply the opt-out. Idempotent.
 
     This is also the RFC 8058 one-click target named by the
-    ``List-Unsubscribe-Post`` header, which posts without a form body — hence
+    ``List-Unsubscribe-Post`` header, which posts without a form body, hence
     accepting the token from either the body or the query string.
     """
     supplied = token or token_query
@@ -153,7 +153,7 @@ _SUPPRESSING_EVENTS = {
     "email.bounced": "bounce",
     "email.complained": "complaint",
     # Resend refused to send because the address is already on its own
-    # suppression list — mirror that locally so we stop trying.
+    # suppression list; mirror that locally so we stop trying.
     "email.suppressed": "suppressed_by_provider",
 }
 _PERMANENT_BOUNCE_TYPES = {"permanent"}
@@ -179,7 +179,7 @@ def _verified_event(request: Request, raw_body: bytes) -> dict:
 
         return resend.Webhooks.verify(
             {
-                # The exact bytes that were signed — re-serialising the parsed
+                # The exact bytes that were signed; re-serialising the parsed
                 # JSON would change the payload and fail verification.
                 "payload": raw_body.decode("utf-8"),
                 "headers": {

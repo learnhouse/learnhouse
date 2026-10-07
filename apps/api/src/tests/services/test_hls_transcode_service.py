@@ -195,7 +195,7 @@ def test_transcode_missing_source_returns_none(tmp_path):
 # --- Error-path coverage (no real hang/ffmpeg needed) ----------------------
 
 async def test_run_subprocess_returns_output():
-    # Uses a real trivial process (python) — no ffmpeg needed.
+    # Uses a real trivial process (python), so no ffmpeg is needed.
     import sys
     rc, out, _ = await ht._run_subprocess([sys.executable, "-c", "print('ok')"], 30)
     assert rc == 0 and out.strip() == b"ok"

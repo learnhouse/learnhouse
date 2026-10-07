@@ -163,7 +163,7 @@ function SubscriptionsClient() {
     if (portalLoading) return
     setPortalLoading(true)
     try {
-      // Sends no orgId/email — the route derives identity from the session cookie.
+      // Sends no orgId/email; the route derives identity from the session cookie.
       const { url } = await billingPortal()
       if (url) {
         window.location.href = url
@@ -186,7 +186,7 @@ function SubscriptionsClient() {
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
       <Toaster />
       <div className="relative min-h-screen">
-        {/* Blueprint grid — fades in from bottom */}
+        {/* Blueprint grid, fades in from bottom */}
         <div
           className="absolute inset-0 pointer-events-none z-0"
           style={{

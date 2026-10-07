@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  *
  * i18next persists the choice and emits `languageChanged`; I18nProvider listens
  * and rewrites <html dir>. If that listener regresses, the copy turns Arabic
- * while the layout stays left-to-right — which reads as "RTL is broken" rather
+ * while the layout stays left-to-right, which reads as "RTL is broken" rather
  * than "one listener is".
  *
  * Driven through the real switcher rather than by poking i18next, so the test

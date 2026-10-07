@@ -1,5 +1,5 @@
 #!/bin/bash
-# Local demo stack — collaboration server.
+# Local demo stack: collaboration server.
 #
 # Boards and the collaborative editor talk to this over a websocket. Without it
 # a board never leaves "connecting", which looks like a broken feature rather
@@ -22,7 +22,7 @@ set +a
 
 export COLLAB_PORT=4000
 export LEARNHOUSE_API_URL="http://lvh.me:1348"
-# LEARNHOUSE_REDIS_URL, not the API's LEARNHOUSE_REDIS_CONNECTION_STRING —
+# LEARNHOUSE_REDIS_URL, not the API's LEARNHOUSE_REDIS_CONNECTION_STRING:
 # src/index.ts reads a different name, so the wrong one silently falls back to
 # the default and would point at the wrong Redis anywhere but here.
 export LEARNHOUSE_REDIS_URL="redis://localhost:6379/0"

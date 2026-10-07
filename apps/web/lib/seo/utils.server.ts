@@ -11,7 +11,7 @@ import { getCanonicalUrl } from './utils'
  * present, and finally to the sync `getCanonicalUrl` (relative path) outside
  * a request context (e.g. unit tests).
  *
- * Lives in a `.server.ts` file because `next/headers` is server-only —
+ * Lives in a `.server.ts` file because `next/headers` is server-only;
  * importing it from a module any client component reaches breaks the build.
  */
 export async function getServerCanonicalUrl(orgslug: string, path: string): Promise<string> {

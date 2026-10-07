@@ -45,7 +45,7 @@ async def track(
 ) -> None:
     """
     Fire-and-forget analytics event to Tinybird.
-    All errors are swallowed and logged — analytics never breaks the app.
+    All errors are swallowed and logged; analytics never breaks the app.
     """
     config = get_learnhouse_config()
     if config.tinybird_config is None:

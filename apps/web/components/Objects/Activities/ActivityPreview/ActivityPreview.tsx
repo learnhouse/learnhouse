@@ -102,7 +102,7 @@ function renderChildren(nodes: any[] | undefined, ctx: RendererCtx): React.React
   return nodes.map((n, i) => <PMNode key={i} node={n} ctx={ctx} />)
 }
 
-// Blocks with no renderable children — previewed as a labelled chip.
+// Blocks with no renderable children, previewed as a labelled chip.
 const ATOM_BLOCK_LABELS: Record<string, string> = {
   blockH5P: 'Interactive content',
   blockVideo: 'Video',
@@ -389,7 +389,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Body renderer — picks a strategy per activity type
+// Body renderer: picks a strategy per activity type
 // ──────────────────────────────────────────────────────────────────────────
 
 function PreviewBody({ activity }: { activity: any }) {

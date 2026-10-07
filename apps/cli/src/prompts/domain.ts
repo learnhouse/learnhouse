@@ -79,7 +79,7 @@ export async function promptDomain(): Promise<DomainConfig> {
     })
     if (p.isCancel(port)) { p.cancel(); process.exit(0) }
     const parsed = parseInt(port as string, 10)
-    // Only re-check non-privileged ports here — privileged ports (≤1024) might
+    // Only re-check non-privileged ports here; privileged ports (≤1024) might
     // be bound by a system service that the wizard can't see from user space,
     // but Docker can still publish to them; trust the user in that case.
     if (parsed > 1024 && !(await checkPort(parsed))) {

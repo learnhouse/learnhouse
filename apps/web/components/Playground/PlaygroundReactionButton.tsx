@@ -46,7 +46,7 @@ export function PlaygroundReactionButton({ playgroundUuid }: PlaygroundReactionB
       const result = await getPlaygroundReactions(playgroundUuid, accessToken)
       setReactions(result)
     } catch {
-      // silent — public playground anonymous fetch may fail
+      // silent; public playground anonymous fetch may fail
     }
   }
 
@@ -85,7 +85,7 @@ export function PlaygroundReactionButton({ playgroundUuid }: PlaygroundReactionB
   return (
     <TooltipProvider delayDuration={200}>
       <div className="flex flex-col gap-2">
-        {/* Quick reaction row — always visible */}
+        {/* Quick reaction row, always visible */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {QUICK_REACTIONS.map((emoji) => {
             const existing = reactions.find((r) => r.emoji === emoji)
@@ -155,7 +155,7 @@ export function PlaygroundReactionButton({ playgroundUuid }: PlaygroundReactionB
           )}
         </div>
 
-        {/* Extra reactions row — reactions outside the quick set that users have added */}
+        {/* Extra reactions row: reactions outside the quick set that users have added */}
         {extraReactions.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
             {extraReactions.map((reaction) => (

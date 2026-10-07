@@ -235,7 +235,7 @@ function buildConfig(opts: {
 
 async function startEe(config: SetupConfig, interactive: boolean, firstDeploy: boolean): Promise<void> {
   const dir = config.installDir
-  // On a fresh deploy, fail early if 80/443 are taken (not on redeploy — our own Caddy holds them).
+  // On a fresh deploy, fail early if 80/443 are taken (not on redeploy, where our own Caddy holds them).
   if (firstDeploy) await ensurePortsFree(interactive)
   // Validate the license by authenticating to the registry BEFORE pulling.
   try {

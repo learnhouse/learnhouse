@@ -40,7 +40,7 @@ from src.routers.integrations.zapier import (
 
 @pytest.fixture
 async def role(db):
-    # Prerequisite row for UserOrganization.role_id FK. Kept minimal — tests
+    # Prerequisite row for UserOrganization.role_id FK. Kept minimal; tests
     # don't exercise role-based authorization, only that the membership row
     # can be inserted under FK enforcement.
     r = Role(
@@ -390,7 +390,7 @@ class TestZapierSubscriptions:
                 ctx=(token_user, db),
             )
 
-        # A manual (non-Zapier) webhook in the same org — should NOT appear
+        # A manual (non-Zapier) webhook in the same org, which should NOT appear
         db.add(
             WebhookEndpoint(
                 webhook_uuid="webhook_manual",
@@ -406,7 +406,7 @@ class TestZapierSubscriptions:
                 update_date=str(datetime.now()),
             )
         )
-        # A Zapier webhook in another org — should NOT appear
+        # A Zapier webhook in another org, which should NOT appear
         db.add(
             WebhookEndpoint(
                 webhook_uuid="webhook_other",
@@ -469,7 +469,7 @@ class TestZapierSubscriptions:
                     ctx=(other_token, db),
                 )
 
-        # Our token tries to delete — should 404 (not leak existence)
+        # Our token tries to delete; should 404 (not leak existence)
         with _patch_plan_pro():
             with pytest.raises(HTTPException) as exc:
                 await zapier_delete_subscription(

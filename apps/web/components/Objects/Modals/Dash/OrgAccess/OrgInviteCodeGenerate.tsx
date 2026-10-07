@@ -54,7 +54,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
 
     return (
         <div className='flex flex-col space-y-4 pt-2'>
-            {/* Mode selection — two clickable cards side by side */}
+            {/* Mode selection: two clickable cards side by side */}
             <div className='flex space-x-3'>
                 {/* Normal invite card */}
                 <div
@@ -97,7 +97,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
                 </div>
             </div>
 
-            {/* Usergroup selector — slides in when usergroup mode is active */}
+            {/* Usergroup selector; slides in when usergroup mode is active */}
             {mode === 'usergroup' && usergroups && usergroups.length > 0 && (
                 <div className='bg-blue-50 rounded-lg p-3'>
                     <label className='text-xs font-medium text-blue-700 mb-1.5 block'>Select User Group</label>

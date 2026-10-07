@@ -113,7 +113,7 @@ async def embed_course_content(
         return 0
 
     texts = [c[0] for c in chunks_to_embed]
-    # Generate all embeddings before touching the DB — a Gemini failure here
+    # Generate all embeddings before touching the DB, so a Gemini failure here
     # leaves the existing embeddings intact rather than wiping them first.
     embeddings = await generate_embeddings(texts)
 

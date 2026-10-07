@@ -65,7 +65,7 @@ def _pick(i, j):
 
 
 # --------------------------------------------------------------------------- #
-# Production-reported miscounts (Brian) — per-question is the fix
+# Production-reported miscounts (Brian): per-question is the fix
 # --------------------------------------------------------------------------- #
 class TestReportedMiscounts:
     def test_one_option_off_on_12q_exam_is_11_of_12_not_98pct(self):
@@ -144,7 +144,7 @@ class TestPerQuestionMatch:
 
 
 # --------------------------------------------------------------------------- #
-# Rounding — driven by number of correct QUESTIONS
+# Rounding: driven by number of correct QUESTIONS
 # --------------------------------------------------------------------------- #
 class TestRounding:
     def test_one_of_three_questions_rounds_to_33(self):
@@ -476,7 +476,7 @@ class TestGradingModeResolution:
 
 
 class TestLegacyContentIsUnaffected:
-    """No `response_type`, no `grading_mode` — scores must not shift."""
+    """No `response_type`, no `grading_mode`: scores must not shift."""
 
     def test_legacy_single_correct_question_grades_as_before(self):
         contents = _contents(_question("q1", [("a", True), ("b", False), ("c", False)]))
@@ -559,7 +559,7 @@ class TestExplicitMultiplePartialCredit:
         assert _grade_quiz_task(self._contents(), _submission(*_picks("q1", "a", "b", "c")), 100) == 50
 
     def test_selecting_everything_earns_nothing(self):
-        # (2 - 2) / 2 = 0 — no free credit for shotgunning the whole list.
+        # (2 - 2) / 2 = 0: no free credit for shotgunning the whole list.
         subs = _submission(*_picks("q1", "a", "b", "c", "d"))
         assert _grade_quiz_task(self._contents(), subs, 100) == 0
 
@@ -604,7 +604,7 @@ class TestExplicitMultiplePartialCredit:
 
 
 class TestSingleResponseUnderPartialCredit:
-    """Single-response questions are 1 or 0 in both modes — nothing to split."""
+    """Single-response questions are 1 or 0 in both modes; there is nothing to split."""
 
     def _contents(self, grading_mode):
         return _mode_contents(
@@ -628,7 +628,7 @@ class TestSingleResponseUnderPartialCredit:
         """The key still rules the score: an exact-set match is required.
 
         The authoring UI keeps at most one correct option on a single-response
-        question, so this is a repair case for content edited elsewhere — it
+        question, so this is a repair case for content edited elsewhere; it
         must not silently award credit for picking just one of the two.
         """
         contents = _mode_contents(
@@ -668,7 +668,7 @@ class TestZeroCorrectQuestionsStaySkipped:
 
 
 class TestStripAnswerKeyKeepsResponseMode:
-    """The learner needs the mode to render radio vs checkbox — it is not a key."""
+    """The learner needs the mode to render radio vs checkbox; it is not a key."""
 
     def _contents(self):
         return {
@@ -703,7 +703,7 @@ class TestStripAnswerKeyKeepsResponseMode:
 
 class TestStripAnswerKeyStampsInferredMode:
     """Legacy questions carry no mode, and the client can't infer one once the
-    key is gone — so the strip resolves it onto the outgoing copy."""
+    key is gone, so the strip resolves it onto the outgoing copy."""
 
     def _legacy(self):
         return {

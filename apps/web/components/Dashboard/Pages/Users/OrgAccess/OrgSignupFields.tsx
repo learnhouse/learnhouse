@@ -154,7 +154,7 @@ export default function OrgSignupFields() {
     })
   }
 
-  /** Only fill the key from the label while the field is still new — once it
+  /** Only fill the key from the label while the field is still new; once it
    *  has been saved, renaming it would orphan every answer collected so far. */
   function onLabelChange(field: EditorField, label: string) {
     const patch: Partial<SignupFieldItem> = { label }

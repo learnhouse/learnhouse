@@ -31,7 +31,7 @@ export interface EndpointDoc {
   pathParams?: PathParam[]
   bodyFields?: BodyField[]
   sampleBody?: unknown
-  /** If true the request cannot be made with an API token — only a session-authed superadmin can call it. */
+  /** If true the request cannot be made with an API token; only a session-authed superadmin can call it. */
   sessionOnly?: boolean
 }
 
@@ -131,7 +131,7 @@ export const ENDPOINTS: EndpointDoc[] = [
   },
 
   // ─── Features ──────────────────────────────────────────────────────────────
-  // No dedicated GET — feature toggles are read via `GET .../config` (config.admin_toggles).
+  // No dedicated GET; feature toggles are read via `GET .../config` (config.admin_toggles).
   {
     id: 'features.update',
     category: 'Features',
@@ -170,7 +170,7 @@ export const ENDPOINTS: EndpointDoc[] = [
   },
 
   // ─── Settings ──────────────────────────────────────────────────────────────
-  // No dedicated GET — settings (name, slug, email, description) are read via `GET /organizations/{org_id}` (orgs.detail).
+  // No dedicated GET; settings (name, slug, email, description) are read via `GET /organizations/{org_id}` (orgs.detail).
   {
     id: 'settings.update',
     category: 'Settings',
@@ -189,7 +189,7 @@ export const ENDPOINTS: EndpointDoc[] = [
   },
 
   // ─── Config ────────────────────────────────────────────────────────────────
-  // No dedicated GET — the full config is included in the `GET /organizations/{org_id}` response (orgs.detail).
+  // No dedicated GET; the full config is included in the `GET /organizations/{org_id}` response (orgs.detail).
   {
     id: 'config.update',
     category: 'Config',

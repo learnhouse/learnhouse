@@ -10,7 +10,7 @@ It also settles provenance. Photography would mean licensing, attribution and
 (for avatars) either model releases or synthetic faces. These are flat vector
 compositions authored here, so the bundle ships art we own outright.
 
-Output is deterministic — same input, same bytes — so re-running this does not
+Output is deterministic (same input, same bytes), so re-running this does not
 produce a spurious diff. Run it when the palette or compositions change:
 
     uv run python scripts/build_demo_media.py
@@ -50,7 +50,7 @@ PAPER = (247, 248, 251)
 
 
 def _vertical_gradient(size, top, bottom):
-    """A soft field rather than a flat fill — flat blocks look unfinished at
+    """A soft field rather than a flat fill; flat blocks look unfinished at
     catalogue size, and a full photo would fight the text over it."""
     width, height = size
     image = Image.new("RGB", size, top)
@@ -182,7 +182,7 @@ def build_avatar(index: int, path: str) -> None:
 
 
 def build_logo(path: str) -> None:
-    """A mark, not a wordmark — no invented company's name rendered as art."""
+    """A mark, not a wordmark; no invented company's name rendered as art."""
     deep, mid, light = PALETTES[0]
     image = Image.new("RGB", LOGO_SIZE, PAPER)
     draw = ImageDraw.Draw(image)
@@ -216,7 +216,7 @@ def build_podcast_cover(index: int, path: str) -> None:
 # Spoken intros for the demo episodes.
 #
 # Generated with macOS `say` piped through ffmpeg, so the clips are real speech
-# with a real waveform — a podcast player showing a flat line for a silent
+# with a real waveform; a podcast player showing a flat line for a silent
 # placeholder looks broken. The text is ours, the voice is the operating
 # system's, and the output is committed, so this generator only needs to run on
 # a Mac when the scripts change.

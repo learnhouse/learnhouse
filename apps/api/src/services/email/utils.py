@@ -36,7 +36,7 @@ def _configured_host(cfg_value: Optional[str]) -> str:
 
 
 # A regexp that matches an unrelated, randomly-named host is a catch-all, not an
-# allowlist — and `re.fullmatch` accepted the historical shipped default
+# allowlist, and `re.fullmatch` accepted the historical shipped default
 # (`\b((?:https?://)[^\s/$.?#].[^\s]*)\b`) for *any* http(s) URL, which let an
 # attacker's Origin header become the base URL of an emailed magic-login link.
 # Probe every configured regexp with a canary host before trusting it.
@@ -70,7 +70,7 @@ def _is_verified_custom_domain(host: str) -> bool:
     check pinned to the platform domain alone would send their users links on
     the wrong host. The CSRF middleware already resolves the request's Origin
     against the ``custom_domains`` table (verified rows only) before the handler
-    runs and memoizes the answer for a short TTL — read that, because this
+    runs and memoizes the answer for a short TTL. Read that, because this
     helper is synchronous and cannot await a DB session. On a miss the caller
     falls back to the configured canonical base URL: correct-by-default and
     never attacker-controlled.
@@ -192,7 +192,7 @@ async def get_org_signup_base_url(
     Branches on tenancy:
 
     - tenancy == "single": always use the URL the request came in on. Same
-      code path serves localhost dev and self-hosted VPS deployments — there
+      code path serves localhost dev and self-hosted VPS deployments; there
       is no subdomain concept and no custom-domain table to consult.
     - tenancy == "multi":
         1. If ``db_session`` and ``org_id`` are supplied, prefer the org's
@@ -233,12 +233,12 @@ def get_media_base_url(request: Optional[Request] = None) -> str:
 
     Email HTML can't reference local assets, so an embedded org logo needs an
     absolute, publicly reachable URL. The host that serves ``/content`` is the
-    backend/media host — which is normally configured only on the FRONTEND
+    backend/media host, which is normally configured only on the FRONTEND
     (``NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL`` / ``..._MEDIA_URL``). The backend
     doesn't have that value, so resolve it in order:
 
     1. An explicit backend override (``LEARNHOUSE_MEDIA_URL`` /
-       ``LEARNHOUSE_BACKEND_URL``) — set this if the media host isn't ``api.``.
+       ``LEARNHOUSE_BACKEND_URL``). Set this if the media host isn't ``api.``.
     2. The SaaS convention ``{scheme}://api.{domain}`` (e.g. api.learnhouse.io)
        when a real domain is configured.
     3. The request's own host as a last resort (correct for single-tenant /
@@ -290,7 +290,7 @@ def get_org_square_logo_url(org, org_config, request: Optional[Request] = None) 
 
     The square variant lives on the org config next to the favicon
     (``customization.general.square_logo_image``, v1 ``general.square_logo_image``)
-    and is served from ``content/orgs/{uuid}/square_logos/{file}`` — the same
+    and is served from ``content/orgs/{uuid}/square_logos/{file}``, the same
     shape as the frontend's ``getOrgSquareLogoMediaDirectory``.
     """
     org_uuid = getattr(org, "org_uuid", None)
@@ -358,7 +358,7 @@ def get_trusted_base_url_from_request(request: Request) -> Optional[str]:
     origin, otherwise None.
 
     This is the "we actually know where the request came from" part of
-    ``get_base_url_from_request`` — callers that need to distinguish a trusted,
+    ``get_base_url_from_request``. Callers that need to distinguish a trusted,
     request-derived URL from the configured fallback (e.g. platform signups that
     prefer the platform URL over ``frontend_domain``) use this directly.
     """
@@ -425,7 +425,7 @@ def send_email(
     Gmail and Outlook penalise bulk senders that omit them. Transactional
     callers pass nothing and are unaffected.
 
-    ``sender_name`` is the DISPLAY NAME only — an organization's own name on
+    ``sender_name`` is the DISPLAY NAME only: an organization's own name on
     org-scoped mail, ``None`` on platform mail so it falls back to the
     deployment default. The From ADDRESS is always
     ``mailing.system_email_address`` and is deliberately not configurable: it
@@ -447,7 +447,7 @@ def send_email(
 
     # Resend (and most providers) require a plain `email@example.com` string.
     # Pydantic's EmailStr is a str subclass, but third-party JSON serializers
-    # can mis-handle it — coerce to a stripped plain str and validate shape
+    # can mis-handle it. Coerce to a stripped plain str and validate shape
     # so a malformed stored email surfaces here rather than as an opaque
     # provider 4xx.
     to_addr = str(to).strip()
@@ -500,7 +500,7 @@ def _is_recipient_rejected(exc: BaseException) -> bool:
     accounts on example.com, a typo in an admin-entered email) is a property of
     that address: retrying cannot help, and it is not an incident worth paging
     on. Everything else stays at error level, because it means mail is broken
-    for everyone — an unverified sending domain (invalid_from_address), an empty
+    for everyone: an unverified sending domain (invalid_from_address), an empty
     subject or body from a template regression (missing_required_field), an
     auth failure, a rate limit, a 5xx, or a non-JSON body from an intermediary
     (application_error). Classifying on the bare 4xx status would sweep all of

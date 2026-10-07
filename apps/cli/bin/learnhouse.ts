@@ -175,7 +175,7 @@ program
   .option('--admin-password <password>', 'Admin password (skips interactive prompt)')
   .action(devCommand)
 
-// Non-blocking update check — runs in background, prints warning if outdated
+// Non-blocking update check: runs in background, prints warning if outdated
 const updateCheck = checkForUpdates()
 
 program.parseAsync().then(() => updateCheck.catch(() => {}))

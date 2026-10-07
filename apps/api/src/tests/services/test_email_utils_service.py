@@ -371,7 +371,7 @@ class TestEmailUtilsService:
     def test_recipient_rejection_logs_warning_not_error(self):
         """A provider rejection of the address itself must not page.
 
-        It still raises 503 — only the log level changes, so nothing downstream
+        It still raises 503; only the log level changes, so nothing downstream
         of send_email sees different behavior.
         """
         rejection = resend_exceptions.ValidationError(
@@ -643,7 +643,7 @@ class TestOrgLogoUrl:
 
 
 class TestSenderNameSanitization:
-    """``sanitize_sender_name`` — the one place org-supplied names are cleaned.
+    """``sanitize_sender_name``: the one place org-supplied names are cleaned.
 
     The name is typed by an org admin and ends up verbatim in an RFC 5322
     header, so a stray CR or LF is header injection, not a cosmetic problem.
@@ -677,7 +677,7 @@ class TestSenderNameSanitization:
         from src.services.email.sender import sanitize_sender_name
 
         cleaned = sanitize_sender_name(raw)
-        # Removed, so the two halves close up rather than being spaced apart —
+        # Removed, so the two halves close up rather than being spaced apart;
         # anything else would leave a name the admin never typed.
         assert cleaned == "AcmeAcademy"
         assert not any(ch in cleaned for ch in "\r\n\x00")
@@ -833,7 +833,7 @@ class TestSendEmailSenderName:
 
     def test_address_is_never_taken_from_the_display_name(self):
         """Deliverability rests on the From address staying on the verified
-        domain — a name that looks like an address must not become one."""
+        domain; a name that looks like an address must not become one."""
         with patch(
             "src.services.email.utils.get_learnhouse_config",
             return_value=_config(email_provider="resend"),
@@ -883,7 +883,7 @@ class TestSendEmailSenderName:
 
     def test_mailing_config_without_the_field_keeps_current_behaviour(self):
         """An older config object (no ``system_email_sender_name``) must not
-        break — it falls back to the built-in platform name."""
+        break; it falls back to the built-in platform name."""
         config = _config(email_provider="resend")
         del config.mailing_config.system_email_sender_name
 

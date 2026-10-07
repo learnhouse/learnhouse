@@ -198,7 +198,7 @@ def chat_session_belongs_to_user(aichat_uuid: str, user_id: int) -> bool:
 
     Ownership is recorded in the ``chat_meta:<uuid>`` Redis key (see
     :func:`save_chat_session_meta`). A session with no metadata (brand-new or
-    expired) is treated as ownable by the caller — the IDOR risk we guard
+    expired) is treated as ownable by the caller; the IDOR risk we guard
     against is reusing *another* user's existing session, which always has a
     populated ``user_id``. This mirrors the ownership check in
     :func:`get_chat_messages` / :func:`delete_chat_session`.
