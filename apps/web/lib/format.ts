@@ -38,6 +38,9 @@ const DAYJS_LOCALES: Record<string, () => Promise<unknown>> = {
   zh: () => import('dayjs/locale/zh'),
 }
 
+const INTL_LOCALE_CACHE_MAX = 64
+const intlLocaleCache = new Map<string, string>()
+
 /**
  * NUMERALS — a deliberate product decision, kept behind one function.
  *
@@ -54,9 +57,17 @@ const DAYJS_LOCALES: Record<string, () => Promise<unknown>> = {
  * native numerals.
  */
 export function intlLocale(lng?: string): string {
+  const key = lng ?? ''
+  const cached = intlLocaleCache.get(key)
+  if (cached) return cached
   const tag = canonicalTag(lng)
   const base = baseCode(tag)
-  return base === 'ar' || base === 'fa' ? `${base}-u-nu-latn` : tag
+  const locale = base === 'ar' || base === 'fa' ? `${base}-u-nu-latn` : tag
+  // The input can come from a request cookie, so on the server it isn't a
+  // small fixed set; keep the cache bounded.
+  if (intlLocaleCache.size >= INTL_LOCALE_CACHE_MAX) intlLocaleCache.clear()
+  intlLocaleCache.set(key, locale)
+  return locale
 }
 
 /**
