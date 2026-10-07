@@ -260,7 +260,7 @@ export async function POST(request: NextRequest) {
     // reject instead of setting a half-broken session that AuthContext cannot
     // refresh (it always calls /api/auth/refresh on mount).
     if (!refresh_token) {
-      console.error('[token-exchange] step=cookies no refresh token — refusing to set partial session')
+      console.error('[token-exchange] step=cookies no refresh token; refusing to set partial session')
       return NextResponse.json(
         { error: 'Platform did not return a refresh token', code: 'no_refresh_token' },
         { status: 401 }

@@ -110,7 +110,7 @@ else:
             pool_timeout=30,
             connect_args=_connect_args,
         )
-        logging.info("DB engine: detected connection pooler — using small client-side pool.")
+        logging.info("DB engine: detected connection pooler, using small client-side pool.")
     else:
         engine_kwargs = dict(
             pool_pre_ping=True,
@@ -389,7 +389,7 @@ async def _bootstrap_schema():
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         except Exception as e:
             logging.warning(
-                "pgvector extension not available — RAG features will be disabled. "
+                "pgvector extension not available; RAG features will be disabled. "
                 "Install pgvector on your PostgreSQL server to enable course chatbot. "
                 "Error: %s", e
             )

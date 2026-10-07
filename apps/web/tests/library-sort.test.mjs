@@ -157,18 +157,18 @@ describe("sortLibrary", () => {
     // The real-world case: zero-padded module numbers keep 10 after 09, and the
     // unnumbered final item lands where its name puts it.
     const items = [
-      item("course_10", { name: "10 Module — Wrap up" }),
-      item("course_02", { name: "02 Module — Basics" }),
+      item("course_10", { name: "10 Module: Wrap up" }),
+      item("course_02", { name: "02 Module: Basics" }),
       item("course_fin", { name: "Final Assessment" }),
-      item("course_01", { name: "01 Module — Intro" }),
-      item("course_09", { name: "09 Module — Review" }),
+      item("course_01", { name: "01 Module: Intro" }),
+      item("course_09", { name: "09 Module: Review" }),
     ];
 
     expect(names(sortLibrary([], items, "name_asc").items)).toEqual([
-      "01 Module — Intro",
-      "02 Module — Basics",
-      "09 Module — Review",
-      "10 Module — Wrap up",
+      "01 Module: Intro",
+      "02 Module: Basics",
+      "09 Module: Review",
+      "10 Module: Wrap up",
       "Final Assessment",
     ]);
   });

@@ -16,7 +16,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   })
 
   return {
-    title: 'Boards — ' + org.name,
+    title: 'Boards | ' + org.name,
     description: `Collaborative boards for ${org.name}`,
     robots: {
       index: false,

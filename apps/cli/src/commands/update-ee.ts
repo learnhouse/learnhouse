@@ -72,22 +72,22 @@ export function backupDatabase(config: LearnHouseConfigJson, layout: EditionLayo
     // compose network name (which differs by edition) and inherits the app's
     // connectivity (e.g. IPv6-only databases).
     const cid = execSync(`docker compose ps -q ${layout.appService}`, { cwd: dir }).toString().trim()
-    if (!cid) throw new Error(`app container (${layout.appService}) is not running — start the stack before backing up`)
-    ui.log('external database — dumping via a client sharing the app container network')
+    if (!cid) throw new Error(`app container (${layout.appService}) is not running; start the stack before backing up`)
+    ui.log('external database: dumping via a client sharing the app container network')
     execSync(
       `docker run --rm --network ${JSON.stringify('container:' + cid)} -e PGCONN -i ${PG_CLIENT_IMAGE} ` +
         `sh -c 'pg_dump "$PGCONN" | gzip' > ${JSON.stringify(out)}`,
       { cwd: dir, stdio: ['ignore', 'inherit', 'inherit'], env: { ...process.env, PGCONN: conn } },
     )
   } else {
-    ui.log('in-container database — pg_dump from the db service')
+    ui.log('in-container database: pg_dump from the db service')
     execSync(
       `docker compose exec -T ${layout.dbService} sh -c 'pg_dump -U "$\{POSTGRES_USER:-learnhouse}" "$\{POSTGRES_DB:-learnhouse}"' | gzip > ${JSON.stringify(out)}`,
       { cwd: dir, stdio: ['ignore', 'inherit', 'inherit'] },
     )
   }
   const bytes = fs.statSync(out).size
-  if (bytes < 100) throw new Error(`backup looks empty (${bytes} bytes) — aborting before any changes`)
+  if (bytes < 100) throw new Error(`backup looks empty (${bytes} bytes); aborting before any changes`)
   return out
 }
 
@@ -111,7 +111,7 @@ export function ensureAlembicBaseline(dir: string, layout: EditionLayout, ui: Up
   try {
     const stamped = parseRevs(alembic(dir, layout, 'current 2>/dev/null')).size > 0
     if (!stamped) {
-      ui.log('Database not Alembic-stamped (created via create_all) — stamping current schema as the baseline…')
+      ui.log('Database not Alembic-stamped (created via create_all); stamping current schema as the baseline…')
       alembic(dir, layout, 'stamp heads')
       ui.ok('Baseline stamped at the current version')
     } else {
@@ -137,7 +137,7 @@ export function runAlembicUpgrade(dir: string, layout: EditionLayout, ui: Update
     const current = alembic(dir, layout, 'current 2>/dev/null')
     const revLines = current.split('\n').map((l) => l.trim()).filter((l) => /^[0-9a-z]{8,40}\b/.test(l))
     if (revLines.length > 0 && revLines.every((l) => /head\)/i.test(l))) {
-      ui.ok('Database already at head — no migrations needed')
+      ui.ok('Database already at head, no migrations needed')
       return true
     }
 
@@ -158,7 +158,7 @@ export function runAlembicUpgrade(dir: string, layout: EditionLayout, ui: Update
         // "already exists" → schema was created via create_all; stamp and continue
         if (/already exists|DuplicateTable/i.test(upgradeOut)) {
           alembic(dir, layout, 'stamp heads')
-          ui.ok('Schema created via create_all — stamped Alembic at current heads')
+          ui.ok('Schema created via create_all; stamped Alembic at current heads')
           return true
         }
         throw upgradeErr
@@ -173,7 +173,7 @@ export function runAlembicUpgrade(dir: string, layout: EditionLayout, ui: Update
     const e = err as { stderr?: { toString(): string }; stdout?: { toString(): string }; message?: string }
     const detail = (e.stderr?.toString() || e.stdout?.toString() || e.message || '').trim()
     if (detail) console.error(pc.dim(detail.slice(0, 800)))
-    ui.warn('Migrations failed — your DB backup is in ./backups/.')
+    ui.warn('Migrations failed; your DB backup is in ./backups/.')
     ui.warn(`  Retry manually: docker compose exec ${layout.appService} sh -c "cd ${layout.alembicCwd} && uv run alembic upgrade heads"`)
     return false
   }
@@ -209,11 +209,11 @@ export function migrateBeforeBoot(dir: string, layout: EditionLayout, previousHe
     const current = parseRevs(run('current 2>/dev/null'))
     if (current.size === 0) {
       if (previousHeads.length === 0) {
-        ui.warn('Database has no Alembic revision and the previous image did not report one — migrations will run after startup instead.')
+        ui.warn('Database has no Alembic revision and the previous image did not report one; migrations will run after startup instead.')
         return true
       }
       run(`stamp ${previousHeads.join(' ')}`)
-      ui.log(`Database created via create_all — stamped at the previous image's revision (${previousHeads.join(', ')})`)
+      ui.log(`Database created via create_all; stamped at the previous image's revision (${previousHeads.join(', ')})`)
     }
     const out = run('upgrade heads')
     const applied = out.split('\n').filter((l) => /Running upgrade/.test(l)).length
@@ -223,7 +223,7 @@ export function migrateBeforeBoot(dir: string, layout: EditionLayout, previousHe
     const e = err as { stderr?: { toString(): string }; stdout?: { toString(): string }; message?: string }
     const detail = (e.stderr?.toString() || e.stdout?.toString() || e.message || '').trim()
     if (detail) console.error(pc.dim(detail.slice(0, 800)))
-    ui.warn('Pre-start migration failed — the previous version is still running and your DB backup is in ./backups/.')
+    ui.warn('Pre-start migration failed; the previous version is still running and your DB backup is in ./backups/.')
     return false
   }
 }
@@ -261,7 +261,7 @@ export async function updateEnterprise(config: LearnHouseConfigJson, options: Ee
 
   if (options.backup !== false) {
     try { ui.ok(`Backup: ${backupDatabase(config, EE_LAYOUT, ui)}`) }
-    catch (err) { die(`database backup failed: ${(err as Error)?.message ?? err}. Aborting — nothing changed.`) }
+    catch (err) { die(`database backup failed: ${(err as Error)?.message ?? err}. Aborting; nothing changed.`) }
   } else {
     ui.warn('Skipping DB backup (--no-backup). Not recommended for production.')
   }
@@ -269,7 +269,7 @@ export async function updateEnterprise(config: LearnHouseConfigJson, options: Ee
   ensureAlembicBaseline(dir, EE_LAYOUT, ui)
 
   const license = readEnvVar(dir, 'LEARNHOUSE_LICENSE_KEY')
-  if (!license) die('LEARNHOUSE_LICENSE_KEY not found in .env — cannot pull EE images.')
+  if (!license) die('LEARNHOUSE_LICENSE_KEY not found in .env; cannot pull EE images.')
   try { dockerLogin(EE_REGISTRY, EE_REGISTRY_USERNAME, license!); ui.ok('Authenticated to the EE registry') }
   catch (err) { die(`registry login failed (license expired?): ${(err as { stderr?: string })?.stderr ?? err}`) }
 
@@ -282,7 +282,7 @@ export async function updateEnterprise(config: LearnHouseConfigJson, options: Ee
   catch (err) { die(`failed to start the upgraded stack: ${(err as Error)?.message ?? err}. Restore from ./backups/ if needed.`) }
 
   const ready = await waitForEeReady(dir)
-  if (ready === 'oss') ui.warn('API came up in OSS mode — license not active. Check `learnhouse logs`.')
+  if (ready === 'oss') ui.warn('API came up in OSS mode, license not active. Check `learnhouse logs`.')
   else if (ready === 'timeout') ui.warn('Could not confirm EE mode yet; the API may still be starting.')
 
   if (options.migrate !== false) {

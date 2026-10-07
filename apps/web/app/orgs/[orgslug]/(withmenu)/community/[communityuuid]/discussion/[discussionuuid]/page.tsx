@@ -54,7 +54,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     // Discussion might not exist or user doesn't have access
   }
 
-  const title = discussion ? `${discussion.title} — ${org.name}` : `Discussion — ${org.name}`
+  const title = discussion ? `${discussion.title} | ${org.name}` : `Discussion | ${org.name}`
   const contentText = discussion ? getContentDescription(discussion.content) : ''
   const description = contentText ? contentText.substring(0, 160) : `Discussion from ${org.name}`
 

@@ -197,7 +197,7 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
             {/* Resend, so a user whose email doesn't arrive isn't stuck. */}
             {resendState === 'sent' ? (
               <p className="text-xs font-medium text-green-700">
-                {t('auth.verification_email_resent', { defaultValue: 'Verification email sent again — check your inbox.' })}
+                {t('auth.verification_email_resent', { defaultValue: 'Verification email sent again. Check your inbox.' })}
               </p>
             ) : (
               <button

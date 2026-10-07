@@ -202,7 +202,7 @@ describe("checkout.session.completed", () => {
 });
 
 describe("customer.subscription.created", () => {
-  test("upgrades the org — it is the recovery path when checkout.session.completed is dropped", async () => {
+  test("upgrades the org: it is the recovery path when checkout.session.completed is dropped", async () => {
     const res = await deliver({
       id: nextEventId(),
       type: "customer.subscription.created",

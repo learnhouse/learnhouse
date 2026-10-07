@@ -492,7 +492,7 @@ function ScormCourseImport({ orgId, orgslug, closeModal }: ScormCourseImportProp
           {isImporting && (
             <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
               <BarLoader width={40} color="#000000" cssOverride={{ borderRadius: 60 }} />
-              <span>Importing — copying content to storage, this can take a few minutes for large packages…</span>
+              <span>Importing: copying content to storage, this can take a few minutes for large packages…</span>
             </div>
           )}
 

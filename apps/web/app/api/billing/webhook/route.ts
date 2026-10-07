@@ -193,7 +193,7 @@ async function handleCheckoutCompleted(session: any) {
       // it. Silent config gaps are exactly how paid orgs end up on free.
       throw new Error(
         `checkout.session.completed: could not resolve plan for session ${session.id} ` +
-          `(org ${orgId}, price ${subscription?.items?.data?.[0]?.price?.id}) — ` +
+          `(org ${orgId}, price ${subscription?.items?.data?.[0]?.price?.id}): ` +
           `is the matching STRIPE_PRICE_* env set?`,
       );
     }

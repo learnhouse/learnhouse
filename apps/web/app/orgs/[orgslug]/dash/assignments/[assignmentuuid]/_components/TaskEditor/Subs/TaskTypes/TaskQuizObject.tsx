@@ -650,7 +650,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                         const responseType = questionResponseType(question);
                         const isSingleResponse = responseType === QUIZ_RESPONSE_SINGLE;
                         const hasNoCorrectOption = correctOptionCount(question) === 0;
-                        const optionsGroupLabel = `${question.questionText || t('assignments.quiz.question_fallback_label', { defaultValue: 'Question' })} — ${isSingleResponse ? t('assignments.quiz.select_one') : t('assignments.quiz.select_all_that_apply')}`;
+                        const optionsGroupLabel = `${question.questionText || t('assignments.quiz.question_fallback_label', { defaultValue: 'Question' })}: ${isSingleResponse ? t('assignments.quiz.select_one') : t('assignments.quiz.select_all_that_apply')}`;
                         return (
                         <div key={qIndex} className="flex flex-col space-y-1.5">
                             <div className="flex space-x-2 items-center">

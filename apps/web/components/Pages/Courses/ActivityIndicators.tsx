@@ -259,7 +259,7 @@ const MobileChapterSelector = memo(({
             return (
               <div key={chapter.id}>
                 <div className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide ${isCurrentChapter ? 'text-teal-600' : 'text-gray-400'}`}>
-                  {t('courses.chapter')} {chapterIdx + 1} — {completedInChapter}/{chapter.activities.length}
+                  {t('courses.chapter')} {chapterIdx + 1}: {completedInChapter}/{chapter.activities.length}
                 </div>
                 {chapter.activities.map((activity: any) => {
                   const isDone = isActivityDone(activity)

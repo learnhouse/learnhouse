@@ -105,7 +105,7 @@ const GRADING_TYPES: {
         color: 'text-blue-600',
         selectedBorder: 'border-blue-400',
         selectedBg: 'bg-blue-50',
-        illustration: '0 — 100',
+        illustration: '0 to 100',
     },
     {
         value: 'PERCENTAGE',
@@ -135,7 +135,7 @@ const GRADING_TYPES: {
         color: 'text-rose-600',
         selectedBorder: 'border-rose-400',
         selectedBg: 'bg-rose-50',
-        illustration: '0.0 — 4.0',
+        illustration: '0.0 to 4.0',
     },
 ];
 
@@ -344,8 +344,8 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             <UngradedRow
                 checked={formik.values.ungraded}
                 onChange={(v) => formik.setFieldValue('ungraded', v, true)}
-                label={t('dashboard.assignments.modals.edit.form.ungraded_label', { defaultValue: 'Formative — no grading' })}
-                description={t('dashboard.assignments.modals.edit.form.ungraded_description', { defaultValue: 'Learners hand their work in and it is never marked. No score, no pass or fail — pair it with a model answer below for self-assessment.' })}
+                label={t('dashboard.assignments.modals.edit.form.ungraded_label', { defaultValue: 'Formative (no grading)' })}
+                description={t('dashboard.assignments.modals.edit.form.ungraded_description', { defaultValue: 'Learners hand their work in and it is never marked. No score, no pass or fail; pair it with a model answer below for self-assessment.' })}
             />
 
             {/* Grading type */}

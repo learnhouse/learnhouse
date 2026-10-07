@@ -412,7 +412,7 @@ export function AdminMfaCallout({ href, message }: { href: string; message?: str
         <p className="text-xs text-amber-800/80 leading-relaxed">
           {t('dashboard.organization.security.admin_mfa_first_why', {
             defaultValue:
-              'Otherwise the policy would lock you out of your own organization the moment it saves — and no admin would be left to turn it back off.',
+              'Otherwise the policy would lock you out of your own organization the moment it saves, and no admin would be left to turn it back off.',
           })}
         </p>
         <Link

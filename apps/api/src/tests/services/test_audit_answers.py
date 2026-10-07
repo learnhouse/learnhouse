@@ -116,7 +116,7 @@ class TestForm:
         ]})
         assert out["kind"] == "form"
         first = out["items"][0]
-        assert first["prompt"] == "Capital of France — city"
+        assert first["prompt"] == "Capital of France: city"
         assert first["correct"] is True
         assert out["correct_count"] == 1 and out["total_count"] == 1
 

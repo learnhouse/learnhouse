@@ -610,7 +610,7 @@ def _coverage_notes() -> list[str]:
     return [
         "Connection history begins when the audit log was enabled; logins before "
         "that are reflected only by the account's last-login fields.",
-        "Assignment retries reset the live submission in place — earlier attempts "
+        "Assignment retries reset the live submission in place; earlier attempts "
         "are preserved in the durable event timeline, not the current submission row.",
         "AI editor chat is ephemeral and is not recorded.",
         "Behavioral metrics (time spent, views, searches) come from the analytics "

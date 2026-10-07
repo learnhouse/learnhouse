@@ -124,13 +124,13 @@ export default function DemoEntryCard({ className = '' }: { className?: string }
             {t('demo.entry_body', {
               interval: formatInterval(status.refresh_minutes),
               defaultValue:
-                'A full academy with courses, learners, progress and grading — already filled in. Shared with everyone, and reset every {{interval}}.',
+                'A full academy with courses, learners, progress and grading, already filled in. Shared with everyone, and reset every {{interval}}.',
             })}
           </p>
           {!status.ready && (
             <p className="mt-2 text-xs font-medium text-gray-400">
               {t('demo.entry_preparing', {
-                defaultValue: 'Being prepared — try again in a moment.',
+                defaultValue: 'Being prepared. Try again in a moment.',
               })}
             </p>
           )}

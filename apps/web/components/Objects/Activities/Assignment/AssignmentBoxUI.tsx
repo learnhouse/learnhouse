@@ -183,7 +183,7 @@ function AssignmentBoxUI({ type, view, currentPoints, currentFeedback, maxPoints
                                 // is already scheduled) instead of a stuck spinner.
                                 <>
                                     <TriangleAlert size={13} className='text-amber-500' />
-                                    <p className='text-amber-600'>{t('activities.autosave_retry', { defaultValue: "Couldn't save — retrying…" })}</p>
+                                    <p className='text-amber-600'>{t('activities.autosave_retry', { defaultValue: "Couldn't save, retrying…" })}</p>
                                 </>
                             ) : auto.isSaving ? (
                                 <>

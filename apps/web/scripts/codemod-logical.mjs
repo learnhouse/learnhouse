@@ -336,12 +336,12 @@ for (const rel of listFiles()) {
 console.log(`${WRITE ? 'Rewrote' : 'Would rewrite'} ${report.converted.length} class strings in ${filesChanged} files`)
 
 if (report.skippedCentering.length) {
-  console.log(`\nSkipped ${report.skippedCentering.length} 50% insets (centering idiom — correct as physical):`)
+  console.log(`\nSkipped ${report.skippedCentering.length} 50% insets (centering idiom, correct as physical):`)
   for (const l of report.skippedCentering) console.log(`  ${l}`)
 }
 
 if (report.review.length) {
-  console.log(`\nREVIEW QUEUE — ${report.review.length} strings contain physical utilities but were not recognised as class lists:`)
+  console.log(`\nREVIEW QUEUE: ${report.review.length} strings contain physical utilities but were not recognised as class lists:`)
   for (const l of report.review) console.log(`  ${l}`)
 }
 

@@ -368,7 +368,7 @@
     "image_title_forgot": "Reset your password.",
     "image_subtitle_forgot": "We'll help you get back into your account in no time.",
     "image_title_login": "Welcome back to LearnHouse.",
-    "image_subtitle_login": "Pick up where you left off — your courses, students, and tools are waiting.",
+    "image_subtitle_login": "Pick up where you left off. Your courses, students, and tools are waiting.",
     "image_title_reset": "Almost there.",
     "image_subtitle_reset": "Create a strong password to keep your account secure.",
     "image_title_signup": "Start teaching with LearnHouse.",
@@ -392,7 +392,7 @@
     "magic_sent_title": "Check your email",
     "magic_sent_body": "If an account exists for {{email}}, we just sent it a secure link to sign in. It expires shortly, so use it soon.",
     "magic_back_to_login": "Back to sign in",
-    "magic_subtitle": "Enter your email and we’ll send you a link that signs you in — no password needed.",
+    "magic_subtitle": "Enter your email and we’ll send you a link that signs you in, no password needed.",
     "magic_send": "Email me a login link",
     "magic_use_password": "Sign in with a password instead",
     "choose_sign_in_method": "Choose how you’d like to sign in.",
@@ -662,7 +662,7 @@
         "plan_generated": "Plan updated",
         "plan_generated_hint": "Check the Plan tab to review and edit.",
         "describe_course": "Describe Your Course",
-        "describe_course_hint": "Use the chat on the right to describe the course you want — topic, audience, and goals.",
+        "describe_course_hint": "Use the chat on the right to describe the course you want: topic, audience, and goals.",
         "generating_plan": "Generating your course plan...",
         "chapters": "Chapters",
         "activities": "activities",
@@ -1319,7 +1319,7 @@
     "upload_to_library": "Upload",
     "upload_to_library_hint": "Uploaded files are added to your Library, so you can reuse them elsewhere.",
     "no_resource_selected": "No library item selected.",
-    "private_media_warning": "Private — learners without access will not see this.",
+    "private_media_warning": "Private: learners without access will not see this.",
     "replace_resource": "Replace",
     "remove_resource": "Remove",
     "show_as_card": "Show as card",
@@ -1457,7 +1457,7 @@
     "embed": "Embed",
     "embed_code_copied": "Embed code copied!",
     "autosave_blocked": "Can't be saved yet",
-    "autosave_retry": "Couldn't save — retrying…",
+    "autosave_retry": "Couldn't save, retrying…",
     "autosave_unsaved": "Unsaved changes",
     "autosaved": "Saved",
     "autosaving": "Saving…",
@@ -1509,8 +1509,8 @@
     "retry_assignment_title": "Try this assignment again?",
     "retry_assignment_confirm": "Your current submission and answers will be reset so you can start over. Your previous grade will be replaced once you resubmit.",
     "retry_assignment_remaining": "You have {{remaining}} attempt{{plural}} left after this one.",
-    "retry_assignment_last": "This is your last attempt — make it count.",
-    "retry_assignment_success": "Your work has been reset — give it another shot.",
+    "retry_assignment_last": "This is your last attempt, so make it count.",
+    "retry_assignment_success": "Your work has been reset. Give it another shot.",
     "retry_assignment_failed": "Couldn't reset your submission. Please try again.",
     "retry_no_attempts_left": "No retries left",
     "quiz": {
@@ -1520,7 +1520,7 @@
       "select_all_that_apply": "Select all that apply",
       "response_type_single": "Single answer",
       "response_type_multiple": "Multiple answers",
-      "no_correct_option_warning": "No correct option — this question is skipped when grading",
+      "no_correct_option_warning": "No correct option: this question is skipped when grading",
       "question_fallback_label": "Question",
       "grading_mode_label": "Grading",
       "grading_all_or_nothing": "All or nothing",
@@ -1667,7 +1667,7 @@
       "confirm_label": "Type {{username}} to confirm",
       "deleting": "Deleting…",
       "zone_subtitle": "Permanently delete your account. This cannot be undone.",
-      "zone_body": "This removes your account and access. Any organization you are the sole admin of — and all of its courses and content — will be deleted too. Organizations with other admins are kept; you are simply removed from them."
+      "zone_body": "This removes your account and access. Any organization you are the sole admin of, and all of its courses and content, will be deleted too. Organizations with other admins are kept; you are simply removed from them."
     }
   },
   "user": {
@@ -1916,7 +1916,7 @@
           "subtitle": "Ask for a one-time code from your authenticator app whenever you sign in.",
           "retry": "Retry",
           "codes_once_title": "This is the only time these codes will be shown.",
-          "codes_once_body": "Save them somewhere safe now. Each code can be used once to sign in if you lose access to your authenticator app. Once you leave this screen they cannot be retrieved — you would have to generate new ones.",
+          "codes_once_body": "Save them somewhere safe now. Each code can be used once to sign in if you lose access to your authenticator app. Once you leave this screen they cannot be retrieved; you would have to generate new ones.",
           "copied": "Copied",
           "copy_all": "Copy all",
           "download": "Download .txt",
@@ -2941,7 +2941,7 @@
         "footer_text_desc": "Custom text displayed at the bottom of your organization pages",
         "email_sender_name": "Email Sender Name",
         "email_sender_name_placeholder": "Your organization's name",
-        "email_sender_name_desc": "The name recipients see on emails sent for this organization — login links, password resets, invitations, verification and welcome emails. Those emails also carry your logo, your brand color on buttons and your watermark setting. Only the name changes here — the sending address stays the platform's, which is what keeps these emails passing SPF and DKIM checks. Leave empty to use the platform default.",
+        "email_sender_name_desc": "The name recipients see on emails sent for this organization: login links, password resets, invitations, verification and welcome emails. Those emails also carry your logo, your brand color on buttons and your watermark setting. Only the name changes here; the sending address stays the platform's, which is what keeps these emails passing SPF and DKIM checks. Leave empty to use the platform default.",
         "default_language": "Default Language",
         "default_language_desc": "The language new visitors see by default and the language used for emails sent on behalf of this organization. Members can still switch their own UI language.",
         "watermark_label": "\"Made with LearnHouse\" watermark",
@@ -3952,7 +3952,7 @@
         "save_error": "Could not save the security policy.",
         "save_success": "Security policy updated",
         "admin_mfa_first": "Enable two-factor on your own account before requiring it for the organization.",
-        "admin_mfa_first_why": "Otherwise the policy would lock you out of your own organization the moment it saves — and no admin would be left to turn it back off.",
+        "admin_mfa_first_why": "Otherwise the policy would lock you out of your own organization the moment it saves, and no admin would be left to turn it back off.",
         "admin_mfa_first_cta": "Set up two-factor on your account",
         "not_admin_title": "You don’t have access to this setting",
         "not_admin_body": "Only organization admins can view or change the two-factor requirement.",
@@ -3962,7 +3962,7 @@
         "methods_empty_warning": "With no method selected, no one could sign in to this organization. Pick at least one.",
         "methods_effect": "Unchecked methods disappear from this organization’s login page, and members already signed in with one are asked to sign in again with an allowed method.",
         "session_sharing_label": "Allow sharing sessions with learnhouse.io",
-        "session_sharing_hint": "When off, signing in at learnhouse.io won’t let members into this org — they must sign in again from this org’s login page using an allowed method.",
+        "session_sharing_hint": "When off, signing in at learnhouse.io won’t let members into this org; they must sign in again from this org’s login page using an allowed method.",
         "saving_short": "Saving…",
         "save": "Save changes",
         "cancel": "Cancel",
@@ -3983,7 +3983,7 @@
         "members_empty": "No members in this organization yet.",
         "you": "you",
         "badge_enrolled": "Enrolled",
-        "badge_exempt": "Exempt — {{method}}",
+        "badge_exempt": "Exempt: {{method}}",
         "badge_not_enrolled": "Not enrolled",
         "reset_hint": "Clear this member’s two-factor so they can set it up again",
         "resetting": "Resetting…",
@@ -3995,7 +3995,7 @@
         "policy_description": "Members without a second factor are blocked from this organization once their grace period ends. They keep their account and any other organization they belong to, and regain access the moment they enroll.",
         "active_since": "Policy active since {{date}}",
         "active_no_date": "Policy is active",
-        "no_restart_note": "Saving changes to an already-active policy does not restart anyone’s countdown — existing deadlines stay anchored to the date above. The countdown only resets if you turn the requirement off and back on.",
+        "no_restart_note": "Saving changes to an already-active policy does not restart anyone’s countdown; existing deadlines stay anchored to the date above. The countdown only resets if you turn the requirement off and back on.",
         "grace_label": "Grace period",
         "grace_immediately": "Immediately",
         "grace_days": "{{count}} days",
@@ -4215,7 +4215,7 @@
           "not_graded": "Not auto-graded",
           "score": "{{correct}}/{{total}} correct",
           "explanation": "Explanation",
-          "raw_note": "Custom task — shown as raw fields",
+          "raw_note": "Custom task (shown as raw fields)",
           "not_submitted": "Not submitted",
           "manual": "manually graded",
           "source_code": "Submitted code",
@@ -4725,7 +4725,7 @@
         "save_error": "Could not save signup fields. Please try again.",
         "title": "Custom signup fields",
         "subtitle": "Extra questions asked when someone joins. Answers are saved on each member.",
-        "public_notice": "Labels, help text and options appear on your public signup page — anyone can read them. Do not put anything confidential here.",
+        "public_notice": "Labels, help text and options appear on your public signup page, where anyone can read them. Do not put anything confidential here.",
         "empty": "No custom fields. Your signup form asks only the standard questions.",
         "label_placeholder": "Question label",
         "badge_saved": "in use",
@@ -4734,7 +4734,7 @@
         "required": "Required",
         "delete_confirm": "Removing this field abandons the answers already collected under its key. Click the bin again to confirm.",
         "key": "Key",
-        "key_locked": "Locked — changing it would orphan the answers already collected.",
+        "key_locked": "Locked: changing it would orphan the answers already collected.",
         "key_hint": "Set automatically from the label.",
         "help_text": "Help text",
         "max_length": "Max length",
@@ -4871,9 +4871,9 @@
             "auth_required_submit": "Authentication required. Please sign in to submit your task.",
             "hint_optional": "Hint (optional)",
             "paste_blocked": "Pasting is disabled for this assignment",
-            "paste_blocked_hint": "Pasting is disabled — type your answer directly.",
-            "upload_locked_graded": "This submission has been graded — your file can no longer be changed.",
-            "upload_locked_submitted": "You have submitted this assignment — your file can no longer be changed."
+            "paste_blocked_hint": "Pasting is disabled; type your answer directly.",
+            "upload_locked_graded": "This submission has been graded; your file can no longer be changed.",
+            "upload_locked_submitted": "You have submitted this assignment; your file can no longer be changed."
           },
           "short_answer": {
             "prompt_label": "Question prompt",
@@ -4890,13 +4890,13 @@
               "regex": "Regular expression"
             },
             "explanation_label": "Explanation (shown on correct answer)",
-            "explanation_placeholder": "Optional — explain why the answer is correct",
+            "explanation_placeholder": "Optional: explain why the answer is correct",
             "your_answer_placeholder": "Type your answer...",
             "student_answer_label": "Student's answer",
             "accepted_answers_label": "Accepted answers",
             "no_answer": "No answer submitted",
             "correct": "Correct",
-            "incorrect": "Not quite — try again"
+            "incorrect": "Not quite, try again"
           },
           "number_answer": {
             "prompt_label": "Question prompt",
@@ -4905,16 +4905,16 @@
             "tolerance_label": "Tolerance (±)",
             "unit_label": "Unit (optional)",
             "unit_placeholder": "m/s², kg, °C...",
-            "unit_hint": "Shown next to the answer field. Not enforced — students only type numbers.",
+            "unit_hint": "Shown next to the answer field. Not enforced; students only type numbers.",
             "explanation_label": "Explanation (shown on correct answer)",
-            "explanation_placeholder": "Optional — explain how to arrive at the answer",
+            "explanation_placeholder": "Optional: explain how to arrive at the answer",
             "preview_label": "Accepts",
             "your_answer_placeholder": "Enter a number...",
             "student_answer_label": "Student's answer",
             "accepted_range_label": "Accepted range",
             "no_answer": "No answer submitted",
             "correct": "Correct",
-            "incorrect": "Not quite — try again"
+            "incorrect": "Not quite, try again"
           },
           "code": {
             "student_behavior_label": "Student behavior",
@@ -4931,9 +4931,9 @@
             "show_solution_label": "Reveal solution after submit",
             "show_solution_description": "Once the student has saved their work, show the teacher's reference solution as a collapsible panel.",
             "reference_solution_label": "Reference solution",
-            "locked_graded_hint": "This submission has been graded — your code is read-only.",
-            "locked_submitted_hint": "You have submitted this assignment — your code is read-only.",
-            "no_runnable_tests": "This task has no tests you can run — your code is checked at grading time."
+            "locked_graded_hint": "This submission has been graded; your code is read-only.",
+            "locked_submitted_hint": "You have submitted this assignment; your code is read-only.",
+            "no_runnable_tests": "This task has no tests you can run; your code is checked at grading time."
           }
         },
         "generate_ai": "Generate tasks with AI",
@@ -5005,7 +5005,7 @@
           "finalize_success": "Assignment graded and activity marked as complete"
         },
         "truncated_warning": "Only the first {{max}} submissions are shown. Some submissions are not listed here.",
-        "ungraded_title": "Formative — not graded",
+        "ungraded_title": "Formative (not graded)",
         "ungraded_description": "This assignment is handed in for review only. No score is recorded.",
         "download_to_grade": "Please download the file and grade it manually, then input the grade above",
         "download_to_review": "Download the file to review what the learner handed in."
@@ -5046,7 +5046,7 @@
         },
         "tasks": {
           "title": "Task performance",
-          "subtitle": "Average score per task — low bars highlight where students struggle",
+          "subtitle": "Average score per task. Low bars highlight where students struggle",
           "empty": "Per-task performance will appear after graded submissions come in",
           "avg_grade": "Average grade",
           "attempts": "attempts"
@@ -5058,7 +5058,7 @@
         },
         "attention": {
           "title": "May need support",
-          "subtitle": "Students who did not pass — consider reaching out",
+          "subtitle": "Students who did not pass. Consider reaching out",
           "empty": "Everyone who was graded passed. Nice work!"
         }
       },
@@ -5073,7 +5073,7 @@
             "description_required": "Please provide a description for your assignment",
             "due_date_label": "Due Date",
             "due_date_required": "Please provide a due date for your assignment",
-            "due_date_hint": "Optional — leave empty for a self-paced course with no deadline.",
+            "due_date_hint": "Optional: leave empty for a self-paced course with no deadline.",
             "due_date_clear": "No deadline",
             "grading_type_label": "Grading Type",
             "grading_type_hint": "How grades are displayed to students",
@@ -5098,9 +5098,9 @@
             "auto_grading_description": "Grade and complete the activity automatically when the student submits. Only works when every task can be graded without a human (quizzes, forms, code).",
             "auto_grading_disabled_file": "Automatic grading is unavailable because this assignment has a file submission task that needs human review.",
             "anti_copy_paste_label": "Block copy & paste",
-            "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events in the code editor and text inputs. Note: this is a deterrent — tech-savvy students can bypass it.",
+            "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events in the code editor and text inputs. Note: this is a deterrent; tech-savvy students can bypass it.",
             "show_correct_answers_label": "Reveal correct answers after grading",
-            "show_correct_answers_description": "Once the submission is graded, show students the right answers alongside their own — which quiz options were correct, the expected short or number answer, and the correct form blanks.",
+            "show_correct_answers_description": "Once the submission is graded, show students the right answers alongside their own: which quiz options were correct, the expected short or number answer, and the correct form blanks.",
             "allow_retries_label": "Allow retries",
             "allow_retries_description": "Let students reset and re-attempt the assignment after it's graded. Each retry wipes their previous answers and counts as a new attempt.",
             "max_retries_label": "Maximum attempts",
@@ -5112,8 +5112,8 @@
             "pass_threshold_label": "Passing threshold",
             "pass_threshold_description": "Minimum score to pass. Leave blank to use the default (50%, or 60% for letter grades).",
             "pass_threshold_placeholder": "Auto",
-            "ungraded_label": "Formative — no grading",
-            "ungraded_description": "Learners hand their work in and it is never marked. No score, no pass or fail — pair it with a model answer below for self-assessment.",
+            "ungraded_label": "Formative (no grading)",
+            "ungraded_description": "Learners hand their work in and it is never marked. No score, no pass or fail. Pair it with a model answer below for self-assessment.",
             "solution_label": "Model answer",
             "solution_hint": "Shown to learners only once unlocked",
             "solution_placeholder": "Write the worked solution learners should compare their work against…",
@@ -5145,7 +5145,7 @@
             "description_required": "Please provide a description for your assignment",
             "due_date_label": "Due Date",
             "due_date_required": "Please provide a due date for your assignment",
-            "due_date_hint": "Optional — leave empty for a self-paced course with no deadline.",
+            "due_date_hint": "Optional: leave empty for a self-paced course with no deadline.",
             "due_date_clear": "No deadline",
             "grading_type_label": "Grading Type",
             "grading_type_hint": "How grades are displayed to students",
@@ -5169,7 +5169,7 @@
             "auto_grading_label": "Automatic grading",
             "auto_grading_description": "Grade and complete the activity automatically when the student submits. Only works when every task can be graded without a human.",
             "anti_copy_paste_label": "Block copy & paste",
-            "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events. Note: this is a deterrent — it can be bypassed.",
+            "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events. Note: this is a deterrent; it can be bypassed.",
             "show_correct_answers_label": "Reveal correct answers after grading",
             "show_correct_answers_description": "Once graded, students see the right answers next to their own.",
             "submit": "Create activity",
@@ -5568,9 +5568,9 @@
           "auto": "Auto",
           "auto_hint": "Let the activity report its own height.",
           "widescreen": "16:9",
-          "widescreen_hint": "Widescreen — best for interactive video.",
+          "widescreen_hint": "Widescreen, best for interactive video.",
           "classic": "4:3",
-          "classic_hint": "Classic — best for slide-based presentations.",
+          "classic_hint": "Classic, best for slide-based presentations.",
           "short": "Short",
           "short_hint": "A fixed 320 pixel frame.",
           "medium": "Medium",
@@ -5602,7 +5602,7 @@
         "select_all_that_apply": "Select all that apply",
         "response_type_single": "Single answer",
         "response_type_multiple": "Multiple answers",
-        "no_correct_answer_warning": "No correct answer — this question is skipped"
+        "no_correct_answer_warning": "No correct answer: this question is skipped"
       },
       "math_block": {
         "templates": "Templates",
@@ -5896,7 +5896,7 @@
         "avg_rate": "Avg Rate",
         "needs_attention": "Needs Attention",
         "total_samples": "Total Samples",
-        "more_expand": "+{{count}} more — click to expand",
+        "more_expand": "+{{count}} more (click to expand)",
         "activities_count": "{{count}} activities",
         "pct_of_total": "% of Total",
         "bar_width_hint": "Bar width = relative views",
@@ -6016,7 +6016,7 @@
       },
       "activity_dropoff": {
         "title": "Drop-off Points",
-        "subtitle": "Where learners stop progressing — last completed activity",
+        "subtitle": "Where learners stop progressing (last completed activity)",
         "total_dropoffs": "Total Drop-offs",
         "dropoff_points": "Drop-off Points"
       },
@@ -6050,7 +6050,7 @@
         "avg_between": "avg {{unit}} between completions",
         "transitions_tracked": "transitions tracked",
         "raw_hours_avg": "raw hours avg",
-        "description": "Measures how quickly learners progress from one activity to the next. Lower is better — it means learners are moving through content faster."
+        "description": "Measures how quickly learners progress from one activity to the next. Lower is better: it means learners are moving through content faster."
       },
       "time_to_completion": {
         "title": "Time to Completion",
@@ -6184,7 +6184,7 @@
       },
       "add_content": {
         "title": "A lesson worth showing up for",
-        "description": "Add a video, page or quiz — give learners a real reason to enroll.",
+        "description": "Add a video, page or quiz to give learners a real reason to enroll.",
         "action": "Add content"
       },
       "brand_school": {
@@ -6194,17 +6194,17 @@
       },
       "share_grow": {
         "title": "Your school’s front door",
-        "description": "Go live and grab your shareable link — the place you’ll send every learner.",
+        "description": "Go live and grab your shareable link, the place you’ll send every learner.",
         "action": "Open my school"
       },
       "invite_learners": {
         "title": "Welcome your first learner",
-        "description": "Share your join link or invite people — get that first learner through the door.",
+        "description": "Share your join link or invite people to get that first learner through the door.",
         "action": "Invite learners"
       },
       "build_community": {
         "title": "Keep learners coming back",
-        "description": "Open a community space so your learners stay active — and bring their friends.",
+        "description": "Open a community space so your learners stay active and bring their friends.",
         "action": "Open community"
       }
     },
@@ -6260,7 +6260,7 @@
         "goal": "Start monetizing your courses and build a learning community.",
         "highlights": {
           "courses": "Unlimited courses",
-          "courses_desc": "Create as many courses as you need — no limits on your curriculum.",
+          "courses_desc": "Create as many courses as you need, with no limits on your curriculum.",
           "members": "Up to 500 members",
           "members_desc": "Grow your learner base and manage them in one place.",
           "payments": "Accept payments",
@@ -6318,7 +6318,7 @@
       "trigger_authenticated_title": "Access: signed-in users only",
       "trigger_restricted_title": "Access: specific user groups only",
       "usergroups_header": "User groups",
-      "usergroups_none_assigned": "No groups assigned — nobody but admins can open this.",
+      "usergroups_none_assigned": "No groups assigned: nobody but admins can open this.",
       "usergroups_remove_title": "Remove",
       "usergroups_loading": "Loading groups…",
       "usergroups_none_in_org": "No user groups exist yet in this org.",
@@ -6421,7 +6421,7 @@
     "recurring_subscription": "recurring subscription",
     "what_youre_getting": "What you're getting",
     "pack_immediate": "Takes effect immediately after payment",
-    "pack_cancel_anytime": "Cancel anytime — stays active until end of billing period",
+    "pack_cancel_anytime": "Cancel anytime. Stays active until end of billing period",
     "pack_credits_reset": "Credits reset each billing cycle",
     "after_purchase": "After purchase",
     "unlimited": "Unlimited",
@@ -6471,9 +6471,9 @@
     "canceled_desc": "Your subscription will be canceled at the end of your current billing period. You'll keep full access until then.",
     "back_to_plan_usage": "Back to Plan & Usage",
     "back_to_orgs": "Back to organizations",
-    "pack_purchased": "Add-on purchased — your limits are updated.",
-    "checkout_success": "Subscription updated — welcome to your new plan!",
-    "checkout_cancelled": "Checkout cancelled — no changes were made.",
+    "pack_purchased": "Add-on purchased. Your limits are updated.",
+    "checkout_success": "Subscription updated. Welcome to your new plan!",
+    "checkout_cancelled": "Checkout cancelled. No changes were made.",
     "load_failed": "We couldn't load your organizations.",
     "no_permission": "You don't have permission to manage billing for this organization.",
     "no_permission_hint": "Only an organization admin can view or change the plan.",
@@ -6486,17 +6486,17 @@
     "base_plus_purchased": "Base: {{base}} + Purchased: {{purchased}}",
     "pack_ai_desc": "{{quantity}} additional AI credits added to your organization",
     "unlimited_lower": "unlimited",
-    "limit_reached_upgrade": "Limit reached — upgrade to continue",
+    "limit_reached_upgrade": "Limit reached: upgrade to continue",
     "remaining": "{{n}} remaining",
-    "remaining_nearing": "{{n}} remaining — nearing limit",
+    "remaining_nearing": "{{n}} remaining, nearing limit",
     "usage_subtitle_free": "Free plans are capped. Upgrade to go past a limit.",
-    "usage_subtitle_paid": "Your plan includes these amounts. Going past the member limit is allowed and billed — nothing is blocked.",
+    "usage_subtitle_paid": "Your plan includes these amounts. Going past the member limit is allowed and billed; nothing is blocked.",
     "members_hint": "Everyone who has joined your organization.",
     "members_beyond_plan": "{{included}} included · {{beyond}} beyond your plan",
     "members_within_plan": "{{included}} included in your plan",
     "active_members": "Active members",
     "active_members_short": "Active members",
-    "active_members_hint": "Counted when a member is active on 2+ days this month. The {{included}} seats your plan includes are free — you're billed $1/month for each active member beyond them.",
+    "active_members_hint": "Counted when a member is active on 2+ days this month. The {{included}} seats your plan includes are free; you're billed $1/month for each active member beyond them.",
     "overage_this_month": "${{amount}} this month so far",
     "no_extra_charges": "No extra charges this month",
     "admin_seats_hint": "Members who can access the dashboard. A subset of your members.",
@@ -6508,8 +6508,8 @@
     "packs_billed_separately": "Add-ons are separate subscriptions and are invoiced on their own schedule.",
     "invoice_history": "Invoice history",
     "view": "View",
-    "checkout_settling": "Payment received — your new plan is being applied and will appear shortly.",
-    "checkout_settling_delayed": "Payment received, but your plan has not updated yet. Refresh in a moment — contact support if it persists."
+    "checkout_settling": "Payment received. Your new plan is being applied and will appear shortly.",
+    "checkout_settling_delayed": "Payment received, but your plan has not updated yet. Refresh in a moment, and contact support if it persists."
   },
   "hub_new": {
     "useType": {
@@ -6612,7 +6612,7 @@
     "toast": {
       "creating": "Creating organization…",
       "created": "Organization created!",
-      "checkoutFailed": "Organization created — you can upgrade from Plan & Usage.",
+      "checkoutFailed": "Organization created. You can upgrade from Plan & Usage.",
       "failed": "Failed to create organization"
     },
     "steps": {
@@ -6672,7 +6672,7 @@
       "banner_message": "{{org}} requires two-factor authentication. You have {{days}} days left to set it up.",
       "set_up_now": "Set up now",
       "blocked_title": "Two-factor authentication is required",
-      "blocked_description": "The deadline set by {{org}} for enabling two-factor authentication has passed. To keep using {{org}}, add a second factor to your account — it only takes a minute.",
+      "blocked_description": "The deadline set by {{org}} for enabling two-factor authentication has passed. To keep using {{org}}, add a second factor to your account; it only takes a minute.",
       "blocked_scope_note": "This only affects {{org}}. Your other organizations are unaffected.",
       "set_up_2fa": "Set up two-factor authentication",
       "signed_in_as": "Signed in as {{email}}",

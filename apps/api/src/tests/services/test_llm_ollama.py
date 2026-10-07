@@ -103,7 +103,7 @@ async def test_generate_json_text_parses():
 async def test_history_round_trips():
     history = [
         {"role": "user", "content": "My favorite color is teal."},
-        {"role": "model", "content": "Got it — teal."},
+        {"role": "model", "content": "Got it, teal."},
     ]
     text = await llm_client.generate(
         model_name=OLLAMA_MODEL,

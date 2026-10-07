@@ -128,7 +128,7 @@ async def api_update_certification(
     summary="Delete certification",
     description=(
         "Delete a certification template by its UUID. Only allowed while no "
-        "certificates have been awarded from it — deleting the template also "
+        "certificates have been awarded from it, since deleting the template also "
         "destroys every awarded certificate and invalidates their verification "
         "links. Revoke awarded certificates individually first."
     ),

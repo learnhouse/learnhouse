@@ -235,7 +235,7 @@ async function proxyRequest(
         signal: AbortSignal.timeout(3000),
       }).catch(() => null)
       if (logoutRes && !logoutRes.ok) {
-        console.warn(`[auth] backend logout returned ${logoutRes.status} — server session may not be revoked`)
+        console.warn(`[auth] backend logout returned ${logoutRes.status}; server session may not be revoked`)
       }
     } catch {
       // Backend logout failed. That's fine, cookies are cleared below

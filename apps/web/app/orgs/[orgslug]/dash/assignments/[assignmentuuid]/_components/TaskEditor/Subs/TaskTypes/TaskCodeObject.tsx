@@ -500,7 +500,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
       toast.error(
         view === 'student'
           ? t('dashboard.assignments.editor.task_editor.code.no_runnable_tests', {
-              defaultValue: 'This task has no tests you can run — your code is checked at grading time.',
+              defaultValue: 'This task has no tests you can run; your code is checked at grading time.',
             })
           : 'No test cases defined'
       )
@@ -632,7 +632,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
         finalGrade = totalCount > 0 ? Math.round((passedCount / totalCount) * maxPoints) : 0
       }
 
-      const feedback = `Auto graded: ${passedCount}/${totalCount} tests passed — ${finalGrade}/${maxPoints} points`
+      const feedback = `Auto graded: ${passedCount}/${totalCount} tests passed, ${finalGrade}/${maxPoints} points`
 
       const values = {
         assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
@@ -989,10 +989,10 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                 <span>
                   {submissionIsGraded
                     ? t('dashboard.assignments.editor.task_editor.code.locked_graded_hint', {
-                        defaultValue: 'This submission has been graded — your code is read-only.',
+                        defaultValue: 'This submission has been graded; your code is read-only.',
                       })
                     : t('dashboard.assignments.editor.task_editor.code.locked_submitted_hint', {
-                        defaultValue: 'You have submitted this assignment — your code is read-only.',
+                        defaultValue: 'You have submitted this assignment; your code is read-only.',
                       })}
                 </span>
               </div>
@@ -1224,7 +1224,7 @@ function TestResultsPanel({
               )}
               {isHidden && !result.passed && (
                 <div className="mt-1 ps-6 text-xs text-slate-400 italic">
-                  Details hidden — this is a hidden test case
+                  Details hidden; this is a hidden test case
                 </div>
               )}
             </div>
@@ -1243,7 +1243,7 @@ function TestResultsPanel({
               <span className="font-medium text-slate-500">{tc.label}</span>
             </div>
             <div className="mt-1 ps-6 text-xs text-slate-400 italic">
-              Hidden test — run when your work is graded
+              Hidden test (run when your work is graded)
             </div>
           </div>
         ))}

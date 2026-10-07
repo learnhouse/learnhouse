@@ -80,7 +80,7 @@ async def record_audit_event(
             await session.commit()
     except Exception:
         logger.error(
-            "Failed to record audit event %s for user %s (org %s) — audit data lost",
+            "Failed to record audit event %s for user %s (org %s); audit data lost",
             event_type,
             user_id,
             org_id,

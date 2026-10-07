@@ -196,7 +196,7 @@ async def _enforce_password_signup_allowed(db_session: AsyncSession, org_id: int
     response_model=UserRead,
     tags=["users"],
     summary="Create user in organization",
-    description="Create a user and attach them to the given organization. Rejected if the organization is invite-only — use the invite-code endpoint instead.",
+    description="Create a user and attach them to the given organization. Rejected if the organization is invite-only; use the invite-code endpoint instead.",
     responses={
         200: {"description": "User created and attached to the organization.", "model": UserRead},
         403: {"description": "Organization is invite-only; an invite code is required"},

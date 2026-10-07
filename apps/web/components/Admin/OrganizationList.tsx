@@ -75,7 +75,7 @@ const PLANS_SAAS = ['all', 'free', 'paid', 'standard', 'pro', 'enterprise'] as c
 const PAGE_SIZE = 20
 
 function Sparkline({ data, max }: { data: number[]; max: number }) {
-  if (data.length === 0) return <span className="text-white/20 text-xs">—</span>
+  if (data.length === 0) return <span className="text-white/20 text-xs">n/a</span>
   const h = 20
   const w = 56
   const step = w / Math.max(data.length - 1, 1)

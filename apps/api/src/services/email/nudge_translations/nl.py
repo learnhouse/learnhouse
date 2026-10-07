@@ -35,41 +35,41 @@ STRINGS: dict[str, str] = {
 
     "nudge.activation.setup_checklist_d7.subject": "Een kwartier tot een werkende academie",
     "nudge.activation.setup_checklist_d7.heading": "Een korte checklist",
-    "nudge.activation.setup_checklist_d7.body": "{org_name} wacht nog op de eerste cursus. De checklist loopt het in een paar korte stappen met je door — de meesten zijn binnen een kwartier klaar.",
+    "nudge.activation.setup_checklist_d7.body": "{org_name} wacht nog op de eerste cursus. De checklist loopt het in een paar korte stappen met je door; de meesten zijn binnen een kwartier klaar.",
     "nudge.activation.setup_checklist_d7.cta": "Checklist openen",
 
     "nudge.activation.whats_blocking_d14.subject": "Wat kwam ertussen?",
     "nudge.activation.whats_blocking_d14.heading": "Mogen we vragen wat je tegenhield?",
-    "nudge.activation.whats_blocking_d14.body": "Je hebt {org_name} een paar weken geleden opgezet en nog geen cursus toegevoegd. Als iets onduidelijk was of ontbrak, horen we dat graag — beantwoord deze e-mail, hij komt rechtstreeks bij ons binnen.",
+    "nudge.activation.whats_blocking_d14.body": "Je hebt {org_name} een paar weken geleden opgezet en nog geen cursus toegevoegd. Als iets onduidelijk was of ontbrak, horen we dat graag: beantwoord deze e-mail, hij komt rechtstreeks bij ons binnen.",
 
     "nudge.activation.last_call_d30.subject": "Laatste e-mail over {org_name}",
     "nudge.activation.last_call_d30.heading": "Dit is de laatste",
-    "nudge.activation.last_call_d30.body": "{org_name} is een maand stil geweest, dus we stoppen met deze e-mails. Je account en alles erin blijft staan — kom je terug, dan vind je het precies zoals je het achterliet.",
+    "nudge.activation.last_call_d30.body": "{org_name} is een maand stil geweest, dus we stoppen met deze e-mails. Je account en alles erin blijft staan; kom je terug, dan vind je het precies zoals je het achterliet.",
     "nudge.activation.last_call_d30.cta": "Dashboard openen",
 
     "nudge.content.course_no_chapter_d1.subject": "{course_name} heeft een eerste hoofdstuk nodig",
     "nudge.content.course_no_chapter_d1.heading": "Nog één hoofdstuk",
-    "nudge.content.course_no_chapter_d1.body": "{course_name} bestaat maar heeft nog geen hoofdstukken, dus er valt niets te openen. Hoofdstukken zijn gewoon secties — één per onderwerp werkt prima.",
+    "nudge.content.course_no_chapter_d1.body": "{course_name} bestaat maar heeft nog geen hoofdstukken, dus er valt niets te openen. Hoofdstukken zijn gewoon secties; één per onderwerp werkt prima.",
     "nudge.content.course_no_chapter_d1.cta": "Hoofdstuk toevoegen",
 
     "nudge.content.chapter_no_activity_d1.subject": "Voeg je eerste les toe aan {course_name}",
     "nudge.content.chapter_no_activity_d1.heading": "De hoofdstukken staan klaar",
-    "nudge.content.chapter_no_activity_d1.body": "{course_name} heeft hoofdstukken, maar ze zijn nog leeg. Een les kan een pagina tekst zijn, een video, een quiz — wat bij het onderwerp past.",
+    "nudge.content.chapter_no_activity_d1.body": "{course_name} heeft hoofdstukken, maar ze zijn nog leeg. Een les kan een pagina tekst zijn, een video, een quiz, wat bij het onderwerp past.",
     "nudge.content.chapter_no_activity_d1.cta": "Les toevoegen",
 
     "nudge.content.activity_unpublished_d2.subject": "Je lessen in {course_name} zijn nog niet zichtbaar",
     "nudge.content.activity_unpublished_d2.heading": "De lessen staan nog verborgen",
-    "nudge.content.activity_unpublished_d2.body": "Je hebt lessen geschreven in {course_name}, maar geen enkele is gepubliceerd, dus deelnemers zien een lege cursus. Publiceren zet niets vast — je kunt blijven bewerken.",
+    "nudge.content.activity_unpublished_d2.body": "Je hebt lessen geschreven in {course_name}, maar geen enkele is gepubliceerd, dus deelnemers zien een lege cursus. Publiceren zet niets vast; je kunt blijven bewerken.",
     "nudge.content.activity_unpublished_d2.cta": "Lessen publiceren",
 
     "nudge.content.course_draft_d3.subject": "{course_name} is nog een concept",
     "nudge.content.course_draft_d3.heading": "{course_name} is er bijna",
-    "nudge.content.course_draft_d3.body": "Je hebt lessen toegevoegd aan {course_name}, maar de cursus is niet gepubliceerd, dus niemand kan hem openen. Hij hoeft niet af te zijn — publiceren maakt hem alleen zichtbaar, en je kunt daarna blijven bewerken.",
+    "nudge.content.course_draft_d3.body": "Je hebt lessen toegevoegd aan {course_name}, maar de cursus is niet gepubliceerd, dus niemand kan hem openen. Hij hoeft niet af te zijn; publiceren maakt hem alleen zichtbaar, en je kunt daarna blijven bewerken.",
     "nudge.content.course_draft_d3.cta": "Publiceren",
 
     "nudge.content.course_draft_d10.subject": "{course_name} staat al een tijd als concept",
     "nudge.content.course_draft_d10.heading": "Waarschijnlijk is hij klaar",
-    "nudge.content.course_draft_d10.body": "{course_name} staat al ruim een week ongepubliceerd. Een cursus voelt zelden af — publiceren maakt hem zichtbaar, en je kunt blijven verbeteren terwijl er al iemand leest.",
+    "nudge.content.course_draft_d10.body": "{course_name} staat al ruim een week ongepubliceerd. Een cursus voelt zelden af; publiceren maakt hem zichtbaar, en je kunt blijven verbeteren terwijl er al iemand leest.",
     "nudge.content.course_draft_d10.cta": "Publiceren",
 
     "nudge.content.thin_course_d5.subject": "{course_name} kan er nog wat bij hebben",
@@ -94,10 +94,10 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.members_no_enrollment_d3.subject": "Je deelnemers zijn nog niet begonnen",
     "nudge.audience.members_no_enrollment_d3.heading": "Aangemeld maar niets geopend",
-    "nudge.audience.members_no_enrollment_d3.body": "Er hebben zich mensen aangesloten bij {org_name}, maar niemand is aan een cursus begonnen. Een kort bericht met een directe link helpt meestal — de meesten hebben simpelweg de ingang niet gevonden.",
+    "nudge.audience.members_no_enrollment_d3.body": "Er hebben zich mensen aangesloten bij {org_name}, maar niemand is aan een cursus begonnen. Een kort bericht met een directe link helpt meestal; de meesten hebben simpelweg de ingang niet gevonden.",
     "nudge.audience.members_no_enrollment_d3.cta": "Bekijk je leden",
 
-    "nudge.audience.share_public_page_d14.subject": "Je cursuspagina is openbaar — hier is de link",
+    "nudge.audience.share_public_page_d14.subject": "Je cursuspagina is openbaar: hier is de link",
     "nudge.audience.share_public_page_d14.heading": "Iedereen met de link kan meelezen",
     "nudge.audience.share_public_page_d14.body": "{course_name} is openbaar, dus je kunt hem overal delen zonder dat iemand een uitnodiging nodig heeft. De link hieronder is degene om te versturen.",
     "nudge.audience.share_public_page_d14.cta": "Openbare pagina bekijken",
@@ -124,7 +124,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.monetization.upgrade_recap_d21.subject": "Wat {next_plan} zou toevoegen voor {org_name}",
     "nudge.monetization.upgrade_recap_d21.heading": "Je hebt iets echts opgebouwd",
-    "nudge.monetization.upgrade_recap_d21.body": "{org_name} heeft gepubliceerde cursussen en mensen die ze lezen. Het {next_plan}-abonnement geeft ruimte om te groeien en bevat dingen die in het {plan_name}-abonnement ontbreken — het bekijken waard als je wilt uitbreiden.",
+    "nudge.monetization.upgrade_recap_d21.body": "{org_name} heeft gepubliceerde cursussen en mensen die ze lezen. Het {next_plan}-abonnement geeft ruimte om te groeien en bevat dingen die in het {plan_name}-abonnement ontbreken; het bekijken waard als je wilt uitbreiden.",
     "nudge.monetization.upgrade_recap_d21.cta": "Abonnementen vergelijken",
 
     "nudge.dormancy.no_login_14d.subject": "Het was stil in {org_name}",
@@ -134,7 +134,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.dormancy.no_login_30d.subject": "Je cursussen op {org_name} staan er nog",
     "nudge.dormancy.no_login_30d.heading": "Het is een paar weken geleden",
-    "nudge.dormancy.no_login_30d.body": "Er is niets veranderd terwijl je weg was — {org_name} en alles erin staat precies waar je het liet. Weer oppakken is één klik.",
+    "nudge.dormancy.no_login_30d.body": "Er is niets veranderd terwijl je weg was: {org_name} en alles erin staat precies waar je het liet. Weer oppakken is één klik.",
     "nudge.dormancy.no_login_30d.cta": "Dashboard openen",
 
     "nudge.dormancy.no_login_60d.subject": "Laatste bericht over {org_name}",
@@ -149,7 +149,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_course_published.subject": "{course_name} staat live",
     "nudge.milestone.first_course_published.heading": "Je hebt je eerste cursus gepubliceerd",
-    "nudge.milestone.first_course_published.body": "{course_name} staat live en is te lezen. Wat nu het verschil maakt, is iemand die hem leest — al zijn het maar één of twee mensen om te beginnen.",
+    "nudge.milestone.first_course_published.body": "{course_name} staat live en is te lezen. Wat nu het verschil maakt, is iemand die hem leest, al zijn het maar één of twee mensen om te beginnen.",
     "nudge.milestone.first_course_published.cta": "Nodig je eerste deelnemers uit",
 
     "nudge.milestone.first_learner_enrolled.subject": "Iemand is begonnen aan {course_name}",
@@ -159,13 +159,13 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_completion.subject": "Iemand heeft een cursus in {org_name} afgerond",
     "nudge.milestone.first_completion.heading": "Eerste afronding",
-    "nudge.milestone.first_completion.body": "Een deelnemer heeft een cursus in {org_name} van begin tot eind afgerond. Wil je dat vastleggen, dan kun je een certificaat toevoegen — of beginnen aan wat hierna komt.",
+    "nudge.milestone.first_completion.body": "Een deelnemer heeft een cursus in {org_name} van begin tot eind afgerond. Wil je dat vastleggen, dan kun je een certificaat toevoegen, of beginnen aan wat hierna komt.",
     "nudge.milestone.first_completion.cta": "Dashboard openen",
 
     # -- reactivation ------------------------------------------------------
     "nudge.reactivation.opener.subject": "Je academie op {org_name} staat er nog",
     "nudge.reactivation.opener.heading": "Nog steeds hier, precies zoals je het achterliet",
-    "nudge.reactivation.opener.body": "Niemand heeft {org_name} aangeraakt sinds je laatste bezoek — elke cursus, elk hoofdstuk en elke les staat waar je het liet. Weer oppakken is één klik.",
+    "nudge.reactivation.opener.body": "Niemand heeft {org_name} aangeraakt sinds je laatste bezoek; elke cursus, elk hoofdstuk en elke les staat waar je het liet. Weer oppakken is één klik.",
     "nudge.reactivation.opener.cta": "Dashboard openen",
     "nudge.reactivation.whats_changed.subject": "Er is het een en ander veranderd op LearnHouse",
     "nudge.reactivation.whats_changed.heading": "Sinds je laatste bezoek",
@@ -173,9 +173,9 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "Bekijk wat nieuw is",
     "nudge.reactivation.need_a_hand.subject": "Hulp nodig om weer in {org_name} te komen?",
     "nudge.reactivation.need_a_hand.heading": "Zat er iets in de weg?",
-    "nudge.reactivation.need_a_hand.body": "Als er een reden was dat {org_name} stil kwam te liggen — iets onduidelijks, iets dat ontbrak, of gewoon geen tijd — horen we dat graag. Beantwoord deze e-mail, hij komt rechtstreeks bij ons binnen.",
+    "nudge.reactivation.need_a_hand.body": "Als er een reden was dat {org_name} stil kwam te liggen (iets onduidelijks, iets dat ontbrak, of gewoon geen tijd), horen we dat graag. Beantwoord deze e-mail, hij komt rechtstreeks bij ons binnen.",
     "nudge.reactivation.closing.subject": "Laatste bericht over {org_name}",
     "nudge.reactivation.closing.heading": "Hier stoppen we",
-    "nudge.reactivation.closing.body": "Dit is de laatste van deze e-mails. {org_name} blijft precies zoals het is en niets verloopt — wil je ooit terugkomen, dan staat alles klaar.",
+    "nudge.reactivation.closing.body": "Dit is de laatste van deze e-mails. {org_name} blijft precies zoals het is en niets verloopt; wil je ooit terugkomen, dan staat alles klaar.",
     "nudge.reactivation.closing.cta": "Dashboard openen",
 }

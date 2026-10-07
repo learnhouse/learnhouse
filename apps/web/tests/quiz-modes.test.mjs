@@ -53,7 +53,7 @@ describe("resolveQuizGradingMode", () => {
   });
 });
 
-describe("scoreQuizQuestion — all or nothing", () => {
+describe("scoreQuizQuestion: all or nothing", () => {
   const key = (a, b, c, d) => [
     outcome(true, a),
     outcome(true, b),
@@ -80,7 +80,7 @@ describe("scoreQuizQuestion — all or nothing", () => {
   });
 });
 
-describe("scoreQuizQuestion — partial credit", () => {
+describe("scoreQuizQuestion: partial credit", () => {
   const key = (a, b, c, d) => [
     outcome(true, a),
     outcome(true, b),

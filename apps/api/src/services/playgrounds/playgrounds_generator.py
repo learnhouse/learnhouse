@@ -102,23 +102,23 @@ Use this content as the foundation for the interactive experience when relevant.
 
     base_prompt += """
 
-You create standalone interactive HTML learning widgets — focused, contained interactive environments that teach or reinforce a concept. Think card-based UIs, quiz panels, simulation panels, interactive diagrams — NOT full websites or landing pages.
+You create standalone interactive HTML learning widgets: focused, contained interactive environments that teach or reinforce a concept. Think card-based UIs, quiz panels, simulation panels, interactive diagrams, NOT full websites or landing pages.
 
 CRITICAL DESIGN PHILOSOPHY:
 - Think WIDGET, not website. Your output is a contained interactive environment embedded in a page.
 - Use a clean, card-based or panel-based layout. Everything should feel like a purposeful learning tool.
 - NO navigation bars, NO hero sections, NO footers, NO marketing copy, NO "Sign up" buttons.
-- Avoid a website-like layout with a top navbar, multiple sections, and a footer — that is NOT what this is.
+- Avoid a website-like layout with a top navbar, multiple sections, and a footer; that is NOT what this is.
 - The content should fill the iframe naturally with a single focused interactive experience.
 - Prefer a neutral or light background (white, gray-50, slate-50) with one or two accent colors max.
 
 DESIGN RULES:
 1. Generate a COMPLETE, self-contained HTML document
 2. ALWAYS use Tailwind CSS via CDN for styling
-3. Use LIGHT backgrounds — no dark full-page themes
-4. Centered, card-style layout — the interactive content is the star
+3. Use LIGHT backgrounds, no dark full-page themes
+4. Centered, card-style layout; the interactive content is the star
 5. Responsive with proper spacing, rounded corners, subtle shadows on cards
-6. Highly interactive — buttons, sliders, inputs, drag, click, animations, visual feedback
+6. Highly interactive: buttons, sliders, inputs, drag, click, animations, visual feedback
 7. Clear instructions so learners know what to do
 
 GOOD EXAMPLES (build these kinds of things):
@@ -136,29 +136,29 @@ GOOD EXAMPLES (build these kinds of things):
 - Concept map or mind map with expandable/collapsible nodes
 - Progress-tracked multi-step learning flow with completion state
 - Animated bar, pie, or line chart that responds to user input
-- Countdown timer quiz — answer before time runs out
+- Countdown timer quiz: answer before time runs out
 - Word cloud that builds as user types associations
 - Venn diagram with draggable items to sort into regions
-- Hotspot image — click zones on a diagram to reveal labels/info
+- Hotspot image: click zones on a diagram to reveal labels/info
 - Code snippet runner with editable input and live output preview
-- Branching scenario / decision tree — choose your path story
+- Branching scenario / decision tree: choose your path story
 - Kanban-style board to categorize concepts into columns
 - Animated number line or coordinate plane explorer
 - Spinning wheel or random picker for classroom activities
 - True/False card swiper (Tinder-style) for quick review
-- Analogy builder — match left column to right column
+- Analogy builder: match left column to right column
 - Fraction or percentage visual (pie slice, bar fill) that updates live
 - Color mixer / RGB/HSL explorer with live preview
 - Sound frequency or wave visualizer with sliders
 - Typing speed / accuracy mini-game
-- Vocabulary builder — definition shown, user types the word
+- Vocabulary builder: definition shown, user types the word
 - Binary / hex / decimal converter with animated bit display
 - Gravity or orbital simulation with adjustable mass/speed
 - Anatomy diagram with labeled clickable regions
 - Budget / resource allocation tool with live bar charts
 - Reaction-time game to illustrate human reflex concepts
 - Morse code encoder/decoder with audio playback
-- World map quiz — click the correct country
+- World map quiz: click the correct country
 - Crossword puzzle generator from given word list
 - Matching pairs: term on left, definition on right, draw connecting lines
 

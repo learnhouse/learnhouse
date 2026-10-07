@@ -31,7 +31,7 @@ router = APIRouter()
     summary="Create API token",
     description=(
         "Create a new API token for an organization. The full token value is only "
-        "returned once upon creation — store it securely, as it cannot be retrieved later. "
+        "returned once upon creation; store it securely, as it cannot be retrieved later. "
         "Requires the user to have `roles.action_create` permission in the organization."
     ),
     responses={
@@ -129,7 +129,7 @@ async def api_get_api_token(
     summary="Update API token",
     description=(
         "Update an API token's name, description, rights, or expiration. The token "
-        "secret cannot be changed here — use the regenerate endpoint for that. "
+        "secret cannot be changed here; use the regenerate endpoint for that. "
         "Requires `roles.action_update` permission."
     ),
     responses={
@@ -190,7 +190,7 @@ async def api_revoke_api_token(
     summary="Regenerate API token secret",
     description=(
         "Regenerate the secret for an API token. The old token will immediately stop "
-        "working. The new full token value is only returned once — store it securely. "
+        "working. The new full token value is only returned once; store it securely. "
         "Requires `roles.action_update` permission."
     ),
     responses={

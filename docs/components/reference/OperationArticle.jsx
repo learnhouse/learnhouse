@@ -67,7 +67,7 @@ function AuthChips({ op }) {
         {op.access === 'token' ? (
           <span className="lh-ref-authchip">or user session</span>
         ) : (
-          <span className="lh-ref-authchip">required — no session fallback</span>
+          <span className="lh-ref-authchip">required (no session fallback)</span>
         )}
       </div>
     )
@@ -76,7 +76,7 @@ function AuthChips({ op }) {
     return (
       <div className="lh-ref-authrow">
         <span className="lh-ref-authchip lh-ref-authchip-session">
-          User session only — API tokens not accepted
+          User session only (API tokens not accepted)
         </span>
       </div>
     )
@@ -135,7 +135,7 @@ export default function OperationArticle({ op }) {
                       {r.typeLabel && (
                         <p className="lh-ref-returns-type">
                           <code>{r.typeLabel}</code>
-                          {r.description ? ` — ${r.description}` : ''}
+                          {r.description ? `: ${r.description}` : ''}
                         </p>
                       )}
                       <SchemaFields fields={r.fields} />
@@ -155,7 +155,7 @@ export default function OperationArticle({ op }) {
                     {r.description || 'Error'}
                     {r.typeLabel ? (
                       <>
-                        {' — '}
+                        {': '}
                         <code>{r.typeLabel}</code>
                       </>
                     ) : null}

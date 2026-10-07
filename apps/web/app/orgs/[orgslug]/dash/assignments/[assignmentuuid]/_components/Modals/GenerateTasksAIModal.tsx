@@ -464,7 +464,7 @@ function GenerateTasksAIModal({
 
               {tasks.length === 0 && (
                 <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-4 py-8 text-center text-xs text-gray-400">
-                  No tasks left — regenerate to start over.
+                  No tasks left; regenerate to start over.
                 </div>
               )}
 

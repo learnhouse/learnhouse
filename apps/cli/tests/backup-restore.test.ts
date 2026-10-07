@@ -38,7 +38,7 @@ class ProcessExit extends Error {
   constructor(code: number) { super(`process.exit(${code})`); this.code = code }
 }
 
-describe('backup / restore — real tar, stubbed database', () => {
+describe('backup / restore: real tar, stubbed database', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined

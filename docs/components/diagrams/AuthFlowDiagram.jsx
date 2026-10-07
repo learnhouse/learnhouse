@@ -19,7 +19,7 @@ export default function AuthFlowDiagram() {
   return (
     <FlowDiagram
       nodes={nodes}
-      caption="The browser only ever holds your app's own session cookie — never the LearnHouse tokens. To refresh, your server re-sends the stored refresh token to GET /auth/refresh as a Cookie: LH_refresh=… header (the endpoint reads it only from that cookie)."
+      caption="The browser only ever holds your app's own session cookie, never the LearnHouse tokens. To refresh, your server re-sends the stored refresh token to GET /auth/refresh as a Cookie: LH_refresh=… header (the endpoint reads it only from that cookie)."
     />
   )
 }

@@ -70,10 +70,10 @@ export default function UsageBar({
           }`}
         >
           {isFull
-            ? t('billing.limit_reached_upgrade', { defaultValue: 'Limit reached — upgrade to continue' })
+            ? t('billing.limit_reached_upgrade', { defaultValue: 'Limit reached: upgrade to continue' })
             : isHigh
               ? t('billing.remaining_nearing', {
-                  defaultValue: `${numericLimit - usage} remaining — nearing limit`,
+                  defaultValue: `${numericLimit - usage} remaining, nearing limit`,
                   n: numericLimit - usage,
                 })
               : t('billing.remaining', {

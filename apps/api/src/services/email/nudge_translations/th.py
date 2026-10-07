@@ -97,7 +97,7 @@ STRINGS: dict[str, str] = {
     "nudge.audience.members_no_enrollment_d3.body": "มีคนเข้าร่วม {org_name} แล้ว แต่ยังไม่มีใครเริ่มคอร์ส ข้อความสั้น ๆ พร้อมลิงก์ตรงมักได้ผล ส่วนใหญ่แค่ยังหาทางเข้าไม่เจอ",
     "nudge.audience.members_no_enrollment_d3.cta": "ดูสมาชิกของคุณ",
 
-    "nudge.audience.share_public_page_d14.subject": "หน้าคอร์สของคุณเป็นสาธารณะ — ลิงก์อยู่นี่",
+    "nudge.audience.share_public_page_d14.subject": "หน้าคอร์สของคุณเป็นสาธารณะ ลิงก์อยู่นี่",
     "nudge.audience.share_public_page_d14.heading": "ใครก็ตามที่มีลิงก์อ่านได้",
     "nudge.audience.share_public_page_d14.body": "«{course_name}» เป็นสาธารณะ คุณจึงแชร์ที่ไหนก็ได้โดยไม่ต้องให้ใครรอคำเชิญ ลิงก์ด้านล่างคือลิงก์ที่ส่งได้เลย",
     "nudge.audience.share_public_page_d14.cta": "ดูหน้าสาธารณะ",

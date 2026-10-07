@@ -43,7 +43,7 @@ def upgrade() -> None:
               ALTER TYPE paymentsmodenum RENAME TO paymentsmodeenum;
             ELSIF new_in_use AND old_exists THEN
               RAISE EXCEPTION
-                'Both paymentsmodenum and paymentsmodeenum exist and paymentsmodeenum is in use — manual intervention required';
+                'Both paymentsmodenum and paymentsmodeenum exist and paymentsmodeenum is in use: manual intervention required';
             END IF;
           ELSIF old_exists THEN
             ALTER TYPE paymentsmodenum RENAME TO paymentsmodeenum;

@@ -391,7 +391,7 @@ async def api_login_mfa(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "code": "MFA_SESSION_EXPIRED",
-                "message": "That took too long — please sign in again.",
+                "message": "That took too long. Please sign in again.",
             },
         )
 
@@ -644,7 +644,7 @@ async def api_set_org_mfa_policy(
                 detail={
                     "code": "AUTH_METHOD_SELF_LOCKOUT",
                     "message": (
-                        "That would lock you out — this session isn't signed in with one of "
+                        "That would lock you out: this session isn't signed in with one of "
                         "the methods you're allowing. Sign in to this organization again with "
                         "an allowed method, then save."
                     ),
@@ -685,7 +685,7 @@ async def api_set_org_mfa_policy(
     summary="List members and whether they have two-factor enabled",
     description=(
         "Admin/maintainer only. Intended to be checked BEFORE switching the "
-        "policy on — enabling it blind is how an org locks out its own staff."
+        "policy on; enabling it blind is how an org locks out its own staff."
     ),
     tags=["auth"],
 )
@@ -753,7 +753,7 @@ async def api_org_mfa_compliance_list(
     summary="Reset (clear) a member's two-factor factor",
     description=(
         "Admin/maintainer recovery tool. Removes a member's TOTP factor and all "
-        "their backup codes so they can re-enroll — the supported path for a "
+        "their backup codes so they can re-enroll, the supported path for a "
         "member who lost their device with no backup codes left. Does not enroll "
         "anything on their behalf; if the org requires 2FA the member re-enters "
         "their grace window and must set it up again."
@@ -762,7 +762,7 @@ async def api_org_mfa_compliance_list(
     responses={
         403: {"description": "Not an org admin, or target is a platform superadmin"},
         404: {"description": "Target user is not a member of this org"},
-        400: {"description": "Cannot reset your own factor here — use /mfa/disable"},
+        400: {"description": "Cannot reset your own factor here; use /mfa/disable"},
     },
 )
 async def api_org_reset_member_mfa(

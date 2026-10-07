@@ -56,7 +56,7 @@ export async function restoreCommand(archivePath: string) {
       process.exit(0)
     }
   } else {
-    p.log.info('Non-interactive mode — proceeding with restore.')
+    p.log.info('Non-interactive mode, proceeding with restore.')
   }
 
   // Extract archive to temp directory

@@ -32,7 +32,7 @@ def _build_pool() -> Optional[redis.ConnectionPool]:
             socket_timeout=5,
         )
     except Exception:
-        logger.debug("Redis pool creation failed — cache disabled", exc_info=True)
+        logger.debug("Redis pool creation failed; cache disabled", exc_info=True)
         return None
 
 

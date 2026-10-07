@@ -370,7 +370,7 @@ export function SessionProvider({
             return { status: 'unauthenticated' } as const
           }
           console.warn(
-            `[auth] refresh failed with ${response.status} — keeping session, will retry`,
+            `[auth] refresh failed with ${response.status}; keeping session, will retry`,
           )
           return { status: 'transient' } as const
         }

@@ -572,7 +572,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
       )
       if (res?.transcript) {
         setGenText(res.transcript)
-        toast.success('Script ready — review it, then generate audio')
+        toast.success('Script ready. Review it, then generate audio')
       }
     } catch (err: any) {
       const errorMessage = err?.message || 'Failed to generate script. Please try again.'
@@ -770,7 +770,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   rows={genMode === 'tts' ? 4 : 5}
                   placeholder={
                     genMode === 'podcast'
-                      ? "What should the podcast be about? Add a topic or a question — or paste notes to turn into a discussion. Then generate a script."
+                      ? "What should the podcast be about? Add a topic or a question, or paste notes to turn into a discussion. Then generate a script."
                       : genMode === 'speak'
                         ? "What should the talk be about? e.g. “Explain how photosynthesis works, in detail.” Then generate a script."
                         : 'Type the text you want spoken aloud…'
@@ -788,7 +788,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                       className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400 bg-white"
                     >
                       {TTS_VOICES.map((v) => (
-                        <option key={v.name} value={v.name}>{v.name} — {v.desc}</option>
+                        <option key={v.name} value={v.name}>{v.name}: {v.desc}</option>
                       ))}
                     </select>
                   </label>
@@ -822,7 +822,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                       </div>
                     ))}
                     <p className="text-[11px] text-neutral-400">
-                      Add a topic above and generate a discussion, or write the script yourself — each line starts with a speaker name (e.g. “Host:”).
+                      Add a topic above and generate a discussion, or write the script yourself; each line starts with a speaker name (e.g. “Host:”).
                     </p>
                   </div>
                 )}

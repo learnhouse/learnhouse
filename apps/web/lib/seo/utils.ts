@@ -20,7 +20,7 @@ export function getOrgSeoConfig(org: any) {
 export function buildPageTitle(pageTitle: string, orgName: string, seoConfig: any): string {
   const suffix = seoConfig.default_meta_title_suffix
   if (suffix) return `${pageTitle}${suffix}`
-  return `${pageTitle} — ${orgName}`
+  return `${pageTitle} | ${orgName}`
 }
 
 export function buildBreadcrumbJsonLd(items: { name: string; url: string }[]) {

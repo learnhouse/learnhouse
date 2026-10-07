@@ -167,7 +167,7 @@ class ReconcileAdminsResponse(BaseModel):
     summary="Backfill existing org admins into the Loops marketing audience",
     description=(
         "Enumerate every current org ADMIN (role_id=1) across all organizations "
-        "and ensure each is on the Loops mailing list. Idempotent — Loops "
+        "and ensure each is on the Loops mailing list. Idempotent: Loops "
         "contact upsert means re-running is safe. Protected by the internal "
         "cloud key (X-Internal-Key header). Best-effort & SaaS-only; a no-op "
         "when LOOPS_API_KEY is unset. The sync itself is fire-and-forget, so a "

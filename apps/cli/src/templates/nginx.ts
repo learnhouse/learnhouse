@@ -11,7 +11,7 @@ server {
     server_name _;
     # Must match the app container's internal nginx (6G). A lower value here
     # makes the outer proxy reject large uploads (e.g. videos) with a 413
-    # before the request ever reaches the app — see docker/nginx.conf.
+    # before the request ever reaches the app; see docker/nginx.conf.
     client_max_body_size 6G;
 
     # Increase header buffer size
@@ -27,7 +27,7 @@ server {
     # The app container has internal nginx routing between frontend, backend, and collab
     location / {
         proxy_pass http://learnhouse-app:80;
-        # Use $http_host (not $host) so the port is preserved — Next.js Server
+        # Use $http_host (not $host) so the port is preserved; Next.js Server
         # Actions reject POSTs where origin and x-forwarded-host disagree.
         proxy_set_header Host $http_host;
         proxy_set_header X-Forwarded-Host $http_host;

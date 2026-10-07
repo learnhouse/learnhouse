@@ -139,7 +139,7 @@ export const ENDPOINTS: EndpointDoc[] = [
     pathTemplate: 'ee/superadmin/organizations/{org_id}/admin_toggles',
     title: 'Update feature toggles',
     description:
-      'Replace the full toggles slice — enable or disable features across the org. Send the entire object; partial updates are not supported.',
+      'Replace the full toggles slice: enable or disable features across the org. Send the entire object; partial updates are not supported.',
     pathParams: [{ name: 'org_id', type: 'integer', required: true, picker: 'org_id' }],
     bodyFields: [
       {
@@ -161,7 +161,7 @@ export const ENDPOINTS: EndpointDoc[] = [
     pathTemplate: 'ee/superadmin/organizations/{org_id}/plan',
     title: 'Update plan',
     description:
-      "Move an organization between plan tiers. SaaS-only — returns 400 in EE/OSS mode since plan tiers don't apply (every EE org runs as enterprise).",
+      "Move an organization between plan tiers. SaaS-only: returns 400 in EE/OSS mode since plan tiers don't apply (every EE org runs as enterprise).",
     pathParams: [{ name: 'org_id', type: 'integer', required: true, picker: 'org_id' }],
     bodyFields: [
       { name: 'plan', type: 'string', required: true, description: 'free | standard | pro | enterprise' },
@@ -197,10 +197,10 @@ export const ENDPOINTS: EndpointDoc[] = [
     pathTemplate: 'ee/superadmin/organizations/{org_id}/config',
     title: 'Replace full config',
     description:
-      "Replace an organization's entire config blob. Destructive — overwrites every field. Prefer the targeted endpoints (Features, Plan, Settings) for everyday operations.",
+      "Replace an organization's entire config blob. Destructive: overwrites every field. Prefer the targeted endpoints (Features, Plan, Settings) for everyday operations.",
     pathParams: [{ name: 'org_id', type: 'integer', required: true, picker: 'org_id' }],
     bodyFields: [
-      { name: 'config', type: 'object', required: true, description: 'Full v2 config object — must include config_version' },
+      { name: 'config', type: 'object', required: true, description: 'Full v2 config object; must include config_version' },
     ],
     sampleBody: {
       config: {
@@ -252,7 +252,7 @@ export const ENDPOINTS: EndpointDoc[] = [
     method: 'GET',
     pathTemplate: 'ee/superadmin/tokens/',
     title: 'List API tokens',
-    description: 'Every superadmin API token on the platform — metadata only (the plaintext secret is never returned here).',
+    description: 'Every superadmin API token on the platform (metadata only; the plaintext secret is never returned here).',
   },
   {
     id: 'tokens.mint',
@@ -261,7 +261,7 @@ export const ENDPOINTS: EndpointDoc[] = [
     pathTemplate: 'ee/superadmin/tokens/',
     title: 'Mint API token',
     description:
-      'Create a new superadmin API token. Session auth only — API tokens cannot mint other tokens (privilege-escalation block).',
+      'Create a new superadmin API token. Session auth only: API tokens cannot mint other tokens (privilege-escalation block).',
     bodyFields: [
       { name: 'name', type: 'string', required: true, description: 'Display name (unique per minting user)' },
       { name: 'description', type: 'string' },

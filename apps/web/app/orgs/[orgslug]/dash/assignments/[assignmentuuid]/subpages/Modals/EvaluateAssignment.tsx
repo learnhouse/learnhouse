@@ -238,7 +238,7 @@ function EvaluateAssignment({ user_id }: any) {
                     <ClipboardCheck size={18} className='text-teal-600 shrink-0' />
                     <div className='flex flex-col'>
                         <p className='text-xs font-bold text-teal-900'>
-                            {t('dashboard.assignments.submissions.ungraded_title', { defaultValue: 'Formative — not graded' })}
+                            {t('dashboard.assignments.submissions.ungraded_title', { defaultValue: 'Formative (not graded)' })}
                         </p>
                         <p className='text-[11px] text-teal-700/90'>
                             {t('dashboard.assignments.submissions.ungraded_description', { defaultValue: 'This assignment is handed in for review only. No score is recorded.' })}

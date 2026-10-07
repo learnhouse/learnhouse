@@ -637,7 +637,7 @@ def _send_email_smtp(
         # SSLError subclasses OSError, so this must stay above the OSError arm.
         logger.error(
             "SMTP TLS verification failed for %s:%s: %s. The relay's certificate "
-            "is not trusted or does not match its hostname — fix the relay's "
+            "is not trusted or does not match its hostname; fix the relay's "
             "certificate or point smtp_host at the name the certificate covers.",
             mailing.smtp_host,
             mailing.smtp_port,

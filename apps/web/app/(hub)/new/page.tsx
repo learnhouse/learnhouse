@@ -869,13 +869,13 @@ export default function CreateNewOrgPage() {
           }
           toast.error(
             t('hub_new.toast.checkoutFailed', {
-              defaultValue: 'Organization created — you can upgrade from Plan & Usage.',
+              defaultValue: 'Organization created. You can upgrade from Plan & Usage.',
             })
           )
         } catch {
           toast.error(
             t('hub_new.toast.checkoutFailed', {
-              defaultValue: 'Organization created — you can upgrade from Plan & Usage.',
+              defaultValue: 'Organization created. You can upgrade from Plan & Usage.',
             })
           )
         }

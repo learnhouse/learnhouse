@@ -1958,7 +1958,7 @@ function AssignmentTools(props: {
                                     ? 'text-emerald-700'
                                     : 'text-rose-700'
                               }`}>
-                                {tb.submitted ? tb.percentage_display : '—'}
+                                {tb.submitted ? tb.percentage_display : 'n/a'}
                               </span>
                             </div>
                           </div>

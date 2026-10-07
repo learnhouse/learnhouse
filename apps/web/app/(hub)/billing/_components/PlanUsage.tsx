@@ -381,7 +381,7 @@ export default function PlanUsage({
                     ? t('billing.access_until', { defaultValue: 'Access until' })
                     : t('billing.next_payment', { defaultValue: 'Next payment' })}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-black">{periodEnd ?? '—'}</p>
+                <p className="mt-1 text-sm font-semibold text-black">{periodEnd ?? 'n/a'}</p>
               </div>
               <div>
                 <p className="text-[11px] font-semibold text-black/30 uppercase tracking-wider">
@@ -445,7 +445,7 @@ export default function PlanUsage({
                 })
               : t('billing.usage_subtitle_paid', {
                   defaultValue:
-                    'Your plan includes these amounts. Going past the member limit is allowed and billed — nothing is blocked.',
+                    'Your plan includes these amounts. Going past the member limit is allowed and billed; nothing is blocked.',
                 })}
           </p>
         </div>
@@ -525,7 +525,7 @@ export default function PlanUsage({
                   />
                   <p className="text-[10px] text-black/25 font-medium mt-1.5 leading-relaxed">
                     {t('billing.active_members_hint', {
-                      defaultValue: `Counted when a member is active on 2+ days this month. The ${includedMembersLabel} seats your plan includes are free — you're billed $1/month for each active member beyond them.`,
+                      defaultValue: `Counted when a member is active on 2+ days this month. The ${includedMembersLabel} seats your plan includes are free; you're billed $1/month for each active member beyond them.`,
                       included: includedMembersLabel,
                     })}
                   </p>
@@ -764,7 +764,7 @@ export default function PlanUsage({
                     </li>
                     <li className="text-[12px] text-black/60 flex items-start gap-2">
                       <span className="text-emerald-500 mt-0.5">&#10003;</span>
-                      {t('billing.pack_cancel_anytime', { defaultValue: 'Cancel anytime — stays active until end of billing period' })}
+                      {t('billing.pack_cancel_anytime', { defaultValue: 'Cancel anytime; stays active until end of billing period' })}
                     </li>
                     {disclaimerPack.type === 'ai_credits' && (
                       <li className="text-[12px] text-black/60 flex items-start gap-2">

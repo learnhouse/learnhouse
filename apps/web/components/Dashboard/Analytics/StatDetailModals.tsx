@@ -186,17 +186,17 @@ export function LiveUsersDetail({ days }: { days: string }) {
                     {row.path}
                   </a>
                 ) : (
-                  <span className="text-gray-300">—</span>
+                  <span className="text-gray-300">n/a</span>
                 )}
               </td>
-              <td className="py-2.5 text-gray-500 capitalize">{row.device_type || '—'}</td>
+              <td className="py-2.5 text-gray-500 capitalize">{row.device_type || 'n/a'}</td>
               <td className="py-2.5">
                 {row.country_code ? (
                   <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
                     {row.country_code}
                   </span>
                 ) : (
-                  <span className="text-gray-300">—</span>
+                  <span className="text-gray-300">n/a</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">
@@ -250,7 +250,7 @@ export function SignupsDetail({ days }: { days: string }) {
                 </a>
               </td>
               <td className="py-2.5 text-gray-500 truncate max-w-[180px]">
-                {user?.email || '—'}
+                {user?.email || 'n/a'}
               </td>
               <td className="py-2.5">
                 {row.signup_method ? (
@@ -258,7 +258,7 @@ export function SignupsDetail({ days }: { days: string }) {
                     {row.signup_method}
                   </span>
                 ) : (
-                  <span className="text-gray-300">—</span>
+                  <span className="text-gray-300">n/a</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">
@@ -319,7 +319,7 @@ export function EnrollmentsDetail({ days }: { days: string }) {
                     {row.course_name || row.course_uuid}
                   </a>
                 ) : (
-                  <span className="text-gray-500">{row.course_name || row.course_uuid || '—'}</span>
+                  <span className="text-gray-500">{row.course_name || row.course_uuid || 'n/a'}</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">
@@ -380,7 +380,7 @@ export function CompletionsDetail({ days }: { days: string }) {
                     {row.course_name || row.course_uuid}
                   </a>
                 ) : (
-                  <span className="text-gray-500">{row.course_name || row.course_uuid || '—'}</span>
+                  <span className="text-gray-500">{row.course_name || row.course_uuid || 'n/a'}</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">

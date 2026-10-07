@@ -107,7 +107,7 @@ test('handing in a document unlocks the model answer, and nothing is graded', as
     const subs = new TeacherSubmissionsPage(reviewPage)
     await subs.open(s.bareAssignmentUuid)
     const modal = await subs.evaluateFirst()
-    await expect(reviewPage.getByText('Formative — not graded').first()).toBeVisible({
+    await expect(reviewPage.getByText('Formative (not graded)').first()).toBeVisible({
       timeout: 15_000,
     })
     await expect(reviewPage.getByRole('button', { name: 'Set final grade' })).toHaveCount(0)

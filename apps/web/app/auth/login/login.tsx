@@ -441,7 +441,7 @@ const LoginClient = (props: LoginClientProps) => {
       welcomeText={t('auth.login_to')}
       title={t('auth.image_title_login', { defaultValue: 'Welcome back to LearnHouse.' })}
       subtitle={t('auth.image_subtitle_login', {
-        defaultValue: 'Pick up where you left off — your courses, students, and tools are waiting.',
+        defaultValue: 'Pick up where you left off. Your courses, students, and tools are waiting.',
       })}
     >
         {/* Error Top Bar */}
@@ -649,7 +649,7 @@ const LoginClient = (props: LoginClientProps) => {
                     <p className="mt-2 text-black/45 text-[15px] font-medium">
                       {t('auth.magic_subtitle', {
                         defaultValue:
-                          'Enter your email and we’ll send you a link that signs you in — no password needed.',
+                          'Enter your email and we’ll send you a link that signs you in, no password needed.',
                       })}
                     </p>
                     <form onSubmit={handleMagicLinkRequest} className="mt-8">

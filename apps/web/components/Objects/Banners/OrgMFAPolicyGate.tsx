@@ -259,7 +259,7 @@ function BlockingInterstitial({
           <p className="text-gray-600 text-sm max-w-prose">
             {t('mfa.policy.blocked_description', {
               defaultValue:
-                'The deadline set by {{org}} for enabling two-factor authentication has passed. To keep using {{org}}, add a second factor to your account — it only takes a minute.',
+                'The deadline set by {{org}} for enabling two-factor authentication has passed. To keep using {{org}}, add a second factor to your account; it only takes a minute.',
               org: orgName,
             })}
           </p>

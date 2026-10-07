@@ -546,7 +546,7 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
             # (e.g. a subprocess spawn that hangs before its own timeout applies).
             await asyncio.wait_for(_dispatch(job), timeout=JOB_TIMEOUT_SECONDS)
         except asyncio.TimeoutError:
-            logger.error("HLS: job %s exceeded %ss — marking failed", item, JOB_TIMEOUT_SECONDS)
+            logger.error("HLS: job %s exceeded %ss, marking failed", item, JOB_TIMEOUT_SECONDS)
             try:
                 await _mark_failed(job, "timeout")
             except Exception:

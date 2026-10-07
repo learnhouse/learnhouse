@@ -359,7 +359,7 @@
     "image_title_forgot": "Stel je wachtwoord opnieuw in.",
     "image_subtitle_forgot": "We helpen je in een mum van tijd weer in je account.",
     "image_title_login": "Welkom terug bij LearnHouse.",
-    "image_subtitle_login": "Ga verder waar je gebleven was — je cursussen, studenten en tools staan klaar.",
+    "image_subtitle_login": "Ga verder waar je gebleven was: je cursussen, studenten en tools staan klaar.",
     "image_title_reset": "Bijna klaar.",
     "image_subtitle_reset": "Maak een sterk wachtwoord om je account veilig te houden.",
     "image_title_signup": "Begin met lesgeven met LearnHouse.",
@@ -616,7 +616,7 @@
         "plan_generated": "Plan bijgewerkt",
         "plan_generated_hint": "Bekijk en bewerk het plan via het tabblad Plan.",
         "describe_course": "Beschrijf je cursus",
-        "describe_course_hint": "Gebruik de chat rechts om de cursus te beschrijven die je wilt — onderwerp, doelgroep en doelen.",
+        "describe_course_hint": "Gebruik de chat rechts om de cursus te beschrijven die je wilt: onderwerp, doelgroep en doelen.",
         "generating_plan": "Cursusplan genereren...",
         "chapters": "Hoofdstukken",
         "activities": "activiteiten",
@@ -978,7 +978,7 @@
     "link_copied": "Link gekopieerd!",
     "share": "Delen",
     "autosave_blocked": "Kan nog niet worden opgeslagen",
-    "autosave_retry": "Opslaan mislukt — opnieuw proberen…",
+    "autosave_retry": "Opslaan mislukt, opnieuw proberen…",
     "autosave_unsaved": "Niet-opgeslagen wijzigingen",
     "autosaved": "Opgeslagen",
     "autosaving": "Opslaan…",
@@ -1031,8 +1031,8 @@
     "retry_assignment_title": "Deze opdracht opnieuw proberen?",
     "retry_assignment_confirm": "Uw huidige inzending en antwoorden worden opnieuw ingesteld zodat u opnieuw kunt beginnen. Uw vorige cijfer wordt vervangen zodra u opnieuw indient.",
     "retry_assignment_remaining": "U hebt nog {{remaining}} poging{{plural}} na deze.",
-    "retry_assignment_last": "Dit is uw laatste poging — zorg dat het telt.",
-    "retry_assignment_success": "Uw werk is opnieuw ingesteld — probeer het nogmaals.",
+    "retry_assignment_last": "Dit is uw laatste poging. Zorg dat het telt.",
+    "retry_assignment_success": "Uw werk is opnieuw ingesteld. Probeer het nogmaals.",
     "retry_assignment_failed": "Kon uw inzending niet opnieuw instellen. Probeer het opnieuw.",
     "retry_no_attempts_left": "Geen pogingen meer",
     "no_task_submission_to_grade": "Deze student heeft nog geen bestand ingediend voor deze opdracht.",
@@ -1153,7 +1153,7 @@
       "confirm_label": "Typ {{username}} om te bevestigen",
       "deleting": "Bezig met verwijderen…",
       "zone_subtitle": "Verwijder je account definitief. Dit kan niet ongedaan worden gemaakt.",
-      "zone_body": "Hiermee verwijder je je account en toegang. Elke organisatie waarvan je de enige beheerder bent — inclusief alle cursussen en inhoud — wordt ook verwijderd. Organisaties met andere beheerders blijven bestaan; je wordt daar alleen uit verwijderd."
+      "zone_body": "Hiermee verwijder je je account en toegang. Elke organisatie waarvan je de enige beheerder bent (inclusief alle cursussen en inhoud) wordt ook verwijderd. Organisaties met andere beheerders blijven bestaan; je wordt daar alleen uit verwijderd."
     }
   },
   "user": {
@@ -3609,9 +3609,9 @@
             "auth_required_submit": "Authenticatie vereist. Log in om de taak in te dienen.",
             "hint_optional": "Tip (optioneel)",
             "paste_blocked": "Plakken is uitgeschakeld voor deze opdracht",
-            "paste_blocked_hint": "Plakken is uitgeschakeld — typ je antwoord direct.",
-            "upload_locked_graded": "Deze inzending is beoordeeld — je bestand kan niet meer worden gewijzigd.",
-            "upload_locked_submitted": "Je hebt deze opdracht ingediend — je bestand kan niet meer worden gewijzigd."
+            "paste_blocked_hint": "Plakken is uitgeschakeld. Typ je antwoord direct.",
+            "upload_locked_graded": "Deze inzending is beoordeeld. Je bestand kan niet meer worden gewijzigd.",
+            "upload_locked_submitted": "Je hebt deze opdracht ingediend. Je bestand kan niet meer worden gewijzigd."
           },
           "code": {
             "student_behavior_label": "Studentgedrag",
@@ -3628,9 +3628,9 @@
             "show_solution_label": "Onthul oplossing na inzending",
             "show_solution_description": "Zodra de student zijn werk heeft opgeslagen, toon de referentieoplossing van de docent.",
             "reference_solution_label": "Referentieoplossing",
-            "locked_graded_hint": "Deze inzending is beoordeeld — je code is alleen-lezen.",
-            "locked_submitted_hint": "Je hebt deze opdracht ingediend — je code is alleen-lezen.",
-            "no_runnable_tests": "Deze opdracht heeft geen tests die je kunt uitvoeren — je code wordt gecontroleerd tijdens de beoordeling."
+            "locked_graded_hint": "Deze inzending is beoordeeld. Je code is alleen-lezen.",
+            "locked_submitted_hint": "Je hebt deze opdracht ingediend. Je code is alleen-lezen.",
+            "no_runnable_tests": "Deze opdracht heeft geen tests die je kunt uitvoeren. Je code wordt gecontroleerd tijdens de beoordeling."
           },
           "short_answer": {
             "prompt_label": "Vraagstelling",
@@ -3647,13 +3647,13 @@
               "regex": "Reguliere expressie"
             },
             "explanation_label": "Uitleg (getoond bij juist antwoord)",
-            "explanation_placeholder": "Optioneel — leg uit waarom het antwoord juist is",
+            "explanation_placeholder": "Optioneel: leg uit waarom het antwoord juist is",
             "your_answer_placeholder": "Typ je antwoord...",
             "student_answer_label": "Antwoord van student",
             "accepted_answers_label": "Geaccepteerde antwoorden",
             "no_answer": "Geen antwoord ingediend",
             "correct": "Juist",
-            "incorrect": "Niet helemaal — probeer opnieuw"
+            "incorrect": "Niet helemaal, probeer opnieuw"
           },
           "number_answer": {
             "prompt_label": "Vraagstelling",
@@ -3664,14 +3664,14 @@
             "unit_placeholder": "m/s², kg, °C...",
             "unit_hint": "Getoond naast het antwoordveld. Niet afgedwongen.",
             "explanation_label": "Uitleg (getoond bij juist antwoord)",
-            "explanation_placeholder": "Optioneel — leg uit hoe je tot het antwoord komt",
+            "explanation_placeholder": "Optioneel: leg uit hoe je tot het antwoord komt",
             "preview_label": "Accepteert",
             "your_answer_placeholder": "Voer een getal in...",
             "student_answer_label": "Antwoord van student",
             "accepted_range_label": "Geaccepteerd bereik",
             "no_answer": "Geen antwoord ingediend",
             "correct": "Juist",
-            "incorrect": "Niet helemaal — probeer opnieuw"
+            "incorrect": "Niet helemaal, probeer opnieuw"
           }
         },
         "generate_ai": "Opdrachten genereren met AI",
@@ -3780,7 +3780,7 @@
         },
         "tasks": {
           "title": "Prestaties per taak",
-          "subtitle": "Gemiddelde score per taak — lage balken tonen waar studenten het moeilijk hebben",
+          "subtitle": "Gemiddelde score per taak; lage balken tonen waar studenten het moeilijk hebben",
           "empty": "Prestaties per taak verschijnen na de eerste beoordelingen",
           "avg_grade": "Gemiddeld cijfer",
           "attempts": "pogingen"
@@ -3792,7 +3792,7 @@
         },
         "attention": {
           "title": "Mogelijk extra steun nodig",
-          "subtitle": "Studenten die niet geslaagd zijn — overweeg contact op te nemen",
+          "subtitle": "Studenten die niet geslaagd zijn; overweeg contact op te nemen",
           "empty": "Iedereen die beoordeeld is, is geslaagd. Goed gedaan!"
         }
       },
@@ -3834,7 +3834,7 @@
             "auto_grading_disabled_file": "Automatisch beoordelen is niet beschikbaar omdat deze opdracht een bestandsinzending heeft die menselijke beoordeling vereist.",
             "grading_type_hint": "Hoe cijfers aan studenten worden getoond",
             "grading_options_hint": "Gedrag bij inzenden",
-            "show_correct_answers_description": "Zodra de inzending is beoordeeld, zien studenten de juiste antwoorden naast hun eigen — welke quizopties correct waren, het verwachte korte antwoord of getal en de juiste formulierinvullingen.",
+            "show_correct_answers_description": "Zodra de inzending is beoordeeld, zien studenten de juiste antwoorden naast hun eigen: welke quizopties correct waren, het verwachte korte antwoord of getal en de juiste formulierinvullingen.",
             "show_correct_answers_label": "Juiste antwoorden tonen na beoordeling",
             "allow_retries_label": "Pogingen toestaan",
             "allow_retries_description": "Laat studenten de opdracht opnieuw instellen en opnieuw proberen nadat deze is beoordeeld. Elke poging wist hun vorige antwoorden en telt als een nieuwe poging.",
@@ -4551,7 +4551,7 @@
         "avg_rate": "Gem. percentage",
         "needs_attention": "Aandacht nodig",
         "total_samples": "Totaal monsters",
-        "more_expand": "+{{count}} meer — klik om uit te vouwen",
+        "more_expand": "+{{count}} meer, klik om uit te vouwen",
         "activities_count": "{{count}} activiteiten",
         "pct_of_total": "% van totaal",
         "bar_width_hint": "Balkbreedte = relatieve weergaven",
@@ -4671,7 +4671,7 @@
       },
       "activity_dropoff": {
         "title": "Afhaakmomenten",
-        "subtitle": "Waar leerlingen stoppen met voortgang — laatst voltooide activiteit",
+        "subtitle": "Waar leerlingen stoppen met voortgang: laatst voltooide activiteit",
         "total_dropoffs": "Totaal afhakingen",
         "dropoff_points": "Afhaakmomenten"
       },
@@ -4705,7 +4705,7 @@
         "avg_between": "gem. {{unit}} tussen voltooiingen",
         "transitions_tracked": "overgangen bijgehouden",
         "raw_hours_avg": "ruwe uren gem.",
-        "description": "Meet hoe snel leerlingen van de ene activiteit naar de volgende gaan. Lager is beter — het betekent dat leerlingen sneller door de inhoud gaan."
+        "description": "Meet hoe snel leerlingen van de ene activiteit naar de volgende gaan. Lager is beter: het betekent dat leerlingen sneller door de inhoud gaan."
       },
       "time_to_completion": {
         "title": "Tijd tot voltooiing",
@@ -4809,7 +4809,7 @@
       },
       "add_content": {
         "title": "Een les die de moeite waard is",
-        "description": "Voeg een video, pagina of quiz toe — geef cursisten een echte reden om zich in te schrijven.",
+        "description": "Voeg een video, pagina of quiz toe. Geef cursisten een echte reden om zich in te schrijven.",
         "action": "Inhoud toevoegen"
       },
       "brand_school": {
@@ -4819,17 +4819,17 @@
       },
       "share_grow": {
         "title": "De voordeur van je school",
-        "description": "Ga live en pak je deelbare link — de plek waar je elke cursist naartoe stuurt.",
+        "description": "Ga live en pak je deelbare link: de plek waar je elke cursist naartoe stuurt.",
         "action": "Open mijn school"
       },
       "invite_learners": {
         "title": "Verwelkom je eerste cursist",
-        "description": "Deel je deelnamelink of nodig mensen uit — krijg die eerste cursist binnen.",
+        "description": "Deel je deelnamelink of nodig mensen uit. Krijg die eerste cursist binnen.",
         "action": "Cursisten uitnodigen"
       },
       "build_community": {
         "title": "Laat cursisten terugkomen",
-        "description": "Open een communityruimte zodat je cursisten actief blijven — en hun vrienden meebrengen.",
+        "description": "Open een communityruimte zodat je cursisten actief blijven en hun vrienden meebrengen.",
         "action": "Community openen"
       }
     },
@@ -5183,7 +5183,7 @@
         "goal": "Begin met het verdienen aan uw cursussen en bouw een leergemeenschap op.",
         "highlights": {
           "courses": "Onbeperkte cursussen",
-          "courses_desc": "Maak zoveel cursussen als u nodig heeft — geen limieten op uw curriculum.",
+          "courses_desc": "Maak zoveel cursussen als u nodig heeft: geen limieten op uw curriculum.",
           "members": "Tot 500 leden",
           "members_desc": "Laat uw leerlingsbestand groeien en beheer alles op één plek.",
           "payments": "Betalingen accepteren",
@@ -5241,7 +5241,7 @@
       "trigger_authenticated_title": "Toegang: alleen ingelogde gebruikers",
       "trigger_restricted_title": "Toegang: specifieke gebruikersgroepen",
       "usergroups_header": "Gebruikersgroepen",
-      "usergroups_none_assigned": "Geen groepen toegewezen — alleen beheerders kunnen dit openen.",
+      "usergroups_none_assigned": "Geen groepen toegewezen. Alleen beheerders kunnen dit openen.",
       "usergroups_remove_title": "Verwijderen",
       "usergroups_loading": "Groepen laden…",
       "usergroups_none_in_org": "Er bestaan nog geen gebruikersgroepen in deze organisatie.",
@@ -5504,7 +5504,7 @@
     "recurring_subscription": "doorlopend abonnement",
     "what_youre_getting": "Wat je krijgt",
     "pack_immediate": "Gaat direct na betaling in",
-    "pack_cancel_anytime": "Altijd opzegbaar — blijft actief tot het einde van de factureringsperiode",
+    "pack_cancel_anytime": "Altijd opzegbaar; blijft actief tot het einde van de factureringsperiode",
     "pack_credits_reset": "Credits worden elke factureringscyclus opnieuw ingesteld",
     "after_purchase": "Na aankoop",
     "unlimited": "Onbeperkt",
@@ -5554,9 +5554,9 @@
     "canceled_desc": "Je abonnement wordt aan het einde van je huidige factureringsperiode opgezegd. Tot dan houd je volledige toegang.",
     "back_to_plan_usage": "Terug naar Abonnement & gebruik",
     "back_to_orgs": "Terug naar organisaties",
-    "pack_purchased": "Add-on gekocht — uw limieten zijn bijgewerkt.",
-    "checkout_success": "Abonnement bijgewerkt — welkom bij uw nieuwe plan!",
-    "checkout_cancelled": "Afrekening geannuleerd — er zijn geen wijzigingen aangebracht.",
+    "pack_purchased": "Add-on gekocht. Uw limieten zijn bijgewerkt.",
+    "checkout_success": "Abonnement bijgewerkt. Welkom bij uw nieuwe plan!",
+    "checkout_cancelled": "Afrekening geannuleerd. Er zijn geen wijzigingen aangebracht.",
     "load_failed": "Wij konden uw organisaties niet laden.",
     "no_permission": "U bent niet gemachtigd om facturering voor deze organisatie te beheren.",
     "no_permission_hint": "Alleen een organisatiebeheerder kan het plan bekijken of wijzigen.",
@@ -5670,7 +5670,7 @@
     "toast": {
       "creating": "Bezig met aanmaken van organisatie…",
       "created": "Organisatie aangemaakt!",
-      "checkoutFailed": "Organisatie aangemaakt — je kunt upgraden via Abonnement & gebruik.",
+      "checkoutFailed": "Organisatie aangemaakt. Je kunt upgraden via Abonnement & gebruik.",
       "failed": "Aanmaken van organisatie mislukt"
     },
     "steps": {

@@ -298,7 +298,7 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
         try:
             await asyncio.wait_for(generate_activity_captions(uuid), timeout=JOB_TIMEOUT_SECONDS)
         except asyncio.TimeoutError:
-            logger.error("Captions: job %s exceeded %ss — marking failed", uuid, JOB_TIMEOUT_SECONDS)
+            logger.error("Captions: job %s exceeded %ss, marking failed", uuid, JOB_TIMEOUT_SECONDS)
             try:
                 await _patch_captions(uuid, status="failed", error="timeout")
             except Exception:

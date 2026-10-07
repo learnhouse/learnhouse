@@ -38,7 +38,7 @@ vi.mock('node:dns', () => ({
 
 import { doctorCommand } from '../src/commands/doctor.js'
 
-describe('doctor — DNS resolution check', () => {
+describe('doctor: DNS resolution check', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined

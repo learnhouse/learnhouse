@@ -79,7 +79,7 @@ export default function AccountDangerZone() {
         <p className="text-sm text-gray-500 max-w-xl">
           {t('account.delete.zone_body', {
             defaultValue:
-              'This removes your account and access. Any organization you are the sole admin of — and all of its courses and content — will be deleted too. Organizations with other admins are kept; you are simply removed from them.',
+              'This removes your account and access. Any organization you are the sole admin of (and all of its courses and content) will be deleted too. Organizations with other admins are kept; you are simply removed from them.',
           })}
         </p>
         <div className="mt-4 sm:mt-0 flex-shrink-0">

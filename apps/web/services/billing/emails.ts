@@ -63,7 +63,7 @@ export async function sendPurchaseCompleteMail(args: {
   const { email, plan, orgSlug } = args;
   await send(email, `Welcome to ${prettyPlan(plan)} 🎉`, {
     accentColor: planColor(plan),
-    heading: "Payment received — you're all set!",
+    heading: "Payment received. You're all set!",
     subtitle: `Your ${prettyPlan(plan)} plan is now active. Thanks for supporting LearnHouse.`,
     card: {
       label: "Your plan",

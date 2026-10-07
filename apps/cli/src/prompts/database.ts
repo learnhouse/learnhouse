@@ -116,7 +116,7 @@ export async function promptDatabase(): Promise<DatabaseConfig> {
     const dbImageChoice = await p.select({
       message: 'Which PostgreSQL image?',
       options: [
-        { value: 'ai', label: 'PostgreSQL with AI capabilities', hint: 'recommended — enables AI course chatbot (RAG)' },
+        { value: 'ai', label: 'PostgreSQL with AI capabilities', hint: 'recommended: enables AI course chatbot (RAG)' },
         { value: 'standard', label: 'Standard PostgreSQL', hint: 'lighter image, no AI search features' },
       ],
     })
@@ -133,7 +133,7 @@ export async function promptDatabase(): Promise<DatabaseConfig> {
       `  ${pc.dim('Database:')} learnhouse`,
       `  ${pc.dim('Host:')}     db:5432 (internal)`,
       '',
-      `  ${pc.yellow('Copy the password now if needed — it will be saved in .env')}`,
+      `  ${pc.yellow('Copy the password now if needed; it will be saved in .env')}`,
       '',
     ].join('\n'))
     const ack = await p.confirm({ message: 'Continue?', initialValue: true })

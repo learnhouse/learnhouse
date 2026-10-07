@@ -923,7 +923,7 @@ async def test_rolling_the_epoch_reconciles_progress(db, no_uploads):
     # The reconcile must actually have run. Without this the assertions below
     # could pass on a build that never rolled at all.
     assert reconciled > 0, (
-        "rolling the epoch removed nothing — progress for dropped courses is "
+        "rolling the epoch removed nothing; progress for dropped courses is "
         "not being reconciled"
     )
 
@@ -964,7 +964,7 @@ async def test_rolling_the_epoch_reconciles_progress(db, no_uploads):
         f"plan does not include, e.g. {orphans[:3]}"
     )
     assert rolled["TrailRun"] < 240, (
-        "trail runs have saturated at 40 students x 6 courses — every learner "
+        "trail runs have saturated at 40 students x 6 courses; every learner "
         "now appears enrolled in the entire catalogue"
     )
 

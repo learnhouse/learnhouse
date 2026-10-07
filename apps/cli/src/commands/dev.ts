@@ -206,7 +206,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
           p.log.warning(`Could not create EE symlink: ${err.message}`)
         }
       } else {
-        p.log.warning(`--ee passed but no ee/ folder found at ${eeRepoPath} — running in OSS mode`)
+        p.log.warning(`--ee passed but no ee/ folder found at ${eeRepoPath}; running in OSS mode`)
       }
     }
 
@@ -232,7 +232,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   const alreadyRunning = isInfraRunning()
 
   if (alreadyRunning) {
-    p.log.success('Existing DB and Redis containers detected — reusing them')
+    p.log.success('Existing DB and Redis containers detected, reusing them')
   }
 
   // Resolve admin credentials: CLI flags take priority, then interactive prompts (first setup only)

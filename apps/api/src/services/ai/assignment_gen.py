@@ -40,8 +40,8 @@ _SYSTEM_PROMPT = """You are an expert instructional designer generating a graded
 
 You know these task types and MUST use their exact structure:
 - QUIZ: each question has options, each option marked correct or not, and a response_type:
-    * response_type "single": exactly ONE option is correct — the learner picks one.
-    * response_type "multiple": a select-all-that-apply question — mark EVERY correct
+    * response_type "single": exactly ONE option is correct; the learner picks one.
+    * response_type "multiple": a select-all-that-apply question; mark EVERY correct
       option correct (two or more), and the learner must find all of them.
   At least one correct option per question, and response_type must match the number of
   correct options you mark. Use "multiple" when the material genuinely has several right

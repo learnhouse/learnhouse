@@ -95,7 +95,7 @@ def test_every_foreign_key_cascades_or_is_explicitly_allowed(parent):
             offenders.append(f"{child_table}.{column} (ondelete={fk.ondelete!r})")
 
     assert not offenders, (
-        f"Foreign keys to {parent!r} without ON DELETE CASCADE — demo teardown "
+        f"Foreign keys to {parent!r} without ON DELETE CASCADE; demo teardown "
         f"would leave these rows behind or fail outright:\n  "
         + "\n  ".join(sorted(offenders))
     )
@@ -145,7 +145,7 @@ def test_progress_tables_reach_organization():
             missing.append(f"{child}.{column} -> {parent}")
 
     assert not missing, (
-        "Broken cascade chain — demo teardown would orphan rows:\n  "
+        "Broken cascade chain; demo teardown would orphan rows:\n  "
         + "\n  ".join(missing)
     )
 
@@ -164,7 +164,7 @@ def test_resource_author_has_no_cascade_from_its_resource():
     """
     resource_author = SQLModel.metadata.tables["resourceauthor"]
     assert not resource_author.columns["resource_uuid"].foreign_keys, (
-        "resourceauthor.resource_uuid now has a foreign key — remove the "
+        "resourceauthor.resource_uuid now has a foreign key; remove the "
         "manual author cleanup in the demo drift deletion."
     )
 

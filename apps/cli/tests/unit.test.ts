@@ -317,7 +317,7 @@ describe('config-store', () => {
 // is provided, it must land in both places verbatim; the template must
 // never emit "=undefined".
 
-describe('generateEnvFile — dbPassword handling', () => {
+describe('generateEnvFile: dbPassword handling', () => {
   it('writes dbPassword into both connection string and POSTGRES_PASSWORD', () => {
     const env = generateEnvFile({ ...baseConfig, dbPassword: 'Sup3rS3cret-Abc_123' })
     expect(env).toContain('postgresql://learnhouse:Sup3rS3cret-Abc_123@db:5432/learnhouse')
@@ -350,7 +350,7 @@ describe('generateEnvFile — dbPassword handling', () => {
 // it would conflict with the internal nginx (port 80) or when TLS is in
 // play (autoSsl/useHttps go through Caddy on 443).
 
-describe('generateDockerCompose — ssr-fwd sidecar', () => {
+describe('generateDockerCompose: ssr-fwd sidecar', () => {
   it('adds the socat sidecar when httpPort is not 80', () => {
     const yml = generateDockerCompose({ ...baseConfig, httpPort: 8088 })
     expect(yml).toContain('learnhouse-ssr-fwd-test1234')
@@ -383,7 +383,7 @@ describe('generateDockerCompose — ssr-fwd sidecar', () => {
 // `origin` (localhost:8088) doesn't match `x-forwarded-host` (localhost).
 // We switched to $http_host and added an explicit X-Forwarded-Host header.
 
-describe('generateNginxConf — Server Action headers', () => {
+describe('generateNginxConf: Server Action headers', () => {
   it('uses $http_host (not $host) for the Host header', () => {
     const conf = generateNginxConf()
     expect(conf).toMatch(/proxy_set_header\s+Host\s+\$http_host/)
@@ -405,14 +405,14 @@ describe('generateNginxConf — Server Action headers', () => {
 // explicit IPv6 listen in the conf with a 127.0.0.1 healthcheck;
 // either alone is enough, both together is durable.
 
-describe('generateNginxConf — IPv6 listen', () => {
+describe('generateNginxConf: IPv6 listen', () => {
   it('listens on IPv6 as well as IPv4', () => {
     const conf = generateNginxConf()
     expect(conf).toMatch(/listen\s+\[::\]:80/)
   })
 })
 
-describe('generateDockerCompose — IPv6-safe healthchecks', () => {
+describe('generateDockerCompose: IPv6-safe healthchecks', () => {
   it('nginx healthcheck targets 127.0.0.1, not the dual-stack localhost', () => {
     const yml = generateDockerCompose(baseConfig)
     expect(yml).toMatch(/wget[^\n]*127\.0\.0\.1/)
@@ -435,7 +435,7 @@ describe('generateDockerCompose — IPv6-safe healthchecks', () => {
 // The fix threads LEARNHOUSE_INITIAL_ORG_NAME / _ORG_SLUG into .env,
 // where the API's `install(short=True)` reads them.
 
-describe('generateEnvFile — org propagation', () => {
+describe('generateEnvFile: org propagation', () => {
   it('writes the user-chosen org name and slug', () => {
     const env = generateEnvFile({ ...baseConfig, orgName: 'Acme Academy', orgSlug: 'acme' })
     expect(env).toContain('LEARNHOUSE_INITIAL_ORG_NAME=')
@@ -485,7 +485,7 @@ vi.mock('node:child_process', async () => {
   return { ...actual, execSync: vi.fn(() => Buffer.from('')) }
 })
 
-describe('findInstallDir — picks the running install over a stale one', () => {
+describe('findInstallDir: picks the running install over a stale one', () => {
   const fakeHome = path.join(os.tmpdir(), 'lh-findinstall-' + Date.now())
   const lhBase = path.join(fakeHome, '.learnhouse')
   let origHome: string | undefined
@@ -566,7 +566,7 @@ describe('findInstallDir — picks the running install over a stale one', () => 
 // auto_install, leaving an empty `organization` table and a restart
 // loop. Reported on Discord against 1.2.1 with a *.local admin email.
 
-describe('validateEmail — reserved TLDs', () => {
+describe('validateEmail: reserved TLDs', () => {
   it('accepts a normal email', () => {
     expect(validateEmail('admin@school.dev')).toBeUndefined()
     expect(validateEmail('admin@yourdomain.com')).toBeUndefined()
@@ -629,7 +629,7 @@ describe('validateEmail — reserved TLDs', () => {
 // These tests import `replaceComposeImageTag` from the real service module,
 // so a regex change in compose-utils.ts is caught immediately.
 
-describe('update — image tag replacement in docker-compose.yml', () => {
+describe('update: image tag replacement in docker-compose.yml', () => {
   it('replaces a pinned version tag (1.2.2 → 1.2.6)', () => {
     const compose = 'image: ghcr.io/learnhouse/app:1.2.2'
     expect(replaceComposeImageTag(compose, 'ghcr.io/learnhouse/app:1.2.6')).toBe(
@@ -698,7 +698,7 @@ describe('update — image tag replacement in docker-compose.yml', () => {
 // `--pull always`. These tests pin the exact commands so the pull can't
 // silently regress out again.
 
-describe('update — docker pull/up commands', () => {
+describe('update: docker pull/up commands', () => {
   let execSync: ReturnType<typeof vi.fn>
   let dockerComposeUp: typeof import('../src/services/docker.js').dockerComposeUp
   let dockerComposePull: typeof import('../src/services/docker.js').dockerComposePull
@@ -1289,7 +1289,7 @@ function runCli(args: string, timeoutMs = 10_000): { stdout: string; stderr: str
   }
 }
 
-describe('CLI — version and help', () => {
+describe('CLI: version and help', () => {
   it('--version prints a semver string and exits 0', () => {
     const r = runCli('--version')
     expect(r.exitCode).toBe(0)
@@ -1318,7 +1318,7 @@ describe('CLI — version and help', () => {
   })
 })
 
-describe('CLI — setup --help (flag discoverability)', () => {
+describe('CLI: setup --help (flag discoverability)', () => {
   it('shows all flags a user needs to automate a deployment', () => {
     const r = runCli('setup --help')
     expect(r.exitCode).toBe(0)
@@ -1334,7 +1334,7 @@ describe('CLI — setup --help (flag discoverability)', () => {
   })
 })
 
-describe('CLI — update --help (flag discoverability)', () => {
+describe('CLI: update --help (flag discoverability)', () => {
   it('shows the flags users need to target a specific version', () => {
     const r = runCli('update --help')
     expect(r.exitCode).toBe(0)
@@ -1346,7 +1346,7 @@ describe('CLI — update --help (flag discoverability)', () => {
   })
 })
 
-describe('CLI — backup / restore --help', () => {
+describe('CLI: backup / restore --help', () => {
   it('backup --help mentions the archive concept', () => {
     const r = runCli('backup --help')
     expect(r.exitCode).toBe(0)
@@ -1367,7 +1367,7 @@ describe('CLI — backup / restore --help', () => {
 // in bin/learnhouse.ts, so `npx learnhouse scale` silently showed the
 // main help instead of the scale UI. Never again.
 
-describe('CLI — all 16 commands registered', () => {
+describe('CLI: all 16 commands registered', () => {
   const ALL_COMMANDS = [
     'setup', 'start', 'stop', 'update', 'status', 'health',
     'logs', 'config', 'env', 'backup', 'restore',
@@ -1434,7 +1434,7 @@ describe('CLI — all 16 commands registered', () => {
 //
 // This is the deepest test you can run without a full Docker environment.
 
-describe('CLI — setup --ci --no-start: real installation, real file assertions', () => {
+describe('CLI: setup --ci --no-start: real installation, real file assertions', () => {
   let tempHome: string
   let installDir: string
 
@@ -1620,7 +1620,7 @@ describe('CLI — setup --ci --no-start: real installation, real file assertions
     expect(r.stdout + r.stderr).toContain('Docker installed')
   })
 
-  it('"doctor" reports that no containers are running (expected — we used --no-start)', () => {
+  it('"doctor" reports that no containers are running (expected: we used --no-start)', () => {
     const r = cliHome(['doctor'])
     expect(r.stdout + r.stderr).toContain('No containers found')
   })
@@ -1635,7 +1635,7 @@ describe('CLI — setup --ci --no-start: real installation, real file assertions
 // miss, e.g. a Commander flag definition that silently swallows the value
 // before validation runs.
 
-describe('CLI — setup --ci input validation', () => {
+describe('CLI: setup --ci input validation', () => {
   let validationHome: string
 
   beforeAll(() => { validationHome = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-val-')) })
@@ -1716,7 +1716,7 @@ describe('CLI — setup --ci input validation', () => {
 // by a template bug) causes the app to crash at startup, which users
 // report as "it just won't start", which is hard to diagnose from logs alone.
 
-describe('generateDockerCompose — service completeness', () => {
+describe('generateDockerCompose: service completeness', () => {
   it('default install includes all four core services', () => {
     const yml = generateDockerCompose(baseConfig)
     // Each service has a container_name with the deployment id; this
@@ -1750,7 +1750,7 @@ describe('generateDockerCompose — service completeness', () => {
 // verification fails, etc. These tests are the first line of defence
 // against template regressions that produce broken installs.
 
-describe('generateEnvFile — no empty or undefined values', () => {
+describe('generateEnvFile: no empty or undefined values', () => {
   // Must include dbPassword: without it the template emits POSTGRES_PASSWORD=undefined,
   // which causes the DB container to reject connections at runtime.
   const envConfig = { ...baseConfig, dbPassword: 'db-pass-test-123' }
@@ -1971,7 +1971,7 @@ describe('docker output parsers', () => {
 
 // ─── config-store: listInstallations filtering & ordering ──
 
-describe('listInstallations — completeness filter and ordering', () => {
+describe('listInstallations: completeness filter and ordering', () => {
   const fakeHome = path.join(os.tmpdir(), 'lh-listinstall-' + process.pid)
   const lhBase = path.join(fakeHome, '.learnhouse')
   let origHome: string | undefined
@@ -2107,7 +2107,7 @@ describe('migrateContentVolume', () => {
 // Tested against real loopback sockets (deterministic, no external network)
 // and a mocked fetch for the public-IP lookup.
 
-describe('network — port and connectivity probes', () => {
+describe('network: port and connectivity probes', () => {
   const close = (s: net.Server) => new Promise<void>((r) => s.close(() => r()))
 
   // Bind on the SAME interface checkPort uses (host omitted) so occupancy
@@ -2509,7 +2509,7 @@ describe('checkForUpdates', () => {
 
 // ─── generateEnvFile: optional-feature branches ────────────
 
-describe('generateEnvFile — feature flags', () => {
+describe('generateEnvFile: feature flags', () => {
   it('emits AI, SMTP email, S3 and Google vars when enabled', () => {
     const env = generateEnvFile({
       ...baseConfig,
@@ -2588,7 +2588,7 @@ describe('config-store edge cases', () => {
   })
 })
 
-describe('checkTcpConnection — timeout', () => {
+describe('checkTcpConnection: timeout', () => {
   afterEach(() => { vi.restoreAllMocks() })
 
   it('resolves false and tears down the socket when neither connect nor error fires in time', async () => {

@@ -102,7 +102,7 @@ async def _send_event(
             )
         elif resp.status_code >= 400:
             logger.error(
-                "Tinybird ingest client error (%s) — check event payload: %s",
+                "Tinybird ingest client error (%s); check event payload: %s",
                 resp.status_code,
                 resp.text[:200],
             )

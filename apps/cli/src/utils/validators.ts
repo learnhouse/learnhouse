@@ -24,7 +24,7 @@ export function validateEmail(value: string): string | undefined {
     return `Reserved TLD ".${tld}" is not accepted. Use a real domain (e.g. admin@yourdomain.com).`
   }
   if (RESERVED_DOMAINS.has(domain)) {
-    return `Reserved domain "${domain}" is not accepted — the seeder would create no admin. Use a real domain.`
+    return `Reserved domain "${domain}" is not accepted; the seeder would create no admin. Use a real domain.`
   }
   return undefined
 }

@@ -3984,7 +3984,7 @@ async def grade_assignment_submission(
     ):
         raise HTTPException(
             status_code=400,
-            detail="This learner has not handed in an attempt yet — nothing to grade.",
+            detail="This learner has not handed in an attempt yet; nothing to grade.",
         )
 
     computed = await _apply_grade_and_finalize(

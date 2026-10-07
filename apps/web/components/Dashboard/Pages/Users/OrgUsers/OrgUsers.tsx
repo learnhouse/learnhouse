@@ -43,13 +43,13 @@ function formatCustomFieldValue(value: any): string {
 }
 
 function formatShortDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return '—'
+  if (!dateStr) return 'n/a'
   try {
     const date = new Date(dateStr)
-    if (isNaN(date.getTime())) return '—'
+    if (isNaN(date.getTime())) return 'n/a'
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   } catch {
-    return '—'
+    return 'n/a'
   }
 }
 
@@ -618,7 +618,7 @@ function OrgUsers() {
                               ))}
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400">—</span>
+                            <span className="text-xs text-gray-400">n/a</span>
                           )}
                         </td>
 
@@ -671,7 +671,7 @@ function OrgUsers() {
                                     ? 'bg-emerald-50 text-emerald-600'
                                     : 'bg-gray-100 text-gray-500'
                                 }`}
-                                title={`Seen on ${user.visit_days} day${user.visit_days === 1 ? '' : 's'} this month${user.is_active ? ' — counts as an active user' : ''}`}
+                                title={`Seen on ${user.visit_days} day${user.visit_days === 1 ? '' : 's'} this month${user.is_active ? ' (counts as an active user)' : ''}`}
                               >
                                 {user.is_active ? 'Active' : 'Inactive'} · {user.visit_days}d
                               </span>
@@ -733,7 +733,7 @@ function OrgUsers() {
                             title={formatCustomFieldValue(user.user.extra_metadata?.[field.key])}
                           >
                             {formatCustomFieldValue(user.user.extra_metadata?.[field.key]) || (
-                              <span className="text-gray-300">—</span>
+                              <span className="text-gray-300">n/a</span>
                             )}
                           </td>
                         ))}

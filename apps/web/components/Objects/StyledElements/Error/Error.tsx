@@ -53,7 +53,7 @@ function ErrorUI({
   const description =
     submessage ||
     classified?.category.description ||
-    "We ran into an error. It's been logged automatically — retrying or heading home usually helps."
+    "We ran into an error. It's been logged automatically; retrying or heading home usually helps."
 
   const actions: ResolutionKind[] =
     resolutions ||

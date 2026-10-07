@@ -50,7 +50,7 @@ function setKeys({ cloud, prefixed }) {
   else process.env.LEARNHOUSE_CLOUD_INTERNAL_KEY = prefixed;
 }
 
-describe("updateOrganizationConfigInternally — internal key resolution", () => {
+describe("updateOrganizationConfigInternally: internal key resolution", () => {
   test("sends the key when only CLOUD_INTERNAL_KEY is set", async () => {
     setKeys({ cloud: "key-unprefixed" });
     await updateOrganizationConfigInternally(ORG_ID, "pro");

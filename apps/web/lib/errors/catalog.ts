@@ -155,7 +155,7 @@ export const ERROR_CATALOG: ErrorCategory[] = [
     kind: 'conflict',
     title: 'That already exists',
     description:
-      "This conflicts with something that's already there — for example an account or item with the same name or email already exists.",
+      "This conflicts with something that's already there; for example an account or item with the same name or email already exists.",
     matchers: {
       statuses: [409],
       messageIncludes: ['already exists', 'already taken', 'already registered', 'already a member', 'duplicate', 'conflict'],
@@ -281,7 +281,7 @@ export const ERROR_CATALOG: ErrorCategory[] = [
         'could not reach the backend',
         'could not reach the main platform',
         'connection issue',
-        "isn't saving — check your connection",
+        "isn't saving. check your connection",
         'load failed',
         'err_internet_disconnected',
         'err_network',
@@ -315,7 +315,7 @@ export const ERROR_CATALOG: ErrorCategory[] = [
     kind: 'timeout',
     title: 'That took too long',
     description:
-      'The request timed out before it finished. The server may be busy — trying again usually works.',
+      'The request timed out before it finished. The server may be busy; trying again usually works.',
     matchers: {
       statuses: [408, 504],
       messageIncludes: ['timeout', 'timed out', 'deadline exceeded', 'gateway timeout'],
@@ -353,7 +353,7 @@ export const UNKNOWN_CATEGORY: ErrorCategory = {
   kind: 'unknown',
   title: "Something didn't go as planned",
   description:
-    "We ran into an unexpected problem completing your request. It's been logged automatically and is likely temporary — trying again often clears it. If it keeps happening, tell us exactly what you were doing below.",
+    "We ran into an unexpected problem completing your request. It's been logged automatically and is likely temporary; trying again often clears it. If it keeps happening, tell us exactly what you were doing below.",
   matchers: { statuses: [], messageIncludes: [], names: [] },
   resolutions: ['retry', 'report', 'home', 'signout'],
 }

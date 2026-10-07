@@ -212,7 +212,7 @@ export default function LockPopover({
             </div>
             {assignedGroups.length === 0 ? (
               <div className="text-xs text-gray-500">
-                {t('course.lock.usergroups_none_assigned', 'No groups assigned — nobody but admins can open this.')}
+                {t('course.lock.usergroups_none_assigned', 'No groups assigned. Nobody but admins can open this.')}
               </div>
             ) : (
               <div className="space-y-1">

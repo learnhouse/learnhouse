@@ -464,7 +464,7 @@ function PreviewBody({ activity }: { activity: any }) {
 
   if (type === 'TYPE_ASSIGNMENT') {
     const description: string = content.description || activity.description || ''
-    if (!description) return <EmptyState text="Assignment — open to view details" />
+    if (!description) return <EmptyState text="Assignment (open to view details)" />
     return (
       <div className="text-xs text-gray-700 leading-relaxed">
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
@@ -475,11 +475,11 @@ function PreviewBody({ activity }: { activity: any }) {
   }
 
   if (type === 'TYPE_SCORM') {
-    return <EmptyState text="SCORM package — preview unavailable" />
+    return <EmptyState text="SCORM package (preview unavailable)" />
   }
 
   if (type === 'TYPE_CUSTOM') {
-    return <EmptyState text="Custom activity — preview unavailable" />
+    return <EmptyState text="Custom activity (preview unavailable)" />
   }
 
   return <EmptyState text="Preview unavailable for this activity type" />

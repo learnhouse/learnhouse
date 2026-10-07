@@ -40,21 +40,21 @@ STRINGS: dict[str, str] = {
 
     "nudge.activation.whats_blocking_d14.subject": "Araya ne girdi?",
     "nudge.activation.whats_blocking_d14.heading": "Sizi ne durdurdu, sorabilir miyiz?",
-    "nudge.activation.whats_blocking_d14.body": "{org_name} kurumunu iki hafta önce oluşturdunuz ve henüz kurs eklemediniz. Kafa karıştıran ya da eksik bir şey olduysa bilmek isteriz — bu e-postayı yanıtlamanız yeterli, doğrudan bize ulaşıyor.",
+    "nudge.activation.whats_blocking_d14.body": "{org_name} kurumunu iki hafta önce oluşturdunuz ve henüz kurs eklemediniz. Kafa karıştıran ya da eksik bir şey olduysa bilmek isteriz: bu e-postayı yanıtlamanız yeterli, doğrudan bize ulaşıyor.",
 
     "nudge.activation.last_call_d30.subject": "{org_name} hakkında son e-posta",
     "nudge.activation.last_call_d30.heading": "Bu sonuncusu",
-    "nudge.activation.last_call_d30.body": "{org_name} bir aydır sessiz, bu yüzden bu e-postaları göndermeyi bırakıyoruz. Hesabınız ve içindeki her şey duruyor — dönerseniz bıraktığınız gibi bulacaksınız.",
+    "nudge.activation.last_call_d30.body": "{org_name} bir aydır sessiz, bu yüzden bu e-postaları göndermeyi bırakıyoruz. Hesabınız ve içindeki her şey duruyor; dönerseniz bıraktığınız gibi bulacaksınız.",
     "nudge.activation.last_call_d30.cta": "Panelinizi açın",
 
     "nudge.content.course_no_chapter_d1.subject": "{course_name} ilk bölümünü bekliyor",
     "nudge.content.course_no_chapter_d1.heading": "Bir bölüm kaldı",
-    "nudge.content.course_no_chapter_d1.body": "{course_name} var ama henüz bölümü yok, dolayısıyla açılacak bir şey de yok. Bölümler sadece başlıklar — konu başına bir tane iyi işliyor.",
+    "nudge.content.course_no_chapter_d1.body": "{course_name} var ama henüz bölümü yok, dolayısıyla açılacak bir şey de yok. Bölümler sadece başlıklar; konu başına bir tane iyi işliyor.",
     "nudge.content.course_no_chapter_d1.cta": "Bölüm ekle",
 
     "nudge.content.chapter_no_activity_d1.subject": "{course_name} kursuna ilk dersinizi ekleyin",
     "nudge.content.chapter_no_activity_d1.heading": "Bölümler hazır",
-    "nudge.content.chapter_no_activity_d1.body": "{course_name} bölümlere sahip ama içleri hâlâ boş. Bir ders metin sayfası, video ya da kısa sınav olabilir — konuya ne uyuyorsa.",
+    "nudge.content.chapter_no_activity_d1.body": "{course_name} bölümlere sahip ama içleri hâlâ boş. Bir ders metin sayfası, video ya da kısa sınav olabilir, konuya ne uyuyorsa.",
     "nudge.content.chapter_no_activity_d1.cta": "Ders ekle",
 
     "nudge.content.activity_unpublished_d2.subject": "{course_name} içindeki dersleriniz henüz görünmüyor",
@@ -64,12 +64,12 @@ STRINGS: dict[str, str] = {
 
     "nudge.content.course_draft_d3.subject": "{course_name} hâlâ taslak",
     "nudge.content.course_draft_d3.heading": "{course_name} neredeyse hazır",
-    "nudge.content.course_draft_d3.body": "{course_name} kursuna dersler eklediniz ama yayında değil, bu yüzden kimse açamıyor. Bitmiş olması gerekmiyor — yayınlamak yalnızca görünür kılar, sonrasında düzenlemeye devam edebilirsiniz.",
+    "nudge.content.course_draft_d3.body": "{course_name} kursuna dersler eklediniz ama yayında değil, bu yüzden kimse açamıyor. Bitmiş olması gerekmiyor; yayınlamak yalnızca görünür kılar, sonrasında düzenlemeye devam edebilirsiniz.",
     "nudge.content.course_draft_d3.cta": "Yayınla",
 
     "nudge.content.course_draft_d10.subject": "{course_name} bir süredir taslak halinde",
     "nudge.content.course_draft_d10.heading": "Muhtemelen hazır",
-    "nudge.content.course_draft_d10.body": "{course_name} bir haftadan uzun süredir yayınlanmadı. Bir kurs nadiren bitmiş hissettirir — yayınlamak görünür kılar, birileri okurken geliştirmeye devam edebilirsiniz.",
+    "nudge.content.course_draft_d10.body": "{course_name} bir haftadan uzun süredir yayınlanmadı. Bir kurs nadiren bitmiş hissettirir; yayınlamak görünür kılar, birileri okurken geliştirmeye devam edebilirsiniz.",
     "nudge.content.course_draft_d10.cta": "Yayınla",
 
     "nudge.content.thin_course_d5.subject": "{course_name} biraz daha isteyebilir",
@@ -94,10 +94,10 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.members_no_enrollment_d3.subject": "Katılımcılarınız henüz başlamadı",
     "nudge.audience.members_no_enrollment_d3.heading": "Katıldılar ama hiçbir şey açmadılar",
-    "nudge.audience.members_no_enrollment_d3.body": "{org_name} kurumuna katılanlar oldu ama kimse kursa başlamadı. Doğrudan bağlantı içeren kısa bir mesaj genelde yeterli oluyor — çoğu kişi sadece girişi bulamıyor.",
+    "nudge.audience.members_no_enrollment_d3.body": "{org_name} kurumuna katılanlar oldu ama kimse kursa başlamadı. Doğrudan bağlantı içeren kısa bir mesaj genelde yeterli oluyor; çoğu kişi sadece girişi bulamıyor.",
     "nudge.audience.members_no_enrollment_d3.cta": "Üyelerinizi görün",
 
-    "nudge.audience.share_public_page_d14.subject": "Kurs sayfanız herkese açık — bağlantı burada",
+    "nudge.audience.share_public_page_d14.subject": "Kurs sayfanız herkese açık: bağlantı burada",
     "nudge.audience.share_public_page_d14.heading": "Bağlantısı olan herkes okuyabilir",
     "nudge.audience.share_public_page_d14.body": "{course_name} herkese açık; yani kimsenin davete ihtiyacı olmadan istediğiniz yerde paylaşabilirsiniz. Aşağıdaki bağlantı gönderilecek olan.",
     "nudge.audience.share_public_page_d14.cta": "Herkese açık sayfayı gör",
@@ -124,7 +124,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.monetization.upgrade_recap_d21.subject": "{next_plan} planının {org_name} için katacakları",
     "nudge.monetization.upgrade_recap_d21.heading": "Gerçek bir şey kurdunuz",
-    "nudge.monetization.upgrade_recap_d21.body": "{org_name} yayınlanmış kurslara ve onları okuyan kişilere sahip. {next_plan} planı büyümek için alan ve {plan_name} planında bulunmayan birkaç şey sunuyor — genişlemeyi düşünüyorsanız bakmaya değer.",
+    "nudge.monetization.upgrade_recap_d21.body": "{org_name} yayınlanmış kurslara ve onları okuyan kişilere sahip. {next_plan} planı büyümek için alan ve {plan_name} planında bulunmayan birkaç şey sunuyor; genişlemeyi düşünüyorsanız bakmaya değer.",
     "nudge.monetization.upgrade_recap_d21.cta": "Planları karşılaştır",
 
     "nudge.dormancy.no_login_14d.subject": "{org_name} sessizdi",
@@ -134,7 +134,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.dormancy.no_login_30d.subject": "{org_name} üzerindeki kurslarınız hâlâ burada",
     "nudge.dormancy.no_login_30d.heading": "Birkaç hafta geçti",
-    "nudge.dormancy.no_login_30d.body": "Siz yokken hiçbir şey değişmedi — {org_name} ve içindeki her şey tam bıraktığınız yerde. Kaldığınız yerden devam etmek tek tık.",
+    "nudge.dormancy.no_login_30d.body": "Siz yokken hiçbir şey değişmedi: {org_name} ve içindeki her şey tam bıraktığınız yerde. Kaldığınız yerden devam etmek tek tık.",
     "nudge.dormancy.no_login_30d.cta": "Panelinizi açın",
 
     "nudge.dormancy.no_login_60d.subject": "{org_name} hakkında son mesaj",
@@ -149,7 +149,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_course_published.subject": "{course_name} yayında",
     "nudge.milestone.first_course_published.heading": "İlk kursunuzu yayınladınız",
-    "nudge.milestone.first_course_published.body": "{course_name} yayında ve okunabilir durumda. Şimdi asıl fark yaratacak olan, onu okuyacak birinin olması — başlangıç için bir iki kişi bile yeter.",
+    "nudge.milestone.first_course_published.body": "{course_name} yayında ve okunabilir durumda. Şimdi asıl fark yaratacak olan, onu okuyacak birinin olması; başlangıç için bir iki kişi bile yeter.",
     "nudge.milestone.first_course_published.cta": "İlk katılımcılarınızı davet edin",
 
     "nudge.milestone.first_learner_enrolled.subject": "Biri {course_name} kursuna başladı",
@@ -165,7 +165,7 @@ STRINGS: dict[str, str] = {
     # -- reactivation ------------------------------------------------------
     "nudge.reactivation.opener.subject": "{org_name} üzerindeki akademiniz hâlâ burada",
     "nudge.reactivation.opener.heading": "Hâlâ burada, bıraktığınız gibi",
-    "nudge.reactivation.opener.body": "Son ziyaretinizden bu yana {org_name} kuruluşuna kimse dokunmadı — her kurs, bölüm ve ders bıraktığınız yerde. Kaldığınız yerden devam etmek tek tık.",
+    "nudge.reactivation.opener.body": "Son ziyaretinizden bu yana {org_name} kuruluşuna kimse dokunmadı; her kurs, bölüm ve ders bıraktığınız yerde. Kaldığınız yerden devam etmek tek tık.",
     "nudge.reactivation.opener.cta": "Panelinizi açın",
     "nudge.reactivation.whats_changed.subject": "LearnHouse'ta birkaç şey değişti",
     "nudge.reactivation.whats_changed.heading": "Son ziyaretinizden bu yana",
@@ -173,9 +173,9 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "Yenilikleri görün",
     "nudge.reactivation.need_a_hand.subject": "{org_name} kuruluşuna dönmek için yardım ister misiniz?",
     "nudge.reactivation.need_a_hand.heading": "Araya bir şey mi girdi?",
-    "nudge.reactivation.need_a_hand.body": "{org_name} durduysa bunun bir nedeni varsa — kafa karıştıran bir şey, eksik bir şey ya da sadece zaman — bunu gerçekten bilmek isteriz. Bu e-postayı yanıtlayın, doğrudan bize ulaşır.",
+    "nudge.reactivation.need_a_hand.body": "{org_name} durduysa bunun bir nedeni varsa (kafa karıştıran bir şey, eksik bir şey ya da sadece zaman) bunu gerçekten bilmek isteriz. Bu e-postayı yanıtlayın, doğrudan bize ulaşır.",
     "nudge.reactivation.closing.subject": "{org_name} hakkında son not",
     "nudge.reactivation.closing.heading": "Burada duruyoruz",
-    "nudge.reactivation.closing.body": "Bu, bu e-postaların sonuncusu. {org_name} olduğu gibi kalıyor ve hiçbir şeyin süresi dolmuyor — bir gün dönmek isterseniz her şey sizi bekliyor olacak.",
+    "nudge.reactivation.closing.body": "Bu, bu e-postaların sonuncusu. {org_name} olduğu gibi kalıyor ve hiçbir şeyin süresi dolmuyor; bir gün dönmek isterseniz her şey sizi bekliyor olacak.",
     "nudge.reactivation.closing.cta": "Panelinizi açın",
 }

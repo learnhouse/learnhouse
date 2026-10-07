@@ -43,7 +43,7 @@ import {
 // Section 1. Live install: command coverage on a single fresh deployment
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('CLI integration — live install (command coverage)', () => {
+describe('CLI integration: live install (command coverage)', () => {
   let home: string
   let installDir: string
   let deploymentId: string
@@ -453,7 +453,7 @@ describe('CLI integration — live install (command coverage)', () => {
 // running image actually changed and the database survived.
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('CLI integration — upgrade (old → new image)', () => {
+describe('CLI integration: upgrade (old → new image)', () => {
   // 1.0.1 is the oldest stable GHCR tag carrying alembic migrations; upgrading
   // to latest applies the full delta of migrations.
   const OLD_VERSION = '1.0.1'
@@ -636,7 +636,7 @@ describe('CLI integration — upgrade (old → new image)', () => {
 // Section 3. Commands run without an installation must fail clearly
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('CLI integration — no installation (error paths)', () => {
+describe('CLI integration: no installation (error paths)', () => {
   let emptyHome: string
   const cli = (args: string) => cliWithHome(emptyHome, args, 15_000)
 
