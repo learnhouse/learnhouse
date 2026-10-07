@@ -278,3 +278,24 @@ class TestActivityChat:
                 "act_chat_ok", db, mock_request, regular_user
             )
         assert got_activity.activity_uuid == "act_chat_ok"
+
+    async def test_foreign_chat_session_rejected_before_credit(self, mock_request, regular_user):
+        from src.services.ai import ai as ai_service
+        from src.services.ai.schemas.ai import SendActivityAIChatMessage
+
+        body = SendActivityAIChatMessage(aichat_uuid="chat_other", activity_uuid="act", message="hi")
+        info = (MagicMock(), MagicMock(), SimpleNamespace(id=1), "m", "ctx")
+        with patch.object(
+            ai_service, "_get_activity_and_course_info", new=AsyncMock(return_value=info)
+        ), patch.object(
+            ai_service, "chat_session_belongs_to_user", return_value=False
+        ) as belongs, patch.object(
+            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ) as reserve:
+            with pytest.raises(HTTPException) as exc:
+                await ai_service.ai_send_activity_chat_message_stream(
+                    mock_request, body, regular_user, AsyncMock()
+                )
+        assert exc.value.status_code == 404
+        belongs.assert_called_once_with("chat_other", regular_user.id)
+        reserve.assert_not_awaited()

@@ -113,6 +113,42 @@ async def create_activity(
     return ActivityRead.model_validate(activity)
 
 
+async def _gated_activity_read(
+    request: Request,
+    activity: Activity,
+    course: Course,
+    current_user,
+    db_session: AsyncSession,
+    *,
+    parent_chapter: Chapter | None = None,
+) -> ActivityRead:
+    """Build the ActivityRead every single-activity read returns.
+
+    Applies the two content gates on top of course READ: paid access (EE hook,
+    free when EE is absent) and chapter/activity locks.
+    """
+    has_paid_access = await check_ee_activity_paid_access(
+        request=request,
+        activity_id=activity.id,
+        user=current_user,
+        db_session=db_session,
+    )
+
+    activity_read = ActivityRead.model_validate(activity)
+    if not has_paid_access:
+        activity_read.content = {"paid_access": False}
+
+    await _apply_activity_lock(
+        activity_read,
+        activity,
+        course,
+        current_user,
+        db_session,
+        parent_chapter=parent_chapter,
+    )
+    return activity_read
+
+
 async def get_activity(
     request: Request,
     activity_uuid: str,
@@ -139,20 +175,11 @@ async def get_activity(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    # Paid access check (via EE hook with fallback to True if EE not available)
-    has_paid_access = await check_ee_activity_paid_access(
-        request=request,
-        activity_id=activity.id,
-        user=current_user,
-        db_session=db_session
+    activity_read = await _gated_activity_read(
+        request, activity, course, current_user, db_session
     )
-
-    activity_read = ActivityRead.model_validate(activity)
-    activity_read.content = activity_read.content if has_paid_access else { "paid_access": False }
     # Include last modified user info
     activity_read.last_modified_by_username = last_modified_user.username if last_modified_user else None
-
-    await _apply_activity_lock(activity_read, activity, course, current_user, db_session)
 
     return activity_read
 
@@ -209,27 +236,11 @@ async def get_editor_bootstrap(
         request, db_session, current_user, course.course_uuid, AccessAction.READ
     )
 
-    has_paid_access = await check_ee_activity_paid_access(
-        request=request,
-        activity_id=activity.id,
-        user=current_user,
-        db_session=db_session,
-    )
-
-    activity_read = ActivityRead.model_validate(activity)
-    activity_read.content = (
-        activity_read.content if has_paid_access else {"paid_access": False}
+    activity_read = await _gated_activity_read(
+        request, activity, course, current_user, db_session, parent_chapter=parent_chapter
     )
     activity_read.last_modified_by_username = (
         last_modified_user.username if last_modified_user else None
-    )
-    await _apply_activity_lock(
-        activity_read,
-        activity,
-        course,
-        current_user,
-        db_session,
-        parent_chapter=parent_chapter,
     )
 
     # Build org with resolved_features (same shape the existing /orgs/uuid/{uuid}
@@ -353,21 +364,8 @@ async def get_activityby_id(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    # Same paid/lock gating as get_activity — ids are sequential, so this
-    # endpoint must not be a way around it.
-    has_paid_access = await check_ee_activity_paid_access(
-        request=request,
-        activity_id=activity.id,
-        user=current_user,
-        db_session=db_session
-    )
-
-    activity_read = ActivityRead.model_validate(activity)
-    activity_read.content = activity_read.content if has_paid_access else { "paid_access": False }
-
-    await _apply_activity_lock(activity_read, activity, course, current_user, db_session)
-
-    return activity_read
+    # Ids are sequential, so this must gate exactly like get_activity.
+    return await _gated_activity_read(request, activity, course, current_user, db_session)
 
 
 async def update_activity(

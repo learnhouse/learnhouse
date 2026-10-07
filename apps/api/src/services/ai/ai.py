@@ -17,6 +17,7 @@ from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.org_auth import enforce_org_mfa, is_org_member
 from src.services.ai.base import (
     ask_ai,
+    chat_session_belongs_to_user,
     get_chat_session_history,
     save_message_to_history,
 )
@@ -68,6 +69,18 @@ async def _authorize_activity_ai_access(
             status_code=403,
             detail="You do not have access to this activity",
         )
+
+
+def _require_own_chat_session(aichat_uuid: str, current_user: PublicUser) -> None:
+    """404 unless the client-supplied session belongs to the caller.
+
+    The session uuid is echoed to the browser in every SSE event, so another
+    user's uuid is easy to come by; without this a caller could read someone
+    else's turns through the model and append to their history. Same rule as
+    the RAG router.
+    """
+    if not chat_session_belongs_to_user(aichat_uuid, resolve_acting_user_id(current_user)):
+        raise HTTPException(status_code=404, detail="Chat session not found")
 
 
 async def ai_start_activity_chat_session(
@@ -300,6 +313,7 @@ async def ai_send_activity_chat_message(
     await _authorize_activity_ai_access(
         request, course, activity, course.org_id, current_user, db_session
     )
+    _require_own_chat_session(chat_session_object.aichat_uuid, current_user)
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
@@ -539,6 +553,7 @@ async def ai_send_activity_chat_message_stream(
     activity, course, org, ai_model, ai_friendly_text = await _get_activity_and_course_info(
         chat_session_object.activity_uuid, db_session, request, current_user
     )
+    _require_own_chat_session(chat_session_object.aichat_uuid, current_user)
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     # Resolve through helper so API tokens bucket under their creator rather

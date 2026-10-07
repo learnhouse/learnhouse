@@ -1,5 +1,5 @@
 """
-Read-access scoping for RAG retrieval.
+Read-access scoping for RAG retrieval and other AI paths that read activities.
 
 Retrieved chunks are handed verbatim to the model and their source metadata is
 streamed back to the caller, so every chunk must come from content the caller
@@ -10,7 +10,6 @@ applied to the retrieved rows afterwards.
 """
 
 from dataclasses import dataclass, field
-from types import SimpleNamespace
 from typing import Iterable, Optional, Union
 
 from fastapi import Request
@@ -22,18 +21,21 @@ from src.db.course_embeddings import CourseEmbedding
 from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.chapters import Chapter
-from src.db.courses.courses import Course
+from src.db.courses.courses import Course, CourseRead
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
 from src.security.auth import resolve_acting_user_id
+from src.security.org_auth import is_org_admin
 from src.security.rbac import AccessAction, AccessContext, check_resource_access
 from src.services.courses.locks import batch_accessible_restricted_uuids, is_locked_for_user
+
+Principal = Union[PublicUser, AnonymousUser, APITokenUser]
 
 
 @dataclass
 class CourseGrant:
     course_uuid: str
-    # Admins/maintainers and course authors see drafts and bypass locks the
-    # same way they do in the course editor.
+    # Admins/maintainers and course authors see drafts; admins also bypass
+    # locks, the same way they do in the course editor.
     is_admin: bool = False
     is_author: bool = False
 
@@ -41,7 +43,7 @@ class CourseGrant:
 @dataclass
 class RagAccessScope:
     request: Request
-    current_user: Union[PublicUser, AnonymousUser, APITokenUser]
+    current_user: Principal
     org_id: int
     courses: dict[int, CourseGrant] = field(default_factory=dict)
 
@@ -52,7 +54,7 @@ class RagAccessScope:
 
 async def _grant_for_course(
     request: Request,
-    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    current_user: Principal,
     course_uuid: str,
     db_session: AsyncSession,
     raise_on_deny: bool,
@@ -78,10 +80,10 @@ async def _grant_for_course(
 
 async def build_rag_access_scope(
     request: Request,
-    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    current_user: Principal,
     org_id: int,
     db_session: AsyncSession,
-    course: Optional[Course] = None,
+    course: Optional[Course | CourseRead] = None,
 ) -> RagAccessScope:
     """Resolve the courses the caller may retrieve from.
 
@@ -105,6 +107,17 @@ async def build_rag_access_scope(
             select(CourseEmbedding.course_id).where(CourseEmbedding.org_id == org_id)
         ))
     )).all()
+
+    # Org admins read every course; skip the per-course RBAC round-trips for
+    # them. API tokens are scoped by their own rights, not their creator's
+    # role, so they always go through the per-course check.
+    if isinstance(current_user, PublicUser) and await is_org_admin(
+        current_user.id, org_id, db_session
+    ):
+        for course_id, course_uuid in indexed_courses:
+            scope.courses[course_id] = CourseGrant(course_uuid=course_uuid, is_admin=True)
+        return scope
+
     for course_id, course_uuid in indexed_courses:
         grant = await _grant_for_course(
             request, current_user, course_uuid, db_session, raise_on_deny=False
@@ -114,66 +127,83 @@ async def build_rag_access_scope(
     return scope
 
 
-async def filter_readable_chunks(
-    rows: Iterable,
+async def readable_activity_ids(
+    activity_ids: Iterable[int],
     scope: RagAccessScope,
     db_session: AsyncSession,
-) -> list:
-    """Drop retrieved rows whose activity the caller could not open."""
-    rows = [row for row in rows if row.course_id in scope.courses]
-    activity_ids = {row.activity_id for row in rows if row.activity_id is not None}
-    if not activity_ids:
-        # Every indexed chunk belongs to an activity; anything else is not
-        # attributable to readable content.
-        return []
+) -> set[int]:
+    """Subset of activity_ids the caller may read, within the scope's courses.
+
+    Mirrors the single-activity read: drafts need author/admin, chapter and
+    activity locks apply unless the caller is an admin or holds course-level
+    usergroup access, and paid access is checked last.
+    """
+    ids = set(activity_ids)
+    if not ids or not scope.courses:
+        return set()
 
     activity_rows = (await db_session.execute(
         select(Activity, Chapter)
         .outerjoin(ChapterActivity, ChapterActivity.activity_id == Activity.id)  # type: ignore
         .outerjoin(Chapter, Chapter.id == ChapterActivity.chapter_id)  # type: ignore
-        .where(Activity.id.in_(activity_ids))  # type: ignore
+        .where(Activity.id.in_(ids))  # type: ignore
+        .where(Activity.course_id.in_(scope.course_ids))  # type: ignore
     )).all()
     activities: dict[int, tuple[Activity, Optional[Chapter]]] = {}
     for activity, chapter in activity_rows:
         activities.setdefault(activity.id, (activity, chapter))
 
-    current_user = scope.current_user
-    is_anon = isinstance(current_user, AnonymousUser)
-
     accessible: set[str] = set()
-    if not is_anon:
-        candidate_uuids: set[str] = set()
+    if not isinstance(scope.current_user, AnonymousUser):
+        candidate_uuids: set[str] = {g.course_uuid for g in scope.courses.values()}
         for activity, chapter in activities.values():
-            grant = scope.courses.get(activity.course_id)
-            if grant:
-                candidate_uuids.add(grant.course_uuid)
             candidate_uuids.add(activity.activity_uuid)
             if chapter is not None:
                 candidate_uuids.add(chapter.chapter_uuid)
         accessible = await batch_accessible_restricted_uuids(
-            resolve_acting_user_id(current_user), candidate_uuids, db_session
+            resolve_acting_user_id(scope.current_user), candidate_uuids, db_session
         )
 
-    readable: dict[int, bool] = {}
+    readable: set[int] = set()
+    for activity_id, (activity, chapter) in activities.items():
+        grant = scope.courses[activity.course_id]
+        if await _activity_readable(activity, chapter, grant, scope, accessible, db_session):
+            readable.add(activity_id)
+    return readable
 
-    async def is_readable(activity_id: int) -> bool:
-        if activity_id in readable:
-            return readable[activity_id]
-        allowed = False
-        entry = activities.get(activity_id)
-        if entry is not None:
-            activity, chapter = entry
-            grant = scope.courses.get(activity.course_id)
-            allowed = grant is not None and await _activity_readable(
-                activity, chapter, grant, scope, accessible, db_session
-            )
-        readable[activity_id] = allowed
-        return allowed
 
-    return [
-        row for row in rows
-        if row.activity_id is not None and await is_readable(row.activity_id)
-    ]
+async def filter_readable_chunks(
+    rows: Iterable,
+    scope: RagAccessScope,
+    db_session: AsyncSession,
+) -> list:
+    """Drop retrieved rows whose activity the caller could not open.
+
+    Rows without an activity are dropped too: every indexed chunk belongs to
+    one, so anything else is not attributable to readable content.
+    """
+    rows = [row for row in rows if row.activity_id is not None]
+    readable = await readable_activity_ids(
+        {row.activity_id for row in rows}, scope, db_session
+    )
+    return [row for row in rows if row.activity_id in readable]
+
+
+async def can_read_activity(
+    request: Request,
+    current_user: Principal,
+    course: Course | CourseRead,
+    activity_id: int,
+    db_session: AsyncSession,
+) -> bool:
+    """Whether the caller may read one activity's content.
+
+    Raises 403 when the course itself is unreadable, like the course endpoint.
+    """
+    scope = await build_rag_access_scope(
+        request, current_user, course.org_id, db_session, course=course
+    )
+    return activity_id in await readable_activity_ids([activity_id], scope, db_session)
 
 
 async def _activity_readable(
@@ -190,26 +220,20 @@ async def _activity_readable(
     # Same lock rules as a single-activity read: admins bypass, and course-level
     # usergroup membership unlocks every chapter and activity in the course.
     if not grant.is_admin and grant.course_uuid not in accessible:
-        if chapter is not None and await is_locked_for_user(
-            chapter.lock_type,
-            chapter.chapter_uuid,
-            activity.org_id,
-            scope.current_user,
-            db_session,
-            accessible_restricted_uuids=accessible,
-            is_admin=False,
+        for lock_type, resource_uuid in (
+            (chapter.lock_type, chapter.chapter_uuid) if chapter is not None else (None, None),
+            (activity.lock_type, activity.activity_uuid),
         ):
-            return False
-        if await is_locked_for_user(
-            activity.lock_type,
-            activity.activity_uuid,
-            activity.org_id,
-            scope.current_user,
-            db_session,
-            accessible_restricted_uuids=accessible,
-            is_admin=False,
-        ):
-            return False
+            if resource_uuid and await is_locked_for_user(
+                lock_type,
+                resource_uuid,
+                activity.org_id,
+                scope.current_user,
+                db_session,
+                accessible_restricted_uuids=accessible,
+                is_admin=False,
+            ):
+                return False
 
     return await check_ee_activity_paid_access(
         request=scope.request,
@@ -217,21 +241,3 @@ async def _activity_readable(
         user=scope.current_user,
         db_session=db_session,
     )
-
-
-async def can_read_activity(
-    request: Request,
-    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    course: Course,
-    activity_id: int,
-    db_session: AsyncSession,
-) -> bool:
-    """Whether the caller may read one activity's content.
-
-    Raises 403 when the course itself is unreadable, like the course endpoint.
-    """
-    scope = await build_rag_access_scope(
-        request, current_user, course.org_id, db_session, course=course
-    )
-    row = SimpleNamespace(course_id=course.id, activity_id=activity_id)
-    return bool(await filter_readable_chunks([row], scope, db_session))
