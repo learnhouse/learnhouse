@@ -3,7 +3,7 @@ from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 from pydantic import BaseModel
-from src.db.users import UserReadPublic
+from src.db.users import UserReadAuthor
 from src.db.resource_authors import ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 
 
@@ -29,9 +29,10 @@ class PodcastSEO(BaseModel):
 
 
 class AuthorWithRole(SQLModel):
-    # Authors ship with public course/podcast pages: never the full UserRead
-    # (email, signup method, superadmin flag, admin-defined signup fields).
-    user: UserReadPublic
+    # SECURITY: authors are returned to every reader of the resource (anonymous
+    # included on public ones), so only the author-chip projection goes out,
+    # never email/is_superadmin/signup_method/extra_metadata.
+    user: UserReadAuthor
     authorship: ResourceAuthorshipEnum
     authorship_status: ResourceAuthorshipStatusEnum
     creation_date: str

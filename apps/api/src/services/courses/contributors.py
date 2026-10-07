@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import HTTPException, Request
 from sqlmodel import select, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
-from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead, UserReadPublic
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead, UserReadAuthor
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.security.auth import resolve_acting_user_id
@@ -190,6 +190,8 @@ async def get_course_contributors(
     SECURITY NOTES:
     - Requires read access to the course
     - Contributors are visible to anyone with course read access
+    - Full user records (email, etc.) only go to course editors; everyone
+      else gets the author projection
     """
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
@@ -209,7 +211,7 @@ async def get_course_contributors(
         request, db_session, current_user, course_uuid, AccessAction.UPDATE,
         raise_on_deny=False,
     )).allowed
-    user_view = UserRead if can_manage else UserReadPublic
+    user_view = UserRead if can_manage else UserReadAuthor
 
     # Get all contributors for this course with user information
     statement = (
