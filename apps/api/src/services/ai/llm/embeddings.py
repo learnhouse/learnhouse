@@ -103,8 +103,8 @@ def build_embedding_model() -> EmbeddingModel:
             settings=settings,
         )
 
-    # Providers without an embeddings API (anthropic, deepseek, moonshot, mistral, openrouter, bedrock):
-    # fall back to Google embeddings when a Gemini key is available.
+    # Providers without an embeddings API (anthropic, deepseek, fireworks, moonshot, mistral,
+    # openrouter, bedrock): fall back to Google embeddings when a Gemini key is available.
     gemini_key = getattr(cfg, "gemini_api_key", None)
     if gemini_key:
         from pydantic_ai.embeddings.google import GoogleEmbeddingModel
