@@ -425,6 +425,32 @@ async def regenerate_api_token(
     )
 
 
+async def _require_api_access_plan(org_id: int, db_session: AsyncSession) -> None:
+    """403 unless ``org_id``'s plan still includes API access.
+
+    Same check (and same plan floor) as the token-management routes; self-
+    hosted modes bypass it there and here alike.
+    """
+    from src.security.features_utils.plan_check import check_org_plan
+    from src.security.features_utils.plans import FEATURE_PLAN_REQUIREMENTS
+
+    try:
+        await check_org_plan(
+            org_id, FEATURE_PLAN_REQUIREMENTS["api_tokens"], "API Access", db_session
+        )
+    except HTTPException as e:
+        if e.status_code == status.HTTP_403_FORBIDDEN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"API token rejected: {e.detail}",
+            )
+        # No plan on record for the org: refuse rather than assume access.
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token rejected: the organization's plan does not include API access.",
+        )
+
+
 async def validate_api_token_for_auth(
     token: str,
     db_session: AsyncSession,
@@ -466,6 +492,10 @@ async def validate_api_token_for_auth(
         except (ValueError, TypeError):
             # If we can't parse the date, consider it not expired
             pass
+
+    # API access is a plan feature, so a token minted while the org was on a
+    # qualifying plan stops working once the org drops below it.
+    await _require_api_access_plan(api_token.org_id, db_session)
 
     # Update last_used_at and opportunistically upgrade legacy hashes.
     try:

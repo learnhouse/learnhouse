@@ -205,8 +205,19 @@ class TestVerifiedCustomDomains:
 
     def test_verified_custom_domain_is_accepted(self):
         self._seed("learn.acme.org", True)
-        with _patch_config(), _no_platform_url():
+        with _patch_config(), _no_platform_url(), patch(
+            "src.services.orgs.custom_domains.domain_points_at_platform",
+            return_value=True,
+        ):
             assert _is_allowed_base_url("https://learn.acme.org")
+
+    def test_verified_custom_domain_repointed_away_is_rejected(self):
+        self._seed("learn.acme.org", True)
+        with _patch_config(), _no_platform_url(), patch(
+            "src.services.orgs.custom_domains.domain_points_at_platform",
+            return_value=False,
+        ):
+            assert not _is_allowed_base_url("https://learn.acme.org")
 
     def test_unverified_and_expired_and_unknown_hosts_are_rejected(self):
         self._seed("notverified.acme.org", False)

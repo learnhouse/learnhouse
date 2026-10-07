@@ -53,7 +53,9 @@ async def seed_activity(db: AsyncSession, org, course, regular_user):
     db.add(UserAuditEvent(
         event_type=UserAuditEventType.LOGIN,
         user_id=regular_user.id,
-        org_id=None,
+        # Recorded against this org: org-agnostic (NULL org_id) connection rows
+        # are cross-tenant and no longer reach an org admin's dossier.
+        org_id=org.id,
         ip="10.0.0.1",
         user_agent="pytest-agent",
         audit_metadata={"method": "password"},
@@ -446,7 +448,7 @@ class TestDossierRichSections:
     async def test_connection_event_is_humanized(self, db, client, regular_user):
         db.add(UserAuditEvent(
             event_type=UserAuditEventType.LOGIN,
-            user_id=regular_user.id, org_id=None, ip="10.0.0.1",
+            user_id=regular_user.id, org_id=1, ip="10.0.0.1",
             user_agent=(
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"

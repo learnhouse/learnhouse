@@ -96,7 +96,8 @@ function isSameOrigin(request: NextRequest): boolean {
  * Flow:
  *   1. Decrypt the code via the platform to get {access_token, refresh_token}.
  *   2. If we have a refresh_token, exchange it on THIS backend for a fresh
- *      access_token. This catches a JWT-secret mismatch loudly.
+ *      access_token + rotated refresh_token (the presented one is spent).
+ *      This catches a JWT-secret mismatch loudly.
  *   3. ALWAYS validate the resulting access_token against /users/session:
  *      refresh only checks the JWT signature, not user existence, so a valid
  *      signature for a user missing on this tenant would otherwise produce a
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     let access_token: string = typeof payload.access_token === 'string' ? payload.access_token : ''
-    const refresh_token: string = typeof payload.refresh_token === 'string' ? payload.refresh_token : ''
+    let refresh_token: string = typeof payload.refresh_token === 'string' ? payload.refresh_token : ''
 
     if (!access_token && !refresh_token) {
       console.error('[token-exchange] step=decrypt no tokens in response')
@@ -175,14 +176,20 @@ export async function POST(request: NextRequest) {
 
     // Step 2: If we have a refresh token, mint a fresh access_token on THIS
     // backend. This is the first chance to detect a JWT-secret mismatch.
+    // Refresh tokens are one-time-use: the backend rotates them, so the
+    // platform's token is spent after this call. Keep only the rotated one;
+    // storing the consumed token would trip replay detection on the next
+    // refresh and revoke every session the user has.
     if (refresh_token) {
+      const presented = refresh_token
+      refresh_token = ''
       try {
         const refreshRes = await fetchWithRetry(
           `${BACKEND_URL}/api/v1/auth/refresh`,
           {
             method: 'GET',
             headers: backendHeaders(request, {
-              Cookie: `${REFRESH_TOKEN_COOKIE}=${refresh_token}`,
+              Cookie: `${REFRESH_TOKEN_COOKIE}=${presented}`,
             }),
           },
           BACKEND_TIMEOUT_MS,
@@ -194,11 +201,16 @@ export async function POST(request: NextRequest) {
           } else {
             console.error('[token-exchange] step=refresh response missing access_token')
           }
+          if (typeof refreshData?.refresh_token === 'string' && refreshData.refresh_token) {
+            refresh_token = refreshData.refresh_token
+          } else {
+            console.error('[token-exchange] step=refresh response missing rotated refresh_token')
+          }
         } else {
           const detail = await refreshRes.text().catch(() => '')
           console.error(`[token-exchange] step=refresh failed: ${refreshRes.status} ${detail}`)
-          // Non-fatal: we'll fall through to /session validation with the
-          // original access_token. If that's also invalid we bail there.
+          // Fall through to /session validation with the original
+          // access_token; with no usable refresh token, Step 4 refuses.
         }
       } catch (err) {
         console.error('[token-exchange] step=refresh errored:', err)
@@ -256,7 +268,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 4: Set cookies. If the platform didn't give us a refresh_token,
+    // Step 4: Set cookies. If we don't hold a usable (rotated) refresh_token,
     // reject instead of setting a half-broken session that AuthContext cannot
     // refresh (it always calls /api/auth/refresh on mount).
     if (!refresh_token) {

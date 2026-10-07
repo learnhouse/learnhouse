@@ -269,6 +269,7 @@ async def api_delete_custom_domain(
 async def api_resolve_domain(
     request: Request,
     domain: str,
+    for_auth: bool = False,
     db_session: AsyncSession = Depends(get_db_session),
 ) -> CustomDomainResolveResponse:
     """
@@ -277,8 +278,10 @@ async def api_resolve_domain(
     This is a public endpoint used by the frontend proxy to
     route custom domain requests to the correct organization.
     Returns 404 if the domain is not registered or not verified.
+    With ``for_auth=1`` it also returns 404 unless the domain's live DNS
+    still points at the platform (checked before bouncing OAuth codes).
     """
-    result = await resolve_org_by_domain(db_session, domain)
+    result = await resolve_org_by_domain(db_session, domain, for_auth=for_auth)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

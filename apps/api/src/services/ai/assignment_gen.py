@@ -231,6 +231,7 @@ async def generate_assignment_plan(
     num_tasks: int = 3,
     allowed_task_types: list[str] | None = None,
     session_uuid: str | None = None,
+    user_id: int | None = None,
 ) -> tuple[GeneratedAssignmentPlan, str]:
     """Generate an assignment plan grounded on course content. Does not persist."""
     num_tasks = max(1, min(num_tasks, MAX_TASKS))
@@ -290,7 +291,10 @@ async def generate_assignment_plan(
     # amend it instead of regenerating from scratch.
     assistant_turn = json.dumps(generated.model_dump())
     try:
-        save_message_to_history(resolved_session_uuid, prompt.strip(), assistant_turn, org_id=org_id)
+        save_message_to_history(
+            resolved_session_uuid, prompt.strip(), assistant_turn,
+            user_id=user_id, org_id=org_id, listed=False,
+        )
     except Exception:
         logger.debug("Failed to persist assignment refine history", exc_info=True)
 

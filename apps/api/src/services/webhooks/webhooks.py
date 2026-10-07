@@ -30,6 +30,10 @@ from src.security.rbac.rbac import authorization_verify_if_user_is_anon
 from src.security.org_auth import require_org_admin
 from src.services.webhooks.crypto import encrypt_secret
 from src.services.webhooks.events import WEBHOOK_EVENTS
+from src.services.webhooks.dispatch import invalidate_active_endpoint_cache
+
+# Each endpoint multiplies outbound deliveries per event
+MAX_WEBHOOK_ENDPOINTS_PER_ORG = 20
 
 
 def _generate_signing_secret() -> str:
@@ -134,6 +138,20 @@ async def create_webhook_endpoint(
     _validate_events(webhook_object.events)
     _validate_webhook_url(webhook_object.url)
 
+    from sqlalchemy import func
+
+    existing = (await db_session.execute(
+        select(func.count()).select_from(WebhookEndpoint).where(WebhookEndpoint.org_id == org_id)
+    )).scalar() or 0
+    if existing >= MAX_WEBHOOK_ENDPOINTS_PER_ORG:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"An organization can have at most {MAX_WEBHOOK_ENDPOINTS_PER_ORG} "
+                "webhook endpoints. Delete one before adding another."
+            ),
+        )
+
     plaintext_secret = _generate_signing_secret()
     now = str(datetime.now())
 
@@ -153,6 +171,7 @@ async def create_webhook_endpoint(
     db_session.add(endpoint)
     await db_session.commit()
     await db_session.refresh(endpoint)
+    invalidate_active_endpoint_cache(org_id)
 
     return WebhookEndpointCreatedResponse(
         webhook_uuid=endpoint.webhook_uuid,
@@ -237,6 +256,7 @@ async def update_webhook_endpoint(
     db_session.add(endpoint)
     await db_session.commit()
     await db_session.refresh(endpoint)
+    invalidate_active_endpoint_cache(org_id)
 
     return _to_read(endpoint)
 
@@ -255,6 +275,7 @@ async def delete_webhook_endpoint(
     endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
     await db_session.delete(endpoint)
     await db_session.commit()
+    invalidate_active_endpoint_cache(org_id)
 
     return {"detail": "Webhook endpoint deleted successfully"}
 

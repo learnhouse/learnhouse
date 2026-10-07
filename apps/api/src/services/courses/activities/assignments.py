@@ -1827,8 +1827,12 @@ async def put_assignment_task_submission_file(
     org_statement = select(Organization).where(Organization.id == course.org_id)
     org = (await db_session.execute(org_statement)).scalars().first()
 
-    # RBAC check - only need read permission to submit files
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # RBAC check - submitting needs the same access as reading the activity:
+    # course read plus the activity's own gate (drafts, paywall, locks).
+    if activity:
+        await verify_activity_reader_access(request, activity, course, current_user, db_session)
+    else:
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Check if user is enrolled in the course
     if not await authorization_verify_based_on_roles(request, current_user.id, "read", course.course_uuid, db_session):
@@ -2269,9 +2273,17 @@ async def handle_assignment_task_submission(
         assignment_task_submission_object.manually_graded = False
 
         if not is_token_submit:
-            # Session students need READ on the course; the token was already
-            # authorized via assignments.create in _resolve_token_submission_user.
-            await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+            # Session students need READ on the course and on the activity
+            # itself (drafts, paywall, locks), like the assignment read; the
+            # token was already authorized via assignments.create in
+            # _resolve_token_submission_user.
+            activity = (await db_session.execute(
+                select(Activity).where(Activity.id == assignment.activity_id)
+            )).scalars().first()
+            if activity:
+                await verify_activity_reader_access(request, activity, course, current_user, db_session)
+            else:
+                await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
     else:
         # SECURITY: Instructors/admins need update permission to grade
         await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)

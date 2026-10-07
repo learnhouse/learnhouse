@@ -14,6 +14,7 @@ from src.db.courses.assignments import (
 from src.db.users import PublicUser
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
+from src.services.security.rate_limiting import check_rate_limit
 from src.services.courses.activities.assignments import (
     create_assignment,
     create_assignment_submission,
@@ -58,6 +59,8 @@ class GradeSubmissionBody(BaseModel):
 
 
 router = APIRouter()
+
+SUB_FILE_UPLOADS_PER_HOUR = 30
 
 ## ASSIGNMENTS ##
 
@@ -421,6 +424,23 @@ async def api_put_assignment_task_sub_file(
     """
     Update tasks for an assignment
     """
+    if sub_file is not None and sub_file.filename:
+        # Per-user upload throttle: each call writes to storage
+        is_allowed, _count, retry_after = check_rate_limit(
+            key=f"sub_file_upload:{current_user.id}",
+            max_attempts=SUB_FILE_UPLOADS_PER_HOUR,
+            window_seconds=60 * 60,
+        )
+        if not is_allowed:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "code": "RATE_LIMITED",
+                    "message": "Too many file uploads. Please wait before trying again.",
+                    "retry_after": retry_after,
+                },
+                headers={"Retry-After": str(retry_after)},
+            )
     return await put_assignment_task_submission_file(
         request, db_session, assignment_task_uuid, current_user, sub_file
     )

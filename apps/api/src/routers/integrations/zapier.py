@@ -393,6 +393,8 @@ async def zapier_list_subscriptions(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierSubscriptionResponse]:
     api_user, db_session = ctx
+    # Subscriptions expose webhook target URLs: same admin gate as subscribe.
+    await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.org_id == api_user.org_id,
         WebhookEndpoint.source == "zapier",
@@ -428,6 +430,8 @@ async def zapier_delete_subscription(
     ctx=Depends(_zapier_context),
 ) -> dict:
     api_user, db_session = ctx
+    # Removing an outbound event feed takes the same admin gate as adding one.
+    await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.id == subscription_id,
         WebhookEndpoint.org_id == api_user.org_id,

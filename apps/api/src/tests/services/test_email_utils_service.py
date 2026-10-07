@@ -498,6 +498,10 @@ class TestGetPrimaryVerifiedCustomDomain:
             "src.services.email.utils._get_primary_verified_custom_domain",
             new_callable=AsyncMock,
             return_value="custom.example.com",
+        ), patch(
+            "src.services.orgs.custom_domains.custom_domain_points_at_platform",
+            new_callable=AsyncMock,
+            return_value=True,
         ):
             url = await get_org_signup_base_url(
                 "myorg", request, db_session=mock_session, org_id=42

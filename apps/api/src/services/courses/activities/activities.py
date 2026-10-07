@@ -29,6 +29,12 @@ logger = logging.getLogger(__name__)
 # preventing them from being garbage-collected before they complete.
 _embedding_tasks: set = set()
 
+# Course ids with a reindex pending in this process, plus the Redis key that
+# dedupes across workers. Saves inside the window collapse into one run.
+_pending_reindex: set = set()
+_REINDEX_KEY_PREFIX = "rag_reindex:"
+REINDEX_DEBOUNCE_SECONDS = 60
+
 
 ####################################################
 # CRUD
@@ -319,16 +325,79 @@ async def update_activity(
 
     # Trigger background re-indexing for RAG when content changes
     if 'content' in update_data:
-        task = asyncio.create_task(_trigger_course_embedding(activity.course_id, activity.org_id))
-        _embedding_tasks.add(task)
-        task.add_done_callback(_embedding_tasks.discard)
-        task.add_done_callback(
-            lambda t: logger.error("Embedding task failed: %s", t.exception()) if t.exception() else None
-        )
+        await _schedule_course_embedding(activity.course_id, activity.org_id, db_session)
 
     activity = ActivityRead.model_validate(activity)
 
     return activity
+
+
+async def _org_ai_enabled(org_id: int, db_session: AsyncSession) -> bool:
+    from src.security.features_utils.usage import check_feature_enabled
+
+    try:
+        await check_feature_enabled("ai", org_id, db_session)
+        return True
+    except HTTPException:
+        return False
+
+
+async def _schedule_course_embedding(course_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """Debounced reindex: at most one pending reindex per course.
+
+    Rapid/concurrent saves collapse into a single delayed run that picks up
+    the latest content. Returns True if a task was scheduled.
+    """
+    if not course_id or not await _org_ai_enabled(org_id, db_session):
+        return False
+
+    from src.core.redis import get_redis_client
+
+    claimed = None
+    r = get_redis_client()
+    if r is not None:
+        try:
+            # TTL is a safety net if the worker dies before releasing it
+            claimed = bool(r.set(
+                f"{_REINDEX_KEY_PREFIX}{course_id}", "1",
+                nx=True, ex=REINDEX_DEBOUNCE_SECONDS * 5,
+            ))
+        except Exception:
+            claimed = None
+    if claimed is False:
+        return False
+    # In-process guard (also the only guard when Redis is unavailable)
+    if course_id in _pending_reindex:
+        return False
+    _pending_reindex.add(course_id)
+
+    task = asyncio.create_task(_debounced_course_embedding(course_id, org_id, claimed is True))
+    _embedding_tasks.add(task)
+    task.add_done_callback(_embedding_tasks.discard)
+    task.add_done_callback(
+        lambda t: logger.error("Embedding task failed: %s", t.exception())
+        if not t.cancelled() and t.exception() else None
+    )
+    return True
+
+
+async def _debounced_course_embedding(course_id: int, org_id: int, redis_claimed: bool) -> None:
+    try:
+        await asyncio.sleep(REINDEX_DEBOUNCE_SECONDS)
+    finally:
+        # Release before embedding so saves made during the run schedule a
+        # follow-up instead of being lost.
+        _pending_reindex.discard(course_id)
+        if redis_claimed:
+            from src.core.redis import get_redis_client
+
+            r = get_redis_client()
+            if r is not None:
+                try:
+                    r.delete(f"{_REINDEX_KEY_PREFIX}{course_id}")
+                except Exception:
+                    pass
+    await _trigger_course_embedding(course_id, org_id)
 
 
 async def _trigger_course_embedding(course_id: int, org_id: int) -> None:

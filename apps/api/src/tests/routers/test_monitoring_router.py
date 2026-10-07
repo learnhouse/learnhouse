@@ -16,6 +16,15 @@ def app():
     return app
 
 
+@pytest.fixture(autouse=True)
+def _allow_rate_limit():
+    """The limiter counts in the shared Redis; keep these tests independent of it."""
+    with patch(
+        "src.routers.monitoring.check_rate_limit", return_value=(True, 0, 0)
+    ) as limiter:
+        yield limiter
+
+
 @pytest.fixture
 async def client(app):
     async with AsyncClient(
@@ -94,3 +103,11 @@ class TestSubmitFeedback:
         assert response.status_code == 204
         cap.assert_called_once()
         scope.add_attachment.assert_not_called()
+
+
+class TestFeedbackRateLimit:
+    async def test_over_limit_is_429(self, client, _allow_rate_limit):
+        _allow_rate_limit.return_value = (False, 11, 3600)
+        resp = await client.post("/monitoring/feedback", data={"message": "hi"})
+        assert resp.status_code == 429
+        assert resp.headers["retry-after"] == "3600"

@@ -92,17 +92,10 @@ const nextConfig = {
   // that family of hosts. Dev-only; ignored by `next build`/`next start`.
   allowedDevOrigins: ['lvh.me', '*.lvh.me'],
   output: 'standalone',
+  // No remote patterns: every next/image source is a bundled asset. Allowing
+  // any host turned /_next/image into an open fetch proxy from the server.
   images: {
-    remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: '**',
-      },
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
+    remotePatterns: [],
   },
   experimental: {
     optimizePackageImports: [

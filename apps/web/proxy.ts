@@ -450,9 +450,11 @@ export default async function proxy(req: NextRequest) {
     const rawNext = params.get('next')
     params.delete('next')
 
-    const customDomain = req.cookies.get('LH_custom_domain')?.value
-    const base = customDomain
-      ? `${req.nextUrl.protocol}//${customDomain}`
+    // Land on the host this request came in on. The LH_custom_domain cookie is
+    // readable/settable by script (cookie tossing), so it must not pick the
+    // redirect host; the Host header is only used once it's a known custom domain.
+    const base = fullhost && await hostIsCustomDomain(fullhost, instance)
+      ? `${req.nextUrl.protocol}//${fullhost}`
       : req.url
     const baseOrigin = new URL(base).origin
 

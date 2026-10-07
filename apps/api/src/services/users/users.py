@@ -739,6 +739,47 @@ async def update_user_password(
     return user
 
 
+async def _can_see_user(current_user, target: User, db_session: AsyncSession) -> bool:
+    """Whether ``current_user`` may look ``target`` up by id/uuid/username.
+
+    SECURITY: these lookups only require a login, and any account could
+    otherwise walk the id space and read every user's profile on the platform.
+    Visible: yourself, anyone you share an org with, or anyone if superadmin.
+    An API token is scoped to its org, so it sees only that org's members.
+    Callers answer 404 either way, so a miss does not confirm the account.
+    """
+    from src.db.users import APITokenUser
+
+    if isinstance(current_user, AnonymousUser):
+        return False
+
+    if isinstance(current_user, APITokenUser):
+        member = (await db_session.execute(
+            select(UserOrganization.id).where(
+                UserOrganization.user_id == target.id,
+                UserOrganization.org_id == current_user.org_id,
+            ).limit(1)
+        )).first()
+        return member is not None
+
+    caller_id = current_user.id
+    if caller_id == target.id:
+        return True
+    if await is_user_superadmin(caller_id, db_session):
+        return True
+
+    caller_orgs = select(UserOrganization.org_id).where(
+        UserOrganization.user_id == caller_id
+    )
+    shared = (await db_session.execute(
+        select(UserOrganization.id).where(
+            UserOrganization.user_id == target.id,
+            UserOrganization.org_id.in_(caller_orgs),  # type: ignore[union-attr]
+        ).limit(1)
+    )).first()
+    return shared is not None
+
+
 async def read_user_by_id(
     request: Request,
     db_session: AsyncSession,
@@ -755,7 +796,7 @@ async def read_user_by_id(
     statement = select(User).where(User.id == user_id)
     user = (await db_session.execute(statement)).scalars().first()
 
-    if not user:
+    if not user or not await _can_see_user(current_user, user, db_session):
         raise HTTPException(
             status_code=404,
             detail="Resource not found",  # Generic message prevents enumeration
@@ -780,7 +821,7 @@ async def read_user_by_uuid(
     statement = select(User).where(User.user_uuid == user_uuid)
     user = (await db_session.execute(statement)).scalars().first()
 
-    if not user:
+    if not user or not await _can_see_user(current_user, user, db_session):
         raise HTTPException(
             status_code=404,
             detail="Resource not found",  # Generic message prevents enumeration
@@ -805,7 +846,7 @@ async def read_user_by_username(
     statement = select(User).where(User.username == username)
     user = (await db_session.execute(statement)).scalars().first()
 
-    if not user:
+    if not user or not await _can_see_user(current_user, user, db_session):
         raise HTTPException(
             status_code=404,
             detail="Resource not found",  # Generic message prevents enumeration

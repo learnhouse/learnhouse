@@ -22,9 +22,11 @@ from botocore.exceptions import ClientError
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
+from src.db.courses.courses import Course
+from src.db.organizations import Organization
+from src.db.podcasts.episodes import PodcastEpisode
 from src.db.podcasts.podcasts import Podcast
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
-from src.db.user_organizations import UserOrganization
 from src.security.auth import get_current_user
 from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
 from src.security.submission_file_access import (
@@ -142,6 +144,71 @@ def _validate_content_path(file_path: str) -> str | None:
     return os.path.relpath(full_real, base_real)
 
 
+async def _verify_course_in_org(
+    org_uuid: str, course_uuid: str, db_session: AsyncSession
+) -> None:
+    """404 unless ``course_uuid`` exists and belongs to the org ``org_uuid``."""
+    course_org_uuid = (await db_session.execute(
+        select(Organization.org_uuid)
+        .join(Course, Course.org_id == Organization.id)  # type: ignore[arg-type]
+        .where(Course.course_uuid == course_uuid)
+    )).scalars().first()
+    if course_org_uuid is None or course_org_uuid != org_uuid:
+        raise HTTPException(status_code=404, detail="File not found")
+
+
+async def _verify_episode_access(
+    org_uuid: str,
+    podcast_uuid: str,
+    episode_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+    request: Request | None,
+) -> None:
+    """Gate a podcast episode file like the podcast read itself.
+
+    The podcast must belong to ``org_uuid`` and the episode to the podcast
+    (404 otherwise). The caller needs podcast READ (anonymous: public and
+    published), and an unpublished podcast or episode is only served to
+    someone who can edit the podcast.
+    """
+    row = (await db_session.execute(
+        select(Podcast, Organization.org_uuid)
+        .join(Organization, Organization.id == Podcast.org_id)  # type: ignore[arg-type]
+        .where(Podcast.podcast_uuid == podcast_uuid)
+    )).first()
+    if not row or row[1] != org_uuid:
+        raise HTTPException(status_code=404, detail="File not found")
+    podcast = row[0]
+    episode = (await db_session.execute(
+        select(PodcastEpisode).where(
+            PodcastEpisode.episode_uuid == episode_uuid,
+            PodcastEpisode.podcast_id == podcast.id,
+        )
+    )).scalars().first()
+    if not episode:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    from src.security.rbac import check_resource_access, AccessAction
+
+    decision = await check_resource_access(
+        request, db_session, current_user, podcast.podcast_uuid,
+        AccessAction.READ, raise_on_deny=False,
+    )
+    if not decision.allowed:
+        if isinstance(current_user, AnonymousUser):
+            raise HTTPException(status_code=401, detail="Authentication required")
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not (podcast.published and episode.published):
+        can_edit = (await check_resource_access(
+            request, db_session, current_user, podcast.podcast_uuid,
+            AccessAction.UPDATE, raise_on_deny=False,
+        )).allowed
+        if not can_edit:
+            raise HTTPException(status_code=404, detail="File not found")
+
+
 async def _check_content_access(
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -158,6 +225,16 @@ async def _check_content_access(
     - orgs/{uuid}/...                                  → org-level (public)
     """
     parts = file_path.split('/')
+
+    # Course activity files (including submission files): the org segment must
+    # be the course's org, so one org's path can't front another org's file.
+    if (
+        len(parts) >= 6
+        and parts[0] == 'orgs'
+        and parts[2] == 'courses'
+        and parts[4] == 'activities'
+    ):
+        await _verify_course_in_org(parts[1], parts[3], db_session)
 
     # Assignment submission files must be gated to the owner or an instructor,
     # not the generic activity-content grant below (which would let any org
@@ -182,37 +259,17 @@ async def _check_content_access(
         )
         return
 
-    # Podcast episode content: requires podcast to be public or user to be org member
+    # Podcast episode content: same gate as reading the podcast, plus the
+    # episode itself must be published unless the caller can edit the podcast.
     if (
         len(parts) >= 6
         and parts[0] == 'orgs'
         and parts[2] == 'podcasts'
         and parts[4] == 'episodes'
     ):
-        podcast_uuid = parts[3]
-        podcast = (await db_session.execute(
-            select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-        )).scalars().first()
-        if not podcast:
-            raise HTTPException(status_code=403, detail="Access denied")
-        if podcast.public:
-            return  # Public podcast: allow anonymous
-        if isinstance(current_user, AnonymousUser):
-            raise HTTPException(status_code=401, detail="Authentication required")
-        # Verify API token is scoped to the correct org
-        if isinstance(current_user, APITokenUser):
-            if current_user.org_id != podcast.org_id:
-                raise HTTPException(status_code=403, detail="Access denied")
-            return
-        # Verify user belongs to the org that owns this podcast
-        membership = (await db_session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == current_user.id,
-                UserOrganization.org_id == podcast.org_id,
-            )
-        )).scalars().first()
-        if not membership:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _verify_episode_access(
+            parts[1], parts[3], parts[5], current_user, db_session, request
+        )
         return
 
     # Library media content: enforce the media's (folder-aware) access. Closes

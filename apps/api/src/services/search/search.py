@@ -20,7 +20,12 @@ from src.services.search.normalization import (
     escape_like_wildcards,
 )
 from src.security.auth import resolve_acting_user_id
-from src.security.org_auth import is_org_member
+from src.security.org_auth import is_org_admin, is_org_member
+from src.services.communities.communities import (
+    accessible_community_ids_select,
+    can_read_all_communities,
+)
+from src.services.podcasts.podcasts import accessible_podcast_ids_query
 
 
 class SearchDiscussionRead(DiscussionRead):
@@ -142,6 +147,8 @@ async def search_across_org(
     - Org members additionally see org-scoped non-public content where the
       resource itself doesn't restrict it further (e.g. unpublished items and
       usergroup-restricted playgrounds are always excluded from search).
+      Usergroup-restricted communities (and their discussions) and podcasts
+      only show up for members of a linked group, as in their listings.
     - User hits are serialized as ``UserReadPublic``, never ``UserRead``: search
       is open to every member, so it must not expose the PII the dedicated
       member directory restricts to admins.
@@ -187,6 +194,7 @@ async def search_across_org(
         not is_anon and await is_org_member(resolve_acting_user_id(current_user), org.id, db_session)
     )
     only_public = is_anon or not user_is_member
+    acting_user_id = 0 if is_anon else resolve_acting_user_id(current_user)
 
     # ── Courses ──────────────────────────────────────────────────────────────
     # `search_courses` already applies its own per-user access filter.
@@ -245,8 +253,17 @@ async def search_across_org(
         .where(Community.org_id == org.id)
         .where(_ilike_any([Community.name, Community.description], pattern))
     )
+    # Members get the same usergroup-aware visibility as the community
+    # listing; only community managers / org admins see every community.
+    community_filter = None
     if only_public:
-        communities_q = communities_q.where(Community.public == sa_true())
+        community_filter = Community.public == sa_true()
+    elif not await can_read_all_communities(request, org, acting_user_id, db_session):
+        community_filter = Community.id.in_(  # type: ignore[attr-defined]
+            accessible_community_ids_select(org.id, acting_user_id)
+        )
+    if community_filter is not None:
+        communities_q = communities_q.where(community_filter)
     communities, total_communities = await _paginate_and_count(
         db_session, communities_q, page, limit
     )
@@ -258,8 +275,8 @@ async def search_across_org(
         .where(Discussion.org_id == org.id)
         .where(_ilike_any([Discussion.title, Discussion.content], pattern))
     )
-    if only_public:
-        discussions_q = discussions_q.where(Community.public == sa_true())
+    if community_filter is not None:
+        discussions_q = discussions_q.where(community_filter)
     discussions, total_discussions = await _paginate_and_count_rows(
         db_session, discussions_q, page, limit
     )
@@ -295,6 +312,12 @@ async def search_across_org(
     )
     if only_public:
         podcasts_q = podcasts_q.where(Podcast.public == sa_true())
+    elif not await is_org_admin(acting_user_id, org.id, db_session):
+        # Same visibility as the podcast listing: usergroup-restricted
+        # podcasts only for members of a linked group (or active authors).
+        podcasts_q = podcasts_q.where(
+            Podcast.id.in_(accessible_podcast_ids_query(acting_user_id))  # type: ignore[union-attr]
+        )
     podcasts, total_podcasts = await _paginate_and_count(
         db_session, podcasts_q, page, limit
     )

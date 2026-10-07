@@ -38,6 +38,10 @@ from src.services.utils.hls_jobs import _fetch_source  # reuse the R2 download h
 logger = logging.getLogger(__name__)
 
 REDIS_QUEUE_KEY = "learnhouse:captions:queue"
+# Per-activity "already queued" marker so repeated saves can't stack jobs.
+# Cleared when the job finishes; the TTL covers a worker dying mid-job.
+QUEUED_MARKER_PREFIX = "caption_queued:"
+QUEUED_MARKER_TTL_SECONDS = 60 * 60
 JOB_TIMEOUT_SECONDS = 40 * 60
 CONSUMER_POLL_SECONDS = 2
 STALE_PROCESSING_SECONDS = 20 * 60
@@ -121,9 +125,22 @@ def enqueue(activity_uuid: str) -> None:
         logger.warning("Captions: no Redis; cannot enqueue %s", activity_uuid)
         return
     try:
+        if not client.set(
+            f"{QUEUED_MARKER_PREFIX}{activity_uuid}", "1",
+            nx=True, ex=QUEUED_MARKER_TTL_SECONDS,
+        ):
+            logger.info("Captions: %s already queued; skipping", activity_uuid)
+            return
         client.rpush(REDIS_QUEUE_KEY, activity_uuid)
     except Exception as e:
         logger.warning("Captions: could not enqueue %s: %s", activity_uuid, e)
+
+
+def _clear_queued_marker(client, activity_uuid: str) -> None:
+    try:
+        client.delete(f"{QUEUED_MARKER_PREFIX}{activity_uuid}")
+    except Exception:
+        pass
 
 
 # --------------------------------------------------------------------------
@@ -295,6 +312,7 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
 
     async def _run(uuid: str) -> None:
         _inflight.add(uuid)
+        requeued = False
         try:
             await asyncio.wait_for(generate_activity_captions(uuid), timeout=JOB_TIMEOUT_SECONDS)
         except asyncio.TimeoutError:
@@ -306,12 +324,15 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
         except asyncio.CancelledError:
             try:
                 client.rpush(REDIS_QUEUE_KEY, uuid)
+                requeued = True
             except Exception:
                 pass
             raise
         except Exception as e:
             logger.error("Captions consumer: job %s failed: %s", uuid, e)
         finally:
+            if not requeued:
+                _clear_queued_marker(client, uuid)
             _inflight.discard(uuid)
             sem.release()
 

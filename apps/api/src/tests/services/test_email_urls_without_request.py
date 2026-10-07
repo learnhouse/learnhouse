@@ -147,6 +147,15 @@ class TestOrgSignupBaseUrlWithoutRequest:
             email_utils, "_get_primary_verified_custom_domain", fake_custom_domain
         )
 
+        async def points_at_platform(_domain, _slug=""):
+            return True
+
+        import src.services.orgs.custom_domains as custom_domains
+
+        monkeypatch.setattr(
+            custom_domains, "custom_domain_points_at_platform", points_at_platform
+        )
+
         url = await email_utils.get_org_signup_base_url(
             "acme", None, db_session=object(), org_id=1
         )

@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { scrubSentryBreadcrumb, scrubSentryEvent } from "./services/utils/ts/scrubUrl";
 
 const rc = typeof window !== 'undefined' ? (window as any).__RUNTIME_CONFIG__ || {} : {};
 const SENTRY_DSN = rc.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN || process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN;
@@ -58,7 +59,14 @@ if (SENTRY_DSN) {
         return null;
       }
 
-      return event;
+      // Auth links carry reset codes / tokens / OAuth codes in the query.
+      return scrubSentryEvent(event);
+    },
+    beforeSendTransaction(event) {
+      return scrubSentryEvent(event);
+    },
+    beforeBreadcrumb(breadcrumb) {
+      return scrubSentryBreadcrumb(breadcrumb);
     },
   });
 }

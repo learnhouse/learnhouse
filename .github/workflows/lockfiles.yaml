@@ -66,21 +66,21 @@ jobs:
           # lockfiles apply to the branch. A SHA rather than the branch name:
           # a ref taken from the event payload is attacker-controlled.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          # A commit pushed with GITHUB_TOKEN does not start a new CI run, so
-          # the rest of the PR's checks would stay red on the stale SHA. Set
-          # LOCKFILE_SYNC_TOKEN (a PAT or app token with `contents: write`) to
-          # have the fix re-trigger them.
-          token: ${{ secrets.LOCKFILE_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+          # Keep the write token out of .git/config while the lockfile
+          # scripts (and any package install hooks) run; only the push step
+          # below gets it.
+          persist-credentials: false
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: .bun-version
 
       # No setup-python step: `uv lock` resolves from package metadata and
       # never needs an interpreter.
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: latest
+          # Matches the uv pinned in apps/api/Dockerfile
+          version: "0.10.7"
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
 
@@ -108,6 +108,11 @@ jobs:
           # attacker-controlled text.
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           HAS_PAT: ${{ secrets.LOCKFILE_SYNC_TOKEN != '' }}
+          # A commit pushed with GITHUB_TOKEN does not start a new CI run, so
+          # the rest of the PR's checks would stay red on the stale SHA. Set
+          # LOCKFILE_SYNC_TOKEN (a PAT or app token with `contents: write`) to
+          # have the fix re-trigger them.
+          PUSH_TOKEN: ${{ secrets.LOCKFILE_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -117,7 +122,7 @@ jobs:
             exit 1
           fi
           git commit -m "chore(deps): regenerate lockfiles"
-          git push origin "HEAD:refs/heads/${HEAD_REF}"
+          git push "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${HEAD_REF}"
           {
             echo "### Lockfiles regenerated"
             echo

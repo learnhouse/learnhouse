@@ -247,12 +247,16 @@ async def get_users_linked_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR.
+    # The member roster is a management view: learners hold usergroups read
+    # by default, so a signed-in user needs usergroups.action_update in the
+    # group's org (admins/maintainers have it). API tokens keep their explicit
+    # usergroups read grant.
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
-        action="read",
+        action="read" if isinstance(current_user, APITokenUser) else "update",
         db_session=db_session,
         org_id=usergroup.org_id,
     )
@@ -387,8 +391,41 @@ async def get_resources_by_usergroup(
         UserGroupResource.usergroup_id == usergroup_id
     )
     usergroup_resources = (await db_session.execute(statement)).scalars().all()
+    resource_uuids = [ugr.resource_uuid for ugr in usergroup_resources]
 
-    return [ugr.resource_uuid for ugr in usergroup_resources]
+    if await _can_manage_usergroups(current_user, usergroup.org_id, db_session):
+        return resource_uuids
+
+    # Learners hold usergroups read (the course catalog filters by group), but
+    # the links to restricted or draft resources are not theirs to see: only
+    # return what they could open anyway.
+    from src.security.rbac import AccessAction, check_resource_access
+
+    readable = []
+    for resource_uuid in resource_uuids:
+        decision = await check_resource_access(
+            request, db_session, current_user, resource_uuid, AccessAction.READ,
+            raise_on_deny=False,
+        )
+        if decision.allowed:
+            readable.append(resource_uuid)
+    return readable
+
+
+async def _can_manage_usergroups(
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    org_id: int,
+    db_session: AsyncSession,
+) -> bool:
+    if isinstance(current_user, (InternalUser, APITokenUser)):
+        return True
+    try:
+        await require_org_role_permission(
+            current_user.id, org_id, db_session, "usergroups", "action_update"
+        )
+    except HTTPException:
+        return False
+    return True
 
 
 async def update_usergroup_by_id(

@@ -32,7 +32,7 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.user_organizations import UserOrganization
-from src.db.users import APITokenUser, User, UserRead
+from src.db.users import APITokenUser, OrgMemberUserRead, User, UserRead
 from src.services.trail.trail import _build_trail_read
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
@@ -1603,6 +1603,13 @@ async def bulk_enroll_users(
     }
 
 
+async def _org_signup_field_keys(org_id: int, db_session: AsyncSession) -> set[str]:
+    """Keys of the org's declared signup fields (what its admins may read)."""
+    from src.services.orgs.signup_fields import get_org_signup_fields
+
+    return {f.key for f in await get_org_signup_fields(org_id, db_session)}
+
+
 async def list_course_enrollments(
     token_user: APITokenUser,
     course_uuid: str,
@@ -1634,9 +1641,12 @@ async def list_course_enrollments(
         .limit(limit)
     )).all()
 
+    # SECURITY: org-scoped member view (no is_superadmin, extra_metadata cut
+    # down to this org's signup fields), not the global UserRead.
+    meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
     return [
         {
-            "user": UserRead.model_validate(user).model_dump(),
+            "user": OrgMemberUserRead.for_org(user, meta_keys).model_dump(),
             "enrolled_at": trail_run.creation_date,
             "status": trail_run.status.value if hasattr(trail_run.status, "value") else str(trail_run.status),
         }
@@ -2202,9 +2212,11 @@ async def list_usergroup_members(
         .limit(limit)
     )).all()
 
+    # SECURITY: org-scoped member view, see list_course_enrollments.
+    meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
     return [
         {
-            "user": UserRead.model_validate(user).model_dump(),
+            "user": OrgMemberUserRead.for_org(user, meta_keys).model_dump(),
             "added_at": membership.creation_date,
         }
         for user, membership in rows
@@ -2472,6 +2484,40 @@ async def export_user_data(
     }
 
 
+def _purge_user_ai_chats(user_id: int) -> int:
+    """Delete every AI chat the user has in Redis. Returns how many were purged.
+
+    Mirrors the key layout of services/ai/base.py: ``user_chats:{user_id}`` is a
+    sorted set of chat uuids, each with ``chat_history:{uuid}`` and
+    ``chat_meta:{uuid}``. Best effort: Redis being down must not fail the
+    erasure of the database record.
+    """
+    try:
+        from src.services.ai.base import _get_redis
+
+        r = _get_redis()
+        if not r:
+            return 0
+        index_key = f"user_chats:{user_id}"
+        chat_uuids = [
+            c.decode("utf-8") if isinstance(c, bytes) else str(c)
+            for c in (r.zrange(index_key, 0, -1) or [])
+        ]
+        keys = [index_key]
+        for chat_uuid in chat_uuids:
+            keys.append(f"chat_history:{chat_uuid}")
+            keys.append(f"chat_meta:{chat_uuid}")
+        r.delete(*keys)
+        return len(chat_uuids)
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "AI chat purge failed during anonymization", exc_info=True
+        )
+        return 0
+
+
 async def anonymize_user(
     token_user: APITokenUser,
     user_id: int,
@@ -2515,11 +2561,30 @@ async def anonymize_user(
     user.password = ""
     user.email_verified = False
     user.email_verified_at = None
+    # Signup answers (from any org) and login/lockout traces are personal data
+    # too; leaving them behind made the erasure partial.
+    user.extra_metadata = {}
+    user.last_login_at = None
     user.last_login_ip = None
+    user.failed_login_attempts = 0
+    user.locked_until = None
     user.signup_method = "anonymized"
     user.update_date = str(datetime.now())
     db_session.add(user)
+
+    # The audit trail stays (it is the legal record), but the network
+    # identifiers on it are personal data and go.
+    from sqlalchemy import update as sa_update
+    from src.db.user_audit_events import UserAuditEvent
+
+    await db_session.execute(
+        sa_update(UserAuditEvent)
+        .where(UserAuditEvent.user_id == user_id)
+        .values(ip=None, user_agent=None)
+    )
     await db_session.commit()
+
+    _purge_user_ai_chats(user_id)
 
     try:
         from src.routers.users import _invalidate_session_cache

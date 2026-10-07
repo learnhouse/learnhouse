@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { scrubSentryBreadcrumb, scrubSentryEvent } from "./services/utils/ts/scrubUrl";
 
 // Edge runtime can't use fs, so use process.env with non-NEXT_PUBLIC fallback (available at runtime)
 const SENTRY_DSN = process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN || process.env.LEARNHOUSE_SENTRY_DSN;
@@ -19,7 +20,14 @@ if (SENTRY_DSN) {
       if (msg.includes("Organization not found")) return null;
       if (msg.includes("Organization has no config")) return null;
 
-      return event;
+      // Auth links carry reset codes / tokens / OAuth codes in the query.
+      return scrubSentryEvent(event);
+    },
+    beforeSendTransaction(event) {
+      return scrubSentryEvent(event);
+    },
+    beforeBreadcrumb(breadcrumb) {
+      return scrubSentryBreadcrumb(breadcrumb);
     },
   });
 }

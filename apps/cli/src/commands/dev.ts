@@ -20,7 +20,7 @@ services:
       - POSTGRES_PASSWORD=learnhouse
       - POSTGRES_DB=learnhouse
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - learnhouse_db_dev_data:/var/lib/postgresql/data
     healthcheck:
@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - learnhouse_redis_dev_data:/data
     healthcheck:

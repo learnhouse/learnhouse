@@ -10,6 +10,7 @@ import { checkSSOEnabled, redirectToSSOLogin } from '@services/auth/sso'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@components/Contexts/AuthContext'
+import { removeQueryParamsFromAddressBar } from '@services/utils/ts/scrubUrl'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, getDeploymentMode, isOnCustomDomain } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
@@ -122,7 +123,10 @@ const LoginClient = (props: LoginClientProps) => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('mfa_token')
-    if (token) setMfaToken(token)
+    if (token) {
+      setMfaToken(token)
+      removeQueryParamsFromAddressBar(['mfa_token'])
+    }
   }, [])
 
   // Honor a post-login redirect via ?next / ?redirect, sanitized to an

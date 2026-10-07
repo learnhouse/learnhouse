@@ -11,7 +11,7 @@ from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import enforce_org_mfa, is_org_member
 from src.security.rbac import check_resource_access, AccessAction
 from src.db.courses.activities import Activity, ActivityRead
-from src.services.ai.base import get_chat_session_history
+from src.services.ai.base import chat_session_belongs_to_user, get_chat_session_history
 from src.services.ai.llm import model_for_tier
 from src.services.ai.schemas.editor import (
     StartEditorAIChatSession,
@@ -363,6 +363,13 @@ async def editor_ai_send_message_stream(
     await _authorize_editor_ai_access(
         course, org.id, current_user, db_session, request
     )
+
+    # The session uuid is echoed to the client in every SSE event; only the
+    # caller's own session may be continued (404 before any credit spend).
+    if not chat_session_belongs_to_user(
+        chat_session_object.aichat_uuid, resolve_acting_user_id(current_user)
+    ):
+        raise HTTPException(status_code=404, detail="Chat session not found")
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     # Resolve through helper so API tokens bucket under their creator rather

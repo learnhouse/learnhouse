@@ -66,6 +66,10 @@ class OrganizationCreate(OrganizationBase):
 class OrganizationRead(OrganizationBase):
     id: int
     org_uuid: str
+    # Optional on the read model: the public org reads null it for anyone
+    # without the organizations update right (it defaults to the creator's
+    # personal address). See services/orgs/orgs.py.
+    email: Optional[str] = None
     config: Optional[OrganizationConfig | dict] = None
     # Deliberately on Read and not on OrganizationBase: if it lived on the base
     # it would be inherited by OrganizationCreate/Update and a client could

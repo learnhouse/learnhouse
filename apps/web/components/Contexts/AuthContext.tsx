@@ -951,20 +951,18 @@ export function SessionProvider({
             }
           }
 
-          // Generate CSRF token for state parameter
+          // Generate CSRF token for state parameter. The server signs the final
+          // state (with returnOrigin pinned to this request's origin) so the
+          // callback can trust where it bounces the code.
           const csrfToken = generateSecureToken()
-          const stateData: Record<string, any> = {
+          const stateData = {
             callbackUrl,
             csrf: csrfToken,
             timestamp: Date.now(),
           }
 
-          // For custom domains, embed returnOrigin so the main domain callback can bounce back
-          if (isCustomDomain()) {
-            stateData.returnOrigin = window.location.origin
-          }
-
-          const state = btoa(JSON.stringify(stateData))
+          // For custom domains, ask for returnOrigin so the main domain callback can bounce back
+          const returnOrigin = isCustomDomain() ? window.location.origin : undefined
 
           // Store CSRF token in cookie for validation on callback
           setOAuthStateCookie(csrfToken)
@@ -976,7 +974,7 @@ export function SessionProvider({
           const authResponse = await fetch('/api/auth/google/authorize', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ redirect_uri: redirectUri, state, scope: 'openid email profile' }),
+            body: JSON.stringify({ redirect_uri: redirectUri, state: stateData, returnOrigin }),
           })
 
           if (!authResponse.ok) {
@@ -1154,12 +1152,29 @@ export function useSession(): UseSessionReturn {
   }
 }
 
-// Validate OAuth state parameter (call this on callback page)
+// Decode the payload half of a server-signed OAuth state (`payload.sig`,
+// base64url). This does NOT verify the signature; /api/auth/google/state does.
+export function decodeOAuthStatePayload(state: string): Record<string, any> | null {
+  try {
+    const body = state.split('.')[0]
+    const b64 = body.replace(/-/g, '+').replace(/_/g, '/')
+    const json = new TextDecoder().decode(
+      Uint8Array.from(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4)), c => c.charCodeAt(0))
+    )
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+// Validate OAuth state parameter (call this on callback page, after the
+// server has verified its signature)
 export function validateOAuthState(state: string): { valid: boolean; callbackUrl: string } {
   const defaultResult = { valid: false, callbackUrl: '/redirect_from_auth' }
 
   try {
-    const stateData = JSON.parse(atob(state))
+    const stateData = decodeOAuthStatePayload(state)
+    if (!stateData) return defaultResult
     const stored = getOAuthStateCookie()
 
     if (!stored) {

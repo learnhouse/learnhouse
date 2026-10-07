@@ -1,14 +1,39 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Literal
+
+from src.services.ai.schemas.limits import (
+    AI_CONTEXT_MAX_CHARS,
+    AI_LABEL_MAX_CHARS,
+    AI_MESSAGE_MAX_CHARS,
+)
+
+# Attachments are decoded into memory and sent inline to the model. 15MB
+# decoded stays under the provider's ~20MB inline request ceiling.
+MAX_ATTACHMENTS = 10
+MAX_ATTACHMENT_TOTAL_BYTES = 15 * 1024 * 1024
 
 
 class AttachmentData(BaseModel):
     """Attachment data sent with a message"""
     type: Literal['image', 'video', 'file', 'youtube']
-    name: str
-    url: Optional[str] = None  # For YouTube links
+    name: str = Field(max_length=AI_LABEL_MAX_CHARS)
+    url: Optional[str] = Field(default=None, max_length=2048)  # For YouTube links
     content_base64: Optional[str] = None  # For uploaded files
-    mime_type: Optional[str] = None  # MIME type for uploaded files
+    mime_type: Optional[str] = Field(default=None, max_length=255)  # MIME type for uploaded files
+
+
+def _check_attachments(v: Optional[List[AttachmentData]]) -> Optional[List[AttachmentData]]:
+    """Cap attachment count and total decoded size (base64 is ~4/3 the bytes)."""
+    if not v:
+        return v
+    if len(v) > MAX_ATTACHMENTS:
+        raise ValueError(f"At most {MAX_ATTACHMENTS} attachments are allowed")
+    total = sum(len(a.content_base64 or "") for a in v) * 3 // 4
+    if total > MAX_ATTACHMENT_TOTAL_BYTES:
+        raise ValueError(
+            f"Attachments exceed {MAX_ATTACHMENT_TOTAL_BYTES // (1024 * 1024)}MB in total"
+        )
+    return v
 
 
 class ActivityPlan(BaseModel):
@@ -72,17 +97,21 @@ class CoursePlanningSessionData(BaseModel):
 class StartCoursePlanningSession(BaseModel):
     """Request to start a new course planning session"""
     org_id: int
-    prompt: str  # Initial course description from user
-    language: str = "en"  # Language code for content generation (e.g., "en", "fr", "de")
+    prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)  # Initial course description from user
+    language: str = Field(default="en", max_length=AI_LABEL_MAX_CHARS)  # Language code for content generation (e.g., "en", "fr", "de")
     attachments: Optional[List[AttachmentData]] = None  # Context files/links
+
+    _validate_attachments = field_validator("attachments")(_check_attachments)
 
 
 class SendCoursePlanningMessage(BaseModel):
     """Request to continue planning with a new message"""
     session_uuid: str
-    message: str
+    message: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     current_plan: Optional[CoursePlan] = None  # User-modified plan to iterate on
     attachments: Optional[List[AttachmentData]] = None  # Context files/links
+
+    _validate_attachments = field_validator("attachments")(_check_attachments)
 
 
 class FinalizeCoursePlanRequest(BaseModel):
@@ -95,12 +124,12 @@ class GenerateActivityContentRequest(BaseModel):
     """Request to generate content for a specific activity"""
     session_uuid: str
     activity_uuid: str
-    activity_name: str
-    activity_description: str
-    chapter_name: str
-    course_name: str
-    course_description: str
-    prompt: Optional[str] = None  # Additional instructions for content generation
+    activity_name: str = Field(max_length=AI_LABEL_MAX_CHARS)
+    activity_description: str = Field(max_length=AI_CONTEXT_MAX_CHARS)
+    chapter_name: str = Field(max_length=AI_LABEL_MAX_CHARS)
+    course_name: str = Field(max_length=AI_LABEL_MAX_CHARS)
+    course_description: str = Field(max_length=AI_CONTEXT_MAX_CHARS)
+    prompt: Optional[str] = Field(default=None, max_length=AI_MESSAGE_MAX_CHARS)  # Additional instructions for content generation
 
 
 class SaveActivityContentRequest(BaseModel):

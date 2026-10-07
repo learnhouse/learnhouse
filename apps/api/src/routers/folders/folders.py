@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from src.core.events.database import get_db_session
 from src.db.folders.folders import (
     FolderContentItem,
@@ -9,7 +9,13 @@ from src.db.folders.folders import (
     FolderUpdate,
     FolderUpdateOrder,
 )
-from src.security.auth import get_current_user
+from src.db.users import AnonymousUser
+from src.security.auth import get_current_user, resolve_acting_user_id
+from src.services.security.rate_limiting import (
+    check_rate_limit,
+    check_search_rate_limit,
+    get_client_ip,
+)
 from src.services.users.users import PublicUser
 from src.services.folders.folders import (
     create_folder,
@@ -91,10 +97,26 @@ async def api_get_folders_by(
 async def api_search_library(
     request: Request,
     org_id: str,
-    q: str,
+    q: str = Query(..., min_length=2, max_length=200),
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
+    # Same throttle as org search: per user, or per IP for anonymous callers
+    caller_id = resolve_acting_user_id(current_user)
+    if caller_id and not isinstance(current_user, AnonymousUser):
+        is_allowed, retry_after = check_search_rate_limit(caller_id)
+    else:
+        is_allowed, _count, retry_after = check_rate_limit(
+            key=f"library_search_anon:{get_client_ip(request)}",
+            max_attempts=30,
+            window_seconds=60,
+        )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many search queries. Please slow down.",
+            headers={"Retry-After": str(retry_after)},
+        )
     return await search_library(request, org_id, q, current_user, db_session)
 
 
