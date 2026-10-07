@@ -268,10 +268,14 @@ async def _load_applicable_roles(
         # Non-member: never grant role-based access to this org's resources.
         return []
 
+    # Only the role the user holds *in the target org* applies. Global default
+    # roles (Admin, User, ...) have org_id NULL, so without pinning the
+    # membership row an admin of any other org would be admin here too.
     statement = (
         select(Role)
         .join(UserOrganization)
         .where(UserOrganization.user_id == user_id)
+        .where(UserOrganization.org_id == target_org_id)
         .where((Role.org_id == target_org_id) | (Role.org_id == null()))
     )
     return (await db_session.execute(statement)).scalars().all()
@@ -330,7 +334,10 @@ async def _load_roles_for_user_target(
         select(Role)
         .join(UserOrganization)
         .where(UserOrganization.user_id == user_id)
-        .where(Role.org_id.in_(shared_org_ids) | (Role.org_id == null()))  # type: ignore[union-attr]
+        .where(UserOrganization.org_id.in_(shared_org_ids))  # type: ignore[union-attr]
+        .where(
+            (Role.org_id == UserOrganization.org_id) | (Role.org_id == null())
+        )
     )
     return (await db_session.execute(statement)).scalars().all()
 
@@ -377,7 +384,6 @@ async def authorization_verify_based_on_roles(
         user_roles_in_organization_and_standard_roles = await _load_applicable_roles(
             db_session, user_id, target_org_id
         )
-
 
     # Check if user is the author of the resource for "own" permissions
     is_author = False

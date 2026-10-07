@@ -2,54 +2,54 @@ import { Callout } from 'nextra/components'
 
 # Cloud vs Self Hosting
 
-LearnHouse is open-source software. You can use the managed **LearnHouse Cloud** platform or self-host the core platform on your own infrastructure using the **LearnHouse CLI**. This page explains the differences so you can make an informed choice.
+LearnHouse is open-source software. You can use the managed **LearnHouse Cloud** platform or self-host the core platform on your own infrastructure using the **LearnHouse CLI**. This page explains the differences between the two.
 
 ## Comparison
 
-|                              | ☁️ LearnHouse Cloud                                | 🖥️ Self Hosting                 |
+|                              | LearnHouse Cloud                                  | Self Hosting                     |
 | ---------------------------- | ------------------------------------------------- | -------------------------------- |
-| 🌍 Worldwide CDN             | ✅ Included                                        | ⚙️ Manual setup + additional cost |
-| 🔄 Weekly updates            | ✅ Automatic                                       | 🔧 Manual                        |
-| 🛠️ Maintenance               | ✅ Managed by the LearnHouse team                  | 👤 Your responsibility            |
-| 🔒 Security patches          | ✅ Applied automatically                           | 🔧 Manual                        |
-| 📊 Threat & uptime monitoring | ✅ Included                                       | ❌ Not included                   |
-| 🔐 SSL certificate           | ✅ Included                                        | 🔧 Manual                        |
-| 💾 Continuous backups         | ✅ Included                                        | ⚙️ Manual + additional cost       |
-| 📈 Scalability               | ✅ Automatic                                       | ⚙️ Depends on your provider       |
-| 🖥️ Direct SSH & DB access    | ❌ Not available                                   | ✅ Full access                    |
-| 🎧 Product support           | ✅ Email support                                   | 👥 Community support              |
-| 💚 Where your money goes     | ✅ Supporting the team and funding new features     | 🏢 Third-party hosting companies  |
+| Worldwide CDN                | Included                                          | Manual setup + additional cost   |
+| Weekly updates               | Automatic                                         | Manual                           |
+| Maintenance                  | Managed by the LearnHouse team                    | Your responsibility              |
+| Security patches             | Applied automatically                             | Manual                           |
+| Threat & uptime monitoring   | Included                                          | Not included                     |
+| SSL certificate              | Included                                          | Manual                           |
+| Continuous backups           | Included                                          | Manual + additional cost         |
+| Scalability                  | Automatic                                         | Depends on your provider         |
+| Direct SSH & DB access       | Not available                                     | Full access                      |
+| Product support              | Email support                                     | Community support                |
+| Where your money goes        | Supporting the team and funding new features      | Third-party hosting companies    |
 
-## ☁️ When to choose LearnHouse Cloud
+## When to choose LearnHouse Cloud
 
-**Best for:** teams, organizations, and businesses that want to focus on content and learners — not infrastructure.
+**Best for:** teams and organizations that want to spend their time on content and learners rather than infrastructure.
 
-- **Launch in minutes** — no servers to provision, no DevOps overhead. Your team can start building courses immediately.
-- **Zero-maintenance operations** — updates, security patches, SSL certificates, and backups are handled automatically by the LearnHouse team.
-- **Enterprise-grade reliability** — global CDN, threat monitoring, uptime guarantees, and automatic scaling out of the box.
-- **Priority support** — dedicated email support with faster response times for production issues.
-- **Invest in the product** — your subscription directly funds development of new features and improvements for the entire LearnHouse ecosystem.
+- **Launch in minutes**: there are no servers to provision and no DevOps work. Your team can start building courses right away.
+- **No maintenance**: the LearnHouse team handles updates, security patches, SSL certificates, and backups.
+- **Reliability**: a global CDN, threat monitoring, uptime guarantees, and automatic scaling are included.
+- **Priority support**: email support with faster response times for production issues.
+- **Fund the project**: your subscription pays for development of new LearnHouse features and improvements.
 
 <Callout type="info">
-LearnHouse Cloud is the recommended option for most organizations. It eliminates operational complexity and lets your team focus entirely on creating great learning experiences.
+We recommend LearnHouse Cloud for most organizations. You don't have to run any servers, so your team can spend its time on courses.
 </Callout>
 
-## 🖥️ When to choose Self Hosting
+## When to choose Self Hosting
 
-**Best for:** enterprises, institutions, and teams with strict infrastructure requirements and dedicated engineering resources.
+**Best for:** institutions and teams with strict infrastructure requirements and engineers available to run the deployment.
 
-- **Full data sovereignty** — host on your own infrastructure with complete control over where data lives. Ideal for organizations with data residency mandates.
-- **Regulatory compliance** — meet on-premises hosting requirements for HIPAA, SOC 2, internal security policies, or government regulations.
-- **Deep infrastructure access** — direct SSH, database access, and full control over networking, storage, and compute resources.
-- **Custom integrations** — connect to internal systems, private networks, SSO providers, and proprietary tooling without restrictions.
-- **Dedicated engineering teams** — organizations with DevOps or platform engineering teams that prefer to own their deployment pipeline.
+- **Data sovereignty**: host on your own infrastructure and decide where data lives. This matters for organizations with data residency requirements.
+- **Regulatory compliance**: meet on-premises hosting requirements for HIPAA, SOC 2, internal security policies, or government regulations.
+- **Infrastructure access**: direct SSH, database access, and full control over networking, storage, and compute.
+- **Custom integrations**: connect to internal systems, private networks, SSO providers, and proprietary tooling.
+- **Your own pipeline**: suits organizations with DevOps or platform engineering teams that prefer to own their deployment pipeline.
 
 <Callout type="warning">
 Self hosting requires your team to manage updates, backups, security patches, and scaling. Make sure you have the engineering capacity before choosing this path.
 </Callout>
 
 <Callout type="info">
-Both options give you access to the same core feature set. Self-hosted instances can be upgraded at any time with `learnhouse update`, which pulls the latest release from the [LearnHouse GitHub repository](https://github.com/learnhouse/learnhouse).
+Both options include the same core features. Self-hosted instances can be upgraded at any time with `learnhouse update`, which pulls the latest release from the [LearnHouse GitHub repository](https://github.com/learnhouse/learnhouse).
 </Callout>
 
 ## Next steps

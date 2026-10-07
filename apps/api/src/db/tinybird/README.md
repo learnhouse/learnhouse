@@ -5,8 +5,8 @@ LearnHouse uses [Tinybird](https://www.tinybird.co/) (managed ClickHouse) for an
 ## Architecture
 
 - **Ingestion**: The API sends events to Tinybird via the Events API (`POST /v0/events`)
-- **Querying**: The API reads data via the Query API (`POST /v0/sql`) using raw ClickHouse SQL — pipe files in `endpoints/` are reference only and are **not deployed**
-- **Config**: Analytics is automatically enabled when the Tinybird env vars are set. No `enabled` flag needed.
+- **Querying**: The API reads data via the Query API (`POST /v0/sql`) using raw ClickHouse SQL. Pipe files in `endpoints/` are reference only and are **not deployed**
+- **Config**: Analytics is automatically enabled when the Tinybird env vars are set. You don't need an `enabled` flag.
 
 ## Prerequisites
 
@@ -24,9 +24,9 @@ LEARNHOUSE_TINYBIRD_INGEST_TOKEN=p.eyJ...
 LEARNHOUSE_TINYBIRD_READ_TOKEN=p.eyJ...
 ```
 
-- `LEARNHOUSE_TINYBIRD_API_URL` — Your workspace's regional API URL
-- `LEARNHOUSE_TINYBIRD_INGEST_TOKEN` — Token with write permissions (Events API)
-- `LEARNHOUSE_TINYBIRD_READ_TOKEN` — Token with read permissions (Query API / SQL)
+- `LEARNHOUSE_TINYBIRD_API_URL`: Your workspace's regional API URL
+- `LEARNHOUSE_TINYBIRD_INGEST_TOKEN`: Token with write permissions (Events API)
+- `LEARNHOUSE_TINYBIRD_READ_TOKEN`: Token with read permissions (Query API / SQL)
 
 When both tokens are set, analytics is enabled automatically. When they are missing, the API skips tracking and the frontend shows a "not configured" message.
 
@@ -106,7 +106,7 @@ curl -X POST \
 ```
 tinybird/
   datasources/
-    events.datasource    # Datasource schema — deployed to Tinybird
+    events.datasource    # Datasource schema, deployed to Tinybird
   endpoints/
     *.pipe               # Reference pipe definitions (NOT deployed)
   README.md              # This file
@@ -191,7 +191,7 @@ Your workspace is in **Forward mode**. Use `tb --cloud deploy` instead of the v0
 The datasource hasn't been deployed yet. Follow the [Initial Setup](#initial-setup) steps.
 
 ### "Datasource events not found" on event ingestion
-Same as above — the Events API cannot auto-create datasources in Forward mode.
+Same as above: the Events API cannot auto-create datasources in Forward mode.
 
 ### Dashboard shows "Analytics not configured"
 The `LEARNHOUSE_TINYBIRD_INGEST_TOKEN` and/or `LEARNHOUSE_TINYBIRD_READ_TOKEN` env vars are not set. Set both to enable analytics.

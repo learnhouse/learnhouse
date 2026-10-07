@@ -57,6 +57,7 @@ from src.security.rbac import (
     check_resource_access,
     AccessAction,
 )
+from src.services.courses.activities.access import verify_activity_reader_access
 from src.services.courses.activities.uploads.sub_file import upload_submission_file
 from src.services.courses.activities.uploads.tasks_ref_files import (
     upload_reference_file,
@@ -135,8 +136,12 @@ async def authorize_assignment_access(
     course_uuid: str,
     access_action: AccessAction,
     token_action: str | None = None,
+    activity_id: int | None = None,
 ) -> None:
     """Authorize an assignment operation for either a user session or an API token.
+
+    With ``activity_id`` a session READ also runs the activity reader gate
+    (published, paywall, locks): an assignment is activity content.
 
     Sessions keep the existing course-scoped RBAC (``check_resource_access``).
     API tokens are authorized against the single ``assignments`` rights bucket,
@@ -159,6 +164,14 @@ async def authorize_assignment_access(
         )
         return
     await check_resource_access(request, db_session, current_user, course_uuid, access_action)
+    if activity_id is not None and access_action == AccessAction.READ:
+        row = (await db_session.execute(
+            select(Activity, Course)
+            .join(Course, Course.id == Activity.course_id)  # type: ignore
+            .where(Activity.id == activity_id)
+        )).first()
+        if row:
+            await verify_activity_reader_access(request, row[0], row[1], current_user, db_session)
 
 
 async def _is_assignment_instructor(
@@ -1180,7 +1193,10 @@ async def read_assignment(
 
     assignment, course_uuid, activity_uuid = row
 
-    await authorize_assignment_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await authorize_assignment_access(
+        request, db_session, current_user, course_uuid, AccessAction.READ,
+        activity_id=assignment.activity_id,
+    )
 
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
@@ -1215,7 +1231,10 @@ async def read_assignment_from_activity_uuid(
 
     assignment, course_uuid, activity_uuid_val = row
 
-    await authorize_assignment_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await authorize_assignment_access(
+        request, db_session, current_user, course_uuid, AccessAction.READ,
+        activity_id=assignment.activity_id,
+    )
 
     result = AssignmentRead.model_validate(assignment)
     result.course_uuid = course_uuid
@@ -1602,7 +1621,10 @@ async def read_assignment_tasks(
     )
 
     # RBAC check
-    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.READ,
+        activity_id=assignment.activity_id,
+    )
 
     # Students must not receive the answer key in the task payload. Instructors
     # see everything; a reveal-eligible student (own submission GRADED +
@@ -1664,7 +1686,10 @@ async def read_assignment_task(
         )
 
     # RBAC check
-    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await authorize_assignment_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.READ,
+        activity_id=assignment.activity_id,
+    )
 
     # Strip the answer key unless instructor. A reveal-eligible student sees the
     # per-answer keys but never the CODE solution or hidden tests (keep_answer_keys).
@@ -2830,9 +2855,15 @@ async def create_assignment_submission(
         is_token_submit = True
     else:
         _block_api_tokens(current_user)
+        if isinstance(current_user, AnonymousUser):
+            raise HTTPException(status_code=401, detail="Authentication required")
         submitter = current_user
-        # RBAC check
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+        # RBAC check, plus the activity gate: a submission on a paid or locked
+        # assignment counts towards completion and the certificate.
+        await authorize_assignment_access(
+            request, db_session, current_user, course.course_uuid, AccessAction.READ,
+            activity_id=assignment.activity_id,
+        )
         is_instructor = await authorization_verify_based_on_roles(
             request, current_user.id, "update", course.course_uuid, db_session
         )

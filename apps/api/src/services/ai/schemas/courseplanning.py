@@ -66,6 +66,7 @@ class CoursePlanningSessionData(BaseModel):
     message_history: List[CoursePlanningMessage] = []
     current_plan: Optional[CoursePlan] = None
     course_id: Optional[int] = None  # Set after finalization
+    user_id: Optional[int] = None  # Who started the session; None for sessions from before this field
 
 
 class StartCoursePlanningSession(BaseModel):
