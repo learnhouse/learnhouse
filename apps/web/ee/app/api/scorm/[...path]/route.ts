@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAPIUrl } from '@services/config/config'
+import { getServerAPIUrl } from '@services/config/config'
 import { bodyWasDecoded, canRecompress } from '../../../../services/scorm/proxyCompression'
+import { forwardedRequestHeaders } from '../../../../services/scorm/proxyHeaders'
 
 /**
  * Proxy route for SCORM content
@@ -14,7 +15,6 @@ import { bodyWasDecoded, canRecompress } from '../../../../services/scorm/proxyC
  * to stay same-origin for the SCORM API bridge.
  */
 
-const FORWARDED_REQUEST_HEADERS = ['range', 'if-none-match', 'if-modified-since']
 const FORWARDED_RESPONSE_HEADERS = [
   'content-type',
   'content-length',
@@ -37,17 +37,11 @@ export async function GET(
     const queryString = request.nextUrl.search
 
     // Build the backend URL (include query string if present)
-    const backendUrl = `${getAPIUrl()}scorm/${pathString}${queryString}`
-
-    const forwardHeaders: Record<string, string> = {}
-    for (const header of FORWARDED_REQUEST_HEADERS) {
-      const value = request.headers.get(header)
-      if (value) forwardHeaders[header] = value
-    }
+    const backendUrl = `${getServerAPIUrl()}scorm/${pathString}${queryString}`
 
     const response = await fetch(backendUrl, {
       method: 'GET',
-      headers: forwardHeaders,
+      headers: forwardedRequestHeaders(request.headers),
       redirect: 'manual',
     })
 
