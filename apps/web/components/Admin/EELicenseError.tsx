@@ -102,7 +102,7 @@ export default function EELicenseError({ error }: { error: unknown }) {
                 {error.detail.diagnostics && (
                   <li>
                     Open{' '}
-                    <code className="font-mono">{error.detail.diagnostics}</code> — it
+                    <code className="font-mono">{error.detail.diagnostics}</code>. It
                     answers even while the license is inactive, and its{' '}
                     <code className="font-mono">hint</code> field names the fix.
                   </li>

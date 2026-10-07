@@ -141,8 +141,8 @@ export default function CreateTokenModal({
           </Field>
 
           <div className="rounded-lg bg-amber-400/[0.06] border border-amber-400/20 px-3 py-2.5 text-xs text-amber-200/90">
-            A superadmin token can call <em>every</em> <code className="font-mono">/ee/superadmin/*</code> endpoint
-            — create orgs, toggle features, update plans across the platform. Treat it like a master key.
+            A superadmin token can call <em>every</em> <code className="font-mono">/ee/superadmin/*</code> endpoint:
+            create orgs, toggle features, update plans across the platform. Treat it like a master key.
           </div>
 
           {error && <p className="text-sm text-red-400">{error}</p>}

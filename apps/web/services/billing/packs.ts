@@ -17,7 +17,7 @@ export function platformApiKey(): string {
   const key = process.env.LEARNHOUSE_PLATFORM_API_KEY;
   if (!key) {
     throw new Error(
-      "LEARNHOUSE_PLATFORM_API_KEY is unset on the web deployment — pack " +
+      "LEARNHOUSE_PLATFORM_API_KEY is unset on the web deployment, so pack " +
         "activation and active-user overage billing cannot authenticate to the " +
         "API. Set it to the same value as the API's LEARNHOUSE_PLATFORM_API_KEY.",
     );
