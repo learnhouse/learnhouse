@@ -120,7 +120,7 @@ Cookies are hints; the backend is the security boundary. Per-cookie:
 - **`LH_session`**: non-httpOnly boolean. Setting it to `1` without a valid JWT just triggers the "redirect logged-in users away from /login" branch. The dashboard then fails real auth and redirects back. Annoyance, not breach.
 - **`LH_region`**: changes which currency Stripe shows. **Stripe enforces server-side prices at checkout**, so the user can change the display but not the charge.
 
-In short: cookies tell us what UI to render, the JWT tells us who you are, the database tells us what you're allowed to do. Every API endpoint enforces the last two regardless of the first.
+Defense in depth: cookies tell us what UI to render, the JWT tells us who you are, the database tells us what you're allowed to do. Every API endpoint enforces the last two regardless of the first.
 
 ### Cookie domain rules
 

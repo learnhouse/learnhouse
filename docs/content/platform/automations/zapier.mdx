@@ -108,4 +108,4 @@ All Zapier endpoints require `Authorization: Bearer lh_…`. The org scope is ca
 - **"Zapier integration requires a Pro plan or higher"**: Upgrade the organization's plan; the Zapier endpoints are gated at Pro.
 - **"Unknown event"**: The Zapier app was pushed with an event name that no longer exists in LearnHouse (or vice versa). Make sure the Zapier app and the LearnHouse instance are on compatible versions.
 - **Zap runs but no data comes through**: Check **Settings → Automations** in LearnHouse; the subscription row shows recent delivery attempts, their status, and the response body Zapier returned.
-- **SSRF block**: Zapier's callback URL is public, so this should not happen in production. If it does, check the delivery log's `error_message`, which says which IP was blocked.
+- **SSRF block**: Zapier's callback URL is public, so this should not happen in production. If it does, check the delivery log's `error_message`, which names the IP that was blocked.

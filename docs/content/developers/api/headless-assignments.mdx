@@ -127,7 +127,7 @@ curl -X POST "http://localhost:1338/api/v1/assignments/{assignment_uuid}/submiss
 Two ways to grade, both gated by `update`:
 
 - `POST .../submissions/{user_id}/grade` recomputes the grade from the task submissions (auto-gradable types are re-verified server-side) and accepts an optional `overall_feedback` in the body.
-- `PUT .../submissions/{user_id}` sets the grade, status, and feedback directly: useful for custom tasks you scored yourself.
+- `PUT .../submissions/{user_id}` sets the grade, status, and feedback directly, which is useful for custom tasks you scored yourself.
 
 ```bash
 curl -X POST http://localhost:1338/api/v1/assignments/{assignment_uuid}/submissions/42/grade \

@@ -12,7 +12,7 @@ import ResourceModelDiagram from '../../../components/diagrams/ResourceModelDiag
 
 LearnHouse is **API-first**. The official web app is one client of a public REST API, so you can build your *own* learning platform on the same API with your own design, routing, and brand.
 
-This guide takes you from an empty folder to a working **headless learning platform**: a Next.js app that lists your courses, plays your content, signs users in, enrolls them, and tracks their progress, all through the LearnHouse API. The result is similar to what you'll find in the [`learnhouse/headless-examples`](https://github.com/learnhouse/headless-examples) repository contains.
+This guide takes you from an empty folder to a working **headless learning platform**: a Next.js app that lists your courses, plays your content, signs users in, enrolls them, and tracks their progress, all through the LearnHouse API. The result is similar to what you'll find in the [`learnhouse/headless-examples`](https://github.com/learnhouse/headless-examples) repository.
 
 ## Pick your path
 
@@ -47,7 +47,7 @@ Your Next.js app is a thin, fast client in front of the LearnHouse API. Reads ha
 <HeadlessArchitecture />
 
 <Callout type="info">
-A server-side BFF also sidesteps CORS entirely, on top of the security benefit. Your browser only ever talks to your own Next.js origin, and your server talks to LearnHouse.
+Besides the security benefit, a server-side BFF sidesteps CORS entirely. Your browser only ever talks to your own Next.js origin, and your server talks to LearnHouse.
 </Callout>
 
 ## The resources you'll touch
