@@ -48,7 +48,6 @@ from src.security.org_auth import (
     require_org_destroy_right,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
-from src.security.superadmin import is_user_superadmin
 from src.services.orgs.invites import send_invite_email
 from src.services.demo.guards import hide_other_visitors
 from src.services.orgs.orgs import is_org_admin_role, rbac_check
