@@ -31,7 +31,7 @@ jobs:
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           # Matches the uv pinned in apps/api/Dockerfile
-          version: "0.10.7"
+          version: latest
           # Resolving and downloading the API's wheels from scratch on every
           # run is pure repetition; the lockfile is what decides the answer,
           # so key the cache on it.

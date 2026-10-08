@@ -80,7 +80,7 @@ jobs:
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           # Matches the uv pinned in apps/api/Dockerfile
-          version: "0.10.7"
+          version: latest
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
 
