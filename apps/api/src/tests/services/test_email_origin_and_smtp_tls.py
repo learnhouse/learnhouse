@@ -283,6 +283,8 @@ class TestMagicLinkUrlInEmailBody:
         with patch(
             "src.routers.auth.check_login_rate_limit", return_value=(True, None)
         ), patch(
+            "src.routers.auth.check_rate_limit", return_value=(True, 1, 900)
+        ), patch(
             "src.services.auth.magic_login.issue_magic_login_token", return_value="tok"
         ), patch(
             "src.services.auth.magic_login.send_email", side_effect=_capture
