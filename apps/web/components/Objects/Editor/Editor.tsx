@@ -69,6 +69,7 @@ import DragHandle from './Extensions/DragHandle/DragHandle'
 import { SlashCommands } from './Extensions/SlashCommands'
 import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
+import { LessonDetails } from './Extensions/Details/LessonDetails'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -167,6 +168,7 @@ function Editor(props: EditorProps) {
         bulletList: { HTMLAttributes: { class: 'bullet-list' } },
         orderedList: { HTMLAttributes: { class: 'ordered-list' } },
       }),
+      ...LessonDetails,
       Callout,
       InfoCallout.configure({ editable: true }),
       WarningCallout.configure({ editable: true }),

@@ -2565,3 +2565,270 @@
   display: block;
 }
 
+/* Lesson reading: a quieter measure, clearer heading rhythm, and readable tables. */
+.activity-editor-content-wrapper .ProseMirror,
+.canva-content-wrapper .ProseMirror {
+  color: var(--color-foreground);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  max-width: 76ch;
+  margin-inline: auto;
+  overflow-wrap: anywhere;
+}
+
+.activity-editor-content-wrapper .ProseMirror p,
+.canva-content-wrapper .ProseMirror p {
+  line-height: inherit;
+  margin-block: 0 1.05em;
+}
+
+.activity-editor-content-wrapper .ProseMirror h1,
+.canva-content-wrapper .ProseMirror h1,
+.activity-editor-content-wrapper .ProseMirror h2,
+.canva-content-wrapper .ProseMirror h2,
+.activity-editor-content-wrapper .ProseMirror h3,
+.canva-content-wrapper .ProseMirror h3,
+.activity-editor-content-wrapper .ProseMirror h4,
+.canva-content-wrapper .ProseMirror h4,
+.activity-editor-content-wrapper .ProseMirror h5,
+.canva-content-wrapper .ProseMirror h5,
+.activity-editor-content-wrapper .ProseMirror h6,
+.canva-content-wrapper .ProseMirror h6 {
+  color: var(--color-foreground);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.018em;
+  margin-block: 1.55em 0.55em;
+  scroll-margin-top: 1.5rem;
+}
+
+.activity-editor-content-wrapper .ProseMirror h1,
+.canva-content-wrapper .ProseMirror h1 {
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  margin-block-start: 0.1em;
+}
+
+.activity-editor-content-wrapper .ProseMirror h2,
+.canva-content-wrapper .ProseMirror h2 {
+  font-size: clamp(1.65rem, 3vw, 2rem);
+}
+
+.activity-editor-content-wrapper .ProseMirror h3,
+.canva-content-wrapper .ProseMirror h3 { font-size: 1.45rem; }
+.activity-editor-content-wrapper .ProseMirror h4,
+.canva-content-wrapper .ProseMirror h4 { font-size: 1.25rem; }
+.activity-editor-content-wrapper .ProseMirror h5,
+.canva-content-wrapper .ProseMirror h5 { font-size: 1.125rem; }
+.activity-editor-content-wrapper .ProseMirror h6,
+.canva-content-wrapper .ProseMirror h6 { font-size: 1rem; }
+
+.activity-editor-content-wrapper .ProseMirror .tableWrapper,
+.canva-content-wrapper .ProseMirror .tableWrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  margin-block: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+}
+
+.activity-editor-content-wrapper .ProseMirror table,
+.canva-content-wrapper .ProseMirror table {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+  min-width: 34rem;
+  width: 100%;
+  color: var(--color-foreground);
+}
+
+.activity-editor-content-wrapper .ProseMirror table td,
+.activity-editor-content-wrapper .ProseMirror table th,
+.canva-content-wrapper .ProseMirror table td,
+.canva-content-wrapper .ProseMirror table th {
+  padding: 0.7rem 0.85rem;
+  border-inline-end: 1px solid var(--color-border);
+  border-block-end: 1px solid var(--color-border);
+  line-height: 1.55;
+  min-width: 7rem;
+}
+
+.activity-editor-content-wrapper .ProseMirror table th,
+.canva-content-wrapper .ProseMirror table th {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  font-weight: 700;
+}
+
+.activity-editor-content-wrapper .ProseMirror table tr:last-child td,
+.canva-content-wrapper .ProseMirror table tr:last-child td {
+  border-block-end: 0;
+}
+
+.activity-editor-content-wrapper .ProseMirror table td:last-child,
+.activity-editor-content-wrapper .ProseMirror table th:last-child,
+.canva-content-wrapper .ProseMirror table td:last-child,
+.canva-content-wrapper .ProseMirror table th:last-child {
+  border-inline-end: 0;
+}
+
+/* Optional reading nodes use the official TipTap Details schema in editor and reader. */
+.activity-editor-content-wrapper .ProseMirror [data-type="details"],
+.canva-content-wrapper .ProseMirror [data-type="details"] {
+  position: relative;
+  margin-block: 1.35rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-card);
+}
+
+.activity-editor-content-wrapper .ProseMirror [data-type="details"] > button,
+.canva-content-wrapper .ProseMirror [data-type="details"] > button {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  inset-block-start: 1.02rem;
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.35rem;
+  color: var(--color-muted-foreground);
+  background: transparent;
+  cursor: pointer;
+}
+
+.activity-editor-content-wrapper .ProseMirror [data-type="details"] > button::before,
+.canva-content-wrapper .ProseMirror [data-type="details"] > button::before {
+  content: "";
+  width: 0.42rem;
+  height: 0.42rem;
+  border-inline-end: 2px solid currentColor;
+  border-block-end: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 140ms ease;
+}
+
+.activity-editor-content-wrapper .ProseMirror [data-type="details"].is-open > button::before,
+.canva-content-wrapper .ProseMirror [data-type="details"].is-open > button::before {
+  transform: rotate(45deg);
+}
+
+.activity-editor-content-wrapper .ProseMirror [data-type="details"] > button:focus-visible,
+.canva-content-wrapper .ProseMirror [data-type="details"] > button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.activity-editor-content-wrapper .ProseMirror [data-type="details"] > div,
+.canva-content-wrapper .ProseMirror [data-type="details"] > div {
+  min-width: 0;
+}
+
+.activity-editor-content-wrapper .ProseMirror .lesson-disclosure__summary,
+.canva-content-wrapper .ProseMirror .lesson-disclosure__summary {
+  display: block;
+  min-height: 1.55rem;
+  margin: 0;
+  padding-inline-start: 1.6rem;
+  color: var(--color-foreground);
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.activity-editor-content-wrapper .ProseMirror .lesson-disclosure__content,
+.canva-content-wrapper .ProseMirror .lesson-disclosure__content {
+  margin-block-start: 0.85rem;
+  padding-inline-start: 1.6rem;
+  color: var(--color-foreground);
+}
+
+.activity-editor-content-wrapper .ProseMirror [data-type="details"] p:last-child,
+.canva-content-wrapper .ProseMirror [data-type="details"] p:last-child {
+  margin-block-end: 0;
+}
+
+.lesson-toc {
+  position: sticky;
+  inset-block-start: 1.25rem;
+  align-self: flex-start;
+  padding: 0.85rem 0.75rem 0.85rem 0;
+}
+
+.lesson-toc__title {
+  margin: 0 0 0.8rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.lesson-toc .toc-item { margin-block: 0.55rem; }
+.lesson-toc .toc-check { color: var(--color-muted-foreground); }
+.lesson-toc .toc-link { color: var(--color-muted-foreground); }
+.lesson-toc .toc-link:hover,
+.lesson-toc .toc-link:focus-visible { color: var(--color-foreground); }
+.lesson-toc .toc-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; border-radius: 2px; }
+
+@media (max-width: 760px) {
+  .canva-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    height: auto;
+  }
+
+  .canva-content-wrapper > div:first-child,
+  .canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:first-child {
+    width: 100%;
+    padding-inline-end: 0;
+  }
+
+  .canva-content-wrapper > div:last-child,
+  .canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:last-child {
+    width: 100%;
+  }
+
+  .lesson-toc {
+    position: static;
+    max-height: 13rem;
+    overflow-y: auto;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-card);
+  }
+
+  .canva-content-wrapper .ProseMirror {
+    padding: 0.75rem 0.25rem;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .canva-content-wrapper .ProseMirror h1 { font-size: 2rem; }
+  .canva-content-wrapper .ProseMirror h2 { font-size: 1.65rem; }
+  .canva-content-wrapper .ProseMirror h3 { font-size: 1.35rem; }
+
+  .activity-editor-content-wrapper {
+    margin: 0.5rem;
+    margin-top: 8rem;
+  }
+
+  .activity-editor-content-wrapper .ProseMirror {
+    padding: 1rem;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-editor-content-wrapper .ProseMirror [data-type="details"] > button::before,
+  .canva-content-wrapper .ProseMirror [data-type="details"] > button::before {
+    transition: none;
+  }
+}

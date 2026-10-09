@@ -60,6 +60,7 @@ import TableOfContents from './TableOfContents'
 import { CustomHeading } from './CustomHeadingExtenstion'
 import WebPreview from '@components/Objects/Editor/Extensions/WebPreview/WebPreview'
 import AICanvaToolkit from './AI/AICanvaToolkit'
+import { LessonDetails } from '@components/Objects/Editor/Extensions/Details/LessonDetails'
 
 interface Editor {
   content: string
@@ -115,6 +116,7 @@ function Canva(props: Editor) {
           },
         },
       }),
+      ...LessonDetails,
       CustomHeading,
       NoTextInput,
       // Custom Extensions

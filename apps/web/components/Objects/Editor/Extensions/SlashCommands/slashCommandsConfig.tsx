@@ -135,6 +135,17 @@ export const slashCommands: SlashCommandItem[] = [
     },
   },
   {
+    id: 'optionalReading',
+    title: 'Optional reading section',
+    description: 'Collapse an example or supplementary explanation',
+    icon: <FileText size={18} />,
+    category: 'text',
+    keywords: ['details', 'disclosure', 'collapse', 'optional', 'example', 'supplementary', 'facultatif'],
+    command: (editor) => {
+      editor.chain().focus().setDetails().run()
+    },
+  },
+  {
     id: 'bulletList',
     title: 'Bullet List',
     description: 'Unordered list with bullet points',
