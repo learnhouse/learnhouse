@@ -41,7 +41,7 @@ Schema constraints:
 - Definitions, objectives, key explanations, and required conclusions stay outside `details` so students see them without an extra action.
 - Preserve all source-language text exactly. The authoring action adds a wrapper and does not rewrite the selected text.
 
-The editor's “Optional reading section” slash command wraps the selected block(s). Authors then replace the empty summary with the disclosure label. The existing course activity JSON envelope remains unchanged: store this node inside the activity's current TipTap `doc` JSON and continue using the same activity save path.
+The editor's “Optional reading section” slash command wraps the selected block(s) and inserts an empty summary when there is no selection. Authors enter a concise disclosure label and add optional material in `detailsContent`. The existing course activity JSON envelope remains unchanged: store this node inside the activity's current TipTap `doc` JSON and continue using the same activity save path.
 
 ## Compatibility and ZIP-generation recommendation
 
@@ -51,17 +51,17 @@ The prototype does not alter the course ZIP format or the course-factory reposit
 
 ## Accessibility and reading behavior
 
-- The official Details node view uses a native `<button type="button">`, so keyboard users can focus and activate the disclosure with Enter or Space.
+- The official Details node view uses a native `<button type="button">`; the LearnHouse wrapper handles Enter and Space explicitly inside the contenteditable and retains focus after toggling.
 - The button's accessible name comes from the summary, and `aria-expanded` follows the open state. The Details content uses the HTML `hidden` attribute while collapsed.
 - A student table-of-contents link opens each collapsed Details ancestor, outermost first, before the browser follows the heading fragment.
-- Focus indicators remain visible, reduced-motion preferences disable the caret transition, tables scroll horizontally on narrow screens, and the reader table of contents stacks above lesson content on mobile.
+- Focus indicators remain visible, reduced-motion preferences disable the caret transition, tables remain inside the mobile content column, and the reader table of contents stacks above lesson content on mobile.
 - This is an implementation review, not a WCAG conformance claim. Screen-reader testing with a supported desktop and mobile assistive-technology matrix remains a release check.
 
 ## Validation record
 
-- Automated TipTap schema tests verify node shape, `open` persistence, and save/reopen JSON round-tripping.
+- Automated TipTap schema tests verify node shape, keyboard activation/focus retention, `open` persistence, and save/reopen JSON round-tripping.
 - The editor and student reader both register the same Details nodes.
-- The 1.3.6 source dependency tree and a production build are used for compatibility validation.
-- Keyboard behavior is based on the extension's native button node view and was reviewed in source; a real keyboard traversal was not completed.
-- Mobile layout rules were included and passed the production CSS build, but a mobile viewport visual check was not completed.
-- Before/after visual captures could not be produced in this environment: the in-app browser returned its offline page while capturing the local preview, even though the local server returned the fixture. No offline-page image is included as a product screenshot.
+- The LearnHouse 1.3.6 dependency tree and a production Webpack build are used for compatibility validation.
+- A clean Chromium browser completed keyboard traversal, Enter/Space toggles, ToC navigation into a collapsed section, editor insertion, browser-local save/reopen, and mobile reading at 390px.
+- Captures live in `screenshots/`; they show the actual production reader/editor components mounted in a clearly labeled local component harness with synthetic French lesson content.
+- No real course activity, account, or API course record was used. Screen-reader testing remains unverified.

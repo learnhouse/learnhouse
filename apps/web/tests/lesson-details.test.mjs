@@ -89,6 +89,73 @@ describe("shared lesson disclosure schema", () => {
     host.remove();
   });
 
+  test("supports Enter and Space without losing focus from the disclosure button", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const editor = new Editor({
+      element: host,
+      editable: true,
+      extensions: [StarterKit, ...LessonDetails],
+      content: sample,
+    });
+    const button = host.querySelector("button[data-details-toggle]");
+
+    button.focus();
+    button.dispatchEvent(new window.KeyboardEvent("keydown", {
+      key: "Enter",
+      bubbles: true,
+      cancelable: true,
+    }));
+    await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    expect(document.activeElement).toBe(button);
+
+    button.dispatchEvent(new window.KeyboardEvent("keydown", {
+      key: " ",
+      bubbles: true,
+      cancelable: true,
+    }));
+    await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(button);
+    editor.destroy();
+    host.remove();
+  });
+
+  test("updates the toggle's accessible name when an author changes its summary", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const editor = new Editor({
+      element: host,
+      editable: true,
+      extensions: [StarterKit, ...LessonDetails],
+      content: sample,
+    });
+    const button = host.querySelector("button[data-details-toggle]");
+    let summaryPosition = -1;
+    let summaryLength = 0;
+
+    editor.state.doc.descendants((node, position) => {
+      if (node.type.name === "detailsSummary") {
+        summaryPosition = position;
+        summaryLength = node.textContent.length;
+      }
+    });
+    editor.commands.setTextSelection({
+      from: summaryPosition + 1,
+      to: summaryPosition + 1 + summaryLength,
+    });
+    editor.commands.insertContent("Complément facultatif");
+    await Promise.resolve();
+
+    expect(host.querySelector(".lesson-disclosure__summary")?.textContent).toBe("Complément facultatif");
+    expect(button.getAttribute("aria-label")).toBe("Complément facultatif");
+    editor.destroy();
+    host.remove();
+  });
+
   test("preserves official details nodes and a closed default through save and reopen", () => {
     const editor = createEditor(sample);
     const saved = JSON.parse(JSON.stringify(editor.getJSON()));
