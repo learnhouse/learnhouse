@@ -16,7 +16,7 @@ from src.services.users.emails import (
     send_password_reset_email,
     send_password_reset_email_platform,
 )
-from src.services.email.utils import get_platform_base_url
+from src.services.email.utils import get_member_link_base_url
 from src.security.org_auth import get_user_org
 from src.db.users import (
     AnonymousUser,
@@ -86,7 +86,14 @@ def _enforce_send_ip_rate_limit(request: Request) -> None:
 def _consume_reset_code(r, reset_key: str, user_uuid: str):
     """Atomically take the code (GETDEL, so two racing requests cannot both
     redeem it). Returns the stored object, or None when absent/expired."""
-    raw = r.getdel(reset_key)
+    try:
+        raw = r.getdel(reset_key)
+    except redis.exceptions.ResponseError:
+        # GETDEL needs Redis 6.2+; a MULTI block is just as atomic elsewhere.
+        pipe = r.pipeline(transaction=True)
+        pipe.get(reset_key)
+        pipe.delete(reset_key)
+        raw, _ = pipe.execute()
     if raw is None:
         return None
     reset_code_object = json.loads(raw)
@@ -386,7 +393,7 @@ async def send_reset_password_code_platform(
     user_read = UserRead.model_validate(user)
     user_read = user_read.model_copy(update={"username": email_user_name(user_read.username)})
 
-    base_url = get_platform_base_url(request)
+    base_url = await get_member_link_base_url(request, db_session, user.id)
     isEmailSent = send_password_reset_email_platform(
         generated_reset_code=generated_reset_code,
         user=user_read,

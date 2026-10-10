@@ -15,7 +15,7 @@ from src.security.features_utils.usage import (
 )
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserReadAuthor, APITokenUser
-from src.security.api_token_utils import require_token_right
+from src.security.api_token_utils import require_token_content_read
 from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import require_org_create_permission
 from src.db.podcasts.podcasts import (
@@ -311,7 +311,7 @@ def _require_token_podcast_listing(current_user: APITokenUser, org_id: int) -> N
             status_code=status.HTTP_403_FORBIDDEN,
             detail="API token cannot access resources outside its organization",
         )
-    require_token_right(current_user, "podcasts", "action_read")
+    require_token_content_read(current_user, "podcasts")
 
 
 async def get_podcasts_orgslug(

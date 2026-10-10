@@ -4,7 +4,7 @@ import json
 import string
 from datetime import datetime
 from types import SimpleNamespace
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -123,7 +123,8 @@ class TestPasswordResetService:
             "src.services.users.password_reset.redis.Redis.from_url",
             return_value=fake_redis,
         ), patch(
-            "src.services.users.password_reset.get_platform_base_url",
+            "src.services.users.password_reset.get_member_link_base_url",
+            new_callable=AsyncMock,
             return_value="https://learnhouse.test",
         ), patch(
             "src.services.users.password_reset.send_password_reset_email",
@@ -163,7 +164,8 @@ class TestPasswordResetService:
             "src.services.users.password_reset._get_redis_connection",
             return_value=fake_redis,
         ), patch(
-            "src.services.users.password_reset.get_platform_base_url",
+            "src.services.users.password_reset.get_member_link_base_url",
+            new_callable=AsyncMock,
             return_value="https://learnhouse.test",
         ), patch(
             "src.services.users.password_reset.send_password_reset_email_platform",
@@ -274,7 +276,8 @@ class TestPasswordResetService:
             "src.services.users.password_reset.redis.Redis.from_url",
             return_value=Mock(set=Mock()),
         ), patch(
-            "src.services.users.password_reset.get_platform_base_url",
+            "src.services.users.password_reset.get_member_link_base_url",
+            new_callable=AsyncMock,
             return_value="https://learnhouse.test",
         ), patch(
             "src.services.users.password_reset.send_password_reset_email",
@@ -529,7 +532,8 @@ class TestPasswordResetService:
             "src.services.users.password_reset._get_redis_connection",
             return_value=fake_redis,
         ), patch(
-            "src.services.users.password_reset.get_platform_base_url",
+            "src.services.users.password_reset.get_member_link_base_url",
+            new_callable=AsyncMock,
             return_value="https://learnhouse.test",
         ), patch(
             "src.services.users.password_reset.send_password_reset_email_platform",
@@ -744,8 +748,30 @@ class TestPasswordResetService:
         set_redis.set = Mock()
         with patch("src.services.users.password_reset.generate_secure_reset_code", return_value="FAIL1234"), \
              patch("src.services.users.password_reset._get_redis_connection", return_value=set_redis), \
-             patch("src.services.users.password_reset.get_platform_base_url", return_value="https://test"), \
+             patch("src.services.users.password_reset.get_member_link_base_url",
+            new_callable=AsyncMock, return_value="https://test"), \
              patch("src.services.users.password_reset.send_password_reset_email_platform", return_value=False):
             with pytest.raises(HTTPException) as exc351:
                 await send_reset_password_code_platform(mock_request, db, AnonymousUser(), regular_user.email)
         assert exc351.value.status_code == 500
+
+
+def test_consume_reset_code_falls_back_without_getdel():
+    """Redis older than 6.2 has no GETDEL; the code is still taken atomically."""
+    import json as _json
+    from datetime import datetime as _dt
+
+    import redis as _redis
+
+    from src.services.users.password_reset import _consume_reset_code
+
+    stored = _json.dumps({"reset_code_expires": int(_dt.now().timestamp()) + 60})
+    pipe = MagicMock()
+    pipe.execute.return_value = [stored, 1]
+    r = MagicMock()
+    r.getdel.side_effect = _redis.exceptions.ResponseError("unknown command 'getdel'")
+    r.pipeline.return_value = pipe
+
+    assert _consume_reset_code(r, "k", "user_x") is not None
+    r.pipeline.assert_called_once_with(transaction=True)
+    pipe.delete.assert_called_once_with("k")

@@ -95,11 +95,14 @@ const requestLimiter = createRateLimiter(RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX)
 const connectionGuard = createConnectionGuard({
   trustProxy: TRUST_PROXY,
   rateLimitWindowMs: RATE_LIMIT_WINDOW_MS,
-  rateLimitMax: 60, // new sockets per IP per window (reconnects included)
-  maxConnectionsPerIp: 50, // open sockets per IP (shared NAT, many tabs)
-  maxPendingConnections: 500, // unauthenticated sockets across all IPs
-  authDeadlineMs: 15_000,
-  preAuthMaxBytes: 1024 * 1024,
+  // Sized for a whole classroom behind one NAT reconnecting at once
+  rateLimitMax: 300, // new sockets per IP per window (reconnects included)
+  maxConnectionsPerIp: 200, // open sockets per IP (shared NAT, many tabs)
+  // Last-resort memory bound; per-socket limits below keep each one cheap,
+  // so this only bites under a flood
+  maxPendingConnections: 2000, // unauthenticated sockets across all IPs
+  authDeadlineMs: 10_000,
+  preAuthMaxBytes: 256 * 1024, // auth plus the first sync step is a few KB
 })
 
 // Clean up stale entries every 5 minutes

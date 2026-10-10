@@ -191,6 +191,16 @@ class TestEmailChange:
         result = await self._change(db, mock_request, user, user, first_name="Renamed")
         assert result.first_name == "Renamed"
 
+    async def test_resaving_a_mixed_case_email_is_not_an_email_change(self, db, mock_request):
+        # EmailStr lowercases the domain the profile form re-sends.
+        user = await _make_user(db, 65, "Mixed@Example.COM")
+        result = await self._change(
+            db, mock_request, user, user, email="Mixed@example.com", first_name="Same"
+        )
+        assert result.first_name == "Same"
+        assert result.email == "Mixed@Example.COM"
+        assert result.email_verified is True
+
     async def test_passwordless_account_without_mfa_is_told_to_set_a_password(self, db, mock_request):
         user = await _make_user(db, 63, "google@test.com", password="")
         with pytest.raises(HTTPException) as exc:
@@ -399,7 +409,7 @@ class TestPasswordReset:
                 mock_request, db, AnonymousUser(), "N3w!Password9", user.email, "ABCDEFGH"
             )
 
-    async def test_platform_send_ignores_origin_and_is_ip_limited(self, db):
+    async def test_platform_send_uses_member_aware_link_and_is_ip_limited(self, db):
         from src.services.users.password_reset import send_reset_password_code_platform
 
         await _make_user(db, 93, "platform@test.com")
@@ -412,7 +422,8 @@ class TestPasswordReset:
         with patch(
             "src.services.users.password_reset._get_redis_connection", return_value=fake_redis
         ), patch(
-            "src.services.users.password_reset.get_platform_base_url",
+            "src.services.users.password_reset.get_member_link_base_url",
+            new_callable=AsyncMock,
             return_value="https://platform.test",
         ) as base_mock, patch(
             "src.services.users.password_reset.send_password_reset_email_platform",
@@ -507,7 +518,9 @@ class TestMagicLinkBranding:
         ) as issue_mock, patch(
             "src.services.auth.magic_login.send_magic_login_email"
         ) as send_mock, patch(
-            "src.services.email.utils.get_platform_base_url", return_value="https://platform.test"
+            "src.services.email.utils.get_member_link_base_url",
+            new_callable=AsyncMock,
+            return_value="https://platform.test",
         ):
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
                 resp = await c.post(
@@ -597,3 +610,50 @@ class TestMfaSessionRevocation:
         assert resp.status_code == 200
         revoke_mock.assert_called_once_with(regular_user.id)
 
+
+
+# ── Member-aware credential link host ────────────────────────────────────────
+
+
+class TestMemberLinkBaseUrl:
+    """Org-less reset and magic links stay on the org host the request came
+    from only when the user belongs to that org."""
+
+    @staticmethod
+    def _multi_tenant_config():
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            hosting_config=SimpleNamespace(
+                tenancy="multi", domain="learnhouse.test", ssl=True, frontend_domain=""
+            )
+        )
+
+    async def _resolve(self, db, user_id, origin):
+        from src.services.email import utils
+
+        request = Request({
+            "type": "http", "method": "POST", "path": "/", "query_string": b"",
+            "headers": [(b"origin", origin.encode())], "client": ("127.0.0.1", 0),
+        })
+        with patch.object(utils, "get_learnhouse_config", self._multi_tenant_config), patch.object(
+            utils, "get_trusted_base_url_from_request", return_value=origin
+        ), patch.object(utils, "get_platform_base_url", return_value="https://platform.test"):
+            return await utils.get_member_link_base_url(request, db, user_id)
+
+    async def test_member_keeps_their_org_host(self, db, org):
+        await _make_user(db, 96, "member-link@test.com")
+        await _join(db, 96, org.id)
+        url = await self._resolve(db, 96, "https://test-org.learnhouse.test")
+        assert url == "https://test-org.learnhouse.test"
+
+    async def test_non_member_gets_platform_host(self, db, org):
+        await _make_user(db, 97, "outsider-link@test.com")
+        url = await self._resolve(db, 97, "https://test-org.learnhouse.test")
+        assert url == "https://platform.test"
+
+    async def test_unknown_host_gets_platform_host(self, db, org):
+        await _make_user(db, 98, "elsewhere-link@test.com")
+        await _join(db, 98, org.id)
+        url = await self._resolve(db, 98, "https://unknown.example")
+        assert url == "https://platform.test"

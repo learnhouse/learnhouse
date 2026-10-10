@@ -460,9 +460,10 @@ async def zapier_delete_subscription(
     ctx=Depends(_zapier_context),
 ) -> dict:
     api_user, db_session = ctx
-    # Removing an outbound event feed takes the same admin gate as adding one.
+    # Removing an outbound event feed takes the same admin gate as adding one,
+    # but not the token-rights check: a token minted before that check existed
+    # must still be able to switch off the feeds it created.
     await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
-    _require_subscription_rights(api_user)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.id == subscription_id,
         WebhookEndpoint.org_id == api_user.org_id,

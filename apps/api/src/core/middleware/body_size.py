@@ -4,6 +4,10 @@ FastAPI reads and parses the whole body before any dependency (auth, rate
 limits) runs, so without a cap a single anonymous request can make a worker
 buffer gigabytes of JSON. Multipart uploads are left to the per-route upload
 validation, which streams to disk and knows each file type's limit.
+
+Known gap: FastAPI reads a JSON route's body into memory whatever its content
+type, so a request that merely claims to be multipart skips this cap. Closing
+that needs uploads to stream instead of buffering, which is tracked separately.
 """
 
 from starlette.datastructures import Headers

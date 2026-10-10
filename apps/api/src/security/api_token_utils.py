@@ -37,6 +37,20 @@ def require_token_right(current_user: APITokenUser, resource: str, action: str) 
         )
 
 
+def require_token_content_read(current_user: APITokenUser, resource: str) -> None:
+    """Read check for a content bucket the token editor has never offered.
+
+    Tokens holding the ``resource`` bucket are judged on it; tokens without it
+    (every token minted so far) fall back to their ``courses`` read right, the
+    bucket that has always covered org content.
+    """
+    rights = current_user.rights or {}
+    has_bucket = (
+        resource in rights if isinstance(rights, dict) else getattr(rights, resource, None) is not None
+    )
+    require_token_right(current_user, resource if has_bucket else "courses", "action_read")
+
+
 def reject_api_token_access(
     current_user: Union[PublicUser, APITokenUser, AnonymousUser]
 ) -> None:

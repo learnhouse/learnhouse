@@ -114,9 +114,12 @@ async def record_failed_login(
     distinct_ips = _record_failed_ip(user.id, ip_address)
     MIN_DISTINCT_IPS_FOR_LOCK = 2
 
+    # An active lock is never pushed forward. Login answers a locked account
+    # like a wrong password even when the password is right, so extending
+    # the lock here would let the real owner's own retries keep them out.
     lock_trigger = (
         (User.failed_login_attempts + 1 >= MAX_FAILED_ATTEMPTS)
-        if distinct_ips >= MIN_DISTINCT_IPS_FOR_LOCK
+        if distinct_ips >= MIN_DISTINCT_IPS_FOR_LOCK and not check_account_locked(user)[0]
         else False
     )
 

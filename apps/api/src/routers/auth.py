@@ -931,7 +931,7 @@ async def magic_link_request(
     )
     from src.services.orgs.auth_policy import is_login_method_allowed
     from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
-    from src.services.email.utils import get_platform_base_url
+    from src.services.email.utils import get_member_link_base_url
 
     is_allowed, retry_after = check_login_rate_limit(request)
     if not is_allowed:
@@ -982,7 +982,7 @@ async def magic_link_request(
 
     try:
         token = issue_magic_login_token(user.email, org.id if org else None)
-        base_url = get_platform_base_url(request)
+        base_url = await get_member_link_base_url(request, db_session, user.id)
         branding_kwargs: dict = {}
         if org is not None:
             # Org-scoped request: the link lands on the org's own host (its

@@ -177,6 +177,9 @@ class TestCommunityWrites:
             await get_communities_by_org(mock_request, other_org.id, reader, db)
         with pytest.raises(HTTPException):
             await get_communities_by_org(mock_request, org.id, _token(creator=admin_user.id), db)
+        # No communities bucket: courses read covers it, as for every existing token.
+        legacy = _token(creator=admin_user.id, courses={"action_read": True})
+        assert len(await get_communities_by_org(mock_request, org.id, legacy, db)) == 1
 
 
 # -- Superadmin token at the non-token gates -----------------------------------
@@ -362,13 +365,25 @@ class TestListings:
         results = await search_courses(mock_request, regular_user, org.slug, "draft", db)
         assert results == []
 
-    async def test_podcast_listing_needs_token_podcast_read(self, db, org, admin_user, mock_request):
+    async def test_podcast_listing_uses_podcasts_bucket_or_courses_read(
+        self, db, org, admin_user, mock_request
+    ):
         from src.services.podcasts.podcasts import get_podcasts_count_orgslug
 
+        # A token holding the podcasts bucket is judged on it.
         with pytest.raises(HTTPException):
             await get_podcasts_count_orgslug(
-                mock_request, _token(creator=admin_user.id, courses={"action_read": True}), org.slug, db
+                mock_request,
+                _token(creator=admin_user.id, podcasts={"action_read": False}, courses={"action_read": True}),
+                org.slug,
+                db,
             )
+        # Tokens minted before that bucket existed fall back to courses read.
+        assert await get_podcasts_count_orgslug(
+            mock_request, _token(creator=admin_user.id, courses={"action_read": True}), org.slug, db
+        ) == 0
+        with pytest.raises(HTTPException):
+            await get_podcasts_count_orgslug(mock_request, _token(creator=admin_user.id), org.slug, db)
 
     async def test_search_denies_token_without_rights(self, db, org, admin_user, mock_request):
         from src.services.search.search import search_across_org
@@ -477,3 +492,23 @@ class TestActiveUserRecording:
                 db.add(UserActivityDay(org_id=org.id, user_id=uid, activity_date=date(2026, 3, day)))
         await db.commit()
         assert await count_active_users(org.id, 2026, 3, db) == 1
+
+
+class TestSuperadminTokenOrgAndCommunityGates:
+    async def test_org_rbac_check_treats_superadmin_token_as_superadmin(self, db, org, mock_request):
+        from src.db.users import SuperadminAPITokenUser
+        from src.services.orgs.orgs import rbac_check
+
+        token = SuperadminAPITokenUser(id=5, created_by_user_id=999)
+        assert await rbac_check(mock_request, org.org_uuid, token, "update", db) is True
+
+    async def test_superadmin_token_cannot_post_to_a_community(self, db, org):
+        from src.db.users import SuperadminAPITokenUser
+        from src.services.communities.access import require_community_participant
+
+        community = await _community(db, org)
+        with pytest.raises(HTTPException) as exc:
+            await require_community_participant(
+                SuperadminAPITokenUser(id=5, created_by_user_id=999), community, db
+            )
+        assert exc.value.status_code == 403

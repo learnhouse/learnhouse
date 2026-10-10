@@ -21,7 +21,7 @@ from src.db.communities.communities import (
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.services.communities.access import require_community_participant
-from src.security.api_token_utils import require_token_right
+from src.security.api_token_utils import require_token_content_read
 from src.security.rbac import (
     check_resource_access,
     AccessAction,
@@ -177,7 +177,7 @@ async def get_communities_by_org(
                 status_code=403,
                 detail="API token cannot access resources outside its organization",
             )
-        require_token_right(current_user, "communities", "action_read")
+        require_token_content_read(current_user, "communities")
         query = select(Community).where(Community.org_id == org_id)
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
         communities = (await db_session.execute(query)).scalars().all()

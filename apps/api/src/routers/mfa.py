@@ -135,7 +135,10 @@ def _revoke_older_sessions(request: Request, user_id: int) -> None:
     if not iat:
         return
     try:
-        revoke_user_sessions_before(user_id, datetime.fromtimestamp(iat, tz=timezone.utc))
+        # One second of slack: this session's access and refresh tokens are
+        # minted separately and can straddle a second boundary, and cutting
+        # between them would sign the caller out at their next refresh.
+        revoke_user_sessions_before(user_id, datetime.fromtimestamp(iat - 1, tz=timezone.utc))
     except Exception:  # pragma: no cover - never fail the 2FA change on the revocation store
         pass
 

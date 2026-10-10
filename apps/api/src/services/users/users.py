@@ -544,7 +544,10 @@ async def update_user(
 
     # Email and username identify a global account; only its owner (or a
     # superadmin) changes them, never an admin of one of its orgs.
-    identity_changed = user_object.email != user.email or user_object.username != user.username
+    # EmailStr lowercases the domain, so a form that re-sends the stored
+    # address can differ from it in case alone; that is not a change.
+    email_changed = (user_object.email or "").strip().lower() != (user.email or "").strip().lower()
+    identity_changed = email_changed or user_object.username != user.username
     if identity_changed and not is_owner and not acting_superadmin:
         raise HTTPException(
             status_code=403,
@@ -554,7 +557,6 @@ async def update_user(
     if not is_owner and not acting_superadmin:
         await _check_org_admin_can_edit_account(user, db_session)
 
-    email_changed = user_object.email != user.email
     if email_changed:
         actor = user if is_owner else (await db_session.execute(
             select(User).where(User.id == current_user.id)
@@ -606,6 +608,9 @@ async def update_user(
     user_data = user_object.model_dump(
         exclude_unset=True, exclude={"current_password", "mfa_code"}
     )
+    if not email_changed:
+        # Keep the stored spelling; login matches the address exactly.
+        user_data.pop("email", None)
 
     # SECURITY: if the email actually changed, force re-verification on the
     # new address. SaaS login requires email_verified=True, so this prevents

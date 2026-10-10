@@ -1,6 +1,5 @@
 import json
 import logging
-import re
 from datetime import datetime
 from typing import Literal, Optional
 from uuid import uuid4
@@ -24,7 +23,7 @@ from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.security.org_auth import get_user_org
 from src.security.superadmin import is_user_superadmin
 from src.services.security.profile_validation import validate_profile_fields
-from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, SuperadminAPITokenUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
     Organization,
@@ -2216,6 +2215,12 @@ async def rbac_check(
     if isinstance(current_user, InternalUser):
         return True
 
+    # Superadmin API tokens are cross-org by design, and auth re-checks that
+    # their minter is still a superadmin. Their id is a token row id, so they
+    # must not reach the user-id based checks below.
+    if isinstance(current_user, SuperadminAPITokenUser):
+        return True
+
     # API Token path: verify token has permissions for this action on organizations
     if isinstance(current_user, APITokenUser):
         # SECURITY: API tokens should NOT be allowed to delete organizations
@@ -2301,17 +2306,16 @@ async def is_org_admin_role(user_id: int, org_id: int, db_session: AsyncSession)
     return user_org is not None and user_org.role_id == ADMIN_ROLE_ID
 
 
-_ORG_SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
-
-
 def normalize_org_slug(slug: str) -> str:
     """Lower-case and validate an org slug as a single DNS label.
 
     Slugs become hostnames in emailed links ({slug}.{domain}), so anything
     outside a DNS label (/ ? # " ...) would let the slug rewrite the link.
     """
+    from src.services.email.utils import ORG_SLUG_LABEL
+
     normalized = (slug or "").strip().lower().strip("-")
-    if not _ORG_SLUG_RE.match(normalized):
+    if not ORG_SLUG_LABEL.fullmatch(normalized):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Organization address may only contain lowercase letters, numbers and dashes",

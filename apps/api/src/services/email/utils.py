@@ -17,7 +17,8 @@ from src.services.email.sender import DEFAULT_SENDER_NAME, format_sender
 
 logger = logging.getLogger(__name__)
 
-_ORG_SLUG_HOST_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
+# An org slug is a single DNS label: it becomes {slug}.{domain} in links.
+ORG_SLUG_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
 
 
 def _configured_host(cfg_value: Optional[str]) -> str:
@@ -240,7 +241,7 @@ async def get_org_signup_base_url(
 
     # The slug becomes a hostname label; anything that is not a plain DNS label
     # could steer a credential-bearing link to another host.
-    if not _ORG_SLUG_HOST_LABEL.fullmatch(org_slug or ""):
+    if not ORG_SLUG_LABEL.fullmatch(org_slug or ""):
         logger.warning("Refusing to build an org link from a non-hostname slug")
         return get_platform_base_url(request)
 
@@ -267,6 +268,69 @@ def get_platform_base_url(request: Optional[Request] = None) -> str:
     if request is None:
         return ""
     return f"{request.url.scheme}://{request.url.netloc}"
+
+
+async def get_member_link_base_url(
+    request: Optional[Request], db_session, user_id: int
+) -> str:
+    """Base URL for a credential link sent without an org in the request.
+
+    Lands on the org host the request came from (subdomain or verified custom
+    domain) only when the user is a member of that org, so the link keeps the
+    user on the site they started from without letting an unrelated org owner
+    route someone else's link to a host they control. Anything else gets the
+    platform URL.
+    """
+    config = get_learnhouse_config()
+    if request is None:
+        return get_platform_base_url(request)
+    if config.hosting_config.tenancy == "single":
+        return get_base_url_from_request(request)
+
+    trusted = get_trusted_base_url_from_request(request)
+    host = (urlparse(trusted).hostname or "").lower() if trusted else ""
+    base_domain = (config.hosting_config.domain or "").strip().rstrip("/").lower()
+    if not host or not base_domain:
+        return get_platform_base_url(request)
+
+    from sqlmodel import select
+    from src.db.organizations import Organization
+    from src.db.user_organizations import UserOrganization
+
+    org = None
+    if host.endswith(f".{base_domain}"):
+        slug = host[: -len(base_domain) - 1]
+        if ORG_SLUG_LABEL.fullmatch(slug):
+            org = (await db_session.execute(
+                select(Organization).where(Organization.slug == slug)
+            )).scalars().first()
+    else:
+        from src.db.custom_domains import CustomDomain
+
+        domain = (await db_session.execute(
+            select(CustomDomain).where(
+                CustomDomain.domain == host,
+                CustomDomain.status == "verified",
+            )
+        )).scalars().first()
+        if domain:
+            org = await db_session.get(Organization, domain.org_id)
+
+    if org is None:
+        return get_platform_base_url(request)
+
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org.id,
+        )
+    )).scalars().first()
+    if membership is None:
+        return get_platform_base_url(request)
+
+    return await get_org_signup_base_url(
+        org.slug, request, db_session=db_session, org_id=org.id
+    ) or get_platform_base_url(request)
 
 
 def get_media_base_url(request: Optional[Request] = None) -> str:

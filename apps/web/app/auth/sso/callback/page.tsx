@@ -68,18 +68,21 @@ export default function SSOCallbackPage() {
         // Google callback does.
         if (result.mfa_required && result.mfa_token) {
           const mfaParams = new URLSearchParams({ mfa_token: result.mfa_token })
-          try {
-            const target = new URL(result.redirect_url, window.location.origin)
-            const next = `${target.pathname}${target.search}`
-            if (
-              target.origin === window.location.origin &&
-              target.pathname !== '/redirect_from_auth' &&
-              /^\/(?!\/)/.test(next)
-            ) {
-              mfaParams.set('redirect_to', next)
+          // Without a usable redirect the login page falls back to its default.
+          if (result.redirect_url) {
+            try {
+              const target = new URL(result.redirect_url, window.location.origin)
+              const next = `${target.pathname}${target.search}`
+              if (
+                target.origin === window.location.origin &&
+                target.pathname !== '/redirect_from_auth' &&
+                /^\/(?!\/)/.test(next)
+              ) {
+                mfaParams.set('redirect_to', next)
+              }
+            } catch {
+              // Malformed redirect: same default.
             }
-          } catch {
-            // No usable redirect: the login page falls back to its default.
           }
           router.push(`/auth/login?${mfaParams.toString()}`)
           return
