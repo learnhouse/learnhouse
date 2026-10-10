@@ -403,3 +403,11 @@ def test_valid_targets_caps_and_vtt_path_containment(tmp_path):
     with pytest.raises(ValueError):
         cj._vtt_path(str(tmp_path), "../escape")
     assert cj._vtt_path(str(tmp_path), "pt-BR").endswith("pt-BR.vtt")
+
+
+def test_valid_targets_skips_malformed_and_duplicate_entries():
+    languages = ["fr", None, {"code": 5}, {"code": "../x"}, {"code": "fr", "name": "French"},
+                 {"code": "fr", "name": "dup"}, {"name": "no code"}, {"code": "de"}]
+    assert cj._valid_targets(languages) == [
+        {"code": "fr", "name": "French"}, {"code": "de"},
+    ]

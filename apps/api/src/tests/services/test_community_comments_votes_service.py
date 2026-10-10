@@ -841,3 +841,28 @@ class TestCommunityCommentsAndVotes:
         assert user_votes == {comment.id: True, 999: False}
         assert removed == {"detail": "Upvote removed"}
         assert duplicate_exc.value.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_remove_upvotes_on_a_discussion_without_community_404(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        community = await _make_community(db, org, community_uuid="community_gone")
+        discussion = await _make_discussion(
+            db, community, org, author_id=admin_user.id, discussion_uuid="discussion_gone",
+        )
+        comment = await _make_comment(
+            db, discussion, author_id=admin_user.id, comment_uuid="comment_gone",
+        )
+        discussion.community_id = 9999
+        db.add(discussion)
+        await db.commit()
+
+        with pytest.raises(HTTPException) as discussion_exc:
+            await remove_upvote(mock_request, discussion.discussion_uuid, regular_user, db)
+        with pytest.raises(HTTPException) as comment_exc:
+            await remove_comment_upvote(mock_request, comment.comment_uuid, regular_user, db)
+
+        assert discussion_exc.value.status_code == 404
+        assert discussion_exc.value.detail == "Community not found"
+        assert comment_exc.value.status_code == 404
+        assert comment_exc.value.detail == "Community not found"

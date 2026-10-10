@@ -1058,8 +1058,6 @@ def _drop_foreign_file_refs(content: dict, new_course_path: str) -> dict:
     other course's (or org's) file, which indexing or later copies would then
     read on the importer's behalf. Bare file names (no slash) are left alone.
     """
-    if not isinstance(content, dict):
-        return content
     own = (f"{new_course_path}/", f"{new_course_path.removeprefix('content/')}/")
     for key in _FILE_REF_KEYS:
         value = content.get(key)

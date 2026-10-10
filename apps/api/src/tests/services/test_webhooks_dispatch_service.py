@@ -621,3 +621,31 @@ class TestWebhookDispatchHelpers:
             )
         ).scalars().all()
         assert len(remaining) == 1
+
+
+@pytest.mark.asyncio
+async def test_deliver_webhooks_stops_once_the_plan_lapses(db, org, admin_user):
+    await _make_endpoint(db, org, admin_user, webhook_uuid="lapsed", events=["course_created"])
+
+    with patch(
+        "src.services.webhooks.dispatch._async_session_factory",
+        _make_fake_session_factory(db),
+    ), patch.object(
+        dispatch, "_org_plan_includes_webhooks", new=AsyncMock(return_value=False)
+    ), patch(
+        "src.services.webhooks.dispatch._deliver_to_endpoint", new_callable=AsyncMock,
+    ) as mock_deliver:
+        await dispatch._deliver_webhooks("course_created", org.id, {}, None)
+
+    mock_deliver.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_plan_lookup_error_keeps_delivering(db, org):
+    # Only a definite "not entitled" stops delivery; a broken lookup does not.
+    with patch(
+        "src.security.features_utils.plan_check.check_org_plan",
+        new=AsyncMock(side_effect=RuntimeError("db down")),
+    ), patch.object(dispatch.logger, "warning") as warning:
+        assert await dispatch._org_plan_includes_webhooks(org.id, db) is True
+    assert warning.call_count == 1

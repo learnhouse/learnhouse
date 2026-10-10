@@ -307,6 +307,24 @@ class TestOffboarding:
         assert (await db.execute(select(BoardMember))).scalars().all()
         assert (await db.execute(select(UserGroupUser))).scalars().all()
 
+    async def test_invite_cleanup_failure_does_not_block_removal(
+        self, db, org, regular_user
+    ):
+        from src.db.organizations import Organization
+        from src.services.orgs.users import _drop_accepted_invites
+
+        fake_redis = MagicMock()
+        fake_redis.delete.side_effect = RuntimeError("redis down")
+        org_row = await db.get(Organization, org.id)
+        with patch("src.core.redis.get_redis_client", return_value=fake_redis), patch(
+            "src.services.orgs.users.logger"
+        ) as log:
+            await _drop_accepted_invites(db, org_row, [regular_user.id])
+        fake_redis.delete.assert_called_once_with(
+            f"invited_user:{regular_user.email}:org:{org.org_uuid}"
+        )
+        assert log.warning.call_count == 1
+
 
 class TestStaleGrantsIgnored:
     async def test_author_row_needs_org_membership(self, db, org, course, mock_request):
@@ -376,6 +394,32 @@ class TestOrgListEmail:
 
         assert (await get_orgs_by_user(mock_request, db, admin_user.id))[0].email == org.email
         assert (await get_orgs_by_user_admin(mock_request, db, admin_user.id))[0].email == org.email
+
+    async def test_superadmin_sees_org_email(self, db, org, regular_user, mock_request):
+        from src.services.orgs.orgs import get_orgs_by_user
+
+        user = await db.get(User, regular_user.id)
+        user.is_superadmin = True
+        db.add(user)
+        await db.commit()
+        assert (await get_orgs_by_user(mock_request, db, regular_user.id))[0].email == org.email
+
+    async def test_builtin_admin_role_without_stored_rights_sees_org_email(
+        self, db, org, admin_role, admin_user, mock_request
+    ):
+        # Roles predating stored rights fall back on the built-in role id.
+        from src.services.orgs.orgs import get_orgs_by_user
+
+        admin_role.rights = None
+        db.add(admin_role)
+        await db.commit()
+        assert (await get_orgs_by_user(mock_request, db, admin_user.id))[0].email == org.email
+
+    async def test_user_without_orgs_gets_empty_list(self, db, org, mock_request):
+        from src.services.orgs.orgs import get_orgs_by_user
+
+        outsider = await _outsider(db)
+        assert await get_orgs_by_user(mock_request, db, outsider.id) == []
 
 
 # ---------------------------------------------------------------------------

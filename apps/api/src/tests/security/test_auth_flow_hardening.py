@@ -258,6 +258,53 @@ class TestEmailChange:
             )
         assert exc.value.status_code == 400
 
+    async def test_unreadable_password_hash_is_a_wrong_password(self, db, mock_request):
+        user = await _make_user(db, 68, "legacy@test.com", password="not-a-known-hash")
+        with pytest.raises(HTTPException) as exc:
+            await self._change(
+                db, mock_request, user, user, email="else4@test.com", current_password="anything"
+            )
+        assert exc.value.detail["code"] == "INVALID_PASSWORD"
+
+    async def test_missing_actor_is_refused(self, db):
+        # update_user looks the actor up again; a row gone by then fails closed.
+        from src.services.users.users import _require_reauth_for_email_change
+
+        user = await _make_user(db, 69, "gone@test.com")
+        with pytest.raises(HTTPException) as exc:
+            await _require_reauth_for_email_change(None, _update(user), db)
+        assert exc.value.status_code == 403
+
+    async def test_mail_failures_do_not_stop_the_old_address_warning(self, db, mock_request):
+        from src.services.users.users import _after_email_change
+
+        user = await _make_user(db, 70, "new@test.com")
+        with patch(
+            "src.services.users.email_verification.invalidate_verification_tokens",
+            side_effect=RuntimeError("redis down"),
+        ), patch(
+            "src.services.users.email_verification.send_verification_email",
+            new=AsyncMock(side_effect=RuntimeError("smtp down")),
+        ), patch("src.services.users.emails.send_email_changed_notice") as notice_mock:
+            await _after_email_change(mock_request, db, user, "old@test.com")
+        notice_mock.assert_called_once_with(
+            email="old@test.com", new_email="new@test.com", username=user.username
+        )
+
+    def test_email_changed_notice_goes_to_the_old_address_escaped(self):
+        from src.services.users import emails
+
+        with patch.object(emails, "_send_notification_email", return_value=True) as send_mock:
+            assert emails.send_email_changed_notice(
+                email="old@test.com", new_email="<b>evil</b>@test.com", username="<i>u</i>"
+            ) is True
+        kwargs = send_mock.call_args.kwargs
+        assert kwargs["to"] == "old@test.com"
+        assert kwargs["subject"]
+        assert "<b>evil</b>" not in kwargs["body"]
+        assert "&lt;b&gt;evil&lt;/b&gt;@test.com" in kwargs["body"]
+        assert "<i>u</i>" not in kwargs["body"]
+
 
 class TestOrgAdminProfileEditScope:
     async def _edit(self, db, mock_request, admin, target):
@@ -657,3 +704,42 @@ class TestMemberLinkBaseUrl:
         await _join(db, 98, org.id)
         url = await self._resolve(db, 98, "https://unknown.example")
         assert url == "https://platform.test"
+
+    async def test_member_keeps_their_verified_custom_domain(self, db, org):
+        from src.db.custom_domains import CustomDomain
+        from src.services.email import utils
+
+        db.add(CustomDomain(
+            domain_uuid="domain_link", domain="learn.example.com", org_id=org.id,
+            status="verified", creation_date="now", update_date="now",
+        ))
+        await db.commit()
+        await _make_user(db, 99, "custom-link@test.com")
+        await _join(db, 99, org.id)
+        with patch.object(
+            utils, "get_org_signup_base_url", new=AsyncMock(return_value="https://learn.example.com")
+        ) as org_url:
+            url = await self._resolve(db, 99, "https://learn.example.com")
+        assert url == "https://learn.example.com"
+        assert org_url.await_args.args[0] == org.slug
+
+    async def test_no_request_gets_platform_host(self, db):
+        from src.services.email import utils
+
+        with patch.object(utils, "get_platform_base_url", return_value="https://platform.test"):
+            assert await utils.get_member_link_base_url(None, db, 1) == "https://platform.test"
+
+    def test_unconfigured_platform_url_falls_back_to_the_request(self, monkeypatch):
+        from src.services.email import utils
+
+        monkeypatch.delenv("LEARNHOUSE_PLATFORM_URL", raising=False)
+        cfg = self._multi_tenant_config()
+        cfg.hosting_config.domain = ""
+        request = Request({
+            "type": "http", "method": "POST", "path": "/", "query_string": b"",
+            "headers": [(b"host", b"localhost:3000")], "scheme": "http",
+            "server": ("localhost", 3000),
+        })
+        with patch.object(utils, "get_learnhouse_config", return_value=cfg):
+            assert utils.get_platform_base_url(None) == ""
+            assert utils.get_platform_base_url(request) == "http://localhost:3000"

@@ -115,3 +115,60 @@ async def test_move_folder_content_rejects_cross_org_target(
                 mock_request, "folder_src", "folder_foreign", "course_test", admin_user, db
             )
     assert exc.value.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_get_folder_hides_usergroup_restricted_subfolders(
+    db, org, admin_user, regular_user, mock_request
+):
+    from src.services.folders.folders import get_folder
+
+    db.add(_folder(30, "folder_parent", org))
+    for id_, uuid in ((31, "folder_child_open"), (32, "folder_child_staff")):
+        child = _folder(id_, uuid, org)
+        child.parent_folder_id = 30
+        db.add(child)
+    await db.commit()
+    await _restrict_to_group(db, org, "folder_child_staff")
+
+    member_view = await get_folder(mock_request, "folder_parent", regular_user, db)
+    admin_view = await get_folder(mock_request, "folder_parent", admin_user, db)
+
+    assert [f.folder_uuid for f in member_view.subfolders] == ["folder_child_open"]
+    assert {f.folder_uuid for f in admin_view.subfolders} == {
+        "folder_child_open", "folder_child_staff",
+    }
+
+
+@pytest.mark.asyncio
+async def test_search_library_hides_restricted_folders_and_boards(
+    db, org, admin_user, regular_user, mock_request
+):
+    db.add(_folder(40, "folder_secret_plans", org))
+    db.add(Board(
+        id=7, name="secret board", public=False, org_id=org.id, board_uuid="board_secret",
+        created_by=admin_user.id, creation_date=_now(), update_date=_now(),
+    ))
+    db.add(FolderContent(folder_id=None, resource_uuid="board_secret", org_id=org.id, position=0))
+    await db.commit()
+    await _restrict_to_group(db, org, "folder_secret_plans")
+    await _restrict_to_group(db, org, "board_secret")
+
+    member = await search_library(mock_request, str(org.id), "secret", regular_user, db)
+    admin = await search_library(mock_request, str(org.id), "secret", admin_user, db)
+
+    assert member == {"folders": [], "items": []}
+    assert [f["folder_uuid"] for f in admin["folders"]] == ["folder_secret_plans"]
+    assert [i["resource_uuid"] for i in admin["items"]] == ["board_secret"]
+
+
+@pytest.mark.asyncio
+async def test_listing_treats_a_raising_access_check_as_hidden(db, admin_user, mock_request):
+    # Org two-factor policies raise even with raise_on_deny=False.
+    from src.services.folders.folders import _can_read
+
+    with patch(
+        "src.services.folders.folders.check_resource_access",
+        new=AsyncMock(side_effect=HTTPException(status_code=403, detail="2FA required")),
+    ):
+        assert await _can_read(mock_request, admin_user, db, "folder_x") is False

@@ -123,3 +123,61 @@ def test_default_cap_is_configured():
     from config.config import get_learnhouse_config
 
     assert get_learnhouse_config().hosting_config.max_request_body_mb == 25
+
+
+# The except branch runs when the 413 escapes a raw ASGI app (one without
+# FastAPI's exception handlers between it and this middleware).
+
+
+def _raw_app(*, start_first: bool = False, error: int | None = None):
+    async def app(scope, receive, send):
+        if start_first:
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+        if error is not None:
+            from starlette.exceptions import HTTPException
+
+            raise HTTPException(status_code=error)
+        while True:
+            message = await receive()
+            if not message.get("more_body"):
+                break
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        await send({"type": "http.response.body", "body": b"ok"})
+
+    return RequestBodySizeLimitMiddleware(app, max_body_bytes=_CAP)
+
+
+async def _stream_oversized(app):
+    async def chunks():
+        for _ in range(4):
+            yield b"x" * (_CAP // 2)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        return await client.put("/", content=chunks())
+
+
+@pytest.mark.asyncio
+async def test_raw_app_overflow_is_turned_into_413():
+    resp = await _stream_oversized(_raw_app())
+    assert resp.status_code == 413
+    assert resp.json() == {"detail": "Request body too large"}
+    assert resp.headers["connection"] == "close"
+
+
+@pytest.mark.asyncio
+async def test_overflow_after_response_started_is_reraised():
+    from starlette.exceptions import HTTPException
+
+    # Headers are already out, so a second response would corrupt the stream.
+    with pytest.raises(HTTPException) as exc:
+        await _stream_oversized(_raw_app(start_first=True, error=413))
+    assert exc.value.status_code == 413
+
+
+@pytest.mark.asyncio
+async def test_other_http_errors_are_not_rewritten():
+    from starlette.exceptions import HTTPException
+
+    with pytest.raises(HTTPException) as exc:
+        await _stream_oversized(_raw_app(error=400))
+    assert exc.value.status_code == 400

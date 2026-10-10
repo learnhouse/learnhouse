@@ -125,3 +125,60 @@ async def test_only_public_by_design_paths_are_shared_cacheable(router, db, org,
     assert await router._check_content_access("orgs/org_test/logos/logo.png", anonymous_user, db) is True
     assert await router._check_content_access("users/user_x/avatars/a.png", anonymous_user, db) is True
     assert router.content_cache_control(False).startswith("private")
+
+
+@pytest.mark.asyncio
+async def test_solution_file_refuses_anonymous_and_api_tokens(db, anonymous_user):
+    from src.db.users import APITokenUser
+    from src.security.submission_file_access import enforce_solution_file_access
+
+    parts = SOLUTION_PATH.split("/")
+    with pytest.raises(HTTPException) as exc:
+        await enforce_solution_file_access(parts, anonymous_user, db)
+    assert exc.value.status_code == 401
+
+    # A token never passed the assignments rights check this path relies on.
+    token = APITokenUser(id=1, org_id=1, created_by_user_id=1, rights={"assignments": {"action_read": True}})
+    with pytest.raises(HTTPException) as exc:
+        await enforce_solution_file_access(parts, token, db)
+    assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_solution_file_path_must_match_the_assignment_course(
+    db, org, course, chapter, activity, admin_user
+):
+    from src.security.submission_file_access import enforce_solution_file_access
+
+    db.add(_assignment(
+        org, course, chapter, activity, "assignment_corrige", solution_file="solution_abc.pdf",
+    ))
+    await db.commit()
+
+    # Unknown assignment
+    with pytest.raises(HTTPException) as exc:
+        await enforce_solution_file_access(
+            SOLUTION_PATH.replace("assignment_corrige", "assignment_missing").split("/"), admin_user, db
+        )
+    assert exc.value.status_code == 404
+
+    # Real assignment, but the path names another course
+    with pytest.raises(HTTPException) as exc:
+        await enforce_solution_file_access(
+            SOLUTION_PATH.replace("course_test", "course_other").split("/"), admin_user, db
+        )
+    assert exc.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_course_assignment_list_skips_assignments_without_an_activity(
+    db, org, course, chapter, activity, regular_user, mock_request
+):
+    db.add(_assignment(org, course, chapter, activity, "assignment_live"))
+    stray = _assignment(org, course, chapter, activity, "assignment_stray")
+    stray.activity_id = 999
+    db.add(stray)
+    await db.commit()
+
+    learner = await get_assignments_from_course(mock_request, course.course_uuid, regular_user, db)
+    assert [a.assignment_uuid for a in learner] == ["assignment_live"]

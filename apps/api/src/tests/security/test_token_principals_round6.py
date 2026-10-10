@@ -512,3 +512,129 @@ class TestSuperadminTokenOrgAndCommunityGates:
                 SuperadminAPITokenUser(id=5, created_by_user_id=999), community, db
             )
         assert exc.value.status_code == 403
+
+
+class TestTokenAuthorship:
+    async def _comment(self, db, discussion, author_id):
+        c = DiscussionComment(
+            discussion_id=discussion.id, author_id=author_id, content="c",
+            comment_uuid="comment_r6", creation_date=NOW, update_date=NOW,
+        )
+        db.add(c)
+        await db.commit()
+        await db.refresh(c)
+        return c
+
+    async def test_token_owns_its_creators_comments_only_while_it_may_post(
+        self, db, org, admin_user, regular_user
+    ):
+        from src.services.communities.comments import _is_comment_author
+
+        community = await _community(db, org)
+        discussion = await _discussion(db, community, admin_user.id)
+        comment = await self._comment(db, discussion, admin_user.id)
+        poster = {"discussions": {"action_create": True}}
+
+        assert await _is_comment_author(_token(creator=admin_user.id, **poster), comment, db)
+        # Someone else's comment
+        assert not await _is_comment_author(_token(creator=regular_user.id, **poster), comment, db)
+        # Creator matches, but the token may no longer post
+        assert not await _is_comment_author(
+            _token(creator=admin_user.id, discussions={"action_read": True}), comment, db
+        )
+        # Creator matches, but the token belongs to another org
+        assert not await _is_comment_author(
+            _token(org_id=org.id + 1, creator=admin_user.id, **poster), comment, db
+        )
+
+    async def test_token_edits_its_creators_discussion_only_while_it_may_post(
+        self, db, org, admin_user
+    ):
+        from src.services.communities.discussions import _is_author
+
+        community = await _community(db, org)
+        discussion = await _discussion(db, community, admin_user.id)
+        poster = _token(creator=admin_user.id, discussions={"action_create": True})
+        reader = _token(creator=admin_user.id, discussions={"action_read": True})
+
+        assert _is_author(poster, admin_user.id, discussion) is True
+        assert _is_author(reader, admin_user.id, discussion) is False
+
+
+class TestTokenListingEdges:
+    async def test_course_listing_for_unknown_org_is_empty(self, db, org, admin_user, mock_request):
+        from src.services.courses.courses import get_courses_count_orgslug, search_courses
+
+        reader = _token(creator=admin_user.id, courses={"action_read": True})
+        assert await get_courses_count_orgslug(mock_request, reader, "no-such-org", db) == 0
+        assert await search_courses(mock_request, reader, "no-such-org", "pub", db) == []
+
+    async def test_course_search_shows_token_only_published_courses(
+        self, db, org, admin_user, mock_request
+    ):
+        from src.services.courses.courses import search_courses
+
+        await TestListings()._courses(db, org)
+        reader = _token(creator=admin_user.id, courses={"action_read": True})
+        assert [c.name for c in await search_courses(mock_request, reader, org.slug, "pub", db)] == ["pub"]
+        assert await search_courses(mock_request, reader, org.slug, "draft", db) == []
+
+    async def _podcasts(self, db, org):
+        from src.db.podcasts.podcasts import Podcast
+
+        db.add(Podcast(name="live", public=False, published=True, org_id=org.id,
+                       podcast_uuid="podcast_live", creation_date=NOW, update_date=NOW))
+        db.add(Podcast(name="draft", public=False, published=False, org_id=org.id,
+                       podcast_uuid="podcast_draft", creation_date=NOW, update_date=NOW))
+        await db.commit()
+
+    async def test_podcast_listing_uses_token_rights(self, db, org, admin_user, mock_request):
+        from src.services.podcasts import podcasts as svc
+
+        await self._podcasts(db, org)
+        reader = _token(creator=admin_user.id, podcasts={"action_read": True})
+        with patch.object(svc, "_is_podcasts_feature_enabled", new_callable=AsyncMock, return_value=True):
+            listed = await svc.get_podcasts_orgslug(mock_request, reader, org.slug, db)
+            assert [p.name for p in listed] == ["live"]
+            listed = await svc.get_podcasts_orgslug(
+                mock_request, reader, org.slug, db, include_unpublished=True
+            )
+            assert {p.name for p in listed} == {"live", "draft"}
+
+            with pytest.raises(HTTPException) as exc:
+                await svc.get_podcasts_orgslug(
+                    mock_request, _token(creator=admin_user.id), org.slug, db
+                )
+            assert exc.value.status_code == 403
+            other = _token(org_id=org.id + 1, creator=admin_user.id, podcasts={"action_read": True})
+            with pytest.raises(HTTPException) as exc:
+                await svc.get_podcasts_orgslug(mock_request, other, org.slug, db)
+            assert exc.value.status_code == 403
+
+    async def test_podcast_count_for_unknown_org_is_zero(self, db, org, admin_user, mock_request):
+        from src.services.podcasts.podcasts import get_podcasts_count_orgslug
+
+        reader = _token(creator=admin_user.id, podcasts={"action_read": True})
+        assert await get_podcasts_count_orgslug(mock_request, reader, "no-such-org", db) == 0
+
+
+class TestRightsShapeEdges:
+    async def test_admin_role_comparison_tolerates_missing_and_malformed_rights(self):
+        from src.services.admin.admin import _role_within_token_rights
+
+        # A role with no rights grants nothing.
+        assert _role_within_token_rights(None, {"users": {"action_update": True}})
+        # A token bucket that is not an object holds nothing.
+        malformed = {b: True for b in ("courses", "users", "roles", "organizations")}
+        assert not _role_within_token_rights(ADMIN_RIGHTS.model_dump(), malformed)
+        assert _role_within_token_rights(USER_RIGHTS.model_dump(), malformed)
+
+    async def test_non_object_extra_bucket_grants_nothing(self):
+        from src.services.api_tokens.api_tokens import validate_rights_structure
+
+        rights = TestRightsCaps()._rights(assignments=True)
+        # Not compared against the role, and not a dict any reader would honour.
+        await validate_rights_structure(rights, USER_RIGHTS.model_dump())
+        from src.security.api_token_utils import token_has_right
+
+        assert not token_has_right(_token(**rights), "assignments", "action_read")

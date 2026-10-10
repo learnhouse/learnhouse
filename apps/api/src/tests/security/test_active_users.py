@@ -378,6 +378,25 @@ class TestActivityCapture:
         # The day guard is downgraded so a same-day join still counts.
         assert list(redis.store.values()) == ["0"]
 
+    async def test_non_member_guard_downgrade_failure_is_swallowed(self, db, org):
+        from src.services.security import activity
+
+        class _GuardThenFail(_FakeRedis):
+            def set(self, key, value, **kwargs):
+                if value == "0":
+                    raise RuntimeError("redis down")
+                return super().set(key, value, **kwargs)
+
+        redis = _GuardThenFail(set_result=True)
+        with _saas(), _patch_session_factory(db), patch(
+            "src.services.security.activity.get_redis_client", return_value=redis
+        ), patch.object(activity.logger, "debug") as debug:
+            await activity.record_user_activity(60, org_id=ORG)
+        assert await _count_rows(db, ORG) == 0
+        # The day guard stays as first written; only the downgrade failed.
+        assert list(redis.store.values()) == ["1"]
+        assert [c.args[0] for c in debug.call_args_list] == ["activity Redis guard update failed"]
+
     async def test_redis_guard_allows_first_touch(self, db, org):
         from src.services.security import activity
         with _saas(), _patch_session_factory(db), patch(
