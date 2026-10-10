@@ -485,6 +485,10 @@ class TestOrgUsersService:
         with patch(
             "src.services.orgs.users.rbac_check",
             new_callable=AsyncMock,
+        ), patch(
+            "src.security.superadmin.is_user_superadmin",
+            new_callable=AsyncMock,
+            return_value=True,
         ):
             with pytest.raises(Exception) as no_admin_exc:
                 await update_user_role(

@@ -97,7 +97,8 @@ async def export_courses_batch(
             )
 
         # The package holds every activity (unpublished, locked and paid ones
-        # included) plus its files: exporting is an editor action, not a read.
+        # included) plus its content files: exporting is an editor action, not
+        # a read. Learner submissions and answer keys are left out entirely.
         await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
         if org is None:
@@ -335,6 +336,23 @@ def _build_export_zip(
         raise
 
 
+def _is_private_assignment_file(rel_path: str) -> bool:
+    """Learner submissions and answer keys under an activity's assignments/.
+
+    A course export is a content package: other learners' work
+    (``assignments/<a>/tasks/<t>/subs/``) and the instructor's model answers
+    (``assignments/<a>/solution/``) are per-user or reveal-gated data that the
+    regular endpoints withhold, so they never go into it. Task reference files
+    stay.
+    """
+    parts = rel_path.split("/")
+    if len(parts) < 3 or parts[0] != "assignments":
+        return False
+    if parts[2] == "solution":
+        return True
+    return len(parts) >= 5 and parts[2] == "tasks" and parts[4] == "subs"
+
+
 def _export_directory_to_zip(
     zip_file: zipfile.ZipFile,
     source_path: str,
@@ -352,6 +370,8 @@ def _export_directory_to_zip(
         for filename in files:
             file_path = f"{root.rstrip('/')}/{filename}".replace("\\", "/")
             rel_path = file_path.removeprefix(source_prefix)
+            if _is_private_assignment_file(rel_path):
+                continue
             content = read_file_content(file_path)
             if content:
                 entry_path = f"{zip_path}/{rel_path}"

@@ -42,6 +42,8 @@ def _permission(**overrides) -> dict:
 
 
 USERS_READ_RIGHTS = {"users": _permission(action_read=True)}
+# Minting a session acts as the user, which is a write on ``users``.
+USERS_UPDATE_RIGHTS = {"users": _permission(action_read=True, action_update=True)}
 # The leaked-integration-token shape: read on content, nothing on people.
 COURSES_ONLY_RIGHTS = {
     "courses": _permission(action_read=True),
@@ -97,33 +99,41 @@ async def _member(
 
 @pytest.fixture
 def reader_token(org):
-    return _token(org.id, USERS_READ_RIGHTS)
+    return _token(org.id, USERS_UPDATE_RIGHTS)
 
 
-class TestIssueUserTokenIsNotRightsScoped:
-    async def test_a_content_scoped_token_can_still_mint_for_a_member(self, db, org):
-        """Tokens only ever carry content buckets, so impersonation is not
-        gated on a ``users`` right; it is gated on the target instead."""
+class TestIssueUserTokenIsRightsScoped:
+    @pytest.mark.parametrize(
+        "rights",
+        [None, {}, COURSES_ONLY_RIGHTS, USERS_READ_RIGHTS],
+        ids=["no-rights", "empty", "content-only", "users-read-only"],
+    )
+    async def test_token_without_users_update_is_refused(self, db, org, rights):
         target = await _member(db, org.id, user_id=20, role_id=MEMBER_ROLE_ID)
-        token = _token(org.id, COURSES_ONLY_RIGHTS)
-
-        result = await issue_user_token(token, target.id, db)
-
-        assert result["user_id"] == target.id
-
-    async def test_a_token_with_no_rights_at_all_still_works(self, db, org):
-        target = await _member(db, org.id, user_id=21, role_id=MEMBER_ROLE_ID)
-        token = _token(org.id, None)
-
-        result = await issue_user_token(token, target.id, db)
-
-        assert result["user_id"] == target.id
-
-    async def test_unknown_target_is_a_404(self, db, org):
-        token = _token(org.id, COURSES_ONLY_RIGHTS)
+        token = _token(org.id, rights)
 
         with pytest.raises(HTTPException) as exc:
-            await issue_user_token(token, 999999, db)
+            await issue_user_token(token, target.id, db)
+
+        assert exc.value.status_code == 403
+        assert "'update' permission for users" in str(exc.value.detail)
+
+    async def test_rights_as_a_pydantic_model_are_honoured(self, db, org):
+        target = await _member(db, org.id, user_id=21, role_id=MEMBER_ROLE_ID)
+
+        class _Rights:
+            users = _model_permission(action_update=True)
+
+        token = _token(org.id, None)
+        token.rights = _Rights()
+
+        result = await issue_user_token(token, target.id, db)
+
+        assert result["user_id"] == target.id
+
+    async def test_unknown_target_is_a_404(self, db, org, reader_token):
+        with pytest.raises(HTTPException) as exc:
+            await issue_user_token(reader_token, 999999, db)
 
         assert exc.value.status_code == 404
 

@@ -97,6 +97,26 @@ def _looks_like_email(value: str) -> bool:
     return bool(_EMAIL_RE.match(value))
 
 
+def _rights_within(granted, held) -> bool:
+    """Whether every permission ``granted`` turns on is also on in ``held``."""
+
+    def as_dict(rights) -> dict:
+        if rights is None:
+            return {}
+        return rights if isinstance(rights, dict) else rights.model_dump()
+
+    held_rights = as_dict(held)
+    for bucket, perms in as_dict(granted).items():
+        if not isinstance(perms, dict):
+            continue
+        held_perms = held_rights.get(bucket)
+        held_perms = held_perms if isinstance(held_perms, dict) else {}
+        for perm, value in perms.items():
+            if value is True and held_perms.get(perm) is not True:
+                return False
+    return True
+
+
 async def _require_admin_to_touch_admins(
     request: Request,
     org: Organization,
@@ -344,8 +364,7 @@ async def get_organization_users(
             # SECURITY: org admins get the org-scoped member view: no
             # is_superadmin, and extra_metadata limited to THIS org's declared
             # signup fields (the column holds answers from every org the
-            # account joined). model_construct keeps that view intact instead
-            # of re-coercing it into the full UserRead the field is typed as.
+            # account joined).
             if member_meta_keys is None:
                 member_meta_keys = {
                     f.key for f in await get_org_signup_fields(org_id, db_session)
@@ -356,7 +375,7 @@ async def get_organization_users(
 
             _days = visit_days_map.get(user.id, 0)
 
-            org_user = OrganizationUser.model_construct(
+            org_user = OrganizationUser(
                 user=user_read,
                 role=role_read,
                 usergroups=usergroups,
@@ -860,16 +879,34 @@ async def update_user_role(
             detail="You cannot change your own role",
         )
 
-    # Handing out Admin or Maintainer is reserved for Admins: a maintainer
-    # must not be able to promote themselves (or anyone) past their own role.
-    if role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
-        acting_user_id = resolve_acting_user_id(current_user)
-        if not await is_user_superadmin(acting_user_id, db_session):
-            caller_membership = await get_user_org(acting_user_id, org.id, db_session)
-            if caller_membership is None or caller_membership.role_id != ADMIN_ROLE_ID:
+    # Below Admin, a caller may only hand out roles that grant nothing they
+    # don't hold themselves, and may not touch an Admin's or Maintainer's role.
+    acting_user_id = resolve_acting_user_id(current_user)
+    if not isinstance(current_user, InternalUser) and not await is_user_superadmin(
+        acting_user_id, db_session
+    ):
+        caller_membership = await get_user_org(acting_user_id, org.id, db_session)
+        if caller_membership is None or caller_membership.role_id != ADMIN_ROLE_ID:
+            if role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
                 raise HTTPException(
                     status_code=403,
                     detail="Only organization administrators can assign the Admin or Maintainer role",
+                )
+            target_membership = await get_user_org(user_id, org.id, db_session)
+            if target_membership is not None and target_membership.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Only organization administrators can change an Admin's or Maintainer's role",
+                )
+            caller_role = (
+                await db_session.get(Role, caller_membership.role_id)
+                if caller_membership is not None
+                else None
+            )
+            if caller_role is None or not _rights_within(role.rights, caller_role.rights):
+                raise HTTPException(
+                    status_code=403,
+                    detail="You cannot assign a role with permissions you don't have",
                 )
 
     # Check if user is the last admin and if the new role is not admin

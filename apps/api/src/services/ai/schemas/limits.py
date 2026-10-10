@@ -10,3 +10,6 @@ AI_MESSAGE_MAX_CHARS = 8000
 AI_CONTEXT_MAX_CHARS = 20000
 # Short labels (names, titles, styles, language codes)
 AI_LABEL_MAX_CHARS = 500
+# Serialized TipTap document sent along with editor AI requests. A whole
+# activity's JSON is much larger than its text, so this ceiling is higher.
+AI_EDITOR_CONTENT_MAX_CHARS = 500_000

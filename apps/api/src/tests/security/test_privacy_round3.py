@@ -34,6 +34,19 @@ from src.db.usergroups import UserGroup
 from src.db.users import APITokenUser, AnonymousUser, PublicUser, User
 
 
+# Admin API endpoints enforce the token's rights buckets; these fixtures exercise
+# the endpoints' own logic, so the token holds every bucket they check.
+FULL_ADMIN_API_RIGHTS = {
+    bucket: {
+        "action_create": True,
+        "action_read": True,
+        "action_update": True,
+        "action_delete": True,
+    }
+    for bucket in ("users", "roles", "courses", "certifications", "usergroups")
+}
+
+
 def _now():
     return str(datetime.now())
 
@@ -122,7 +135,7 @@ class TestOrgMemberView:
         db.add(UserGroupUser(usergroup_id=group.id, user_id=member.id, org_id=org.id))
         await db.commit()
 
-        token = APITokenUser(id=1, org_id=org.id, created_by_user_id=admin_user.id)
+        token = APITokenUser(id=1, org_id=org.id, rights=FULL_ADMIN_API_RIGHTS, created_by_user_id=admin_user.id)
         rows = await list_usergroup_members(token, "ug_r3", db)
         assert rows[0]["user"]["extra_metadata"] == {"company": "Acme"}
         assert "is_superadmin" not in rows[0]["user"]
@@ -240,7 +253,7 @@ class TestAnonymizeScrub:
 
         fake_redis = MagicMock()
         fake_redis.zrange.return_value = [b"chat_a", b"chat_b"]
-        token = APITokenUser(id=1, org_id=org.id, created_by_user_id=admin_user.id)
+        token = APITokenUser(id=1, org_id=org.id, rights=FULL_ADMIN_API_RIGHTS, created_by_user_id=admin_user.id)
 
         with patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock), \
                 patch("src.services.ai.base._get_redis", return_value=fake_redis):
@@ -270,7 +283,7 @@ class TestAnonymizeScrub:
         from src.services.admin.admin import anonymize_user
 
         victim = await _make_user(db, 96, [org.id], extra_metadata={"a": 1})
-        token = APITokenUser(id=1, org_id=org.id, created_by_user_id=admin_user.id)
+        token = APITokenUser(id=1, org_id=org.id, rights=FULL_ADMIN_API_RIGHTS, created_by_user_id=admin_user.id)
         with patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock), \
                 patch("src.services.ai.base._get_redis", side_effect=RuntimeError("down")):
             await anonymize_user(token, victim.id, db)

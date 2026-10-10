@@ -32,7 +32,13 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.user_organizations import UserOrganization
-from src.db.users import APITokenUser, OrgMemberUserRead, User, UserRead
+from src.db.users import (
+    APITokenUser,
+    OrgMemberUserRead,
+    SuperadminAPITokenUser,
+    User,
+    UserRead,
+)
 from src.services.trail.trail import _build_trail_read
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
@@ -72,6 +78,35 @@ def _require_api_token(current_user) -> APITokenUser:
             detail="This endpoint requires API token authentication",
         )
     return current_user
+
+
+_TOKEN_ACTIONS = frozenset({"create", "read", "update", "delete"})
+
+
+def _require_token_right(token_user, resource: str, action: str) -> None:
+    """Refuse unless the token's rights grant ``action`` on ``resource``.
+
+    Passing the org boundary only says which org a token may touch; what it
+    may do there is its ``rights`` (``{"users": {"action_read": true, ...}}``,
+    stored as a dict or a ``Rights`` model). A missing bucket or flag denies.
+    Superadmin tokens are not org-scoped rights holders and keep full access.
+    """
+    if action not in _TOKEN_ACTIONS:
+        raise ValueError(f"Unknown token action: {action}")
+    if isinstance(token_user, SuperadminAPITokenUser):
+        return
+    rights = getattr(token_user, "rights", None) or {}
+    bucket = rights.get(resource) if isinstance(rights, dict) else getattr(rights, resource, None)
+    key = f"action_{action}"
+    if isinstance(bucket, dict):
+        granted = bucket.get(key)
+    else:
+        granted = getattr(bucket, key, None)
+    if granted is not True:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have '{action}' permission for {resource}",
+        )
 
 
 async def _resolve_org_slug(org_slug: str, token_user: APITokenUser, db_session: AsyncSession) -> Organization:
@@ -275,11 +310,10 @@ async def issue_user_token(
     could mint a full session for the org's administrator and inherit every
     permission the token itself was never granted.
 
-    Deliberately not gated on a ``users`` rights bucket: tokens are issued with
-    content buckets only (courses, activities, usergroups, …), so requiring one
-    would reject every token in existence rather than scope anything. Scoping
-    impersonation properly needs ``users`` to become a grantable bucket first.
+    Minting a session acts as the user, so the token needs ``users.action_update``
+    on top of the privileged-target refusal.
     """
+    _require_token_right(token_user, "users", "update")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -318,6 +352,7 @@ async def check_course_access(
     db_session: AsyncSession,
 ) -> dict:
     """Check if a user can access a specific course within the token's org."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -358,6 +393,7 @@ async def enroll_user(
     db_session: AsyncSession,
 ) -> TrailRead:
     """Enroll a user in a course on their behalf."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -429,6 +465,7 @@ async def unenroll_user(
     db_session: AsyncSession,
 ) -> dict:
     """Unenroll a user from a course."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -474,6 +511,7 @@ async def get_user_enrollments(
     db_session: AsyncSession,
 ) -> TrailRead:
     """Get all enrollments for a user in the token's org."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -504,6 +542,7 @@ async def get_user_progress(
     db_session: AsyncSession,
 ) -> dict:
     """Get a user's progress in a specific course."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -550,6 +589,7 @@ async def complete_activity(
     db_session: AsyncSession,
 ) -> dict:
     """Mark an activity as completed on behalf of a user."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -679,6 +719,7 @@ async def uncomplete_activity(
     db_session: AsyncSession,
 ) -> dict:
     """Remove an activity completion for a user."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -723,6 +764,7 @@ async def complete_course(
     db_session: AsyncSession,
 ) -> dict:
     """Mark all activities in a course as completed for a user."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -779,7 +821,15 @@ async def complete_course(
 
     activity_ids = [ca.activity_id for ca in chapter_activities]
     if not activity_ids:
-        return {"detail": "No activities in course", "completed_count": 0}
+        return {
+            "course_uuid": course_uuid,
+            "user_id": user_id,
+            "completed_count": 0,
+            "already_completed_count": 0,
+            "total_activities": 0,
+            "course_completed": False,
+            "certificate_awarded": False,
+        }
 
     # Get already completed activities
     existing_steps = (await db_session.execute(
@@ -849,6 +899,7 @@ async def get_all_user_progress(
     db_session: AsyncSession,
 ) -> List[dict]:
     """Get progress summary for all courses a user is enrolled in."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -922,6 +973,7 @@ async def get_user_trail_detail(
 ) -> dict:
     """Build a full trail breakdown for a user: every chapter + every activity
     with per-activity completion status. Optionally filtered to a single course."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1116,6 +1168,7 @@ async def provision_user(
     Designed for SSO/JIT provisioning: email is auto-verified and the user
     bypasses the normal email-verification flow.
     """
+    _require_token_right(token_user, "users", "create")
 
     name_check = validate_profile_fields({
         "username": username,
@@ -1241,6 +1294,7 @@ async def remove_user_from_org_admin(
     db_session: AsyncSession,
 ) -> dict:
     """Remove a user's org membership (scope: membership only)."""
+    _require_token_right(token_user, "users", "delete")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
     await _check_token_can_manage_membership(user_id, token_user.org_id, db_session)
@@ -1295,6 +1349,7 @@ async def get_user_by_email(
     db_session: AsyncSession,
 ) -> UserRead:
     """Find a user by email within the token's org. 404 if not a member."""
+    _require_token_right(token_user, "users", "read")
 
     row = (await db_session.execute(
         select(User)
@@ -1358,6 +1413,7 @@ async def issue_magic_link(
     (``get_base_url_from_request``), so it respects custom domains and the
     deployment's allowed-origin config.
     """
+    _require_token_right(token_user, "users", "update")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1499,6 +1555,7 @@ async def bulk_enroll_users(
     db_session: AsyncSession,
 ) -> dict:
     """Enroll a batch of users in a course. Returns summary of results."""
+    _require_token_right(token_user, "courses", "update")
 
     course = (await db_session.execute(
         select(Course).where(
@@ -1618,6 +1675,7 @@ async def list_course_enrollments(
     limit: int = 25,
 ) -> List[dict]:
     """List users enrolled in a course within the token's org."""
+    _require_token_right(token_user, "courses", "read")
 
     course = (await db_session.execute(
         select(Course).where(
@@ -1664,6 +1722,7 @@ async def reset_user_progress(
     db_session: AsyncSession,
 ) -> dict:
     """Delete a user's trail steps for a course. Keeps TrailRun enrollment intact."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1721,6 +1780,7 @@ async def award_certificate(
     db_session: AsyncSession,
 ) -> dict:
     """Manually award a certificate, bypassing the completion gate."""
+    _require_token_right(token_user, "certifications", "create")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1764,6 +1824,7 @@ async def revoke_certificate(
     db_session: AsyncSession,
 ) -> dict:
     """Delete a user's certificate. Verifies cross-org boundary."""
+    _require_token_right(token_user, "certifications", "delete")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1833,6 +1894,7 @@ async def add_usergroup_member(
     db_session: AsyncSession,
 ) -> dict:
     """Add a user to a user group. User and group must both be in the token's org."""
+    _require_token_right(token_user, "usergroups", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
@@ -1881,6 +1943,7 @@ async def remove_usergroup_member(
     db_session: AsyncSession,
 ) -> dict:
     """Remove a user from a user group."""
+    _require_token_right(token_user, "usergroups", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
@@ -1922,6 +1985,7 @@ async def get_user_certificates(
     db_session: AsyncSession,
 ) -> List[dict]:
     """Get all certificates for a user in the token's org."""
+    _require_token_right(token_user, "certifications", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1984,6 +2048,7 @@ async def update_user_profile(
     db_session: AsyncSession,
 ) -> UserRead:
     """Update a user's profile fields. Org-scoped: user must be a member."""
+    _require_token_right(token_user, "users", "update")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
     await _check_token_can_edit_account(user, token_user.org_id, db_session)
@@ -2051,6 +2116,8 @@ async def change_user_role(
     db_session: AsyncSession,
 ) -> dict:
     """Change a user's org role. Blocks demoting the last admin."""
+    _require_token_right(token_user, "users", "update")
+    _require_token_right(token_user, "roles", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
     await _check_token_can_manage_membership(user_id, token_user.org_id, db_session)
@@ -2128,6 +2195,7 @@ async def create_usergroup(
     db_session: AsyncSession,
 ) -> UserGroupRead:
     """Create a user group / cohort in the token's org."""
+    _require_token_right(token_user, "usergroups", "create")
 
     # Enforce the usergroups plan limit on the API path too (it is disabled on
     # free and count-limited on higher tiers); previously this bypassed it.
@@ -2164,6 +2232,7 @@ async def delete_usergroup(
     db_session: AsyncSession,
 ) -> dict:
     """Delete a user group and all its memberships + resource links."""
+    _require_token_right(token_user, "usergroups", "delete")
 
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
@@ -2199,6 +2268,7 @@ async def list_usergroup_members(
     limit: int = 25,
 ) -> List[dict]:
     """List users in a cohort, with pagination."""
+    _require_token_right(token_user, "usergroups", "read")
 
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
@@ -2229,6 +2299,7 @@ async def get_user_groups(
     db_session: AsyncSession,
 ) -> List[dict]:
     """List user groups a user belongs to within the token's org."""
+    _require_token_right(token_user, "usergroups", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -2261,6 +2332,7 @@ async def add_course_to_usergroup(
     db_session: AsyncSession,
 ) -> dict:
     """Grant a cohort access to a course."""
+    _require_token_right(token_user, "usergroups", "update")
 
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
@@ -2316,6 +2388,7 @@ async def remove_course_from_usergroup(
     db_session: AsyncSession,
 ) -> dict:
     """Revoke a cohort's access to a course."""
+    _require_token_right(token_user, "usergroups", "update")
 
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
@@ -2357,6 +2430,7 @@ async def bulk_unenroll_users(
     db_session: AsyncSession,
 ) -> dict:
     """Unenroll a batch of users from a course. Returns summary."""
+    _require_token_right(token_user, "courses", "update")
     from sqlmodel import delete as sql_delete
 
     course = (await db_session.execute(
@@ -2418,6 +2492,7 @@ async def export_user_data(
     memberships and certificates are intentionally excluded so a token for
     org A cannot read a user's history in org B.
     """
+    _require_token_right(token_user, "users", "read")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -2529,6 +2604,7 @@ async def anonymize_user(
     every org the user belongs to. Accounts that also belong to another org
     (or are privileged) are refused; erasing those needs platform authority.
     """
+    _require_token_right(token_user, "users", "delete")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
     await _check_token_can_edit_account(user, token_user.org_id, db_session)
@@ -2619,6 +2695,7 @@ async def get_course_analytics(
     db_session: AsyncSession,
 ) -> dict:
     """Aggregate course stats: enrollment, completion, in-progress, cert count."""
+    _require_token_right(token_user, "courses", "read")
 
     from src.db.trail_runs import StatusEnum
 
