@@ -1,5 +1,6 @@
 """
-Embedding service for RAG.
+Embedding primitives for RAG (chunking and provider calls). Indexing itself
+lives in ``pipeline``.
 
 Embeddings are provider-agnostic: they follow the configured AI provider through the shared
 ``src.services.ai.llm.embeddings`` layer (Google, OpenAI family incl. Ollama; other providers
@@ -9,18 +10,12 @@ Uses local sentence-aware token chunking without downloading language models.
 
 import asyncio
 import logging
-from datetime import datetime
 
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
-
-from src.db.course_embeddings import CourseEmbedding
 from src.services.ai.llm.embeddings import (
     DEFAULT_EMBEDDING_DIMENSIONS,
     embed_documents,
     embed_query,
 )
-from src.services.ai.rag.content_extraction import extract_all_course_content
 from src.services.ai.rag.text_chunking import split_text
 
 logger = logging.getLogger(__name__)
@@ -80,76 +75,3 @@ async def embed_single_text(text: str) -> list[float]:
                 raise
             await asyncio.sleep(2 ** attempt)
     raise RuntimeError("unreachable")
-
-
-async def embed_course_content(
-    course_id: int,
-    org_id: int,
-    db_session: AsyncSession,
-) -> int:
-    """
-    Index all content from a course into embeddings.
-
-    Generates new embeddings first, then atomically replaces old ones so a
-    Gemini failure never leaves the course with zero searchable content.
-
-    Returns the number of chunks indexed.
-    """
-    content_items = await extract_all_course_content(course_id, org_id, db_session)
-    if not content_items:
-        logger.info("No content to index for course %d", course_id)
-        return 0
-
-    chunks_to_embed: list[tuple[str, dict]] = []
-    for item in content_items:
-        text = item["text"]
-        if not text.strip():
-            continue
-        for idx, chunk in enumerate(chunk_text(text)):
-            chunks_to_embed.append((chunk, {**item, "chunk_index": idx}))
-
-    if not chunks_to_embed:
-        logger.info("No chunks generated for course %d", course_id)
-        return 0
-
-    texts = [c[0] for c in chunks_to_embed]
-    # Generate all embeddings before touching the DB, so a Gemini failure here
-    # leaves the existing embeddings intact rather than wiping them first.
-    embeddings = await generate_embeddings(texts)
-
-    now = str(datetime.now())
-    new_records = [
-        CourseEmbedding(
-            org_id=org_id,
-            course_id=course_id,
-            activity_id=metadata.get("activity_id"),
-            activity_uuid=metadata.get("activity_uuid", ""),
-            block_uuid=metadata.get("block_uuid"),
-            source_type=metadata.get("source_type", ""),
-            chunk_text=chunk_text_val,
-            chunk_index=metadata.get("chunk_index", 0),
-            activity_name=metadata.get("activity_name", ""),
-            chapter_name=metadata.get("chapter_name", ""),
-            course_name=metadata.get("course_name", ""),
-            embedding=embedding,
-            creation_date=now,
-            update_date=now,
-        )
-        for (chunk_text_val, metadata), embedding in zip(chunks_to_embed, embeddings)
-    ]
-
-    # Atomically swap old embeddings for new ones in a single commit.
-    existing = (await db_session.execute(
-        select(CourseEmbedding).where(CourseEmbedding.course_id == course_id)
-    )).scalars().all()
-    for emb in existing:
-        await db_session.delete(emb)
-    for record in new_records:
-        db_session.add(record)
-    await db_session.commit()
-
-    logger.info(
-        "Indexed %d chunks for course %d (org %d)",
-        len(chunks_to_embed), course_id, org_id
-    )
-    return len(chunks_to_embed)

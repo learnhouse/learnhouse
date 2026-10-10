@@ -11,6 +11,7 @@ from typing import List, Optional
 
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.ai.rag.queue import index_activity
 from src.security.features_utils.usage import check_feature_access
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -337,6 +338,7 @@ async def restore_activity_version(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    index_activity(activity.id)
 
     await dispatch_webhooks(
         event_name="activity_version_restored",

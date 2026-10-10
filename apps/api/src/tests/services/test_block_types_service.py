@@ -65,7 +65,7 @@ def _mock_upload_file() -> MagicMock:
 class TestCreateAudioBlock:
     @pytest.mark.asyncio
     async def test_creates_audio_block_and_persists(
-        self, mock_request, db, org, course, activity, admin_user
+        self, mock_request, db, org, course, activity, admin_user, rag_dispatch
     ):
         block_file = _fake_block_file("audio", "mp3", activity.activity_uuid)
         with patch(
@@ -82,6 +82,8 @@ class TestCreateAudioBlock:
 
         assert isinstance(result, BlockRead)
         assert result.org_id == org.id
+        # Uploaded media may be transcribed for AI search; images may not.
+        assert rag_dispatch.call_args.args[2] is True
 
     @pytest.mark.asyncio
     async def test_audio_block_activity_not_found(self, mock_request, db, org, course):
@@ -124,7 +126,7 @@ class TestCreateAudioBlock:
 class TestCreateImageBlock:
     @pytest.mark.asyncio
     async def test_creates_image_block_and_persists(
-        self, mock_request, db, org, course, activity, admin_user
+        self, mock_request, db, org, course, activity, admin_user, rag_dispatch
     ):
         block_file = _fake_block_file("image", "png", activity.activity_uuid)
         with patch(
@@ -141,6 +143,8 @@ class TestCreateImageBlock:
 
         assert isinstance(result, BlockRead)
         assert result.org_id == org.id
+        # Uploaded media may be transcribed for AI search; images may not.
+        assert rag_dispatch.call_args.args[2] is False
 
     @pytest.mark.asyncio
     async def test_image_block_org_not_found(self, mock_request, db):
@@ -214,7 +218,7 @@ class TestCreatePdfBlock:
 class TestCreateVideoBlock:
     @pytest.mark.asyncio
     async def test_creates_video_block_and_persists(
-        self, mock_request, db, org, course, activity, admin_user
+        self, mock_request, db, org, course, activity, admin_user, rag_dispatch
     ):
         block_file = _fake_block_file("video", "mp4", activity.activity_uuid)
         with patch(
@@ -231,6 +235,8 @@ class TestCreateVideoBlock:
 
         assert isinstance(result, BlockRead)
         assert result.org_id == org.id
+        # Uploaded media may be transcribed for AI search; images may not.
+        assert rag_dispatch.call_args.args[2] is True
 
     @pytest.mark.asyncio
     async def test_video_block_org_not_found(self, mock_request, db):

@@ -9,7 +9,6 @@ from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityType
 from src.db.organizations import OrganizationRead
 from src.services.courses.activities.access import apply_activity_lock
 from src.services.courses.activities.activities import (
-    _trigger_course_embedding,
     create_activity,
     delete_activity,
     get_activities,
@@ -229,14 +228,14 @@ class TestUpdateActivity:
             "src.services.courses.activities.activities.create_activity_version",
             new_callable=AsyncMock,
         ) as mock_version, patch(
-            "src.services.courses.activities.activities._trigger_course_embedding",
-            new_callable=AsyncMock,
-        ):
+            "src.services.courses.activities.activities.index_activity",
+        ) as mock_index:
             result = await update_activity(
                 mock_request, update_obj, activity.activity_uuid, admin_user, db
             )
         assert isinstance(result, ActivityRead)
         mock_version.assert_called_once()
+        mock_index.assert_called_once_with(activity.id)
 
 
 class TestDeleteActivity:
@@ -360,27 +359,40 @@ class TestApplyActivityLock:
 
 
 # ---------------------------------------------------------------------------
-# _trigger_course_embedding
+# AI search indexing
 # ---------------------------------------------------------------------------
 
 
-class TestTriggerCourseEmbedding:
+class TestIndexing:
     @pytest.mark.asyncio
-    async def test_runs_embedding_when_course_found(self, db, course):
-        """Covers lines 438-439 (lazy imports inside _trigger_course_embedding)."""
-        async def fake_get_db():
-            yield db
-
+    async def test_rename_schedules_reindex(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        # Names are copied onto indexed chunks, so any update re-indexes, not
+        # only content changes.
         with patch(
-            "src.core.events.database.get_db_session",
-            return_value=fake_get_db(),
-        ), patch(
-            "src.services.ai.rag.embedding_service.embed_course_content",
+            "src.services.courses.activities.activities.check_resource_access",
             new_callable=AsyncMock,
-        ) as mock_embed:
-            await _trigger_course_embedding(course.id, course.org_id)
+        ), patch("src.services.courses.activities.activities.index_activity") as mock_index:
+            await update_activity(
+                mock_request, ActivityUpdate(name="Renamed"), activity.activity_uuid, admin_user, db
+            )
+        mock_index.assert_called_once_with(activity.id)
 
-        mock_embed.assert_called_once_with(course.id, course.org_id, db)
+    @pytest.mark.asyncio
+    async def test_scheduling_failure_does_not_fail_the_save(
+        self, mock_request, db, org, course, chapter, activity, admin_user, rag_dispatch
+    ):
+        rag_dispatch.side_effect = RuntimeError("redis down")
+        with patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await update_activity(
+                mock_request, ActivityUpdate(name="Still saved"), activity.activity_uuid, admin_user, db
+            )
+        assert result.name == "Still saved"
+        rag_dispatch.assert_called_once()
 
 
 # ---------------------------------------------------------------------------

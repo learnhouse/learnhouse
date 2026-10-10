@@ -90,6 +90,14 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.utils.caption_jobs import start_consumer as start_captions_consumer
         start_captions_consumer()
 
+        # Start the in-app RAG indexing consumer (no-op without Redis, where
+        # indexing runs in-process instead).
+        from src.services.ai.rag.queue import start_consumer as start_rag_consumer
+        start_rag_consumer()
+        # Every few hours, queue whatever the index is missing or behind on.
+        from src.services.ai.rag.scheduler import start_scheduler as start_rag_backfill
+        start_rag_backfill()
+
         # Start Enterprise Edition Startup tasks if available
         run_ee_startup(app)
 
@@ -110,6 +118,12 @@ def shutdown_app(app: FastAPI) -> Callable:
         # Stop the in-app captions consumer.
         from src.services.utils.caption_jobs import stop_consumer as stop_captions_consumer
         await stop_captions_consumer()
+        # Stop the RAG backfill tick, then the indexing consumer; in-flight
+        # refs are re-queued.
+        from src.services.ai.rag.scheduler import stop_scheduler as stop_rag_backfill
+        await stop_rag_backfill()
+        from src.services.ai.rag.queue import stop_consumer as stop_rag_consumer
+        await stop_rag_consumer()
         # Wait for in-flight webhook deliveries before closing the HTTP client
         from src.services.webhooks.dispatch import close_webhook_client, _background_tasks as _webhook_tasks
         if _webhook_tasks:  # pragma: no cover

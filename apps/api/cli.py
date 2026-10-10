@@ -311,6 +311,62 @@ def transcode_backfill(
 
 
 @cli.command()
+def index_backfill(
+    org: Annotated[str, typer.Option(help="Only this organization (slug)")] = "",
+    course: Annotated[str, typer.Option(help="Only this course (course_uuid)")] = "",
+    inline: Annotated[bool, typer.Option(help="Index inline now instead of enqueuing")] = False,
+    transcribe: Annotated[bool, typer.Option(help="Also transcribe media never transcribed (uses the orgs' AI credits)")] = False,
+):
+    """Index existing course content for AI search and the copilot.
+
+    Default: enqueue every course for the running API's in-app consumer. Use
+    --inline to index here instead. Media is only transcribed with
+    --transcribe, since that spends each org's AI credits. The API also runs
+    this on its own every few hours for whatever is missing or out of date."""
+    if not inline:
+        from src.core.redis import get_redis_client
+
+        client = get_redis_client()
+        try:
+            reachable = client is not None and client.ping()
+        except Exception:
+            reachable = False
+        if not reachable:
+            print("Redis is not reachable, so nothing would pick the work up. Use --inline.")
+            raise typer.Exit(code=1)
+    result = asyncio.run(_index_backfill(org, course, inline, transcribe))
+    verb = "indexed" if inline else "enqueued"
+    print(f"Index backfill done. courses={result['courses']} {verb}={result['items']}")
+
+
+async def _index_backfill(org_slug: str, course_uuid: str, inline: bool, transcribe: bool) -> dict:
+    from sqlmodel import select
+
+    from src.core.events.database import _async_session_factory
+    from src.db.courses.courses import Course
+    from src.db.organizations import Organization
+    from src.services.ai.rag import pipeline, queue
+
+    async with _async_session_factory() as db:
+        statement = select(Course.id)
+        if org_slug:
+            statement = statement.join(Organization, Organization.id == Course.org_id).where(
+                Organization.slug == org_slug
+            )
+        if course_uuid:
+            statement = statement.where(Course.course_uuid == course_uuid)
+        course_ids = (await db.execute(statement.order_by(Course.id))).scalars().all()
+
+        items = 0
+        for course_id in course_ids:
+            if inline:
+                items += await pipeline.run_course(course_id, transcribe=transcribe)
+            else:
+                items += await queue.enqueue_course(course_id, db, delay=0, transcribe=transcribe)
+    return {"courses": len(course_ids), "items": items}
+
+
+@cli.command()
 def compute_active_user_overage(
     year: Annotated[int, typer.Option(help="Calendar year (UTC), e.g. 2026")] = 0,
     month: Annotated[int, typer.Option(help="Calendar month 1-12 (UTC)")] = 0,

@@ -23,6 +23,7 @@ from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.ai.rag.queue import index_activity
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,7 @@ async def create_video_activity(
     db_session.add(chapter_activity_object)
     await db_session.commit()
     await db_session.refresh(chapter_activity_object)
+    index_activity(activity.id, transcribe=True)
 
     # Kick off HLS transcoding (no-op unless LEARNHOUSE_HLS_ENABLED). The MP4 is
     # served as the fallback until HLS is ready.
@@ -276,6 +278,7 @@ async def create_external_video_activity(
     # Insert ChapterActivity link in DB
     db_session.add(chapter_activity_object)
     await db_session.commit()
+    index_activity(activity.id)
 
     return ActivityRead.model_validate(activity)
 
@@ -339,6 +342,7 @@ async def update_video_activity(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    index_activity(activity.id, transcribe=video_file is not None)
 
     return ActivityRead.model_validate(activity)
 
@@ -504,6 +508,7 @@ async def update_external_video_activity(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    index_activity(activity.id)
 
     return ActivityRead.model_validate(activity)
 

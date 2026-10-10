@@ -729,7 +729,7 @@ class TestImportHelpers:
         _set_import_temp_dir(monkeypatch, tmp_path)
 
         import_side_effect = [
-            SimpleNamespace(course_uuid="course-new-1", name="Imported One"),
+            SimpleNamespace(id=101, course_uuid="course-new-1", name="Imported One"),
             RuntimeError("boom"),
         ]
         new_uuid_sequence = iter([UUID(int=1), UUID(int=2)])

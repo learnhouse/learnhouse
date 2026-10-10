@@ -29,6 +29,8 @@ from src.db.courses.activities import Activity, ActivitySubTypeEnum
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.services.ai import captions as cap
+from src.services.ai.rag.media import Media, read_transcript
+from src.services.ai.rag.queue import index_activity
 from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
     upload_directory_to_s3,
@@ -164,6 +166,7 @@ async def _resolve(activity_uuid: str) -> Optional[dict]:
         if not org or not course:
             return None
         return {
+            "activity_id": a.id,
             "org_id": a.org_id,
             "org_uuid": org.org_uuid,
             "course_uuid": course.course_uuid,
@@ -206,35 +209,45 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
 
     model_name = model_for_tier("standard")
     reserved = 0
+    need_translation = [
+        t for t in targets
+        if not (source_language != "auto" and t["code"] == source_language)
+    ]
+    # The AI search index may already hold a transcript of this exact file;
+    # reusing it skips the download and the transcription charge.
+    existing_transcript = await read_transcript(
+        Media(org_id=org_id, owner="activity", owner_id=info["activity_id"], source_key=src_key)
+    )
     try:
         with tempfile.TemporaryDirectory() as td:
-            # 1. Download source video + extract audio.
-            local_src = os.path.join(td, os.path.basename(info["filename"]))
-            if not await asyncio.to_thread(_fetch_source, src_key, local_src):
-                await _patch_captions(activity_uuid, status="failed", error="source_unavailable")
-                return False
-            audio_dir = os.path.join(td, "audio")
-            os.makedirs(audio_dir, exist_ok=True)
-            chunks = await cap.extract_audio_chunks(local_src, audio_dir)
-            if not chunks:
-                await _patch_captions(activity_uuid, status="failed", error="audio_extract_failed")
-                return False
-            duration = await cap.probe_duration(local_src)
+            if existing_transcript:
+                chunks = []
+                cost = max(1, len(need_translation))
+            else:
+                # 1. Download source video + extract audio.
+                local_src = os.path.join(td, os.path.basename(info["filename"]))
+                if not await asyncio.to_thread(_fetch_source, src_key, local_src):
+                    await _patch_captions(activity_uuid, status="failed", error="source_unavailable")
+                    return False
+                audio_dir = os.path.join(td, "audio")
+                os.makedirs(audio_dir, exist_ok=True)
+                chunks = await cap.extract_audio_chunks(local_src, audio_dir)
+                if not chunks:
+                    await _patch_captions(activity_uuid, status="failed", error="audio_extract_failed")
+                    return False
+                duration = await cap.probe_duration(local_src)
+                # Cost scales with duration + number of languages that need a
+                # real translation.
+                cost = cap.estimate_credits(duration, len(need_translation))
 
-            # 2. Credit gate (feature + atomic reserve). Cost scales with duration
-            #    + number of languages that need a real translation.
-            need_translation = [
-                t for t in targets
-                if not (source_language != "auto" and t["code"] == source_language)
-            ]
-            cost = cap.estimate_credits(duration, len(need_translation))
+            # 2. Credit gate (feature + atomic reserve).
             async with _async_session_factory() as db:
                 await check_feature_enabled("ai", org_id, db)
                 await reserve_ai_credit(org_id, db, amount=cost)
             reserved = cost
 
             # 3. Transcribe once (source language).
-            source_vtt = await cap.transcribe_to_vtt(chunks, model_name, source_language)
+            source_vtt = existing_transcript or await cap.transcribe_to_vtt(chunks, model_name, source_language)
 
             # 4. Produce a VTT per target language (translate unless it IS the source).
             out_dir = os.path.join(td, "captions")
@@ -281,6 +294,7 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
             error=None,
         )
         logger.info("Captions ready for %s (%s/%s langs)", activity_uuid, done, len(targets))
+        index_activity(info["activity_id"])
         return True
     except HTTPException as e:
         # e.g. AI disabled or quota exceeded (reserve raises 403): do NOT refund

@@ -75,7 +75,7 @@ class TestCreateVideoActivity:
 
     @pytest.mark.asyncio
     async def test_creates_video_activity_successfully(
-        self, mock_request, db, org, course, chapter, admin_user
+        self, mock_request, db, org, course, chapter, admin_user, rag_dispatch
     ):
         with patch(
             "src.services.courses.activities.video.check_resource_access",
@@ -95,6 +95,7 @@ class TestCreateVideoActivity:
             )
 
         assert result.name == "Test Video"
+        assert rag_dispatch.call_args.args[2] is True  # transcribe only uploads
 
 
 class TestCreateExternalVideoActivity:
@@ -111,7 +112,7 @@ class TestCreateExternalVideoActivity:
 
     @pytest.mark.asyncio
     async def test_creates_external_video_activity(
-        self, mock_request, db, org, course, chapter, admin_user
+        self, mock_request, db, org, course, chapter, admin_user, rag_dispatch
     ):
         data = ExternalVideo(
             name="YT Video",
@@ -127,3 +128,4 @@ class TestCreateExternalVideoActivity:
                 mock_request, admin_user, data, db
             )
         assert result.name == "YT Video"
+        assert rag_dispatch.call_args.args[2] is False  # transcribe only uploads

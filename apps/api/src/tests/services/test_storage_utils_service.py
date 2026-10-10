@@ -180,6 +180,35 @@ class TestStorageClientHelpers:
         assert "config" in call_kwargs
 
 
+class TestWriteFileContent:
+    def test_writes_under_the_content_root_and_reads_back(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "content").mkdir()
+        with patch.object(storage_utils, "get_content_delivery_type", return_value="filesystem"):
+            assert storage_utils.write_file_content("content/a/b/t.vtt", b"WEBVTT") is True
+            assert storage_utils.read_file_content("content/a/b/t.vtt") == b"WEBVTT"
+
+    @pytest.mark.parametrize("path", ["/etc/x", "content/../../x", "outside/x", ""])
+    def test_rejects_paths_outside_the_content_root(self, tmp_path, monkeypatch, path):
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "content").mkdir()
+        with patch.object(storage_utils, "get_content_delivery_type", return_value="filesystem"):
+            assert storage_utils.write_file_content(path, b"x") is False
+
+    def test_os_errors_are_reported_not_raised(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "content").mkdir()
+        with patch.object(storage_utils, "get_content_delivery_type", return_value="filesystem"), \
+             patch("builtins.open", side_effect=OSError("disk full")):
+            assert storage_utils.write_file_content("content/t.vtt", b"x") is False
+
+    def test_s3_mode_uploads(self):
+        with patch.object(storage_utils, "get_content_delivery_type", return_value="s3api"), \
+             patch.object(storage_utils, "upload_to_s3", return_value=True) as upload:
+            assert storage_utils.write_file_content("content/t.vtt", b"x") is True
+        upload.assert_called_once_with("content/t.vtt", b"x")
+
+
 class TestFileReadAndExistenceHelpers:
     def test_read_file_content_covers_filesystem_and_s3_fallbacks(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)

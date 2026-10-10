@@ -60,6 +60,16 @@ def run_ee_startup(app):
     if hooks and hasattr(hooks, "on_startup"):
         hooks.on_startup(app)
 
+def register_ee_rag_sources():
+    """Let EE register extractors for its own content types (e.g. SCORM) with
+    the AI search source registry."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "register_rag_sources"):
+        try:
+            hooks.register_rag_sources()
+        except Exception as e:
+            logger.error(f"Failed to register EE AI search sources: {e}")
+
 def is_multi_org_allowed() -> bool:
     """Check if multi-org mode is allowed (requires EE or SaaS)."""
     from src.core.deployment_mode import get_deployment_mode

@@ -20,6 +20,7 @@ from src.db.courses.courses import Course
 from fastapi import HTTPException, status, Request
 from src.core.ee_hooks import check_ee_activity_paid_access
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.locks import (
     batch_accessible_restricted_uuids,
     is_locked_for_user,
@@ -89,6 +90,7 @@ async def create_chapter(
     # Single atomic commit for both Chapter and CourseChapter
     db_session.add(course_chapter)
     await db_session.commit()
+    index_course(course.id)
 
     return chapter_read
 
@@ -187,6 +189,8 @@ async def update_chapter(
 
     await db_session.commit()
     await db_session.refresh(chapter)
+    # Activities carry their chapter's name, so a rename re-indexes them too.
+    await enqueue_course(chapter.course_id, db_session)
 
     if chapter:
         chapter = await get_chapter(
@@ -229,6 +233,7 @@ async def delete_chapter(
     # Delete the chapter
     await db_session.delete(chapter)
     await db_session.commit()
+    await enqueue_course(course.id, db_session)
 
     return {"detail": "chapter deleted"}
 
@@ -691,5 +696,6 @@ async def reorder_chapters_and_activities(
         if (ca.chapter_id, ca.activity_id) not in activities_to_keep:
             await db_session.delete(ca)
     await db_session.commit()
+    await enqueue_course(course.id, db_session)
 
     return {"detail": "Chapters and activities reordered successfully"}

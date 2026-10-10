@@ -36,6 +36,7 @@ from src.security.file_validation import EXT_TO_CANONICAL_MIME, MIME_TO_SAFE_EXT
 from src.security.org_auth import require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
+from src.services.ai.rag.queue import enqueue_course
 
 from .models import (
     ImportAnalysisResponse,
@@ -545,6 +546,7 @@ async def import_courses(
 
             # Commit the outer transaction so the course is persisted
             await db_session.commit()
+            await enqueue_course(new_course.id, db_session)
 
             # Track usage AFTER commit: increase_feature_usage calls commit()
             # internally, so it must not run inside the savepoint

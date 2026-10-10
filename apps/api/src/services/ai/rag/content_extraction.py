@@ -1,324 +1,21 @@
-"""
-Content extraction for RAG indexing.
+"""Course text extraction for AI features that read content directly.
 
-Extracts text from all course content types:
-- Dynamic pages (ProseMirror/TipTap JSON)
-- PDF blocks and document activities
-- Image blocks (metadata)
-- Audio blocks (metadata)
-- Quiz blocks (questions + answers)
-- Custom blocks (text content)
+The extractors live in ``sources``; this module keeps the helpers other AI
+features (quiz, scenario and assignment generation) import.
 """
-
-import asyncio
-import logging
-import os
-from typing import Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.courses.activities import Activity, ActivityTypeEnum
-from src.db.courses.blocks import Block, BlockTypeEnum
-from src.db.courses.chapters import Chapter
-from src.db.courses.courses import Course
-from src.db.courses.chapter_activities import ChapterActivity
-from src.services.courses.transfer.storage_utils import read_file_content
-
-logger = logging.getLogger(__name__)
-
-MAX_PDF_CHARS = 100_000
-
-# ProseMirror only defines heading levels 1-6.
-MAX_HEADING_LEVEL = 6
-
-
-def _safe_heading_level(node: dict) -> int:
-    """Clamp a stored heading level to the ProseMirror range.
-
-    ``activity.content`` is a free-form JSON column, so ``level`` is untrusted:
-    used raw as a string repeat count an oversized value asks for a multi-GB
-    allocation and OOM-kills the indexing worker. Anything that isn't a real
-    int falls back to 1.
-    """
-    attrs = node.get("attrs")
-    if not isinstance(attrs, dict):
-        return 1
-    level = attrs.get("level", 1)
-    if isinstance(level, bool) or not isinstance(level, int):
-        return 1
-    return max(1, min(level, MAX_HEADING_LEVEL))
-
-
-def _child_nodes(node: dict) -> list:
-    """Return only the dict children of a stored node.
-
-    ``content`` may be missing, a scalar, or hold non-node entries; dropping
-    those here keeps a poisoned row from crashing the whole re-index.
-    """
-    children = node.get("content")
-    if not isinstance(children, list):
-        return []
-    return [child for child in children if isinstance(child, dict)]
-
-
-def _is_safe_content_path(file_path: str) -> bool:
-    """Reject obviously unsafe stored-file paths before reading them.
-
-    Block values (file_id/uri/file_path) are persisted from user input, so
-    guard against traversal here in addition to the containment check in
-    read_file_content (S8). Rejects empty paths, NUL bytes, absolute paths and
-    any ``..`` component.
-    """
-    if not file_path or not isinstance(file_path, str) or "\x00" in file_path:
-        return False
-    normalized = file_path.replace("\\", "/")
-    if normalized.startswith("/") or os.path.isabs(file_path):
-        return False
-    if ".." in normalized.split("/"):
-        return False
-    return True
-
-
-def extract_text_from_prosemirror(content: dict) -> str:
-    """
-    Recursively walk a TipTap/ProseMirror JSON tree and extract all text.
-    Preserves heading hierarchy via # markers.
-    """
-    if not content or not isinstance(content, dict):
-        return ""
-
-    parts = []
-    _walk_prosemirror_node(content, parts)
-    return "\n".join(parts).strip()
-
-
-def _walk_prosemirror_node(node: dict, parts: list[str]) -> None:
-    """Recursively extract text from a ProseMirror node."""
-    node_type = node.get("type", "")
-
-    # Handle text nodes directly
-    if node_type == "text":
-        text = node.get("text", "")
-        if text and isinstance(text, str):
-            parts.append(text)
-        return
-
-    # Add heading markers
-    if node_type == "heading":
-        level = _safe_heading_level(node)
-        prefix = "#" * level + " "
-        texts = _collect_inline_text(node)
-        if texts:
-            parts.append(prefix + texts)
-        return
-
-    # Handle paragraph
-    if node_type == "paragraph":
-        texts = _collect_inline_text(node)
-        if texts:
-            parts.append(texts)
-        # Recurse into children that are not inline
-        return
-
-    # Handle list items
-    if node_type in ("bulletList", "orderedList"):
-        for child in _child_nodes(node):
-            _walk_prosemirror_node(child, parts)
-        return
-
-    if node_type == "listItem":
-        texts = []
-        for child in _child_nodes(node):
-            if child.get("type") == "paragraph":
-                t = _collect_inline_text(child)
-                if t:
-                    texts.append(t)
-            else:
-                _walk_prosemirror_node(child, parts)
-        if texts:
-            parts.append("- " + " ".join(texts))
-        return
-
-    # Handle blockquote
-    if node_type == "blockquote":
-        for child in _child_nodes(node):
-            sub_parts = []
-            _walk_prosemirror_node(child, sub_parts)
-            for p in sub_parts:
-                parts.append("> " + p)
-        return
-
-    # Handle code blocks
-    if node_type == "codeBlock":
-        texts = _collect_inline_text(node)
-        if texts:
-            parts.append(f"```\n{texts}\n```")
-        return
-
-    # Handle callouts
-    if node_type in ("calloutInfo", "calloutWarning", "calloutDanger", "calloutSuccess"):
-        texts = _collect_inline_text(node)
-        if texts:
-            parts.append(f"[{node_type}] {texts}")
-        return
-
-    # Handle H5P blocks. They are embed-only: the interactive content lives on the
-    # author's own H5P host, so the author-supplied title is the only text we
-    # have. Handled explicitly so it does not fall through to the generic
-    # recursion, which would yield nothing for this atom node.
-    if node_type == "blockH5P":
-        attrs = node.get("attrs") if isinstance(node.get("attrs"), dict) else {}
-        url = attrs.get("h5pUrl")
-        # An emptied block may still carry the title of the embed it used to
-        # hold; indexing that keeps search citing content the activity no
-        # longer contains.
-        if not (isinstance(url, str) and url.strip()):
-            return
-        title = attrs.get("title")
-        if isinstance(title, str) and title.strip():
-            parts.append(f"[H5P interactive content] {title.strip()}")
-        return
-
-    # Handle table
-    if node_type == "table":
-        for row in _child_nodes(node):
-            cells = []
-            for cell in _child_nodes(row):
-                cell_text = _collect_inline_text(cell)
-                if cell_text:
-                    cells.append(cell_text)
-            if cells:
-                parts.append(" | ".join(cells))
-        return
-
-    # Default: recurse into children
-    for child in _child_nodes(node):
-        _walk_prosemirror_node(child, parts)
-
-
-def _collect_inline_text(node: dict) -> str:
-    """Collect all inline text from a node's content."""
-    texts = []
-    for child in _child_nodes(node):
-        if child.get("type") == "text":
-            text = child.get("text", "")
-            texts.append(text if isinstance(text, str) else "")
-        elif child.get("type") == "hardBreak":
-            texts.append("\n")
-        else:
-            # Recurse for nested inline elements (marks, etc.)
-            texts.append(_collect_inline_text(child))
-    return "".join(texts)
-
-
-def extract_text_from_pdf(pdf_bytes: bytes) -> str:
-    """Extract text from PDF bytes using pypdf. Cap at MAX_PDF_CHARS."""
-    try:
-        from pypdf import PdfReader
-        from io import BytesIO
-
-        reader = PdfReader(BytesIO(pdf_bytes))
-        texts = []
-        total_chars = 0
-        for page in reader.pages:
-            page_text = page.extract_text() or ""
-            if total_chars + len(page_text) > MAX_PDF_CHARS:
-                texts.append(page_text[:MAX_PDF_CHARS - total_chars])
-                break
-            texts.append(page_text)
-            total_chars += len(page_text)
-        return "\n".join(texts).strip()
-    except Exception as e:
-        logger.warning("Failed to extract PDF text: %s", e)
-        return ""
-
-
-def _read_pdf_text(file_path: str) -> str:
-    """Blocking: read a PDF from storage and extract its text."""
-    pdf_bytes = read_file_content(file_path)
-    if not pdf_bytes:
-        return ""
-    return extract_text_from_pdf(pdf_bytes)
-
-
-def _extract_block_content(block: Block, activity_name: str) -> Optional[dict]:
-    """
-    Extract text content from a block based on its type.
-    Returns dict with {text, source_type} or None if no content.
-    """
-    block_type = block.block_type
-    content = block.content or {}
-
-    if block_type == BlockTypeEnum.BLOCK_VIDEO:
-        # Skip video blocks: too heavy, no text
-        return None
-
-    if block_type == BlockTypeEnum.BLOCK_DOCUMENT_PDF:
-        # Read PDF file and extract text
-        file_path = content.get("file_id") or content.get("uri") or content.get("file_path", "")
-        if not file_path or not _is_safe_content_path(file_path):
-            return None
-        pdf_bytes = read_file_content(file_path)
-        if not pdf_bytes:
-            return None
-        text = extract_text_from_pdf(pdf_bytes)
-        if not text:
-            return None
-        return {"text": text, "source_type": "pdf_block"}
-
-    if block_type == BlockTypeEnum.BLOCK_IMAGE:
-        # Extract image metadata
-        file_name = content.get("file_name", "") or content.get("file_id", "")
-        alt_text = content.get("alt", "") or content.get("caption", "")
-        meta_parts = [f"Image in activity '{activity_name}'"]
-        if file_name:
-            meta_parts.append(f"File: {file_name}")
-        if alt_text:
-            meta_parts.append(f"Description: {alt_text}")
-        text = ". ".join(meta_parts)
-        return {"text": text, "source_type": "image_block"}
-
-    if block_type == BlockTypeEnum.BLOCK_AUDIO:
-        # Extract audio metadata
-        file_name = content.get("file_name", "") or content.get("file_id", "")
-        meta_parts = [f"Audio in activity '{activity_name}'"]
-        if file_name:
-            meta_parts.append(f"File: {file_name}")
-        text = ". ".join(meta_parts)
-        return {"text": text, "source_type": "audio_block"}
-
-    if block_type == BlockTypeEnum.BLOCK_QUIZ:
-        # Extract quiz questions and answers
-        questions = content.get("questions", [])
-        if not questions:
-            return None
-        quiz_parts = []
-        for q in questions:
-            q_text = q.get("question", "") or q.get("text", "")
-            if q_text:
-                quiz_parts.append(f"Q: {q_text}")
-            answers = q.get("answers", []) or q.get("options", [])
-            for a in answers:
-                a_text = a.get("answer", "") or a.get("text", "") if isinstance(a, dict) else str(a)
-                if a_text:
-                    quiz_parts.append(f"  A: {a_text}")
-        if not quiz_parts:
-            return None
-        return {"text": "\n".join(quiz_parts), "source_type": "quiz_block"}
-
-    if block_type == BlockTypeEnum.BLOCK_CUSTOM:
-        # Try to extract any text from custom block content
-        text_parts = []
-        if isinstance(content, dict):
-            for key, value in content.items():
-                if isinstance(value, str) and value.strip():
-                    text_parts.append(value.strip())
-        if not text_parts:
-            return None
-        return {"text": "\n".join(text_parts), "source_type": "custom_block"}
-
-    return None
+from src.db.courses.activities import Activity
+from src.services.ai.rag.formats import is_safe_content_path as _is_safe_content_path  # noqa: F401
+from src.services.ai.rag.sources import extract
+from src.services.ai.rag.sources.dynamic import (  # noqa: F401
+    MAX_HEADING_LEVEL,
+    _walk_prosemirror_node,
+    extract_text_from_prosemirror,
+)
+from src.services.ai.rag.types import ContentRef
 
 
 async def extract_all_course_content(
@@ -326,108 +23,27 @@ async def extract_all_course_content(
     org_id: int,
     db_session: AsyncSession,
 ) -> list[dict]:
+    """The text of every activity in a course, one item per activity.
+
+    Items are ``{text, activity_id, activity_uuid, activity_name,
+    chapter_name, course_name}``. Reads stored transcripts but never starts a
+    transcription.
     """
-    Extract all indexable content from a course.
-
-    Returns a list of dicts with:
-    {text, activity_id, activity_uuid, activity_name, chapter_name, course_name, source_type, block_uuid}
-    """
-    # Get the course
-    course = (await db_session.execute(
-        select(Course).where(Course.id == course_id)
-    )).scalars().first()
-    if not course:
-        logger.warning("Course %d not found for extraction", course_id)
-        return []
-
-    course_name = course.name
-
-    # Get all activities for this course with their chapter info
-    results = []
-
-    # Get chapters for this course
-    chapters = (await db_session.execute(
-        select(Chapter).where(Chapter.course_id == course_id)
-    )).scalars().all()
-    chapter_map = {ch.id: ch.name for ch in chapters}
-
-    # Get all activities for this course
-    activities = (await db_session.execute(
-        select(Activity).where(Activity.course_id == course_id)
+    activity_ids = (await db_session.execute(
+        select(Activity.id).where(Activity.course_id == course_id, Activity.org_id == org_id)
     )).scalars().all()
 
-    for activity in activities:
-        # Find chapter name via chapter_activities join
-        chapter_activity = (await db_session.execute(
-            select(ChapterActivity).where(ChapterActivity.activity_id == activity.id)
-        )).scalars().first()
-        chapter_name = chapter_map.get(chapter_activity.chapter_id, "") if chapter_activity else ""
-
-        activity_name = activity.name
-        activity_id = activity.id
-        activity_uuid = activity.activity_uuid
-
-        # Handle Dynamic Page activities
-        if activity.activity_type == ActivityTypeEnum.TYPE_DYNAMIC:
-            # Extract text from ProseMirror content
-            content = activity.content
-            if content and isinstance(content, dict):
-                text = extract_text_from_prosemirror(content)
-                if text:
-                    results.append({
-                        "text": text,
-                        "activity_id": activity_id,
-                        "activity_uuid": activity_uuid,
-                        "activity_name": activity_name,
-                        "chapter_name": chapter_name,
-                        "course_name": course_name,
-                        "source_type": "dynamic_page",
-                        "block_uuid": None,
-                    })
-
-            # Extract from blocks attached to this activity
-            blocks = (await db_session.execute(
-                select(Block).where(Block.activity_id == activity_id)
-            )).scalars().all()
-            for block in blocks:
-                if block.block_type == BlockTypeEnum.BLOCK_DOCUMENT_PDF:
-                    # Storage read + PDF parse are blocking; keep them off the loop
-                    block_content = await asyncio.to_thread(_extract_block_content, block, activity_name)
-                else:
-                    block_content = _extract_block_content(block, activity_name)
-                if block_content:
-                    results.append({
-                        "text": block_content["text"],
-                        "activity_id": activity_id,
-                        "activity_uuid": activity_uuid,
-                        "activity_name": activity_name,
-                        "chapter_name": chapter_name,
-                        "course_name": course_name,
-                        "source_type": block_content["source_type"],
-                        "block_uuid": block.block_uuid,
-                    })
-
-        # Handle Document activities (PDF)
-        elif activity.activity_type == ActivityTypeEnum.TYPE_DOCUMENT:
-            content = activity.content
-            if content and isinstance(content, dict):
-                file_path = content.get("file_id") or content.get("uri") or content.get("file_path", "")
-                if file_path and _is_safe_content_path(file_path):
-                    text = await asyncio.to_thread(_read_pdf_text, file_path)
-                    if text:
-                        results.append({
-                            "text": text,
-                            "activity_id": activity_id,
-                            "activity_uuid": activity_uuid,
-                            "activity_name": activity_name,
-                            "chapter_name": chapter_name,
-                            "course_name": course_name,
-                            "source_type": "document_activity",
-                            "block_uuid": None,
-                        })
-
-    logger.info(
-        "Extracted %d content chunks from course %d (%s)",
-        len(results), course_id, course_name
-    )
-    return results
+    items = []
+    for activity_id in activity_ids:
+        extraction = await extract(ContentRef.activity(activity_id), db_session)
+        if extraction is None:
+            continue
+        items.append({
+            "text": "\n\n".join(s.text for s in extraction.segments),
+            "activity_id": extraction.activity_id,
+            "activity_uuid": extraction.activity_uuid,
+            "activity_name": extraction.activity_name,
+            "chapter_name": extraction.chapter_name,
+            "course_name": extraction.course_name,
+        })
+    return items

@@ -1,5 +1,6 @@
 import { getAPIUrl } from '@services/config/config'
 import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
+import type { CopilotSource } from '@/lib/copilot/sources'
 
 export async function startActivityAIChatSession(
   message: string,
@@ -128,16 +129,7 @@ interface StreamErrorEvent {
 type StreamEvent = StreamStartEvent | StreamChunkEvent | StreamDoneEvent | StreamFollowUpsEvent | StreamSourcesEvent | StreamSessionTitleEvent | StreamErrorEvent
 
 export interface StreamSourceData {
-  sources: Array<{
-    activity_uuid?: string
-    activity_name?: string
-    chapter_name?: string
-    course_name?: string
-    course_uuid?: string
-    source_type?: string
-    chunk_text?: string
-    similarity?: number
-  }>
+  sources: CopilotSource[]
 }
 
 export interface StreamCallbacks {

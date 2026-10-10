@@ -441,7 +441,7 @@ class TestImportTempIdTraversal:
             "src.services.courses.transfer.import_service.increase_feature_usage"
         ), patch(
             "src.services.courses.transfer.import_service._import_single_course",
-            return_value=SimpleNamespace(course_uuid="course-new", name="Imported"),
+            return_value=SimpleNamespace(id=1, course_uuid="course-new", name="Imported"),
         ):
             result = await import_courses(
                 mock_request,

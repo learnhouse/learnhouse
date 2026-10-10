@@ -3,6 +3,7 @@ limits, library search bounds, list clamps, AI input caps, caption dedupe,
 per-recipient magic links, webhook caps and the link-preview throttle."""
 
 import asyncio
+import contextlib
 from io import BytesIO
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -48,47 +49,41 @@ def _deny(*_a, **_k):
 # ---------------------------------------------------------------------------
 
 class TestReindexDebounce:
-    async def _run(self, monkeypatch, redis_client, calls=10, ai_enabled=True):
-        from src.services.courses.activities import activities as act
+    """Saves are debounced by the RAG queue (one run per burst) and orgs
+    without AI search are never indexed; both covered in depth in
+    test_rag_queue.py and test_rag_pipeline.py."""
 
-        monkeypatch.setattr(act, "REINDEX_DEBOUNCE_SECONDS", 0)
-        monkeypatch.setattr(act, "_org_ai_enabled", AsyncMock(return_value=ai_enabled))
-        monkeypatch.setattr("src.core.redis.get_redis_client", lambda: redis_client)
-        trigger = AsyncMock()
-        monkeypatch.setattr(act, "_trigger_course_embedding", trigger)
-        act._pending_reindex.clear()
+    @pytest.fixture
+    def rag_dispatch(self):
+        """Use the real queue dispatch here, not the suite-wide stub."""
+        yield None
 
-        results = [await act._schedule_course_embedding(7, 1, None) for _ in range(calls)]
-        await asyncio.gather(*list(act._embedding_tasks))
-        return results, trigger
+    async def test_rapid_saves_schedule_one_reindex(self, monkeypatch, rag_dispatch):
+        from src.services.ai.rag import queue
 
-    async def test_rapid_saves_schedule_one_reindex(self, monkeypatch):
-        r = _FakeRedis()
-        results, trigger = await self._run(monkeypatch, r)
-        assert results.count(True) == 1
-        trigger.assert_awaited_once_with(7, 1)
-        # Released after the run so the next save schedules again
-        assert "rag_reindex:7" not in r.store
-
-    async def test_without_redis_one_in_flight_per_course(self, monkeypatch):
-        results, trigger = await self._run(monkeypatch, None)
-        assert results.count(True) == 1
-        trigger.assert_awaited_once()
+        due = {}
+        client = MagicMock()
+        client.zadd.side_effect = lambda key, mapping: due.update(mapping)
+        monkeypatch.setattr(queue, "get_redis_client", lambda: client)
+        for _ in range(10):
+            queue.index_activity(7)
+        assert list(due) == ["activity:7"]
 
     async def test_ai_disabled_skips_reindex(self, monkeypatch):
-        results, trigger = await self._run(monkeypatch, _FakeRedis(), ai_enabled=False)
-        assert not any(results)
-        trigger.assert_not_awaited()
+        from src.services.ai.rag import pipeline
+        from src.services.ai.rag.types import ContentRef
 
-    async def test_ai_disabled_detection(self, monkeypatch):
-        from src.services.courses.activities import activities as act
-        import src.security.features_utils.usage as usage
+        @contextlib.asynccontextmanager
+        async def session():
+            yield MagicMock()
 
-        async def _off(*_a, **_k):
-            raise HTTPException(status_code=403, detail="off")
-
-        monkeypatch.setattr(usage, "check_feature_enabled", _off)
-        assert await act._org_ai_enabled(1, None) is False
+        monkeypatch.setattr(pipeline, "_session", session)
+        monkeypatch.setattr(pipeline, "_org_of", AsyncMock(return_value=1))
+        monkeypatch.setattr(pipeline, "orgs_using_ai", AsyncMock(return_value=set()))
+        extract = AsyncMock()
+        monkeypatch.setattr(pipeline, "extract", extract)
+        assert await pipeline.run(ContentRef.activity(7)) == 0
+        extract.assert_not_awaited()
 
 
 # ---------------------------------------------------------------------------
@@ -439,7 +434,7 @@ class TestRouteThrottles:
         embed = AsyncMock(return_value=1)
         with patch.object(rag, "require_org_admin", new=AsyncMock()), \
              patch("src.services.security.rate_limiting.check_rate_limit", side_effect=_deny) as rl, \
-             patch.object(rag, "embed_course_content", new=embed):
+             patch.object(rag.pipeline, "run_course", new=embed):
             with pytest.raises(HTTPException) as exc:
                 await rag.api_rag_index(
                     mock_request, rag.RAGIndexRequest(course_uuid=course.course_uuid), admin_user, db
