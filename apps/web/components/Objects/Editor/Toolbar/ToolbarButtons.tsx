@@ -301,7 +301,7 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
                   editor.chain().focus().insertContent({
                     type: 'callout',
                     attrs: { type },
-                    content: [],
+                    content: [{ type: 'paragraph' }],
                   }).run()
                   setShowCalloutMenu(false)
                 }}

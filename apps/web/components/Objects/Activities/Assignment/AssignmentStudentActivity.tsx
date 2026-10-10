@@ -14,6 +14,7 @@ import { AlarmClockOff, Backpack, BookOpenCheck, Calendar, CheckCircle2, Clipboa
 import Link from 'next/link';
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next';
+import { sortTasksByOrder } from '@/lib/assignments/taskOrder'
 
 type ParsedDueDate = { at: Date; hasTime: boolean }
 
@@ -281,7 +282,7 @@ function AssignmentStudentActivity() {
         </div>
       )}
 
-      {assignments && assignments?.assignment_tasks?.slice().sort((a: any, b: any) => a.id - b.id).map((task: any, index: number) => {
+      {assignments && sortTasksByOrder(assignments?.assignment_tasks).map((task: any, index: number) => {
         const taskSubmission = taskSubmissionsMap ? taskSubmissionsMap[task.assignment_task_uuid] : null;
         const taskGrade = taskSubmission?.grade ?? 0;
         const taskMax = task.max_grade_value || 0;

@@ -15,6 +15,7 @@ try:
 except Exception:  # pragma: no cover - fallback if the optional dep is absent
     _regex = None
 from fastapi import HTTPException, Request, UploadFile
+from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.exc import IntegrityError
@@ -26,6 +27,7 @@ from src.db.courses.assignments import (
     AssignmentRead,
     AssignmentTask,
     AssignmentTaskCreate,
+    AssignmentTaskOrder,
     AssignmentTaskRead,
     AssignmentTaskSubmission,
     AssignmentTaskSubmissionCreate,
@@ -1578,6 +1580,15 @@ async def create_assignment_task(
     assignment_task.assignment_id = assignment.id  # type: ignore
     assignment_task.course_id = assignment.course_id
 
+    # New tasks go to the end of the assignment
+    statement = select(
+        func.max(AssignmentTask.order), func.count(AssignmentTask.id)  # type: ignore
+    ).where(AssignmentTask.assignment_id == assignment.id)
+    max_order, task_count = (await db_session.execute(statement)).one()
+    assignment_task.order = (
+        max(max_order + 1, task_count) if max_order is not None else task_count
+    )
+
     # Insert Assignment Task in DB
     db_session.add(assignment_task)
     await db_session.commit()
@@ -1613,11 +1624,12 @@ async def read_assignment_tasks(
             detail="Course not found",
         )
 
-    # Find assignments tasks for an assignment, most recently created first
+    # Find assignments tasks for an assignment, in the order set by the
+    # instructor (rows that predate ordering fall back to creation order)
     statement = (
         select(AssignmentTask)
         .where(AssignmentTask.assignment_id == assignment.id)
-        .order_by(AssignmentTask.creation_date.desc(), AssignmentTask.id.desc())
+        .order_by(AssignmentTask.order.asc().nulls_last(), AssignmentTask.id.asc())  # type: ignore
     )
 
     # RBAC check
@@ -1937,6 +1949,62 @@ async def update_assignment_task(
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
+
+
+async def reorder_assignment_tasks(
+    request: Request,
+    assignment_uuid: str,
+    order_object: AssignmentTaskOrder,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+):
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = (await db_session.execute(statement)).scalars().first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # Check if course exists
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = (await db_session.execute(statement)).scalars().first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+
+    statement = select(AssignmentTask).where(AssignmentTask.assignment_id == assignment.id)
+    tasks = (await db_session.execute(statement)).scalars().all()
+    tasks_by_uuid = {task.assignment_task_uuid: task for task in tasks}
+
+    # The payload must list every task of this assignment exactly once, so a
+    # stale client can't drop a task out of the order or pull in another
+    # assignment's task.
+    if (
+        len(order_object.task_uuids) != len(tasks_by_uuid)
+        or set(order_object.task_uuids) != set(tasks_by_uuid)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Task order must list every task of the assignment exactly once",
+        )
+
+    for position, task_uuid in enumerate(order_object.task_uuids):
+        task = tasks_by_uuid[task_uuid]
+        if task.order != position:
+            task.order = position
+            db_session.add(task)
+    await db_session.commit()
+
+    return await read_assignment_tasks(request, assignment_uuid, current_user, db_session)
 
 
 async def delete_assignment_task(

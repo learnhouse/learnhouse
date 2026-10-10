@@ -4851,7 +4851,8 @@
           "task_updated": "Task updated successfully",
           "task_update_error": "Error updating task, please retry later.",
           "reminder": "When editing/adding your tasks, make sure to Unpublish your Assignment to avoid any issues with students, you can Publish it again when you are ready.",
-          "no_submission_to_grade": "This student has no submission for this task yet, there is nothing to grade."
+          "no_submission_to_grade": "This student has no submission for this task yet, there is nothing to grade.",
+          "reorder_failed": "Could not reorder tasks"
         },
         "task_editor": {
           "general": {
@@ -4940,7 +4941,8 @@
         "generate_ai_modal": {
           "description": "Describe what you want and preview tasks grounded on the course content before adding them.",
           "title": "Generate tasks with AI"
-        }
+        },
+        "drag_to_reorder": "Drag to reorder"
       },
       "submissions": {
         "status": {

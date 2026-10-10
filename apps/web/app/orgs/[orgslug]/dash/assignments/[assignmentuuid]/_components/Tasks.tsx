@@ -1,13 +1,20 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
-import { Clock, Code2, FileUp, Hash, ListTodo, Pencil, Plus, Sparkles, Type } from 'lucide-react';
+import { Clock, Code2, FileUp, GripVertical, Hash, ListTodo, Pencil, Plus, Sparkles, Type } from 'lucide-react';
 import React from 'react'
+import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd'
+import { useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import NewTaskModal from './Modals/NewTaskModal';
 import GenerateTasksAIModal from './Modals/GenerateTasksAIModal';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { queryKeys } from '@/lib/query/keys'
+import { moveTask, sortTasksByOrder } from '@/lib/assignments/taskOrder'
+import { reorderAssignmentTasks } from '@services/courses/assignments'
 
 dayjs.extend(relativeTime)
 
@@ -35,12 +42,34 @@ function AssignmentTasks({ assignment_uuid }: any) {
     const assignmentTaskHook = useAssignmentsTaskDispatch() as any;
     const [isNewTaskModalOpen, setIsNewTaskModalOpen] = React.useState(false)
     const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = React.useState(false)
+    const queryClient = useQueryClient()
+    const session = useLHSession() as any
+    const access_token = session?.data?.tokens?.access_token
 
     async function setSelectTask(task_uuid: string) {
         assignmentTaskHook({ type: 'setSelectedAssignmentTaskUUID', payload: task_uuid })
     }
 
-    const tasks: any[] = assignments?.assignment_tasks ?? []
+    const tasks: any[] = sortTasksByOrder(assignments?.assignment_tasks)
+
+    async function handleDragEnd(result: DropResult) {
+        if (!result.destination || result.destination.index === result.source.index) return
+        const tasksKey = queryKeys.assignments.tasks(assignment_uuid)
+        const previous = queryClient.getQueryData(tasksKey)
+        const reordered = moveTask(tasks, result.source.index, result.destination.index)
+        // Show the new order right away; the API call below confirms it.
+        queryClient.setQueryData(tasksKey, reordered)
+        const res = await reorderAssignmentTasks(
+            reordered.map((task: any) => task.assignment_task_uuid),
+            assignment_uuid,
+            access_token
+        )
+        if (!res.success) {
+            queryClient.setQueryData(tasksKey, previous)
+            toast.error(t('dashboard.assignments.editor.toasts.reorder_failed', 'Could not reorder tasks'))
+        }
+        queryClient.invalidateQueries({ queryKey: tasksKey })
+    }
 
     return (
         <div className='flex w-full'>
@@ -99,10 +128,22 @@ function AssignmentTasks({ assignment_uuid }: any) {
                         <span className='text-[10px] font-semibold text-gray-400 uppercase tracking-wider'>
                             {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
                         </span>
-                        <span className='text-[10px] font-medium text-gray-300'>newest first</span>
+                        {tasks.length > 1 && (
+                            <span className='text-[10px] font-medium text-gray-300'>
+                                {t('dashboard.assignments.editor.drag_to_reorder', 'Drag to reorder')}
+                            </span>
+                        )}
                     </div>
                 )}
 
+                <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId='assignment-tasks'>
+                {(droppableProvided) => (
+                <div
+                    ref={droppableProvided.innerRef}
+                    {...droppableProvided.droppableProps}
+                    className='flex flex-col'
+                >
                 {tasks.map((task: any, index: number) => {
                     const meta = TASK_TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: Type }
                     const Icon = meta.Icon
@@ -110,17 +151,30 @@ function AssignmentTasks({ assignment_uuid }: any) {
                     const descriptionPreview = stripMarkup(task.description || '')
                     const createdAt = task.creation_date ? dayjs(task.creation_date) : null
                     const createdLabel = createdAt?.isValid() ? createdAt.fromNow() : null
-                    const position = tasks.length - index
+                    const position = index + 1
 
                     return (
+                        <Draggable
+                            key={task.assignment_task_uuid}
+                            draggableId={task.assignment_task_uuid}
+                            index={index}
+                            // The whole card is a <button>; let it start a drag
+                            // while a plain click still selects the task.
+                            disableInteractiveElementBlocking
+                        >
+                        {(draggableProvided, snapshot) => (
                         <button
                             type='button'
-                            key={task.id}
+                            ref={draggableProvided.innerRef}
+                            {...draggableProvided.draggableProps}
+                            {...draggableProvided.dragHandleProps}
                             onClick={() => setSelectTask(task.assignment_task_uuid)}
-                            className={`group relative text-start rounded-xl border transition-all overflow-hidden
+                            data-testid='assignment-task-card'
+                            className={`group relative w-full mb-2 text-start rounded-xl border transition-colors overflow-hidden
                                 ${isSelected
                                     ? 'border-gray-900 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.08)]'
                                     : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-[0_2px_8px_rgba(15,23,42,0.05)]'}
+                                ${snapshot.isDragging ? 'shadow-[0_8px_24px_rgba(15,23,42,0.15)]' : ''}
                             `}
                         >
                             {/* Accent bar when selected */}
@@ -140,7 +194,14 @@ function AssignmentTasks({ assignment_uuid }: any) {
                                         </span>
                                         <span>{meta.label}</span>
                                     </div>
-                                    <Icon size={13} className='text-gray-300' />
+                                    <div className='flex items-center gap-1 text-gray-300'>
+                                        <GripVertical
+                                            size={13}
+                                            className={`transition-opacity ${tasks.length > 1 ? 'opacity-0 group-hover:opacity-100' : 'hidden'}`}
+                                            aria-hidden
+                                        />
+                                        <Icon size={13} />
+                                    </div>
                                 </div>
 
                                 {/* Title */}
@@ -167,8 +228,15 @@ function AssignmentTasks({ assignment_uuid }: any) {
                                 </div>
                             </div>
                         </button>
+                        )}
+                        </Draggable>
                     )
                 })}
+                {droppableProvided.placeholder}
+                </div>
+                )}
+                </Droppable>
+                </DragDropContext>
 
                 {tasks.length === 0 && assignments && (
                     <div className='rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-8 text-center'>

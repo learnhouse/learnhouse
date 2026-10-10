@@ -1,12 +1,13 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import CalloutComponent from './CalloutComponent'
+import { CALLOUT_CONTENT } from './calloutContent'
 
 export default Node.create({
   name: 'callout',
   group: 'block',
   draggable: true,
-  content: 'text*',
+  content: CALLOUT_CONTENT,
 
   addAttributes() {
     return {

@@ -179,6 +179,19 @@ export async function updateAssignmentTask(
   return res
 }
 
+export async function reorderAssignmentTasks(
+  taskUUIDs: string[],
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/order`,
+    RequestBodyWithAuthHeader('PUT', { task_uuids: taskUUIDs }, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function deleteAssignmentTask(
   assignmentTaskUUID: string,
   assignmentUUID: string,

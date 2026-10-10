@@ -6,6 +6,7 @@ from src.db.courses.assignments import (
     AssignmentCreate,
     AssignmentRead,
     AssignmentTaskCreate,
+    AssignmentTaskOrder,
     AssignmentTaskSubmissionUpdate,
     AssignmentTaskUpdate,
     AssignmentUpdate,
@@ -38,6 +39,7 @@ from src.services.courses.activities.assignments import (
     read_assignment_task,
     read_assignment_task_submissions,
     read_assignment_tasks,
+    reorder_assignment_tasks,
     read_user_assignment_submissions,
     read_user_assignment_submissions_me,
     read_user_assignment_task_submissions,
@@ -320,6 +322,33 @@ async def api_read_assignment_tasks(
     """
     return await read_assignment_tasks(
         request, assignment_uuid, current_user, db_session
+    )
+
+
+@router.put(
+    "/{assignment_uuid}/tasks/order",
+    summary="Reorder assignment tasks",
+    description="Set the order of an assignment's tasks. The body lists every task UUID of the assignment, in the new order. The authenticated user must have permission to edit the parent course.",
+    responses={
+        200: {"description": "Tasks reordered; returns the tasks in their new order."},
+        400: {"description": "The list does not match the assignment's tasks"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to edit this assignment"},
+        404: {"description": "Assignment not found"},
+    },
+)
+async def api_reorder_assignment_tasks(
+    request: Request,
+    assignment_uuid: str,
+    order_object: AssignmentTaskOrder,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Reorder tasks for an assignment
+    """
+    return await reorder_assignment_tasks(
+        request, assignment_uuid, order_object, current_user, db_session
     )
 
 
