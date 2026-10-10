@@ -63,6 +63,28 @@ export default function SSOCallbackPage() {
         // Exchange code for user profile and tokens
         const result = await handleSSOCallback(code, state)
 
+        // A 2FA-enabled account gets a pending challenge instead of a session.
+        // Hand it to the login page, which owns the code form, exactly like the
+        // Google callback does.
+        if (result.mfa_required && result.mfa_token) {
+          const mfaParams = new URLSearchParams({ mfa_token: result.mfa_token })
+          try {
+            const target = new URL(result.redirect_url, window.location.origin)
+            const next = `${target.pathname}${target.search}`
+            if (
+              target.origin === window.location.origin &&
+              target.pathname !== '/redirect_from_auth' &&
+              /^\/(?!\/)/.test(next)
+            ) {
+              mfaParams.set('redirect_to', next)
+            }
+          } catch {
+            // No usable redirect: the login page falls back to its default.
+          }
+          router.push(`/auth/login?${mfaParams.toString()}`)
+          return
+        }
+
         // Use absolute URL with current origin for custom domain support
         const defaultRedirect = `${window.location.origin}/redirect_from_auth`
         const redirectUrl = result.redirect_url || defaultRedirect

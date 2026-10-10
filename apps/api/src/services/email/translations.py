@@ -52,6 +52,11 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_deleted.body": "Your LearnHouse account and personal data have been permanently removed. We're sorry to see you go. If this wasn't you, contact support right away.",
         "account_deleted.footer": "This is a confirmation that your account was deleted.",
 
+        "email_changed.subject": "Your email address was changed",
+        "email_changed.heading": "Your email address was changed",
+        "email_changed.body": "Hi {username}, the email address on your account was changed to {new_email}. If you made this change, no action is needed.",
+        "email_changed.footer": "If you didn't make this change, reset your password and contact support right away.",
+
         "password_reset.subject": "Reset your password",
         "password_reset.heading": "Reset your password",
         "password_reset.body": "Hi {username}, we received a request to reset your password. Use the code below or click the button.",

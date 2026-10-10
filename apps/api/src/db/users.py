@@ -49,6 +49,10 @@ class UserUpdate(UserBase):
     details: Optional[dict] = Field(default_factory=dict)
     profile: Optional[dict] = Field(default_factory=dict)
     extra_metadata: Optional[dict] = None
+    # Re-authentication for an email change (never stored): the current
+    # password, or a two-factor code for accounts that have no password.
+    current_password: Optional[str] = None
+    mfa_code: Optional[str] = None
 
 
 class UserUpdatePassword(SQLModel):

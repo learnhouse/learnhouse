@@ -224,8 +224,26 @@ async def signWithGoogle(
 
             return user
 
-    # For existing users, ensure email is verified (Google already verified it)
+    # Pre-hijack guard: a password set by someone who never proved control of
+    # this inbox (an unverified signup, or one an org admin chose through the
+    # admin API and the owner never changed) must not survive the real owner
+    # signing in with Google. Drop it and end any session it opened; the
+    # owner keeps Google sign-in and can set a password via reset.
     needs_update = False
+    untrusted_password = bool(user.password) and (
+        not user.email_verified
+        or (user.signup_method == "admin_api" and user.password_changed_at is None)
+    )
+    if untrusted_password:
+        user.password = ""
+        # Whole seconds: the session minted right after this carries an
+        # integer ``iat`` and must not count as issued before the change.
+        user.password_changed_at = datetime.now(timezone.utc).replace(
+            tzinfo=None, microsecond=0
+        )
+        needs_update = True
+
+    # For existing users, ensure email is verified (Google already verified it)
     if not user.email_verified:
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
@@ -240,6 +258,11 @@ async def signWithGoogle(
         db_session.add(user)
         await db_session.commit()
         await db_session.refresh(user)
+
+    if untrusted_password and user.id is not None:
+        from src.security.auth import revoke_user_sessions_before
+
+        revoke_user_sessions_before(user.id)
 
     # If the caller supplied (and the router validated, via a pending invite)
     # an ``org_id``, an *existing* user signing in with Google must still be

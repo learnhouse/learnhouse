@@ -17,6 +17,7 @@ from httpx import ASGITransport, AsyncClient
 from src.core.events.database import get_db_session
 from src.db.organization_config import OrganizationConfig
 from src.db.user_mfa import UserMFA
+from src.db.user_organizations import UserOrganization
 from src.db.users import AnonymousUser, User
 from src.routers.auth import JWT_REFRESH_COOKIE_NAME, router as auth_router
 from src.security.auth import decode_jwt, get_current_user
@@ -150,6 +151,15 @@ class TestMagicLinkRequest:
                         }
                     },
                 },
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.add(
+            UserOrganization(
+                user_id=verified_user.id,
+                org_id=org.id,
+                role_id=4,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
             )

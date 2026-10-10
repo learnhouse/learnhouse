@@ -44,6 +44,21 @@ async def _make_user(db, **overrides):
     return user
 
 
+async def _join_org(db, user, org):
+    from src.db.user_organizations import UserOrganization
+
+    db.add(
+        UserOrganization(
+            user_id=user.id,
+            org_id=org.id,
+            role_id=4,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+    )
+    await db.commit()
+
+
 class TestEmailVerificationService:
     def test_generate_verification_token(self):
         with patch(
@@ -92,6 +107,7 @@ class TestEmailVerificationService:
             email="newuser@test.com",
             user_uuid="user_new",
         )
+        await _join_org(db, user, org)
         fake_redis = Mock()
         fake_redis.setex = Mock()
 
@@ -173,6 +189,7 @@ class TestEmailVerificationService:
         user = await _make_user(
             db, id=31, username="branded", email="branded@test.com", user_uuid="user_branded"
         )
+        await _join_org(db, user, org)
 
         with patch(
             "src.services.users.email_verification.get_redis_connection",
@@ -212,6 +229,7 @@ class TestEmailVerificationService:
             email="sendfail@test.com",
             user_uuid="user_sendfail",
         )
+        await _join_org(db, user, org)
 
         with pytest.raises(HTTPException) as missing_org_exc:
             await send_verification_email(

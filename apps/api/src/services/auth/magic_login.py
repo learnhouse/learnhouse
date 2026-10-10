@@ -128,7 +128,7 @@ def send_magic_login_email(
     # Names are attacker-controllable; never relay a link or header break.
     org_name = email_org_name(org_name) if org_name else None
     safe_token = quote(token, safe="")
-    login_url = f"{base_url.rstrip('/')}/auth/magic?token={safe_token}"
+    login_url = html.escape(f"{base_url.rstrip('/')}/auth/magic?token={safe_token}")
     safe_name = html.escape(email_user_name(user.username) if user.username else user.email)
     white_label = bool(org_name)
     brand = html.escape(org_name) if org_name else "LearnHouse"

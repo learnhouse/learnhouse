@@ -17,6 +17,8 @@ from src.services.email.sender import DEFAULT_SENDER_NAME, format_sender
 
 logger = logging.getLogger(__name__)
 
+_ORG_SLUG_HOST_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
+
 
 def _configured_host(cfg_value: Optional[str]) -> str:
     """Bare, lowercase hostname of a configured domain value, "" when unset.
@@ -236,7 +238,35 @@ async def get_org_signup_base_url(
             return get_base_url_from_request(request)
         return _configured_frontend_base_url() or ""
 
+    # The slug becomes a hostname label; anything that is not a plain DNS label
+    # could steer a credential-bearing link to another host.
+    if not _ORG_SLUG_HOST_LABEL.fullmatch(org_slug or ""):
+        logger.warning("Refusing to build an org link from a non-hostname slug")
+        return get_platform_base_url(request)
+
     return f"{scheme}://{org_slug}.{base_domain}"
+
+
+def get_platform_base_url(request: Optional[Request] = None) -> str:
+    """Platform frontend base URL for links that carry a credential.
+
+    Never derived from the request's Origin/Referer: those are only checked
+    against an allowlist that includes every org's verified custom domain, so
+    an org owner could otherwise have a reset or login link for any account
+    pointed at a host they control. Falls back to the request's own URL only
+    when nothing is configured (local dev).
+    """
+    configured = _configured_frontend_base_url()
+    if configured:
+        return configured
+    config = get_learnhouse_config()
+    frontend_domain = (config.hosting_config.frontend_domain or "").strip().rstrip("/")
+    if frontend_domain:
+        scheme = "https" if config.hosting_config.ssl else "http"
+        return f"{scheme}://{frontend_domain}"
+    if request is None:
+        return ""
+    return f"{request.url.scheme}://{request.url.netloc}"
 
 
 def get_media_base_url(request: Optional[Request] = None) -> str:

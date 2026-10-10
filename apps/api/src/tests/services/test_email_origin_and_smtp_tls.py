@@ -320,14 +320,17 @@ class TestMagicLinkUrlInEmailBody:
         assert "evil.com" not in sent["body"]
         assert "https://app.learnhouse.io/auth/magic?token=tok" in sent["body"]
 
-    async def test_legitimate_org_subdomain_origin_is_preserved(
+    async def test_allowlisted_origin_does_not_pick_the_link_host(
         self, magic_client, link_user
     ):
+        # Even an allowlisted origin (org subdomains, verified custom domains)
+        # never chooses where a sign-in link points: the platform host does.
         response, sent = await self._request_link(
             magic_client, link_user.email, {"origin": "https://acme.learnhouse.io"}
         )
         assert response.status_code == 200
-        assert "https://acme.learnhouse.io/auth/magic?token=tok" in sent["body"]
+        assert "acme.learnhouse.io" not in sent["body"]
+        assert "https://app.learnhouse.io/auth/magic?token=tok" in sent["body"]
 
 
 class TestSmtpTls:
