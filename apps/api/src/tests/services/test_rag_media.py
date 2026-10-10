@@ -46,6 +46,9 @@ class TestMedia:
         assert _media(captions=captions).ready_captions_key().endswith("/video/captions/en.vtt")
         assert _media(captions={"languages": [{"code": "en", "status": "processing"}]}).ready_captions_key() is None
         assert _media().ready_captions_key() is None
+        # A stored code is a path component; anything else is never read.
+        unsafe = {"languages": [{"code": "../../../other/x", "status": "ready"}]}
+        assert _media(captions=unsafe).ready_captions_key() is None
 
     async def test_read_transcript_prefers_the_transcript(self, monkeypatch):
         files = {_media().transcript_key: b"T", KEY.rsplit("/", 1)[0] + "/captions/en.vtt": b"C"}
