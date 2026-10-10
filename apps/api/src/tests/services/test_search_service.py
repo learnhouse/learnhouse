@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from fastapi import HTTPException
 
 from src.db.folders.folders import Folder
 from src.db.users import APITokenUser
@@ -165,26 +166,14 @@ class TestSearchAcrossOrg:
         assert result.users == []
 
     @pytest.mark.asyncio
-    async def test_search_api_token_without_rights_skips_token_check(
+    async def test_search_api_token_without_rights_is_denied(
         self, db, org, mock_request
     ):
         token_user = APITokenUser(org_id=org.id, rights=None, token_name="demo")
 
-        with patch(
-            "src.services.search.search.search_courses",
-            new_callable=AsyncMock,
-            return_value=[],
-        ), patch(
-            "src.services.search.search.is_org_member",
-            return_value=False,
-        ):
-            result = await search_across_org(
-                mock_request, token_user, "test-org", "Test", db
-            )
-
-        assert result.courses == []
-        assert result.folders == []
-        assert result.users == []
+        with pytest.raises(HTTPException) as exc:
+            await search_across_org(mock_request, token_user, "test-org", "Test", db)
+        assert exc.value.status_code == 403
 
     @pytest.mark.asyncio
     async def test_search_api_token_rejects_cross_org_access(

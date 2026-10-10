@@ -20,6 +20,8 @@ from src.db.communities.communities import (
 )
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
+from src.services.communities.access import require_community_participant
+from src.security.api_token_utils import require_token_right
 from src.security.rbac import (
     check_resource_access,
     AccessAction,
@@ -50,6 +52,9 @@ async def create_community(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # The placeholder carries the token's communities.action_create check;
+    # it resolves to no org, so the org-scoped role check follows.
+    await check_resource_access(request, db_session, current_user, "community_x", AccessAction.CREATE)
     # communities.action_create in this org. A "community_<org_uuid>" uuid
     # resolves to no org, which would accept a role held in any org.
     await require_org_create_permission(current_user, org.id, db_session, "communities")
@@ -163,8 +168,21 @@ async def get_communities_by_org(
     page = max(page, 1)
     offset = (page - 1) * limit
 
-    # Resolve to the token's creator for API-token callers so ownership /
-    # admin / membership checks run against a real user_id.
+    # API tokens list through their own rights in their own org (the same
+    # outcome check_resource_access gives them per community), never through
+    # their creator's role.
+    if isinstance(current_user, APITokenUser):
+        if current_user.org_id != org_id:
+            raise HTTPException(
+                status_code=403,
+                detail="API token cannot access resources outside its organization",
+            )
+        require_token_right(current_user, "communities", "action_read")
+        query = select(Community).where(Community.org_id == org_id)
+        query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
+        communities = (await db_session.execute(query)).scalars().all()
+        return [CommunityRead.model_validate(c.model_dump()) for c in communities]
+
     acting_user_id = resolve_acting_user_id(current_user)
 
     # For anonymous users, only show public communities
@@ -505,7 +523,12 @@ async def get_community_user_rights(
 
     if has_access:
         rights["permissions"]["read"] = True
-        rights["permissions"]["create_discussion"] = True
+        # Posting is for members of the org whose role allows it.
+        try:
+            await require_community_participant(current_user, community, db_session)
+            rights["permissions"]["create_discussion"] = True
+        except HTTPException:
+            pass
 
     if is_admin_or_maintainer:
         rights["ownership"]["is_admin"] = True

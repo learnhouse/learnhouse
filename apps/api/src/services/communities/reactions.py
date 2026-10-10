@@ -15,6 +15,8 @@ from src.db.communities.discussion_reactions import (
 )
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
 from src.services.communities.moderation import get_community_settings
+from src.services.communities.access import require_community_participant
+from src.security.auth import resolve_acting_user_id
 
 
 async def get_reactions(
@@ -72,6 +74,7 @@ async def get_reactions(
         user_map = {u.id: u for u in fetched}
 
     # Build summary with user info
+    viewer_id = resolve_acting_user_id(current_user)
     summaries = []
     for emoji, emoji_reactions in emoji_groups.items():
         user_ids = [r.user_id for r in emoji_reactions]
@@ -89,7 +92,7 @@ async def get_reactions(
             if (u := user_map.get(uid)) is not None
         ]
 
-        has_reacted = current_user.id in user_ids if current_user.id != 0 else False
+        has_reacted = viewer_id in user_ids if viewer_id != 0 else False
 
         summaries.append(
             DiscussionReactionSummary(
@@ -144,6 +147,8 @@ async def toggle_reaction(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
+    reactor_id = await require_community_participant(current_user, community, db_session)
+
     if get_community_settings(community).get("disable_reactions"):
         raise HTTPException(
             status_code=403,
@@ -156,7 +161,7 @@ async def toggle_reaction(
     # Check if user has already reacted with this emoji
     existing_reaction_statement = select(DiscussionReaction).where(
         DiscussionReaction.discussion_id == discussion.id,
-        DiscussionReaction.user_id == current_user.id,
+        DiscussionReaction.user_id == reactor_id,
         DiscussionReaction.emoji == emoji,
     )
     existing_reaction = (await db_session.execute(existing_reaction_statement)).scalars().first()
@@ -170,7 +175,7 @@ async def toggle_reaction(
         # Add the reaction
         reaction = DiscussionReaction(
             discussion_id=discussion.id,
-            user_id=current_user.id,
+            user_id=reactor_id,
             emoji=emoji,
             reaction_uuid=f"reaction_{uuid4()}",
             creation_date=str(datetime.now()),

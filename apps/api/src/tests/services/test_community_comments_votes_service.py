@@ -29,6 +29,17 @@ from src.services.communities.votes import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _members_may_post():
+    """These tests cover comment/vote/reaction mechanics; who may post is
+    covered in tests/security/test_token_principals_round6.py."""
+    with patch(
+        "src.services.communities.access.require_org_role_permission",
+        new_callable=AsyncMock,
+    ):
+        yield
+
+
 async def _make_community(db, org, **overrides):
     community = Community(
         id=overrides.pop("id", None),

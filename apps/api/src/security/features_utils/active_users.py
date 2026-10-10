@@ -53,10 +53,21 @@ def current_utc_year_month() -> tuple[int, int]:
 async def count_active_users(
     org_id: int, year: int, month: int, db_session: AsyncSession
 ) -> int:
-    """Number of users with >= ACTIVE_DAYS_THRESHOLD distinct activity days in the month."""
+    """Number of members with >= ACTIVE_DAYS_THRESHOLD distinct activity days in the month.
+
+    Only current members count, so stray rows for non-members (whoever they
+    came from) cannot inflate an org's figure.
+    """
     start, end = _month_bounds(year, month)
     per_user = (
         select(UserActivityDay.user_id)
+        .join(
+            UserOrganization,
+            and_(
+                UserOrganization.user_id == UserActivityDay.user_id,
+                UserOrganization.org_id == UserActivityDay.org_id,
+            ),
+        )
         .where(
             UserActivityDay.org_id == org_id,
             UserActivityDay.activity_date >= start,

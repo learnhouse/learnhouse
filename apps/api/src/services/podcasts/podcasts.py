@@ -15,6 +15,7 @@ from src.security.features_utils.usage import (
 )
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserReadAuthor, APITokenUser
+from src.security.api_token_utils import require_token_right
 from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import require_org_create_permission
 from src.db.podcasts.podcasts import (
@@ -302,6 +303,17 @@ def accessible_podcast_ids_query(acting_user_id: int):
     )
 
 
+def _require_token_podcast_listing(current_user: APITokenUser, org_id: int) -> None:
+    """API tokens list podcasts through their own ``podcasts.action_read`` and
+    only in their own org, never through their creator's role."""
+    if current_user.org_id != org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token cannot access resources outside its organization",
+        )
+    require_token_right(current_user, "podcasts", "action_read")
+
+
 async def get_podcasts_orgslug(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -324,10 +336,16 @@ async def get_podcasts_orgslug(
         return []
 
     acting_user_id = resolve_acting_user_id(current_user)
+    is_token = isinstance(current_user, APITokenUser)
+    if is_token:
+        _require_token_podcast_listing(current_user, org.id)
 
     # Check if user can view unpublished podcasts (must be admin/editor in org)
     can_view_unpublished = False
-    if include_unpublished and not isinstance(current_user, AnonymousUser):
+    if is_token:
+        # podcasts.action_read already reads every podcast of the token's org.
+        can_view_unpublished = include_unpublished
+    elif include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished podcasts
         if await is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
@@ -354,6 +372,9 @@ async def get_podcasts_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published podcasts
         query = query.where(Podcast.public == True, Podcast.published == True)
+    elif is_token:
+        if not can_view_unpublished:
+            query = query.where(Podcast.published == True)
     else:
         # For authenticated users with admin access viewing dashboard, show all podcasts
         if can_view_unpublished:
@@ -448,7 +469,15 @@ async def get_podcasts_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published podcasts
         query = query.where(Podcast.public == True, Podcast.published == True)
-    elif not isinstance(current_user, AnonymousUser) and await is_user_superadmin(count_acting_user_id, db_session):
+    elif isinstance(current_user, APITokenUser):
+        org_id = (await db_session.execute(
+            select(Organization.id).where(Organization.slug == org_slug)
+        )).scalars().first()
+        if org_id is None:
+            return 0
+        _require_token_podcast_listing(current_user, org_id)
+        query = query.where(Podcast.published == True)
+    elif await is_user_superadmin(count_acting_user_id, db_session):
         # Superadmins see all podcasts (no additional filter)
         pass
     else:

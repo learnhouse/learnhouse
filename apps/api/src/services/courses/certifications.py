@@ -19,8 +19,9 @@ from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.trail_steps import TrailStep
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.rbac import check_resource_access, AccessAction
+from src.security.rbac.rbac import authorization_verify_api_token_permissions
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.audit.audit import record_audit_event
@@ -33,6 +34,25 @@ logger = logging.getLogger(__name__)
 ####################################################
 # CRUD
 ####################################################
+
+
+async def _check_certification_access(
+    request: Request,
+    db_session: AsyncSession,
+    current_user,
+    course_uuid: str,
+    action: AccessAction,
+) -> None:
+    """Course access for users; for API tokens, their ``certifications``
+    rights bucket (capped by ``courses`` when the token was minted) within the
+    course's org."""
+    if isinstance(current_user, APITokenUser):
+        await authorization_verify_api_token_permissions(
+            request, current_user, action.value, course_uuid, db_session,
+            resource_type_override="certifications",
+        )
+        return
+    await check_resource_access(request, db_session, current_user, course_uuid, action)
 
 
 async def create_certification(
@@ -54,7 +74,7 @@ async def create_certification(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Plan gate: the router wrapper can't see the org (it's in the body)
     from src.security.features_utils.plan_check import check_org_plan
@@ -105,7 +125,7 @@ async def get_certification(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     return CertificationRead(**certification.model_dump())
 
@@ -129,7 +149,7 @@ async def get_certifications_by_course(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await _check_certification_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)
@@ -167,7 +187,7 @@ async def update_certification(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(certification_object).items():
@@ -212,7 +232,7 @@ async def delete_certification(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+    await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # CertificateUser.certification_id is declared ON DELETE CASCADE, so deleting
     # the template also destroys every certificate ever awarded from it: the
@@ -292,7 +312,7 @@ async def create_certificate_user(
             )
 
         # Require course ownership or instructor role for creating certificates
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+        await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Check if certificate user already exists
     statement = select(CertificateUser).where(
@@ -506,7 +526,7 @@ async def get_user_certificates_for_course(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await _check_certification_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get all certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)

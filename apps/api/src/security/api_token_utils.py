@@ -9,7 +9,32 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
-from src.db.users import AnonymousUser, APITokenUser, PublicUser
+from src.db.users import AnonymousUser, APITokenUser, PublicUser, SuperadminAPITokenUser
+
+# Both token principals carry a token row id in ``id``, not a user id, so
+# every "no API tokens" gate rejects them alike. Superadmin token routes use
+# ``require_superadmin`` and never these gates.
+_TOKEN_PRINCIPALS = (APITokenUser, SuperadminAPITokenUser)
+
+
+def token_has_right(current_user: APITokenUser, resource: str, action: str) -> bool:
+    """Whether the token's own rights grant ``action`` (e.g. ``"action_read"``)
+    on ``resource``. A missing bucket or flag counts as not granted."""
+    rights = current_user.rights or {}
+    bucket = rights.get(resource) if isinstance(rights, dict) else getattr(rights, resource, None)
+    if isinstance(bucket, dict):
+        return bucket.get(action) is True
+    return getattr(bucket, action, None) is True
+
+
+def require_token_right(current_user: APITokenUser, resource: str, action: str) -> None:
+    """403 unless the token's own rights grant ``action`` on ``resource``."""
+    if not token_has_right(current_user, resource, action):
+        verb = action.removeprefix("action_")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have '{verb}' permission for {resource}",
+        )
 
 
 def reject_api_token_access(
@@ -27,7 +52,7 @@ def reject_api_token_access(
     Raises:
         HTTPException: 403 if current_user is an APITokenUser
     """
-    if isinstance(current_user, APITokenUser):
+    if isinstance(current_user, _TOKEN_PRINCIPALS):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="API tokens cannot access this resource. Only user authentication is allowed.",
@@ -95,7 +120,7 @@ async def get_authenticated_non_api_token_user(
     from src.security.auth import get_authenticated_user
 
     user = await get_authenticated_user(request, db_session)
-    if isinstance(user, APITokenUser):
+    if isinstance(user, _TOKEN_PRINCIPALS):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="API tokens cannot access this resource. Only user authentication is allowed.",
@@ -122,4 +147,12 @@ async def require_authenticated_user_or_api_token(
     # Imported locally to avoid a circular dependency on auth.py.
     from src.security.auth import get_authenticated_user
 
-    return await get_authenticated_user(request, db_session)
+    user = await get_authenticated_user(request, db_session)
+    # Org-scoped routers: a cross-org superadmin token has no org and no
+    # rights bucket for the handlers to check.
+    if isinstance(user, SuperadminAPITokenUser):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superadmin API tokens cannot access this resource.",
+        )
+    return user

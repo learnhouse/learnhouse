@@ -13,7 +13,7 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.trails import TrailRead
-from src.db.users import UserRead
+from src.db.users import OrgMemberUserRead, UserRead
 from src.routers.auth import set_auth_cookies
 from src.security.auth import get_current_user
 from src.services.admin.admin import (
@@ -855,7 +855,7 @@ async def api_admin_remove_user(
 
 @router.get(
     "/{org_slug}/users/by-email/{email}",
-    response_model=UserRead,
+    response_model=OrgMemberUserRead,
     summary="Look up a user by email",
     description=(
         "Find a user by email within the organization. Returns 404 if the user "
@@ -863,7 +863,7 @@ async def api_admin_remove_user(
         "Requires `users.action_read` permission."
     ),
     responses={
-        200: {"description": "The user matching the given email within this org.", "model": UserRead},
+        200: {"description": "The user matching the given email within this org.", "model": OrgMemberUserRead},
         404: {"description": "User not found in this organization"},
     },
 )
@@ -872,7 +872,7 @@ async def api_admin_get_user_by_email(
     email: str = Path(description="URL-encoded email address"),
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
-) -> UserRead:
+) -> OrgMemberUserRead:
     token_user = _require_api_token(current_user)
     await _resolve_org_slug(org_slug, token_user, db_session)
 
@@ -1264,7 +1264,7 @@ async def api_admin_remove_usergroup_member(
 
 @router.patch(
     "/{org_slug}/users/{user_id}",
-    response_model=UserRead,
+    response_model=OrgMemberUserRead,
     summary="Update a user's profile",
     description=(
         "Update profile fields of an org member. Supports partial updates: "
@@ -1273,7 +1273,7 @@ async def api_admin_remove_usergroup_member(
         "Requires `users.action_update` permission."
     ),
     responses={
-        200: {"description": "Updated user profile.", "model": UserRead},
+        200: {"description": "Updated user profile.", "model": OrgMemberUserRead},
         400: {"description": "Duplicate email or username"},
         404: {"description": "User not in org"},
     },
@@ -1284,7 +1284,7 @@ async def api_admin_update_user_profile(
     body: UpdateUserRequest,
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
-) -> UserRead:
+) -> OrgMemberUserRead:
     token_user = _require_api_token(current_user)
     await _resolve_org_slug(org_slug, token_user, db_session)
     updates = body.model_dump(exclude_unset=True)

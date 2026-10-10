@@ -133,6 +133,7 @@ def other_token(other_org, other_user):
         org_id=other_org.id,
         token_name="Other Token",
         created_by_user_id=other_user.id,
+        rights={"users": {"action_read": True}},
     )
 
 

@@ -57,7 +57,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def resolve_acting_user_id(
-    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser, SuperadminAPITokenUser],
 ) -> int:
     """Return the real user id behind an authenticated principal.
 
@@ -67,7 +67,7 @@ def resolve_acting_user_id(
     admin/role checks, author comparisons) so tokens resolve to their
     creator instead of silently failing against id=0.
     """
-    if isinstance(current_user, APITokenUser):
+    if isinstance(current_user, (APITokenUser, SuperadminAPITokenUser)):
         return current_user.created_by_user_id
     return current_user.id
 

@@ -48,6 +48,7 @@ from src.services.courses.certifications import (
 )
 from src.services.email.utils import get_base_url_from_request
 from src.services.orgs.join_notifications import notify_user_joined_org
+from src.services.orgs.users import _rights_within
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -167,9 +168,50 @@ def _role_priority(role_id: int) -> int:
     return _ROLE_PRIORITY.get(role_id, _DEFAULT_ROLE_PRIORITY)
 
 
+# Role buckets an API token's rights can speak for. Participation buckets
+# (communities, discussions, podcasts, boards, playgrounds) and dashboard
+# access sit outside the token rights model and are not compared.
+_TOKEN_COMPARED_BUCKETS = frozenset({
+    "courses", "activities", "assignments", "coursechapters", "folders",
+    "media", "usergroups", "users", "roles", "organizations",
+})
+
+
+def _role_within_token_rights(role_rights, token_rights) -> bool:
+    """Whether a role grants no write authority the token does not hold.
+
+    Only create/update/delete are compared: read access is what every member
+    has, and comparing it would stop a users-only token from serving ordinary
+    learners. An ``action_x_own`` permission is covered by the token's
+    ``action_x``.
+    """
+    def as_dict(rights) -> dict:
+        if rights is None:
+            return {}
+        return rights if isinstance(rights, dict) else rights.model_dump()
+
+    granted = {}
+    for bucket, perms in as_dict(role_rights).items():
+        if bucket not in _TOKEN_COMPARED_BUCKETS or not isinstance(perms, dict):
+            continue
+        granted[bucket] = {
+            perm: value for perm, value in perms.items()
+            if not perm.startswith("action_read")
+        }
+    held = {}
+    for bucket, perms in as_dict(token_rights).items():
+        if not isinstance(perms, dict):
+            continue
+        held[bucket] = dict(perms)
+        for perm, value in perms.items():
+            if value is True:
+                held[bucket][f"{perm}_own"] = True
+    return _rights_within(granted, held)
+
+
 async def _check_token_can_impersonate(
     user: User,
-    org_id: int,
+    token_user: APITokenUser,
     db_session: AsyncSession,
 ) -> None:
     """Refuse to mint a session for a privileged account.
@@ -179,6 +221,7 @@ async def _check_token_can_impersonate(
     an org Admin/Maintainer's (or a platform superadmin's) session and inherit
     every check that trusts it.
     """
+    org_id = token_user.org_id
     if user.is_superadmin:
         raise HTTPException(
             status_code=403,
@@ -196,6 +239,17 @@ async def _check_token_can_impersonate(
             status_code=403,
             detail="API tokens cannot issue tokens for Admin or Maintainer accounts",
         )
+
+    # The session carries the target's role, so the target may hold no write
+    # authority the token was not granted itself. (A role that no longer
+    # exists grants nothing.)
+    if membership is not None:
+        target_role = await db_session.get(Role, membership.role_id)
+        if target_role is not None and not _role_within_token_rights(target_role.rights, token_user.rights):
+            raise HTTPException(
+                status_code=403,
+                detail="API tokens cannot issue tokens for accounts with rights beyond the token's own",
+            )
 
     # A session for a shared account is usable in every org it belongs to.
     await _check_not_member_elsewhere(
@@ -278,6 +332,13 @@ async def _check_token_can_assign_role(
             detail="API tokens cannot grant Admin or Maintainer roles",
         )
 
+    # Nor any custom role carrying rights the token does not hold itself.
+    if not _role_within_token_rights(role.rights, token_user.rights):
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot grant a role with rights beyond the token's own",
+        )
+
     membership_q = select(UserOrganization).where(
         UserOrganization.user_id == token_user.created_by_user_id,
         UserOrganization.org_id == token_user.org_id,
@@ -317,7 +378,7 @@ async def issue_user_token(
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    await _check_token_can_impersonate(user, token_user.org_id, db_session)
+    await _check_token_can_impersonate(user, token_user, db_session)
 
     # Issue a short-lived token (1 hour) for headless use, shorter than the
     # default 8-hour session token to limit blast radius if leaked.
@@ -1347,7 +1408,7 @@ async def get_user_by_email(
     token_user: APITokenUser,
     email: str,
     db_session: AsyncSession,
-) -> UserRead:
+) -> OrgMemberUserRead:
     """Find a user by email within the token's org. 404 if not a member."""
     _require_token_right(token_user, "users", "read")
 
@@ -1361,7 +1422,9 @@ async def get_user_by_email(
     )).scalars().first()
     if not row:
         raise HTTPException(status_code=404, detail="User not found in this organization")
-    return UserRead.model_validate(row)
+    # The account is global: show only what this org may see of it.
+    meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
+    return OrgMemberUserRead.for_org(row, meta_keys)
 
 
 # -- Magic link ---------------------------------------------------------------
@@ -1422,7 +1485,7 @@ async def issue_magic_link(
     # magic-link route a way around the impersonation rules rather than a
     # variation on them. A token that may not mint a session for an Admin,
     # Maintainer or superadmin directly must not be able to mail itself one.
-    await _check_token_can_impersonate(user, token_user.org_id, db_session)
+    await _check_token_can_impersonate(user, token_user, db_session)
 
     safe_redirect = _validate_magic_link_redirect(redirect_to)
 
@@ -2046,7 +2109,7 @@ async def update_user_profile(
     user_id: int,
     updates: dict,
     db_session: AsyncSession,
-) -> UserRead:
+) -> OrgMemberUserRead:
     """Update a user's profile fields. Org-scoped: user must be a member."""
     _require_token_right(token_user, "users", "update")
 
@@ -2106,7 +2169,8 @@ async def update_user_profile(
     except Exception:
         pass
 
-    return UserRead.model_validate(user)
+    meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
+    return OrgMemberUserRead.for_org(user, meta_keys)
 
 
 async def change_user_role(
@@ -2544,7 +2608,9 @@ async def export_user_data(
     )).all()
 
     return {
-        "profile": UserRead.model_validate(user).model_dump(),
+        "profile": OrgMemberUserRead.for_org(
+            user, await _org_signup_field_keys(token_user.org_id, db_session)
+        ).model_dump(),
         "memberships": [m.model_dump() for m in memberships],
         "trails": [t.model_dump() for t in trails],
         "trail_runs": [tr.model_dump() for tr in trail_runs],
