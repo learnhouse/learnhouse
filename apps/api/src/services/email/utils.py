@@ -436,6 +436,10 @@ def send_email(
     before it gets anywhere near one.
     """
     from fastapi import HTTPException
+    from src.services.email.safe_text import header_safe
+
+    # Subjects interpolate org/user names; a line break there is header injection.
+    subject = header_safe(subject)
 
     lh_config = get_learnhouse_config()
     mailing = lh_config.mailing_config

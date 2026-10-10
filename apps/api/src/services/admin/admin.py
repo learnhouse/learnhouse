@@ -61,6 +61,7 @@ from src.security.features_utils.usage import (
 from src.security.security import security_hash_password
 from src.security.rbac.constants import ADMIN_ROLE_ID, MAINTAINER_ROLE_ID
 from src.services.security.password_validation import validate_password_complexity
+from src.services.security.profile_validation import validate_profile_fields
 
 
 def _require_api_token(current_user) -> APITokenUser:
@@ -160,6 +161,65 @@ async def _check_token_can_impersonate(
             status_code=403,
             detail="API tokens cannot issue tokens for Admin or Maintainer accounts",
         )
+
+    # A session for a shared account is usable in every org it belongs to.
+    await _check_not_member_elsewhere(
+        user, org_id, db_session,
+        detail="API tokens cannot issue tokens for accounts that belong to other organizations",
+    )
+
+
+async def _check_not_member_elsewhere(
+    user: User,
+    org_id: int,
+    db_session: AsyncSession,
+    *,
+    detail: str,
+) -> None:
+    """Refuse when the global account is not the token org's alone."""
+    if not await org_owns_account(user.id, org_id, db_session):
+        raise HTTPException(status_code=403, detail=detail)
+
+
+async def _check_token_can_manage_membership(
+    user_id: int,
+    org_id: int,
+    db_session: AsyncSession,
+) -> None:
+    """Role changes and removals never touch an Admin/Maintainer via a token."""
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
+    )).scalars().first()
+    if membership is not None and membership.role_id in {ADMIN_ROLE_ID, MAINTAINER_ROLE_ID}:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot modify Admin or Maintainer accounts",
+        )
+
+
+async def _check_token_can_edit_account(
+    user: User,
+    org_id: int,
+    db_session: AsyncSession,
+) -> None:
+    """Refuse edits to a global account the token's org does not solely own.
+
+    The ``User`` row is shared by every org it belongs to, so a token may only
+    rewrite it when the account is an ordinary member of the token's org alone.
+    """
+    if user.is_superadmin:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot modify superadmin accounts",
+        )
+    await _check_token_can_manage_membership(user.id, org_id, db_session)
+    await _check_not_member_elsewhere(
+        user, org_id, db_session,
+        detail="API tokens cannot modify accounts that belong to other organizations",
+    )
 
 
 async def _check_token_can_assign_role(
@@ -1057,6 +1117,22 @@ async def provision_user(
     bypasses the normal email-verification flow.
     """
 
+    name_check = validate_profile_fields({
+        "username": username,
+        "first_name": first_name,
+        "last_name": last_name,
+    })
+    if not name_check.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Display name fields may not contain URLs or links",
+                "errors": name_check.errors,
+                "invalid_fields": name_check.invalid_fields,
+            },
+        )
+
     if password:
         validation = validate_password_complexity(password)
         if not validation.is_valid:
@@ -1089,62 +1165,14 @@ async def provision_user(
 
     now = datetime.now()
 
+    # Never attach an existing global account: the token's org would gain
+    # control of someone else's identity without their consent.
     existing_user = (await db_session.execute(select(User).where(User.email == email))).scalars().first()
     if existing_user:
-        # Email matches an existing account, so treat this as "attach to org"
-        # rather than "create new user". Previously this raised 400 and left
-        # any user that had been created in a prior aborted call as an orphan
-        # (in the users table but with no UserOrganization row).
-        existing_membership = (await db_session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == existing_user.id,
-                UserOrganization.org_id == token_user.org_id,
-            )
-        )).scalars().first()
-        if existing_membership:
-            raise HTTPException(
-                status_code=400,
-                detail="Email already exists in this organization",
-            )
-
-        membership = UserOrganization(
-            user_id=existing_user.id if existing_user.id else 0,
-            org_id=token_user.org_id,
-            role_id=role_id,
-            creation_date=str(now),
-            update_date=str(now),
+        raise HTTPException(
+            status_code=409,
+            detail="A user with this email already exists; invite them instead",
         )
-        db_session.add(membership)
-        await db_session.commit()
-
-        await increase_feature_usage("members", token_user.org_id, db_session)
-
-        await track(
-            event_name=analytics_events.USER_SIGNED_UP,
-            org_id=token_user.org_id,
-            user_id=existing_user.id if existing_user.id else 0,
-            properties={"signup_method": "admin_api_attach"},
-        )
-        await dispatch_webhooks(
-            event_name=analytics_events.USER_SIGNED_UP,
-            org_id=token_user.org_id,
-            data={
-                "user": {
-                    "user_uuid": existing_user.user_uuid,
-                    "email": existing_user.email,
-                    "username": existing_user.username,
-                    "first_name": existing_user.first_name,
-                    "last_name": existing_user.last_name,
-                },
-                "signup_method": "admin_api_attach",
-            },
-        )
-
-        await notify_user_joined_org(
-            request, db_session, existing_user, token_user.org_id
-        )
-
-        return UserRead.model_validate(existing_user)
 
     if (await db_session.execute(select(User).where(User.username == username))).scalars().first():
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -1215,6 +1243,7 @@ async def remove_user_from_org_admin(
     """Remove a user's org membership (scope: membership only)."""
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _check_token_can_manage_membership(user_id, token_user.org_id, db_session)
 
     membership = (await db_session.execute(
         select(UserOrganization).where(
@@ -1947,14 +1976,7 @@ async def update_user_profile(
     """Update a user's profile fields. Org-scoped: user must be a member."""
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
-
-    email_changed = "email" in updates and updates["email"] != user.email
-    username_changed = "username" in updates and updates["username"] != user.username
-    if (email_changed or username_changed) and not await org_owns_account(user.id, token_user.org_id, db_session):
-        raise HTTPException(
-            status_code=403,
-            detail="This account also belongs to other organizations; its email and username can only be changed by the account owner",
-        )
+    await _check_token_can_edit_account(user, token_user.org_id, db_session)
 
     if "email" in updates and updates["email"] != user.email:
         existing = (await db_session.execute(
@@ -1972,8 +1994,6 @@ async def update_user_profile(
 
     # Reject phishing links in display-name fields here too; the admin API
     # token path must not be a way around the signup/profile-update guard.
-    from src.services.security.profile_validation import validate_profile_fields
-
     name_check = validate_profile_fields({
         "username": updates.get("username"),
         "first_name": updates.get("first_name"),
@@ -1990,13 +2010,15 @@ async def update_user_profile(
             },
         )
 
+    # A new address must be re-verified, same as the self-service path.
+    new_email = updates.get("email")
+    if new_email is not None and new_email != user.email:
+        user.email_verified = False
+        user.email_verified_at = None
+
     for field, value in updates.items():
         if field in _USER_UPDATABLE_FIELDS and value is not None:
             setattr(user, field, value)
-    if email_changed:
-        # A new address has not been proven; same rule as the profile path.
-        user.email_verified = False
-        user.email_verified_at = None
 
     user.update_date = str(datetime.now())
     db_session.add(user)
@@ -2021,6 +2043,7 @@ async def change_user_role(
     """Change a user's org role. Blocks demoting the last admin."""
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _check_token_can_manage_membership(user_id, token_user.org_id, db_session)
 
     role = (await db_session.execute(select(Role).where(Role.id == new_role_id))).scalars().first()
     if not role:
@@ -2456,22 +2479,13 @@ async def anonymize_user(
 ) -> dict:
     """GDPR right-to-be-forgotten. Scrub PII, delete API tokens, invalidate session.
 
-    Cross-org note: the ``User`` row is global (shared across all orgs the
-    user belongs to), so scrubbing PII fields (email, name, avatar, bio,
-    details, profile) affects every org. API token cleanup is scoped to the
-    *caller's* org; tokens the user created in other orgs are NOT touched.
-    If the user also belongs to other orgs, the caller should coordinate a
-    purge in each org, or use a dedicated "global anonymize" flow (not
-    exposed here) that has platform-wide authority.
+    Cross-org note: the ``User`` row is global, so scrubbing it would affect
+    every org the user belongs to. Accounts that also belong to another org
+    (or are privileged) are refused; erasing those needs platform authority.
     """
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
-
-    if not await org_owns_account(user.id, token_user.org_id, db_session):
-        raise HTTPException(
-            status_code=403,
-            detail="This account also belongs to other organizations and cannot be anonymized from here; remove it from this organization instead",
-        )
+    await _check_token_can_edit_account(user, token_user.org_id, db_session)
 
     # example.com is reserved by RFC 2606 and has no MX record, so the address
     # is undeliverable while still being a well-formed one. The previous

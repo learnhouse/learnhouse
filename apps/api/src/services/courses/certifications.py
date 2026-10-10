@@ -56,6 +56,10 @@ async def create_certification(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
+    # Plan gate: the router wrapper can't see the org (it's in the body)
+    from src.security.features_utils.plan_check import check_org_plan
+    await check_org_plan(course.org_id, "pro", "Certifications", db_session)
+
     # Create certification
     certification = Certifications(
         course_id=certification_object.course_id,

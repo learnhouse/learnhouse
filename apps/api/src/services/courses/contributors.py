@@ -8,6 +8,7 @@ from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, Reso
 from src.security.auth import resolve_acting_user_id
 from src.services.security.rate_limiting import enforce_batch_size_limit
 from src.security.rbac import authorization_verify_if_user_is_anon, check_resource_access, AccessAction
+from src.security.rbac.rbac import authorization_verify_based_on_org_admin_status
 from src.services.webhooks.dispatch import dispatch_webhooks
 from typing import List
 
@@ -40,6 +41,10 @@ async def apply_course_contributor(
             status_code=404,
             detail="Course not found",
         )
+
+    # SECURITY: Can't apply to a course you can't see (private, other org).
+    # The open_to_contributors gate lives in the router.
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Check if user already has any authorship role for this course
     existing_authorship = (await db_session.execute(
@@ -108,6 +113,31 @@ async def update_course_contributor(
         raise HTTPException(
             status_code=404,
             detail="Course not found",
+        )
+
+    # SECURITY: course UPDATE is also granted to active contributors, who must
+    # not be able to promote anyone (themselves included). Managing roles takes
+    # an active CREATOR/MAINTAINER of the course or an org admin.
+    acting_user_id = resolve_acting_user_id(current_user)
+    caller_authorship = (await db_session.execute(
+        select(ResourceAuthor).where(
+            and_(
+                ResourceAuthor.resource_uuid == course_uuid,
+                ResourceAuthor.user_id == acting_user_id
+            )
+        )
+    )).scalars().first()
+    is_course_owner = bool(
+        caller_authorship
+        and caller_authorship.authorship in (ResourceAuthorshipEnum.CREATOR, ResourceAuthorshipEnum.MAINTAINER)
+        and caller_authorship.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+    )
+    if not is_course_owner and not await authorization_verify_based_on_org_admin_status(
+        request, acting_user_id, "update", course_uuid, db_session
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Only course owners (CREATOR, MAINTAINER) or admins can manage contributors",
         )
 
     # Check if the contributor exists for this course

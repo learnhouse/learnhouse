@@ -6,6 +6,7 @@ from urllib.parse import quote
 from pydantic import EmailStr
 from src.db.organizations import OrganizationRead
 from src.db.users import UserRead
+from src.services.email.safe_text import email_org_name, email_user_name
 from src.services.email.translations import t
 from src.services.email.utils import send_email
 
@@ -106,7 +107,7 @@ def _org_wordmark(org_name: str) -> str:
     return (
         f'<span style="display: inline-block; font-size: 20px; font-weight: 900; '
         f'color: #000000; letter-spacing: -0.02em; line-height: 1.2;">'
-        f"{html.escape(org_name)}</span>"
+        f"{html.escape(email_org_name(org_name))}</span>"
     )
 
 
@@ -331,9 +332,9 @@ def send_account_creation_email(
     line that ``powered_by=False`` removes. Org-less signups keep the
     LearnHouse-branded variant with the Academy footer link.
     """
-    safe_username = html.escape(user.username)
+    safe_username = html.escape(email_user_name(user.username))
     white_label = bool(org_name)
-    safe_org = html.escape(org_name) if org_name else ""
+    safe_org = html.escape(email_org_name(org_name)) if org_name else ""
 
     heading = t(lang, "account_creation.heading", username=safe_username)
     cta = t(lang, "account_creation.cta")
@@ -386,7 +387,7 @@ def send_org_created_email(
     lang: str = "en",
 ):
     """Confirmation email when a user creates a new organization."""
-    safe_name = html.escape(org_name)
+    safe_name = html.escape(email_org_name(org_name))
     heading = t(lang, "org_created.heading", org_name=safe_name)
     body_text = t(lang, "org_created.body")
     cta = t(lang, "org_created.cta")
@@ -413,7 +414,7 @@ def send_org_deleted_email(
     lang: str = "en",
 ):
     """Confirmation email sent to org admins after an organization is deleted."""
-    safe_name = html.escape(org_name)
+    safe_name = html.escape(email_org_name(org_name))
     heading = t(lang, "org_deleted.heading", org_name=safe_name)
     body_text = t(lang, "org_deleted.body")
 
@@ -474,7 +475,7 @@ def send_password_reset_email(
     button, its name as the From display name. Platform-level resets go
     through ``send_password_reset_email_platform`` instead.
     """
-    safe_username = html.escape(user.username)
+    safe_username = html.escape(email_user_name(user.username))
     safe_code = html.escape(generated_reset_code)
     safe_email = quote(str(email), safe='')
     safe_code_param = quote(generated_reset_code, safe='')
@@ -519,7 +520,7 @@ def send_password_reset_email_platform(
     base_url: str,
     lang: str = "en",
 ):
-    safe_username = html.escape(user.username)
+    safe_username = html.escape(email_user_name(user.username))
     safe_code = html.escape(generated_reset_code)
     safe_email = quote(str(email), safe='')
     safe_code_param = quote(generated_reset_code, safe='')
@@ -566,8 +567,8 @@ def send_invitation_email(
     powered_by: bool = True,
 ):
     """Invitation into an organization, branded to that organization."""
-    safe_org_name = html.escape(org_name)
-    safe_inviter = html.escape(inviter_username)
+    safe_org_name = html.escape(email_org_name(org_name))
+    safe_inviter = html.escape(email_user_name(inviter_username))
 
     code_section = ""
     if invite_code:
@@ -637,8 +638,8 @@ def send_org_join_email(
     Always white-labeled to the org (the user is being welcomed into that
     academy, not onto LearnHouse), with the org's logo (or name) up top.
     """
-    safe_username = html.escape(username)
-    safe_org_name = html.escape(org_name)
+    safe_username = html.escape(email_user_name(username))
+    safe_org_name = html.escape(email_org_name(org_name))
 
     heading = t(lang, "org_join.heading", username=safe_username)
     body_text = t(lang, "org_join.body", org_name=safe_org_name)
@@ -689,8 +690,8 @@ def send_role_changed_email(
     custom domain when it has one). Without it the mail told someone their
     permissions had changed and then gave them nowhere to go.
     """
-    safe_username = html.escape(username)
-    safe_org_name = html.escape(org_name)
+    safe_username = html.escape(email_user_name(username))
+    safe_org_name = html.escape(email_org_name(org_name))
     safe_role_name = html.escape(new_role_name)
 
     heading = t(lang, "role_changed.heading")
@@ -763,8 +764,8 @@ def send_email_verification_email(
     Returns:
         Boolean indicating if email was sent successfully
     """
-    safe_username = html.escape(user.username)
-    brand = html.escape(organization.name) if organization else "LearnHouse"
+    safe_username = html.escape(email_user_name(user.username))
+    brand = html.escape(email_org_name(organization.name)) if organization else "LearnHouse"
     safe_token = quote(token, safe='')
     safe_user_uuid = quote(user.user_uuid, safe='')
     org_uuid = organization.org_uuid if organization else "none"
@@ -841,7 +842,7 @@ def send_nudge_email(
     Failures are swallowed via ``_send_notification_email``: a nudge nobody
     asked for must never be the reason a batch job dies.
     """
-    safe_org_name = html.escape(org_name)
+    safe_org_name = html.escape(email_org_name(org_name))
     raw_vars = {key: str(value) for key, value in copy_vars.items() if value is not None}
     raw_vars.setdefault("org_name", org_name)
     safe_vars = {key: html.escape(value) for key, value in raw_vars.items()}

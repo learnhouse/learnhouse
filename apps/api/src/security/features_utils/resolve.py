@@ -17,7 +17,7 @@ ALWAYS_ON_FEATURES = {"courses", "usergroups", "assignments"}
 
 # Always-on features that have plan-based limits (not unlimited)
 # These are always enabled but their limit comes from the plan config
-ALWAYS_ON_WITH_LIMITS = {"courses"}
+ALWAYS_ON_WITH_LIMITS = {"courses", "assignments"}
 
 # All known features
 ALL_FEATURES = [

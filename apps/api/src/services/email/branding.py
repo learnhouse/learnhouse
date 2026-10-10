@@ -157,11 +157,14 @@ def resolve_org_email_branding(
     configured; background jobs pass None.
     """
     # Imported here: orgs.orgs imports the email package indirectly.
+    from src.services.email.safe_text import email_org_name
     from src.services.email.utils import get_org_brand_logo_url
     from src.services.orgs.orgs import get_org_default_language, resolve_org_sender_name
 
+    raw_name = getattr(org, "name", "") or ""
     return OrgEmailBranding(
-        org_name=getattr(org, "name", "") or "",
+        # Admin-typed text rendered into copy and subjects: strip links/breaks.
+        org_name=email_org_name(raw_name) if raw_name else "",
         lang=get_org_default_language(org_config),
         sender_name=resolve_org_sender_name(org_config),
         logo_url=get_org_brand_logo_url(org, org_config, request) if org is not None else None,

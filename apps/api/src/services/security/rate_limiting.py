@@ -7,6 +7,7 @@ Rate limits:
 - Verification resend: 5 attempts per 5 minutes per email
 """
 import ipaddress
+import os
 from typing import Tuple
 from fastapi import HTTPException, Request
 from src.core.redis import get_redis_client as _get_redis_pool_client
@@ -40,6 +41,12 @@ def _is_trusted_proxy(ip: str) -> bool:
         return False
 
 
+def _trust_proxy_headers() -> bool:
+    """LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS (default true)."""
+    value = os.environ.get("LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS", "")
+    return value.strip().lower() not in ("false", "0", "no", "off")
+
+
 def get_client_ip(request: Request) -> str:
     """
     Extract client IP from request, considering proxy headers.
@@ -48,27 +55,26 @@ def get_client_ip(request: Request) -> str:
     comes from a private/loopback address (i.e., a local reverse proxy).
     """
     # SECURITY: This trusts X-Forwarded-For only when the direct connection comes
-    # from a private IP (assumed to be a trusted reverse proxy).
-    # REQUIREMENT: The reverse proxy MUST strip and rewrite X-Forwarded-For headers
-    # from untrusted clients. If the proxy passes through client-supplied headers,
-    # IP spoofing can bypass rate limits.
+    # from a private IP (assumed to be a trusted reverse proxy), and then only
+    # the right-most entry that is not itself a trusted proxy: entries to the
+    # left of that are client-supplied and trivially spoofable.
     # For self-hosted deployments without a reverse proxy, set
-    # LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS=false in config to disable this.
+    # LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS=false to disable this.
     direct_ip = request.client.host if request.client else None
 
     # Only trust proxy headers if request comes from a local reverse proxy
-    if direct_ip and _is_trusted_proxy(direct_ip):
-        # Check for forwarded headers (reverse proxy)
+    if direct_ip and _trust_proxy_headers() and _is_trusted_proxy(direct_ip):
         forwarded = request.headers.get("X-Forwarded-For")
         if forwarded:
-            # Take the first IP in the chain (original client)
-            client_ip = forwarded.split(",")[0].strip()
-            # Validate it's a real IP, not garbage
-            try:
-                ipaddress.ip_address(client_ip)
-                return client_ip
-            except ValueError:
-                pass
+            # Walk from the right, skipping our own proxy hops
+            for hop in reversed(forwarded.split(",")):
+                hop = hop.strip()
+                try:
+                    ipaddress.ip_address(hop)
+                except ValueError:
+                    break
+                if not _is_trusted_proxy(hop):
+                    return hop
 
         # Check for real IP header
         real_ip = request.headers.get("X-Real-IP")

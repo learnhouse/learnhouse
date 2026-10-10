@@ -15,6 +15,9 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
 from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.security.org_auth import get_user_org
+from src.security.superadmin import is_user_superadmin
+from src.services.security.profile_validation import validate_profile_fields
 from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
@@ -267,6 +270,8 @@ async def create_org(
             detail=f"The slug '{org_object.slug}' is already taken. Please choose a different slug.",
         )
 
+    reject_url_in_org_name(org_object.name)
+
     org = Organization.model_validate(org_object)
 
     if isinstance(current_user, AnonymousUser):
@@ -363,6 +368,8 @@ async def create_org_with_config(
             detail=f"The slug '{org_object.slug}' is already taken. Please choose a different slug.",
         )
 
+    reject_url_in_org_name(org_object.name)
+
     org = Organization.model_validate(org_object)
 
     if isinstance(current_user, AnonymousUser):
@@ -458,6 +465,8 @@ async def update_org(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
+    reject_url_in_org_name(org_object.name)
+
     # Everything else on the demo org is fair game; editing the name or logo
     # is part of what a prospect is here to try, and the refresh puts it back.
     # Two fields are not:
@@ -484,13 +493,21 @@ async def update_org(
                 detail="Custom scripts cannot be set on the demo organization.",
             )
 
-    # `scripts` runs as JavaScript on every page of the org: changing it takes
-    # the organizations.update right, not just maintainer status.
-    if org_object.scripts is not None and org_object.scripts != org.scripts:
+    # `scripts` runs as JavaScript on every page of the org, and slug/email
+    # are its identity: changing any of them takes the organizations.update
+    # right, not just maintainer status. Unchanged values pass so the general
+    # settings form can resubmit the whole org.
+    identity_changes = (
+        (org_object.scripts is not None and org_object.scripts != (org.scripts or {}))
+        or (org_object.slug is not None and org_object.slug != org.slug)
+        or (org_object.email is not None and org_object.email != org.email)
+    )
+    if identity_changes:
         await require_org_role_permission(
             _acting_user_id(current_user), org.id, db_session,
             "organizations", "action_update",
         )
+
     # Verify if the new slug is already in use
     statement = select(Organization).where(Organization.slug == org_object.slug)
     slug_available = (await db_session.execute(statement)).scalars().first()
@@ -1424,6 +1441,7 @@ async def update_org_email_sender_name_config(
             status_code=400,
             detail="Sender name contains no usable characters",
         )
+    reject_url_in_org_name(sanitized, field="email_sender_name")
 
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
@@ -2174,6 +2192,33 @@ async def rbac_check(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User rights (admin status) : You don't have the right to perform this action",
             )
+
+
+async def is_org_admin_role(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """True if the user holds the Admin role in the org, or is a superadmin.
+
+    Unlike ``is_org_admin`` this excludes Maintainers, whose seeded role has no
+    organization update/delete rights.
+    """
+    if await is_user_superadmin(user_id, db_session):
+        return True
+    user_org = await get_user_org(user_id, org_id, db_session)
+    return user_org is not None and user_org.role_id == ADMIN_ROLE_ID
+
+
+def reject_url_in_org_name(name: Optional[str], field: str = "name") -> None:
+    """Org names are relayed in invite/role emails; links in them are phishing bait."""
+    result = validate_profile_fields({field: name})
+    if not result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Organization names may not contain URLs or links",
+                "errors": result.errors,
+                "invalid_fields": result.invalid_fields,
+            },
+        )
 
 
 ## 🔒 RBAC Utils ##

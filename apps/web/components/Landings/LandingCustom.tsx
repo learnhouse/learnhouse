@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getPublicOffers } from '@services/payments/offers'
 import { formatCurrency } from '@/lib/format'
-import { backgroundCss, deviceClass, hasSectionFrame, isSectionVisible, resolveLandingVideo, sanitizeAnchor, spacingClass } from './landingSections'
+import { backgroundCss, deviceClass, hasSectionFrame, isSectionVisible, resolveLandingVideo, safeHref, sanitizeAnchor, spacingClass } from './landingSections'
 import { BannerBlock, ColumnsBlock, CountdownBlock, CtaBlock, EmbedBlock, FaqBlock, FeaturesBlock, GalleryBlock, ImageBlock, PricingBlock, Reveal, RichTextBlock, SpacerBlock, StatsBlock, StepsBlock, TestimonialsBlock } from './LandingBlocks'
 
 interface LandingCustomProps {
@@ -144,7 +144,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                     {section.buttons.map((button, index) => (
                       <a
                         key={index}
-                        href={button.link}
+                        href={safeHref(button.link)}
                         className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-extrabold shadow-sm transition-transform hover:scale-105"
                         style={{
                           backgroundColor: button.background,
@@ -180,7 +180,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                   {section.buttons.map((button, index) => (
                     <a
                       key={index}
-                      href={button.link}
+                      href={safeHref(button.link)}
                       className="px-6 py-3 rounded-xl font-medium shadow-xs transition-all duration-200 hover:scale-105"
                       style={{
                         backgroundColor: button.background,

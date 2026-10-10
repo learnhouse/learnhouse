@@ -10,6 +10,7 @@ from src.security.auth import resolve_acting_user_id
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
+from src.security.org_auth import require_org_create_permission, require_org_role_permission
 from src.security.superadmin import is_user_superadmin
 from src.db.communities.communities import (
     Community,
@@ -49,17 +50,9 @@ async def create_community(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check if user has permission to create communities using role-based permissions
-    # This checks the actual database permissions (communities.action_create) instead of hardcoded role IDs
-    has_create_permission = await authorization_verify_based_on_roles(
-        request, current_user.id, "create", f"community_{org.org_uuid}", db_session
-    )
-
-    if not has_create_permission:
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to create communities. Check your role permissions.",
-        )
+    # communities.action_create in this org. A "community_<org_uuid>" uuid
+    # resolves to no org, which would accept a role held in any org.
+    await require_org_create_permission(current_user, org.id, db_session, "communities")
 
     # Create community
     community = Community(
@@ -154,9 +147,13 @@ async def get_communities_by_org(
     if not org_lookup:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    has_admin_read = await authorization_verify_based_on_roles(
-        request, acting_user_id, "update", f"community_{org_lookup.org_uuid}", db_session
-    )
+    try:
+        await require_org_role_permission(
+            acting_user_id, org_id, db_session, "communities", "action_update"
+        )
+        has_admin_read = True
+    except HTTPException:
+        has_admin_read = False
     is_admin_or_maintainer = has_admin_read or await authorization_verify_based_on_org_admin_status(
         request, acting_user_id, "read", org_lookup.org_uuid, db_session
     )

@@ -1215,13 +1215,10 @@ class TestProvisionUser:
                 first_name="", last_name="", password=None, role_id=4,
                 request=mock_request, db_session=db,
             )
-        assert exc.value.status_code == 400
-        assert "in this organization" in exc.value.detail
+        assert exc.value.status_code == 409
 
-    async def test_existing_user_in_other_org_is_attached(self, token_user, other_org, student_role, mock_request, db, mock_admin_side_effects):
-        # Seed a user that exists ONLY in another org → simulates the orphan case
-        # the original bug created. provision_user should attach them to the
-        # caller's org instead of failing.
+    async def test_existing_user_in_other_org_is_refused(self, token_user, other_org, student_role, mock_request, db, mock_admin_side_effects):
+        # A token must not claim someone else's global account into its org.
         foreign = User(
             id=42,
             username="foreign",
@@ -1239,30 +1236,27 @@ class TestProvisionUser:
         ))
         await db.commit()
 
-        result = await provision_user(
-            token_user=token_user,
-            email="foreign@example.com",
-            username="ignored_username",
-            first_name="ignored", last_name="ignored",
-            password=None, role_id=4,
-            request=mock_request, db_session=db,
-        )
-        # Same underlying user, now linked to the caller's org
-        assert result.id == foreign.id
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="foreign@example.com",
+                username="ignored_username",
+                first_name="ignored", last_name="ignored",
+                password=None, role_id=4,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 409
         membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == foreign.id,
                 UserOrganization.org_id == token_user.org_id,
             )
         )).scalars().first()
-        assert membership is not None
-        assert membership.role_id == 4
-        mock_admin_side_effects["increase_feature_usage"].assert_called_once()
+        assert membership is None
+        mock_admin_side_effects["increase_feature_usage"].assert_not_called()
 
-    async def test_orphan_user_is_attached(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
-        # An orphan user (in users table, no UserOrganization anywhere)
-        # left behind by the pre-fix bug should be recoverable by re-calling
-        # provision_user with the same email.
+    async def test_orgless_user_is_refused(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
+        # An account with no org (e.g. a platform signup) is still someone's.
         orphan = User(
             id=99,
             username="orphan",
@@ -1274,21 +1268,15 @@ class TestProvisionUser:
         db.add(orphan)
         await db.commit()
 
-        result = await provision_user(
-            token_user=token_user,
-            email="orphan@example.com",
-            username="newname",
-            first_name="", last_name="", password=None, role_id=4,
-            request=mock_request, db_session=db,
-        )
-        assert result.id == orphan.id
-        membership = (await db.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == orphan.id,
-                UserOrganization.org_id == token_user.org_id,
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="orphan@example.com",
+                username="newname",
+                first_name="", last_name="", password=None, role_id=4,
+                request=mock_request, db_session=db,
             )
-        )).scalars().first()
-        assert membership is not None
+        assert exc.value.status_code == 409
 
     async def test_duplicate_username_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
@@ -1602,7 +1590,8 @@ class TestRemoveUserFromOrg:
         )
         with pytest.raises(HTTPException) as exc:
             await remove_user_from_org_admin(admin_token, org_admin_user.id, db)
-        assert exc.value.status_code == 400
+        # Admin targets are refused outright, before the last-admin guard.
+        assert exc.value.status_code == 403
 
     async def test_user_not_in_org(self, token_user, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
@@ -2164,33 +2153,33 @@ class TestUserGroupMembers:
 
 class TestUpdateUserProfile:
 
-    async def test_updates_fields(self, token_user, user, db):
+    async def test_updates_fields(self, token_user, learner_user, db):
         result = await update_user_profile(
-            token_user, user.id,
+            token_user, learner_user.id,
             {"first_name": "Updated", "bio": "New bio"},
             db,
         )
         assert result.first_name == "Updated"
         assert result.bio == "New bio"
 
-    async def test_partial_update_preserves_other_fields(self, token_user, user, db):
-        original_email = user.email
-        await update_user_profile(token_user, user.id, {"first_name": "Changed"}, db)
-        await db.refresh(user)
-        assert user.first_name == "Changed"
-        assert user.email == original_email
+    async def test_partial_update_preserves_other_fields(self, token_user, learner_user, db):
+        original_email = learner_user.email
+        await update_user_profile(token_user, learner_user.id, {"first_name": "Changed"}, db)
+        await db.refresh(learner_user)
+        assert learner_user.first_name == "Changed"
+        assert learner_user.email == original_email
 
-    async def test_duplicate_email_rejected(self, token_user, user, second_user, db):
+    async def test_duplicate_email_rejected(self, token_user, learner_user, second_user, db):
         with pytest.raises(HTTPException) as exc:
             await update_user_profile(
-                token_user, user.id, {"email": second_user.email}, db
+                token_user, learner_user.id, {"email": second_user.email}, db
             )
         assert exc.value.status_code == 400
 
-    async def test_duplicate_username_rejected(self, token_user, user, second_user, db):
+    async def test_duplicate_username_rejected(self, token_user, learner_user, second_user, db):
         with pytest.raises(HTTPException) as exc:
             await update_user_profile(
-                token_user, user.id, {"username": second_user.username}, db
+                token_user, learner_user.id, {"username": second_user.username}, db
             )
         assert exc.value.status_code == 400
 
@@ -2199,11 +2188,11 @@ class TestUpdateUserProfile:
             await update_user_profile(token_user, 9999, {"first_name": "X"}, db)
         assert exc.value.status_code == 404
 
-    async def test_rejects_url_in_display_name(self, token_user, user, db):
+    async def test_rejects_url_in_display_name(self, token_user, learner_user, db):
         # The admin API path must not be a way around the display-name URL guard.
         with pytest.raises(HTTPException) as exc:
             await update_user_profile(
-                token_user, user.id, {"username": "win money http://evil.io"}, db
+                token_user, learner_user.id, {"username": "win money http://evil.io"}, db
             )
         assert exc.value.status_code == 400
         assert exc.value.detail["code"] == "PROFILE_FIELD_INVALID"
@@ -2241,15 +2230,15 @@ class TestChangeUserRole:
         )).scalars().first()
         assert membership.role_id == student_role.id
 
-    async def test_api_token_cannot_grant_admin_role(self, token_user, user, admin_role, db):
+    async def test_api_token_cannot_grant_admin_role(self, token_user, learner_user, admin_role, db):
         # API tokens must never be able to mint org admins/maintainers.
         with pytest.raises(HTTPException) as exc:
-            await change_user_role(token_user, user.id, admin_role.id, db)
+            await change_user_role(token_user, learner_user.id, admin_role.id, db)
         assert exc.value.status_code == 403
 
-    async def test_role_not_found(self, token_user, user, db):
+    async def test_role_not_found(self, token_user, learner_user, db):
         with pytest.raises(HTTPException) as exc:
-            await change_user_role(token_user, user.id, 9999, db)
+            await change_user_role(token_user, learner_user.id, 9999, db)
         assert exc.value.status_code == 404
 
     async def test_cannot_demote_last_admin(self, org, org_admin_user, student_role, admin_role, db):
@@ -2260,7 +2249,8 @@ class TestChangeUserRole:
         )
         with pytest.raises(HTTPException) as exc:
             await change_user_role(admin_token, org_admin_user.id, student_role.id, db)
-        assert exc.value.status_code == 400
+        # Admin targets are refused outright, before the last-admin guard.
+        assert exc.value.status_code == 403
 
 
 # ── User group CRUD tests ───────────────────────────────────────────────────
@@ -2499,21 +2489,21 @@ class TestExportUserData:
 
 class TestAnonymizeUser:
 
-    async def test_scrubs_pii(self, token_user, user, db, mock_admin_side_effects):
-        original_email = user.email
-        result = await anonymize_user(token_user, user.id, db)
+    async def test_scrubs_pii(self, token_user, learner_user, db, mock_admin_side_effects):
+        original_email = learner_user.email
+        result = await anonymize_user(token_user, learner_user.id, db)
         assert result["api_tokens_revoked"] == 0
         assert "deleted-user-" in result["anonymized_email"]
 
-        await db.refresh(user)
-        assert user.email != original_email
-        assert user.email == f"deleted-user-{user.id}@anonymized.example.com"
-        assert user.first_name == "Deleted"
-        assert user.password == ""
-        assert user.email_verified is False
-        assert user.signup_method == "anonymized"
+        await db.refresh(learner_user)
+        assert learner_user.email != original_email
+        assert learner_user.email == f"deleted-user-{learner_user.id}@anonymized.example.com"
+        assert learner_user.first_name == "Deleted"
+        assert learner_user.password == ""
+        assert learner_user.email_verified is False
+        assert learner_user.signup_method == "anonymized"
 
-    async def test_revokes_api_tokens(self, token_user, user, db, mock_admin_side_effects):
+    async def test_revokes_api_tokens(self, token_user, learner_user, db, mock_admin_side_effects):
         api_token = APIToken(
             id=500,
             name="User's token",
@@ -2521,7 +2511,7 @@ class TestAnonymizeUser:
             token_prefix="lh_user500",
             token_hash="abc" * 20,
             org_id=token_user.org_id,
-            created_by_user_id=user.id,
+            created_by_user_id=learner_user.id,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
             is_active=True,
@@ -2529,15 +2519,15 @@ class TestAnonymizeUser:
         db.add(api_token)
         await db.commit()
 
-        result = await anonymize_user(token_user, user.id, db)
+        result = await anonymize_user(token_user, learner_user.id, db)
         assert result["api_tokens_revoked"] == 1
 
         remaining = (await db.execute(
-            select(APIToken).where(APIToken.created_by_user_id == user.id)
+            select(APIToken).where(APIToken.created_by_user_id == learner_user.id)
         )).scalars().all()
         assert remaining == []
 
-    async def test_does_not_revoke_other_org_api_tokens(self, token_user, user, other_org, db, mock_admin_side_effects):
+    async def test_does_not_revoke_other_org_api_tokens(self, token_user, learner_user, other_org, db, mock_admin_side_effects):
         """Anonymize in org A must NOT delete the user's API tokens in org B."""
         other_org_token = APIToken(
             id=600,
@@ -2546,7 +2536,7 @@ class TestAnonymizeUser:
             token_prefix="lh_user600",
             token_hash="def" * 20,
             org_id=other_org.id,
-            created_by_user_id=user.id,
+            created_by_user_id=learner_user.id,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
             is_active=True,
@@ -2554,7 +2544,7 @@ class TestAnonymizeUser:
         db.add(other_org_token)
         await db.commit()
 
-        result = await anonymize_user(token_user, user.id, db)
+        result = await anonymize_user(token_user, learner_user.id, db)
         assert result["api_tokens_revoked"] == 0
 
         remaining = (await db.execute(

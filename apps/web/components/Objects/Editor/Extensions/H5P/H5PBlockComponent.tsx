@@ -58,6 +58,11 @@ function H5PBlockComponent(props: any) {
   // local mirror would drift on undo/redo or when a version-history preview
   // swaps the content underneath us.
   const h5pUrl: string = props.node.attrs.h5pUrl || ''
+  // Re-validate at render: the stored attr may come from a hand-edited document.
+  const frameSrc = useMemo(() => {
+    const result = normalizeH5PUrl(h5pUrl)
+    return result.ok ? result.url : ''
+  }, [h5pUrl])
   const title: string = props.node.attrs.title || ''
   const sizeMode: H5PSizeMode = normalizeSizeMode(props.node.attrs.sizeMode)
   const isAuto = isAutoSized(sizeMode)
@@ -349,7 +354,7 @@ function H5PBlockComponent(props: any) {
       // content that already handed its scrolling over never takes it back.
       key={isAuto ? 'h5p-auto' : 'h5p-manual'}
       ref={iframeRef}
-      src={h5pUrl}
+      src={frameSrc || undefined}
       title={frameTitle}
       className="w-full block border-0 rounded-lg bg-white"
       style={{ height: `${displayHeight}px` }}

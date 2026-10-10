@@ -4,6 +4,7 @@ import { Link as LinkIcon, DotsSixVertical, DotsSix, TextAlignCenter, Code, X, P
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiNotion, SiGoogledocs, SiX, SiFigma, SiGiphy, SiYoutube } from '@icons-pack/react-simple-icons'
 import DOMPurify from 'dompurify'
+import { sanitizeEmbedCode } from '@/lib/media/embedSanitize'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 
@@ -202,13 +203,7 @@ function EmbedObjectsComponent(props: any) {
     if (!embedCode) {
       return ''
     }
-    return DOMPurify.sanitize(embedCode, {
-      ADD_TAGS: ['iframe'],
-      ALLOWED_ATTR: [
-        'src', 'frameborder', 'allowfullscreen', 'allow', 'width', 'height',
-        'style', 'class', 'title', 'loading', 'referrerpolicy', 'scrolling', 'name',
-      ],
-    })
+    return sanitizeEmbedCode(embedCode)
   }, [embedCode])
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -684,7 +684,7 @@ function OrgUsers() {
                           <Select
                             value={user.role.role_uuid}
                             onValueChange={(newRoleUuid) => handleRoleChange(user.user.id, newRoleUuid)}
-                            disabled={!roles || !canManageOrg}
+                            disabled={!roles || !canManageOrg || user.user.id === session?.data?.user?.id}
                           >
                             <SelectTrigger className={`h-8 w-fit px-3 text-xs font-semibold rounded-md nice-shadow transition-all border-0 ${
                               user.role.name.toLowerCase().includes('admin')

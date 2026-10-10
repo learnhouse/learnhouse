@@ -72,7 +72,15 @@ const PaymentsConfigurationPage: React.FC = () => {
   });
 
   useEffect(() => {
+    // The OAuth callback page posts from this origin or the main app domain.
+    const trustedOrigins = new Set([window.location.origin]);
+    try {
+      trustedOrigins.add(new URL(getMainDomainUri('/')).origin);
+    } catch {
+      /* misconfigured domain: same origin only */
+    }
     const handleMessage = (event: MessageEvent) => {
+      if (!trustedOrigins.has(event.origin)) return;
       if (event.data?.type === 'payment_provider_connected') {
         queryClient.invalidateQueries({ queryKey: queryKeys.payments.configs(org?.id) });
       }

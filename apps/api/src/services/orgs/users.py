@@ -20,7 +20,7 @@ from src.db.roles import Role, RoleRead
 from src.db.user_organizations import UserOrganization
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
-from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
 from src.security.auth import resolve_acting_user_id
 from src.security.features_utils.usage import (
     check_members_limit_with_pending,
@@ -40,10 +40,9 @@ from src.security.org_auth import (
     require_org_destroy_right,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
-from src.security.superadmin import is_user_superadmin
 from src.services.orgs.invites import send_invite_email
 from src.services.demo.guards import hide_other_visitors
-from src.services.orgs.orgs import rbac_check
+from src.services.orgs.orgs import is_org_admin_role, rbac_check
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.users.emails import send_role_changed_email
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -88,6 +87,22 @@ def _looks_like_email(value: str) -> bool:
     if any(ord(c) < 32 or ord(c) == 127 for c in value):
         return False
     return bool(_EMAIL_RE.match(value))
+
+
+async def _require_admin_to_touch_admins(
+    request: Request,
+    org: Organization,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+) -> None:
+    """Only Admins (or superadmins) may act on another Admin's membership."""
+    if isinstance(current_user, (InternalUser, APITokenUser)):
+        return
+    if not await is_org_admin_role(current_user.id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="Only organization administrators can remove an administrator",
+        )
 
 
 async def get_organization_users(
@@ -573,6 +588,10 @@ async def remove_user_from_org(
             detail="User not found",
         )
 
+    # Maintainers may remove members, but not Admins.
+    if user_org.role_id == ADMIN_ROLE_ID:
+        await _require_admin_to_touch_admins(request, org, current_user, db_session)
+
     # Check if user is the last admin
     statement = select(UserOrganization).where(
         UserOrganization.org_id == org.id, UserOrganization.role_id == ADMIN_ROLE_ID
@@ -683,6 +702,9 @@ async def remove_batch_users_from_org(
     )
     admins = (await db_session.execute(admin_statement)).scalars().all()
     admin_ids = {a.user_id for a in admins}
+
+    if admin_ids & set(user_ids):
+        await _require_admin_to_touch_admins(request, org, current_user, db_session)
 
     # Check if removing these users would remove all admins
     remaining_admins = admin_ids - set(user_ids)
@@ -798,8 +820,25 @@ async def update_user_role(
             detail="Organization not found",
         )
 
-    # RBAC check
+    # Global roles have no org; any other role must belong to this org.
+    if role.org_id is not None and role.org_id != org.id:
+        raise HTTPException(
+            status_code=404,
+            detail="Role not found",
+        )
+
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    from src.security.superadmin import is_user_superadmin
+    if (
+        not isinstance(current_user, (InternalUser, APITokenUser))
+        and current_user.id == user_id
+        and not await is_user_superadmin(current_user.id, db_session)
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot change your own role",
+        )
 
     # Handing out Admin or Maintainer is reserved for Admins: a maintainer
     # must not be able to promote themselves (or anyone) past their own role.

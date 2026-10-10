@@ -79,7 +79,8 @@ async def send_reset_password_code(
     - Logs attempts for security audit
     """
     # Rate limit by IP before any email lookup (prevents enumeration timing attacks)
-    _ip = request.client.host if request.client else "unknown"
+    from src.services.security.rate_limiting import get_client_ip
+    _ip = get_client_ip(request)
     ip_rate_key = f"pwd_reset_ip:{_ip}"
     try:
         _r_ip = _get_redis_connection()
@@ -155,8 +156,13 @@ async def send_reset_password_code(
         ex=ttl,
     )
 
+    from src.services.email.safe_text import email_org_name, email_user_name
+
+    # Scrub names rendered into the mail; the address itself stays untouched.
     user_read = UserRead.model_validate(user)
+    user_read = user_read.model_copy(update={"username": email_user_name(user_read.username)})
     org_read = OrganizationRead.model_validate(org)
+    org_read = org_read.model_copy(update={"name": email_org_name(org_read.name)})
 
     org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
     org_config = (await db_session.execute(org_config_stmt)).scalars().first()
@@ -351,7 +357,10 @@ async def send_reset_password_code_platform(
         ex=ttl,
     )
 
+    from src.services.email.safe_text import email_user_name
+
     user_read = UserRead.model_validate(user)
+    user_read = user_read.model_copy(update={"username": email_user_name(user_read.username)})
 
     base_url = get_base_url_from_request(request)
     isEmailSent = send_password_reset_email_platform(

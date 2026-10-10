@@ -42,6 +42,7 @@ import {
   GlobeSimple,
 } from '@phosphor-icons/react'
 import Link from 'next/link'
+import { MarkdownImageLink } from '@components/Objects/Activities/AI/MarkdownImageLink'
 
 export type CopilotProps = {
   orgslug: string
@@ -1029,6 +1030,7 @@ export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = 
       li: ({ children, ...props }: any) => <li {...props}>{processChildren(children)}</li>,
       td: ({ children, ...props }: any) => <td {...props}>{processChildren(children)}</td>,
       th: ({ children, ...props }: any) => <th {...props}>{processChildren(children)}</th>,
+      img: ({ src, alt }: any) => <MarkdownImageLink src={src} alt={alt} />,
       strong: ({ children, ...props }: any) => <strong {...props}>{processChildren(children)}</strong>,
       em: ({ children, ...props }: any) => <em {...props}>{processChildren(children)}</em>,
       blockquote: ({ children, ...props }: any) => (

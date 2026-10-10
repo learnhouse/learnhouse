@@ -123,9 +123,13 @@ def send_magic_login_email(
         _email_layout,
     )
 
+    from src.services.email.safe_text import email_org_name, email_user_name
+
+    # Names are attacker-controllable; never relay a link or header break.
+    org_name = email_org_name(org_name) if org_name else None
     safe_token = quote(token, safe="")
     login_url = f"{base_url.rstrip('/')}/auth/magic?token={safe_token}"
-    safe_name = html.escape(user.username or user.email)
+    safe_name = html.escape(email_user_name(user.username) if user.username else user.email)
     white_label = bool(org_name)
     brand = html.escape(org_name) if org_name else "LearnHouse"
 

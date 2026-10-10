@@ -48,6 +48,16 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
+def _is_bare_filename(value: str) -> bool:
+    """Thumbnail names are joined onto the course's thumbnails dir, so they
+    must be a bare file name: no separators, traversal, NUL or absolute path."""
+    if not value or "\x00" in value:
+        return False
+    if "/" in value or "\\" in value:
+        return False
+    return value not in (".", "..") and not value.startswith(".")
+
+
 async def get_course(
     request: Request,
     course_uuid: str,
@@ -879,6 +889,17 @@ async def update_course(
                 detail=f"You must be the course owner (CREATOR or MAINTAINER) or have admin role to change access settings: {', '.join(sensitive_fields_updated)}",
             )
 
+    # SECURITY: thumbnail names end up in storage paths (clone copies them);
+    # only accept bare file names. Unchanged values are echoed back by the
+    # dashboard on every save, so leave those alone.
+    for field in ("thumbnail_image", "thumbnail_video"):
+        value = getattr(course_object, field)
+        if value and value != getattr(course, field) and not _is_bare_filename(value):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid {field}",
+            )
+
     # Track published state before update for webhook
     old_published = course.published
 
@@ -1241,8 +1262,9 @@ async def clone_course(
             detail="Course not found",
         )
 
-    # RBAC check - user needs read access to clone
-    await check_resource_access(request, db_session, current_user, original_course.course_uuid, AccessAction.READ)
+    # RBAC check - cloning copies drafts, paid/locked content and quiz answers,
+    # so require edit rights on the source (same bar as export).
+    await check_resource_access(request, db_session, current_user, original_course.course_uuid, AccessAction.UPDATE)
 
     # Also check if user can create courses
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
@@ -1302,7 +1324,7 @@ async def clone_course(
         os.makedirs(f"{new_course_path}/thumbnails", exist_ok=True)
 
     # Copy thumbnail image if exists (thumbnails are in a subdirectory)
-    if original_course.thumbnail_image:
+    if original_course.thumbnail_image and _is_bare_filename(original_course.thumbnail_image):
         original_thumbnail_path = f"{original_course_path}/thumbnails/{original_course.thumbnail_image}"
         if file_exists(original_thumbnail_path):
             new_thumbnail_name = f"{new_course_uuid}_thumbnail_{uuid4()}.{original_course.thumbnail_image.split('.')[-1]}"
@@ -1311,7 +1333,7 @@ async def clone_course(
             new_course.thumbnail_image = new_thumbnail_name
 
     # Copy thumbnail video if exists (also in thumbnails subdirectory)
-    if original_course.thumbnail_video:
+    if original_course.thumbnail_video and _is_bare_filename(original_course.thumbnail_video):
         original_video_path = f"{original_course_path}/thumbnails/{original_course.thumbnail_video}"
         if file_exists(original_video_path):
             new_video_name = f"{new_course_uuid}_thumbnail_{uuid4()}.{original_course.thumbnail_video.split('.')[-1]}"

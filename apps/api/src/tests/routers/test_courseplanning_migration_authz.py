@@ -422,6 +422,14 @@ class TestFinalizeCoursePlanRequiresCreateRight:
     async def test_admin_still_finalizes_and_becomes_the_creator(
         self, db, org, admin_role, admin_user, mock_request
     ):
+        from src.db.organization_config import OrganizationConfig
+
+        # Finalize now applies the course limit, which needs an org config.
+        db.add(OrganizationConfig(
+            org_id=org.id, config={"config_version": "2.0", "plan": "free"},
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
