@@ -10,6 +10,7 @@ Extracts text from all course content types:
 - Custom blocks (text content)
 """
 
+import asyncio
 import logging
 import os
 from typing import Optional
@@ -233,6 +234,14 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> str:
         return ""
 
 
+def _read_pdf_text(file_path: str) -> str:
+    """Blocking: read a PDF from storage and extract its text."""
+    pdf_bytes = read_file_content(file_path)
+    if not pdf_bytes:
+        return ""
+    return extract_text_from_pdf(pdf_bytes)
+
+
 def _extract_block_content(block: Block, activity_name: str) -> Optional[dict]:
     """
     Extract text content from a block based on its type.
@@ -381,7 +390,11 @@ async def extract_all_course_content(
                 select(Block).where(Block.activity_id == activity_id)
             )).scalars().all()
             for block in blocks:
-                block_content = _extract_block_content(block, activity_name)
+                if block.block_type == BlockTypeEnum.BLOCK_DOCUMENT_PDF:
+                    # Storage read + PDF parse are blocking; keep them off the loop
+                    block_content = await asyncio.to_thread(_extract_block_content, block, activity_name)
+                else:
+                    block_content = _extract_block_content(block, activity_name)
                 if block_content:
                     results.append({
                         "text": block_content["text"],
@@ -400,20 +413,18 @@ async def extract_all_course_content(
             if content and isinstance(content, dict):
                 file_path = content.get("file_id") or content.get("uri") or content.get("file_path", "")
                 if file_path and _is_safe_content_path(file_path):
-                    pdf_bytes = read_file_content(file_path)
-                    if pdf_bytes:
-                        text = extract_text_from_pdf(pdf_bytes)
-                        if text:
-                            results.append({
-                                "text": text,
-                                "activity_id": activity_id,
-                                "activity_uuid": activity_uuid,
-                                "activity_name": activity_name,
-                                "chapter_name": chapter_name,
-                                "course_name": course_name,
-                                "source_type": "document_activity",
-                                "block_uuid": None,
-                            })
+                    text = await asyncio.to_thread(_read_pdf_text, file_path)
+                    if text:
+                        results.append({
+                            "text": text,
+                            "activity_id": activity_id,
+                            "activity_uuid": activity_uuid,
+                            "activity_name": activity_name,
+                            "chapter_name": chapter_name,
+                            "course_name": course_name,
+                            "source_type": "document_activity",
+                            "block_uuid": None,
+                        })
 
     logger.info(
         "Extracted %d content chunks from course %d (%s)",

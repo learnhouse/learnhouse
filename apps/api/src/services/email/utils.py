@@ -85,7 +85,13 @@ def _is_verified_custom_domain(host: str) -> bool:
     if not cached:
         return False
     allowed, expires_at = cached
-    return bool(allowed) and expires_at > time.monotonic()
+    if not (bool(allowed) and expires_at > time.monotonic()):
+        return False
+    # Origin-derived links carry reset/magic codes: also require the domain's
+    # live DNS to still point at the platform (cached; fails closed).
+    from src.services.orgs.custom_domains import domain_points_at_platform
+
+    return domain_points_at_platform(host)
 
 
 def _is_allowed_base_url(url: str) -> bool:
@@ -216,8 +222,13 @@ async def get_org_signup_base_url(
 
     if db_session is not None and org_id is not None:
         custom_domain = await _get_primary_verified_custom_domain(db_session, org_id)
+        # A verified domain can be repointed away later; never email a
+        # credential-bearing link to it unless its DNS still routes to us.
         if custom_domain:
-            return f"{scheme}://{custom_domain}"
+            from src.services.orgs.custom_domains import custom_domain_points_at_platform
+
+            if await custom_domain_points_at_platform(custom_domain, org_slug):
+                return f"{scheme}://{custom_domain}"
 
     base_domain = (config.hosting_config.domain or "").strip().rstrip("/")
     if not base_domain or "localhost" in base_domain:

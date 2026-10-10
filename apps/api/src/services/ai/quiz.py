@@ -91,8 +91,13 @@ async def generate_quiz(
     num_questions: int = 5,
     difficulty: str | None = None,
     session_uuid: str | None = None,
+    user_id: int | None = None,
 ) -> tuple[dict, str]:
-    """Generate a `blockQuiz` payload. Returns ``(block_quiz_attrs, session_uuid)``."""
+    """Generate a `blockQuiz` payload. Returns ``(block_quiz_attrs, session_uuid)``.
+
+    ``user_id`` is recorded as the refine session's owner; the router checks
+    ownership of a client-supplied ``session_uuid`` before calling this.
+    """
     num_questions = max(1, min(num_questions, MAX_QUESTIONS))
 
     context = ""
@@ -122,7 +127,10 @@ async def generate_quiz(
     # (persist the generated questions, not just a count).
     assistant_turn = json.dumps(block_quiz.get("questions", []))
     try:
-        save_message_to_history(resolved_session_uuid, prompt.strip(), assistant_turn, org_id=org_id)
+        save_message_to_history(
+            resolved_session_uuid, prompt.strip(), assistant_turn,
+            user_id=user_id, org_id=org_id, listed=False,
+        )
     except Exception:
         logger.debug("Failed to persist quiz refine history", exc_info=True)
 

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@components/Contexts/AuthContext'
+import { removeQueryParamsFromAddressBar } from '@services/utils/ts/scrubUrl'
 
 /**
  * Consumes a passwordless login link: reads ?token from the URL and hands it to
@@ -41,6 +42,7 @@ export default function MagicLinkConsumePage() {
     const run = async () => {
       const params = new URLSearchParams(window.location.search)
       const token = params.get('token')
+      removeQueryParamsFromAddressBar(['token'])
 
       if (!token) {
         setError('This link is missing its token. Request a new one to sign in.')

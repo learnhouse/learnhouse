@@ -421,6 +421,8 @@ class TestEditorAIAuthorization:
             editor_service,
             "get_chat_session_history",
             return_value={"aichat_uuid": "chat_1", "message_history": []},
+        ), patch.object(
+            editor_service, "chat_session_belongs_to_user", return_value=True
         ):
             context = await editor_service.editor_ai_send_message_stream(
                 chat_obj, admin_user, db

@@ -35,6 +35,7 @@ from src.db.user_audit_events import UserAuditEventType
 from src.services.dev.dev import isDevModeEnabled
 from src.services.security.rate_limiting import (
     check_login_rate_limit,
+    check_rate_limit,
     check_refresh_rate_limit,
     check_email_verification_rate_limit,
     get_client_ip,
@@ -577,11 +578,12 @@ async def login(
     client_ip = get_client_ip(request)
     await update_login_info(user, client_ip, db_session)
 
-    # Durable connection record for the per-student audit log. Org-agnostic:
-    # a login authenticates the user, not a single org membership.
+    # Durable connection record for the per-student audit log, filed under the
+    # org the login page named (if any) so each org only sees its own logins.
     await record_audit_event(
         event_type=UserAuditEventType.LOGIN,
         user_id=user.id,
+        org_id=session_org_id,
         ip=client_ip,
         user_agent=request.headers.get("user-agent"),
         metadata={"method": "password"},
@@ -899,6 +901,10 @@ class MagicLinkLoginRequest(BaseModel):
     org_slug: Optional[str] = None
 
 
+MAGIC_LINK_MAX_PER_EMAIL = 5
+MAGIC_LINK_EMAIL_WINDOW_SECONDS = 15 * 60
+
+
 class MagicLinkVerifyRequest(BaseModel):
     token: str
 
@@ -935,6 +941,17 @@ async def magic_link_request(
         )
 
     generic = {"detail": "If an account exists for that email, a login link has been sent."}
+
+    # Per-recipient cap so one inbox can't be flooded from many IPs. Checked
+    # before the user lookup and answered with the same generic body, so it
+    # reveals nothing about whether the account exists.
+    email_allowed, _email_count, _retry = check_rate_limit(
+        key=f"magic_link:{str(body.email).lower()}",
+        max_attempts=MAGIC_LINK_MAX_PER_EMAIL,
+        window_seconds=MAGIC_LINK_EMAIL_WINDOW_SECONDS,
+    )
+    if not email_allowed:
+        return generic
 
     org = await resolve_org(body.org_slug, db_session)
     # If the request is scoped to an org that does not offer magic-link login,

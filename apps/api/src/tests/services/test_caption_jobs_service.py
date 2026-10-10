@@ -56,6 +56,9 @@ def test_enqueue_pushes(monkeypatch):
     pushed = []
 
     class _R:
+        def set(self, key, val, nx=False, ex=None):
+            return True
+
         def rpush(self, key, val):
             pushed.append((key, val))
 

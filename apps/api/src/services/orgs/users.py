@@ -20,7 +20,15 @@ from src.db.roles import Role, RoleRead
 from src.db.user_organizations import UserOrganization
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
-from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
+from src.db.users import (
+    AnonymousUser,
+    APITokenUser,
+    InternalUser,
+    OrgMemberUserRead,
+    PublicUser,
+    User,
+    UserRead,
+)
 from src.security.auth import resolve_acting_user_id
 from src.security.features_utils.usage import (
     check_members_limit_with_pending,
@@ -319,6 +327,9 @@ async def get_organization_users(
         except Exception:
             logging.debug("visit_days enrichment unavailable", exc_info=True)
 
+        from src.services.orgs.signup_fields import get_org_signup_fields
+        member_meta_keys: set[str] | None = None  # loaded on first listed row
+
         for user in users:
             user_org = user_org_map.get(user.id)
             if not user_org:
@@ -330,13 +341,22 @@ async def get_organization_users(
                 logging.error(f"Role {user_org.role_id} not found")
                 continue
 
-            user_read = UserRead.model_validate(user)
+            # SECURITY: org admins get the org-scoped member view: no
+            # is_superadmin, and extra_metadata limited to THIS org's declared
+            # signup fields (the column holds answers from every org the
+            # account joined). model_construct keeps that view intact instead
+            # of re-coercing it into the full UserRead the field is typed as.
+            if member_meta_keys is None:
+                member_meta_keys = {
+                    f.key for f in await get_org_signup_fields(org_id, db_session)
+                }
+            user_read = OrgMemberUserRead.for_org(user, member_meta_keys)
             role_read = RoleRead.model_validate(role)
             usergroups = user_usergroups_map.get(user.id, [])
 
             _days = visit_days_map.get(user.id, 0)
 
-            org_user = OrganizationUser(
+            org_user = OrganizationUser.model_construct(
                 user=user_read,
                 role=role_read,
                 usergroups=usergroups,

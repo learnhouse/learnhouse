@@ -64,6 +64,14 @@ async def create_media(
     # still answers 404 rather than "not a member of it".
     await _get_org_uuid(db_session, media_object.org_id)
 
+    # An API token is scoped to its own org: the form's org_id must not let it
+    # write into another org its creator happens to belong to.
+    if isinstance(current_user, APITokenUser) and current_user.org_id != media_object.org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="API token cannot access resources outside its organization",
+        )
+
     # `media_x` is a placeholder, not a real uuid, so RBAC cannot resolve a
     # target org from it and falls back to the caller's roles in ANY org. The
     # org is caller-supplied here, so pin the create right to THAT org first.
@@ -250,6 +258,9 @@ async def get_media_list(
     limit: int = 50,
 ) -> List[MediaRead]:
     org_id_int = int(org_id)
+    # Bound page size; negative/zero values would yield bad offsets
+    page = max(1, int(page if page is not None else 1))
+    limit = min(max(1, int(limit if limit is not None else 50)), 100)
     user_id = resolve_acting_user_id(current_user)
     # Membership in the requested org, not merely being signed in, is what
     # opens up the private library. A logged-in non-member sees exactly what an

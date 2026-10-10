@@ -23,6 +23,13 @@ from src.security.auth import decode_jwt, get_current_user
 from src.security.session_context import AMR_CLAIM, SORG_CLAIM
 
 
+@pytest.fixture(autouse=True)
+def _no_per_email_limit():
+    """Keep the per-recipient counter out of these tests (it would hit Redis)."""
+    with patch("src.routers.auth.check_rate_limit", return_value=(True, 1, 900)):
+        yield
+
+
 @pytest.fixture
 def app(db):
     app = FastAPI()

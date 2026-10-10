@@ -2,12 +2,14 @@
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from src.services.ai.schemas.limits import AI_MESSAGE_MAX_CHARS
 
 
 class GenerateImageRequest(BaseModel):
     org_id: int
-    prompt: str
+    prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     # Ephemeral refine-session id (Redis). Omitted on the first generation; the
     # response returns a session_uuid to pass back on subsequent refine turns.
     session_uuid: Optional[str] = None
@@ -16,7 +18,8 @@ class GenerateImageRequest(BaseModel):
     # (no client fetch → no CORS/credentials issues). Preferred over base64.
     source_file_id: Optional[str] = None
     # Fallback: the source image sent back as a base64 data URL (client-held).
-    source_image_base64: Optional[str] = None
+    # ~15MB image as a base64 data URL
+    source_image_base64: Optional[str] = Field(default=None, max_length=21_000_000)
     # Optional context the image is generated for (recorded in durable history).
     course_id: Optional[int] = None
     activity_id: Optional[int] = None

@@ -194,8 +194,18 @@ class TestUsergroupMembers:
         ))
         await db.commit()
 
+        # The roster is a management view: a learner is refused outright,
+        # and even a manager only gets the public projection.
+        from fastapi import HTTPException
+
+        with pytest.raises(HTTPException) as exc_info:
+            await get_users_linked_to_usergroup(
+                mock_request, db, regular_user, usergroup.id
+            )
+        assert exc_info.value.status_code == 403
+
         users = await get_users_linked_to_usergroup(
-            mock_request, db, regular_user, usergroup.id
+            mock_request, db, admin_user, usergroup.id
         )
 
         assert users

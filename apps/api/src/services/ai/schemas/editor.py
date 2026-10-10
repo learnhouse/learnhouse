@@ -1,13 +1,15 @@
 from typing import Optional, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from src.services.ai.schemas.limits import AI_CONTEXT_MAX_CHARS, AI_MESSAGE_MAX_CHARS
 
 
 class StartEditorAIChatSession(BaseModel):
     """Request to start a new AI editor chat session"""
     activity_uuid: str
-    message: str
+    message: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     current_content: Any  # TipTap JSON content
-    selected_text: Optional[str] = None
+    selected_text: Optional[str] = Field(default=None, max_length=AI_CONTEXT_MAX_CHARS)
     cursor_position: Optional[int] = None  # Cursor position in editor
 
 
@@ -15,9 +17,9 @@ class SendEditorAIChatMessage(BaseModel):
     """Request to send a message in an existing editor AI chat session"""
     aichat_uuid: str
     activity_uuid: str
-    message: str
+    message: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     current_content: Any  # TipTap JSON content
-    selected_text: Optional[str] = None
+    selected_text: Optional[str] = Field(default=None, max_length=AI_CONTEXT_MAX_CHARS)
     cursor_position: Optional[int] = None  # Cursor position in editor
 
 

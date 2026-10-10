@@ -114,6 +114,42 @@ class UserReadAuthor(SQLModel):
     avatar_image: Optional[str] = ""
 
 
+class OrgMemberUserRead(SQLModel):
+    """A member as seen by an org admin (members list, admin-token user reads).
+
+    SECURITY: ``User`` is a global account shared across every org it joins.
+    ``extra_metadata`` collects signup-field answers from *all* of those orgs,
+    and ``is_superadmin`` is platform-level. An org admin must see neither, so
+    this view drops ``is_superadmin`` and the caller filters ``extra_metadata``
+    down to the keys of the viewing org's own declared signup fields (see
+    ``for_org``). ``signup_method``/``last_login_at`` stay: the members table
+    renders them.
+    """
+    id: int
+    user_uuid: str
+    username: str
+    first_name: str
+    last_name: str
+    email: str
+    email_verified: bool = False
+    avatar_image: Optional[str] = ""
+    bio: Optional[str] = ""
+    details: Optional[dict] = None
+    profile: Optional[dict] = None
+    extra_metadata: Optional[dict] = None
+    last_login_at: Optional[str] = None
+    signup_method: Optional[str] = None
+
+    @classmethod
+    def for_org(cls, user, allowed_keys) -> "OrgMemberUserRead":
+        """Build the view, keeping only ``allowed_keys`` of ``extra_metadata``."""
+        read = cls.model_validate(user, from_attributes=True)
+        meta = read.extra_metadata or {}
+        keys = set(allowed_keys or ())
+        read.extra_metadata = {k: v for k, v in meta.items() if k in keys}
+        return read
+
+
 class PublicUser(UserRead):
     pass
 

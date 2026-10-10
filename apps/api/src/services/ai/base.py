@@ -74,8 +74,15 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
         "aichat_uuid": session_id
     }
 
-def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: str, user_id: Optional[int] = None, course_uuid: Optional[str] = None, sources: Optional[list] = None, mode: str = "course_only", org_id: Optional[int] = None):
-    """Save a message exchange to Redis history. Auto-creates session metadata on first message."""
+def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: str, user_id: Optional[int] = None, course_uuid: Optional[str] = None, sources: Optional[list] = None, mode: str = "course_only", org_id: Optional[int] = None, listed: bool = True):
+    """Save a message exchange to Redis history. Auto-creates session metadata on first message.
+
+    Pass ``user_id`` on every call: the metadata it creates is what binds the
+    session to its owner, and :func:`chat_session_belongs_to_user` refuses a
+    session that has history but no owner. ``listed=False`` records the owner
+    without adding the session to the user's chat sidebar (refine sessions for
+    quiz/scenario/assignment/editor generation).
+    """
     LH_CONFIG = get_learnhouse_config()
     redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
 
@@ -120,7 +127,7 @@ def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: st
             title = user_message[:50].strip()
             if len(user_message) > 50:
                 title += "..."
-            save_chat_session_meta(aichat_uuid, user_id, title, course_uuid, mode=mode, org_id=org_id)
+            save_chat_session_meta(aichat_uuid, user_id, title, course_uuid, mode=mode, org_id=org_id, listed=listed)
 
     except Exception as e:
         logger.error("Failed to save message to Redis: %s", e, exc_info=True)
@@ -138,7 +145,7 @@ def _get_redis():
     return redis.from_url(conn, socket_connect_timeout=5, socket_timeout=5)
 
 
-def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uuid: Optional[str] = None, mode: str = "course_only", org_id: Optional[int] = None):
+def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uuid: Optional[str] = None, mode: str = "course_only", org_id: Optional[int] = None, listed: bool = True):
     """Store session metadata and add to user's session index."""
     r = _get_redis()
     if not r:
@@ -156,8 +163,9 @@ def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uu
             "mode": mode,
         }
         r.setex(f"chat_meta:{aichat_uuid}", CHAT_TTL, json.dumps(meta))
-        r.zadd(f"user_chats:{user_id}", {aichat_uuid: now.timestamp()})
-        r.expire(f"user_chats:{user_id}", CHAT_TTL)
+        if listed:
+            r.zadd(f"user_chats:{user_id}", {aichat_uuid: now.timestamp()})
+            r.expire(f"user_chats:{user_id}", CHAT_TTL)
     except Exception as e:
         logger.error("Failed to save chat session meta: %s", e, exc_info=True)
 
@@ -197,11 +205,10 @@ def chat_session_belongs_to_user(aichat_uuid: str, user_id: int) -> bool:
     """Return True if the chat session is owned by ``user_id``.
 
     Ownership is recorded in the ``chat_meta:<uuid>`` Redis key (see
-    :func:`save_chat_session_meta`). A session with no metadata (brand-new or
-    expired) is treated as ownable by the caller; the IDOR risk we guard
-    against is reusing *another* user's existing session, which always has a
-    populated ``user_id``. This mirrors the ownership check in
-    :func:`get_chat_messages` / :func:`delete_chat_session`.
+    :func:`save_chat_session_meta`). A uuid with neither metadata nor history
+    is unclaimed (brand-new or fully expired) and may be taken by the caller.
+    A uuid that has history but no metadata fails closed: its owner is
+    unknown, so nobody may read it through the model or append to it.
     """
     r = _get_redis()
     if not r:
@@ -209,7 +216,7 @@ def chat_session_belongs_to_user(aichat_uuid: str, user_id: int) -> bool:
     try:
         meta_data = r.get(f"chat_meta:{aichat_uuid}")
         if not meta_data:
-            return True
+            return not r.exists(f"chat_history:{aichat_uuid}")
         meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
         return meta.get("user_id") == user_id
     except Exception as e:

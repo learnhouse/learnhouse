@@ -206,6 +206,28 @@ async function proxyRequest(
   // Handle logout locally: clear cookies and return 200
   // Try backend invalidation but don't fail if it errors
   if (pathSegments === 'logout' || pathSegments.endsWith('/logout')) {
+    // POST only, same-origin when the browser says where it came from: a GET
+    // (or cross-site POST) would let any page or <img> log users out.
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405, headers: { Allow: 'POST' } })
+    }
+    const origin = request.headers.get('origin')
+    if (origin) {
+      let originHost = ''
+      try {
+        originHost = new URL(origin).host.toLowerCase()
+      } catch {
+        /* "null" or malformed: treated as cross-origin */
+      }
+      const requestHost = (request.headers.get('x-forwarded-host') || request.headers.get('host') || '')
+        .split(',')[0]
+        .trim()
+        .toLowerCase()
+      if (!originHost || originHost !== requestHost) {
+        return NextResponse.json({ error: 'Cross-origin logout rejected' }, { status: 403 })
+      }
+    }
+
     // Best-effort backend token invalidation
     try {
       const logoutHeaders: HeadersInit = {}

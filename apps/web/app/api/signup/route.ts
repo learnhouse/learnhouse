@@ -109,6 +109,11 @@ export async function POST(request: NextRequest) {
     ...(custom_fields ? { custom_fields } : {}),
   }
 
+  // org_id is interpolated into the backend path, so it must be a plain id.
+  if (org_id !== undefined && org_id !== null && org_id !== '' && !/^\d+$/.test(String(org_id))) {
+    return NextResponse.json({ detail: 'Invalid organization.' }, { status: 400 })
+  }
+
   let url: string
   if (inviteCode) {
     if (!org_id) {

@@ -169,9 +169,9 @@ async def _identity(db_session: AsyncSession, user_id: int, org_id: int) -> dict
             "email_verified_at": user.email_verified_at,
             "signup_method": user.signup_method,
             "last_login_at": user.last_login_at,
-            "last_login_ip": user.last_login_ip,
-            "failed_login_attempts": user.failed_login_attempts,
-            "locked_until": user.locked_until,
+            # SECURITY: last_login_ip / failed_login_attempts / locked_until are
+            # account-global login state (the login may have been into another
+            # org), so an org admin's dossier does not carry them.
             "password_changed_at": (
                 user.password_changed_at.isoformat()
                 if user.password_changed_at else None
@@ -185,14 +185,16 @@ async def _connections_and_timeline(
 ) -> tuple[list[dict], list[dict]]:
     """Return (connections, full_event_timeline) from the durable audit log.
 
-    Connections (login/logout) are org-agnostic, so they are matched on user_id
-    regardless of org. Activity events are filtered to this org (or org-agnostic).
+    SECURITY: only events recorded against THIS org are returned. Rows with a
+    NULL org_id (login/logout, which are recorded org-agnostically) describe the
+    account's activity across every org it belongs to, IPs and devices
+    included, so they are not an org admin's to read.
     """
     rows = (await db_session.execute(
         select(UserAuditEvent)
         .where(
             UserAuditEvent.user_id == user_id,
-            (UserAuditEvent.org_id == org_id) | (UserAuditEvent.org_id.is_(None)),  # type: ignore[union-attr]
+            UserAuditEvent.org_id == org_id,
         )
         .order_by(UserAuditEvent.created_at.desc())  # type: ignore[union-attr]
     )).scalars().all()

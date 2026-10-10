@@ -602,7 +602,8 @@ class TestSuggestStructureIsGated:
         self, db, org, admin_role, admin_user, migration_package, llm_generate,
         no_redis, mock_request,
     ):
-        with patch.object(mig, "enforce_ai_rate_limit") as rate:
+        with patch.object(mig, "enforce_ai_rate_limit") as rate, \
+             patch.object(mig, "reserve_ai_credit", new=AsyncMock()):
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
@@ -613,22 +614,36 @@ class TestSuggestStructureIsGated:
         # authorization allowed.
         rate.assert_called_once_with(admin_user.id, org.id)
 
-    async def test_suggestion_is_not_billed_as_an_ai_credit(
+    async def test_suggestion_is_billed_as_an_ai_credit(
         self, db, org, admin_role, admin_user, migration_package, llm_generate,
         no_redis, mock_request,
     ):
-        """Metering this would match the /ai routers, but it would also start
-        refusing a call that is free today (orgs out of credits, and orgs with
-        no config row, which reserve_ai_credit answers 404 for). Pinned so the
-        choice stays deliberate."""
+        """Metered like the /ai routers so it is not a free model-spend path."""
+        reserve = AsyncMock()
         with patch.object(mig, "enforce_ai_rate_limit"), \
-             patch("src.security.features_utils.usage.reserve_ai_credit") as reserve:
+             patch.object(mig, "reserve_ai_credit", new=reserve):
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
 
         assert result.course_name == "Suggested Course"
-        reserve.assert_not_called()
+        reserve.assert_awaited_once()
+
+    async def test_suggestion_credit_refunded_on_failure(
+        self, db, org, admin_role, admin_user, no_redis, mock_request,
+    ):
+        refund = MagicMock()
+        with patch.object(mig, "enforce_ai_rate_limit"), \
+             patch.object(mig, "reserve_ai_credit", new=AsyncMock()), \
+             patch.object(mig, "refund_ai_credit", new=refund):
+            with pytest.raises(HTTPException):
+                await mig.api_suggest_structure(
+                    mock_request, org.id,
+                    self._body("00000000-0000-4000-8000-000000000000"),
+                    admin_user, db,
+                )
+
+        refund.assert_called_once_with(org.id)
 
 
 class TestUploadAndCreateAreGated:

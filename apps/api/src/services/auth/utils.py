@@ -302,6 +302,7 @@ async def signWithGoogle(
     await record_audit_event(
         event_type=UserAuditEventType.LOGIN,
         user_id=user.id,
+        org_id=org_id,
         ip=client_ip,
         user_agent=request.headers.get("user-agent"),
         metadata={"method": "google"},

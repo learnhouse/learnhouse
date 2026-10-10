@@ -11,6 +11,7 @@ from src.db.users import PublicUser
 from src.security.auth import get_authenticated_user, resolve_acting_user_id
 from src.security.org_auth import is_org_member, enforce_org_mfa, require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
+from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
 from src.services.security.rate_limiting import enforce_ai_rate_limit
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
@@ -174,15 +175,9 @@ async def api_suggest_structure(
     claim_migration_package(body.temp_id, user_id)
 
     # This endpoint spends the server's provider key on a caller-supplied
-    # prompt, so it is rate limited per user and per org like the /ai routers.
-    # That is what bounds the abuse the missing authorization allowed.
-    #
-    # It deliberately does NOT reserve an AI credit. Metering it would be
-    # consistent with the /ai routers, but it would also start refusing a call
-    # that is free today: for orgs out of credits, and (via a 404 from
-    # reserve_ai_credit) for orgs with no config row. Billing this belongs in
-    # its own change, not in an authorization fix.
+    # prompt, so it is rate limited and metered like the /ai routers.
     enforce_ai_rate_limit(user_id, org_id)
+    await reserve_ai_credit(org_id, db_session)
 
     try:
         return await suggest_structure(
@@ -191,7 +186,18 @@ async def api_suggest_structure(
             description=body.description,
         )
     except ValueError as e:
+        _refund_suggest_credit(org_id)
         raise _migration_value_error_to_http(e) from e
+    except Exception:
+        _refund_suggest_credit(org_id)
+        raise
+
+
+def _refund_suggest_credit(org_id: int) -> None:
+    try:
+        refund_ai_credit(org_id)
+    except Exception:
+        pass
 
 
 @router.post(

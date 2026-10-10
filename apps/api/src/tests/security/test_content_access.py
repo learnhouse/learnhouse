@@ -101,7 +101,7 @@ class TestCheckContentAccess:
         from unittest.mock import patch
         import src.routers.local_content as lc
 
-        db = self._make_db_session()
+        db = self._make_db_session(course="org1")
         user = self._make_anon_user()
         with patch.object(lc, "verify_activity_reader_access_by_uuid", new_callable=AsyncMock) as gate:
             await lc._check_content_access(
@@ -116,7 +116,7 @@ class TestCheckContentAccess:
         from unittest.mock import patch
         import src.routers.local_content as lc
 
-        db = self._make_db_session()
+        db = self._make_db_session(course="org1")
         with patch.object(
             lc, "verify_activity_reader_access_by_uuid", new_callable=AsyncMock,
             side_effect=HTTPException(status_code=401, detail="Authentication required"),
@@ -137,7 +137,7 @@ class TestCheckContentAccess:
 
         path = ("orgs/org1/courses/course_abc/activities/act1/assignments/"
                 "asgn1/tasks/task1/subs/submission_x.pdf")
-        db = self._make_db_session()
+        db = self._make_db_session(course="org1")
         with patch.object(lc, "enforce_submission_file_access", new_callable=AsyncMock) as gate:
             await lc._check_content_access(path, MagicMock(), db)
         gate.assert_awaited_once()
@@ -150,34 +150,43 @@ class TestCheckContentAccess:
 
         path = ("orgs/org1/courses/course_abc/activities/act1/assignments/"
                 "asgn1/tasks/task1/subs/submission_x.pdf")
-        db = self._make_db_session()
+        db = self._make_db_session(course="org1")
         with patch.object(cf, "enforce_submission_file_access", new_callable=AsyncMock) as gate:
             await cf._check_content_access(path, MagicMock(), db)
         gate.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_public_podcast_episode_anonymous(self):
-        """Anonymous users can access episode content of public podcasts."""
-        from src.routers.local_content import _check_content_access
-        podcast = self._make_podcast(public=True)
-        db = self._make_db_session(podcast=podcast)
-        await _check_content_access(
-            "orgs/org1/podcasts/podcast_abc/episodes/ep1/audio.mp3",
-            self._make_anon_user(), db
-        )
+    async def test_podcast_episode_path_is_delegated_to_the_episode_gate(self):
+        """Episode files go through the podcast READ + published gate with the
+        org, podcast and episode segments of the path (covered end-to-end in
+        test_content_authz_round3)."""
+        from unittest.mock import patch
+        import src.routers.local_content as lc
 
-    @pytest.mark.asyncio
-    async def test_private_podcast_episode_anonymous_rejected(self):
-        """Anonymous users cannot access episode content of private podcasts."""
-        from src.routers.local_content import _check_content_access
-        podcast = self._make_podcast(public=False)
-        db = self._make_db_session(podcast=podcast)
-        with pytest.raises(HTTPException) as exc_info:
-            await _check_content_access(
+        db = self._make_db_session()
+        with patch.object(lc, "_verify_episode_access", new_callable=AsyncMock) as gate:
+            await lc._check_content_access(
                 "orgs/org1/podcasts/podcast_abc/episodes/ep1/audio.mp3",
                 self._make_anon_user(), db
             )
-        assert exc_info.value.status_code == 401
+        gate.assert_awaited_once()
+        assert gate.await_args.args[:3] == ("org1", "podcast_abc", "ep1")
+
+    @pytest.mark.asyncio
+    async def test_activity_path_with_foreign_org_segment_is_404(self):
+        """The org segment must be the course's org."""
+        from unittest.mock import patch
+        import src.routers.local_content as lc
+
+        db = self._make_db_session(course="other_org")
+        with patch.object(lc, "verify_activity_reader_access_by_uuid", new_callable=AsyncMock) as gate:
+            with pytest.raises(HTTPException) as exc_info:
+                await lc._check_content_access(
+                    "orgs/org1/courses/course_abc/activities/act1/video.mp4",
+                    self._make_anon_user(), db
+                )
+        assert exc_info.value.status_code == 404
+        gate.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_course_thumbnail_always_public(self):
@@ -292,7 +301,7 @@ class TestS3ContentAccess:
         from unittest.mock import patch
         import src.routers.content_files as cf
 
-        db = self._make_db_session()
+        db = self._make_db_session(course="org1")
         with patch.object(cf, "verify_activity_reader_access_by_uuid", new_callable=AsyncMock) as gate:
             await cf._check_content_access(
                 "orgs/org1/courses/c1/activities/a1/file.mp4", self._make_anon_user(), db
