@@ -27,11 +27,14 @@ from src.db.organizations import Organization
 from src.db.podcasts.episodes import PodcastEpisode
 from src.db.podcasts.podcasts import Podcast
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
+from src.routers.content_files import content_cache_control
 from src.security.auth import get_current_user
 from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
 from src.security.submission_file_access import (
-    is_submission_file,
+    enforce_solution_file_access,
     enforce_submission_file_access,
+    is_solution_file,
+    is_submission_file,
 )
 
 router = APIRouter()
@@ -129,9 +132,13 @@ async def _check_content_access(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
     request: Request | None = None,
-) -> None:
+) -> bool:
     """
     Check if the user has access to the requested content.
+
+    Returns True when the file is public by design (org branding, course
+    thumbnails, avatars) and may be cached by shared caches; False for files
+    served after a per-user check.
 
     Path patterns:
     - orgs/{uuid}/courses/{uuid}/activities/{uuid}/... → check course access
@@ -156,7 +163,7 @@ async def _check_content_access(
     # member, or anyone on a public course, download another learner's work).
     if is_submission_file(parts):
         await enforce_submission_file_access(parts, current_user, db_session, request)
-        return
+        return False
 
     # Activity content: requires course to be public or user to be org member
     if (
@@ -172,7 +179,10 @@ async def _check_content_access(
         await verify_activity_reader_access_by_uuid(
             request, activity_uuid, current_user, db_session, course_uuid=course_uuid
         )
-        return
+        # The model answer follows the assignment's reveal rule, same as the API
+        if is_solution_file(parts):
+            await enforce_solution_file_access(parts, current_user, db_session, request)
+        return False
 
     # Podcast episode content: same gate as reading the podcast, plus the
     # episode itself must be published unless the caller can edit the podcast.
@@ -185,7 +195,7 @@ async def _check_content_access(
         await _verify_episode_access(
             parts[1], parts[3], parts[5], current_user, db_session, request
         )
-        return
+        return False
 
     # Library media content: enforce the media's (folder-aware) access. Closes
     # the legacy hole where orgs/{}/media/... fell through to the public branch.
@@ -196,7 +206,7 @@ async def _check_content_access(
             await check_resource_access(
                 request, db_session, current_user, media_uuid, AccessAction.READ
             )
-            return
+            return False
         # Randomized keys don't embed the media_uuid → deny direct /content
         # access (these are only served via /media/{uuid}/file).
         raise HTTPException(status_code=403, detail="Access denied")
@@ -204,12 +214,12 @@ async def _check_content_access(
     # Course metadata (thumbnails, etc.) and org-level content: always public
     # These are displayed on listing pages to all users
     if len(parts) >= 2 and parts[0] == 'orgs':
-        return
+        return True
 
     # User content (avatars, profile images): always public
     # Paths: users/{user_uuid}/avatars/...
     if len(parts) >= 2 and parts[0] == 'users':
-        return
+        return True
 
     # Unknown path pattern: deny by default. Previously this only blocked
     # anonymous users and silently served the file to any authenticated user,
@@ -290,7 +300,7 @@ async def serve_local_content(
     # Deriving the path from `safe_real` keeps the access check and the
     # filesystem touch looking at exactly the same, collapsed, path.
     canonical_rel = os.path.relpath(safe_real, base_real).replace(os.sep, '/')
-    await _check_content_access(canonical_rel, current_user, db_session, request=request)
+    is_public = await _check_content_access(canonical_rel, current_user, db_session, request=request)
 
     if not os.path.isfile(safe_real):
         raise HTTPException(status_code=404, detail="File not found")
@@ -302,7 +312,7 @@ async def serve_local_content(
         path=safe_real,
         media_type=media_type,
         headers={
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": content_cache_control(is_public),
             "X-Content-Type-Options": "nosniff",
         },
     )
@@ -342,7 +352,7 @@ async def head_local_content(
     # string; see serve_local_content: a `.`/`//` segment would otherwise slip
     # private content past the pattern matching (auth bypass / IDOR).
     canonical_rel = os.path.relpath(safe_real, base_real).replace(os.sep, '/')
-    await _check_content_access(canonical_rel, current_user, db_session, request=request)
+    is_public = await _check_content_access(canonical_rel, current_user, db_session, request=request)
 
     if not os.path.isfile(safe_real):
         raise HTTPException(status_code=404, detail="File not found")
@@ -358,7 +368,7 @@ async def head_local_content(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": media_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": content_cache_control(is_public),
             "X-Content-Type-Options": "nosniff",
         },
     )

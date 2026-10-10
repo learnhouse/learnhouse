@@ -833,7 +833,8 @@ async def api_update_course_update(
     """
 
     return await update_update(
-        request, courseupdate_uuid, update_object, current_user, db_session
+        request, courseupdate_uuid, update_object, current_user, db_session,
+        course_uuid=course_uuid,
     )
 
 
@@ -858,7 +859,9 @@ async def api_delete_course_update(
     Delete Course Update by courseupdate_uuid
     """
 
-    return await delete_update(request, courseupdate_uuid, current_user, db_session)
+    return await delete_update(
+        request, courseupdate_uuid, current_user, db_session, course_uuid=course_uuid
+    )
 
 
 @router.get(

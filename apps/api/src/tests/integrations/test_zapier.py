@@ -133,6 +133,7 @@ def other_token(other_org, other_user):
         org_id=other_org.id,
         token_name="Other Token",
         created_by_user_id=other_user.id,
+        rights={"users": {"action_read": True}},
     )
 
 
@@ -448,6 +449,26 @@ class TestZapierSubscriptions:
             await db.execute(
                 select(WebhookEndpoint).where(WebhookEndpoint.id == created.id)
             )
+        ).scalars().first()
+        assert remaining is None
+
+    async def test_delete_works_for_a_token_without_users_read(self, db, token_user, request_obj):
+        # Tokens minted before subscriptions needed users read must still be
+        # able to switch off the feeds they created.
+        with _patch_plan_pro():
+            created = await zapier_create_subscription(
+                request=request_obj,
+                payload=ZapierSubscriptionCreate(
+                    target_url="https://hooks.zapier.com/hooks/catch/1/b",
+                    event="ping",
+                ),
+                ctx=(token_user, db),
+            )
+            legacy_token = token_user.model_copy(update={"rights": {}})
+            await zapier_delete_subscription(subscription_id=created.id, ctx=(legacy_token, db))
+
+        remaining = (
+            await db.execute(select(WebhookEndpoint).where(WebhookEndpoint.id == created.id))
         ).scalars().first()
         assert remaining is None
 

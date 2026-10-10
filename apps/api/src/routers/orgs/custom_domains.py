@@ -342,7 +342,8 @@ async def api_list_all_verified_domains(
     if (
         not expected_key
         or not x_internal_key
-        or not secrets.compare_digest(x_internal_key, expected_key)
+        # Bytes: compare_digest raises TypeError on non-ASCII str header values.
+        or not secrets.compare_digest(x_internal_key.encode(), expected_key.encode())
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

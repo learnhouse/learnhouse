@@ -17,6 +17,7 @@ from src.db.courses.courses import Course
 from src.db.trail_runs import TrailRun
 from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.superadmin import is_user_superadmin
+from src.security.org_auth import enforce_org_mfa
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 import httpx
@@ -201,6 +202,7 @@ async def _verify_org_membership(user_id: int, org_id: int, db_session: AsyncSes
     )).scalars().first()
     if not membership:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
+    await enforce_org_mfa(user_id, org_id, db_session)
 
 
 async def _verify_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> None:
@@ -238,6 +240,7 @@ async def _verify_org_admin(user_id: int, org_id: int, db_session: AsyncSession)
         if org_rights:
             has_update = org_rights.get("action_update", False) if isinstance(org_rights, dict) else getattr(org_rights, "action_update", False)
             if has_update:
+                await enforce_org_mfa(user_id, org_id, db_session)
                 return
 
     raise HTTPException(status_code=403, detail="Admin access required for this organization")

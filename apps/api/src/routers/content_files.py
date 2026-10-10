@@ -30,8 +30,10 @@ from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.security.auth import get_current_user
 from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
 from src.security.submission_file_access import (
-    is_submission_file,
+    enforce_solution_file_access,
     enforce_submission_file_access,
+    is_solution_file,
+    is_submission_file,
 )
 from src.services.courses.transfer.storage_utils import (
     get_storage_client,
@@ -92,6 +94,17 @@ _INLINE_MIME_TYPES = frozenset({'application/pdf'})
 # Neutralizes an SVG opened top-level or framed: no script, no subresources,
 # and an opaque origin, so it cannot reach the API it is served from.
 _SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+
+
+# Gated files must stay out of shared caches (CDN, proxies): a copy cached
+# there would be served to the next caller without the access check. Browsers
+# may still keep them, which is what video seeking relies on.
+PUBLIC_CACHE_CONTROL = "public, max-age=86400"
+PRIVATE_CACHE_CONTROL = "private, max-age=86400"
+
+
+def content_cache_control(is_public: bool) -> str:
+    return PUBLIC_CACHE_CONTROL if is_public else PRIVATE_CACHE_CONTROL
 
 
 def _get_mime_type(file_path: str) -> str:
@@ -214,9 +227,13 @@ async def _check_content_access(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
     request: Request | None = None,
-) -> None:
+) -> bool:
     """
     Check if the user has access to the requested content.
+
+    Returns True when the file is public by design (org branding, course
+    thumbnails, avatars) and may be cached by shared caches; False for files
+    served after a per-user check.
 
     Path patterns:
     - orgs/{uuid}/courses/{uuid}/activities/{uuid}/... → check course access
@@ -241,7 +258,7 @@ async def _check_content_access(
     # member, or anyone on a public course, download another learner's work).
     if is_submission_file(parts):
         await enforce_submission_file_access(parts, current_user, db_session, request)
-        return
+        return False
 
     # Activity content: requires course to be public or user to be org member
     if (
@@ -257,7 +274,10 @@ async def _check_content_access(
         await verify_activity_reader_access_by_uuid(
             request, activity_uuid, current_user, db_session, course_uuid=course_uuid
         )
-        return
+        # The model answer follows the assignment's reveal rule, same as the API
+        if is_solution_file(parts):
+            await enforce_solution_file_access(parts, current_user, db_session, request)
+        return False
 
     # Podcast episode content: same gate as reading the podcast, plus the
     # episode itself must be published unless the caller can edit the podcast.
@@ -270,7 +290,7 @@ async def _check_content_access(
         await _verify_episode_access(
             parts[1], parts[3], parts[5], current_user, db_session, request
         )
-        return
+        return False
 
     # Library media content: enforce the media's (folder-aware) access. Closes
     # the legacy hole where orgs/{}/media/... fell through to the public branch.
@@ -281,18 +301,18 @@ async def _check_content_access(
             await check_resource_access(
                 request, db_session, current_user, media_uuid, AccessAction.READ
             )
-            return
+            return False
         # Randomized keys don't embed the media_uuid → deny direct /content
         # access (these are only served via /media/{uuid}/file).
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Course metadata (thumbnails, etc.) and org-level content: always public
     if len(parts) >= 2 and parts[0] == 'orgs':
-        return
+        return True
 
     # User content (avatars, profile images): always public
     if len(parts) >= 2 and parts[0] == 'users':
-        return
+        return True
 
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -328,7 +348,7 @@ async def serve_content_file(
     if safe_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    await _check_content_access(safe_path, current_user, db_session, request=request)
+    is_public = await _check_content_access(safe_path, current_user, db_session, request=request)
 
     s3_key = f"content/{safe_path}"
     s3_client = get_storage_client()
@@ -357,7 +377,7 @@ async def serve_content_file(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": content_cache_control(is_public),
         "X-Content-Type-Options": "nosniff",
         "Content-Disposition": _content_disposition(mime_type, safe_path),
         **_security_headers(mime_type),
@@ -469,7 +489,7 @@ async def head_content_file(
     if safe_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    await _check_content_access(safe_path, current_user, db_session, request=request)
+    is_public = await _check_content_access(safe_path, current_user, db_session, request=request)
 
     s3_key = f"content/{safe_path}"
     s3_client = get_storage_client()
@@ -500,7 +520,7 @@ async def head_content_file(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": content_cache_control(is_public),
             "X-Content-Type-Options": "nosniff",
             "Content-Disposition": _content_disposition(mime_type, safe_path),
             **_security_headers(mime_type),

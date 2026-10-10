@@ -149,7 +149,8 @@ class TestWebhookCrud:
             "src.services.webhooks.webhooks.authorization_verify_if_user_is_anon",
             new_callable=AsyncMock,
         ) as mock_auth, patch(
-            "src.services.webhooks.webhooks.require_org_admin"
+            "src.services.webhooks.webhooks.require_org_role_permission",
+            new_callable=AsyncMock,
         ) as mock_admin, patch(
             "src.services.webhooks.webhooks.socket.getaddrinfo",
             return_value=[
@@ -180,7 +181,9 @@ class TestWebhookCrud:
             )
 
         mock_auth.assert_awaited_once_with(admin_user.id)
-        mock_admin.assert_called_once_with(admin_user.id, org.id, db)
+        mock_admin.assert_awaited_once_with(
+            admin_user.id, org.id, db, "organizations", "action_update"
+        )
         assert result.webhook_uuid == "webhook_uuid-123"
         assert result.secret == "whsec_plaintext"
 

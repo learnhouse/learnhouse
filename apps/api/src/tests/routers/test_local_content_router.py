@@ -329,7 +329,7 @@ class TestLocalContentRouter:
                     anonymous_user,
                     db,
                 )
-                is None
+                is False
             )
             assert (
                 await local_content._check_content_access(
@@ -337,7 +337,7 @@ class TestLocalContentRouter:
                     anonymous_user,
                     db,
                 )
-                is None
+                is False
             )
             assert (
                 await local_content._check_content_access(
@@ -345,7 +345,7 @@ class TestLocalContentRouter:
                     regular_user,
                     db,
                 )
-            ) is None
+            ) is False
 
             assert (
                 await local_content._check_content_access(
@@ -356,7 +356,7 @@ class TestLocalContentRouter:
                     ),
                     db,
                 )
-                is None
+                is False
             )
 
             with pytest.raises(HTTPException) as token_course_exc:

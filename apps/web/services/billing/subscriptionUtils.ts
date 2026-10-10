@@ -29,6 +29,15 @@ export function isSwitchableStatus(status: string | undefined): boolean {
   return status !== undefined && (SWITCHABLE_STATUSES as readonly string[]).includes(status);
 }
 
+// Statuses in good standing. Only these may gain entitlements (an upgrade or a
+// checkout fulfillment); past_due/unpaid stay switchable for downgrade/cancel
+// only, so an unpaid balance can't be used to unlock a higher plan.
+export const PAID_UP_STATUSES = ["active", "trialing"] as const;
+
+export function isPaidUpStatus(status: string | undefined): boolean {
+  return status !== undefined && (PAID_UP_STATUSES as readonly string[]).includes(status);
+}
+
 /**
  * Select an organization's PLAN subscription from a flat list of subscriptions
  * that may span multiple Stripe customers (a single email can map to several

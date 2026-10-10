@@ -89,6 +89,9 @@ export interface SSOCallbackResponse {
   }
   redirect_url: string
   org_slug?: string
+  // Set instead of user/tokens when the account has two-factor enabled.
+  mfa_required?: boolean
+  mfa_token?: string
 }
 
 export interface SSOErrorDetail {

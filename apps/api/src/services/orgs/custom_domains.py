@@ -22,7 +22,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
-from src.security.org_auth import require_org_membership, require_org_admin
+from src.security.org_auth import require_org_membership, require_org_role_permission
 from src.services.utils.ssrf_guard import SSRFBlockedError, resolve_and_validate_url
 
 logger = logging.getLogger(__name__)
@@ -265,8 +265,11 @@ async def add_custom_domain(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3+4: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 3+4: Membership + organizations.update (superadmins bypass).
+    # Routing the org's traffic is not everyday editing for Maintainers.
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # VERIFICATION 4b: Free-tier abuse gate. Custom domains are an unenforced,
     # unlimited surface and a phishing/brand-impersonation amplifier, so a
@@ -462,8 +465,10 @@ async def verify_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 2: Membership + organizations.update (superadmins bypass)
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
@@ -512,8 +517,10 @@ async def delete_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 2: Membership + organizations.update (superadmins bypass)
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -743,6 +750,25 @@ async def custom_domain_points_at_platform(domain: str, org_slug: str = "") -> b
     return await asyncio.to_thread(domain_points_at_platform, domain, org_slug)
 
 
+async def _org_plan_includes_custom_domains(org_id: int, db_session: AsyncSession) -> bool:
+    """Stop routing a domain once the org's plan no longer includes it.
+
+    Same plan level as the management routes (router.py). A plan lookup that
+    errors for any reason other than a definite "not entitled" serves the
+    domain: a transient DB/config hiccup must not take a paying org offline,
+    and the domain was verified while the org was entitled.
+    """
+    from src.security.features_utils.plan_check import check_org_plan
+
+    try:
+        await check_org_plan(org_id, "standard", "Custom Domains", db_session)
+    except HTTPException as exc:
+        return exc.status_code != status.HTTP_403_FORBIDDEN
+    except Exception:
+        logger.warning("Plan lookup failed for custom domain of org %s", org_id, exc_info=True)
+    return True
+
+
 async def resolve_org_by_domain(
     db_session: AsyncSession,
     domain: str,
@@ -773,6 +799,9 @@ async def resolve_org_by_domain(
     organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
+        return None
+
+    if not await _org_plan_includes_custom_domains(organization.id, db_session):
         return None
 
     if for_auth and not await custom_domain_points_at_platform(domain, organization.slug):

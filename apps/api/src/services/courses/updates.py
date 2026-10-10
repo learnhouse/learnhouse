@@ -65,6 +65,30 @@ async def create_update(
     return CourseUpdateRead(**update.model_dump())
 
 
+async def _authorize_update_write(
+    request: Request,
+    update: CourseUpdate,
+    course_uuid: str | None,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+) -> None:
+    """Editing or deleting a post takes UPDATE on its parent course, the same
+    right that creates one; ``course_uuid`` (from the URL) must be that course.
+
+    RBAC has no resource type for ``courseupdate_*`` uuids, so checking the
+    update's own uuid denied every caller."""
+    course = (await db_session.execute(
+        select(Course).where(Course.id == update.course_id)
+    )).scalars().first()
+    if not course or (course_uuid is not None and course.course_uuid != course_uuid):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Update does not exist"
+        )
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+
+
 # Update Course Update
 async def update_update(
     request: Request,
@@ -72,6 +96,7 @@ async def update_update(
     update_object: CourseUpdateUpdate,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
+    course_uuid: str | None = None,
 ) -> CourseUpdateRead:
     statement = select(CourseUpdate).where(
         CourseUpdate.courseupdate_uuid == courseupdate_uuid
@@ -83,10 +108,7 @@ async def update_update(
             status_code=status.HTTP_409_CONFLICT, detail="Update does not exist"
         )
 
-    # RBAC check
-    await check_resource_access(
-        request, db_session, current_user, update.courseupdate_uuid, AccessAction.UPDATE
-    )
+    await _authorize_update_write(request, update, course_uuid, current_user, db_session)
 
     for key, value in update_object.model_dump().items():
         if value is not None:
@@ -106,6 +128,7 @@ async def delete_update(
     courseupdate_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
+    course_uuid: str | None = None,
 ):
     statement = select(CourseUpdate).where(
         CourseUpdate.courseupdate_uuid == courseupdate_uuid
@@ -117,10 +140,7 @@ async def delete_update(
             status_code=status.HTTP_409_CONFLICT, detail="Update does not exist"
         )
 
-    # RBAC check
-    await check_resource_access(
-        request, db_session, current_user, update.courseupdate_uuid, AccessAction.DELETE
-    )
+    await _authorize_update_write(request, update, course_uuid, current_user, db_session)
 
     await db_session.delete(update)
     await db_session.commit()

@@ -83,7 +83,10 @@ def _zapier_session(endpoint=None):
 def test_zapier_subscribe_invalidates_active_cache():
     from src.routers.integrations import zapier
 
-    api_user = SimpleNamespace(org_id=7, created_by_user_id=3)
+    api_user = SimpleNamespace(
+        org_id=7, created_by_user_id=3,
+        rights={"users": {"action_read": True}, "courses": {"action_read": True}},
+    )
     session = _zapier_session()
     payload = zapier.ZapierSubscriptionCreate(
         target_url="https://hooks.zapier.com/x", event="course_created", zap_id="z", zap_name="n"
@@ -102,7 +105,7 @@ def test_zapier_subscribe_invalidates_active_cache():
 def test_zapier_unsubscribe_invalidates_active_cache():
     from src.routers.integrations import zapier
 
-    api_user = SimpleNamespace(org_id=7, created_by_user_id=3)
+    api_user = SimpleNamespace(org_id=7, created_by_user_id=3, rights={"users": {"action_read": True}})
     session = _zapier_session(endpoint=MagicMock())
     with patch.object(zapier, "require_org_admin", new=AsyncMock()), patch.object(
         zapier, "invalidate_active_endpoint_cache"

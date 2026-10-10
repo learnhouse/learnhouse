@@ -323,3 +323,33 @@ async def test_podcast_audio_redirects_in_s3(
         f"/audio/{org.org_uuid}/pod_test/ep_test/a.mp3", follow_redirects=False
     )
     assert r.status_code == 302
+
+
+async def test_podcast_audio_hides_unpublished_episode_and_checks_org(
+    db, org, anonymous_user, mock_request
+):
+    """/stream/audio applies the same episode gate as the /content files."""
+    from fastapi import HTTPException
+    from src.db.podcasts.episodes import PodcastEpisode
+    from src.db.podcasts.podcasts import Podcast
+
+    db.add(Podcast(
+        id=70, name="Pod", description="", public=True, published=True, org_id=org.id,
+        podcast_uuid="podcast_pub", creation_date="2024-01-01", update_date="2024-01-01",
+    ))
+    db.add(PodcastEpisode(
+        id=70, podcast_id=70, org_id=org.id, title="Next week", published=False,
+        episode_uuid="episode_draft", creation_date="2024-01-01", update_date="2024-01-01",
+    ))
+    await db.commit()
+
+    for org_uuid in (org.org_uuid, "org_someone_else"):
+        with pytest.raises(HTTPException) as exc:
+            await stream_mod._verify_podcast_episode_access(
+                mock_request, org_uuid, "podcast_pub", "episode_draft", anonymous_user, db
+            )
+        assert exc.value.status_code == 404
+
+
+def test_stream_responses_are_not_shared_cacheable():
+    assert stream_mod.PRIVATE_CACHE_CONTROL.startswith("private")

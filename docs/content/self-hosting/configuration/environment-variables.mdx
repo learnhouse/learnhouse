@@ -31,6 +31,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_PORT` | Backend port. Local config defaults to `1338`; the production CLI template emits `9000`. | integer | `1338` locally, `9000` in generated Docker installs | API, CLI, API container |
 | `LEARNHOUSE_ALLOWED_ORIGINS` | Comma-separated CORS allowlist. | CSV of URLs | `http://localhost:3000,http://localhost:3001` | API |
 | `LEARNHOUSE_ALLOWED_REGEXP` | Additional CORS origin regex used by multi-tenant deployments. | regex string | `\b((?:https?://)[^\s/$.?#].[^\s]*)\b` | API |
+| `LEARNHOUSE_MAX_REQUEST_BODY_MB` | Largest JSON, form or raw request body the API accepts before returning `413`. Multipart uploads keep their own per-type limits. `0` disables the cap. | integer | `25` | API |
 | `LEARNHOUSE_COOKIE_DOMAIN` | Cookie domain for auth cookies. Use a leading dot only when subdomains must share auth. | hostname | `.localhost` | API, CLI |
 | `LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD` | Acknowledges intentionally broad cookie domains such as `.example.com` and silences the safety warning. | boolean | `false` | API, EE CLI |
 | `LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE` | Skips DNS verification for all custom domains and marks them verified immediately. Development/testing only. | boolean | `false` | API |

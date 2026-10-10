@@ -1,4 +1,6 @@
+import json
 from typing import Optional, Dict
+from pydantic import field_validator
 from sqlalchemy import JSON, Column, ForeignKey, Index, UniqueConstraint
 from sqlmodel import Field, SQLModel
 from enum import Enum
@@ -289,6 +291,21 @@ class AssignmentTask(AssignmentTaskBase, table=True):
 
 ## AssignmentTaskSubmission ##
 
+# Learner answers are stored verbatim (CUSTOM tasks are arbitrary JSON) and
+# returned on every grading read. Code tasks carry the source plus test results
+# capped at 1 MB by the code submission endpoint, so this leaves headroom.
+MAX_TASK_SUBMISSION_BYTES = 2 * 1024 * 1024
+
+
+def _check_task_submission_size(value):
+    if value is not None and len(
+        json.dumps(value, default=str).encode("utf-8")
+    ) > MAX_TASK_SUBMISSION_BYTES:
+        raise ValueError(
+            f"task_submission must be at most {MAX_TASK_SUBMISSION_BYTES // (1024 * 1024)} MB"
+        )
+    return value
+
 
 class AssignmentTaskSubmissionBase(SQLModel):
     """Represents the common fields for an assignment task submission."""
@@ -312,7 +329,9 @@ class AssignmentTaskSubmissionBase(SQLModel):
 class AssignmentTaskSubmissionCreate(AssignmentTaskSubmissionBase):
     """Model for creating a new assignment task submission."""
 
-    pass  # Inherits all fields from AssignmentTaskSubmissionBase
+    _cap_task_submission = field_validator("task_submission")(
+        _check_task_submission_size
+    )
 
 
 class AssignmentTaskSubmissionRead(AssignmentTaskSubmissionBase):
@@ -333,6 +352,10 @@ class AssignmentTaskSubmissionUpdate(SQLModel):
     task_submission_grade_feedback: Optional[str] = None
     manually_graded: Optional[bool] = None
     assignment_type: Optional[AssignmentTaskTypeEnum] = None
+
+    _cap_task_submission = field_validator("task_submission")(
+        _check_task_submission_size
+    )
 
 
 class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):

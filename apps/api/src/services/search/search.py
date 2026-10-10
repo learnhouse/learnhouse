@@ -19,6 +19,7 @@ from src.services.search.normalization import (
     build_like_pattern,
     escape_like_wildcards,
 )
+from src.security.api_token_utils import token_has_right
 from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import is_org_admin, is_org_member
 from src.services.communities.communities import (
@@ -173,21 +174,12 @@ async def search_across_org(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="API token cannot search in organizations outside its scope",
             )
-        if current_user.rights:
-            rights = current_user.rights
-            if isinstance(rights, dict):
-                search_rights = rights.get("search", {})
-                has_permission = search_rights.get("action_read", False)
-            else:
-                search_rights = getattr(rights, "search", None)
-                has_permission = bool(
-                    search_rights and getattr(search_rights, "action_read", False)
-                )
-            if not has_permission:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="API token does not have search permission",
-                )
+        # A token with no rights at all holds no search right either.
+        if not token_has_right(current_user, "search", "action_read"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token does not have search permission",
+            )
 
     is_anon = isinstance(current_user, AnonymousUser)
     user_is_member = (
@@ -198,9 +190,15 @@ async def search_across_org(
 
     # ── Courses ──────────────────────────────────────────────────────────────
     # `search_courses` already applies its own per-user access filter.
-    courses = await search_courses(
-        request, current_user, org_slug, search_query, db_session, page, limit
-    )
+    if isinstance(current_user, APITokenUser) and not token_has_right(
+        current_user, "courses", "action_read"
+    ):
+        # search_courses refuses such a token; leave courses out instead.
+        courses = []
+    else:
+        courses = await search_courses(
+            request, current_user, org_slug, search_query, db_session, page, limit
+        )
     total_courses = len(courses)
 
     # ── Folders ──────────────────────────────────────────────────────────────

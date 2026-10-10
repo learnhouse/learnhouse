@@ -303,7 +303,7 @@ def test_ip_based_wrappers_delegate_with_expected_limits(
     "func,input_value,expected_key",
     [
         (check_verification_resend_rate_limit, "User@Example.com", "verify_resend:user@example.com"),
-        (check_password_reset_rate_limit, "User@Example.com", "password_reset:user@example.com"),
+        (check_password_reset_rate_limit, "User@Example.com", "password_reset:change:user@example.com"),
         (check_email_verification_rate_limit, "User@Example.com", "email_verify:user@example.com"),
     ],
 )

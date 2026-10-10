@@ -28,7 +28,7 @@ interface AppEnvSpec {
 // Defaults
 // ────────────────────────────────────────────────────────────────────────────
 
-function generateJwtSecret(): string {
+function generateSecret(): string {
   return crypto.randomBytes(32).toString('base64url')
 }
 
@@ -46,13 +46,13 @@ const API_ENV: AppEnvSpec = {
       name: 'LEARNHOUSE_AUTH_JWT_SECRET_KEY',
       required: true,
       description: 'JWT signing secret (min 32 chars)',
-      defaultValue: generateJwtSecret,
+      defaultValue: generateSecret,
     },
     {
       name: 'COLLAB_INTERNAL_KEY',
       required: true,
       description: 'Shared key for collab ↔ API auth',
-      defaultValue: 'dev-collab-internal-key-change-in-prod',
+      defaultValue: generateSecret,
     },
   ],
 }
@@ -225,9 +225,13 @@ export async function checkDevEnv(root: string): Promise<boolean> {
   // Generate JWT secret & collab key once, share across API + Collab.
   const apiFile = path.join(root, API_ENV.envFile)
   const apiExisting = parseEnvFile(apiFile)
+  const collabExisting = parseEnvFile(path.join(root, COLLAB_ENV.envFile))
 
-  const jwtSecret = apiExisting.get('LEARNHOUSE_AUTH_JWT_SECRET_KEY') || generateJwtSecret()
-  const collabKey = apiExisting.get('COLLAB_INTERNAL_KEY') || 'dev-collab-internal-key-change-in-prod'
+  const jwtSecret = apiExisting.get('LEARNHOUSE_AUTH_JWT_SECRET_KEY') || generateSecret()
+  // The internal key authorizes collab's board writes on the API, so it is
+  // never a fixed string; reuse whichever side already has one.
+  const collabKey =
+    apiExisting.get('COLLAB_INTERNAL_KEY') || collabExisting.get('COLLAB_INTERNAL_KEY') || generateSecret()
 
   // ── Write ──────────────────────────────────────────────────────────────
   for (const app of ALL_APPS) {

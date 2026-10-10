@@ -26,6 +26,7 @@ from src.db.courses.courses import (
     AuthorWithRole,
     ThumbnailType,
 )
+from src.security.api_token_utils import require_token_right
 from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import require_org_create_permission
 from src.security.rbac.rbac import (
@@ -262,6 +263,17 @@ async def get_course_meta(
     return course_read
 
 
+def _require_token_course_listing(current_user: APITokenUser, org_id: int) -> None:
+    """API tokens list courses through their own ``courses.action_read`` and
+    only in their own org, never through their creator's role."""
+    if current_user.org_id != org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token cannot access resources outside its organization",
+        )
+    require_token_right(current_user, "courses", "action_read")
+
+
 async def get_courses_orgslug(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -294,9 +306,17 @@ async def get_courses_orgslug(
     if not org:
         return []
 
+    is_token = isinstance(current_user, APITokenUser)
+    if is_token:
+        _require_token_course_listing(current_user, org.id)
+
     # Check if user can view unpublished courses (must be admin/editor in org)
     can_view_unpublished = False
-    if include_unpublished and not isinstance(current_user, AnonymousUser):
+    if is_token:
+        # courses.action_read already lets the token read every course of its
+        # org one by one, published or not (check_resource_access).
+        can_view_unpublished = include_unpublished
+    elif include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished courses
         if await is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
@@ -325,6 +345,9 @@ async def get_courses_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published courses
         query = query.where(Course.public == True, Course.published == True)
+    elif is_token:
+        if not can_view_unpublished:
+            query = query.where(Course.published == True)
     else:
         # For authenticated users with admin access viewing dashboard, show all courses
         if can_view_unpublished:
@@ -449,7 +472,15 @@ async def get_courses_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published courses
         query = query.where(Course.public == True, Course.published == True)
-    elif not isinstance(current_user, AnonymousUser) and await is_user_superadmin(acting_user_id, db_session):
+    elif isinstance(current_user, APITokenUser):
+        org_id = (await db_session.execute(
+            select(Organization.id).where(Organization.slug == org_slug)
+        )).scalars().first()
+        if org_id is None:
+            return 0
+        _require_token_course_listing(current_user, org_id)
+        query = query.where(Course.published == True)
+    elif await is_user_superadmin(acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
     else:
@@ -531,6 +562,14 @@ async def search_courses(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published courses
         query = query.where(Course.public == True, Course.published == True)
+    elif isinstance(current_user, APITokenUser):
+        org_id = (await db_session.execute(
+            select(Organization.id).where(Organization.slug == org_slug)
+        )).scalars().first()
+        if org_id is None:
+            return []
+        _require_token_course_listing(current_user, org_id)
+        query = query.where(Course.published == True)
     elif await is_user_superadmin(search_acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
@@ -538,7 +577,8 @@ async def search_courses(
         # For authenticated users, show:
         # 1. Published AND public courses
         # 2. Published courses not in any UserGroup
-        # 3. Courses (including unpublished) in UserGroups where the user is a member
+        # 3. Published courses in UserGroups where the user is a member
+        #    (a member cannot open an unpublished one, so don't surface it)
         # 4. Courses (including unpublished) where the user is a resource author
         needs_distinct = True
         query = (
@@ -563,7 +603,7 @@ async def search_courses(
                         UserOrganization.org_id == Course.org_id,
                     ).exists(),
                 ),
-                UserGroupUser.user_id == search_acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
+                and_(Course.published == True, UserGroupUser.user_id == search_acting_user_id),  # Published courses in UserGroups where user is a member
                 ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
         )

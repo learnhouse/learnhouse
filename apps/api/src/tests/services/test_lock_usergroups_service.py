@@ -469,3 +469,16 @@ class TestGetActivityUsergroups:
                     mock_request, "bad_activity", admin_user, db
                 )
         assert exc_info.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_learner_cannot_list_lock_usergroups(
+    db, org, course, chapter, activity, regular_user, mock_request
+):
+    """Reading the course isn't enough: the group list is editor information."""
+    with pytest.raises(HTTPException) as chapter_exc:
+        await get_chapter_usergroups(mock_request, chapter.chapter_uuid, regular_user, db)
+    with pytest.raises(HTTPException) as activity_exc:
+        await get_activity_usergroups(mock_request, activity.activity_uuid, regular_user, db)
+    assert chapter_exc.value.status_code == 403
+    assert activity_exc.value.status_code == 403

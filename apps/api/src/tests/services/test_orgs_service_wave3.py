@@ -948,6 +948,9 @@ class TestOrgConfigBranchesWave3:
             new_callable=AsyncMock,
             return_value=True,
         ), patch(
+            "src.services.orgs.orgs.require_org_role_permission",
+            new_callable=AsyncMock,
+        ), patch(
             "src.services.orgs.orgs.upload_org_favicon",
             new_callable=AsyncMock,
             return_value="stored-favicon.png",

@@ -4,9 +4,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
+from starlette.requests import Request
 
 from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityTypeEnum, ActivitySubTypeEnum, ActivityUpdate
 from src.db.organizations import OrganizationRead
+from src.db.resource_authors import (
+    ResourceAuthor,
+    ResourceAuthorshipEnum,
+    ResourceAuthorshipStatusEnum,
+)
 from src.services.courses.activities.access import apply_activity_lock
 from src.services.courses.activities.activities import (
     create_activity,
@@ -104,6 +110,10 @@ class TestGetEditorBootstrap:
         ), patch(
             "src.services.orgs.orgs._build_org_read_with_resolved",
             return_value=fake_org_read,
+        ), patch(
+            "src.services.orgs.orgs._redact_org_email_unless_manager",
+            new_callable=AsyncMock,
+            return_value=fake_org_read,
         ):
             result = await get_editor_bootstrap(
                 mock_request, activity.activity_uuid, admin_user, db
@@ -132,12 +142,41 @@ class TestGetEditorBootstrap:
         ), patch(
             "src.services.orgs.orgs._build_org_read_with_resolved",
             return_value=fake_org_read,
+        ), patch(
+            "src.services.orgs.orgs._redact_org_email_unless_manager",
+            new_callable=AsyncMock,
+            return_value=fake_org_read,
         ):
             result = await get_editor_bootstrap(
                 mock_request, activity.activity_uuid, admin_user, db
             )
 
         assert result.activity.content == {"paid_access": False}
+
+
+class TestEditorBootstrapGates:
+    @pytest.mark.asyncio
+    async def test_learner_gets_403_and_org_email_is_redacted_for_non_managers(
+        self, mock_request, db, org, course, chapter, activity, admin_user, regular_user
+    ):
+        with pytest.raises(HTTPException) as exc:
+            await get_editor_bootstrap(mock_request, activity.activity_uuid, regular_user, db)
+        assert exc.value.status_code == 403
+
+        # A course contributor can edit but doesn't manage the org
+        db.add(ResourceAuthor(
+            resource_uuid=course.course_uuid, user_id=regular_user.id,
+            authorship=ResourceAuthorshipEnum.CONTRIBUTOR,
+            authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+            creation_date="now", update_date="now",
+        ))
+        await db.commit()
+        # Fresh requests: RBAC decisions are memoized per request
+        fresh = lambda: Request({"type": "http", "method": "GET", "path": "/", "headers": [], "query_string": b""})  # noqa: E731
+        contributor_view = await get_editor_bootstrap(fresh(), activity.activity_uuid, regular_user, db)
+        admin_view = await get_editor_bootstrap(fresh(), activity.activity_uuid, admin_user, db)
+        assert contributor_view.org.email is None
+        assert admin_view.org.email == org.email
 
 
 class TestGetActivity:
@@ -236,6 +275,30 @@ class TestUpdateActivity:
         assert isinstance(result, ActivityRead)
         mock_version.assert_called_once()
         mock_index.assert_called_once_with(activity.id)
+
+
+    @pytest.mark.asyncio
+    async def test_update_keeps_server_owned_caption_and_hls_state(
+        self, mock_request, db, org, course, chapter, activity, admin_user
+    ):
+        server_captions = {"enabled": True, "status": "ready", "languages": [{"code": "fr", "status": "ready"}]}
+        activity.extra_metadata = {"captions": server_captions, "note": "old"}
+        db.add(activity)
+        await db.commit()
+
+        forged = ActivityUpdate(extra_metadata={
+            "captions": {"enabled": True, "status": "processing", "languages": [{"code": "../../x"}]},
+            "hls": {"status": "ready", "master": "orgs/other/x.m3u8"},
+            "note": "new",
+        })
+        with patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await update_activity(
+                mock_request, forged, activity.activity_uuid, admin_user, db
+            )
+        assert result.extra_metadata == {"captions": server_captions, "note": "new"}
 
 
 class TestDeleteActivity:

@@ -596,7 +596,7 @@ async def api_send_password_reset_email_v2(
     # Rate limit: 5 attempts per 5 minutes per email. Without this an attacker
     # can spam reset-code emails to any address (email bombing) and probe for
     # registered accounts. Mirrors the platform send endpoint.
-    is_allowed, retry_after = check_password_reset_rate_limit(body.email)
+    is_allowed, retry_after = check_password_reset_rate_limit(body.email, action="send")
     if not is_allowed:
         raise HTTPException(
             status_code=429,
@@ -628,7 +628,7 @@ async def api_send_password_reset_email(
 ):
     # Rate limit: 5 attempts per 5 minutes per email (email bombing / account
     # probing protection), matching the body-based and platform variants.
-    is_allowed, retry_after = check_password_reset_rate_limit(email)
+    is_allowed, retry_after = check_password_reset_rate_limit(email, action="send")
     if not is_allowed:
         raise HTTPException(
             status_code=429,
@@ -666,7 +666,7 @@ async def api_send_password_reset_email_platform_v2(
     current_user: PublicUser = Depends(get_current_user),
     body: SendPlatformResetCodeRequest,
 ):
-    is_allowed, retry_after = check_password_reset_rate_limit(body.email)
+    is_allowed, retry_after = check_password_reset_rate_limit(body.email, action="send")
     if not is_allowed:
         raise HTTPException(
             status_code=429,
@@ -695,7 +695,7 @@ async def api_send_password_reset_email_platform(
     current_user: PublicUser = Depends(get_current_user),
     email: EmailStr,
 ):
-    is_allowed, retry_after = check_password_reset_rate_limit(email)
+    is_allowed, retry_after = check_password_reset_rate_limit(email, action="send")
     if not is_allowed:
         raise HTTPException(
             status_code=429,

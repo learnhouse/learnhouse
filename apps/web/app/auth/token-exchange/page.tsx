@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Loader2, AlertTriangle } from 'lucide-react'
+import { safeInternalPath } from '@services/security/url'
 
 const ERROR_MESSAGES: Record<string, string> = {
   missing_code: 'No sign-in code was provided.',
@@ -20,16 +21,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   unexpected: 'Something unexpected went wrong. Please try again.',
 }
 
-// Only allow same-origin relative paths. Rejects `//evil.com`, `https://evil.com`,
-// and backslash tricks, which prevents the `?redirect=` param from becoming an open
+// Only allow same-origin paths, so the `?redirect=` param cannot become an open
 // redirect after a successful exchange.
 function sanitizeRedirect(raw: string | null): string {
-  const fallback = '/dash'
-  if (!raw) return fallback
-  if (!raw.startsWith('/')) return fallback
-  if (raw.startsWith('//') || raw.startsWith('/\\')) return fallback
-  if (/[\r\n]/.test(raw)) return fallback
-  return raw
+  return safeInternalPath(raw || null, '/dash')
 }
 
 function TokenExchangeInner() {

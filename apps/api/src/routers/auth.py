@@ -45,7 +45,6 @@ from src.services.security.account_lockout import (
     record_failed_login,
     reset_failed_attempts,
     update_login_info,
-    format_lockout_message,
 )
 from src.services.users.email_verification import (
     verify_email_token,
@@ -80,6 +79,13 @@ def get_token_expiry_ms() -> Optional[int]:
 
 
 router = APIRouter()
+
+# One answer for an unknown account, a wrong password and a locked account, so
+# none of them can be told apart. It still tells a locked-out user to wait.
+INVALID_CREDENTIALS_MESSAGE = (
+    "Incorrect email or password. After several failed attempts, sign-in is "
+    "paused for a few minutes."
+)
 
 
 def get_cookie_domain_for_request(request: Request) -> str | None:
@@ -481,7 +487,6 @@ async def refresh(
         200: {"description": "Login successful; cookies set and body contains user + tokens."},
         401: {"description": "Incorrect email or password"},
         403: {"description": "Email not verified (SaaS mode)"},
-        423: {"description": "Account is locked due to too many failed attempts"},
         429: {"description": "Too many login attempts from this IP"},
     },
 )
@@ -515,6 +520,13 @@ async def login(
         request, username, password, db_session
     )
 
+    # Step 3: Enforce lockout from prior failed attempts. A locked account
+    # answers exactly like a wrong password, right password or not: a distinct
+    # reply for the correct one would let an attacker keep guessing through
+    # the lock and learn the password the moment they hit it.
+    if user and check_account_locked(user)[0]:
+        user = None
+
     if not user:
         # Unknown user OR wrong password: responses are indistinguishable.
         # The row lookup below runs behind that wall for lockout bookkeeping.
@@ -532,26 +544,14 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "code": "INVALID_CREDENTIALS",
-                "message": "Incorrect Email or password",
+                "message": INVALID_CREDENTIALS_MESSAGE,
             },
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Password was correct. From here on, disclosing lockout/verification
-    # state no longer enables enumeration since the caller has proven they
-    # control the account.
-
-    # Step 3: Enforce lockout from prior failed attempts.
-    is_pre_locked, pre_lock_remaining = check_account_locked(user)
-    if is_pre_locked and pre_lock_remaining:
-        raise HTTPException(
-            status_code=status.HTTP_423_LOCKED,
-            detail={
-                "code": "ACCOUNT_LOCKED",
-                "message": format_lockout_message(pre_lock_remaining),
-                "retry_after": pre_lock_remaining,
-            },
-        )
+    # Password was correct and the account is not locked. From here on,
+    # disclosing verification state no longer enables enumeration since the
+    # caller has proven they control the account.
 
     # Step 4: Check email verification (required for SaaS login only)
     if not user.email_verified and get_deployment_mode() == 'saas':
@@ -931,7 +931,7 @@ async def magic_link_request(
     )
     from src.services.orgs.auth_policy import is_login_method_allowed
     from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
-    from src.services.email.utils import get_base_url_from_request
+    from src.services.email.utils import get_member_link_base_url
 
     is_allowed, retry_after = check_login_rate_limit(request)
     if not is_allowed:
@@ -971,9 +971,18 @@ async def magic_link_request(
     if not user.email_verified and get_deployment_mode() == "saas":
         return generic
 
+    # The org's host and branding are only for its members; anyone else gets
+    # the platform link, so an org cannot mail sign-in links for accounts it
+    # has nothing to do with from (or to) a host it controls.
+    if org is not None:
+        from src.security.org_auth import get_user_org
+
+        if await get_user_org(user.id, org.id, db_session) is None:
+            org = None
+
     try:
         token = issue_magic_login_token(user.email, org.id if org else None)
-        base_url = get_base_url_from_request(request)
+        base_url = await get_member_link_base_url(request, db_session, user.id)
         branding_kwargs: dict = {}
         if org is not None:
             # Org-scoped request: the link lands on the org's own host (its

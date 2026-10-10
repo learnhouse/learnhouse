@@ -20,7 +20,7 @@ from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
 from src.security.auth import resolve_acting_user_id
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.security.rbac import AccessAction, check_resource_access
-from src.security.org_auth import is_org_admin, require_org_create_permission, require_org_membership
+from src.security.org_auth import is_org_admin, is_org_member, require_org_create_permission, require_org_membership
 from src.services.utils.upload_content import upload_file
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -376,14 +376,16 @@ async def check_board_membership(
 ) -> BoardMemberRead:
     # Single joined query: Board + BoardMember + User in one round-trip
     result = (await db_session.execute(
-        select(BoardMember, User)
+        select(BoardMember, User, Board.org_id)
         .join(Board, BoardMember.board_id == Board.id)
         .join(User, BoardMember.user_id == User.id)
         .where(Board.board_uuid == board_uuid, BoardMember.user_id == current_user.id)
     )).first()
 
-    if result:
-        member, user = result
+    # A member row only counts while the user still belongs to the board's org;
+    # otherwise fall through to the same RBAC check as any other visitor.
+    if result and await is_org_member(current_user.id, result[2], db_session):
+        member, user, _ = result
         return BoardMemberRead(
             id=member.id,
             board_id=member.board_id,

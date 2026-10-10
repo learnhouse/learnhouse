@@ -16,6 +16,7 @@ from src.db.superadmin_api_tokens import (
     SuperadminAPITokenRead,
     SuperadminAPITokenUpdate,
 )
+from src.services.api_tokens.api_tokens import _validate_expires_at
 from src.security.security import (
     security_hash_token,
     security_token_needs_rehash,
@@ -75,6 +76,8 @@ async def create_superadmin_token(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"An active superadmin API token named '{name}' already exists for this user",
         )
+
+    _validate_expires_at(token_data.expires_at)
 
     full_token, token_prefix, token_hash = generate_token()
     now = str(datetime.now())
@@ -205,11 +208,11 @@ async def validate_superadmin_token_for_auth(
         try:
             expires_at = datetime.fromisoformat(api_token.expires_at.replace('Z', '+00:00'))
             now = datetime.now(expires_at.tzinfo)
-            if now > expires_at:
-                return None
-        except (ValueError, TypeError):
-            # Unparseable expiry: fail safe by treating as not expired (matches org-token behavior)
-            pass
+        except (ValueError, TypeError, AttributeError):
+            # Unparseable expiry fails closed (matches org-token behavior)
+            return None
+        if now > expires_at:
+            return None
 
     try:
         api_token.last_used_at = str(datetime.now())

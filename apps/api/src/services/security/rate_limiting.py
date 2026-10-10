@@ -9,7 +9,7 @@ Rate limits:
 import ipaddress
 import os
 from contextvars import ContextVar
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 from fastapi import HTTPException, Request
 from src.core.redis import get_redis_client as _get_redis_pool_client
 
@@ -250,14 +250,19 @@ def check_api_token_rate_limit(request: Request) -> Tuple[bool, int]:
     return is_allowed, retry_after
 
 
-def check_password_reset_rate_limit(email: str) -> Tuple[bool, int]:
+def check_password_reset_rate_limit(
+    email: str, action: Literal["send", "change"] = "change"
+) -> Tuple[bool, int]:
     """
-    Check password reset verification rate limit: 5 attempts per 5 minutes per email.
+    Check password reset rate limit: 5 attempts per 5 minutes per email.
+
+    Sending and redeeming codes count separately, so someone flooding an
+    address with reset emails cannot also lock its owner out of using one.
 
     Returns:
         Tuple of (is_allowed, retry_after_seconds)
     """
-    key = f"password_reset:{email.lower()}"
+    key = f"password_reset:{action}:{email.lower()}"
 
     is_allowed, count, retry_after = check_rate_limit(
         key=key,

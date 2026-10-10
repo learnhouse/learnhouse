@@ -29,7 +29,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity
 from src.db.courses.blocks import Block
-from src.services.ai.rag.formats import vtt_windows
+from src.services.ai.rag.formats import is_safe_file_name, vtt_windows
 from src.services.ai.rag.types import Segment, SourceType
 from src.services.courses.transfer.storage_utils import read_file_content, write_file_content
 
@@ -75,9 +75,10 @@ class Media:
     def ready_captions_key(self) -> Optional[str]:
         """A finished captions track for this video, source language first."""
         captions = self.captions or {}
+        # Codes become a path component of the storage key.
         ready = [
             lang.get("code") for lang in captions.get("languages") or []
-            if isinstance(lang, dict) and lang.get("status") == "ready" and lang.get("code")
+            if isinstance(lang, dict) and lang.get("status") == "ready" and is_safe_file_name(lang.get("code"))
         ]
         if not ready:
             return None

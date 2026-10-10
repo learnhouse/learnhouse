@@ -6,7 +6,7 @@ challenge deliberately lives at ``/auth/login/mfa`` so the web app's auth proxy
 needing a separate allowlist entry.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -18,7 +18,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.user_mfa import UserMFA
 from src.db.users import APITokenUser, PublicUser, SuperadminAPITokenUser, User, UserRead
-from src.security.auth import get_authenticated_user
+from src.security.auth import (
+    decode_jwt,
+    extract_jwt_from_request,
+    get_authenticated_user,
+    revoke_user_sessions_before,
+)
 from src.security.security import security_verify_password
 from src.services.auth.mfa import (
     build_provisioning_uri,
@@ -31,7 +36,6 @@ from src.services.auth.mfa import (
     get_user_mfa,
     replace_backup_codes,
     verify_and_consume_totp,
-    verify_totp_code,
 )
 from src.services.auth.session import (
     decode_mfa_pending_token,
@@ -116,6 +120,27 @@ def _verify_password_if_set(user: User, password: Optional[str]) -> None:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "INVALID_PASSWORD", "message": "Incorrect password."},
         )
+
+
+def _revoke_older_sessions(request: Request, user_id: int) -> None:
+    """Sign out every session established before the one making this request.
+
+    The revocation store is a single "issued before" cutoff per user, so the
+    closest it can get to "all other sessions" without logging the caller out
+    is to cut at this session's own issue time.
+    """
+    token = extract_jwt_from_request(request)
+    payload = decode_jwt(token) if token else None
+    iat = payload.get("iat") if payload else None
+    if not iat:
+        return
+    try:
+        # One second of slack: this session's access and refresh tokens are
+        # minted separately and can straddle a second boundary, and cutting
+        # between them would sign the caller out at their next refresh.
+        revoke_user_sessions_before(user_id, datetime.fromtimestamp(iat - 1, tz=timezone.utc))
+    except Exception:  # pragma: no cover - never fail the 2FA change on the revocation store
+        pass
 
 
 def _check_mfa_rate_limit(request: Request, scope: str, identifier: str) -> None:
@@ -281,6 +306,7 @@ async def api_mfa_confirm(
     await db_session.commit()
 
     codes = await replace_backup_codes(db_session, user.id)
+    _revoke_older_sessions(request, user.id)
     return {"enabled": True, "backup_codes": codes}
 
 
@@ -313,7 +339,10 @@ async def api_mfa_disable(
     # still needs a way to turn the factor off rather than being stuck with it.
     accepted = False
     if secret is not None:
-        accepted, _ = verify_totp_code(secret, form.code, mfa.last_used_timestep)
+        # Burn the timestep so a code seen once cannot be replayed here.
+        accepted = await verify_and_consume_totp(
+            db_session, user.id, secret, form.code, mfa.last_used_timestep
+        )
     if not accepted:
         accepted = await consume_backup_code(db_session, user.id, form.code)
     if not accepted:
@@ -323,6 +352,7 @@ async def api_mfa_disable(
         )
 
     await disable_mfa(db_session, user.id)
+    _revoke_older_sessions(request, user.id)
     return {"enabled": False}
 
 
@@ -839,4 +869,7 @@ async def api_org_reset_member_mfa(
 
     had_factor = await get_user_mfa(db_session, user_id) is not None
     await disable_mfa(db_session, user_id)
+    # Whoever lost (or stole) the device may still hold a session; the member
+    # signs in again and re-enrolls.
+    revoke_user_sessions_before(user_id)
     return {"reset": True, "user_id": user_id, "had_factor": had_factor}

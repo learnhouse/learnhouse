@@ -79,3 +79,27 @@ async def test_record_failed_login_is_backwards_compatible_without_ip():
     is_locked, duration = await account_lockout.record_failed_login(user, db_session)
     assert is_locked is False
     assert duration is None
+
+
+@pytest.mark.asyncio
+async def test_active_lock_is_not_extended_by_further_failures(monkeypatch):
+    """
+    Login answers a locked account like a wrong password even when the
+    password is right, so further failures must not push the lock forward,
+    or the owner retrying their real password would never get back in.
+    """
+    monkeypatch.setattr(
+        account_lockout, "_record_failed_ip", lambda user_id, ip: 3
+    )
+    future = "2999-01-01T00:00:00+00:00"
+    user = SimpleNamespace(id=10, locked_until=future)
+    db_session = AsyncMock()
+
+    await account_lockout.record_failed_login(
+        user, db_session, ip_address="3.3.3.3"
+    )
+
+    stmt = db_session.execute.await_args.args[0]
+    sql = str(stmt.compile(compile_kwargs={"literal_binds": True}))
+    # The lock branch is disabled outright, so locked_until keeps its value.
+    assert "CASE WHEN false" in sql

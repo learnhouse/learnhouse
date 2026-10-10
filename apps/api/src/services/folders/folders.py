@@ -161,11 +161,33 @@ def _public_resource_dump(resource) -> dict:
     key is that the client can never derive a storage path (bytes are only
     reachable via GET /media/{uuid}/file).
     """
+    from src.db.boards import Board, BoardRead
     from src.db.media.media import Media, MediaRead
 
     if isinstance(resource, Media):
         return MediaRead.model_validate(resource, from_attributes=True).model_dump()
+    if isinstance(resource, Board):
+        # The table row carries the raw collaborative document (ydoc_state).
+        return BoardRead.model_validate(resource, from_attributes=True).model_dump()
     return resource.model_dump()
+
+
+# Resource types gated by their own RBAC rules (usergroup links, folder-aware
+# media privacy); filtered per item through check_resource_access.
+_RBAC_GATED_RESOURCE_TYPES = ("boards", "communities", "media")
+
+
+async def _can_read(request, current_user, db_session: AsyncSession, resource_uuid: str) -> bool:
+    try:
+        decision = await check_resource_access(
+            request, db_session, current_user, resource_uuid, AccessAction.READ,
+            raise_on_deny=False,
+        )
+    except HTTPException:
+        # Org two-factor/auth policies raise even with raise_on_deny=False;
+        # in a listing that just means the item is not shown.
+        return False
+    return bool(decision.allowed)
 
 
 # Resource types whose rows carry draft / usergroup restrictions of their own.
@@ -244,6 +266,8 @@ async def _resolve_items(
     include_private: bool,
     sort_mode: str = "manual",
     viewer_id: Optional[int] = None,
+    request: Optional[Request] = None,
+    current_user=None,
 ) -> List[FolderContentItem]:
     """Resolve FolderContent rows into typed items, batching per resource type.
 
@@ -253,7 +277,8 @@ async def _resolve_items(
 
     Courses and podcasts the viewer can't read (drafts, usergroup-restricted)
     are left out, so a folder can't leak their metadata; see
-    ``_hidden_gated_uuids`` for ``viewer_id``.
+    ``_hidden_gated_uuids`` for ``viewer_id``. Boards, communities and media
+    are checked through RBAC for the ``current_user`` when one is given.
     """
     registry = _resource_registry()
 
@@ -286,6 +311,13 @@ async def _resolve_items(
                 continue
             r_uuid = getattr(resource, uuid_field)
             if r_uuid in hidden:
+                continue
+            if (
+                current_user is not None
+                and viewer_id is not None
+                and resource_type in _RBAC_GATED_RESOURCE_TYPES
+                and not await _can_read(request, current_user, db_session, r_uuid)
+            ):
                 continue
             items.append(
                 FolderContentItem(
@@ -326,6 +358,8 @@ async def _folder_to_read(
     include_private: bool,
     with_children: bool = True,
     viewer_id: Optional[int] = None,
+    request: Optional[Request] = None,
+    current_user=None,
 ) -> FolderRead:
     from sqlalchemy import func
 
@@ -357,6 +391,12 @@ async def _folder_to_read(
         for sub in sub_rows:
             if not include_private and not sub.public:
                 continue
+            if (
+                current_user is not None
+                and viewer_id is not None
+                and not await _can_read(request, current_user, db_session, sub.folder_uuid)
+            ):
+                continue
             subfolders.append(
                 await _folder_to_read(db_session, sub, include_private, with_children=False)
             )
@@ -367,7 +407,8 @@ async def _folder_to_read(
             )
         ).scalars().all()
         items = await _resolve_items(
-            db_session, list(content_rows), include_private, sort_mode, viewer_id
+            db_session, list(content_rows), include_private, sort_mode, viewer_id,
+            request=request, current_user=current_user,
         )
         breadcrumbs = await _build_breadcrumbs(db_session, folder)
 
@@ -495,6 +536,7 @@ async def get_folder(
     return await _folder_to_read(
         db_session, folder, include_private=include_private,
         viewer_id=resolve_acting_user_id(current_user),
+        request=request, current_user=current_user,
     )
 
 
@@ -669,13 +711,22 @@ async def get_folders(
     statement = statement.offset((page - 1) * limit).limit(limit)
     folders = (await db_session.execute(statement)).scalars().all()
 
-    return [
-        await _folder_to_read(
-            db_session, folder, include_private=include_private,
-            viewer_id=resolve_acting_user_id(current_user),
+    viewer_id = resolve_acting_user_id(current_user)
+    result = []
+    for folder in folders:
+        # Private folders can be restricted to UserGroups; membership in the org
+        # alone doesn't grant READ on those.
+        if include_private and not await _can_read(
+            request, current_user, db_session, folder.folder_uuid
+        ):
+            continue
+        result.append(
+            await _folder_to_read(
+                db_session, folder, include_private=include_private,
+                viewer_id=viewer_id, request=request, current_user=current_user,
+            )
         )
-        for folder in folders
-    ]
+    return result
 
 
 async def reorder_folders(
@@ -923,6 +974,8 @@ async def move_folder_content(
     ).scalars().first()
     if not source or not target:
         raise HTTPException(status_code=404, detail="Folder not found")
+    if source.org_id != target.org_id:
+        raise HTTPException(status_code=400, detail="Target folder is in another organization")
 
     await check_resource_access(
         request, db_session, current_user, source.folder_uuid, AccessAction.UPDATE
@@ -988,6 +1041,7 @@ async def search_library(
         return {"folders": [], "items": []}
 
     include_private = await _may_see_private(current_user, int(org_id), db_session)
+    viewer_id = resolve_acting_user_id(current_user)
     like = build_like_pattern(query.lower())
 
     # Cache folder paths (full breadcrumb chain) by folder id
@@ -1019,6 +1073,8 @@ async def search_library(
 
     folder_results = []
     for f in folder_rows:
+        if include_private and not await _can_read(request, current_user, db_session, f.folder_uuid):
+            continue
         crumbs = await _build_breadcrumbs(db_session, f)
         d = f.model_dump()
         # parent path = breadcrumb chain excluding the folder itself
@@ -1054,6 +1110,15 @@ async def search_library(
         uuids = list({r.resource_uuid for r in rrows})
         resources = (await db_session.execute(select(model).where(uuid_col.in_(uuids)))).scalars().all()
         rmap = {getattr(x, uuid_field): x for x in resources}
+        # Same visibility rules as browsing the folders (see _resolve_items)
+        hidden: set[str] = set()
+        if rtype in _GATED_RESOURCE_TYPES:
+            hidden = await _hidden_gated_uuids(
+                db_session,
+                [(x, getattr(x, uuid_field)) for x in resources],
+                include_private,
+                viewer_id,
+            )
         for r in rrows:
             if len(items) >= LIBRARY_SEARCH_MAX_RESULTS:
                 break
@@ -1064,8 +1129,15 @@ async def search_library(
                 continue
             if not include_private and not getattr(res, "public", False):
                 continue
+            if r.resource_uuid in hidden:
+                continue
             name = (getattr(res, "name", None) or getattr(res, "title", "") or "")
             if query.lower() not in name.lower():
+                continue
+            if (
+                rtype in _RBAC_GATED_RESOURCE_TYPES
+                and not await _can_read(request, current_user, db_session, r.resource_uuid)
+            ):
                 continue
             seen.add(r.resource_uuid)
             items.append({
@@ -1103,6 +1175,7 @@ async def get_org_root_items(
     return await _resolve_items(
         db_session, list(content_rows), include_private=include_private, sort_mode=sort_mode,
         viewer_id=resolve_acting_user_id(current_user),
+        request=request, current_user=current_user,
     )
 
 

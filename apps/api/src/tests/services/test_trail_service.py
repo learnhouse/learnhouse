@@ -270,6 +270,23 @@ class TestTrailService:
         assert missing_course_exc.value.status_code == 404
 
     @pytest.mark.asyncio
+    async def test_add_activity_to_trail_rejects_assignments(
+        self, db, org, course, regular_user, mock_request
+    ):
+        db.add(Activity(
+            id=77, name="Essay", activity_type=ActivityTypeEnum.TYPE_ASSIGNMENT,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_ASSIGNMENT_ANY, content={},
+            published=True, org_id=org.id, course_id=course.id,
+            activity_uuid="activity_essay", creation_date="now", update_date="now",
+        ))
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await add_activity_to_trail(mock_request, regular_user, "activity_essay", db)
+        assert exc.value.status_code == 400
+        assert (await db.execute(TrailStep.__table__.select())).all() == []
+
+    @pytest.mark.asyncio
     async def test_remove_activity_from_trail_deletes_step_and_checks_guards(
         self, db, org, admin_user, mock_request, activity, course
     ):

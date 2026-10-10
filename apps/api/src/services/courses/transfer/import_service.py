@@ -819,6 +819,7 @@ async def _import_activity(
 
     # Clone content (will update block references)
     new_content = dict(activity_data.get("content", {})) if activity_data.get("content") else {}
+    _drop_foreign_file_refs(new_content, new_course_path)
     new_details = dict(activity_data.get("details", {})) if activity_data.get("details") else {}
 
     new_activity = Activity(
@@ -958,6 +959,7 @@ async def _import_block(
 
     # Clone block content
     new_block_content = dict(block_data.get("content", {})) if block_data.get("content") else {}
+    _drop_foreign_file_refs(new_block_content, new_activity_path.split("/activities/", 1)[0])
 
     # Track what needs to be updated in activity content
     content_updates = {
@@ -1042,6 +1044,27 @@ async def _import_block(
     await db_session.flush()
 
     return new_block_uuid, content_updates
+
+
+# Content keys that may carry a full storage key instead of a bare file name.
+_FILE_REF_KEYS = ("file_id", "uri", "file_path")
+
+
+def _drop_foreign_file_refs(content: dict, new_course_path: str) -> dict:
+    """Drop storage-key references that point outside the imported course.
+
+    Packaged files are re-rooted under ``new_course_path``, so a path-like
+    reference anywhere else can't be backed by the package: it names some
+    other course's (or org's) file, which indexing or later copies would then
+    read on the importer's behalf. Bare file names (no slash) are left alone.
+    """
+    own = (f"{new_course_path}/", f"{new_course_path.removeprefix('content/')}/")
+    for key in _FILE_REF_KEYS:
+        value = content.get(key)
+        if isinstance(value, str) and ("/" in value or "\\" in value):
+            if ".." in value or not value.startswith(own):
+                content.pop(key)
+    return content
 
 
 def _get_block_type_folder(block_type: str) -> Optional[str]:

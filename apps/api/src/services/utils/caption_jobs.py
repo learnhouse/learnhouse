@@ -35,7 +35,11 @@ from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
     upload_directory_to_s3,
 )
-from src.services.utils.hls_jobs import _fetch_source  # reuse the R2 download helper
+from src.services.courses.activities.video import (
+    MAX_CAPTION_LANGUAGES,
+    _CAPTION_LANG_RE,
+)
+from src.services.utils.hls_jobs import _fetch_source, _safe_filename
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +165,10 @@ async def _resolve(activity_uuid: str) -> Optional[dict]:
         captions = (a.extra_metadata or {}).get("captions") or {}
         if not filename or not captions.get("enabled"):
             return None
+        # Stored values are re-checked here: the reaper re-queues jobs without
+        # going through configure_captions, and the filename becomes a key.
+        if not isinstance(filename, str) or not _safe_filename(filename):
+            return None
         org = (await db.execute(select(Organization).where(Organization.id == a.org_id))).scalars().first()
         course = (await db.execute(select(Course).where(Course.id == a.course_id))).scalars().first()
         if not org or not course:
@@ -173,6 +181,31 @@ async def _resolve(activity_uuid: str) -> Optional[dict]:
             "filename": filename,
             "captions": captions,
         }
+
+
+def _valid_targets(languages) -> list[dict]:
+    """Target languages with a well-formed code, deduped and capped, exactly as
+    configure_captions accepts them. A code becomes a file and storage key name."""
+    targets: list[dict] = []
+    seen: set[str] = set()
+    for entry in languages if isinstance(languages, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        code = entry.get("code")
+        if not isinstance(code, str) or not _CAPTION_LANG_RE.match(code) or code in seen:
+            continue
+        seen.add(code)
+        targets.append(dict(entry))
+    return targets[:MAX_CAPTION_LANGUAGES]
+
+
+def _vtt_path(out_dir: str, code: str) -> str:
+    """Output path for one language, refused unless it stays inside ``out_dir``."""
+    base = os.path.realpath(out_dir)
+    path = os.path.realpath(os.path.join(base, f"{code}.vtt"))
+    if os.path.dirname(path) != base:
+        raise ValueError(f"unsafe caption language code: {code!r}")
+    return path
 
 
 async def generate_activity_captions(activity_uuid: str) -> bool:
@@ -192,7 +225,11 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
     captions_prefix = f"{base}/captions"
     cfg = info["captions"]
     source_language = cfg.get("source_language") or "auto"
-    targets = [dict(x) for x in (cfg.get("languages") or []) if x.get("code")]
+    if source_language != "auto" and not (
+        isinstance(source_language, str) and _CAPTION_LANG_RE.match(source_language)
+    ):
+        source_language = "auto"
+    targets = _valid_targets(cfg.get("languages"))
     if not targets:
         await _patch_captions(activity_uuid, status="failed", error="no_languages")
         return False
@@ -261,7 +298,8 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
                         vtt = source_vtt
                     else:
                         vtt = await cap.translate_vtt(source_vtt, t.get("label") or code, model_name)
-                    with open(os.path.join(out_dir, f"{code}.vtt"), "w", encoding="utf-8") as f:
+                    vtt_path = _vtt_path(out_dir, code)
+                    with open(vtt_path, "w", encoding="utf-8") as f:
                         f.write(vtt)
                     await _set_lang_status(activity_uuid, code, "ready")
                     done += 1

@@ -5,7 +5,11 @@ from typing import Literal, Optional
 from uuid import uuid4
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from src.security.org_auth import require_org_destroy_right, require_org_role_permission
+from src.security.org_auth import (
+    enforce_org_mfa,
+    require_org_destroy_right,
+    require_org_role_permission,
+)
 from src.db.organization_config import (
     OrganizationConfig,
     OrganizationConfigBase,
@@ -14,11 +18,12 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_org_admin_status,
     authorization_verify_if_user_is_anon,
 )
+from src.security.rbac.utils import get_element_organization_id
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.security.org_auth import get_user_org
 from src.security.superadmin import is_user_superadmin
 from src.services.security.profile_validation import validate_profile_fields
-from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, SuperadminAPITokenUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
     Organization,
@@ -293,6 +298,7 @@ async def create_org(
                 detail="Multi-organization mode requires Enterprise Edition",
             )
 
+    org_object.slug = normalize_org_slug(org_object.slug)
     statement = select(Organization).where(Organization.slug == org_object.slug)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -391,6 +397,7 @@ async def create_org_with_config(
                 detail="Multi-organization mode requires Enterprise Edition",
             )
 
+    org_object.slug = normalize_org_slug(org_object.slug)
     statement = select(Organization).where(Organization.slug == org_object.slug)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -478,6 +485,7 @@ def _acting_user_id(current_user) -> int:
     return resolve_acting_user_id(current_user)
 
 
+
 async def update_org(
     request: Request,
     org_object: OrganizationUpdate,
@@ -498,6 +506,9 @@ async def update_org(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     reject_url_in_org_name(org_object.name)
+    # Only a changed slug is validated: existing slugs keep working as-is.
+    if org_object.slug is not None and org_object.slug != org.slug:
+        org_object.slug = normalize_org_slug(org_object.slug)
 
     # Everything else on the demo org is fair game; editing the name or logo
     # is part of what a prospect is here to try, and the refresh puts it back.
@@ -948,6 +959,45 @@ async def wipe_org_content(
     return {"detail": "Organization content wiped", "deleted_courses": deleted_count}
 
 
+async def _org_ids_user_may_manage(
+    user_id: int, org_ids: list[int], db_session: AsyncSession
+) -> set[int]:
+    """Org ids among ``org_ids`` where the user holds organizations.update
+    (mirrors require_org_role_permission, including its role-id fallback)."""
+    if await is_user_superadmin(user_id, db_session):
+        return set(org_ids)
+    from src.db.roles import Role
+    from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+
+    rows = (await db_session.execute(
+        select(UserOrganization.org_id, Role)
+        .join(Role, Role.id == UserOrganization.role_id)
+        .where(UserOrganization.user_id == user_id, UserOrganization.org_id.in_(org_ids))
+    )).all()
+    allowed = set()
+    for org_id, role in rows:
+        if role.rights and isinstance(role.rights, dict):
+            if (role.rights.get("organizations") or {}).get("action_update", False):
+                allowed.add(org_id)
+        elif role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+            allowed.add(org_id)
+    return allowed
+
+
+async def _redact_emails_for_member(
+    orgs: list[OrganizationRead], user_id: int, db_session: AsyncSession
+) -> list[OrganizationRead]:
+    """``org.email`` is the creator's address by default; only members who may
+    edit it get it back (same rule as _redact_org_email_unless_manager)."""
+    if not orgs:
+        return orgs
+    managed = await _org_ids_user_may_manage(user_id, [o.id for o in orgs], db_session)
+    return [
+        o if o.id in managed or o.email is None else o.model_copy(update={"email": None})
+        for o in orgs
+    ]
+
+
 async def get_orgs_by_user_admin(
     request: Request,
     db_session: AsyncSession,
@@ -983,7 +1033,7 @@ async def get_orgs_by_user_admin(
         org_read = OrganizationRead(**org.model_dump(), config=config)
         orgsWithConfig.append(org_read)
 
-    return orgsWithConfig
+    return await _redact_emails_for_member(orgsWithConfig, user_id, db_session)
 
 
 async def get_orgs_by_user(
@@ -1020,7 +1070,7 @@ async def get_orgs_by_user(
         org_read = OrganizationRead(**org.model_dump(), config=config)
         orgsWithConfig.append(org_read)
 
-    return orgsWithConfig
+    return await _redact_emails_for_member(orgsWithConfig, user_id, db_session)
 
 
 # Config related
@@ -1052,6 +1102,12 @@ async def update_org_signup_mechanism(
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+    # Opening an invite-only org to anyone takes organizations.update, not
+    # just the maintainer status rbac_check accepts.
+    await require_org_role_permission(
+        _acting_user_id(current_user), org.id, db_session,
+        "organizations", "action_update",
+    )
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
@@ -2159,6 +2215,12 @@ async def rbac_check(
     if isinstance(current_user, InternalUser):
         return True
 
+    # Superadmin API tokens are cross-org by design, and auth re-checks that
+    # their minter is still a superadmin. Their id is a token row id, so they
+    # must not reach the user-id based checks below.
+    if isinstance(current_user, SuperadminAPITokenUser):
+        return True
+
     # API Token path: verify token has permissions for this action on organizations
     if isinstance(current_user, APITokenUser):
         # SECURITY: API tokens should NOT be allowed to delete organizations
@@ -2225,6 +2287,12 @@ async def rbac_check(
                 detail="User rights (admin status) : You don't have the right to perform this action",
             )
 
+        # Org session policies (2FA requirement, allowed sign-in methods) apply
+        # to org writes too; superadmins are exempt inside the policy itself.
+        target_org_id = await get_element_organization_id(org_uuid, db_session)
+        if target_org_id is not None:
+            await enforce_org_mfa(current_user.id, target_org_id, db_session)
+
 
 async def is_org_admin_role(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """True if the user holds the Admin role in the org, or is a superadmin.
@@ -2236,6 +2304,23 @@ async def is_org_admin_role(user_id: int, org_id: int, db_session: AsyncSession)
         return True
     user_org = await get_user_org(user_id, org_id, db_session)
     return user_org is not None and user_org.role_id == ADMIN_ROLE_ID
+
+
+def normalize_org_slug(slug: str) -> str:
+    """Lower-case and validate an org slug as a single DNS label.
+
+    Slugs become hostnames in emailed links ({slug}.{domain}), so anything
+    outside a DNS label (/ ? # " ...) would let the slug rewrite the link.
+    """
+    from src.services.email.utils import ORG_SLUG_LABEL
+
+    normalized = (slug or "").strip().lower().strip("-")
+    if not ORG_SLUG_LABEL.fullmatch(normalized):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization address may only contain lowercase letters, numbers and dashes",
+        )
+    return normalized
 
 
 def reject_url_in_org_name(name: Optional[str], field: str = "name") -> None:

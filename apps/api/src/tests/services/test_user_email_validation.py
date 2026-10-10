@@ -101,7 +101,9 @@ async def test_update_user_resets_email_verified_when_email_changes(
     """Changing the email flips email_verified back to False."""
     await _set_user_email_state(db, user_id=regular_user.id, email="regular@test.com", verified=True)
 
-    with patch("src.services.users.users.rbac_check", new=AsyncMock()):
+    with patch("src.services.users.users.rbac_check", new=AsyncMock()), patch(
+        "src.services.users.users._require_reauth_for_email_change", new=AsyncMock()
+    ), patch("src.services.users.users._after_email_change", new=AsyncMock()):
         result = await update_user(
             mock_request,
             db,

@@ -433,7 +433,8 @@ def _token_db(token_row):
 
 def _token_row():
     return SimpleNamespace(
-        org_id=1, token_hash="h", expires_at=None, last_used_at=None, is_active=True
+        org_id=1, token_hash="h", expires_at=None, last_used_at=None, is_active=True,
+        created_by_user_id=1,
     )
 
 
@@ -456,7 +457,8 @@ async def test_token_accepted_on_pro_in_saas():
          patch("src.security.features_utils.plan_check.get_org_plan",
                new=AsyncMock(return_value="pro")), \
          patch.object(api_tokens_service, "security_verify_token", return_value=True), \
-         patch.object(api_tokens_service, "security_token_needs_rehash", return_value=False):
+         patch.object(api_tokens_service, "security_token_needs_rehash", return_value=False), \
+         patch.object(api_tokens_service, "is_org_member", new=AsyncMock(return_value=True)):
         result = await api_tokens_service.validate_api_token_for_auth(
             "lh_abcdefghijklmnop", _token_db(row)
         )
@@ -479,7 +481,8 @@ async def test_token_plan_check_bypassed_self_hosted():
     row = _token_row()
     with patch("src.security.features_utils.plan_check.get_deployment_mode", return_value="oss"), \
          patch.object(api_tokens_service, "security_verify_token", return_value=True), \
-         patch.object(api_tokens_service, "security_token_needs_rehash", return_value=False):
+         patch.object(api_tokens_service, "security_token_needs_rehash", return_value=False), \
+         patch.object(api_tokens_service, "is_org_member", new=AsyncMock(return_value=True)):
         result = await api_tokens_service.validate_api_token_for_auth(
             "lh_abcdefghijklmnop", _token_db(row)
         )

@@ -1,6 +1,7 @@
+import json
 from typing import Optional, TYPE_CHECKING
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlmodel import Field, SQLModel
 from sqlalchemy import JSON, Column, Index
 from sqlalchemy.dialects.postgresql import JSONB
@@ -22,6 +23,20 @@ class UserBase(SQLModel):
     profile: Optional[dict] = Field(default_factory=dict, sa_column=Column(JSON))
     extra_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
 
+# Free-form profile fields are stored as-is and returned on every profile and
+# member read, so each one is capped by its serialized size.
+MAX_PROFILE_FIELD_BYTES = 64 * 1024
+
+
+def _check_profile_field_size(value):
+    if value is None:
+        return value
+    raw = value if isinstance(value, str) else json.dumps(value, default=str)
+    if len(raw.encode("utf-8")) > MAX_PROFILE_FIELD_BYTES:
+        raise ValueError(f"must be at most {MAX_PROFILE_FIELD_BYTES // 1024} KB")
+    return value
+
+
 class UserCreate(UserBase):
     first_name: str = ""
     last_name: str = ""
@@ -34,6 +49,10 @@ class UserCreate(UserBase):
     # request could write an arbitrary blob. Values here are validated against
     # the org's declared fields before anything is stored.
     custom_fields: Optional[dict] = None
+
+    _cap_profile_fields = field_validator("bio", "details", "profile")(
+        _check_profile_field_size
+    )
 
 
 class UserUpdate(UserBase):
@@ -49,6 +68,14 @@ class UserUpdate(UserBase):
     details: Optional[dict] = Field(default_factory=dict)
     profile: Optional[dict] = Field(default_factory=dict)
     extra_metadata: Optional[dict] = None
+    # Re-authentication for an email change (never stored): the current
+    # password, or a two-factor code for accounts that have no password.
+    current_password: Optional[str] = None
+    mfa_code: Optional[str] = None
+
+    _cap_profile_fields = field_validator("bio", "details", "profile")(
+        _check_profile_field_size
+    )
 
 
 class UserUpdatePassword(SQLModel):

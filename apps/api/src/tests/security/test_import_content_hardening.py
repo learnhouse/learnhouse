@@ -513,3 +513,21 @@ class TestImportTempIdTraversal:
         )
 
         assert ignored == {"evil.html"}
+
+
+def test_import_drops_file_refs_outside_the_new_course():
+    from src.services.courses.transfer.import_service import _drop_foreign_file_refs
+
+    course_path = "content/orgs/org_new/courses/course_new"
+    content = {
+        "filename": "documentpdf_a.pdf",
+        "file_id": "block_abc",
+        "uri": "content/orgs/org_victim/courses/course_x/activities/a/secret.pdf",
+        "file_path": "orgs/org_new/courses/course_new/../course_x/secret.pdf",
+    }
+    assert _drop_foreign_file_refs(dict(content), course_path) == {
+        "filename": "documentpdf_a.pdf",
+        "file_id": "block_abc",
+    }
+    own = {"uri": "orgs/org_new/courses/course_new/activities/a/doc.pdf"}
+    assert _drop_foreign_file_refs(dict(own), course_path) == own

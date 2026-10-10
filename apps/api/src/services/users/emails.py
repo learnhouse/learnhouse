@@ -457,6 +457,35 @@ def send_account_deleted_email(
     )
 
 
+def send_email_changed_notice(
+    email: EmailStr,
+    new_email: str,
+    username: str = "",
+    lang: str = "en",
+):
+    """Tell the previous address that the account's email was changed, so a
+    hijacked session cannot quietly move the account to another inbox."""
+    safe_username = html.escape(email_user_name(username))
+    heading = t(lang, "email_changed.heading")
+    body_text = t(
+        lang, "email_changed.body", username=safe_username, new_email=html.escape(new_email)
+    )
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">{body_text}</p>
+    """
+    return _send_notification_email(
+        to=email,
+        subject=t(lang, "email_changed.subject"),
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "email_changed.footer"),
+        ),
+    )
+
+
 def send_password_reset_email(
     generated_reset_code: str,
     user: UserRead,
@@ -479,7 +508,7 @@ def send_password_reset_email(
     safe_code = html.escape(generated_reset_code)
     safe_email = quote(str(email), safe='')
     safe_code_param = quote(generated_reset_code, safe='')
-    reset_url = f"{base_url}/reset?email={safe_email}&amp;resetCode={safe_code_param}"
+    reset_url = html.escape(f"{base_url}/reset?email={safe_email}&resetCode={safe_code_param}")
 
     heading = t(lang, "password_reset.heading")
     body_text = t(lang, "password_reset.body", username=safe_username)
@@ -524,7 +553,7 @@ def send_password_reset_email_platform(
     safe_code = html.escape(generated_reset_code)
     safe_email = quote(str(email), safe='')
     safe_code_param = quote(generated_reset_code, safe='')
-    reset_url = f"{base_url}/reset?email={safe_email}&amp;resetCode={safe_code_param}"
+    reset_url = html.escape(f"{base_url}/reset?email={safe_email}&resetCode={safe_code_param}")
 
     heading = t(lang, "password_reset.heading")
     body_text = t(lang, "password_reset.body", username=safe_username)
@@ -597,7 +626,7 @@ def send_invitation_email(
             {intro}
         </p>
         {code_section}
-        <a href="{signup_url}" style="{_button_style(brand_color)}">
+        <a href="{html.escape(signup_url)}" style="{_button_style(brand_color)}">
             {cta}
         </a>
     """
@@ -770,7 +799,9 @@ def send_email_verification_email(
     safe_user_uuid = quote(user.user_uuid, safe='')
     org_uuid = organization.org_uuid if organization else "none"
     safe_org_uuid = quote(org_uuid, safe='')
-    verification_url = f"{base_url}/verify-email?token={safe_token}&amp;user={safe_user_uuid}&amp;org={safe_org_uuid}"
+    verification_url = html.escape(
+        f"{base_url}/verify-email?token={safe_token}&user={safe_user_uuid}&org={safe_org_uuid}"
+    )
 
     heading = t(lang, "email_verification.heading")
     body_text = t(lang, "email_verification.body", username=safe_username, brand=brand)

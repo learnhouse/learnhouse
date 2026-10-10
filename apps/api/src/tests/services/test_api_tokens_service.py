@@ -416,7 +416,7 @@ class TestApiTokenLifecycle:
 
 class TestValidateApiTokenForAuth:
     @pytest.mark.asyncio
-    async def test_validate_api_token_for_auth_success_and_edge_paths(self, db, org):
+    async def test_validate_api_token_for_auth_success_and_edge_paths(self, db, org, admin_user):
         valid_token = "lh_valid_tkn"
         valid = await _make_token(
             db,
@@ -445,7 +445,7 @@ class TestValidateApiTokenForAuth:
             expires_at=(datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
         )
         malformed_token = "lh_malformed"
-        malformed = await _make_token(
+        await _make_token(
             db,
             org,
             token_uuid="apitoken_malformed",
@@ -459,12 +459,14 @@ class TestValidateApiTokenForAuth:
         assert await validate_api_token_for_auth(inactive_token, db) is None
         assert await validate_api_token_for_auth(expired_token, db) is None
 
+        # An expiry that cannot be parsed fails closed.
+        assert await validate_api_token_for_auth(malformed_token, db) is None
+
         with patch.object(db, "commit", side_effect=Exception("commit failed")):
-            malformed_result = await validate_api_token_for_auth(malformed_token, db)
+            assert await validate_api_token_for_auth(valid_token, db) is valid
 
         valid_result = await validate_api_token_for_auth(valid_token, db)
 
-        assert malformed_result is malformed
         assert valid_result is valid
         assert valid_result.last_used_at is not None
 
@@ -516,6 +518,7 @@ class TestUpdateApiTokenRightsObject:
         # (not a dict), which triggers the isinstance(value, Rights) branch at line 287.
         fake_token_data = MagicMock()
         fake_token_data.rights = rights_obj
+        fake_token_data.expires_at = None
         fake_token_data.model_dump.return_value = {"rights": rights_obj}
 
         with patch(

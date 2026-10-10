@@ -21,7 +21,7 @@ from src.security.rbac.resource_access import (
     check_resource_access,
     _get_request_checker,
 )
-from src.db.users import AnonymousUser, PublicUser, APITokenUser
+from src.db.users import AnonymousUser, PublicUser, APITokenUser, SuperadminAPITokenUser
 
 
 class TestResourceConfig:
@@ -214,6 +214,24 @@ class TestResourceAccessChecker:
         assert decision.via_admin is True
         assert decision.user_id == mock_public_user.id
         # Bypass reads the flag off the user object, so no DB calls.
+        mock_db_session.execute.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_check_access_superadmin_token_never_reads_token_id_as_user(
+        self, mock_request, mock_db_session
+    ):
+        """A superadmin API token resolves to its minter, not to user id == token id."""
+        token = SuperadminAPITokenUser(id=7, created_by_user_id=42)
+        checker = ResourceAccessChecker(mock_request, mock_db_session, token)
+
+        decision = await checker.check_access(
+            "course_xyz", AccessAction.UPDATE, AccessContext.DASHBOARD
+        )
+
+        assert decision.allowed is True
+        assert decision.via_admin is True
+        assert decision.user_id == 42
+        assert checker._get_user_id() == 0
         mock_db_session.execute.assert_not_called()
 
     @pytest.mark.asyncio

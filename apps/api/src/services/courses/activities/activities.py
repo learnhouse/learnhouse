@@ -187,8 +187,9 @@ async def get_editor_bootstrap(
 
     activity, course, org, org_config, last_modified_user, parent_chapter = db_result
 
+    # Only the editor loads this; learners read the activity via GET /activities/{uuid}.
     await check_resource_access(
-        request, db_session, current_user, course.course_uuid, AccessAction.READ
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
 
     activity_read = ActivityRead.model_validate(activity)
@@ -202,8 +203,13 @@ async def get_editor_bootstrap(
 
     # Build org with resolved_features (same shape the existing /orgs/uuid/{uuid}
     # endpoint returns, so the frontend doesn't have to reshape anything).
-    from src.services.orgs.orgs import _build_org_read_with_resolved
-    org_read = _build_org_read_with_resolved(org, org_config)
+    from src.services.orgs.orgs import (
+        _build_org_read_with_resolved,
+        _redact_org_email_unless_manager,
+    )
+    org_read = await _redact_org_email_unless_manager(
+        request, _build_org_read_with_resolved(org, org_config), current_user, db_session
+    )
 
     return EditorBootstrapResponse(
         activity=activity_read,
@@ -247,6 +253,9 @@ async def get_activityby_id(
     return await redact_activity_for_reader(
         request, ActivityRead.model_validate(activity), activity, course, current_user, db_session
     )
+
+
+_SERVER_OWNED_METADATA_KEYS = ("captions", "hls")
 
 
 async def update_activity(
@@ -294,6 +303,21 @@ async def update_activity(
         activity.current_version = (activity.current_version or 1) + 1
         # Track who made the change
         activity.last_modified_by_id = user_id
+
+    # Caption and HLS state is written only by their pipelines (configure_captions,
+    # the background jobs); a client-supplied copy would feed forged codes,
+    # statuses or keys back into those jobs and the player.
+    if 'extra_metadata' in update_data:
+        incoming = dict(update_data['extra_metadata'] or {})
+        current = activity.extra_metadata or {}
+        for key in _SERVER_OWNED_METADATA_KEYS:
+            if key in current:
+                incoming[key] = current[key]
+            else:
+                incoming.pop(key, None)
+        # Clearing (null) stays null unless pipeline state has to survive it
+        if update_data['extra_metadata'] is not None or incoming:
+            update_data['extra_metadata'] = incoming
 
     if 'content' in update_data and isinstance(update_data['content'], str):
         logger.warning("[Activity Update] Content is STRING not dict for %s", activity_uuid)

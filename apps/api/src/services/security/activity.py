@@ -49,8 +49,17 @@ def _seconds_until_utc_midnight() -> int:
     return max(1, int((midnight - now).total_seconds()))
 
 
-async def _insert_activity_row(org_id: int, user_id: int, day: date) -> None:
+# How long a "not a member" answer is remembered before checking again, so a
+# visitor who joins the org later the same day still gets today counted.
+_NON_MEMBER_RECHECK_SECONDS = 300
+
+
+async def _insert_activity_row(org_id: int, user_id: int, day: date) -> bool:
     """Insert today's activity row in its own short-lived session.
+
+    Only members of the org are recorded: the org comes from the request (any
+    ``?org_id=``), so without this check anyone signed in could add rows, and
+    active users, to any org. Returns False when the user is not a member.
 
     Uses a dedicated session (not the request's mid-transaction session) so
     committing the activity row never flushes/commits request work. Idempotent
@@ -58,10 +67,20 @@ async def _insert_activity_row(org_id: int, user_id: int, day: date) -> None:
     and is silently ignored, since the row already exists.
     """
     from sqlalchemy.exc import IntegrityError
+    from sqlmodel import select
     from src.core.events.database import _async_session_factory
     from src.db.user_activity import UserActivityDay
+    from src.db.user_organizations import UserOrganization
 
     async with _async_session_factory() as session:
+        is_member = (await session.execute(
+            select(UserOrganization.id).where(
+                UserOrganization.user_id == user_id,
+                UserOrganization.org_id == org_id,
+            ).limit(1)
+        )).scalars().first() is not None
+        if not is_member:
+            return False
         session.add(
             UserActivityDay(org_id=org_id, user_id=user_id, activity_date=day)
         )
@@ -69,6 +88,7 @@ async def _insert_activity_row(org_id: int, user_id: int, day: date) -> None:
             await session.commit()
         except IntegrityError:
             await session.rollback()  # already recorded today, no-op
+    return True
 
 
 async def _resolve_org_id(
@@ -148,15 +168,20 @@ async def record_user_activity(
         today = datetime.now(timezone.utc).date()
 
         r = get_redis_client()
+        key = f"activity_touched:{org_id}:{user_id}:{today.isoformat()}"
         if r is not None:
             try:
-                key = f"activity_touched:{org_id}:{user_id}:{today.isoformat()}"
                 # If the key already exists we've written today's row -> skip DB.
                 if not r.set(key, "1", nx=True, ex=_seconds_until_utc_midnight()):
                     return
             except Exception:
                 logger.debug("activity Redis guard failed; falling through to DB", exc_info=True)
 
-        await _insert_activity_row(org_id, user_id, today)
+        if not await _insert_activity_row(org_id, user_id, today) and r is not None:
+            try:
+                # Not a member: shorten the guard so a same-day join still counts.
+                r.set(key, "0", ex=_NON_MEMBER_RECHECK_SECONDS)
+            except Exception:
+                logger.debug("activity Redis guard update failed", exc_info=True)
     except Exception:
         logger.debug("record_user_activity failed (non-fatal)", exc_info=True)

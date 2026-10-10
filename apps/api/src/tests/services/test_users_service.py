@@ -343,6 +343,12 @@ class TestCreateAndUpdateUser:
         ), patch(
             "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
             new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.users._require_reauth_for_email_change",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.users._after_email_change",
+            new_callable=AsyncMock,
         ):
             created = await create_user(
                 mock_request,
@@ -905,6 +911,12 @@ class TestUserPasswordAvatarSession:
             new_callable=AsyncMock,
         ), patch(
             "src.services.users.users.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.users._require_reauth_for_email_change",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.users._after_email_change",
             new_callable=AsyncMock,
         ):
             with pytest.raises(HTTPException) as missing_user_exc:

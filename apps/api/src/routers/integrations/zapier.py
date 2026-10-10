@@ -86,6 +86,30 @@ def _require_token_right(api_user: APITokenUser, resource: str) -> None:
         )
 
 
+# Token rights bucket that also covers an event's resource, by event-name
+# prefix. Events of other kinds need only the users right below.
+_EVENT_BUCKETS = {
+    "course": "courses",
+    "activity": "courses",
+    "assignment": "assignments",
+    "certificate": "certifications",
+    "folder": "folders",
+    "usergroup": "usergroups",
+}
+
+
+def _require_subscription_rights(api_user: APITokenUser, event: Optional[str] = None) -> None:
+    """A subscription is a standing feed of org events, most of which name the
+    member they concern, so managing one takes the token's own ``users`` read
+    right (not just its creator's admin role), plus the read right on the
+    event's resource when it has one."""
+    _require_token_right(api_user, "users")
+    if event:
+        bucket = _EVENT_BUCKETS.get(event.split("_", 1)[0])
+        if bucket:
+            _require_token_right(api_user, bucket)
+
+
 async def _zapier_context(
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
@@ -334,6 +358,7 @@ async def zapier_create_subscription(
     # same admin gate manual webhook endpoints have.
     await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     _validate_event(payload.event)
+    _require_subscription_rights(api_user, payload.event)
     _validate_webhook_url(payload.target_url)
 
     now = str(datetime.now())
@@ -399,6 +424,7 @@ async def zapier_list_subscriptions(
     api_user, db_session = ctx
     # Subscriptions expose webhook target URLs: same admin gate as subscribe.
     await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
+    _require_subscription_rights(api_user)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.org_id == api_user.org_id,
         WebhookEndpoint.source == "zapier",
@@ -434,7 +460,9 @@ async def zapier_delete_subscription(
     ctx=Depends(_zapier_context),
 ) -> dict:
     api_user, db_session = ctx
-    # Removing an outbound event feed takes the same admin gate as adding one.
+    # Removing an outbound event feed takes the same admin gate as adding one,
+    # but not the token-rights check: a token minted before that check existed
+    # must still be able to switch off the feeds it created.
     await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.id == subscription_id,

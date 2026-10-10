@@ -5,7 +5,7 @@ from sqlmodel import select, func, delete as sql_delete
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.chapter_activities import ChapterActivity
 from fastapi import HTTPException, Request, status
-from src.db.courses.activities import Activity
+from src.db.courses.activities import Activity, ActivityTypeEnum
 from src.db.courses.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
@@ -238,6 +238,14 @@ async def add_activity_to_trail(
     if not activity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found"
+        )
+
+    # An assignment is completed by its submission/grading flow, never by a
+    # learner self-marking it done.
+    if activity.activity_type == ActivityTypeEnum.TYPE_ASSIGNMENT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Assignments are completed by submitting them",
         )
 
     statement = select(Course).where(Course.id == activity.course_id)
