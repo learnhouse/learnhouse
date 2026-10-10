@@ -502,7 +502,7 @@ class TestMagicLinkBranding:
         from fastapi import FastAPI
         from httpx import ASGITransport, AsyncClient
 
-        from src.core.events.database import get_db_session
+        from src.routers.auth import get_db_session  # the router's own reference
         from src.routers.auth import router as auth_router
 
         await _make_user(db, 95, "outsider-magic@test.com")
@@ -560,7 +560,7 @@ class TestMfaSessionRevocation:
         from fastapi import FastAPI
         from httpx import ASGITransport, AsyncClient
 
-        from src.core.events.database import get_db_session
+        from src.routers.mfa import get_db_session  # the router's own reference
         from src.db.user_mfa import UserMFA
         from src.routers.mfa import router as mfa_router
         from src.security.auth import get_authenticated_user
@@ -596,7 +596,7 @@ class TestMfaSessionRevocation:
         from fastapi import FastAPI
         from httpx import ASGITransport, AsyncClient
 
-        from src.core.events.database import get_db_session
+        from src.routers.mfa import get_db_session  # the router's own reference
         from src.routers.mfa import router as mfa_router
         from src.security.auth import get_authenticated_user
 
