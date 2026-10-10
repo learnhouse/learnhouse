@@ -243,6 +243,15 @@ class TestGetActivityState:
         assert exc.value.status_code == 404
 
 
+    @pytest.mark.asyncio
+    async def test_learner_cannot_read_editor_state(
+        self, mock_request, db, activity, regular_user
+    ):
+        with pytest.raises(HTTPException) as exc:
+            await get_activity_state(mock_request, activity.activity_uuid, regular_user, db)
+        assert exc.value.status_code == 403
+
+
 class TestRestoreActivityVersion:
     @pytest.mark.asyncio
     async def test_raises_404_when_activity_not_found(

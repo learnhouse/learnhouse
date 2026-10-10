@@ -118,3 +118,53 @@ async def enforce_submission_file_access(
                 return
 
     raise HTTPException(status_code=403, detail="Access denied")
+
+
+def is_solution_file(parts: list[str]) -> bool:
+    """True when the split path points at an assignment model-answer file
+    (``.../activities/{act}/assignments/{asgn}/solution/{file}``)."""
+    return (
+        len(parts) >= 10
+        and parts[0] == "orgs"
+        and parts[2] == "courses"
+        and parts[4] == "activities"
+        and parts[6] == "assignments"
+        and parts[8] == "solution"
+    )
+
+
+async def enforce_solution_file_access(
+    parts: list[str],
+    current_user,
+    db_session: AsyncSession,
+    request: Request | None = None,
+) -> None:
+    """Serve a model-answer file only to whoever the assignment API would hand
+    the corrige to: instructors, or a learner whose own submission meets the
+    teacher's reveal rule. The caller has already run the activity reader gate.
+    Assumes ``is_solution_file`` already matched ``parts``.
+    """
+    from src.db.courses.assignments import Assignment
+    from src.services.courses.activities.assignments import (
+        _resolve_solution_visibility,
+    )
+
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    # A token's instructor shortcut in the assignments service presumes the
+    # assignments rights bucket was checked; nothing checked it here.
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    row = (await db_session.execute(
+        select(Assignment, Course.course_uuid)
+        .join(Course, Course.id == Assignment.course_id)  # type: ignore[arg-type]
+        .where(Assignment.assignment_uuid == parts[7])
+    )).first()
+    if not row or row[1] != parts[3]:
+        raise HTTPException(status_code=404, detail="File not found")
+    assignment, course_uuid = row
+    if not await _resolve_solution_visibility(
+        request, db_session, current_user, course_uuid, assignment
+    ):
+        raise HTTPException(status_code=403, detail="Access denied")

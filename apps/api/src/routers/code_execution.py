@@ -7,7 +7,7 @@ import re
 import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Form
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from typing import Optional, Union
 import httpx
@@ -16,8 +16,10 @@ from config.config import get_learnhouse_config
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import APITokenUser, PublicUser
-from src.security.auth import get_authenticated_user
+from src.security.auth import get_authenticated_user, resolve_acting_user_id
 from src.security.rbac.rbac import authorization_verify_based_on_roles_and_authorship
+from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
+from src.services.security.rate_limiting import check_rate_limit
 from src.services.utils.upload_content import upload_file
 
 logger = logging.getLogger(__name__)
@@ -33,6 +35,20 @@ JUDGE0_TIMEOUT = 30.0
 MAX_BATCH_TEST_CASES = 50
 MAX_BATCH_CONCURRENCY = 8
 
+# Per-user throttles (per minute). Every call is a Judge0 submission (a batch is
+# up to MAX_BATCH_TEST_CASES of them); a learner iterating on an exercise stays
+# well below these.
+EXECUTE_MAX_PER_MINUTE = 60
+EXECUTE_BATCH_MAX_PER_MINUTE = 20
+
+# Payload caps (characters). The editor imposes no limits of its own; these sit
+# far above any exercise while keeping one request from shipping megabytes to
+# Judge0 (or, for batches, megabytes times MAX_BATCH_TEST_CASES).
+MAX_SOURCE_CODE_CHARS = 64 * 1024
+MAX_STDIN_CHARS = 64 * 1024
+MAX_ADDITIONAL_FILES = 20
+MAX_ADDITIONAL_FILE_CHARS = 128 * 1024
+
 # SQL language ID (Judge0)
 SQL_LANGUAGE_ID = 82
 # We run SQL via Python's sqlite3 module
@@ -40,31 +56,31 @@ PYTHON3_LANGUAGE_ID = 71
 
 
 class AdditionalFile(BaseModel):
-    name: str
-    content: str
+    name: str = Field(max_length=255)
+    content: str = Field(max_length=MAX_ADDITIONAL_FILE_CHARS)
 
 
 class ExecuteRequest(BaseModel):
     language_id: int
-    source_code: str
-    stdin: str = ""
-    sqlite_db_path: Optional[str] = None
-    additional_files: Optional[list[AdditionalFile]] = None
+    source_code: str = Field(max_length=MAX_SOURCE_CODE_CHARS)
+    stdin: str = Field(default="", max_length=MAX_STDIN_CHARS)
+    sqlite_db_path: Optional[str] = Field(default=None, max_length=1024)
+    additional_files: Optional[list[AdditionalFile]] = Field(default=None, max_length=MAX_ADDITIONAL_FILES)
 
 
 class TestCase(BaseModel):
-    id: str
-    label: str
-    stdin: str
-    expected_stdout: str
+    id: str = Field(max_length=255)
+    label: str = Field(max_length=1024)
+    stdin: str = Field(max_length=MAX_STDIN_CHARS)
+    expected_stdout: str = Field(max_length=MAX_STDIN_CHARS)
 
 
 class ExecuteBatchRequest(BaseModel):
     language_id: int
-    source_code: str
+    source_code: str = Field(max_length=MAX_SOURCE_CODE_CHARS)
     test_cases: list[TestCase]
-    sqlite_db_path: Optional[str] = None
-    additional_files: Optional[list[AdditionalFile]] = None
+    sqlite_db_path: Optional[str] = Field(default=None, max_length=1024)
+    additional_files: Optional[list[AdditionalFile]] = Field(default=None, max_length=MAX_ADDITIONAL_FILES)
 
 
 def _get_judge0_config():
@@ -134,23 +150,26 @@ def _validate_storage_path(file_path: str) -> str:
     return full_path
 
 
-def _course_uuid_from_sqlite_path(file_path: str) -> str:
+def _sqlite_path_owner(file_path: str) -> tuple[str, str]:
     """
-    Extract the course_uuid from a sqlite storage path so we can run an RBAC
-    check before the file is read into the Judge0 sandbox.
+    Extract (course_uuid, activity_uuid) from a sqlite storage path so the
+    reader gate runs before the file is read into the Judge0 sandbox.
 
-    Expected layout: ``orgs/{org_uuid}/courses/{course_uuid}/activities/...``
+    Expected layout: ``orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/...``
+    (the only layout /code/upload-sqlite writes).
     """
     parts = file_path.replace('\\', '/').strip('/').split('/')
-    if len(parts) < 4 or parts[0] != 'orgs' or parts[2] != 'courses':
+    if len(parts) < 7 or parts[0] != 'orgs' or parts[2] != 'courses' or parts[4] != 'activities':
         raise HTTPException(
             status_code=400,
-            detail="sqlite_db_path must reference a course under orgs/{org_uuid}/courses/{course_uuid}/...",
+            detail="sqlite_db_path must reference an activity under orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/...",
         )
-    course_uuid = parts[3]
+    course_uuid, activity_uuid = parts[3], parts[5]
     if not course_uuid.startswith('course_'):
         raise HTTPException(status_code=400, detail="Invalid course_uuid in sqlite_db_path")
-    return course_uuid
+    if not activity_uuid.startswith('activity_'):
+        raise HTTPException(status_code=400, detail="Invalid activity_uuid in sqlite_db_path")
+    return course_uuid, activity_uuid
 
 
 def _canonical_sqlite_path(file_path: str) -> str:
@@ -190,6 +209,46 @@ async def _require_course_access(
     await authorization_verify_based_on_roles_and_authorship(
         request, current_user.id, action, course_uuid, db_session
     )
+
+
+async def _require_sqlite_reader(
+    request: Request,
+    current_user: Union[PublicUser, APITokenUser],
+    sqlite_path: str,
+    db_session: AsyncSession,
+) -> None:
+    """The caller must be able to consume the activity that owns the sqlite
+    file (drafts, locks and paywall included), not just read its course."""
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot use code execution or playground uploads",
+        )
+    course_uuid, activity_uuid = _sqlite_path_owner(sqlite_path)
+    await verify_activity_reader_access_by_uuid(
+        request, activity_uuid, current_user, db_session, course_uuid=course_uuid
+    )
+
+
+def _check_execution_caller(current_user, scope: str, max_per_minute: int) -> None:
+    # Code execution is an interactive learner feature; an API token would let
+    # an integration drive the Judge0 sandbox on the org's behalf.
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot use code execution or playground uploads",
+        )
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=f"{scope}:{resolve_acting_user_id(current_user)}",
+        max_attempts=max_per_minute,
+        window_seconds=60,
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many code executions. Please wait a moment and try again.",
+            headers={"Retry-After": str(retry_after)},
+        )
 
 
 def _read_storage_file(file_path: str) -> bytes:
@@ -282,6 +341,7 @@ async def _submit_single(
         401: {"description": "Authentication required"},
         403: {"description": "API tokens not permitted, or no access to the referenced course"},
         404: {"description": "SQLite database file not found"},
+        429: {"description": "Too many code executions"},
         503: {"description": "Code execution is not configured on this instance"},
     },
 )
@@ -292,6 +352,7 @@ async def execute_code(
     db_session: AsyncSession = Depends(get_db_session),
 ):
     judge0_cfg = _get_judge0_config()
+    _check_execution_caller(current_user, "code_execute", EXECUTE_MAX_PER_MINUTE)
 
     language_id = body.language_id
     source_code = body.source_code
@@ -302,10 +363,9 @@ async def execute_code(
         zip_files = [{"name": f.name, "content": f.content} for f in body.additional_files]
 
     if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
-        # Authorize: caller must have read access to the course that owns the sqlite file.
+        # Authorize against the activity that owns the sqlite file.
         sqlite_path = _canonical_sqlite_path(body.sqlite_db_path)
-        course_uuid = _course_uuid_from_sqlite_path(sqlite_path)
-        await _require_course_access(request, current_user, course_uuid, "read", db_session)
+        await _require_sqlite_reader(request, current_user, sqlite_path, db_session)
 
         db_bytes = _read_storage_file(sqlite_path)
         language_id = PYTHON3_LANGUAGE_ID
@@ -330,6 +390,7 @@ async def execute_code(
         401: {"description": "Authentication required"},
         403: {"description": "API tokens not permitted, or no access to the referenced course"},
         404: {"description": "SQLite database file not found"},
+        429: {"description": "Too many code executions"},
         503: {"description": "Code execution is not configured on this instance"},
     },
 )
@@ -340,6 +401,7 @@ async def execute_batch(
     db_session: AsyncSession = Depends(get_db_session),
 ):
     judge0_cfg = _get_judge0_config()
+    _check_execution_caller(current_user, "code_execute_batch", EXECUTE_BATCH_MAX_PER_MINUTE)
 
     if len(body.test_cases) > MAX_BATCH_TEST_CASES:
         raise HTTPException(
@@ -356,10 +418,9 @@ async def execute_batch(
         zip_files = [{"name": f.name, "content": f.content} for f in body.additional_files]
 
     if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
-        # Authorize: caller must have read access to the course that owns the sqlite file.
+        # Authorize against the activity that owns the sqlite file.
         sqlite_path = _canonical_sqlite_path(body.sqlite_db_path)
-        course_uuid = _course_uuid_from_sqlite_path(sqlite_path)
-        await _require_course_access(request, current_user, course_uuid, "read", db_session)
+        await _require_sqlite_reader(request, current_user, sqlite_path, db_session)
 
         db_bytes = _read_storage_file(sqlite_path)
         language_id = PYTHON3_LANGUAGE_ID

@@ -19,6 +19,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipEnum,
     ResourceAuthorshipStatusEnum,
 )
+from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.services.courses.contributors import (
     add_bulk_course_contributors,
@@ -45,6 +46,14 @@ async def _make_user(db, *, user_id: int, username: str) -> User:
     await db.commit()
     await db.refresh(user)
     return user
+
+
+async def _join_org(db, user_id: int, org_id: int = 1) -> None:
+    db.add(UserOrganization(
+        user_id=user_id, org_id=org_id, role_id=4,
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    ))
+    await db.commit()
 
 
 async def _make_contributor(
@@ -381,6 +390,8 @@ class TestAddBulkCourseContributors:
     ):
         alice = await _make_user(db, user_id=40, username="alice")
         bob = await _make_user(db, user_id=41, username="bob")
+        await _join_org(db, alice.id)
+        await _join_org(db, bob.id)
         await _make_contributor(db, course, bob.id)
         await _make_user(db, user_id=42, username="carol")
 
@@ -434,6 +445,7 @@ class TestAddBulkCourseContributors:
         self, db, course, admin_user, mock_request
     ):
         user = await _make_user(db, user_id=43, username="boom")
+        await _join_org(db, user.id)
 
         with patch(
             "src.services.courses.contributors.authorization_verify_if_user_is_anon",
@@ -634,3 +646,60 @@ class TestContributorEmailsAreForManagers:
             result = await get_course_contributors(mock_request, course.course_uuid, admin_user, db)
 
         assert "email" not in result[0]["user"]
+
+
+class TestBulkContributorManagementGuards:
+    """Course UPDATE alone (an active contributor has it) doesn't let a caller
+    manage contributors; maintainers can't remove each other; only members of
+    the course's org can be added."""
+
+    def _patches(self):
+        return (
+            patch(
+                "src.services.courses.contributors.check_resource_access",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "src.services.courses.contributors.dispatch_webhooks",
+                new_callable=AsyncMock,
+            ),
+        )
+
+    @pytest.mark.asyncio
+    async def test_contributor_cannot_bulk_add_or_remove(self, db, course, regular_user, mock_request):
+        await _make_contributor(db, course, regular_user.id)
+        access, hooks = self._patches()
+        with access, hooks:
+            for fn in (add_bulk_course_contributors, remove_bulk_course_contributors):
+                with pytest.raises(HTTPException) as exc:
+                    await fn(mock_request, course.course_uuid, ["someone"], regular_user, db)
+                assert exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_maintainer_cannot_remove_other_maintainer(self, db, course, regular_user, mock_request):
+        await _make_contributor(
+            db, course, regular_user.id, authorship=ResourceAuthorshipEnum.MAINTAINER
+        )
+        peer = await _make_user(db, user_id=60, username="peer")
+        helper = await _make_user(db, user_id=61, username="helper")
+        await _make_contributor(db, course, peer.id, authorship=ResourceAuthorshipEnum.MAINTAINER)
+        await _make_contributor(db, course, helper.id)
+        access, hooks = self._patches()
+        with access, hooks:
+            result = await remove_bulk_course_contributors(
+                mock_request, course.course_uuid, ["peer", "helper"], regular_user, db
+            )
+        assert [s["username"] for s in result["successful"]] == ["helper"]
+        assert result["failed"][0]["username"] == "peer"
+
+    @pytest.mark.asyncio
+    async def test_bulk_add_skips_users_of_other_orgs(self, db, course, admin_user, mock_request):
+        outsider = await _make_user(db, user_id=62, username="outsider")
+        await _join_org(db, outsider.id, org_id=2)
+        access, hooks = self._patches()
+        with access, hooks:
+            result = await add_bulk_course_contributors(
+                mock_request, course.course_uuid, ["outsider"], admin_user, db
+            )
+        assert result["successful"] == []
+        assert result["failed"] == [{"username": "outsider", "reason": "User not found or invalid"}]

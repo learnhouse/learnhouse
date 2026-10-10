@@ -21,6 +21,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from src.db.courses.activities import Activity
+from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.assignments import (
     Assignment,
     AssignmentCreate,
@@ -1158,6 +1159,11 @@ async def create_assignment(
     assignment.org_id = course.org_id
     assignment.course_id = course.id
     assignment.activity_id = parent_activity.id
+    parent_chapter_id = (await db_session.execute(
+        select(ChapterActivity.chapter_id).where(ChapterActivity.activity_id == parent_activity.id)
+    )).scalars().first()
+    if parent_chapter_id is not None:
+        assignment.chapter_id = parent_chapter_id
 
     # Insert Assignment in DB
     db_session.add(assignment)
@@ -4333,6 +4339,26 @@ async def get_assignments_from_course(
     if not is_instructor:
         statement = statement.where(Assignment.published == True)  # noqa: E712
     assignments = (await db_session.execute(statement)).scalars().all()
+
+    # Learners only get assignments whose activity they may open (drafts,
+    # chapter/activity locks, paywall), the same gate as the single read.
+    if not is_instructor:
+        activities = {
+            a.id: a for a in (await db_session.execute(
+                select(Activity).where(Activity.id.in_({x.activity_id for x in assignments}))  # type: ignore
+            )).scalars().all()
+        } if assignments else {}
+        readable = []
+        for assignment in assignments:
+            activity = activities.get(assignment.activity_id)
+            if activity is None:
+                continue
+            try:
+                await verify_activity_reader_access(request, activity, course, current_user, db_session)
+            except HTTPException:
+                continue
+            readable.append(assignment)
+        assignments = readable
 
     # The model answer is reveal-gated here exactly as on the single read: this
     # list is reachable with plain course READ, so returning the raw rows would

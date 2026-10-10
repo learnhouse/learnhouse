@@ -40,6 +40,13 @@ async def client(app):
 
 
 @pytest.fixture(autouse=True)
+def _no_rate_limit():
+    """The share-link limiter counts in Redis, which these tests don't run against."""
+    with patch("src.routers.media.media.check_rate_limit", return_value=(True, 1, 3600)):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def _bypass_rbac():
     with patch("src.services.media.media.check_resource_access", new_callable=AsyncMock):
         yield
@@ -382,3 +389,25 @@ class TestServedContentTypeIsNotClientControlled:
         res = await client.get(f"/api/v1/media/{m.media_uuid}/file")
         assert res.status_code == 200, res.text
         assert res.headers["content-type"].startswith("application/pdf")
+
+
+@pytest.mark.asyncio
+async def test_share_link_requires_sign_in_and_is_rate_limited(db, org):
+    from src.db.users import AnonymousUser, PublicUser
+    from src.routers.media.media import router
+
+    acting = {"user": AnonymousUser()}
+    application = FastAPI()
+    application.include_router(router, prefix="/api/v1/media")
+    application.dependency_overrides[get_db_session] = lambda: db
+    application.dependency_overrides[get_current_user] = lambda: acting["user"]
+    m = await _mk_media(db, org, name="limited")
+    async with AsyncClient(transport=ASGITransport(app=application), base_url="http://t") as c:
+        anon = await c.post(f"/api/v1/media/{m.media_uuid}/share-link")
+        acting["user"] = PublicUser(
+            id=1, username="u", first_name="", last_name="", email="u@t.com", user_uuid="user_u"
+        )
+        with patch("src.routers.media.media.check_rate_limit", return_value=(False, 61, 120)):
+            limited = await c.post(f"/api/v1/media/{m.media_uuid}/share-link")
+    assert anon.status_code == 401
+    assert limited.status_code == 429

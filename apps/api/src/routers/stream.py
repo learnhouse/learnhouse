@@ -19,12 +19,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
-from src.db.podcasts.podcasts import Podcast
-from src.db.podcasts.episodes import PodcastEpisode
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.core.events.database import get_db_session
+from src.routers.content_files import PRIVATE_CACHE_CONTROL, _verify_episode_access
 from src.security.auth import get_current_user
-from src.security.rbac.resource_access import ResourceAccessChecker, AccessAction, AccessContext
 from src.services.courses.activities.access import verify_activity_reader_access
 from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
@@ -146,38 +144,18 @@ async def _verify_course_activity_access(
 
 async def _verify_podcast_episode_access(
     request: Request,
+    org_uuid: str,
     podcast_uuid: str,
     episode_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ) -> None:
-    """
-    Verify user has read access to the podcast/episode.
-
-    SECURITY: This ensures that:
-    - Anonymous users can only access public+published podcasts
-    - Authenticated users can access podcasts they have permission to view
-    - Episode must belong to the specified podcast
-    """
-    # Verify episode exists and belongs to the podcast
-    episode_stmt = select(PodcastEpisode).where(PodcastEpisode.episode_uuid == episode_uuid)
-    episode = (await db_session.execute(episode_stmt)).scalars().first()
-
-    if not episode:
-        raise HTTPException(status_code=404, detail="Episode not found")
-
-    podcast_stmt = select(Podcast).where(Podcast.id == episode.podcast_id)
-    podcast = (await db_session.execute(podcast_stmt)).scalars().first()
-
-    if not podcast or podcast.podcast_uuid != podcast_uuid:
-        raise HTTPException(status_code=404, detail="Podcast not found or episode doesn't belong to podcast")
-
-    # RBAC check - verify user can read this podcast
-    checker = ResourceAccessChecker(request, db_session, current_user)
-    decision = await checker.check_access(podcast_uuid, AccessAction.READ, AccessContext.PUBLIC_VIEW)
-
-    if not decision.allowed:
-        raise HTTPException(status_code=403, detail=decision.reason)
+    """Same gate as the episode's /content files: podcast in ``org_uuid``,
+    episode in podcast, podcast READ, and an unpublished podcast or episode
+    only for someone who can edit the podcast."""
+    await _verify_episode_access(
+        org_uuid, podcast_uuid, episode_uuid, current_user, db_session, request
+    )
 
 
 @router.get(
@@ -261,7 +239,7 @@ async def stream_activity_video(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+        "Cache-Control": PRIVATE_CACHE_CONTROL,
         "X-Content-Type-Options": "nosniff",
     }
 
@@ -378,7 +356,7 @@ async def stream_activity_hls(
         content=raw,
         media_type=_HLS_MIME.get(ext, "application/octet-stream"),
         headers={
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
             "X-Content-Type-Options": "nosniff",
         },
     )
@@ -461,7 +439,7 @@ async def stream_block_hls(
     return Response(
         content=raw,
         media_type=_HLS_MIME.get(ext, "application/octet-stream"),
-        headers={"Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff"},
+        headers={"Cache-Control": PRIVATE_CACHE_CONTROL, "X-Content-Type-Options": "nosniff"},
     )
 
 
@@ -593,7 +571,7 @@ async def stream_block_audio(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": PRIVATE_CACHE_CONTROL,
         "X-Content-Type-Options": "nosniff",
     }
 
@@ -674,7 +652,7 @@ async def head_block_audio(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
         },
     )
 
@@ -764,7 +742,7 @@ async def stream_block_video(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+        "Cache-Control": PRIVATE_CACHE_CONTROL,
         "X-Content-Type-Options": "nosniff",
     }
 
@@ -847,7 +825,7 @@ async def head_activity_video(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
         },
     )
 
@@ -912,7 +890,7 @@ async def head_block_video(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
         },
     )
 
@@ -949,7 +927,7 @@ async def stream_podcast_audio(
     SECURITY: Validates user has read access to the podcast via RBAC.
     """
     # SECURITY: Verify user has access to this podcast/episode
-    await _verify_podcast_episode_access(request, podcast_uuid, episode_uuid, current_user, db_session)
+    await _verify_podcast_episode_access(request, org_uuid, podcast_uuid, episode_uuid, current_user, db_session)
 
     # Construct and validate the file path
     file_path = validate_video_path(
@@ -998,7 +976,7 @@ async def stream_podcast_audio(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+        "Cache-Control": PRIVATE_CACHE_CONTROL,
         "X-Content-Type-Options": "nosniff",
     }
 
@@ -1053,7 +1031,7 @@ async def head_podcast_audio(
     SECURITY: Validates user has read access to the podcast via RBAC.
     """
     # SECURITY: Verify user has access to this podcast/episode
-    await _verify_podcast_episode_access(request, podcast_uuid, episode_uuid, current_user, db_session)
+    await _verify_podcast_episode_access(request, org_uuid, podcast_uuid, episode_uuid, current_user, db_session)
 
     file_path = validate_video_path(
         CONTENT_DIR,
@@ -1081,6 +1059,6 @@ async def head_podcast_audio(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
         },
     )

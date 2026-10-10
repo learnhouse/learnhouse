@@ -256,7 +256,8 @@ async def get_activity_state(
             detail="Course not found",
         )
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # Conflict detection for collaborators editing the activity
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     return ActivityStateRead(
         activity_uuid=activity.activity_uuid,

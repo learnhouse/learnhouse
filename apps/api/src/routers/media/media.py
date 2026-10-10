@@ -1,8 +1,10 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from src.core.events.database import get_db_session
 from src.db.media.media import MediaCreate, MediaRead, MediaTypeEnum, MediaUpdate
-from src.security.auth import get_current_user
+from src.db.users import AnonymousUser
+from src.security.auth import get_current_user, resolve_acting_user_id
+from src.services.security.rate_limiting import check_rate_limit
 from src.services.users.users import PublicUser
 from src.services.media.media import (
     create_media,
@@ -18,6 +20,9 @@ from src.services.media.media_serve import serve_media_file
 
 
 router = APIRouter()
+
+# Every call stores a new token row; copying a link is an occasional click.
+SHARE_LINKS_PER_HOUR = 60
 
 
 # --- File serving (the ONLY way the client loads media bytes) ----------------
@@ -64,6 +69,19 @@ async def api_create_media_share_link(
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=f"media_share_link:{resolve_acting_user_id(current_user)}",
+        max_attempts=SHARE_LINKS_PER_HOUR,
+        window_seconds=60 * 60,
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many share links created. Please try again later.",
+            headers={"Retry-After": str(retry_after)},
+        )
     return await create_media_share_link(request, media_uuid, current_user, db_session)
 
 

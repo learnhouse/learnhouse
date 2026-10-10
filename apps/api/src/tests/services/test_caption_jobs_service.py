@@ -363,3 +363,43 @@ async def test_generate_captions_without_transcript_still_transcribes(monkeypatc
     )
     assert await cj.generate_activity_captions("capN") is True
     assert transcribed == [["a.mp3"]]
+# --- stored values are re-validated inside the job --------------------------
+
+async def test_generate_captions_rejects_traversal_filename(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    _mock_engine(monkeypatch)
+    fetched = []
+    monkeypatch.setattr(cj, "_fetch_source", lambda key, path: fetched.append(key) or True)
+    await _add_caption_activity(
+        db, org, course, "capTraversal", filename="../../other_course/secret.mp4",
+        captions={"enabled": True, "languages": [{"code": "fr", "status": "queued"}]},
+    )
+    assert await cj.generate_activity_captions("capTraversal") is False
+    assert fetched == []
+
+
+async def test_generate_captions_skips_unsafe_language_codes(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    _mock_engine(monkeypatch)
+    written = []
+    monkeypatch.setattr(cj, "upload_directory_to_s3", lambda d, p: written.extend(sorted(__import__("os").listdir(d))) or True)
+    await _add_caption_activity(
+        db, org, course, "capCodes",
+        captions={"enabled": True, "source_language": "../x", "languages": [
+            {"code": "../../../../tmp/pwn", "status": "queued"},
+            {"code": "fr", "status": "queued"},
+            {"code": "fr", "status": "queued"},
+            {"code": 7, "status": "queued"},
+        ]},
+    )
+    assert await cj.generate_activity_captions("capCodes") is True
+    assert written == ["fr.vtt"]
+
+
+def test_valid_targets_caps_and_vtt_path_containment(tmp_path):
+    many = [{"code": f"l{i:02d}"} for i in range(40)]
+    assert len(cj._valid_targets(many)) == cj.MAX_CAPTION_LANGUAGES
+    assert cj._valid_targets("nope") == []
+    with pytest.raises(ValueError):
+        cj._vtt_path(str(tmp_path), "../escape")
+    assert cj._vtt_path(str(tmp_path), "pt-BR").endswith("pt-BR.vtt")

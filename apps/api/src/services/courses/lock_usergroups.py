@@ -163,8 +163,9 @@ async def get_chapter_usergroups(
     db_session: AsyncSession,
 ) -> List[dict]:
     _, course = await _load_chapter_and_course(chapter_uuid, db_session)
+    # Which groups unlock a lock is course-editor information (dashboard only)
     await check_resource_access(
-        request, db_session, current_user, course.course_uuid, AccessAction.READ
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
     return await _list_usergroups_for_resource(chapter_uuid, db_session)
 
@@ -211,7 +212,8 @@ async def get_activity_usergroups(
     db_session: AsyncSession,
 ) -> List[dict]:
     _, course = await _load_activity_and_course(activity_uuid, db_session)
+    # Which groups unlock a lock is course-editor information (dashboard only)
     await check_resource_access(
-        request, db_session, current_user, course.course_uuid, AccessAction.READ
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
     return await _list_usergroups_for_resource(activity_uuid, db_session)

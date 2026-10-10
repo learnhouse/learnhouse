@@ -222,3 +222,43 @@ class TestCourseUpdatesService:
         assert [item.courseupdate_uuid for item in updates] == [newer.courseupdate_uuid, older.courseupdate_uuid]
         assert updates[0].title == "Update 2"
         assert updates[1].title == "Update 1"
+
+
+class TestCourseUpdateWriteAuthorization:
+    """Real RBAC: course editors can edit/delete posts (this used to 403 for
+    everyone), learners can't, and the URL's course must own the post."""
+
+    @pytest.mark.asyncio
+    async def test_admin_edits_and_deletes_learner_cannot(
+        self, db, org, course, admin_user, regular_user, mock_request
+    ):
+        seeded = await _seed_course_update(
+            db, org, course, update_id=50, courseupdate_uuid="courseupdate_rbac",
+            creation_date="2024-01-01",
+        )
+        with pytest.raises(HTTPException) as exc:
+            await update_update(
+                mock_request, seeded.courseupdate_uuid, CourseUpdateUpdate(title="x"),
+                regular_user, db, course_uuid=course.course_uuid,
+            )
+        assert exc.value.status_code == 403
+
+        from starlette.requests import Request
+
+        fresh = Request({"type": "http", "method": "PUT", "path": "/", "headers": [], "query_string": b""})
+        edited = await update_update(
+            fresh, seeded.courseupdate_uuid, CourseUpdateUpdate(title="Edited"),
+            admin_user, db, course_uuid=course.course_uuid,
+        )
+        assert edited.title == "Edited"
+
+        with pytest.raises(HTTPException) as mismatch:
+            await delete_update(
+                fresh, seeded.courseupdate_uuid, admin_user, db, course_uuid="course_other"
+            )
+        assert mismatch.value.status_code == 409
+
+        result = await delete_update(
+            fresh, seeded.courseupdate_uuid, admin_user, db, course_uuid=course.course_uuid
+        )
+        assert result == {"message": "Update deleted successfully"}
