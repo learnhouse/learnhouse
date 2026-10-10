@@ -3,7 +3,6 @@ import { Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 import 'nextra-theme-docs/style.css'
 import '../styles.css'
-import { Analytics } from '@vercel/analytics/react'
 import CustomNavbar from '../components/Navbar/Navbar'
 import CustomFooter from '../components/Footer/Footer'
 import PostHogProvider from '../components/Analytics/PostHogProvider'
@@ -94,7 +93,6 @@ export default async function RootLayout({ children }) {
           </Layout>
           <CustomFooter />
         </PostHogProvider>
-        <Analytics />
       </body>
     </html>
   )
