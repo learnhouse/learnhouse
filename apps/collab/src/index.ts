@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { Server } from '@hocuspocus/server'
 import type {
   onRequestPayload,
+  onUpgradePayload,
   onAuthenticatePayload,
   onConnectPayload,
   beforeHandleMessagePayload,
@@ -9,6 +10,12 @@ import type {
 import { Database } from '@hocuspocus/extension-database'
 import jwt from 'jsonwebtoken'
 import Redis from 'ioredis'
+import {
+  CONNECTION_ID_HEADER,
+  clientIp,
+  createConnectionGuard,
+  createRateLimiter,
+} from './connectionGuard.js'
 
 const PORT = parseInt(process.env.COLLAB_PORT || '4000', 10)
 const API_URL = process.env.LEARNHOUSE_API_URL || 'http://localhost:8000'
@@ -79,28 +86,26 @@ function fetchWithTimeout(
 }
 
 // ── Rate limiting ───────────────────────────────────────────────────────────
-// Tracks connection attempts per IP to prevent brute-force/DoS
+// Plain HTTP requests (health checks, probes) per IP
 const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
-const RATE_LIMIT_MAX = 30 // max connections per IP per window
-const connectionAttempts = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT_MAX = 30 // max requests per IP per window
+const requestLimiter = createRateLimiter(RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX)
 
-function isRateLimited(ip: string): boolean {
-  const now = Date.now()
-  const entry = connectionAttempts.get(ip)
-  if (!entry || now >= entry.resetAt) {
-    connectionAttempts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
-    return false
-  }
-  entry.count++
-  return entry.count > RATE_LIMIT_MAX
-}
+// WebSocket upgrades never reach onRequest, so they are limited separately
+const connectionGuard = createConnectionGuard({
+  trustProxy: TRUST_PROXY,
+  rateLimitWindowMs: RATE_LIMIT_WINDOW_MS,
+  rateLimitMax: 60, // new sockets per IP per window (reconnects included)
+  maxConnectionsPerIp: 50, // open sockets per IP (shared NAT, many tabs)
+  maxPendingConnections: 500, // unauthenticated sockets across all IPs
+  authDeadlineMs: 15_000,
+  preAuthMaxBytes: 1024 * 1024,
+})
 
 // Clean up stale entries every 5 minutes
 const rateLimitCleanupInterval = setInterval(() => {
-  const now = Date.now()
-  for (const [ip, entry] of connectionAttempts) {
-    if (now >= entry.resetAt) connectionAttempts.delete(ip)
-  }
+  requestLimiter.sweep()
+  connectionGuard.sweep()
 }, 5 * 60_000)
 
 function extractBoardUuid(documentName: string): string | null {
@@ -210,14 +215,7 @@ const server = new Server({
       throw null
     }
 
-    // Rate limiting by IP. Only read x-forwarded-for when we're explicitly
-    // behind a trusted proxy; otherwise a client can spoof the header to
-    // rotate through unlimited buckets.
-    const forwarded = TRUST_PROXY
-      ? (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
-      : undefined
-    const ip = forwarded || request.socket.remoteAddress || 'unknown'
-    if (isRateLimited(ip)) {
+    if (requestLimiter.isLimited(clientIp(request, TRUST_PROXY))) {
       response.writeHead(429, { 'Content-Type': 'application/json' })
       response.end(JSON.stringify({ error: 'Too many connection attempts' }))
       // eslint-disable-next-line no-throw-literal
@@ -225,7 +223,20 @@ const server = new Server({
     }
   },
 
-  async onAuthenticate({ token, documentName, connectionConfig }: onAuthenticatePayload) {
+  async onUpgrade({ request, socket }: onUpgradePayload) {
+    if (!connectionGuard.admit(request, socket)) {
+      // Falsy throw stops the upgrade without crashing (see onRequest)
+      // eslint-disable-next-line no-throw-literal
+      throw null
+    }
+  },
+
+  async onAuthenticate({
+    token,
+    documentName,
+    connectionConfig,
+    requestHeaders,
+  }: onAuthenticatePayload) {
     if (!token) {
       throw new Error('Authentication required')
     }
@@ -271,6 +282,7 @@ const server = new Server({
     // The API answers "viewer" for anyone who may only read the board (public
     // boards, org admins without membership). Their socket must not write.
     connectionConfig.readOnly = membership.role === 'viewer'
+    connectionGuard.markAuthenticated(requestHeaders.get(CONNECTION_ID_HEADER))
 
     return {
       user: {

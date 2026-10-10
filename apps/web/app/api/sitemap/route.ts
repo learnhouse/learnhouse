@@ -5,6 +5,15 @@ import { getOrgPodcasts } from '@services/podcasts/podcasts'
 import { getCommunities } from '@services/communities/communities'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Every fetch below is anonymous, so the output is public and the same for
+// every visitor of a host. Caching it keeps crawlers (and anyone looping on
+// ?type=activities, one API call per course) off the API.
+const SITEMAP_HEADERS = {
+  'Content-Type': 'application/xml',
+  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+  Vary: 'Host, X-Sitemap-Orgslug',
+}
+
 function getBaseUrlFromRequest(request: NextRequest): string {
   const host = request.headers.get('host') || 'localhost'
   const proto = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https')
@@ -28,7 +37,7 @@ export async function GET(request: NextRequest) {
   if (!sitemapType) {
     const sitemapIndex = generateSitemapIndex(baseUrl)
     return new NextResponse(sitemapIndex, {
-      headers: { 'Content-Type': 'application/xml' },
+      headers: SITEMAP_HEADERS,
     })
   }
 
@@ -135,7 +144,7 @@ export async function GET(request: NextRequest) {
 
   const sitemap = generateSitemap(sitemapUrls)
   return new NextResponse(sitemap, {
-    headers: { 'Content-Type': 'application/xml' },
+    headers: SITEMAP_HEADERS,
   })
 }
 

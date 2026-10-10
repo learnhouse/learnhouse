@@ -101,6 +101,9 @@ class HostingConfig(BaseModel):
     self_hosted: bool
     cookie_config: CookieConfig
     content_delivery: ContentDeliveryConfig
+    # Cap for non-multipart request bodies (JSON, form-urlencoded, raw);
+    # 0 disables it. Multipart uploads keep their per-route limits.
+    max_request_body_mb: int = 25
 
 
 class MailingConfig(BaseModel):
@@ -316,6 +319,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
     self_hosted = _env_bool(
         env_self_hosted, yaml_config.get("hosting_config", {}).get("self_hosted")
     )
+    max_request_body_mb = os.environ.get("LEARNHOUSE_MAX_REQUEST_BODY_MB") or yaml_config.get(
+        "hosting_config", {}
+    ).get("max_request_body_mb", 25)
 
     # Tenancy mode: a single explicit knob that supersedes the older overlapping
     # flags (`self_hosted`, `use_default_org`). Two values:
@@ -594,6 +600,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         self_hosted=bool(self_hosted),
         cookie_config=cookie_config,
         content_delivery=content_delivery,
+        max_request_body_mb=int(max_request_body_mb),
     )
 
     # Tenancy validation and deprecation warnings: only enforce in non-test

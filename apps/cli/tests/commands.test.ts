@@ -267,6 +267,26 @@ describe('checkDevEnv', () => {
       .toContain('COLLAB_PORT=4000')
   })
 
+  it('generates a random collab internal key shared by API and collab', async () => {
+    H.q.select.push('defaults')
+    expect(await checkDevEnv(root)).toBe(true)
+    const keyIn = (rel: string) =>
+      fs.readFileSync(path.join(root, rel), 'utf-8').match(/^COLLAB_INTERNAL_KEY=(.*)$/m)?.[1]
+    const apiKey = keyIn('apps/api/.env')
+    expect(apiKey).toBeTruthy()
+    expect(apiKey!.length).toBeGreaterThanOrEqual(32)
+    expect(apiKey).not.toBe('dev-collab-internal-key-change-in-prod')
+    expect(keyIn('apps/collab/.env')).toBe(apiKey)
+  })
+
+  it('reuses the collab key from the collab env file when the API lacks one', async () => {
+    writeEnv('apps/collab/.env', 'COLLAB_INTERNAL_KEY=existing-collab-key\n')
+    H.q.select.push('defaults')
+    expect(await checkDevEnv(root)).toBe(true)
+    expect(fs.readFileSync(path.join(root, 'apps/api/.env'), 'utf-8'))
+      .toContain('COLLAB_INTERNAL_KEY=existing-collab-key')
+  })
+
   it('appends defaults to an existing env file that lacks a trailing newline', async () => {
     // Pre-existing partial file with NO trailing newline → appendToEnvFile must
     // insert the missing separator before adding the defaulted vars.

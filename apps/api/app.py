@@ -23,6 +23,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.ee_hooks import register_ee_middlewares
 from src.core.events.events import shutdown_app, startup_app
+from src.core.middleware.body_size import RequestBodySizeLimitMiddleware
 from src.core.middleware.cors import configure_cors
 from src.security.csrf import CSRFProtectionMiddleware
 from src.router import v1_router
@@ -153,7 +154,12 @@ app = FastAPI(
 # Middleware
 # Starlette runs the last-added middleware first. CSRF is added before CORS so
 # CORS wraps it: preflights are answered by CORS, and a CSRF 403 still carries
-# CORS headers so the frontend can read it.
+# CORS headers so the frontend can read it. The body cap sits inside both, so
+# its 413 carries CORS headers too.
+app.add_middleware(
+    RequestBodySizeLimitMiddleware,
+    max_body_bytes=learnhouse_config.hosting_config.max_request_body_mb * 1024 * 1024,
+)
 app.add_middleware(CSRFProtectionMiddleware)
 configure_cors(app)
 # compresslevel 9 costs several times the CPU of 6 for a couple of percent on
