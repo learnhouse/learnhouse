@@ -11,7 +11,6 @@
   "dependencies": {
     "@icons-pack/react-simple-icons": "^13.13.0",
     "@phosphor-icons/react": "^2.1.10",
-    "@vercel/analytics": "^2.0.1",
     "@xyflow/react": "^12.11.0",
     "next": "16.4.0",
     "next-sitemap": "^4.2.3",
