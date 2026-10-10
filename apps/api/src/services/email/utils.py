@@ -284,10 +284,11 @@ async def get_member_link_base_url(
     config = get_learnhouse_config()
     if request is None:
         return get_platform_base_url(request)
-    if config.hosting_config.tenancy == "single":
-        return get_base_url_from_request(request)
-
     trusted = get_trusted_base_url_from_request(request)
+    if config.hosting_config.tenancy == "single":
+        # One org per instance: an allowlisted origin is the instance itself.
+        return trusted or get_platform_base_url(request)
+
     host = (urlparse(trusted).hostname or "").lower() if trusted else ""
     base_domain = (config.hosting_config.domain or "").strip().rstrip("/").lower()
     if not host or not base_domain:
