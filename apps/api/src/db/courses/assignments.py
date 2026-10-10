@@ -231,6 +231,9 @@ class AssignmentTaskRead(AssignmentTaskBase):
 
     id: int
     assignment_task_uuid: str
+    # Position of the task inside its assignment (0-based). None only for
+    # rows created before ordering existed; readers fall back to id order.
+    order: Optional[int] = None
     creation_date: str
     update_date: str
 
@@ -246,12 +249,19 @@ class AssignmentTaskUpdate(SQLModel):
     max_grade_value: Optional[int] = Field(default=None, ge=0)
 
 
+class AssignmentTaskOrder(SQLModel):
+    """Full ordered list of an assignment's task UUIDs."""
+
+    task_uuids: list[str]
+
+
 class AssignmentTask(AssignmentTaskBase, table=True):
     """Represents a task within an assignment with various attributes and foreign keys."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
     assignment_task_uuid: str
+    order: Optional[int] = Field(default=None)
     creation_date: str
     update_date: str
 

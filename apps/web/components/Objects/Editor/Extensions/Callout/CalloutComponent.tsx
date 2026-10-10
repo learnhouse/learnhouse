@@ -105,8 +105,9 @@ function CalloutComponent(props: any) {
       props.updateAttributes({ type: newType })
     } else {
       // Old node: replace with new unified callout node, preserving content
+      // (old callouts hold inline text, the unified one holds paragraphs)
       const pos = typeof props.getPos === 'function' ? props.getPos() : 0
-      const textContent = props.node?.textContent || ''
+      const inlineContent = props.node?.content?.toJSON() ?? []
       props.editor
         .chain()
         .focus()
@@ -114,7 +115,11 @@ function CalloutComponent(props: any) {
         .insertContentAt(pos, {
           type: 'callout',
           attrs: { type: newType },
-          content: textContent ? [{ type: 'text', text: textContent }] : [],
+          content: [
+            inlineContent.length > 0
+              ? { type: 'paragraph', content: inlineContent }
+              : { type: 'paragraph' },
+          ],
         })
         .run()
     }

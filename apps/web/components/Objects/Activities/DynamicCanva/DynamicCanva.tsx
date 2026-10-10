@@ -26,6 +26,7 @@ function normalizeMarkTypes(content: any): any {
 }
 // Custom Extensions
 import Callout from '@components/Objects/Editor/Extensions/Callout/Callout'
+import { normalizeCalloutContent } from '@components/Objects/Editor/Extensions/Callout/calloutContent'
 import InfoCallout from '@components/Objects/Editor/Extensions/Callout/Info/InfoCallout'
 import WarningCallout from '@components/Objects/Editor/Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from '@components/Objects/Editor/Extensions/Image/ImageBlock'
@@ -82,13 +83,14 @@ function Canva(props: Editor) {
   const isEditable = true
 
   // Normalize content to fix AI-generated mark types (strong -> bold, em -> italic)
+  // and to wrap the inline text of callouts saved before they could hold lists
   const normalizedContent = useMemo(() => {
     if (!props.content) return props.content;
     try {
       const parsed = typeof props.content === 'string'
         ? JSON.parse(props.content)
         : props.content;
-      return normalizeMarkTypes(parsed);
+      return normalizeCalloutContent(normalizeMarkTypes(parsed));
     } catch {
       return props.content;
     }

@@ -234,6 +234,166 @@ export function textToParagraphs(text: string): AIContentNode[] {
     })
 }
 
+// Inline markdown, earliest match wins: **bold** / __bold__, `code`,
+// [text](https://url), *italic* / _italic_. Underscores only count at word
+// boundaries so snake_case identifiers stay as they are.
+const INLINE_MARKDOWN =
+  /(\*\*|__)(?=\S)([\s\S]+?)(?<=\S)\1|`([^`\n]+)`|\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|\*(?=[^\s*])([^*\n]+?)(?<=\S)\*|(?<![\w])_(?=\S)([^_\n]+?)(?<=\S)_(?![\w])/
+
+function markdownInline(text: string, marks: AIContentNode[] = []): AIContentNode[] {
+  const nodes: AIContentNode[] = []
+  const pushText = (value: string, nodeMarks: AIContentNode[]) => {
+    if (!value) return
+    nodes.push(nodeMarks.length ? { type: 'text', text: value, marks: nodeMarks } : { type: 'text', text: value })
+  }
+
+  let rest = text
+  while (rest) {
+    const match = INLINE_MARKDOWN.exec(rest)
+    if (!match) {
+      pushText(rest, marks)
+      break
+    }
+    pushText(rest.slice(0, match.index), marks)
+    if (match[2] !== undefined) {
+      nodes.push(...markdownInline(match[2], [...marks, { type: 'bold' }]))
+    } else if (match[3] !== undefined) {
+      // Inline code excludes every other mark in the schema
+      pushText(match[3], [{ type: 'code' }])
+    } else if (match[4] !== undefined) {
+      nodes.push(...markdownInline(match[4], [...marks, { type: 'link', attrs: { href: match[5] } }]))
+    } else {
+      nodes.push(...markdownInline(match[6] ?? match[7], [...marks, { type: 'italic' }]))
+    }
+    rest = rest.slice(match.index + match[0].length)
+  }
+  return nodes
+}
+
+function markdownParagraph(lines: string[]): AIContentNode {
+  const content: AIContentNode[] = []
+  lines.forEach((line, index) => {
+    if (index > 0) {
+      content.push({ type: 'hardBreak' })
+    }
+    content.push(...markdownInline(line))
+  })
+  return { type: 'paragraph', content }
+}
+
+const MD_FENCE = /^\s*(```|~~~)\s*([\w+-]*)\s*$/
+const MD_HEADING = /^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/
+const MD_RULE = /^\s{0,3}([-*_])(\s*\1){2,}\s*$/
+const MD_BULLET = /^\s*[-*+]\s+(.*)$/
+const MD_ORDERED = /^\s*(\d{1,9})[.)]\s+(.*)$/
+const MD_QUOTE = /^\s{0,3}>\s?(.*)$/
+
+/**
+ * Turn a plain-text or markdown reply into TipTap nodes. The model is told to
+ * answer in TipTap JSON, but when it answers in markdown the reply must still
+ * land as headings, lists and formatted text rather than literal `##`, `-`
+ * and `**`. Text without markdown comes out as paragraphs: blank lines
+ * separate them and single newlines become hard breaks.
+ */
+export function markdownToNodes(text: string): AIContentNode[] {
+  const lines = text.split(/\r?\n/)
+  const nodes: AIContentNode[] = []
+  let paragraph: string[] = []
+
+  const flushParagraph = () => {
+    if (paragraph.length > 0) {
+      nodes.push(markdownParagraph(paragraph))
+      paragraph = []
+    }
+  }
+
+  let i = 0
+  while (i < lines.length) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    if (!trimmed) {
+      flushParagraph()
+      i++
+      continue
+    }
+
+    const fence = MD_FENCE.exec(line)
+    if (fence) {
+      flushParagraph()
+      const code: string[] = []
+      i++
+      while (i < lines.length && !lines[i].trim().startsWith(fence[1])) {
+        code.push(lines[i])
+        i++
+      }
+      i++
+      const codeText = code.join('\n')
+      nodes.push({
+        type: 'codeBlock',
+        attrs: { language: fence[2] || null },
+        ...(codeText ? { content: [{ type: 'text', text: codeText }] } : {}),
+      })
+      continue
+    }
+
+    const heading = MD_HEADING.exec(line)
+    if (heading) {
+      flushParagraph()
+      nodes.push({
+        type: 'heading',
+        attrs: { level: heading[1].length },
+        content: markdownInline(heading[2]),
+      })
+      i++
+      continue
+    }
+
+    if (MD_RULE.test(line)) {
+      flushParagraph()
+      nodes.push({ type: 'horizontalRule' })
+      i++
+      continue
+    }
+
+    const ordered = MD_ORDERED.exec(line)
+    if (MD_BULLET.test(line) || ordered) {
+      flushParagraph()
+      const pattern = ordered ? MD_ORDERED : MD_BULLET
+      const items: AIContentNode[] = []
+      while (i < lines.length && pattern.test(lines[i])) {
+        const match = pattern.exec(lines[i])!
+        const itemText = ordered ? match[2] : match[1]
+        items.push({ type: 'listItem', content: [markdownParagraph([itemText])] })
+        i++
+      }
+      nodes.push(
+        ordered
+          ? { type: 'orderedList', attrs: { start: Number(ordered[1]) }, content: items }
+          : { type: 'bulletList', content: items }
+      )
+      continue
+    }
+
+    if (MD_QUOTE.test(line)) {
+      flushParagraph()
+      const quoted: string[] = []
+      while (i < lines.length && MD_QUOTE.test(lines[i])) {
+        quoted.push(MD_QUOTE.exec(lines[i])![1])
+        i++
+      }
+      const inner = markdownToNodes(quoted.join('\n'))
+      nodes.push({ type: 'blockquote', content: inner.length ? inner : [{ type: 'paragraph' }] })
+      continue
+    }
+
+    paragraph.push(trimmed)
+    i++
+  }
+  flushParagraph()
+  return nodes
+}
+
 /**
  * Transform content to fix common AI output issues.
  * Specifically handles blocks that require direct text nodes (not paragraphs).
@@ -341,7 +501,8 @@ export function prepareAIContent(raw: string, schema: Schema): PreparedAIContent
     if (JSON_START.test(clean) && clean.includes('"type"')) {
       return { nodes: [], error: 'unparseable' }
     }
-    return { nodes: textToParagraphs(clean) }
+    // The model answered in prose or markdown instead of TipTap JSON
+    return { nodes: normalizeAINodes(markdownToNodes(clean), schema) }
   }
 
   const nodes = normalizeAINodes(parsed, schema)

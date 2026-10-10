@@ -25,6 +25,7 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import InfoCallout from './Extensions/Callout/Info/InfoCallout'
 import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
 import Callout from './Extensions/Callout/Callout'
+import { normalizeCalloutContent } from './Extensions/Callout/calloutContent'
 import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
@@ -208,7 +209,7 @@ function Editor(props: EditorProps) {
   )
 
   React.useEffect(() => {
-    savedContentSnapshotRef.current = getEditorContentSnapshot(props.content)
+    savedContentSnapshotRef.current = getEditorContentSnapshot(normalizeCalloutContent(props.content))
     setHasUnsavedChanges(false)
   }, [props.activity.activity_uuid, props.content])
 
@@ -286,10 +287,16 @@ function Editor(props: EditorProps) {
     setHasUnsavedChanges(false)
   }, [])
 
+  // Wrap the inline text of callouts saved before they could hold lists
+  const editorContent = React.useMemo(
+    () => normalizeCalloutContent(props.content),
+    [props.content]
+  )
+
   const editor: any = useEditor({
     editable: true,
     extensions,
-    content: props.content,
+    content: editorContent,
     immediatelyRender: false,
     onCreate: ({ editor }) => {
       // Re-baseline against the editor's own normalized doc. The initial
@@ -392,7 +399,7 @@ function Editor(props: EditorProps) {
     if (!editor) return
 
     // Update editor with merged content
-    editor.commands.setContent(mergedContent)
+    editor.commands.setContent(normalizeCalloutContent(mergedContent))
 
     // Save the merged content (force overwrite since we've manually merged)
     const result = await props.setContent(mergedContent, true)

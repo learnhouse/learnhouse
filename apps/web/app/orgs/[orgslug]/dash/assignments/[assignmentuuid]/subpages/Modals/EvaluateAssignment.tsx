@@ -19,6 +19,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
+import { sortTasksByOrder } from '@/lib/assignments/taskOrder'
 
 function pctToLetterGrade(pct: number): string {
     if (pct >= 90) return 'A';
@@ -214,7 +215,7 @@ function EvaluateAssignment({ user_id }: any) {
         setGradePreview(null)
     }
 
-    const sortedTasks = assignments?.assignment_tasks?.slice().sort((a: any, b: any) => a.id - b.id) || [];
+    const sortedTasks = sortTasksByOrder(assignments?.assignment_tasks);
 
     // Banner numbers derived from the live per-task rows in the same response
     // (see buildLiveGrade) so the header can't contradict the chips below it.
