@@ -21,6 +21,7 @@ import {
   selectCheckoutCustomerId,
   planFromPriceId,
   effectivePlanForSubscription,
+  isPaidUpStatus,
   type PriceMapEntry,
 } from "./subscriptionUtils";
 import { updateOrganizationConfigInternally } from "./orgPlan";
@@ -310,6 +311,16 @@ export async function switchSubscriptionPlan(
     return { scheduled: true, plan: newPlan };
   }
 
+  // An upgrade takes effect immediately, so it must not run on a subscription
+  // with an unpaid balance: the prorated invoice would just join the unpaid
+  // ones while the org already gets the higher plan.
+  if (!isPaidUpStatus(subscription.status)) {
+    throw Object.assign(
+      new Error("Your subscription has an outstanding payment. Update your payment method before upgrading."),
+      { status: 409 },
+    );
+  }
+
   // Resolve the promotion code. Apply it by `promotion_code` (not the bare
   // coupon) so the promotion's own restrictions (max redemptions, per-customer
   // limits, expiry, minimum amount) are enforced, matching the checkout path.
@@ -378,8 +389,13 @@ export async function cancelSubscription(email: string, orgId: string) {
  * Called when the user returns from Stripe checkout with a session_id.
  * This is a safety net: the webhook should also handle this, but
  * webhooks can be delayed or misconfigured (especially on localhost).
+ *
+ * `orgId` is the org the caller is authorized for. The session id comes from
+ * the client, so it is only honoured when its subscription belongs to that org,
+ * is in good standing, and is a plan (not a pack) subscription. The plan is
+ * derived from the live subscription's price, not from caller input.
  */
-export async function fulfillCheckoutSession(sessionId: string) {
+export async function fulfillCheckoutSession(sessionId: string, orgId: string) {
   try {
     // Stripe's basil API (2025-03-31) defers subscription creation until after
     // payment completes, so the expanded `subscription` can briefly be null
@@ -397,28 +413,43 @@ export async function fulfillCheckoutSession(sessionId: string) {
       }
 
       subscription = checkoutSession.subscription;
-      if (subscription?.metadata?.org_id && subscription?.metadata?.plan) break;
+      if (subscription?.metadata?.org_id && isPaidUpStatus(subscription.status)) break;
       if (attempt < 2) await new Promise(r => setTimeout(r, 1000));
     }
 
-    console.log("[fulfillCheckout] payment_status:", checkoutSession.payment_status);
-    console.log("[fulfillCheckout] subscription metadata:", subscription?.metadata);
-
-    if (!subscription?.metadata?.org_id || !subscription?.metadata?.plan) {
+    if (!subscription?.metadata?.org_id) {
       console.error("[fulfillCheckout] Missing metadata on subscription:", subscription?.metadata);
       return { fulfilled: false, reason: "missing_metadata" };
     }
 
-    console.log("[fulfillCheckout] Updating org", subscription.metadata.org_id, "to plan", subscription.metadata.plan);
+    if (String(subscription.metadata.org_id) !== String(orgId)) {
+      console.warn("[fulfillCheckout] Session", sessionId, "does not belong to org", orgId);
+      return { fulfilled: false, reason: "org_mismatch" };
+    }
+
+    if (!isPaidUpStatus(subscription.status)) {
+      return { fulfilled: false, reason: "not_active" };
+    }
+
+    // Packs are activated by the webhook; never let a pack session set a plan.
+    const priceEntry = planFromPriceId(PRICE_TO_PLAN, subscription.items?.data?.[0]?.price?.id);
+    if (subscription.metadata.type === "pack" || priceEntry?.isPack) {
+      return { fulfilled: false, reason: "not_a_plan" };
+    }
+
+    const plan = effectivePlanForSubscription(subscription, PRICE_TO_PLAN);
+    if (plan === "free") {
+      console.error("[fulfillCheckout] Could not resolve plan for subscription", subscription.id);
+      return { fulfilled: false, reason: "missing_metadata" };
+    }
+
+    console.log("[fulfillCheckout] Updating org", orgId, "to plan", plan);
 
     // Retry up to 3 times with 1s delay
     let lastError: any;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await updateOrganizationConfigInternally(
-          subscription.metadata.org_id,
-          subscription.metadata.plan,
-        );
+        await updateOrganizationConfigInternally(orgId, plan as any);
         lastError = null;
         break;
       } catch (err) {
@@ -429,11 +460,7 @@ export async function fulfillCheckoutSession(sessionId: string) {
     }
     if (lastError) throw lastError;
 
-    return {
-      fulfilled: true,
-      orgId: subscription.metadata.org_id,
-      plan: subscription.metadata.plan,
-    };
+    return { fulfilled: true, orgId, plan };
   } catch (err) {
     console.error("[fulfillCheckout] Error:", err);
     return { fulfilled: false, reason: "error" };
