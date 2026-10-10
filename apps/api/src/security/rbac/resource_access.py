@@ -22,7 +22,7 @@ from fastapi import HTTPException, Request, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.users import AnonymousUser, PublicUser, APITokenUser
+from src.db.users import AnonymousUser, PublicUser, APITokenUser, SuperadminAPITokenUser
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
@@ -121,6 +121,21 @@ class ResourceAccessChecker:
                 via_admin=True,
                 resource_uuid=resource_uuid,
                 user_id=self.current_user.id,
+                action=action.value,
+                context=context.value,
+            )
+
+        # Superadmin API tokens are cross-org by design and re-check at auth
+        # time that their minter is still a superadmin. Their id is the token
+        # row id, so they must never fall through to the user-id based checks
+        # below, where that id would be read as some unrelated user's.
+        if isinstance(self.current_user, SuperadminAPITokenUser):
+            return AccessDecision(
+                allowed=True,
+                reason="Superadmin API token access",
+                via_admin=True,
+                resource_uuid=resource_uuid,
+                user_id=self.current_user.created_by_user_id,
                 action=action.value,
                 context=context.value,
             )
@@ -630,8 +645,8 @@ class ResourceAccessChecker:
 
     def _get_user_id(self) -> int:
         """Get the current user's ID."""
-        if isinstance(self.current_user, APITokenUser):
-            return 0  # API tokens don't have a user ID in the same sense
+        if isinstance(self.current_user, (APITokenUser, SuperadminAPITokenUser)):
+            return 0  # token ids are not user ids
         return self.current_user.id if self.current_user else 0
 
     async def _resolve_parent_resource_uuid(
