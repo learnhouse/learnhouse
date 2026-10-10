@@ -8,12 +8,21 @@ import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL } from '../../../core/instance'
 import { login, getOrg, seedScorm } from '../api'
 
 async function assertContentLoads(token: string, activityUuid: string, path: string) {
-  const res = await fetch(`${API_URL}/scorm/${activityUuid}/content/${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
+  // Content is served under a launch token, not the session.
+  const launch = await fetch(`${API_URL}/scorm/${activityUuid}/launch`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ host: 'localhost' }),
   })
+  expect(launch.status, 'launch should 200').toBe(200)
+  const { content_base } = await launch.json()
+
+  const res = await fetch(`${API_URL}/scorm/${content_base}${path}`)
   expect(res.status, `content ${path} should 200`).toBe(200)
+  expect(res.headers.get('content-security-policy') ?? '').toMatch(/^sandbox /)
   const body = await res.text()
   expect(body).toContain('lhComplete') // our SCO html marker
+  expect(body).toContain('data-lh-scorm-seed') // runtime seed for the API shim
 }
 
 test('Articulate Rise-style (./scormcontent) imports and content resolves', async () => {

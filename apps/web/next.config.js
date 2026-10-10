@@ -50,16 +50,22 @@ const nextConfig = {
         ],
       },
       {
-        // SCORM packages are served same-origin through /api/scorm and rendered
-        // inside an iframe by the player. The global frame-ancestors 'none' /
-        // X-Frame-Options: DENY above blocks even same-origin framing, so the
-        // player shows "refused to connect". Allow the content to be framed by
-        // its own origin (the player also needs same-origin contentDocument
-        // access to inject the SCORM API and styles).
+        // SCORM packages (untrusted HTML/JS) are served through /api/scorm and
+        // always sandboxed: CSP `sandbox` without allow-same-origin puts them in
+        // an opaque origin, framed by the player or opened top-level. Must match
+        // SCORM_CONTENT_CSP in ee/services/scorm/scormShim.ts (the route sets it
+        // too). No frame-ancestors/X-Frame-Options restriction: a package's own
+        // nested frames have an opaque-origin ancestor, which 'self' and
+        // SAMEORIGIN reject; 'ALLOWALL' is not a valid value and is ignored,
+        // overriding the global DENY.
         source: '/api/scorm/:path*',
         headers: [
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+          {
+            key: 'Content-Security-Policy',
+            value: 'sandbox allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads',
+          },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
         ],
       },
       {

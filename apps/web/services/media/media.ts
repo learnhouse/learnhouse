@@ -299,18 +299,16 @@ export function getOrgFaviconMediaDirectory(orgUUID: string, fileId: string) {
 }
 
 /**
- * Get the URL for SCORM content files
- * Routes through a local proxy to ensure same-origin for SCORM API injection
+ * Get the URL for a SCORM content file, under a launch token.
+ * Served by the local proxy, sandboxed (opaque origin); relative URLs inside
+ * the package resolve under the same token prefix.
  */
 export function getScormContentUrl(
-  orgUUID: string,
-  courseUUID: string,
   activityUUID: string,
+  launchToken: string,
   filePath: string
 ): string {
-  // Use local proxy route to serve SCORM content from same origin
-  // This is required for the SCORM API to work properly in iframes
-  return `/api/scorm/${activityUUID}/content/${filePath}`
+  return `/api/scorm/${activityUUID}/t/${launchToken}/content/${filePath}`
 }
 
 /**

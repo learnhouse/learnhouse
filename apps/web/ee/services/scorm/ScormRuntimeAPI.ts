@@ -1,8 +1,18 @@
 /**
  * SCORM Runtime API Bridge
  * Implements JavaScript API for SCORM 1.2 and SCORM 2004
- * Handles communication between SCORM content and the LearnHouse backend
+ * Handles communication between SCORM content and the LearnHouse backend.
+ *
+ * Package content runs sandboxed and reaches this runtime through the injected
+ * shim (see scormShim.ts), which forwards setValue/commit/terminate here.
  */
+
+import {
+  SCORM_12_ERROR_STRINGS,
+  SCORM_12_READ_ONLY,
+  SCORM_2004_ERROR_STRINGS,
+  SCORM_2004_READ_ONLY,
+} from './scormShim'
 
 // SCORM 1.2 Error Codes
 const SCORM_12_ERRORS = {
@@ -78,6 +88,11 @@ export class ScormRuntimeAPI {
    * progress stops persisting (otherwise a failing commit is silent). */
   setSaveStatusHandler(fn: (_ok: boolean) => void) {
     this.saveStatusHandler = fn
+  }
+
+  /** Copy of the live CMI cache, for the content shim's resync. */
+  getCmiSnapshot(): Record<string, string> {
+    return { ...this.cmiData }
   }
 
   /** True when this launch is resuming a previous attempt (entry === "resume"). */
@@ -346,36 +361,9 @@ export class ScormRuntimeAPI {
    * Check if element is read-only
    */
   private isReadOnlyElement(element: string): boolean {
-    const readOnlyElements12 = [
-      'cmi.core._children',
-      'cmi.core.student_id',
-      'cmi.core.student_name',
-      'cmi.core.credit',
-      'cmi.core.entry',
-      'cmi.core.total_time',
-      'cmi.core.lesson_mode',
-      'cmi.launch_data',
-      'cmi.comments_from_lms',
-    ]
-
-    const readOnlyElements2004 = [
-      'cmi._version',
-      'cmi.completion_threshold',
-      'cmi.credit',
-      'cmi.entry',
-      'cmi.launch_data',
-      'cmi.learner_id',
-      'cmi.learner_name',
-      'cmi.max_time_allowed',
-      'cmi.mode',
-      'cmi.scaled_passing_score',
-      'cmi.time_limit_action',
-      'cmi.total_time',
-    ]
-
     const readOnly = this.scormVersion === 'SCORM_2004'
-      ? readOnlyElements2004
-      : readOnlyElements12
+      ? SCORM_2004_READ_ONLY
+      : SCORM_12_READ_ONLY
 
     return readOnly.some((ro) => element.startsWith(ro))
   }
@@ -391,52 +379,9 @@ export class ScormRuntimeAPI {
    * Get error string for error code
    */
   getErrorString(errorCode: string): string {
-    const errorStrings12: Record<string, string> = {
-      '0': 'No Error',
-      '101': 'General Exception',
-      '201': 'Invalid argument error',
-      '202': 'Element cannot have children',
-      '203': 'Element not an array - Cannot have count',
-      '301': 'Not initialized',
-      '401': 'Not implemented error',
-      '402': 'Invalid set value, element is a keyword',
-      '403': 'Element is read only',
-      '404': 'Element is write only',
-      '405': 'Incorrect Data Type',
-    }
-
-    const errorStrings2004: Record<string, string> = {
-      '0': 'No Error',
-      '101': 'General Exception',
-      '102': 'General Initialization Failure',
-      '103': 'Already Initialized',
-      '104': 'Content Instance Terminated',
-      '111': 'General Termination Failure',
-      '112': 'Termination Before Initialization',
-      '113': 'Termination After Termination',
-      '122': 'Retrieve Data Before Initialization',
-      '123': 'Retrieve Data After Termination',
-      '132': 'Store Data Before Initialization',
-      '133': 'Store Data After Termination',
-      '142': 'Commit Before Initialization',
-      '143': 'Commit After Termination',
-      '201': 'General Argument Error',
-      '301': 'General Get Failure',
-      '351': 'General Set Failure',
-      '391': 'General Commit Failure',
-      '401': 'Undefined Data Model Element',
-      '402': 'Unimplemented Data Model Element',
-      '403': 'Data Model Element Value Not Initialized',
-      '404': 'Data Model Element Is Read Only',
-      '405': 'Data Model Element Is Write Only',
-      '406': 'Data Model Element Type Mismatch',
-      '407': 'Data Model Element Value Out Of Range',
-      '408': 'Data Model Dependency Not Established',
-    }
-
     const strings = this.scormVersion === 'SCORM_2004'
-      ? errorStrings2004
-      : errorStrings12
+      ? SCORM_2004_ERROR_STRINGS
+      : SCORM_12_ERROR_STRINGS
 
     return strings[errorCode] || 'Unknown Error'
   }
@@ -458,7 +403,7 @@ export class ScormRuntimeAPI {
    * via getLastError on the next call and is retried by the auto-commit loop and
    * the unload handler.
    */
-  private requestCommit(): string {
+  requestCommit(): string {
     if (!this.isInitialized) {
       this.lastError = this.scormVersion === 'SCORM_2004'
         ? SCORM_2004_ERRORS.COMMIT_BEFORE_INITIALIZATION
@@ -479,7 +424,7 @@ export class ScormRuntimeAPI {
   /**
    * Synchronously accept a terminate request and finalize in the background.
    */
-  private requestTerminate(): string {
+  requestTerminate(): string {
     if (!this.isInitialized) {
       this.lastError = this.scormVersion === 'SCORM_2004'
         ? SCORM_2004_ERRORS.TERMINATION_BEFORE_INITIALIZATION
@@ -496,72 +441,27 @@ export class ScormRuntimeAPI {
     void this.terminate()
     return 'true'
   }
+}
 
-  /**
-   * Get SCORM 1.2 API object for injection
-   */
-  getScorm12API() {
-    return {
-      LMSInitialize: (_: string) => {
-        // Already initialized on the backend
-        this.lastError = '0'
-        return 'true'
-      },
-      LMSFinish: (_: string) => {
-        return this.requestTerminate()
-      },
-      LMSGetValue: (element: string) => {
-        return this.getValue(element)
-      },
-      LMSSetValue: (element: string, value: string) => {
-        return this.setValue(element, value) ? 'true' : 'false'
-      },
-      LMSCommit: (_: string) => {
-        return this.requestCommit()
-      },
-      LMSGetLastError: () => {
-        return this.getLastError()
-      },
-      LMSGetErrorString: (errorCode: string) => {
-        return this.getErrorString(errorCode)
-      },
-      LMSGetDiagnostic: (errorCode: string) => {
-        return this.getDiagnostic(errorCode)
-      },
-    }
+/**
+ * Mint a launch token for the activity's content. The content proxy serves the
+ * package under `/api/scorm/<activity>/t/<token>/content/...`; the token is
+ * bound to this learner, the activity, and the host the player runs on.
+ */
+export async function requestScormLaunch(
+  apiUrl: string,
+  activityUuid: string,
+  accessToken: string | undefined
+): Promise<{ token: string; expires_at: number }> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
+  const response = await fetch(`${apiUrl}scorm/${activityUuid}/launch`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ host: window.location.host }),
+  })
+  if (!response.ok) {
+    throw new Error(`Failed to launch SCORM content: ${response.status}`)
   }
-
-  /**
-   * Get SCORM 2004 API object for injection
-   */
-  getScorm2004API() {
-    return {
-      Initialize: (_: string) => {
-        // Already initialized on the backend
-        this.lastError = '0'
-        return 'true'
-      },
-      Terminate: (_: string) => {
-        return this.requestTerminate()
-      },
-      GetValue: (element: string) => {
-        return this.getValue(element)
-      },
-      SetValue: (element: string, value: string) => {
-        return this.setValue(element, value) ? 'true' : 'false'
-      },
-      Commit: (_: string) => {
-        return this.requestCommit()
-      },
-      GetLastError: () => {
-        return this.getLastError()
-      },
-      GetErrorString: (errorCode: string) => {
-        return this.getErrorString(errorCode)
-      },
-      GetDiagnostic: (errorCode: string) => {
-        return this.getDiagnostic(errorCode)
-      },
-    }
-  }
+  return response.json()
 }

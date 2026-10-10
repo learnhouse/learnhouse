@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { getScormContentUrl } from '@services/media/media'
 import { RefreshCw, AlertCircle } from 'lucide-react'
-import { ScormRuntimeAPI } from '../../services/scorm/ScormRuntimeAPI'
+import { ScormRuntimeAPI, requestScormLaunch } from '../../services/scorm/ScormRuntimeAPI'
+import { SCORM_IFRAME_SANDBOX, handleShimMessage } from '../../services/scorm/scormShim'
 
 interface ScormActivityProps {
   activity: {
@@ -22,8 +22,7 @@ interface ScormActivityProps {
   }
 }
 
-function ScormActivity({ activity, course }: ScormActivityProps) {
-  const org = useOrg() as any
+function ScormActivity({ activity }: ScormActivityProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -34,7 +33,8 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
-  const [apiInjected, setApiInjected] = useState(false)
+  const [launchToken, setLaunchToken] = useState<string | null>(null)
+  const [launchAttempt, setLaunchAttempt] = useState(0)
   const [needsAuth, setNeedsAuth] = useState(false)
   const [saveError, setSaveError] = useState(false)
   const [resuming, setResuming] = useState(false)
@@ -46,18 +46,12 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
     return () => window.clearTimeout(t)
   }, [resuming])
 
-  // Get the content URL for the SCORM entry point
+  // The package is served sandboxed under a launch token; its relative URLs
+  // resolve under the same prefix.
   const getContentUrl = useCallback(() => {
-    if (!org?.org_uuid || !course?.course_uuid || !activity?.activity_uuid) {
-      return null
-    }
-    return getScormContentUrl(
-      org.org_uuid,
-      course.course_uuid,
-      activity.activity_uuid,
-      activity.content.entry_point
-    )
-  }, [org?.org_uuid, course?.course_uuid, activity?.activity_uuid, activity?.content?.entry_point])
+    if (!launchToken || !activity?.activity_uuid) return null
+    return getScormContentUrl(activity.activity_uuid, launchToken, activity.content.entry_point)
+  }, [launchToken, activity?.activity_uuid, activity?.content?.entry_point])
 
   // Initialize SCORM runtime
   useEffect(() => {
@@ -116,317 +110,43 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
     }
   }, [access_token, activity?.activity_uuid, activity?.content?.scorm_version])
 
-  // Inject SCORM API into window (where SCORM content looks for it)
+  // Mint the launch token once the runtime is ready, so the content's seeded
+  // CMI matches what the runtime just initialized.
   useEffect(() => {
-    if (!runtimeRef.current || !initialized) return
-
-    const runtime = runtimeRef.current
-
-    // SCORM content looks for API in window.parent, window.top, or window.opener
-    // We inject into the current window so the iframe can find it
-    try {
-      // Inject SCORM 1.2 API
-      if (activity.content.scorm_version === 'SCORM_12') {
-        (window as any).API = runtime.getScorm12API()
-      }
-
-      // Inject SCORM 2004 API
-      if (activity.content.scorm_version === 'SCORM_2004') {
-        (window as any).API_1484_11 = runtime.getScorm2004API()
-      }
-
-      // Mark API as injected so iframe can render
-      setApiInjected(true)
-    } catch (err) {
-      console.error('Error injecting SCORM API:', err)
-    }
-
-  }, [initialized, activity?.content?.scorm_version])
-
-  // Cleanup SCORM API and observers on unmount
-  useEffect(() => {
+    if (!initialized || launchToken || !activity?.activity_uuid) return
+    let cancelled = false
+    requestScormLaunch(getAPIUrl(), activity.activity_uuid, access_token)
+      .then(({ token }) => {
+        if (!cancelled) setLaunchToken(token)
+      })
+      .catch((err) => {
+        console.error('Failed to launch SCORM content:', err)
+        if (!cancelled) setError('Failed to load SCORM content')
+      })
     return () => {
-      delete (window as any).API
-      delete (window as any).API_1484_11
-
-      // Cleanup MutationObserver and style enforcement interval
-      if (iframeRef.current) {
-        if ((iframeRef.current as any)._scormObserver) {
-          (iframeRef.current as any)._scormObserver.disconnect()
-        }
-        if ((iframeRef.current as any)._scormStyleInterval) {
-          clearInterval((iframeRef.current as any)._scormStyleInterval)
-        }
-      }
+      cancelled = true
     }
-  }, [])
+  }, [initialized, launchToken, launchAttempt, access_token, activity?.activity_uuid])
 
-  // Handle iframe load
+  // The package runs in an opaque origin and cannot reach this window's API.
+  // The shim injected into its documents answers SCORM calls from its own
+  // cache and reports writes here; only messages from our iframe count.
+  useEffect(() => {
+    if (!initialized) return
+    const onMessage = (event: MessageEvent) => {
+      const frame = iframeRef.current
+      if (!frame || !frame.contentWindow || event.source !== frame.contentWindow) return
+      const reply = handleShimMessage(runtimeRef.current, event.data)
+      if (reply) frame.contentWindow.postMessage(reply, '*')
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [initialized])
+
+  // Layout CSS is applied by the shim inside the (cross-origin) frame.
   const handleIframeLoad = () => {
     setIsLoading(false)
     setError(null)
-
-    // Inject custom styles into the iframe to improve the SCORM content appearance
-    try {
-      const iframe = iframeRef.current
-      if (iframe?.contentDocument) {
-        const style = iframe.contentDocument.createElement('style')
-        style.textContent = `
-          /* Full screen clean layout */
-          html, body {
-            margin: 0 !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-            outline: none !important;
-            overflow: hidden !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-            background: #fff !important;
-            height: 100% !important;
-            width: 100% !important;
-          }
-
-          /* Remove all borders and padding from everything */
-          * {
-            border: none !important;
-            outline: none !important;
-            box-sizing: border-box !important;
-          }
-
-          /* Navigation - fixed at top right as floating pill buttons */
-          #navDiv, .navDiv {
-            position: fixed !important;
-            top: 8px !important;
-            right: 50px !important;
-            left: auto !important;
-            bottom: auto !important;
-            background: transparent !important;
-            padding: 0 !important;
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: flex-end !important;
-            align-items: center !important;
-            gap: 8px !important;
-            z-index: 9999 !important;
-            border: none !important;
-            box-shadow: none !important;
-          }
-
-          /* Button styling - pill buttons with text and icons */
-          #navDiv input[type="button"],
-          #navDiv button,
-          input#butPrevious,
-          input#butNext,
-          #butPrevious,
-          #butNext {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            padding: 8px 16px !important;
-            border: none !important;
-            border-radius: 9999px !important;
-            cursor: pointer !important;
-            transition: all 0.15s ease !important;
-            min-width: auto !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 6px !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-            text-indent: 0 !important;
-            line-height: 1 !important;
-          }
-
-          input#butPrevious,
-          #butPrevious {
-            background: rgba(255,255,255,0.95) !important;
-            color: #171717 !important;
-          }
-
-          input#butPrevious::before,
-          #butPrevious::before {
-            content: '' !important;
-            display: inline-block !important;
-            width: 6px !important;
-            height: 6px !important;
-            border-left: 2px solid #171717 !important;
-            border-bottom: 2px solid #171717 !important;
-            transform: rotate(45deg) !important;
-            flex-shrink: 0 !important;
-          }
-
-          input#butPrevious:hover:not(:disabled),
-          #butPrevious:hover:not(:disabled) {
-            background: #fff !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-          }
-
-          input#butNext,
-          #butNext {
-            background: rgba(23,23,23,0.95) !important;
-            color: #fff !important;
-          }
-
-          input#butNext::after,
-          #butNext::after {
-            content: '' !important;
-            display: inline-block !important;
-            width: 6px !important;
-            height: 6px !important;
-            border-right: 2px solid #fff !important;
-            border-top: 2px solid #fff !important;
-            transform: rotate(45deg) !important;
-            flex-shrink: 0 !important;
-          }
-
-          input#butNext:hover:not(:disabled),
-          #butNext:hover:not(:disabled) {
-            background: #171717 !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
-          }
-
-          input[type="button"]:disabled,
-          button:disabled {
-            opacity: 0.35 !important;
-            cursor: not-allowed !important;
-          }
-
-          /* Hide exit button */
-          #butExit, input#butExit {
-            display: none !important;
-          }
-
-          /* Content iframe takes full space */
-          #contentFrame {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-
-          /* Hide scrollbars */
-          ::-webkit-scrollbar {
-            display: none !important;
-          }
-          html, body, * {
-            -ms-overflow-style: none !important;
-            scrollbar-width: none !important;
-          }
-        `
-        iframe.contentDocument.head.appendChild(style)
-
-        // Also inject styles into nested iframes (contentFrame)
-        const injectNestedStyles = () => {
-          const nestedIframes = iframe.contentDocument?.querySelectorAll('iframe')
-          nestedIframes?.forEach((nestedIframe: HTMLIFrameElement) => {
-            try {
-              if (nestedIframe.contentDocument) {
-                // Force inline styles directly on body element to override any CSS
-                const nestedBody = nestedIframe.contentDocument.body
-                if (nestedBody) {
-                  nestedBody.style.cssText = `
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    border: none !important;
-                    background: #fff !important;
-                    overflow-x: hidden !important;
-                    overflow-y: auto !important;
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                  `
-                }
-
-                // Also inject stylesheet for other elements
-                const nestedStyle = nestedIframe.contentDocument.createElement('style')
-                nestedStyle.id = 'learnhouse-scorm-styles'
-                nestedStyle.textContent = `
-                  html, html body, body {
-                    margin: 0 !important;
-                    margin-left: 0 !important;
-                    margin-right: 0 !important;
-                    margin-top: 0 !important;
-                    margin-bottom: 0 !important;
-                    padding: 0 !important;
-                    border: none !important;
-                    background: #fff !important;
-                    overflow-x: hidden !important;
-                    overflow-y: auto !important;
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                  }
-                  img {
-                    max-width: 100% !important;
-                    height: auto !important;
-                    border: none !important;
-                  }
-                  ::-webkit-scrollbar {
-                    width: 0 !important;
-                    height: 0 !important;
-                  }
-                `
-                // Remove any existing learnhouse styles first
-                const existing = nestedIframe.contentDocument.getElementById('learnhouse-scorm-styles')
-                if (existing) existing.remove()
-                // Append to end of head for higher cascade priority
-                nestedIframe.contentDocument.head.appendChild(nestedStyle)
-              }
-            } catch {
-              // Nested iframe might have different origin
-            }
-          })
-        }
-
-        // Inject immediately
-        injectNestedStyles()
-
-        // Watch for iframe loads and content changes
-        const setupListeners = () => {
-          iframe.contentDocument?.querySelectorAll('iframe').forEach((nestedIframe: HTMLIFrameElement) => {
-            nestedIframe.removeEventListener('load', injectNestedStyles)
-            nestedIframe.addEventListener('load', injectNestedStyles)
-          })
-        }
-
-        setupListeners()
-
-        // Watch for DOM changes to catch navigation
-        const observer = new MutationObserver(() => {
-          injectNestedStyles()
-          setupListeners()
-        })
-
-        observer.observe(iframe.contentDocument.body, {
-          childList: true,
-          subtree: true
-        })
-
-        // Re-apply styles periodically for the first few seconds to override any late-loading CSS
-        let styleEnforcementCount = 0
-        const styleEnforcementInterval = setInterval(() => {
-          injectNestedStyles()
-          styleEnforcementCount++
-          if (styleEnforcementCount >= 10) {
-            clearInterval(styleEnforcementInterval)
-          }
-        }, 200)
-
-        // Store observer and interval for cleanup
-        ;(iframe as any)._scormObserver = observer
-        ;(iframe as any)._scormStyleInterval = styleEnforcementInterval
-      }
-    } catch {
-      // Cross-origin restriction - can't inject styles
-      console.log('[SCORM] Could not inject styles (cross-origin restriction)')
-    }
   }
 
   // Handle iframe error
@@ -437,6 +157,11 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
 
   // Refresh content
   const refreshContent = () => {
+    setError(null)
+    if (!launchToken) {
+      setLaunchAttempt((n) => n + 1)
+      return
+    }
     if (iframeRef.current) {
       setIsLoading(true)
       iframeRef.current.src = getContentUrl() || ''
@@ -514,7 +239,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
       )}
 
       {/* SCORM Content iframe - Full viewport */}
-      {contentUrl && apiInjected && (
+      {contentUrl && (
         <iframe
           ref={iframeRef}
           src={contentUrl}
@@ -531,12 +256,14 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
           onLoad={handleIframeLoad}
           onError={handleIframeError}
           title={activity.content.sco_title || 'SCORM Content'}
+          sandbox={SCORM_IFRAME_SANDBOX}
+          referrerPolicy="no-referrer"
           allow="fullscreen"
         />
       )}
 
       {/* Loading overlay */}
-      {isLoading && apiInjected && (
+      {isLoading && contentUrl && (
         <div role="status" aria-live="polite" className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-950 z-10">
           <div className="text-center space-y-4">
             <div className="relative w-10 h-10 mx-auto">
@@ -549,7 +276,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
       )}
 
       {/* Initializing state */}
-      {!apiInjected && !error && (
+      {!contentUrl && !error && (
         <div role="status" aria-live="polite" className="flex items-center justify-center bg-neutral-50 dark:bg-neutral-900" style={{ height: 'calc(100vh - 140px)', minHeight: '500px' }}>
           <div className="text-center space-y-4">
             <div className="relative w-10 h-10 mx-auto">

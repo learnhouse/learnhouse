@@ -1,14 +1,12 @@
 /**
  * Request headers the SCORM content proxy passes on to the API.
  *
- * The API decides who is asking from the session cookie or a Bearer token.
- * Without them every request reaches it as anonymous, and anything outside a
- * public, published course comes back 401, so the player loads nothing for
- * signed-in learners. Kept here so it can be tested without a server.
+ * Content is authorized by the launch token in the URL, never by session:
+ * package code runs sandboxed, and the API must not see the viewer's cookie or
+ * bearer token on a request a package can trigger. Only range and cache
+ * validators pass through. Kept here so it can be tested without a server.
  */
 export const FORWARDED_REQUEST_HEADERS = [
-  'cookie',
-  'authorization',
   'range',
   'if-none-match',
   'if-modified-since',
