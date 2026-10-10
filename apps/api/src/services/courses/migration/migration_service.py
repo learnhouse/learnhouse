@@ -530,25 +530,29 @@ async def create_course_from_migration(
                         ActivityTypeEnum.TYPE_VIDEO,
                         ActivityTypeEnum.TYPE_DOCUMENT,
                     ):
+                        saved_filename = f"{new_file_id}.{ext}"
                         content = {
-                            "file_id": new_file_id,
-                            "file_format": ext,
+                             "filename": saved_filename,
+                             "activity_uuid": activity_uuid,
                         }
 
                         if is_s3_enabled():
-                            s3_key = f"orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/files/{new_file_id}.{ext}"
+                            media_dir = "video" if activity_type == ActivityTypeEnum.TYPE_VIDEO else "documentpdf"
+                            s3_key = (
+                                f"orgs/{org_uuid}/courses/{course_uuid}"
+                                f"/activities/{activity_uuid}/{media_dir}/{saved_filename}"
+                            )
                             ok = await asyncio.to_thread(upload_file_to_s3, s3_key, src_real)
                             if not ok:
                                 raise RuntimeError(f"S3 upload failed for {s3_key}")
                         else:
-                            files_dir = os.path.join(activity_dir, "files")
-                            os.makedirs(files_dir, exist_ok=True)
+                            media_dir = "video" if activity_type == ActivityTypeEnum.TYPE_VIDEO else "documentpdf"
+                            media_real = os.path.realpath(os.path.join(activity_dir, media_dir))
+                            os.makedirs(media_real, exist_ok=True)
                             dst_real = os.path.realpath(
-                                os.path.join(files_dir, f"{new_file_id}.{ext}")
+                                os.path.join(media_real, saved_filename)
                             )
-                            if not dst_real.startswith(
-                                os.path.realpath(files_dir) + os.sep
-                            ):
+                            if not dst_real.startswith(media_real + os.sep):
                                 continue
                             await asyncio.to_thread(shutil.copy2, src_real, dst_real)
 
