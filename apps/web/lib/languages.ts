@@ -13,6 +13,7 @@ export const AVAILABLE_LANGUAGES: Language[] = [
   { code: 'fr', translationKey: 'common.french', nativeName: 'Français', dir: 'ltr' },
   { code: 'de', translationKey: 'common.german', nativeName: 'Deutsch', dir: 'ltr' },
   { code: 'es', translationKey: 'common.spanish', nativeName: 'Español', dir: 'ltr' },
+  { code: 'ca', translationKey: 'common.catalan', nativeName: 'Català', dir: 'ltr' },
   { code: 'ar', translationKey: 'common.arabic', nativeName: 'العربية', dir: 'rtl' },
   { code: 'ja', translationKey: 'common.japanese', nativeName: '日本語', dir: 'ltr' },
   { code: 'pt', translationKey: 'common.portuguese', nativeName: 'Português', dir: 'ltr' },
