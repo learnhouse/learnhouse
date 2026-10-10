@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import HTTPException, Request
 from sqlmodel import select, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
-from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead, UserReadAuthor
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserReadAuthor
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.security.auth import resolve_acting_user_id
@@ -211,7 +211,15 @@ async def get_course_contributors(
         request, db_session, current_user, course_uuid, AccessAction.UPDATE,
         raise_on_deny=False,
     )).allowed
-    user_view = UserRead if can_manage else UserReadAuthor
+
+    def user_view(user: User) -> dict:
+        # SECURITY: editors get the author chip plus email (the contributors
+        # table shows it), never the full account record: is_superadmin,
+        # extra_metadata, signup/login details are not a course editor's.
+        data = UserReadAuthor.model_validate(user).model_dump()
+        if can_manage:
+            data["email"] = user.email
+        return data
 
     # Get all contributors for this course with user information
     statement = (
@@ -228,7 +236,7 @@ async def get_course_contributors(
             "authorship_status": contributor.authorship_status,
             "creation_date": contributor.creation_date,
             "update_date": contributor.update_date,
-            "user": user_view.model_validate(user).model_dump()
+            "user": user_view(user)
         }
         for contributor, user in results
     ]

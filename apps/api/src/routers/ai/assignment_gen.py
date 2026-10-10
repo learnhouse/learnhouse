@@ -17,11 +17,12 @@ from src.db.ai.generations import AIGenerationKind
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.users import PublicUser
-from src.security.auth import get_authenticated_user
+from src.security.auth import get_authenticated_user, resolve_acting_user_id
 from src.security.features_utils.usage import refund_ai_credit, reserve_ai_credit
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.assignment_gen import generate_assignment_plan
+from src.services.ai.base import chat_session_belongs_to_user
 from src.services.ai.generations import (
     delete_generation,
     list_generations,
@@ -93,6 +94,12 @@ async def api_generate_assignment(
         request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
     )
 
+    # A refine turn may only continue the caller's own session, checked
+    # before any credit is reserved.
+    acting_user_id = resolve_acting_user_id(current_user)
+    if body.session_uuid and not chat_session_belongs_to_user(body.session_uuid, acting_user_id):
+        raise HTTPException(status_code=404, detail="Session not found")
+
     enforce_ai_rate_limit(current_user.id, org.id)
     await reserve_ai_credit(org.id, db_session, amount=ASSIGNMENT_CREDIT_COST)
 
@@ -108,6 +115,7 @@ async def api_generate_assignment(
             num_tasks=body.num_tasks,
             allowed_task_types=body.allowed_task_types,
             session_uuid=body.session_uuid,
+            user_id=acting_user_id,
         )
     except AINotConfiguredError as e:
         refund_ai_credit(org.id, ASSIGNMENT_CREDIT_COST)

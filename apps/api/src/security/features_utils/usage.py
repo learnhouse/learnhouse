@@ -1065,6 +1065,58 @@ return redis.call("INCRBY", KEYS[1], amount)
 """
 
 
+# The demo org is one shared organization whose credit pool every visitor
+# draws from; without a per-visitor ceiling one visitor can drain it for all.
+DEMO_AI_DAILY_REQUESTS_PER_USER = 20
+_DEMO_AI_DAILY_KEY = "ai_demo_daily:{org_id}:{user_id}:{day}"
+_DEMO_AI_DAILY_TTL_SECONDS = 2 * 24 * 3600
+
+
+async def _enforce_demo_visitor_ai_cap(org_id: int, db_session: AsyncSession) -> None:
+    """Cap each demo visitor at ``DEMO_AI_DAILY_REQUESTS_PER_USER`` AI requests/day.
+
+    The acting user comes from ``enforce_ai_rate_limit``, which every AI route
+    calls first. Calls without one (background jobs) fall through to the org
+    pool. Raises 429 using the shared rate-limit envelope.
+    """
+    from datetime import timezone
+
+    from src.services.demo.guards import is_demo_org
+    from src.services.security.rate_limiting import ai_acting_user
+
+    acting = ai_acting_user.get()
+    if not acting or acting[1] != int(org_id):
+        return
+    if not await is_demo_org(org_id, db_session):
+        return
+
+    user_id = acting[0]
+    r = _get_redis_client()
+    day = datetime.now(timezone.utc).strftime("%Y%m%d")
+    key = _DEMO_AI_DAILY_KEY.format(org_id=org_id, user_id=user_id, day=day)
+    try:
+        count = int(r.incr(key))
+        if count == 1:
+            r.expire(key, _DEMO_AI_DAILY_TTL_SECONDS)
+    except Exception:
+        # Fail closed, like the credit reservation itself.
+        raise HTTPException(
+            status_code=503,
+            detail="AI credit store temporarily unavailable. Please retry.",
+        )
+    if count > DEMO_AI_DAILY_REQUESTS_PER_USER:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "code": "RATE_LIMITED",
+                "message": (
+                    f"The demo allows {DEMO_AI_DAILY_REQUESTS_PER_USER} AI requests "
+                    "per visitor per day. Try again tomorrow."
+                ),
+            },
+        )
+
+
 async def _load_org_config_for_ai(org_id: int, db_session: AsyncSession):
     stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
     return (await db_session.execute(stmt)).scalars().first()
@@ -1096,6 +1148,8 @@ async def reserve_ai_credit(
             status_code=403,
             detail="AI is not enabled for this organization",
         )
+
+    await _enforce_demo_visitor_ai_cap(org_id, db_session)
 
     # Non-SaaS deployments do not enforce limits but still track usage.
     if _is_non_saas():

@@ -77,7 +77,9 @@ class TestGetOrgBySlug:
 
         assert isinstance(result, OrganizationRead)
         assert result.slug == "cached-org"
-        mock_rbac.assert_not_called()
+        # The cached read skips the (no-op) "read" gate; the only check left
+        # is the "update" probe that decides whether org.email is returned.
+        assert all(c.args[3] == "update" for c in mock_rbac.call_args_list)
 
     @pytest.mark.asyncio
     async def test_get_org_by_slug_found(self, mock_request, db, org, admin_user):

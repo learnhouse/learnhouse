@@ -40,54 +40,60 @@ export default function GoogleCallbackPage() {
         return
       }
 
-      // Check if we need to bounce to a custom domain origin.
-      // When OAuth was initiated from a custom domain (e.g., learn.mozilla.org),
-      // Google redirects to the main domain (dev.learnhouse.io). We detect this
-      // via returnOrigin in the state and bounce the code+state to the custom domain
-      // so CSRF validation and cookie-setting happen on the correct origin.
+      // Verify the state's signature server-side BEFORE trusting anything in
+      // it. Only a state we issued may name a returnOrigin to bounce the code to.
+      let returnOrigin: string | null = null
       try {
-        const stateData = JSON.parse(atob(state))
-        // Validate returnOrigin strictly before bouncing the OAuth code there.
-        // Parse it as a URL and use ONLY its origin (drops any path/query
-        // injection); require an http(s) scheme, which rejects `javascript:`/`data:`,
-        // protocol-relative `//evil`, and malformed values that would otherwise
-        // be an open redirect / OAuth-code leak. (Full forgery protection needs
-        // HMAC-signed state, tracked as a follow-up.)
-        // Only bounce the OAuth code to a TRUSTED host: the platform apex / a
-        // platform subdomain (sync), or a REGISTERED custom domain (verified
-        // against the backend). A scheme check alone still allows any https host
-        // (e.g. attacker.com) → open redirect / OAuth-code leak. Anything not
-        // proven trusted is ignored; we fall through to CSRF validation on the
-        // current origin. (HMAC-signed state is the fuller fix; follow-up.)
+        const verifyRes = await fetch('/api/auth/google/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state }),
+        })
+        const verified = verifyRes.ok ? await verifyRes.json() : null
+        if (!verified?.valid) throw new Error('invalid state')
+        returnOrigin = typeof verified.returnOrigin === 'string' ? verified.returnOrigin : null
+      } catch {
+        setError('Invalid or expired authentication request. Please try again.')
+        setStatus('csrf_error')
+        return
+      }
+
+      // When OAuth was initiated from a custom domain, Google redirects to the
+      // main domain; bounce code+state back so CSRF validation and cookies
+      // happen on the right origin. Platform hosts are trusted as-is; a custom
+      // domain must still resolve AND its live DNS must still point at us
+      // (for_auth), or a repointed domain could harvest codes.
+      if (returnOrigin) {
         let bounceOrigin: string | null = null
-        if (typeof stateData.returnOrigin === 'string') {
-          try {
-            const u = new URL(stateData.returnOrigin)
-            if (u.protocol === 'http:' || u.protocol === 'https:') {
-              const host = u.hostname
-              const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL()
-              const isPlatformHost = !!topDomain && (host === topDomain || host.endsWith(`.${topDomain}`))
-              if (isPlatformHost) {
-                bounceOrigin = u.origin
-              } else {
-                // Non-platform host: bounce ONLY if the backend confirms it is a
-                // registered custom domain (200 = resolved to an org).
-                try {
-                  const r = await fetch(
-                    `${getAPIUrl()}orgs/resolve/domain/${encodeURIComponent(host)}`,
-                    { signal: AbortSignal.timeout(5000) },
-                  )
-                  if (r.ok) bounceOrigin = u.origin
-                } catch {
-                  /* verification failed, do not bounce */
-                }
+        try {
+          const u = new URL(returnOrigin)
+          if (u.protocol === 'http:' || u.protocol === 'https:') {
+            const host = u.hostname
+            const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL()
+            const isPlatformHost = !!topDomain && (host === topDomain || host.endsWith(`.${topDomain}`))
+            if (isPlatformHost || u.origin === window.location.origin) {
+              bounceOrigin = u.origin
+            } else {
+              try {
+                const r = await fetch(
+                  `${getAPIUrl()}orgs/resolve/domain/${encodeURIComponent(host)}?for_auth=1`,
+                  { signal: AbortSignal.timeout(8000) },
+                )
+                if (r.ok) bounceOrigin = u.origin
+              } catch {
+                /* verification failed, do not bounce */
               }
             }
-          } catch {
-            /* malformed returnOrigin: ignore, fall through to CSRF validation */
           }
+        } catch {
+          /* malformed returnOrigin: no bounce */
         }
-        if (bounceOrigin && bounceOrigin !== window.location.origin) {
+        if (!bounceOrigin) {
+          setError('This sign-in request could not be completed for this domain. Please try again.')
+          setStatus('error')
+          return
+        }
+        if (bounceOrigin !== window.location.origin) {
           const bounceUrl = new URL('/auth/callback/google', bounceOrigin)
           // Forward all search params (code, state, scope, etc.)
           searchParams.forEach((value, key) => {
@@ -96,8 +102,6 @@ export default function GoogleCallbackPage() {
           window.location.href = bounceUrl.toString()
           return
         }
-      } catch {
-        // State parsing failed, continue to CSRF validation which will handle the error
       }
 
       const stateValidation = validateOAuthState(state)
@@ -157,6 +161,7 @@ export default function GoogleCallbackPage() {
           body: JSON.stringify({
             code,
             redirect_uri: oauthRedirectUri,
+            state,
           }),
         })
 

@@ -182,6 +182,66 @@ class TestUpdateUserRole:
         assert exc.value.status_code == 404
         assert await _role_of(db, org, regular_user.id) == 4
 
+    async def test_maintainer_cannot_demote_an_admin(
+        self, db, org, admin_user, second_admin, user_role, maintainer_user, mock_request, side_effects
+    ):
+        from src.services.orgs.users import update_user_role
+
+        with pytest.raises(HTTPException) as exc:
+            await update_user_role(
+                mock_request, org.id, second_admin.id, "role_user", db, maintainer_user
+            )
+        assert exc.value.status_code == 403
+        assert await _role_of(db, org, second_admin.id) == 1
+
+    async def test_maintainer_cannot_grant_rights_they_lack(
+        self, db, org, admin_user, regular_user, maintainer_user, mock_request, side_effects
+    ):
+        from src.services.orgs.users import update_user_role
+
+        broad = Role(
+            id=11,
+            name="Broad custom",
+            org_id=org.id,
+            role_type=RoleTypeEnum.TYPE_ORGANIZATION,
+            role_uuid="role_broad",
+            rights=ADMIN_RIGHTS.model_dump(),
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(broad)
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await update_user_role(
+                mock_request, org.id, regular_user.id, "role_broad", db, maintainer_user
+            )
+        assert exc.value.status_code == 403
+        assert await _role_of(db, org, regular_user.id) == 4
+
+    async def test_maintainer_can_grant_a_narrower_role(
+        self, db, org, admin_user, regular_user, maintainer_user, mock_request, side_effects
+    ):
+        from src.services.orgs.users import update_user_role
+
+        narrow = Role(
+            id=12,
+            name="Reader",
+            org_id=org.id,
+            role_type=RoleTypeEnum.TYPE_ORGANIZATION,
+            role_uuid="role_reader",
+            rights=USER_RIGHTS.model_dump(),
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(narrow)
+        await db.commit()
+
+        await update_user_role(
+            mock_request, org.id, regular_user.id, "role_reader", db, maintainer_user
+        )
+        assert await _role_of(db, org, regular_user.id) == 12
+
 
 # ---------------------------------------------------------------------------
 # Delete / wipe / remove

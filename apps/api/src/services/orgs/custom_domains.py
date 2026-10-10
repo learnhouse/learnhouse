@@ -643,13 +643,117 @@ async def check_domain_ssl_status(
         }
 
 
+# Live "does this verified domain still point at us" results, keyed by
+# (domain, org_slug). Verification is a one-time TXT proof, so a tenant can
+# verify a domain and later repoint its DNS at their own server; anything that
+# hands credentials (OAuth codes, emailed reset/magic links) to a custom domain
+# must re-check this first.
+_POINTS_AT_PLATFORM_CACHE: dict[tuple[str, str], tuple[bool, float]] = {}
+_POINTS_AT_PLATFORM_TTL_SECONDS = 300.0
+_POINTS_AT_PLATFORM_CACHE_MAX = 2048
+_DNS_LIFETIME_SECONDS = 3.0
+
+
+def _normalize_host(value: str) -> str:
+    return (value or "").strip().lower().rstrip(".").split(":")[0]
+
+
+def _dns_records(name: str, rdtype: str) -> set:
+    """Records of ``rdtype`` for ``name``; empty when the name has none.
+
+    Any other resolver failure (timeout, SERVFAIL) propagates so the caller
+    fails closed instead of treating it as "no record".
+    """
+    import dns.resolver
+
+    try:
+        answers = dns.resolver.resolve(name, rdtype, lifetime=_DNS_LIFETIME_SECONDS)
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+        return set()
+    if rdtype == "CNAME":
+        return {_normalize_host(str(r.target)) for r in answers}
+    return {str(r.address) for r in answers}
+
+
+def _addresses(name: str) -> set:
+    return _dns_records(name, "A") | _dns_records(name, "AAAA")
+
+
+def _check_points_at_platform(domain: str, org_slug: str) -> bool:
+    base = _normalize_host(LEARNHOUSE_DOMAIN)
+    if not base or not domain:
+        return False
+    slug_host = f"{org_slug}.{base}" if org_slug else ""
+    if domain == base or domain.endswith(f".{base}"):
+        # Platform-owned namespace (wildcard DNS): always served by us.
+        return True
+
+    cnames = _dns_records(domain, "CNAME")
+    for target in cnames:
+        if target == slug_host or target == base or target.endswith(f".{base}"):
+            return True
+
+    # Apex domains can't CNAME (ALIAS/flattening, or plain A records): require
+    # the resolved addresses to overlap with the platform's.
+    domain_ips = _addresses(domain)
+    if not domain_ips:
+        return False
+    platform_ips = _addresses(base)
+    if slug_host:
+        platform_ips |= _addresses(slug_host)
+    return bool(domain_ips & platform_ips)
+
+
+def domain_points_at_platform(domain: str, org_slug: str = "") -> bool:
+    """True when ``domain``'s live DNS still routes to this platform.
+
+    Accepts a CNAME to ``{org_slug}.{LEARNHOUSE_DOMAIN}`` (or anything under the
+    platform domain), else A/AAAA overlap with the platform's addresses. Fails
+    closed on any DNS error. Results are cached for a few minutes. Blocking;
+    async callers use ``custom_domain_points_at_platform``.
+    """
+    import time
+
+    domain = _normalize_host(domain)
+    org_slug = (org_slug or "").strip().lower()
+    if os.getenv("LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE") == "true":
+        return True
+
+    key = (domain, org_slug)
+    now = time.monotonic()
+    cached = _POINTS_AT_PLATFORM_CACHE.get(key)
+    if cached and cached[1] > now:
+        return cached[0]
+
+    try:
+        ok = _check_points_at_platform(domain, org_slug)
+    except Exception as e:
+        logger.warning("Live DNS check failed for custom domain %s: %s", domain, e)
+        ok = False
+
+    if len(_POINTS_AT_PLATFORM_CACHE) >= _POINTS_AT_PLATFORM_CACHE_MAX:
+        _POINTS_AT_PLATFORM_CACHE.clear()
+    _POINTS_AT_PLATFORM_CACHE[key] = (ok, now + _POINTS_AT_PLATFORM_TTL_SECONDS)
+    return ok
+
+
+async def custom_domain_points_at_platform(domain: str, org_slug: str = "") -> bool:
+    import asyncio
+
+    return await asyncio.to_thread(domain_points_at_platform, domain, org_slug)
+
+
 async def resolve_org_by_domain(
     db_session: AsyncSession,
     domain: str,
+    for_auth: bool = False,
 ) -> Optional[CustomDomainResolveResponse]:
     """
     Resolve an organization by custom domain.
     This is a public endpoint that doesn't require authentication.
+
+    ``for_auth`` additionally requires the domain's live DNS to still point at
+    the platform, for callers about to hand it credentials (OAuth code bounce).
     """
     # Normalize domain
     domain = domain.lower().strip()
@@ -669,6 +773,9 @@ async def resolve_org_by_domain(
     organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
+        return None
+
+    if for_auth and not await custom_domain_points_at_platform(domain, organization.slug):
         return None
 
     return CustomDomainResolveResponse(

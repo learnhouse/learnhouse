@@ -1,18 +1,24 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
+
+from src.services.ai.schemas.limits import (
+    AI_CONTEXT_MAX_CHARS,
+    AI_LABEL_MAX_CHARS,
+    AI_MESSAGE_MAX_CHARS,
+)
 
 
 class MagicBlockContext(BaseModel):
-    course_title: str
-    course_description: str
-    activity_name: str
-    activity_content_summary: str
+    course_title: str = Field(max_length=AI_LABEL_MAX_CHARS)
+    course_description: str = Field(max_length=AI_CONTEXT_MAX_CHARS)
+    activity_name: str = Field(max_length=AI_LABEL_MAX_CHARS)
+    activity_content_summary: str = Field(max_length=AI_CONTEXT_MAX_CHARS)
 
 
 class StartMagicBlockSession(BaseModel):
     activity_uuid: str
     block_uuid: str
-    prompt: str
+    prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     context: MagicBlockContext
 
 
@@ -20,8 +26,9 @@ class SendMagicBlockMessage(BaseModel):
     session_uuid: str
     activity_uuid: str
     block_uuid: str
-    message: str
-    current_html: Optional[str] = None  # The current HTML content to iterate on
+    message: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
+    # The current HTML content to iterate on (model-generated, so larger)
+    current_html: Optional[str] = Field(default=None, max_length=100_000)
 
 
 class MagicBlockMessage(BaseModel):

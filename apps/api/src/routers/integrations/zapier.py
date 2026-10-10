@@ -33,6 +33,7 @@ from src.security.org_auth import require_org_admin
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.services.webhooks.crypto import encrypt_secret
+from src.services.webhooks.dispatch import invalidate_active_endpoint_cache
 from src.services.webhooks.events import WEBHOOK_EVENTS
 # Reuse the same SSRF guard as the manual webhook create path so both code
 # paths enforce identical validation. The leading underscore is conventional,
@@ -366,6 +367,9 @@ async def zapier_create_subscription(
     db_session.add(endpoint)
     await db_session.commit()
     await db_session.refresh(endpoint)
+    # The dispatcher caches "org has no active endpoint"; drop it so the new
+    # subscription starts receiving events immediately.
+    invalidate_active_endpoint_cache(api_user.org_id)
 
     return ZapierSubscriptionResponse(
         id=endpoint.id or 0,
@@ -393,6 +397,8 @@ async def zapier_list_subscriptions(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierSubscriptionResponse]:
     api_user, db_session = ctx
+    # Subscriptions expose webhook target URLs: same admin gate as subscribe.
+    await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.org_id == api_user.org_id,
         WebhookEndpoint.source == "zapier",
@@ -428,6 +434,8 @@ async def zapier_delete_subscription(
     ctx=Depends(_zapier_context),
 ) -> dict:
     api_user, db_session = ctx
+    # Removing an outbound event feed takes the same admin gate as adding one.
+    await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.id == subscription_id,
         WebhookEndpoint.org_id == api_user.org_id,
@@ -442,4 +450,5 @@ async def zapier_delete_subscription(
 
     await db_session.delete(endpoint)
     await db_session.commit()
+    invalidate_active_endpoint_cache(api_user.org_id)
     return {"detail": "Subscription deleted"}

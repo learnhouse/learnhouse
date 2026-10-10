@@ -8,7 +8,8 @@ Rate limits:
 """
 import ipaddress
 import os
-from typing import Tuple
+from contextvars import ContextVar
+from typing import Optional, Tuple
 from fastapi import HTTPException, Request
 from src.core.redis import get_redis_client as _get_redis_pool_client
 
@@ -465,6 +466,15 @@ AI_USER_MAX_REQUESTS_PER_MINUTE = 30
 AI_ORG_MAX_REQUESTS_PER_MINUTE = 120
 AI_RATE_LIMIT_WINDOW_SECONDS = 60
 
+# (user_id, org_id) of the caller that last passed ``enforce_ai_rate_limit`` in
+# this request. Every AI route calls it right before ``reserve_ai_credit``,
+# which only receives the org; this lets the credit reservation apply
+# per-visitor limits (the shared demo org) without threading the user through
+# every call site. Request-scoped: each request runs in its own context.
+ai_acting_user: ContextVar[Optional[Tuple[int, int]]] = ContextVar(
+    "ai_acting_user", default=None
+)
+
 
 def check_ai_rate_limit(user_id: int, org_id: int) -> Tuple[bool, int]:
     """
@@ -508,6 +518,8 @@ def enforce_ai_rate_limit(user_id: int, org_id: int) -> None:
     frontend can reuse its existing 429 handler without any change.
     """
     is_allowed, retry_after = check_ai_rate_limit(user_id, org_id)
+    if user_id and org_id:
+        ai_acting_user.set((int(user_id), int(org_id)))
     if not is_allowed:
         raise HTTPException(
             status_code=429,

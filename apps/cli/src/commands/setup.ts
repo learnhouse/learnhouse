@@ -273,7 +273,8 @@ export async function setupCommand(options: SetupOptions) {
     fs.mkdirSync(resolvedDir, { recursive: true })
     fs.mkdirSync(path.join(resolvedDir, 'extra'), { recursive: true })
     fs.writeFileSync(path.join(resolvedDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
-    fs.writeFileSync(path.join(resolvedDir, '.env'), generateEnvFile(config))
+    fs.writeFileSync(path.join(resolvedDir, '.env'), generateEnvFile(config), { mode: 0o600 })
+    // mode only applies on create; tighten a pre-existing .env too
     fs.chmodSync(path.join(resolvedDir, '.env'), 0o600)
     fs.writeFileSync(path.join(resolvedDir, 'extra', 'nginx.prod.conf'), generateNginxConf())
     writeConfig(config)
@@ -555,7 +556,8 @@ export async function setupCommand(options: SetupOptions) {
     fs.mkdirSync(path.join(finalDir, 'extra'), { recursive: true })
 
     fs.writeFileSync(path.join(finalDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
-    fs.writeFileSync(path.join(finalDir, '.env'), generateEnvFile(config))
+    fs.writeFileSync(path.join(finalDir, '.env'), generateEnvFile(config), { mode: 0o600 })
+    // mode only applies on create; tighten a pre-existing .env too
     fs.chmodSync(path.join(finalDir, '.env'), 0o600)
 
     if (config.autoSsl) {

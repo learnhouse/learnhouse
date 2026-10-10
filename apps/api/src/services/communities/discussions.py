@@ -72,6 +72,22 @@ def validate_label(label: str) -> str:
     return label
 
 
+def _require_token_in_community_org(
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    community: Community,
+) -> None:
+    """403 when an API token acts on a community outside its own org.
+
+    Tokens resolve to their creator for author/admin checks, and the creator
+    may belong to other orgs; the token itself is scoped to one org only.
+    """
+    if isinstance(current_user, APITokenUser) and current_user.org_id != community.org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="API token cannot access resources outside its organization",
+        )
+
+
 async def create_discussion(
     request: Request,
     community_uuid: str,
@@ -389,6 +405,8 @@ async def update_discussion(
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
 
+    _require_token_in_community_org(current_user, community)
+
     # Check if user is author or admin
     is_author = discussion.author_id == acting_user_id
     is_admin = await authorization_verify_based_on_org_admin_status(
@@ -483,6 +501,8 @@ async def pin_discussion(
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
 
+    _require_token_in_community_org(current_user, community)
+
     is_admin = await authorization_verify_based_on_org_admin_status(
         request, acting_user_id, "update", community.community_uuid, db_session
     )
@@ -551,6 +571,8 @@ async def lock_discussion(
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
+
+    _require_token_in_community_org(current_user, community)
 
     is_admin = await authorization_verify_based_on_org_admin_status(
         request, acting_user_id, "update", community.community_uuid, db_session
@@ -623,6 +645,8 @@ async def delete_discussion(
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
+
+    _require_token_in_community_org(current_user, community)
 
     # Check if user is author or admin
     is_author = discussion.author_id == acting_user_id

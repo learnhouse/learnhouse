@@ -11,6 +11,7 @@ from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
 from src.tests.fixtures.rows import activity_row
 from src.db.podcasts.podcasts import Podcast
+from src.db.podcasts.episodes import PodcastEpisode
 from src.db.users import APITokenUser, AnonymousUser, PublicUser
 from src.routers import content_files
 from src.routers.content_files import router as content_files_router
@@ -170,6 +171,12 @@ class TestContentFilesRouter:
         db.add(public_podcast)
         db.add(activity_row(31, org.id, 31, "act_private"))
         db.add(activity_row(32, org.id, 32, "act_public"))
+        for ep_id, podcast_id in ((41, 41), (42, 42)):
+            db.add(PodcastEpisode(
+                id=ep_id, podcast_id=podcast_id, org_id=org.id, title="Ep",
+                published=True, episode_uuid="a",
+                creation_date="2024-01-01", update_date="2024-01-01",
+            ))
         await db.commit()
 
         outsider = PublicUser(
@@ -249,7 +256,7 @@ class TestContentFilesRouter:
                 admin_user,
                 db,
             )
-        assert not_found_podcast.value.status_code == 403
+        assert not_found_podcast.value.status_code == 404
 
         await content_files._check_content_access(
             f"orgs/{org.org_uuid}/podcasts/{public_podcast.podcast_uuid}/episodes/a/audio.mp3",
@@ -275,7 +282,7 @@ class TestContentFilesRouter:
 
         await content_files._check_content_access(
             f"orgs/{org.org_uuid}/podcasts/{private_podcast.podcast_uuid}/episodes/a/audio.mp3",
-            APITokenUser(org_id=org.id, rights={"courses": {"action_read": True}}),
+            APITokenUser(org_id=org.id, rights={"podcasts": {"action_read": True}}),
             db,
         )
 

@@ -24,6 +24,7 @@ from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.ee_hooks import register_ee_middlewares
 from src.core.events.events import shutdown_app, startup_app
 from src.core.middleware.cors import configure_cors
+from src.security.csrf import CSRFProtectionMiddleware
 from src.router import v1_router
 from src.routers.content_files import router as content_files_router
 from src.routers.local_content import router as local_content_router
@@ -143,11 +144,17 @@ app = FastAPI(
     description=learnhouse_config.site_description,
     docs_url="/docs" if learnhouse_config.general_config.development_mode else None,
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
+    # The schema lists every internal route; publish it only where the docs are.
+    openapi_url="/openapi.json" if learnhouse_config.general_config.development_mode else None,
     version="1.3.7",
     lifespan=lifespan,
 )
 
 # Middleware
+# Starlette runs the last-added middleware first. CSRF is added before CORS so
+# CORS wraps it: preflights are answered by CORS, and a CSRF 403 still carries
+# CORS headers so the frontend can read it.
+app.add_middleware(CSRFProtectionMiddleware)
 configure_cors(app)
 # compresslevel 9 costs several times the CPU of 6 for a couple of percent on
 # JSON; 6 is gzip's own default.

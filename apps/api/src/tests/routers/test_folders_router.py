@@ -17,6 +17,16 @@ from src.security.auth import get_current_user
 from src.routers.folders.folders import router
 
 
+@pytest.fixture(autouse=True)
+def _no_rate_limit():
+    """The limiters count in Redis, which these tests don't run against."""
+    with patch("src.routers.folders.folders.check_rate_limit", return_value=(True, 1, 60)), patch(
+        "src.routers.folders.folders.check_search_rate_limit", return_value=(True, 0)
+    ):
+        yield
+
+
+
 @pytest.fixture
 def app(db, admin_user):
     app = FastAPI()

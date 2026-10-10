@@ -1,19 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from '@services/auth/cookies'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
-  const tag = request.nextUrl.searchParams.get('tag')
+// The cache tags the dashboard busts after an edit. Anything else is refused
+// so this route can't be used to flush arbitrary caches.
+const REVALIDATABLE_TAGS = new Set([
+  'activities',
+  'communities',
+  'courses',
+  'folders',
+  'organizations',
+  'podcasts',
+])
 
-  if (!tag) {
-    return NextResponse.json(
-      { error: 'Tag parameter is required' },
-      { status: 400 }
-    )
+export async function GET(request: NextRequest) {
+  // Called from the signed-in dashboard (same origin, cookies attached).
+  // Anonymous callers have nothing to revalidate.
+  if (
+    !request.cookies.get(ACCESS_TOKEN_COOKIE)?.value &&
+    !request.cookies.get(REFRESH_TOKEN_COOKIE)?.value
+  ) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Revalidate the requested tag
+  const tag = request.nextUrl.searchParams.get('tag')
+
+  if (!tag || !REVALIDATABLE_TAGS.has(tag)) {
+    return NextResponse.json({ error: 'Unknown tag' }, { status: 400 })
+  }
+
   revalidateTag(tag, {})
 
   // When organizations change, also bust course/folder caches since they
@@ -23,15 +40,5 @@ export async function GET(request: NextRequest) {
     revalidateTag('folders', {})
   }
 
-  return NextResponse.json(
-    { revalidated: true, now: Date.now(), tag },
-    {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    }
-  )
+  return NextResponse.json({ revalidated: true, now: Date.now(), tag })
 }

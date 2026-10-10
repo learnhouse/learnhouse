@@ -10,7 +10,7 @@ from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlmodel import select
 
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -37,6 +37,7 @@ from src.services.ai.rag.access import build_rag_access_scope
 from src.services.ai.rag.embedding_service import embed_course_content
 from src.services.ai.rag.query_service import query_course_rag_stream
 from src.services.ai.llm import model_for_tier
+from src.services.ai.schemas.limits import AI_MESSAGE_MAX_CHARS
 
 logger = logging.getLogger(__name__)
 
@@ -49,11 +50,14 @@ router = APIRouter()
 
 
 class RAGChatRequest(BaseModel):
-    message: str
+    message: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     course_uuid: Optional[str] = None
     aichat_uuid: Optional[str] = None
     mode: Literal["course_only", "general"] = "course_only"
     org_slug: Optional[str] = None
+
+
+RAG_INDEX_MAX_PER_HOUR = 10
 
 
 class RAGIndexRequest(BaseModel):
@@ -321,6 +325,24 @@ async def api_rag_index(
 
     # Require admin/maintainer access
     await require_org_admin(resolve_acting_user_id(current_user), course.org_id, db_session)
+
+    # A full reindex re-embeds every chunk (paid), so cap manual runs per org
+    from src.services.security.rate_limiting import check_rate_limit
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=f"rag_index:{course.org_id}",
+        max_attempts=RAG_INDEX_MAX_PER_HOUR,
+        window_seconds=60 * 60,
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "code": "RATE_LIMITED",
+                "message": "Too many reindex requests. Please try again later.",
+                "retry_after": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
 
     # Run indexing
     chunks_indexed = await embed_course_content(

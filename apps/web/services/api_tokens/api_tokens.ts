@@ -69,6 +69,20 @@ export interface APITokenRights {
   search: {
     action_read: boolean
   }
+  // Admin API: user management and role assignment. Optional because tokens
+  // created before these buckets existed don't carry them.
+  users?: {
+    action_create: boolean
+    action_read: boolean
+    action_update: boolean
+    action_delete: boolean
+  }
+  roles?: {
+    action_create: boolean
+    action_read: boolean
+    action_update: boolean
+    action_delete: boolean
+  }
 }
 
 export interface APIToken {
@@ -167,6 +181,18 @@ export const getDefaultRights = (): APITokenRights => ({
   search: {
     action_read: false,
   },
+  users: {
+    action_create: false,
+    action_read: false,
+    action_update: false,
+    action_delete: false,
+  },
+  roles: {
+    action_create: false,
+    action_read: false,
+    action_update: false,
+    action_delete: false,
+  },
 })
 
 // Full permissions template
@@ -231,6 +257,18 @@ export const getFullRights = (): APITokenRights => ({
   search: {
     action_read: true,
   },
+  users: {
+    action_create: true,
+    action_read: true,
+    action_update: true,
+    action_delete: true,
+  },
+  roles: {
+    action_create: true,
+    action_read: true,
+    action_update: true,
+    action_delete: true,
+  },
 })
 
 // Read-only permissions template
@@ -294,6 +332,18 @@ export const getReadOnlyRights = (): APITokenRights => ({
   },
   search: {
     action_read: true,
+  },
+  users: {
+    action_create: false,
+    action_read: true,
+    action_update: false,
+    action_delete: false,
+  },
+  roles: {
+    action_create: false,
+    action_read: true,
+    action_update: false,
+    action_delete: false,
   },
 })
 

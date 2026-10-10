@@ -3,7 +3,9 @@
 from typing import Optional
 
 import sentry_sdk
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+
+from src.services.security.rate_limiting import check_rate_limit, get_client_ip
 
 router = APIRouter()
 
@@ -28,12 +30,25 @@ _MAX_MESSAGE_LENGTH = 4096
     status_code=204,
 )
 async def submit_feedback(
+    request: Request,
     message: str = Form(""),
     name: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
     associated_event_id: Optional[str] = Form(None),
     attachments: list[UploadFile] = File(default=[]),
 ):
+    # Anonymous by design, so throttle per client IP: each call forwards up to
+    # three attachments to Sentry.
+    allowed, _count, retry_after = check_rate_limit(
+        key=f"feedback:{get_client_ip(request)}", max_attempts=10, window_seconds=3600
+    )
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many feedback submissions. Please try again later.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
     message = (message or "").strip()
     if not message:
         raise HTTPException(status_code=400, detail="Feedback message is required")

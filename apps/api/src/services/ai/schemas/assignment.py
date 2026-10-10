@@ -15,6 +15,8 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from src.services.ai.schemas.limits import AI_MESSAGE_MAX_CHARS
+
 # The subset of AssignmentTaskTypeEnum the AI can generate. CODE (Judge0 test
 # cases) and CUSTOM/OTHER (headless) are intentionally excluded; they need
 # human-authored specifics. Teachers add those manually.
@@ -100,7 +102,7 @@ class AIAssignmentPlan(BaseModel):
 class GenerateAssignmentRequest(BaseModel):
     org_id: int
     course_uuid: str
-    prompt: str
+    prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     session_uuid: Optional[str] = None
     num_tasks: int = 3
     allowed_task_types: Optional[List[AIGeneratableTaskType]] = None

@@ -262,6 +262,46 @@ async def get_podcast_meta(
     }
 
 
+def accessible_podcast_ids_query(acting_user_id: int):
+    """IDs of the podcasts a signed-in, non-admin user may see in a listing.
+
+    Shared by the podcast list/count endpoints and search so the three can't
+    drift apart. A podcast is visible when it is:
+    1. published and public;
+    2. published, not linked to any UserGroup, and the user is a member of
+       its org (org-wide content);
+    3. linked to a UserGroup the user belongs to (including unpublished);
+    4. authored by the user with an ACTIVE authorship (including unpublished).
+       Pending or inactive authorships grant nothing.
+    """
+    return (
+        select(Podcast.id)
+        .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Podcast.podcast_uuid)
+        .outerjoin(UserGroupUser, and_(
+            UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
+            UserGroupUser.user_id == acting_user_id
+        ))
+        .outerjoin(ResourceAuthor, and_(
+            ResourceAuthor.resource_uuid == Podcast.podcast_uuid,
+            ResourceAuthor.user_id == acting_user_id,
+            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
+        ))
+        .where(or_(
+            and_(Podcast.published == True, Podcast.public == True),
+            and_(
+                Podcast.published == True,
+                UserGroupResource.resource_uuid.is_(None),
+                select(UserOrganization.id).where(
+                    UserOrganization.user_id == acting_user_id,
+                    UserOrganization.org_id == Podcast.org_id,
+                ).exists(),
+            ),
+            UserGroupUser.user_id == acting_user_id,
+            ResourceAuthor.user_id == acting_user_id,
+        ))
+    )
+
+
 async def get_podcasts_orgslug(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -319,33 +359,7 @@ async def get_podcasts_orgslug(
         if can_view_unpublished:
             pass
         else:
-            # For regular users, show:
-            # 1. Published AND public podcasts
-            # 2. Published podcasts not in any UserGroup
-            # 3. Podcasts (including unpublished) in UserGroups where the user is a member
-            # 4. Podcasts (including unpublished) where the user is a resource author
-            query = (
-                query
-                .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Podcast.podcast_uuid)
-                .outerjoin(UserGroupUser, and_(
-                    UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                    UserGroupUser.user_id == acting_user_id
-                ))
-                .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Podcast.podcast_uuid)
-                .where(or_(
-                    and_(Podcast.published == True, Podcast.public == True),  # Published public podcasts
-                    and_(  # Published podcasts not in any UserGroup: org-wide, so members of its org only
-                        Podcast.published == True,
-                        UserGroupResource.resource_uuid.is_(None),
-                        select(UserOrganization.id).where(
-                            UserOrganization.user_id == acting_user_id,
-                            UserOrganization.org_id == Podcast.org_id,
-                        ).exists(),
-                    ),
-                    UserGroupUser.user_id == acting_user_id,  # Podcasts in UserGroups where user is a member (including unpublished)
-                    ResourceAuthor.user_id == acting_user_id  # Podcasts where user is a resource author (including unpublished)
-                ))
-            )
+            query = query.where(Podcast.id.in_(accessible_podcast_ids_query(acting_user_id)))
 
     # Apply ordering and pagination
     query = query.order_by(Podcast.creation_date.desc()).offset(offset).limit(limit).distinct()
@@ -438,33 +452,7 @@ async def get_podcasts_count_orgslug(
         # Superadmins see all podcasts (no additional filter)
         pass
     else:
-        # For authenticated users, count:
-        # 1. Published AND public podcasts
-        # 2. Published podcasts not in any UserGroup
-        # 3. Podcasts (including unpublished) in UserGroups where the user is a member
-        # 4. Podcasts (including unpublished) where the user is a resource author
-        query = (
-            query
-            .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Podcast.podcast_uuid)
-            .outerjoin(UserGroupUser, and_(
-                UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                UserGroupUser.user_id == count_acting_user_id
-            ))
-            .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Podcast.podcast_uuid)
-            .where(or_(
-                and_(Podcast.published == True, Podcast.public == True),  # Published public podcasts
-                and_(  # Published podcasts not in any UserGroup: org-wide, so members of its org only
-                    Podcast.published == True,
-                    UserGroupResource.resource_uuid.is_(None),
-                    select(UserOrganization.id).where(
-                        UserOrganization.user_id == count_acting_user_id,
-                        UserOrganization.org_id == Podcast.org_id,
-                    ).exists(),
-                ),
-                UserGroupUser.user_id == count_acting_user_id,  # Podcasts in UserGroups where user is a member (including unpublished)
-                ResourceAuthor.user_id == count_acting_user_id  # Podcasts where user is a resource author (including unpublished)
-            ))
-        )
+        query = query.where(Podcast.id.in_(accessible_podcast_ids_query(count_acting_user_id)))
 
     count = (await db_session.execute(query)).scalar_one()
     return count

@@ -293,6 +293,7 @@ async def editor_chat_event_generator(
     ai_friendly_text: str,
     ai_model: str,
     org_id: int | None = None,
+    user_id: int | None = None,
 ):
     """
     Convert async generator to SSE format for editor AI chat.
@@ -399,8 +400,12 @@ async def editor_chat_event_generator(
             else:
                 yield f"data: {json.dumps({'type': 'chat_chunk', 'content': buffer})}\n\n"
 
-        # Save the message exchange to history
-        save_message_to_history(aichat_uuid, user_message, full_response)
+        # Save the message exchange to history (and who owns the session, so
+        # a follow-up turn can only continue the caller's own session)
+        save_message_to_history(
+            aichat_uuid, user_message, full_response,
+            user_id=user_id, org_id=org_id, listed=False,
+        )
 
         # Send done event
         yield f"data: {json.dumps({'type': 'done', 'aichat_uuid': aichat_uuid, 'activity_uuid': activity_uuid})}\n\n"
@@ -481,6 +486,7 @@ async def api_editor_ai_start_chat_session_stream(
             context["ai_friendly_text"],
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
+            user_id=resolve_acting_user_id(current_user),
         ),
         media_type="text/event-stream",
         headers={
@@ -537,6 +543,7 @@ async def api_editor_ai_send_message_stream(
             context["ai_friendly_text"],
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
+            user_id=resolve_acting_user_id(current_user),
         ),
         media_type="text/event-stream",
         headers={

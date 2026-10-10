@@ -81,6 +81,32 @@ def _build_org_read_with_resolved(org, org_config) -> OrganizationRead:
     return org_read
 
 
+async def _redact_org_email_unless_manager(
+    request: Request,
+    org_read: OrganizationRead,
+    current_user,
+    db_session: AsyncSession,
+) -> OrganizationRead:
+    """Null ``email`` unless the caller holds the organizations update right.
+
+    SECURITY: the slug/uuid reads are public (logged-out visitors, signup
+    page), and ``org.email`` defaults to the creator's personal address. Only
+    people who may edit it (the settings form) need it back.
+    """
+    if org_read.email is None:
+        return org_read
+    allowed = False
+    if not isinstance(current_user, AnonymousUser) and current_user is not None:
+        try:
+            await rbac_check(request, org_read.org_uuid, current_user, "update", db_session)
+            allowed = True
+        except HTTPException:
+            allowed = False
+    if allowed:
+        return org_read
+    return org_read.model_copy(update={"email": None})
+
+
 async def get_organization_by_uuid(
     request: Request,
     org_uuid: str,
@@ -106,7 +132,9 @@ async def get_organization_by_uuid(
     if org_config is None:
         logging.warning(f"Organization {org_uuid} has no config")
 
-    return _build_org_read_with_resolved(org, org_config)
+    return await _redact_org_email_unless_manager(
+        request, _build_org_read_with_resolved(org, org_config), current_user, db_session
+    )
 
 
 async def get_organization_by_slug(
@@ -120,7 +148,9 @@ async def get_organization_by_slug(
     # Check Redis cache first (org read is public, no RBAC needed)
     cached = get_cached_org_by_slug(org_slug)
     if cached is not None:
-        return OrganizationRead(**cached)
+        return await _redact_org_email_unless_manager(
+            request, OrganizationRead(**cached), current_user, db_session
+        )
 
     statement = select(Organization).where(Organization.slug == org_slug).order_by(Organization.id)
     org = (await db_session.execute(statement)).scalars().first()
@@ -145,7 +175,9 @@ async def get_organization_by_slug(
     except Exception:
         pass
 
-    return org_read
+    return await _redact_org_email_unless_manager(
+        request, org_read, current_user, db_session
+    )
 
 
 # Free-plan organizations a single user may own (as admin) before an upgrade is

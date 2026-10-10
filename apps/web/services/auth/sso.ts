@@ -323,6 +323,9 @@ export async function initiateSSOLogin(
       headers: {
         'Content-Type': 'application/json',
       },
+      // The response sets the cookie that binds this sign-in to the browser;
+      // the callback is refused without it.
+      credentials: 'include',
     }
   )
 
@@ -449,6 +452,7 @@ export function getErrorMessage(errorCode: string, errorDescription?: string): s
     invalid_state: 'The authentication session has expired. Please try again.',
     missing_params: 'Missing required parameters. Please try logging in again.',
     state_invalid_or_expired: 'Your SSO session has expired. Please try logging in again.',
+    state_browser_mismatch: 'This sign-in was started in a different browser or has expired. Please start the login again from this browser.',
     email_domain_rejected: 'Your email domain is not allowed for this organization.',
     auto_provision_disabled: 'Your account does not exist. Please contact your administrator for access.',
     sso_misconfigured: 'SSO is not configured correctly. Please contact your administrator.',

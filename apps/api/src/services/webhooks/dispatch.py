@@ -44,6 +44,58 @@ LOG_RETENTION_PER_ENDPOINT = 200
 # fire-and-forget in the shared worker, so an endless (or gzip-bombed) response
 # body must never be buffered or decompressed here.
 MAX_RESPONSE_BYTES = 8 * 1024
+# Bound concurrent outbound requests across all orgs in this worker so an
+# event burst can't open thousands of sockets at once.
+MAX_CONCURRENT_DELIVERIES = 20
+_delivery_semaphore = asyncio.Semaphore(MAX_CONCURRENT_DELIVERIES)
+# Short-lived "does this org have any active endpoint" flag, so events from
+# orgs without webhooks (the common case) don't spawn a task + DB query each.
+ACTIVE_CACHE_KEY = "webhooks:has_active:{org_id}"
+ACTIVE_CACHE_TTL_SECONDS = 30
+
+
+def _active_cache_get(org_id: int) -> Optional[bool]:
+    from src.core.redis import get_redis_client
+
+    r = get_redis_client()
+    if r is None:
+        return None
+    try:
+        v = r.get(ACTIVE_CACHE_KEY.format(org_id=org_id))
+    except Exception:
+        return None
+    if v is None:
+        return None
+    return v in (b"1", "1")
+
+
+def _active_cache_set(org_id: int, has_active: bool) -> None:
+    from src.core.redis import get_redis_client
+
+    r = get_redis_client()
+    if r is None:
+        return
+    try:
+        r.set(
+            ACTIVE_CACHE_KEY.format(org_id=org_id),
+            "1" if has_active else "0",
+            ex=ACTIVE_CACHE_TTL_SECONDS,
+        )
+    except Exception:
+        pass
+
+
+def invalidate_active_endpoint_cache(org_id: int) -> None:
+    """Call after creating/updating/deleting an org's endpoints."""
+    from src.core.redis import get_redis_client
+
+    r = get_redis_client()
+    if r is None:
+        return
+    try:
+        r.delete(ACTIVE_CACHE_KEY.format(org_id=org_id))
+    except Exception:
+        pass
 
 
 def _get_webhook_client() -> httpx.AsyncClient:
@@ -117,6 +169,8 @@ async def dispatch_webhooks(
                      (used by the test/ping feature).
     """
     validate_event_data(event_name, data)
+    if not webhook_ids and _active_cache_get(org_id) is False:
+        return
     task = asyncio.create_task(
         _deliver_webhooks(event_name, org_id, data, webhook_ids)
     )
@@ -153,7 +207,10 @@ async def _deliver_webhooks(
                     WebhookEndpoint.org_id == org_id,
                     WebhookEndpoint.is_active == True,
                 )
-            for ep in (await db_session.execute(statement)).scalars().all():
+            rows = (await db_session.execute(statement)).scalars().all()
+            if not webhook_ids:
+                _active_cache_set(org_id, bool(rows))
+            for ep in rows:
                 if webhook_ids or event_name in (ep.events or []):
                     endpoints.append(_EndpointInfo(
                         id=ep.id,  # type: ignore
@@ -236,34 +293,36 @@ async def _deliver_to_endpoint(
             created_at=str(datetime.now()),
         )
 
-        try:
-            # SSRF guard: resolve DNS, verify all returned IPs are public,
-            # then after the request verify the peer we actually connected
-            # to was one of the approved IPs (defeats DNS rebinding).
-            validated_ips = resolve_and_validate_url(ep.url)
+        # Only the network call holds a slot, not the backoff sleep
+        async with _delivery_semaphore:
+            try:
+                # SSRF guard: resolve DNS, verify all returned IPs are public,
+                # then after the request verify the peer we actually connected
+                # to was one of the approved IPs (defeats DNS rebinding).
+                validated_ips = resolve_and_validate_url(ep.url)
 
-            # Streamed so the response body is capped as it arrives instead of
-            # being buffered whole before we truncate it to 500 bytes.
-            async with client.stream(
-                "POST", ep.url, content=payload_bytes, headers=headers
-            ) as resp:
-                try:
-                    assert_connected_peer_allowed(resp, validated_ips)
-                except SSRFBlockedError as ssrf_exc:
-                    log_entry.success = False
-                    log_entry.error_message = f"SSRF guard: {ssrf_exc}"[:1000]
-                else:
-                    body = await _read_capped_body(resp)
-                    log_entry.response_status = resp.status_code
-                    log_entry.response_body = body[:500] if body else None
-                    log_entry.success = 200 <= resp.status_code < 300
+                # Streamed so the response body is capped as it arrives instead of
+                # being buffered whole before we truncate it to 500 bytes.
+                async with client.stream(
+                    "POST", ep.url, content=payload_bytes, headers=headers
+                ) as resp:
+                    try:
+                        assert_connected_peer_allowed(resp, validated_ips)
+                    except SSRFBlockedError as ssrf_exc:
+                        log_entry.success = False
+                        log_entry.error_message = f"SSRF guard: {ssrf_exc}"[:1000]
+                    else:
+                        body = await _read_capped_body(resp)
+                        log_entry.response_status = resp.status_code
+                        log_entry.response_body = body[:500] if body else None
+                        log_entry.success = 200 <= resp.status_code < 300
 
-        except SSRFBlockedError as e:
-            log_entry.success = False
-            log_entry.error_message = f"SSRF guard: {e}"[:1000]
-        except Exception as e:
-            log_entry.success = False
-            log_entry.error_message = str(e)[:1000]
+            except SSRFBlockedError as e:
+                log_entry.success = False
+                log_entry.error_message = f"SSRF guard: {e}"[:1000]
+            except Exception as e:
+                log_entry.success = False
+                log_entry.error_message = str(e)[:1000]
 
         # Short-lived session just to persist the log entry.
         async with _async_session_factory() as db_session:

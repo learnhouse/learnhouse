@@ -1,6 +1,11 @@
 import 'dotenv/config'
 import { Server } from '@hocuspocus/server'
-import type { onRequestPayload, onAuthenticatePayload, onConnectPayload } from '@hocuspocus/server'
+import type {
+  onRequestPayload,
+  onAuthenticatePayload,
+  onConnectPayload,
+  beforeHandleMessagePayload,
+} from '@hocuspocus/server'
 import { Database } from '@hocuspocus/extension-database'
 import jwt from 'jsonwebtoken'
 import Redis from 'ioredis'
@@ -24,18 +29,40 @@ const DB_FLUSH_DELAY = 5000
 const REDIS_YDOC_TTL = 3600
 // Largest Yjs state we persist (bytes): 5 MB
 const MAX_YDOC_BYTES = 5 * 1024 * 1024
+// Largest single incoming WebSocket message (bytes): 2 MB
+const MAX_MESSAGE_BYTES = 2 * 1024 * 1024
 
 // ── Startup validation ──────────────────────────────────────────────────────
 
-if (!SECRET_KEY) {
-  console.error('[collab] FATAL: LEARNHOUSE_AUTH_JWT_SECRET_KEY is not set')
-  process.exit(1)
+// Placeholders shipped in .env.example (old and current) must never be used.
+const PLACEHOLDER_SECRETS = new Set([
+  'your-jwt-secret-key',
+  'your-internal-key',
+  'CHANGE_ME_generate_with_openssl_rand_hex_32',
+])
+const MIN_SECRET_LENGTH = 32
+
+function requireStrongSecret(name: string, value: string) {
+  if (!value) {
+    console.error(`[collab] FATAL: ${name} is not set`)
+    process.exit(1)
+  }
+  if (PLACEHOLDER_SECRETS.has(value)) {
+    console.error(
+      `[collab] FATAL: ${name} is still the example placeholder (generate one with: openssl rand -hex 32)`,
+    )
+    process.exit(1)
+  }
+  // Warn rather than refuse so an existing deployment keeps booting.
+  if (value.length < MIN_SECRET_LENGTH) {
+    console.warn(
+      `[collab] ${name} is shorter than ${MIN_SECRET_LENGTH} characters; rotate it (openssl rand -hex 32)`,
+    )
+  }
 }
 
-if (!INTERNAL_KEY) {
-  console.error('[collab] FATAL: COLLAB_INTERNAL_KEY is not set')
-  process.exit(1)
-}
+requireStrongSecret('LEARNHOUSE_AUTH_JWT_SECRET_KEY', SECRET_KEY)
+requireStrongSecret('COLLAB_INTERNAL_KEY', INTERNAL_KEY)
 
 // ── Fetch with timeout helper ─────────────────────────────────────────────
 
@@ -158,6 +185,18 @@ const MAX_BOARD_USERS = 10
 
 const server = new Server({
   port: PORT,
+  // ws drops oversized frames before they are buffered into a document
+  websocketOptions: { maxPayload: MAX_MESSAGE_BYTES },
+
+  async beforeHandleMessage({ update, documentName }: beforeHandleMessagePayload) {
+    // Backstop for the ws cap: throwing closes the connection
+    if (update.byteLength > MAX_MESSAGE_BYTES) {
+      console.warn(
+        `[collab] Rejecting ${update.byteLength}-byte message for ${documentName}`,
+      )
+      throw new Error('Message too large')
+    }
+  },
 
   async onRequest({ request, response }: onRequestPayload) {
     // Health check endpoint. Handles both "/" (k8s probe) and "/health"

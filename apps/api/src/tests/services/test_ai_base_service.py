@@ -5,7 +5,9 @@ Covers src/services/ai/base.py lines 237-260. The function reads the
 by the requesting user. Documented behavior (read from the source):
 
 - No Redis configured -> returns True (fail-open; nothing to protect yet).
-- Meta missing/None -> returns True (brand-new/expired session is ownable).
+- Meta and history both missing -> returns True (brand-new/expired session
+  is ownable).
+- Meta missing but history present -> False (owner unknown, fail closed).
 - Meta user_id matches -> True.
 - Meta user_id differs -> False.
 - Redis raises -> returns False (fail-closed on unexpected errors).
@@ -15,11 +17,15 @@ import json
 from src.services.ai import base
 
 
-def _fake_redis_returning(meta_value):
+def _fake_redis_returning(meta_value, history_exists=False):
     class _Redis:
         def get(self, key):
             assert key == "chat_meta:abc-uuid"
             return meta_value
+
+        def exists(self, key):
+            assert key == "chat_history:abc-uuid"
+            return 1 if history_exists else 0
 
     return _Redis()
 
@@ -32,6 +38,13 @@ def test_returns_true_when_no_redis(monkeypatch):
 def test_returns_true_when_meta_missing(monkeypatch):
     monkeypatch.setattr(base, "_get_redis", lambda: _fake_redis_returning(None))
     assert base.chat_session_belongs_to_user("abc-uuid", 7) is True
+
+
+def test_returns_false_when_meta_missing_but_history_exists(monkeypatch):
+    monkeypatch.setattr(
+        base, "_get_redis", lambda: _fake_redis_returning(None, history_exists=True)
+    )
+    assert base.chat_session_belongs_to_user("abc-uuid", 7) is False
 
 
 def test_returns_true_when_user_id_matches(monkeypatch):

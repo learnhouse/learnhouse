@@ -2,11 +2,30 @@
 import React, { Suspense, useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import posthog from 'posthog-js'
+import type { CaptureResult } from 'posthog-js'
 import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react'
 import { getPOSTHOG_KEY_VAL } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { scrubUrl, scrubUrlProperties } from '@services/utils/ts/scrubUrl'
 
 let initialized = false
+
+// Auth links carry reset codes, magic/verify tokens, OAuth codes etc. in the
+// query string; strip them from every URL-valued property before sending.
+function scrubCapture(cr: CaptureResult | null): CaptureResult | null {
+  if (!cr) return cr
+  scrubUrlProperties(cr.properties)
+  scrubUrlProperties(cr.$set)
+  scrubUrlProperties(cr.$set_once)
+  // Session replay meta events record the page href.
+  const snapshots = cr.properties?.$snapshot_data
+  if (Array.isArray(snapshots)) {
+    for (const snap of snapshots) {
+      if (snap?.data && typeof snap.data.href === 'string') snap.data.href = scrubUrl(snap.data.href)
+    }
+  }
+  return cr
+}
 
 function initPostHog(key: string) {
   if (initialized || typeof window === 'undefined') return
@@ -26,7 +45,12 @@ function initPostHog(key: string) {
     session_recording: {
       maskAllInputs: true,
       maskTextSelector: '*',
+      maskCapturedNetworkRequestFn: (req) => {
+        if (req?.name) req.name = scrubUrl(req.name)
+        return req
+      },
     },
+    before_send: scrubCapture,
   })
 }
 
@@ -65,7 +89,7 @@ function PostHogPageView() {
     let url = window.origin + pathname
     const qs = searchParams?.toString()
     if (qs) url += `?${qs}`
-    posthogClient.capture('$pageview', { $current_url: url })
+    posthogClient.capture('$pageview', { $current_url: scrubUrl(url) })
   }, [posthogClient, pathname, searchParams])
 
   return null
@@ -89,10 +113,8 @@ function PostHogIdentify() {
     if (status === 'authenticated' && user?.user_uuid) {
       if (identifiedRef.current !== user.user_uuid) {
         identifiedRef.current = user.user_uuid
-        posthogClient.identify(String(user.user_uuid), {
-          email: user.email,
-          username: user.username,
-        })
+        // Identify by uuid only; no email/PII in person properties.
+        posthogClient.identify(String(user.user_uuid))
       }
       return
     }
@@ -101,7 +123,7 @@ function PostHogIdentify() {
       identifiedRef.current = null
       posthogClient.reset()
     }
-  }, [posthogClient, status, user?.user_uuid, user?.email, user?.username])
+  }, [posthogClient, status, user?.user_uuid])
 
   return null
 }
