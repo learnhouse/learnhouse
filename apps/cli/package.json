@@ -59,5 +59,9 @@
   "license": "GPL-3.0",
   "publishConfig": {
     "access": "public"
+  },
+  "overrides": {
+    "source-map-js": ">=1.2.2",
+    "esbuild": ">=0.28.1"
   }
 }
