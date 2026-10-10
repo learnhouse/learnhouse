@@ -1,4 +1,52 @@
+const fs = require('fs')
+const path = require('path')
 const { withSentryConfig } = require("@sentry/nextjs/config");
+
+// Enterprise Edition modules are imported as `@ee/*`. They resolve to
+// apps/web/ee when it is present (a copied-in folder or local symlink) and to the
+// tracked no-op stubs in apps/web/ee-stub otherwise, so open-source builds
+// compile without EE. LEARNHOUSE_DISABLE_EE=1 or LEARNHOUSE_PUBLIC=true forces
+// the stubs even when ee/ exists.
+const eeForcedOff =
+  process.env.LEARNHOUSE_DISABLE_EE === '1' || process.env.LEARNHOUSE_PUBLIC === 'true'
+const eeDir = path.join(__dirname, 'ee')
+// A broken ee symlink makes `next build` fail with a bare ENOENT; say why.
+try {
+  if (fs.lstatSync(eeDir).isSymbolicLink() && !fs.existsSync(eeDir)) {
+    throw new Error(
+      `apps/web/ee is a symlink to ${fs.readlinkSync(eeDir)}, which does not exist. ` +
+        'Fix the link or remove it to build without Enterprise features.'
+    )
+  }
+} catch (err) {
+  if (err.code !== 'ENOENT') throw err
+}
+// Check a known entrypoint rather than the folder: a leftover ee/ holding only
+// untracked files (e.g. after pulling the commit that untracked it) must not
+// switch the build to EE.
+const eeEnabled =
+  !eeForcedOff && fs.existsSync(path.join(eeDir, 'services', 'tenancy', 'resolveMulti.server.ts'))
+const eeTarget = eeEnabled ? 'ee' : 'ee-stub'
+
+// A symlinked ee/ (local dev against a sibling checkout) lives outside the
+// project root, which Turbopack refuses to resolve. Widen the root to the
+// nearest directory containing both.
+function commonAncestor(a, b) {
+  const pa = a.split(path.sep)
+  const pb = b.split(path.sep)
+  let i = 0
+  while (i < pa.length && i < pb.length && pa[i] === pb[i]) i++
+  // No shared prefix (e.g. different drives on Windows): leave the root alone.
+  if (i === 0) return undefined
+  return pa.slice(0, i).join(path.sep) || path.sep
+}
+// Done even when EE is off: Tailwind's `@source '../ee'` in globals.css still
+// follows the link.
+const eeRealDir = fs.existsSync(eeDir) ? fs.realpathSync(eeDir) : null
+const turbopackRoot =
+  eeRealDir && !eeRealDir.startsWith(fs.realpathSync(__dirname) + path.sep)
+    ? commonAncestor(fs.realpathSync(__dirname), eeRealDir)
+    : undefined
 
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
@@ -87,6 +135,19 @@ const nextConfig = {
     ]
   },
   reactStrictMode: false,
+  turbopack: {
+    ...(turbopackRoot ? { root: turbopackRoot } : {}),
+    resolveAlias: {
+      '@ee/*': `./${eeTarget}/*`,
+    },
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@ee': path.join(__dirname, eeTarget),
+    }
+    return config
+  },
   // `next dev` refuses cross-origin requests for its own chunks. A local
   // multi-tenant run (DEMO_STACK.md) serves orgs from <slug>.lvh.me, so allow
   // that family of hosts. Dev-only; ignored by `next build`/`next start`.
@@ -141,8 +202,6 @@ const nextConfig = {
 
 // Generate runtime config for development
 if (process.env.NODE_ENV === 'development') {
-  const fs = require('fs')
-  const path = require('path')
   const runtimeConfig = {}
 
   Object.keys(process.env).forEach((key) => {

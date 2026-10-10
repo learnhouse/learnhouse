@@ -61,7 +61,7 @@ const AIActivityAsk = lazy(() => import('@components/Objects/Activities/AI/AIAct
 const AISidePanelContentWrapper = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk').then(mod => ({ default: mod.AISidePanelContentWrapper })))
 const AISidePanelInline = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk').then(mod => ({ default: mod.AISidePanelInline })))
 const AIChatBotProvider = lazy(() => import('@components/Contexts/AI/AIChatBotContext'))
-const ScormActivity = lazy(() => import('../../../../../../../../ee/components/Activities/ScormActivity'))
+const ScormActivity = lazy(() => import('@ee/components/Activities/ScormActivity'))
 const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
 const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
 const ResourceActivity = lazy(() => import('@components/Objects/Activities/Resource/ResourceActivity'))

@@ -126,7 +126,7 @@ async function resolveFromSubdomainViaEE(): Promise<ResolvedOrg | null> {
 
 async function getOrgSlugFromSubdomainViaEE(): Promise<string | null> {
   try {
-    const mod = await import('@/ee/services/tenancy/resolveMulti.server')
+    const mod = await import('@ee/services/tenancy/resolveMulti.server')
     const cookieStore = await cookies()
     const frontendDomain =
       process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN

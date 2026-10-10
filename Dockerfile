@@ -22,6 +22,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Remove .env files to avoid leaking secrets into the build
 RUN rm -f .env*
 
+# Remove Enterprise Edition folder for public builds (@ee/* falls back to
+# ee-stub), and drop an ee symlink that does not resolve inside the image
+ARG LEARNHOUSE_PUBLIC=false
+RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ] || { [ -L /app/ee ] && [ ! -e /app/ee ]; }; then rm -rf /app/ee; fi
+
 RUN bun run build
 
 # ───────────────────────────────────────────────

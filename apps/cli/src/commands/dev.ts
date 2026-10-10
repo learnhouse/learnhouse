@@ -191,22 +191,48 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   const envOk = await checkDevEnv(root)
   if (!envOk) process.exit(1)
 
-  // EE mode: set up ee/ symlink when --ee is passed
+  // EE mode: set up ee/ symlinks when --ee is passed
   const eePath = path.join(root, 'apps', 'api', 'ee')
   if (opts.ee) {
-    if (!fs.existsSync(eePath)) {
-      // Try the sibling `ee` repo (parent-dir/ee/apps/api/ee)
-      const parentDir = path.dirname(root)
-      const eeRepoPath = path.join(parentDir, 'ee', 'apps', 'api', 'ee')
+    const parentDir = path.dirname(root)
+    // A symlink whose target is gone reads as missing to existsSync but still
+    // blocks symlinkSync (EEXIST); clear it so it can be re-created.
+    const removeDanglingLink = (linkPath: string) => {
+      try {
+        if (fs.lstatSync(linkPath).isSymbolicLink() && !fs.existsSync(linkPath)) fs.unlinkSync(linkPath)
+      } catch { /* nothing at linkPath */ }
+    }
+
+    for (const app of ['api', 'web']) {
+      const appEePath = path.join(root, 'apps', app, 'ee')
+      if (fs.existsSync(appEePath)) continue
+      removeDanglingLink(appEePath)
+      // Try the sibling `ee` repo (parent-dir/ee/apps/<app>/ee)
+      const eeRepoPath = path.join(parentDir, 'ee', 'apps', app, 'ee')
       if (fs.existsSync(eeRepoPath)) {
         try {
-          fs.symlinkSync(eeRepoPath, eePath)
-          p.log.success(`Linked EE folder → ${eeRepoPath}`)
+          fs.symlinkSync(eeRepoPath, appEePath)
+          p.log.success(`Linked ${app} EE folder → ${eeRepoPath}`)
         } catch (err: any) {
-          p.log.warning(`Could not create EE symlink: ${err.message}`)
+          p.log.warning(`Could not create ${app} EE symlink: ${err.message}`)
         }
       } else {
-        p.log.warning(`--ee passed but no ee/ folder found at ${eeRepoPath}; running in OSS mode`)
+        p.log.warning(`--ee passed but no ee/ folder found at ${eeRepoPath}; ${app} runs in OSS mode`)
+      }
+    }
+
+    // The bundler resolves packages imported by symlinked web EE files from
+    // their real location, so give that EE checkout access to web's node_modules.
+    const webEePath = path.join(root, 'apps', 'web', 'ee')
+    if (fs.existsSync(webEePath) && fs.lstatSync(webEePath).isSymbolicLink()) {
+      const webEeModules = path.join(path.dirname(fs.realpathSync(webEePath)), 'node_modules')
+      removeDanglingLink(webEeModules)
+      if (!fs.existsSync(webEeModules)) {
+        try {
+          fs.symlinkSync(path.join(root, 'apps', 'web', 'node_modules'), webEeModules)
+        } catch (err: any) {
+          p.log.warning(`Could not link web node_modules into the EE checkout: ${err.message}`)
+        }
       }
     }
 

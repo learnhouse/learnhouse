@@ -12,11 +12,11 @@ import ResourceModal from './NewActivityModal/ResourceActivityModal'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
 
-// SCORM authoring lives in the Enterprise (ee) package; load it lazily so
-// open-source builds without `ee/` degrade gracefully (the card is also
+// SCORM authoring lives in the Enterprise (ee) package (`@ee` resolves to a
+// no-op stub in open-source builds); load it lazily (the card is also
 // feature-gated, so it only appears when SCORM is enabled).
 const ScormActivityModal = dynamic(
-  () => import('../../../../../ee/components/Modals/ScormActivityModal'),
+  () => import('@ee/components/Modals/ScormActivityModal'),
   { ssr: false }
 )
 
