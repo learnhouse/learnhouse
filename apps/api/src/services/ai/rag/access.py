@@ -177,16 +177,20 @@ async def filter_readable_chunks(
     scope: RagAccessScope,
     db_session: AsyncSession,
 ) -> list:
-    """Drop retrieved rows whose activity the caller could not open.
+    """Drop retrieved rows the caller could not open.
 
-    Rows without an activity are dropped too: every indexed chunk belongs to
-    one, so anything else is not attributable to readable content.
+    Activity rows follow the activity's read rules. Course-level rows (course
+    and chapter text, no activity) are what the course page shows, so reading
+    the course is enough.
     """
-    rows = [row for row in rows if row.activity_id is not None]
+    rows = list(rows)
     readable = await readable_activity_ids(
-        {row.activity_id for row in rows}, scope, db_session
+        {row.activity_id for row in rows if row.activity_id is not None}, scope, db_session
     )
-    return [row for row in rows if row.activity_id in readable]
+    return [
+        row for row in rows
+        if (row.activity_id in readable if row.activity_id is not None else row.course_id in scope.courses)
+    ]
 
 
 async def can_read_activity(

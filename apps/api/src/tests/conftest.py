@@ -480,6 +480,18 @@ async def folder(db, org, course):
 # Request / bypass fixtures
 # ---------------------------------------------------------------------------
 
+@pytest.fixture(autouse=True)
+def rag_dispatch():
+    """Keep content saves from starting real AI indexing runs.
+
+    Every content mutation schedules re-indexing; unpatched, that would reach
+    Redis or start a background run against the app database. The mock
+    records what would have been scheduled.
+    """
+    with patch("src.services.ai.rag.queue._dispatch") as dispatch:
+        yield dispatch
+
+
 @pytest.fixture
 def mock_request():
     """Minimal Starlette Request for passing to service functions."""

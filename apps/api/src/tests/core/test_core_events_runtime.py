@@ -210,12 +210,16 @@ async def test_events_startup_shutdown_and_reconcile(monkeypatch):
         "src.services.courses.migration.migration_service.cleanup_old_temp_migrations",
         cleanup_temp_migrations,
     )
-    # The HLS + captions consumers only start when Redis is available; this test
-    # exercises the migration-cleanup lifecycle, so keep them no-ops (no Redis).
+    # The HLS, captions and AI search consumers only start when Redis is
+    # available; this test exercises the migration-cleanup lifecycle, so keep
+    # them no-ops (no Redis).
+    import src.services.ai.rag.queue as _rag_queue
     import src.services.utils.caption_jobs as _cap_jobs
     import src.services.utils.hls_jobs as _hls_jobs
     monkeypatch.setattr(_cap_jobs, "get_redis_client", lambda: None)
     monkeypatch.setattr(_hls_jobs, "get_redis_client", lambda: None)
+    monkeypatch.setattr(_rag_queue, "get_redis_client", lambda: None)
+    monkeypatch.setenv("LEARNHOUSE_RAG_BACKFILL_HOURS", "0")
 
     start_app = core_events.startup_app(app)
     await start_app()

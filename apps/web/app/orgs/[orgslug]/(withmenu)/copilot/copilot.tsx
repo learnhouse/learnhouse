@@ -40,8 +40,11 @@ import {
   PencilSimple,
   Check,
   GlobeSimple,
+  Play,
+  FileText,
 } from '@phosphor-icons/react'
 import Link from 'next/link'
+import { sourceLocation, sourcePath, sourceTitle, type CopilotSource } from '@/lib/copilot/sources'
 import { MarkdownImageLink } from '@components/Objects/Activities/AI/MarkdownImageLink'
 
 export type CopilotProps = {
@@ -840,8 +843,13 @@ export function ThinkingIndicator() {
   )
 }
 
+function sourceHref(source: CopilotSource, orgslug: string): string | null {
+  const path = sourcePath(source)
+  return path ? getUriWithOrg(orgslug, path) : null
+}
+
 /**
- * Render a single citation badge [N] as a clickable link to the source activity.
+ * Render a single citation badge [N] as a clickable link to where the source came from.
  */
 function CitationBadge({ num, sources, orgslug }: { num: number; sources: StreamSourceData['sources']; orgslug: string }) {
   const source = sources[num - 1]
@@ -853,16 +861,13 @@ function CitationBadge({ num, sources, orgslug }: { num: number; sources: Stream
     )
   }
 
-  const courseId = source.course_uuid?.replace(/^course_/, '') || ''
-  const activityId = source.activity_uuid?.replace(/^activity_/, '') || ''
-  const href = activityId && courseId
-    ? getUriWithOrg(orgslug, `/course/${courseId}/activity/${activityId}`)
-    : null
+  const href = sourceHref(source, orgslug)
+  const location = sourceLocation(source)
 
   const badge = (
     <span
       className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-md bg-violet-100 dark:bg-violet-500/15 text-[10px] font-bold text-violet-600 dark:text-violet-400 align-middle mx-0.5 hover:bg-violet-200 dark:hover:bg-violet-500/25 cursor-pointer transition-colors"
-      title={[source.course_name, source.chapter_name, source.activity_name].filter(Boolean).join(' > ')}
+      title={[source.course_name, source.chapter_name, source.activity_name, location?.label].filter(Boolean).join(' > ')}
     >
       {num}
     </span>
@@ -1097,11 +1102,8 @@ export function SourcesCompact({ sources, orgslug }: { sources: StreamSourceData
   return (
     <div className="relative z-10 flex flex-wrap gap-x-3 gap-y-1 px-1">
       {sources.map((source, i) => {
-        const courseId = source.course_uuid?.replace(/^course_/, '') || ''
-        const activityId = source.activity_uuid?.replace(/^activity_/, '') || ''
-        const href = activityId && courseId
-          ? getUriWithOrg(orgslug, `/course/${courseId}/activity/${activityId}`)
-          : null
+        const href = sourceHref(source, orgslug)
+        const location = sourceLocation(source)
 
         const inner = (
           <span className="inline-flex items-center gap-1.5 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors group">
@@ -1109,8 +1111,14 @@ export function SourcesCompact({ sources, orgslug }: { sources: StreamSourceData
               {i + 1}
             </span>
             <span className="truncate max-w-xs font-medium text-neutral-500 dark:text-neutral-400 group-hover:text-violet-600 dark:group-hover:text-violet-400">
-              {source.activity_name || 'Unknown'}
+              {sourceTitle(source)}
             </span>
+            {location && (
+              <span className="inline-flex items-center gap-0.5 tabular-nums" dir="ltr">
+                {location.kind === 'time' ? <Play size={10} weight="fill" /> : <FileText size={11} />}
+                {location.label}
+              </span>
+            )}
           </span>
         )
 

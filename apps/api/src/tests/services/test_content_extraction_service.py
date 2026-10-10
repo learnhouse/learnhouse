@@ -1,17 +1,13 @@
-"""Behavioral tests for the _is_safe_content_path traversal guard.
+"""Tests for the content_extraction helpers other AI features import.
 
-Covers src/services/ai/rag/content_extraction.py line 14 (import os,
-transitively), the helper at lines 32-49, and its two call sites at 203
-(PDF block) and 354 (document activity). Block file paths are persisted from
-user input, so the guard rejects empty/NUL/absolute/`..` paths before any
-file read.
+The traversal guard rejects empty/NUL/absolute/`..` paths before any file
+read; the TipTap walker output is pinned so moving it into the source
+registry changed nothing for quiz, scenario and assignment generation.
 """
-from types import SimpleNamespace
-from unittest.mock import patch
-
-import pytest
+import json
 
 from src.services.ai.rag import content_extraction as ce
+from src.tests.services.rag_helpers import ActivitySubTypeEnum, ActivityTypeEnum, add_activity
 
 
 # --- direct unit tests of the helper -------------------------------------
@@ -63,108 +59,54 @@ def test_dotdot_substring_in_filename_is_allowed():
     assert ce._is_safe_content_path("orgs/my..notes/file.pdf") is True
 
 
-# --- call site coverage: PDF block (line 203) ----------------------------
+# --- walker compatibility ------------------------------------------------
+# Output for the node types the walker handled before the source registry,
+# including malformed children; must stay byte-identical.
 
-class _FakeBlock:
-    def __init__(self, file_path):
-        self.block_type = ce.BlockTypeEnum.BLOCK_DOCUMENT_PDF
-        self.content = {"file_id": file_path}
-
-
-def _pdf_block(file_path):
-    return ce._extract_block_content(_FakeBlock(file_path), activity_name="A")
+_LEGACY_DOC = json.loads('{"type": "doc", "content": [{"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Cells"}]}, {"type": "heading", "attrs": {"level": 99}, "content": [{"type": "text", "text": "Deep"}]}, {"type": "paragraph", "content": [{"type": "text", "text": "A cell is "}, {"type": "text", "marks": [{"type": "bold"}], "text": "small"}, {"type": "hardBreak"}, {"type": "text", "text": "line2"}]}, {"type": "bulletList", "content": [{"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "one"}]}, {"type": "orderedList", "content": [{"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "nested"}]}]}]}]}]}, {"type": "blockquote", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "quoted"}]}, {"type": "paragraph", "content": [{"type": "text", "text": "twice"}]}]}, {"type": "codeBlock", "content": [{"type": "text", "text": "print(1)"}]}, {"type": "calloutInfo", "content": [{"type": "text", "text": "note"}]}, {"type": "calloutWarning", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "warn"}]}]}, {"type": "callout", "attrs": {"type": "info"}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "generic callout"}]}]}, {"type": "table", "content": [{"type": "tableRow", "content": [{"type": "tableCell", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "a"}]}]}, {"type": "tableCell", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "b"}]}]}]}]}, {"type": "blockH5P", "attrs": {"h5pUrl": "https://h5p.example/1", "title": "Drag"}}, {"type": "blockImage", "attrs": {"blockObject": {"x": 1}}}, {"type": "paragraph", "content": "bad"}, "junk", {"type": "text", "text": "bare"}]}')
 
 
-def test_pdf_block_unsafe_path_short_circuits_without_reading():
-    with patch.object(ce, "read_file_content") as read_mock:
-        assert _pdf_block("/etc/passwd") is None
-        read_mock.assert_not_called()
-
-
-def test_pdf_block_safe_path_proceeds_to_read():
-    with patch.object(ce, "read_file_content", return_value=b"%PDF-1.4 bytes") as read_mock, \
-         patch.object(ce, "extract_text_from_pdf", return_value="extracted text"):
-        result = _pdf_block("orgs/1/courses/2/file.pdf")
-        read_mock.assert_called_once_with("orgs/1/courses/2/file.pdf")
-        assert result == {"text": "extracted text", "source_type": "pdf_block"}
-
-
-# --- call site coverage: document activity (line 354) --------------------
-
-class _Result:
-    """Stand-in for the object returned by AsyncSession.execute()."""
-
-    def __init__(self, items):
-        self._items = items
-
-    def scalars(self):
-        return self
-
-    def first(self):
-        return self._items[0] if self._items else None
-
-    def all(self):
-        return self._items
-
-
-class _FakeDBSession:
-    """Returns queued results in call order for each execute()."""
-
-    def __init__(self, results):
-        self._results = list(results)
-
-    async def execute(self, _query):
-        return self._results.pop(0)
-
-
-@pytest.mark.asyncio
-async def test_document_activity_guard_blocks_unsafe_path():
-    course = SimpleNamespace(id=1, name="Course")
-    activity = SimpleNamespace(
-        id=10,
-        name="Doc",
-        activity_uuid="act_1",
-        activity_type=ce.ActivityTypeEnum.TYPE_DOCUMENT,
-        content={"file_id": "../../etc/passwd"},
-        course_id=1,
+def test_walker_output_for_legacy_node_types_is_unchanged():
+    assert ce.extract_text_from_prosemirror(_LEGACY_DOC) == (
+        "## Cells\n###### Deep\nA cell is small\nline2\n- nested\n- one\n> quoted\n> twice\n"
+        "```\nprint(1)\n```\n[calloutInfo] note\n[calloutWarning] warn\ngeneric callout\n"
+        "a | b\n[H5P interactive content] Drag\nbare"
     )
-    # execute() call order: course, chapters, activities, chapter_activity
-    db = _FakeDBSession([
-        _Result([course]),
-        _Result([]),          # chapters
-        _Result([activity]),  # activities
-        _Result([]),          # chapter_activity join
-    ])
-    with patch.object(ce, "read_file_content") as read_mock:
-        results = await ce.extract_all_course_content(1, 1, db)
-        read_mock.assert_not_called()
-    assert results == []
 
 
-@pytest.mark.asyncio
-async def test_document_activity_safe_path_extracts_text():
-    course = SimpleNamespace(id=1, name="Course")
-    activity = SimpleNamespace(
-        id=10,
-        name="Doc",
-        activity_uuid="act_1",
-        activity_type=ce.ActivityTypeEnum.TYPE_DOCUMENT,
-        content={"file_id": "orgs/1/courses/2/file.pdf"},
-        course_id=1,
+def test_walker_ignores_non_documents():
+    assert ce.extract_text_from_prosemirror(None) == ""
+    assert ce.extract_text_from_prosemirror("text") == ""
+
+
+# --- extract_all_course_content -------------------------------------------
+
+async def test_extract_all_course_content_one_item_per_activity(db, org, course, chapter):
+    await add_activity(
+        db, org, course, chapter, 70,
+        activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+        sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+        content={"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Hello"}]}]},
+        name="Welcome",
     )
-    db = _FakeDBSession([
-        _Result([course]),
-        _Result([]),
-        _Result([activity]),
-        _Result([]),
-    ])
-    with patch.object(ce, "read_file_content", return_value=b"%PDF bytes") as read_mock, \
-         patch.object(ce, "extract_text_from_pdf", return_value="doc text"):
-        results = await ce.extract_all_course_content(1, 1, db)
-        read_mock.assert_called_once_with("orgs/1/courses/2/file.pdf")
-    assert len(results) == 1
-    assert results[0]["text"] == "doc text"
-    assert results[0]["source_type"] == "document_activity"
+    items = await ce.extract_all_course_content(course.id, org.id, db)
+    assert items == [{
+        "text": "Activity: Welcome\n\nHello",
+        "activity_id": 70,
+        "activity_uuid": "activity_70",
+        "activity_name": "Welcome",
+        "chapter_name": "Test Chapter",
+        "course_name": "Test Course",
+    }]
+
+
+async def test_extract_all_course_content_is_scoped_to_the_org(db, org, other_org, course, chapter):
+    await add_activity(
+        db, org, course, chapter, 71,
+        activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+        sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+    )
+    assert await ce.extract_all_course_content(course.id, other_org.id, db) == []
 
 
 # --- blockH5P extraction --------------------------------------------------

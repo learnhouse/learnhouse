@@ -107,7 +107,9 @@ def _row(course, activity):
         course_name=course.name,
         source_type="dynamic_page",
         block_uuid=None,
+        locator=None,
         course_uuid=course.course_uuid,
+        distance=0.2,
     )
 
 
@@ -203,6 +205,45 @@ class TestActivityFilter:
         private_activity = await _activity(db, org, private_course, None, 47, "act_out")
         scope = await build_rag_access_scope(mock_request, regular_user, org.id, db, course=course)
         assert await filter_readable_chunks([_row(private_course, private_activity)], scope, db) == []
+
+
+def _course_row(course, source_type="course", block_uuid=None, chapter_name=""):
+    return SimpleNamespace(
+        id=0,
+        course_id=course.id,
+        activity_id=None,
+        activity_uuid="",
+        chunk_text=f"about {course.course_uuid}",
+        activity_name="",
+        chapter_name=chapter_name,
+        course_name=course.name,
+        source_type=source_type,
+        block_uuid=block_uuid,
+        locator=None,
+        course_uuid=course.course_uuid,
+        distance=0.1,
+    )
+
+
+class TestCourseLevelRows:
+    async def test_course_text_needs_only_course_read(
+        self, db, org, regular_user, course, private_course, mock_request
+    ):
+        scope = await build_rag_access_scope(mock_request, regular_user, org.id, db, course=course)
+        kept = await filter_readable_chunks(
+            [_course_row(course), _course_row(private_course)], scope, db
+        )
+        assert [r.course_id for r in kept] == [course.id]
+
+    async def test_mixed_rows_keep_their_order(
+        self, db, org, regular_user, course, chapter, mock_request
+    ):
+        visible = await _activity(db, org, course, chapter, 48, "act_mixed")
+        draft = await _activity(db, org, course, chapter, 49, "act_mixed_draft", published=False)
+        scope = await build_rag_access_scope(mock_request, regular_user, org.id, db, course=course)
+        rows = [_row(course, draft), _course_row(course), _row(course, visible)]
+        kept = await filter_readable_chunks(rows, scope, db)
+        assert [(r.activity_id, r.source_type) for r in kept] == [(None, "course"), (48, "dynamic_page")]
 
 
 class TestQuery:

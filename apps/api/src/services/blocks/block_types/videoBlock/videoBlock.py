@@ -11,6 +11,7 @@ from src.db.users import AnonymousUser, PublicUser
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
+from src.services.ai.rag.queue import index_activity
 
 
 async def create_video_block(
@@ -85,6 +86,7 @@ async def create_video_block(
     db_session.add(block)
     await db_session.commit()
     await db_session.refresh(block)
+    index_activity(activity.id, transcribe=True)
 
     # Kick off HLS transcoding (adaptive streaming), reusing the same pipeline as
     # video activities. No-op unless LEARNHOUSE_HLS_ENABLED; until ready the

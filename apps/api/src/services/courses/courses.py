@@ -39,6 +39,7 @@ from src.security.rbac import (
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
+from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -696,6 +697,7 @@ async def create_course(
     except Exception:
         await db_session.rollback()
         raise
+    index_course(course.id)
 
     # Get course authors with their roles
     authors_statement = (
@@ -789,6 +791,7 @@ async def update_course_thumbnail(
     db_session.add(course)
     await db_session.commit()
     await db_session.refresh(course)
+    index_course(course.id)
 
     # Get course authors with their roles
     authors_statement = (
@@ -914,6 +917,7 @@ async def update_course(
     db_session.add(course)
     await db_session.commit()
     await db_session.refresh(course)
+    index_course(course.id)
 
     # Dispatch webhook if published state changed
     if course_object.published is not None and course.published != old_published:
@@ -1554,6 +1558,7 @@ async def clone_course(
 
     # Single commit for all chapters, activities, blocks, and links
     await db_session.commit()
+    await enqueue_course(new_course.id, db_session)
 
     # Increase feature usage for the new course
     await increase_feature_usage("courses", new_course.org_id, db_session)

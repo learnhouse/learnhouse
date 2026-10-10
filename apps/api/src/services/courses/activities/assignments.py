@@ -59,6 +59,7 @@ from src.security.rbac import (
     check_resource_access,
     AccessAction,
 )
+from src.services.ai.rag.queue import index_activity
 from src.services.courses.activities.access import verify_activity_reader_access
 from src.services.courses.activities.uploads.sub_file import upload_submission_file
 from src.services.courses.activities.uploads.tasks_ref_files import (
@@ -1162,6 +1163,7 @@ async def create_assignment(
     db_session.add(assignment)
     await db_session.commit()
     await db_session.refresh(assignment)
+    index_activity(assignment.activity_id)
 
     # Feature usage
     await increase_feature_usage("assignments", course.org_id, db_session)
@@ -1314,6 +1316,7 @@ async def update_assignment(
     db_session.add(assignment)
     await db_session.commit()
     await db_session.refresh(assignment)
+    index_activity(assignment.activity_id)
 
     # return assignment read. The caller passed the UPDATE authorization above,
     # so they are an instructor and the corrige is theirs to see.
@@ -1393,6 +1396,7 @@ async def put_assignment_solution_file(
     db_session.add(assignment)
     await db_session.commit()
     await db_session.refresh(assignment)
+    index_activity(assignment.activity_id)
 
     return _apply_solution_visibility(
         AssignmentRead.model_validate(assignment), assignment, unlocked=True
@@ -1439,6 +1443,7 @@ async def delete_assignment_solution_file(
     db_session.add(assignment)
     await db_session.commit()
     await db_session.refresh(assignment)
+    index_activity(assignment.activity_id)
 
     return _apply_solution_visibility(
         AssignmentRead.model_validate(assignment), assignment, unlocked=True
@@ -1478,8 +1483,10 @@ async def delete_assignment(
     await decrease_feature_usage("assignments", course.org_id, db_session)
 
     # Delete Assignment
+    activity_id = assignment.activity_id
     await db_session.delete(assignment)
     await db_session.commit()
+    index_activity(activity_id)
 
     return {"message": "Assignment deleted"}
 
@@ -1528,9 +1535,11 @@ async def delete_assignment_from_activity_uuid(
     await decrease_feature_usage("assignments", course.org_id, db_session)
 
     # Delete Assignment
+    activity_id = assignment.activity_id
     await db_session.delete(assignment)
 
     await db_session.commit()
+    index_activity(activity_id)
 
     return {"message": "Assignment deleted"}
 
@@ -1593,6 +1602,7 @@ async def create_assignment_task(
     db_session.add(assignment_task)
     await db_session.commit()
     await db_session.refresh(assignment_task)
+    index_activity(assignment_task.activity_id)
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
@@ -1786,6 +1796,7 @@ async def put_assignment_task_reference_file(
     db_session.add(assignment_task)
     await db_session.commit()
     await db_session.refresh(assignment_task)
+    index_activity(assignment_task.activity_id)
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
@@ -1942,6 +1953,7 @@ async def update_assignment_task(
     db_session.add(assignment_task)
     await db_session.commit()
     await db_session.refresh(assignment_task)
+    index_activity(assignment_task.activity_id)
 
     if scoring_changed:
         await _regrade_graded_submissions(
@@ -2053,8 +2065,10 @@ async def delete_assignment_task(
     await authorize_assignment_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Delete Assignment Task
+    activity_id = assignment_task.activity_id
     await db_session.delete(assignment_task)
     await db_session.commit()
+    index_activity(activity_id)
 
     # Already-graded learners keep a frozen `grade` that still includes the
     # points from the task we just removed, while the denominator is recomputed

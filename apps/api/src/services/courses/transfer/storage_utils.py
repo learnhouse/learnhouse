@@ -197,6 +197,28 @@ def read_file_content(file_path: str) -> Optional[bytes]:
         return None
 
 
+def write_file_content(file_path: str, content: bytes) -> bool:
+    """Write a file under the content root (filesystem or S3).
+
+    Counterpart of :func:`read_file_content`. Returns False when the path is
+    unsafe or the write fails.
+    """
+    if get_content_delivery_type() == "s3api":
+        return upload_to_s3(file_path, content)
+    safe_path = _validate_local_path(file_path)
+    if safe_path is None:
+        logger.warning("Rejected unsafe local file path: %s", file_path)
+        return False
+    try:
+        os.makedirs(os.path.dirname(safe_path), exist_ok=True)
+        with open(safe_path, "wb") as f:
+            f.write(content)
+        return True
+    except OSError as e:
+        logger.error("Error writing %s: %s", file_path, e)
+        return False
+
+
 def file_exists(file_path: str) -> bool:
     """
     Check if file exists based on configured content delivery type.
