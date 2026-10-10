@@ -182,6 +182,25 @@ async def dispatch_webhooks(
     )
 
 
+async def _org_plan_includes_webhooks(org_id: int, db_session) -> bool:
+    """Endpoints outlive a downgrade; stop delivering once the plan lapses.
+
+    Only a definite "not entitled" stops delivery. A lookup that errors for
+    any other reason delivers, so a transient failure doesn't silently drop a
+    paying org's events.
+    """
+    from fastapi import HTTPException
+    from src.security.features_utils.plan_check import check_org_plan
+
+    try:
+        await check_org_plan(org_id, "pro", "Webhooks", db_session)
+    except HTTPException as exc:
+        return exc.status_code != 403
+    except Exception:
+        logger.warning("Plan lookup failed for webhooks of org %s", org_id, exc_info=True)
+    return True
+
+
 async def _deliver_webhooks(
     event_name: str,
     org_id: int,
@@ -210,6 +229,8 @@ async def _deliver_webhooks(
             rows = (await db_session.execute(statement)).scalars().all()
             if not webhook_ids:
                 _active_cache_set(org_id, bool(rows))
+            if rows and not await _org_plan_includes_webhooks(org_id, db_session):
+                return
             for ep in rows:
                 if webhook_ids or event_name in (ep.events or []):
                     endpoints.append(_EndpointInfo(

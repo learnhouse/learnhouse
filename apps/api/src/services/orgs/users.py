@@ -46,6 +46,7 @@ from src.security.org_auth import (
     get_user_org,
     is_org_member,
     require_org_destroy_right,
+    require_org_role_permission,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
@@ -66,7 +67,10 @@ def _csv_safe(value):
     with a single quote so it is rendered as literal text. Non-string values
     are returned unchanged.
     """
-    if isinstance(value, str) and value and value[0] in ("=", "+", "-", "@", "\t", "\r"):
+    # Spreadsheets skip leading spaces before evaluating, so " =cmd" is a formula too.
+    if isinstance(value, str) and value and (
+        value[0] in ("\t", "\r") or value.lstrip()[:1] in ("=", "+", "-", "@")
+    ):
         return "'" + value
     return value
 
@@ -123,14 +127,114 @@ async def _require_admin_to_touch_admins(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ) -> None:
-    """Only Admins (or superadmins) may act on another Admin's membership."""
+    """Only Admins (or superadmins) may remove an Admin or Maintainer.
+
+    rbac_check lets Maintainers remove ordinary members; removing staff also
+    takes the users.delete right, which the seeded Maintainer role lacks.
+    """
     if isinstance(current_user, (InternalUser, APITokenUser)):
         return
     if not await is_org_admin_role(current_user.id, org.id, db_session):
         raise HTTPException(
             status_code=403,
-            detail="Only organization administrators can remove an administrator",
+            detail="Only organization administrators can remove an administrator or maintainer",
         )
+    await require_org_role_permission(
+        current_user.id, org.id, db_session, "users", "action_delete"
+    )
+
+
+async def _revoke_org_grants(
+    db_session: AsyncSession, org: Organization, user_ids: list[int]
+) -> None:
+    """Drop the per-resource grants departing members hold in ``org``.
+
+    Deleting the UserOrganization row alone leaves authorship, usergroup and
+    board membership plus their API tokens in place, each of which keeps
+    granting access. Staged on the session; the caller commits.
+    """
+    if not user_ids:
+        return
+    from sqlalchemy import delete, update, union_all
+
+    from src.db.api_tokens import APIToken
+    from src.db.boards import Board, BoardMember
+    from src.db.courses.courses import Course
+    from src.db.folders.folders import Folder
+    from src.db.media.media import Media
+    from src.db.podcasts.podcasts import Podcast
+    from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipStatusEnum
+
+    now = str(datetime.now())
+    org_resource_uuids = union_all(
+        select(Course.course_uuid).where(Course.org_id == org.id),
+        select(Podcast.podcast_uuid).where(Podcast.org_id == org.id),
+        select(Board.board_uuid).where(Board.org_id == org.id),
+        select(Folder.folder_uuid).where(Folder.org_id == org.id),
+        select(Media.media_uuid).where(Media.org_id == org.id),
+    )
+    # Deactivated rather than deleted so the author history stays visible.
+    await db_session.execute(
+        update(ResourceAuthor)
+        .where(
+            ResourceAuthor.user_id.in_(user_ids),
+            ResourceAuthor.resource_uuid.in_(org_resource_uuids),
+        )
+        .values(
+            authorship_status=ResourceAuthorshipStatusEnum.INACTIVE,
+            update_date=now,
+        )
+    )
+    await db_session.execute(
+        delete(UserGroupUser).where(
+            UserGroupUser.user_id.in_(user_ids),
+            UserGroupUser.usergroup_id.in_(
+                select(UserGroup.id).where(UserGroup.org_id == org.id)
+            ),
+        )
+    )
+    await db_session.execute(
+        delete(BoardMember).where(
+            BoardMember.user_id.in_(user_ids),
+            BoardMember.board_id.in_(select(Board.id).where(Board.org_id == org.id)),
+        )
+    )
+    await db_session.execute(
+        update(APIToken)
+        .where(
+            APIToken.created_by_user_id.in_(user_ids),
+            APIToken.org_id == org.id,
+            APIToken.is_active == True,  # noqa: E712
+        )
+        .values(is_active=False, update_date=now)
+    )
+
+
+async def _drop_accepted_invites(
+    db_session: AsyncSession, org: Organization, user_ids: list[int]
+) -> None:
+    """Remove the invite records that would let a removed member rejoin an
+    invite-only org (the OAuth signup gate accepts any existing key)."""
+    if not user_ids:
+        return
+    from src.core.redis import get_redis_client
+
+    r = get_redis_client()
+    if r is None:
+        return
+    emails = (await db_session.execute(
+        select(User.email).where(User.id.in_(user_ids))
+    )).scalars().all()
+    try:
+        keys = [
+            f"invited_user:{email.strip().lower()}:org:{org.org_uuid}"
+            for email in emails
+            if email
+        ]
+        if keys:
+            r.delete(*keys)
+    except Exception:
+        logger.warning("Failed to drop invites for org %s", org.id, exc_info=True)
 
 
 async def get_organization_users(
@@ -516,7 +620,8 @@ async def export_organization_users_csv(
             "Name", "Username", "Email", "Groups", "Role", "Joined",
             "Email Verified", "Signup Method", "Last Login",
         ]
-        + [f.label or f.key for f in custom_fields]
+        # Labels are admin-editable signup copy: as untrusted as the values.
+        + [_csv_safe(f.label or f.key) for f in custom_fields]
     )
 
     if users:
@@ -627,8 +732,8 @@ async def remove_user_from_org(
             detail="User not found",
         )
 
-    # Maintainers may remove members, but not Admins.
-    if user_org.role_id == ADMIN_ROLE_ID:
+    # Maintainers may remove members, but not Admins or other Maintainers.
+    if user_org.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
         await _require_admin_to_touch_admins(request, org, current_user, db_session)
 
     # Check if user is the last admin
@@ -644,7 +749,9 @@ async def remove_user_from_org(
         )
 
     await db_session.delete(user_org)
+    await _revoke_org_grants(db_session, org, [user_id])
     await db_session.commit()
+    await _drop_accepted_invites(db_session, org, [user_id])
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_id)
@@ -698,7 +805,9 @@ async def leave_org(
         )
 
     await db_session.delete(user_org)
+    await _revoke_org_grants(db_session, org, [user_id])
     await db_session.commit()
+    await _drop_accepted_invites(db_session, org, [user_id])
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_id)
@@ -742,7 +851,13 @@ async def remove_batch_users_from_org(
     admins = (await db_session.execute(admin_statement)).scalars().all()
     admin_ids = {a.user_id for a in admins}
 
-    if admin_ids & set(user_ids):
+    staff_ids = set((await db_session.execute(
+        select(UserOrganization.user_id).where(
+            UserOrganization.org_id == org.id,
+            UserOrganization.role_id.in_(ADMIN_OR_MAINTAINER_ROLE_IDS),
+        )
+    )).scalars().all())
+    if staff_ids & set(user_ids):
         await _require_admin_to_touch_admins(request, org, current_user, db_session)
 
     # Check if removing these users would remove all admins
@@ -763,10 +878,13 @@ async def remove_batch_users_from_org(
         user_orgs_to_remove = []
 
     removed_count = len(user_orgs_to_remove)
+    removed_user_ids = [uo.user_id for uo in user_orgs_to_remove]
     for user_org in user_orgs_to_remove:
         await db_session.delete(user_org)
+    await _revoke_org_grants(db_session, org, removed_user_ids)
 
     await db_session.commit()
+    await _drop_accepted_invites(db_session, org, removed_user_ids)
 
     from src.routers.users import _invalidate_session_cache
     for uid in user_ids:
@@ -817,8 +935,10 @@ async def remove_all_users_from_org(
     removed_user_ids = [uo.user_id for uo in user_orgs_to_remove]
     for user_org in user_orgs_to_remove:
         await db_session.delete(user_org)
+    await _revoke_org_grants(db_session, org, removed_user_ids)
 
     await db_session.commit()
+    await _drop_accepted_invites(db_session, org, removed_user_ids)
 
     from src.routers.users import _invalidate_session_cache
     for uid in removed_user_ids:

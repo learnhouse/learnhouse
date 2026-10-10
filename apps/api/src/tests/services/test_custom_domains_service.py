@@ -905,7 +905,7 @@ class TestResolveAndSslStatus:
                     admin_user,
                 )
         with patch(
-            "src.services.orgs.custom_domains.require_org_admin",
+            "src.services.orgs.custom_domains.require_org_role_permission",
             return_value=None,
         ):
             with pytest.raises(HTTPException) as verify_org_exc:

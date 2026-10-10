@@ -27,7 +27,7 @@ from src.db.webhooks import (
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
-from src.security.org_auth import require_org_admin
+from src.security.org_auth import require_org_admin, require_org_role_permission
 from src.services.webhooks.crypto import encrypt_secret
 from src.services.webhooks.events import WEBHOOK_EVENTS
 from src.services.webhooks.dispatch import invalidate_active_endpoint_cache
@@ -124,7 +124,11 @@ async def create_webhook_endpoint(
     if not (await db_session.execute(statement)).scalars().first():
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # Where org events (member emails included) are sent, and with which
+    # signing secret, takes organizations.update, not maintainer status.
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # Every visitor to the shared demo is an admin of it, so an endpoint
     # registered there is a live feed of whatever happens next, including the
@@ -225,7 +229,11 @@ async def update_webhook_endpoint(
 ) -> WebhookEndpointRead:
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # Where org events (member emails included) are sent, and with which
+    # signing secret, takes organizations.update, not maintainer status.
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
 
@@ -289,7 +297,11 @@ async def regenerate_webhook_secret(
 ) -> WebhookEndpointCreatedResponse:
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # Where org events (member emails included) are sent, and with which
+    # signing secret, takes organizations.update, not maintainer status.
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
 

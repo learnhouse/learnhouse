@@ -778,6 +778,10 @@ class ResourceAccessChecker:
             resource_author.authorship in valid_authorships and
             resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
         )
+        # Authorship is an org-scoped grant: someone removed from the org must
+        # not keep editing its content through a leftover author row.
+        if is_valid:
+            is_valid = await self._is_member_of_resource_org(resource_uuid, user_id)
         self._author_cache[resource_uuid] = is_valid
         return is_valid
 
@@ -869,7 +873,9 @@ class ResourceAccessChecker:
         )
         membership = (await self.db_session.execute(membership_stmt)).scalars().first()
 
-        result = membership is not None
+        result = membership is not None and await self._is_member_of_resource_org(
+            resource_uuid, user_id
+        )
         self._usergroup_cache[cache_key] = result
         return result
 
