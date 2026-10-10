@@ -5,6 +5,10 @@
 
 @import 'tailwindcss';
 
+/* EE components (apps/web/ee) are gitignored, so automatic source detection
+   skips them. Scan them explicitly. */
+@source '../ee';
+
 
 @custom-variant dark (&:is(.dark *));
 

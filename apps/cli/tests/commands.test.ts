@@ -1065,6 +1065,56 @@ describe('dev command guards', () => {
     }
   })
 
+  it('replaces a dangling web EE symlink instead of failing with EEXIST', async () => {
+    const root = fakeRepo(true)
+    fs.mkdirSync(path.join(tmp, 'ee', 'apps', 'api', 'ee'), { recursive: true })
+    fs.mkdirSync(path.join(tmp, 'ee', 'apps', 'web', 'ee'), { recursive: true })
+    for (const d of ['apps/web/node_modules', 'apps/collab/node_modules', 'apps/api/.venv']) {
+      fs.mkdirSync(path.join(root, d), { recursive: true })
+    }
+    fs.symlinkSync(path.join(tmp, 'gone', 'ee'), path.join(root, 'apps', 'web', 'ee'))
+    process.chdir(root)
+    const cp = await import('node:child_process')
+    const spawnMock = cp.spawn as unknown as ReturnType<typeof vi.fn>
+    spawnMock.mockClear()
+    const sigintBefore = process.listenerCount('SIGINT')
+    try {
+      const promise = devCommand({ ee: true, adminEmail: 'a@b.dev', adminPassword: 'pw' })
+      promise.catch(() => {})
+      await new Promise((r) => setTimeout(r, 150))
+      expect(fs.realpathSync(path.join(root, 'apps', 'web', 'ee')))
+        .toBe(fs.realpathSync(path.join(tmp, 'ee', 'apps', 'web', 'ee')))
+    } finally {
+      for (const h of process.listeners('SIGINT').slice(sigintBefore)) process.removeListener('SIGINT', h as never)
+      for (const h of process.listeners('SIGTERM')) process.removeListener('SIGTERM', h as never)
+    }
+  })
+
+  it('symlinks the web EE folder and shares web node_modules with the EE checkout', async () => {
+    const root = fakeRepo(true)
+    fs.mkdirSync(path.join(tmp, 'ee', 'apps', 'api', 'ee'), { recursive: true })
+    fs.mkdirSync(path.join(tmp, 'ee', 'apps', 'web', 'ee'), { recursive: true })
+    for (const d of ['apps/web/node_modules', 'apps/collab/node_modules', 'apps/api/.venv']) {
+      fs.mkdirSync(path.join(root, d), { recursive: true })
+    }
+    process.chdir(root)
+    const cp = await import('node:child_process')
+    const spawnMock = cp.spawn as unknown as ReturnType<typeof vi.fn>
+    spawnMock.mockClear()
+    const sigintBefore = process.listenerCount('SIGINT')
+    try {
+      const promise = devCommand({ ee: true, adminEmail: 'a@b.dev', adminPassword: 'pw' })
+      promise.catch(() => {})
+      await new Promise((r) => setTimeout(r, 150))
+      expect(fs.lstatSync(path.join(root, 'apps', 'web', 'ee')).isSymbolicLink()).toBe(true)
+      expect(fs.realpathSync(path.join(tmp, 'ee', 'apps', 'web', 'node_modules')))
+        .toBe(fs.realpathSync(path.join(root, 'apps', 'web', 'node_modules')))
+    } finally {
+      for (const h of process.listeners('SIGINT').slice(sigintBefore)) process.removeListener('SIGINT', h as never)
+      for (const h of process.listeners('SIGTERM')) process.removeListener('SIGTERM', h as never)
+    }
+  })
+
   it('runs in OSS mode when --ee is passed but no ee folder exists', async () => {
     const root = fakeRepo(true)
     for (const d of ['apps/web/node_modules', 'apps/collab/node_modules', 'apps/api/.venv']) {

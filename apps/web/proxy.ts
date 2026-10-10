@@ -11,7 +11,7 @@ import { isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
 //
 //   1. multi (EE-only):   slug.{LEARNHOUSE_DOMAIN} subdomain detection +
 //                         per-org custom domains. The detection logic lives in
-//                         `./ee/services/tenancy/...` and is dynamic-imported
+//                         `@ee/services/tenancy/...` and is dynamic-imported
 //                         here, so OSS proxy.ts never references subdomain or
 //                         custom-domain helpers directly.
 //   2. single (localhost): always serves the default org. Host-only cookies.
@@ -88,7 +88,7 @@ async function resolveTenant(req: NextRequest, instance: InstanceInfo): Promise<
   }
 
   try {
-    const mod = await import('./ee/services/tenancy/resolveMulti.middleware')
+    const mod = await import('@ee/services/tenancy/resolveMulti.middleware')
     return await mod.resolveMultiFromRequest(req, instance)
   } catch (err) {
     console.warn('[proxy] EE multi-tenant resolver unavailable; falling back to default org', err)
@@ -103,7 +103,7 @@ async function resolveTenant(req: NextRequest, instance: InstanceInfo): Promise<
 async function hostIsCustomDomain(host: string | null, instance: InstanceInfo): Promise<boolean> {
   if (instance.tenancy === 'single' || !host) return false
   try {
-    const mod = await import('./ee/services/tenancy/resolveMulti.middleware')
+    const mod = await import('@ee/services/tenancy/resolveMulti.middleware')
     return mod.isCustomDomain(host, instance.frontend_domain)
   } catch {
     return false
@@ -117,7 +117,7 @@ async function hostIsCustomDomain(host: string | null, instance: InstanceInfo): 
 async function isAdminSubdomain(host: string | null, instance: InstanceInfo): Promise<boolean> {
   if (instance.tenancy === 'single' || !host) return false
   try {
-    const mod = await import('./ee/services/tenancy/resolveMulti.middleware')
+    const mod = await import('@ee/services/tenancy/resolveMulti.middleware')
     return mod.extractOrgSubdomain(host, instance.frontend_domain) === 'admin'
       // The EE helper filters out reserved subdomains; check raw too:
       || host.split(':')[0] === `admin.${instance.frontend_domain.split(':')[0]}`

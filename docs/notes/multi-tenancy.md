@@ -186,7 +186,7 @@ For non-org URLs use `getUriWithoutOrg(path)`. For URLs that must always point a
 
 Do not write code like `` `${slug}.${domain}` `` in a component. The only places that should construct subdomain URLs are:
 - `services/config/config.ts:getUriWithOrg` (frontend)
-- `ee/services/tenancy/*` (EE-only)
+- the Enterprise tenancy resolver (EE-only)
 - `src/services/email/utils.py:get_org_signup_base_url` (backend)
 
 New callers should use `getUriWithOrg(slug, path)`, which handles both modes.
@@ -202,13 +202,9 @@ New callers should use `getUriWithOrg(slug, path)`, which handles both modes.
 
 ## EE / OSS code split
 
-The OSS frontend never imports subdomain or custom-domain logic directly. All of that lives under `learnhouse/apps/web/ee/services/tenancy/`:
+The OSS frontend never imports subdomain or custom-domain logic directly. That logic is Enterprise-only and is imported through the `@ee/services/tenancy/*` alias, which exposes two entry points: `resolveMulti.middleware` (Next.js middleware, Edge Runtime) and `resolveMulti.server` (Server Components, Node runtime).
 
-- `core.ts`: pure logic (subdomain extraction, custom-domain detection, full priority chain). Runtime-agnostic.
-- `resolveMulti.middleware.ts`: entry point for the Next.js middleware (Edge Runtime). Takes a `NextRequest`.
-- `resolveMulti.server.ts`: entry point for Server Components (Node runtime). Takes `next/headers`.
-
-The OSS `proxy.ts` and `services/org/orgResolution.ts` reach these via dynamic `import()` wrapped in try/catch. If EE is unavailable (folder removed at deploy time, or `LEARNHOUSE_DISABLE_EE=1`) the resolver falls back to the default org and logs a warning.
+When EE is not part of the build (or `LEARNHOUSE_DISABLE_EE=1` / `LEARNHOUSE_PUBLIC=true`), `@ee/*` resolves to the stubs in `apps/web/ee-stub`, which always return the default org. The dynamic `import()` calls in `proxy.ts` and `services/org/orgResolution.ts` keep their try/catch, so a resolver that throws at runtime also falls back to the default org.
 
 The backend EE/OSS gate is `is_multi_org_allowed()` in `src/core/ee_hooks.py`. It returns true only when the deployment mode is `ee` or `saas`. The `tenancy=multi` boot validation already requires the EE folder to be present.
 
@@ -297,9 +293,7 @@ Backend:
 
 Frontend:
 - `learnhouse/apps/web/proxy.ts`: middleware (resolveTenant)
-- `learnhouse/apps/web/ee/services/tenancy/core.ts`: pure resolver logic
-- `learnhouse/apps/web/ee/services/tenancy/resolveMulti.middleware.ts`: Edge entry
-- `learnhouse/apps/web/ee/services/tenancy/resolveMulti.server.ts`: Node entry
+- `learnhouse/apps/web/ee-stub/services/tenancy/*`: OSS stand-ins for the EE resolver entry points
 - `learnhouse/apps/web/services/org/orgResolution.ts`: server-side org resolution
 - `learnhouse/apps/web/services/auth/cookies.ts`: cookie options
 - `learnhouse/apps/web/services/config/config.ts`: `getTenancy`, `getUriWithOrg`
