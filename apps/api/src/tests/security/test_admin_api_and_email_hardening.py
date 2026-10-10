@@ -27,6 +27,19 @@ from src.services.orgs.auth_policy import SESSION_NOT_BOUND_CODE, evaluate_org_a
 from src.services.orgs.join_notifications import notify_user_joined_org
 
 
+# Admin API endpoints enforce the token's rights buckets; these fixtures exercise
+# the endpoints' own logic, so the token holds every bucket they check.
+FULL_ADMIN_API_RIGHTS = {
+    bucket: {
+        "action_create": True,
+        "action_read": True,
+        "action_update": True,
+        "action_delete": True,
+    }
+    for bucket in ("users", "roles", "courses", "certifications", "usergroups")
+}
+
+
 @pytest.fixture
 def token(org, admin_user):
     return APITokenUser(
@@ -34,6 +47,7 @@ def token(org, admin_user):
         user_uuid="apitoken_hardening",
         username="api_token",
         org_id=org.id,
+        rights=FULL_ADMIN_API_RIGHTS,
         token_name="t",
         created_by_user_id=admin_user.id,
     )

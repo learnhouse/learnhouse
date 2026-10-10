@@ -77,6 +77,19 @@ from src.services.admin.admin import (
 )
 
 
+# Admin API endpoints enforce the token's rights buckets; these fixtures exercise
+# the endpoints' own logic, so the token holds every bucket they check.
+FULL_ADMIN_API_RIGHTS = {
+    bucket: {
+        "action_create": True,
+        "action_read": True,
+        "action_update": True,
+        "action_delete": True,
+    }
+    for bucket in ("users", "roles", "courses", "certifications", "usergroups")
+}
+
+
 # ── Fixtures ────────────────────────────────────────────────────────────────
 
 
@@ -203,6 +216,7 @@ def token_user(org, user):
         user_uuid="apitoken_test123",
         username="api_token",
         org_id=org.id,
+        rights=FULL_ADMIN_API_RIGHTS,
         token_name="Test Token",
         created_by_user_id=user.id,
     )
@@ -215,6 +229,7 @@ def other_org_token(other_org):
         user_uuid="apitoken_other456",
         username="api_token",
         org_id=other_org.id,
+        rights=FULL_ADMIN_API_RIGHTS,
         token_name="Other Org Token",
         created_by_user_id=99,
     )
@@ -837,7 +852,11 @@ class TestCompleteCourse:
     async def test_no_activities(self, mock_track, mock_cert, token_user, user, course, db, mock_request):
         result = await complete_course(mock_request, token_user, user.id, "course_test123", db)
         assert result["completed_count"] == 0
-        assert result["detail"] == "No activities in course"
+        assert result["total_activities"] == 0
+        assert result["course_completed"] is False
+        # The router's response model must accept the empty-course result.
+        from src.routers.admin import CourseCompletionResponse
+        CourseCompletionResponse(**result)
         mock_cert.assert_not_awaited()
         mock_track.assert_not_awaited()
 
@@ -1091,8 +1110,8 @@ class TestIssueUserToken:
 
     @pytest.fixture
     def reader_token(self, token_user):
-        """Impersonation needs the token to actually hold users.action_read."""
-        token_user.rights = {"users": {"action_read": True}}
+        """Impersonation needs the token to actually hold users.action_update."""
+        token_user.rights = {"users": {"action_read": True, "action_update": True}}
         return token_user
 
     @pytest.fixture
@@ -1585,6 +1604,7 @@ class TestRemoveUserFromOrg:
             user_uuid="apitoken_admin",
             username="api_token",
             org_id=org.id,
+            rights=FULL_ADMIN_API_RIGHTS,
             token_name="Admin Token",
             created_by_user_id=org_admin_user.id,
         )
@@ -2244,7 +2264,9 @@ class TestChangeUserRole:
     async def test_cannot_demote_last_admin(self, org, org_admin_user, student_role, admin_role, db):
         admin_token = APITokenUser(
             id=77, user_uuid="apitoken_admin", username="api_token",
-            org_id=org.id, token_name="Admin Token",
+            org_id=org.id,
+            rights=FULL_ADMIN_API_RIGHTS,
+            token_name="Admin Token",
             created_by_user_id=org_admin_user.id,
         )
         with pytest.raises(HTTPException) as exc:

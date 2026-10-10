@@ -1,7 +1,27 @@
+import json
 from typing import Optional, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from src.services.ai.schemas.limits import AI_CONTEXT_MAX_CHARS, AI_MESSAGE_MAX_CHARS
+from src.services.ai.schemas.limits import (
+    AI_CONTEXT_MAX_CHARS,
+    AI_EDITOR_CONTENT_MAX_CHARS,
+    AI_MESSAGE_MAX_CHARS,
+)
+
+
+def _check_editor_content_size(value: Any) -> Any:
+    """Reject editor content whose JSON form exceeds the prompt ceiling."""
+    if value is None:
+        return value
+    try:
+        size = len(json.dumps(value, ensure_ascii=False, default=str))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("current_content must be JSON-serializable") from exc
+    if size > AI_EDITOR_CONTENT_MAX_CHARS:
+        raise ValueError(
+            f"current_content is too large ({size} > {AI_EDITOR_CONTENT_MAX_CHARS} characters)"
+        )
+    return value
 
 
 class StartEditorAIChatSession(BaseModel):
@@ -12,6 +32,8 @@ class StartEditorAIChatSession(BaseModel):
     selected_text: Optional[str] = Field(default=None, max_length=AI_CONTEXT_MAX_CHARS)
     cursor_position: Optional[int] = None  # Cursor position in editor
 
+    _cap_current_content = field_validator("current_content")(_check_editor_content_size)
+
 
 class SendEditorAIChatMessage(BaseModel):
     """Request to send a message in an existing editor AI chat session"""
@@ -21,6 +43,8 @@ class SendEditorAIChatMessage(BaseModel):
     current_content: Any  # TipTap JSON content
     selected_text: Optional[str] = Field(default=None, max_length=AI_CONTEXT_MAX_CHARS)
     cursor_position: Optional[int] = None  # Cursor position in editor
+
+    _cap_current_content = field_validator("current_content")(_check_editor_content_size)
 
 
 class EditorModificationRequest(BaseModel):

@@ -8,7 +8,7 @@ from src.db.usergroups import UserGroupRead
 from src.db.organization_config import OrganizationConfig
 
 if TYPE_CHECKING:
-    from src.db.users import UserRead
+    from src.db.users import OrgMemberUserRead
 
 
 class OrganizationBase(SQLModel):
@@ -81,7 +81,9 @@ class OrganizationRead(OrganizationBase):
 
 
 class OrganizationUser(BaseModel):
-    user: "UserRead"
+    # Org-scoped member view: never the full UserRead (no is_superadmin, and
+    # extra_metadata limited to the viewing org's signup fields).
+    user: "OrgMemberUserRead"
     role: RoleRead
     usergroups: List[UserGroupRead] = []
     joined_at: Optional[str] = None
@@ -92,7 +94,7 @@ class OrganizationUser(BaseModel):
 
 # Rebuild models to resolve forward references after all classes are defined
 def rebuild_models():
-    from src.db.users import UserRead  # noqa: F401
+    from src.db.users import OrgMemberUserRead  # noqa: F401
     OrganizationUser.model_rebuild()
 
 rebuild_models()

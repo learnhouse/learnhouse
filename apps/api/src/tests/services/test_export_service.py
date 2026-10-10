@@ -618,3 +618,42 @@ class TestStoredZipInfo:
 
         assert info.filename == "courses/course-1/thumbnails/thumb.jpg"
         assert info.compress_type == zipfile.ZIP_STORED
+
+    def test_export_leaves_out_submissions_and_answer_keys(self):
+        """Learner submissions and instructor solutions never enter the package;
+        regular content and task reference files do."""
+        from io import BytesIO
+
+        base = "content/orgs/org-1/courses/course-1/activities/activity-1"
+        files = {
+            f"{base}/video.mp4": b"video",
+            f"{base}/assignments/a1/solution/key.pdf": b"KEY",
+            f"{base}/assignments/a1/tasks/t1/handout.pdf": b"handout",
+            f"{base}/assignments/a1/tasks/t1/subs/learner.pdf": b"SUB",
+        }
+
+        def _walk_directory(source_path: str):
+            return [
+                (base, ["assignments"], ["video.mp4"]),
+                (f"{base}/assignments/a1/solution", [], ["key.pdf"]),
+                (f"{base}/assignments/a1/tasks/t1", ["subs"], ["handout.pdf"]),
+                (f"{base}/assignments/a1/tasks/t1/subs", [], ["learner.pdf"]),
+            ]
+
+        buffer = BytesIO()
+        with patch(
+            "src.services.courses.transfer.export_service.walk_directory",
+            side_effect=_walk_directory,
+        ), patch(
+            "src.services.courses.transfer.export_service.read_file_content",
+            side_effect=lambda path: files.get(path, b""),
+        ):
+            with zipfile.ZipFile(buffer, "w") as zip_file:
+                _export_directory_to_zip(zip_file, base, "files")
+
+        with zipfile.ZipFile(buffer) as zip_file:
+            names = set(zip_file.namelist())
+        assert names == {
+            "files/video.mp4",
+            "files/assignments/a1/tasks/t1/handout.pdf",
+        }

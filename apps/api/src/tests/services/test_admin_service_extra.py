@@ -48,6 +48,19 @@ from src.services.admin.admin import (
 )
 
 
+# Admin API endpoints enforce the token's rights buckets; these fixtures exercise
+# the endpoints' own logic, so the token holds every bucket they check.
+FULL_ADMIN_API_RIGHTS = {
+    bucket: {
+        "action_create": True,
+        "action_read": True,
+        "action_update": True,
+        "action_delete": True,
+    }
+    for bucket in ("users", "roles", "courses", "certifications", "usergroups")
+}
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -59,7 +72,7 @@ def _make_token_user(org_id: int) -> APITokenUser:
         user_uuid="api_token_user",
         username="api_token_user",
         org_id=org_id,
-        rights={},
+        rights=FULL_ADMIN_API_RIGHTS,
         token_name="test-token",
         created_by_user_id=1,
     )

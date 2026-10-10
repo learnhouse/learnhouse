@@ -512,6 +512,13 @@ async def validate_api_token_for_auth(
     return api_token
 
 
+# Token rights buckets that roles don't have, and the role bucket that caps them.
+_TOKEN_BUCKET_CAPS = {
+    "certifications": "courses",
+    "payments": "organizations",
+}
+
+
 async def validate_rights_structure(
     rights: Optional[Rights | dict],
     user_rights: Optional[Rights | dict],
@@ -557,8 +564,11 @@ async def validate_rights_structure(
         user_rights_dict = user_rights.model_dump() if isinstance(user_rights, Rights) else user_rights
 
         for right_key, right_permissions in rights_dict.items():
-            if right_key in user_rights_dict:
-                user_right_permissions = user_rights_dict[right_key]
+            # Token-only buckets have no role counterpart; cap them by the
+            # closest role bucket so they can't be granted unchecked.
+            cap_key = right_key if right_key in user_rights_dict else _TOKEN_BUCKET_CAPS.get(right_key)
+            if cap_key in user_rights_dict:
+                user_right_permissions = user_rights_dict[cap_key]
 
                 for perm_key, perm_value in right_permissions.items():
                     if isinstance(perm_value, bool) and perm_value:
