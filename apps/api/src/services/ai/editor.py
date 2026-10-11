@@ -11,7 +11,7 @@ from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import enforce_org_mfa, is_org_member
 from src.security.rbac import check_resource_access, AccessAction
 from src.db.courses.activities import Activity, ActivityRead
-from src.services.ai.base import get_chat_session_history
+from src.services.ai.base import chat_session_belongs_to_user, get_chat_session_history
 from src.services.ai.llm import model_for_tier
 from src.services.ai.schemas.editor import (
     StartEditorAIChatSession,
@@ -41,7 +41,7 @@ def _safe_heading_level(attrs: Any) -> int:
 
 
 def _node_attrs(node: Any) -> dict:
-    """Read a node's ``attrs`` defensively — the document is free-form JSON."""
+    """Read a node's ``attrs`` defensively; the document is free-form JSON."""
     attrs = node.get('attrs') if isinstance(node, dict) else None
     return attrs if isinstance(attrs, dict) else {}
 
@@ -213,7 +213,8 @@ async def editor_ai_start_chat_session_stream(
     # Get course authors
     from src.db.resource_authors import ResourceAuthor
     from src.db.users import User
-    from src.services.courses.courses import AuthorWithRole, UserRead
+    from src.db.courses.courses import AuthorWithRole
+    from src.db.users import UserReadAuthor
 
     authors_statement = (
         select(ResourceAuthor, User)
@@ -225,7 +226,7 @@ async def editor_ai_start_chat_session_stream(
 
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -327,7 +328,8 @@ async def editor_ai_send_message_stream(
     # Get course authors
     from src.db.resource_authors import ResourceAuthor
     from src.db.users import User
-    from src.services.courses.courses import AuthorWithRole, UserRead
+    from src.db.courses.courses import AuthorWithRole
+    from src.db.users import UserReadAuthor
 
     authors_statement = (
         select(ResourceAuthor, User)
@@ -339,7 +341,7 @@ async def editor_ai_send_message_stream(
 
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -361,6 +363,13 @@ async def editor_ai_send_message_stream(
     await _authorize_editor_ai_access(
         course, org.id, current_user, db_session, request
     )
+
+    # The session uuid is echoed to the client in every SSE event; only the
+    # caller's own session may be continued (404 before any credit spend).
+    if not chat_session_belongs_to_user(
+        chat_session_object.aichat_uuid, resolve_acting_user_id(current_user)
+    ):
+        raise HTTPException(status_code=404, detail="Chat session not found")
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     # Resolve through helper so API tokens bucket under their creator rather

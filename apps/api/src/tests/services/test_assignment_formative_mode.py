@@ -2,21 +2,21 @@
 
 Covers the "dépôt d'un document qui débloque un corrigé, sans notation" flow:
 
-- ``_student_may_see_solution`` — the reveal rule per ``solution_reveal`` mode,
+- ``_student_may_see_solution``: the reveal rule per ``solution_reveal`` mode,
   measured against the reader's own submission, including the retry guard and
   the anonymous reader.
-- ``read_assignment`` / ``read_assignment_from_activity_uuid`` — the corrigé is
+- ``read_assignment`` / ``read_assignment_from_activity_uuid``: the corrigé is
   stripped from the payload for a learner who has not unlocked it, and the
   ``has_solution`` flag still tells the UI one exists.
-- ``create_assignment`` / ``update_assignment`` — formative mode forces
+- ``create_assignment`` / ``update_assignment``: formative mode forces
   auto-grading off.
-- ``create_assignment_submission`` — a formative submission stays SUBMITTED and
+- ``create_assignment_submission``: a formative submission stays SUBMITTED and
   is never auto-graded.
 - ``_apply_grade_and_finalize`` / ``grade_assignment_submission`` /
-  ``get_grade_assignment_submission`` — grading a formative assignment, and
+  ``get_grade_assignment_submission``: grading a formative assignment, and
   reading a grade off one, are both refused.
-- ``retry_assignment_submission`` — retries work from SUBMITTED when formative.
-- ``are_course_assignments_passed`` — a handed-in formative assignment satisfies
+- ``retry_assignment_submission``: retries work from SUBMITTED when formative.
+- ``are_course_assignments_passed``: a handed-in formative assignment satisfies
   the certificate gate instead of blocking it forever.
 - the solution-file upload / detach services.
 """
@@ -262,7 +262,7 @@ class TestStudentMaySeeSolution:
         )
         assert await _student_may_see_solution(regular_user, a, db) is False
 
-        # Attempt cap reached — nothing left to game, so it unlocks.
+        # Attempt cap reached: nothing left to game, so it unlocks.
         sub.attempt_number = 2
         db.add(sub)
         await db.commit()
@@ -271,7 +271,7 @@ class TestStudentMaySeeSolution:
     async def test_formative_assignment_ignores_the_retry_guard(
         self, db, org, course, chapter, activity, regular_user
     ):
-        """Read the corrigé, try again — that IS the formative loop."""
+        """Read the corrigé, try again: that IS the formative loop."""
         a = await _make_formative(
             db, org, course, chapter, activity, allow_retries=True, max_retries=0
         )
@@ -374,7 +374,7 @@ class TestSolutionVisibilityOnRead:
         self, mock_request, db, org, course, chapter, activity, regular_user
     ):
         # The course-wide list is reachable with plain course READ, so it has
-        # to apply the same reveal rule as the single read — per assignment,
+        # to apply the same reveal rule as the single read, per assignment,
         # since the learner may have handed in one and not the other.
         handed_in = await _make_formative(
             db, org, course, chapter, activity, uuid="assignment_formative_a"
@@ -599,7 +599,7 @@ class TestGradingRefused:
     async def test_reading_the_grade_is_refused_rather_than_returning_zero(
         self, mock_request, db, org, course, chapter, activity, regular_user, admin_user
     ):
-        """A computed 0 would render as "0/100 — not passed" for work that was
+        """A computed 0 would render as "0/100 (not passed)" for work that was
         never meant to be scored."""
         a = await _make_formative(db, org, course, chapter, activity)
         await _make_submission(

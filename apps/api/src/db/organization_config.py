@@ -150,7 +150,7 @@ class SecurityAdminToggle(BaseModel):
 
     # Which sign-in methods this org accepts. Members of the org must have
     # authenticated with one of these to access it. The default lists all
-    # methods, i.e. no restriction — the policy is a no-op until an admin removes
+    # methods, i.e. no restriction; the policy is a no-op until an admin removes
     # one. Values are drawn from
     # src.security.session_context.POLICY_AUTH_METHODS:
     # "password" | "magic_login" | "google" | "sso". Empty list is treated as
@@ -227,7 +227,7 @@ class GeneralCustomization(BaseModel):
     default_language: str = "en"
     # Display name on transactional email from this org. The From ADDRESS is
     # never configurable (it stays the platform's verified sending domain, so
-    # DKIM keeps aligning) — only the name a recipient sees. Empty means "use
+    # DKIM keeps aligning), only the name a recipient sees. Empty means "use
     # the platform default".
     email_sender_name: str = ""
 
@@ -285,7 +285,7 @@ class SignupFieldItem(BaseModel):
     order: int = 0
     help_text: str = ""
     placeholder: str = ""
-    # select only — the permitted values. A submitted value outside this list is
+    # select only: the permitted values. A submitted value outside this list is
     # rejected server-side, so it doubles as the validation allowlist.
     options: list[str] = Field(default_factory=list)
     # text/textarea only.
@@ -382,7 +382,7 @@ class OrganizationConfigV2Base(BaseModel):
 
 
 # ============================================================================
-# SQLModel table (unchanged — config is a JSON blob)
+# SQLModel table (unchanged; config is a JSON blob)
 # ============================================================================
 
 class OrganizationConfig(SQLModel, table=True):

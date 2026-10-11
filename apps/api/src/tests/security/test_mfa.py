@@ -45,7 +45,7 @@ class TestSecretEncryption:
 
     def test_encryption_is_non_deterministic(self):
         # Fernet embeds a random IV, so two encryptions of the same secret must
-        # not be byte-identical — otherwise equal ciphertexts would leak that
+        # not be byte-identical; otherwise equal ciphertexts would leak that
         # two users share a secret.
         secret = generate_totp_secret()
         assert encrypt_secret(secret) != encrypt_secret(secret)
@@ -164,7 +164,7 @@ async def _enroll_confirmed(db, user_id, last_step=None):
 @pytest.mark.asyncio
 class TestTimestepClaim:
     """A code is single-use because the timestep is claimed by an atomic,
-    conditional UPDATE — not read, checked, then written. These pin that a
+    conditional UPDATE, not read, checked, then written. These pin that a
     second claim of the same (or an older) step loses, which is what stops two
     concurrent logins from both minting a session off one intercepted code.
     """
@@ -174,7 +174,7 @@ class TestTimestepClaim:
         step = int(time.time()) // TOTP_PERIOD_SECONDS
 
         assert await claim_totp_timestep(db, regular_user.id, step) is True
-        # Same step again — already burned.
+        # Same step again: already burned.
         assert await claim_totp_timestep(db, regular_user.id, step) is False
 
     async def test_older_step_cannot_be_claimed_after_a_newer_one(self, db, regular_user):
@@ -201,7 +201,7 @@ class TestTimestepClaim:
         row = (await db.execute(select(UserMFA).where(UserMFA.user_id == regular_user.id))).scalars().first()
         assert await verify_and_consume_totp(db, regular_user.id, secret, code, row.last_used_timestep) is False
 
-    # NB: true parallel racing is not exercised here — the shared test session is
+    # NB: true parallel racing is not exercised here. The shared test session is
     # a single connection (SQLAlchemy forbids concurrent ops on one AsyncSession,
     # and separate connections to in-memory SQLite would see different DBs). The
     # single-use guarantee is enforced by the conditional UPDATE at the DB layer;

@@ -27,7 +27,7 @@ export async function updateAssignment(
   return res
 }
 
-// Model answer ("corrigé") document for the whole assignment. Instructor only —
+// Model answer ("corrigé") document for the whole assignment. Instructor only:
 // the API withholds the stored filename from learners until the assignment's
 // reveal rule unlocks it.
 export async function updateAssignmentSolutionFile(
@@ -179,6 +179,19 @@ export async function updateAssignmentTask(
   return res
 }
 
+export async function reorderAssignmentTasks(
+  taskUUIDs: string[],
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/order`,
+    RequestBodyWithAuthHeader('PUT', { task_uuids: taskUUIDs }, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function deleteAssignmentTask(
   assignmentTaskUUID: string,
   assignmentUUID: string,
@@ -279,7 +292,7 @@ export async function putFinalGrade(
   access_token: string,
   overall_feedback?: string | null
 ) {
-  // Only send a body when the caller actually passed feedback — otherwise the
+  // Only send a body when the caller actually passed feedback; otherwise the
   // backend leaves any existing note alone.
   const body =
     overall_feedback !== undefined && overall_feedback !== null

@@ -39,7 +39,7 @@ def _fake_response(status_code: int = 200):
 
 
 # ---------------------------------------------------------------------------
-# _get_loops_client — construction, memoization, gating
+# _get_loops_client: construction, memoization, gating
 # ---------------------------------------------------------------------------
 
 
@@ -76,7 +76,7 @@ def test_get_loops_client_none_when_key_missing(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# close_loops_client — shutdown hook (covers lines 77-79)
+# close_loops_client: shutdown hook (covers lines 77-79)
 # ---------------------------------------------------------------------------
 
 
@@ -99,14 +99,14 @@ async def test_close_loops_client_closes_and_resets(monkeypatch):
 
 
 async def test_close_loops_client_noop_when_unset():
-    # No client built — close is a harmless no-op (guards the `if` at line 77).
+    # No client built, so close is a harmless no-op (guards the `if` at line 77).
     assert loops_mod._loops_client is None
     await loops_mod.close_loops_client()
     assert loops_mod._loops_client is None
 
 
 # ---------------------------------------------------------------------------
-# _record_org_admin — optional-field branches + event-without-org_slug
+# _record_org_admin: optional-field branches + event-without-org_slug
 # ---------------------------------------------------------------------------
 
 
@@ -166,7 +166,7 @@ async def test_record_org_admin_includes_only_first_name(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# _record_org_admin — >=400 warning branches (covers lines 134 and 149)
+# _record_org_admin: >=400 warning branches (covers lines 134 and 149)
 # ---------------------------------------------------------------------------
 
 
@@ -227,7 +227,7 @@ async def test_record_org_admin_only_event_errors(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# _record_org_admin — early return when the client resolves to None
+# _record_org_admin: early return when the client resolves to None
 # ---------------------------------------------------------------------------
 
 

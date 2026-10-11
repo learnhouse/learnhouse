@@ -20,7 +20,7 @@ from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
 from src.security.auth import resolve_acting_user_id
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.security.rbac import AccessAction, check_resource_access
-from src.security.org_auth import require_org_membership
+from src.security.org_auth import is_org_admin, is_org_member, require_org_create_permission, require_org_membership
 from src.services.utils.upload_content import upload_file
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -33,8 +33,7 @@ async def create_board(
     db_session: AsyncSession,
 ) -> BoardRead:
     await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
-
-    await require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await require_org_create_permission(current_user, org_id, db_session, "boards")
 
     board = Board(
         **board_object.model_dump(),
@@ -100,7 +99,7 @@ async def get_boards_by_org(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ) -> List[BoardRead]:
-    # Require org membership before listing boards — prevents unauthenticated
+    # Require org membership before listing boards; prevents unauthenticated
     # and cross-org enumeration of boards.
     await require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
@@ -110,6 +109,18 @@ async def get_boards_by_org(
         .order_by(Board.creation_date.desc())
     )
     boards = (await db_session.execute(statement)).scalars().all()
+    # Each board decides who may see it (public, member, author), the same
+    # rule as opening one directly. Org admins see all of them.
+    if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
+        visible = []
+        for b in boards:
+            decision = await check_resource_access(
+                request, db_session, current_user, b.board_uuid, AccessAction.READ,
+                raise_on_deny=False,
+            )
+            if decision.allowed:
+                visible.append(b)
+        boards = visible
     if not boards:
         return []
 
@@ -160,7 +171,7 @@ async def duplicate_board(
     # Also need create permission
     await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
 
-    await require_org_membership(resolve_acting_user_id(current_user), source.org_id, db_session)
+    await require_org_create_permission(current_user, source.org_id, db_session, "boards")
 
     board = Board(
         org_id=source.org_id,
@@ -365,14 +376,16 @@ async def check_board_membership(
 ) -> BoardMemberRead:
     # Single joined query: Board + BoardMember + User in one round-trip
     result = (await db_session.execute(
-        select(BoardMember, User)
+        select(BoardMember, User, Board.org_id)
         .join(Board, BoardMember.board_id == Board.id)
         .join(User, BoardMember.user_id == User.id)
         .where(Board.board_uuid == board_uuid, BoardMember.user_id == current_user.id)
     )).first()
 
-    if result:
-        member, user = result
+    # A member row only counts while the user still belongs to the board's org;
+    # otherwise fall through to the same RBAC check as any other visitor.
+    if result and await is_org_member(current_user.id, result[2], db_session):
+        member, user, _ = result
         return BoardMemberRead(
             id=member.id,
             board_id=member.board_id,
@@ -389,7 +402,7 @@ async def check_board_membership(
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
-    # Not a direct member — fall back to RBAC so public boards, linked usergroups,
+    # Not a direct member: fall back to RBAC so public boards, linked usergroups,
     # resource authors, and org admins can still join the collab session as viewers.
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
 
@@ -415,6 +428,12 @@ async def get_board_members(
 ) -> List[BoardMemberRead]:
     board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
+    # Member emails are for whoever manages the board, not every viewer
+    # (a public board is readable anonymously).
+    can_manage = (await check_resource_access(
+        request, db_session, current_user, board.board_uuid, AccessAction.UPDATE,
+        raise_on_deny=False,
+    )).allowed
 
     members = (await db_session.execute(
         select(BoardMember).where(BoardMember.board_id == board.id)
@@ -435,7 +454,7 @@ async def get_board_members(
             role=m.role,
             creation_date=m.creation_date,
             username=users[m.user_id].username if m.user_id in users else None,
-            email=users[m.user_id].email if m.user_id in users else None,
+            email=users[m.user_id].email if can_manage and m.user_id in users else None,
             avatar_image=users[m.user_id].avatar_image if m.user_id in users else None,
             user_uuid=users[m.user_id].user_uuid if m.user_id in users else None,
         )

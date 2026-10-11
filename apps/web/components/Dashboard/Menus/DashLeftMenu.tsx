@@ -192,7 +192,7 @@ function DashLeftMenu() {
 
   const plan = usePlan()
   const mode = getDeploymentMode()
-  // Only org managers (admins/superadmins) see billing surfaces — non-admins
+  // Only org managers (admins/superadmins) see billing surfaces; non-admins
   // shouldn't manage the plan/subscription.
   const { canManageOrg } = useAdminStatus()
 
@@ -288,7 +288,7 @@ function DashLeftMenu() {
           </button>
         )}
 
-        {/* Onboarding progress reuses this header's bottom border as its track —
+        {/* Onboarding progress reuses this header's bottom border as its track,
             a neon purple gradient that glows out from the border. */}
         {showOnboarding && (
           <>
@@ -309,7 +309,7 @@ function DashLeftMenu() {
         )}
       </div>
 
-      {/* Search trigger — replaced by the onboarding progress in this slot until
+      {/* Search trigger, replaced by the onboarding progress in this slot until
           setup is complete (then the search box returns). */}
       <div className={cn('px-3 shrink-0', showOnboarding ? 'pt-2' : 'pt-3')}>
         {showOnboarding ? (
@@ -319,7 +319,7 @@ function DashLeftMenu() {
         )}
       </div>
 
-      {/* Main Navigation — scrolls once the list outgrows the viewport.
+      {/* Main Navigation: scrolls once the list outgrows the viewport.
           Centered with `my-auto`, not `justify-center`: the latter would push
           the first items above scroll origin, out of reach. No
           `overscroll-contain`: it stops the wheel from scrolling the page
@@ -914,7 +914,7 @@ function DashLeftMenu() {
         </AdminAuthorization>
       </div>
 
-      {/* Free-plan upgrade box — replaces the old full-width top banner.
+      {/* Free-plan upgrade box: replaces the old full-width top banner.
           Sits in the sidebar's empty space; multi-org / SaaS, free plan only.
           Twinkling stars on top; on hover it reveals the premium features the
           org is missing, the gold glow swells and the button sweeps a shimmer. */}
@@ -924,7 +924,7 @@ function DashLeftMenu() {
           onHoverStart={() => setUpgradeHovered(true)}
           onHoverEnd={() => setUpgradeHovered(false)}
         >
-          {/* Blueprint grid — same motif as the login/home pages, fading in
+          {/* Blueprint grid, same motif as the login/home pages, fading in
               from the bottom. No card/border; it blends into the sidebar. */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -939,7 +939,7 @@ function DashLeftMenu() {
               WebkitMaskImage: 'linear-gradient(to top, black 0%, transparent 80%)',
             }}
           />
-          {/* Gold glow rising from the bottom — swells on hover. */}
+          {/* Gold glow rising from the bottom; swells on hover. */}
           <motion.div
             className="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none"
             initial={false}
@@ -950,7 +950,7 @@ function DashLeftMenu() {
                 'radial-gradient(120% 90% at 50% 100%, rgba(250,204,21,0.12), rgba(255,255,255,0.05) 38%, transparent 72%)',
             }}
           />
-          {/* Night-sky starfield — scattered points of light that twinkle and
+          {/* Night-sky starfield: scattered points of light that twinkle and
               brighten on hover. The single amber "north star" is the plan you're
               reaching for; the white stars are the features it unlocks below. */}
           <div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none">
@@ -993,7 +993,7 @@ function DashLeftMenu() {
               {t('plan.free_plan_cta', { defaultValue: 'Unlock the full platform' })}
             </p>
 
-            {/* Stable one-line pitch — no layout shift on hover; hover only
+            {/* Stable one-line pitch: no layout shift on hover; hover only
                 intensifies the gold glow / starfield / button halo. */}
             <p className="mt-1 text-[11px] leading-relaxed text-white/40">
               {t('plan.free_plan_desc', {

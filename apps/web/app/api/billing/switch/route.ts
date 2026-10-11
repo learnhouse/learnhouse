@@ -38,6 +38,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err: any) {
     console.error("[billing/switch] failed:", err);
-    return NextResponse.json({ error: err?.message ?? "Plan switch failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: err?.message ?? "Plan switch failed" },
+      { status: err?.status === 409 ? 409 : 500 },
+    );
   }
 }

@@ -24,13 +24,17 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.security.auth import resolve_acting_user_id
-from src.security.org_auth import is_org_member, require_org_membership
+from src.security.org_auth import (
+    is_org_member,
+    require_org_create_permission,
+    require_org_role_permission,
+)
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 # ----------------------------------------------------------------------------
-# Folder ordering — org-scoped, admin-controlled sort mode
+# Folder ordering: org-scoped, admin-controlled sort mode
 # ----------------------------------------------------------------------------
 
 VALID_SORT_MODES = ("name_asc", "name_desc", "newest", "oldest", "manual")
@@ -78,7 +82,7 @@ def _apply_folder_sort(statement, sort_mode: str):
 
 
 def _item_name(item: FolderContentItem) -> str:
-    """Display name of a resolved item — courses/media expose `name`, some
+    """Display name of a resolved item. Courses/media expose `name`, some
     resources only carry a `title`. Lowercased to match the client comparator."""
     resource = item.resource or {}
     return str(resource.get("name") or resource.get("title") or "").lower()
@@ -87,7 +91,7 @@ def _item_name(item: FolderContentItem) -> str:
 def _item_date(item: FolderContentItem) -> str:
     """Creation timestamp of a resolved item, in the same fallback order the
     client comparator uses (creation_date -> created_at -> update_date).
-    'newest'/'oldest' mean creation date on both sides — every course carries a
+    'newest'/'oldest' mean creation date on both sides; every course carries a
     non-empty update_date, so preferring it would put the API and the browser in
     permanent disagreement. Timestamps are stored as sortable strings."""
     resource = item.resource or {}
@@ -106,7 +110,7 @@ def _sort_items(
     _apply_folder_sort so folders and their content agree.
 
     FolderContent.position is applied first and Python's sort is stable, so the
-    admin's drag order stays the tiebreaker for the name modes — and is the only
+    admin's drag order stays the tiebreaker for the name modes, and is the only
     key in 'manual' mode. The date modes break ties by name instead, the way the
     client comparator does (`_dateOf(b) - _dateOf(a) || byName(a, b)`).
     """
@@ -127,7 +131,7 @@ def _sort_items(
 
 
 # ----------------------------------------------------------------------------
-# Resource resolution — folders are polymorphic containers
+# Resource resolution: folders are polymorphic containers
 # ----------------------------------------------------------------------------
 
 def _resource_registry():
@@ -157,11 +161,103 @@ def _public_resource_dump(resource) -> dict:
     key is that the client can never derive a storage path (bytes are only
     reachable via GET /media/{uuid}/file).
     """
+    from src.db.boards import Board, BoardRead
     from src.db.media.media import Media, MediaRead
 
     if isinstance(resource, Media):
         return MediaRead.model_validate(resource, from_attributes=True).model_dump()
+    if isinstance(resource, Board):
+        # The table row carries the raw collaborative document (ydoc_state).
+        return BoardRead.model_validate(resource, from_attributes=True).model_dump()
     return resource.model_dump()
+
+
+# Resource types gated by their own RBAC rules (usergroup links, folder-aware
+# media privacy); filtered per item through check_resource_access.
+_RBAC_GATED_RESOURCE_TYPES = ("boards", "communities", "media")
+
+
+async def _can_read(request, current_user, db_session: AsyncSession, resource_uuid: str) -> bool:
+    try:
+        decision = await check_resource_access(
+            request, db_session, current_user, resource_uuid, AccessAction.READ,
+            raise_on_deny=False,
+        )
+    except HTTPException:
+        # Org two-factor/auth policies raise even with raise_on_deny=False;
+        # in a listing that just means the item is not shown.
+        return False
+    return bool(decision.allowed)
+
+
+# Resource types whose rows carry draft / usergroup restrictions of their own.
+_GATED_RESOURCE_TYPES = ("courses", "podcasts")
+
+
+async def _hidden_gated_uuids(
+    db_session: AsyncSession,
+    gated: list,
+    include_private: bool,
+    viewer_id: Optional[int],
+) -> set[str]:
+    """UUIDs of courses/podcasts in ``gated`` the viewer may not see.
+
+    Mirrors the course/podcast listings: anonymous and non-member viewers get
+    public + published only; members also see published org-wide items (not
+    linked to a UserGroup), plus items linked to a UserGroup they belong to or
+    that they actively author (drafts included); org admins see everything.
+    ``viewer_id=None`` means a caller that already proved edit rights on the
+    folder and is shown its full content.
+    """
+    if not gated:
+        return set()
+    if not include_private:
+        return {
+            r_uuid for resource, r_uuid in gated
+            if not (getattr(resource, "public", False) and getattr(resource, "published", False))
+        }
+    if viewer_id is None:
+        return set()
+
+    from src.db.usergroup_resources import UserGroupResource
+    from src.security.org_auth import is_org_admin
+    from src.services.courses.locks import batch_accessible_restricted_uuids
+
+    org_ids = {resource.org_id for resource, _ in gated}
+    if len(org_ids) == 1 and viewer_id and await is_org_admin(viewer_id, org_ids.pop(), db_session):
+        return set()
+
+    uuids = [r_uuid for _, r_uuid in gated]
+    linked = set(
+        (await db_session.execute(
+            select(UserGroupResource.resource_uuid).where(
+                UserGroupResource.resource_uuid.in_(uuids)
+            )
+        )).scalars().all()
+    )
+    granted: set[str] = set()
+    if viewer_id:
+        granted = await batch_accessible_restricted_uuids(viewer_id, uuids, db_session)
+        granted |= set(
+            (await db_session.execute(
+                select(ResourceAuthor.resource_uuid).where(
+                    ResourceAuthor.resource_uuid.in_(uuids),
+                    ResourceAuthor.user_id == viewer_id,
+                    ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
+                )
+            )).scalars().all()
+        )
+
+    hidden: set[str] = set()
+    for resource, r_uuid in gated:
+        published = getattr(resource, "published", False)
+        org_wide = getattr(resource, "public", False) or r_uuid not in linked
+        if published and org_wide:
+            continue
+        if r_uuid in granted:
+            continue
+        hidden.add(r_uuid)
+    return hidden
 
 
 async def _resolve_items(
@@ -169,12 +265,20 @@ async def _resolve_items(
     content_rows: list[FolderContent],
     include_private: bool,
     sort_mode: str = "manual",
+    viewer_id: Optional[int] = None,
+    request: Optional[Request] = None,
+    current_user=None,
 ) -> List[FolderContentItem]:
     """Resolve FolderContent rows into typed items, batching per resource type.
 
     The resolved items are ordered by the org's sort mode, the same mode the
-    sibling folders are ordered by — otherwise a folder's content would render
+    sibling folders are ordered by; otherwise a folder's content would render
     in a different order than the dashboard shows.
+
+    Courses and podcasts the viewer can't read (drafts, usergroup-restricted)
+    are left out, so a folder can't leak their metadata; see
+    ``_hidden_gated_uuids`` for ``viewer_id``. Boards, communities and media
+    are checked through RBAC for the ``current_user`` when one is given.
     """
     registry = _resource_registry()
 
@@ -194,10 +298,27 @@ async def _resolve_items(
         rows = (
             await db_session.execute(select(model).where(uuid_col.in_(uuids)))
         ).scalars().all()
+        hidden: set[str] = set()
+        if resource_type in _GATED_RESOURCE_TYPES:
+            hidden = await _hidden_gated_uuids(
+                db_session,
+                [(resource, getattr(resource, uuid_field)) for resource in rows],
+                include_private,
+                viewer_id,
+            )
         for resource in rows:
             if not include_private and not getattr(resource, "public", False):
                 continue
             r_uuid = getattr(resource, uuid_field)
+            if r_uuid in hidden:
+                continue
+            if (
+                current_user is not None
+                and viewer_id is not None
+                and resource_type in _RBAC_GATED_RESOURCE_TYPES
+                and not await _can_read(request, current_user, db_session, r_uuid)
+            ):
+                continue
             items.append(
                 FolderContentItem(
                     resource_uuid=r_uuid,
@@ -236,6 +357,9 @@ async def _folder_to_read(
     folder: Folder,
     include_private: bool,
     with_children: bool = True,
+    viewer_id: Optional[int] = None,
+    request: Optional[Request] = None,
+    current_user=None,
 ) -> FolderRead:
     from sqlalchemy import func
 
@@ -267,6 +391,12 @@ async def _folder_to_read(
         for sub in sub_rows:
             if not include_private and not sub.public:
                 continue
+            if (
+                current_user is not None
+                and viewer_id is not None
+                and not await _can_read(request, current_user, db_session, sub.folder_uuid)
+            ):
+                continue
             subfolders.append(
                 await _folder_to_read(db_session, sub, include_private, with_children=False)
             )
@@ -277,7 +407,8 @@ async def _folder_to_read(
             )
         ).scalars().all()
         items = await _resolve_items(
-            db_session, list(content_rows), include_private, sort_mode
+            db_session, list(content_rows), include_private, sort_mode, viewer_id,
+            request=request, current_user=current_user,
         )
         breadcrumbs = await _build_breadcrumbs(db_session, folder)
 
@@ -337,10 +468,8 @@ async def create_folder(
     )
     # The "folder_x" placeholder has no organization of its own, so the RBAC
     # check above accepts any role the caller holds in ANY org. The target org
-    # comes from the request body — gate it explicitly.
-    await require_org_membership(
-        resolve_acting_user_id(current_user), folder_object.org_id, db_session
-    )
+    # comes from the request body, so gate it explicitly.
+    await require_org_create_permission(current_user, folder_object.org_id, db_session, "folders")
 
     parent_folder_id = None
     if folder_object.parent_folder_uuid:
@@ -403,8 +532,12 @@ async def get_folder(
         request, db_session, current_user, folder.folder_uuid, AccessAction.READ
     )
 
-    include_private = not _is_anonymous(current_user)
-    return await _folder_to_read(db_session, folder, include_private=include_private)
+    include_private = await _may_see_private(current_user, folder.org_id, db_session)
+    return await _folder_to_read(
+        db_session, folder, include_private=include_private,
+        viewer_id=resolve_acting_user_id(current_user),
+        request=request, current_user=current_user,
+    )
 
 
 async def update_folder(
@@ -438,6 +571,8 @@ async def update_folder(
             ).scalars().first()
             if not parent:
                 raise HTTPException(status_code=404, detail="Parent folder not found")
+            if parent.org_id != folder.org_id:
+                raise HTTPException(status_code=400, detail="Parent folder is in another organization")
             if parent.id == folder.id:
                 raise HTTPException(status_code=400, detail="A folder cannot be its own parent")
             if await _would_create_cycle(db_session, folder.id, parent.id):
@@ -549,6 +684,8 @@ async def get_folders(
 ) -> List[FolderRead]:
     """List folders for an org. Lists root folders by default; pass
     parent_folder_uuid to list a folder's direct sub-folders."""
+    page = max(1, int(page if page is not None else 1))
+    limit = min(max(1, int(limit if limit is not None else 50)), 100)
     parent_id = None
     if parent_folder_uuid:
         parent = (
@@ -574,10 +711,22 @@ async def get_folders(
     statement = statement.offset((page - 1) * limit).limit(limit)
     folders = (await db_session.execute(statement)).scalars().all()
 
-    return [
-        await _folder_to_read(db_session, folder, include_private=include_private)
-        for folder in folders
-    ]
+    viewer_id = resolve_acting_user_id(current_user)
+    result = []
+    for folder in folders:
+        # Private folders can be restricted to UserGroups; membership in the org
+        # alone doesn't grant READ on those.
+        if include_private and not await _can_read(
+            request, current_user, db_session, folder.folder_uuid
+        ):
+            continue
+        result.append(
+            await _folder_to_read(
+                db_session, folder, include_private=include_private,
+                viewer_id=viewer_id, request=request, current_user=current_user,
+            )
+        )
+    return result
 
 
 async def reorder_folders(
@@ -653,7 +802,7 @@ async def reorder_folder_content(
     db_session: AsyncSession,
 ) -> dict:
     """Persist the manual (admin drag) ordering of a folder's CONTENT items
-    (courses, media, …). Position is derived from the array index — matching how
+    (courses, media, …). Position is derived from the array index, matching how
     `_sort_items` orders items by FolderContent.position in 'manual' mode (and
     uses it as the tiebreaker in every other mode). Admin only.
     """
@@ -707,6 +856,28 @@ async def reorder_folder_content(
 # Content management
 # ----------------------------------------------------------------------------
 
+async def _require_resource_in_org(
+    db_session: AsyncSession, resource_uuid: str, org_id: int
+) -> None:
+    """A folder may only hold resources of its own org. Read access alone isn't
+    enough: another tenant's public course is readable by anyone, and filing it
+    here would surface it in this org's library."""
+    registry = _resource_registry()
+    for prefix, (_, model, uuid_field) in registry.items():
+        if resource_uuid.startswith(prefix):
+            resource_org_id = (
+                await db_session.execute(
+                    select(model.org_id).where(getattr(model, uuid_field) == resource_uuid)
+                )
+            ).scalars().first()
+            if resource_org_id is None:
+                raise HTTPException(status_code=404, detail="Resource not found")
+            if resource_org_id != org_id:
+                raise HTTPException(status_code=400, detail="Resource is in another organization")
+            return
+    raise HTTPException(status_code=400, detail="Unsupported resource type")
+
+
 async def add_folder_content(
     request: Request,
     folder_uuid: str,
@@ -727,6 +898,7 @@ async def add_folder_content(
     await check_resource_access(
         request, db_session, current_user, resource_uuid, AccessAction.READ
     )
+    await _require_resource_in_org(db_session, resource_uuid, folder.org_id)
 
     existing = (
         await db_session.execute(
@@ -802,6 +974,8 @@ async def move_folder_content(
     ).scalars().first()
     if not source or not target:
         raise HTTPException(status_code=404, detail="Folder not found")
+    if source.org_id != target.org_id:
+        raise HTTPException(status_code=400, detail="Target folder is in another organization")
 
     await check_resource_access(
         request, db_session, current_user, source.folder_uuid, AccessAction.UPDATE
@@ -841,8 +1015,12 @@ async def move_folder_content(
 
 
 # ----------------------------------------------------------------------------
-# Library search — across the WHOLE tree, with folder-path context per result
+# Library search: across the WHOLE tree, with folder-path context per result
 # ----------------------------------------------------------------------------
+
+LIBRARY_SEARCH_MAX_QUERY = 200
+LIBRARY_SEARCH_MAX_RESULTS = 50
+
 
 async def search_library(
     request: Request,
@@ -852,13 +1030,19 @@ async def search_library(
     db_session: AsyncSession,
 ) -> dict:
     from sqlalchemy import func
+    from src.services.search.normalization import (
+        LIKE_ESCAPE_CHAR,
+        build_like_pattern,
+        normalize_search_term,
+    )
 
-    query = (q or "").strip()
+    query = normalize_search_term(q)[:LIBRARY_SEARCH_MAX_QUERY]
     if not query:
         return {"folders": [], "items": []}
 
     include_private = await _may_see_private(current_user, int(org_id), db_session)
-    like = f"%{query.lower()}%"
+    viewer_id = resolve_acting_user_id(current_user)
+    like = build_like_pattern(query.lower())
 
     # Cache folder paths (full breadcrumb chain) by folder id
     path_cache: dict[int, list] = {}
@@ -879,14 +1063,18 @@ async def search_library(
     # --- Folders matching by name ---
     fstmt = select(Folder).where(
         Folder.org_id == int(org_id),
-        func.lower(Folder.name).like(like),
+        func.lower(Folder.name).like(like, escape=LIKE_ESCAPE_CHAR),
     )
     if not include_private:
         fstmt = fstmt.where(Folder.public == True)  # noqa: E712
+    # Each hit costs breadcrumb + count queries, so bound the result set
+    fstmt = fstmt.order_by(Folder.id).limit(LIBRARY_SEARCH_MAX_RESULTS)
     folder_rows = (await db_session.execute(fstmt)).scalars().all()
 
     folder_results = []
     for f in folder_rows:
+        if include_private and not await _can_read(request, current_user, db_session, f.folder_uuid):
+            continue
         crumbs = await _build_breadcrumbs(db_session, f)
         d = f.model_dump()
         # parent path = breadcrumb chain excluding the folder itself
@@ -922,7 +1110,18 @@ async def search_library(
         uuids = list({r.resource_uuid for r in rrows})
         resources = (await db_session.execute(select(model).where(uuid_col.in_(uuids)))).scalars().all()
         rmap = {getattr(x, uuid_field): x for x in resources}
+        # Same visibility rules as browsing the folders (see _resolve_items)
+        hidden: set[str] = set()
+        if rtype in _GATED_RESOURCE_TYPES:
+            hidden = await _hidden_gated_uuids(
+                db_session,
+                [(x, getattr(x, uuid_field)) for x in resources],
+                include_private,
+                viewer_id,
+            )
         for r in rrows:
+            if len(items) >= LIBRARY_SEARCH_MAX_RESULTS:
+                break
             if r.resource_uuid in seen:
                 continue
             res = rmap.get(r.resource_uuid)
@@ -930,8 +1129,15 @@ async def search_library(
                 continue
             if not include_private and not getattr(res, "public", False):
                 continue
+            if r.resource_uuid in hidden:
+                continue
             name = (getattr(res, "name", None) or getattr(res, "title", "") or "")
             if query.lower() not in name.lower():
+                continue
+            if (
+                rtype in _RBAC_GATED_RESOURCE_TYPES
+                and not await _can_read(request, current_user, db_session, r.resource_uuid)
+            ):
                 continue
             seen.add(r.resource_uuid)
             items.append({
@@ -967,7 +1173,9 @@ async def get_org_root_items(
     ).scalars().all()
     sort_mode = await _get_folders_sort_mode(db_session, int(org_id))
     return await _resolve_items(
-        db_session, list(content_rows), include_private=include_private, sort_mode=sort_mode
+        db_session, list(content_rows), include_private=include_private, sort_mode=sort_mode,
+        viewer_id=resolve_acting_user_id(current_user),
+        request=request, current_user=current_user,
     )
 
 
@@ -984,13 +1192,12 @@ async def add_org_root_content(
         request, db_session, current_user, "folder_x", AccessAction.CREATE
     )
     # "folder_x" carries no organization, so the check above is satisfied by any
-    # role the caller holds anywhere. org_id is caller-supplied — gate it.
-    await require_org_membership(
-        resolve_acting_user_id(current_user), int(org_id), db_session
-    )
+    # role the caller holds anywhere. org_id is caller-supplied, so gate it.
+    await require_org_create_permission(current_user, int(org_id), db_session, "folders")
     await check_resource_access(
         request, db_session, current_user, resource_uuid, AccessAction.READ
     )
+    await _require_resource_in_org(db_session, resource_uuid, int(org_id))
 
     existing = (
         await db_session.execute(
@@ -1030,8 +1237,9 @@ async def remove_org_root_content(
     )
     # Same "folder_x" placeholder caveat as add_org_root_content: the target org
     # is only ever checked here.
-    await require_org_membership(
-        resolve_acting_user_id(current_user), int(org_id), db_session
+    await require_org_role_permission(
+        resolve_acting_user_id(current_user), int(org_id), db_session,
+        "folders", "action_update",
     )
     rows = (
         await db_session.execute(

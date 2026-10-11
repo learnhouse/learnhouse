@@ -8,15 +8,15 @@ TestComputeAssignmentGrade). They pin down exact boundary behavior so a refactor
 of the rounding / clamping / threshold logic can't silently shift a grade.
 
 Functions under test:
-- ``_percentage_to_letter_grade`` — every A/B/C/D/F cut line, including the
+- ``_percentage_to_letter_grade``: every A/B/C/D/F cut line, including the
   fractional 89.99-vs-90 / 59.99-vs-60 boundaries.
-- ``_percentage_to_gpa`` — every 4.0 → 0.0 cut line and just-below variants.
-- ``compute_assignment_grade`` — clamping (raw>max, negative, max<=0), the
+- ``_percentage_to_gpa``: every 4.0 → 0.0 cut line and just-below variants.
+- ``compute_assignment_grade``: clamping (raw>max, negative, max<=0), the
   2-decimal percentage rounding, per-grading-type display strings, the
   mode-aware pass/fail threshold (50% default, 60% ALPHABET/GPA), grading_type
   as enum/string/None/unknown, overall_feedback variants, and the always-present
   secondary fields (letter_grade / points_summary / percentage_display).
-- ``_build_tasks_breakdown`` — row shape, percentage clamp, div-by-zero guard on
+- ``_build_tasks_breakdown``: row shape, percentage clamp, div-by-zero guard on
   a zero-max task, submitted flag, points_summary, and the per-row passed flag
   relative to the supplied threshold.
 
@@ -41,7 +41,7 @@ from src.services.courses.activities.assignments import (
 
 
 # --------------------------------------------------------------------------- #
-# _percentage_to_letter_grade — every cut line + fractional boundaries
+# _percentage_to_letter_grade: every cut line + fractional boundaries
 # --------------------------------------------------------------------------- #
 class TestLetterGradeBoundaries:
     """Pin every A/B/C/D/F threshold including the fractional just-below cases."""
@@ -69,7 +69,7 @@ class TestLetterGradeBoundaries:
 
 
 # --------------------------------------------------------------------------- #
-# _percentage_to_gpa — every cut line + just-below variants
+# _percentage_to_gpa: every cut line + just-below variants
 # --------------------------------------------------------------------------- #
 class TestGpaBoundaries:
     """Pin every GPA cut line (4.0 down to 0.0) and the just-below boundary."""
@@ -109,7 +109,7 @@ class TestGpaBoundaries:
 
 
 # --------------------------------------------------------------------------- #
-# compute_assignment_grade — clamping edge cases
+# compute_assignment_grade: clamping edge cases
 # --------------------------------------------------------------------------- #
 class TestComputeClamping:
     """Clamp raw to [0, max]; guard max<=0; never divide by zero."""
@@ -156,7 +156,7 @@ class TestComputeClamping:
 
 
 # --------------------------------------------------------------------------- #
-# compute_assignment_grade — percentage rounding edge cases
+# compute_assignment_grade: percentage rounding edge cases
 # --------------------------------------------------------------------------- #
 class TestComputeRounding:
     """Percentage is rounded to 2dp; NUMERIC display rounds pct to an int."""
@@ -199,7 +199,7 @@ class TestComputeRounding:
 
 
 # --------------------------------------------------------------------------- #
-# compute_assignment_grade — pass/fail threshold per grading type at boundary
+# compute_assignment_grade: pass/fail threshold per grading type at boundary
 # --------------------------------------------------------------------------- #
 class TestComputePassThresholdBoundaries:
     """Exercise the exact threshold line for each grading type.
@@ -284,7 +284,7 @@ class TestComputePassThresholdBoundaries:
 
 
 # --------------------------------------------------------------------------- #
-# compute_assignment_grade — grading_type as enum / string / None / unknown
+# compute_assignment_grade: grading_type as enum / string / None / unknown
 # --------------------------------------------------------------------------- #
 class TestComputeGradingTypeForms:
     """grading_type accepts enum, plain string, None, or an unknown string."""
@@ -328,7 +328,7 @@ class TestComputeGradingTypeForms:
 
 
 # --------------------------------------------------------------------------- #
-# compute_assignment_grade — overall_feedback variants & secondary fields
+# compute_assignment_grade: overall_feedback variants & secondary fields
 # --------------------------------------------------------------------------- #
 class TestComputeFeedbackAndSecondaryFields:
     """overall_feedback passes through unchanged; secondary fields always present."""
@@ -340,7 +340,7 @@ class TestComputeFeedbackAndSecondaryFields:
 
     def test_feedback_empty_string_preserved(self):
         """An empty feedback string is preserved verbatim, not coerced to None."""
-        # Empty string is NOT coerced to None — passed through verbatim
+        # Empty string is NOT coerced to None; it is passed through verbatim
         r = compute_assignment_grade(85, 100, GradingTypeEnum.NUMERIC, "")
         assert r["overall_feedback"] == ""
 

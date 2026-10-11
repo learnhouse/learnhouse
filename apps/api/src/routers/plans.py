@@ -17,7 +17,7 @@ router = APIRouter()
 )
 async def api_get_plan_limits():
     """
-    Public endpoint — returns plan limits for all plans.
+    Public endpoint: returns plan limits for all plans.
     Used by the frontend to display correct plan feature limits
     on pricing pages, dashboards, and onboarding flows.
     """

@@ -5,7 +5,7 @@ date that means anything to a learner who enrolled today. The column was
 NOT NULL, so leaving the deadline out failed at insert time even though every
 deadline check already treats a missing or unparseable value as "no deadline".
 
-Nothing is backfilled — existing rows keep the date they have.
+Nothing is backfilled; existing rows keep the date they have.
 
 Revision ID: a3b4c5d6e7f8
 Revises: c7d8e9f0a1b2

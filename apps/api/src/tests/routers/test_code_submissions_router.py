@@ -29,7 +29,7 @@ async def client(app):
 
 
 class TestCodeSubmissionsRouter:
-    async def test_save_and_history_submission(self, client):
+    async def test_save_and_history_submission(self, client, activity):
         body = {
             "activity_uuid": "activity_test",
             "block_id": "block_1",

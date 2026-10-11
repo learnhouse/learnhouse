@@ -96,7 +96,7 @@ def _set_temp_dir(monkeypatch, path) -> None:
 
 
 class TestContentFileMimeHardening:
-    """F21/F24 — nothing served from /content may render as a document."""
+    """F21/F24: nothing served from /content may render as a document."""
 
     @pytest.mark.parametrize(
         "filename", ["evil.html", "evil.js", "evil.css", "evil.xml"]
@@ -192,7 +192,7 @@ class TestContentFileMimeHardening:
 
 
 class TestImportExtensionAllowlist:
-    """F21/F24 — the import pipeline must not persist package-chosen types."""
+    """F21/F24: the import pipeline must not persist package-chosen types."""
 
     @pytest.mark.parametrize(
         "filename",
@@ -364,7 +364,7 @@ class TestImportExtensionAllowlist:
 
 
 class TestImportTempIdTraversal:
-    """F8 — temp_id reaches os.rename/open/rmtree and must be a UUID."""
+    """F8: temp_id reaches os.rename/open/rmtree and must be a UUID."""
 
     def test_require_temp_id_rejects_non_uuid_values(self):
         for value in ["../../orgs", "..", "/etc", "not-a-uuid", "", None]:
@@ -441,7 +441,7 @@ class TestImportTempIdTraversal:
             "src.services.courses.transfer.import_service.increase_feature_usage"
         ), patch(
             "src.services.courses.transfer.import_service._import_single_course",
-            return_value=SimpleNamespace(course_uuid="course-new", name="Imported"),
+            return_value=SimpleNamespace(id=1, course_uuid="course-new", name="Imported"),
         ):
             result = await import_courses(
                 mock_request,
@@ -513,3 +513,21 @@ class TestImportTempIdTraversal:
         )
 
         assert ignored == {"evil.html"}
+
+
+def test_import_drops_file_refs_outside_the_new_course():
+    from src.services.courses.transfer.import_service import _drop_foreign_file_refs
+
+    course_path = "content/orgs/org_new/courses/course_new"
+    content = {
+        "filename": "documentpdf_a.pdf",
+        "file_id": "block_abc",
+        "uri": "content/orgs/org_victim/courses/course_x/activities/a/secret.pdf",
+        "file_path": "orgs/org_new/courses/course_new/../course_x/secret.pdf",
+    }
+    assert _drop_foreign_file_refs(dict(content), course_path) == {
+        "filename": "documentpdf_a.pdf",
+        "file_id": "block_abc",
+    }
+    own = {"uri": "orgs/org_new/courses/course_new/activities/a/doc.pdf"}
+    assert _drop_foreign_file_refs(dict(own), course_path) == own

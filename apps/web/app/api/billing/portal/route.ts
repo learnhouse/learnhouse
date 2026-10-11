@@ -3,7 +3,7 @@ import { getCustomerPortal } from "@services/billing/stripe";
 import { guardBilling, authenticateUser } from "../_lib";
 
 // POST /api/billing/portal
-// → { url } — a Stripe billing-portal session URL for the authenticated user's
+// → { url }: a Stripe billing-portal session URL for the authenticated user's
 // own customer record. Email comes from the session, never the request body
 // (otherwise any user could open another user's billing portal).
 export async function POST() {

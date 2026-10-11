@@ -2,6 +2,7 @@ import React from 'react'
 import YouTube from 'react-youtube'
 import { useOrg } from '@components/Contexts/OrgContext'
 import LearnHousePlayer from './LearnHousePlayer'
+import { positiveIntParam } from '@/lib/copilot/sources'
 import {
   isActivityHlsReady,
   resolveActivityVideoSource,
@@ -53,6 +54,11 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
   const org = useOrg() as any
   const resolvedOrgUuid = orgUuid || org?.org_uuid
   const [videoId, setVideoId] = React.useState('')
+  // `?t=<seconds>` opens the video at a moment, e.g. from a copilot citation.
+  // The player reads its start time when it initializes on the client; no
+  // markup depends on it, so reading the URL during render is hydration-safe.
+  const linkedStart = typeof window !== 'undefined' ? positiveIntParam(window.location.search, 't') : null
+  const details = linkedStart ? { ...activity.details, startTime: linkedStart } : activity.details
 
   React.useEffect(() => {
     if (activity?.content?.uri) {
@@ -113,7 +119,7 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                       src={src}
                       isHls={isHls}
                       fallbackSrc={fallbackSrc}
-                      details={activity.details}
+                      details={details}
                       thumbnails={thumbnails}
                       captions={captions}
                     />

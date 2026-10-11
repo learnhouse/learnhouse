@@ -80,7 +80,7 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
         access_token,
         (uploaded, total, currentFile) => {
           setUploadProgress(
-            `${t('migration.uploading_files')} ${uploaded}/${total}${currentFile ? ` — ${currentFile}` : ''}`
+            `${t('migration.uploading_files')} ${uploaded}/${total}${currentFile ? `: ${currentFile}` : ''}`
           )
         }
       )

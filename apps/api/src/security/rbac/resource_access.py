@@ -22,7 +22,7 @@ from fastapi import HTTPException, Request, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.users import AnonymousUser, PublicUser, APITokenUser
+from src.db.users import AnonymousUser, PublicUser, APITokenUser, SuperadminAPITokenUser
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
@@ -110,7 +110,7 @@ class ResourceAccessChecker:
                 context=context.value,
             )
 
-        # Superadmin bypass — platform admins act on any tenant without an org
+        # Superadmin bypass: platform admins act on any tenant without an org
         # membership row. The flag is loaded onto PublicUser by get_current_user
         # so this is a free attribute read, no DB hit. API tokens and anonymous
         # users carry no superadmin flag and continue through the normal path.
@@ -121,6 +121,21 @@ class ResourceAccessChecker:
                 via_admin=True,
                 resource_uuid=resource_uuid,
                 user_id=self.current_user.id,
+                action=action.value,
+                context=context.value,
+            )
+
+        # Superadmin API tokens are cross-org by design and re-check at auth
+        # time that their minter is still a superadmin. Their id is the token
+        # row id, so they must never fall through to the user-id based checks
+        # below, where that id would be read as some unrelated user's.
+        if isinstance(self.current_user, SuperadminAPITokenUser):
+            return AccessDecision(
+                allowed=True,
+                reason="Superadmin API token access",
+                via_admin=True,
+                resource_uuid=resource_uuid,
+                user_id=self.current_user.created_by_user_id,
                 action=action.value,
                 context=context.value,
             )
@@ -152,7 +167,7 @@ class ResourceAccessChecker:
         # users: anonymous public browsing is unaffected, superadmins bypassed
         # above, and API tokens are a separate credential class handled above.
         # Raises rather than returning a denial so the structured error code
-        # survives to the client — the UI needs to tell "enable 2FA" apart from
+        # survives to the client; the UI needs to tell "enable 2FA" apart from
         # "you don't have permission", which a plain reason string cannot do.
         await self._enforce_org_mfa_policy(resource_uuid, config)
 
@@ -264,7 +279,7 @@ class ResourceAccessChecker:
 
         # Fall through to public view rules. Note: public_view's usergroup rule
         # requires is_published=True, so usergroup members on unpublished
-        # resources still get denied here — which is the intended behavior.
+        # resources still get denied here, which is the intended behavior.
         return await self._check_public_view_read_access(resource_uuid, config)
 
     async def _check_public_view_read_access(
@@ -630,8 +645,8 @@ class ResourceAccessChecker:
 
     def _get_user_id(self) -> int:
         """Get the current user's ID."""
-        if isinstance(self.current_user, APITokenUser):
-            return 0  # API tokens don't have a user ID in the same sense
+        if isinstance(self.current_user, (APITokenUser, SuperadminAPITokenUser)):
+            return 0  # token ids are not user ids
         return self.current_user.id if self.current_user else 0
 
     async def _resolve_parent_resource_uuid(
@@ -778,6 +793,10 @@ class ResourceAccessChecker:
             resource_author.authorship in valid_authorships and
             resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
         )
+        # Authorship is an org-scoped grant: someone removed from the org must
+        # not keep editing its content through a leftover author row.
+        if is_valid:
+            is_valid = await self._is_member_of_resource_org(resource_uuid, user_id)
         self._author_cache[resource_uuid] = is_valid
         return is_valid
 
@@ -869,7 +888,9 @@ class ResourceAccessChecker:
         )
         membership = (await self.db_session.execute(membership_stmt)).scalars().first()
 
-        result = membership is not None
+        result = membership is not None and await self._is_member_of_resource_org(
+            resource_uuid, user_id
+        )
         self._usergroup_cache[cache_key] = result
         return result
 
@@ -987,7 +1008,9 @@ def _get_request_checker(
     that request. This collapses what was previously 2–3× redundant author /
     admin / usergroup / resource lookups per course endpoint.
     """
-    existing = getattr(request.state, "rbac_checker", None)
+    # Service helpers are sometimes called without a live request (tests,
+    # background tasks); only memoize when there is one.
+    existing = getattr(getattr(request, "state", None), "rbac_checker", None)
     if (
         existing is not None
         and existing.db_session is db_session

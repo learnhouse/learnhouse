@@ -17,6 +17,28 @@ from src.services.communities.comment_votes import get_user_votes_for_comments
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
 from src.services.communities.moderation import validate_comment_content, enforce_auto_lock
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.communities.access import require_community_participant
+from src.security.api_token_utils import token_has_right
+from src.security.auth import resolve_acting_user_id
+
+
+async def _is_comment_author(
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    comment: DiscussionComment,
+    db_session: AsyncSession,
+) -> bool:
+    """API tokens act as their creator, but only inside their own org and
+    while they may still post."""
+    if not isinstance(current_user, APITokenUser):
+        return comment.author_id == current_user.id
+    if comment.author_id != current_user.created_by_user_id:
+        return False
+    if not token_has_right(current_user, "discussions", "action_create"):
+        return False
+    discussion_org_id = (await db_session.execute(
+        select(Discussion.org_id).where(Discussion.id == comment.discussion_id)
+    )).scalars().first()
+    return discussion_org_id == current_user.org_id
 
 
 async def create_comment(
@@ -66,6 +88,8 @@ async def create_comment(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
+    author_id = await require_community_participant(current_user, community, db_session)
+
     # Check content moderation
     await validate_comment_content(content, community.id, db_session)
 
@@ -73,7 +97,7 @@ async def create_comment(
     comment = DiscussionComment(
         content=content,
         discussion_id=discussion.id,
-        author_id=current_user.id,
+        author_id=author_id,
         comment_uuid=f"comment_{uuid4()}",
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
@@ -91,7 +115,11 @@ async def create_comment(
         event_name="comment_created",
         org_id=community.org_id,
         data={
-            "user": {"user_uuid": current_user.user_uuid, "email": current_user.email, "username": current_user.username},
+            "user": {
+                "user_uuid": author.user_uuid if author else "",
+                "email": author.email if author else "",
+                "username": author.username if author else "",
+            },
             "comment": {"comment_uuid": comment.comment_uuid},
             "discussion": {"discussion_uuid": discussion.discussion_uuid, "title": discussion.title},
             "community": {"community_uuid": community.community_uuid},
@@ -160,7 +188,7 @@ async def get_comments_by_discussion(
     # Get user's votes for these comments
     comment_ids = [c.id for c in comments]
     user_votes = await get_user_votes_for_comments(
-        comment_ids, current_user.id, db_session
+        comment_ids, resolve_acting_user_id(current_user), db_session
     )
 
     # Build response
@@ -202,7 +230,7 @@ async def update_comment(
         raise HTTPException(status_code=404, detail="Comment not found")
 
     # Check if user is the author
-    if comment.author_id != current_user.id:
+    if not await _is_comment_author(current_user, comment, db_session):
         raise HTTPException(
             status_code=403,
             detail="You can only edit your own comments"
@@ -236,7 +264,7 @@ async def update_comment(
 
     # Get user's vote status
     user_votes = await get_user_votes_for_comments(
-        [comment.id], current_user.id, db_session
+        [comment.id], resolve_acting_user_id(current_user), db_session
     )
 
     return DiscussionCommentReadWithVoteStatus(
@@ -275,7 +303,7 @@ async def delete_comment(
     discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     # Check if user is the author or has admin rights
-    is_author = comment.author_id == current_user.id
+    is_author = await _is_comment_author(current_user, comment, db_session)
 
     if not is_author:
         # Check if user is admin of the community

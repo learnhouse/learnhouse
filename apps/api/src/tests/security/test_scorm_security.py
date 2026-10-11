@@ -76,7 +76,7 @@ class TestDefusedXml:
             os.path.dirname(__file__), '..', '..', '..', 'ee', 'services', 'scorm', 'scorm.py'
         )
         if not os.path.exists(scorm_path):
-            pytest.skip("EE not present (OSS build) — SCORM source check not applicable")
+            pytest.skip("EE not present (OSS build): SCORM source check not applicable")
         with open(scorm_path, encoding='utf-8') as f:
             source = f.read()
 

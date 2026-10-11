@@ -8,7 +8,7 @@ export type InstanceMode = 'saas' | 'oss' | 'ee'
  *
  * Blocks only on a definitive 'oss'. A null mode means the lookup failed, and
  * that renders the dashboard: failing closed would lock real SaaS superadmins
- * out of /admin during any brief API blip — which is exactly when they need
+ * out of /admin during any brief API blip, which is exactly when they need
  * it. The API-side check is what actually enforces this; the web gate exists
  * to show a clean message instead of dead chrome.
  */

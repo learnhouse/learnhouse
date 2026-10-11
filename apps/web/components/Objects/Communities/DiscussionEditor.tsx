@@ -20,7 +20,7 @@ interface DiscussionEditorProps {
 }
 
 // Defined at module level so React keeps the same component identity across
-// renders — defining it inside DiscussionEditor would remount every button
+// renders; defining it inside DiscussionEditor would remount every button
 // (and drop hover/focus state) on each keystroke.
 const ToolbarButton = ({
   onClick,

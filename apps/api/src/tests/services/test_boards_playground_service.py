@@ -52,6 +52,8 @@ class TestBoardsPlaygroundService:
         fake_redis.get.return_value = session.model_dump_json().encode("utf-8")
 
         with patch(
+            "src.services.boards.boards_playground._redis_client", None
+        ), patch(
             "src.services.boards.boards_playground.redis.from_url",
             return_value=fake_redis,
         ), patch(

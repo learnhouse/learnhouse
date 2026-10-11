@@ -30,13 +30,13 @@ hosting_config:
   # This one value is read by three consumers: CORS (core/middleware/cors.py),
   # CSRF (security/csrf.py) and the base URL of emailed login / verification
   # links (services/email/utils.py). The default below is a catch-all, which
-  # means CORS and CSRF are effectively open unless you scope it — set
+  # means CORS and CSRF are effectively open unless you scope it. Set
   # LEARNHOUSE_ALLOWED_REGEXP to your own domain in any real deployment, e.g.
   # '^https://(?:[a-z0-9-]+\.)*example\.com$'.
   #
   # Narrowing this default is deliberately NOT done here: it would CORS-block
   # and CSRF-403 every deployment that relies on it. Email links do not depend
-  # on it being scoped — services/email/utils.py ignores a catch-all pattern
+  # on it being scoped; services/email/utils.py ignores a catch-all pattern
   # and validates the Origin against the configured domain, its subdomains and
   # the verified custom domains instead.
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
@@ -67,12 +67,12 @@ payments_config:
   # To add a new payment provider, add its credentials block here and register
   # it in ee/db/payments/payments.py (PaymentProviderEnum) and config/config.py.
   stripe:
-    # Platform API keys — Stripe Dashboard → Developers → API keys
+    # Platform API keys: Stripe Dashboard → Developers → API keys
     stripe_secret_key: ""        # sk_live_... (or sk_test_... for development)
     stripe_publishable_key: ""   # pk_live_... (or pk_test_... for development)
-    # Stripe Connect OAuth client ID — Stripe Dashboard → Settings → Connect → OAuth
+    # Stripe Connect OAuth client ID: Stripe Dashboard → Settings → Connect → OAuth
     stripe_client_id: ""         # ca_...
-    # Webhook signing secrets — Stripe Dashboard → Developers → Webhooks
+    # Webhook signing secrets: Stripe Dashboard → Developers → Webhooks
     # Standard endpoint:  POST /payments/stripe/webhook/standard
     stripe_webhook_standard_secret: ""   # whsec_...
     # Connect endpoint:   POST /payments/stripe/webhook/connect

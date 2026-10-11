@@ -53,7 +53,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
     const queryClient = useQueryClient();
     // Reveal correct answers only after the submission is GRADED AND the
     // teacher opted in on the assignment. See TaskQuizObject for the same
-    // pattern — keep these consistent across task types.
+    // pattern; keep these consistent across task types.
     const assignmentSubmission = useAssignmentSubmission() as any;
     const submissionIsGraded = Array.isArray(assignmentSubmission)
         && assignmentSubmission.length > 0
@@ -91,11 +91,11 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
     // Did the answer key actually reach the client?
     //
     // The API strips `blanks[].correctAnswer` from the task payload whenever the
-    // student isn't allowed to see it yet — notably while retry attempts remain
+    // student isn't allowed to see it yet, notably while retry attempts remain
     // (see _student_may_see_answer_key; max_retries=0 means unlimited, so it
     // never reveals). The client can't re-derive that rule (it has no
     // attempt_number here), so `showCorrectAnswers` can be true while the key is
-    // absent — and the reveal chip would then render an empty
+    // absent, and the reveal chip would then render an empty
     // "Expected answer:". Trust the key only when it is genuinely present.
     const answerKeyPresent = useMemo(
         () => questions.some((question) =>
@@ -257,7 +257,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
             if (!opts?.silent) toast.success('Form submitted successfully!');
             const savedUUID = res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid;
             // Baseline = exactly what we sent. Live = the LATEST answers (from
-            // prev), never reverted to the call-time snapshot — so any edit made
+            // prev), never reverted to the call-time snapshot, so any edit made
             // during the save round-trip survives and re-triggers auto-save.
             setInitialUserSubmissions({ ...userSubmissions, assignment_task_submission_uuid: savedUUID });
             setUserSubmissions(prev => ({ ...prev, assignment_task_submission_uuid: savedUUID }));
@@ -291,7 +291,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
         }
         // There must be an existing submission row to grade. Without this guard
         // (the siblings already have it) the PUT falls through to an upsert on
-        // the CALLER's own row — the instructor's — where the grade is silently
+        // the CALLER's own row (the instructor's), where the grade is silently
         // forced to 0 while the UI reports success, and the student's task stays
         // ungraded.
         if (!userSubmissions?.assignment_task_submission_uuid) {
@@ -383,7 +383,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
     }
 
     useEffect(() => {
-        // Used only by grading view — student view hydrates from useAssignments() context
+        // Used only by grading view; student view hydrates from useAssignments() context
         const loadAssignmentTask = async () => {
             if (assignmentTaskUUID) {
                 const res = await getAssignmentTask(assignmentTaskUUID, access_token);
@@ -619,7 +619,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                                         className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
                                                     />
                                                     {/* Render nothing at all when this blank's key
-                                                        was withheld — the learner still sees their
+                                                        was withheld; the learner still sees their
                                                         own answer and their score. An empty
                                                         "Expected answer:" is worse than nothing.
                                                         Checked per blank too, so a partially

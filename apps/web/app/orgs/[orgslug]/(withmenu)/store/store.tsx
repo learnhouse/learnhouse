@@ -237,7 +237,7 @@ function Store({ orgslug, offers }: StoreProps) {
             </div>
             <h2 className="text-xl font-bold text-gray-600 mb-2">No offers available yet</h2>
             <p className="text-gray-400 text-sm max-w-sm">
-              Check back soon — offers and subscriptions will appear here when they become available.
+              Check back soon; offers and subscriptions will appear here when they become available.
             </p>
           </div>
         ) : (

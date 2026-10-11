@@ -22,7 +22,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
-from src.security.org_auth import require_org_membership, require_org_admin
+from src.security.org_auth import require_org_membership, require_org_role_permission
 from src.services.utils.ssrf_guard import SSRFBlockedError, resolve_and_validate_url
 
 logger = logging.getLogger(__name__)
@@ -66,12 +66,12 @@ def is_own_agency_subdomain(domain: str, org_slug: str) -> bool:
 
     In agency (multi-tenant) deployments the whole `*.{LEARNHOUSE_DOMAIN}` space
     is under the operator's control (wildcard DNS + wildcard TLS served by Caddy
-    via DNS-01). That proves the *operator* controls the namespace — it does NOT
+    via DNS-01). That proves the *operator* controls the namespace; it does NOT
     prove a given org owns an arbitrary label within it. Only `{slug}.{apex}` is
     provably this org's, so we auto-verify exactly that host and nothing else:
     the bare apex and every other label (including other orgs' slugs) must still
     go through the DNS TXT proof-of-ownership flow. Without this restriction any
-    tenant admin could claim another org's subdomain — or the apex — and hijack
+    tenant admin could claim another org's subdomain (or the apex) and hijack
     its routing.
 
     Guarded so we never auto-verify when no real agency domain is configured
@@ -157,7 +157,7 @@ async def verify_domain_dns(domain: CustomDomain, db_session: AsyncSession, org_
         return True, "Verified (dev mode)"
 
     # This org's own slug host under the agency apex is provably theirs (wildcard
-    # DNS+TLS), so there's nothing to prove via a DNS TXT record — verify it now.
+    # DNS+TLS), so there's nothing to prove via a DNS TXT record; verify it now.
     # Any other label still has to go through the TXT flow below.
     if is_own_agency_subdomain(domain.domain, org_slug):
         logger.info(f"Auto-verifying {domain.domain} (own slug host under agency domain {LEARNHOUSE_DOMAIN})")
@@ -265,8 +265,11 @@ async def add_custom_domain(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3+4: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 3+4: Membership + organizations.update (superadmins bypass).
+    # Routing the org's traffic is not everyday editing for Maintainers.
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # VERIFICATION 4b: Free-tier abuse gate. Custom domains are an unenforced,
     # unlimited surface and a phishing/brand-impersonation amplifier, so a
@@ -462,8 +465,10 @@ async def verify_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 2: Membership + organizations.update (superadmins bypass)
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
@@ -512,8 +517,10 @@ async def delete_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 2: Membership + organizations.update (superadmins bypass)
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -643,13 +650,136 @@ async def check_domain_ssl_status(
         }
 
 
+# Live "does this verified domain still point at us" results, keyed by
+# (domain, org_slug). Verification is a one-time TXT proof, so a tenant can
+# verify a domain and later repoint its DNS at their own server; anything that
+# hands credentials (OAuth codes, emailed reset/magic links) to a custom domain
+# must re-check this first.
+_POINTS_AT_PLATFORM_CACHE: dict[tuple[str, str], tuple[bool, float]] = {}
+_POINTS_AT_PLATFORM_TTL_SECONDS = 300.0
+_POINTS_AT_PLATFORM_CACHE_MAX = 2048
+_DNS_LIFETIME_SECONDS = 3.0
+
+
+def _normalize_host(value: str) -> str:
+    return (value or "").strip().lower().rstrip(".").split(":")[0]
+
+
+def _dns_records(name: str, rdtype: str) -> set:
+    """Records of ``rdtype`` for ``name``; empty when the name has none.
+
+    Any other resolver failure (timeout, SERVFAIL) propagates so the caller
+    fails closed instead of treating it as "no record".
+    """
+    import dns.resolver
+
+    try:
+        answers = dns.resolver.resolve(name, rdtype, lifetime=_DNS_LIFETIME_SECONDS)
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+        return set()
+    if rdtype == "CNAME":
+        return {_normalize_host(str(r.target)) for r in answers}
+    return {str(r.address) for r in answers}
+
+
+def _addresses(name: str) -> set:
+    return _dns_records(name, "A") | _dns_records(name, "AAAA")
+
+
+def _check_points_at_platform(domain: str, org_slug: str) -> bool:
+    base = _normalize_host(LEARNHOUSE_DOMAIN)
+    if not base or not domain:
+        return False
+    slug_host = f"{org_slug}.{base}" if org_slug else ""
+    if domain == base or domain.endswith(f".{base}"):
+        # Platform-owned namespace (wildcard DNS): always served by us.
+        return True
+
+    cnames = _dns_records(domain, "CNAME")
+    for target in cnames:
+        if target == slug_host or target == base or target.endswith(f".{base}"):
+            return True
+
+    # Apex domains can't CNAME (ALIAS/flattening, or plain A records): require
+    # the resolved addresses to overlap with the platform's.
+    domain_ips = _addresses(domain)
+    if not domain_ips:
+        return False
+    platform_ips = _addresses(base)
+    if slug_host:
+        platform_ips |= _addresses(slug_host)
+    return bool(domain_ips & platform_ips)
+
+
+def domain_points_at_platform(domain: str, org_slug: str = "") -> bool:
+    """True when ``domain``'s live DNS still routes to this platform.
+
+    Accepts a CNAME to ``{org_slug}.{LEARNHOUSE_DOMAIN}`` (or anything under the
+    platform domain), else A/AAAA overlap with the platform's addresses. Fails
+    closed on any DNS error. Results are cached for a few minutes. Blocking;
+    async callers use ``custom_domain_points_at_platform``.
+    """
+    import time
+
+    domain = _normalize_host(domain)
+    org_slug = (org_slug or "").strip().lower()
+    if os.getenv("LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE") == "true":
+        return True
+
+    key = (domain, org_slug)
+    now = time.monotonic()
+    cached = _POINTS_AT_PLATFORM_CACHE.get(key)
+    if cached and cached[1] > now:
+        return cached[0]
+
+    try:
+        ok = _check_points_at_platform(domain, org_slug)
+    except Exception as e:
+        logger.warning("Live DNS check failed for custom domain %s: %s", domain, e)
+        ok = False
+
+    if len(_POINTS_AT_PLATFORM_CACHE) >= _POINTS_AT_PLATFORM_CACHE_MAX:
+        _POINTS_AT_PLATFORM_CACHE.clear()
+    _POINTS_AT_PLATFORM_CACHE[key] = (ok, now + _POINTS_AT_PLATFORM_TTL_SECONDS)
+    return ok
+
+
+async def custom_domain_points_at_platform(domain: str, org_slug: str = "") -> bool:
+    import asyncio
+
+    return await asyncio.to_thread(domain_points_at_platform, domain, org_slug)
+
+
+async def _org_plan_includes_custom_domains(org_id: int, db_session: AsyncSession) -> bool:
+    """Stop routing a domain once the org's plan no longer includes it.
+
+    Same plan level as the management routes (router.py). A plan lookup that
+    errors for any reason other than a definite "not entitled" serves the
+    domain: a transient DB/config hiccup must not take a paying org offline,
+    and the domain was verified while the org was entitled.
+    """
+    from src.security.features_utils.plan_check import check_org_plan
+
+    try:
+        await check_org_plan(org_id, "standard", "Custom Domains", db_session)
+    except HTTPException as exc:
+        return exc.status_code != status.HTTP_403_FORBIDDEN
+    except Exception:
+        logger.warning("Plan lookup failed for custom domain of org %s", org_id, exc_info=True)
+    return True
+
+
 async def resolve_org_by_domain(
     db_session: AsyncSession,
     domain: str,
+    for_auth: bool = False,
 ) -> Optional[CustomDomainResolveResponse]:
     """
     Resolve an organization by custom domain.
     This is a public endpoint that doesn't require authentication.
+
+    ``for_auth`` additionally requires the domain's live DNS to still point at
+    the platform, for callers about to hand it credentials (OAuth code bounce).
     """
     # Normalize domain
     domain = domain.lower().strip()
@@ -669,6 +799,12 @@ async def resolve_org_by_domain(
     organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
+        return None
+
+    if not await _org_plan_includes_custom_domains(organization.id, db_session):
+        return None
+
+    if for_auth and not await custom_domain_points_at_platform(domain, organization.slug):
         return None
 
     return CustomDomainResolveResponse(

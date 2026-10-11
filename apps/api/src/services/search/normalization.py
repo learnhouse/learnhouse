@@ -11,7 +11,7 @@ from typing import Optional
 
 # Escape character used by `build_like_pattern` when emitting `\%` / `\_` / `\\`.
 # Pass this to `column.ilike(pattern, escape=LIKE_ESCAPE_CHAR)` so the database
-# treats the escaped sequence as a literal — without it, `\%` is read as
+# treats the escaped sequence as a literal. Without it, `\%` is read as
 # (literal `\`) + (wildcard `%`) and our escape function is purely cosmetic.
 LIKE_ESCAPE_CHAR = "\\"
 
@@ -22,7 +22,7 @@ def normalize_search_term(query: Optional[str]) -> str:
     Stored text and the query can otherwise differ in unicode form (NFC vs
     NFD), making emoji with modifiers (skin tones, ZWJ family sequences) and
     accented characters silently fail to match under LIKE/ILIKE. NFC on both
-    sides — plus a strip — keeps the comparison consistent.
+    sides, plus a strip, keeps the comparison consistent.
     """
     if not query:
         return ""

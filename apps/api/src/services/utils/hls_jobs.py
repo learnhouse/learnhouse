@@ -6,7 +6,7 @@ video, transcode it to an HLS ladder, upload the output next to the original,
 and record status on `activity.extra_metadata["hls"]`.
 
 Execution models (no dedicated worker infra exists yet):
-- A `transcode-worker` CLI drains a Redis queue — the recommended prod path so
+- A `transcode-worker` CLI drains a Redis queue, the recommended prod path so
   heavy ffmpeg runs off the API pods.
 - An in-process consumer (`LEARNHOUSE_HLS_INPROCESS_WORKER=true`, default off,
   Semaphore(1)) for dev/self-host.
@@ -56,7 +56,7 @@ def scratch_dir():
     """A temp directory whose cleanup can never fail the job.
 
     ``tempfile.TemporaryDirectory`` raises on exit if anything is still writing
-    into the tree — ffmpeg segment writers race the rmtree and it comes back as
+    into the tree. ffmpeg segment writers race the rmtree and it comes back as
     ``[Errno 39] Directory not empty``, which surfaced as "HLS job crashed"
     *after* the transcode had already succeeded and uploaded. The output is
     already safe at that point; a leftover temp dir is not worth failing over
@@ -68,40 +68,48 @@ def scratch_dir():
     finally:
         try:
             shutil.rmtree(path, ignore_errors=True)
-        except Exception:  # pragma: no cover — ignore_errors already swallows
+        except Exception:  # pragma: no cover; ignore_errors already swallows
             logger.debug("Could not remove scratch dir %s", path, exc_info=True)
 
 
 async def _upload_output(out_dir: str, prefix: str) -> bool:
-    """Upload a transcode's output dir, in parallel, off the event loop.
+    """Publish a transcode's output dir (S3 in parallel, or a local copy) off
+    the event loop.
 
     Must be awaited inside ``scratch_dir()``. If the job is cancelled (the
     JOB_TIMEOUT_SECONDS cap, or a pod shutting down), ``asyncio.to_thread``
     can't stop its worker thread, and ``scratch_dir`` deletes the files right
-    after. Without the stop flag that thread kept going and logged one
-    "No such file or directory" error per remaining segment.
+    after. The stop flag tells that thread to give up instead of failing on
+    every file that has disappeared.
     """
-    if not is_s3_enabled():
-        await asyncio.to_thread(shutil.copytree, out_dir, prefix, dirs_exist_ok=True)
-        return True
     stop = threading.Event()
+
+    def _copy_unless_stopped(src: str, dst: str) -> str:
+        return dst if stop.is_set() else shutil.copy2(src, dst)
+
     try:
-        return await asyncio.to_thread(
-            upload_directory_to_s3_parallel, out_dir, prefix, stop=stop
+        if is_s3_enabled():
+            return await asyncio.to_thread(
+                upload_directory_to_s3_parallel, out_dir, prefix, stop=stop
+            )
+        await asyncio.to_thread(
+            shutil.copytree, out_dir, prefix,
+            dirs_exist_ok=True, copy_function=_copy_unless_stopped,
         )
+        return True
     except BaseException:
         stop.set()
         raise
 
 # In-app background consumer state. Transcoding runs INSIDE the API process as
-# an asyncio background task that drains the Redis queue — no separate worker
+# an asyncio background task that drains the Redis queue, with no separate worker
 # deployment. ffmpeg runs as an async subprocess and S3 I/O is offloaded to a
 # thread, so the event loop is never blocked; a semaphore caps how many
 # transcodes run at once per pod.
 _consumer_task: Optional["asyncio.Task"] = None
 _reaper_task: Optional["asyncio.Task"] = None
 _consumer_children: set = set()
-# UUIDs currently transcoding on THIS pod — re-enqueued on shutdown so a pod
+# UUIDs currently transcoding on THIS pod, re-enqueued on shutdown so a pod
 # termination (deploy/autoscale) never leaves a job stuck at "processing".
 _inflight: set = set()
 
@@ -207,7 +215,7 @@ async def _resolve_source(activity_uuid: str) -> Optional[dict]:
 
 
 def _safe_filename(filename: str) -> bool:
-    """A stored filename must be a bare name — reject path separators, traversal,
+    """A stored filename must be a bare name: reject path separators, traversal,
     NUL, and absolute paths so it can't escape the activity's key/dir on join."""
     if not filename or "\x00" in filename:
         return False
@@ -331,7 +339,7 @@ def enqueue(activity_uuid: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Video BLOCK transcoding — reuses the SAME queue/consumer/reconciler/transcoder
+# Video BLOCK transcoding. Reuses the SAME queue/consumer/reconciler/transcoder
 # as activities. A block job is a JSON queue item; a legacy bare uuid string is
 # still an activity job, so the activity path is untouched.
 # ---------------------------------------------------------------------------
@@ -538,13 +546,13 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
             # (e.g. a subprocess spawn that hangs before its own timeout applies).
             await asyncio.wait_for(_dispatch(job), timeout=JOB_TIMEOUT_SECONDS)
         except asyncio.TimeoutError:
-            logger.error("HLS: job %s exceeded %ss — marking failed", item, JOB_TIMEOUT_SECONDS)
+            logger.error("HLS: job %s exceeded %ss, marking failed", item, JOB_TIMEOUT_SECONDS)
             try:
                 await _mark_failed(job, "timeout")
             except Exception:
                 pass
         except asyncio.CancelledError:
-            # Interrupted (pod shutting down) — re-queue so another pod finishes it.
+            # Interrupted (pod shutting down): re-queue so another pod finishes it.
             try:
                 client.rpush(REDIS_QUEUE_KEY, item)
             except Exception:
@@ -556,7 +564,7 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
             _inflight.discard(item)
             sem.release()
 
-    # A single failed poll means nothing — Redis read timeouts happen on an idle
+    # A single failed poll means nothing. Redis read timeouts happen on an idle
     # connection and the next poll reconnects. Only a *run* of failures is worth
     # an error (i.e. Redis is actually down), otherwise every blip pages us.
     poll_failures = 0
@@ -587,14 +595,14 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
 
 
 async def reconcile_unfinished(max_retries: Optional[int] = None) -> dict:
-    """Re-poll for hosted videos whose HLS isn't `ready` and (re)queue them —
+    """Re-poll for hosted videos whose HLS isn't `ready` and (re)queue them:
     the clean auto-retry system that replaces manual re-triggering.
 
     Per video it:
       * skips ones that are `ready`, already queued, or actively transcoding
         (a live heartbeated processing lease exists);
-      * otherwise (re)queues it — interrupted `processing`, `failed`, a lost
-        `queued`, or never-started (no hls) — bumping a Redis retry counter;
+      * otherwise (re)queues it, whether interrupted `processing`, `failed`, a lost
+        `queued`, or never-started (no hls), bumping a Redis retry counter;
       * gives up after `max_retries` so a genuinely broken file can't loop
         forever (a successful transcode clears that video's counter).
 
@@ -661,7 +669,7 @@ async def reconcile_unfinished(max_retries: Optional[int] = None) -> dict:
             except Exception:
                 pass
 
-        # Video BLOCKS — same retry/lease/dedup logic, keyed by block:{uuid}.
+        # Video BLOCKS: same retry/lease/dedup logic, keyed by block:{uuid}.
         brows = (await db.execute(
             select(Block).where(Block.block_type == BlockTypeEnum.BLOCK_VIDEO)
         )).scalars().all()
@@ -793,7 +801,7 @@ async def _pending_targets(limit: int = 0) -> list[str]:
 
 async def enqueue_pending(limit: int = 0) -> dict:
     """Enqueue every not-yet-ready hosted video for HLS. The in-app consumer
-    transcodes them in the background — this returns immediately."""
+    transcodes them in the background; this returns immediately."""
     targets = await _pending_targets(limit)
     client = get_redis_client()
     if not client:

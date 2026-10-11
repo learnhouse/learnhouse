@@ -29,7 +29,7 @@ TRANSLATE_TIMEOUT_S = 5 * 60
 MAX_CHUNKS = 60  # up to 10h of audio
 
 # WebVTT timestamps: the hours field is OPTIONAL. Models (Gemini) commonly emit
-# MM:SS.mmm (e.g. "00:01.800"); the spec also allows HH:MM:SS.mmm. Accept both —
+# MM:SS.mmm (e.g. "00:01.800"); the spec also allows HH:MM:SS.mmm. Accept both, since
 # requiring hours made every real transcript match zero cues.
 _TS = r"(?:\d+:)?\d{1,2}:\d{2}[.,]\d{3}"
 _CUE_TIME_RE = re.compile(rf"({_TS})\s*-->\s*({_TS})")

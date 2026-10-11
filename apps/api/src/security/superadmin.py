@@ -25,7 +25,7 @@ def ensure_ee_superadmin_surface() -> None:
     """Block the superadmin surface on OSS deployments.
 
     Denies only when the mode is definitively 'oss'. Both 'saas' and 'ee' pass
-    through untouched — never invert this to ``!= 'ee'``, which would 403 the
+    through untouched. Never invert this to ``!= 'ee'``, which would 403 the
     live SaaS deployment.
 
     The import is lazy so the mode is resolved per request rather than frozen
@@ -76,7 +76,7 @@ async def require_superadmin(
 
     Rejects:
       - ``AnonymousUser`` (401)
-      - ``APITokenUser`` (org-scoped token; 403 — org tokens are never superadmins)
+      - ``APITokenUser`` (org-scoped token; 403, since org tokens are never superadmins)
     """
     from src.db.users import AnonymousUser, APITokenUser, SuperadminAPITokenUser
 
@@ -87,7 +87,7 @@ async def require_superadmin(
         )
 
     # Defense in depth. The EE superadmin routers are already mounted behind
-    # their own OSS check, so on those routes this never fires — it is here so
+    # their own OSS check, so on those routes this never fires. It is here so
     # that any core route which adopts require_superadmin later inherits the
     # gate instead of quietly shipping a superadmin surface to OSS.
     # Ordered after the 401 so anonymous callers still get 401, and before the
@@ -103,7 +103,7 @@ async def require_superadmin(
 
     if isinstance(current_user, SuperadminAPITokenUser):
         # Re-check the minting user still has is_superadmin=True. If they've
-        # been demoted, the token loses effect immediately — no separate
+        # been demoted, the token loses effect immediately, no separate
         # revocation needed.
         if not await is_user_superadmin(current_user.created_by_user_id, db_session):
             raise HTTPException(

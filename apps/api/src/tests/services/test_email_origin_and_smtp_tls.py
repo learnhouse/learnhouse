@@ -174,7 +174,7 @@ class TestScopedOriginRegexp:
         assert _is_scoped_origin_regexp(pattern)
 
     def test_shipped_catch_all_default_cannot_host_an_email_link(self):
-        """The shipped default stays a catch-all on purpose — the same value
+        """The shipped default stays a catch-all on purpose: the same value
         drives CORS and CSRF, so narrowing it would lock out every deployment
         that relies on it. What must hold is that a catch-all can never decide
         the host of an emailed link: it is recognized and ignored."""
@@ -205,8 +205,19 @@ class TestVerifiedCustomDomains:
 
     def test_verified_custom_domain_is_accepted(self):
         self._seed("learn.acme.org", True)
-        with _patch_config(), _no_platform_url():
+        with _patch_config(), _no_platform_url(), patch(
+            "src.services.orgs.custom_domains.domain_points_at_platform",
+            return_value=True,
+        ):
             assert _is_allowed_base_url("https://learn.acme.org")
+
+    def test_verified_custom_domain_repointed_away_is_rejected(self):
+        self._seed("learn.acme.org", True)
+        with _patch_config(), _no_platform_url(), patch(
+            "src.services.orgs.custom_domains.domain_points_at_platform",
+            return_value=False,
+        ):
+            assert not _is_allowed_base_url("https://learn.acme.org")
 
     def test_unverified_and_expired_and_unknown_hosts_are_rejected(self):
         self._seed("notverified.acme.org", False)
@@ -272,6 +283,8 @@ class TestMagicLinkUrlInEmailBody:
         with patch(
             "src.routers.auth.check_login_rate_limit", return_value=(True, None)
         ), patch(
+            "src.routers.auth.check_rate_limit", return_value=(True, 1, 900)
+        ), patch(
             "src.services.auth.magic_login.issue_magic_login_token", return_value="tok"
         ), patch(
             "src.services.auth.magic_login.send_email", side_effect=_capture
@@ -307,14 +320,17 @@ class TestMagicLinkUrlInEmailBody:
         assert "evil.com" not in sent["body"]
         assert "https://app.learnhouse.io/auth/magic?token=tok" in sent["body"]
 
-    async def test_legitimate_org_subdomain_origin_is_preserved(
+    async def test_allowlisted_origin_does_not_pick_the_link_host(
         self, magic_client, link_user
     ):
+        # Even an allowlisted origin (org subdomains, verified custom domains)
+        # never chooses where a sign-in link points: the platform host does.
         response, sent = await self._request_link(
             magic_client, link_user.email, {"origin": "https://acme.learnhouse.io"}
         )
         assert response.status_code == 200
-        assert "https://acme.learnhouse.io/auth/magic?token=tok" in sent["body"]
+        assert "acme.learnhouse.io" not in sent["body"]
+        assert "https://app.learnhouse.io/auth/magic?token=tok" in sent["body"]
 
 
 class TestSmtpTls:

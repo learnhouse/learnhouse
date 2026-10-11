@@ -1,5 +1,5 @@
 """
-Unit tests for src/core/redis.py — the singleton Redis pool factory.
+Unit tests for src/core/redis.py, the singleton Redis pool factory.
 
 All tests manipulate the module-level _pool via reset_pool() so they are
 fully independent and leave no global state behind.

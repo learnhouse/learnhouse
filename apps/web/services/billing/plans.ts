@@ -46,6 +46,6 @@ export const PACK_PRICE_IDS: Record<PackId, string> = {
 
 // Reverse lookup: Stripe price id → plan/billing (or pack). Used to derive an
 // org's plan from the subscription's PRICE (the source of truth) rather than
-// stale metadata — see subscriptionUtils for why metadata can't be trusted
+// stale metadata; see subscriptionUtils for why metadata can't be trusted
 // after a billing-portal change. Built once at module load.
 export const PRICE_TO_PLAN: ReadonlyMap<string, PriceMapEntry> = buildPriceToPlan(PRICE_IDS, PACK_PRICE_IDS);

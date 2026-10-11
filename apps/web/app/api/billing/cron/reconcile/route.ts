@@ -8,7 +8,7 @@ import { guardBilling, requireCronSecret } from "../../_lib";
 // source of truth). Catches missed `customer.subscription.deleted` webhooks
 // (orgs stuck on a paid plan after cancel), billing-portal plan changes (stale
 // metadata), and any dropped webhook delivery. Iterates ALL orgs, so it is
-// gated by a shared cron secret — it must never be invocable from a browser.
+// gated by a shared cron secret; it must never be invocable from a browser.
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 

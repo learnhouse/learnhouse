@@ -13,7 +13,7 @@ interface EnvVar {
   description: string
   /** Static string or factory (e.g. to generate a secret). */
   defaultValue: string | (() => string)
-  /** If true, the var has NO usable fallback in config.yaml — app won't work without it. */
+  /** If true, the var has NO usable fallback in config.yaml; the app won't work without it. */
   required: boolean
 }
 
@@ -28,7 +28,7 @@ interface AppEnvSpec {
 // Defaults
 // ────────────────────────────────────────────────────────────────────────────
 
-function generateJwtSecret(): string {
+function generateSecret(): string {
   return crypto.randomBytes(32).toString('base64url')
 }
 
@@ -36,7 +36,7 @@ function generateJwtSecret(): string {
  * Only vars that are truly required for dev and have NO working yaml fallback.
  *
  * Most API vars fall back to config.yaml which ships sensible localhost
- * defaults — those are intentionally omitted here.
+ * defaults; those are intentionally omitted here.
  */
 const API_ENV: AppEnvSpec = {
   label: 'API',
@@ -46,13 +46,13 @@ const API_ENV: AppEnvSpec = {
       name: 'LEARNHOUSE_AUTH_JWT_SECRET_KEY',
       required: true,
       description: 'JWT signing secret (min 32 chars)',
-      defaultValue: generateJwtSecret,
+      defaultValue: generateSecret,
     },
     {
       name: 'COLLAB_INTERNAL_KEY',
       required: true,
       description: 'Shared key for collab ↔ API auth',
-      defaultValue: 'dev-collab-internal-key-change-in-prod',
+      defaultValue: generateSecret,
     },
   ],
 }
@@ -202,7 +202,7 @@ export async function checkDevEnv(root: string): Promise<boolean> {
   for (const [label, vars] of byApp) {
     console.log(`  ${pc.bold(label)} ${pc.dim(`(${vars[0].app.envFile})`)}`)
     for (const m of vars) {
-      console.log(`    ${pc.red('✗')} ${pc.cyan(m.envVar.name)} — ${pc.dim(m.envVar.description)}`)
+      console.log(`    ${pc.red('✗')} ${pc.cyan(m.envVar.name)}: ${pc.dim(m.envVar.description)}`)
     }
     console.log()
   }
@@ -212,7 +212,7 @@ export async function checkDevEnv(root: string): Promise<boolean> {
     message: 'How would you like to proceed?',
     options: [
       { value: 'defaults', label: 'Apply dev defaults and continue', hint: 'writes only the missing vars' },
-      { value: 'abort', label: "Abort — I'll set them up manually" },
+      { value: 'abort', label: "Abort; I'll set them up manually" },
     ],
   })
 
@@ -225,9 +225,13 @@ export async function checkDevEnv(root: string): Promise<boolean> {
   // Generate JWT secret & collab key once, share across API + Collab.
   const apiFile = path.join(root, API_ENV.envFile)
   const apiExisting = parseEnvFile(apiFile)
+  const collabExisting = parseEnvFile(path.join(root, COLLAB_ENV.envFile))
 
-  const jwtSecret = apiExisting.get('LEARNHOUSE_AUTH_JWT_SECRET_KEY') || generateJwtSecret()
-  const collabKey = apiExisting.get('COLLAB_INTERNAL_KEY') || 'dev-collab-internal-key-change-in-prod'
+  const jwtSecret = apiExisting.get('LEARNHOUSE_AUTH_JWT_SECRET_KEY') || generateSecret()
+  // The internal key authorizes collab's board writes on the API, so it is
+  // never a fixed string; reuse whichever side already has one.
+  const collabKey =
+    apiExisting.get('COLLAB_INTERNAL_KEY') || collabExisting.get('COLLAB_INTERNAL_KEY') || generateSecret()
 
   // ── Write ──────────────────────────────────────────────────────────────
   for (const app of ALL_APPS) {

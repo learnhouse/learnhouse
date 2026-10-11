@@ -10,7 +10,7 @@ const wixMadeforText = Wix_Madefor_Text({
 })
 
 // Wix Madefor Text has no Arabic subset, so Arabic would otherwise fall back to
-// whatever the OS provides — Geeza Pro, Segoe UI, Noto — and look like a
+// whatever the OS provides (Geeza Pro, Segoe UI, Noto) and look like a
 // different product on every platform.
 //
 // Tajawal is the Arabic face for the whole product. It is FORCED whenever the
@@ -19,7 +19,7 @@ const wixMadeforText = Wix_Madefor_Text({
 // instead of switching per glyph between two designs with different
 // proportions.
 //
-// Weights are 200-900 with no 600 — a `font-semibold` element rounds up to 700,
+// Weights are 200-900 with no 600, so a `font-semibold` element rounds up to 700,
 // which is the intended reading.
 const tajawal = Tajawal({
   subsets: ['arabic', 'latin'],
@@ -44,11 +44,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Synchronous script — sets <html lang/dir> before body paints so an
+        {/* Synchronous script: sets <html lang/dir> before body paints so an
             RTL locale never flashes an LTR layout. Must run first. */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src="/dir-init.js" />
-        {/* Synchronous script — blocks parsing to guarantee window.__RUNTIME_CONFIG__ exists before any JS runs.
+        {/* Synchronous script: blocks parsing to guarantee window.__RUNTIME_CONFIG__ exists before any JS runs.
             Next.js <Script strategy="beforeInteractive"> is not truly blocking in all browsers (Safari). */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src="/runtime-config.js" />

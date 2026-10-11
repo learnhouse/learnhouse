@@ -102,7 +102,7 @@ function PaymentsOffersPage() {
           <Modal
             isDialogOpen={!!resourcesPanelOffer}
             onOpenChange={(open) => { if (!open) setResourcesPanelOffer(null); }}
-            dialogTitle={`Resources — ${resourcesPanelOffer.name}`}
+            dialogTitle={`Resources: ${resourcesPanelOffer.name}`}
             dialogDescription="Resources accessible to enrolled users"
             dialogContent={
               <OfferResourcesPanel

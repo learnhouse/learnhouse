@@ -102,7 +102,7 @@ export class AssignmentEditorPage {
 
   /**
    * Turn the assignment into a formative one through the Edit modal: switch on
-   * "Formative — no grading", write the model answer, and choose when it
+   * the "Formative" option (no grading), write the model answer, and choose when it
    * unlocks. Drives the real form rather than the API so the spec proves the
    * authoring surface works, not just the endpoint behind it.
    */
@@ -117,7 +117,7 @@ export class AssignmentEditorPage {
     await expect(dialog).toBeVisible({ timeout: 15_000 })
 
     // The formative switch carries its label as an aria-label.
-    await dialog.getByRole('button', { name: 'Formative — no grading' }).click()
+    await dialog.getByRole('button', { name: 'Formative (no grading)' }).click()
 
     await dialog
       .getByPlaceholder('Write the worked solution learners should compare their work against…')

@@ -24,7 +24,7 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
 
-  // TanStack Query for community data — cached across navigations within the same course
+  // TanStack Query for community data, cached across navigations within the same course
   const { data: community } = useQuery<Community | null>({
     queryKey: queryKeys.community.byCourse(courseUuid),
     queryFn: () => getCommunityByCourse(courseUuid, null, accessToken),
@@ -32,7 +32,7 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
     staleTime: 60_000,
   })
 
-  // TanStack Query for discussions — only fetch when community is loaded
+  // TanStack Query for discussions; only fetch when community is loaded
   const communityUuid = community?.community_uuid
   const { data: discussions } = useQuery<DiscussionWithAuthor[]>({
     queryKey: queryKeys.community.discussions(communityUuid ?? '', 'recent', 1),

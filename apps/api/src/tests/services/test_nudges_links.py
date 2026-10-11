@@ -1,7 +1,7 @@
 """Tests for src/services/nudges/links.py.
 
 The point of this file is that every CTA in a nudge resolves. A broken link in
-a lifecycle email fails silently — the recipient just leaves.
+a lifecycle email fails silently: the recipient just leaves.
 """
 
 import pytest
@@ -80,7 +80,7 @@ class TestRouteShapes:
 
     def test_unknown_subpage_falls_back_to_content(self):
         """An unknown segment renders an empty tab rather than 404ing, which is
-        harder to spot than a dead link — so refuse to emit one."""
+        harder to spot than a dead link, so refuse to emit one."""
         url = course_editor_url(BASE, "course_abc123", "does-not-exist")
         assert url.endswith("/content")
 

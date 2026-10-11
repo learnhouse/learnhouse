@@ -1,5 +1,5 @@
 /**
- * Goal: prove the QUIZ task type works end-to-end for a student — selecting the
+ * Goal: prove the QUIZ task type works end-to-end for a student: selecting the
  * correct option, saving, and submitting yields a fully auto-graded 100, both
  * in the UI and in persisted server state.
  */
@@ -33,7 +33,7 @@ test('student takes a quiz, picks the right answer, and is auto-graded 100', asy
   // UI shows the auto-grade.
   await assignment.expectGraded(100)
 
-  // Server agrees (read back with the cached admin token — no extra login).
+  // Server agrees (read back with the cached admin token, no extra login).
   const submission = await getUserSubmission(s.seeded.assignmentUuid, s.studentId, s.adminToken)
   expect(submission.grade).toBe(100)
   expect(submission.submission_status).toBe('GRADED')

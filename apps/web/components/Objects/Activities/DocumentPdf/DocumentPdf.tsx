@@ -3,6 +3,7 @@ import { getActivityMediaDirectory } from '@services/media/media'
 import { ArrowsOut, ArrowsIn, DownloadSimple } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import React from 'react'
+import { positiveIntParam } from '@/lib/copilot/sources'
 
 // Filename for the saved copy: the activity's name, so learners don't end up
 // with a folder of opaque upload ids.
@@ -10,6 +11,8 @@ function downloadName(activity: any) {
   const base = String(activity?.name || 'document').replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'document'
   return base.toLowerCase().endsWith('.pdf') ? base : `${base}.pdf`
 }
+
+const noSubscription = () => () => {}
 
 function DocumentPdfActivity({
   activity,
@@ -35,6 +38,11 @@ function DocumentPdfActivity({
     activity.content.filename,
     'documentpdf'
   )
+
+  // `?page=<n>` opens the document at a page, e.g. from a copilot citation.
+  // Read through useSyncExternalStore so the server render and hydration agree.
+  const search = React.useSyncExternalStore(noSubscription, () => window.location.search, () => '')
+  const linkedPage = positiveIntParam(search, 'page')
 
   React.useEffect(() => {
     const onChange = () => setIsFullscreen(document.fullscreenElement === containerRef.current)
@@ -104,7 +112,7 @@ function DocumentPdfActivity({
     >
       <iframe
         className={className || isFullscreen ? 'w-full h-full' : 'sm:rounded-lg w-full h-[85vh] sm:h-[900px]'}
-        src={pdfUrl}
+        src={linkedPage && pdfUrl ? `${pdfUrl}#page=${linkedPage}` : pdfUrl}
         title={activity?.name || t('editor.blocks.pdf_block.document_title')}
       />
       {/* Always visible on touch screens, where there is no hover to reveal them. */}

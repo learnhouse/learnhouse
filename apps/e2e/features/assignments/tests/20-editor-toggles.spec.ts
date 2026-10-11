@@ -1,5 +1,5 @@
 /**
- * Goal: prove the Edit-modal grading-option TOGGLES persist — turning on
+ * Goal: prove the Edit-modal grading-option TOGGLES persist: turning on
  * "Block copy & paste" and "Allow retries" and turning off "Automatic grading"
  * is saved to the assignment (verified via API). Uses the shared admin session.
  */

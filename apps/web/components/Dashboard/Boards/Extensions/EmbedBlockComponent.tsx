@@ -9,6 +9,7 @@ import {
   SiFigma, SiGiphy, SiYoutube,
 } from '@icons-pack/react-simple-icons'
 import DOMPurify from 'dompurify'
+import { sanitizeEmbedCode } from '@/lib/media/embedSanitize'
 import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
@@ -101,13 +102,7 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
   // Sanitize embed code
   useEffect(() => {
     if (embedType === 'code' && embedCode) {
-      setSanitizedCode(DOMPurify.sanitize(embedCode, {
-        ADD_TAGS: ['iframe'],
-        ALLOWED_ATTR: [
-          'src', 'frameborder', 'allowfullscreen', 'allow', 'width', 'height',
-          'style', 'class', 'title', 'loading', 'referrerpolicy', 'scrolling', 'name',
-        ],
-      }))
+      setSanitizedCode(sanitizeEmbedCode(embedCode))
     }
   }, [embedCode, embedType])
 

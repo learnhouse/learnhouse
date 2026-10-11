@@ -16,7 +16,8 @@ from src.services.users.emails import (
     send_password_reset_email,
     send_password_reset_email_platform,
 )
-from src.services.email.utils import get_base_url_from_request
+from src.services.email.utils import get_member_link_base_url
+from src.security.org_auth import get_user_org
 from src.db.users import (
     AnonymousUser,
     PublicUser,
@@ -63,6 +64,55 @@ def generate_secure_reset_code(length: int = 8) -> str:
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
+def _enforce_send_ip_rate_limit(request: Request) -> None:
+    """Cap reset-code emails per source IP (before any lookup, so it cannot be
+    used to time account existence)."""
+    from src.services.security.rate_limiting import get_client_ip
+
+    ip_rate_key = f"pwd_reset_ip:{get_client_ip(request)}"
+    try:
+        r = _get_redis_connection()
+        attempts = r.incr(ip_rate_key)
+        if attempts == 1:
+            r.expire(ip_rate_key, 1800)  # 30-minute window
+        if attempts > 10:
+            raise HTTPException(status_code=429, detail="Too many requests")
+    except HTTPException:
+        raise
+    except Exception:
+        logging.warning("Could not check IP rate limit for password reset")
+
+
+def _consume_reset_code(r, reset_key: str, user_uuid: str):
+    """Atomically take the code (GETDEL, so two racing requests cannot both
+    redeem it). Returns the stored object, or None when absent/expired."""
+    try:
+        raw = r.getdel(reset_key)
+    except redis.exceptions.ResponseError:
+        # GETDEL needs Redis 6.2+; a MULTI block is just as atomic elsewhere.
+        pipe = r.pipeline(transaction=True)
+        pipe.get(reset_key)
+        pipe.delete(reset_key)
+        raw, _ = pipe.execute()
+    if raw is None:
+        return None
+    reset_code_object = json.loads(raw)
+    if reset_code_object["reset_code_expires"] < int(datetime.now().timestamp()):
+        logging.info(f"Expired reset code used for user: {user_uuid}")
+        return None
+    return reset_code_object
+
+
+def _invalidate_reset_codes(r, user_uuid: str) -> None:
+    """Drop every other live reset code for the user once one is redeemed."""
+    try:
+        keys = list(r.scan_iter(match=f"pwd_reset:user:{user_uuid}:*", count=100))
+        if keys:
+            r.delete(*keys)
+    except Exception:
+        logging.warning("Could not invalidate remaining reset codes")
+
+
 async def send_reset_password_code(
     request: Request,
     db_session: AsyncSession,
@@ -79,19 +129,7 @@ async def send_reset_password_code(
     - Logs attempts for security audit
     """
     # Rate limit by IP before any email lookup (prevents enumeration timing attacks)
-    _ip = request.client.host if request.client else "unknown"
-    ip_rate_key = f"pwd_reset_ip:{_ip}"
-    try:
-        _r_ip = _get_redis_connection()
-        _attempts = _r_ip.incr(ip_rate_key)
-        if _attempts == 1:
-            _r_ip.expire(ip_rate_key, 1800)  # 30-minute window
-        if _attempts > 10:
-            raise HTTPException(status_code=429, detail="Too many requests")
-    except HTTPException:
-        raise
-    except Exception:
-        logging.warning("Could not check IP rate limit for password reset")
+    _enforce_send_ip_rate_limit(request)
 
     # Get org first (public info, safe to fail explicitly)
     statement = select(Organization).where(Organization.id == org_id)
@@ -112,6 +150,12 @@ async def send_reset_password_code(
     if not user:
         logging.info(f"Password reset requested for non-existent email: {email[:3]}***")
         # Return same message as success to prevent enumeration
+        return "If an account with that email exists, a reset code has been sent"
+
+    # An org-branded reset only goes to that org's members; otherwise any org
+    # could send its own reset mail (and link) to any account on the platform.
+    if await get_user_org(user.id, org.id, db_session) is None:
+        logging.info(f"Org password reset requested by non-member: {user.user_uuid}")
         return "If an account with that email exists, a reset code has been sent"
 
     # Redis init
@@ -155,14 +199,19 @@ async def send_reset_password_code(
         ex=ttl,
     )
 
+    from src.services.email.safe_text import email_org_name, email_user_name
+
+    # Scrub names rendered into the mail; the address itself stays untouched.
     user_read = UserRead.model_validate(user)
+    user_read = user_read.model_copy(update={"username": email_user_name(user_read.username)})
     org_read = OrganizationRead.model_validate(org)
+    org_read = org_read.model_copy(update={"name": email_org_name(org_read.name)})
 
     org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
     org_config = (await db_session.execute(org_config_stmt)).scalars().first()
 
     # Send reset code via email. Use the org-aware base URL so the link points at
-    # the org's own host — including a verified CUSTOM DOMAIN (learn.acme.org) —
+    # the org's own host, including a verified CUSTOM DOMAIN (learn.acme.org),
     # not the org-less platform apex (where /reset can't resolve the org). Mirrors
     # the invitation flow (services/orgs/invites.py).
     from src.services.email.utils import get_org_signup_base_url
@@ -236,7 +285,7 @@ async def change_password_with_reset_code(
     user = (await db_session.execute(statement)).scalars().first()
 
     # SECURITY FIX: Generic error message to prevent enumeration
-    if not user:
+    if not user or await get_user_org(user.id, org.id, db_session) is None:
         logging.warning(f"Password change attempted for non-existent email: {email[:3]}***")
         raise HTTPException(
             status_code=400,
@@ -271,24 +320,10 @@ async def change_password_with_reset_code(
             detail="Invalid or expired reset code",
         )
 
-    # Direct deterministic key lookup — no wildcards or scan_iter needed
+    # Direct deterministic key lookup; no wildcards or scan_iter needed
     reset_key = f"pwd_reset:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
-    reset_code_value = r.get(reset_key)
-
-    if reset_code_value is None:
+    if _consume_reset_code(r, reset_key, user.user_uuid) is None:
         logging.warning(f"Invalid reset code attempt for user: {user.user_uuid}")
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid or expired reset code",
-        )
-
-    reset_code_object = json.loads(reset_code_value)
-
-    # Check if reset code is expired
-    if reset_code_object["reset_code_expires"] < int(datetime.now().timestamp()):
-        # Delete expired code
-        r.delete(reset_key)
-        logging.info(f"Expired reset code used for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
             detail="Invalid or expired reset code",
@@ -302,8 +337,8 @@ async def change_password_with_reset_code(
     await db_session.commit()
     await db_session.refresh(user)
 
-    # Delete reset code (one-time use)
-    r.delete(reset_key)
+    # The code itself was consumed above; any other outstanding code dies too.
+    _invalidate_reset_codes(r, user.user_uuid)
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")
     return "Password changed"
@@ -323,6 +358,8 @@ async def send_reset_password_code_platform(
     - Returns generic message to prevent user enumeration
     - Logs attempts for security audit
     """
+    _enforce_send_ip_rate_limit(request)
+
     statement = select(User).where(User.email == email)
     user = (await db_session.execute(statement)).scalars().first()
 
@@ -351,9 +388,12 @@ async def send_reset_password_code_platform(
         ex=ttl,
     )
 
-    user_read = UserRead.model_validate(user)
+    from src.services.email.safe_text import email_user_name
 
-    base_url = get_base_url_from_request(request)
+    user_read = UserRead.model_validate(user)
+    user_read = user_read.model_copy(update={"username": email_user_name(user_read.username)})
+
+    base_url = await get_member_link_base_url(request, db_session, user.id)
     isEmailSent = send_password_reset_email_platform(
         generated_reset_code=generated_reset_code,
         user=user_read,
@@ -419,22 +459,10 @@ async def change_password_with_reset_code_platform(
             detail="Invalid or expired reset code",
         )
 
-    # Direct deterministic key lookup — no wildcards or scan_iter needed
+    # Direct deterministic key lookup; no wildcards or scan_iter needed
     reset_key = f"pwd_reset:user:{user.user_uuid}:platform:code:{reset_code}"
-    reset_code_value = r.get(reset_key)
-
-    if reset_code_value is None:
+    if _consume_reset_code(r, reset_key, user.user_uuid) is None:
         logging.warning(f"Invalid reset code attempt for user: {user.user_uuid}")
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid or expired reset code",
-        )
-
-    reset_code_object = json.loads(reset_code_value)
-
-    if reset_code_object["reset_code_expires"] < int(datetime.now().timestamp()):
-        r.delete(reset_key)
-        logging.info(f"Expired reset code used for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
             detail="Invalid or expired reset code",
@@ -447,7 +475,7 @@ async def change_password_with_reset_code_platform(
     await db_session.commit()
     await db_session.refresh(user)
 
-    r.delete(reset_key)
+    _invalidate_reset_codes(r, user.user_uuid)
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")
     return "Password changed"

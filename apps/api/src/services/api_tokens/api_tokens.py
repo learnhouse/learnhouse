@@ -20,6 +20,7 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
 from src.security.org_auth import (
+    is_org_member,
     require_org_role_permission,
     get_user_org_role,
 )
@@ -60,7 +61,7 @@ def _block_api_tokens(current_user) -> None:
     """Block API tokens from managing other API tokens.
 
     SECURITY: Allowing a token to create / read / update / revoke other tokens
-    is a privilege-escalation surface — a low-rights token could spawn a
+    is a privilege-escalation surface: a low-rights token could spawn a
     higher-rights one, or revoke the admin's active token. Token management
     is a human/admin action and must stay behind user authentication.
     """
@@ -68,6 +69,27 @@ def _block_api_tokens(current_user) -> None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="API tokens cannot manage other API tokens. Use user authentication.",
+        )
+
+
+def _parse_expires_at(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace('Z', '+00:00'))
+
+
+def _validate_expires_at(value: Optional[str]) -> None:
+    """400 unless ``expires_at`` is empty or an ISO 8601 datetime.
+
+    Authentication refuses a token whose expiry cannot be parsed, so a bad
+    value must be caught here rather than minting a token that never works.
+    """
+    if not value:
+        return
+    try:
+        _parse_expires_at(value)
+    except (ValueError, TypeError, AttributeError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="expires_at must be an ISO 8601 datetime",
         )
 
 
@@ -157,6 +179,8 @@ async def create_api_token(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"An active API token with the name '{token_data.name}' already exists in this organization",
         )
+
+    _validate_expires_at(token_data.expires_at)
 
     # VERIFICATION 7: Validate rights structure if provided
     if token_data.rights:
@@ -300,6 +324,8 @@ async def update_api_token(
             detail="API token not found",
         )
 
+    _validate_expires_at(token_data.expires_at)
+
     # VERIFICATION 5: Validate rights if being updated
     if token_data.rights:
         user_role = await get_user_org_role(current_user.id, org_id, db_session)
@@ -425,6 +451,32 @@ async def regenerate_api_token(
     )
 
 
+async def _require_api_access_plan(org_id: int, db_session: AsyncSession) -> None:
+    """403 unless ``org_id``'s plan still includes API access.
+
+    Same check (and same plan floor) as the token-management routes; self-
+    hosted modes bypass it there and here alike.
+    """
+    from src.security.features_utils.plan_check import check_org_plan
+    from src.security.features_utils.plans import FEATURE_PLAN_REQUIREMENTS
+
+    try:
+        await check_org_plan(
+            org_id, FEATURE_PLAN_REQUIREMENTS["api_tokens"], "API Access", db_session
+        )
+    except HTTPException as e:
+        if e.status_code == status.HTTP_403_FORBIDDEN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"API token rejected: {e.detail}",
+            )
+        # No plan on record for the org: refuse rather than assume access.
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token rejected: the organization's plan does not include API access.",
+        )
+
+
 async def validate_api_token_for_auth(
     token: str,
     db_session: AsyncSession,
@@ -456,16 +508,25 @@ async def validate_api_token_for_auth(
     if not api_token:
         return None
 
-    # Check if token is expired
+    # Check if token is expired. An expiry we cannot read fails closed: the
+    # admin meant the token to stop working at some point.
     if api_token.expires_at:
         try:
-            expires_at = datetime.fromisoformat(api_token.expires_at.replace('Z', '+00:00'))
+            expires_at = _parse_expires_at(api_token.expires_at)
             now = datetime.now(expires_at.tzinfo)
-            if now > expires_at:
-                return None
-        except (ValueError, TypeError):
-            # If we can't parse the date, consider it not expired
-            pass
+        except (ValueError, TypeError, AttributeError):
+            return None
+        if now > expires_at:
+            return None
+
+    # API access is a plan feature, so a token minted while the org was on a
+    # qualifying plan stops working once the org drops below it.
+    await _require_api_access_plan(api_token.org_id, db_session)
+
+    # A token acts with its creator's standing in the org: once the creator
+    # has left (or been removed from) the org, the token stops working.
+    if not await is_org_member(api_token.created_by_user_id, api_token.org_id, db_session):
+        return None
 
     # Update last_used_at and opportunistically upgrade legacy hashes.
     try:
@@ -480,6 +541,14 @@ async def validate_api_token_for_auth(
         pass
 
     return api_token
+
+
+# Token rights buckets that roles don't have, and the role bucket that caps them.
+_TOKEN_BUCKET_CAPS = {
+    "certifications": "courses",
+    "payments": "organizations",
+    "search": "courses",
+}
 
 
 async def validate_rights_structure(
@@ -527,22 +596,28 @@ async def validate_rights_structure(
         user_rights_dict = user_rights.model_dump() if isinstance(user_rights, Rights) else user_rights
 
         for right_key, right_permissions in rights_dict.items():
-            if right_key in user_rights_dict:
-                user_right_permissions = user_rights_dict[right_key]
+            # Token-only buckets have no role counterpart; cap them by the
+            # closest role bucket so they can't be granted unchecked.
+            cap_key = right_key if right_key in user_rights_dict else _TOKEN_BUCKET_CAPS.get(right_key)
+            # A bucket the creator's role does not carry (e.g. a custom role
+            # saved before "assignments" existed) is a bucket they do not hold.
+            user_right_permissions = user_rights_dict.get(cap_key) if cap_key else None
+            if not isinstance(right_permissions, dict):
+                continue
 
-                for perm_key, perm_value in right_permissions.items():
-                    if isinstance(perm_value, bool) and perm_value:
-                        # The user must explicitly hold this permission to grant
-                        # it. Previously, if the permission key was absent from
-                        # the user's own rights object the check was skipped,
-                        # letting a user mint a token with a permission they do
-                        # not possess. Treat absent/false alike as not-granted.
-                        user_has_perm = (
-                            isinstance(user_right_permissions, dict)
-                            and bool(user_right_permissions.get(perm_key))
+            for perm_key, perm_value in right_permissions.items():
+                if isinstance(perm_value, bool) and perm_value:
+                    # The user must explicitly hold this permission to grant
+                    # it. Previously, if the permission key was absent from
+                    # the user's own rights object the check was skipped,
+                    # letting a user mint a token with a permission they do
+                    # not possess. Treat absent/false alike as not-granted.
+                    user_has_perm = (
+                        isinstance(user_right_permissions, dict)
+                        and bool(user_right_permissions.get(perm_key))
+                    )
+                    if not user_has_perm:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"Cannot grant '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
                         )
-                        if not user_has_perm:
-                            raise HTTPException(
-                                status_code=status.HTTP_403_FORBIDDEN,
-                                detail=f"Cannot grant '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
-                            )

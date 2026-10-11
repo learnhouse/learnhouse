@@ -8,7 +8,7 @@ mark-activity-done flow, which is what normally emits the event).
 ``# pragma: no cover`` in the service: the unique constraints that back them are
 verified in test_submission_uniqueness.py, but a mid-transaction constraint
 violation followed by further async IO can't be faithfully simulated on the
-aiosqlite test harness — it raises MissingGreenlet where prod asyncpg recovers.)
+aiosqlite test harness; it raises MissingGreenlet where prod asyncpg recovers.)
 """
 
 from datetime import datetime
@@ -63,7 +63,7 @@ class TestCourseCompletedFires:
         self, mock_request, db, org, course, chapter, activity, regular_user
     ):
         # The `activity` fixture is published and already linked to the course
-        # via a ChapterActivity, and it's the only activity — so submitting the
+        # via a ChapterActivity, and it's the only activity, so submitting the
         # assignment completes the course and COURSE_COMPLETED must fire.
         assignment = await _assignment(db, org, course, chapter, activity)
         trail = await _trail(db, course, regular_user)

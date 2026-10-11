@@ -2,7 +2,7 @@
 Redis cache layer for Tinybird analytics queries.
 
 Caches query results by (query_name, org_id, days, course_id) with a
-configurable TTL.  Falls back gracefully — if Redis is unavailable the
+configurable TTL.  Falls back gracefully: if Redis is unavailable the
 query runs against Tinybird directly.
 """
 
@@ -16,11 +16,11 @@ from src.core.redis import get_redis_client as _get_redis_client
 logger = logging.getLogger(__name__)
 
 # Default TTL per query category (seconds)
-CACHE_TTL_CORE = 60        # core widgets — 1 min
-CACHE_TTL_ADVANCED = 300   # advanced widgets — 5 min (expensive queries)
-CACHE_TTL_COURSE = 60      # course-level widgets — 1 min
-CACHE_TTL_DETAIL = 30      # detail/enriched queries — 30 s
-CACHE_TTL_LIVE = 0         # live_users — never cached
+CACHE_TTL_CORE = 60        # core widgets: 1 min
+CACHE_TTL_ADVANCED = 300   # advanced widgets: 5 min (expensive queries)
+CACHE_TTL_COURSE = 60      # course-level widgets: 1 min
+CACHE_TTL_DETAIL = 30      # detail/enriched queries: 30 s
+CACHE_TTL_LIVE = 0         # live_users: never cached
 
 # Queries that should never be cached (real-time data)
 _NO_CACHE_QUERIES = {"live_users", "detail_live_users"}
@@ -61,7 +61,7 @@ def get_ttl_for_query(query_name: str) -> int:
     from src.services.analytics.queries import DETAIL_QUERIES
     if query_name in DETAIL_QUERIES:
         return CACHE_TTL_DETAIL
-    # Everything else — check if it's in the advanced set (imported lazily)
+    # Everything else: check if it's in the advanced set (imported lazily)
     from src.services.analytics.queries import ADVANCED_QUERIES
     if query_name in ADVANCED_QUERIES:
         return CACHE_TTL_ADVANCED

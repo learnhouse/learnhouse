@@ -3,7 +3,7 @@ Zapier integration router.
 
 These endpoints are called by the Zapier Platform (not the LearnHouse dashboard)
 and MUST be authenticated via an API token (``Authorization: Bearer lh_...``).
-The token carries the organization scope — no ``org_id`` appears in the URL.
+The token carries the organization scope; no ``org_id`` appears in the URL.
 
 Pattern: REST Hooks. When a Zap is enabled, Zapier calls ``POST /subscriptions``
 with a target URL; we create a ``WebhookEndpoint`` tagged ``source="zapier"``.
@@ -29,13 +29,15 @@ from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, User
 from src.db.webhooks import WebhookEndpoint
 from src.security.auth import get_current_user
+from src.security.org_auth import require_org_admin
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.services.webhooks.crypto import encrypt_secret
+from src.services.webhooks.dispatch import invalidate_active_endpoint_cache
 from src.services.webhooks.events import WEBHOOK_EVENTS
 # Reuse the same SSRF guard as the manual webhook create path so both code
 # paths enforce identical validation. The leading underscore is conventional,
-# not enforced — importing it here is deliberate to avoid duplicating the
+# not enforced; importing it here is deliberate to avoid duplicating the
 # logic across files.
 from src.services.webhooks.webhooks import _validate_webhook_url
 
@@ -67,6 +69,45 @@ async def _require_pro_plan(org_id: int, db_session: AsyncSession) -> None:
                 f"Your organization is currently on the {current_plan.capitalize()} plan."
             ),
         )
+
+
+def _require_token_right(api_user: APITokenUser, resource: str) -> None:
+    """Listing endpoints return org data (member emails, cohorts): the token
+    needs the matching read right, like every other API-token route."""
+    rights = api_user.rights or {}
+    if isinstance(rights, dict):
+        allowed = bool((rights.get(resource) or {}).get("action_read", False))
+    else:
+        allowed = bool(getattr(getattr(rights, resource, None), "action_read", False))
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have 'read' permission for {resource}",
+        )
+
+
+# Token rights bucket that also covers an event's resource, by event-name
+# prefix. Events of other kinds need only the users right below.
+_EVENT_BUCKETS = {
+    "course": "courses",
+    "activity": "courses",
+    "assignment": "assignments",
+    "certificate": "certifications",
+    "folder": "folders",
+    "usergroup": "usergroups",
+}
+
+
+def _require_subscription_rights(api_user: APITokenUser, event: Optional[str] = None) -> None:
+    """A subscription is a standing feed of org events, most of which name the
+    member they concern, so managing one takes the token's own ``users`` read
+    right (not just its creator's admin role), plus the read right on the
+    event's resource when it has one."""
+    _require_token_right(api_user, "users")
+    if event:
+        bucket = _EVENT_BUCKETS.get(event.split("_", 1)[0])
+        if bucket:
+            _require_token_right(api_user, bucket)
 
 
 async def _zapier_context(
@@ -206,6 +247,7 @@ async def zapier_list_courses(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierCourseItem]:
     api_user, db_session = ctx
+    _require_token_right(api_user, "courses")
     query = (
         select(Course)
         .where(Course.org_id == api_user.org_id)
@@ -235,6 +277,7 @@ async def zapier_list_users(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierUserItem]:
     api_user, db_session = ctx
+    _require_token_right(api_user, "users")
     query = (
         select(User)
         .join(UserOrganization, UserOrganization.user_id == User.id)  # type: ignore
@@ -271,6 +314,7 @@ async def zapier_list_usergroups(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierUserGroupItem]:
     api_user, db_session = ctx
+    _require_token_right(api_user, "usergroups")
     query = (
         select(UserGroup)
         .where(UserGroup.org_id == api_user.org_id)
@@ -298,7 +342,7 @@ async def zapier_list_usergroups(
         "Creates a webhook endpoint tagged `source=\"zapier\"` that the dispatcher will deliver events to."
     ),
     responses={
-        201: {"description": "Subscription created — webhook endpoint registered for the given event.", "model": ZapierSubscriptionResponse},
+        201: {"description": "Subscription created: webhook endpoint registered for the given event.", "model": ZapierSubscriptionResponse},
         400: {"description": "Unknown event name or invalid target URL (SSRF guard)"},
         401: {"description": "Missing or invalid API token"},
         403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
@@ -310,13 +354,17 @@ async def zapier_create_subscription(
     ctx=Depends(_zapier_context),
 ) -> ZapierSubscriptionResponse:
     api_user, db_session = ctx
+    # A subscription is an outbound event feed carrying member data: the
+    # same admin gate manual webhook endpoints have.
+    await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     _validate_event(payload.event)
+    _require_subscription_rights(api_user, payload.event)
     _validate_webhook_url(payload.target_url)
 
     now = str(datetime.now())
     description = f"Zapier: {payload.zap_name}" if payload.zap_name else "Zapier integration"
 
-    # The signing secret is never returned to Zapier — Zapier's Catch Hook
+    # The signing secret is never returned to Zapier; Zapier's Catch Hook
     # authenticates its own inbound URL, so signatures are unused here. We
     # still persist one so the dispatcher can sign the payload exactly like
     # any other webhook (defence in depth).
@@ -344,6 +392,9 @@ async def zapier_create_subscription(
     db_session.add(endpoint)
     await db_session.commit()
     await db_session.refresh(endpoint)
+    # The dispatcher caches "org has no active endpoint"; drop it so the new
+    # subscription starts receiving events immediately.
+    invalidate_active_endpoint_cache(api_user.org_id)
 
     return ZapierSubscriptionResponse(
         id=endpoint.id or 0,
@@ -371,6 +422,9 @@ async def zapier_list_subscriptions(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierSubscriptionResponse]:
     api_user, db_session = ctx
+    # Subscriptions expose webhook target URLs: same admin gate as subscribe.
+    await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
+    _require_subscription_rights(api_user)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.org_id == api_user.org_id,
         WebhookEndpoint.source == "zapier",
@@ -406,6 +460,10 @@ async def zapier_delete_subscription(
     ctx=Depends(_zapier_context),
 ) -> dict:
     api_user, db_session = ctx
+    # Removing an outbound event feed takes the same admin gate as adding one,
+    # but not the token-rights check: a token minted before that check existed
+    # must still be able to switch off the feeds it created.
+    await require_org_admin(api_user.created_by_user_id, api_user.org_id, db_session)
     query = select(WebhookEndpoint).where(
         WebhookEndpoint.id == subscription_id,
         WebhookEndpoint.org_id == api_user.org_id,
@@ -420,4 +478,5 @@ async def zapier_delete_subscription(
 
     await db_session.delete(endpoint)
     await db_session.commit()
+    invalidate_active_endpoint_cache(api_user.org_id)
     return {"detail": "Subscription deleted"}

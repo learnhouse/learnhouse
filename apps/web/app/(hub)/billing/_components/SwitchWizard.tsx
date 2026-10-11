@@ -396,8 +396,8 @@ export default function SwitchWizard({
                   <p className="mt-2 text-xs font-medium text-green-600 flex items-center gap-1.5">
                     <Check size={12} />
                     {t('billing.code_applied', { defaultValue: 'Code applied' })}
-                    {promoDetail.percentOff ? ` — ${promoDetail.percentOff}% off` : ''}
-                    {promoDetail.amountOff ? ` — ${promoDetail.currency?.toUpperCase() ?? '$'}${promoDetail.amountOff} off` : ''}
+                    {promoDetail.percentOff ? ` (${promoDetail.percentOff}% off)` : ''}
+                    {promoDetail.amountOff ? ` (${promoDetail.currency?.toUpperCase() ?? '$'}${promoDetail.amountOff} off)` : ''}
                   </p>
                 )}
                 {promoStatus === 'invalid' && (

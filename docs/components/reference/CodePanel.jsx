@@ -39,7 +39,7 @@ function CopyButton({ getText }) {
 
 /**
  * Substitute the visitor's token into pre-highlighted shiki HTML by walking
- * text nodes only — the highlighted markup is server-generated and trusted;
+ * text nodes only. The highlighted markup is server-generated and trusted;
  * the token is user input and is inserted purely as text.
  */
 function substituteToken(container, html, token) {

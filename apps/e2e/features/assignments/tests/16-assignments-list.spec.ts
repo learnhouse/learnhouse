@@ -1,5 +1,5 @@
 /**
- * Goal: prove the assignments LIST dashboard (/dash/assignments) works — search
+ * Goal: prove the assignments LIST dashboard (/dash/assignments) works: search
  * narrows by title, the Published/Drafts status filters segment assignments,
  * and each card exposes Editor + Submissions links. Uses the shared admin
  * session (storageState) so it adds no logins.
@@ -23,7 +23,7 @@ test.beforeAll(async () => {
     assignment_type: 'SHORT_ANSWER' as const,
     contents: TaskContents.shortAnswer(['x'], 'exact'),
   }
-  // One published, one draft — distinct unique titles so the list is deterministic
+  // One published, one draft, with distinct unique titles so the list is deterministic
   // even though the org already contains many assignments from other specs.
   await seedAssignment(token, org, {
     courseName: `E2E List Course ${suffix}`,

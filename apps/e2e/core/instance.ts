@@ -13,7 +13,7 @@ const DOMAIN = process.env.E2E_DOMAIN || 'localhost'
 export const BASE_URL =
   process.env.E2E_BASE_URL || `http://${DOMAIN}:${PORT}`
 
-/** REST API root — used by helpers/verify.ts to read back server state.
+/** REST API root, used by helpers/verify.ts to read back server state.
  * Defaults to same-origin; point at a separate API origin via E2E_API_URL for
  * split web/API dev setups. */
 export const API_URL = process.env.E2E_API_URL || `${BASE_URL}/api/v1`
@@ -37,7 +37,7 @@ export const SKIP_BOOT =
 
 export { PORT, DOMAIN }
 
-/** Deterministic unique-ish suffix for created entities (no Date.now in shared code paths is fine here — this runs in Node, not a workflow). */
+/** Deterministic unique-ish suffix for created entities (no Date.now in shared code paths is fine here; this runs in Node, not a workflow). */
 export function uniqueSuffix(): string {
   return `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`
 }
@@ -46,7 +46,7 @@ export function uniqueSuffix(): string {
 export function makeStudent(label: string) {
   const suffix = uniqueSuffix()
   return {
-    // Avoid reserved TLDs (.test/.example/.localhost) — the API email
+    // Avoid reserved TLDs (.test/.example/.localhost): the API email
     // validator rejects them. A normal .com domain validates fine.
     email: `student-${label}-${suffix}@e2e-tests.com`,
     username: `student_${label}_${suffix}`.replace(/-/g, '_'),

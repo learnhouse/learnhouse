@@ -12,7 +12,7 @@ If you'd rather not type out every file, hand the work to a coding agent. This p
 The spec is written *for the model*: it states the goal, the exact API contract taken from the LearnHouse codebase, the file layout, the auth rules, and clear acceptance criteria. You supply three facts about your instance and let the agent do the rest.
 
 <Callout type="info">
-This still produces **your** code on **your** machine — the agent is just doing the typing. Review the result the same way you'd review a teammate's PR.
+This still produces **your** code on **your** machine. The agent only does the typing. Review the result the same way you'd review a teammate's PR.
 </Callout>
 
 ## What you'll need
@@ -34,9 +34,9 @@ Go to the **[Agent Spec](/guides/build-learning-platform/agent-spec)** page and 
 
 At the top of the spec there's a short **Configuration** section. Replace the placeholders with your values:
 
-- `API_BASE` — your API base URL (e.g. `http://localhost:1338/api/v1`)
-- `ORG_SLUG` — your organization slug
-- `TEST_EMAIL` / `TEST_PASSWORD` — optional, for verifying login/enrollment
+- `API_BASE`: your API base URL (e.g. `http://localhost:1338/api/v1`)
+- `ORG_SLUG`: your organization slug
+- `TEST_EMAIL` / `TEST_PASSWORD`: optional, for verifying login/enrollment
 
 ### Paste it into your agent
 
@@ -74,6 +74,6 @@ Agents are good at the scaffolding and the happy path, but they can't see your s
 
 ## Why a spec instead of "build me an LMS"?
 
-A vague prompt makes the agent invent an API. The [spec](/guides/build-learning-platform/agent-spec) pins down the **real** endpoints, response shapes, and the auth/refresh quirk — all lifted from this codebase — so the agent builds against the API that actually exists, not one it hallucinated. That's the difference between an app that runs and an app that 404s on every call.
+A vague prompt makes the agent invent an API. The [spec](/guides/build-learning-platform/agent-spec) pins down the **real** endpoints, response shapes, and the auth/refresh quirk, all lifted from this codebase. The agent then builds against the API that actually exists instead of one it made up, and the app runs instead of returning 404 on every call.
 
 Ready? **[Open the Agent Spec →](/guides/build-learning-platform/agent-spec)**

@@ -5,7 +5,7 @@ from sqlmodel import Field, SQLModel
 
 
 class MediaTypeEnum(str, Enum):
-    """Kind of media asset. Extensible — add new embeddable kinds here."""
+    """Kind of media asset. Extensible; add new embeddable kinds here."""
     UPLOAD = "UPLOAD"  # A stored, downloadable file (pdf, mp4, etc.)
     EMBED = "EMBED"    # An external embed (YouTube/Vimeo/generic URL)
 
@@ -28,7 +28,7 @@ class Media(MediaBase, table=True):
         )
     )
     media_uuid: str = Field(default="", index=True)
-    # For UPLOAD — file metadata (mirrors BlockFile shape)
+    # For UPLOAD: file metadata (mirrors BlockFile shape)
     file_id: Optional[str] = ""
     # Randomized, server-only relative storage key (under content/). New uploads
     # set this; it is NEVER returned to clients, so the storage path cannot be
@@ -60,7 +60,7 @@ class MediaRead(MediaBase):
     org_id: int
     media_uuid: str
     # NOTE: the storage-locating fields (file_id / storage_key) are intentionally
-    # NOT exposed — clients load bytes via GET /media/{media_uuid}/file only, so
+    # NOT exposed; clients load bytes via GET /media/{media_uuid}/file only, so
     # the storage path is never derivable. file_format/size/mime are safe metadata
     # the UI needs to pick the right preview.
     file_format: Optional[str] = ""

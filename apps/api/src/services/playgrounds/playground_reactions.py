@@ -14,7 +14,14 @@ from src.db.playground_reactions import (
     ReactionUser,
 )
 from src.security.auth import resolve_acting_user_id
-from src.services.playgrounds.playgrounds import _check_read_access
+from src.services.playgrounds.playgrounds import _check_draft_access, _check_read_access
+
+# The reactions the web picker offers (PlaygroundReactionButton).
+ALLOWED_REACTION_EMOJIS = frozenset({
+    "👍", "👎", "❤️", "🔥", "🎉", "🚀", "👀", "💯",
+    "🤔", "😮", "😂", "🥳", "💡", "👏", "🙌", "⭐",
+    "🧠", "✨", "💪", "🎯", "🤩", "😍", "🙏", "💎",
+})
 
 
 async def get_playground_reactions(
@@ -30,6 +37,7 @@ async def get_playground_reactions(
         raise HTTPException(status_code=404, detail="Playground not found")
 
     await _check_read_access(playground, current_user, db_session)
+    await _check_draft_access(playground, current_user, db_session)
 
     # Resolve the real user id: an API token's .id is the token id, not a user
     # id, so comparing it against reaction.user_id would yield a wrong
@@ -96,6 +104,7 @@ async def toggle_playground_reaction(
         raise HTTPException(status_code=404, detail="Playground not found")
 
     await _check_read_access(playground, current_user, db_session)
+    await _check_draft_access(playground, current_user, db_session)
 
     # An API token's .id is the token id, not a user id; reaction.user_id is a FK
     # to user.id, so we must record/match against the real acting user.
@@ -113,6 +122,9 @@ async def toggle_playground_reaction(
         await db_session.delete(existing)
         await db_session.commit()
         return {"action": "removed", "emoji": emoji}
+
+    if emoji not in ALLOWED_REACTION_EMOJIS:
+        raise HTTPException(status_code=400, detail="Unsupported reaction")
 
     reaction = PlaygroundReaction(
         playground_id=playground.id,

@@ -6,7 +6,7 @@ import { ORG_SLUG } from '../../../core/instance'
  *
  * The server can't know the language: i18next detects from localStorage, which
  * is client-only. So a blocking <head> script sets <html dir> before the body
- * paints. If that regresses the app still works — it just flashes a
+ * paints. If that regresses the app still works; it just flashes a
  * left-to-right layout first, which is the kind of bug that survives review.
  */
 

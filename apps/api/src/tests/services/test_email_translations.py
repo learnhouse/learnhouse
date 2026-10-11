@@ -45,7 +45,7 @@ class TestT:
         assert t("fr", "academy_link_text") == EMAIL_TRANSLATIONS["fr"]["academy_link_text"]
 
     def test_returns_key_itself_when_key_unknown_everywhere(self):
-        # No locale has this key — t() must not raise.
+        # No locale has this key; t() must not raise.
         assert t("fr", "totally.made.up.key") == "totally.made.up.key"
 
     def test_format_kwargs_are_interpolated(self):

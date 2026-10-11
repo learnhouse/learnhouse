@@ -7,7 +7,7 @@ independently of the additive folders/media work.
 
 This also reconciles environments where f7a8b9c0d1e2 was stamped from an earlier
 build whose upgrade() never actually executed the drop (Alembic keys off the
-revision id, not file contents) — those DBs still have the collection tables and
+revision id, not file contents); those DBs still have the collection tables and
 this revision is what removes them.
 
 Revision ID: d4e5f6a7b8c9

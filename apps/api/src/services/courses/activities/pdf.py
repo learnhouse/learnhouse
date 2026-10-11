@@ -18,6 +18,7 @@ from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.ai.rag.queue import index_activity
 
 
 async def create_documentpdf_activity(
@@ -146,6 +147,7 @@ async def create_documentpdf_activity(
     db_session.add(activity_chapter)
     await db_session.commit()
     await db_session.refresh(activity_chapter)
+    index_activity(activity.id)
 
     return ActivityRead.model_validate(activity)
 
@@ -201,5 +203,6 @@ async def update_documentpdf_activity(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    index_activity(activity.id)
 
     return ActivityRead.model_validate(activity)

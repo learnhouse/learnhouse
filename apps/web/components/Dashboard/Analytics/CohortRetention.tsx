@@ -7,7 +7,7 @@ export default function CohortRetention({ days = '90' }: { days?: string }) {
   const rows = data?.data ?? []
 
   const pct = (val: number, total: number) =>
-    total > 0 ? `${Math.round((val / total) * 100)}%` : '—'
+    total > 0 ? `${Math.round((val / total) * 100)}%` : 'n/a'
 
   const cellColor = (val: number, total: number) => {
     if (total === 0) return ''

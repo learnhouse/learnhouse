@@ -39,7 +39,7 @@ RATE_LIMIT_PATH = "src.services.security.rate_limiting.enforce_ai_rate_limit"
 
 @pytest.fixture
 async def org_config(db, org):
-    """Minimal org config row — the AI services validate one before answering."""
+    """Minimal org config row; the AI services validate one before answering."""
     cfg = OrganizationConfig(org_id=org.id, config={"config_version": "1.0"})
     db.add(cfg)
     await db.commit()
@@ -48,7 +48,7 @@ async def org_config(db, org):
 
 @pytest.fixture
 async def outsider_user(db, other_org):
-    """A user registered in another org — no membership in the test org."""
+    """A user registered in another org, with no membership in the test org."""
     u = User(
         id=99,
         username="outsider",
@@ -84,7 +84,7 @@ async def outsider_user(db, other_org):
 
 
 # ---------------------------------------------------------------------------
-# F5 / F6 — activity AI chat authorization
+# F5 / F6: activity AI chat authorization
 # ---------------------------------------------------------------------------
 
 
@@ -99,7 +99,7 @@ class TestActivityChatAuthorization:
         with patch.object(
             ai_service, "reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
         ) as rate_limit, patch.object(
@@ -126,7 +126,7 @@ class TestActivityChatAuthorization:
         with patch.object(
             ai_service, "reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
         ), patch.object(
@@ -146,7 +146,7 @@ class TestActivityChatAuthorization:
         with patch.object(
             ai_service, "reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
         ):
@@ -166,7 +166,7 @@ class TestActivityChatAuthorization:
             ai_service, "reserve_ai_credit", new_callable=AsyncMock
         ) as reserve, patch.object(
             ai_service,
-            "check_resource_access",
+            "can_read_activity",
             new_callable=AsyncMock,
             side_effect=HTTPException(status_code=403, detail="no access"),
         ), patch(
@@ -185,7 +185,7 @@ class TestActivityChatAuthorization:
         self, db, org, course, activity, org_config, mock_request, regular_user
     ):
         with patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ) as rbac, patch.object(
             ai_service, "model_for_tier", return_value="test-model"
         ), patch.object(
@@ -210,9 +210,9 @@ class TestActivityChatAuthorization:
         assert got_org.id == org.id
         assert ai_model == "test-model"
         assert ai_friendly_text == "course context"
-        # READ access on the owning course, not the activity.
-        assert rbac.await_args.args[3] == "course_test"
-        assert rbac.await_args.args[4] == AccessAction.READ
+        # Checked against the owning course and the specific activity.
+        assert rbac.await_args.args[2].course_uuid == "course_test"
+        assert rbac.await_args.args[3] == activity.id
 
     async def test_member_non_streaming_start_succeeds(
         self, db, org, course, activity, org_config, mock_request, regular_user
@@ -222,7 +222,7 @@ class TestActivityChatAuthorization:
         )
 
         with patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
         ), patch(
             RATE_LIMIT_PATH
         ) as rate_limit, patch.object(
@@ -264,7 +264,9 @@ class TestActivityChatAuthorization:
         )
 
         with patch.object(
-            ai_service, "check_resource_access", new_callable=AsyncMock
+            ai_service, "can_read_activity", new_callable=AsyncMock
+        ), patch.object(
+            ai_service, "chat_session_belongs_to_user", return_value=True
         ), patch(
             RATE_LIMIT_PATH
         ), patch.object(
@@ -298,7 +300,7 @@ class TestActivityChatAuthorization:
 
 
 # ---------------------------------------------------------------------------
-# F32 — editor AI authorization
+# F32: editor AI authorization
 # ---------------------------------------------------------------------------
 
 
@@ -419,6 +421,8 @@ class TestEditorAIAuthorization:
             editor_service,
             "get_chat_session_history",
             return_value={"aichat_uuid": "chat_1", "message_history": []},
+        ), patch.object(
+            editor_service, "chat_session_belongs_to_user", return_value=True
         ):
             context = await editor_service.editor_ai_send_message_stream(
                 chat_obj, admin_user, db
@@ -430,7 +434,7 @@ class TestEditorAIAuthorization:
 
 
 # ---------------------------------------------------------------------------
-# F19 — editor TipTap serialization clamp
+# F19: editor TipTap serialization clamp
 # ---------------------------------------------------------------------------
 
 
@@ -501,7 +505,7 @@ class TestEditorHeadingClamp:
 
 
 # ---------------------------------------------------------------------------
-# F40 — stored ProseMirror content clamp (RAG indexing)
+# F40: stored ProseMirror content clamp (RAG indexing)
 # ---------------------------------------------------------------------------
 
 

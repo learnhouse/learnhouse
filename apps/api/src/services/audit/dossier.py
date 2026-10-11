@@ -8,7 +8,7 @@ inside ONE organization, by unioning three sources:
      participation, certificates.
   2. The append-only ``user_audit_event`` log (connections + a permanent event
      timeline that survives live-table overwrites such as assignment retries).
-  3. Tinybird behavioral enrichment (time-on-activity, views, searches) — best-effort;
+  3. Tinybird behavioral enrichment (time-on-activity, views, searches), best-effort;
      degrades gracefully to empty when analytics is not configured.
 
 Everything is org-scoped so an org admin can never see another org's data through a
@@ -169,9 +169,9 @@ async def _identity(db_session: AsyncSession, user_id: int, org_id: int) -> dict
             "email_verified_at": user.email_verified_at,
             "signup_method": user.signup_method,
             "last_login_at": user.last_login_at,
-            "last_login_ip": user.last_login_ip,
-            "failed_login_attempts": user.failed_login_attempts,
-            "locked_until": user.locked_until,
+            # SECURITY: last_login_ip / failed_login_attempts / locked_until are
+            # account-global login state (the login may have been into another
+            # org), so an org admin's dossier does not carry them.
             "password_changed_at": (
                 user.password_changed_at.isoformat()
                 if user.password_changed_at else None
@@ -185,14 +185,16 @@ async def _connections_and_timeline(
 ) -> tuple[list[dict], list[dict]]:
     """Return (connections, full_event_timeline) from the durable audit log.
 
-    Connections (login/logout) are org-agnostic, so they are matched on user_id
-    regardless of org. Activity events are filtered to this org (or org-agnostic).
+    SECURITY: only events recorded against THIS org are returned. Rows with a
+    NULL org_id (login/logout, which are recorded org-agnostically) describe the
+    account's activity across every org it belongs to, IPs and devices
+    included, so they are not an org admin's to read.
     """
     rows = (await db_session.execute(
         select(UserAuditEvent)
         .where(
             UserAuditEvent.user_id == user_id,
-            (UserAuditEvent.org_id == org_id) | (UserAuditEvent.org_id.is_(None)),  # type: ignore[union-attr]
+            UserAuditEvent.org_id == org_id,
         )
         .order_by(UserAuditEvent.created_at.desc())  # type: ignore[union-attr]
     )).scalars().all()
@@ -359,7 +361,7 @@ async def _assignments(
     assignment_ids = [a.id for _sub, a in subs]
 
     # The task definitions carry the question bank (contents), the per-task max and
-    # the title — none of which live on the submission — so the readable answer is a
+    # the title (none of which live on the submission), so the readable answer is a
     # join against these rows.
     tasks = (await db_session.execute(
         select(AssignmentTask)
@@ -373,7 +375,7 @@ async def _assignments(
     for t in tasks:
         tasks_by_assignment.setdefault(t.assignment_id, []).append(t)
 
-    # Keyed on assignment_task_id — the actual foreign key. The previous version
+    # Keyed on assignment_task_id, the actual foreign key. The previous version
     # grouped by (course_id, activity_id) because AssignmentTaskSubmission has no
     # assignment_id, but nothing constrains assignment.activity_id to be unique, so
     # two assignments on one activity swapped each other's tasks. That query was also
@@ -389,8 +391,8 @@ async def _assignments(
         )).scalars().all():
             sub_by_task_id[ts.assignment_task_id] = ts
 
-    # A deleted task leaves its submissions behind. Keep them visible — an audit
-    # record shouldn't silently lose answers — but only when the task row is *really*
+    # A deleted task leaves its submissions behind. Keep them visible (an audit
+    # record shouldn't silently lose answers), but only when the task row is *really*
     # gone. Matching on activity_id alone would readmit the cross-org collision this
     # rewrite exists to close, since activity ids are global and an activity can carry
     # more than one assignment.
@@ -441,7 +443,7 @@ async def _assignments(
                 _task_row(len(task_rows) + 1, None, orphan, include_raw)
             )
 
-        # The assignment max is the sum of its tasks' maxima — it is not stored
+        # The assignment max is the sum of its tasks' maxima; it is not stored
         # anywhere, which is why the UI used to hardcode "/100".
         max_grade = sum(int(t.max_grade_value or 0) for t in assignment_tasks)
         # Reuse the canonical formatter so an ALPHABET-graded assignment reads "B"
@@ -530,7 +532,7 @@ async def _community(db_session: AsyncSession, user_id: int, org_id: int) -> dic
         ).order_by(Discussion.creation_date.desc())  # type: ignore[union-attr]
     )).scalars().all()
 
-    # Comments have no org column — scope via the parent discussion's org.
+    # Comments have no org column, so scope via the parent discussion's org.
     org_discussions = {
         d.id: d for d in (await db_session.execute(
             select(Discussion).where(Discussion.org_id == org_id)
@@ -610,7 +612,7 @@ def _coverage_notes() -> list[str]:
     return [
         "Connection history begins when the audit log was enabled; logins before "
         "that are reflected only by the account's last-login fields.",
-        "Assignment retries reset the live submission in place — earlier attempts "
+        "Assignment retries reset the live submission in place; earlier attempts "
         "are preserved in the durable event timeline, not the current submission row.",
         "AI editor chat is ephemeral and is not recorded.",
         "Behavioral metrics (time spent, views, searches) come from the analytics "
@@ -737,7 +739,7 @@ async def build_users_summary(
 ) -> list[dict]:
     """Lightweight per-user summary rows for the list + multi-select comparison.
 
-    Avoids building the full dossier for each user — computes just the headline
+    Avoids building the full dossier for each user; computes just the headline
     numbers with a few grouped queries.
     """
     if not user_ids:

@@ -1031,7 +1031,7 @@ const EventSelector: React.FC<{
 }
 
 // Compact row used inside the Zapier hero card.
-// Zapier-managed webhooks are read-only from LearnHouse's side — the Zap itself
+// Zapier-managed webhooks are read-only from LearnHouse's side; the Zap itself
 // must be edited inside Zapier. We only expose enable/disable, view logs, and
 // a delete escape hatch for admins who want to force-disconnect a Zap.
 const ZapierRow: React.FC<{

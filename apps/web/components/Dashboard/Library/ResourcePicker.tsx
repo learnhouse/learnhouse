@@ -300,7 +300,7 @@ function TabButton({
 }
 
 // The library "add content" flow places existing resources into a folder, and
-// media already lives in the library — offering it there would just file the
+// media already lives in the library, so offering it there would just file the
 // same asset twice. Callers that want media (the Library block) opt in.
 const DEFAULT_TABS: TabKey[] = ['courses', 'podcasts', 'communities', 'boards', 'playgrounds']
 

@@ -1,10 +1,10 @@
 """Resource-exhaustion guards on the upload, outbound-fetch and response paths.
 
 Covers:
-  * F17 — ``validate_upload`` enforces its cap by measuring, not by buffering.
-  * F26 — the link preview streams an attacker's response under a byte cap.
-  * F41 — webhook delivery reads a capped, uncompressed response body.
-  * F39 — gzip is applied to compressible payloads only, never to media.
+  * F17: ``validate_upload`` enforces its cap by measuring, not by buffering.
+  * F26: the link preview streams an attacker's response under a byte cap.
+  * F41: webhook delivery reads a capped, uncompressed response body.
+  * F39: gzip is applied to compressible payloads only, never to media.
 """
 
 import asyncio
@@ -107,7 +107,7 @@ class _ChunkedStream(httpx.AsyncByteStream):
 
 # Captured before any patching: `link_preview` does `import httpx`, so patching
 # "src.services.utils.link_preview.httpx.AsyncClient" replaces the attribute on
-# the httpx module itself — the factory below would otherwise recurse into itself.
+# the httpx module itself; the factory below would otherwise recurse into itself.
 _REAL_ASYNC_CLIENT = httpx.AsyncClient
 
 
@@ -121,7 +121,7 @@ def _mock_transport_client_factory(handler):
 
 
 # ---------------------------------------------------------------------------
-# F17 — validate_upload
+# F17: validate_upload
 # ---------------------------------------------------------------------------
 
 
@@ -247,7 +247,7 @@ class TestUploadSizeEnforcement:
         assert validate_zip_stream(io.BytesIO(buf.getvalue())) is False
 
     def test_every_type_declares_a_cap(self):
-        # The caps themselves are a product decision, not a security control —
+        # The caps themselves are a product decision, not a security control;
         # what matters here is that no type is unbounded, since the cap is what
         # the pre-read size check is measured against.
         for name, config in FILE_TYPES.items():
@@ -255,7 +255,7 @@ class TestUploadSizeEnforcement:
 
 
 # ---------------------------------------------------------------------------
-# F26 — link preview
+# F26: link preview
 # ---------------------------------------------------------------------------
 
 
@@ -405,7 +405,7 @@ class TestLinkPreviewResponseCap:
 
 
 # ---------------------------------------------------------------------------
-# F41 — webhook delivery
+# F41: webhook delivery
 # ---------------------------------------------------------------------------
 
 
@@ -523,7 +523,7 @@ class TestWebhookResponseCap:
 
 
 # ---------------------------------------------------------------------------
-# F39 — content-type-aware gzip
+# F39: content-type-aware gzip
 # ---------------------------------------------------------------------------
 
 
@@ -564,7 +564,7 @@ def _gzip_test_app() -> FastAPI:
 
 class TestSelectiveGZip:
     async def test_sse_stream_is_passed_through_intact(self):
-        """AI chat streams over SSE — compressing or half-compressing one
+        """AI chat streams over SSE; compressing or half-compressing one
         would break every live token as it arrives."""
         application = _gzip_test_app()
         transport = ASGITransport(app=application)

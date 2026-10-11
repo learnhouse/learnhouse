@@ -24,7 +24,7 @@ export async function createActivity(
 }
 
 /**
- * Upload a hosted-video activity with real upload progress (XHR — fetch can't
+ * Upload a hosted-video activity with real upload progress (XHR, since fetch can't
  * report upload progress). Resolves with the created activity JSON. Used by the
  * background-upload flow so the modal can close immediately.
  */
@@ -123,7 +123,7 @@ export async function createFileActivity(
   )
   if (!result.ok) {
     // A too-large body is rejected by the reverse proxy (nginx) with a 413
-    // and an HTML error page — not JSON — so surface a clear error instead of
+    // and an HTML error page (not JSON), so surface a clear error instead of
     // letting `result.json()` blow up with "Unexpected token '<'".
     if (result.status === 413) {
       throw new Error('The file is too large to upload.')

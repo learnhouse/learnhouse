@@ -40,8 +40,12 @@ import {
   PencilSimple,
   Check,
   GlobeSimple,
+  Play,
+  FileText,
 } from '@phosphor-icons/react'
 import Link from 'next/link'
+import { sourceLocation, sourcePath, sourceTitle, type CopilotSource } from '@/lib/copilot/sources'
+import { MarkdownImageLink } from '@components/Objects/Activities/AI/MarkdownImageLink'
 
 export type CopilotProps = {
   orgslug: string
@@ -377,7 +381,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
 
   return (
     <div className="flex h-[calc(100vh-72px)] w-full max-w-(--breakpoint-2xl) mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-      {/* Sidebar — overlay on mobile, inline on desktop */}
+      {/* Sidebar: overlay on mobile, inline on desktop */}
       {sidebarOpen && (
       <>
         {/* Mobile backdrop */}
@@ -435,7 +439,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
       </>
       )}
 
-      {/* Toggle sidebar button (when closed, desktop only — mobile uses top bar button) */}
+      {/* Toggle sidebar button (when closed, desktop only; mobile uses top bar button) */}
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
@@ -812,7 +816,7 @@ export const AssistantMessage = React.memo(function AssistantMessage({ content, 
         </div>
       )}
 
-      {/* Message bubble — full width, relative for badge positioning */}
+      {/* Message bubble: full width, relative for badge positioning */}
       <div className="relative rounded-2xl px-4 py-3 bg-neutral-50 dark:bg-neutral-800/60 nice-shadow">
         {isWaiting ? (
           <ThinkingIndicator />
@@ -839,8 +843,13 @@ export function ThinkingIndicator() {
   )
 }
 
+function sourceHref(source: CopilotSource, orgslug: string): string | null {
+  const path = sourcePath(source)
+  return path ? getUriWithOrg(orgslug, path) : null
+}
+
 /**
- * Render a single citation badge [N] as a clickable link to the source activity.
+ * Render a single citation badge [N] as a clickable link to where the source came from.
  */
 function CitationBadge({ num, sources, orgslug }: { num: number; sources: StreamSourceData['sources']; orgslug: string }) {
   const source = sources[num - 1]
@@ -852,16 +861,13 @@ function CitationBadge({ num, sources, orgslug }: { num: number; sources: Stream
     )
   }
 
-  const courseId = source.course_uuid?.replace(/^course_/, '') || ''
-  const activityId = source.activity_uuid?.replace(/^activity_/, '') || ''
-  const href = activityId && courseId
-    ? getUriWithOrg(orgslug, `/course/${courseId}/activity/${activityId}`)
-    : null
+  const href = sourceHref(source, orgslug)
+  const location = sourceLocation(source)
 
   const badge = (
     <span
       className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-md bg-violet-100 dark:bg-violet-500/15 text-[10px] font-bold text-violet-600 dark:text-violet-400 align-middle mx-0.5 hover:bg-violet-200 dark:hover:bg-violet-500/25 cursor-pointer transition-colors"
-      title={[source.course_name, source.chapter_name, source.activity_name].filter(Boolean).join(' > ')}
+      title={[source.course_name, source.chapter_name, source.activity_name, location?.label].filter(Boolean).join(' > ')}
     >
       {num}
     </span>
@@ -959,8 +965,8 @@ export function normalizeMathDelimiters(markdown: string): string {
         ? segment
         : segment
             // A \[ that opens its own line is a display equation, so it keeps the
-            // fenced form. Anywhere else — inside a list item, a table cell, a
-            // blockquote — it has to stay on one line, or the blank lines around
+            // fenced form. Anywhere else (inside a list item, a table cell, a
+            // blockquote) it has to stay on one line, or the blank lines around
             // the fence would close the block it sits in.
             .replace(
               /(^|\n)\\\[([\s\S]+?)\\\][ \t]*(?=\n|$)/g,
@@ -1029,6 +1035,7 @@ export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = 
       li: ({ children, ...props }: any) => <li {...props}>{processChildren(children)}</li>,
       td: ({ children, ...props }: any) => <td {...props}>{processChildren(children)}</td>,
       th: ({ children, ...props }: any) => <th {...props}>{processChildren(children)}</th>,
+      img: ({ src, alt }: any) => <MarkdownImageLink src={src} alt={alt} />,
       strong: ({ children, ...props }: any) => <strong {...props}>{processChildren(children)}</strong>,
       em: ({ children, ...props }: any) => <em {...props}>{processChildren(children)}</em>,
       blockquote: ({ children, ...props }: any) => (
@@ -1095,11 +1102,8 @@ export function SourcesCompact({ sources, orgslug }: { sources: StreamSourceData
   return (
     <div className="relative z-10 flex flex-wrap gap-x-3 gap-y-1 px-1">
       {sources.map((source, i) => {
-        const courseId = source.course_uuid?.replace(/^course_/, '') || ''
-        const activityId = source.activity_uuid?.replace(/^activity_/, '') || ''
-        const href = activityId && courseId
-          ? getUriWithOrg(orgslug, `/course/${courseId}/activity/${activityId}`)
-          : null
+        const href = sourceHref(source, orgslug)
+        const location = sourceLocation(source)
 
         const inner = (
           <span className="inline-flex items-center gap-1.5 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors group">
@@ -1107,8 +1111,14 @@ export function SourcesCompact({ sources, orgslug }: { sources: StreamSourceData
               {i + 1}
             </span>
             <span className="truncate max-w-xs font-medium text-neutral-500 dark:text-neutral-400 group-hover:text-violet-600 dark:group-hover:text-violet-400">
-              {source.activity_name || 'Unknown'}
+              {sourceTitle(source)}
             </span>
+            {location && (
+              <span className="inline-flex items-center gap-0.5 tabular-nums" dir="ltr">
+                {location.kind === 'time' ? <Play size={10} weight="fill" /> : <FileText size={11} />}
+                {location.label}
+              </span>
+            )}
           </span>
         )
 

@@ -63,7 +63,7 @@ class TestIsUserSuperadmin:
         assert db._superadmin_cache[21] is False
 
     async def test_cache_hit_returns_cached_value_without_db(self, db):
-        # Pre-seed the cache — no matching row needed in the DB
+        # Pre-seed the cache; no matching row needed in the DB
         db._superadmin_cache = {99: True}
 
         result = await is_user_superadmin(99, db)

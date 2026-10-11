@@ -10,6 +10,7 @@ import { useSearchParams } from 'next/navigation'
 import { useFormik } from 'formik'
 import { resetPassword } from '@services/auth/auth'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
+import { removeQueryParamsFromAddressBar } from '@services/utils/ts/scrubUrl'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
@@ -57,8 +58,14 @@ function ResetPasswordClient({ org }: ResetPasswordClientProps) {
     const { track } = useLHAnalytics('public')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const searchParams = useSearchParams()
-    const reset_code = searchParams.get('resetCode') || ''
+    // Read the code once, then drop it from the address bar so it can't leak
+    // via history, screenshots or analytics. A reload loses the prefill; the
+    // field stays editable and the emailed link still works until used.
+    const [reset_code] = React.useState(() => searchParams.get('resetCode') || '')
     const email = searchParams.get('email') || ''
+    React.useEffect(() => {
+        removeQueryParamsFromAddressBar(['resetCode'])
+    }, [])
     const [error, setError] = React.useState('')
     const [message, setMessage] = React.useState('')
     const [showMessage, setShowMessage] = React.useState(false)

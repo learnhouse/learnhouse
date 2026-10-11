@@ -12,7 +12,7 @@ import { test as base, expect } from '@playwright/test'
 
 const ONBOARDING_KEY = 'lh_onboarding'
 
-/** Fully-completed, dismissed onboarding state — nothing pops up. */
+/** Fully-completed, dismissed onboarding state, so nothing pops up. */
 const ONBOARDING_DISMISSED = JSON.stringify({
   completedSteps: [
     'create_course',

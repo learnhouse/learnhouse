@@ -75,7 +75,7 @@ export default function FrameBoxComponent({ node, updateAttributes, selected, de
     >
       <DragHandle onMouseDown={handleDragStart} />
 
-      {/* Top bar — title pill, color picker, lock */}
+      {/* Top bar: title pill, color picker, lock */}
       <div
         onMouseDown={handleDragStart}
         className="flex items-center gap-2 px-3 pt-3 pb-1 cursor-grab active:cursor-grabbing select-none"
@@ -109,7 +109,7 @@ export default function FrameBoxComponent({ node, updateAttributes, selected, de
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Color swatches — visible on hover */}
+        {/* Color swatches, visible on hover */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {FRAME_COLORS.map((c) => (
             <button
@@ -141,7 +141,7 @@ export default function FrameBoxComponent({ node, updateAttributes, selected, de
         </button>
       </div>
 
-      {/* Body — transparent, just takes up remaining space */}
+      {/* Body: transparent, just takes up remaining space */}
       <div
         className="pointer-events-none"
         style={{ height: height - 44 }}

@@ -3,7 +3,7 @@
 Adds a nullable boolean ``show_correct_answers`` column to ``assignment``
 that defaults to false. When true, the student's graded task view reveals
 the correct answers (quiz right options, expected short / number answer,
-form blanks). Default false keeps existing assignments opaque — teachers
+form blanks). Default false keeps existing assignments opaque; teachers
 must explicitly opt in.
 
 Revision ID: z5a6b7c8d9e0

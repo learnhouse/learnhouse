@@ -49,7 +49,7 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
           setComments(result || [])
         }
       } catch {
-        // silent — loading errors are handled by the empty state
+        // silent; loading errors are handled by the empty state
       } finally {
         if (!stale) {
           setIsLoading(false)

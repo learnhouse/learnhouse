@@ -4,12 +4,12 @@ All four issues covered here shared one shape: a bare org-membership check was
 standing in for a real permission check. Membership answers "are you in this
 tenant", never "may you do this thing", so any learner in the org sailed through.
 
-- F7  ``save_activity_content``   — overwrote any activity in the org.
-- F14 ``generate_activity_content`` — read another tenant's activity content back
+- F7  ``save_activity_content``: overwrote any activity in the org.
+- F14 ``generate_activity_content``: read another tenant's activity content back
       out over SSE, billed to the attacker's own org.
-- F33 ``finalize_course_plan``    — created courses (and CREATOR authorship) with
+- F33 ``finalize_course_plan``: created courses (and CREATOR authorship) with
       no create right and no plan-limit check.
-- F25 ``/courses/migrate/*``      — org_id was accepted and ignored entirely, so
+- F25 ``/courses/migrate/*``: org_id was accepted and ignored entirely, so
       the endpoints burned the server's provider key with no tenant, no rights,
       no credits and no rate limit.
 
@@ -149,7 +149,7 @@ async def _drain(response) -> str:
 
 
 # ===========================================================================
-# F7 — save_activity_content
+# F7: save_activity_content
 # ===========================================================================
 
 
@@ -220,15 +220,15 @@ class TestSaveActivityContentRequiresWriteAccess:
 
 
 # ===========================================================================
-# F14 — generate_activity_content
+# F14: generate_activity_content
 # ===========================================================================
 
 
 def _stream_spy(session: CoursePlanningSessionData):
     """Stand-in for generate_activity_content_stream.
 
-    Echoes whatever ``current_content`` the router hands it — the real service
-    does the same thing via the prompt — and bumps the per-activity iteration
+    Echoes whatever ``current_content`` the router hands it (the real service
+    does the same thing via the prompt) and bumps the per-activity iteration
     count exactly like the real one, so a second call reaches the branch where
     existing content is fed back in.
     """
@@ -267,7 +267,7 @@ class TestGenerateActivityContentIsTenantScoped:
     ):
         """Cross-tenant read: two sequential calls, both refused, nothing leaked.
 
-        The second call matters — under the old code the first call only bumped
+        The second call matters: under the old code the first call only bumped
         ``iteration_count`` to 1, and it was the *second* that serialized the
         victim's content into the prompt and streamed it straight back.
         """
@@ -367,14 +367,14 @@ class TestGenerateActivityContentIsTenantScoped:
             body = await _drain(second)
 
         # First call has nothing to iterate on; the second feeds the existing
-        # content back in — the exact branch the cross-tenant test must not reach.
+        # content back in, the exact branch the cross-tenant test must not reach.
         assert stream.calls[0]["current_content"] is None
         assert stream.calls[1]["current_content"] == json.dumps(content)
         assert "doc" in body
 
 
 # ===========================================================================
-# F33 — finalize_course_plan
+# F33: finalize_course_plan
 # ===========================================================================
 
 
@@ -422,10 +422,20 @@ class TestFinalizeCoursePlanRequiresCreateRight:
     async def test_admin_still_finalizes_and_becomes_the_creator(
         self, db, org, admin_role, admin_user, mock_request
     ):
+        from src.db.organization_config import OrganizationConfig
+
+        # Finalize now applies the course limit, which needs an org config.
+        db.add(OrganizationConfig(
+            org_id=org.id, config={"config_version": "2.0", "plan": "free"},
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
-             patch.object(cp, "save_course_planning_session"):
+             patch.object(cp, "save_course_planning_session"), \
+             patch.object(cp, "check_limits_with_usage", new=AsyncMock()), \
+             patch.object(cp, "increase_feature_usage", new=AsyncMock()):
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -449,18 +459,17 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         assert author.user_id == admin_user.id
         assert author.authorship == ResourceAuthorshipEnum.CREATOR
 
-    async def test_plan_course_limit_is_not_enforced_here(
+    async def test_plan_course_limit_is_enforced(
         self, db, org, admin_role, admin_user, mock_request
     ):
-        """This path skips the plan's course limit that `create_course` applies.
-        That is a billing gap, not an authorization one, and enforcing it would
-        start refusing a call that works today — so it stays out of the fix and
-        is pinned here so the choice is visible rather than accidental."""
+        """Finalizing creates a real course, so it counts against the plan's
+        course limit exactly like `create_course`."""
         session = _session(org.id)
 
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
-             patch("src.security.features_utils.usage.check_limits_with_usage") as limits:
+             patch.object(cp, "check_limits_with_usage", new=AsyncMock()) as limits, \
+             patch.object(cp, "increase_feature_usage", new=AsyncMock()) as usage:
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -471,12 +480,12 @@ class TestFinalizeCoursePlanRequiresCreateRight:
             )
 
         assert result.course_uuid.startswith("course_")
-        limits.assert_not_called()
-
+        limits.assert_awaited_once_with("courses", org.id, db)
+        usage.assert_awaited_once()
 
 
 # ===========================================================================
-# F25 — /courses/migrate/*
+# F25: /courses/migrate/*
 # ===========================================================================
 
 
@@ -593,33 +602,48 @@ class TestSuggestStructureIsGated:
         self, db, org, admin_role, admin_user, migration_package, llm_generate,
         no_redis, mock_request,
     ):
-        with patch.object(mig, "enforce_ai_rate_limit") as rate:
+        with patch.object(mig, "enforce_ai_rate_limit") as rate, \
+             patch.object(mig, "reserve_ai_credit", new=AsyncMock()):
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
 
         assert result.course_name == "Suggested Course"
         llm_generate.assert_awaited_once()
-        # Rate limited per user+org — that is what bounds the spend the missing
+        # Rate limited per user+org; that is what bounds the spend the missing
         # authorization allowed.
         rate.assert_called_once_with(admin_user.id, org.id)
 
-    async def test_suggestion_is_not_billed_as_an_ai_credit(
+    async def test_suggestion_is_billed_as_an_ai_credit(
         self, db, org, admin_role, admin_user, migration_package, llm_generate,
         no_redis, mock_request,
     ):
-        """Metering this would match the /ai routers, but it would also start
-        refusing a call that is free today (orgs out of credits, and orgs with
-        no config row, which reserve_ai_credit answers 404 for). Pinned so the
-        choice stays deliberate."""
+        """Metered like the /ai routers so it is not a free model-spend path."""
+        reserve = AsyncMock()
         with patch.object(mig, "enforce_ai_rate_limit"), \
-             patch("src.security.features_utils.usage.reserve_ai_credit") as reserve:
+             patch.object(mig, "reserve_ai_credit", new=reserve):
             result = await mig.api_suggest_structure(
                 mock_request, org.id, self._body(migration_package), admin_user, db
             )
 
         assert result.course_name == "Suggested Course"
-        reserve.assert_not_called()
+        reserve.assert_awaited_once()
+
+    async def test_suggestion_credit_refunded_on_failure(
+        self, db, org, admin_role, admin_user, no_redis, mock_request,
+    ):
+        refund = MagicMock()
+        with patch.object(mig, "enforce_ai_rate_limit"), \
+             patch.object(mig, "reserve_ai_credit", new=AsyncMock()), \
+             patch.object(mig, "refund_ai_credit", new=refund):
+            with pytest.raises(HTTPException):
+                await mig.api_suggest_structure(
+                    mock_request, org.id,
+                    self._body("00000000-0000-4000-8000-000000000000"),
+                    admin_user, db,
+                )
+
+        refund.assert_called_once_with(org.id)
 
 
 class TestUploadAndCreateAreGated:

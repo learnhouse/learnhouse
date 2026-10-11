@@ -4,9 +4,9 @@ import { Callout } from 'nextra/components'
 
 Every activity in LearnHouse is described by two enums and one JSON `content` blob:
 
-- `activity_type` -- one of `TYPE_DYNAMIC`, `TYPE_VIDEO`, `TYPE_DOCUMENT`, `TYPE_ASSIGNMENT`, `TYPE_CUSTOM`, `TYPE_SCORM`.
-- `activity_sub_type` -- a more specific variant within the type (e.g. `SUBTYPE_VIDEO_YOUTUBE` vs `SUBTYPE_VIDEO_HOSTED`).
-- `content` -- a JSON object whose shape depends on the sub-type.
+- `activity_type`: one of `TYPE_DYNAMIC`, `TYPE_VIDEO`, `TYPE_DOCUMENT`, `TYPE_ASSIGNMENT`, `TYPE_CUSTOM`, `TYPE_SCORM`.
+- `activity_sub_type`: a more specific variant within the type (e.g. `SUBTYPE_VIDEO_YOUTUBE` vs `SUBTYPE_VIDEO_HOSTED`).
+- `content`: a JSON object whose shape depends on the sub-type.
 
 This page is the canonical reference for what `content` (and `details`) must contain for each combination, alongside the create endpoint to use.
 
@@ -16,13 +16,13 @@ The list of valid types and sub-types is enforced by the API as Python enums. Se
 
 ## Dynamic activities
 
-`activity_type: "TYPE_DYNAMIC"` -- pages rendered inside the activity viewer.
+`activity_type: "TYPE_DYNAMIC"`: pages rendered inside the activity viewer.
 
 ### Dynamic Page (`SUBTYPE_DYNAMIC_PAGE`)
 
 The flagship activity type. `content` is a [TipTap](https://tiptap.dev/) / ProseMirror document.
 
-**Create endpoint:** `POST /api/v1/activities/` (JSON body, see [Programmatic Migration](/developers/migration/programmatic#3a-generic-json-create----post-apiv1activities)).
+**Create endpoint:** `POST /api/v1/activities/` (JSON body, see [Programmatic Migration](/developers/migration/programmatic#3a-generic-json-create-post-apiv1activities)).
 
 **Initial content:** start empty (`"content": {}`) and update later, or send a complete document on creation:
 
@@ -156,9 +156,9 @@ The full `BlockRead` object returned by `POST /api/v1/blocks/image` (or `/video`
 | Block node | Required attrs | Optional attrs |
 | --- | --- | --- |
 | `blockImage` | `blockObject` | `size: { width }`, `alignment` (`center`, `left`, `right`), `unsplash_*` |
-| `blockVideo` | `blockObject` | -- |
-| `blockPDF` | `blockObject` | -- |
-| `blockAudio` | `blockObject` | -- |
+| `blockVideo` | `blockObject` | None |
+| `blockPDF` | `blockObject` | None |
+| `blockAudio` | `blockObject` | None |
 
 #### Code blocks
 
@@ -197,7 +197,7 @@ Common languages: `python`, `javascript`, `typescript`, `java`, `cpp`, `c`, `rus
 }
 ```
 
-The exact `questions` schema is the same one rendered by the editor's `QuizBlockComponent`. Inspect a real quiz in the editor and export the JSON if you need an authoritative shape -- it has evolved over time and is best treated as opaque to migration scripts.
+The exact `questions` schema is the same one rendered by the editor's `QuizBlockComponent`. Inspect a real quiz in the editor and export the JSON if you need an authoritative shape. It has evolved over time and is best treated as opaque to migration scripts.
 
 ### Dynamic Markdown (`SUBTYPE_DYNAMIC_MARKDOWN`)
 
@@ -237,7 +237,7 @@ The embedded site must allow iframe embedding (`X-Frame-Options` / `Content-Secu
 
 ### Hosted video (`SUBTYPE_VIDEO_HOSTED`)
 
-Created via the dedicated multipart endpoint -- you cannot create a hosted video by sending JSON to `/activities/`.
+Created via the dedicated multipart endpoint. You cannot create a hosted video by sending JSON to `/activities/`.
 
 <Callout type="info">
 The endpoint creates the activity with `published: false` regardless of any payload field. To publish, follow up with `PUT /api/v1/activities/{activity_uuid}` setting `{"published": true}`. The same is true for `/activities/external_video` and `/activities/documentpdf`.
@@ -254,7 +254,7 @@ curl -X POST "http://localhost:1338/api/v1/activities/video" \
   -F 'details={"startTime":0,"endTime":null,"autoplay":false,"muted":false}'
 ```
 
-`Content-Type` is checked strictly -- only `video/mp4` and `video/webm` are accepted. The server stores the file, builds the `content` object internally, and returns the resulting `ActivityRead`. The persisted `content` looks like:
+`Content-Type` is checked strictly: only `video/mp4` and `video/webm` are accepted. The server stores the file, builds the `content` object internally, and returns the resulting `ActivityRead`. The persisted `content` looks like:
 
 ```json
 {
@@ -269,12 +269,12 @@ curl -X POST "http://localhost:1338/api/v1/activities/video" \
 | --- | --- | --- |
 | `startTime` | number (seconds) | Seek-to point on play |
 | `endTime` | number or `null` | Stop point (omit to play to end) |
-| `autoplay` | boolean | -- |
-| `muted` | boolean | -- |
+| `autoplay` | boolean | |
+| `muted` | boolean | |
 
 ### External video (`SUBTYPE_VIDEO_YOUTUBE`)
 
-For YouTube and Vimeo embeds. Note the sub-type name is historical -- the same sub-type covers Vimeo too, distinguished by the `type` field in the request.
+For YouTube and Vimeo embeds. Note the sub-type name is historical. The same sub-type covers Vimeo too, distinguished by the `type` field in the request.
 
 **Create endpoint:** `POST /api/v1/activities/external_video`
 
@@ -330,19 +330,19 @@ The viewer renders the PDF with PDF.js.
 
 ### Generic document (`SUBTYPE_DOCUMENT_DOC`)
 
-Reserved sub-type. There is no dedicated upload endpoint -- if you need to host arbitrary downloadable files, use a hosted-video-style upload via the editor UI, or wrap the file in a Block and reference it from a dynamic page.
+Reserved sub-type. There is no dedicated upload endpoint. If you need to host arbitrary downloadable files, use a hosted-video-style upload via the editor UI, or wrap the file in a Block and reference it from a dynamic page.
 
 ## Assignments
 
 `activity_type: "TYPE_ASSIGNMENT"`, `activity_sub_type: "SUBTYPE_ASSIGNMENT_ANY"`.
 
 <Callout type="warning">
-**An assignment activity on its own is an empty box.** The activity record is just a placeholder -- the title, description, due date, grading type, and any submission tasks live in a separate `Assignment` record. If you create the activity but skip the second step, learners see a blank panel. Treat both calls as a single transaction in your migration script.
+**An assignment activity on its own is an empty box.** The activity record is just a placeholder. The title, description, due date, grading type, and any submission tasks live in a separate `Assignment` record. If you create the activity but skip the second step, learners see a blank panel. Treat both calls as a single transaction in your migration script.
 </Callout>
 
 An assignment is a **three-step** create when you want learners to actually submit something:
 
-### Step 1 -- Create the activity shell
+### Step 1: Create the activity shell
 
 Generic `POST /api/v1/activities/`:
 
@@ -359,7 +359,7 @@ Generic `POST /api/v1/activities/`:
 
 Capture `id` and `activity_uuid` from the response.
 
-### Step 2 -- Create the linked Assignment record
+### Step 2: Create the linked Assignment record
 
 `POST /api/v1/assignments/` with the assignment metadata. **All numeric IDs are required**:
 
@@ -392,7 +392,7 @@ Capture `id` and `activity_uuid` from the response.
 
 The response includes `assignment_uuid`, which is the handle for step 3.
 
-### Step 3 -- Add at least one Task
+### Step 3: Add at least one Task
 
 Without tasks, the assignment renders the description but has no submission UI. `POST /api/v1/assignments/{assignment_uuid}/tasks`:
 
@@ -409,25 +409,25 @@ Without tasks, the assignment renders the description but has no submission UI. 
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `title` | string | Yes | -- |
-| `description` | string | Yes | -- |
-| `hint` | string | Yes | Pass `""` if you don't want a hint -- the field is required by the model |
+| `title` | string | Yes | |
+| `description` | string | Yes | |
+| `hint` | string | Yes | Pass `""` if you don't want a hint; the field is required by the model |
 | `assignment_type` | enum | Yes | See list below |
 | `contents` | object | No (default `{}`) | Type-dependent payload |
 | `max_grade_value` | int | No (default `100`) | Tasks are graded out of this value; new code uses `100` everywhere |
 | `reference_file` | string | No | Reference document URL or filename |
 
-Task types (`assignment_type`): `FILE_SUBMISSION`, `QUIZ`, `FORM`, `CODE`, `SHORT_ANSWER`, `NUMBER_ANSWER`, `OTHER`. Each task type interprets `contents` differently -- the safest path for unknown types is `{}`. See the `/api/v1/assignments/` endpoint group in Swagger UI for the per-type contents schema.
+Task types (`assignment_type`): `FILE_SUBMISSION`, `QUIZ`, `FORM`, `CODE`, `SHORT_ANSWER`, `NUMBER_ANSWER`, `OTHER`. Each task type interprets `contents` differently, so the safest path for unknown types is `{}`. See the `/api/v1/assignments/` endpoint group in Swagger UI for the per-type contents schema.
 
 <Callout type="warning">
-**Assignments require authentication to view**, even on a public course. The `/api/v1/assignments/*` router has a router-level `Depends(require_authenticated_user)` that returns `401` for anonymous requests, so an unauthenticated viewer of a public course sees an **empty panel** where the assignment widget would be. The course outline still lists the assignment activity, but the assignment's title, description, due date, tasks and submission UI only appear after login. There is no public read mode for assignments today -- if learners need to read the assignment description without signing in, surface it in a sibling dynamic page instead.
+**Assignments require authentication to view**, even on a public course. The `/api/v1/assignments/*` router has a router-level `Depends(require_authenticated_user)` that returns `401` for anonymous requests, so an unauthenticated viewer of a public course sees an **empty panel** where the assignment widget would be. The course outline still lists the assignment activity, but the assignment's title, description, due date, tasks and submission UI only appear after login. There is no public read mode for assignments today. If learners need to read the assignment description without signing in, surface it in a sibling dynamic page instead.
 </Callout>
 
 ## Custom
 
 `activity_type: "TYPE_CUSTOM"`, `activity_sub_type: "SUBTYPE_CUSTOM"`.
 
-A free-form activity. `content` is any JSON object you want -- the platform stores it verbatim and exposes it to a custom renderer that you supply on the frontend. Use this when no built-in type fits and you have your own UI for the activity.
+A free-form activity. `content` is any JSON object you want. The platform stores it verbatim and exposes it to a custom renderer that you supply on the frontend. Use this when no built-in type fits and you have your own UI for the activity.
 
 ```json
 {
@@ -440,14 +440,14 @@ A free-form activity. `content` is any JSON object you want -- the platform stor
 ```
 
 <Callout type="warning">
-**Stock LearnHouse has no built-in renderer for `TYPE_CUSTOM`.** The activity will appear as an empty container in the learner viewer until you ship a custom frontend component for it. Treat `TYPE_CUSTOM` as a hook for your own integration code -- if you don't already have that integration, prefer `SUBTYPE_DYNAMIC_PAGE` (TipTap) or `SUBTYPE_DYNAMIC_EMBED` (iframe) instead.
+**Stock LearnHouse has no built-in renderer for `TYPE_CUSTOM`.** The activity will appear as an empty container in the learner viewer until you ship a custom frontend component for it. Treat `TYPE_CUSTOM` as a hook for your own integration code. If you don't already have that integration, prefer `SUBTYPE_DYNAMIC_PAGE` (TipTap) or `SUBTYPE_DYNAMIC_EMBED` (iframe) instead.
 </Callout>
 
 ## SCORM
 
 `activity_type: "TYPE_SCORM"`, sub-types `SUBTYPE_SCORM_12` and `SUBTYPE_SCORM_2004`.
 
-SCORM packages are uploaded through the editor UI -- the manifest (`imsmanifest.xml`) is parsed, files are extracted to storage, and the `content` is populated with launch metadata. Programmatic creation of SCORM activities is not currently exposed as a documented public endpoint; check the Swagger UI on a development instance for the latest interface.
+SCORM packages are uploaded through the editor UI. The manifest (`imsmanifest.xml`) is parsed, files are extracted to storage, and the `content` is populated with launch metadata. Programmatic creation of SCORM activities is not currently exposed as a documented public endpoint; check the Swagger UI on a development instance for the latest interface.
 
 ## The full enum (verbatim)
 

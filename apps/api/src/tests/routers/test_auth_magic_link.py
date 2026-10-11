@@ -17,10 +17,18 @@ from httpx import ASGITransport, AsyncClient
 from src.core.events.database import get_db_session
 from src.db.organization_config import OrganizationConfig
 from src.db.user_mfa import UserMFA
+from src.db.user_organizations import UserOrganization
 from src.db.users import AnonymousUser, User
 from src.routers.auth import JWT_REFRESH_COOKIE_NAME, router as auth_router
 from src.security.auth import decode_jwt, get_current_user
 from src.security.session_context import AMR_CLAIM, SORG_CLAIM
+
+
+@pytest.fixture(autouse=True)
+def _no_per_email_limit():
+    """Keep the per-recipient counter out of these tests (it would hit Redis)."""
+    with patch("src.routers.auth.check_rate_limit", return_value=(True, 1, 900)):
+        yield
 
 
 @pytest.fixture
@@ -143,6 +151,15 @@ class TestMagicLinkRequest:
                         }
                     },
                 },
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.add(
+            UserOrganization(
+                user_id=verified_user.id,
+                org_id=org.id,
+                role_id=4,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
             )
@@ -336,7 +353,7 @@ class TestMagicLinkVerify:
 
 class TestRefreshPreservesProvenance:
     """Rotation must not launder a method-bound/org-bound session into a
-    claim-less one — otherwise a refresh would silently bypass the org
+    claim-less one; otherwise a refresh would silently bypass the org
     auth-method / session-sharing policy. Tokens are minted for real here (not
     mocked) so the carried claims are asserted on the actual rotated token."""
 

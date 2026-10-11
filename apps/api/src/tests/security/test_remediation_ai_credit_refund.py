@@ -2,7 +2,7 @@
 F-11: AI credits are refunded if the streaming generator aborts before
 producing any model output.
 
-These unit-test the SSE generator directly — the router wiring that injects
+These unit-test the SSE generator directly; the router wiring that injects
 ``org_id`` is covered by the existing F-9 rate-limit tests.
 """
 
@@ -22,7 +22,7 @@ async def _collect(gen):
 async def _empty_stream():
     """A stream that yields nothing (e.g. upstream model refused)."""
     if False:
-        yield ""  # pragma: no cover — never runs, makes this an async gen
+        yield ""  # pragma: no cover (never runs, makes this an async gen)
 
 
 async def _raising_stream():

@@ -888,7 +888,7 @@ class TestCreateCertificateUser:
         self, db, course, regular_user
     ):
         # The unique (user_id, certification_id) constraint must reject a second
-        # certificate row for the same user+certification at the DB level — the
+        # certificate row for the same user+certification at the DB level, the
         # safety net behind the race-recovery path.
         from sqlalchemy.exc import IntegrityError
 
@@ -913,7 +913,7 @@ class TestCreateCertificateUser:
         # Simulate the race: a concurrent request already inserted the winning
         # certificate, but this request's pre-existence SELECT missed it (the
         # race window). Its own INSERT then trips the unique constraint. The
-        # service must recover — roll back and return the existing row — instead
+        # service must recover (roll back and return the existing row) instead
         # of 500-ing an already-committed submission.
         certification = await _create_certification(db, course, cert_uuid="cert_race")
         winner = await _create_certificate_user(
@@ -1559,7 +1559,7 @@ class TestIsCourseFullyCompleted:
         self, db, org, course, regular_user
     ):
         """A draft (unpublished) activity is never shown to the learner, so it
-        must not count toward completion — otherwise the course could never be
+        must not count toward completion; otherwise the course could never be
         finished and the certificate would be permanently withheld."""
         from src.db.courses.activities import (
             Activity, ActivityTypeEnum, ActivitySubTypeEnum,
@@ -1604,7 +1604,7 @@ class TestIsCourseFullyCompleted:
 
 
 class TestSyncTrailrunStatus:
-    """Tests for sync_trailrun_status — keeps TrailRun.status aligned with
+    """Tests for sync_trailrun_status, which keeps TrailRun.status aligned with
     actual course completion so enrollment/analytics counts are correct."""
 
     async def _make_in_progress_run(self, db, org, course, user, *, status=StatusEnum.STATUS_IN_PROGRESS):

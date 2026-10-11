@@ -81,7 +81,7 @@ function pointsToSvgPath(points: { x: number; y: number }[]): string {
   return d
 }
 
-/** Inner component — only mounted once ydoc & provider are ready */
+/** Inner component, only mounted once ydoc & provider are ready */
 function BoardEditorInner({
   board,
   orgslug,
@@ -205,12 +205,12 @@ function BoardEditorInner({
         class: 'board-editor outline-none min-h-[2000px] min-w-[3000px] relative',
         // The canvas coordinate space is dir="ltr" in every locale. Cards store
         // absolute left/top pixels in the Yjs doc, and those coordinates are
-        // shared live between collaborators — mirroring the canvas for an RTL
+        // shared live between collaborators; mirroring the canvas for an RTL
         // client would put its cards somewhere else than everyone else sees.
         // Card *text* still follows its own direction via dir="auto".
         dir: 'ltr',
       },
-      // Block free-floating text at the canvas root — typing must happen inside
+      // Block free-floating text at the canvas root; typing must happen inside
       // a card or note. Without this, a click on empty canvas lets ProseMirror
       // insert text into the root paragraph, which renders "on the map".
       handleTextInput(view) {
@@ -334,11 +334,11 @@ function BoardEditorInner({
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
       e.preventDefault()
     } else if (mode === 'select' && e.button === 0) {
-      // Check if click landed on a block (node-view-wrapper) — if so, let the block handle it
+      // Check if click landed on a block (node-view-wrapper); if so, let the block handle it
       const target = e.target as HTMLElement
       const isOnBlock = target.closest('[data-node-view-wrapper]')
       if (!isOnBlock) {
-        // Clicked empty canvas — blur editor so it stops capturing keystrokes
+        // Clicked empty canvas: blur editor so it stops capturing keystrokes
         editor?.commands.blur()
 
         // Start marquee or just clear selection
@@ -690,7 +690,7 @@ function BoardEditorInner({
   } | null>(null)
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Ignore touches on blocks — let them handle their own
+    // Ignore touches on blocks; let them handle their own
     const target = e.target as HTMLElement
     if (target.closest('[data-node-view-wrapper]')) return
 
@@ -894,7 +894,7 @@ function BoardEditorInner({
         />
       </div>
 
-      {/* Feedback button — bottom left */}
+      {/* Feedback button, bottom left */}
       <button
         onClick={() => setFeedbackOpen(true)}
         className="absolute bottom-5 start-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed board-feedback"
@@ -918,7 +918,7 @@ function BoardEditorInner({
   )
 }
 
-/** Outer component — handles Yjs lifecycle, only renders editor once ready */
+/** Outer component: handles Yjs lifecycle, only renders editor once ready */
 export default function BoardCanvas({ board, accessToken, orgslug, username, orgUuid }: BoardCanvasProps) {
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null)

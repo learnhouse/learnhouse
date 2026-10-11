@@ -306,7 +306,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
   // Pomodoro color scheme
   const pomColors = timerState.isPomodoro ? POMODORO_COLORS[timerState.pomodoroPhase] : null
 
-  // Track "Time's up" banner — phases: 'hidden' → 'dramatic' (50% screen) → 'bar' (small top bar, stays)
+  // Track "Time's up" banner; phases: 'hidden' → 'dramatic' (50% screen) → 'bar' (small top bar, stays)
   // For pomodoro: auto-advance to the next phase after the dramatic display
   useEffect(() => {
     if (isTimerExpired && !prevExpiredRef.current) {
@@ -434,7 +434,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
         </div>
       </div>
 
-      {/* Timer banner — slides down from top center when active */}
+      {/* Timer banner: slides down from top center when active */}
       <style jsx>{`
         @keyframes timer-slide-down {
           from { transform: translateX(-50%) translateY(-100%); }
@@ -553,7 +553,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
         </div>
       )}
 
-      {/* Time's up — dramatic phase: takes 50% of screen */}
+      {/* Time's up, dramatic phase: takes 50% of screen */}
       {timesUpPhase === 'dramatic' && (() => {
         const pc = pomColors
         const dramaticBg = pc ? pc.bg : '#1a0505'
@@ -595,7 +595,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
         )
       })()}
 
-      {/* Time's up — bar phase: small banner at top, stays permanently (non-pomodoro only) */}
+      {/* Time's up, bar phase: small banner at top, stays permanently (non-pomodoro only) */}
       {timesUpPhase === 'bar' && !timerState.isPomodoro && (
         <div
           className="absolute top-0 left-1/2 z-30 pointer-events-auto"

@@ -44,7 +44,7 @@ test('analytics subpage shows KPIs and charts for graded submissions', async ({ 
   await expect(page.getByRole('heading', { name: 'Grade distribution' })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Top performers/ })).toBeVisible()
 
-  // The single passing submission yields a 100% pass rate — read the Pass Rate
+  // The single passing submission yields a 100% pass rate. Read the Pass Rate
   // KPI card's own value (not just any "100%" on the page).
   const passRateValue = page
     .locator('p', { hasText: /^Pass Rate$/ })

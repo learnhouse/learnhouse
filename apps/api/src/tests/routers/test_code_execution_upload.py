@@ -65,7 +65,7 @@ async def _call(db, current_user, *, org_uuid, activity_uuid, block_id,
 
 
 # ---------------------------------------------------------------------------
-# Malformed segment validation (regex ^[A-Za-z0-9_-]+$) — one test per field
+# Malformed segment validation (regex ^[A-Za-z0-9_-]+$): one test per field
 # ---------------------------------------------------------------------------
 
 BAD_VALUES = ["../x", "a/b", "x;y", "", "a b", "a.b"]

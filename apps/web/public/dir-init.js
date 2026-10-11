@@ -3,12 +3,12 @@
 //
 // The server cannot do this: i18next's highest-priority detection source is
 // localStorage, which is client-only. So the detection order below MIRRORS
-// `detection.order` in lib/i18n.ts exactly — localStorage, cookie, querystring,
+// `detection.order` in lib/i18n.ts exactly: localStorage, cookie, querystring,
 // navigator.
 //
 // The RTL list is duplicated from RTL_LANGUAGES in lib/direction.ts, because
 // this file runs before any bundle loads and cannot import it.
-// tests/rtl-guard.test.mjs asserts the two lists stay in sync — update both.
+// tests/rtl-guard.test.mjs asserts the two lists stay in sync, so update both.
 (function () {
   var RTL = {
     ar: 1, fa: 1, he: 1, iw: 1, ur: 1, ps: 1,

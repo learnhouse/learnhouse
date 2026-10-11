@@ -15,7 +15,7 @@ interface CourseWidgetCardProps {
   subtitle: string
   /** Compact card content */
   children: React.ReactNode
-  /** Expanded modal content — if not provided, children are rendered in modal */
+  /** Expanded modal content; if not provided, children are rendered in modal */
   modalContent?: React.ReactNode
   /** Optional extra classes on the card */
   className?: string
@@ -173,7 +173,7 @@ export function ProgressRing({
   )
 }
 
-/** Pagination hook — returns sliced page + controls */
+/** Pagination hook: returns sliced page + controls */
 export function usePagination<T>(items: T[], pageSize = 10) {
   const [page, setPage] = useState(0)
   const totalPages = Math.max(Math.ceil(items.length / pageSize), 1)

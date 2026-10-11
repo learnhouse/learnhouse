@@ -3,7 +3,7 @@
  *
  * The specs drive the feature through the UI, but they also assert the backend
  * persisted what we expect by reading the public REST API directly. That way a
- * failure tells us whether the UI lied or the server did — and we're testing
+ * failure tells us whether the UI lied or the server did, and we're testing
  * the real server state, not just rendered pixels.
  */
 import { apiGet } from '../../core/client'

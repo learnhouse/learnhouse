@@ -10,7 +10,7 @@ const FlipcardGridExtension = dynamic(() => import("./FlipcardGridExtension"), {
  * Container that lays its flipcards out side by side.
  *
  * A flipcard is `group: 'block'`, so two of them can never share a row on their
- * own — the grid has to come from a parent node. Existing standalone flipcards
+ * own; the grid has to come from a parent node. Existing standalone flipcards
  * are untouched; they keep rendering as full-width rows.
  */
 export default Node.create({

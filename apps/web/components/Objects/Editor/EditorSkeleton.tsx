@@ -1,7 +1,7 @@
 export default function EditorSkeleton() {
   return (
     <div className="activity-editor-page">
-      {/* Toolbar — uses real CSS classes for pixel-perfect match */}
+      {/* Toolbar: uses real CSS classes for pixel-perfect match */}
       <div className="activity-editor-top">
         <div className="activity-editor-doc-section">
           <div className="activity-editor-info-wrapper">
@@ -65,7 +65,7 @@ export default function EditorSkeleton() {
         </div>
       </div>
 
-      {/* Content area — uses real CSS class for exact positioning and style */}
+      {/* Content area: uses real CSS class for exact positioning and style */}
       <div className="flex gap-5" style={{ position: 'relative', margin: '0 40px' }}>
         <div className="activity-editor-content-wrapper" style={{ flex: 1, margin: 0, marginTop: 97 }}>
           <div className="p-10 space-y-5 animate-pulse">

@@ -111,7 +111,7 @@ export default function PlaygroundChatPanel({
           </span>
         </div>
 
-        {/* Source toggle — only shown before session starts and when courses exist */}
+        {/* Source toggle, only shown before session starts and when courses exist */}
         {orgCourses.length > 0 && !sessionStarted && (
           <div className="mt-3 space-y-2">
             <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Source</p>
@@ -140,7 +140,7 @@ export default function PlaygroundChatPanel({
               </button>
             </div>
 
-            {/* Course dropdown — only when Course mode is active */}
+            {/* Course dropdown, only when Course mode is active */}
             {sourceMode === 'course' && (
               <select
                 value={selectedCourseUuid}
@@ -223,7 +223,7 @@ export default function PlaygroundChatPanel({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggestion chips — only in AI mode */}
+      {/* Suggestion chips, only in AI mode */}
       {messages.length === 0 && sourceMode === 'ai' && (
         <div className="px-4 pb-3 flex flex-wrap gap-1.5 flex-shrink-0">
           {SUGGESTION_CHIPS.map((chip) => (

@@ -1,7 +1,7 @@
 /**
  * Stripe-style definition list of schema fields.
  * Nested object/array-of-object fields render inside a collapsible
- * <details> block — server-rendered, zero JS.
+ * <details> block, server-rendered with zero JS.
  */
 function FieldRow({ field }) {
   return (

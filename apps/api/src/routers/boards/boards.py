@@ -39,7 +39,10 @@ router = APIRouter(dependencies=[Depends(require_boards_feature)])
 async def verify_internal_key(x_internal_key: str = Header(...)):
     """FastAPI dependency that validates the shared collab internal key."""
     expected_key = os.getenv("COLLAB_INTERNAL_KEY", "")
-    if not expected_key or not hmac.compare_digest(x_internal_key, expected_key):
+    # Bytes: compare_digest raises TypeError on non-ASCII str header values.
+    if not expected_key or not hmac.compare_digest(
+        x_internal_key.encode(), expected_key.encode()
+    ):
         raise HTTPException(status_code=403, detail="Invalid internal key")
 
 

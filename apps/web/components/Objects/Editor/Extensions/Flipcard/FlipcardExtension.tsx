@@ -284,7 +284,7 @@ const FlipcardExtension: React.FC = (props: any) => {
         {/* Editor Controls */}
         {isEditable && (
           <div className="flex mt-3 gap-1 justify-center opacity-60 hover:opacity-100 transition-opacity">
-            {/* Alignment Controls — the grid container owns alignment when nested */}
+            {/* Alignment Controls; the grid container owns alignment when nested */}
             {!inGrid && (<>
             <button
               onClick={(e) => {

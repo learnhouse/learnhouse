@@ -18,7 +18,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   })
 
   return {
-    title: 'Communities — ' + org.name,
+    title: 'Communities | ' + org.name,
     description: `Manage communities for ${org.name}`,
     robots: {
       index: false,

@@ -19,8 +19,9 @@ from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.trail_steps import TrailStep
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.rbac import check_resource_access, AccessAction
+from src.security.rbac.rbac import authorization_verify_api_token_permissions
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.audit.audit import record_audit_event
@@ -33,6 +34,25 @@ logger = logging.getLogger(__name__)
 ####################################################
 # CRUD
 ####################################################
+
+
+async def _check_certification_access(
+    request: Request,
+    db_session: AsyncSession,
+    current_user,
+    course_uuid: str,
+    action: AccessAction,
+) -> None:
+    """Course access for users; for API tokens, their ``certifications``
+    rights bucket (capped by ``courses`` when the token was minted) within the
+    course's org."""
+    if isinstance(current_user, APITokenUser):
+        await authorization_verify_api_token_permissions(
+            request, current_user, action.value, course_uuid, db_session,
+            resource_type_override="certifications",
+        )
+        return
+    await check_resource_access(request, db_session, current_user, course_uuid, action)
 
 
 async def create_certification(
@@ -54,7 +74,11 @@ async def create_certification(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+
+    # Plan gate: the router wrapper can't see the org (it's in the body)
+    from src.security.features_utils.plan_check import check_org_plan
+    await check_org_plan(course.org_id, "pro", "Certifications", db_session)
 
     # Create certification
     certification = Certifications(
@@ -101,7 +125,7 @@ async def get_certification(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     return CertificationRead(**certification.model_dump())
 
@@ -125,7 +149,7 @@ async def get_certifications_by_course(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await _check_certification_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)
@@ -163,7 +187,7 @@ async def update_certification(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(certification_object).items():
@@ -208,17 +232,17 @@ async def delete_certification(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+    await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # CertificateUser.certification_id is declared ON DELETE CASCADE, so deleting
-    # the template also destroys every certificate ever awarded from it — the
+    # the template also destroys every certificate ever awarded from it: the
     # learners' "my certificates" list empties and every verification link they
     # shared, including the QR code printed on already-downloaded PDFs, starts
     # reporting the certificate as revoked. That is irreversible: re-creating the
     # template mints a new id, and nothing re-issues to past graduates.
     #
     # Refuse instead. Awarded certificates must be revoked deliberately, one at a
-    # time, through revoke_user_certificate — which also emits the revocation
+    # time, through revoke_user_certificate, which also emits the revocation
     # analytics and webhooks that a silent cascade skips entirely.
     awarded_count = (await db_session.execute(
         select(func.count(CertificateUser.id)).where(
@@ -288,7 +312,7 @@ async def create_certificate_user(
             )
 
         # Require course ownership or instructor role for creating certificates
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+        await _check_certification_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Check if certificate user already exists
     statement = select(CertificateUser).where(
@@ -345,7 +369,7 @@ async def create_certificate_user(
         await db_session.commit()
     except IntegrityError:
         # A concurrent completion check inserted the certificate first. The
-        # unique (user_id, certification_id) constraint tripped — treat it as
+        # unique (user_id, certification_id) constraint tripped, so treat it as
         # "already issued" and return the existing row instead of 500-ing.
         await db_session.rollback()
         existing = (
@@ -502,7 +526,7 @@ async def get_user_certificates_for_course(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    await _check_certification_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get all certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)
@@ -564,7 +588,7 @@ async def is_course_fully_completed(
     Uses COUNT aggregates instead of fetching all rows so this stays fast
     even on large courses.
     """
-    # Only PUBLISHED activities count toward completion — a draft/unpublished
+    # Only PUBLISHED activities count toward completion. A draft/unpublished
     # activity is never shown to the learner, so counting it in the total would
     # make the course impossible to complete (and permanently withhold the
     # certificate).
@@ -604,13 +628,13 @@ async def sync_trailrun_status(
     """
     Keep the enrollment row (TrailRun.status) in sync with actual course
     completion. This is the single field every enrollment/analytics "completed"
-    vs "in progress" number is derived from, yet nothing used to flip it — so
+    vs "in progress" number is derived from, yet nothing used to flip it, so
     fully completed, certified learners still counted as in-progress.
 
     Derives the status from :func:`is_course_fully_completed` and promotes the
     run to STATUS_COMPLETED when done, or demotes it back to STATUS_IN_PROGRESS
     if completion was lost (e.g. an activity was un-completed). PAUSED and
-    CANCELLED runs are left untouched — those are explicit learner/teacher
+    CANCELLED runs are left untouched; those are explicit learner/teacher
     states, not derived from progress. No-ops when nothing needs to change.
     """
     from src.db.trail_runs import TrailRun, StatusEnum
@@ -632,7 +656,7 @@ async def sync_trailrun_status(
     ):
         return
 
-    # Callers that already know whether the course is complete pass it in —
+    # Callers that already know whether the course is complete pass it in;
     # this same pair of aggregates otherwise runs several times per submit.
     if is_complete is None:
         is_complete = await is_course_fully_completed(user_id, course_id, db_session)
@@ -722,7 +746,7 @@ async def are_course_assignments_passed(
     sub_by_assignment = {s.assignment_id: s for s in subs}
 
     for assignment in assignments:
-        # A formative (ungraded) assignment has no grade to pass or fail — it is
+        # A formative (ungraded) assignment has no grade to pass or fail; it is
         # satisfied by handing the work in. Requiring GRADED here would make an
         # ungraded assignment permanently block every certificate in its course,
         # since nothing ever moves that submission out of SUBMITTED.
@@ -732,7 +756,7 @@ async def are_course_assignments_passed(
                 return False
             continue
         # An assignment with no gradable points (no tasks / all-zero max) can't
-        # be passed or failed — treat it as vacuously passed so it doesn't
+        # be passed or failed. Treat it as vacuously passed so it doesn't
         # permanently block the certificate.
         if max_by_assignment.get(assignment.id, 0) <= 0:
             continue
@@ -765,7 +789,7 @@ async def check_course_completion_and_create_certificate(
 
     NOTE: Returns True only when this call *creates a new certificate row*.
     That is False for courses without a certification even when the course is
-    actually complete — do NOT use this return value as the trigger for
+    actually complete, so do NOT use this return value as the trigger for
     ``course_completed`` webhooks. Use :func:`is_course_fully_completed` for
     that, and call this function purely for the certificate side effect.
 
@@ -783,7 +807,7 @@ async def check_course_completion_and_create_certificate(
     # Keep the enrollment status (TrailRun.status) in sync on every completion
     # check. Assignment activities render their own submit flow instead of going
     # through add_activity_to_trail, so when the last activity in a course is an
-    # assignment nothing else would flip the run to COMPLETED — leaving a
+    # assignment nothing else would flip the run to COMPLETED, leaving a
     # certified learner reported as "in progress" in analytics/enrollment. This
     # is idempotent (no-op when already correct) and also demotes if completion
     # was lost.
@@ -801,7 +825,7 @@ async def check_course_completion_and_create_certificate(
         certification = (await db_session.execute(statement)).scalars().first()
         
         if certification and certification.id:
-            # Certificate integrity: completion is necessary but not sufficient —
+            # Certificate integrity: completion is necessary but not sufficient;
             # every graded assignment in the course must be passed. This withholds
             # the certificate from learners who finished all activities but failed
             # (or haven't yet been graded on) a required assessment.
@@ -814,7 +838,7 @@ async def check_course_completion_and_create_certificate(
                 return True  # Newly completed
             except HTTPException as e:
                 if e.status_code == 400 and "already has a certificate" in e.detail:
-                    # Certificate already exists — course was completed before
+                    # Certificate already exists; the course was completed before
                     return False
                 else:
                     raise e

@@ -14,9 +14,10 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
-from src.db.users import PublicUser, AnonymousUser, User, UserRead, APITokenUser
+from src.db.users import PublicUser, AnonymousUser, User, UserReadAuthor, APITokenUser
+from src.security.api_token_utils import require_token_content_read
 from src.security.auth import resolve_acting_user_id
-from src.security.org_auth import require_org_membership
+from src.security.org_auth import require_org_create_permission
 from src.db.podcasts.podcasts import (
     Podcast,
     PodcastCreate,
@@ -168,7 +169,7 @@ async def get_podcast(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -241,7 +242,7 @@ async def get_podcast_meta(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -260,6 +261,57 @@ async def get_podcast_meta(
         "podcast": podcast_read,
         "episodes": episodes
     }
+
+
+def accessible_podcast_ids_query(acting_user_id: int):
+    """IDs of the podcasts a signed-in, non-admin user may see in a listing.
+
+    Shared by the podcast list/count endpoints and search so the three can't
+    drift apart. A podcast is visible when it is:
+    1. published and public;
+    2. published, not linked to any UserGroup, and the user is a member of
+       its org (org-wide content);
+    3. linked to a UserGroup the user belongs to (including unpublished);
+    4. authored by the user with an ACTIVE authorship (including unpublished).
+       Pending or inactive authorships grant nothing.
+    """
+    return (
+        select(Podcast.id)
+        .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Podcast.podcast_uuid)
+        .outerjoin(UserGroupUser, and_(
+            UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
+            UserGroupUser.user_id == acting_user_id
+        ))
+        .outerjoin(ResourceAuthor, and_(
+            ResourceAuthor.resource_uuid == Podcast.podcast_uuid,
+            ResourceAuthor.user_id == acting_user_id,
+            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
+        ))
+        .where(or_(
+            and_(Podcast.published == True, Podcast.public == True),
+            and_(
+                Podcast.published == True,
+                UserGroupResource.resource_uuid.is_(None),
+                select(UserOrganization.id).where(
+                    UserOrganization.user_id == acting_user_id,
+                    UserOrganization.org_id == Podcast.org_id,
+                ).exists(),
+            ),
+            UserGroupUser.user_id == acting_user_id,
+            ResourceAuthor.user_id == acting_user_id,
+        ))
+    )
+
+
+def _require_token_podcast_listing(current_user: APITokenUser, org_id: int) -> None:
+    """API tokens list podcasts through their own ``podcasts.action_read`` and
+    only in their own org, never through their creator's role."""
+    if current_user.org_id != org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token cannot access resources outside its organization",
+        )
+    require_token_content_read(current_user, "podcasts")
 
 
 async def get_podcasts_orgslug(
@@ -284,10 +336,16 @@ async def get_podcasts_orgslug(
         return []
 
     acting_user_id = resolve_acting_user_id(current_user)
+    is_token = isinstance(current_user, APITokenUser)
+    if is_token:
+        _require_token_podcast_listing(current_user, org.id)
 
     # Check if user can view unpublished podcasts (must be admin/editor in org)
     can_view_unpublished = False
-    if include_unpublished and not isinstance(current_user, AnonymousUser):
+    if is_token:
+        # podcasts.action_read already reads every podcast of the token's org.
+        can_view_unpublished = include_unpublished
+    elif include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished podcasts
         if await is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
@@ -314,31 +372,15 @@ async def get_podcasts_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published podcasts
         query = query.where(Podcast.public == True, Podcast.published == True)
+    elif is_token:
+        if not can_view_unpublished:
+            query = query.where(Podcast.published == True)
     else:
         # For authenticated users with admin access viewing dashboard, show all podcasts
         if can_view_unpublished:
             pass
         else:
-            # For regular users, show:
-            # 1. Published AND public podcasts
-            # 2. Published podcasts not in any UserGroup
-            # 3. Podcasts (including unpublished) in UserGroups where the user is a member
-            # 4. Podcasts (including unpublished) where the user is a resource author
-            query = (
-                query
-                .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Podcast.podcast_uuid)
-                .outerjoin(UserGroupUser, and_(
-                    UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                    UserGroupUser.user_id == acting_user_id
-                ))
-                .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Podcast.podcast_uuid)
-                .where(or_(
-                    and_(Podcast.published == True, Podcast.public == True),  # Published public podcasts
-                    and_(Podcast.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published podcasts not in any UserGroup
-                    UserGroupUser.user_id == acting_user_id,  # Podcasts in UserGroups where user is a member (including unpublished)
-                    ResourceAuthor.user_id == acting_user_id  # Podcasts where user is a resource author (including unpublished)
-                ))
-            )
+            query = query.where(Podcast.id.in_(accessible_podcast_ids_query(acting_user_id)))
 
     # Apply ordering and pagination
     query = query.order_by(Podcast.creation_date.desc()).offset(offset).limit(limit).distinct()
@@ -369,7 +411,7 @@ async def get_podcasts_orgslug(
             podcast_authors[resource_author.resource_uuid] = []
         podcast_authors[resource_author.resource_uuid].append(
             AuthorWithRole(
-                user=UserRead.model_validate(user),
+                user=UserReadAuthor.model_validate(user),
                 authorship=resource_author.authorship,
                 authorship_status=resource_author.authorship_status,
                 creation_date=resource_author.creation_date,
@@ -427,30 +469,19 @@ async def get_podcasts_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published podcasts
         query = query.where(Podcast.public == True, Podcast.published == True)
-    elif not isinstance(current_user, AnonymousUser) and await is_user_superadmin(count_acting_user_id, db_session):
+    elif isinstance(current_user, APITokenUser):
+        org_id = (await db_session.execute(
+            select(Organization.id).where(Organization.slug == org_slug)
+        )).scalars().first()
+        if org_id is None:
+            return 0
+        _require_token_podcast_listing(current_user, org_id)
+        query = query.where(Podcast.published == True)
+    elif await is_user_superadmin(count_acting_user_id, db_session):
         # Superadmins see all podcasts (no additional filter)
         pass
     else:
-        # For authenticated users, count:
-        # 1. Published AND public podcasts
-        # 2. Published podcasts not in any UserGroup
-        # 3. Podcasts (including unpublished) in UserGroups where the user is a member
-        # 4. Podcasts (including unpublished) where the user is a resource author
-        query = (
-            query
-            .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Podcast.podcast_uuid)
-            .outerjoin(UserGroupUser, and_(
-                UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                UserGroupUser.user_id == count_acting_user_id
-            ))
-            .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Podcast.podcast_uuid)
-            .where(or_(
-                and_(Podcast.published == True, Podcast.public == True),  # Published public podcasts
-                and_(Podcast.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published podcasts not in any UserGroup
-                UserGroupUser.user_id == count_acting_user_id,  # Podcasts in UserGroups where user is a member (including unpublished)
-                ResourceAuthor.user_id == count_acting_user_id  # Podcasts where user is a resource author (including unpublished)
-            ))
-        )
+        query = query.where(Podcast.id.in_(accessible_podcast_ids_query(count_acting_user_id)))
 
     count = (await db_session.execute(query)).scalar_one()
     return count
@@ -469,10 +500,7 @@ async def create_podcast(
 
     # SECURITY: Check if user has permission to create podcasts
     await check_resource_access(request, db_session, current_user, "podcast_x", AccessAction.CREATE)
-
-    await require_org_membership(
-        resolve_acting_user_id(current_user), org_id, db_session
-    )
+    await require_org_create_permission(current_user, org_id, db_session, "podcasts")
 
     # Check plan access (podcasts require standard+ plan)
     await check_feature_access("podcasts", org_id, db_session)
@@ -537,7 +565,7 @@ async def create_podcast(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -612,7 +640,7 @@ async def update_podcast_thumbnail(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -651,6 +679,8 @@ async def update_podcast(
 
     if podcast_object.public is not None:
         sensitive_fields_updated.append("public")
+    if podcast_object.published is not None:
+        sensitive_fields_updated.append("published")
 
     if sensitive_fields_updated:
         # Resolve to the token's creator for API-token callers so ownership /
@@ -710,7 +740,7 @@ async def update_podcast(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,

@@ -10,8 +10,8 @@ import { P } from './primitives'
  * The server (services/audit/answers.py) has already joined the learner's stored
  * answer against the task's question bank, so every task type arrives in the same
  * shape and this component only has to lay it out. It deliberately mirrors the
- * teacher-facing TaskQuizObject — same lettered option tiles, same three-state
- * verdict badges — so a quiz reads identically in the dossier and in the grading
+ * teacher-facing TaskQuizObject (same lettered option tiles, same three-state
+ * verdict badges) so a quiz reads identically in the dossier and in the grading
  * modal.
  *
  * `correct` is tri-state: `null` means the answer key was absent or the grader itself
@@ -45,7 +45,7 @@ function QuestionHeader({ item }: { item: any }) {
 
 function QuizItem({ item }: { item: any }) {
   const { t } = useTranslation()
-  // No key configured means no option can carry a verdict — labelling them anyway
+  // No key configured means no option can carry a verdict; labelling them anyway
   // would mark a fully correct submission as wrong.
   const keyPresent = item.expected_text !== null && item.expected_text !== undefined
 
@@ -75,7 +75,7 @@ function QuizItem({ item }: { item: any }) {
               </span>
             )}
             {/* Correct but not chosen. Options that were neither chosen nor correct
-                get no badge — labelling every option reads as "all of these wrong". */}
+                get no badge, since labelling every option reads as "all of these wrong". */}
             {keyPresent && !option.selected && option.is_correct && (
               <span className="flex-none flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-50/70 text-emerald-700 border border-emerald-200">
                 <Check size={10} /> {t(`${P}.answer.correct_answer`, { defaultValue: 'Correct answer' })}
@@ -130,7 +130,7 @@ function CodeAnswer({ code }: { code: any }) {
     <div className="space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">
-          <Code2 size={10} /> {code.language || '—'}
+          <Code2 size={10} /> {code.language || 'n/a'}
         </span>
         <span className="text-[11px] text-gray-500">
           {code.passed_tests}/{code.total_tests} {t(`${P}.answer.test_passed`, { defaultValue: 'Passed' })}
@@ -203,7 +203,7 @@ export default function TaskAnswer({ answer }: { answer: any }) {
         items.map((item: any, i: number) => (
           <div key={i} className="flex items-center gap-2 text-xs text-gray-700">
             <FileText size={14} className="text-gray-400 flex-none" />
-            <span className="break-words">{item.answer_text || '—'}</span>
+            <span className="break-words">{item.answer_text || 'n/a'}</span>
           </div>
         ))}
 
@@ -216,7 +216,7 @@ export default function TaskAnswer({ answer }: { answer: any }) {
       {answer.kind === 'raw' && (
         <div className="space-y-1">
           <p className="text-[11px] text-gray-400 italic">
-            {t(`${P}.answer.raw_note`, { defaultValue: 'Custom task — shown as raw fields' })}
+            {t(`${P}.answer.raw_note`, { defaultValue: 'Custom task (shown as raw fields)' })}
           </p>
           <dl className="text-[11px] space-y-0.5">
             {items.map((item: any, i: number) => (

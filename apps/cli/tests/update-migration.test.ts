@@ -26,7 +26,7 @@ vi.mock('../src/services/content-volume-migration.js', () => ({
 
 import { updateCommand } from '../src/commands/update.js'
 
-describe('update — content-migration status arms', () => {
+describe('update: content-migration status arms', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined

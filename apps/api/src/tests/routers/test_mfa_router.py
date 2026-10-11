@@ -298,7 +298,7 @@ class TestRegenerateBackupCodes:
 
 
 class TestLoginMFA:
-    """/login/mfa takes only the DB dependency (no auth gate) — the pending token
+    """/login/mfa takes only the DB dependency (no auth gate); the pending token
     is the credential. These patch the cookie/expiry helpers that reach for the
     hosting config, exactly as test_auth_router does for set_auth_cookies."""
 
@@ -472,7 +472,7 @@ class TestSetOrgPolicy:
         _act_as(app, admin_user)
         await _add_org_config(db, org.id)
         # Signed in with password; restricting to google-only would refuse this
-        # very session — the guard blocks the save.
+        # very session, so the guard blocks the save.
         set_session_provenance(SessionProvenance(amr=AUTH_METHOD_PASSWORD, org_id=org.id))
         response = await client.put(
             f"/api/v1/auth/mfa/org-policy/{org.id}",
@@ -488,7 +488,7 @@ class TestSetOrgPolicy:
         await _add_org_config(db, org.id)
         # A session minted before the policy shipped carries no amr. The gate
         # refuses it exactly like a disallowed method, so the save must not go
-        # through — the admin would have no way back in.
+        # through; the admin would have no way back in.
         set_session_provenance(SessionProvenance(amr=None, org_id=org.id))
         response = await client.put(
             f"/api/v1/auth/mfa/org-policy/{org.id}",
@@ -565,7 +565,7 @@ class TestCoverageGaps:
         assert resp.json()["detail"]["code"] == "MFA_ALREADY_ENABLED"
 
     async def test_setup_skips_password_for_passwordless_account(self, client, db, regular_user):
-        # A Google/SSO account has no local password — the re-auth check is skipped
+        # A Google/SSO account has no local password, so the re-auth check is skipped
         # rather than making enrollment unreachable.
         from sqlmodel import select as _select
 
@@ -614,7 +614,7 @@ class TestOrgResetMember:
         assert body["reset"] is True
         assert body["had_factor"] is True
 
-        # Factor is gone — the member can now re-enroll.
+        # Factor is gone; the member can now re-enroll.
         from src.services.auth.mfa import get_user_mfa
 
         assert await get_user_mfa(db, regular_user.id) is None
@@ -640,7 +640,7 @@ class TestOrgResetMember:
 
     async def test_reset_member_without_factor_is_noop_ok(self, app, client, org, admin_user, regular_user):
         _act_as(app, admin_user)
-        # regular_user has no factor enrolled — reset still succeeds, had_factor False.
+        # regular_user has no factor enrolled; reset still succeeds, had_factor False.
         resp = await client.post(f"/api/v1/auth/mfa/org-reset/{org.id}/{regular_user.id}")
         assert resp.status_code == 200
         assert resp.json()["had_factor"] is False

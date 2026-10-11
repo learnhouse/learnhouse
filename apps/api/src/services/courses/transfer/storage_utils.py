@@ -59,7 +59,7 @@ def _validate_local_path(file_path: str) -> Optional[str]:
 
 @functools.cache
 def get_content_delivery_type() -> str:
-    """Get the configured content delivery type (cached — config doesn't change at runtime)."""
+    """Get the configured content delivery type (cached; config doesn't change at runtime)."""
     learnhouse_config = get_learnhouse_config()
     return learnhouse_config.hosting_config.content_delivery.type
 
@@ -102,7 +102,7 @@ def get_storage_client():
 
 @functools.cache
 def get_s3_bucket_name() -> str:
-    """Get the S3 bucket name from config (cached — config doesn't change at runtime)."""
+    """Get the S3 bucket name from config (cached; config doesn't change at runtime)."""
     learnhouse_config = get_learnhouse_config()
     return learnhouse_config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
 
@@ -128,7 +128,7 @@ def generate_presigned_get_url(
     every byte through the API.
 
     Returns None when S3 is not enabled, the client is unavailable, or signing
-    fails — callers fall back to streaming the file through the API.
+    fails; callers fall back to streaming the file through the API.
     """
     if not is_s3_enabled():
         return None
@@ -195,6 +195,28 @@ def read_file_content(file_path: str) -> Optional[bytes]:
             with open(safe_path, 'rb') as f:
                 return f.read()
         return None
+
+
+def write_file_content(file_path: str, content: bytes) -> bool:
+    """Write a file under the content root (filesystem or S3).
+
+    Counterpart of :func:`read_file_content`. Returns False when the path is
+    unsafe or the write fails.
+    """
+    if get_content_delivery_type() == "s3api":
+        return upload_to_s3(file_path, content)
+    safe_path = _validate_local_path(file_path)
+    if safe_path is None:
+        logger.warning("Rejected unsafe local file path: %s", file_path)
+        return False
+    try:
+        os.makedirs(os.path.dirname(safe_path), exist_ok=True)
+        with open(safe_path, "wb") as f:
+            f.write(content)
+        return True
+    except OSError as e:
+        logger.error("Error writing %s: %s", file_path, e)
+        return False
 
 
 def file_exists(file_path: str) -> bool:
@@ -585,7 +607,7 @@ def upload_directory_to_s3_parallel(
     """
     Upload an entire directory to S3 with concurrent per-file uploads.
 
-    Same contract as upload_directory_to_s3, but uploads files in parallel —
+    Same contract as upload_directory_to_s3, but uploads files in parallel:
     for directories with many files (e.g. extracted SCORM packages) sequential
     per-file round-trips dominate the wall clock. The cached boto3 client is
     thread-safe.

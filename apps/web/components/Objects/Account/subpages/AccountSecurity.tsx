@@ -106,7 +106,7 @@ function TwoFactorAuthSection() {
   // Same call shape the change-password form uses (getAPIUrl() +
   // RequestBodyWithAuthHeader + getResponseMetadata). Deliberately NOT apiFetch:
   // its errorHandling() turns a 401 into a global "session expired" event, and
-  // /mfa/setup answers a wrong password with a 401 — which would sign the user
+  // /mfa/setup answers a wrong password with a 401, which would sign the user
   // out mid-enrolment.
   const mfaFetch = React.useCallback(
     async (path: string, method: 'GET' | 'POST', body?: any) => {
@@ -119,8 +119,8 @@ function TwoFactorAuthSection() {
     [access_token]
   )
 
-  // Surface the backend `detail.message` verbatim — those strings are already
-  // written for end users — and turn a 429 into a visible cooldown.
+  // Surface the backend `detail.message` verbatim (those strings are already
+  // written for end users) and turn a 429 into a visible cooldown.
   const readError = React.useCallback(
     (res: { data: any; status: number }, fallback: string): string => {
       const detail = res?.data?.detail
@@ -171,7 +171,7 @@ function TwoFactorAuthSection() {
     loadStatus()
   }, [loadStatus])
 
-  // Render the QR locally (the `qrcode` package) instead of an image service —
+  // Render the QR locally (the `qrcode` package) instead of an image service:
   // the secret must never leave the page, and the CSP blocks third-party images
   // anyway. Imported lazily so it stays out of the settings page bundle.
   React.useEffect(() => {
@@ -255,7 +255,7 @@ function TwoFactorAuthSection() {
         setPassword('')
         setStep('scan')
       } else if (res.status === 409) {
-        // Already enabled somewhere else (another tab) — resync rather than lie.
+        // Already enabled somewhere else (another tab); resync rather than lie.
         toast.error(
           readError(
             res,
@@ -295,7 +295,7 @@ function TwoFactorAuthSection() {
     if (status?.has_password) {
       setStep('password')
     } else {
-      // No password on the account (SSO) — go straight to the QR.
+      // No password on the account (SSO), so go straight to the QR.
       setStep('scan')
       runSetup()
     }
@@ -526,7 +526,7 @@ function TwoFactorAuthSection() {
       </div>
     )
   } else if (step === 'codes') {
-    // Step 4 — the ONLY time these codes are ever visible.
+    // Step 4: the ONLY time these codes are ever visible.
     body = (
       <div className="rounded-lg border border-gray-200 p-4 space-y-4">
         <div className="flex items-start gap-2 text-amber-700 bg-amber-50 p-3 rounded-md">
@@ -540,7 +540,7 @@ function TwoFactorAuthSection() {
             <p className="mt-0.5">
               {t('user.settings.security.mfa.codes_once_body', {
                 defaultValue:
-                  'Save them somewhere safe now. Each code can be used once to sign in if you lose access to your authenticator app. Once you leave this screen they cannot be retrieved — you would have to generate new ones.',
+                  'Save them somewhere safe now. Each code can be used once to sign in if you lose access to your authenticator app. Once you leave this screen they cannot be retrieved; you would have to generate new ones.',
               })}
             </p>
           </div>
@@ -603,7 +603,7 @@ function TwoFactorAuthSection() {
       </div>
     )
   } else if (step === 'password') {
-    // Step 1 — confirm the password before we hand out a secret.
+    // Step 1: confirm the password before we hand out a secret.
     body = (
       <div className="rounded-lg border border-gray-200 p-4 space-y-4">
         <div className="flex items-center gap-2">
@@ -658,7 +658,7 @@ function TwoFactorAuthSection() {
       </div>
     )
   } else if (step === 'scan') {
-    // Step 2 — QR + the raw secret for desktop authenticators.
+    // Step 2: QR + the raw secret for desktop authenticators.
     body = (
       <div className="rounded-lg border border-gray-200 p-4 space-y-4">
         <div className="flex items-center gap-2">
@@ -753,7 +753,7 @@ function TwoFactorAuthSection() {
       </div>
     )
   } else if (step === 'verify') {
-    // Step 3 — prove the app is set up before we switch 2FA on.
+    // Step 3: prove the app is set up before we switch 2FA on.
     body = (
       <div className="rounded-lg border border-gray-200 p-4 space-y-4">
         <div className="flex items-center gap-2">
@@ -882,7 +882,7 @@ function TwoFactorAuthSection() {
             })}
             {lowOnCodes && (
               <>
-                {' — '}
+                {': '}
                 {t('user.settings.security.mfa.codes_low', {
                   defaultValue: 'generate a new set so you do not get locked out.',
                 })}
@@ -1126,7 +1126,7 @@ function AccountSecurity() {
               <Monitor className="text-gray-400 shrink-0" size={20} />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-800 truncate">
-                  {device ? [device.browser, device.os].filter(Boolean).join(' · ') : '—'}
+                  {device ? [device.browser, device.os].filter(Boolean).join(' · ') : 'n/a'}
                 </p>
                 <p className="text-xs text-gray-500">
                   {t('user.settings.security.this_device', { defaultValue: 'This device' })}
@@ -1224,7 +1224,7 @@ function AccountSecurity() {
       </div>
     </div>
 
-    {/* Danger zone — delete account (also deletes solely-owned orgs + content) */}
+    {/* Danger zone: delete account (also deletes solely-owned orgs + content) */}
     <AccountDangerZone />
     </>
   )

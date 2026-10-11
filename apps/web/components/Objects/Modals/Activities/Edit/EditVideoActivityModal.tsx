@@ -104,7 +104,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
         toast.error(res?.data?.detail || 'Failed to save captions', { id: toastId })
       } else {
         toast.success(
-          captions.enabled ? 'Captions queued — generating in the background' : 'Captions disabled',
+          captions.enabled ? 'Captions queued, generating in the background' : 'Captions disabled',
           { id: toastId }
         )
         setCapStatus(res?.data?.status || (captions.enabled ? 'queued' : 'idle'))

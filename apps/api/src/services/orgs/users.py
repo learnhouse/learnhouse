@@ -20,7 +20,15 @@ from src.db.roles import Role, RoleRead
 from src.db.user_organizations import UserOrganization
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
-from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
+from src.db.users import (
+    AnonymousUser,
+    APITokenUser,
+    InternalUser,
+    OrgMemberUserRead,
+    PublicUser,
+    User,
+    UserRead,
+)
 from src.security.auth import resolve_acting_user_id
 from src.security.features_utils.usage import (
     check_members_limit_with_pending,
@@ -33,11 +41,17 @@ from src.services.security.rate_limiting import (
     enforce_batch_size_limit,
     enforce_invite_rate_limit,
 )
-from src.security.org_auth import is_org_member, enforce_org_mfa
-from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.security.org_auth import (
+    enforce_org_mfa,
+    get_user_org,
+    is_org_member,
+    require_org_destroy_right,
+    require_org_role_permission,
+)
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
 from src.services.demo.guards import hide_other_visitors
-from src.services.orgs.orgs import rbac_check
+from src.services.orgs.orgs import is_org_admin_role, rbac_check
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.users.emails import send_role_changed_email
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -53,7 +67,10 @@ def _csv_safe(value):
     with a single quote so it is rendered as literal text. Non-string values
     are returned unchanged.
     """
-    if isinstance(value, str) and value and value[0] in ("=", "+", "-", "@", "\t", "\r"):
+    # Spreadsheets skip leading spaces before evaluating, so " =cmd" is a formula too.
+    if isinstance(value, str) and value and (
+        value[0] in ("\t", "\r") or value.lstrip()[:1] in ("=", "+", "-", "@")
+    ):
         return "'" + value
     return value
 
@@ -61,7 +78,7 @@ def _csv_safe(value):
 # Deliberately permissive email shape check: exactly one "@", a dotted domain,
 # no whitespace/control chars, bounded length. The goal is to reject malformed
 # input (and ":"/whitespace that would shape the Redis invite key), not to
-# fully validate deliverability — the mail provider is the source of truth.
+# fully validate deliverability; the mail provider is the source of truth.
 _EMAIL_RE = re.compile(r"^[^@\s:]{1,64}@[^@\s:]{1,255}\.[a-zA-Z]{2,}$")
 
 
@@ -82,6 +99,142 @@ def _looks_like_email(value: str) -> bool:
     if any(ord(c) < 32 or ord(c) == 127 for c in value):
         return False
     return bool(_EMAIL_RE.match(value))
+
+
+def _rights_within(granted, held) -> bool:
+    """Whether every permission ``granted`` turns on is also on in ``held``."""
+
+    def as_dict(rights) -> dict:
+        if rights is None:
+            return {}
+        return rights if isinstance(rights, dict) else rights.model_dump()
+
+    held_rights = as_dict(held)
+    for bucket, perms in as_dict(granted).items():
+        if not isinstance(perms, dict):
+            continue
+        held_perms = held_rights.get(bucket)
+        held_perms = held_perms if isinstance(held_perms, dict) else {}
+        for perm, value in perms.items():
+            if value is True and held_perms.get(perm) is not True:
+                return False
+    return True
+
+
+async def _require_admin_to_touch_admins(
+    request: Request,
+    org: Organization,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+) -> None:
+    """Only Admins (or superadmins) may remove an Admin or Maintainer.
+
+    rbac_check lets Maintainers remove ordinary members; removing staff also
+    takes the users.delete right, which the seeded Maintainer role lacks.
+    """
+    if isinstance(current_user, (InternalUser, APITokenUser)):
+        return
+    if not await is_org_admin_role(current_user.id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="Only organization administrators can remove an administrator or maintainer",
+        )
+    await require_org_role_permission(
+        current_user.id, org.id, db_session, "users", "action_delete"
+    )
+
+
+async def _revoke_org_grants(
+    db_session: AsyncSession, org: Organization, user_ids: list[int]
+) -> None:
+    """Drop the per-resource grants departing members hold in ``org``.
+
+    Deleting the UserOrganization row alone leaves authorship, usergroup and
+    board membership plus their API tokens in place, each of which keeps
+    granting access. Staged on the session; the caller commits.
+    """
+    if not user_ids:
+        return
+    from sqlalchemy import delete, update, union_all
+
+    from src.db.api_tokens import APIToken
+    from src.db.boards import Board, BoardMember
+    from src.db.courses.courses import Course
+    from src.db.folders.folders import Folder
+    from src.db.media.media import Media
+    from src.db.podcasts.podcasts import Podcast
+    from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipStatusEnum
+
+    now = str(datetime.now())
+    org_resource_uuids = union_all(
+        select(Course.course_uuid).where(Course.org_id == org.id),
+        select(Podcast.podcast_uuid).where(Podcast.org_id == org.id),
+        select(Board.board_uuid).where(Board.org_id == org.id),
+        select(Folder.folder_uuid).where(Folder.org_id == org.id),
+        select(Media.media_uuid).where(Media.org_id == org.id),
+    )
+    # Deactivated rather than deleted so the author history stays visible.
+    await db_session.execute(
+        update(ResourceAuthor)
+        .where(
+            ResourceAuthor.user_id.in_(user_ids),
+            ResourceAuthor.resource_uuid.in_(org_resource_uuids),
+        )
+        .values(
+            authorship_status=ResourceAuthorshipStatusEnum.INACTIVE,
+            update_date=now,
+        )
+    )
+    await db_session.execute(
+        delete(UserGroupUser).where(
+            UserGroupUser.user_id.in_(user_ids),
+            UserGroupUser.usergroup_id.in_(
+                select(UserGroup.id).where(UserGroup.org_id == org.id)
+            ),
+        )
+    )
+    await db_session.execute(
+        delete(BoardMember).where(
+            BoardMember.user_id.in_(user_ids),
+            BoardMember.board_id.in_(select(Board.id).where(Board.org_id == org.id)),
+        )
+    )
+    await db_session.execute(
+        update(APIToken)
+        .where(
+            APIToken.created_by_user_id.in_(user_ids),
+            APIToken.org_id == org.id,
+            APIToken.is_active == True,  # noqa: E712
+        )
+        .values(is_active=False, update_date=now)
+    )
+
+
+async def _drop_accepted_invites(
+    db_session: AsyncSession, org: Organization, user_ids: list[int]
+) -> None:
+    """Remove the invite records that would let a removed member rejoin an
+    invite-only org (the OAuth signup gate accepts any existing key)."""
+    if not user_ids:
+        return
+    from src.core.redis import get_redis_client
+
+    r = get_redis_client()
+    if r is None:
+        return
+    emails = (await db_session.execute(
+        select(User.email).where(User.id.in_(user_ids))
+    )).scalars().all()
+    try:
+        keys = [
+            f"invited_user:{email.strip().lower()}:org:{org.org_uuid}"
+            for email in emails
+            if email
+        ]
+        if keys:
+            r.delete(*keys)
+    except Exception:
+        logger.warning("Failed to drop invites for org %s", org.id, exc_info=True)
 
 
 async def get_organization_users(
@@ -197,7 +350,7 @@ async def get_organization_users(
             .join(UserGroupUser, (UserGroupUser.user_id == User.id) & (UserGroupUser.usergroup_id == usergroup_id))
         )
         # This count is built from its own query rather than from
-        # base_statement, so it needs the demo filter applied again — otherwise
+        # base_statement, so it needs the demo filter applied again. Otherwise
         # the page hides the visitors but the tally above it still counts them,
         # which both looks broken and leaks how many people are in there.
         in_group_count_stmt = _hide_other_visitors(
@@ -230,7 +383,7 @@ async def get_organization_users(
     # Get total count using SQL COUNT
     total = (await db_session.execute(select(func.count()).select_from(base_statement.subquery()))).scalar_one()
 
-    # Sort by join date — use UserOrganization.id as it's auto-increment
+    # Sort by join date. Use UserOrganization.id as it's auto-increment
     # and directly correlates with join order (creation_date is a str, unreliable for sorting)
     if sort_order == "asc":
         base_statement = base_statement.order_by(UserOrganization.id.asc())
@@ -298,6 +451,9 @@ async def get_organization_users(
         except Exception:
             logging.debug("visit_days enrichment unavailable", exc_info=True)
 
+        from src.services.orgs.signup_fields import get_org_signup_fields
+        member_meta_keys: set[str] | None = None  # loaded on first listed row
+
         for user in users:
             user_org = user_org_map.get(user.id)
             if not user_org:
@@ -309,7 +465,15 @@ async def get_organization_users(
                 logging.error(f"Role {user_org.role_id} not found")
                 continue
 
-            user_read = UserRead.model_validate(user)
+            # SECURITY: org admins get the org-scoped member view: no
+            # is_superadmin, and extra_metadata limited to THIS org's declared
+            # signup fields (the column holds answers from every org the
+            # account joined).
+            if member_meta_keys is None:
+                member_meta_keys = {
+                    f.key for f in await get_org_signup_fields(org_id, db_session)
+                }
+            user_read = OrgMemberUserRead.for_org(user, member_meta_keys)
             role_read = RoleRead.model_validate(role)
             usergroups = user_usergroups_map.get(user.id, [])
 
@@ -456,7 +620,8 @@ async def export_organization_users_csv(
             "Name", "Username", "Email", "Groups", "Role", "Joined",
             "Email Verified", "Signup Method", "Last Login",
         ]
-        + [f.label or f.key for f in custom_fields]
+        # Labels are admin-editable signup copy: as untrusted as the values.
+        + [_csv_safe(f.label or f.key) for f in custom_fields]
     )
 
     if users:
@@ -567,6 +732,10 @@ async def remove_user_from_org(
             detail="User not found",
         )
 
+    # Maintainers may remove members, but not Admins or other Maintainers.
+    if user_org.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+        await _require_admin_to_touch_admins(request, org, current_user, db_session)
+
     # Check if user is the last admin
     statement = select(UserOrganization).where(
         UserOrganization.org_id == org.id, UserOrganization.role_id == ADMIN_ROLE_ID
@@ -580,7 +749,9 @@ async def remove_user_from_org(
         )
 
     await db_session.delete(user_org)
+    await _revoke_org_grants(db_session, org, [user_id])
     await db_session.commit()
+    await _drop_accepted_invites(db_session, org, [user_id])
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_id)
@@ -603,7 +774,7 @@ async def leave_org(
     current_user: PublicUser,
 ):
     """Let the CURRENT user leave an org they belong to (self-service, no admin
-    rights needed). They can only remove their OWN membership — the acting user
+    rights needed). They can only remove their OWN membership; the acting user
     id comes from the authenticated session, never a request field."""
     user_id = current_user.id
 
@@ -621,7 +792,7 @@ async def leave_org(
     if not user_org:
         raise HTTPException(status_code=404, detail="You are not a member of this organization")
 
-    # The last admin can't just walk away — they'd orphan the org.
+    # The last admin can't just walk away; they'd orphan the org.
     admins = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.org_id == org.id, UserOrganization.role_id == ADMIN_ROLE_ID
@@ -634,7 +805,9 @@ async def leave_org(
         )
 
     await db_session.delete(user_org)
+    await _revoke_org_grants(db_session, org, [user_id])
     await db_session.commit()
+    await _drop_accepted_invites(db_session, org, [user_id])
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_id)
@@ -678,6 +851,15 @@ async def remove_batch_users_from_org(
     admins = (await db_session.execute(admin_statement)).scalars().all()
     admin_ids = {a.user_id for a in admins}
 
+    staff_ids = set((await db_session.execute(
+        select(UserOrganization.user_id).where(
+            UserOrganization.org_id == org.id,
+            UserOrganization.role_id.in_(ADMIN_OR_MAINTAINER_ROLE_IDS),
+        )
+    )).scalars().all())
+    if staff_ids & set(user_ids):
+        await _require_admin_to_touch_admins(request, org, current_user, db_session)
+
     # Check if removing these users would remove all admins
     remaining_admins = admin_ids - set(user_ids)
     if len(admin_ids) > 0 and len(remaining_admins) == 0:
@@ -696,10 +878,13 @@ async def remove_batch_users_from_org(
         user_orgs_to_remove = []
 
     removed_count = len(user_orgs_to_remove)
+    removed_user_ids = [uo.user_id for uo in user_orgs_to_remove]
     for user_org in user_orgs_to_remove:
         await db_session.delete(user_org)
+    await _revoke_org_grants(db_session, org, removed_user_ids)
 
     await db_session.commit()
+    await _drop_accepted_invites(db_session, org, removed_user_ids)
 
     from src.routers.users import _invalidate_session_cache
     for uid in user_ids:
@@ -735,6 +920,8 @@ async def remove_all_users_from_org(
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    # Keeping only the caller would leave a maintainer-run org with no admin.
+    await require_org_destroy_right(resolve_acting_user_id(current_user), org.id, db_session)
 
     # Keep the caller so the org always retains at least one admin.
     keep_user_id = resolve_acting_user_id(current_user)
@@ -748,8 +935,10 @@ async def remove_all_users_from_org(
     removed_user_ids = [uo.user_id for uo in user_orgs_to_remove]
     for user_org in user_orgs_to_remove:
         await db_session.delete(user_org)
+    await _revoke_org_grants(db_session, org, removed_user_ids)
 
     await db_session.commit()
+    await _drop_accepted_invites(db_session, org, removed_user_ids)
 
     from src.routers.users import _invalidate_session_cache
     for uid in removed_user_ids:
@@ -790,8 +979,55 @@ async def update_user_role(
             detail="Organization not found",
         )
 
-    # RBAC check
+    # Global roles have no org; any other role must belong to this org.
+    if role.org_id is not None and role.org_id != org.id:
+        raise HTTPException(
+            status_code=404,
+            detail="Role not found",
+        )
+
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    from src.security.superadmin import is_user_superadmin
+    if (
+        not isinstance(current_user, (InternalUser, APITokenUser))
+        and current_user.id == user_id
+        and not await is_user_superadmin(current_user.id, db_session)
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot change your own role",
+        )
+
+    # Below Admin, a caller may only hand out roles that grant nothing they
+    # don't hold themselves, and may not touch an Admin's or Maintainer's role.
+    acting_user_id = resolve_acting_user_id(current_user)
+    if not isinstance(current_user, InternalUser) and not await is_user_superadmin(
+        acting_user_id, db_session
+    ):
+        caller_membership = await get_user_org(acting_user_id, org.id, db_session)
+        if caller_membership is None or caller_membership.role_id != ADMIN_ROLE_ID:
+            if role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Only organization administrators can assign the Admin or Maintainer role",
+                )
+            target_membership = await get_user_org(user_id, org.id, db_session)
+            if target_membership is not None and target_membership.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Only organization administrators can change an Admin's or Maintainer's role",
+                )
+            caller_role = (
+                await db_session.get(Role, caller_membership.role_id)
+                if caller_membership is not None
+                else None
+            )
+            if caller_role is None or not _rights_within(role.rights, caller_role.rights):
+                raise HTTPException(
+                    status_code=403,
+                    detail="You cannot assign a role with permissions you don't have",
+                )
 
     # Check if user is the last admin and if the new role is not admin
     statement = select(UserOrganization).where(
@@ -941,7 +1177,7 @@ async def invite_batch_users(
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
     # This is the endpoint that actually sends the mail, so it needs the demo
-    # guard even though create_invite_code already has one — an invite code is
+    # guard even though create_invite_code already has one: an invite code is
     # optional here, and without one send_invite_email still delivers, pointing
     # at the org's /signup. Every visitor to the shared demo holds admin on it,
     # and the free-tier age gate below exempts paid plans, which the demo is by
@@ -1016,8 +1252,8 @@ async def invite_batch_users(
     #
     # Only the ones still PENDING, though. Accepted invites keep their Redis key
     # (flipped to pending=False) for the full 60 day TTL, so counting every key
-    # charged an accepted invitee twice — once as a real member and once as a
-    # phantom pending invite — and an org that had filled its seats through
+    # charged an accepted invitee twice (once as a real member and once as a
+    # phantom pending invite), and an org that had filled its seats through
     # invitations was told it had hit the member limit while well under it.
     existing_pending = 0
     for key in r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=1000):
@@ -1147,7 +1383,7 @@ async def get_list_of_invited_users(
         )
 
     # SECURITY: pending invites carry the invitee's email address and the
-    # invite code — a ready-made phishing list. rbac_check short-circuits every
+    # invite code, a ready-made phishing list. rbac_check short-circuits every
     # "read" to True, so it is no gate at all here: mirror the member-listing
     # path instead and require an admin/maintainer of *this* org.
     if isinstance(current_user, AnonymousUser):
@@ -1238,7 +1474,7 @@ async def remove_invited_user(
         )
 
     # Invites are keyed on the lower-cased address (see invite_batch_users), so
-    # normalise here too — otherwise an admin who typed the address with any
+    # normalise here too. Otherwise an admin who typed the address with any
     # capitals could never withdraw the invitation they had just sent.
     email = email.strip().lower()
 

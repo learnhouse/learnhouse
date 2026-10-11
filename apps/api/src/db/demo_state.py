@@ -22,9 +22,9 @@ class DemoState(SQLModel, table=True):
     Exactly one row, id=1. Holds the two pieces of state the scheduler needs
     that are not derivable from the data itself:
 
-    * `bundle_version` — when the checked-in bundle changes, a refresh is not
+    * `bundle_version`: when the checked-in bundle changes, a refresh is not
       enough and the org is re-provisioned from scratch.
-    * `content_epoch` — the anchor all backdated timestamps are computed from.
+    * `content_epoch`: the anchor all backdated timestamps are computed from.
       It is rolled forward once a day, *not* on every refresh. If dates were
       recomputed from `now` each tick, every seeded row would change hourly and
       the whole point of refreshing in place would be lost.

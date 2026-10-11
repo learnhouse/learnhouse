@@ -81,7 +81,7 @@ export default async function BoardsPage({ params }: { params: PageParams }) {
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
-  // Require authentication to view boards. Browser-relative path only — the
+  // Require authentication to view boards. Browser-relative path only; the
   // proxy adds /orgs/{slug} and rewrites /login → /auth/login; an org-prefixed
   // path would be double-prefixed → 404.
   if (!access_token) {

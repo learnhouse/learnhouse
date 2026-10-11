@@ -55,7 +55,7 @@ class TestInstanceRouter:
 
         Deploys are rolling and the cache is shared, so any pod running older
         code will return a cached blob verbatim. If these fields are ever put
-        back into the stored payload, that pod serves a stale `mode` — and if
+        back into the stored payload, that pod serves a stale `mode`, and if
         they are stored under a key an older build also reads, it serves a
         response missing `mode` entirely.
         """

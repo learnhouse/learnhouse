@@ -181,7 +181,7 @@ async def test_backfill_respects_limit(monkeypatch, db, org, course, chapter, ac
 
 
 # --------------------------------------------------------------------------
-# transcode_activity orchestration (mocked — no ffmpeg/S3 needed)
+# transcode_activity orchestration (mocked, no ffmpeg/S3 needed)
 # --------------------------------------------------------------------------
 
 def _mock_transcode_deps(monkeypatch, *, resolve, fetch=True, transcode=None,
@@ -266,12 +266,11 @@ async def test_cancelled_upload_stops_before_scratch_dir_is_removed(monkeypatch)
 
     monkeypatch.setattr(hls_jobs, "upload_directory_to_s3_parallel", _slow_upload)
     task = asyncio.create_task(hls_jobs.transcode_activity("act"))
-    while not started.is_set():
-        await asyncio.sleep(0.01)
+    assert await asyncio.to_thread(started.wait, 5), "upload never started"
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task
-    for _ in range(100):
+    for _ in range(500):
         if "stopped" in seen:
             break
         await asyncio.sleep(0.01)
@@ -413,7 +412,7 @@ async def test_consumer_loop_drains_and_transcodes(monkeypatch):
     async def _tr(uuid):
         processed.append(uuid)
         if uuid == "a1":
-            raise RuntimeError("boom")  # one job errors — consumer must survive
+            raise RuntimeError("boom")  # one job errors; the consumer must survive
         return True
 
     monkeypatch.setattr(hls_jobs, "transcode_activity", _tr)
@@ -829,7 +828,7 @@ def test_scratch_dir_cleans_up_and_never_raises_on_busy_tree(monkeypatch):
     """A file appearing mid-cleanup used to surface as "HLS job crashed".
 
     tempfile.TemporaryDirectory raises OSError(39, "Directory not empty") when
-    something writes into the tree while it is being removed — after the
+    something writes into the tree while it is being removed, after the
     transcode had already succeeded and uploaded.
     """
     seen = {}
@@ -855,3 +854,38 @@ def test_scratch_dir_cleans_up_and_never_raises_on_busy_tree(monkeypatch):
 
     monkeypatch.setattr(hls_jobs.shutil, "rmtree", real_rmtree)
     real_rmtree(leftover, ignore_errors=True)
+
+
+async def test_upload_output_local_copy_skips_files_once_stopped(monkeypatch, tmp_path):
+    """Without S3 the output is copied locally; a cancelled job must not keep
+    copying files that scratch_dir is about to delete."""
+    import shutil
+    import threading
+
+    src = tmp_path / "hls"
+    src.mkdir()
+    for i in range(3):
+        (src / f"seg_{i}.ts").write_bytes(b"x")
+    dst = tmp_path / "out"
+    monkeypatch.setattr(hls_jobs, "is_s3_enabled", lambda: False)
+
+    copied = []
+    real_copy2 = shutil.copy2
+    first_copy = threading.Event()
+    release = threading.Event()
+
+    def _copy2(s, d, *a, **k):
+        copied.append(s)
+        first_copy.set()
+        release.wait(timeout=5)
+        return real_copy2(s, d, *a, **k)
+
+    monkeypatch.setattr(shutil, "copy2", _copy2)
+    task = asyncio.create_task(hls_jobs._upload_output(str(src), str(dst)))
+    assert await asyncio.to_thread(first_copy.wait, 5)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    release.set()
+    await asyncio.sleep(0.2)
+    assert len(copied) == 1

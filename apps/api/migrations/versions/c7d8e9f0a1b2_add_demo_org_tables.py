@@ -3,14 +3,14 @@
 The shared demo organization is refreshed in place on a schedule rather than
 dropped and rebuilt, which needs three things in the schema:
 
-* ``organization.is_demo`` — indexed, because it is a filter on org-wide scans
+* ``organization.is_demo``: indexed, because it is a filter on org-wide scans
   (active-user billing overage, nudge eligibility, explore, the free-org cap),
   not a per-row lookup.
-* ``demo_entity`` — the registry of every row the bundle owns, keyed by the
+* ``demo_entity``: the registry of every row the bundle owns, keyed by the
   stable ``(kind, bundle_key)`` identity the manifest declares. Rows in the
   demo org with no entry here were created by a visitor and are deleted as
   drift on the next refresh.
-* ``demo_state`` — a singleton row holding ``bundle_version`` (a change forces
+* ``demo_state``: a singleton row holding ``bundle_version`` (a change forces
   a re-provision) and ``content_epoch`` (the anchor for backdated timestamps,
   rolled once a day so hourly refreshes are no-ops).
 

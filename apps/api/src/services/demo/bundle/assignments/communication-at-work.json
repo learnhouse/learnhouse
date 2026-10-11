@@ -70,7 +70,7 @@
         "match_mode": "contains"
       },
       "submissions": {
-        "correct": { "answer": "Can you confirm by Thursday whether we hold order 4192? We will miss Friday on the original plan — detail below." },
+        "correct": { "answer": "Can you confirm by Thursday whether we hold order 4192? We will miss Friday on the original plan; detail below." },
         "partial": { "answer": "Please confirm by Thursday about order 4192. Background follows." },
         "incorrect": { "answer": "Following up on my earlier note regarding the order, I wanted to reach out and see whether there had been any movement on this at your end." }
       }

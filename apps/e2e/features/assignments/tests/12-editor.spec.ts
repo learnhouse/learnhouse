@@ -1,6 +1,6 @@
 /**
  * Teacher assignment EDITOR: the Edit modal (grading type), the publish toggle,
- * and adding a task — all driven through the dashboard UI and verified via API.
+ * and adding a task, all driven through the dashboard UI and verified via API.
  */
 import { test, expect } from '../../../core/fixtures'
 import { setupScenario, Scenario } from '../scenario'
@@ -46,7 +46,7 @@ test('teacher edits grading type, toggles publish, and adds a task via the edito
   await editor.publish()
   expect((await getAssignment(s.adminToken, s.seeded.assignmentUuid)).published).toBe(true)
 
-  // 3) Add a Quiz task — task count goes from 1 to 2.
+  // 3) Add a Quiz task: task count goes from 1 to 2.
   const before = await getTaskCount(s.adminToken, s.seeded.assignmentUuid)
   await editor.addTask('Quiz')
   await expect

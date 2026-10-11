@@ -4,7 +4,7 @@ Generates a full assignment + graded tasks grounded on a course's content.
 Structured output (``AIAssignmentPlan``) keeps the model on-rails; the service
 then converts each task into the exact ``contents`` shape the server graders in
 ``src/services/courses/activities/assignments.py`` expect, stamping the ids
-(questionUUID / optionUUID / blankUUID). Nothing is persisted here — the plan is
+(questionUUID / optionUUID / blankUUID). Nothing is persisted here; the plan is
 returned for the teacher to preview, edit, and save via the existing endpoints.
 """
 
@@ -40,8 +40,8 @@ _SYSTEM_PROMPT = """You are an expert instructional designer generating a graded
 
 You know these task types and MUST use their exact structure:
 - QUIZ: each question has options, each option marked correct or not, and a response_type:
-    * response_type "single": exactly ONE option is correct — the learner picks one.
-    * response_type "multiple": a select-all-that-apply question — mark EVERY correct
+    * response_type "single": exactly ONE option is correct; the learner picks one.
+    * response_type "multiple": a select-all-that-apply question; mark EVERY correct
       option correct (two or more), and the learner must find all of them.
   At least one correct option per question, and response_type must match the number of
   correct options you mark. Use "multiple" when the material genuinely has several right
@@ -231,6 +231,7 @@ async def generate_assignment_plan(
     num_tasks: int = 3,
     allowed_task_types: list[str] | None = None,
     session_uuid: str | None = None,
+    user_id: int | None = None,
 ) -> tuple[GeneratedAssignmentPlan, str]:
     """Generate an assignment plan grounded on course content. Does not persist."""
     num_tasks = max(1, min(num_tasks, MAX_TASKS))
@@ -290,7 +291,10 @@ async def generate_assignment_plan(
     # amend it instead of regenerating from scratch.
     assistant_turn = json.dumps(generated.model_dump())
     try:
-        save_message_to_history(resolved_session_uuid, prompt.strip(), assistant_turn, org_id=org_id)
+        save_message_to_history(
+            resolved_session_uuid, prompt.strip(), assistant_turn,
+            user_id=user_id, org_id=org_id, listed=False,
+        )
     except Exception:
         logger.debug("Failed to persist assignment refine history", exc_info=True)
 

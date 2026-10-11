@@ -1,4 +1,6 @@
+import json
 from typing import Optional, Dict
+from pydantic import field_validator
 from sqlalchemy import JSON, Column, ForeignKey, Index, UniqueConstraint
 from sqlmodel import Field, SQLModel
 from enum import Enum
@@ -49,18 +51,18 @@ class AssignmentBase(SQLModel):
     # which require a human). Teacher can still override by re-grading later.
     auto_grading: Optional[bool] = False
     # When True, the student-facing task views block paste events on code
-    # editors and text inputs. This is a soft deterrent — it can be bypassed
+    # editors and text inputs. This is a soft deterrent; it can be bypassed
     # but it discourages casual AI-assisted copy/paste.
     anti_copy_paste: Optional[bool] = False
     # When True, after a submission is GRADED the student's task view reveals
     # the correct answers (which quiz options were right, the accepted short
     # answer, the expected number, the correct form blanks). Defaults to False
-    # so existing assignments don't start leaking answer keys automatically —
+    # so existing assignments don't start leaking answer keys automatically;
     # the teacher must explicitly opt in.
     show_correct_answers: Optional[bool] = False
     # When True, after a submission is GRADED the student may reset their work
     # and try the assignment again. The retry wipes per-task submissions and
-    # the user submission row back to a fresh state — only the attempt
+    # the user submission row back to a fresh state; only the attempt
     # counter on AssignmentUserSubmission survives, so a future grade
     # replaces the previous one (no submission history is kept).
     allow_retries: Optional[bool] = False
@@ -82,7 +84,7 @@ class AssignmentBase(SQLModel):
     # The model answer ("corrigé") for the whole assignment: the worked solution
     # the learner compares their own work against. Free text, plus an optional
     # uploaded document. Both are withheld from students until
-    # `solution_reveal` says otherwise — the read services blank them out
+    # `solution_reveal` says otherwise: the read services blank them out
     # server-side, so the payload never carries the solution to a learner who
     # has not unlocked it.
     solution: Optional[str] = None
@@ -129,7 +131,7 @@ class AssignmentUpdate(SQLModel):
     The structural foreign keys (org_id / course_id / chapter_id / activity_id)
     are intentionally NOT exposed here. They locate the assignment inside a
     single tenant/course, and the update endpoint only authorizes against the
-    assignment's *current* course — so accepting client-supplied parents would
+    assignment's *current* course, so accepting client-supplied parents would
     let an instructor reparent an assignment into another org/course they don't
     own. Assignments are created inside a course and never legitimately moved
     across one through this endpoint.
@@ -192,7 +194,7 @@ class AssignmentTaskTypeEnum(str, Enum):
     NUMBER_ANSWER = "NUMBER_ANSWER"
     # Headless/custom task: the `contents` JSON (the task definition) and the
     # `task_submission` JSON (the learner answer) are an arbitrary, caller-owned
-    # data object. The server never interprets or auto-grades it — it is graded
+    # data object. The server never interprets or auto-grades it; it is graded
     # manually (or left ungraded), so custom frontends fully control the schema.
     CUSTOM = "CUSTOM"
     OTHER = "OTHER"
@@ -207,7 +209,7 @@ class AssignmentTaskBase(SQLModel):
     reference_file: Optional[str] = None
     assignment_type: AssignmentTaskTypeEnum
     contents: Dict = Field(default_factory=dict, sa_column=Column(JSON))
-    # Internal grading scale for this task. Defaults to 100 — every task is
+    # Internal grading scale for this task. Defaults to 100: every task is
     # graded out of 100 (a percentage). The field stays in the DB because
     # legacy assignments set different values which, when summed, yielded a
     # weighted average. New tasks and the UI always use 100, so the
@@ -231,6 +233,9 @@ class AssignmentTaskRead(AssignmentTaskBase):
 
     id: int
     assignment_task_uuid: str
+    # Position of the task inside its assignment (0-based). None only for
+    # rows created before ordering existed; readers fall back to id order.
+    order: Optional[int] = None
     creation_date: str
     update_date: str
 
@@ -246,12 +251,19 @@ class AssignmentTaskUpdate(SQLModel):
     max_grade_value: Optional[int] = Field(default=None, ge=0)
 
 
+class AssignmentTaskOrder(SQLModel):
+    """Full ordered list of an assignment's task UUIDs."""
+
+    task_uuids: list[str]
+
+
 class AssignmentTask(AssignmentTaskBase, table=True):
     """Represents a task within an assignment with various attributes and foreign keys."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
     assignment_task_uuid: str
+    order: Optional[int] = Field(default=None)
     creation_date: str
     update_date: str
 
@@ -279,6 +291,21 @@ class AssignmentTask(AssignmentTaskBase, table=True):
 
 ## AssignmentTaskSubmission ##
 
+# Learner answers are stored verbatim (CUSTOM tasks are arbitrary JSON) and
+# returned on every grading read. Code tasks carry the source plus test results
+# capped at 1 MB by the code submission endpoint, so this leaves headroom.
+MAX_TASK_SUBMISSION_BYTES = 2 * 1024 * 1024
+
+
+def _check_task_submission_size(value):
+    if value is not None and len(
+        json.dumps(value, default=str).encode("utf-8")
+    ) > MAX_TASK_SUBMISSION_BYTES:
+        raise ValueError(
+            f"task_submission must be at most {MAX_TASK_SUBMISSION_BYTES // (1024 * 1024)} MB"
+        )
+    return value
+
 
 class AssignmentTaskSubmissionBase(SQLModel):
     """Represents the common fields for an assignment task submission."""
@@ -302,7 +329,9 @@ class AssignmentTaskSubmissionBase(SQLModel):
 class AssignmentTaskSubmissionCreate(AssignmentTaskSubmissionBase):
     """Model for creating a new assignment task submission."""
 
-    pass  # Inherits all fields from AssignmentTaskSubmissionBase
+    _cap_task_submission = field_validator("task_submission")(
+        _check_task_submission_size
+    )
 
 
 class AssignmentTaskSubmissionRead(AssignmentTaskSubmissionBase):
@@ -323,6 +352,10 @@ class AssignmentTaskSubmissionUpdate(SQLModel):
     task_submission_grade_feedback: Optional[str] = None
     manually_graded: Optional[bool] = None
     assignment_type: Optional[AssignmentTaskTypeEnum] = None
+
+    _cap_task_submission = field_validator("task_submission")(
+        _check_task_submission_size
+    )
 
 
 class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):
@@ -446,7 +479,7 @@ class AssignmentUserSubmissionUpdate(SQLModel):
 
 class AssignmentUserSubmission(AssignmentUserSubmissionBase, table=True):
     """Represents the submission status of an assignment for a user."""
-    # One submission row per (user, assignment) — retries reset the row in place
+    # One submission row per (user, assignment); retries reset the row in place
     # rather than inserting a new one. Enforced in the DB so two concurrent
     # submit requests (double-click) can't both INSERT a duplicate row that then
     # splits grading/webhooks across two rows.

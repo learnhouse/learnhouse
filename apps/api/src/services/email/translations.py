@@ -15,7 +15,7 @@ SUPPORTED_LANGUAGES: Final[tuple[str, ...]] = (
 
 # Locales selectable as an organisation's UI language; mirrors
 # apps/web/lib/languages.ts. A UI locale need not have an email-translation
-# bundle — emails for any locale without one fall back to English (see `t()`).
+# bundle; emails for any locale without one fall back to English (see `t()`).
 SUPPORTED_UI_LANGUAGES: Final[tuple[str, ...]] = (
     "en", "fr", "de", "es", "ar", "ja", "pt", "ru", "zh", "hi",
     "ko", "it", "tr", "vi", "id", "pl", "uk", "nl", "th", "bn", "sk", "fa",
@@ -51,6 +51,11 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "account_deleted.heading": "Your account has been deleted",
         "account_deleted.body": "Your LearnHouse account and personal data have been permanently removed. We're sorry to see you go. If this wasn't you, contact support right away.",
         "account_deleted.footer": "This is a confirmation that your account was deleted.",
+
+        "email_changed.subject": "Your email address was changed",
+        "email_changed.heading": "Your email address was changed",
+        "email_changed.body": "Hi {username}, the email address on your account was changed to {new_email}. If you made this change, no action is needed.",
+        "email_changed.footer": "If you didn't make this change, reset your password and contact support right away.",
 
         "password_reset.subject": "Reset your password",
         "password_reset.heading": "Reset your password",
@@ -449,7 +454,7 @@ EMAIL_TRANSLATIONS: dict[str, dict[str, str]] = {
         "email_verification.body": "Здравствуйте, {username}, добро пожаловать в {brand}! Нажмите на кнопку ниже, чтобы подтвердить адрес электронной почты и активировать аккаунт.",
         "email_verification.cta": "Подтвердить адрес почты",
         "email_verification.copy_paste": "Либо скопируйте эту ссылку:",
-        "email_verification.footer": "Срок действия ссылки — 1 час. Если вы не создавали аккаунт {brand}, проигнорируйте это письмо.",
+        "email_verification.footer": "Срок действия ссылки: 1 час. Если вы не создавали аккаунт {brand}, проигнорируйте это письмо.",
 
         "magic_login.subject": "Ваша ссылка для входа в {brand}",
         "magic_login.heading": "Войти в {brand}",

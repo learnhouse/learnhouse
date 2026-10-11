@@ -1,4 +1,4 @@
-"""Unit tests for src/services/ai/captions.py (VTT engine — no real model/ffmpeg)."""
+"""Unit tests for src/services/ai/captions.py (VTT engine, no real model/ffmpeg)."""
 
 import src.services.ai.captions as cap
 
@@ -51,7 +51,7 @@ def test_has_cues():
 
 
 def test_mm_ss_timestamps_recognized():
-    # Gemini emits MM:SS.mmm (no hours) — this MUST be recognized as cues,
+    # Gemini emits MM:SS.mmm (no hours), and this MUST be recognized as cues,
     # otherwise every real transcript fails with "no cues".
     vtt = "WEBVTT\n\n00:01.800 --> 00:03.200\nHello"
     assert cap.has_cues(vtt)

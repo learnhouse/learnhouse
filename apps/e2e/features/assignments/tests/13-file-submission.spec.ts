@@ -54,7 +54,7 @@ test('student uploads a file and the teacher grades it manually', async ({ page,
     await subs.open(s.bareAssignmentUuid)
     const modal = await subs.evaluateFirst()
     await modal.gradeFirstTask('Full')
-    await modal.setOverallFeedback('Received — looks good.')
+    await modal.setOverallFeedback('Received, looks good.')
     await modal.finalizeAndComplete()
   } finally {
     await adminCtx.close()

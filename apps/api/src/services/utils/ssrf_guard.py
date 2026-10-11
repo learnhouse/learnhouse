@@ -110,7 +110,7 @@ def assert_connected_peer_allowed(
     """
     stream = response.extensions.get("network_stream")
     if stream is None:
-        raise SSRFBlockedError("Cannot determine peer address — fail closed")
+        raise SSRFBlockedError("Cannot determine peer address; fail closed")
 
     try:
         peer = stream.get_extra_info("server_addr")
@@ -118,7 +118,7 @@ def assert_connected_peer_allowed(
         raise SSRFBlockedError(f"Failed to read peer address: {exc}") from exc
 
     if not peer:
-        raise SSRFBlockedError("Peer address unavailable — fail closed")
+        raise SSRFBlockedError("Peer address unavailable; fail closed")
 
     peer_host = peer[0] if isinstance(peer, tuple) else str(peer)
     try:

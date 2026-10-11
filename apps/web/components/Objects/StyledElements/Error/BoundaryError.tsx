@@ -25,7 +25,7 @@ export default function BoundaryError({
 
   useEffect(() => {
     const msg = error?.message || ''
-    // A new deployment invalidated this page's chunks/server actions — the only
+    // A new deployment invalidated this page's chunks/server actions; the only
     // real fix is to reload into the fresh version.
     if (
       msg.includes('Failed to find Server Action') ||

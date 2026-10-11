@@ -92,7 +92,7 @@ export default function PdfThumbnail({ url }: { url: string }) {
   if (state === 'error') {
     // Page-1 render failed (unreachable file / blocked fetch). The media card
     // that wraps this thumbnail is ALREADY a link to the file, so render a
-    // non-interactive tile here — a nested <a> inside the card's <a> is invalid
+    // non-interactive tile here; a nested <a> inside the card's <a> is invalid
     // HTML and causes a hydration error.
     return (
       <div className="relative aspect-video flex flex-col items-center justify-center gap-1.5 bg-amber-50 text-amber-500">

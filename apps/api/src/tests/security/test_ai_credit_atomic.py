@@ -3,7 +3,7 @@ Regression tests for the F-06 atomic AI-credit reservation fix.
 
 Before the fix, ``check_ai_credits`` + ``deduct_ai_credit`` were two separate
 Redis operations, so N concurrent requests at ``remaining=1`` could all pass
-the check and all decrement — burning N model calls while billing for 1.
+the check and all decrement, burning N model calls while billing for 1.
 
 ``reserve_ai_credit`` bundles the check + increment into a single Redis Lua
 script, so at most one caller can cross the boundary per reservation.

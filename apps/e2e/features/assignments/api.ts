@@ -1,5 +1,5 @@
 /**
- * Assignments feature API — seeds the preconditions the UI specs need
+ * Assignments feature API: seeds the preconditions the UI specs need
  * (course → chapter → assignment activity → tasks, plus submissions/grading)
  * via the documented REST API. Builds on the generic client in core/.
  * Field names mirror the backend Create models (snake_case); see

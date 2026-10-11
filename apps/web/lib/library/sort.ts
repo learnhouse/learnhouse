@@ -30,7 +30,7 @@ export const _dateOf = (x: any) => {
  *
  * 'manual' is intentionally a no-op here: folders already arrive ordered by their
  * persisted `order` from the server, and drag-reordering mutates the array in
- * place — re-sorting by the (optimistically stale) `order` field would fight the
+ * place; re-sorting by the (optimistically stale) `order` field would fight the
  * drag. So manual mode trusts the incoming order.
  */
 export function sortLibrary(folders: any[], items: any[], mode: FolderSortMode) {

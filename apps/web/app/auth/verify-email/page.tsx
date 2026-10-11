@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const orgslug = await getAuthOrgSlug()
 
   if (!orgslug) {
-    return { title: 'Verify Email — LearnHouse' }
+    return { title: 'Verify Email | LearnHouse' }
   }
 
   let org: any = null
@@ -20,11 +20,11 @@ export async function generateMetadata(): Promise<Metadata> {
       tags: ['organizations'],
     })
   } catch {
-    // Stale cookie or unknown org — fall back to generic title
+    // Stale cookie or unknown org: fall back to generic title
   }
 
   return {
-    title: 'Verify Email' + ` — ${org?.name || 'LearnHouse'}`,
+    title: 'Verify Email' + ` | ${org?.name || 'LearnHouse'}`,
     robots: { index: false, follow: false },
   }
 }

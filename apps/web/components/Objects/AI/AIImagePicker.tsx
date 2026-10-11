@@ -85,13 +85,13 @@ const AIImagePicker: React.FC<AIImagePickerProps> = ({ onSelect, onSelectFile, o
           org_id: org.id,
           prompt: prompt.trim(),
           session_uuid: sessionUuid,
-          // Refine by file_id — the backend reads the source image from storage
+          // Refine by file_id: the backend reads the source image from storage
           // (no cross-origin fetch), so refinement is reliable.
           source_file_id: refineFrom?.file_id,
         },
         access_token
       )
-      // detail can be a string (our HTTPException) or an array (422) — only show strings.
+      // detail can be a string (our HTTPException) or an array (422); only show strings.
       const detail = res.data?.detail
       const message = typeof detail === 'string' ? detail : 'Image generation failed. Please try again.'
       if (!res.success || !res.data?.file_id || !res.data?.ai_generation_uuid) {

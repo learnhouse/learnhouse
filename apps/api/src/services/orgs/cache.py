@@ -2,7 +2,7 @@
 Redis cache layer for organization lookups.
 
 Caches org-by-slug and instance info with short TTLs.
-Falls back gracefully — if Redis is unavailable, queries hit the DB directly.
+Falls back gracefully: if Redis is unavailable, queries hit the DB directly.
 """
 
 import json
@@ -13,9 +13,9 @@ from src.core.redis import get_redis_client
 
 logger = logging.getLogger(__name__)
 
-CACHE_TTL_ORG_SLUG = 120       # org-by-slug — 2 min (short, keeps frontend fresh)
-CACHE_TTL_INSTANCE_INFO = 600  # instance info — 10 min
-CACHE_TTL_ORG_CONFIG = 120     # org config — same TTL as slug
+CACHE_TTL_ORG_SLUG = 120       # org-by-slug, 2 min (short, keeps frontend fresh)
+CACHE_TTL_INSTANCE_INFO = 600  # instance info, 10 min
+CACHE_TTL_ORG_CONFIG = 120     # org config, same TTL as slug
 
 _KEY_PREFIX = "org_cache"
 
@@ -23,7 +23,7 @@ _KEY_PREFIX = "org_cache"
 # `multi_org_enabled` moved out of it and became per-request. Deploys are
 # rolling, so old and new pods share this Redis for the length of a rollout.
 # On the old key an old pod would read the new trimmed blob and return it
-# verbatim, giving clients an /instance/info response with no `mode` at all —
+# verbatim, giving clients an /instance/info response with no `mode` at all,
 # which the frontend proxy writes into the LH_mode cookie, and which then
 # reads back as "oss". EE surfaces and the SaaS billing guard would switch off
 # fleet-wide for up to the cache TTL. Bumping the key means neither version

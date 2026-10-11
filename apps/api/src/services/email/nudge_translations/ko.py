@@ -97,7 +97,7 @@ STRINGS: dict[str, str] = {
     "nudge.audience.members_no_enrollment_d3.body": "{org_name}에 가입한 분들은 있지만 아직 아무도 코스를 시작하지 않았습니다. 직접 링크가 담긴 짧은 메시지면 대개 움직입니다. 대부분은 입구를 못 찾았을 뿐입니다.",
     "nudge.audience.members_no_enrollment_d3.cta": "멤버 보기",
 
-    "nudge.audience.share_public_page_d14.subject": "코스 페이지가 공개 상태입니다 — 링크는 여기 있습니다",
+    "nudge.audience.share_public_page_d14.subject": "코스 페이지가 공개 상태입니다. 링크는 여기 있습니다",
     "nudge.audience.share_public_page_d14.heading": "링크만 있으면 누구나 읽을 수 있습니다",
     "nudge.audience.share_public_page_d14.body": "'{course_name}'은 공개 설정이라 초대 없이도 어디에나 공유할 수 있습니다. 아래 링크가 그대로 보내시면 되는 주소입니다.",
     "nudge.audience.share_public_page_d14.cta": "공개 페이지 보기",
@@ -173,7 +173,7 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "달라진 점 보기",
     "nudge.reactivation.need_a_hand.subject": "{org_name}으로 돌아오시는 데 도움이 필요하신가요?",
     "nudge.reactivation.need_a_hand.heading": "무엇이 걸리셨나요?",
-    "nudge.reactivation.need_a_hand.body": "{org_name}이 멈춘 이유가 있었다면 — 헷갈리는 부분, 빠진 기능, 아니면 그저 시간 — 정말 듣고 싶습니다. 이 메일에 그대로 답장해 주시면 저희에게 바로 전달됩니다.",
+    "nudge.reactivation.need_a_hand.body": "{org_name}이 멈춘 이유가 있었다면(헷갈리는 부분, 빠진 기능, 아니면 그저 시간) 정말 듣고 싶습니다. 이 메일에 그대로 답장해 주시면 저희에게 바로 전달됩니다.",
     "nudge.reactivation.closing.subject": "{org_name}에 대한 마지막 안내",
     "nudge.reactivation.closing.heading": "여기서 멈추겠습니다",
     "nudge.reactivation.closing.body": "이런 메일은 이번이 마지막입니다. {org_name}은 그대로 남고 만료되는 것도 없습니다. 언제든 돌아오고 싶으시면 모두 그대로 기다리고 있습니다.",

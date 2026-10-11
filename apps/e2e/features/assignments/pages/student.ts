@@ -56,7 +56,7 @@ export class AssignmentPage {
   /**
    * Upload a file for a FILE_SUBMISSION task. The "Submit File" button opens a
    * native file chooser; we satisfy it via Playwright's filechooser event
-   * (mirrors the real user gesture — the component uploads on selection).
+   * (mirrors the real user gesture; the component uploads on selection).
    */
   async uploadFile(filePath: string): Promise<void> {
     const [chooser] = await Promise.all([
@@ -74,7 +74,7 @@ export class AssignmentPage {
    */
   async saveProgress(): Promise<void> {
     // The page can render responsive duplicates (some hidden), so click only
-    // the visible "Save your progress" controls — one per task. Each click
+    // the visible "Save your progress" controls, one per task. Each click
     // PUTs the task submission; we settle the network after each so every
     // answer is persisted before we submit (otherwise a task can grade as
     // unanswered).
@@ -162,7 +162,7 @@ export class AssignmentPage {
 
   /**
    * Hand in a formative assignment. The trigger reads "Hand in my work" rather
-   * than "Submit for grading" — nothing downstream will grade it — but the
+   * than "Submit for grading" (nothing downstream will grade it), but the
    * confirmation dialog is the same one.
    */
   async handIn(): Promise<void> {

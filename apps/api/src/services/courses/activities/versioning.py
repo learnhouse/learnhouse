@@ -11,6 +11,7 @@ from typing import List, Optional
 
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.ai.rag.queue import index_activity
 from src.security.features_utils.usage import check_feature_access
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -116,7 +117,9 @@ async def get_activity_versions(
             detail="Course not found",
         )
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # Version history includes drafts and content later removed, and is only
+    # used by the editor: it needs edit rights, not read.
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Get versions with user info
     statement = (
@@ -180,7 +183,7 @@ async def get_activity_version(
             detail="Course not found",
         )
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Get specific version with user info
     statement = (
@@ -253,7 +256,8 @@ async def get_activity_state(
             detail="Course not found",
         )
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # Conflict detection for collaborators editing the activity
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     return ActivityStateRead(
         activity_uuid=activity.activity_uuid,
@@ -317,7 +321,7 @@ async def restore_activity_version(
         )
 
     # Create a version of the current state before restoring. Unwrap API
-    # tokens via resolve_acting_user_id — raw current_user.id is 0 on a
+    # tokens via resolve_acting_user_id, because raw current_user.id is 0 on a
     # token, and created_by_id is an FK to user.id (writing 0 fails).
     user_id = resolve_acting_user_id(current_user)
     await create_activity_version(activity, user_id, db_session)
@@ -335,6 +339,7 @@ async def restore_activity_version(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    index_activity(activity.id)
 
     await dispatch_webhooks(
         event_name="activity_version_restored",

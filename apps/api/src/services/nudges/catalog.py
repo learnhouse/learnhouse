@@ -2,11 +2,11 @@
 The nudge catalog: which email fires, for whom, and when.
 
 Each entry is a pure declaration. The runner is generic over them, so adding a
-nudge means adding a ``NudgeSpec`` and its copy — never touching the send loop.
+nudge means adding a ``NudgeSpec`` and its copy, never touching the send loop.
 
 Two properties are load-bearing:
 
-``day_max`` — every window has an upper bound. This is what makes a backfill
+``day_max``: every window has an upper bound. This is what makes a backfill
 over years of existing organizations safe: an org created 400 days ago cannot
 match a "day 1" activation nudge, so switching the system on does not blast the
 entire history with the whole catalog. Only the dormancy track deliberately has
@@ -19,7 +19,7 @@ accurate to about a day; a one-day window would flip on clock skew alone.
 One interaction worth knowing: a spec with ``suppress_if_active`` cannot fire
 inside ``ACTIVE_WINDOW_DAYS`` of the org's last engagement. Where the anchor is
 *itself* an engagement signal (a course was created, a lesson was written), the
-earliest the nudge can actually send is that window — so those specs declare a
+earliest the nudge can actually send is that window, so those specs declare a
 ``day_min`` of at least ``ACTIVE_WINDOW_DAYS`` rather than a smaller number
 that would never be reached. Activation and dormancy are unaffected: they
 anchor on org creation and on inactivity respectively, neither of which is
@@ -85,7 +85,7 @@ class NudgeSpec:
 
 
 # --------------------------------------------------------------------------
-# Plan helpers — read at match time, never hardcoded into copy.
+# Plan helpers: read at match time, never hardcoded into copy.
 #
 # The limits are not monotonic across tiers (free allows 10 members, personal
 # allows 1), so any threshold typed as a literal would be wrong for most plans
@@ -138,7 +138,7 @@ def ai_credits_nearly_spent(snapshot: OrgSnapshot, ratio: float = 0.8) -> bool:
     fails closed: no cache, no nudge.
     """
     limit = ai_credit_limit(snapshot.plan)
-    if limit <= 0:  # -1 unlimited, 0 no access — neither is a warning worth sending
+    if limit <= 0:  # -1 unlimited, 0 no access; neither is a warning worth sending
         return False
     return snapshot.ai_credits_used >= limit * ratio
 
@@ -214,7 +214,7 @@ def _no_second_visit(s: OrgSnapshot) -> bool:
     """True when nobody appears to have come back after signing up.
 
     ``last_engagement`` already excludes the org's own creation and covers a
-    later admin login, so its absence is the whole signal — an explicit
+    later admin login, so its absence is the whole signal; an explicit
     "logged in within a day of signing up" comparison would be unreachable.
 
     ``last_login_at`` is null for the large majority of admins, so a missing
@@ -238,7 +238,7 @@ def _content_link(s: OrgSnapshot, base: str) -> str:
 
 
 # --------------------------------------------------------------------------
-# The catalog — thirty nudges across six tracks.
+# The catalog: thirty nudges across six tracks.
 #
 # Priorities encode what is worth an admin's single daily slot. Milestones
 # outrank everything (they are congratulations, and stale congratulations are
@@ -359,7 +359,7 @@ NUDGE_CATALOG: tuple[NudgeSpec, ...] = (
         cta=_content_link,
         priority=32,
     ),
-    # Courses get built and then sit in draft indefinitely — the most common
+    # Courses get built and then sit in draft indefinitely, the most common
     # state for an org that has done real work.
     NudgeSpec(
         id="content.course_draft_d3",
@@ -409,7 +409,7 @@ NUDGE_CATALOG: tuple[NudgeSpec, ...] = (
         priority=34,
     ),
     # ---------------------------------------------------------------- track 3
-    # A published course with nobody to read it — the widest gap in the
+    # A published course with nobody to read it: the widest gap in the
     # product. Almost no org ever adds a second person.
     NudgeSpec(
         id="audience.published_no_members_d1",
@@ -566,7 +566,7 @@ NUDGE_CATALOG: tuple[NudgeSpec, ...] = (
     # Reactivation: a real sequence for organizations that went cold long ago.
     #
     # These exist because every other track is bounded by `day_max`, so an org
-    # quiet for a year qualifies for essentially nothing — the frequency cap was
+    # quiet for a year qualifies for essentially nothing. The frequency cap was
     # never what limited them, the absence of anything to send was. The ladder
     # is anchored on first contact so it can actually advance, and it opens the
     # door once: after the last step, `dormancy.winback_q` takes over at its
@@ -577,7 +577,7 @@ NUDGE_CATALOG: tuple[NudgeSpec, ...] = (
         day_min=90,
         day_max=3650,
         anchor=_anchor_touch,
-        # No prior contact — this is the step that starts the sequence and
+        # No prior contact: this is the step that starts the sequence and
         # stamps the clock the rest of it measures from.
         predicate=lambda s: s.content_exists and s.first_nudged_at is None,
         cta=lambda s, base: links.dashboard_url(base),
@@ -616,7 +616,7 @@ NUDGE_CATALOG: tuple[NudgeSpec, ...] = (
     ),
     # ---------------------------------------------------------------- track 6
     # Congratulations go out immediately or not at all, so these never
-    # suppress on activity — the whole point is that something just happened.
+    # suppress on activity; the whole point is that something just happened.
     NudgeSpec(
         id="milestone.first_course_published",
         track=TRACK_MILESTONE,

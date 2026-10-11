@@ -3,7 +3,7 @@
 These cover the call sites that fire ``record_org_admin_in_loops`` when a user
 becomes an org ADMIN. Each site imports the helper *locally* (inside the
 function body) from ``src.services.marketing.loops``, so we patch it at that
-source module — that intercepts every call site regardless of deployment mode,
+source module; that intercepts every call site regardless of deployment mode,
 keeping the tests SaaS-gating-agnostic (the helper itself is a no-op outside
 SaaS, but here we only assert the hook *invokes* it with the promoted user).
 
@@ -13,7 +13,7 @@ Covered targets:
   - src/services/orgs/users.py :: update_user_role admin branch (and the
     non-admin branch which must NOT call it).
   - src/services/setup/setup.py :: install_create_organization_user admin branch.
-  - src/services/admin/admin.py :: change_user_role admin branch — see the
+  - src/services/admin/admin.py :: change_user_role admin branch; see the
     note in test_change_user_role_admin_branch_unreachable_via_token: the
     API-token guard blocks Admin promotion *before* the hook, so that branch is
     unreachable through the token path.
@@ -43,7 +43,7 @@ from src.services.setup.setup import (
     install_create_organization_user,
 )
 
-# Every hook imports the helper locally from this module path — patch it here so
+# Every hook imports the helper locally from this module path. Patch it here so
 # a single patch target intercepts all call sites.
 _LOOPS_TARGET = "src.services.marketing.loops.record_org_admin_in_loops"
 
@@ -233,7 +233,7 @@ async def test_update_user_role_to_admin_records_promoted_user_in_loops(
 async def test_update_user_role_loops_failure_does_not_break_promotion(
     mock_request, db, org, admin_role, admin_user, regular_user
 ):
-    """A Loops outage must never fail the role change — the exception is
+    """A Loops outage must never fail the role change: the exception is
     swallowed (users.py) and the promotion still succeeds."""
     with patch(
         "src.services.orgs.users.rbac_check", new_callable=AsyncMock
@@ -352,7 +352,7 @@ async def test_install_create_organization_user_swallows_loops_error(db):
 
 
 # ---------------------------------------------------------------------------
-# admin.py :: change_user_role admin branch — UNREACHABLE via API token
+# admin.py :: change_user_role admin branch (UNREACHABLE via API token)
 # ---------------------------------------------------------------------------
 
 
@@ -387,7 +387,7 @@ async def test_change_user_role_admin_branch_unreachable_via_token(
 
 
 # ---------------------------------------------------------------------------
-# orgs.py :: _try_send_org_created — best-effort creator welcome email
+# orgs.py :: _try_send_org_created, the best-effort creator welcome email
 # ---------------------------------------------------------------------------
 
 
@@ -411,7 +411,7 @@ async def test_try_send_org_created_links_to_the_new_org_dashboard():
     """The CTA must be the new org's own dashboard on the org's host.
 
     Orgs are created from the platform apex, so a request-derived host points
-    at the apex, and `/home` is the org picker everywhere — together they sent
+    at the apex, and `/home` is the org picker everywhere; together they sent
     the creator to a list of orgs instead of into the one they just made.
     """
     from src.services.orgs.orgs import _try_send_org_created

@@ -4,12 +4,12 @@ permissions:
   contents: read
 
 # End-to-end UI acceptance suite (apps/e2e). It boots a full LearnHouse
-# self-host via the LearnHouse CLI — pulling the PUBLISHED app image — and
+# self-host via the LearnHouse CLI (pulling the PUBLISHED app image) and
 # drives the UI with Playwright across every feature module under
 # apps/e2e/features/.
 #
 # Because it validates the *published image*, it is intentionally NOT a
-# per-PR gate (a PR's own code isn't in that image yet — chicken-and-egg).
+# per-PR gate (a PR's own code isn't in that image yet; chicken-and-egg).
 # It runs on demand and nightly, so it catches regressions in the shipped
 # self-host. To gate a PR on E2E, run it against an image built from the
 # branch (future enhancement).

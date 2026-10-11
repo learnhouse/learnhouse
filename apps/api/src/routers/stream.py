@@ -19,12 +19,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
-from src.db.podcasts.podcasts import Podcast
-from src.db.podcasts.episodes import PodcastEpisode
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.core.events.database import get_db_session
+from src.routers.content_files import PRIVATE_CACHE_CONTROL, _verify_episode_access
 from src.security.auth import get_current_user
-from src.security.rbac.resource_access import ResourceAccessChecker, AccessAction, AccessContext
+from src.services.courses.activities.access import verify_activity_reader_access
 from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
     generate_presigned_get_url,
@@ -47,7 +46,7 @@ CONTENT_DIR = "content"
 
 # HLS MIME types (not covered by the generic media maps). Includes the
 # hover-preview sprite (.jpg, served like a segment) and the AES-128 key (.key,
-# served ONLY server-side after RBAC — never presigned/redirected).
+# served ONLY server-side after RBAC, never presigned/redirected).
 _HLS_MIME = {
     ".m3u8": "application/vnd.apple.mpegurl",
     ".ts": "video/mp2t",
@@ -73,9 +72,10 @@ def _safe_hls_relpath(hls_path: str) -> str | None:
         return None
     return "/".join(parts)
 
+
 # The 302 to the presigned URL is cacheable for a bounded window. This is
 # critical for smooth playback: without it (no-store) the browser re-resolves
-# the redirect — re-running RBAC + presign (~0.3–1.3s) — on every seek and
+# the redirect, re-running RBAC + presign (~0.3–1.3s), on every seek and
 # reconnect, starving the buffer and causing periodic stalls. Caching lets the
 # browser resolve once and reuse the same R2 URL for all Range requests. The
 # 6h window stays well under the 24h presign TTL so a cached 302 never points
@@ -93,7 +93,7 @@ def _redirect_to_storage(file_path: str) -> RedirectResponse | None:
     Returns None when S3 isn't enabled or signing fails, so the caller falls
     back to streaming the file through the API.
 
-    SECURITY: callers MUST run their RBAC check before calling this — the
+    SECURITY: callers MUST run their RBAC check before calling this. The
     presigned URL grants temporary unauthenticated read access to the object.
     """
     if not is_s3_enabled():
@@ -137,48 +137,25 @@ async def _verify_course_activity_access(
     if not course or course.course_uuid != course_uuid:
         raise HTTPException(status_code=404, detail="Course not found or activity doesn't belong to course")
 
-    # RBAC check - verify user can read this course
-    checker = ResourceAccessChecker(request, db_session, current_user)
-    decision = await checker.check_access(course_uuid, AccessAction.READ, AccessContext.PUBLIC_VIEW)
-
-    if not decision.allowed:
-        raise HTTPException(status_code=403, detail=decision.reason)
+    # Course read, published state, paywall and locks: the same gate the
+    # activity read applies, or the files are a way around it.
+    await verify_activity_reader_access(request, activity, course, current_user, db_session)
 
 
 async def _verify_podcast_episode_access(
     request: Request,
+    org_uuid: str,
     podcast_uuid: str,
     episode_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
 ) -> None:
-    """
-    Verify user has read access to the podcast/episode.
-
-    SECURITY: This ensures that:
-    - Anonymous users can only access public+published podcasts
-    - Authenticated users can access podcasts they have permission to view
-    - Episode must belong to the specified podcast
-    """
-    # Verify episode exists and belongs to the podcast
-    episode_stmt = select(PodcastEpisode).where(PodcastEpisode.episode_uuid == episode_uuid)
-    episode = (await db_session.execute(episode_stmt)).scalars().first()
-
-    if not episode:
-        raise HTTPException(status_code=404, detail="Episode not found")
-
-    podcast_stmt = select(Podcast).where(Podcast.id == episode.podcast_id)
-    podcast = (await db_session.execute(podcast_stmt)).scalars().first()
-
-    if not podcast or podcast.podcast_uuid != podcast_uuid:
-        raise HTTPException(status_code=404, detail="Podcast not found or episode doesn't belong to podcast")
-
-    # RBAC check - verify user can read this podcast
-    checker = ResourceAccessChecker(request, db_session, current_user)
-    decision = await checker.check_access(podcast_uuid, AccessAction.READ, AccessContext.PUBLIC_VIEW)
-
-    if not decision.allowed:
-        raise HTTPException(status_code=403, detail=decision.reason)
+    """Same gate as the episode's /content files: podcast in ``org_uuid``,
+    episode in podcast, podcast READ, and an unpublished podcast or episode
+    only for someone who can edit the podcast."""
+    await _verify_episode_access(
+        org_uuid, podcast_uuid, episode_uuid, current_user, db_session, request
+    )
 
 
 @router.get(
@@ -262,7 +239,7 @@ async def stream_activity_video(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+        "Cache-Control": PRIVATE_CACHE_CONTROL,
         "X-Content-Type-Options": "nosniff",
     }
 
@@ -368,7 +345,7 @@ async def stream_activity_hls(
         )
 
     # Segment request. In S3 mode the player uses presigned URLs directly, so
-    # this is only hit in local mode — but redirect defensively if S3 is on.
+    # this is only hit in local mode, but redirect defensively if S3 is on.
     redirect = _redirect_to_storage(asset_key)
     if redirect:
         return redirect
@@ -379,7 +356,7 @@ async def stream_activity_hls(
         content=raw,
         media_type=_HLS_MIME.get(ext, "application/octet-stream"),
         headers={
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
             "X-Content-Type-Options": "nosniff",
         },
     )
@@ -390,7 +367,7 @@ async def stream_activity_hls(
     summary="Serve an HLS playlist or segment for a video block",
     description=(
         "Serves the adaptive-bitrate HLS assets for a video block inside a dynamic "
-        "activity — identical behavior to the activity HLS endpoint (RBAC-gated "
+        "activity; identical behavior to the activity HLS endpoint (RBAC-gated "
         "playlists with segment URLs presigned to R2), keyed off the block's dir."
     ),
     responses={
@@ -462,7 +439,7 @@ async def stream_block_hls(
     return Response(
         content=raw,
         media_type=_HLS_MIME.get(ext, "application/octet-stream"),
-        headers={"Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff"},
+        headers={"Cache-Control": PRIVATE_CACHE_CONTROL, "X-Content-Type-Options": "nosniff"},
     )
 
 
@@ -594,7 +571,7 @@ async def stream_block_audio(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": PRIVATE_CACHE_CONTROL,
         "X-Content-Type-Options": "nosniff",
     }
 
@@ -675,7 +652,7 @@ async def head_block_audio(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
         },
     )
 
@@ -765,7 +742,7 @@ async def stream_block_video(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+        "Cache-Control": PRIVATE_CACHE_CONTROL,
         "X-Content-Type-Options": "nosniff",
     }
 
@@ -848,7 +825,7 @@ async def head_activity_video(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
         },
     )
 
@@ -913,7 +890,7 @@ async def head_block_video(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
         },
     )
 
@@ -950,7 +927,7 @@ async def stream_podcast_audio(
     SECURITY: Validates user has read access to the podcast via RBAC.
     """
     # SECURITY: Verify user has access to this podcast/episode
-    await _verify_podcast_episode_access(request, podcast_uuid, episode_uuid, current_user, db_session)
+    await _verify_podcast_episode_access(request, org_uuid, podcast_uuid, episode_uuid, current_user, db_session)
 
     # Construct and validate the file path
     file_path = validate_video_path(
@@ -999,7 +976,7 @@ async def stream_podcast_audio(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+        "Cache-Control": PRIVATE_CACHE_CONTROL,
         "X-Content-Type-Options": "nosniff",
     }
 
@@ -1054,7 +1031,7 @@ async def head_podcast_audio(
     SECURITY: Validates user has read access to the podcast via RBAC.
     """
     # SECURITY: Verify user has access to this podcast/episode
-    await _verify_podcast_episode_access(request, podcast_uuid, episode_uuid, current_user, db_session)
+    await _verify_podcast_episode_access(request, org_uuid, podcast_uuid, episode_uuid, current_user, db_session)
 
     file_path = validate_video_path(
         CONTENT_DIR,
@@ -1082,6 +1059,6 @@ async def head_podcast_audio(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": PRIVATE_CACHE_CONTROL,
         },
     )

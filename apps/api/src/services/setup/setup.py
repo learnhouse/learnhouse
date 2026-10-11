@@ -643,7 +643,7 @@ async def install_create_organization_user(
     await db_session.commit()
     await db_session.refresh(user_organization)
 
-    # This install/seed user is an org ADMIN — add them to the Loops marketing
+    # This install/seed user is an org ADMIN, so add them to the Loops marketing
     # audience. Best-effort, SaaS-gated (no-op on OSS/self-hosted), never fails
     # the install.
     try:

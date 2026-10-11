@@ -123,7 +123,7 @@ async def upload_content(
             f.close()
         # Move the MP4 index atom to the front so long videos stream/seek
         # smoothly over HTTP (no-op for non-MP4 and when ffmpeg is absent).
-        # Runs in a thread — the ffmpeg subprocess must not block the event loop.
+        # Runs in a thread; the ffmpeg subprocess must not block the event loop.
         await asyncio.to_thread(ensure_faststart, safe_path)
 
     elif content_delivery == "s3api":
@@ -145,7 +145,7 @@ async def upload_content(
         # Move the MP4 index atom to the front before uploading so long videos
         # stream/seek smoothly from R2 (no-op for non-MP4 and when ffmpeg is
         # absent). Done on the temp file so the uploaded object is faststart.
-        # Threaded — the ffmpeg subprocess must not block the event loop.
+        # Threaded; the ffmpeg subprocess must not block the event loop.
         await asyncio.to_thread(ensure_faststart, local_path)
 
         try:
@@ -177,7 +177,7 @@ async def read_content(
     traversal-guarded; raises HTTP 404 when the file is missing.
     """
     # Defense in depth: the filesystem branch is guarded by _safe_content_path,
-    # but the S3 branch builds the key by string interpolation — reject any
+    # but the S3 branch builds the key by string interpolation, so reject any
     # separators/traversal in the caller-supplied filename for both.
     if (
         not file_and_format

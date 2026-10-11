@@ -3,7 +3,7 @@ Per-track illustrations for nudge emails, drawn as table cells.
 
 Every obvious way to put a picture in an email fails somewhere that matters:
 Gmail strips inline ``<svg>`` entirely, and both Gmail and Outlook refuse
-``data:`` URIs — so a base64 image renders as a blank gap. A remote ``<img>``
+``data:`` URIs, so a base64 image renders as a blank gap. A remote ``<img>``
 works, but images are blocked by default until the reader clicks "display
 images", which is precisely the moment we are trying to earn.
 
@@ -33,7 +33,7 @@ TRACK_COLORS: Final[dict[str, str]] = {
 
 DEFAULT_COLOR = "#3f3f46"
 
-# 8x8, one per track. Read them as pixel art — the shape is the message.
+# 8x8, one per track. Read them as pixel art: the shape is the message.
 MOTIFS: Final[dict[str, tuple[str, ...]]] = {
     # A plus: make something that isn't there yet.
     "activation": (
@@ -57,7 +57,7 @@ MOTIFS: Final[dict[str, tuple[str, ...]]] = {
         "00000000",
         "22222222",
     ),
-    # A small crowd — three, then two.
+    # A small crowd: three, then two.
     "audience": (
         "00000000",
         "11011011",

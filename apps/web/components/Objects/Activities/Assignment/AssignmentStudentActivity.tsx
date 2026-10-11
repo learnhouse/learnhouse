@@ -14,6 +14,7 @@ import { AlarmClockOff, Backpack, BookOpenCheck, Calendar, CheckCircle2, Clipboa
 import Link from 'next/link';
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next';
+import { sortTasksByOrder } from '@/lib/assignments/taskOrder'
 
 type ParsedDueDate = { at: Date; hasTime: boolean }
 
@@ -24,7 +25,7 @@ type ParsedDueDate = { at: Date; hasTime: boolean }
 //   - the server compares against a NAIVE `datetime.now()` and drops any
 //     timezone offset, so the wall-clock parts are what matter. We therefore
 //     build a LOCAL Date from those parts instead of letting `new Date(...)`
-//     treat a bare "2026-06-12" as UTC midnight — that shift alone could mark
+//     treat a bare "2026-06-12" as UTC midnight; that shift alone could mark
 //     an assignment overdue a day early (or late) depending on the viewer's
 //     offset, disagreeing with the 403 the server actually enforces.
 export function parseDueDate(raw?: string | null): ParsedDueDate | null {
@@ -67,13 +68,13 @@ function AssignmentStudentActivity() {
   const taskSubmissionsMap = useAssignmentTaskSubmissions() as Record<string, any> | null;
 
   // Per-task grading is rendered inline only after the whole assignment has
-  // been graded — that's when raw task grades are guaranteed to reflect the
+  // been graded; that's when raw task grades are guaranteed to reflect the
   // server-verified value (auto-grade or teacher override). Before that,
   // task.grade is the placeholder 0 from save-progress.
   const isGraded = Array.isArray(submission) && submission.length > 0 && submission[0].submission_status === 'GRADED';
 
   // Attempt indicator. Only worth showing when the teacher actually enabled
-  // retries and the student has burned at least one attempt — otherwise it's
+  // retries and the student has burned at least one attempt; otherwise it's
   // noise.
   const allowRetries = !!assignments?.assignment_object?.allow_retries;
   const maxRetries = Number(assignments?.assignment_object?.max_retries || 0);
@@ -86,7 +87,7 @@ function AssignmentStudentActivity() {
   // server (50% for NUMERIC / PERCENTAGE / PASS_FAIL, 60% for ALPHABET /
   // GPA_SCALE). Otherwise a student with 55% on a numeric-graded task sees
   // "Not Passed" inline while the same score is "Pass" at the assignment
-  // level — exactly the mismatch the teacher tried to avoid.
+  // level, exactly the mismatch the teacher tried to avoid.
   // Formative assignment: handed in, never marked. The server refuses to grade
   // it at all, so every grade affordance below is hidden rather than left
   // showing a score that can never arrive.
@@ -228,7 +229,7 @@ function AssignmentStudentActivity() {
       )}
       
       
-      {/* Model answer ("corrigé"). Locked, this is only a promise — the text and
+      {/* Model answer ("corrigé"). Locked, this is only a promise: the text and
           the document are withheld by the API until the learner hands their
           work in, so there is nothing here to read early. */}
       {hasSolution && !solutionUnlocked && (
@@ -281,7 +282,7 @@ function AssignmentStudentActivity() {
         </div>
       )}
 
-      {assignments && assignments?.assignment_tasks?.slice().sort((a: any, b: any) => a.id - b.id).map((task: any, index: number) => {
+      {assignments && sortTasksByOrder(assignments?.assignment_tasks).map((task: any, index: number) => {
         const taskSubmission = taskSubmissionsMap ? taskSubmissionsMap[task.assignment_task_uuid] : null;
         const taskGrade = taskSubmission?.grade ?? 0;
         const taskMax = task.max_grade_value || 0;
@@ -377,7 +378,7 @@ function AssignmentStudentActivity() {
               </div>
             )}
             {/* Key by attempt number so a retry (which wipes the server-side
-                answers) remounts the editors fresh — they re-hydrate from the
+                answers) remounts the editors fresh; they re-hydrate from the
                 now-empty submission instead of keeping the previous attempt's
                 answers as a stale saved baseline (which would submit empty ->
                 0% on the next attempt). */}

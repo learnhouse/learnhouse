@@ -12,7 +12,7 @@ const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://
 // Dormant cross-domain handoff safety valve. Post learnhouse.app deprecation the
 // .io apex and org subdomains share .{top_domain} cookies, so this route is no
 // longer used by the app (handleGoToOrg navigates directly). No hardcoded .app
-// default — if a legacy code is presented and PLATFORM_URL isn't configured, the
+// default: if a legacy code is presented and PLATFORM_URL isn't configured, the
 // fetch fails and the route returns a clean 502 instead of silently calling .app.
 const PLATFORM_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_PLATFORM_URL') || getConfig('LEARNHOUSE_PLATFORM_URL') || '').replace(/\/+$/, '')
 
@@ -21,7 +21,7 @@ const PLATFORM_TIMEOUT_MS = 10_000
 const BACKEND_TIMEOUT_MS = 5_000
 
 // Fetch with one retry on transient errors (network errors, 5xx). Creates a
-// FRESH timeout signal for each attempt — reusing the same signal would leave
+// FRESH timeout signal for each attempt. Reusing the same signal would leave
 // the retry with zero budget after the first attempt nearly timed out.
 async function fetchWithRetry(
   url: string,
@@ -62,7 +62,7 @@ function backendHeaders(request: NextRequest, extra: Record<string, string> = {}
   return headers
 }
 
-// CSRF defense. Compare HOST, not full origin — protocol detection behind a
+// CSRF defense. Compare HOST, not full origin: protocol detection behind a
 // TLS-terminating proxy is unreliable (nextUrl.protocol depends on whether
 // X-Forwarded-Proto is forwarded). The host check alone is sufficient because
 // a cross-origin attacker cannot spoof the browser-set Origin header.
@@ -96,8 +96,9 @@ function isSameOrigin(request: NextRequest): boolean {
  * Flow:
  *   1. Decrypt the code via the platform to get {access_token, refresh_token}.
  *   2. If we have a refresh_token, exchange it on THIS backend for a fresh
- *      access_token — this catches a JWT-secret mismatch loudly.
- *   3. ALWAYS validate the resulting access_token against /users/session —
+ *      access_token + rotated refresh_token (the presented one is spent).
+ *      This catches a JWT-secret mismatch loudly.
+ *   3. ALWAYS validate the resulting access_token against /users/session:
  *      refresh only checks the JWT signature, not user existence, so a valid
  *      signature for a user missing on this tenant would otherwise produce a
  *      silent half-logged-in state (cookies set → /session 401 on next page).
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     let access_token: string = typeof payload.access_token === 'string' ? payload.access_token : ''
-    const refresh_token: string = typeof payload.refresh_token === 'string' ? payload.refresh_token : ''
+    let refresh_token: string = typeof payload.refresh_token === 'string' ? payload.refresh_token : ''
 
     if (!access_token && !refresh_token) {
       console.error('[token-exchange] step=decrypt no tokens in response')
@@ -175,14 +176,20 @@ export async function POST(request: NextRequest) {
 
     // Step 2: If we have a refresh token, mint a fresh access_token on THIS
     // backend. This is the first chance to detect a JWT-secret mismatch.
+    // Refresh tokens are one-time-use: the backend rotates them, so the
+    // platform's token is spent after this call. Keep only the rotated one;
+    // storing the consumed token would trip replay detection on the next
+    // refresh and revoke every session the user has.
     if (refresh_token) {
+      const presented = refresh_token
+      refresh_token = ''
       try {
         const refreshRes = await fetchWithRetry(
           `${BACKEND_URL}/api/v1/auth/refresh`,
           {
             method: 'GET',
             headers: backendHeaders(request, {
-              Cookie: `${REFRESH_TOKEN_COOKIE}=${refresh_token}`,
+              Cookie: `${REFRESH_TOKEN_COOKIE}=${presented}`,
             }),
           },
           BACKEND_TIMEOUT_MS,
@@ -194,11 +201,16 @@ export async function POST(request: NextRequest) {
           } else {
             console.error('[token-exchange] step=refresh response missing access_token')
           }
+          if (typeof refreshData?.refresh_token === 'string' && refreshData.refresh_token) {
+            refresh_token = refreshData.refresh_token
+          } else {
+            console.error('[token-exchange] step=refresh response missing rotated refresh_token')
+          }
         } else {
           const detail = await refreshRes.text().catch(() => '')
           console.error(`[token-exchange] step=refresh failed: ${refreshRes.status} ${detail}`)
-          // Non-fatal: we'll fall through to /session validation with the
-          // original access_token. If that's also invalid we bail there.
+          // Fall through to /session validation with the original
+          // access_token; with no usable refresh token, Step 4 refuses.
         }
       } catch (err) {
         console.error('[token-exchange] step=refresh errored:', err)
@@ -213,7 +225,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: ALWAYS validate via /session. Refresh only checks the JWT
-    // signature — this call also confirms the user exists on THIS tenant, so
+    // signature. This call also confirms the user exists on THIS tenant, so
     // we never set cookies for a half-logged-in state.
     let sessionRes: Response
     try {
@@ -242,7 +254,7 @@ export async function POST(request: NextRequest) {
       //         valid but the user row is missing on this tenant, or when the
       //         token has a non-session purpose claim.
       //   400 → get_current_user returned AnonymousUser (token could not be
-      //         decoded — bad signature, expired, or malformed), then
+      //         decoded: bad signature, expired, or malformed), then
       //         get_user_session raised "User does not exist".
       if (sessionRes.status === 401) {
         return NextResponse.json(
@@ -256,11 +268,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 4: Set cookies. If the platform didn't give us a refresh_token,
+    // Step 4: Set cookies. If we don't hold a usable (rotated) refresh_token,
     // reject instead of setting a half-broken session that AuthContext cannot
     // refresh (it always calls /api/auth/refresh on mount).
     if (!refresh_token) {
-      console.error('[token-exchange] step=cookies no refresh token — refusing to set partial session')
+      console.error('[token-exchange] step=cookies no refresh token; refusing to set partial session')
       return NextResponse.json(
         { error: 'Platform did not return a refresh token', code: 'no_refresh_token' },
         { status: 401 }

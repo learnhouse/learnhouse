@@ -163,7 +163,7 @@ jobs:
           # Build migration note
           MIGRATION_NOTE=""
           if [ "$MIGRATION_COUNT" -gt 0 ]; then
-            MIGRATION_NOTE="⚠️ Includes ${MIGRATION_COUNT} database migration(s) — back up before upgrading"
+            MIGRATION_NOTE="⚠️ Includes ${MIGRATION_COUNT} database migration(s). Back up before upgrading"
           fi
 
           # Build the embed description

@@ -7,7 +7,9 @@ Rate limits:
 - Verification resend: 5 attempts per 5 minutes per email
 """
 import ipaddress
-from typing import Tuple
+import os
+from contextvars import ContextVar
+from typing import Literal, Optional, Tuple
 from fastapi import HTTPException, Request
 from src.core.redis import get_redis_client as _get_redis_pool_client
 
@@ -40,6 +42,12 @@ def _is_trusted_proxy(ip: str) -> bool:
         return False
 
 
+def _trust_proxy_headers() -> bool:
+    """LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS (default true)."""
+    value = os.environ.get("LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS", "")
+    return value.strip().lower() not in ("false", "0", "no", "off")
+
+
 def get_client_ip(request: Request) -> str:
     """
     Extract client IP from request, considering proxy headers.
@@ -48,27 +56,26 @@ def get_client_ip(request: Request) -> str:
     comes from a private/loopback address (i.e., a local reverse proxy).
     """
     # SECURITY: This trusts X-Forwarded-For only when the direct connection comes
-    # from a private IP (assumed to be a trusted reverse proxy).
-    # REQUIREMENT: The reverse proxy MUST strip and rewrite X-Forwarded-For headers
-    # from untrusted clients. If the proxy passes through client-supplied headers,
-    # IP spoofing can bypass rate limits.
+    # from a private IP (assumed to be a trusted reverse proxy), and then only
+    # the right-most entry that is not itself a trusted proxy: entries to the
+    # left of that are client-supplied and trivially spoofable.
     # For self-hosted deployments without a reverse proxy, set
-    # LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS=false in config to disable this.
+    # LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS=false to disable this.
     direct_ip = request.client.host if request.client else None
 
     # Only trust proxy headers if request comes from a local reverse proxy
-    if direct_ip and _is_trusted_proxy(direct_ip):
-        # Check for forwarded headers (reverse proxy)
+    if direct_ip and _trust_proxy_headers() and _is_trusted_proxy(direct_ip):
         forwarded = request.headers.get("X-Forwarded-For")
         if forwarded:
-            # Take the first IP in the chain (original client)
-            client_ip = forwarded.split(",")[0].strip()
-            # Validate it's a real IP, not garbage
-            try:
-                ipaddress.ip_address(client_ip)
-                return client_ip
-            except ValueError:
-                pass
+            # Walk from the right, skipping our own proxy hops
+            for hop in reversed(forwarded.split(",")):
+                hop = hop.strip()
+                try:
+                    ipaddress.ip_address(hop)
+                except ValueError:
+                    break
+                if not _is_trusted_proxy(hop):
+                    return hop
 
         # Check for real IP header
         real_ip = request.headers.get("X-Real-IP")
@@ -200,11 +207,11 @@ def check_refresh_rate_limit(request: Request) -> Tuple[bool, int]:
     /auth/refresh requires an already-valid, server-signed refresh JWT, so
     there is nothing here an attacker can brute-force.
 
-    The limit is keyed per IP, and schools/companies — LearnHouse's core
-    audience — put hundreds of users behind a single NAT address. The previous
+    The limit is keyed per IP, and schools/companies (LearnHouse's core
+    audience) put hundreds of users behind a single NAT address. The previous
     60/minute ceiling was reached by a few dozen people signing in at the same
     time (start of a class, Monday morning), and every request over the line
-    got a 429 that the frontend then treated as "your session is dead" —
+    got a 429 that the frontend then treated as "your session is dead",
     logging out an entire site at once. Keep this generous; the real
     protections are the JWT signature, the revocation blocklist, and the
     one-time-use rotation.
@@ -243,14 +250,19 @@ def check_api_token_rate_limit(request: Request) -> Tuple[bool, int]:
     return is_allowed, retry_after
 
 
-def check_password_reset_rate_limit(email: str) -> Tuple[bool, int]:
+def check_password_reset_rate_limit(
+    email: str, action: Literal["send", "change"] = "change"
+) -> Tuple[bool, int]:
     """
-    Check password reset verification rate limit: 5 attempts per 5 minutes per email.
+    Check password reset rate limit: 5 attempts per 5 minutes per email.
+
+    Sending and redeeming codes count separately, so someone flooding an
+    address with reset emails cannot also lock its owner out of using one.
 
     Returns:
         Tuple of (is_allowed, retry_after_seconds)
     """
-    key = f"password_reset:{email.lower()}"
+    key = f"password_reset:{action}:{email.lower()}"
 
     is_allowed, count, retry_after = check_rate_limit(
         key=key,
@@ -459,13 +471,22 @@ AI_USER_MAX_REQUESTS_PER_MINUTE = 30
 AI_ORG_MAX_REQUESTS_PER_MINUTE = 120
 AI_RATE_LIMIT_WINDOW_SECONDS = 60
 
+# (user_id, org_id) of the caller that last passed ``enforce_ai_rate_limit`` in
+# this request. Every AI route calls it right before ``reserve_ai_credit``,
+# which only receives the org; this lets the credit reservation apply
+# per-visitor limits (the shared demo org) without threading the user through
+# every call site. Request-scoped: each request runs in its own context.
+ai_acting_user: ContextVar[Optional[Tuple[int, int]]] = ContextVar(
+    "ai_acting_user", default=None
+)
+
 
 def check_ai_rate_limit(user_id: int, org_id: int) -> Tuple[bool, int]:
     """
     Per-user AND per-org sliding-window rate limit for AI endpoints.
 
     AI routes consume real model spend and provider capacity. Credits alone
-    don't prevent a single authenticated user from saturating workers — they
+    don't prevent a single authenticated user from saturating workers; they
     throttle spend, not concurrency. This guard enforces both a per-user
     ceiling (to stop a single actor from exhausting capacity) and a per-org
     ceiling (to protect multi-tenant fairness).
@@ -502,6 +523,8 @@ def enforce_ai_rate_limit(user_id: int, org_id: int) -> None:
     frontend can reuse its existing 429 handler without any change.
     """
     is_allowed, retry_after = check_ai_rate_limit(user_id, org_id)
+    if user_id and org_id:
+        ai_acting_user.set((int(user_id), int(org_id)))
     if not is_allowed:
         raise HTTPException(
             status_code=429,

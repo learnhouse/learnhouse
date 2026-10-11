@@ -20,7 +20,7 @@ export default function PlaygroundPreview({
   const lastRenderedRef = useRef<string | null>(null)
   const writeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // srcdoc, not document.write() — the frame is sandboxed onto an opaque
+  // srcdoc, not document.write(): the frame is sandboxed onto an opaque
   // origin, so its document isn't reachable from here.
   const writeToIframe = useCallback((content: string) => {
     const iframe = iframeRef.current
@@ -45,7 +45,7 @@ export default function PlaygroundPreview({
         }
       }, 300)
     } else {
-      // Final render — write immediately
+      // Final render: write immediately
       if (writeTimeoutRef.current) clearTimeout(writeTimeoutRef.current)
       if (html !== lastRenderedRef.current) {
         lastRenderedRef.current = html
@@ -76,7 +76,7 @@ export default function PlaygroundPreview({
         </div>
       )}
 
-      {/* Streaming indicator — top left */}
+      {/* Streaming indicator, top left */}
       {isStreaming && (
         <div className="absolute top-3 start-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/75 backdrop-blur-sm rounded-full nice-shadow">
           <CircleNotch size={11} weight="bold" className="animate-spin text-sky-400" />
@@ -84,7 +84,7 @@ export default function PlaygroundPreview({
         </div>
       )}
 
-      {/* Fullscreen toggle — top right */}
+      {/* Fullscreen toggle, top right */}
       {onToggleFullscreen && (
         <button
           onClick={onToggleFullscreen}
@@ -98,7 +98,7 @@ export default function PlaygroundPreview({
         </button>
       )}
 
-      {/* iframe — always mounted so writes take effect */}
+      {/* iframe, always mounted so writes take effect */}
       <iframe
         ref={iframeRef}
         className="w-full h-full border-0"

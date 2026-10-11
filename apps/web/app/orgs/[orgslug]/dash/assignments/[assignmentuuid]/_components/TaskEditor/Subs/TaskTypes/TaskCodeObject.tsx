@@ -131,7 +131,7 @@ const cmStyles: React.CSSProperties = {
   fontSize: '14px',
   fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace",
 }
-// rtl-ok: CodeMirror is dir="ltr" regardless of UI language — code reads
+// rtl-ok: CodeMirror is dir="ltr" regardless of UI language. Code reads
 // left-to-right by language spec, and the editor computes gutter, cursor and
 // selection geometry physically. The gutter border stays physical to match.
 const cmClassName = [
@@ -248,7 +248,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
 
   // Anti-copy-paste: if the assignment has anti_copy_paste enabled, inject a
   // CodeMirror extension that blocks paste events and shows a toast. Only
-  // applied in the student view — teachers and graders can paste freely.
+  // applied in the student view; teachers and graders can paste freely.
   const antiPasteEnabled =
     view === 'student' && !!assignment?.assignment_object?.anti_copy_paste
 
@@ -336,7 +336,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
   // submissions map. Re-runs when either context payload arrives.
   useEffect(() => {
     if (view !== 'student' || !assignmentTaskUUID) return
-    // Definition (starter code) — hydrate once. Re-running would reset the
+    // Definition (starter code): hydrate once. Re-running would reset the
     // editor to starter code over the learner's edits.
     if (defHydratedForRef.current !== assignmentTaskUUID) {
       const task = assignment?.assignment_tasks?.find(
@@ -358,7 +358,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
         defHydratedForRef.current = assignmentTaskUUID
       }
     }
-    // Saved submission — hydrate once, when the batch first resolves. Runs even
+    // Saved submission: hydrate once, when the batch first resolves. Runs even
     // if the learner already started typing: the submission uuid + baseline
     // (initialCode) are always adopted so a save targets the right row and dirty
     // detection works, while their in-progress code is preserved.
@@ -380,7 +380,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
     }
   }, [view, assignmentTaskUUID, assignment?.assignment_tasks, taskSubmissionsMap])
 
-  // Grading view still uses per-task fetches — there's only ever one task
+  // Grading view still uses per-task fetches; there's only ever one task
   // open at a time in the grading modal so the N+1 cost doesn't apply.
   useEffect(() => {
     if (view === 'grading') {
@@ -413,11 +413,11 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
 
   // Student-gating helpers: derived from the student-behavior flags.
   // `visibleTestCases` are the only ones a learner can see, run and reason
-  // about — the API strips the hidden ones' stdin/expectedStdout before the
+  // about; the API strips the hidden ones' stdin/expectedStdout before the
   // task ever reaches them.
   const visibleTestCases = contents.test_cases.filter((tc) => !tc.hidden)
   // `visibleResults` is the subset of run results that are NOT hidden test
-  // cases — those are the only ones the student can see and reason about.
+  // cases; those are the only ones the student can see and reason about.
   const visibleResults = results.filter((r) => {
     const tc = contents.test_cases.find((t) => t.id === r.id)
     return !tc?.hidden
@@ -437,9 +437,9 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
     // Enforce "must pass all visible tests" gate if the teacher enabled it.
     // This is a POLICY refusal, not a failure: returning `false` would make
     // useAutoSave treat it as a transient error and retry every few seconds
-    // forever (permanent amber "Couldn't save — retrying…" chip) and would
+    // forever (permanent amber autosave_retry "Couldn't save" chip) and would
     // also fail the assignment-wide flushAll(), blocking submission of the
-    // WHOLE assignment. `'blocked'` is handled by useAutoSave as terminal —
+    // WHOLE assignment. `'blocked'` is handled by useAutoSave as terminal:
     // no retry, no error state. Genuine network/server failures below still
     // return `false` so they keep being retried.
     if (submissionBlocked) {
@@ -490,7 +490,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
     // before sending the task contents to a student (deliberate: hidden tests
     // must stay secret). Sending them back would post
     // {stdin: undefined, expected_stdout: undefined}, which JSON.stringify
-    // drops entirely — and the server's TestCase model requires both — so the
+    // drops entirely (and the server's TestCase model requires both), so the
     // WHOLE batch 422'd and the learner got zero results, including for the
     // visible tests. Students therefore only ever run the visible tests; the
     // hidden ones are executed server-side at grading time.
@@ -500,7 +500,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
       toast.error(
         view === 'student'
           ? t('dashboard.assignments.editor.task_editor.code.no_runnable_tests', {
-              defaultValue: 'This task has no tests you can run — your code is checked at grading time.',
+              defaultValue: 'This task has no tests you can run; your code is checked at grading time.',
             })
           : 'No test cases defined'
       )
@@ -535,7 +535,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
       }
 
       const data = await resp.json()
-      // Match every result back to its test case BY ID — after filtering, array
+      // Match every result back to its test case BY ID; after filtering, array
       // indices no longer line up with contents.test_cases.
       const newResults: CodeTestResult[] = (data.results ?? []).map((r: any) => {
         const tc = testCasesToRun.find((t) => t.id === r.id)
@@ -632,7 +632,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
         finalGrade = totalCount > 0 ? Math.round((passedCount / totalCount) * maxPoints) : 0
       }
 
-      const feedback = `Auto graded: ${passedCount}/${totalCount} tests passed — ${finalGrade}/${maxPoints} points`
+      const feedback = `Auto graded: ${passedCount}/${totalCount} tests passed, ${finalGrade}/${maxPoints} points`
 
       const values = {
         assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
@@ -959,7 +959,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
               )}
             </div>
 
-            {/* Code Editor — locked once the submission is SUBMITTED/GRADED.
+            {/* Code Editor, locked once the submission is SUBMITTED/GRADED.
                 Auto-save is switched off at that point (AssignmentBoxUI's
                 `canStudentSave`), so any further typing would be silently lost
                 on reload and would not reach the grader. Mirrors the read-only
@@ -989,10 +989,10 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
                 <span>
                   {submissionIsGraded
                     ? t('dashboard.assignments.editor.task_editor.code.locked_graded_hint', {
-                        defaultValue: 'This submission has been graded — your code is read-only.',
+                        defaultValue: 'This submission has been graded; your code is read-only.',
                       })
                     : t('dashboard.assignments.editor.task_editor.code.locked_submitted_hint', {
-                        defaultValue: 'You have submitted this assignment — your code is read-only.',
+                        defaultValue: 'You have submitted this assignment; your code is read-only.',
                       })}
                 </span>
               </div>
@@ -1004,7 +1004,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
               </div>
             )}
 
-            {/* Run Button — only if the task allows students to run */}
+            {/* Run Button: only if the task allows students to run */}
             {contents.allow_student_run !== false && (
               <div className="flex items-center space-x-2">
                 <button
@@ -1018,7 +1018,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
               </div>
             )}
 
-            {/* Submission gating notice — when the teacher requires passing
+            {/* Submission gating notice: when the teacher requires passing
                 all visible tests before save. */}
             {submissionGatedByPassing && !allVisiblePassing && (
               <div className="flex items-center space-x-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-1.5 w-fit">
@@ -1027,7 +1027,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
               </div>
             )}
 
-            {/* Results — hidden tests are never run client-side, so they are
+            {/* Results: hidden tests are never run client-side, so they are
                 listed as "not shown" rather than counted as failures. */}
             {showResults && (
               <TestResultsPanel
@@ -1224,7 +1224,7 @@ function TestResultsPanel({
               )}
               {isHidden && !result.passed && (
                 <div className="mt-1 ps-6 text-xs text-slate-400 italic">
-                  Details hidden — this is a hidden test case
+                  Details hidden; this is a hidden test case
                 </div>
               )}
             </div>
@@ -1243,7 +1243,7 @@ function TestResultsPanel({
               <span className="font-medium text-slate-500">{tc.label}</span>
             </div>
             <div className="mt-1 ps-6 text-xs text-slate-400 italic">
-              Hidden test — run when your work is graded
+              Hidden test (run when your work is graded)
             </div>
           </div>
         ))}

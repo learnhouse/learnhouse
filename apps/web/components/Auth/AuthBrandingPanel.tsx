@@ -12,7 +12,7 @@ import { usePlan } from '@components/Hooks/usePlan'
 interface AuthBrandingPanelProps {
   org: any
   welcomeText?: string
-  // No-org (apex) panel copy — platform-style title + subtitle shown at the top
+  // No-org (apex) panel copy: platform-style title + subtitle shown at the top
   // of the illustration. Falls back to the login wording when omitted.
   title?: string
   subtitle?: string
@@ -78,7 +78,7 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
   // No-org platform copy (defaults mirror the platform login illustration).
   const noOrgTitle = title || 'Welcome back to LearnHouse.'
   const noOrgSubtitle =
-    subtitle || 'Pick up where you left off — your courses, students, and tools are waiting.'
+    subtitle || 'Pick up where you left off. Your courses, students, and tools are waiting.'
   // Treat the no-org illustration like a photo background: dark scrim, no
   // blueprint-grid overlay.
   const hasCustomBackground = noOrg || (background_type !== 'gradient' && background_image)
@@ -90,7 +90,7 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
         {/* Base layer: org's chosen background (gradient | custom | unsplash) */}
         <div className="absolute inset-0" style={getBackgroundStyle()} />
 
-        {/* Blueprint + dot overlays — ONLY for gradient fallback (no photo) */}
+        {/* Blueprint + dot overlays, ONLY for gradient fallback (no photo) */}
         {!hasCustomBackground && (
           <>
             <div
@@ -114,7 +114,7 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
         )}
 
         {/* Dark scrim for org photo backgrounds (centered text needs it).
-            The no-org illustration stays vivid — it's darkened only at the top. */}
+            The no-org illustration stays vivid; it's darkened only at the top. */}
         {hasCustomBackground && !noOrg && (
           <div className="absolute inset-0 bg-black/30" />
         )}
@@ -162,7 +162,7 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
           )}
 
           {noOrg ? (
-            /* No-org apex panel — platform layout: heading at the TOP, no logo
+            /* No-org apex panel, platform layout: heading at the TOP, no logo
                box, platform copy. */
             <div className="max-w-md text-white">
               <h1 className="font-black text-[28px] leading-tight tracking-tight">
@@ -173,7 +173,7 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
               </p>
             </div>
           ) : (
-            /* Org panel — centered logo + name (unchanged). */
+            /* Org panel: centered logo + name (unchanged). */
             <>
               <div className="flex-1 flex items-center justify-center">
                 <div className={cn(

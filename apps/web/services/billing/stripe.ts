@@ -2,7 +2,7 @@ import "server-only";
 // SaaS subscription billing service layer (server-only).
 //
 // Faithful port of the platform repo's services/stripe/stripe.ts. These are
-// plain server-only functions — NOT "use server" server actions — so they can
+// plain server-only functions (NOT "use server" server actions), so they can
 // only be invoked from route handlers that have authenticated + authorized the
 // caller (see app/api/billing/_lib.ts). The `server-only` import hard-fails the
 // build if any client bundle imports this module. Pure decision logic lives in
@@ -21,6 +21,7 @@ import {
   selectCheckoutCustomerId,
   planFromPriceId,
   effectivePlanForSubscription,
+  isPaidUpStatus,
   type PriceMapEntry,
 } from "./subscriptionUtils";
 import { updateOrganizationConfigInternally } from "./orgPlan";
@@ -29,7 +30,7 @@ import { invoiceSubscriptionId } from "./activeUserBillingUtils";
 
 // Resolve the Stripe secret key. Prefer the billing-specific STRIPE_SECRET_KEY,
 // but fall back to LEARNHOUSE_STRIPE_SECRET_KEY (the platform Stripe account's
-// secret key — the same account the SaaS subscription prices live in) so
+// secret key, the same account the SaaS subscription prices live in) so
 // deployments that only set the LEARNHOUSE_-prefixed var still work. Shared by
 // the lazy Stripe client here, the webhook route, and the billing guard.
 export function getStripeSecretKey(): string | undefined {
@@ -37,7 +38,7 @@ export function getStripeSecretKey(): string | undefined {
 }
 
 // Lazy Stripe client. The SDK throws if instantiated without a key, so we must
-// NOT create it at module load — that would crash `next build` (page-data
+// NOT create it at module load; that would crash `next build` (page-data
 // collection evaluates this module) and any non-SaaS deployment that imports it
 // without a Stripe key. The Proxy instantiates the real client on first
 // property access (request time, after the SaaS/key guard has run).
@@ -89,7 +90,7 @@ function getPeriodStart(subscription: any): number | undefined {
 // other LearnHouse products share this Stripe account and create their own
 // customer per email. `customers.list({ email, limit: 1 })` returns an arbitrary
 // (most-recently created) customer, which may not be the one holding this org's
-// subscription — that made getActiveSubscription return null and wrongly route
+// subscription. That made getActiveSubscription return null and wrongly route
 // paying users into a brand-new checkout (duplicate sub). Always resolve across
 // ALL customers for the email.
 async function listCustomerIdsByEmail(email: string): Promise<string[]> {
@@ -187,7 +188,7 @@ export async function createCheckoutSession(
 
   const APP_URL = appUrl();
   // cancelUrl returns the user to their plan page if org context is known,
-  // otherwise the new-org flow — so they land with context instead of a
+  // otherwise the new-org flow, so they land with context instead of a
   // blank org list and have to navigate back to checkout themselves.
   // The `checkout=cancelled` marker lets the landing page fire a
   // `checkout_canceled` analytics event (closing the checkout_initiated loop).
@@ -280,7 +281,7 @@ export async function switchSubscriptionPlan(
     await stripe.subscriptionSchedules.update(scheduleId, {
       end_behavior: "release",
       // No proration: the user keeps the plan they already paid for until period
-      // end, and the new plan starts cleanly next cycle — exactly what the UI
+      // end, and the new plan starts cleanly next cycle, exactly what the UI
       // promises. A proration invoice here would contradict that.
       proration_behavior: "none",
       phases: [
@@ -310,9 +311,19 @@ export async function switchSubscriptionPlan(
     return { scheduled: true, plan: newPlan };
   }
 
+  // An upgrade takes effect immediately, so it must not run on a subscription
+  // with an unpaid balance: the prorated invoice would just join the unpaid
+  // ones while the org already gets the higher plan.
+  if (!isPaidUpStatus(subscription.status)) {
+    throw Object.assign(
+      new Error("Your subscription has an outstanding payment. Update your payment method before upgrading."),
+      { status: 409 },
+    );
+  }
+
   // Resolve the promotion code. Apply it by `promotion_code` (not the bare
-  // coupon) so the promotion's own restrictions — max redemptions, per-customer
-  // limits, expiry, minimum amount — are enforced, matching the checkout path.
+  // coupon) so the promotion's own restrictions (max redemptions, per-customer
+  // limits, expiry, minimum amount) are enforced, matching the checkout path.
   let discountParam: Record<string, any> = {};
   if (promotionCode?.trim()) {
     const resolved = await validatePromotionCode(promotionCode);
@@ -336,7 +347,7 @@ export async function switchSubscriptionPlan(
 
   // Best-effort direct org-config update. Stripe has already applied the
   // upgrade at this point, so a backend hiccup here must NOT surface to the
-  // user as a failed upgrade — the customer.subscription.updated webhook
+  // user as a failed upgrade; the customer.subscription.updated webhook
   // reconciles org config as the safety net.
   try {
     await updateOrganizationConfigInternally(orgId, newPlan as any);
@@ -376,10 +387,15 @@ export async function cancelSubscription(email: string, orgId: string) {
 /**
  * Verify a completed checkout session and update the org plan.
  * Called when the user returns from Stripe checkout with a session_id.
- * This is a safety net — the webhook should also handle this, but
+ * This is a safety net: the webhook should also handle this, but
  * webhooks can be delayed or misconfigured (especially on localhost).
+ *
+ * `orgId` is the org the caller is authorized for. The session id comes from
+ * the client, so it is only honoured when its subscription belongs to that org,
+ * is in good standing, and is a plan (not a pack) subscription. The plan is
+ * derived from the live subscription's price, not from caller input.
  */
-export async function fulfillCheckoutSession(sessionId: string) {
+export async function fulfillCheckoutSession(sessionId: string, orgId: string) {
   try {
     // Stripe's basil API (2025-03-31) defers subscription creation until after
     // payment completes, so the expanded `subscription` can briefly be null
@@ -397,28 +413,43 @@ export async function fulfillCheckoutSession(sessionId: string) {
       }
 
       subscription = checkoutSession.subscription;
-      if (subscription?.metadata?.org_id && subscription?.metadata?.plan) break;
+      if (subscription?.metadata?.org_id && isPaidUpStatus(subscription.status)) break;
       if (attempt < 2) await new Promise(r => setTimeout(r, 1000));
     }
 
-    console.log("[fulfillCheckout] payment_status:", checkoutSession.payment_status);
-    console.log("[fulfillCheckout] subscription metadata:", subscription?.metadata);
-
-    if (!subscription?.metadata?.org_id || !subscription?.metadata?.plan) {
+    if (!subscription?.metadata?.org_id) {
       console.error("[fulfillCheckout] Missing metadata on subscription:", subscription?.metadata);
       return { fulfilled: false, reason: "missing_metadata" };
     }
 
-    console.log("[fulfillCheckout] Updating org", subscription.metadata.org_id, "to plan", subscription.metadata.plan);
+    if (String(subscription.metadata.org_id) !== String(orgId)) {
+      console.warn("[fulfillCheckout] Session", sessionId, "does not belong to org", orgId);
+      return { fulfilled: false, reason: "org_mismatch" };
+    }
+
+    if (!isPaidUpStatus(subscription.status)) {
+      return { fulfilled: false, reason: "not_active" };
+    }
+
+    // Packs are activated by the webhook; never let a pack session set a plan.
+    const priceEntry = planFromPriceId(PRICE_TO_PLAN, subscription.items?.data?.[0]?.price?.id);
+    if (subscription.metadata.type === "pack" || priceEntry?.isPack) {
+      return { fulfilled: false, reason: "not_a_plan" };
+    }
+
+    const plan = effectivePlanForSubscription(subscription, PRICE_TO_PLAN);
+    if (plan === "free") {
+      console.error("[fulfillCheckout] Could not resolve plan for subscription", subscription.id);
+      return { fulfilled: false, reason: "missing_metadata" };
+    }
+
+    console.log("[fulfillCheckout] Updating org", orgId, "to plan", plan);
 
     // Retry up to 3 times with 1s delay
     let lastError: any;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await updateOrganizationConfigInternally(
-          subscription.metadata.org_id,
-          subscription.metadata.plan,
-        );
+        await updateOrganizationConfigInternally(orgId, plan as any);
         lastError = null;
         break;
       } catch (err) {
@@ -429,11 +460,7 @@ export async function fulfillCheckoutSession(sessionId: string) {
     }
     if (lastError) throw lastError;
 
-    return {
-      fulfilled: true,
-      orgId: subscription.metadata.org_id,
-      plan: subscription.metadata.plan,
-    };
+    return { fulfilled: true, orgId, plan };
   } catch (err) {
     console.error("[fulfillCheckout] Error:", err);
     return { fulfilled: false, reason: "error" };
@@ -519,7 +546,7 @@ function toInvoiceLines(invoice: any): InvoiceLine[] {
  *
  * Returns null when the org has no plan subscription, and also when Stripe has
  * nothing to preview (a subscription that is cancelled or fully paid off has no
- * upcoming invoice — Stripe 404s rather than returning an empty one).
+ * upcoming invoice; Stripe 404s rather than returning an empty one).
  */
 export async function getUpcomingInvoice(
   email: string,
@@ -531,12 +558,12 @@ export async function getUpcomingInvoice(
   let invoice: any;
   try {
     // Stripe Node v18 removed invoices.retrieveUpcoming in favour of
-    // invoices.createPreview. Despite the name this creates nothing — it is a
+    // invoices.createPreview. Despite the name this creates nothing; it is a
     // read-only preview call.
     invoice = await stripe.invoices.createPreview({ subscription: subscription.id });
   } catch (err: any) {
     // No upcoming invoice for this subscription is an expected state, not a
-    // failure — surface it as "nothing to show" rather than a 500.
+    // failure, so surface it as "nothing to show" rather than a 500.
     if (err?.statusCode === 404) return null;
     throw err;
   }
@@ -555,7 +582,7 @@ export async function getUpcomingInvoice(
  * Past invoices for this org, newest first.
  *
  * Invoices carry no org metadata, so they are matched by the subscriptions they
- * belong to — the org's plan subscription plus its packs. Invoices belonging to
+ * belong to: the org's plan subscription plus its packs. Invoices belonging to
  * another org (or another LearnHouse product) on the same shared customer are
  * therefore excluded.
  */
@@ -642,7 +669,7 @@ export async function getActivePackSubscriptions(email: string, orgId: string) {
   if (customerIds.length === 0) return [];
 
   // Include past_due/unpaid (not just active) so an org doesn't silently lose
-  // pack entitlement during a failed renewal — mirrors plan resolution.
+  // pack entitlement during a failed renewal. Mirrors plan resolution.
   const PACK_KEEP_STATUSES = ["active", "trialing", "past_due", "unpaid"];
   const packs: any[] = [];
   for (const customerId of customerIds) {
@@ -693,7 +720,7 @@ export interface StripePackPrices {
 
 /**
  * Fetch actual prices from Stripe for all pack add-ons.
- * Works the same way as fetchPlanPrices — supports Adaptive Pricing.
+ * Works the same way as fetchPlanPrices, including Adaptive Pricing support.
  */
 export async function fetchPackPrices(displayCurrency?: string): Promise<StripePackPrices> {
   const result: StripePackPrices = {};
@@ -769,7 +796,7 @@ function extractAmount(price: any, displayCurrency?: string): { amount: number; 
  * Uses the recurring.interval from each Stripe price to correctly
  * separate monthly vs annual pricing.
  *
- * @param displayCurrency — optional currency code (e.g. 'eur'). If the Stripe
+ * @param displayCurrency Optional currency code (e.g. 'eur'). If the Stripe
  *   price has Adaptive Pricing enabled, the converted amount for that currency
  *   is returned. Otherwise falls back to the price's base currency.
  */
@@ -867,7 +894,7 @@ export async function fetchPlanLimits(): Promise<PlanLimits> {
   }
 
   // Plan limits live on the backend API (getServerAPIUrl() already ends in
-  // /api/v1/), NOT on the frontend domain — hitting the latter 404s. This is a
+  // /api/v1/), NOT on the frontend domain; hitting the latter 404s. This is a
   // "use server" action, so THROWING here surfaces as an unhandled
   // server-action exception on every caller route even though callers catch the
   // rejection. Plan limits are display-only and change rarely, so degrade
@@ -900,7 +927,7 @@ export async function fetchPlanLimits(): Promise<PlanLimits> {
  * Iterates all subscriptions, groups plan subs by org, derives each org's plan
  * from its live subscription's PRICE, and pushes the correct plan to the
  * backend. Orgs whose only subs are canceled/expired are set to "free".
- * Idempotent — safe to run on a schedule.
+ * Idempotent, so safe to run on a schedule.
  */
 export async function reconcileAllOrgPlans(): Promise<{
   orgsChecked: number;

@@ -17,29 +17,29 @@
 </p>
 
 <p align="center">
-📖 <b>Courses</b> — Create and manage courses with ease<br>
-✏️ <b>Editor</b> — Powerful block-based Notion-like content editor<br>
-📦 <b>Collections</b> — Organize courses into curated bundles<br>
-📝 <b>Assignments</b> — Create tasks and track student submissions<br>
-💬 <b>Discussions</b> — Community forums for your learners<br>
-🎙️ <b>Podcasts</b> — Audio content for on-the-go learning<br>
-📊 <b>Analytics</b> — Track engagement and course performance<br>
-🧊 <b>Playgrounds</b> — AI-generated interactive elements, simulations & diagrams<br>
-💻 <b>Code</b> — Real code execution with auto-grading in 30+ languages<br>
-📋 <b>Boards</b> — Real-time collaborative whiteboards<br>
-🧠 <b>AI</b> — Context-aware AI for learning & teaching<br>
-🎓 <b>Certificates</b> — Auto-generate certificates on course completion<br>
-👥 <b>User Groups</b> — Organize learners and control access<br>
-🔍 <b>SEO</b> — Built-in SEO optimization with metadata, sitemaps & open graph<br>
-🎨 <b>Customization</b> — Custom branding, landing pages & theming<br>
-💳 <b>Payments (Enterprise)</b> — Sell courses with no fees and no lock-in<br>
-🔐 <b>SSO (Enterprise)</b> — Single sign-on with OAuth providers<br>
-🏢 <b>Multi-Org (Enterprise)</b> — Run multiple organizations from a single instance<br>
+📖 <b>Courses</b>: Create and manage courses<br>
+✏️ <b>Editor</b>: Block-based Notion-like content editor<br>
+📦 <b>Collections</b>: Organize courses into curated bundles<br>
+📝 <b>Assignments</b>: Create tasks and track student submissions<br>
+💬 <b>Discussions</b>: Community forums for your learners<br>
+🎙️ <b>Podcasts</b>: Audio content for on-the-go learning<br>
+📊 <b>Analytics</b>: Track engagement and course performance<br>
+🧊 <b>Playgrounds</b>: AI-generated interactive elements, simulations & diagrams<br>
+💻 <b>Code</b>: Real code execution with auto-grading in 30+ languages<br>
+📋 <b>Boards</b>: Real-time collaborative whiteboards<br>
+🧠 <b>AI</b>: Context-aware AI for learning & teaching<br>
+🎓 <b>Certificates</b>: Auto-generate certificates on course completion<br>
+👥 <b>User Groups</b>: Organize learners and control access<br>
+🔍 <b>SEO</b>: Built-in SEO optimization with metadata, sitemaps & open graph<br>
+🎨 <b>Customization</b>: Custom branding, landing pages & theming<br>
+💳 <b>Payments (Enterprise)</b>: Sell courses with no fees and no lock-in<br>
+🔐 <b>SSO (Enterprise)</b>: Single sign-on with OAuth providers<br>
+🏢 <b>Multi-Org (Enterprise)</b>: Run multiple organizations from a single instance<br>
 </p>
 
 ## 🚀 Get Started
 
-LearnHouse has an official CLI that handles everything — self-hosting, updates, backups, and local development.
+LearnHouse has an official CLI for self-hosting, updates, backups, and local development.
 
 ### Self-host
 
@@ -97,15 +97,15 @@ This spins up PostgreSQL and Redis, installs dependencies, and starts the API, W
 
 | App | Path | Description | Technology | Used by |
 |-----|------|-------------|------------|---------|
-| **Web** | `apps/web` | Frontend application — dashboard, course player, editor, landing pages | Next.js, React, TailwindCSS, Tiptap | Teachers, Students, Admins |
-| **API** | `apps/api` | Backend REST API — auth, courses, payments, AI, analytics | FastAPI, Python, SQLModel, Alembic | Web, CLI, Collab |
-| **Collab** | `apps/collab` | Real-time collaboration server — live editing sync for courses & boards | Hocuspocus, Yjs, WebSocket | Web (editor, boards) |
-| **CLI** | `apps/cli` | Official CLI — setup wizard, dev environment, instance management | Commander, Node.js | Developers, Self-hosters |
+| **Web** | `apps/web` | Frontend application: dashboard, course player, editor, landing pages | Next.js, React, TailwindCSS, Tiptap | Teachers, Students, Admins |
+| **API** | `apps/api` | Backend REST API: auth, courses, payments, AI, analytics | FastAPI, Python, SQLModel, Alembic | Web, CLI, Collab |
+| **Collab** | `apps/collab` | Real-time collaboration server: live editing sync for courses & boards | Hocuspocus, Yjs, WebSocket | Web (editor, boards) |
+| **CLI** | `apps/cli` | Official CLI: setup wizard, dev environment, instance management | Commander, Node.js | Developers, Self-hosters |
 
 ## 💬 Community
 
-- [Discord](https://discord.gg/CMyZjjYZ6x) — chat with the team and other users
-- [Documentation](https://docs.learnhouse.app) — guides and references
+- [Discord](https://discord.gg/CMyZjjYZ6x): chat with the team and other users
+- [Documentation](https://docs.learnhouse.app): guides and references
 
 ## 🤝 Contributing
 
@@ -121,7 +121,7 @@ npx learnhouse dev
 
 ## 🔒 Security
 
-We take the security of LearnHouse and the data entrusted to us seriously. If you discover a vulnerability, please email **security@learnhouse.app** — do not disclose it publicly until we've had a chance to investigate.
+We take the security of LearnHouse and the data entrusted to us seriously. If you discover a vulnerability, please email **security@learnhouse.app** and do not disclose it publicly until we've had a chance to investigate.
 
 Please include a clear description, steps to reproduce, affected endpoints, and any relevant screenshots or proof-of-concept code. We will acknowledge your report, keep you informed, and credit you once resolved if you wish.
 
@@ -129,7 +129,7 @@ See our full [Security Policy](https://learnhouse.app/security) for details on o
 
 ## ✍️ Author & Maintainer
 
-Sweave (Badr B.) — [@swve](https://github.com/swve)
+Sweave (Badr B.), [@swve](https://github.com/swve)
 
 ## 💜 A Word
 
@@ -139,4 +139,4 @@ Thank you and have fun using/developing/testing LearnHouse !
 
 ## 📄 License
 
-[AGPL-3.0](LICENSE) — Enterprise features are available under a separate Enterprise License.
+[AGPL-3.0](LICENSE). Enterprise features are available under a separate Enterprise License.

@@ -20,12 +20,12 @@ import {
 } from '@phosphor-icons/react/dist/ssr'
 
 const features = [
-  // Row 1 — hero features (large)
+  // Row 1: hero features (large)
   { icon: PencilSimple, label: 'Block Editor', desc: 'Notion-like WYSIWYG editor with rich content blocks, videos, documents, and embeds', color: '#3b82f6', size: 'large', href: '/platform/editor' },
   { icon: Brain, label: 'AI Tutoring', desc: 'Built-in AI assistant for students and teachers with RAG-powered context', color: '#a855f7', size: 'large', href: '/platform/ai' },
   { icon: UsersThree, label: 'Real-time Collaboration', desc: 'Live co-editing for course content and boards powered by Hocuspocus', color: '#ec4899', size: 'large', href: '/platform/editor/collaboration' },
 
-  // Row 2+ — standard features
+  // Row 2+: standard features
   { icon: BookOpen, label: 'Courses & Trails', desc: 'Chapters, activities, collections, and learning paths', color: '#10b981', href: '/platform/courses' },
   { icon: ClipboardText, label: 'Assignments', desc: 'Automated and manual grading', color: '#f59e0b', href: '/platform/assignments' },
   { icon: Terminal, label: 'Code Execution', desc: 'Run code in 7+ languages', color: '#8b5cf6', href: '/platform/code-execution' },
@@ -107,14 +107,14 @@ export default function FeaturesGrid() {
 
   return (
     <div style={{ margin: '24px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* Hero row — 3 large cards */}
+      {/* Hero row: 3 large cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
         {heroFeatures.map(f => (
           <FeatureCard key={f.label} {...f} large />
         ))}
       </div>
 
-      {/* Standard features — compact bento grid */}
+      {/* Standard features: compact bento grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
         {standardFeatures.map(f => (
           <FeatureCard key={f.label} {...f} />

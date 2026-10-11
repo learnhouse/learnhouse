@@ -22,16 +22,19 @@ class CourseUpdate(SQLModel, table=True):
     creation_date: str
     update_date: str
 
+
 class CourseUpdateCreate(SQLModel):
-    title: str 
-    content: str 
+    title: str
+    content: str
     linked_activity_uuids: Optional[str] = Field(default=None)
-    org_id: int
+    # Accepted for backwards compatibility and ignored: the course decides.
+    org_id: Optional[int] = None
+
 
 class CourseUpdateRead(SQLModel):
     id: int
-    title: str 
-    content: str 
+    title: str
+    content: str
     course_id: int
     courseupdate_uuid: str
     linked_activity_uuids: Optional[str] = Field(default=None)
@@ -39,9 +42,9 @@ class CourseUpdateRead(SQLModel):
     creation_date: str
     update_date: str
 
+
 class CourseUpdateUpdate(SQLModel):
     title: Optional[str] = None
     content: Optional[str] = None
     linked_activity_uuids: Optional[str] = Field(default=None)
 
-    

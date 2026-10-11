@@ -114,7 +114,7 @@ class TestScoExtraction:
 
     def test_resource_without_href_uses_first_file(self):
         # IMS CP: a <resource> may omit href and declare the entry point as its
-        # first <file> — common in some authoring-tool exports.
+        # first <file>, which is common in some authoring-tool exports.
         manifest = (
             '<?xml version="1.0"?>'
             '<manifest identifier="M" version="1.0" '

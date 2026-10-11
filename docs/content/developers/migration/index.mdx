@@ -4,10 +4,10 @@ import { Callout } from 'nextra/components'
 
 This section explains how to bring existing course content into LearnHouse using the public API. There are two supported approaches:
 
-1. **Programmatic Migration** -- you script every step (create the course, then chapters, then activities, then upload files). Use this when you need full control of the resulting structure -- typical for migrating from another LMS where you already know the chapter/activity layout.
-2. **AI-Assisted Migration** -- you upload a folder of media (videos, PDFs, images, audio) and LearnHouse asks Gemini to propose a chapter/activity tree. You review and confirm, and a single endpoint creates the entire course in one transaction. Use this when you have a pile of files but no predefined structure.
+1. **Programmatic Migration**: you script every step (create the course, then chapters, then activities, then upload files). Use this when you need full control of the resulting structure. This is typical when migrating from another LMS where you already know the chapter/activity layout.
+2. **AI-Assisted Migration**: you upload a folder of media (videos, PDFs, images, audio) and LearnHouse asks Gemini to propose a chapter/activity tree. You review and confirm, and a single endpoint creates the entire course in one transaction. Use this when you have a pile of files but no predefined structure.
 
-Both approaches share the same underlying data model -- a Course contains Chapters, and each Chapter contains an ordered list of Activities.
+Both approaches share the same underlying data model: a Course contains Chapters, and each Chapter contains an ordered list of Activities.
 
 <Callout type="info">
 All endpoints below are prefixed with `/api/v1/`. In local development the base URL is `http://localhost:1338/api/v1/`. In production it is served at `/api/v1/` on your instance domain.
@@ -17,8 +17,8 @@ All endpoints below are prefixed with `/api/v1/`. In local development the base 
 
 Every migration call must be authenticated. There are two token types:
 
-- **JWT access tokens** (`POST /api/v1/auth/login`) -- a user session, 8-hour lifetime, refreshable.
-- **API tokens** (Pro plan) -- prefixed with `lh_`, issued per organization, no expiry.
+- **JWT access tokens** (`POST /api/v1/auth/login`): a user session, 8-hour lifetime, refreshable.
+- **API tokens** (Pro plan): prefixed with `lh_`, issued per organization, no expiry.
 
 Both are sent the same way:
 
@@ -30,7 +30,7 @@ curl http://localhost:1338/api/v1/courses/?org_id=1 \
 API tokens are bound to a single organization at creation time. Any attempt to operate on a different `org_id` is rejected at the auth layer, so a leaked token cannot reach across tenants.
 
 <Callout type="warning">
-**API tokens cannot call every endpoint.** A small set of routers -- including the AI-assisted migration endpoints under `/api/v1/courses/migrate/*` and several user-scoped endpoints like `/users/profile` -- explicitly reject API tokens (HTTP 403, `"API tokens cannot access this resource"`). For these calls, you need a user JWT. The supported pattern is the **admin token-swap**: use your API token once to mint a JWT on behalf of any user in your organization, then use that JWT for the protected calls.
+**API tokens cannot call every endpoint.** A small set of routers, including the AI-assisted migration endpoints under `/api/v1/courses/migrate/*` and several user-scoped endpoints like `/users/profile`, explicitly reject API tokens (HTTP 403, `"API tokens cannot access this resource"`). For these calls, you need a user JWT. The supported pattern is the **admin token-swap**: use your API token once to mint a JWT on behalf of any user in your organization, then use that JWT for the protected calls.
 
 ```bash
 # Mint a user JWT using your API token
@@ -84,10 +84,10 @@ Both are returned in every create response, so capture them as you go.
 | `TYPE_VIDEO` | `SUBTYPE_VIDEO_HOSTED` | Self-hosted video file | Multipart upload to `/activities/video` |
 | `TYPE_VIDEO` | `SUBTYPE_VIDEO_YOUTUBE` | Embedded YouTube / Vimeo video | JSON `POST /activities/external_video` |
 | `TYPE_DOCUMENT` | `SUBTYPE_DOCUMENT_PDF` | PDF document | Multipart upload to `/activities/documentpdf` |
-| `TYPE_DOCUMENT` | `SUBTYPE_DOCUMENT_DOC` | Generic document | Reserved -- not exposed via dedicated upload endpoint |
+| `TYPE_DOCUMENT` | `SUBTYPE_DOCUMENT_DOC` | Generic document | Reserved, not exposed via a dedicated upload endpoint |
 | `TYPE_ASSIGNMENT` | `SUBTYPE_ASSIGNMENT_ANY` | Graded assignment with tasks | Three-step: activity shell + assignment record + at least one task |
 | `TYPE_CUSTOM` | `SUBTYPE_CUSTOM` | Free-form structured content | JSON `content` of any shape |
-| `TYPE_SCORM` | `SUBTYPE_SCORM_12` / `SUBTYPE_SCORM_2004` | SCORM packages | Reserved -- handled via the SCORM uploader |
+| `TYPE_SCORM` | `SUBTYPE_SCORM_12` / `SUBTYPE_SCORM_2004` | SCORM packages | Reserved, handled by the SCORM uploader |
 
 The full per-type `content` JSON schemas, including the dynamic page block list, are documented in [Activity Types Reference](/developers/migration/activity-types).
 
@@ -113,7 +113,7 @@ A copy-pasteable bash script for the full flow lives in [Programmatic Migration]
 </Callout>
 
 <Callout type="warning">
-**Modifying `content` creates a new version.** Each `PUT /api/v1/activities/{activity_uuid}` that touches `content` increments the activity's `current_version`. This is normal -- learners always see the published version -- but expect your migration to leave a tidy version history.
+**Modifying `content` creates a new version.** Each `PUT /api/v1/activities/{activity_uuid}` that touches `content` increments the activity's `current_version`. This is normal (learners always see the published version), but expect your migration to leave a version history.
 </Callout>
 
 <Callout type="info">
@@ -125,7 +125,7 @@ A copy-pasteable bash script for the full flow lives in [Programmatic Migration]
 </Callout>
 
 <Callout type="warning">
-**`TYPE_ASSIGNMENT` is a three-step create.** A bare assignment activity renders as an empty panel. You also need to `POST /api/v1/assignments/` to attach the title/description/grading, and at least one `POST /api/v1/assignments/{uuid}/tasks` for a submission UI. See [Activity Types Reference -- Assignments](/developers/migration/activity-types#assignments).
+**`TYPE_ASSIGNMENT` is a three-step create.** A bare assignment activity renders as an empty panel. You also need to `POST /api/v1/assignments/` to attach the title/description/grading, and at least one `POST /api/v1/assignments/{uuid}/tasks` for a submission UI. See [Activity Types Reference: Assignments](/developers/migration/activity-types#assignments).
 </Callout>
 
 <Callout type="warning">
@@ -134,6 +134,6 @@ A copy-pasteable bash script for the full flow lives in [Programmatic Migration]
 
 ## Where to next
 
-- [Programmatic Migration](/developers/migration/programmatic) -- step-by-step guide with curl examples for each call.
-- [Activity Types Reference](/developers/migration/activity-types) -- the exact `content` JSON shape for every activity sub-type, including TipTap blocks for dynamic pages.
-- [AI-Assisted Migration](/developers/migration/assisted) -- the three-call upload / suggest / create flow for bulk file imports.
+- [Programmatic Migration](/developers/migration/programmatic): step-by-step guide with curl examples for each call.
+- [Activity Types Reference](/developers/migration/activity-types): the exact `content` JSON shape for every activity sub-type, including TipTap blocks for dynamic pages.
+- [AI-Assisted Migration](/developers/migration/assisted): the three-call upload / suggest / create flow for bulk file imports.

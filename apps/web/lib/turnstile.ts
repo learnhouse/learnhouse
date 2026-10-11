@@ -8,7 +8,7 @@ import 'server-only'
 //
 // Design principle: Turnstile is OPTIONAL infrastructure. When TURNSTILE_SECRET_KEY
 // is absent (local dev, self-hosted, OSS) verification is disabled and every
-// action is allowed through — so the app degrades gracefully instead of locking
+// action is allowed through, so the app degrades gracefully instead of locking
 // everyone out. Gate the UI on isTurnstileEnabled() / the public site key.
 
 const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
@@ -37,7 +37,7 @@ export async function verifyTurnstile(
   remoteIp?: string | null,
 ): Promise<TurnstileResult> {
   const secret = process.env.TURNSTILE_SECRET_KEY
-  // Disabled deployment — allow through.
+  // Disabled deployment: allow through.
   if (!secret) return { ok: true }
 
   if (!token) return { ok: false, reason: 'missing_token' }

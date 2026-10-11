@@ -65,7 +65,7 @@ function normalizeContents(raw: any): ShortAnswerContents {
 // Did the answer key actually reach the client?
 //
 // The API strips `correct_answers` from the task payload whenever the student
-// isn't allowed to see it yet — notably while retry attempts remain (see
+// isn't allowed to see it yet, notably while retry attempts remain (see
 // _student_may_see_answer_key; max_retries=0 means unlimited, so it never
 // reveals). The client can't re-derive that rule (it has no attempt_number
 // here), so `showCorrectAnswers` can be true while the key is absent. In that
@@ -104,7 +104,7 @@ function TaskShortAnswerObject({
   // Tracks whether the server actually sent the answer key (see hasAnswerKey).
   const [answerKeyPresent, setAnswerKeyPresent] = useState(false)
   // The server applies a third reveal condition the client can't reproduce, so
-  // the opt-in gate alone isn't enough — only reveal when the key is really here.
+  // the opt-in gate alone isn't enough; only reveal when the key is really here.
   const revealAnswerKey = showCorrectAnswers && answerKeyPresent
   const [studentAnswer, setStudentAnswer] = useState<string>('')
   const [initialAnswer, setInitialAnswer] = useState<string>('')
@@ -153,7 +153,7 @@ function TaskShortAnswerObject({
     if (res.success && res.data) {
       setUserSubmissions(res.data)
       const saved = res.data.task_submission?.answer ?? ''
-      // The interaction guard has to be checked HERE, after the await — not
+      // The interaction guard has to be checked HERE, after the await, not
       // before it. If the learner starts typing during the round trip, a
       // pre-await check still lets the late response overwrite their text AND
       // reset the dirty baseline, so auto-save never fires and the answer is
@@ -228,7 +228,7 @@ function TaskShortAnswerObject({
 
   // --- SAVE PROGRESS (student) ---
   // Matches the QUIZ / FORM pattern: just persist the student's answer. We
-  // deliberately send grade=0 and no feedback — the actual grading happens
+  // deliberately send grade=0 and no feedback; the actual grading happens
   // server-side when the student submits the whole assignment for grading
   // (which triggers _server_verified_task_grade in the backend), or when
   // the teacher clicks "Set final grade" in the EvaluateAssignment modal.
@@ -441,7 +441,7 @@ function TaskShortAnswerObject({
         )}
 
         {/* === STUDENT VIEW === */}
-        {/* No Correct/Incorrect banner here — saving is just persisting a
+        {/* No Correct/Incorrect banner here: saving is just persisting a
             draft. The student learns their grade after the whole assignment
             is submitted + graded (visible in the activity header badge). */}
         {view === 'student' && (
@@ -458,7 +458,7 @@ function TaskShortAnswerObject({
               )}
               className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-md bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none"
             />
-            {/* No answer-key panel at all when the key was withheld — the
+            {/* No answer-key panel at all when the key was withheld; the
                 learner still sees their own answer and their score. A panel
                 holding one blank chip would be worse than nothing. */}
             {revealAnswerKey && (

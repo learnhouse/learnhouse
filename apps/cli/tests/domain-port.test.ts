@@ -34,7 +34,7 @@ vi.mock('../src/utils/prompt.js', () => H.stub)
 
 import { promptDomain } from '../src/prompts/domain.js'
 
-describe('promptDomain — canonical-port availability branches', () => {
+describe('promptDomain: canonical-port availability branches', () => {
   beforeEach(() => { H.reset(); net.checkQueue = [] })
 
   it('suggests an alternative when the canonical HTTP port is already in use', async () => {

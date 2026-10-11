@@ -69,7 +69,7 @@ export function dockerLogin(registry: string, username: string, password: string
 }
 
 /** Run a command inside a compose service (no TTY). Returns combined stdout.
- *  `-T` disables pseudo-TTY allocation — required because callers capture
+ *  `-T` disables pseudo-TTY allocation, required because callers capture
  *  stdout non-interactively; without it `docker compose exec` can abort with
  *  "the input device is not a TTY" on setups that allocate a TTY when piped. */
 export function dockerComposeExec(cwd: string, service: string, command: string): string {
@@ -118,7 +118,7 @@ function sleepBlockingMs(ms: number): void {
 
 /**
  * True only if a process is *confirmed* LISTENING on the TCP port. Uses
- * lsof/ss (not a bind attempt — privileged ports <1024 can't be bound by a
+ * lsof/ss (not a bind attempt: privileged ports <1024 can't be bound by a
  * non-root process, which would false-positive). If no probe tool is available,
  * returns false (don't block; docker would surface a real conflict at `up`).
  */
@@ -131,7 +131,7 @@ export function isTcpPortListening(port: number): boolean {
       const out = execSync(cmd, { stdio: 'pipe' }).toString().trim()
       if (out) return true
     } catch {
-      // tool missing or nothing listening — try the next probe
+      // tool missing or nothing listening; try the next probe
     }
   }
   return false

@@ -18,7 +18,7 @@ export default function WebhookFlowDiagram() {
   return (
     <FlowDiagram
       nodes={nodes}
-      caption="Recompute the HMAC-SHA256 of the raw request body with your endpoint secret and compare it to X-Webhook-Signature before trusting the payload. If your endpoint doesn't return a 2xx, LearnHouse retries — up to 3 attempts, waiting 1s then 4s between them."
+      caption="Recompute the HMAC-SHA256 of the raw request body with your endpoint secret and compare it to X-Webhook-Signature before trusting the payload. If your endpoint doesn't return a 2xx, LearnHouse retries (up to 3 attempts, waiting 1s then 4s between them)."
     />
   )
 }

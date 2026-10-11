@@ -2,24 +2,24 @@
 Unit tests for assignment auto-grading correctness.
 
 These exercise the pure grading helpers in
-``src.services.courses.activities.assignments`` directly — no DB, no HTTP — so
+``src.services.courses.activities.assignments`` directly (no DB, no HTTP), so
 they assert the actual behavioral contract of the feature: a right answer earns
 full marks, a wrong answer earns zero, and partial answers earn a proportional
 score. The companion E2E suite (apps/e2e) covers the same logic through the UI;
 these give a fast, deterministic safety net that runs in api-tests CI.
 
 Covered:
-- ``_check_short_answer`` — all four match modes (exact / case_insensitive /
+- ``_check_short_answer``: all four match modes (exact / case_insensitive /
   contains / regex), plus blank-answer and invalid-regex guards.
-- ``_check_number_answer`` — exact, within-tolerance, outside-tolerance, comma
+- ``_check_number_answer``: exact, within-tolerance, outside-tolerance, comma
   decimals, blank / non-numeric / non-finite guards.
-- ``_grade_quiz_task`` — all-correct / partial / all-wrong / empty.
-- ``_grade_form_task`` — all-correct / partial / case + whitespace insensitivity.
-- ``_server_verified_task_grade`` — dispatch per task type returns full/zero.
-- ``compute_assignment_grade`` — clamping, percentage, per-grading-type display
+- ``_grade_quiz_task``: all-correct / partial / all-wrong / empty.
+- ``_grade_form_task``: all-correct / partial / case + whitespace insensitivity.
+- ``_server_verified_task_grade``: dispatch per task type returns full/zero.
+- ``compute_assignment_grade``: clamping, percentage, per-grading-type display
   and ``passed`` threshold.
-- ``_percentage_to_letter_grade`` / ``_percentage_to_gpa`` — boundary mapping.
-- ``AUTO_GRADABLE_TASK_TYPES`` — FILE_SUBMISSION / OTHER excluded.
+- ``_percentage_to_letter_grade`` / ``_percentage_to_gpa``: boundary mapping.
+- ``AUTO_GRADABLE_TASK_TYPES``: FILE_SUBMISSION / OTHER excluded.
 """
 
 from types import SimpleNamespace
@@ -65,7 +65,7 @@ class TestCheckShortAnswer:
         assert _check_short_answer("Berlin", ["paris"], "contains") is False
 
     def test_regex_is_anchored_with_fullmatch(self):
-        # `hello` must not match `hello world` — fullmatch anchoring
+        # `hello` must not match `hello world` (fullmatch anchoring)
         assert _check_short_answer("hello", ["hello"], "regex") is True
         assert _check_short_answer("hello world", ["hello"], "regex") is False
 
@@ -74,7 +74,7 @@ class TestCheckShortAnswer:
         assert _check_short_answer("dog", ["c.t"], "regex") is False
 
     def test_invalid_regex_is_treated_as_no_match(self):
-        # Unbalanced bracket — must not raise, just fail to match
+        # Unbalanced bracket: must not raise, just fail to match
         assert _check_short_answer("anything", ["[unclosed"], "regex") is False
 
     def test_catastrophic_backtracking_pattern_is_bounded_not_hang(self):

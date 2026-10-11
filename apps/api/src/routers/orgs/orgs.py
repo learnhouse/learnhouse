@@ -412,7 +412,7 @@ async def api_remove_user_from_org(
     "/{org_id}/leave",
     summary="Leave an organization",
     description=(
-        "Remove the CURRENT (authenticated) user's own membership in the org — "
+        "Remove the CURRENT (authenticated) user's own membership in the org; "
         "self-service, no admin rights required. The last remaining admin cannot "
         "leave (they must transfer ownership or delete the org)."
     ),
@@ -1696,7 +1696,7 @@ async def api_get_org_active_users(
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
-    # Same tenant guard as /{org_id}/usage — active-user data is org-scoped.
+    # Same tenant guard as /{org_id}/usage: active-user data is org-scoped.
     from src.security.auth import resolve_acting_user_id
     from src.security.org_auth import require_org_membership
     await require_org_membership(

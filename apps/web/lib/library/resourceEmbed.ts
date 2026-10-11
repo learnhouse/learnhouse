@@ -17,7 +17,7 @@ export type ResourceKind =
  * Base internal route for a Library resource. Boards live at a top-level
  * chrome-free route; the other kinds live under the (withmenu) group (see
  * buildEmbedUrl for the chrome=none suppression used when embedding).
- * `media` has no page of its own — it is rendered by MediaViewer instead.
+ * `media` has no page of its own; it is rendered by MediaViewer instead.
  */
 export function buildResourceUrl(
   kind: ResourceKind,

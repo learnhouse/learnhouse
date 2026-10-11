@@ -23,6 +23,7 @@ from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.ai.rag.queue import index_activity
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,7 @@ async def create_video_activity(
     db_session.add(chapter_activity_object)
     await db_session.commit()
     await db_session.refresh(chapter_activity_object)
+    index_activity(activity.id, transcribe=True)
 
     # Kick off HLS transcoding (no-op unless LEARNHOUSE_HLS_ENABLED). The MP4 is
     # served as the fallback until HLS is ready.
@@ -276,6 +278,7 @@ async def create_external_video_activity(
     # Insert ChapterActivity link in DB
     db_session.add(chapter_activity_object)
     await db_session.commit()
+    index_activity(activity.id)
 
     return ActivityRead.model_validate(activity)
 
@@ -339,6 +342,7 @@ async def update_video_activity(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    index_activity(activity.id, transcribe=video_file is not None)
 
     return ActivityRead.model_validate(activity)
 
@@ -374,7 +378,7 @@ async def configure_captions(
     enqueue generation. Instructor must have UPDATE rights on the course.
 
     Languages may be any of the platform's available languages OR custom
-    additions — any well-formed BCP-47-ish code is accepted (the model can
+    additions; any well-formed BCP-47-ish code is accepted (the model can
     translate to it). Returns the stored `captions` metadata block.
     """
     activity = (
@@ -419,7 +423,12 @@ async def configure_captions(
             check_feature_enabled,
             get_ai_credits_summary,
         )
+        from src.security.auth import resolve_acting_user_id
+        from src.services.security.rate_limiting import enforce_ai_rate_limit
+
         await check_feature_enabled("ai", activity.org_id, db_session)
+        # Each enabled save can enqueue a paid transcription job
+        enforce_ai_rate_limit(resolve_acting_user_id(current_user), activity.org_id)
         summary = await get_ai_credits_summary(activity.org_id, db_session)
         remaining = summary.get("remaining_credits")
         if isinstance(remaining, (int, float)) and remaining != -1 and remaining <= 0:
@@ -499,6 +508,7 @@ async def update_external_video_activity(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    index_activity(activity.id)
 
     return ActivityRead.model_validate(activity)
 

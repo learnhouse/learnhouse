@@ -22,7 +22,7 @@ from src.db.usergroup_user import UserGroupUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
-from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserReadPublic
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.services.security.rate_limiting import enforce_batch_size_limit
 
@@ -123,7 +123,7 @@ async def create_usergroup(
     # SECURITY: enforce the API-token org boundary. The target org here comes
     # from the request body (usergroup_create.org_id), which neither the global
     # path/query org-boundary net (auth._verify_api_token_org_boundary) nor the
-    # RBAC element-org lookup can see — the RBAC check below authorizes against
+    # RBAC element-org lookup can see: the RBAC check below authorizes against
     # the placeholder "usergroup_X", whose org resolves to None so the boundary
     # check is skipped. Without this, a token whose creator also belongs to
     # another org could create a usergroup in that other org. A token is bound
@@ -137,6 +137,13 @@ async def create_usergroup(
     await require_org_membership(
         resolve_acting_user_id(current_user), usergroup_create.org_id, db_session
     )
+    # Membership is not permission to create (the placeholder check below
+    # passes for any signed-in member).
+    if not isinstance(current_user, APITokenUser):
+        await require_org_role_permission(
+            resolve_acting_user_id(current_user), usergroup_create.org_id, db_session,
+            "usergroups", "action_create",
+        )
 
     # RBAC check
     await rbac_check(
@@ -145,6 +152,7 @@ async def create_usergroup(
         current_user=current_user,
         action="create",
         db_session=db_session,
+        org_id=usergroup_create.org_id,
     )
 
     # Check if Organization exists
@@ -157,7 +165,11 @@ async def create_usergroup(
             detail="Organization does not exist",
         )
 
-    # Usage check — this is the usergroups limit, not courses. (Previously
+    # Plan gate: the router wrapper can't see the org (it's in the body)
+    from src.security.features_utils.plan_check import check_org_plan
+    await check_org_plan(org.id, "standard", "User Groups", db_session)
+
+    # Usage check: this is the usergroups limit, not courses. (Previously
     # keyed "courses", so the usergroups cap was never actually enforced.)
     await check_limits_with_usage("usergroups", org.id, db_session)
 
@@ -204,7 +216,7 @@ async def read_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -224,7 +236,7 @@ async def get_users_linked_to_usergroup(
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
-) -> list[UserRead]:
+) -> list[UserReadPublic]:
 
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = (await db_session.execute(statement)).scalars().first()
@@ -235,12 +247,16 @@ async def get_users_linked_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR.
+    # The member roster is a management view: learners hold usergroups read
+    # by default, so a signed-in user needs usergroups.action_update in the
+    # group's org (admins/maintainers have it). API tokens keep their explicit
+    # usergroups read grant.
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
-        action="read",
+        action="read" if isinstance(current_user, APITokenUser) else "update",
         db_session=db_session,
         org_id=usergroup.org_id,
     )
@@ -253,7 +269,9 @@ async def get_users_linked_to_usergroup(
     )
     users = (await db_session.execute(statement)).scalars().all()
 
-    return [UserRead.model_validate(user) for user in users]
+    # SECURITY: learners hold usergroups read by default, so member lists use
+    # the public projection (no email). The router's response_model matches.
+    return [UserReadPublic.model_validate(user) for user in users]
 
 
 async def read_usergroups_by_org_id(
@@ -279,6 +297,7 @@ async def read_usergroups_by_org_id(
         current_user=current_user,
         action="read",
         db_session=db_session,
+        org_id=org_id,
     )
 
     usergroups = [UserGroupRead.model_validate(usergroup) for usergroup in usergroups]
@@ -298,30 +317,21 @@ async def get_usergroups_by_resource(
     )
     usergroup_resources = (await db_session.execute(statement)).scalars().all()
 
-    # Authorize unconditionally, before the empty-result shortcut below, so an
-    # absent/unlinked resource cannot be used as an unauthenticated existence
-    # oracle (an anonymous caller must get 403, not an empty 200).
-    await rbac_check(
-        request,
-        usergroup_uuid="usergroup_X",
-        current_user=current_user,
-        action="read",
-        db_session=db_session,
-    )
+    from src.security.auth import resolve_acting_user_id
+
+    # Refuse anonymous callers before the empty-result shortcut, so an
+    # absent/unlinked resource is not an unauthenticated existence oracle.
+    await authorization_verify_if_user_is_anon(resolve_acting_user_id(current_user))
 
     if not usergroup_resources:
         return []
-
-    from src.security.auth import resolve_acting_user_id
 
     target_org_id = usergroup_resources[0].org_id
 
     # SECURITY: enforce the API-token org boundary. The org is derived from the
     # resource here, not from an org_id path/query param, so the global boundary
-    # net cannot see it, and the RBAC check above ran against the placeholder
-    # "usergroup_X" (org None → boundary skipped). Refuse cross-org reads so a
-    # token cannot enumerate another org's usergroups via a resource its creator
-    # happens to be able to reach.
+    # net cannot see it. Refuse cross-org reads so a token cannot enumerate
+    # another org's usergroups via a resource its creator can reach.
     if isinstance(current_user, APITokenUser) and target_org_id != current_user.org_id:
         raise HTTPException(
             status_code=403,
@@ -330,6 +340,14 @@ async def get_usergroups_by_resource(
 
     await require_org_membership(
         resolve_acting_user_id(current_user), target_org_id, db_session
+    )
+    await rbac_check(
+        request,
+        usergroup_uuid="usergroup_X",
+        current_user=current_user,
+        action="read",
+        db_session=db_session,
+        org_id=target_org_id,
     )
 
     # Batch fetch all usergroups in a single query
@@ -359,7 +377,7 @@ async def get_resources_by_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -373,8 +391,41 @@ async def get_resources_by_usergroup(
         UserGroupResource.usergroup_id == usergroup_id
     )
     usergroup_resources = (await db_session.execute(statement)).scalars().all()
+    resource_uuids = [ugr.resource_uuid for ugr in usergroup_resources]
 
-    return [ugr.resource_uuid for ugr in usergroup_resources]
+    if await _can_manage_usergroups(current_user, usergroup.org_id, db_session):
+        return resource_uuids
+
+    # Learners hold usergroups read (the course catalog filters by group), but
+    # the links to restricted or draft resources are not theirs to see: only
+    # return what they could open anyway.
+    from src.security.rbac import AccessAction, check_resource_access
+
+    readable = []
+    for resource_uuid in resource_uuids:
+        decision = await check_resource_access(
+            request, db_session, current_user, resource_uuid, AccessAction.READ,
+            raise_on_deny=False,
+        )
+        if decision.allowed:
+            readable.append(resource_uuid)
+    return readable
+
+
+async def _can_manage_usergroups(
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    org_id: int,
+    db_session: AsyncSession,
+) -> bool:
+    if isinstance(current_user, (InternalUser, APITokenUser)):
+        return True
+    try:
+        await require_org_role_permission(
+            current_user.id, org_id, db_session, "usergroups", "action_update"
+        )
+    except HTTPException:
+        return False
+    return True
 
 
 async def update_usergroup_by_id(
@@ -394,7 +445,7 @@ async def update_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -435,7 +486,7 @@ async def delete_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -445,7 +496,7 @@ async def delete_usergroup_by_id(
         org_id=usergroup.org_id,
     )
 
-    # Feature usage — deleting a usergroup must DECREASE the counter, not increase it.
+    # Feature usage: deleting a usergroup must DECREASE the counter, not increase it.
     await decrease_feature_usage("usergroups", usergroup.org_id, db_session)
 
     usergroup_uuid_val = usergroup.usergroup_uuid
@@ -484,7 +535,7 @@ async def add_users_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -580,7 +631,7 @@ async def remove_users_from_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -633,7 +684,7 @@ async def add_resources_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -706,7 +757,7 @@ async def remove_resources_from_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
+    # RBAC check, scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,

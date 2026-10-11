@@ -101,7 +101,9 @@ async def test_update_user_resets_email_verified_when_email_changes(
     """Changing the email flips email_verified back to False."""
     await _set_user_email_state(db, user_id=regular_user.id, email="regular@test.com", verified=True)
 
-    with patch("src.services.users.users.rbac_check", new=AsyncMock()):
+    with patch("src.services.users.users.rbac_check", new=AsyncMock()), patch(
+        "src.services.users.users._require_reauth_for_email_change", new=AsyncMock()
+    ), patch("src.services.users.users._after_email_change", new=AsyncMock()):
         result = await update_user(
             mock_request,
             db,
@@ -163,7 +165,7 @@ async def test_update_user_cannot_self_promote_email_verified(
     body; (2) the service's ``_PROTECTED_FIELDS`` allowlist also refuses
     to apply it, as a belt-and-braces guard against future schema drift.
     """
-    # Layer 1: schema-level — pydantic drops unknown fields by default and
+    # Layer 1 (schema-level): pydantic drops unknown fields by default and
     # the ``extra`` setting on SQLModel rejects them on strict validation.
     assert "email_verified" not in UserUpdate.model_fields
     assert "email_verified_at" not in UserUpdate.model_fields

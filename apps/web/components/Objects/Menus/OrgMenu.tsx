@@ -442,7 +442,7 @@ const CopilotMenuButton = ({
   const accessToken = session?.data?.tokens?.access_token
   const [isOpen, setIsOpen] = useState(false)
 
-  // Only fetch when the dropdown is open — avoids firing on every page load
+  // Only fetch when the dropdown is open; avoids firing on every page load
   const { data: sessions } = useQuery<RAGChatSession[]>({
     queryKey: queryKeys.ai.ragSessions(orgslug),
     queryFn: () => fetchRAGChatSessions(accessToken, orgslug),

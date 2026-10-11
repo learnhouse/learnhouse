@@ -52,7 +52,7 @@ export default function NoteBlockComponent({ node, updateAttributes, selected, d
     >
       <DragHandle onMouseDown={handleDragStart} />
 
-      {/* Header — icon, label, color swatches */}
+      {/* Header: icon, label, color swatches */}
       <div className="flex items-center px-4 pt-3 pb-0.5 select-none">
         <div className="flex items-center gap-1">
           <Note size={11} weight="fill" style={{ color: colorSet.text }} />
@@ -66,7 +66,7 @@ export default function NoteBlockComponent({ node, updateAttributes, selected, d
 
         <div className="flex-1" />
 
-        {/* Color swatches — visible on hover */}
+        {/* Color swatches, visible on hover */}
         <div className="flex items-center gap-1">
           {NOTE_COLORS.map((c) => (
             <button

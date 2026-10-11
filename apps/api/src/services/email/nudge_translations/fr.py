@@ -35,41 +35,41 @@ STRINGS: dict[str, str] = {
 
     "nudge.activation.setup_checklist_d7.subject": "Quinze minutes pour une académie fonctionnelle",
     "nudge.activation.setup_checklist_d7.heading": "Une courte liste d'étapes",
-    "nudge.activation.setup_checklist_d7.body": "{org_name} attend toujours son premier cours. La liste de configuration vous guide en quelques étapes — la plupart des gens terminent en un quart d'heure.",
+    "nudge.activation.setup_checklist_d7.body": "{org_name} attend toujours son premier cours. La liste de configuration vous guide en quelques étapes : la plupart des gens terminent en un quart d'heure.",
     "nudge.activation.setup_checklist_d7.cta": "Ouvrir la liste",
 
     "nudge.activation.whats_blocking_d14.subject": "Qu'est-ce qui vous a bloqué ?",
     "nudge.activation.whats_blocking_d14.heading": "Pouvons-nous vous demander ce qui vous a arrêté ?",
-    "nudge.activation.whats_blocking_d14.body": "Vous avez créé {org_name} il y a deux semaines et n'avez pas encore ajouté de cours. Si quelque chose n'était pas clair ou manquait, nous aimerions le savoir — répondez simplement à cet e-mail, il nous parvient directement.",
+    "nudge.activation.whats_blocking_d14.body": "Vous avez créé {org_name} il y a deux semaines et n'avez pas encore ajouté de cours. Si quelque chose n'était pas clair ou manquait, nous aimerions le savoir : répondez simplement à cet e-mail, il nous parvient directement.",
 
     "nudge.activation.last_call_d30.subject": "Dernier e-mail au sujet de {org_name}",
     "nudge.activation.last_call_d30.heading": "C'est le dernier",
-    "nudge.activation.last_call_d30.body": "{org_name} est resté silencieux pendant un mois, nous arrêtons donc ces e-mails. Votre compte et tout ce qu'il contient restent en place — si vous revenez, vous retrouverez tout tel quel.",
+    "nudge.activation.last_call_d30.body": "{org_name} est resté silencieux pendant un mois, nous arrêtons donc ces e-mails. Votre compte et tout ce qu'il contient restent en place : si vous revenez, vous retrouverez tout tel quel.",
     "nudge.activation.last_call_d30.cta": "Ouvrir votre tableau de bord",
 
     "nudge.content.course_no_chapter_d1.subject": "{course_name} attend son premier chapitre",
     "nudge.content.course_no_chapter_d1.heading": "Plus qu'un chapitre",
-    "nudge.content.course_no_chapter_d1.body": "{course_name} existe mais n'a pas encore de chapitre, il n'y a donc rien à ouvrir. Les chapitres ne sont que des sections — un par thème fonctionne bien.",
+    "nudge.content.course_no_chapter_d1.body": "{course_name} existe mais n'a pas encore de chapitre, il n'y a donc rien à ouvrir. Les chapitres ne sont que des sections : un par thème fonctionne bien.",
     "nudge.content.course_no_chapter_d1.cta": "Ajouter un chapitre",
 
     "nudge.content.chapter_no_activity_d1.subject": "Ajoutez votre première leçon à {course_name}",
     "nudge.content.chapter_no_activity_d1.heading": "Les chapitres sont prêts",
-    "nudge.content.chapter_no_activity_d1.body": "{course_name} a des chapitres, mais ils sont encore vides. Une leçon peut être une page de texte, une vidéo, un quiz — ce qui convient au sujet.",
+    "nudge.content.chapter_no_activity_d1.body": "{course_name} a des chapitres, mais ils sont encore vides. Une leçon peut être une page de texte, une vidéo, un quiz, ce qui convient au sujet.",
     "nudge.content.chapter_no_activity_d1.cta": "Ajouter une leçon",
 
     "nudge.content.activity_unpublished_d2.subject": "Vos leçons dans {course_name} ne sont pas encore visibles",
     "nudge.content.activity_unpublished_d2.heading": "Les leçons sont encore masquées",
-    "nudge.content.activity_unpublished_d2.body": "Vous avez rédigé des leçons dans {course_name}, mais aucune n'est publiée : les apprenants voient un cours vide. Publier ne fige rien — vous pourrez continuer à modifier.",
+    "nudge.content.activity_unpublished_d2.body": "Vous avez rédigé des leçons dans {course_name}, mais aucune n'est publiée : les apprenants voient un cours vide. Publier ne fige rien : vous pourrez continuer à modifier.",
     "nudge.content.activity_unpublished_d2.cta": "Publier vos leçons",
 
     "nudge.content.course_draft_d3.subject": "{course_name} est encore un brouillon",
     "nudge.content.course_draft_d3.heading": "{course_name} y est presque",
-    "nudge.content.course_draft_d3.body": "Vous avez ajouté des leçons à {course_name}, mais il n'est pas publié : personne ne peut l'ouvrir. Il n'a pas besoin d'être terminé — publier le rend simplement visible, et vous pourrez continuer à le modifier.",
+    "nudge.content.course_draft_d3.body": "Vous avez ajouté des leçons à {course_name}, mais il n'est pas publié : personne ne peut l'ouvrir. Il n'a pas besoin d'être terminé : publier le rend simplement visible, et vous pourrez continuer à le modifier.",
     "nudge.content.course_draft_d3.cta": "Le publier",
 
     "nudge.content.course_draft_d10.subject": "{course_name} est un brouillon depuis un moment",
     "nudge.content.course_draft_d10.heading": "Il est sans doute prêt",
-    "nudge.content.course_draft_d10.body": "{course_name} n'est pas publié depuis plus d'une semaine. Un cours semble rarement terminé — le publier le rend visible, et vous pouvez continuer à l'améliorer pendant que des gens le lisent.",
+    "nudge.content.course_draft_d10.body": "{course_name} n'est pas publié depuis plus d'une semaine. Un cours semble rarement terminé : le publier le rend visible, et vous pouvez continuer à l'améliorer pendant que des gens le lisent.",
     "nudge.content.course_draft_d10.cta": "Le publier",
 
     "nudge.content.thin_course_d5.subject": "{course_name} mériterait un peu plus",
@@ -94,10 +94,10 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.members_no_enrollment_d3.subject": "Vos apprenants n'ont pas encore commencé",
     "nudge.audience.members_no_enrollment_d3.heading": "Ils ont rejoint mais n'ont rien ouvert",
-    "nudge.audience.members_no_enrollment_d3.body": "Des personnes ont rejoint {org_name} mais personne n'a commencé de cours. Un court message avec un lien direct suffit généralement — la plupart n'ont simplement pas trouvé l'entrée.",
+    "nudge.audience.members_no_enrollment_d3.body": "Des personnes ont rejoint {org_name} mais personne n'a commencé de cours. Un court message avec un lien direct suffit généralement : la plupart n'ont simplement pas trouvé l'entrée.",
     "nudge.audience.members_no_enrollment_d3.cta": "Voir vos membres",
 
-    "nudge.audience.share_public_page_d14.subject": "Votre page de cours est publique — voici le lien",
+    "nudge.audience.share_public_page_d14.subject": "Votre page de cours est publique : voici le lien",
     "nudge.audience.share_public_page_d14.heading": "Toute personne avec le lien peut lire",
     "nudge.audience.share_public_page_d14.body": "{course_name} est public : vous pouvez le partager partout sans que personne ait besoin d'une invitation. Le lien ci-dessous est celui à envoyer.",
     "nudge.audience.share_public_page_d14.cta": "Voir la page publique",
@@ -124,7 +124,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.monetization.upgrade_recap_d21.subject": "Ce que {next_plan} apporterait à {org_name}",
     "nudge.monetization.upgrade_recap_d21.heading": "Vous avez construit quelque chose de solide",
-    "nudge.monetization.upgrade_recap_d21.body": "{org_name} a des cours publiés et des personnes qui les lisent. Le forfait {next_plan} offre de la marge et quelques fonctionnalités absentes du forfait {plan_name} — à regarder si vous comptez grandir.",
+    "nudge.monetization.upgrade_recap_d21.body": "{org_name} a des cours publiés et des personnes qui les lisent. Le forfait {next_plan} offre de la marge et quelques fonctionnalités absentes du forfait {plan_name}, à regarder si vous comptez grandir.",
     "nudge.monetization.upgrade_recap_d21.cta": "Comparer les forfaits",
 
     "nudge.dormancy.no_login_14d.subject": "{org_name} est resté silencieux",
@@ -134,7 +134,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.dormancy.no_login_30d.subject": "Vos cours sur {org_name} sont toujours là",
     "nudge.dormancy.no_login_30d.heading": "Cela fait quelques semaines",
-    "nudge.dormancy.no_login_30d.body": "Rien n'a changé pendant votre absence — {org_name} et tout ce qu'il contient sont exactement là où vous les avez laissés. Reprendre ne prend qu'un clic.",
+    "nudge.dormancy.no_login_30d.body": "Rien n'a changé pendant votre absence : {org_name} et tout ce qu'il contient sont exactement là où vous les avez laissés. Reprendre ne prend qu'un clic.",
     "nudge.dormancy.no_login_30d.cta": "Ouvrir votre tableau de bord",
 
     "nudge.dormancy.no_login_60d.subject": "Dernier message au sujet de {org_name}",
@@ -149,7 +149,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_course_published.subject": "{course_name} est en ligne",
     "nudge.milestone.first_course_published.heading": "Vous avez publié votre premier cours",
-    "nudge.milestone.first_course_published.body": "{course_name} est en ligne et lisible. La suite qui change tout, c'est d'avoir quelqu'un pour le lire — même une ou deux personnes pour commencer.",
+    "nudge.milestone.first_course_published.body": "{course_name} est en ligne et lisible. La suite qui change tout, c'est d'avoir quelqu'un pour le lire, même une ou deux personnes pour commencer.",
     "nudge.milestone.first_course_published.cta": "Inviter vos premiers apprenants",
 
     "nudge.milestone.first_learner_enrolled.subject": "Quelqu'un a commencé {course_name}",
@@ -159,7 +159,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_completion.subject": "Quelqu'un a terminé un cours dans {org_name}",
     "nudge.milestone.first_completion.heading": "Première réussite",
-    "nudge.milestone.first_completion.body": "Un apprenant a terminé un cours de {org_name} du début à la fin. Pour le marquer comme il se doit, vous pouvez ajouter un certificat — ou commencer à préparer la suite.",
+    "nudge.milestone.first_completion.body": "Un apprenant a terminé un cours de {org_name} du début à la fin. Pour le marquer comme il se doit, vous pouvez ajouter un certificat, ou commencer à préparer la suite.",
     "nudge.milestone.first_completion.cta": "Ouvrir votre tableau de bord",
 
     # -- reactivation ------------------------------------------------------
@@ -173,7 +173,7 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "Voir les nouveautés",
     "nudge.reactivation.need_a_hand.subject": "Besoin d'aide pour revenir sur {org_name} ?",
     "nudge.reactivation.need_a_hand.heading": "Quelque chose vous a bloqué ?",
-    "nudge.reactivation.need_a_hand.body": "S'il y avait une raison à l'arrêt de {org_name} — quelque chose de confus, de manquant, ou simplement le manque de temps — nous aimerions vraiment le savoir. Répondez à cet e-mail, il nous parvient directement.",
+    "nudge.reactivation.need_a_hand.body": "S'il y avait une raison à l'arrêt de {org_name} (quelque chose de confus, de manquant, ou simplement le manque de temps), nous aimerions vraiment le savoir. Répondez à cet e-mail, il nous parvient directement.",
     "nudge.reactivation.closing.subject": "Dernier message au sujet de {org_name}",
     "nudge.reactivation.closing.heading": "Nous nous arrêtons là",
     "nudge.reactivation.closing.body": "C'est le dernier de ces e-mails. {org_name} reste exactement en l'état et rien n'expire : si vous souhaitez revenir un jour, tout vous attendra.",

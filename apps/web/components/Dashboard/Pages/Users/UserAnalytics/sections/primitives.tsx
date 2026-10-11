@@ -62,7 +62,7 @@ export function StatusBadge({ status }: { status: string }) {
     NOT_SUBMITTED: 'bg-gray-100 text-gray-600',
   }
   const key = status?.replace('STATUS_', '').toLowerCase()
-  const label = key ? t(`${P}.status.${key}`, { defaultValue: key.replace('_', ' ') }) : '—'
+  const label = key ? t(`${P}.status.${key}`, { defaultValue: key.replace('_', ' ') }) : 'n/a'
   return (
     <span className={`text-xs font-semibold rounded-full px-2 py-0.5 capitalize ${color[status] || 'bg-gray-100 text-gray-600'}`}>
       {label}

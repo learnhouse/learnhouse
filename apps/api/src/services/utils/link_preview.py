@@ -12,6 +12,8 @@ from src.services.utils.ssrf_guard import (
     resolve_and_validate_url,
 )
 
+_BLOCKED_DETAIL = "This URL cannot be previewed"
+
 _MAX_RESPONSE_SIZE = 5 * 1024 * 1024  # 5MB
 _MAX_REDIRECTS = 5
 # httpx timeouts are per socket operation: a slow-drip chunked body satisfies
@@ -77,7 +79,7 @@ async def _fetch_html(url: str) -> Optional[str]:
     """Fetch ``url`` and return its HTML, or ``None`` when there is nothing to parse.
 
     Redirects are followed manually so every hop is SSRF-validated, and the body
-    is streamed under a hard byte cap — status, Content-Type and Content-Length
+    is streamed under a hard byte cap; status, Content-Type and Content-Length
     are all decided from the headers, before a single body byte is consumed.
     """
     async with httpx.AsyncClient(
@@ -94,15 +96,17 @@ async def _fetch_html(url: str) -> Optional[str]:
             # away from the request it protects.
             try:
                 validated_ips = resolve_and_validate_url(current_url)
-            except SSRFBlockedError as exc:
-                raise HTTPException(status_code=400, detail=str(exc))
+            except SSRFBlockedError:
+                # The guard's message names the resolved address; echoing it
+                # would turn this endpoint into an internal DNS oracle.
+                raise HTTPException(status_code=400, detail=_BLOCKED_DETAIL)
 
             try:
                 async with client.stream("GET", current_url) as response:
                     try:
                         assert_connected_peer_allowed(response, validated_ips)
-                    except SSRFBlockedError as exc:
-                        raise HTTPException(status_code=400, detail=str(exc))
+                    except SSRFBlockedError:
+                        raise HTTPException(status_code=400, detail=_BLOCKED_DETAIL)
 
                     if response.is_redirect:
                         redirect_url = (

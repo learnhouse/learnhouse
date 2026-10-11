@@ -354,7 +354,13 @@ class TestCourseChapters:
                     chapter_uuid=chapter.chapter_uuid,
                     id=chapter.id,
                     name=chapter.name,
-                    activities=[SimpleNamespace(activity_uuid=activity.activity_uuid)],
+                    activities=[SimpleNamespace(
+                        activity_uuid=activity.activity_uuid,
+                        id=activity.id,
+                        name=activity.name,
+                        activity_type=activity.activity_type,
+                        content={},
+                    )],
                 )
             ],
         ):

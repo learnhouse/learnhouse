@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react'
 import ErrorActions from './ErrorActions'
 
 interface ErrorUIProps {
-  /** The actual error — when given we classify it for a meaningful message. */
+  /** The actual error; when given we classify it for a meaningful message. */
   error?: unknown
   /** Override the headline (back-compat with old `<ErrorUI message=.. />`). */
   message?: string
@@ -27,7 +27,7 @@ interface ErrorUIProps {
 /**
  * The shared error surface. Given a raw `error` it shows a SPECIFIC, reassuring
  * message (from the error catalog) plus the recovery actions that actually help
- * — including a sign-out escape hatch and a Sentry "report this problem" button.
+ * (including a sign-out escape hatch and a Sentry "report this problem" button).
  * Collapsible technical details carry the real cause + ids for support.
  */
 function ErrorUI({
@@ -53,7 +53,7 @@ function ErrorUI({
   const description =
     submessage ||
     classified?.category.description ||
-    "We ran into an error. It's been logged automatically — retrying or heading home usually helps."
+    "We ran into an error. It's been logged automatically; retrying or heading home usually helps."
 
   const actions: ResolutionKind[] =
     resolutions ||

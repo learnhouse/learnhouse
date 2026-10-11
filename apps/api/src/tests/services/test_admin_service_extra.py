@@ -48,6 +48,19 @@ from src.services.admin.admin import (
 )
 
 
+# Admin API endpoints enforce the token's rights buckets; these fixtures exercise
+# the endpoints' own logic, so the token holds every bucket they check.
+FULL_ADMIN_API_RIGHTS = {
+    bucket: {
+        "action_create": True,
+        "action_read": True,
+        "action_update": True,
+        "action_delete": True,
+    }
+    for bucket in ("users", "roles", "courses", "certifications", "usergroups")
+}
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -59,7 +72,7 @@ def _make_token_user(org_id: int) -> APITokenUser:
         user_uuid="api_token_user",
         username="api_token_user",
         org_id=org_id,
-        rights={},
+        rights=FULL_ADMIN_API_RIGHTS,
         token_name="test-token",
         created_by_user_id=1,
     )
@@ -161,7 +174,7 @@ async def _create_trail_run(db, user: User, course: Course, org) -> TrailRun:
 
 
 # ---------------------------------------------------------------------------
-# Line 899 — _validate_magic_link_redirect whitespace-only
+# Line 899: _validate_magic_link_redirect whitespace-only
 # ---------------------------------------------------------------------------
 
 
@@ -198,7 +211,7 @@ def test_validate_magic_link_redirect_rejects_open_redirects(redirect_to):
 
 
 # ---------------------------------------------------------------------------
-# Lines 986, 995 — consume_magic_link_token
+# Lines 986, 995: consume_magic_link_token
 # ---------------------------------------------------------------------------
 
 
@@ -229,7 +242,7 @@ async def test_consume_magic_link_token_ghost_user_raises_410(db):
 
 
 # ---------------------------------------------------------------------------
-# Line 1125 — list_course_enrollments course not found
+# Line 1125: list_course_enrollments course not found
 # ---------------------------------------------------------------------------
 
 
@@ -243,7 +256,7 @@ async def test_list_course_enrollments_course_not_found(db, org):
 
 
 # ---------------------------------------------------------------------------
-# Line 1227 — award_certificate course not found
+# Line 1227: award_certificate course not found
 # ---------------------------------------------------------------------------
 
 
@@ -261,7 +274,7 @@ async def test_award_certificate_course_not_found(db, org, user_role):
 
 
 # ---------------------------------------------------------------------------
-# Lines 1276, 1282 — revoke_certificate boundary checks
+# Lines 1276, 1282: revoke_certificate boundary checks
 # ---------------------------------------------------------------------------
 
 
@@ -325,7 +338,7 @@ async def test_revoke_certificate_course_wrong_org_raises_404(db, org, course, u
 
 
 # ---------------------------------------------------------------------------
-# Lines 847-848, 852-853 — remove_user_from_org_admin exception swallowing
+# Lines 847-848, 852-853: remove_user_from_org_admin exception swallowing
 # ---------------------------------------------------------------------------
 
 
@@ -377,7 +390,7 @@ async def test_remove_user_from_org_decrease_feature_usage_raises_is_swallowed(d
 
 
 # ---------------------------------------------------------------------------
-# Lines 1509-1510 — update_user_profile _invalidate_session_cache swallowed
+# Lines 1509-1510: update_user_profile _invalidate_session_cache swallowed
 # ---------------------------------------------------------------------------
 
 
@@ -395,7 +408,7 @@ async def test_update_user_profile_invalidate_cache_raises_is_swallowed(db, org,
 
 
 # ---------------------------------------------------------------------------
-# Line 1529 — change_user_role role belongs to wrong org
+# Line 1529: change_user_role role belongs to wrong org
 # ---------------------------------------------------------------------------
 
 
@@ -427,7 +440,7 @@ async def test_change_user_role_role_wrong_org_raises_403(db, org, user_role):
 
 
 # ---------------------------------------------------------------------------
-# Lines 1561-1562 — change_user_role _invalidate_session_cache swallowed
+# Lines 1561-1562: change_user_role _invalidate_session_cache swallowed
 # ---------------------------------------------------------------------------
 
 
@@ -441,11 +454,9 @@ async def test_change_user_role_invalidate_cache_raises_is_swallowed(db, org, ad
     creator = await _create_user(db, user_id=1, username="creator1", email="creator1@test.com")
     await _add_user_to_org(db, creator, org, role_id=admin_role.id)
 
-    # Need at least two admins so we can demote without triggering last-admin guard
-    admin1 = await _create_user(db, user_id=81, username="admin81", email="admin81@test.com")
-    await _add_user_to_org(db, admin1, org, role_id=admin_role.id)
-    admin2 = await _create_user(db, user_id=82, username="admin82", email="admin82@test.com")
-    await _add_user_to_org(db, admin2, org, role_id=admin_role.id)
+    # Tokens may not change an Admin's role, so the target is a plain member.
+    admin1 = await _create_user(db, user_id=81, username="member81", email="member81@test.com")
+    await _add_user_to_org(db, admin1, org, role_id=user_role.id)
 
     with patch("src.routers.users._invalidate_session_cache", side_effect=RuntimeError("cache fail")):
         result = await change_user_role(token_user, admin1.id, user_role.id, db)
@@ -455,7 +466,7 @@ async def test_change_user_role_invalidate_cache_raises_is_swallowed(db, org, ad
 
 
 # ---------------------------------------------------------------------------
-# Line 1836 — bulk_unenroll_users user with no TrailRun → not_enrolled
+# Line 1836: bulk_unenroll_users user with no TrailRun → not_enrolled
 # ---------------------------------------------------------------------------
 
 
@@ -466,7 +477,7 @@ async def test_bulk_unenroll_users_user_not_enrolled_goes_to_not_enrolled(db, or
     user = await _create_user(db, user_id=90, username="unenroll90", email="unenroll90@test.com")
     await _add_user_to_org(db, user, org, role_id=user_role.id)
 
-    # Do NOT create a TrailRun for this user — they are not enrolled
+    # Do NOT create a TrailRun for this user; they are not enrolled
     result = await bulk_unenroll_users(token_user, course.course_uuid, [user.id], db)
 
     assert user.id in result["not_enrolled"]
@@ -474,7 +485,7 @@ async def test_bulk_unenroll_users_user_not_enrolled_goes_to_not_enrolled(db, or
 
 
 # ---------------------------------------------------------------------------
-# Lines 1979-1980 — anonymize_user _invalidate_session_cache swallowed
+# Lines 1979-1980: anonymize_user _invalidate_session_cache swallowed
 # ---------------------------------------------------------------------------
 
 
@@ -494,7 +505,7 @@ async def test_anonymize_user_invalidate_cache_raises_is_swallowed(db, org, user
 
 
 # ---------------------------------------------------------------------------
-# Line 2058 — get_course_analytics certification + CertificateUser count > 0
+# Line 2058: get_course_analytics certification + CertificateUser count > 0
 # ---------------------------------------------------------------------------
 
 
@@ -515,7 +526,7 @@ async def test_get_course_analytics_with_certification_and_cert_users(db, org, c
 
 
 # ---------------------------------------------------------------------------
-# Line 827 — remove_user_from_org_admin: user passes _get_user_in_org but
+# Line 827 (remove_user_from_org_admin): user passes _get_user_in_org but
 # no UserOrganization row exists (second membership query returns None).
 # We patch _get_user_in_org to bypass the first check.
 # ---------------------------------------------------------------------------
@@ -536,7 +547,7 @@ async def test_remove_user_from_org_admin_no_membership_row_raises_404(db, org):
 
 
 # ---------------------------------------------------------------------------
-# Line 1538 — change_user_role: user passes _get_user_in_org but no
+# Line 1538 (change_user_role): user passes _get_user_in_org but no
 # UserOrganization row exists (second membership query returns None).
 # ---------------------------------------------------------------------------
 
@@ -556,7 +567,7 @@ async def test_change_user_role_no_membership_row_raises_404(db, org, user_role)
 
 
 # ---------------------------------------------------------------------------
-# Line 1836 — bulk_unenroll_users: enrolled user with TrailSteps gets steps
+# Line 1836 (bulk_unenroll_users): enrolled user with TrailSteps gets steps
 # deleted (the db_session.delete(step) branch).
 # ---------------------------------------------------------------------------
 
@@ -633,7 +644,7 @@ async def test_complete_course_marks_trailrun_completed(db, org, course, user_ro
 
     await complete_course(mock_request, token_user, user.id, course.course_uuid, db)
 
-    # Status must flip regardless of whether a certificate is configured — the
+    # Status must flip regardless of whether a certificate is configured; the
     # enrollment/analytics count reads from TrailRun.status, not the cert.
     trailrun = (await db.execute(
         sql_select(TrailRun).where(TrailRun.course_id == course.id, TrailRun.user_id == user.id)

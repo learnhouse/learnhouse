@@ -42,7 +42,7 @@ export function OrgProvider({
   const isOrgActive = useMemo(() => (org?.config?.config?.active ?? org?.config?.config?.general?.enabled) !== false, [org])
 
   // Determine membership from session roles (available immediately, no extra API call).
-  // Session roles contain ALL orgs the user belongs to — no pagination limit.
+  // Session roles contain ALL orgs the user belongs to, with no pagination limit.
   const isUserPartOfTheOrg = useMemo(() => {
     if (session.status !== 'authenticated') return true
     if (!org?.id) return true // Don't show guest banner while org is loading

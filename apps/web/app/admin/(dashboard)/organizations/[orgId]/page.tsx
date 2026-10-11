@@ -63,7 +63,7 @@ const ALL_TABS = [
 type TabId = (typeof ALL_TABS)[number]['id']
 
 function getTabsForMode(mode: string) {
-  // In non-SaaS modes (EE/OSS) plans don't apply — hide the Plan tab.
+  // In non-SaaS modes (EE/OSS) plans don't apply, so hide the Plan tab.
   return mode === 'saas' ? ALL_TABS : ALL_TABS.filter((t) => t.id !== 'plan')
 }
 
@@ -620,7 +620,7 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-white/40">
-                      {user.creation_date ? new Date(user.creation_date).toLocaleDateString() : '—'}
+                      {user.creation_date ? new Date(user.creation_date).toLocaleDateString() : 'n/a'}
                     </span>
                   </td>
                 </tr>
@@ -1121,7 +1121,7 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
   }
 
   const fmt = (v: number | string | undefined) =>
-    v === undefined ? '—' : typeof v === 'number' ? v.toLocaleString() : v
+    v === undefined ? 'n/a' : typeof v === 'number' ? v.toLocaleString() : v
 
   return (
     <div>
@@ -1198,7 +1198,7 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
 }
 
 // ---------------------------------------------------------------------------
-// Features Tab — per-feature admin toggles (writes to config.admin_toggles)
+// Features Tab: per-feature admin toggles (writes to config.admin_toggles)
 // ---------------------------------------------------------------------------
 
 type FeatureToggle = { disabled: boolean }
@@ -1387,7 +1387,7 @@ function FeaturesTab({
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-white/90 font-medium">{label}</p>
-                      {/* "Available in the org's plan" — separate from the on/off
+                      {/* "Available in the org's plan" is separate from the on/off
                           toggle. On a paid plan these stay enabled regardless. */}
                       {mode === 'saas' && resolvedFeatures[key]?.available && (
                         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-violet-400/10 text-violet-300 border border-violet-400/20">

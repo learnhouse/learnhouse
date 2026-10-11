@@ -1,8 +1,8 @@
 name: Lockfiles
 
 # Manifests are the source of truth; lockfiles are derived from them. When the
-# two disagree, every frozen install downstream fails — the Docker build, the
-# web lint, the API tests — with an error that says nothing about the cause:
+# two disagree, every frozen install downstream fails (the Docker build, the
+# web lint, the API tests) with an error that says nothing about the cause:
 #
 #   error: lockfile had changes, but lockfile is frozen
 #
@@ -38,7 +38,7 @@ on:
 permissions:
   contents: read
 
-# See api-lint.yaml — one live run per PR, dev runs always finish.
+# See api-lint.yaml: one live run per PR, dev runs always finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           # The head commit, not the merge commit, so the regenerated
-          # lockfiles apply to the branch. A SHA rather than the branch name —
+          # lockfiles apply to the branch. A SHA rather than the branch name:
           # a ref taken from the event payload is attacker-controlled.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           # A commit pushed with GITHUB_TOKEN does not start a new CI run, so
@@ -104,7 +104,7 @@ jobs:
         id: push
         if: steps.check.outcome == 'failure' && env.AUTOFIX == 'true'
         env:
-          # Never interpolated into the script body — a branch name is
+          # Never interpolated into the script body, since a branch name is
           # attacker-controlled text.
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           HAS_PAT: ${{ secrets.LOCKFILE_SYNC_TOKEN != '' }}
@@ -113,7 +113,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A -- '*package.json' '*bun.lock' apps/api/uv.lock
           if git diff --cached --quiet; then
-            echo "Nothing to commit — the drift is outside the lockfiles."
+            echo "Nothing to commit: the drift is outside the lockfiles."
             exit 1
           fi
           git commit -m "chore(deps): regenerate lockfiles"
@@ -126,7 +126,7 @@ jobs:
             if [ "$HAS_PAT" != "true" ]; then
               echo
               echo "Pushed with \`GITHUB_TOKEN\`, so the other checks will not"
-              echo "re-run on their own — re-run them to see the new commit."
+              echo "re-run on their own; re-run them to see the new commit."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

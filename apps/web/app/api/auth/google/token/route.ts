@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requestOriginHost, verifyOAuthState } from '@/lib/auth/oauth-state'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { code, redirect_uri } = body
+    const { code, redirect_uri, state } = body
 
-    if (!code || !redirect_uri) {
+    if (!code || !redirect_uri || !state) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 }
@@ -23,6 +24,20 @@ export async function POST(request: NextRequest) {
       }
     } catch {
       return NextResponse.json({ error: 'Invalid redirect_uri' }, { status: 400 })
+    }
+
+    // Only redeem codes for flows we started, from the origin that started
+    // them: the custom domain in the signed state, else the platform callback
+    // host (redirect_uri, which Google pins to the registered value).
+    const statePayload = verifyOAuthState(state)
+    if (!statePayload) {
+      return NextResponse.json({ error: 'Invalid or expired state' }, { status: 400 })
+    }
+    const expectedHost = (
+      statePayload.returnOrigin ? new URL(statePayload.returnOrigin) : new URL(redirect_uri)
+    ).host.toLowerCase()
+    if (requestOriginHost(request) !== expectedHost) {
+      return NextResponse.json({ error: 'Origin mismatch' }, { status: 403 })
     }
 
     const clientId = process.env.LEARNHOUSE_GOOGLE_CLIENT_ID
@@ -61,17 +76,17 @@ export async function POST(request: NextRequest) {
 
     const tokenData = await tokenResponse.json()
 
+    // The callback only needs a short-lived access token to read the user's
+    // profile; never hand out Google refresh or ID tokens.
     return NextResponse.json({
       access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
       expires_in: tokenData.expires_in,
       token_type: tokenData.token_type,
-      id_token: tokenData.id_token,
     })
   } catch (error: any) {
     console.error('Google token exchange error:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

@@ -87,7 +87,7 @@ const isValidUrl = (url: string) => {
   }
 };
 
-// Module-level so React keeps a stable component identity — defining this
+// Module-level so React keeps a stable component identity; defining this
 // inside EditCourseSEO would remount the counter on every keystroke.
 const CharacterCounter = ({ current, max }: { current: number, max: number }) => (
   <span className={`text-xs ${current > max ? 'text-red-500' : 'text-gray-400'}`}>

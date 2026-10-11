@@ -420,7 +420,7 @@ class TestSessionOnlyEndpointsStillBlockTokens:
     async def test_retry_blocks_token(
         self, mock_request, db, org, course, chapter, activity
     ):
-        # Retry stays session-only — even a full-rights token is rejected.
+        # Retry stays session-only; even a full-rights token is rejected.
         await _make_assignment(db, org, course, chapter, activity)
         token = _token(
             assignments=_assignments_rights(create=True, read=True, update=True, delete=True)

@@ -372,7 +372,7 @@
     "image_title_forgot": "Đặt lại mật khẩu của bạn.",
     "image_subtitle_forgot": "Chúng tôi sẽ giúp bạn nhanh chóng truy cập lại tài khoản.",
     "image_title_login": "Chào mừng trở lại với LearnHouse.",
-    "image_subtitle_login": "Tiếp tục từ nơi bạn dừng lại — các khóa học, học viên và công cụ của bạn đang chờ.",
+    "image_subtitle_login": "Tiếp tục từ nơi bạn dừng lại: các khóa học, học viên và công cụ của bạn đang chờ.",
     "image_title_reset": "Sắp xong rồi.",
     "image_subtitle_reset": "Tạo một mật khẩu mạnh để giữ tài khoản của bạn an toàn.",
     "image_title_signup": "Bắt đầu giảng dạy cùng LearnHouse.",
@@ -638,7 +638,7 @@
         "plan_generated": "Kế hoạch đã cập nhật",
         "plan_generated_hint": "Kiểm tra tab Kế hoạch để xem lại và chỉnh sửa.",
         "describe_course": "Mô tả khóa học của bạn",
-        "describe_course_hint": "Sử dụng khung chat bên phải để mô tả khóa học bạn muốn — chủ đề, đối tượng và mục tiêu.",
+        "describe_course_hint": "Sử dụng khung chat bên phải để mô tả khóa học bạn muốn: chủ đề, đối tượng và mục tiêu.",
         "generating_plan": "Đang tạo kế hoạch khóa học...",
         "chapters": "Chương",
         "activities": "hoạt động",
@@ -1000,7 +1000,7 @@
     "link_copied": "Đã sao chép liên kết!",
     "share": "Chia sẻ",
     "autosave_blocked": "Chưa thể lưu",
-    "autosave_retry": "Không thể lưu — đang thử lại…",
+    "autosave_retry": "Không thể lưu, đang thử lại…",
     "autosave_unsaved": "Thay đổi chưa lưu",
     "autosaved": "Đã lưu",
     "autosaving": "Đang lưu…",
@@ -1053,8 +1053,8 @@
     "retry_assignment_title": "Thử làm bài tập này lại?",
     "retry_assignment_confirm": "Bài nộp và câu trả lời hiện tại của bạn sẽ được đặt lại để bạn có thể bắt đầu lại. Điểm số trước đây của bạn sẽ được thay thế khi bạn gửi lại.",
     "retry_assignment_remaining": "Bạn có {{remaining}} lần thử{{plural}} còn lại sau lần này.",
-    "retry_assignment_last": "Đây là lần thử cuối cùng của bạn — hãy làm cho nó có ý nghĩa.",
-    "retry_assignment_success": "Công việc của bạn đã được đặt lại — hãy thử lại.",
+    "retry_assignment_last": "Đây là lần thử cuối cùng của bạn; hãy làm cho nó có ý nghĩa.",
+    "retry_assignment_success": "Công việc của bạn đã được đặt lại; hãy thử lại.",
     "retry_assignment_failed": "Không thể đặt lại bài nộp của bạn. Vui lòng thử lại.",
     "retry_no_attempts_left": "Không còn lần thử nào",
     "no_task_submission_to_grade": "Học viên này chưa nộp tệp cho bài tập này.",
@@ -1175,7 +1175,7 @@
       "confirm_label": "Nhập {{username}} để xác nhận",
       "deleting": "Đang xóa…",
       "zone_subtitle": "Xóa vĩnh viễn tài khoản của bạn. Thao tác này không thể hoàn tác.",
-      "zone_body": "Thao tác này sẽ xóa tài khoản và quyền truy cập của bạn. Mọi tổ chức mà bạn là quản trị viên duy nhất — cùng toàn bộ khóa học và nội dung của tổ chức đó — cũng sẽ bị xóa. Các tổ chức có quản trị viên khác sẽ được giữ lại; bạn chỉ bị xóa khỏi các tổ chức đó."
+      "zone_body": "Thao tác này sẽ xóa tài khoản và quyền truy cập của bạn. Mọi tổ chức mà bạn là quản trị viên duy nhất (cùng toàn bộ khóa học và nội dung của tổ chức đó) cũng sẽ bị xóa. Các tổ chức có quản trị viên khác sẽ được giữ lại; bạn chỉ bị xóa khỏi các tổ chức đó."
     }
   },
   "user": {
@@ -3631,9 +3631,9 @@
             "auth_required_submit": "Yêu cầu xác thực. Đăng nhập để nộp nhiệm vụ.",
             "hint_optional": "Gợi ý (tùy chọn)",
             "paste_blocked": "Dán bị vô hiệu hóa cho bài tập này",
-            "paste_blocked_hint": "Dán bị vô hiệu hóa — nhập câu trả lời trực tiếp.",
-            "upload_locked_graded": "Bài nộp này đã được chấm — bạn không thể thay đổi tệp nữa.",
-            "upload_locked_submitted": "Bạn đã nộp bài tập này — bạn không thể thay đổi tệp nữa."
+            "paste_blocked_hint": "Dán bị vô hiệu hóa; nhập câu trả lời trực tiếp.",
+            "upload_locked_graded": "Bài nộp này đã được chấm; bạn không thể thay đổi tệp nữa.",
+            "upload_locked_submitted": "Bạn đã nộp bài tập này; bạn không thể thay đổi tệp nữa."
           },
           "code": {
             "student_behavior_label": "Hành vi học sinh",
@@ -3650,9 +3650,9 @@
             "show_solution_label": "Tiết lộ giải pháp sau khi nộp",
             "show_solution_description": "Sau khi học sinh đã lưu công việc, hiển thị giải pháp tham khảo của giáo viên.",
             "reference_solution_label": "Giải pháp tham khảo",
-            "locked_graded_hint": "Bài nộp này đã được chấm — mã của bạn ở chế độ chỉ đọc.",
-            "locked_submitted_hint": "Bạn đã nộp bài tập này — mã của bạn ở chế độ chỉ đọc.",
-            "no_runnable_tests": "Bài tập này không có bài kiểm tra để chạy — mã của bạn sẽ được kiểm tra khi chấm điểm."
+            "locked_graded_hint": "Bài nộp này đã được chấm; mã của bạn ở chế độ chỉ đọc.",
+            "locked_submitted_hint": "Bạn đã nộp bài tập này; mã của bạn ở chế độ chỉ đọc.",
+            "no_runnable_tests": "Bài tập này không có bài kiểm tra để chạy; mã của bạn sẽ được kiểm tra khi chấm điểm."
           },
           "short_answer": {
             "prompt_label": "Nội dung câu hỏi",
@@ -3669,13 +3669,13 @@
               "regex": "Biểu thức chính quy"
             },
             "explanation_label": "Giải thích (hiện khi trả lời đúng)",
-            "explanation_placeholder": "Tùy chọn — giải thích tại sao câu trả lời đúng",
+            "explanation_placeholder": "Tùy chọn: giải thích tại sao câu trả lời đúng",
             "your_answer_placeholder": "Nhập câu trả lời...",
             "student_answer_label": "Câu trả lời học sinh",
             "accepted_answers_label": "Câu trả lời được chấp nhận",
             "no_answer": "Không có câu trả lời được gửi",
             "correct": "Đúng",
-            "incorrect": "Chưa đúng — thử lại"
+            "incorrect": "Chưa đúng, thử lại"
           },
           "number_answer": {
             "prompt_label": "Nội dung câu hỏi",
@@ -3686,14 +3686,14 @@
             "unit_placeholder": "m/s², kg, °C...",
             "unit_hint": "Hiển thị bên cạnh trường câu trả lời. Không bắt buộc.",
             "explanation_label": "Giải thích (hiện khi trả lời đúng)",
-            "explanation_placeholder": "Tùy chọn — giải thích cách có được câu trả lời",
+            "explanation_placeholder": "Tùy chọn: giải thích cách có được câu trả lời",
             "preview_label": "Chấp nhận",
             "your_answer_placeholder": "Nhập một số...",
             "student_answer_label": "Câu trả lời học sinh",
             "accepted_range_label": "Phạm vi chấp nhận",
             "no_answer": "Không có câu trả lời được gửi",
             "correct": "Đúng",
-            "incorrect": "Chưa đúng — thử lại"
+            "incorrect": "Chưa đúng, thử lại"
           }
         },
         "generate_ai": "Tạo bài tập bằng AI",
@@ -3802,7 +3802,7 @@
         },
         "tasks": {
           "title": "Hiệu suất theo bài",
-          "subtitle": "Điểm trung bình mỗi bài — cột thấp cho biết học viên đang gặp khó khăn ở đâu",
+          "subtitle": "Điểm trung bình mỗi bài; cột thấp cho biết học viên đang gặp khó khăn ở đâu",
           "empty": "Hiệu suất theo bài sẽ xuất hiện sau khi có điểm",
           "avg_grade": "Điểm trung bình",
           "attempts": "lần làm"
@@ -3814,7 +3814,7 @@
         },
         "attention": {
           "title": "Có thể cần hỗ trợ",
-          "subtitle": "Học viên không đạt — hãy cân nhắc liên hệ",
+          "subtitle": "Học viên không đạt; hãy cân nhắc liên hệ",
           "empty": "Tất cả người đã chấm đều đạt. Tuyệt vời!"
         }
       },
@@ -3856,7 +3856,7 @@
             "auto_grading_disabled_file": "Chấm điểm tự động không khả dụng vì bài tập này có nhiệm vụ nộp tệp cần sự xem xét của con người.",
             "grading_type_hint": "Cách điểm được hiển thị cho học sinh",
             "grading_options_hint": "Hành vi khi nộp",
-            "show_correct_answers_description": "Sau khi bài nộp được chấm điểm, hiển thị cho học viên các đáp án đúng bên cạnh đáp án của họ — bao gồm các lựa chọn trắc nghiệm đúng, đáp án ngắn hoặc số mong đợi, và các ô điền chính xác.",
+            "show_correct_answers_description": "Sau khi bài nộp được chấm điểm, hiển thị cho học viên các đáp án đúng bên cạnh đáp án của họ, bao gồm các lựa chọn trắc nghiệm đúng, đáp án ngắn hoặc số mong đợi, và các ô điền chính xác.",
             "show_correct_answers_label": "Hiển thị đáp án đúng sau khi chấm điểm",
             "allow_retries_label": "Cho phép thử lại",
             "allow_retries_description": "Cho phép học sinh đặt lại và thử lại bài tập sau khi được chấm điểm. Mỗi lần thử lại sẽ xóa câu trả lời trước đó của họ và được tính là một lần thử mới.",
@@ -4573,7 +4573,7 @@
         "avg_rate": "Tỷ lệ TB",
         "needs_attention": "Cần chú ý",
         "total_samples": "Tổng mẫu",
-        "more_expand": "+{{count}} nữa — nhấp để mở rộng",
+        "more_expand": "+{{count}} nữa, nhấp để mở rộng",
         "activities_count": "{{count}} hoạt động",
         "pct_of_total": "% tổng",
         "bar_width_hint": "Độ rộng thanh = lượt xem tương đối",
@@ -4693,7 +4693,7 @@
       },
       "activity_dropoff": {
         "title": "Điểm bỏ ngang",
-        "subtitle": "Nơi học viên dừng tiến độ — hoạt động hoàn thành cuối cùng",
+        "subtitle": "Nơi học viên dừng tiến độ: hoạt động hoàn thành cuối cùng",
         "total_dropoffs": "Tổng bỏ ngang",
         "dropoff_points": "Điểm bỏ ngang"
       },
@@ -4727,7 +4727,7 @@
         "avg_between": "TB {{unit}} giữa các hoàn thành",
         "transitions_tracked": "chuyển tiếp được theo dõi",
         "raw_hours_avg": "TB giờ thô",
-        "description": "Đo tốc độ học viên tiến từ hoạt động này sang hoạt động khác. Càng thấp càng tốt — nghĩa là học viên đang tiến nhanh hơn qua nội dung."
+        "description": "Đo tốc độ học viên tiến từ hoạt động này sang hoạt động khác. Càng thấp càng tốt; nghĩa là học viên đang tiến nhanh hơn qua nội dung."
       },
       "time_to_completion": {
         "title": "Thời gian hoàn thành",
@@ -4831,7 +4831,7 @@
       },
       "add_content": {
         "title": "Một bài học đáng để học viên ghé thăm",
-        "description": "Thêm video, trang nội dung hoặc bài kiểm tra — cho học viên một lý do thực sự để đăng ký.",
+        "description": "Thêm video, trang nội dung hoặc bài kiểm tra; cho học viên một lý do thực sự để đăng ký.",
         "action": "Thêm nội dung"
       },
       "brand_school": {
@@ -4841,17 +4841,17 @@
       },
       "share_grow": {
         "title": "Cánh cửa chính của ngôi trường",
-        "description": "Đưa trường lên mạng và lấy liên kết chia sẻ — nơi bạn sẽ gửi cho mọi học viên.",
+        "description": "Đưa trường lên mạng và lấy liên kết chia sẻ: nơi bạn sẽ gửi cho mọi học viên.",
         "action": "Mở trường của tôi"
       },
       "invite_learners": {
         "title": "Chào đón học viên đầu tiên của bạn",
-        "description": "Chia sẻ liên kết tham gia hoặc mời mọi người — đưa học viên đầu tiên bước qua cửa.",
+        "description": "Chia sẻ liên kết tham gia hoặc mời mọi người; đưa học viên đầu tiên bước qua cửa.",
         "action": "Mời học viên"
       },
       "build_community": {
         "title": "Giữ chân học viên quay lại",
-        "description": "Mở một không gian cộng đồng để học viên luôn năng động — và rủ thêm bạn bè.",
+        "description": "Mở một không gian cộng đồng để học viên luôn năng động và rủ thêm bạn bè.",
         "action": "Mở cộng đồng"
       }
     },
@@ -5205,7 +5205,7 @@
         "goal": "Bắt đầu kiếm tiền từ khóa học và xây dựng cộng đồng học tập.",
         "highlights": {
           "courses": "Khóa học không giới hạn",
-          "courses_desc": "Tạo bao nhiêu khóa học tùy thích — không giới hạn chương trình giảng dạy.",
+          "courses_desc": "Tạo bao nhiêu khóa học tùy thích; không giới hạn chương trình giảng dạy.",
           "members": "Lên đến 500 thành viên",
           "members_desc": "Phát triển đội ngũ người học và quản lý tại một nơi.",
           "payments": "Chấp nhận thanh toán",
@@ -5263,7 +5263,7 @@
       "trigger_authenticated_title": "Truy cập: chỉ người đã đăng nhập",
       "trigger_restricted_title": "Truy cập: các nhóm người dùng cụ thể",
       "usergroups_header": "Nhóm người dùng",
-      "usergroups_none_assigned": "Chưa có nhóm nào — chỉ quản trị viên mới mở được.",
+      "usergroups_none_assigned": "Chưa có nhóm nào; chỉ quản trị viên mới mở được.",
       "usergroups_remove_title": "Xóa",
       "usergroups_loading": "Đang tải các nhóm…",
       "usergroups_none_in_org": "Tổ chức này chưa có nhóm người dùng nào.",
@@ -5526,7 +5526,7 @@
     "recurring_subscription": "gói đăng ký định kỳ",
     "what_youre_getting": "Những gì bạn nhận được",
     "pack_immediate": "Có hiệu lực ngay sau khi thanh toán",
-    "pack_cancel_anytime": "Hủy bất cứ lúc nào — vẫn hoạt động đến cuối kỳ thanh toán",
+    "pack_cancel_anytime": "Hủy bất cứ lúc nào; vẫn hoạt động đến cuối kỳ thanh toán",
     "pack_credits_reset": "Tín dụng được làm mới mỗi chu kỳ thanh toán",
     "after_purchase": "Sau khi mua",
     "unlimited": "Không giới hạn",
@@ -5576,9 +5576,9 @@
     "canceled_desc": "Gói đăng ký của bạn sẽ bị hủy vào cuối kỳ thanh toán hiện tại. Bạn vẫn giữ toàn quyền truy cập đến lúc đó.",
     "back_to_plan_usage": "Quay lại Gói & Mức sử dụng",
     "back_to_orgs": "Quay lại tổ chức",
-    "pack_purchased": "Gói bổ sung đã mua — giới hạn của bạn đã được cập nhật.",
-    "checkout_success": "Đăng ký đã cập nhật — chào mừng bạn đến với gói mới của bạn!",
-    "checkout_cancelled": "Thanh toán đã hủy — không có thay đổi nào.",
+    "pack_purchased": "Gói bổ sung đã mua; giới hạn của bạn đã được cập nhật.",
+    "checkout_success": "Đăng ký đã cập nhật; chào mừng bạn đến với gói mới của bạn!",
+    "checkout_cancelled": "Thanh toán đã hủy; không có thay đổi nào.",
     "load_failed": "Chúng tôi không thể tải tổ chức của bạn.",
     "no_permission": "Bạn không có quyền quản lý thanh toán cho tổ chức này.",
     "no_permission_hint": "Chỉ quản trị viên tổ chức mới có thể xem hoặc thay đổi gói.",
@@ -5692,7 +5692,7 @@
     "toast": {
       "creating": "Đang tạo tổ chức…",
       "created": "Đã tạo tổ chức!",
-      "checkoutFailed": "Đã tạo tổ chức — bạn có thể nâng cấp từ Gói & Mức sử dụng.",
+      "checkoutFailed": "Đã tạo tổ chức; bạn có thể nâng cấp từ Gói & Mức sử dụng.",
       "failed": "Không thể tạo tổ chức"
     },
     "steps": {

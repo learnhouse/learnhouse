@@ -139,9 +139,9 @@ class TestUsergroupsApiTokenOrgBoundary:
     The router admits API tokens (require_authenticated_user_or_api_token) and
     most handlers authorize against a real usergroup uuid, so the RBAC layer
     resolves the element's org and enforces the boundary. These tests lock down
-    the two handlers that authorize against the ``usergroup_X`` placeholder —
+    the two handlers that authorize against the ``usergroup_X`` placeholder,
     create (org from the request body) and get-by-resource (org from the
-    resource) — where the placeholder's org resolves to None and the RBAC
+    resource), where the placeholder's org resolves to None and the RBAC
     boundary check is skipped, so the service layer must guard the boundary.
     """
 
@@ -158,7 +158,7 @@ class TestUsergroupsApiTokenOrgBoundary:
 
     async def test_create_usergroup_cross_org_rejected(self, db, org, other_org, mock_request):
         # Token scoped to `org` tries to create a group in `other_org` via the
-        # request body — invisible to the global path/query org-boundary net.
+        # request body, invisible to the global path/query org-boundary net.
         # Must 403 before any DB write.
         token = self._token(org.id, usergroups={"action_create": True})
         with pytest.raises(HTTPException) as exc:

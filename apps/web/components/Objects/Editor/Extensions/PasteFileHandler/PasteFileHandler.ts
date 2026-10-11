@@ -60,7 +60,7 @@ const PasteFileHandler = Extension.create<PasteFileHandlerOptions>({
 
         // Upload first, then insert the block with the completed data.
         // This avoids the problem where block components initialize
-        // blockObject in React state only once on mount — updating
+        // blockObject in React state only once on mount; updating
         // node attrs via ProseMirror transactions doesn't trigger
         // a re-render of the component's internal state.
         upload(file, activityUuid, accessToken)

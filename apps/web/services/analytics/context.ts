@@ -8,7 +8,7 @@ import { getDeploymentMode } from '@services/config/config'
 
 /**
  * Standard properties auto-attached to EVERY analytics event. Call-sites must
- * never pass these — they're injected by useLHAnalytics from app context.
+ * never pass these; they're injected by useLHAnalytics from app context.
  *
  * All hooks used here are provider-safe (useOrg/useOrgMembership/usePlan return
  * defaults when their provider is absent), so this works on any surface,

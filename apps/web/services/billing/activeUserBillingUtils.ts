@@ -2,7 +2,7 @@
 //
 // These deliberately live OUTSIDE activeUserBilling.ts (which imports the Stripe
 // SDK and is server-only). Keeping the period math and payload shape handling
-// here lets us unit-test it in isolation — no Stripe SDK, no network.
+// here lets us unit-test it in isolation: no Stripe SDK, no network.
 
 /** The `count` complete calendar months strictly before a UTC date's month,
  *  oldest first. For Aug 15 with count=3 → [May, Jun, Jul]. */
@@ -41,7 +41,7 @@ export function intervalMonths(subscription: any): number {
   const count = recurring?.interval_count ?? 1;
   if (recurring?.interval === "year") return 12 * count;
   if (recurring?.interval === "month") return count;
-  // week/day intervals bill more often than monthly — one month is enough.
+  // week/day intervals bill more often than monthly, so one month is enough.
   return 1;
 }
 

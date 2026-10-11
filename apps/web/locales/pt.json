@@ -359,7 +359,7 @@
     "image_title_forgot": "Redefina a sua palavra-passe.",
     "image_subtitle_forgot": "Vamos ajudá-lo a voltar à sua conta num instante.",
     "image_title_login": "Bem-vindo de volta ao LearnHouse.",
-    "image_subtitle_login": "Continue de onde parou — os seus cursos, alunos e ferramentas estão à sua espera.",
+    "image_subtitle_login": "Continue de onde parou: os seus cursos, alunos e ferramentas estão à sua espera.",
     "image_title_reset": "Está quase.",
     "image_subtitle_reset": "Crie uma palavra-passe forte para manter a sua conta segura.",
     "image_title_signup": "Comece a ensinar com o LearnHouse.",
@@ -616,7 +616,7 @@
         "plan_generated": "Plano atualizado",
         "plan_generated_hint": "Confira a aba Plano para revisar e editar.",
         "describe_course": "Descreva seu curso",
-        "describe_course_hint": "Use o chat à direita para descrever o curso desejado — tema, público e objetivos.",
+        "describe_course_hint": "Use o chat à direita para descrever o curso desejado: tema, público e objetivos.",
         "generating_plan": "Gerando plano do curso...",
         "chapters": "Capítulos",
         "activities": "atividades",
@@ -978,7 +978,7 @@
     "link_copied": "Link copiado!",
     "share": "Compartilhar",
     "autosave_blocked": "Ainda não é possível salvar",
-    "autosave_retry": "Não foi possível salvar — tentando novamente…",
+    "autosave_retry": "Não foi possível salvar, tentando novamente…",
     "autosave_unsaved": "Alterações não salvas",
     "autosaved": "Salvo",
     "autosaving": "Salvando…",
@@ -1031,8 +1031,8 @@
     "retry_assignment_title": "Tentar esta tarefa novamente?",
     "retry_assignment_confirm": "Sua submissão e respostas atuais serão resetadas para que você possa começar novamente. Sua nota anterior será substituída ao reenviar.",
     "retry_assignment_remaining": "Você tem {{remaining}} tentativa{{plural}} restante{{plural}} após esta.",
-    "retry_assignment_last": "Esta é sua última tentativa — faça valer.",
-    "retry_assignment_success": "Seu trabalho foi resetado — tente novamente.",
+    "retry_assignment_last": "Esta é sua última tentativa. Faça valer.",
+    "retry_assignment_success": "Seu trabalho foi resetado. Tente novamente.",
     "retry_assignment_failed": "Não foi possível resetar sua submissão. Tente novamente.",
     "retry_no_attempts_left": "Sem tentativas restantes",
     "no_task_submission_to_grade": "Este aluno ainda não enviou um arquivo para esta tarefa.",
@@ -1153,7 +1153,7 @@
       "confirm_label": "Escreva {{username}} para confirmar",
       "deleting": "A eliminar…",
       "zone_subtitle": "Exclua sua conta permanentemente. Esta ação não pode ser desfeita.",
-      "zone_body": "Isso remove sua conta e seu acesso. Qualquer organização da qual você seja o único administrador — e todos os seus cursos e conteúdos — também será excluída. Organizações com outros administradores serão mantidas; você apenas será removido delas."
+      "zone_body": "Isso remove sua conta e seu acesso. Qualquer organização da qual você seja o único administrador (e todos os seus cursos e conteúdos) também será excluída. Organizações com outros administradores serão mantidas; você apenas será removido delas."
     }
   },
   "user": {
@@ -3609,9 +3609,9 @@
             "auth_required_submit": "Autenticação necessária. Faça login para enviar sua atividade.",
             "hint_optional": "Dica (opcional)",
             "paste_blocked": "Colar está desativado para esta tarefa",
-            "paste_blocked_hint": "Colar está desativado — digite sua resposta diretamente.",
-            "upload_locked_graded": "Este envio foi avaliado — seu arquivo não pode mais ser alterado.",
-            "upload_locked_submitted": "Você enviou esta tarefa — seu arquivo não pode mais ser alterado."
+            "paste_blocked_hint": "Colar está desativado. Digite sua resposta diretamente.",
+            "upload_locked_graded": "Este envio foi avaliado. Seu arquivo não pode mais ser alterado.",
+            "upload_locked_submitted": "Você enviou esta tarefa. Seu arquivo não pode mais ser alterado."
           },
           "code": {
             "student_behavior_label": "Comportamento do aluno",
@@ -3628,9 +3628,9 @@
             "show_solution_label": "Revelar solução após enviar",
             "show_solution_description": "Depois que o aluno salvar seu trabalho, mostre a solução de referência do professor.",
             "reference_solution_label": "Solução de referência",
-            "locked_graded_hint": "Este envio foi avaliado — seu código é somente leitura.",
-            "locked_submitted_hint": "Você enviou esta tarefa — seu código é somente leitura.",
-            "no_runnable_tests": "Esta tarefa não tem testes que você possa executar — seu código será verificado durante a avaliação."
+            "locked_graded_hint": "Este envio foi avaliado. Seu código é somente leitura.",
+            "locked_submitted_hint": "Você enviou esta tarefa. Seu código é somente leitura.",
+            "no_runnable_tests": "Esta tarefa não tem testes que você possa executar. Seu código será verificado durante a avaliação."
           },
           "short_answer": {
             "prompt_label": "Enunciado da pergunta",
@@ -3647,13 +3647,13 @@
               "regex": "Expressão regular"
             },
             "explanation_label": "Explicação (mostrada em resposta correta)",
-            "explanation_placeholder": "Opcional — explique por que a resposta está correta",
+            "explanation_placeholder": "Opcional: explique por que a resposta está correta",
             "your_answer_placeholder": "Digite sua resposta...",
             "student_answer_label": "Resposta do aluno",
             "accepted_answers_label": "Respostas aceitas",
             "no_answer": "Nenhuma resposta enviada",
             "correct": "Correto",
-            "incorrect": "Não exatamente — tente novamente"
+            "incorrect": "Não exatamente, tente novamente"
           },
           "number_answer": {
             "prompt_label": "Enunciado da pergunta",
@@ -3664,14 +3664,14 @@
             "unit_placeholder": "m/s², kg, °C...",
             "unit_hint": "Mostrada ao lado do campo de resposta. Não obrigatória.",
             "explanation_label": "Explicação (mostrada em resposta correta)",
-            "explanation_placeholder": "Opcional — explique como chegar à resposta",
+            "explanation_placeholder": "Opcional: explique como chegar à resposta",
             "preview_label": "Aceita",
             "your_answer_placeholder": "Digite um número...",
             "student_answer_label": "Resposta do aluno",
             "accepted_range_label": "Faixa aceita",
             "no_answer": "Nenhuma resposta enviada",
             "correct": "Correto",
-            "incorrect": "Não exatamente — tente novamente"
+            "incorrect": "Não exatamente, tente novamente"
           }
         },
         "generate_ai": "Gerar tarefas com AI",
@@ -3780,7 +3780,7 @@
         },
         "tasks": {
           "title": "Desempenho por tarefa",
-          "subtitle": "Nota média por tarefa — barras baixas indicam onde os alunos têm dificuldades",
+          "subtitle": "Nota média por tarefa; barras baixas indicam onde os alunos têm dificuldades",
           "empty": "O desempenho por tarefa aparecerá após as primeiras classificações",
           "avg_grade": "Nota média",
           "attempts": "tentativas"
@@ -3792,7 +3792,7 @@
         },
         "attention": {
           "title": "Podem precisar de apoio",
-          "subtitle": "Alunos que não foram aprovados — considere falar com eles",
+          "subtitle": "Alunos que não foram aprovados; considere falar com eles",
           "empty": "Todos os classificados foram aprovados. Bom trabalho!"
         }
       },
@@ -4551,7 +4551,7 @@
         "avg_rate": "Taxa média",
         "needs_attention": "Precisa de atenção",
         "total_samples": "Total de amostras",
-        "more_expand": "+{{count}} mais — clique para expandir",
+        "more_expand": "+{{count}} mais, clique para expandir",
         "activities_count": "{{count}} atividades",
         "pct_of_total": "% do total",
         "bar_width_hint": "Largura da barra = visualizações relativas",
@@ -4671,7 +4671,7 @@
       },
       "activity_dropoff": {
         "title": "Pontos de desistência",
-        "subtitle": "Onde os alunos param de progredir — última atividade concluída",
+        "subtitle": "Onde os alunos param de progredir: última atividade concluída",
         "total_dropoffs": "Total de desistências",
         "dropoff_points": "Pontos de desistência"
       },
@@ -4705,7 +4705,7 @@
         "avg_between": "média {{unit}} entre conclusões",
         "transitions_tracked": "transições rastreadas",
         "raw_hours_avg": "média bruta de horas",
-        "description": "Mede a rapidez com que os alunos progridem de uma atividade para a próxima. Menor é melhor — significa que os alunos estão avançando mais rápido pelo conteúdo."
+        "description": "Mede a rapidez com que os alunos progridem de uma atividade para a próxima. Menor é melhor: significa que os alunos estão avançando mais rápido pelo conteúdo."
       },
       "time_to_completion": {
         "title": "Tempo até a conclusão",
@@ -4809,7 +4809,7 @@
       },
       "add_content": {
         "title": "Uma aula que vale a pena seguir",
-        "description": "Adicione um vídeo, página ou questionário — dê aos alunos um verdadeiro motivo para se inscreverem.",
+        "description": "Adicione um vídeo, página ou questionário. Dê aos alunos um verdadeiro motivo para se inscreverem.",
         "action": "Adicionar conteúdo"
       },
       "brand_school": {
@@ -4819,17 +4819,17 @@
       },
       "share_grow": {
         "title": "A porta de entrada da sua escola",
-        "description": "Coloque no ar e obtenha o seu link partilhável — o lugar para onde vai enviar todos os alunos.",
+        "description": "Coloque no ar e obtenha o seu link partilhável: o lugar para onde vai enviar todos os alunos.",
         "action": "Abrir a minha escola"
       },
       "invite_learners": {
         "title": "Dê as boas-vindas ao seu primeiro aluno",
-        "description": "Partilhe o seu link de adesão ou convide pessoas — traga esse primeiro aluno para dentro.",
+        "description": "Partilhe o seu link de adesão ou convide pessoas. Traga esse primeiro aluno para dentro.",
         "action": "Convidar alunos"
       },
       "build_community": {
         "title": "Mantenha os alunos a voltar",
-        "description": "Abra um espaço de comunidade para que os seus alunos se mantenham ativos — e tragam os amigos.",
+        "description": "Abra um espaço de comunidade para que os seus alunos se mantenham ativos e tragam os amigos.",
         "action": "Abrir comunidade"
       }
     },
@@ -5183,7 +5183,7 @@
         "goal": "Comece a monetizar seus cursos e construa uma comunidade de aprendizagem.",
         "highlights": {
           "courses": "Cursos ilimitados",
-          "courses_desc": "Crie quantos cursos precisar — sem limites no seu currículo.",
+          "courses_desc": "Crie quantos cursos precisar: sem limites no seu currículo.",
           "members": "Até 500 membros",
           "members_desc": "Aumente sua base de alunos e gerencie em um só lugar.",
           "payments": "Aceitar pagamentos",
@@ -5241,7 +5241,7 @@
       "trigger_authenticated_title": "Acesso: apenas usuários autenticados",
       "trigger_restricted_title": "Acesso: grupos de usuários específicos",
       "usergroups_header": "Grupos de usuários",
-      "usergroups_none_assigned": "Nenhum grupo atribuído — só administradores podem abrir.",
+      "usergroups_none_assigned": "Nenhum grupo atribuído. Só administradores podem abrir.",
       "usergroups_remove_title": "Remover",
       "usergroups_loading": "Carregando grupos…",
       "usergroups_none_in_org": "Ainda não existem grupos de usuários nesta organização.",
@@ -5504,7 +5504,7 @@
     "recurring_subscription": "subscrição recorrente",
     "what_youre_getting": "O que vai receber",
     "pack_immediate": "Entra em vigor imediatamente após o pagamento",
-    "pack_cancel_anytime": "Cancele quando quiser — permanece ativo até ao final do período de faturação",
+    "pack_cancel_anytime": "Cancele quando quiser; permanece ativo até ao final do período de faturação",
     "pack_credits_reset": "Os créditos são reiniciados a cada ciclo de faturação",
     "after_purchase": "Após a compra",
     "unlimited": "Ilimitado",
@@ -5554,9 +5554,9 @@
     "canceled_desc": "A sua subscrição será cancelada no final do período de faturação atual. Manterá o acesso total até lá.",
     "back_to_plan_usage": "Voltar a Plano e Utilização",
     "back_to_orgs": "Voltar às organizações",
-    "pack_purchased": "Complemento adquirido — seus limites foram atualizados.",
-    "checkout_success": "Assinatura atualizada — bem-vindo ao seu novo plano!",
-    "checkout_cancelled": "Checkout cancelado — nenhuma alteração foi feita.",
+    "pack_purchased": "Complemento adquirido. Seus limites foram atualizados.",
+    "checkout_success": "Assinatura atualizada. Bem-vindo ao seu novo plano!",
+    "checkout_cancelled": "Checkout cancelado. Nenhuma alteração foi feita.",
     "load_failed": "Não conseguimos carregar suas organizações.",
     "no_permission": "Você não tem permissão para gerenciar cobrança para esta organização.",
     "no_permission_hint": "Apenas um administrador da organização pode visualizar ou alterar o plano.",
@@ -5670,7 +5670,7 @@
     "toast": {
       "creating": "A criar organização…",
       "created": "Organização criada!",
-      "checkoutFailed": "Organização criada — pode fazer upgrade em Plano e Utilização.",
+      "checkoutFailed": "Organização criada. Pode fazer upgrade em Plano e Utilização.",
       "failed": "Falha ao criar a organização"
     },
     "steps": {

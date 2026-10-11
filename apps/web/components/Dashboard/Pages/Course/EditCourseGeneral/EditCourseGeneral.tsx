@@ -137,7 +137,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     enableReinitialize: true,
   }) as any;
 
-  // Sync form changes to context — compare against formik.initialValues
+  // Sync form changes to context; compare against formik.initialValues
   // so that reinitialization from server data is never treated as a user edit
   useEffect(() => {
     if (isLoading || isSaving) return;

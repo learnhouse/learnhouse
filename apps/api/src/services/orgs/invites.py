@@ -344,8 +344,8 @@ async def delete_invite_code(
         )
 
     # SECURITY: the UUID is interpolated into a Redis SCAN glob pattern. Without
-    # validation an admin could pass wildcard characters (e.g. "*") to match —
-    # and delete — every invite code key for the org in a single call, instead
+    # validation an admin could pass wildcard characters (e.g. "*") to match,
+    # and delete, every invite code key for the org in a single call, instead
     # of the one resource the endpoint is meant to address. Restrict to the
     # exact "org_invite_code_<uuid4>" shape this codebase generates.
     if not re.fullmatch(r"org_invite_code_[0-9a-fA-F-]{36}", invite_code_uuid):
@@ -392,7 +392,7 @@ async def send_invite_email(
                     invite_code = json.loads(data).get("invite_code")
 
     # Build signup URL rooted at the org's own frontend subdomain (or primary
-    # verified custom domain if one is configured — passing db_session opts in).
+    # verified custom domain if one is configured; passing db_session opts in).
     from src.services.email.utils import get_org_signup_base_url
     org_base_url = await get_org_signup_base_url(
         org.slug, request, db_session=db_session, org_id=org.id

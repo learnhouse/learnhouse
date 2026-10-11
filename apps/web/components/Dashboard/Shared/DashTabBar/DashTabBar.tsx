@@ -52,7 +52,7 @@ export function DashTabBar({ tabs }: DashTabBarProps) {
 
   // Scroll active tab into view whenever the active key changes.
   // Next.js reuses the component across subpage navigations, so scroll state
-  // can persist — we need to bring the new active tab back into view.
+  // can persist, so we need to bring the new active tab back into view.
   const activeKey = tabs.find((t) => t.active)?.key
   useEffect(() => {
     const container = scrollRef.current

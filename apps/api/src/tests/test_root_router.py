@@ -345,7 +345,7 @@ class TestRootRouter:
         assert usergroups["prefix"] == "/usergroups"
         assert usergroups["tags"] == ["usergroups"]
         # usergroups admits API tokens (headless enrollment/usergroup mgmt) via
-        # require_authenticated_user_or_api_token — anonymous is still rejected
+        # require_authenticated_user_or_api_token; anonymous is still rejected
         # (401) and the plan gate still applies. Per-handler rbac_check enforces
         # the token's usergroups rights + org boundary.
         assert _dependency_names(usergroups) == [

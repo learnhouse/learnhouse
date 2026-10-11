@@ -16,7 +16,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
-from src.db.users import PublicUser, AnonymousUser, User, UserRead, APITokenUser
+from src.db.users import PublicUser, AnonymousUser, User, UserReadAuthor, APITokenUser
 from src.db.courses.courses import (
     Course,
     CourseCreate,
@@ -26,8 +26,9 @@ from src.db.courses.courses import (
     AuthorWithRole,
     ThumbnailType,
 )
+from src.security.api_token_utils import require_token_right
 from src.security.auth import resolve_acting_user_id
-from src.security.org_auth import require_org_membership
+from src.security.org_auth import require_org_create_permission
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
@@ -39,6 +40,7 @@ from src.security.rbac import (
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
+from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -46,6 +48,16 @@ from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+
+def _is_bare_filename(value: str) -> bool:
+    """Thumbnail names are joined onto the course's thumbnails dir, so they
+    must be a bare file name: no separators, traversal, NUL or absolute path."""
+    if not value or "\x00" in value:
+        return False
+    if "/" in value or "\\" in value:
+        return False
+    return value not in (".", "..") and not value.startswith(".")
 
 
 async def get_course(
@@ -88,7 +100,7 @@ async def get_course(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -134,7 +146,7 @@ async def get_course_by_id(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -192,7 +204,7 @@ async def get_course_meta(
         context=AccessContext.DASHBOARD,
     )
 
-    # Permission check passed — try Redis cache for the heavy data.
+    # Permission check passed. Try the Redis cache for the heavy data.
     # SECURITY: chapter/activity content is lock-stripped PER USER in
     # _apply_locks_to_chapters (restricted items are blanked for users not in
     # the right usergroup, while admins/members see everything). The meta cache
@@ -208,7 +220,7 @@ async def get_course_meta(
         if cached is not None:
             return FullCourseRead.model_validate(cached)
 
-    # Get course chapters — pass the already-loaded course to skip the
+    # Get course chapters. Pass the already-loaded course to skip the
     # duplicate SELECT inside get_course_chapters.
     chapters = []
     if course.id is not None:
@@ -225,7 +237,7 @@ async def get_course_meta(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -249,6 +261,17 @@ async def get_course_meta(
         set_cached_course_meta(course_uuid, slim, course_read.model_dump())
 
     return course_read
+
+
+def _require_token_course_listing(current_user: APITokenUser, org_id: int) -> None:
+    """API tokens list courses through their own ``courses.action_read`` and
+    only in their own org, never through their creator's role."""
+    if current_user.org_id != org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token cannot access resources outside its organization",
+        )
+    require_token_right(current_user, "courses", "action_read")
 
 
 async def get_courses_orgslug(
@@ -283,9 +306,17 @@ async def get_courses_orgslug(
     if not org:
         return []
 
+    is_token = isinstance(current_user, APITokenUser)
+    if is_token:
+        _require_token_course_listing(current_user, org.id)
+
     # Check if user can view unpublished courses (must be admin/editor in org)
     can_view_unpublished = False
-    if include_unpublished and not isinstance(current_user, AnonymousUser):
+    if is_token:
+        # courses.action_read already lets the token read every course of its
+        # org one by one, published or not (check_resource_access).
+        can_view_unpublished = include_unpublished
+    elif include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished courses
         if await is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
@@ -314,6 +345,9 @@ async def get_courses_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published courses
         query = query.where(Course.public == True, Course.published == True)
+    elif is_token:
+        if not can_view_unpublished:
+            query = query.where(Course.published == True)
     else:
         # For authenticated users with admin access viewing dashboard, show all courses
         if can_view_unpublished:
@@ -343,13 +377,20 @@ async def get_courses_orgslug(
                 ))  # type: ignore
                 .where(or_(
                     and_(Course.published == True, Course.public == True),  # Published public courses
-                    and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
+                    and_(  # Published courses not in any UserGroup: org-wide, so members of its org only
+                        Course.published == True,
+                        UserGroupResource.resource_uuid.is_(None),
+                        select(UserOrganization.id).where(
+                            UserOrganization.user_id == acting_user_id,
+                            UserOrganization.org_id == Course.org_id,
+                        ).exists(),
+                    ),
                     UserGroupUser.user_id == acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
                     ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
                 ))
             )
 
-    # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
+    # Apply ordering and pagination; only use DISTINCT when outerjoins may produce duplicates
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
     if needs_distinct:
         query = query.distinct()
@@ -361,7 +402,7 @@ async def get_courses_orgslug(
 
     # Get all course UUIDs
     course_uuids = [course.course_uuid for course in courses]
-    
+
     # Fetch all authors for all courses in a single query
     authors_query = (
         select(ResourceAuthor, User)
@@ -371,9 +412,9 @@ async def get_courses_orgslug(
             ResourceAuthor.id.asc() # type: ignore
         )
     )
-    
+
     author_results = (await db_session.execute(authors_query)).all()
-    
+
     # Create a dictionary mapping course_uuid to list of authors
     course_authors = {}
     for resource_author, user in author_results:
@@ -381,14 +422,14 @@ async def get_courses_orgslug(
             course_authors[resource_author.resource_uuid] = []
         course_authors[resource_author.resource_uuid].append(
             AuthorWithRole(
-                user=UserRead.model_validate(user),
+                user=UserReadAuthor.model_validate(user),
                 authorship=resource_author.authorship,
                 authorship_status=resource_author.authorship_status,
                 creation_date=resource_author.creation_date,
                 update_date=resource_author.update_date
             )
         )
-    
+
     # Create CourseRead objects with authors
     course_reads = []
     for course in courses:
@@ -431,7 +472,15 @@ async def get_courses_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published courses
         query = query.where(Course.public == True, Course.published == True)
-    elif not isinstance(current_user, AnonymousUser) and await is_user_superadmin(acting_user_id, db_session):
+    elif isinstance(current_user, APITokenUser):
+        org_id = (await db_session.execute(
+            select(Organization.id).where(Organization.slug == org_slug)
+        )).scalars().first()
+        if org_id is None:
+            return 0
+        _require_token_course_listing(current_user, org_id)
+        query = query.where(Course.published == True)
+    elif await is_user_superadmin(acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
     else:
@@ -454,7 +503,14 @@ async def get_courses_count_orgslug(
             ))  # type: ignore
             .where(or_(
                 and_(Course.published == True, Course.public == True),  # Published public courses
-                and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
+                and_(  # Published courses not in any UserGroup: org-wide, so members of its org only
+                    Course.published == True,
+                    UserGroupResource.resource_uuid.is_(None),
+                    select(UserOrganization.id).where(
+                        UserOrganization.user_id == acting_user_id,
+                        UserOrganization.org_id == Course.org_id,
+                    ).exists(),
+                ),
                 UserGroupUser.user_id == acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
                 ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
@@ -506,6 +562,14 @@ async def search_courses(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published courses
         query = query.where(Course.public == True, Course.published == True)
+    elif isinstance(current_user, APITokenUser):
+        org_id = (await db_session.execute(
+            select(Organization.id).where(Organization.slug == org_slug)
+        )).scalars().first()
+        if org_id is None:
+            return []
+        _require_token_course_listing(current_user, org_id)
+        query = query.where(Course.published == True)
     elif await is_user_superadmin(search_acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
@@ -513,7 +577,8 @@ async def search_courses(
         # For authenticated users, show:
         # 1. Published AND public courses
         # 2. Published courses not in any UserGroup
-        # 3. Courses (including unpublished) in UserGroups where the user is a member
+        # 3. Published courses in UserGroups where the user is a member
+        #    (a member cannot open an unpublished one, so don't surface it)
         # 4. Courses (including unpublished) where the user is a resource author
         needs_distinct = True
         query = (
@@ -530,13 +595,20 @@ async def search_courses(
             ))  # type: ignore
             .where(or_(
                 and_(Course.published == True, Course.public == True),  # Published public courses
-                and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
-                UserGroupUser.user_id == search_acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
+                and_(  # Published courses not in any UserGroup: org-wide, so members of its org only
+                    Course.published == True,
+                    UserGroupResource.resource_uuid.is_(None),
+                    select(UserOrganization.id).where(
+                        UserOrganization.user_id == search_acting_user_id,
+                        UserOrganization.org_id == Course.org_id,
+                    ).exists(),
+                ),
+                and_(Course.published == True, UserGroupUser.user_id == search_acting_user_id),  # Published courses in UserGroups where user is a member
                 ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
         )
 
-    # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
+    # Apply ordering and pagination; only use DISTINCT when outerjoins may produce duplicates
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
     if needs_distinct:
         query = query.distinct()
@@ -561,7 +633,7 @@ async def search_courses(
     for resource_author, user in author_results:
         course_authors.setdefault(resource_author.resource_uuid, []).append(
             AuthorWithRole(
-                user=UserRead.model_validate(user),
+                user=UserReadAuthor.model_validate(user),
                 authorship=resource_author.authorship,
                 authorship_status=resource_author.authorship_status,
                 creation_date=resource_author.creation_date,
@@ -605,10 +677,8 @@ async def create_course(
     # Since this is a new course, we need to check organization-level permissions
     # For now, we'll use the existing RBAC check but with proper organization context
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
-
-    await require_org_membership(
-        resolve_acting_user_id(current_user), org_id, db_session
-    )
+    # course_x has no org: pin the create right (and membership) to this org.
+    await require_org_create_permission(current_user, org_id, db_session, "courses")
 
     # Usage check
     await check_limits_with_usage("courses", org_id, db_session)
@@ -667,6 +737,7 @@ async def create_course(
     except Exception:
         await db_session.rollback()
         raise
+    index_course(course.id)
 
     # Get course authors with their roles
     authors_statement = (
@@ -682,7 +753,7 @@ async def create_course(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -760,6 +831,7 @@ async def update_course_thumbnail(
     db_session.add(course)
     await db_session.commit()
     await db_session.refresh(course)
+    index_course(course.id)
 
     # Get course authors with their roles
     authors_statement = (
@@ -775,7 +847,7 @@ async def update_course_thumbnail(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -818,13 +890,13 @@ async def update_course(
 
     # SECURITY: Additional checks for sensitive access control fields
     sensitive_fields_updated = []
-    
+
     # Check if sensitive fields are being updated
     if course_object.public is not None:
         sensitive_fields_updated.append("public")
     if course_object.open_to_contributors is not None:
         sensitive_fields_updated.append("open_to_contributors")
-    
+
     # If sensitive fields are being updated, require additional validation
     if sensitive_fields_updated:
         # API tokens carry their own per-resource rights and have already passed
@@ -852,12 +924,23 @@ async def update_course(
         is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
             request, acting_user_id, "update", course_uuid, db_session
         )
-        
+
         # SECURITY: Only course owners (CREATOR, MAINTAINER) or admins can change access settings
         if not (is_course_owner or is_admin_or_maintainer):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"You must be the course owner (CREATOR or MAINTAINER) or have admin role to change access settings: {', '.join(sensitive_fields_updated)}",
+            )
+
+    # SECURITY: thumbnail names end up in storage paths (clone copies them);
+    # only accept bare file names. Unchanged values are echoed back by the
+    # dashboard on every save, so leave those alone.
+    for field in ("thumbnail_image", "thumbnail_video"):
+        value = getattr(course_object, field)
+        if value and value != getattr(course, field) and not _is_bare_filename(value):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid {field}",
             )
 
     # Track published state before update for webhook
@@ -874,6 +957,7 @@ async def update_course(
     db_session.add(course)
     await db_session.commit()
     await db_session.refresh(course)
+    index_course(course.id)
 
     # Dispatch webhook if published state changed
     if course_object.published is not None and course.published != old_published:
@@ -901,7 +985,7 @@ async def update_course(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -1010,7 +1094,7 @@ async def delete_course(
         logger.exception("Failed to remove deleted course %s from org landing", course_uuid_val)
         await db_session.rollback()
 
-    # Feature usage — decrement only AFTER the row is actually gone. The usage
+    # Feature usage: decrement only AFTER the row is actually gone. The usage
     # counter lives in Redis and is written immediately/irreversibly; doing it
     # before the delete meant a failed delete/commit (or storage error) left the
     # org's course count permanently under-counted, letting them create an extra
@@ -1067,9 +1151,9 @@ async def get_user_courses(
         .offset((page - 1) * limit)
         .limit(limit)
     )
-    
+
     courses = (await db_session.execute(statement)).scalars().all()
-    
+
     if not courses:
         return []
 
@@ -1088,7 +1172,7 @@ async def get_user_courses(
     for resource_author, user in author_results:
         course_authors.setdefault(resource_author.resource_uuid, []).append(
             AuthorWithRole(
-                user=UserRead.model_validate(user),
+                user=UserReadAuthor.model_validate(user),
                 authorship=resource_author.authorship,
                 authorship_status=resource_author.authorship_status,
                 creation_date=resource_author.creation_date,
@@ -1222,8 +1306,9 @@ async def clone_course(
             detail="Course not found",
         )
 
-    # RBAC check - user needs read access to clone
-    await check_resource_access(request, db_session, current_user, original_course.course_uuid, AccessAction.READ)
+    # RBAC check - cloning copies drafts, paid/locked content and quiz answers,
+    # so require edit rights on the source (same bar as export).
+    await check_resource_access(request, db_session, current_user, original_course.course_uuid, AccessAction.UPDATE)
 
     # Also check if user can create courses
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
@@ -1234,9 +1319,7 @@ async def clone_course(
     # check, a user from org A who can merely view a public course in org B could
     # clone it (with all its content + files) into org B and make themselves its
     # creator. Require membership in the target org, consistent with create_course.
-    await require_org_membership(
-        resolve_acting_user_id(current_user), original_course.org_id, db_session
-    )
+    await require_org_create_permission(current_user, original_course.org_id, db_session, "courses")
 
     # Usage check for creating new course
     await check_limits_with_usage("courses", original_course.org_id, db_session)
@@ -1285,7 +1368,7 @@ async def clone_course(
         os.makedirs(f"{new_course_path}/thumbnails", exist_ok=True)
 
     # Copy thumbnail image if exists (thumbnails are in a subdirectory)
-    if original_course.thumbnail_image:
+    if original_course.thumbnail_image and _is_bare_filename(original_course.thumbnail_image):
         original_thumbnail_path = f"{original_course_path}/thumbnails/{original_course.thumbnail_image}"
         if file_exists(original_thumbnail_path):
             new_thumbnail_name = f"{new_course_uuid}_thumbnail_{uuid4()}.{original_course.thumbnail_image.split('.')[-1]}"
@@ -1294,7 +1377,7 @@ async def clone_course(
             new_course.thumbnail_image = new_thumbnail_name
 
     # Copy thumbnail video if exists (also in thumbnails subdirectory)
-    if original_course.thumbnail_video:
+    if original_course.thumbnail_video and _is_bare_filename(original_course.thumbnail_video):
         original_video_path = f"{original_course_path}/thumbnails/{original_course.thumbnail_video}"
         if file_exists(original_video_path):
             new_video_name = f"{new_course_uuid}_thumbnail_{uuid4()}.{original_course.thumbnail_video.split('.')[-1]}"
@@ -1515,6 +1598,7 @@ async def clone_course(
 
     # Single commit for all chapters, activities, blocks, and links
     await db_session.commit()
+    await enqueue_course(new_course.id, db_session)
 
     # Increase feature usage for the new course
     await increase_feature_usage("courses", new_course.org_id, db_session)
@@ -1531,7 +1615,7 @@ async def clone_course(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
@@ -1622,10 +1706,10 @@ async def get_course_user_rights(
         ResourceAuthor.user_id == rights_acting_user_id
     )
     resource_author = (await db_session.execute(statement)).scalars().first()
-    
+
     if resource_author:
         rights["ownership"]["authorship_status"] = resource_author.authorship_status
-        
+
         if resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE:
             if resource_author.authorship == ResourceAuthorshipEnum.CREATOR:
                 rights["ownership"]["is_creator"] = True
@@ -1640,7 +1724,7 @@ async def get_course_user_rights(
     # Check user roles
     from src.security.rbac.rbac import authorization_verify_based_on_org_admin_status
     from src.security.rbac.rbac import authorization_verify_based_on_roles
-    
+
     # Check admin/maintainer role
     is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
         request, rights_acting_user_id, "update", course_uuid, db_session
@@ -1662,7 +1746,7 @@ async def get_course_user_rights(
     has_user_permissions = await authorization_verify_based_on_roles(
         request, rights_acting_user_id, "read", course_uuid, db_session
     )
-    
+
     if has_user_permissions:
         rights["roles"]["is_user"] = True
 
@@ -1705,7 +1789,7 @@ async def get_course_user_rights(
         rights["permissions"]["manage_contributors"] = True
 
     # ACCESS MANAGEMENT permissions (public, open_to_contributors)
-    if (rights["ownership"]["is_creator"] or rights["ownership"]["is_maintainer"] or 
+    if (rights["ownership"]["is_creator"] or rights["ownership"]["is_maintainer"] or
         is_admin or is_maintainer_role):
         rights["permissions"]["manage_access"] = True
 

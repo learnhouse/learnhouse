@@ -105,7 +105,7 @@ class TestCreateSuperadminToken:
 
     async def test_create_allows_same_name_for_different_user(self, db):
         await create_superadmin_token(db, SuperadminAPITokenCreate(name="shared"), created_by_user_id=1)
-        # Different user, same name — should succeed
+        # Different user, same name: should succeed
         resp = await create_superadmin_token(db, SuperadminAPITokenCreate(name="shared"), created_by_user_id=2)
         assert resp.name == "shared"
 
@@ -203,13 +203,13 @@ class TestValidateForAuth:
         result = await validate_superadmin_token_for_auth(full, db)
         assert result is not None
 
-    async def test_unparseable_expiry_treated_as_not_expired(self, db):
+    async def test_unparseable_expiry_fails_closed(self, db):
         _, full = await _seed_token(db, expires_at="not-a-date")
         result = await validate_superadmin_token_for_auth(full, db)
-        assert result is not None
+        assert result is None
 
     async def test_last_used_update_failure_does_not_break_auth(self, db, monkeypatch):
-        """If updating last_used_at raises, auth still succeeds — the timestamp
+        """If updating last_used_at raises, auth still succeeds; the timestamp
         is bookkeeping, not a security gate."""
         token_row, full = await _seed_token(db)
 

@@ -62,7 +62,7 @@ class TestFeaturesUtils:
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_success(self, mock_db_session, mock_org_config):
-        """Test successful feature limit check (EE mode — all features enabled & unlimited)"""
+        """Test successful feature limit check (EE mode: all features enabled & unlimited)"""
         mock_db_session.execute.return_value.scalar_one_or_none.return_value = mock_org_config
 
         with patch('src.security.features_utils.resolve.get_deployment_mode', return_value='ee'), \
@@ -89,7 +89,7 @@ class TestFeaturesUtils:
         """Feature limit check raises 403 when a feature is not enabled.
 
         Uses the FREE plan so the admin toggle actually disables `ai`. On a paid
-        plan an admin toggle cannot disable an included feature — that guarantee
+        plan an admin toggle cannot disable an included feature; that guarantee
         is covered in test_feature_resolve.py.
         """
         mock_org_config.config["plan"] = "free"
@@ -298,7 +298,7 @@ class TestFeaturesUtils:
 
     @pytest.mark.asyncio
     async def test_all_features_covered(self, mock_db_session, mock_org_config):
-        """Test that all features in FeatureSet are covered (EE mode — all enabled)"""
+        """Test that all features in FeatureSet are covered (EE mode: all enabled)"""
         features = [
             "ai", "analytics", "api", "assignments", "collaboration",
             "courses", "members", "payments", "storage", "usergroups"

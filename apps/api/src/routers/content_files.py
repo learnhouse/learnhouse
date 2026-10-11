@@ -23,13 +23,17 @@ from botocore.exceptions import ClientError
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
+from src.db.organizations import Organization
+from src.db.podcasts.episodes import PodcastEpisode
 from src.db.podcasts.podcasts import Podcast
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
-from src.db.user_organizations import UserOrganization
 from src.security.auth import get_current_user
+from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
 from src.security.submission_file_access import (
-    is_submission_file,
+    enforce_solution_file_access,
     enforce_submission_file_access,
+    is_solution_file,
+    is_submission_file,
 )
 from src.services.courses.transfer.storage_utils import (
     get_storage_client,
@@ -40,7 +44,7 @@ router = APIRouter()
 
 # MIME type mapping.
 #
-# SECURITY: no type a browser executes as a document is listed here — no
+# SECURITY: no type a browser executes as a document is listed here; no
 # text/html, application/javascript, text/css or application/xml. Content keys
 # can carry a caller-chosen extension (course import packages name their own
 # files), and this endpoint answers on the shared API origin where every
@@ -50,7 +54,7 @@ router = APIRouter()
 #
 # SVG is the one exception: org logos and thumbnails are legitimately uploaded
 # as SVG, so refusing to render it would blank them out. It keeps its real type
-# and stays inline, but is served under `_SVG_CSP` — scripting inside an SVG is
+# and stays inline, but is served under `_SVG_CSP`; scripting inside an SVG is
 # already disabled when it loads through <img>, and the CSP covers the
 # remaining case of someone opening the URL top-level or framing it.
 MIME_TYPES = {
@@ -92,6 +96,17 @@ _INLINE_MIME_TYPES = frozenset({'application/pdf'})
 _SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
 
 
+# Gated files must stay out of shared caches (CDN, proxies): a copy cached
+# there would be served to the next caller without the access check. Browsers
+# may still keep them, which is what video seeking relies on.
+PUBLIC_CACHE_CONTROL = "public, max-age=86400"
+PRIVATE_CACHE_CONTROL = "private, max-age=86400"
+
+
+def content_cache_control(is_public: bool) -> str:
+    return PUBLIC_CACHE_CONTROL if is_public else PRIVATE_CACHE_CONTROL
+
+
 def _get_mime_type(file_path: str) -> str:
     ext = Path(file_path).suffix.lower()
     return MIME_TYPES.get(ext, 'application/octet-stream')
@@ -107,8 +122,8 @@ def _security_headers(mime_type: str) -> dict[str, str]:
 def _content_disposition(mime_type: str, file_path: str) -> str:
     """Build the Content-Disposition header for a served file.
 
-    Renderable media stays inline (players and <img> need it); anything else —
-    including every unrecognized extension — is forced to download so the file
+    Renderable media stays inline (players and <img> need it); anything else,
+    including every unrecognized extension, is forced to download so the file
     can never be interpreted as a document on the API origin. RFC 5987
     encoding keeps non-ASCII filenames intact.
     """
@@ -142,14 +157,83 @@ def _validate_content_path(file_path: str) -> str | None:
     return os.path.relpath(full_real, base_real)
 
 
+async def _verify_course_in_org(
+    org_uuid: str, course_uuid: str, db_session: AsyncSession
+) -> None:
+    """404 unless ``course_uuid`` exists and belongs to the org ``org_uuid``."""
+    course_org_uuid = (await db_session.execute(
+        select(Organization.org_uuid)
+        .join(Course, Course.org_id == Organization.id)  # type: ignore[arg-type]
+        .where(Course.course_uuid == course_uuid)
+    )).scalars().first()
+    if course_org_uuid is None or course_org_uuid != org_uuid:
+        raise HTTPException(status_code=404, detail="File not found")
+
+
+async def _verify_episode_access(
+    org_uuid: str,
+    podcast_uuid: str,
+    episode_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+    request: Request | None,
+) -> None:
+    """Gate a podcast episode file like the podcast read itself.
+
+    The podcast must belong to ``org_uuid`` and the episode to the podcast
+    (404 otherwise). The caller needs podcast READ (anonymous: public and
+    published), and an unpublished podcast or episode is only served to
+    someone who can edit the podcast.
+    """
+    row = (await db_session.execute(
+        select(Podcast, Organization.org_uuid)
+        .join(Organization, Organization.id == Podcast.org_id)  # type: ignore[arg-type]
+        .where(Podcast.podcast_uuid == podcast_uuid)
+    )).first()
+    if not row or row[1] != org_uuid:
+        raise HTTPException(status_code=404, detail="File not found")
+    podcast = row[0]
+    episode = (await db_session.execute(
+        select(PodcastEpisode).where(
+            PodcastEpisode.episode_uuid == episode_uuid,
+            PodcastEpisode.podcast_id == podcast.id,
+        )
+    )).scalars().first()
+    if not episode:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    from src.security.rbac import check_resource_access, AccessAction
+
+    decision = await check_resource_access(
+        request, db_session, current_user, podcast.podcast_uuid,
+        AccessAction.READ, raise_on_deny=False,
+    )
+    if not decision.allowed:
+        if isinstance(current_user, AnonymousUser):
+            raise HTTPException(status_code=401, detail="Authentication required")
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not (podcast.published and episode.published):
+        can_edit = (await check_resource_access(
+            request, db_session, current_user, podcast.podcast_uuid,
+            AccessAction.UPDATE, raise_on_deny=False,
+        )).allowed
+        if not can_edit:
+            raise HTTPException(status_code=404, detail="File not found")
+
+
 async def _check_content_access(
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
     request: Request | None = None,
-) -> None:
+) -> bool:
     """
     Check if the user has access to the requested content.
+
+    Returns True when the file is public by design (org branding, course
+    thumbnails, avatars) and may be cached by shared caches; False for files
+    served after a per-user check.
 
     Path patterns:
     - orgs/{uuid}/courses/{uuid}/activities/{uuid}/... → check course access
@@ -159,12 +243,22 @@ async def _check_content_access(
     """
     parts = file_path.split('/')
 
-    # Assignment submission files must be gated to the owner or an instructor —
+    # Course activity files (including submission files): the org segment must
+    # be the course's org, so one org's path can't front another org's file.
+    if (
+        len(parts) >= 6
+        and parts[0] == 'orgs'
+        and parts[2] == 'courses'
+        and parts[4] == 'activities'
+    ):
+        await _verify_course_in_org(parts[1], parts[3], db_session)
+
+    # Assignment submission files must be gated to the owner or an instructor,
     # not the generic activity-content grant below (which would let any org
     # member, or anyone on a public course, download another learner's work).
     if is_submission_file(parts):
         await enforce_submission_file_access(parts, current_user, db_session, request)
-        return
+        return False
 
     # Activity content: requires course to be public or user to be org member
     if (
@@ -173,64 +267,30 @@ async def _check_content_access(
         and parts[2] == 'courses'
         and parts[4] == 'activities'
     ):
-        course_uuid = parts[3]
-        course = (await db_session.execute(
-            select(Course).where(Course.course_uuid == course_uuid)
-        )).scalars().first()
-        if not course:
-            raise HTTPException(status_code=403, detail="Access denied")
-        if course.public:
-            return  # Public course — allow anonymous
-        if isinstance(current_user, AnonymousUser):
-            raise HTTPException(status_code=401, detail="Authentication required")
-        # Verify API token is scoped to the correct org
-        if isinstance(current_user, APITokenUser):
-            if current_user.org_id != course.org_id:
-                raise HTTPException(status_code=403, detail="Access denied")
-            return
-        # Verify user belongs to the org that owns this course
-        membership = (await db_session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == current_user.id,
-                UserOrganization.org_id == course.org_id,
-            )
-        )).scalars().first()
-        if not membership:
-            raise HTTPException(status_code=403, detail="Access denied")
-        return
+        # The files under an activity (HLS segments and key, captions, block
+        # uploads) are the activity: apply the activity's own gate (course
+        # read, published, paywall, locks), not just "public course or member".
+        course_uuid, activity_uuid = parts[3], parts[5]
+        await verify_activity_reader_access_by_uuid(
+            request, activity_uuid, current_user, db_session, course_uuid=course_uuid
+        )
+        # The model answer follows the assignment's reveal rule, same as the API
+        if is_solution_file(parts):
+            await enforce_solution_file_access(parts, current_user, db_session, request)
+        return False
 
-    # Podcast episode content: requires podcast to be public or user to be org member
+    # Podcast episode content: same gate as reading the podcast, plus the
+    # episode itself must be published unless the caller can edit the podcast.
     if (
         len(parts) >= 6
         and parts[0] == 'orgs'
         and parts[2] == 'podcasts'
         and parts[4] == 'episodes'
     ):
-        podcast_uuid = parts[3]
-        podcast = (await db_session.execute(
-            select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-        )).scalars().first()
-        if not podcast:
-            raise HTTPException(status_code=403, detail="Access denied")
-        if podcast.public:
-            return  # Public podcast — allow anonymous
-        if isinstance(current_user, AnonymousUser):
-            raise HTTPException(status_code=401, detail="Authentication required")
-        # Verify API token is scoped to the correct org
-        if isinstance(current_user, APITokenUser):
-            if current_user.org_id != podcast.org_id:
-                raise HTTPException(status_code=403, detail="Access denied")
-            return
-        # Verify user belongs to the org that owns this podcast
-        membership = (await db_session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == current_user.id,
-                UserOrganization.org_id == podcast.org_id,
-            )
-        )).scalars().first()
-        if not membership:
-            raise HTTPException(status_code=403, detail="Access denied")
-        return
+        await _verify_episode_access(
+            parts[1], parts[3], parts[5], current_user, db_session, request
+        )
+        return False
 
     # Library media content: enforce the media's (folder-aware) access. Closes
     # the legacy hole where orgs/{}/media/... fell through to the public branch.
@@ -241,18 +301,18 @@ async def _check_content_access(
             await check_resource_access(
                 request, db_session, current_user, media_uuid, AccessAction.READ
             )
-            return
+            return False
         # Randomized keys don't embed the media_uuid → deny direct /content
         # access (these are only served via /media/{uuid}/file).
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Course metadata (thumbnails, etc.) and org-level content — always public
+    # Course metadata (thumbnails, etc.) and org-level content: always public
     if len(parts) >= 2 and parts[0] == 'orgs':
-        return
+        return True
 
-    # User content (avatars, profile images) — always public
+    # User content (avatars, profile images): always public
     if len(parts) >= 2 and parts[0] == 'users':
-        return
+        return True
 
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -288,7 +348,7 @@ async def serve_content_file(
     if safe_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    await _check_content_access(safe_path, current_user, db_session, request=request)
+    is_public = await _check_content_access(safe_path, current_user, db_session, request=request)
 
     s3_key = f"content/{safe_path}"
     s3_client = get_storage_client()
@@ -317,7 +377,7 @@ async def serve_content_file(
     headers = {
         "Accept-Ranges": "bytes",
         "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": content_cache_control(is_public),
         "X-Content-Type-Options": "nosniff",
         "Content-Disposition": _content_disposition(mime_type, safe_path),
         **_security_headers(mime_type),
@@ -429,7 +489,7 @@ async def head_content_file(
     if safe_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    await _check_content_access(safe_path, current_user, db_session, request=request)
+    is_public = await _check_content_access(safe_path, current_user, db_session, request=request)
 
     s3_key = f"content/{safe_path}"
     s3_client = get_storage_client()
@@ -460,7 +520,7 @@ async def head_content_file(
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
             "Content-Type": mime_type,
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": content_cache_control(is_public),
             "X-Content-Type-Options": "nosniff",
             "Content-Disposition": _content_disposition(mime_type, safe_path),
             **_security_headers(mime_type),

@@ -48,7 +48,7 @@ def install(
 ):
     """Install LearnHouse: schema, default elements, organization, and admin user.
 
-    Typer entry point — uses asyncio.run because no loop is running yet.
+    Typer entry point; uses asyncio.run because no loop is running yet.
     Programmatic async callers (FastAPI lifespan, etc.) should await
     `_install_async` directly to keep the SQLAlchemy greenlet context.
     """
@@ -66,7 +66,7 @@ async def _install_async(short: bool) -> None:
 
     # The install_* coroutines use sqlmodel.ext.asyncio.session.AsyncSession.
     # expire_on_commit=False keeps already-loaded attributes accessible after
-    # each commit — without it, `UserRead.model_validate(user)` inside
+    # each commit; without it, `UserRead.model_validate(user)` inside
     # `install_create_organization_user` triggers async refresh outside the
     # session's greenlet context and raises MissingGreenlet.
     async_engine = create_async_engine(
@@ -84,7 +84,7 @@ async def _install_async(short: bool) -> None:
                 print("Default elements installed ✅")
 
                 # Honor LEARNHOUSE_INITIAL_ORG_NAME / LEARNHOUSE_INITIAL_ORG_SLUG when
-                # the CLI passes them — falls back to "Default Organization" / "default"
+                # the CLI passes them; falls back to "Default Organization" / "default"
                 # so existing standalone deployments still work unchanged.
                 org_name = os.environ.get("LEARNHOUSE_INITIAL_ORG_NAME", "Default Organization")
                 org_slug = os.environ.get("LEARNHOUSE_INITIAL_ORG_SLUG", "default").lower()
@@ -191,7 +191,7 @@ def backfill_faststart(
 
     Streams the first 2MB of each MP4 to detect whether it is already faststart;
     only non-faststart files are downloaded in full, remuxed with ffmpeg
-    (-c copy, lossless), and re-uploaded. Safe to re-run — faststart files are
+    (-c copy, lossless), and re-uploaded. Safe to re-run; faststart files are
     skipped.
     """
     import tempfile
@@ -245,7 +245,7 @@ def backfill_faststart(
                     skipped += 1
                     continue
 
-                # This file needs work — counts toward the --limit budget whether
+                # This file needs work; it counts toward the --limit budget whether
                 # or not the remux ultimately succeeds (bounds real download/CPU).
                 attempted += 1
                 print(f"  → needs faststart: {key} ({obj['Size'] / 1e6:.0f} MB)")
@@ -291,7 +291,7 @@ def transcode_backfill(
 ):
     """Queue existing not-yet-ready hosted videos for HLS transcoding.
 
-    Default: enqueue them to Redis — the running API's in-app background consumer
+    Default: enqueue them to Redis; the running API's in-app background consumer
     transcodes them (no worker process needed); returns immediately. Use --inline
     to transcode synchronously here (e.g. a one-off box with ffmpeg + creds)."""
     from src.services.utils.hls_jobs import backfill, enqueue_pending
@@ -311,6 +311,62 @@ def transcode_backfill(
 
 
 @cli.command()
+def index_backfill(
+    org: Annotated[str, typer.Option(help="Only this organization (slug)")] = "",
+    course: Annotated[str, typer.Option(help="Only this course (course_uuid)")] = "",
+    inline: Annotated[bool, typer.Option(help="Index inline now instead of enqueuing")] = False,
+    transcribe: Annotated[bool, typer.Option(help="Also transcribe media never transcribed (uses the orgs' AI credits)")] = False,
+):
+    """Index existing course content for AI search and the copilot.
+
+    Default: enqueue every course for the running API's in-app consumer. Use
+    --inline to index here instead. Media is only transcribed with
+    --transcribe, since that spends each org's AI credits. The API also runs
+    this on its own every few hours for whatever is missing or out of date."""
+    if not inline:
+        from src.core.redis import get_redis_client
+
+        client = get_redis_client()
+        try:
+            reachable = client is not None and client.ping()
+        except Exception:
+            reachable = False
+        if not reachable:
+            print("Redis is not reachable, so nothing would pick the work up. Use --inline.")
+            raise typer.Exit(code=1)
+    result = asyncio.run(_index_backfill(org, course, inline, transcribe))
+    verb = "indexed" if inline else "enqueued"
+    print(f"Index backfill done. courses={result['courses']} {verb}={result['items']}")
+
+
+async def _index_backfill(org_slug: str, course_uuid: str, inline: bool, transcribe: bool) -> dict:
+    from sqlmodel import select
+
+    from src.core.events.database import _async_session_factory
+    from src.db.courses.courses import Course
+    from src.db.organizations import Organization
+    from src.services.ai.rag import pipeline, queue
+
+    async with _async_session_factory() as db:
+        statement = select(Course.id)
+        if org_slug:
+            statement = statement.join(Organization, Organization.id == Course.org_id).where(
+                Organization.slug == org_slug
+            )
+        if course_uuid:
+            statement = statement.where(Course.course_uuid == course_uuid)
+        course_ids = (await db.execute(statement.order_by(Course.id))).scalars().all()
+
+        items = 0
+        for course_id in course_ids:
+            if inline:
+                items += await pipeline.run_course(course_id, transcribe=transcribe)
+            else:
+                items += await queue.enqueue_course(course_id, db, delay=0, transcribe=transcribe)
+    return {"courses": len(course_ids), "items": items}
+
+
+@cli.command()
 def compute_active_user_overage(
     year: Annotated[int, typer.Option(help="Calendar year (UTC), e.g. 2026")] = 0,
     month: Annotated[int, typer.Option(help="Calendar month 1-12 (UTC)")] = 0,
@@ -318,7 +374,7 @@ def compute_active_user_overage(
     """
     Month-end: compute per-org active-user overage for a calendar month.
 
-    Cron-invoked. COMPUTES and reports only — the platform service performs
+    Cron-invoked. COMPUTES and reports only; the platform service performs
     the Stripe charge. Defaults to the current UTC month when year/month
     are omitted.
     """
@@ -378,7 +434,7 @@ def nudges_run(
     Daily: send lifecycle nudges to organization admins.
 
     Cron-invoked. Sends nothing unless LEARNHOUSE_NUDGES_ENABLED is set and the
-    deployment is SaaS — so deploying this command is not the same as arming
+    deployment is SaaS, so deploying this command is not the same as arming
     it. Start with --dry-run, then --seed, then a small --max-sends.
     """
     asyncio.run(
@@ -434,7 +490,7 @@ async def _run_nudges(
         f"inactive_org={result['skipped_inactive_org']}"
     )
     if result["budget_exhausted"]:
-        print("  budget exhausted — remaining candidates deferred to the next run")
+        print("  budget exhausted; remaining candidates deferred to the next run")
     for nudge_id, count in result["by_nudge"].items():
         print(f"    {nudge_id}: {count}")
 
@@ -481,10 +537,10 @@ async def _nudges_stats(days: int) -> None:
     for nudge_id, status, count in rows:
         print(f"  {nudge_id:45} {status:10} {count}")
     # A row still in "claimed" means a process died between the ledger write
-    # and the provider call — worth knowing about, never auto-retried.
+    # and the provider call: worth knowing about, never auto-retried.
     stuck = sum(count for _n, status, count in rows if status == "claimed")
     if stuck:
-        print(f"\n  {stuck} row(s) stuck in 'claimed' — a run died mid-send.")
+        print(f"\n  {stuck} row(s) stuck in 'claimed': a run died mid-send.")
 
 
 @cli.command(name="demo-sync")
@@ -492,7 +548,7 @@ def demo_sync():
     """
     Create or refresh the shared demo organization.
 
-    Safe to run repeatedly — that is the point. The first run builds the demo
+    Safe to run repeatedly; that is the point. The first run builds the demo
     from the bundle; every run after it puts back whatever a visitor changed
     and writes nothing if nothing changed.
 
@@ -522,7 +578,7 @@ async def _demo_sync() -> None:
     print(f"  updated:       {stats.updated}")
     print(f"  drift removed: {stats.drift_deleted}")
     if not stats.created and not stats.updated and not stats.drift_deleted:
-        print("  nothing to do — the demo already matches the bundle")
+        print("  nothing to do: the demo already matches the bundle")
 
 
 @cli.command(name="demo-status")

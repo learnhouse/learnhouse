@@ -7,7 +7,7 @@ class UserMFA(SQLModel, table=True):
     """TOTP enrollment for a single user.
 
     A row exists from the moment enrollment *starts*, but the factor is only
-    live once ``confirmed_at`` is set — i.e. once the user has proven the
+    live once ``confirmed_at`` is set, i.e. once the user has proven the
     authenticator app actually works by submitting a valid code. Unconfirmed
     rows are meaningless and are overwritten if enrollment is restarted.
     """
@@ -27,7 +27,7 @@ class UserMFA(SQLModel, table=True):
             index=True,
         )
     )
-    # Fernet-encrypted TOTP shared secret. See services/auth/mfa.py — this is
+    # Fernet-encrypted TOTP shared secret. See services/auth/mfa.py; this is
     # never stored, returned or logged in plaintext after enrollment setup.
     secret_encrypted: str = ""
     confirmed_at: Optional[str] = None

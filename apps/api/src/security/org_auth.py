@@ -2,7 +2,7 @@
 Centralized organization authorization helpers.
 
 All org membership and admin checks go through this module.
-Superadmin bypass is baked in — superadmins pass every check automatically.
+Superadmin bypass is baked in: superadmins pass every check automatically.
 """
 
 import logging
@@ -13,6 +13,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
+from src.db.users import APITokenUser
 from src.security.superadmin import is_user_superadmin
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
@@ -77,7 +78,7 @@ async def enforce_org_mfa(user_id: int, org_id: int, db_session: AsyncSession) -
 
     * the "require two-factor" policy (:mod:`src.services.orgs.mfa_policy`), and
     * the auth-method / session-sharing policy
-      (:mod:`src.services.orgs.auth_policy`) — which methods may access the org
+      (:mod:`src.services.orgs.auth_policy`): which methods may access the org
       and whether a central/foreign session is accepted.
 
     Every ``require_*`` gate and every additive call site funnels through here,
@@ -167,3 +168,53 @@ async def require_org_role_permission(
     # earlier would also mean issuing DB queries in the middle of the role
     # lookup, which is both wasteful and surprising.
     await enforce_org_mfa(user_id, org_id, db_session)
+
+
+async def require_org_create_permission(
+    current_user,
+    org_id: int,
+    db_session: AsyncSession,
+    resource: str,
+) -> None:
+    """Gate creating a top-level ``resource`` (e.g. ``"courses"``) in ``org_id``.
+
+    Complements ``check_resource_access(..., "<type>_x", CREATE)``, whose
+    placeholder carries no org and so accepts a role held in any org. API
+    tokens are rights-checked there already; here they are pinned to their org.
+    """
+    if isinstance(current_user, APITokenUser):
+        if current_user.org_id != org_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token cannot access resources outside its organization",
+            )
+        return
+    await require_org_role_permission(
+        current_user.id, org_id, db_session, resource, "action_create"
+    )
+
+
+async def org_owns_account(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """Whether ``org_id`` may act on the *identity* of ``user_id``.
+
+    A user row is global. An org that is the account's only organization is
+    effectively its home and may change its email, reset its two-factor or
+    scrub it; an account that also belongs to other orgs (or is a platform
+    superadmin) is not any one org's to rewrite; otherwise joining a second
+    org would hand that org's admins the keys to the first.
+    """
+    if await is_user_superadmin(user_id, db_session):
+        return False
+    other = (await db_session.execute(
+        select(UserOrganization.org_id).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id != org_id,
+        ).limit(1)
+    )).scalars().first()
+    return other is None
+
+
+async def require_org_destroy_right(user_id: int, org_id: int, db_session: AsyncSession) -> None:
+    """Deleting an org, wiping its content or emptying its members takes
+    ``organizations.delete``; admin-or-maintainer status alone is not enough."""
+    await require_org_role_permission(user_id, org_id, db_session, "organizations", "action_delete")

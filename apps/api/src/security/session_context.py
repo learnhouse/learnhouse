@@ -3,7 +3,7 @@
 A session JWT records *how* the user authenticated (``amr``) and *which org the
 session was minted for* (``sorg``). The per-org authorization gates
 (``src.security.org_auth``, ``src.services.orgs.auth_policy``) need those facts,
-but they are called from ~20 sites with only ``(user_id, org_id, db_session)`` —
+but they are called from ~20 sites with only ``(user_id, org_id, db_session)``, and
 threading the token through every signature would be a large, error-prone change.
 
 Instead :func:`src.security.auth.get_current_user` publishes the decoded
@@ -33,8 +33,8 @@ from typing import Optional
 def _legacy_session_grace() -> timedelta:
     """How long a method-less session keeps working once it is first rotated.
 
-    Defaults to the refresh-token lifetime — the longest a member can go without
-    re-authenticating — so everyone gets a full cycle to sign in again before the
+    Defaults to the refresh-token lifetime (the longest a member can go without
+    re-authenticating) so everyone gets a full cycle to sign in again before the
     policy applies to them.
     """
     raw = os.environ.get("LEARNHOUSE_AUTH_LEGACY_SESSION_GRACE_DAYS")
@@ -53,7 +53,7 @@ AMR_CLAIM = "amr"       # authentication method: password | magic_login | google
 SORG_CLAIM = "sorg"     # id of the org the session was established for (int), or absent
 LEGACY_GRACE_CLAIM = "lgc"  # unix seconds after which a method-less session stops being admitted
 
-# Recognised authentication methods. "api_token" is internal — a machine
+# Recognised authentication methods. "api_token" is internal: a machine
 # credential that already carries its own org boundary and is exempt from the
 # human auth-method policy.
 AUTH_METHOD_PASSWORD = "password"
@@ -118,7 +118,7 @@ def carry_session_claims(payload: dict) -> dict:
     first rotation after this shipped, and keeps it from then on. Without a
     deadline such a session would sit outside the org auth-method policy
     forever: rotation copies the missing method claim forward, so it never ages
-    out on its own. Stamping here needs no stored state and no backfill — the
+    out on its own. Stamping here needs no stored state and no backfill: the
     deadline travels in the token, and a real sign-in replaces the whole thing
     with a method-bearing session.
     """

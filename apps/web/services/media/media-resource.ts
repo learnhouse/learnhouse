@@ -18,7 +18,7 @@ import {
  * Build the media file URL for an uploaded media resource.
  *
  * SECURITY: this now points at the authenticated, access-checked API endpoint
- * (GET /api/v1/media/{uuid}/file) — NOT the public storage/CDN URL. The browser
+ * (GET /api/v1/media/{uuid}/file), NOT the public storage/CDN URL. The browser
  * sends the session cookie (same-origin), so private-folder files are only
  * served to authorized users, and the storage path is never exposed. The
  * orgUuid/fileId params are kept for signature stability but unused.
@@ -42,7 +42,7 @@ export function getMediaFileDirectory(
 /**
  * Create a fresh, random share link for a media file. Each call mints a NEW
  * token (the URL is unique every time) and is revocable server-side. The link
- * still enforces the recipient's access — it is not a public capability.
+ * still enforces the recipient's access; it is not a public capability.
  */
 export async function createMediaShareLink(media_uuid: string, access_token: string) {
   const result = await fetch(

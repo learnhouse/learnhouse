@@ -13,6 +13,8 @@ from src.db.communities.discussions import Discussion
 from src.db.communities.discussion_votes import DiscussionVote, DiscussionVoteRead
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.communities.access import require_community_participant
+from src.security.auth import resolve_acting_user_id
 
 
 async def upvote_discussion(
@@ -52,10 +54,12 @@ async def upvote_discussion(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
+    voter_id = await require_community_participant(current_user, community, db_session)
+
     existing_vote = (await db_session.execute(
         select(DiscussionVote).where(
             DiscussionVote.discussion_id == discussion.id,
-            DiscussionVote.user_id == current_user.id,
+            DiscussionVote.user_id == voter_id,
         )
     )).scalars().first()
     if existing_vote:
@@ -66,7 +70,7 @@ async def upvote_discussion(
 
     vote = DiscussionVote(
         discussion_id=discussion.id,
-        user_id=current_user.id,
+        user_id=voter_id,
         vote_uuid=f"vote_{uuid4()}",
         creation_date=str(datetime.now()),
     )
@@ -93,7 +97,7 @@ async def upvote_discussion(
         org_id=community.org_id,
         data={
             "discussion_uuid": discussion.discussion_uuid,
-            "user_id": current_user.id,
+            "user_id": voter_id,
             "upvote_count": discussion.upvote_count,
         },
     )
@@ -124,10 +128,18 @@ async def remove_upvote(
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
+    community = (await db_session.execute(
+        select(Community).where(Community.id == discussion.community_id)
+    )).scalars().first()
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    voter_id = await require_community_participant(current_user, community, db_session)
+
     # Find existing vote
     vote_statement = select(DiscussionVote).where(
         DiscussionVote.discussion_id == discussion.id,
-        DiscussionVote.user_id == current_user.id,
+        DiscussionVote.user_id == voter_id,
     )
     vote = (await db_session.execute(vote_statement)).scalars().first()
 
@@ -166,7 +178,8 @@ async def get_user_votes_for_discussions(
 
     Returns a dictionary mapping discussion_uuid to voted status.
     """
-    if current_user.id == 0:
+    viewer_id = resolve_acting_user_id(current_user)
+    if viewer_id == 0:
         # Anonymous users haven't voted on anything
         return {uuid: False for uuid in discussion_uuids}
 
@@ -180,7 +193,7 @@ async def get_user_votes_for_discussions(
     # Get user's votes for these discussions
     votes_statement = select(DiscussionVote).where(
         DiscussionVote.discussion_id.in_(discussion_id_to_uuid.keys()),  # type: ignore
-        DiscussionVote.user_id == current_user.id,
+        DiscussionVote.user_id == viewer_id,
     )
     votes = (await db_session.execute(votes_statement)).scalars().all()
     voted_discussion_ids = {v.discussion_id for v in votes}

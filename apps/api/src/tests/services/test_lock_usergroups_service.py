@@ -153,15 +153,22 @@ class TestLoadActivityAndCourse:
 class TestLoadUsergroup:
     async def test_success(self, db, org):
         ug = await _make_usergroup(db, org)
-        result = await _load_usergroup("ug_test", db)
+        result = await _load_usergroup("ug_test", org.id, db)
         assert result.id == ug.id
         assert result.usergroup_uuid == "ug_test"
 
     async def test_not_found(self, db, org):
         with pytest.raises(HTTPException) as exc_info:
-            await _load_usergroup("nonexistent_ug", db)
+            await _load_usergroup("nonexistent_ug", org.id, db)
         assert exc_info.value.status_code == 404
         assert "User group not found" in exc_info.value.detail
+
+    async def test_other_orgs_group_is_not_found(self, db, org):
+        """A group from another org can't be attached to this org's course."""
+        await _make_usergroup(db, org)
+        with pytest.raises(HTTPException) as exc_info:
+            await _load_usergroup("ug_test", org.id + 1, db)
+        assert exc_info.value.status_code == 404
 
 
 # ===========================================================================
@@ -462,3 +469,16 @@ class TestGetActivityUsergroups:
                     mock_request, "bad_activity", admin_user, db
                 )
         assert exc_info.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_learner_cannot_list_lock_usergroups(
+    db, org, course, chapter, activity, regular_user, mock_request
+):
+    """Reading the course isn't enough: the group list is editor information."""
+    with pytest.raises(HTTPException) as chapter_exc:
+        await get_chapter_usergroups(mock_request, chapter.chapter_uuid, regular_user, db)
+    with pytest.raises(HTTPException) as activity_exc:
+        await get_activity_usergroups(mock_request, activity.activity_uuid, regular_user, db)
+    assert chapter_exc.value.status_code == 403
+    assert activity_exc.value.status_code == 403

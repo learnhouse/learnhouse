@@ -9,6 +9,7 @@ import redis
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from config.config import get_learnhouse_config
+from src.security.superadmin import is_user_superadmin
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
@@ -41,7 +42,7 @@ from src.db.users import (
     UserUpdatePassword,
 )
 from src.db.user_organizations import UserOrganization
-from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS, ADMIN_ROLE_ID
 from src.security.security import security_hash_password, security_verify_password
 from src.services.security.password_validation import validate_password_complexity
 from src.services.security.profile_validation import validate_profile_fields
@@ -148,7 +149,7 @@ async def _get_welcome_cta_url(
 
         # Org-less signups often arrive without a trusted Origin/Referer, and the
         # generic request fallback would land on the org app rather than the
-        # platform — so only use it after the explicit platform URL.
+        # platform, so only use it after the explicit platform URL.
         base_url = get_trusted_base_url_from_request(request)
         if not base_url:
             platform_url = os.environ.get("LEARNHOUSE_PLATFORM_URL")
@@ -235,7 +236,7 @@ async def create_user(
     # fields alone. Raises 400 when a required field is missing or invalid.
     #
     # OAuth never sees the signup form, so required fields cannot be enforced
-    # here — that would make an org with a required field unable to use Google
+    # here; that would make an org with a required field unable to use Google
     # sign-in at all. Those users are asked to complete their profile after
     # landing instead (see the signup-fields completion endpoint).
     user.extra_metadata = await _resolve_signup_custom_fields(
@@ -250,7 +251,8 @@ async def create_user(
     # already registered (account enumeration).
     conflict = (await db_session.execute(
         select(User).where(
-            (User.username == user.username) | (User.email == user.email)
+            (User.username == user.username)
+            | (func.lower(User.email) == str(user.email).lower())
         )
     )).scalars().first()
 
@@ -262,7 +264,7 @@ async def create_user(
 
     # Exclude unset values; strip protected fields to prevent privilege escalation.
     # `extra_metadata` is protected here because it was just rebuilt from the
-    # org's declared signup fields — re-applying the submitted value would undo
+    # org's declared signup fields; re-applying the submitted value would undo
     # that and let a public caller store arbitrary JSON.
     _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "extra_metadata"}
     user_data = user.model_dump(exclude_unset=True)
@@ -360,8 +362,6 @@ async def create_user_with_invite(
 
     # Usage check
     await check_limits_with_usage("members", org_id, db_session)
-
-
 
     user = await create_user(request, db_session, current_user, user_object, org_id, signup_provider="invite")
 
@@ -467,7 +467,7 @@ async def create_user_without_org(
     user.update_date = str(datetime.now())
 
     # SECURITY: this endpoint is public and has no org, so there are no declared
-    # signup fields to validate against — nothing may be stored. Dropping the
+    # signup fields to validate against, so nothing may be stored. Dropping the
     # submitted blob stops an anonymous caller writing arbitrary JSON.
     user.extra_metadata = None
 
@@ -477,7 +477,8 @@ async def create_user_without_org(
     # prevent account enumeration via this org-less signup endpoint.
     conflict = (await db_session.execute(
         select(User).where(
-            (User.username == user.username) | (User.email == user.email)
+            (User.username == user.username)
+            | (func.lower(User.email) == str(user.email).lower())
         )
     )).scalars().first()
 
@@ -538,6 +539,30 @@ async def update_user(
     # RBAC check
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
 
+    is_owner = current_user.id == user.id
+    acting_superadmin = not is_owner and await is_user_superadmin(current_user.id, db_session)
+
+    # Email and username identify a global account; only its owner (or a
+    # superadmin) changes them, never an admin of one of its orgs.
+    # EmailStr lowercases the domain, so a form that re-sends the stored
+    # address can differ from it in case alone; that is not a change.
+    email_changed = (user_object.email or "").strip().lower() != (user.email or "").strip().lower()
+    identity_changed = email_changed or user_object.username != user.username
+    if identity_changed and not is_owner and not acting_superadmin:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the account owner can change its email or username",
+        )
+
+    if not is_owner and not acting_superadmin:
+        await _check_org_admin_can_edit_account(user, db_session)
+
+    if email_changed:
+        actor = user if is_owner else (await db_session.execute(
+            select(User).where(User.id == current_user.id)
+        )).scalars().first()
+        await _require_reauth_for_email_change(actor, user_object, db_session)
+
     # Reject phishing links in display-name fields on profile update.
     _reject_urls_in_profile_fields(
         username=user_object.username,
@@ -552,7 +577,10 @@ async def update_user(
     # via the update endpoint to enumerate other accounts.
     conflict = (await db_session.execute(
         select(User).where(
-            ((User.username == user_object.username) | (User.email == user_object.email))
+            (
+                (User.username == user_object.username)
+                | (func.lower(User.email) == str(user_object.email).lower())
+            )
             & (User.id != user.id)
         )
     )).scalars().first()
@@ -577,14 +605,19 @@ async def update_user(
         "email_verified_at",
         "extra_metadata",
     }
-    user_data = user_object.model_dump(exclude_unset=True)
+    user_data = user_object.model_dump(
+        exclude_unset=True, exclude={"current_password", "mfa_code"}
+    )
+    if not email_changed:
+        # Keep the stored spelling; login matches the address exactly.
+        user_data.pop("email", None)
 
     # SECURITY: if the email actually changed, force re-verification on the
     # new address. SaaS login requires email_verified=True, so this prevents
     # a compromised session from pivoting to an attacker-controlled address
     # while keeping the trusted-since-signup flag set.
-    incoming_email = user_data.get("email")
-    if incoming_email is not None and incoming_email != user.email:
+    previous_email = user.email
+    if email_changed:
         user.email_verified = False
         user.email_verified_at = None
 
@@ -599,9 +632,122 @@ async def update_user(
     await db_session.commit()
     await db_session.refresh(user)
 
+    if email_changed:
+        await _after_email_change(request, db_session, user, previous_email)
+
     user = UserRead.model_validate(user)
 
     return user
+
+
+async def _check_org_admin_can_edit_account(user: User, db_session: AsyncSession) -> None:
+    """Refuse an org admin's edit of a global account their org does not solely own.
+
+    The ``User`` row is shared by every org it belongs to, so (as for API
+    tokens) an org admin may only rewrite it when the account is an ordinary
+    member of that one org: never a superadmin, an Admin/Maintainer, or an
+    account that also belongs to another organization.
+    """
+    if user.is_superadmin:
+        raise HTTPException(status_code=403, detail="You cannot modify superadmin accounts")
+    memberships = (await db_session.execute(
+        select(UserOrganization).where(UserOrganization.user_id == user.id)
+    )).scalars().all()
+    if len(memberships) != 1:
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot modify accounts that belong to other organizations",
+        )
+    if memberships[0].role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot modify Admin or Maintainer accounts",
+        )
+
+
+async def _require_reauth_for_email_change(
+    actor: User | None, user_object: UserUpdate, db_session: AsyncSession
+) -> None:
+    """Moving an account to another inbox hands over password resets and
+    magic links, so a session alone is not enough: prove the password, or a
+    second factor for accounts that have no password."""
+    if actor is None:
+        raise HTTPException(status_code=403, detail="Re-authentication required")
+
+    if actor.password:
+        try:
+            valid = bool(user_object.current_password) and security_verify_password(
+                user_object.current_password, actor.password
+            )
+        except Exception:
+            valid = False
+        if not valid:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "INVALID_PASSWORD",
+                    "message": "Enter your current password to change your email.",
+                },
+            )
+        return
+
+    from src.services.auth.mfa import decrypt_secret, get_user_mfa, verify_and_consume_totp
+
+    mfa = await get_user_mfa(db_session, actor.id)
+    if mfa is not None and mfa.confirmed_at is not None:
+        secret = decrypt_secret(mfa.secret_encrypted)
+        if not (
+            secret is not None
+            and user_object.mfa_code
+            and await verify_and_consume_totp(
+                db_session, actor.id, secret, user_object.mfa_code, mfa.last_used_timestep
+            )
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "INVALID_MFA_CODE",
+                    "message": "Enter a valid two-factor code to change your email.",
+                },
+            )
+        return
+
+    # No password and no second factor (e.g. a Google-only account): nothing
+    # beyond the session proves who is asking. Setting a password through the
+    # reset flow proves control of the current inbox and unlocks the change.
+    raise HTTPException(
+        status_code=403,
+        detail={
+            "code": "PASSWORD_REQUIRED",
+            "message": "Set a password first (use \"Forgot password\" on the sign-in page), then change your email.",
+        },
+    )
+
+
+async def _after_email_change(
+    request: Request, db_session: AsyncSession, user: User, previous_email: str
+) -> None:
+    """Kill verification links sent to the old address, ask the new one to
+    verify, and warn the old one. Mail failures never undo the change."""
+    from src.services.users.email_verification import (
+        invalidate_verification_tokens,
+        send_verification_email,
+    )
+    from src.services.users.emails import send_email_changed_notice
+
+    try:
+        invalidate_verification_tokens(user.user_uuid)
+    except Exception:
+        logging.warning("Could not invalidate verification tokens after email change")
+
+    try:
+        await send_verification_email(request, db_session, user, org_id=None)
+    except Exception:
+        logging.warning("Could not send verification email after email change")
+
+    send_email_changed_notice(
+        email=previous_email, new_email=user.email, username=user.username
+    )
 
 
 async def update_user_avatar(
@@ -693,7 +839,7 @@ async def update_user_password(
     # Verify old password before allowing change. Accounts with no local
     # password (Google/SSO signups, admin-provisioned users) store an empty
     # sentinel that pwdlib rejects with UnknownHashError, which surfaced as a 500
-    # instead of an answer — there is no old password to prove here, so refuse it
+    # instead of an answer. There is no old password to prove here, so refuse it
     # the same way a wrong one is refused.
     if not user.password or not security_verify_password(form.old_password, user.password):
         raise HTTPException(
@@ -704,7 +850,7 @@ async def update_user_password(
     user.password = security_hash_password(form.new_password)
     # SECURITY: stamp the change so every token minted before it is rejected by
     # get_current_user and /auth/refresh. Without this, a session stolen before
-    # the password change survives it for the full refresh-token lifetime — the
+    # the password change survives it for the full refresh-token lifetime; the
     # reset-code flow already stamps it, this one did not.
     user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     user.update_date = str(datetime.now())
@@ -731,6 +877,47 @@ async def update_user_password(
     return user
 
 
+async def _can_see_user(current_user, target: User, db_session: AsyncSession) -> bool:
+    """Whether ``current_user`` may look ``target`` up by id/uuid/username.
+
+    SECURITY: these lookups only require a login, and any account could
+    otherwise walk the id space and read every user's profile on the platform.
+    Visible: yourself, anyone you share an org with, or anyone if superadmin.
+    An API token is scoped to its org, so it sees only that org's members.
+    Callers answer 404 either way, so a miss does not confirm the account.
+    """
+    from src.db.users import APITokenUser
+
+    if isinstance(current_user, AnonymousUser):
+        return False
+
+    if isinstance(current_user, APITokenUser):
+        member = (await db_session.execute(
+            select(UserOrganization.id).where(
+                UserOrganization.user_id == target.id,
+                UserOrganization.org_id == current_user.org_id,
+            ).limit(1)
+        )).first()
+        return member is not None
+
+    caller_id = current_user.id
+    if caller_id == target.id:
+        return True
+    if await is_user_superadmin(caller_id, db_session):
+        return True
+
+    caller_orgs = select(UserOrganization.org_id).where(
+        UserOrganization.user_id == caller_id
+    )
+    shared = (await db_session.execute(
+        select(UserOrganization.id).where(
+            UserOrganization.user_id == target.id,
+            UserOrganization.org_id.in_(caller_orgs),  # type: ignore[union-attr]
+        ).limit(1)
+    )).first()
+    return shared is not None
+
+
 async def read_user_by_id(
     request: Request,
     db_session: AsyncSession,
@@ -747,7 +934,7 @@ async def read_user_by_id(
     statement = select(User).where(User.id == user_id)
     user = (await db_session.execute(statement)).scalars().first()
 
-    if not user:
+    if not user or not await _can_see_user(current_user, user, db_session):
         raise HTTPException(
             status_code=404,
             detail="Resource not found",  # Generic message prevents enumeration
@@ -772,7 +959,7 @@ async def read_user_by_uuid(
     statement = select(User).where(User.user_uuid == user_uuid)
     user = (await db_session.execute(statement)).scalars().first()
 
-    if not user:
+    if not user or not await _can_see_user(current_user, user, db_session):
         raise HTTPException(
             status_code=404,
             detail="Resource not found",  # Generic message prevents enumeration
@@ -797,7 +984,7 @@ async def read_user_by_username(
     statement = select(User).where(User.username == username)
     user = (await db_session.execute(statement)).scalars().first()
 
-    if not user:
+    if not user or not await _can_see_user(current_user, user, db_session):
         raise HTTPException(
             status_code=404,
             detail="Resource not found",  # Generic message prevents enumeration
@@ -907,6 +1094,14 @@ async def delete_user_by_id(
     # RBAC check
     await rbac_check(request, current_user, "delete", user.user_uuid, db_session)
 
+    # Deleting an account is global and cascades to every org the user is the
+    # sole admin of. Org admins remove members from their org instead.
+    if current_user.id != user.id and not await is_user_superadmin(current_user.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the account owner can delete this account",
+        )
+
     # Capture identity before deletion for the confirmation ('goodbye') email.
     deleted_email = user.email
     deleted_username = user.username
@@ -935,7 +1130,7 @@ async def delete_user_by_id(
         )).scalar_one()
 
         if other_admins:
-            # Another admin remains — keep the org, only drop this membership.
+            # Another admin remains, so keep the org and only drop this membership.
             continue
 
         org = (await db_session.execute(

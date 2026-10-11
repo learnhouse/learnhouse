@@ -1,6 +1,6 @@
 ---
 title: Build It Yourself
-description: A complete, tested, step-by-step guide to building a headless learning platform with Next.js and the LearnHouse API — public catalogue first, then authentication, enrollment, and progress tracking.
+description: A complete, tested, step-by-step guide to building a headless learning platform with Next.js and the LearnHouse API. Public catalogue first, then authentication, enrollment, and progress tracking.
 ---
 
 import { Callout, Tabs } from 'nextra/components'
@@ -8,9 +8,9 @@ import AuthFlowDiagram from '../../../components/diagrams/AuthFlowDiagram'
 
 # Build It Yourself
 
-This is the full build. By the end you'll have a Next.js app that browses your courses, plays their content, signs learners in, enrolls them, and tracks progress — all on top of the LearnHouse API.
+This is the full build. By the end you'll have a Next.js app that browses your courses, plays their content, signs learners in, enrolls them, and tracks progress, all on top of the LearnHouse API.
 
-It's split into two parts. **Part 1 is completely anonymous** — no login, no tokens, just public reads — and gets you a working public site. **Part 2 layers authentication on top** without rewriting anything from Part 1.
+It's split into two parts. **Part 1 is completely anonymous** (no login, no tokens, only public reads) and gets you a working public site. **Part 2 layers authentication on top** without rewriting anything from Part 1.
 
 <Callout type="info">
 **Prerequisites** (from the [overview](/guides/build-learning-platform)): Node 18+, a running LearnHouse instance at `http://localhost:1338`, your **org slug**, and at least one **public, published course** with content. Everything reads the API base from one env var, so adjust it if your instance is elsewhere.
@@ -18,9 +18,9 @@ It's split into two parts. **Part 1 is completely anonymous** — no login, no t
 
 ---
 
-# Part 1 — A public learning site (no auth)
+# Part 1: A public learning site (no auth)
 
-## Step 1 — Scaffold the app
+## Step 1: Scaffold the app
 
 Create a new Next.js app with the App Router, TypeScript, and Tailwind:
 
@@ -38,12 +38,12 @@ NEXT_PUBLIC_LEARNHOUSE_ORG_SLUG=your-org-slug
 ```
 
 <Callout type="warning">
-Replace `your-org-slug` with your real slug. You can confirm it resolves by opening `http://localhost:1338/api/v1/orgs/slug/your-org-slug` in your browser — you should get the organization JSON back.
+Replace `your-org-slug` with your real slug. You can confirm it resolves by opening `http://localhost:1338/api/v1/orgs/slug/your-org-slug` in your browser. You should get the organization JSON back.
 </Callout>
 
-## Step 2 — A tiny API client
+## Step 2: A tiny API client
 
-Every call to LearnHouse goes through one small helper. Create `src/lib/learnhouse.ts`. This mirrors the pattern the official frontend uses in `apps/web/services/utils/ts/requests.ts` — a thin `fetch` wrapper that surfaces the API's `{ "detail": "..." }` error shape.
+Every call to LearnHouse goes through one small helper. Create `src/lib/learnhouse.ts`. This mirrors the pattern the official frontend uses in `apps/web/services/utils/ts/requests.ts`: a thin `fetch` wrapper that surfaces the API's `{ "detail": "..." }` error shape.
 
 ```ts filename="src/lib/learnhouse.ts"
 export const API_URL = process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL!
@@ -112,7 +112,7 @@ export function activityMedia(
 ```
 
 <Callout type="info">
-The content-delivery endpoint lives at the backend **root** (`http://localhost:1338/content/…`), *not* under `/api/v1`. And `thumbnail_image` is just a filename — the real path is `content/orgs/{org_uuid}/courses/{course_uuid}/thumbnails/{filename}`. This mirrors the official frontend's media service.
+The content-delivery endpoint lives at the backend **root** (`http://localhost:1338/content/…`), *not* under `/api/v1`. And `thumbnail_image` is only a filename. The real path is `content/orgs/{org_uuid}/courses/{course_uuid}/thumbnails/{filename}`. This mirrors the official frontend's media service.
 </Callout>
 
 It also defines a few types you'll reuse. Add them to the same file:
@@ -128,7 +128,7 @@ export type Course = {
 }
 
 export type Activity = {
-  id: number                 // numeric id — progress steps are keyed by this
+  id: number                 // numeric id; progress steps are keyed by this
   activity_uuid: string
   name: string
   activity_type: string      // TYPE_VIDEO | TYPE_DOCUMENT | TYPE_DYNAMIC | ...
@@ -150,9 +150,9 @@ export type CourseMeta = Course & {
 }
 ```
 
-## Step 3 — The course catalogue
+## Step 3: The course catalogue
 
-The list endpoint returns a plain JSON array of courses for an organization, **and it works anonymously** for public courses — no token required. Replace `src/app/page.tsx`:
+The list endpoint returns a plain JSON array of courses for an organization, **and it works anonymously** for public courses, with no token required. Replace `src/app/page.tsx`:
 
 ```tsx filename="src/app/page.tsx"
 import Link from 'next/link'
@@ -203,13 +203,13 @@ Start the dev server:
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and you'll see your courses. (If LearnHouse is also on `:3000`, run the API on its usual port and Next will pick `:3001` — or set `PORT`.)
+Open [http://localhost:3000](http://localhost:3000) and you'll see your courses. (If LearnHouse is also on `:3000`, run the API on its usual port and Next will pick `:3001`, or set `PORT`.)
 
 <Callout type="info">
-The path segment after `courses/` is the **full** `course_uuid` exactly as returned by the list — it already includes the `course_` prefix (e.g. `course_3f2a…`). Pass it through verbatim; don't add or strip anything.
+The path segment after `courses/` is the **full** `course_uuid` exactly as returned by the list. It already includes the `course_` prefix (e.g. `course_3f2a…`). Pass it through verbatim; don't add or strip anything.
 </Callout>
 
-## Step 4 — The course page
+## Step 4: The course page
 
 `GET /api/v1/courses/{course_uuid}/meta` returns the whole content tree in one call: the course plus its `chapters`, each with its `activities`. Create `src/app/courses/[uuid]/page.tsx`:
 
@@ -261,7 +261,7 @@ export default async function CoursePage({
 `meta` accepts a `with_unpublished_activities` query flag, but that only returns drafts to a user with edit permission. For a public site, leave it off and filter on `activity.published` as above.
 </Callout>
 
-## Step 5 — The activity viewer
+## Step 5: The activity viewer
 
 Each activity carries an `activity_type` and a `content` object. Render per type. Create `src/app/courses/[uuid]/[activityUuid]/page.tsx`:
 
@@ -339,26 +339,26 @@ function Unsupported() {
 ```
 
 <Callout type="warning">
-The exact keys inside `content` depend on the activity sub-type and your editor version. Inspect a real activity (`GET /api/v1/activities/{activity_uuid}`) on your instance and adjust the field names above to match. Dynamic pages in particular are a rich block document — see the [Editor docs](/platform/editor) for the block model.
+The exact keys inside `content` depend on the activity sub-type and your editor version. Inspect a real activity (`GET /api/v1/activities/{activity_uuid}`) on your instance and adjust the field names above to match. Dynamic pages in particular are a block document; see the [Editor docs](/platform/editor) for the block model.
 </Callout>
 
-### ✅ Checkpoint
+### Checkpoint
 
-You now have a **fully browsable public learning site** — catalogue, course pages, and an activity viewer — with **zero authentication**. This is already useful for any course you've marked public. Everything from here is additive.
+You now have a **browsable public learning site** (catalogue, course pages, and an activity viewer) with **no authentication**. This is already useful for any course you've marked public. Everything from here is additive.
 
 ---
 
-# Part 2 — Authentication, enrollment & progress
+# Part 2: Authentication, enrollment & progress
 
-Now we add accounts. The golden rule: **LearnHouse tokens never reach the browser.** Your Next.js app logs in on the server, stores the tokens in its *own* httpOnly cookie, and attaches them when calling the API. This is the Backend-for-Frontend (BFF) pattern.
+Now we add accounts. The main rule: **LearnHouse tokens never reach the browser.** Your Next.js app logs in on the server, stores the tokens in its *own* httpOnly cookie, and attaches them when calling the API. This is the Backend-for-Frontend (BFF) pattern.
 
 <AuthFlowDiagram />
 
 <Callout type="warning">
-**The refresh gotcha.** `POST /api/v1/auth/login` returns `access_token` **and** `refresh_token` in the JSON body. But `GET /api/v1/auth/refresh` reads the refresh token **only from the `LH_refresh` cookie** — not a header and not the body. So when your server refreshes, it must send the stored refresh token *as the `LH_refresh` cookie*. We handle this in `lib/session.ts` below.
+**The refresh gotcha.** `POST /api/v1/auth/login` returns `access_token` **and** `refresh_token` in the JSON body. But `GET /api/v1/auth/refresh` reads the refresh token **only from the `LH_refresh` cookie**, not a header and not the body. So when your server refreshes, it must send the stored refresh token *as the `LH_refresh` cookie*. We handle this in `lib/session.ts` below.
 </Callout>
 
-## Step 6 — A server-side session
+## Step 6: A server-side session
 
 Create `src/lib/session.ts` to read and write the session cookie. It stores the LearnHouse tokens, encrypted-at-rest concerns aside, in an httpOnly cookie that the browser can't read from JavaScript.
 
@@ -393,7 +393,7 @@ export async function clearSession() {
 }
 ```
 
-## Step 7 — Signup & login Route Handlers (the BFF)
+## Step 7: Signup & login Route Handlers (the BFF)
 
 The login endpoint expects **form-encoded** fields `username` (the email) and `password`. Create `src/app/api/auth/login/route.ts`:
 
@@ -457,7 +457,7 @@ export async function POST(req: NextRequest) {
 On SaaS deployments, new accounts must verify their email before they can log in. On a local self-hosted instance this is usually disabled, so signup → login works immediately. See [Authentication](/developers/api/authentication) for the verification endpoints.
 </Callout>
 
-A logout handler clears the cookie — `src/app/api/auth/logout/route.ts`:
+A logout handler clears the cookie in `src/app/api/auth/logout/route.ts`:
 
 ```ts filename="src/app/api/auth/logout/route.ts"
 import { NextResponse } from 'next/server'
@@ -480,7 +480,7 @@ export async function POST() {
 
 ### A login form
 
-A minimal client form that posts to your BFF — `src/app/login/page.tsx`:
+A minimal client form that posts to your BFF, in `src/app/login/page.tsx`:
 
 ```tsx filename="src/app/login/page.tsx"
 'use client'
@@ -573,7 +573,7 @@ export default function SignupPage() {
 }
 ```
 
-## Step 8 — Authenticated requests & refresh
+## Step 8: Authenticated requests & refresh
 
 Add a helper that pulls the token from the session and refreshes it when it has expired. Append to `src/lib/session.ts`:
 
@@ -618,9 +618,9 @@ export async function authedFetch<T = any>(
 }
 ```
 
-## Step 9 — Enrollment
+## Step 9: Enrollment
 
-A learner's enrollments and progress live on a **Trail** (one per user per organization). Adding a course to the trail is `POST /api/v1/trail/add_course/{course_uuid}` — but the trail must **exist first**, or you'll get a `404 Trail not found`. The simplest way to guarantee it: read the trail once (`GET /api/v1/trail/org/{org_id}/trail` creates it lazily) right before enrolling.
+A learner's enrollments and progress live on a **Trail** (one per user per organization). Adding a course to the trail is `POST /api/v1/trail/add_course/{course_uuid}`, but the trail must **exist first**, or you'll get a `404 Trail not found`. The easiest way to make sure it exists is to read the trail once (`GET /api/v1/trail/org/{org_id}/trail` creates it lazily) right before enrolling.
 
 Add a Server Action and wire it to a button. Create `src/app/courses/[uuid]/actions.ts`:
 
@@ -631,7 +631,7 @@ import { revalidatePath } from 'next/cache'
 import { authedFetch } from '@/lib/session'
 
 export async function enroll(courseUuid: string, orgId: number) {
-  // Reading the trail creates it if it doesn't exist yet — required before a
+  // Reading the trail creates it if it doesn't exist yet; required before a
   // course can be added. orgId comes from the course `meta` response.
   await authedFetch(`trail/org/${orgId}/trail`)
   await authedFetch(`trail/add_course/${courseUuid}`, { method: 'POST' })
@@ -680,7 +680,7 @@ export default function EnrollButton({
 }
 ```
 
-## Step 10 — Progress
+## Step 10: Progress
 
 A learner's progress lives on their **Trail**. Fetch it for the current org with `GET /api/v1/trail/org/{org_id}/trail`; it returns a `runs` array (one per enrolled course), each with `steps` (one per completed activity, keyed by numeric `activity_id`) and a `course_total_steps` count.
 
@@ -745,13 +745,13 @@ export default async function CoursePage({
 }
 ```
 
-Finally, call `markActivityDone(course_uuid, activity_uuid)` from the activity viewer when a learner finishes — e.g. a "Mark as complete" button (a client component using the same `useTransition` pattern as `EnrollButton`).
+Finally, call `markActivityDone(course_uuid, activity_uuid)` from the activity viewer when a learner finishes, e.g. a "Mark as complete" button (a client component using the same `useTransition` pattern as `EnrollButton`).
 
 <Callout type="info">
-`steps` are keyed by the activity's numeric `id`, so the completed-set check uses `activity.id`. The `meta` response includes both `id` and `activity_uuid` on each activity — `id` for matching progress, `activity_uuid` for routing.
+`steps` are keyed by the activity's numeric `id`, so the completed-set check uses `activity.id`. The `meta` response includes both `id` and `activity_uuid` on each activity: `id` for matching progress, `activity_uuid` for routing.
 </Callout>
 
-### ✅ Checkpoint
+### Checkpoint
 
 You now have the full loop: **browse → sign up → log in → enroll → learn → track progress**, all on your own Next.js frontend, with tokens safely server-side.
 
@@ -759,9 +759,9 @@ You now have the full loop: **browse → sign up → log in → enroll → learn
 
 ## Where to go next
 
-- **Make it yours** — swap in real block rendering for dynamic activities ([Editor model](/platform/editor)), add search (`GET /api/v1/courses/org_slug/{slug}/search?query=…`), and collections.
-- **React to events** — add [webhooks](/guides/custom-features/webhooks) so your platform (or an external tool) reacts when a learner completes a course.
-- **Go deeper on the API** — the [API Reference](/developers/api) and the interactive Swagger UI at `http://localhost:1338/docs` (dev mode) list every endpoint and schema.
-- **Compare with the reference** — see [`learnhouse/headless-examples`](https://github.com/learnhouse/headless-examples) for a complete project.
+- **Make it yours**: swap in real block rendering for dynamic activities ([Editor model](/platform/editor)), add search (`GET /api/v1/courses/org_slug/{slug}/search?query=…`), and collections.
+- **React to events**: add [webhooks](/guides/custom-features/webhooks) so your platform (or an external tool) reacts when a learner completes a course.
+- **Go deeper on the API**: the [API Reference](/developers/api) and the interactive Swagger UI at `http://localhost:1338/docs` (dev mode) list every endpoint and schema.
+- **Compare with the reference**: see [`learnhouse/headless-examples`](https://github.com/learnhouse/headless-examples) for a complete project.
 
 Prefer to skip the typing? **[Let an agent build all of this](/guides/build-learning-platform/with-an-agent)** from a ready-made spec.

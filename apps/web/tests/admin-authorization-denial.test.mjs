@@ -5,7 +5,7 @@
 // 2. Denial set isAuthorized(false) *and* router.push('/dash'), so the message
 //    flashed for a frame and the user was bounced with no explanation.
 // 3. isAuthorized started at `false` while the decision is made in an effect,
-//    which runs after the commit — so the denial surface painted for a frame on
+//    which runs after the commit, so the denial surface painted for a frame on
 //    every load, admins included.
 
 import { describe, expect, test } from "bun:test";

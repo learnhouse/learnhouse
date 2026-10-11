@@ -49,7 +49,7 @@ export default [
         rules: {
             // Physical-direction utilities don't mirror under dir="rtl". This is
             // an error, not a warning: the whole codebase was converted in one
-            // pass, so there is no backlog to stage around — anything this
+            // pass, so there is no backlog to stage around; anything this
             // catches is genuinely new.
             "rtl/no-physical-direction": "error",
             "react/no-unescaped-entities": "off",
@@ -62,8 +62,8 @@ export default [
             // repo-wide change makes CI fail on debt it merely walked past.
             //
             // Base ESLint also can't read TypeScript, so it reports the
-            // parameter names inside type annotations — `onSelect: (id: string)
-            // => void` — as unused variables. Those names are documentation,
+            // parameter names inside type annotations, like `onSelect: (id: string)
+            // => void`, as unused variables. Those names are documentation,
             // not dead code, and renaming them to `_id` would be a regression
             // in readability. A real fix means adopting
             // @typescript-eslint/no-unused-vars, which is its own change.
@@ -72,7 +72,7 @@ export default [
             // pre-existing backlog (#800) that the full-project lint already
             // reports. Keep them as warnings so the strict changed-files gate
             // enforces genuinely-new debt without blocking PRs on legacy code
-            // they merely touch — matching the "don't block on pre-existing
+            // they merely touch, matching the "don't block on pre-existing
             // issues" intent in web-lint.yaml.
             "react-hooks/refs": "warn",
             "react-hooks/set-state-in-effect": "warn",

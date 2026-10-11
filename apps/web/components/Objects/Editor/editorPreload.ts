@@ -41,7 +41,7 @@ export function preloadComponentsForContent(doc: any): void {
     const loader = COMPONENT_LOADERS[t]
     if (loader) {
       loader().catch(() => {
-        // Swallow — the node-view's own dynamic() will retry on render.
+        // Swallow; the node-view's own dynamic() will retry on render.
       })
     }
   }

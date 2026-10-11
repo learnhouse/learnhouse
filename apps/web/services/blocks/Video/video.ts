@@ -35,7 +35,7 @@ export async function uploadNewVideoFile(
 }
 
 /**
- * Upload a video block with REAL upload progress (XHR — fetch can't report upload
+ * Upload a video block with REAL upload progress (XHR, since fetch can't report upload
  * progress). Mirrors createVideoActivityWithProgress so the block gets the same
  * accurate progress the video-activity flow has. Resolves with the created
  * BlockRead JSON.
@@ -59,7 +59,7 @@ export function uploadNewVideoFileWithProgress(
 
 /**
  * Fetch a fresh video block by its UUID (BlockRead). Used to read the current
- * `content.hls` transcode status — the Tiptap-stored blockObject is an
+ * `content.hls` transcode status; the Tiptap-stored blockObject is an
  * upload-time snapshot and never sees later HLS-ready updates.
  */
 export async function getVideoBlock(block_uuid: string, access_token: string) {

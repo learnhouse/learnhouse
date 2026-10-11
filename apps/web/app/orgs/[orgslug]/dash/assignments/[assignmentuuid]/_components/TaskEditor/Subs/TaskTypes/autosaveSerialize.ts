@@ -1,7 +1,7 @@
 // Canonical serializations of task answers for the value-driven auto-save.
 //
 // Two answers with the same MEANING must serialize to the same string,
-// regardless of array order or partial-vs-complete representation — otherwise a
+// regardless of array order or partial-vs-complete representation; otherwise a
 // hydrated "full" server answer would look different from the learner's
 // "partial" edit and either save spuriously or (worse) never settle. Equally,
 // distinct answers must never collide, so free-text values go through

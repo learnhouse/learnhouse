@@ -8,9 +8,9 @@ reason to contain URLs, so we reject them at signup and profile update, and
 additionally strip any that slip through before rendering them into emails.
 
 Two entry points:
-- ``validate_display_name`` / ``validate_profile_fields`` — hard-reject at
+- ``validate_display_name`` / ``validate_profile_fields``: hard-reject at
   write time (raises the caller's chosen error).
-- ``strip_urls`` / ``sanitize_display_name`` — best-effort scrub at render
+- ``strip_urls`` / ``sanitize_display_name``: best-effort scrub at render
   time (defense in depth for values already stored, e.g. via OAuth import).
 """
 import re
@@ -19,15 +19,15 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 # Control characters (CR/LF/NUL and other C0 controls). Stripped before a value
-# is rendered into an email — a newline in a display name that reaches an SMTP
+# is rendered into an email: a newline in a display name that reaches an SMTP
 # header is a classic header-injection (Bcc smuggling) primitive.
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 
-# URL / link-like patterns. We match generously — the goal is to deny links in
+# URL / link-like patterns. We match generously; the goal is to deny links in
 # a display name, not to perfectly parse URLs. Any of these signals a link:
 #   - a scheme (http://, https://, ftp://, etc.)
 #   - a bare "www." host
-#   - any dotted token immediately followed by a path ("evil.dev/x") — this is
+#   - any dotted token immediately followed by a path ("evil.dev/x"); this is
 #     TLD-agnostic so new/obscure TLDs (.dev .ai .ly .to …) can't slip through
 #   - a "word.tld" with a plausible TLD (schemeless, pathless)
 #   - explicit "dot"/"punto" obfuscation ("evil dot com")
@@ -36,7 +36,7 @@ _URL_PATTERNS = [
     re.compile(r"\bwww\.", re.IGNORECASE),
     re.compile(r"[a-z0-9-]+\.[a-z]{2,24}/\S", re.IGNORECASE),
     re.compile(r"[a-z0-9-]+\.(?:com|net|org|io|ru|online|site|click|xyz|top|shop|app|link|info|biz|co|me|tv|cc|pro|store|live|dev|ai|ly|to|sh|gg|us|uk|de|fr|es|it|nl|pl|in|cn|jp|br|za|ua|by|kz)\b", re.IGNORECASE),
-    # Obfuscated dot forms only — "evil[.]com", "evil(dot)com", "evil dot com".
+    # Obfuscated dot forms only: "evil[.]com", "evil(dot)com", "evil dot com".
     # Deliberately NOT a bare "." so ordinary names ("Dr. Strange", "J.R.R.")
     # are not flagged; real "word.tld" is already covered by the list above.
     re.compile(r"[a-z0-9-]+\s*(?:\[\.\]|\(dot\)|\bdot\b|\bpunto\b)\s*[a-z]{2,}", re.IGNORECASE),

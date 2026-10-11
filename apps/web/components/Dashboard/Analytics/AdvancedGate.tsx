@@ -17,7 +17,7 @@ export function AdvancedGate({
 }) {
   const { t } = useTranslation()
   const org = useOrg() as any
-  // Advanced analytics is an Enterprise feature — deep-link to that plan.
+  // Advanced analytics is an Enterprise feature, so deep-link to that plan.
   const upgradeUrl = getUpgradeUrl(org?.slug || 'default', 'enterprise')
 
   return (

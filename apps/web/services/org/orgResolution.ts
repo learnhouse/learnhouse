@@ -36,11 +36,11 @@ async function getServerTenancy(): Promise<'multi' | 'single'> {
 
 /**
  * Resolves the organization context from multiple sources in priority order:
- * 1. Subdomain (multi tenancy only — delegates to the EE resolver)
+ * 1. Subdomain (multi tenancy only; delegates to the EE resolver)
  * 2. `LH_org` cookie
  * 3. Action token (for password reset, email verification links)
  *
- * In single tenancy the subdomain step is skipped — the middleware has
+ * In single tenancy the subdomain step is skipped; the middleware has
  * already pinned the request to the default org.
  */
 export async function resolveOrg(searchParams?: { token?: string }): Promise<OrgResolutionResult> {
@@ -126,7 +126,7 @@ async function resolveFromSubdomainViaEE(): Promise<ResolvedOrg | null> {
 
 async function getOrgSlugFromSubdomainViaEE(): Promise<string | null> {
   try {
-    const mod = await import('@/ee/services/tenancy/resolveMulti.server')
+    const mod = await import('@ee/services/tenancy/resolveMulti.server')
     const cookieStore = await cookies()
     const frontendDomain =
       process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN
@@ -134,7 +134,7 @@ async function getOrgSlugFromSubdomainViaEE(): Promise<string | null> {
       || 'localhost'
     return await mod.getOrgSlugFromHost(frontendDomain)
   } catch {
-    // EE module unavailable — multi tenancy without EE is invalid; the
+    // EE module unavailable. Multi tenancy without EE is invalid; the
     // backend would have refused to boot. Stay quiet here.
     return null
   }
@@ -169,7 +169,7 @@ async function resolveFromToken(token: string): Promise<ResolvedOrg | null> {
 
 /**
  * Decode JWT payload without verification. Used only to extract `org_uuid`
- * for display purposes — the action itself is verified by the backend.
+ * for display purposes; the action itself is verified by the backend.
  */
 function decodeTokenPayload(token: string): { org_uuid?: string; email?: string; action?: string } | null {
   try {

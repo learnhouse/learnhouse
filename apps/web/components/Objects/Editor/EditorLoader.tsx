@@ -75,7 +75,7 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
 
   return (
     <div className="relative">
-      {/* Skeleton — fades out when editor is ready */}
+      {/* Skeleton: fades out when editor is ready */}
       <div
         style={{
           opacity: editorReady ? 0 : 1,
@@ -89,7 +89,7 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
         <EditorSkeleton />
       </div>
 
-      {/* Editor — mounts when data ready, fades in when TipTap initializes */}
+      {/* Editor: mounts when data ready, fades in when TipTap initializes */}
       {dataReady && (
         <div
           style={{
