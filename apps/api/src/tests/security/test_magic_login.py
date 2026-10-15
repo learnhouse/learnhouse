@@ -1,6 +1,6 @@
 """User-facing passwordless magic-login token: shape, single-use, purpose."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi import HTTPException
@@ -18,26 +18,6 @@ from src.services.auth.magic_login import (
 from src.services.auth.session import mint_session_tokens
 
 
-class _FakeRedis:
-    """Minimal SETNX-capable stand-in for the single-use marker store."""
-
-    def __init__(self):
-        self.store = {}
-
-    def set(self, key, value, nx=False, ex=None):
-        if nx and key in self.store:
-            return None
-        self.store[key] = value
-        return True
-
-
-@pytest.fixture
-def fake_redis():
-    r = _FakeRedis()
-    with patch.object(ml, "_redis", return_value=r):
-        yield r
-
-
 class TestIssue:
     def test_token_shape(self):
         token = issue_magic_login_token("a@b.co", org_id=5)
@@ -52,74 +32,94 @@ class TestIssue:
         assert "org_id" not in payload
 
 
+@pytest.mark.asyncio
 class TestConsume:
-    def test_valid_token_returns_email_and_org(self, fake_redis):
+    async def test_valid_token_returns_email_and_org(self, db):
         token = issue_magic_login_token("a@b.co", org_id=9)
-        assert consume_magic_login_token(token) == ("a@b.co", 9)
+        assert await consume_magic_login_token(token, db) == ("a@b.co", 9)
 
-    def test_single_use(self, fake_redis):
+    async def test_single_use(self, db):
         token = issue_magic_login_token("a@b.co", org_id=None)
-        assert consume_magic_login_token(token) == ("a@b.co", None)
+        assert await consume_magic_login_token(token, db) == ("a@b.co", None)
         with pytest.raises(HTTPException) as exc:
-            consume_magic_login_token(token)
+            await consume_magic_login_token(token, db)
         assert exc.value.status_code == 410
         assert exc.value.detail["code"] == "MAGIC_LINK_USED"
 
-    def test_wrong_purpose_rejected(self, fake_redis):
+    async def test_wrong_purpose_rejected(self, db):
         # A real session token must never be spendable as a login link.
         session = mint_session_tokens("a@b.co", amr="password", org_id=1)
         with pytest.raises(HTTPException) as exc:
-            consume_magic_login_token(session.access_token)
+            await consume_magic_login_token(session.access_token, db)
         assert exc.value.status_code == 410
         assert exc.value.detail["code"] == "MAGIC_LINK_INVALID"
 
-    def test_garbage_token_rejected(self, fake_redis):
+    async def test_garbage_token_rejected(self, db):
         # decode_jwt returns None (not a raise) for an unparseable token, so this
         # lands on the wrong-purpose branch.
         with pytest.raises(HTTPException) as exc:
-            consume_magic_login_token("not-a-jwt")
+            await consume_magic_login_token("not-a-jwt", db)
         assert exc.value.status_code == 410
         assert exc.value.detail["code"] == "MAGIC_LINK_INVALID"
 
-    def test_fails_closed_without_redis(self):
-        # If the single-use store is unavailable the link must be refused, not
-        # allowed to replay.
-        token = issue_magic_login_token("a@b.co", org_id=None)
-        with patch.object(ml, "_redis", return_value=None):
-            with pytest.raises(HTTPException) as exc:
-                consume_magic_login_token(token)
+    async def test_token_without_jti_rejected(self, db):
+        token = create_access_token(data={"sub": "a@b.co", "purpose": MAGIC_LOGIN_PURPOSE})
+        with pytest.raises(HTTPException) as exc:
+            await consume_magic_login_token(token, db)
         assert exc.value.status_code == 410
-        assert exc.value.detail["code"] == "MAGIC_LINK_USED"
 
-    def test_fails_closed_when_redis_errors(self):
-        # A Redis that is reachable but throws on SET must also fail closed.
+    async def test_fails_closed_when_the_record_cannot_be_written(self, db):
+        # If the use cannot be recorded the link must be refused, not let
+        # through unrecorded where it could be replayed.
         token = issue_magic_login_token("a@b.co", org_id=None)
-        boom = Mock()
-        boom.set.side_effect = RuntimeError("connection reset")
-        with patch.object(ml, "_redis", return_value=boom):
+        with patch.object(db, "commit", side_effect=RuntimeError("db down")):
             with pytest.raises(HTTPException) as exc:
-                consume_magic_login_token(token)
-        assert exc.value.status_code == 410
-        assert exc.value.detail["code"] == "MAGIC_LINK_USED"
+                await consume_magic_login_token(token, db)
+        assert exc.value.status_code == 503
 
-    def test_undecodable_token_raises_401(self, fake_redis):
+    async def test_refresh_typed_token_rejected(self, db):
+        token = create_access_token(
+            data={"sub": "a@b.co", "purpose": MAGIC_LOGIN_PURPOSE, "jti": "t", "type": "refresh"}
+        )
+        with pytest.raises(HTTPException) as exc:
+            await consume_magic_login_token(token, db)
+        assert exc.value.detail["code"] == "MAGIC_LINK_INVALID"
+
+    async def test_token_without_jti_is_invalid_not_used(self, db):
+        token = create_access_token(data={"sub": "a@b.co", "purpose": MAGIC_LOGIN_PURPOSE})
+        with pytest.raises(HTTPException) as exc:
+            await consume_magic_login_token(token, db)
+        assert exc.value.detail["code"] == "MAGIC_LINK_INVALID"
+
+    async def test_malformed_link_is_not_spent(self, db):
+        # Refused before redemption, so nothing is recorded against its jti.
+        from sqlmodel import select
+
+        from src.db.used_link_tokens import UsedLinkToken
+
+        token = create_access_token(data={"sub": "", "purpose": MAGIC_LOGIN_PURPOSE, "jti": "keep"})
+        with pytest.raises(HTTPException):
+            await consume_magic_login_token(token, db)
+        assert (await db.execute(select(UsedLinkToken))).scalars().first() is None
+
+    async def test_undecodable_token_raises_401(self, db):
         # decode_jwt raising (rather than returning None) lands on the 401 path.
         with patch.object(ml, "decode_jwt", side_effect=ValueError("bad")):
             with pytest.raises(HTTPException) as exc:
-                consume_magic_login_token("whatever")
+                await consume_magic_login_token("whatever", db)
         assert exc.value.status_code == 401
         assert exc.value.detail["code"] == "MAGIC_LINK_INVALID"
 
-    def test_token_without_subject_raises_401(self, fake_redis):
+    async def test_token_without_subject_raises_401(self, db):
         token = create_access_token(
             data={"sub": "", "purpose": MAGIC_LOGIN_PURPOSE, "jti": "abc"}
         )
         with pytest.raises(HTTPException) as exc:
-            consume_magic_login_token(token)
+            await consume_magic_login_token(token, db)
         assert exc.value.status_code == 401
         assert exc.value.detail["code"] == "MAGIC_LINK_INVALID"
 
-    def test_non_integer_org_id_falls_back_to_none(self, fake_redis):
+    async def test_non_integer_org_id_falls_back_to_none(self, db):
         token = create_access_token(
             data={
                 "sub": "a@b.co",
@@ -128,7 +128,7 @@ class TestConsume:
                 "org_id": "not-a-number",
             }
         )
-        assert consume_magic_login_token(token) == ("a@b.co", None)
+        assert await consume_magic_login_token(token, db) == ("a@b.co", None)
 
 
 @pytest.mark.asyncio

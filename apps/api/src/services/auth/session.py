@@ -13,6 +13,7 @@ in the app the moment it is minted; it can only be spent at the MFA
 verification endpoint, which decodes it explicitly.
 """
 
+import secrets
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Optional
@@ -48,9 +49,40 @@ def create_mfa_pending_token(
     ``sorg``) so that when the second factor is completed at ``/auth/login/mfa``
     the real session is minted with the same method and org it was started for."""
     return create_access_token(
-        data={"sub": email, "purpose": MFA_PENDING_PURPOSE, **session_claims(amr, org_id)},
+        data={
+            "sub": email,
+            "purpose": MFA_PENDING_PURPOSE,
+            # Single use: completing the second factor spends it, so a pending
+            # token seen once cannot start another session.
+            "jti": secrets.token_urlsafe(16),
+            **session_claims(amr, org_id),
+        },
         expires_delta=MFA_PENDING_TTL,
     )
+
+
+async def mfa_pending_token_usable(db_session: AsyncSession, token: str) -> bool:
+    """Read-only pre-check, before a code is spent on it: the pending token
+    carries a ``jti`` that has not been redeemed yet."""
+    from src.services.auth.link_tokens import link_token_spent
+
+    payload = decode_jwt(token) or {}
+    jti = payload.get("jti")
+    if not jti or not isinstance(payload.get("exp"), int):
+        return False
+    return not await link_token_spent(db_session, jti)
+
+
+async def spend_mfa_pending_token(db_session: AsyncSession, token: str) -> bool:
+    """Record a pending token as used once its second factor is accepted.
+    False when it was already spent or carries no ``jti``."""
+    from src.services.auth.link_tokens import redeem_link_token
+
+    payload = decode_jwt(token) or {}
+    jti, exp = payload.get("jti"), payload.get("exp")
+    if not jti or not isinstance(exp, int):
+        return False
+    return await redeem_link_token(db_session, jti, MFA_PENDING_PURPOSE, exp)
 
 
 def decode_mfa_pending_token(token: str) -> Optional[str]:

@@ -1,3 +1,4 @@
+import contextlib
 import logging
 from datetime import timedelta, datetime, timezone
 from typing import Literal, Optional
@@ -189,7 +190,20 @@ def is_request_secure(request: Request | None) -> bool:
 
 
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str, request: Request = None):
-    """Helper to set authentication cookies."""
+    """Set the httpOnly token cookies on a JSON response the web app's auth
+    route relays to the browser.
+
+    Only that route (``apps/web/app/api/auth/[...path]``) produces a session
+    the web client recognises: it re-sets these cookies from the host the
+    browser is on and adds the readable ``LH_session`` marker the client checks
+    before it will even try to restore a session. Setting these cookies here on
+    a ``RedirectResponse`` the browser follows directly leaves the user
+    signed in server-side and anonymous client-side, with the cookie domain
+    guessed from headers a custom-domain hairpin does not carry. Sign-in flows
+    that start from a link therefore land on a web page that posts the
+    credential to the API; see ``/auth/magic``.
+    ``test_session_cookies_only_on_json_responses`` enforces this.
+    """
     is_secure = is_request_secure(request)
     cookie_domain = get_cookie_domain_for_request(request) if request else None
 
@@ -1015,6 +1029,53 @@ async def magic_link_request(
     return generic
 
 
+async def _verify_admin_magic_link(
+    request: Request, response: Response, token: str, db_session: AsyncSession
+):
+    """Redeem an admin-issued sign-in link for the /auth/magic page.
+
+    Not subject to the org's self-service magic-login toggle: the org issued
+    this link itself through its API token. Refusals carry the same
+    ``{"code", "message"}`` detail as the emailed link, so the page shows them
+    the same way.
+    """
+    from src.services.admin.admin import consume_magic_link_token
+
+    user, access_token, refresh_token, redirect_to, mfa_token = await consume_magic_link_token(
+        token=token, db_session=db_session
+    )
+    user_read = UserRead.model_validate(user)
+    await _record_login_quietly(user, request, db_session)
+
+    # The page that redeems the link opens redirect_to afterwards when its URL
+    # carries no ?next (an integration that built the URL from the raw token).
+    if mfa_token:
+        return {"mfa_required": True, "mfa_token": mfa_token, "redirect_to": redirect_to}
+
+    set_auth_cookies(response, access_token, refresh_token, request)
+    return {
+        "user": user_read,
+        "tokens": {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expiry": get_token_expiry_ms(),
+        },
+        "redirect_to": redirect_to,
+    }
+
+
+async def _record_login_quietly(user: User, request: Request, db_session: AsyncSession) -> None:
+    """Last-login bookkeeping for a link sign-in. The link is already spent by
+    now, so a failure here must not cost the user their sign-in. Callers read
+    anything they need from ``user`` first: the rollback expires it."""
+    try:
+        await update_login_info(user, get_client_ip(request), db_session)
+    except Exception:
+        logging.getLogger(__name__).warning("Could not record last login", exc_info=True)
+        with contextlib.suppress(Exception):
+            await db_session.rollback()
+
+
 @router.post(
     "/magic-link/verify",
     summary="Complete a passwordless login",
@@ -1035,7 +1096,13 @@ async def magic_link_verify(
     from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
     from src.services.orgs.auth_policy import enforce_login_auth_method
 
-    email, org_id = consume_magic_login_token(body.token)
+    # The sign-in page redeems both kinds of link: this emailed one and the
+    # admin/integration one, which an org's API token issues for a member.
+    peek = decode_jwt(body.token) or {}
+    if peek.get("purpose") == "magic_link":
+        return await _verify_admin_magic_link(request, response, body.token, db_session)
+
+    email, org_id = await consume_magic_login_token(body.token, db_session)
 
     # A link issued before the org turned magic login off must not still work.
     await enforce_login_auth_method(db_session, org_id, AUTH_METHOD_MAGIC_LOGIN)
@@ -1049,18 +1116,19 @@ async def magic_link_verify(
             detail={"code": "MAGIC_LINK_INVALID", "message": "This login link is no longer valid."},
         )
 
-    client_ip = get_client_ip(request)
-    await update_login_info(user, client_ip, db_session)
-
+    # Issue first, then the bookkeeping: its rollback on failure expires
+    # ``user``, which issuing reads.
+    user_read = UserRead.model_validate(user)
     issue = await issue_session_or_challenge(
         db_session, user, amr=AUTH_METHOD_MAGIC_LOGIN, org_id=org_id
     )
+    await _record_login_quietly(user, request, db_session)
     if issue.mfa_required:
         return {"mfa_required": True, "mfa_token": issue.mfa_token}
 
     set_auth_cookies(response, issue.access_token, issue.refresh_token, request)
     return {
-        "user": UserRead.model_validate(user),
+        "user": user_read,
         "tokens": {
             "access_token": issue.access_token,
             "refresh_token": issue.refresh_token,

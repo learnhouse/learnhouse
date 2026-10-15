@@ -223,7 +223,7 @@ async def test_consume_magic_link_token_incomplete_payload_raises_410(db):
         with pytest.raises(HTTPException) as exc_info:
             await consume_magic_link_token("fake-token", db)
     assert exc_info.value.status_code == 410
-    assert "incomplete" in exc_info.value.detail.lower()
+    assert exc_info.value.detail["code"] == "MAGIC_LINK_INVALID"
 
 
 @pytest.mark.asyncio
@@ -233,12 +233,16 @@ async def test_consume_magic_link_token_ghost_user_raises_410(db):
         mock_decode.return_value = {
             "sub": "ghost@nonexistent.com",
             "purpose": "magic_link",
+            "type": "access",
+            "jti": "ghost-jti",
+            "exp": 4102444800,
             "org_id": 1,
         }
         with pytest.raises(HTTPException) as exc_info:
             await consume_magic_link_token("fake-token", db)
     assert exc_info.value.status_code == 410
-    assert "no longer exists" in exc_info.value.detail.lower()
+    assert exc_info.value.detail["code"] == "MAGIC_LINK_INVALID"
+    assert "no longer exists" in exc_info.value.detail["message"]
 
 
 # ---------------------------------------------------------------------------

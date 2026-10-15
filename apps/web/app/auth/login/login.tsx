@@ -51,13 +51,6 @@ const LoginClient = (props: LoginClientProps) => {
   // SSO counts only once it is actually configured for the org (ssoEnabled).
   const hasAlternativeMethods = googleAllowed || magicLoginAllowed || (ssoAllowed && ssoEnabled)
 
-  // A signed-in user has nothing to do on /login → bounce to the hub. The proxy
-  // does this best-effort, but pages must self-handle it too (mirrors signup.tsx).
-  // Guarded by !isSubmitting so a FRESH login (which flips the session to
-  // authenticated) doesn't race the onSubmit's own post-login navigation.
-  useEffect(() => {
-    if (isAuthenticated && !isSubmitting) router.replace('/home')
-  }, [isAuthenticated, isSubmitting, router])
 
   // Error state with type information
   const [error, setError] = useState('')
@@ -72,6 +65,7 @@ const LoginClient = (props: LoginClientProps) => {
   // replaced in place by the code step. Same route, so the ?next redirect and
   // the org context survive without being threaded through a navigation.
   const [mfaToken, setMfaToken] = useState<string | null>(null)
+  const arrivedWithMfaRef = React.useRef(false)
   const [mfaCode, setMfaCode] = useState('')
   const [useBackupCode, setUseBackupCode] = useState(false)
   const [mfaError, setMfaError] = useState('')
@@ -118,16 +112,30 @@ const LoginClient = (props: LoginClientProps) => {
     setMagicSent(true)
   }
 
-  // An admin magic link for a 2FA-enabled user lands here with a pending token
-  // in the query string instead of a session (see /admin/{org}/auth/magic-consume).
+  // A sign-in link for a 2FA-enabled user lands here with a pending token in
+  // the query string instead of a session (see /auth/magic).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('mfa_token')
     if (token) {
+      arrivedWithMfaRef.current = true
       setMfaToken(token)
       removeQueryParamsFromAddressBar(['mfa_token'])
     }
   }, [])
+
+  // A signed-in user has nothing to do on /login → bounce to the hub. The proxy
+  // does this best-effort, but pages must self-handle it too (mirrors signup.tsx).
+  // Guarded by !isSubmitting so a FRESH login (which flips the session to
+  // authenticated) doesn't race the onSubmit's own post-login navigation.
+  // Not while a second factor is pending: a sign-in link for another account
+  // hands its 2FA step over here (see /auth/magic). The ref covers the render
+  // before the mfaToken state lands.
+  useEffect(() => {
+    if (isAuthenticated && !isSubmitting && !mfaToken && !arrivedWithMfaRef.current) {
+      router.replace('/home')
+    }
+  }, [isAuthenticated, isSubmitting, mfaToken, router])
 
   // Honor a post-login redirect via ?next / ?redirect, sanitized to an
   // internal same-origin path (no open-redirect), defaulting to /home.

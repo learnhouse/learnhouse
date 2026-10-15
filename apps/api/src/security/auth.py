@@ -720,6 +720,39 @@ async def get_authenticated_user(
     return user
 
 
+def api_token_user_from(api_token) -> APITokenUser:
+    """The request identity for an ``APIToken`` row."""
+    # Normalize rights to a plain dict of plain dicts so .get() works everywhere
+    raw_rights = api_token.rights
+    if raw_rights is None:
+        rights = None
+    elif isinstance(raw_rights, dict):
+        # Already a dict, but inner values might be Pydantic models
+        rights = {}
+        for k, v in raw_rights.items():
+            if isinstance(v, dict):
+                rights[k] = v
+            elif hasattr(v, 'model_dump'):
+                rights[k] = v.model_dump()
+            elif hasattr(v, 'dict'):
+                rights[k] = v.dict()
+            else:
+                rights[k] = v
+    else:
+        # Full Pydantic Rights model
+        rights = raw_rights.model_dump() if hasattr(raw_rights, 'model_dump') else raw_rights.dict()
+
+    return APITokenUser(
+        id=api_token.id,
+        user_uuid=api_token.token_uuid,
+        username=f"api_token_{api_token.name}",
+        org_id=api_token.org_id,
+        rights=rights,
+        token_name=api_token.name,
+        created_by_user_id=api_token.created_by_user_id,
+    )
+
+
 async def validate_api_token(
     token: str,
     db_session: AsyncSession,
@@ -742,36 +775,7 @@ async def validate_api_token(
     if not api_token:
         return None
 
-    # Normalize rights to a plain dict of plain dicts so .get() works everywhere
-    raw_rights = api_token.rights
-    if raw_rights is None:
-        rights = None
-    elif isinstance(raw_rights, dict):
-        # Already a dict, but inner values might be Pydantic models
-        rights = {}
-        for k, v in raw_rights.items():
-            if isinstance(v, dict):
-                rights[k] = v
-            elif hasattr(v, 'model_dump'):
-                rights[k] = v.model_dump()
-            elif hasattr(v, 'dict'):
-                rights[k] = v.dict()
-            else:
-                rights[k] = v
-    else:
-        # Full Pydantic Rights model
-        rights = raw_rights.model_dump() if hasattr(raw_rights, 'model_dump') else raw_rights.dict()
-
-    # Create and return an APITokenUser
-    return APITokenUser(
-        id=api_token.id,
-        user_uuid=api_token.token_uuid,
-        username=f"api_token_{api_token.name}",
-        org_id=api_token.org_id,
-        rights=rights,
-        token_name=api_token.name,
-        created_by_user_id=api_token.created_by_user_id,
-    )
+    return api_token_user_from(api_token)
 
 
 async def validate_superadmin_api_token(

@@ -40,7 +40,9 @@ from src.services.auth.mfa import (
 from src.services.auth.session import (
     decode_mfa_pending_token,
     decode_mfa_pending_provenance,
+    mfa_pending_token_usable,
     mint_session_tokens,
+    spend_mfa_pending_token,
 )
 from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
 from src.services.orgs.mfa_policy import evaluate_mfa_compliance, get_org_mfa_policy
@@ -428,6 +430,14 @@ async def api_login_mfa(
 
     _check_mfa_rate_limit(request, "login", email)
 
+    # Refuse a spent (or pre-single-use) pending token before a code is
+    # consumed on it, so a refusal never costs the user a backup code.
+    if not await mfa_pending_token_usable(db_session, form.mfa_token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "MFA_SESSION_EXPIRED", "message": "Please sign in again."},
+        )
+
     # Provenance (how the user authenticated, which org for) was stamped into the
     # pending token at the password/magic-link/SSO step; carry it into the real
     # session so the org auth-method / sharing policy sees the true method.
@@ -474,16 +484,25 @@ async def api_login_mfa(
 
         result = mint_session_tokens(user.email, pending_amr, pending_org_id)
 
+    # One pending token, one session: replaying it with another valid code
+    # (a second backup code, the next TOTP step) must not mint a second one.
+    user_read = UserRead.model_validate(user)
+    if not await spend_mfa_pending_token(db_session, form.mfa_token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "MFA_SESSION_EXPIRED", "message": "Please sign in again."},
+        )
+
     set_auth_cookies(response, result.access_token, result.refresh_token, request)
 
     return {
-        "user": UserRead.model_validate(user),
+        "user": user_read,
         "tokens": {
             "access_token": result.access_token,
             "refresh_token": result.refresh_token,
             "expiry": get_token_expiry_ms(),
         },
-        "backup_codes_remaining": await count_unused_backup_codes(db_session, user.id),
+        "backup_codes_remaining": await count_unused_backup_codes(db_session, user_read.id),
     }
 
 
