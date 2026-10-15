@@ -351,6 +351,111 @@ class TestMagicLinkVerify:
         assert response.json()["detail"]["code"] == "MAGIC_LINK_USED"
 
 
+class TestEmailedLinkBookkeeping:
+    async def test_last_login_failure_does_not_cost_the_sign_in(self, client, verified_user):
+        from src.services.auth.magic_login import issue_magic_login_token
+
+        email = verified_user.email
+        token = issue_magic_login_token(email, None)
+        with patch("src.routers.auth.update_login_info", side_effect=RuntimeError("db hiccup")):
+            response = await client.post("/api/v1/auth/magic-link/verify", json={"token": token})
+        assert response.status_code == 200
+        assert response.json()["user"]["email"] == email
+
+
+class TestAdminMagicLinkVerify:
+    """The /auth/magic page also redeems links an org issues through its API
+    token (purpose ``magic_link``), so they get the web app's cookies too."""
+
+    @pytest.fixture
+    async def member(self, db, org, verified_user):
+        now = str(datetime.now())
+        db.add(UserOrganization(user_id=verified_user.id, org_id=org.id, role_id=4, creation_date=now, update_date=now))
+        await db.commit()
+        return verified_user
+
+    def _link(self, email, org_id, jti="admin-jti"):
+        from datetime import timedelta
+        from src.security.auth import create_access_token
+
+        return create_access_token(
+            data={"sub": email, "purpose": "magic_link", "org_id": org_id, "redirect_to": "", "jti": jti},
+            expires_delta=timedelta(minutes=5),
+        )
+
+    async def test_success_mints_session(self, client, org, member):
+        response = await client.post(
+            "/api/v1/auth/magic-link/verify", json={"token": self._link(member.email, org.id)}
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["user"]["email"] == member.email
+        assert body["tokens"]["access_token"]
+        assert "LH_access" in response.headers.get("set-cookie", "")
+
+    async def test_returns_the_links_redirect(self, client, org, member):
+        # An integration that builds the URL from the raw token has no ?next;
+        # the page opens the link's own redirect_to instead.
+        from datetime import timedelta
+        from src.security.auth import create_access_token
+
+        token = create_access_token(
+            data={"sub": member.email, "purpose": "magic_link", "org_id": org.id,
+                  "redirect_to": "/course/intro", "jti": "redirect-jti"},
+            expires_delta=timedelta(minutes=5),
+        )
+        response = await client.post("/api/v1/auth/magic-link/verify", json={"token": token})
+        assert response.status_code == 200
+        assert response.json()["redirect_to"] == "/course/intro"
+
+    async def test_last_login_failure_does_not_cost_the_sign_in(self, client, org, member):
+        # Read up front: the test shares the request's session, which the
+        # failed bookkeeping rolls back.
+        email, token = member.email, self._link(member.email, org.id)
+        with patch("src.routers.auth.update_login_info", side_effect=RuntimeError("db hiccup")):
+            response = await client.post("/api/v1/auth/magic-link/verify", json={"token": token})
+        assert response.status_code == 200
+        assert response.json()["user"]["email"] == email
+
+    async def test_second_use_refused(self, client, org, member):
+        token = self._link(member.email, org.id)
+        first = await client.post("/api/v1/auth/magic-link/verify", json={"token": token})
+        assert first.status_code == 200
+        again = await client.post("/api/v1/auth/magic-link/verify", json={"token": token})
+        assert again.status_code == 410
+        assert again.json()["detail"]["code"] == "MAGIC_LINK_USED"
+
+    async def test_mfa_user_gets_challenge_not_session(self, client, db, org, member):
+        await _enroll_confirmed(db, member.id)
+        response = await client.post(
+            "/api/v1/auth/magic-link/verify", json={"token": self._link(member.email, org.id)}
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["mfa_required"] is True
+        assert body["mfa_token"]
+        assert "LH_access" not in response.headers.get("set-cookie", "")
+
+    async def test_non_member_refused(self, client, other_org, member):
+        response = await client.post(
+            "/api/v1/auth/magic-link/verify", json={"token": self._link(member.email, other_org.id)}
+        )
+        assert response.status_code == 410
+        assert response.json()["detail"]["code"] == "MAGIC_LINK_INVALID"
+
+    async def test_not_gated_by_self_service_magic_login_toggle(self, client, org, member):
+        # The org issued this link itself; turning off emailed login links for
+        # its members must not break its own integration.
+        with patch(
+            "src.services.orgs.auth_policy.enforce_login_auth_method",
+            side_effect=HTTPException(status_code=403, detail="disabled"),
+        ):
+            response = await client.post(
+                "/api/v1/auth/magic-link/verify", json={"token": self._link(member.email, org.id)}
+            )
+        assert response.status_code == 200
+
+
 class TestRefreshPreservesProvenance:
     """Rotation must not launder a method-bound/org-bound session into a
     claim-less one; otherwise a refresh would silently bypass the org

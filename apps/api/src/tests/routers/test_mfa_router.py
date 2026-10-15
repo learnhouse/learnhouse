@@ -361,6 +361,95 @@ class TestLoginMFA:
         assert response.status_code == 200
         assert response.json()["tokens"]["access_token"]
 
+    async def test_pending_token_mints_only_one_session(self, app, db, regular_user):
+        # A pending token seen once (shoulder-surfed, logged) must not start a
+        # second session even with another valid code.
+        app.dependency_overrides.pop(get_authenticated_user, None)
+        user = await self._get_user_row(db, regular_user.id)
+        await _enroll(db, user.id, generate_totp_secret())
+        await _add_backup_code(db, user.id, "AAAAA-BBBBB")
+        await _add_backup_code(db, user.id, "CCCCC-DDDDD")
+        token = create_mfa_pending_token(user.email, AUTH_METHOD_PASSWORD, 1)
+
+        c1, c2 = self._patches()
+        with c1, c2:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as c:
+                first = await c.post(
+                    "/api/v1/auth/login/mfa",
+                    json={"mfa_token": token, "code": "AAAAA-BBBBB", "is_backup_code": True},
+                )
+                again = await c.post(
+                    "/api/v1/auth/login/mfa",
+                    json={"mfa_token": token, "code": "CCCCC-DDDDD", "is_backup_code": True},
+                )
+        assert first.status_code == 200
+        assert again.status_code == 401
+        assert again.json()["detail"]["code"] == "MFA_SESSION_EXPIRED"
+        # Refused before the code was looked at, so the second backup code
+        # was not burned by the replay.
+        from sqlmodel import select
+
+        remaining = (
+            await db.execute(
+                select(UserMFABackupCode).where(
+                    UserMFABackupCode.user_id == user.id,
+                    UserMFABackupCode.used_at.is_(None),
+                )
+            )
+        ).scalars().all()
+        assert len(remaining) == 1
+
+    async def test_concurrent_completion_mints_only_one_session(self, app, db, regular_user):
+        # Both requests passed the read-only pre-check; the one that loses the
+        # insert must not mint a session.
+        from unittest.mock import AsyncMock, patch
+
+        app.dependency_overrides.pop(get_authenticated_user, None)
+        user = await self._get_user_row(db, regular_user.id)
+        await _enroll(db, user.id, generate_totp_secret())
+        await _add_backup_code(db, user.id, "EEEEE-FFFFF")
+        token = create_mfa_pending_token(user.email, AUTH_METHOD_PASSWORD, 1)
+
+        c1, c2 = self._patches()
+        with c1, c2, patch(
+            "src.routers.mfa.spend_mfa_pending_token", new_callable=AsyncMock, return_value=False
+        ):
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as c:
+                response = await c.post(
+                    "/api/v1/auth/login/mfa",
+                    json={"mfa_token": token, "code": "EEEEE-FFFFF", "is_backup_code": True},
+                )
+        assert response.status_code == 401
+        assert "tokens" not in response.json()
+
+    async def test_pending_token_without_jti_refused(self, app, db, regular_user):
+        from datetime import timedelta
+
+        from src.security.auth import create_access_token
+
+        app.dependency_overrides.pop(get_authenticated_user, None)
+        user = await self._get_user_row(db, regular_user.id)
+        await _enroll(db, user.id, generate_totp_secret())
+        await _add_backup_code(db, user.id, "AAAAA-BBBBB")
+        token = create_access_token(
+            data={"sub": user.email, "purpose": "mfa_pending"}, expires_delta=timedelta(minutes=5)
+        )
+
+        c1, c2 = self._patches()
+        with c1, c2:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as c:
+                response = await c.post(
+                    "/api/v1/auth/login/mfa",
+                    json={"mfa_token": token, "code": "AAAAA-BBBBB", "is_backup_code": True},
+                )
+        assert response.status_code == 401
+
     async def test_invalid_code_401(self, app, db, regular_user):
         app.dependency_overrides.pop(get_authenticated_user, None)
         user = await self._get_user_row(db, regular_user.id)

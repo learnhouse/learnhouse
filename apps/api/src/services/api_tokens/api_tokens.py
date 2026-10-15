@@ -477,6 +477,51 @@ async def _require_api_access_plan(org_id: int, db_session: AsyncSession) -> Non
         )
 
 
+async def _api_token_is_live(api_token: APIToken, db_session: AsyncSession) -> bool:
+    """Whether an active token may still act: not expired, plan still includes
+    API access (403 otherwise), creator still a member of the org."""
+    # An expiry we cannot read fails closed: the admin meant the token to stop
+    # working at some point.
+    if api_token.expires_at:
+        try:
+            expires_at = _parse_expires_at(api_token.expires_at)
+            now = datetime.now(expires_at.tzinfo)
+        except (ValueError, TypeError, AttributeError):
+            return False
+        if now > expires_at:
+            return False
+
+    # API access is a plan feature, so a token minted while the org was on a
+    # qualifying plan stops working once the org drops below it.
+    await _require_api_access_plan(api_token.org_id, db_session)
+
+    # A token acts with its creator's standing in the org: once the creator
+    # has left (or been removed from) the org, the token stops working.
+    return await is_org_member(api_token.created_by_user_id, api_token.org_id, db_session)
+
+
+async def get_live_api_token(token_id: int, db_session: AsyncSession) -> Optional[APIToken]:
+    """The token with ``token_id`` if it could still authenticate a request now.
+
+    For credentials a token issued earlier (a sign-in link) that must stop
+    working once the token is revoked, expires or loses its plan.
+    """
+    api_token = (
+        await db_session.execute(
+            select(APIToken).where(
+                APIToken.id == token_id,
+                APIToken.is_active == True,  # noqa: E712
+            )
+        )
+    ).scalars().first()
+    if api_token is None:
+        return None
+    try:
+        return api_token if await _api_token_is_live(api_token, db_session) else None
+    except HTTPException:
+        return None
+
+
 async def validate_api_token_for_auth(
     token: str,
     db_session: AsyncSession,
@@ -508,24 +553,7 @@ async def validate_api_token_for_auth(
     if not api_token:
         return None
 
-    # Check if token is expired. An expiry we cannot read fails closed: the
-    # admin meant the token to stop working at some point.
-    if api_token.expires_at:
-        try:
-            expires_at = _parse_expires_at(api_token.expires_at)
-            now = datetime.now(expires_at.tzinfo)
-        except (ValueError, TypeError, AttributeError):
-            return None
-        if now > expires_at:
-            return None
-
-    # API access is a plan feature, so a token minted while the org was on a
-    # qualifying plan stops working once the org drops below it.
-    await _require_api_access_plan(api_token.org_id, db_session)
-
-    # A token acts with its creator's standing in the org: once the creator
-    # has left (or been removed from) the org, the token stops working.
-    if not await is_org_member(api_token.created_by_user_id, api_token.org_id, db_session):
+    if not await _api_token_is_live(api_token, db_session):
         return None
 
     # Update last_used_at and opportunistically upgrade legacy hashes.

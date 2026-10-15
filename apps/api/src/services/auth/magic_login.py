@@ -8,7 +8,8 @@ carries ``purpose: "magic_login"``.
 
 Security posture mirrors the admin link:
 * short TTL,
-* a random ``jti`` enforced single-use via a Redis ``SETNX`` marker at consume,
+* a random ``jti`` enforced single-use by a durable record at consume (see
+  :mod:`src.services.auth.link_tokens`),
 * consumption goes through :func:`issue_session_or_challenge`, so a user with 2FA
   still gets a second-factor challenge; a magic link is a first factor, not a
   bypass.
@@ -51,40 +52,6 @@ def issue_magic_login_token(email: str, org_id: Optional[int]) -> str:
     if org_id is not None:
         payload["org_id"] = org_id
     return create_access_token(data=payload, expires_delta=MAGIC_LOGIN_TTL)
-
-
-def _redis():  # pragma: no cover - thin import shim; patched out in tests
-    try:
-        from src.core.redis import get_redis_client
-
-        return get_redis_client()
-    except Exception:
-        return None
-
-
-def _burn_jti(jti: str) -> bool:
-    """Atomically consume ``jti``. True on first use, False on replay.
-
-    Fails **closed**: if Redis is unavailable we refuse the link rather than risk
-    a replayable login. (The admin link fails open because it is already
-    single-recipient and integration-gated; a self-service emailed link is a
-    softer target, so single-use must hold even without Redis.)
-    """
-    r = _redis()
-    if r is None:
-        logger.error("Magic-login: Redis unavailable, refusing to consume (fail closed)")
-        return False
-    try:
-        ok = r.set(
-            f"magic_login_used:{jti}",
-            "1",
-            nx=True,
-            ex=int(MAGIC_LOGIN_TTL.total_seconds()) + 60,
-        )
-        return bool(ok)
-    except Exception:
-        logger.exception("Magic-login: Redis error during single-use check")
-        return False
 
 
 async def resolve_org(org_slug: Optional[str], db_session: AsyncSession) -> Optional[Organization]:
@@ -164,29 +131,40 @@ def send_magic_login_email(
     )
 
 
-def consume_magic_login_token(token: str) -> Tuple[str, Optional[int]]:
-    """Validate + burn a magic-login token. Returns ``(email, org_id)``.
+async def consume_magic_login_token(token: str, db_session: AsyncSession) -> Tuple[str, Optional[int]]:
+    """Validate + spend a magic-login token. Returns ``(email, org_id)``.
 
-    Raises 401/410 on an invalid, expired, wrong-purpose, or already-used token.
+    Raises 401/410 on an invalid, expired, wrong-purpose, or already-used token,
+    and 503 when the use cannot be recorded (the link is refused, never let
+    through unrecorded).
     """
+    from src.services.auth.link_tokens import redeem_link_token
+
     try:
         payload = decode_jwt(token)
     except Exception:
         raise HTTPException(status_code=401, detail={"code": "MAGIC_LINK_INVALID", "message": "This login link is invalid or has expired."})
 
-    if not payload or payload.get("purpose") != MAGIC_LOGIN_PURPOSE:
+    # Links are minted by create_access_token, which stamps type "access".
+    if not payload or payload.get("purpose") != MAGIC_LOGIN_PURPOSE or payload.get("type") != "access":
         raise HTTPException(status_code=410, detail={"code": "MAGIC_LINK_INVALID", "message": "This is not a valid login link."})
-
-    jti = payload.get("jti")
-    if not jti or not _burn_jti(jti):
-        raise HTTPException(
-            status_code=410,
-            detail={"code": "MAGIC_LINK_USED", "message": "This login link has already been used. Please request a new one."},
-        )
 
     email = payload.get("sub")
     if not email:
         raise HTTPException(status_code=401, detail={"code": "MAGIC_LINK_INVALID", "message": "This login link is invalid."})
+
+    jti = payload.get("jti")
+    exp = payload.get("exp")
+    if not jti or not isinstance(exp, int):
+        raise HTTPException(status_code=410, detail={"code": "MAGIC_LINK_INVALID", "message": "This is not a valid login link."})
+
+    # Spend the link only once it is known to be well formed, and before
+    # anything else is read or written.
+    if not await redeem_link_token(db_session, jti, MAGIC_LOGIN_PURPOSE, exp):
+        raise HTTPException(
+            status_code=410,
+            detail={"code": "MAGIC_LINK_USED", "message": "This login link has already been used. Please request a new one."},
+        )
 
     org_raw = payload.get("org_id")
     try:

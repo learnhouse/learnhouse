@@ -1657,9 +1657,9 @@ class TestGetUserByEmail:
 
 class TestIssueMagicLink:
 
-    @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="https://academy.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_abc")
-    async def test_issues_link(self, mock_create, mock_base_url, token_user, learner_user, mock_request, db):
+    async def test_issues_link(self, mock_create, mock_org_base, token_user, learner_user, mock_request, db):
         result = await issue_magic_link(
             token_user=token_user,
             user_id=learner_user.id,
@@ -1670,13 +1670,26 @@ class TestIssueMagicLink:
             db_session=db,
         )
         assert result["token"] == "magic_jwt_abc"
-        # URL should use frontend origin and include the /api/v1 prefix
-        assert result["url"] == "https://myorg.example.com/api/v1/admin/test-org/auth/magic-consume?token=magic_jwt_abc"
+        # The link opens the redeeming page on the org's own site, not the API.
+        assert result["url"] == "https://academy.example.com/auth/magic?token=magic_jwt_abc&next=%2Fcourse%2Ffoo"
         assert "expires_at" in result
+        # Built for the token's org, so a custom domain wins over the request host.
+        assert mock_org_base.call_args.kwargs["org_id"] == token_user.org_id
 
         call_kwargs = mock_create.call_args.kwargs
         assert call_kwargs["data"]["purpose"] == "magic_link"
         assert call_kwargs["data"]["redirect_to"] == "/course/foo"
+        assert call_kwargs["data"]["jti"]
+
+    @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="")
+    @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_abc")
+    async def test_falls_back_to_request_host_without_org_site(self, _create, _org_base, _base, token_user, learner_user, mock_request, db):
+        result = await issue_magic_link(
+            token_user=token_user, user_id=learner_user.id, redirect_to=None,
+            ttl_seconds=300, org_slug="test-org", request=mock_request, db_session=db,
+        )
+        assert result["url"] == "https://myorg.example.com/auth/magic?token=magic_jwt_abc"
 
     @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_clamp")
@@ -1774,32 +1787,35 @@ class TestMagicLinkConsume:
     # patch targets follow it there.
     @patch("src.services.auth.session.create_refresh_token", return_value="refresh_consumed")
     @patch("src.services.auth.session.create_access_token", return_value="access_consumed")
-    async def test_valid_token(self, mock_access, mock_refresh, token_user, user, db):
+    async def test_valid_token(self, mock_access, mock_refresh, token_user, learner_user, db):
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
-                "sub": user.email,
+                "sub": learner_user.email,
                 "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
                 "org_id": token_user.org_id,
                 "redirect_to": "/course/bar",
             }
             consumed_user, access, refresh, redirect, mfa_token = await consume_magic_link_token(
                 token="fake_token", db_session=db,
             )
-        assert consumed_user.id == user.id
+        assert consumed_user.id == learner_user.id
         assert access == "access_consumed"
         assert refresh == "refresh_consumed"
         assert redirect == "/course/bar"
         assert mfa_token is None
 
     @patch("src.services.auth.session.create_access_token", return_value="unused")
-    async def test_enrolled_user_gets_challenge_not_session(self, mock_access, token_user, user, db):
+    async def test_enrolled_user_gets_challenge_not_session(self, mock_access, token_user, learner_user, db):
         """A magic link for a 2FA-enabled user must not mint a session."""
         from datetime import datetime as _dt
         from src.db.user_mfa import UserMFA
 
         db.add(
             UserMFA(
-                user_id=user.id,
+                user_id=learner_user.id,
                 secret_encrypted="ciphertext",
                 confirmed_at=str(_dt.now()),
                 creation_date=str(_dt.now()),
@@ -1810,8 +1826,11 @@ class TestMagicLinkConsume:
 
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
-                "sub": user.email,
+                "sub": learner_user.email,
                 "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
                 "org_id": token_user.org_id,
                 "redirect_to": "/course/bar",
             }
@@ -1829,18 +1848,70 @@ class TestMagicLinkConsume:
                 await consume_magic_link_token(token="bogus", db_session=db)
             assert exc.value.status_code == 401
 
-    async def test_wrong_purpose(self, user, db):
+    async def test_token_without_jti_rejected(self, token_user, learner_user, db):
+        """Every issued link has a jti; one without it is incomplete, not exempt."""
         with patch("src.security.auth.decode_jwt") as mock_decode:
-            mock_decode.return_value = {"sub": user.email, "purpose": "other"}
+            mock_decode.return_value = {
+                "sub": learner_user.email,
+                "purpose": "magic_link",
+                "type": "access",
+                "exp": 4102444800,
+                "org_id": token_user.org_id,
+            }
             with pytest.raises(HTTPException) as exc:
                 await consume_magic_link_token(token="t", db_session=db)
-            assert exc.value.status_code == 410
+        assert exc.value.status_code == 410
 
-    async def test_user_no_longer_member(self, user, other_org, db):
+    @patch("src.services.auth.session.create_refresh_token", return_value="r")
+    @patch("src.services.auth.session.create_access_token", return_value="a")
+    async def test_second_use_rejected(self, _a, _r, token_user, learner_user, db):
+        with patch("src.security.auth.decode_jwt") as mock_decode:
+            mock_decode.return_value = {
+                "sub": learner_user.email,
+                "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
+                "org_id": token_user.org_id,
+            }
+            await consume_magic_link_token(token="t", db_session=db)
+            with pytest.raises(HTTPException) as exc:
+                await consume_magic_link_token(token="t", db_session=db)
+        assert exc.value.status_code == 410
+        assert exc.value.detail["code"] == "MAGIC_LINK_USED"
+
+    async def test_admin_target_refused_at_redemption(self, token_user, user, db):
+        """A link for someone the token may no longer sign in (here an org
+        Admin, e.g. promoted after the link was issued) is refused on click."""
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
                 "sub": user.email,
                 "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
+                "org_id": token_user.org_id,
+            }
+            with pytest.raises(HTTPException) as exc:
+                await consume_magic_link_token(token="t", db_session=db)
+        assert exc.value.status_code == 410
+        assert exc.value.detail["code"] == "MAGIC_LINK_INVALID"
+
+    async def test_wrong_purpose(self, learner_user, db):
+        with patch("src.security.auth.decode_jwt") as mock_decode:
+            mock_decode.return_value = {"sub": learner_user.email, "purpose": "other"}
+            with pytest.raises(HTTPException) as exc:
+                await consume_magic_link_token(token="t", db_session=db)
+            assert exc.value.status_code == 410
+
+    async def test_user_no_longer_member(self, learner_user, other_org, db):
+        with patch("src.security.auth.decode_jwt") as mock_decode:
+            mock_decode.return_value = {
+                "sub": learner_user.email,
+                "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
                 "org_id": other_org.id,  # user is not in other_org
                 "redirect_to": "",
             }
@@ -1852,12 +1923,15 @@ class TestMagicLinkConsume:
     # factories are patched there, not on the admin module.
     @patch("src.services.auth.session.create_refresh_token", return_value="refresh_x")
     @patch("src.services.auth.session.create_access_token", return_value="access_x")
-    async def test_sanitizes_bad_redirect_to_default(self, mock_access, mock_refresh, token_user, user, db):
+    async def test_sanitizes_bad_redirect_to_default(self, mock_access, mock_refresh, token_user, learner_user, db):
         """An older token might have an unvalidated redirect_to. Consume must not honor an absolute URL."""
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
-                "sub": user.email,
+                "sub": learner_user.email,
                 "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
                 "org_id": token_user.org_id,
                 "redirect_to": "https://evil.com/phish",
             }
@@ -1865,6 +1939,58 @@ class TestMagicLinkConsume:
                 token="t", db_session=db,
             )
         assert redirect is None  # falls through to "/" in the router
+
+
+class TestLegacyConsumeForwarding:
+    """Links in the older API form are forwarded, unspent, to the redeeming page."""
+
+    def _link(self, org_id, **extra):
+        from datetime import timedelta
+        from src.security.auth import create_access_token
+
+        data = {"sub": "a@b.co", "purpose": "magic_link", "org_id": org_id, "jti": "j", **extra}
+        return create_access_token(data=data, expires_delta=timedelta(minutes=5))
+
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="https://academy.example.com")
+    async def test_forwards_to_org_site_with_redirect(self, mock_base, token_user, mock_request, db):
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        token = self._link(token_user.org_id, redirect_to="/course/x")
+        url = await magic_link_landing_url_for_token(token, "ignored-slug", mock_request, db)
+        assert url == f"https://academy.example.com/auth/magic?token={token}&next=%2Fcourse%2Fx"
+        assert mock_base.call_args.kwargs["org_id"] == token_user.org_id
+
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="https://academy.example.com")
+    async def test_drops_unsafe_redirect(self, _base, token_user, mock_request, db):
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        token = self._link(token_user.org_id, redirect_to="https://evil.example/x")
+        url = await magic_link_landing_url_for_token(token, "x", mock_request, db)
+        assert "next=" not in url
+
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="https://academy.example.com")
+    async def test_unverifiable_token_uses_url_slug(self, mock_base, org, mock_request, db):
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        url = await magic_link_landing_url_for_token("garbage", org.slug, mock_request, db)
+        assert url == "https://academy.example.com/auth/magic?token=garbage"
+        assert mock_base.call_args.kwargs["org_id"] == org.id
+
+    @patch("src.services.email.utils.get_platform_base_url", return_value="https://platform.example.com")
+    async def test_unknown_org_lands_on_the_platform(self, _platform, mock_request, db):
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        url = await magic_link_landing_url_for_token("garbage", "no-such-org", mock_request, db)
+        assert url == "https://platform.example.com/auth/magic?token=garbage"
+
+    @patch("src.services.email.utils.get_platform_base_url", return_value="https://platform.example.com")
+    async def test_valid_link_never_borrows_the_url_slug(self, _platform, org, mock_request, db):
+        # A link whose org is gone must not be sent to whichever org the URL names.
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        token = self._link(987654)
+        url = await magic_link_landing_url_for_token(token, org.slug, mock_request, db)
+        assert url.startswith("https://platform.example.com/auth/magic?token=")
 
 
 # ── Bulk enroll tests ───────────────────────────────────────────────────────

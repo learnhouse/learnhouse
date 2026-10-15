@@ -344,8 +344,10 @@ export default async function proxy(req: NextRequest) {
     const hasSession = !!req.cookies.get('LH_session')?.value
 
     // A logged-in user has no business on /login, so bounce them to the hub (the
-    // page itself re-verifies, so this is a best-effort UX shortcut).
-    if (pathname === '/login' && hasSession) {
+    // page itself re-verifies, so this is a best-effort UX shortcut). Not when
+    // they arrive with a pending second factor: a sign-in link for another
+    // account hands its 2FA step over here, and bouncing would drop it.
+    if (pathname === '/login' && hasSession && !req.nextUrl.searchParams.has('mfa_token')) {
       return NextResponse.redirect(new URL('/home', req.url))
     }
 
