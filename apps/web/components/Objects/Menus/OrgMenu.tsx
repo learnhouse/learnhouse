@@ -337,7 +337,7 @@ export const OrgMenu = (props: any) => {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a
-                        href="https://discord.gg/learnhouse"
+                        href="http://learnhouse.to/discord"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2"
