@@ -827,7 +827,7 @@ class TestApplyLocksToChapters:
             activity.name, activity.activity_type, activity.activity_sub_type,
             activity.activity_uuid, activity.published,
             activity.creation_date, activity.update_date,
-            1, None, activity.lock_type, 1,
+            1, None, activity.lock_type, None, 1,
         )
         async def execute_with_slim_dupes(statement):
             slim_call["n"] += 1

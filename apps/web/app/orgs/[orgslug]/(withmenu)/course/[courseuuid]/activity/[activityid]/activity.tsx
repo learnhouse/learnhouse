@@ -7,6 +7,7 @@ import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/cour
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
+import './theater.css'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -141,6 +142,8 @@ interface ActivityActionsProps {
   assignment: any
   showNavigation?: boolean
   trailData?: any
+  /** Dark styling, for the video theater band. */
+  dark?: boolean
 }
 
 // Custom hook for activity position
@@ -170,7 +173,7 @@ function useActivityPosition(course: any, activityId: string) {
   }, [course, activityId]);
 }
 
-function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true, trailData }: ActivityActionsProps) {
+function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true, trailData, dark = false }: ActivityActionsProps) {
 
   const { t: _t } = useTranslation();
   const _org = useOrg() as any;
@@ -190,6 +193,7 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment, sh
                 course={course}
                 orgslug={orgslug}
                 trailData={trailData}
+                dark={dark}
               />
             </>
           )}
@@ -207,7 +211,7 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment, sh
             </>
           )}
           {showNavigation && (
-            <NextActivityButton course={course} currentActivityId={activity.id} orgslug={orgslug} />
+            <NextActivityButton course={course} currentActivityId={activity.id} orgslug={orgslug} dark={dark} />
           )}
         </AuthenticatedClientElement>
       )}
@@ -441,6 +445,10 @@ function ActivityClient(props: ActivityClientProps) {
       setBgColor(isFocusMode ? 'bg-white' : 'bg-white nice-shadow');
       getAssignmentUI();
     }
+    else if (activity.activity_type == 'TYPE_VIDEO') {
+      // The player is the whole surface; no dark card around it.
+      setBgColor('');
+    }
     else {
       setBgColor(isFocusMode ? 'bg-zinc-950' : 'bg-zinc-950 nice-shadow');
     }
@@ -635,6 +643,9 @@ function ActivityClient(props: ActivityClientProps) {
                                     )
                                   : '/empty_thumbnail.png'
                                 }
+                                onError={(e) => {
+                                  if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'
+                                }}
                                 alt=""
                               />
                             </Link>
@@ -698,7 +709,7 @@ function ActivityClient(props: ActivityClientProps) {
                               initial={isInitialRender.current ? false : { scale: 0.95, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
                               transition={{ delay: 0.3 }}
-                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
+                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? '' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
                             >
                               {/* Activity Types */}
                               <div className={activity.activity_type === 'TYPE_SCORM' ? 'overflow-hidden' : ''}>
@@ -826,6 +837,9 @@ function ActivityClient(props: ActivityClientProps) {
                                       )
                                     : '/empty_thumbnail.png'
                                   }
+                                  onError={(e) => {
+                                    if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'
+                                  }}
                                   alt=""
                                 />
                               </Link>
@@ -989,8 +1003,26 @@ function ActivityClient(props: ActivityClientProps) {
                           {activity.content.paid_access == false ? (
                             <PaidCourseActivityDisclaimer course={course} />
                           ) : (
+                            // Video activities sit on a dark theater band (theater.css).
+                            <div className={activity.activity_type === 'TYPE_VIDEO' ? 'lh-theater-band py-8 sm:py-12' : ''}>
+                            {activity.activity_type === 'TYPE_VIDEO' && (
+                              <button
+                                onClick={() => setIsFocusMode(true)}
+                                className="absolute top-0 end-0 -translate-y-1/2 hidden sm:flex bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden"
+                                style={{ zIndex: 'var(--z-interactive)' }}
+                                title={t('activities.focus_mode')}
+                              >
+                                <div className="flex items-center">
+                                  <Maximize2 size={16} className="text-gray-700" />
+                                  <span className="text-xs font-bold text-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200 w-0 group-hover:w-auto group-hover:ms-2 whitespace-nowrap">
+                                    {t('activities.focus_mode')}
+                                  </span>
+                                </div>
+                              </button>
+                            )}
                             <div className="flex gap-6">
-                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
+                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? '' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
+                                {activity.activity_type !== 'TYPE_VIDEO' && (
                                 <button
                                   onClick={() => setIsFocusMode(true)}
                                   className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 end-2' : 'top-4 end-4'} hidden sm:flex bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
@@ -1004,11 +1036,13 @@ function ActivityClient(props: ActivityClientProps) {
                                     </span>
                                   </div>
                                 </button>
+                                )}
                                 {activityContent}
                               </div>
                               <Suspense fallback={null}>
                                 <AISidePanelInline activity={activity} />
                               </Suspense>
+                            </div>
                             </div>
                           )}
                         </>
@@ -1022,6 +1056,7 @@ function ActivityClient(props: ActivityClientProps) {
                               course={course}
                               currentActivityId={activity.id}
                               orgslug={orgslug}
+                              dark={activity.activity_type === 'TYPE_VIDEO'}
                             />
                           </div>
                           <div className="flex items-center justify-between sm:justify-end space-x-2 order-2 sm:order-none">
@@ -1033,11 +1068,13 @@ function ActivityClient(props: ActivityClientProps) {
                               assignment={assignment}
                               showNavigation={false}
                               trailData={trailData}
+                              dark={activity.activity_type === 'TYPE_VIDEO'}
                             />
                             <NextActivityButton
                               course={course}
                               currentActivityId={activity.id}
                               orgslug={orgslug}
+                              dark={activity.activity_type === 'TYPE_VIDEO'}
                             />
                           </div>
                         </div>
@@ -1050,6 +1087,7 @@ function ActivityClient(props: ActivityClientProps) {
                           currentActivityId={activityid}
                           orgslug={orgslug}
                           activity={activity}
+                          dark={activity.activity_type === 'TYPE_VIDEO'}
                         />
                       )}
                       
@@ -1074,6 +1112,7 @@ export function MarkStatus(props: {
   course: any
   orgslug: string,
   trailData: any
+  dark?: boolean
 }) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -1313,7 +1352,7 @@ export function MarkStatus(props: {
         <div className="flex items-center space-x-2">
           <div className="relative">
             <div
-              className={`${isLoading ? 'opacity-90' : ''} bg-gray-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition-all duration-200 ${isLoading ? 'cursor-not-allowed' : 'hover:bg-gray-700'}`}
+              className={`${isLoading ? 'opacity-90' : ''} rounded-md px-4 flex flex-col p-2.5 text-white hover:cursor-pointer transition-all duration-200 ${props.dark ? 'bg-white/10 ring-1 ring-white/10' : 'bg-gray-800 nice-shadow'} ${isLoading ? 'cursor-not-allowed' : props.dark ? 'hover:bg-white/15' : 'hover:bg-gray-700'}`}
               onClick={!isLoading ? markActivityAsCompleteFront : undefined}
             >
               <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
@@ -1367,7 +1406,7 @@ export function MarkStatus(props: {
   )
 }
 
-function NextActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
+function NextActivityButton({ course, currentActivityId, orgslug, dark = false }: { course: any, currentActivityId: string, orgslug: string, dark?: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
   const _isMobile = useMediaQuery('(max-width: 768px)');
@@ -1418,9 +1457,13 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
   return (
     <div
       onClick={navigateToActivity}
-      className="bg-gray-200 rounded-md px-3 sm:px-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] flex flex-col p-2 sm:p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:bg-gray-200"
+      className={`rounded-md px-3 sm:px-4 flex flex-col p-2 sm:p-2.5 hover:cursor-pointer transition delay-150 duration-300 ease-in-out ${
+        dark
+          ? 'bg-white/10 text-white ring-1 ring-white/10 hover:bg-white/15'
+          : 'bg-gray-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] text-gray-600 hover:bg-gray-200'
+      }`}
     >
-      <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.next')}</span>
+      <span className={`text-[10px] font-bold mb-1 uppercase ${dark ? 'text-white/50' : 'text-gray-500'}`}>{t('common.next')}</span>
       <div className="flex items-center space-x-1">
         <span className="text-xs sm:text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px]">
           {isLastActivity ? t('course.finish_course', 'Finish course') : nextActivity.name}
@@ -1431,7 +1474,7 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
   );
 }
 
-function PreviousActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
+function PreviousActivityButton({ course, currentActivityId, orgslug, dark = false }: { course: any, currentActivityId: string, orgslug: string, dark?: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
   const _isMobile = useMediaQuery('(max-width: 768px)');
@@ -1473,9 +1516,11 @@ function PreviousActivityButton({ course, currentActivityId, orgslug }: { course
   return (
     <div
       onClick={navigateToActivity}
-      className="bg-white rounded-md px-3 sm:px-4 nice-shadow flex flex-col p-2 sm:p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+      className={`rounded-md px-3 sm:px-4 flex flex-col p-2 sm:p-2.5 hover:cursor-pointer transition delay-150 duration-300 ease-in-out ${
+        dark ? 'bg-white/5 text-white/85 ring-1 ring-white/10 hover:bg-white/10' : 'bg-white nice-shadow text-gray-600'
+      }`}
     >
-      <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.previous')}</span>
+      <span className={`text-[10px] font-bold mb-1 uppercase ${dark ? 'text-white/50' : 'text-gray-500'}`}>{t('common.previous')}</span>
       <div className="flex items-center space-x-1">
         <ChevronLeft size={17} className="shrink-0" />
         <span className="text-xs sm:text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px]">{previousActivity.name}</span>

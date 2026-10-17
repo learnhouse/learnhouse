@@ -11,7 +11,7 @@ import { urlEmbedSandboxFor } from '@/lib/media/embedSanitize'
 import { safeExternalUrl } from '@components/Dashboard/Library/resourceLink'
 import InlineAudioPlayer from '@components/Objects/Media/InlineAudioPlayer'
 
-// video.js touches window on import; keep it out of the server bundle.
+// The player is client-only (media elements, blob URLs); keep it out of the server bundle.
 const LearnHousePlayer = dynamic(
   () => import('@components/Objects/Activities/Video/LearnHousePlayer'),
   { ssr: false }

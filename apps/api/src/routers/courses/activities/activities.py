@@ -1,6 +1,6 @@
 from typing import List, Optional
 import json
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, Form, Request, Query
 from pydantic import BaseModel
 from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityUpdate
 from src.db.courses.activity_versions import ActivityVersionRead, ActivityStateRead
@@ -29,8 +29,11 @@ from src.services.courses.activities.pdf import (
 )
 from src.services.courses.activities.video import (
     CaptionsConfigIn,
+    ChaptersIn,
     ExternalVideo,
     configure_captions,
+    request_chapters_generation,
+    save_chapters,
     create_external_video_activity,
     create_video_activity,
     update_video_activity,
@@ -550,6 +553,44 @@ async def api_configure_video_captions(
     db_session=Depends(get_db_session),
 ) -> dict:
     return await configure_captions(request, activity_uuid, current_user, db_session, config)
+
+
+@router.post(
+    "/video/{activity_uuid}/chapters",
+    summary="Generate AI chapters for a hosted video activity",
+    description=(
+        "Generate chapters from the video's ready captions with the fast AI model "
+        "tier (one AI credit). Runs in the background; poll the activity's "
+        "`extra_metadata.chapters.status`. Returns the stored chapters metadata."
+    ),
+)
+async def api_generate_video_chapters(
+    request: Request,
+    activity_uuid: str,
+    background_tasks: BackgroundTasks,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> dict:
+    from src.services.utils.chapter_jobs import generate_activity_chapters
+
+    chapters = await request_chapters_generation(request, activity_uuid, current_user, db_session)
+    background_tasks.add_task(generate_activity_chapters, activity_uuid, force=True)
+    return chapters
+
+
+@router.put(
+    "/video/{activity_uuid}/chapters",
+    summary="Save edited chapters for a hosted video activity",
+    description="Replace the video's chapters with an edited list. An empty list clears them.",
+)
+async def api_save_video_chapters(
+    request: Request,
+    activity_uuid: str,
+    payload: ChaptersIn,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> dict:
+    return await save_chapters(request, activity_uuid, current_user, db_session, payload)
 
 
 @router.put(

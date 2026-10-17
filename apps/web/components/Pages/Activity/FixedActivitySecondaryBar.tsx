@@ -12,6 +12,8 @@ interface FixedActivitySecondaryBarProps {
   currentActivityId: string
   orgslug: string
   activity: any
+  /** Dark styling, for pages on the video theater band. */
+  dark?: boolean
 }
 
 // Memoized navigation buttons component
@@ -20,13 +22,15 @@ const NavigationButtons = memo(({
   nextActivity, 
   currentIndex, 
   allActivities, 
-  navigateToActivity 
+  navigateToActivity,
+  dark = false,
 }: { 
   prevActivity: any, 
   nextActivity: any, 
   currentIndex: number, 
   allActivities: any[], 
   navigateToActivity: (_activity: any) => void
+  dark?: boolean
 }) => {
   const { t } = useTranslation();
   // On the final activity, Next leads to the course-end/certificate screen
@@ -38,29 +42,29 @@ const NavigationButtons = memo(({
       <button
         onClick={() => navigateToActivity(prevActivity)}
         className={`flex items-center space-x-1 sm:space-x-2 py-1.5 px-1.5 sm:px-2 rounded-md transition-all duration-200 ${
-          prevActivity 
-            ? 'text-gray-700 hover:bg-gray-100' 
-            : 'text-gray-300 cursor-not-allowed'
+          prevActivity
+            ? dark ? 'text-white/85 hover:bg-white/10' : 'text-gray-700 hover:bg-gray-100'
+            : dark ? 'text-white/25 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed'
         }`}
         disabled={!prevActivity}
         title={prevActivity ? `${t('common.previous')}: ${prevActivity.name}` : t('activities.no_previous_activity')}
       >
         <ChevronLeft size={16} className="shrink-0 sm:w-5 sm:h-5" />
         <div className="flex flex-col items-start hidden sm:flex">
-          <span className="text-xs text-gray-500">{t('common.previous')}</span>
+          <span className={`text-xs ${dark ? 'text-white/50' : 'text-gray-500'}`}>{t('common.previous')}</span>
           <span className="text-sm font-medium text-start truncate max-w-[100px] sm:max-w-[150px]">
             {prevActivity ? prevActivity.name : t('activities.no_previous_activity')}
           </span>
         </div>
       </button>
 
-      <span className="text-sm font-medium text-gray-500 px-1 sm:px-2">
+      <span className={`text-sm font-medium px-1 sm:px-2 ${dark ? 'text-white/50' : 'text-gray-500'}`}>
         {currentIndex + 1} {t('common.of')} {allActivities.length}
       </span>
 
       <button
         onClick={() => navigateToActivity(nextActivity)}
-        className={`flex items-center space-x-1 sm:space-x-2 py-1.5 px-1.5 sm:px-2 rounded-md transition-all duration-200`}
+        className={`flex items-center space-x-1 sm:space-x-2 py-1.5 px-1.5 sm:px-2 rounded-md transition-all duration-200 ${dark ? 'text-white/85 hover:bg-white/10' : ''}`}
         disabled={!nextActivity && !isLastActivity}
         title={
           nextActivity
@@ -71,7 +75,7 @@ const NavigationButtons = memo(({
         }
       >
         <div className="flex flex-col items-end hidden sm:flex">
-          <span className={`text-xs ${nextActivity ? 'text-gray-500' : 'text-gray-500'}`}>{t('common.next')}</span>
+          <span className={`text-xs ${dark ? 'text-white/50' : 'text-gray-500'}`}>{t('common.next')}</span>
           <span className="text-sm font-medium text-end truncate max-w-[100px] sm:max-w-[150px]">
             {nextActivity
               ? nextActivity.name
@@ -89,22 +93,28 @@ const NavigationButtons = memo(({
 NavigationButtons.displayName = 'NavigationButtons';
 
 // Memoized course info component
-const CourseInfo = memo(({ course, org }: { course: any, org: any }) => {
+const CourseInfo = memo(({ course, org, dark = false }: { course: any, org: any, dark?: boolean }) => {
   const { t } = useTranslation();
   return (
     <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-shrink">
       <img
         className="w-[35px] sm:w-[45px] h-[20px] sm:h-[26px] rounded-md object-cover flex-shrink-0"
-        src={`${getCourseThumbnailMediaDirectory(
-          org?.org_uuid,
-          course.course_uuid,
-          course.thumbnail_image
-        )}`}
+        src={course.thumbnail_image
+          ? getCourseThumbnailMediaDirectory(
+              org?.org_uuid,
+              course.course_uuid,
+              course.thumbnail_image
+            )
+          : '/empty_thumbnail.png'
+        }
+        onError={(e) => {
+          if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'
+        }}
         alt=""
       />
       <div className="flex flex-col -space-y-0.5 min-w-0 hidden sm:block">
-        <p className="text-sm font-medium text-gray-500">{t('courses.courses')}</p>
-        <h1 className="font-semibold text-gray-900 text-base truncate">
+        <p className={`text-sm font-medium ${dark ? 'text-white/50' : 'text-gray-500'}`}>{t('courses.courses')}</p>
+        <h1 className={`font-semibold text-base truncate ${dark ? 'text-white' : 'text-gray-900'}`}>
           {course.name}
         </h1>
       </div>
@@ -198,14 +208,14 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
 
   return (
     <div
-      className={`fixed top-[60px] start-0 end-0 bg-white/90 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
-        isScrolled ? 'nice-shadow' : ''
-      }`}
+      className={`fixed top-[60px] start-0 end-0 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
+        props.dark ? 'bg-[#141414]/90 border-b border-white/5' : 'bg-white/90'
+      } ${isScrolled && !props.dark ? 'nice-shadow' : ''}`}
       style={{ zIndex: 'var(--z-drag-overlay)' }}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 py-2">
-          <CourseInfo course={props.course} org={org} />
+          <CourseInfo course={props.course} org={org} dark={props.dark} />
           
           <div className="flex items-center flex-shrink-0">
             <NavigationButtons
@@ -214,6 +224,7 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
               currentIndex={currentIndex}
               allActivities={allActivities}
               navigateToActivity={navigateToActivity}
+              dark={props.dark}
             />
           </div>
         </div>
