@@ -258,7 +258,7 @@ async def get_activityby_id(
     )
 
 
-_SERVER_OWNED_METADATA_KEYS = ("captions", "hls")
+_SERVER_OWNED_METADATA_KEYS = ("captions", "chapters", "hls")
 
 
 def keep_server_owned_metadata(incoming: dict | None, current: dict | None) -> dict:

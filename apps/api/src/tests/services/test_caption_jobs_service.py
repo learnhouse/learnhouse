@@ -262,6 +262,17 @@ def _mock_engine(monkeypatch):
     monkeypatch.setattr(usage, "refund_ai_credit", lambda *a, **k: 0)
     monkeypatch.setattr(llm, "model_for_tier", lambda tier: "gemini-standard")
 
+    import src.services.utils.chapter_jobs as chapter_jobs
+
+    chapters_runs = []
+
+    async def _chapters(uuid, force=False):
+        chapters_runs.append((uuid, force))
+        return True
+
+    monkeypatch.setattr(chapter_jobs, "generate_activity_chapters", _chapters)
+    return chapters_runs
+
 
 async def test_generate_captions_success(monkeypatch, db, org, course, chapter, activity):
     _bind_session(monkeypatch, db)
@@ -273,6 +284,35 @@ async def test_generate_captions_success(monkeypatch, db, org, course, chapter, 
     )
     ok = await cj.generate_activity_captions("capA")
     assert ok is True
+
+
+async def test_generate_captions_then_regenerates_chapters(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    chapters_runs = _mock_engine(monkeypatch)
+    await _add_caption_activity(
+        db, org, course, "capCh",
+        captions={"enabled": True, "source_language": "auto",
+                  "languages": [{"code": "fr", "label": "French", "status": "queued"}]},
+    )
+    assert await cj.generate_activity_captions("capCh") is True
+    assert chapters_runs == [("capCh", True)]
+
+
+async def test_generate_captions_survives_chapters_crash(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    _mock_engine(monkeypatch)
+    import src.services.utils.chapter_jobs as chapter_jobs
+
+    async def _boom(uuid, force=False):
+        raise RuntimeError("chapters down")
+
+    monkeypatch.setattr(chapter_jobs, "generate_activity_chapters", _boom)
+    await _add_caption_activity(
+        db, org, course, "capCh2",
+        captions={"enabled": True, "source_language": "auto",
+                  "languages": [{"code": "fr", "label": "French", "status": "queued"}]},
+    )
+    assert await cj.generate_activity_captions("capCh2") is True
 
 
 async def test_generate_captions_disabled_activity(monkeypatch, db, org, course, chapter, activity):

@@ -333,6 +333,14 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
         )
         logger.info("Captions ready for %s (%s/%s langs)", activity_uuid, done, len(targets))
         index_activity(info["activity_id"])
+        # New captions mean new chapters. A chapters failure is recorded on its
+        # own status and never turns a caption success into a failure.
+        try:
+            from src.services.utils.chapter_jobs import generate_activity_chapters
+
+            await generate_activity_chapters(activity_uuid, force=True)
+        except Exception:
+            logger.exception("Chapters after captions failed for %s", activity_uuid)
         return True
     except HTTPException as e:
         # e.g. AI disabled or quota exceeded (reserve raises 403): do NOT refund
