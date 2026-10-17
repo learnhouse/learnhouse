@@ -142,7 +142,7 @@
     "tippy.js": "^6.3.7",
     "usehooks-ts": "^3.1.1",
     "uuid": "^14.0.0",
-    "video.js": "^8.23.9",
+    "video.js": "^10.0.0",
     "videojs-contrib-quality-levels": "^4",
     "videojs-hls-quality-selector": "^2",
     "videojs-sprite-thumbnails": "^2",
