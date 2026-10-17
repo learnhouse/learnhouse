@@ -311,6 +311,24 @@ def transcode_backfill(
 
 
 @cli.command()
+def backfill(
+    only: Annotated[str, typer.Option(help="Comma-separated jobs to run (default: all)")] = "",
+):
+    """Run every content backfill now: HLS transcodes, the AI search index and
+    video chapters. The API also runs this on its own every two days
+    (LEARNHOUSE_BACKFILL_INTERVAL_HOURS)."""
+    from src.services.backfill.jobs import JOBS, run_all
+
+    names = [n.strip() for n in only.split(",") if n.strip()]
+    unknown = sorted(set(names) - {job.name for job in JOBS})
+    if unknown:
+        print(f"Unknown backfill job(s): {', '.join(unknown)}. Available: {', '.join(j.name for j in JOBS)}")
+        raise typer.Exit(code=1)
+    for name, result in asyncio.run(run_all(names or None)).items():
+        print(f"{name}: {result}")
+
+
+@cli.command()
 def chapters_backfill(
     org: Annotated[str, typer.Option(help="Only this organization (slug)")] = "",
     force: Annotated[bool, typer.Option(help="Regenerate videos that already have chapters")] = False,
