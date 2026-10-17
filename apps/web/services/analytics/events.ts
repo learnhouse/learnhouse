@@ -2,7 +2,7 @@
    Enum members are the public API of this registry; they are referenced by
    call-sites across the app, not within this file. */
 /**
- * learnhouse-analytics — central event registry (single source of truth).
+ * learnhouse-analytics: central event registry (single source of truth).
  *
  * Naming convention: `object_action`, snake_case, past-tense verb.
  * - Object first so events cluster by feature in PostHog (course_*, podcast_*, …).
@@ -12,7 +12,7 @@
  *
  * The enum VALUE is the wire name sent to the backend sink. Where the canonical
  * PostHog name should differ from the legacy backend name, add an entry to
- * POSTHOG_NAME_OVERRIDES below — call-sites never deal with this.
+ * POSTHOG_NAME_OVERRIDES below; call-sites never deal with this.
  */
 export enum AnalyticsEvent {
   // ── Existing events already in code (preserved wire names) ────────────────
@@ -229,7 +229,7 @@ export enum AnalyticsEvent {
   OfferCreated = 'offer_created',
   PaymentsFeatureGateBlocked = 'payments_feature_gate_blocked',
 
-  // Super-admin (/admin) is intentionally NOT tracked — see PostHogAdminGuard.
+  // Super-admin (/admin) is intentionally NOT tracked; see PostHogAdminGuard.
 
   // ── Global navigation & cross-cutting ────────────────────────────────────
   CommandPaletteOpened = 'command_palette_opened',

@@ -1,5 +1,5 @@
 """
-Tests for ``_student_may_see_answer_key`` — the gate that decides whether a
+Tests for ``_student_may_see_answer_key``, the gate that decides whether a
 student receives the correct-answer key in the task GET payload.
 
 Covers the base contract (opt-in + own submission GRADED + PublicUser) and the

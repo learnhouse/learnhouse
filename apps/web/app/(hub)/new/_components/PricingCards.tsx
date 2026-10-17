@@ -9,7 +9,7 @@
 // a plain badge span instead (matching the existing billing-hub PricingGrid).
 //
 // This is a pure presentational client component: it never imports
-// @services/billing/* — pricing/limits arrive as props (priceOverrides /
+// @services/billing/*. Pricing/limits arrive as props (priceOverrides /
 // planLimits) and selection is reported via onSelect.
 import React from 'react'
 import { motion } from 'motion/react'
@@ -30,10 +30,10 @@ import {
 } from '../../_billing/plans'
 
 export interface PricingCardsProps {
-  /** Controlled plan tab — pair with onPlanTypeChange, or omit for uncontrolled. */
+  /** Controlled plan tab. Pair with onPlanTypeChange, or omit for uncontrolled. */
   planType?: 'general' | 'personal'
   onPlanTypeChange?: (_t: 'general' | 'personal') => void
-  /** Controlled billing toggle — pair with onAnnualChange, or omit for uncontrolled. */
+  /** Controlled billing toggle. Pair with onAnnualChange, or omit for uncontrolled. */
   annual?: boolean
   onAnnualChange?: (_v: boolean) => void
   defaultPlanType?: 'general' | 'personal'

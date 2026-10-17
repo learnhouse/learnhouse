@@ -1,7 +1,7 @@
 """Durable audit-event write path.
 
-Unlike ``services/analytics/analytics.track`` — which fires-and-forgets to Tinybird
-and swallows every error — this records a legal-grade row in Postgres and commits it.
+Unlike ``services/analytics/analytics.track``, which fires-and-forgets to Tinybird
+and swallows every error, this records a legal-grade row in Postgres and commits it.
 It writes in its **own** isolated session (from the app session factory) so the audit
 row is a self-contained transaction that neither depends on nor interferes with the
 caller's unit of work. Callers emit an audit event AFTER the authoritative action has
@@ -54,7 +54,7 @@ async def record_audit_event(
     """Append one durable audit row in an isolated, immediately-committed transaction.
 
     Emit this only for STUDENT learning actions (see ``UserAuditEventType``). Do not
-    call from authoring/admin paths — that data is intentionally out of scope.
+    call from authoring/admin paths; that data is intentionally out of scope.
     """
     # Anonymous / system actors (user_id 0) have nothing to audit.
     if not user_id:
@@ -80,7 +80,7 @@ async def record_audit_event(
             await session.commit()
     except Exception:
         logger.error(
-            "Failed to record audit event %s for user %s (org %s) — audit data lost",
+            "Failed to record audit event %s for user %s (org %s); audit data lost",
             event_type,
             user_id,
             org_id,

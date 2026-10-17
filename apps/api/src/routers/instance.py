@@ -50,7 +50,7 @@ async def get_instance_info(db_session: AsyncSession = Depends(get_db_session)):
     # key watched /instance/info keep reporting mode "oss" for ten minutes and
     # concluded the fix had not worked.
     #
-    # This is not free — get_deployment_mode() resolves the whole config, which
+    # This is not free: get_deployment_mode() resolves the whole config, which
     # is why config.yaml parsing is memoised. Measured at ~0.2ms per request
     # against ~26ms before that memoisation.
     cached = get_cached_instance_info()

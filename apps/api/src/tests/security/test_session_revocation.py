@@ -1,7 +1,7 @@
 """
 Coverage for the F-08 session-revocation helpers in ``src/security/auth.py``.
 
-The helpers intentionally fail open when Redis is unavailable — the JWT's
+The helpers intentionally fail open when Redis is unavailable; the JWT's
 ``exp`` claim and the ``password_changed_at`` check are still load-bearing.
 These tests pin every branch: configured/unconfigured Redis, set/get roundtrip,
 transient Redis errors, and the ``iat``-absent pre-upgrade token path.
@@ -45,7 +45,7 @@ def test_get_revocation_redis_client_returns_client_when_configured():
     import src.core.redis as core_redis
     with patch.object(core_redis, "get_redis_client", return_value=fake_client):
         client = auth_module._get_revocation_redis_client()
-        # We don't actually want to connect — just confirm the code path returns
+        # We don't actually want to connect, just confirm the code path returns
         # the configured client.
         assert client is not None
 
@@ -125,7 +125,7 @@ def test_is_token_revoked_true_when_iat_predates_cutoff():
     fake = _FakeRedis()
     cutoff = datetime.now(timezone.utc)
     fake.setex("jwt_revoked_before:5", 3600, int(cutoff.timestamp()))
-    # Token issued 10 minutes before revocation — must be rejected.
+    # Token issued 10 minutes before revocation: must be rejected.
     old_iat = cutoff - timedelta(minutes=10)
     with _patch_redis(fake):
         assert auth_module._is_token_revoked_for_user(5, old_iat) is True
@@ -135,7 +135,7 @@ def test_is_token_revoked_false_when_iat_postdates_cutoff():
     fake = _FakeRedis()
     cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
     fake.setex("jwt_revoked_before:5", 3600, int(cutoff.timestamp()))
-    # Token issued after revocation — must still be valid (user logged back in).
+    # Token issued after revocation: must still be valid (user logged back in).
     new_iat = cutoff + timedelta(minutes=1)
     with _patch_redis(fake):
         assert auth_module._is_token_revoked_for_user(5, new_iat) is False

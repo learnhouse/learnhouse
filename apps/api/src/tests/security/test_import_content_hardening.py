@@ -41,6 +41,12 @@ from src.services.courses.transfer.import_service import (
 from src.services.courses.transfer.models import ImportOptions
 
 
+# Imported media must carry content matching its extension (magic bytes), so
+# fixtures use minimal real headers instead of placeholder bytes.
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + b"\x00" * 17
+MP4_BYTES = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 16
+
+
 class _Body:
     def __init__(self, data: bytes):
         self._data = data
@@ -96,7 +102,7 @@ def _set_temp_dir(monkeypatch, path) -> None:
 
 
 class TestContentFileMimeHardening:
-    """F21/F24 — nothing served from /content may render as a document."""
+    """F21/F24: nothing served from /content may render as a document."""
 
     @pytest.mark.parametrize(
         "filename", ["evil.html", "evil.js", "evil.css", "evil.xml"]
@@ -192,7 +198,7 @@ class TestContentFileMimeHardening:
 
 
 class TestImportExtensionAllowlist:
-    """F21/F24 — the import pipeline must not persist package-chosen types."""
+    """F21/F24: the import pipeline must not persist package-chosen types."""
 
     @pytest.mark.parametrize(
         "filename",
@@ -226,7 +232,7 @@ class TestImportExtensionAllowlist:
         (course_path / "course.json").write_text(
             json.dumps({"name": "Course", "thumbnail_image": "thumb.png"})
         )
-        (thumbnails / "thumb.png").write_bytes(b"png")
+        (thumbnails / "thumb.png").write_bytes(PNG_BYTES)
         (thumbnails / "evil.html").write_bytes(b"<script>alert(1)</script>")
 
         with patch(
@@ -266,7 +272,7 @@ class TestImportExtensionAllowlist:
         (activity_path / "files" / "evil.html").write_bytes(b"<script>alert(1)</script>")
         (activity_path / "files" / "evil.svg").write_bytes(b"<svg onload=alert(1)>")
         (files_dir / "evil.js").write_bytes(b"alert(1)")
-        (files_dir / "clip.mp4").write_bytes(b"video")
+        (files_dir / "clip.mp4").write_bytes(MP4_BYTES)
 
         new_course_path = f"content/orgs/{org.org_uuid}/courses/course_pkg_new"
 
@@ -289,7 +295,7 @@ class TestImportExtensionAllowlist:
         assert not (dest / "evil.svg").exists()
         assert not (dest / "video" / "evil.js").exists()
         # The legitimate media file still lands, under its original name.
-        assert (dest / "video" / "clip.mp4").read_bytes() == b"video"
+        assert (dest / "video" / "clip.mp4").read_bytes() == MP4_BYTES
 
     async def test_block_file_with_unsafe_extension_is_dropped(
         self, db, org, course, chapter, tmp_path, monkeypatch
@@ -364,7 +370,7 @@ class TestImportExtensionAllowlist:
 
 
 class TestImportTempIdTraversal:
-    """F8 — temp_id reaches os.rename/open/rmtree and must be a UUID."""
+    """F8: temp_id reaches os.rename/open/rmtree and must be a UUID."""
 
     def test_require_temp_id_rejects_non_uuid_values(self):
         for value in ["../../orgs", "..", "/etc", "not-a-uuid", "", None]:
@@ -441,7 +447,7 @@ class TestImportTempIdTraversal:
             "src.services.courses.transfer.import_service.increase_feature_usage"
         ), patch(
             "src.services.courses.transfer.import_service._import_single_course",
-            return_value=SimpleNamespace(course_uuid="course-new", name="Imported"),
+            return_value=SimpleNamespace(id=1, course_uuid="course-new", name="Imported"),
         ):
             result = await import_courses(
                 mock_request,
@@ -480,7 +486,7 @@ class TestImportTempIdTraversal:
 
     def test_ignore_filter_keeps_directories(self, tmp_path):
         (tmp_path / "video").mkdir()
-        (tmp_path / "clip.mp4").write_bytes(b"v")
+        (tmp_path / "clip.mp4").write_bytes(MP4_BYTES)
         (tmp_path / "evil.html").write_bytes(b"x")
 
         ignored = import_service._ignore_unsafe_package_files(
@@ -506,10 +512,28 @@ class TestImportTempIdTraversal:
         files_dir = tmp_path / "activities" / "activity_x" / "files"
         files_dir.mkdir(parents=True)
         (files_dir / "evil.html").write_bytes(b"x")
-        (files_dir / "clip.mp4").write_bytes(b"v")
+        (files_dir / "clip.mp4").write_bytes(MP4_BYTES)
 
         ignored = import_service._ignore_unsafe_package_files(
             str(files_dir), ["evil.html", "clip.mp4"]
         )
 
         assert ignored == {"evil.html"}
+
+
+def test_import_drops_file_refs_outside_the_new_course():
+    from src.services.courses.transfer.import_service import _drop_foreign_file_refs
+
+    course_path = "content/orgs/org_new/courses/course_new"
+    content = {
+        "filename": "documentpdf_a.pdf",
+        "file_id": "block_abc",
+        "uri": "content/orgs/org_victim/courses/course_x/activities/a/secret.pdf",
+        "file_path": "orgs/org_new/courses/course_new/../course_x/secret.pdf",
+    }
+    assert _drop_foreign_file_refs(dict(content), course_path) == {
+        "filename": "documentpdf_a.pdf",
+        "file_id": "block_abc",
+    }
+    own = {"uri": "orgs/org_new/courses/course_new/activities/a/doc.pdf"}
+    assert _drop_foreign_file_refs(dict(own), course_path) == own

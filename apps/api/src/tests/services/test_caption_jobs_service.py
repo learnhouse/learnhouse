@@ -56,6 +56,9 @@ def test_enqueue_pushes(monkeypatch):
     pushed = []
 
     class _R:
+        def set(self, key, val, nx=False, ex=None):
+            return True
+
         def rpush(self, key, val):
             pushed.append((key, val))
 
@@ -292,3 +295,119 @@ async def test_generate_captions_audio_failure(monkeypatch, db, org, course, cha
                   "languages": [{"code": "fr", "label": "French", "status": "queued"}]},
     )
     assert await cj.generate_activity_captions("capB") is False
+
+
+# --- reuse of the AI search transcript ---------------------------------------
+
+async def test_generate_captions_reuses_existing_transcript(monkeypatch, db, org, course, chapter, activity):
+    """A transcript made for AI search is reused: no download, no transcription,
+    and only the translations are charged."""
+    _bind_session(monkeypatch, db)
+    _mock_engine(monkeypatch)
+    import src.security.features_utils.usage as usage
+
+    charged = []
+
+    async def _reserve(org_id, db_session, amount=1):
+        charged.append(amount)
+        return 1
+
+    async def _transcript(media):
+        assert media.source_key.endswith("/activities/capR/video/v.mp4")
+        return "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello\n"
+
+    def _no_fetch(key, path):
+        raise AssertionError("source must not be downloaded")
+
+    async def _no_transcribe(*a, **k):
+        raise AssertionError("must not transcribe again")
+
+    monkeypatch.setattr(usage, "reserve_ai_credit", _reserve)
+    monkeypatch.setattr(cj, "read_transcript", _transcript)
+    monkeypatch.setattr(cj, "_fetch_source", _no_fetch)
+    monkeypatch.setattr(cj.cap, "transcribe_to_vtt", _no_transcribe)
+    indexed = []
+    monkeypatch.setattr(cj, "index_activity", indexed.append)
+
+    a = await _add_caption_activity(
+        db, org, course, "capR",
+        captions={"enabled": True, "source_language": "en", "languages": [
+            {"code": "en", "label": "English", "status": "queued"},
+            {"code": "fr", "label": "French", "status": "queued"},
+        ]},
+    )
+    assert await cj.generate_activity_captions("capR") is True
+    assert charged == [1]  # one translation; the English track is the transcript itself
+    assert indexed == [a.id]
+
+
+async def test_generate_captions_without_transcript_still_transcribes(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    _mock_engine(monkeypatch)
+
+    async def _none(media):
+        return None
+
+    transcribed = []
+
+    async def _tvtt(chunks, model, source_language=None):
+        transcribed.append(chunks)
+        return "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello\n"
+
+    monkeypatch.setattr(cj, "read_transcript", _none)
+    monkeypatch.setattr(cj.cap, "transcribe_to_vtt", _tvtt)
+    await _add_caption_activity(
+        db, org, course, "capN",
+        captions={"enabled": True, "source_language": "auto",
+                  "languages": [{"code": "fr", "label": "French", "status": "queued"}]},
+    )
+    assert await cj.generate_activity_captions("capN") is True
+    assert transcribed == [["a.mp3"]]
+# --- stored values are re-validated inside the job --------------------------
+
+async def test_generate_captions_rejects_traversal_filename(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    _mock_engine(monkeypatch)
+    fetched = []
+    monkeypatch.setattr(cj, "_fetch_source", lambda key, path: fetched.append(key) or True)
+    await _add_caption_activity(
+        db, org, course, "capTraversal", filename="../../other_course/secret.mp4",
+        captions={"enabled": True, "languages": [{"code": "fr", "status": "queued"}]},
+    )
+    assert await cj.generate_activity_captions("capTraversal") is False
+    assert fetched == []
+
+
+async def test_generate_captions_skips_unsafe_language_codes(monkeypatch, db, org, course, chapter, activity):
+    _bind_session(monkeypatch, db)
+    _mock_engine(monkeypatch)
+    written = []
+    monkeypatch.setattr(cj, "upload_directory_to_s3", lambda d, p: written.extend(sorted(__import__("os").listdir(d))) or True)
+    await _add_caption_activity(
+        db, org, course, "capCodes",
+        captions={"enabled": True, "source_language": "../x", "languages": [
+            {"code": "../../../../tmp/pwn", "status": "queued"},
+            {"code": "fr", "status": "queued"},
+            {"code": "fr", "status": "queued"},
+            {"code": 7, "status": "queued"},
+        ]},
+    )
+    assert await cj.generate_activity_captions("capCodes") is True
+    assert written == ["fr.vtt"]
+
+
+def test_valid_targets_caps_and_vtt_path_containment(tmp_path):
+    many = [{"code": f"l{i:02d}"} for i in range(40)]
+    assert len(cj._valid_targets(many)) == cj.MAX_CAPTION_LANGUAGES
+    assert cj._valid_targets("nope") == []
+    with pytest.raises(ValueError):
+        cj._vtt_path(str(tmp_path), "../escape")
+    assert cj._vtt_path(str(tmp_path), "pt-BR").endswith("pt-BR.vtt")
+
+
+def test_valid_targets_skips_malformed_and_duplicate_entries():
+    languages = ["fr", None, {"code": 5}, {"code": "../x"}, {"code": "fr", "name": "French"},
+                 {"code": "fr", "name": "dup"}, {"name": "no code"}, {"code": "de"}]
+    assert cj._valid_targets(languages) == [
+        {"code": "fr", "name": "French"}, {"code": "de"},
+    ]

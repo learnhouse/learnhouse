@@ -2,7 +2,7 @@
 Plan-based feature restriction utilities.
 
 Single source of truth for plan hierarchy, feature configs, and limits.
-Org config only stores the plan name (cloud.plan) — all feature settings
+Org config only stores the plan name (cloud.plan); all feature settings
 are derived from these definitions at runtime.
 """
 

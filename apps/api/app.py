@@ -23,7 +23,9 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.ee_hooks import register_ee_middlewares
 from src.core.events.events import shutdown_app, startup_app
+from src.core.middleware.body_size import RequestBodySizeLimitMiddleware
 from src.core.middleware.cors import configure_cors
+from src.security.csrf import CSRFProtectionMiddleware
 from src.router import v1_router
 from src.routers.content_files import router as content_files_router
 from src.routers.local_content import router as local_content_router
@@ -31,14 +33,14 @@ from src.routers.local_content import router as local_content_router
 
 learnhouse_config: LearnHouseConfig = get_learnhouse_config()
 
-# Health probes fail loudly on purpose — a 503 from /health is how Kubernetes
+# Health probes fail loudly on purpose: a 503 from /health is how Kubernetes
 # learns to take the pod out of rotation. It is not a second, separate incident
 # to report, and during an outage every probe on every pod files one.
 _HEALTH_TRANSACTIONS = ("/api/v1/health", "/health")
 
 
-# Content types worth compressing. Everything else — video, audio, images,
-# PDFs, zips — is already compressed, so gzipping it burns CPU for ~0 bytes
+# Content types worth compressing. Everything else (video, audio, images,
+# PDFs, zips) is already compressed, so gzipping it burns CPU for ~0 bytes
 # saved. That matters here because Starlette compresses inline in the ASGI
 # `send` coroutine, on the event loop: a few concurrent range-less GETs of a
 # course video would otherwise pin the workers for the whole transfer.
@@ -107,7 +109,7 @@ def _before_send(event, hint):
 if learnhouse_config.general_config.sentry_config.dsn:
     # OpenTelemetry logs "Failed to detach context" at ERROR when a span's
     # context token is reset from a different asyncio context than the one that
-    # created it — which is exactly what streaming AI endpoints do. It is
+    # created it, which is exactly what streaming AI endpoints do. It is
     # instrumentation bookkeeping, not an application fault, and the request it
     # is attached to succeeds.
     ignore_logger("opentelemetry.context")
@@ -143,18 +145,29 @@ app = FastAPI(
     description=learnhouse_config.site_description,
     docs_url="/docs" if learnhouse_config.general_config.development_mode else None,
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
-    version="1.3.7",
+    # The schema lists every internal route; publish it only where the docs are.
+    openapi_url="/openapi.json" if learnhouse_config.general_config.development_mode else None,
+    version="1.4.0",
     lifespan=lifespan,
 )
 
 # Middleware
+# Starlette runs the last-added middleware first. CSRF is added before CORS so
+# CORS wraps it: preflights are answered by CORS, and a CSRF 403 still carries
+# CORS headers so the frontend can read it. The body cap sits inside both, so
+# its 413 carries CORS headers too.
+app.add_middleware(
+    RequestBodySizeLimitMiddleware,
+    max_body_bytes=learnhouse_config.hosting_config.max_request_body_mb * 1024 * 1024,
+)
+app.add_middleware(CSRFProtectionMiddleware)
 configure_cors(app)
 # compresslevel 9 costs several times the CPU of 6 for a couple of percent on
 # JSON; 6 is gzip's own default.
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000, compresslevel=6)
 register_ee_middlewares(app)
 
-# Content delivery — S3-aware router when S3 is enabled, local otherwise.
+# Content delivery: S3-aware router when S3 is enabled, local otherwise.
 # Both paths enforce access control; neither serves raw StaticFiles.
 if learnhouse_config.hosting_config.content_delivery.type == "s3api":
     app.include_router(content_files_router)

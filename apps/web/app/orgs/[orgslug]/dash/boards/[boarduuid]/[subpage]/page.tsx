@@ -41,7 +41,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
     staleTime: 60_000,
   })
 
-  // boardKey passed as null — tabs use queryKeys directly now
+  // boardKey passed as null; tabs use queryKeys directly now
   const boardKey = null
 
   const tabs: DashTabItem[] = [
@@ -131,7 +131,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
             </Link>
             <div className="flex flex-col justify-center ps-3 sm:ps-5 min-w-0">
               <div className="text-gray-400 font-semibold text-xs sm:text-sm">Board Settings</div>
-              <div className="text-black font-bold text-base sm:text-xl -mt-1 first-letter:uppercase truncate">
+              <div className="text-black font-bold text-base sm:text-xl -mt-1 truncate">
                 {board.name}
               </div>
             </div>

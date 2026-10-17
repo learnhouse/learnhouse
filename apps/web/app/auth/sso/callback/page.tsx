@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { handleSSOCallback, SSOError, getErrorMessage } from '@services/auth/sso'
+import { handleSSOCallback, SSOError, getErrorMessage, ssoContinueUrl } from '@services/auth/sso'
 import { useAuth } from '@components/Contexts/AuthContext'
 import { Shield, AlertTriangle, Loader2, Info, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
@@ -25,8 +25,16 @@ export default function SSOCallbackPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false)
   const [copied, setCopied] = useState(false)
+  // The IdP code and state are single-use: a second run of the effect (React
+  // StrictMode, or a dependency changing identity) would spend the state again
+  // and land on "invalid state" even though the first run succeeded.
+  const handledRef = useRef<string | null>(null)
 
   useEffect(() => {
+    const callbackKey = searchParams.toString()
+    if (handledRef.current === callbackKey) return
+    handledRef.current = callbackKey
+
     const handleCallback = async () => {
       // First, check for IdP error parameters in the URL
       const idpError = searchParams.get('error')
@@ -63,6 +71,31 @@ export default function SSOCallbackPage() {
         // Exchange code for user profile and tokens
         const result = await handleSSOCallback(code, state)
 
+        // A 2FA-enabled account gets a pending challenge instead of a session.
+        // Hand it to the login page, which owns the code form, exactly like the
+        // Google callback does.
+        if (result.mfa_required && result.mfa_token) {
+          const mfaParams = new URLSearchParams({ mfa_token: result.mfa_token })
+          // Without a usable redirect the login page falls back to its default.
+          if (result.redirect_url) {
+            try {
+              const target = new URL(result.redirect_url, window.location.origin)
+              const next = `${target.pathname}${target.search}`
+              if (
+                target.origin === window.location.origin &&
+                target.pathname !== '/redirect_from_auth' &&
+                /^\/(?!\/)/.test(next)
+              ) {
+                mfaParams.set('redirect_to', next)
+              }
+            } catch {
+              // Malformed redirect: same default.
+            }
+          }
+          router.push(`/auth/login?${mfaParams.toString()}`)
+          return
+        }
+
         // Use absolute URL with current origin for custom domain support
         const defaultRedirect = `${window.location.origin}/redirect_from_auth`
         const redirectUrl = result.redirect_url || defaultRedirect
@@ -73,7 +106,6 @@ export default function SSOCallbackPage() {
           email: result.user.email,
           sso: 'true',
           sso_access_token: result.tokens.access_token,
-          sso_refresh_token: result.tokens.refresh_token,
           sso_user: JSON.stringify(result.user),
           sso_expiry: result.tokens.expiry ?? undefined,
           callbackUrl: redirectUrl,
@@ -100,6 +132,11 @@ export default function SSOCallbackPage() {
         console.error('SSO callback error:', err)
 
         if (err instanceof SSOError) {
+          const continueUrl = ssoContinueUrl(err, window.location.protocol)
+          if (continueUrl) {
+            window.location.replace(continueUrl)
+            return
+          }
           setError({
             message: getErrorMessage(err.errorCode, err.errorDescription),
             errorCode: err.errorCode,

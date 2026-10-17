@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 LH_CONFIG = get_learnhouse_config()
 
 BOARDS_PLAYGROUND_SESSION_KEY = "boards_playground_session:{session_uuid}"
+# Creator of a session, kept beside the session payload so the session schema
+# (and every session already stored) stays unchanged.
+BOARDS_PLAYGROUND_OWNER_KEY = "boards_playground_owner:{session_uuid}"
 SESSION_TTL = 2160000  # 25 days
 MAX_ITERATIONS = 6
 
@@ -26,8 +29,8 @@ _redis_client = None
 
 def get_redis_connection():
     # Reuse a single client (and its connection pool) across calls. Creating a
-    # new redis.from_url() client on every session read/write — as the playground
-    # hot path does — spawns a fresh connection pool each time and leaks sockets.
+    # new redis.from_url() client on every session read/write, as the playground
+    # hot path does, spawns a fresh connection pool each time and leaks sockets.
     global _redis_client
     if _redis_client is not None:
         return _redis_client
@@ -59,10 +62,28 @@ def get_boards_playground_session(session_uuid: str) -> Optional[BoardsPlaygroun
     return None
 
 
+def get_boards_playground_session_owner(session_uuid: str) -> Optional[int]:
+    """Return the user id that created the session, or None if unknown."""
+    r = get_redis_connection()
+    if not r:
+        return None
+    try:
+        owner = r.get(BOARDS_PLAYGROUND_OWNER_KEY.format(session_uuid=session_uuid))
+        if owner is None:
+            return None
+        if isinstance(owner, bytes):
+            owner = owner.decode("utf-8")
+        return int(owner)
+    except Exception as e:
+        logger.error("Failed to get Boards Playground session owner: %s", e, exc_info=True)
+    return None
+
+
 def create_boards_playground_session(
     block_uuid: str,
     board_uuid: str,
     context: BoardsPlaygroundContext,
+    user_id: Optional[int] = None,
 ) -> BoardsPlaygroundSessionData:
     session_uuid = f"pg_{uuid4()}"
     session = BoardsPlaygroundSessionData(
@@ -75,6 +96,17 @@ def create_boards_playground_session(
         current_html=None,
         context=context,
     )
+    if user_id is not None:
+        r = get_redis_connection()
+        if r:
+            try:
+                r.setex(
+                    BOARDS_PLAYGROUND_OWNER_KEY.format(session_uuid=session_uuid),
+                    SESSION_TTL,
+                    str(user_id),
+                )
+            except Exception as e:
+                logger.error("Failed to save Boards Playground session owner: %s", e, exc_info=True)
     save_boards_playground_session(session)
     return session
 
@@ -86,6 +118,8 @@ def save_boards_playground_session(session: BoardsPlaygroundSessionData) -> bool
     try:
         key = BOARDS_PLAYGROUND_SESSION_KEY.format(session_uuid=session.session_uuid)
         r.setex(key, SESSION_TTL, json.dumps(session.model_dump()))
+        # Keep the owner record alive as long as the session itself.
+        r.expire(BOARDS_PLAYGROUND_OWNER_KEY.format(session_uuid=session.session_uuid), SESSION_TTL)
         return True
     except Exception as e:
         logger.error("Failed to save Boards Playground session: %s", e, exc_info=True)
@@ -99,16 +133,16 @@ CONTEXT:
 - Board: {context.board_name}
 - Description: {context.board_description}
 
-You create standalone interactive HTML elements — widgets, visualizations, mini-apps, simulations, and educational tools that run entirely in the browser.
+You create standalone interactive HTML elements: widgets, visualizations, mini-apps, simulations, and educational tools that run entirely in the browser.
 
 DESIGN RULES:
 1. Generate a COMPLETE, self-contained HTML document
 2. ALWAYS use Tailwind CSS via CDN for styling
-3. Use LIGHT backgrounds (white, gray-50) — no dark themes
+3. Use LIGHT backgrounds (white, gray-50), no dark themes
 4. Design as an embedded widget/component, NOT a full page
 5. Keep it responsive and sized to fit its container (use 100% width/height on html and body)
 6. Use clean, modern UI with proper spacing, rounded corners, shadows
-7. Make it interactive and engaging — buttons, inputs, animations, visual feedback
+7. Make it interactive and engaging: buttons, inputs, animations, visual feedback
 8. Include clear instructions or labels so users know how to interact
 
 AVAILABLE LIBRARIES (use via CDN):

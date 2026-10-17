@@ -1,5 +1,5 @@
 /**
- * Goal: prove the NUMBER_ANSWER task type works end-to-end — a numeric answer
+ * Goal: prove the NUMBER_ANSWER task type works end-to-end: a numeric answer
  * within the configured tolerance is auto-graded 100, in the UI and in
  * persisted server state.
  */

@@ -359,7 +359,7 @@
     "image_title_forgot": "重置你的密码。",
     "image_subtitle_forgot": "我们会帮你快速重新登录账户。",
     "image_title_login": "欢迎回到 LearnHouse。",
-    "image_subtitle_login": "从上次离开的地方继续 — 你的课程、学员和工具都在等你。",
+    "image_subtitle_login": "从上次离开的地方继续，你的课程、学员和工具都在等你。",
     "image_title_reset": "马上就好。",
     "image_subtitle_reset": "设置一个强密码以保护你的账户安全。",
     "image_title_signup": "用 LearnHouse 开始教学。",
@@ -626,7 +626,7 @@
         "plan_generated": "计划已更新",
         "plan_generated_hint": "查看计划选项卡进行审查和编辑。",
         "describe_course": "描述您的课程",
-        "describe_course_hint": "使用右侧聊天描述您想要的课程 — 主题、受众和目标。",
+        "describe_course_hint": "使用右侧聊天描述您想要的课程：主题、受众和目标。",
         "generating_plan": "正在生成课程计划...",
         "chapters": "章节",
         "activities": "活动",
@@ -1035,8 +1035,8 @@
     "retry_assignment_title": "重新尝试此作业？",
     "retry_assignment_confirm": "您当前的提交和答案将被重置，以便您重新开始。重新提交后，您之前的成绩将被替换。",
     "retry_assignment_remaining": "本次之后您还剩 {{remaining}} 次尝试机会。",
-    "retry_assignment_last": "这是您的最后一次尝试——请认真对待。",
-    "retry_assignment_success": "您的作答已重置——再试一次吧。",
+    "retry_assignment_last": "这是您的最后一次尝试，请认真对待。",
+    "retry_assignment_success": "您的作答已重置，再试一次吧。",
     "retry_assignment_failed": "无法重置您的提交。请重试。",
     "retry_no_attempts_left": "没有剩余的重试机会",
     "quick_grade": {
@@ -3619,7 +3619,7 @@
             "auth_required_submit": "需要身份验证。请登录以提交任务。",
             "hint_optional": "提示（可选）",
             "paste_blocked": "此作业已禁用粘贴",
-            "paste_blocked_hint": "粘贴已禁用 — 直接输入您的答案。",
+            "paste_blocked_hint": "粘贴已禁用，直接输入您的答案。",
             "upload_locked_graded": "此提交已评分，无法再更改文件。",
             "upload_locked_submitted": "你已提交此作业，无法再更改文件。"
           },
@@ -3657,13 +3657,13 @@
               "regex": "正则表达式"
             },
             "explanation_label": "解释（答对时显示）",
-            "explanation_placeholder": "可选 — 解释为什么答案是正确的",
+            "explanation_placeholder": "可选：解释为什么答案是正确的",
             "your_answer_placeholder": "输入您的答案...",
             "student_answer_label": "学生的答案",
             "accepted_answers_label": "接受的答案",
             "no_answer": "未提交答案",
             "correct": "正确",
-            "incorrect": "不太对 — 再试一次"
+            "incorrect": "不太对，再试一次"
           },
           "number_answer": {
             "prompt_label": "问题提示",
@@ -3674,14 +3674,14 @@
             "unit_placeholder": "m/s², kg, °C...",
             "unit_hint": "显示在答案字段旁边。不强制。",
             "explanation_label": "解释（答对时显示）",
-            "explanation_placeholder": "可选 — 解释如何得出答案",
+            "explanation_placeholder": "可选：解释如何得出答案",
             "preview_label": "接受",
             "your_answer_placeholder": "输入一个数字...",
             "student_answer_label": "学生的答案",
             "accepted_range_label": "接受范围",
             "no_answer": "未提交答案",
             "correct": "正确",
-            "incorrect": "不太对 — 再试一次"
+            "incorrect": "不太对，再试一次"
           }
         },
         "generate_ai": "使用 AI 生成任务",
@@ -3790,7 +3790,7 @@
         },
         "tasks": {
           "title": "任务表现",
-          "subtitle": "每项任务的平均分 — 较低的柱子提示学生薄弱环节",
+          "subtitle": "每项任务的平均分，较低的柱子提示学生薄弱环节",
           "empty": "批改后将显示各项任务的表现",
           "avg_grade": "平均成绩",
           "attempts": "次尝试"
@@ -3802,7 +3802,7 @@
         },
         "attention": {
           "title": "可能需要帮助",
-          "subtitle": "未通过的学生 — 可考虑主动联系",
+          "subtitle": "未通过的学生，可考虑主动联系",
           "empty": "所有已批改的学生都通过了。干得好！"
         }
       },
@@ -3841,10 +3841,10 @@
             "auto_grading_description": "学生提交时自动评分并完成活动。仅在每个任务都可以无需人工审核进行评分时有效。",
             "anti_copy_paste_label": "阻止复制和粘贴",
             "anti_copy_paste_description": "通过阻止粘贴事件来劝阻粘贴 AI 生成的答案。注意：这是一种威慑手段。",
-            "auto_grading_disabled_file": "自动评分不可用 — 此作业包含需要人工审核的文件提交任务。",
+            "auto_grading_disabled_file": "自动评分不可用：此作业包含需要人工审核的文件提交任务。",
             "grading_type_hint": "成绩如何向学生显示",
             "grading_options_hint": "提交时的行为",
-            "show_correct_answers_description": "提交评分后，向学生显示其答案旁的正确答案——包括正确的测验选项、预期的简答或数字答案，以及正确的填空内容。",
+            "show_correct_answers_description": "提交评分后，向学生显示其答案旁的正确答案，包括正确的测验选项、预期的简答或数字答案，以及正确的填空内容。",
             "show_correct_answers_label": "评分后显示正确答案",
             "allow_retries_label": "允许重试",
             "allow_retries_description": "允许学员在作业评分后重置并重新作答。每次重试都会清除其之前的答案，并计为一次新的尝试。",
@@ -4561,7 +4561,7 @@
         "avg_rate": "平均比率",
         "needs_attention": "需要关注",
         "total_samples": "总样本数",
-        "more_expand": "+{{count}} 更多 — 点击展开",
+        "more_expand": "+{{count}} 更多，点击展开",
         "activities_count": "{{count}} 个活动",
         "pct_of_total": "占总比%",
         "bar_width_hint": "条宽 = 相对浏览量",
@@ -4681,7 +4681,7 @@
       },
       "activity_dropoff": {
         "title": "流失点",
-        "subtitle": "学员停止进度的位置 — 最后完成的活动",
+        "subtitle": "学员停止进度的位置：最后完成的活动",
         "total_dropoffs": "总流失数",
         "dropoff_points": "流失点"
       },
@@ -4715,7 +4715,7 @@
         "avg_between": "平均 {{unit}} 完成间隔",
         "transitions_tracked": "已跟踪转换",
         "raw_hours_avg": "原始小时均值",
-        "description": "衡量学员从一个活动进入下一个活动的速度。越低越好 — 意味着学员更快地通过内容。"
+        "description": "衡量学员从一个活动进入下一个活动的速度。越低越好，意味着学员更快地通过内容。"
       },
       "time_to_completion": {
         "title": "完成时间",
@@ -4819,7 +4819,7 @@
       },
       "add_content": {
         "title": "一节值得专程来上的课",
-        "description": "添加视频、页面或测验 — 给学员一个报名的真实理由。",
+        "description": "添加视频、页面或测验，给学员一个报名的真实理由。",
         "action": "添加内容"
       },
       "brand_school": {
@@ -4829,17 +4829,17 @@
       },
       "share_grow": {
         "title": "你学校的大门",
-        "description": "立即上线并获取可分享链接 — 你将把每位学员都引导到这里。",
+        "description": "立即上线并获取可分享链接，你将把每位学员都引导到这里。",
         "action": "打开我的学校"
       },
       "invite_learners": {
         "title": "迎接你的第一位学员",
-        "description": "分享你的加入链接或邀请他人 — 让第一位学员走进门来。",
+        "description": "分享你的加入链接或邀请他人，让第一位学员走进门来。",
         "action": "邀请学员"
       },
       "build_community": {
         "title": "让学员持续回访",
-        "description": "开设一个社区空间，让你的学员保持活跃 — 并带上他们的朋友。",
+        "description": "开设一个社区空间，让你的学员保持活跃，并带上他们的朋友。",
         "action": "打开社区"
       }
     },
@@ -5193,7 +5193,7 @@
         "goal": "开始从课程中获利，构建学习社区。",
         "highlights": {
           "courses": "无限课程",
-          "courses_desc": "创建任意数量的课程——课程表没有限制。",
+          "courses_desc": "创建任意数量的课程，课程表没有限制。",
           "members": "最多 500 名成员",
           "members_desc": "扩大学员群体，在一个地方统一管理。",
           "payments": "接受付款",
@@ -5251,7 +5251,7 @@
       "trigger_authenticated_title": "访问权限:仅限登录用户",
       "trigger_restricted_title": "访问权限:特定用户组",
       "usergroups_header": "用户组",
-      "usergroups_none_assigned": "没有分配的组 — 只有管理员可以打开。",
+      "usergroups_none_assigned": "没有分配的组，只有管理员可以打开。",
       "usergroups_remove_title": "移除",
       "usergroups_loading": "正在加载用户组…",
       "usergroups_none_in_org": "此组织尚未创建用户组。",
@@ -5522,7 +5522,7 @@
     "recurring_subscription": "周期性订阅",
     "what_youre_getting": "你将获得",
     "pack_immediate": "付款后立即生效",
-    "pack_cancel_anytime": "随时可取消 — 在账单周期结束前持续有效",
+    "pack_cancel_anytime": "随时可取消，在账单周期结束前持续有效",
     "pack_credits_reset": "额度在每个账单周期重置",
     "after_purchase": "购买后",
     "unlimited": "无限",
@@ -5572,9 +5572,9 @@
     "canceled_desc": "你的订阅将在当前账单周期结束时取消。在此之前你将保留完整访问权限。",
     "back_to_plan_usage": "返回方案与用量",
     "back_to_orgs": "返回组织",
-    "pack_purchased": "附加包已购买 — 您的限额已更新。",
-    "checkout_success": "订阅已更新 — 欢迎使用您的新计划！",
-    "checkout_cancelled": "结账已取消 — 未进行任何更改。",
+    "pack_purchased": "附加包已购买，您的限额已更新。",
+    "checkout_success": "订阅已更新，欢迎使用您的新计划！",
+    "checkout_cancelled": "结账已取消，未进行任何更改。",
     "load_failed": "我们无法加载您的组织。",
     "no_permission": "您没有权限管理此组织的账单。",
     "no_permission_hint": "只有组织管理员可以查看或更改计划。",
@@ -5688,7 +5688,7 @@
     "toast": {
       "creating": "正在创建组织…",
       "created": "组织已创建！",
-      "checkoutFailed": "组织已创建 — 你可以在“方案与用量”中升级。",
+      "checkoutFailed": "组织已创建，你可以在“方案与用量”中升级。",
       "failed": "创建组织失败"
     },
     "steps": {

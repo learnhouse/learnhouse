@@ -68,7 +68,7 @@ class _BrokenRedis:
 
 def test_store_swallows_redis_errors():
     with patch("src.security.auth._get_revocation_redis_client", return_value=_BrokenRedis()):
-        # Must not raise — a failed cache write is best-effort.
+        # Must not raise: a failed cache write is best-effort.
         _store_refresh_grace(1, "jti", "a", "b")
 
 

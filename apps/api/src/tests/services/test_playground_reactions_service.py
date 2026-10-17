@@ -155,20 +155,20 @@ async def test_toggle_playground_reaction_adds_and_removes(db, playground, react
         added = await toggle_playground_reaction(
             request=None,
             playground_uuid=playground.playground_uuid,
-            emoji=":+1:",
+            emoji="👍",
             current_user=PublicUser.model_validate(current_user),
             db_session=db,
         )
         removed = await toggle_playground_reaction(
             request=None,
             playground_uuid=playground.playground_uuid,
-            emoji=":+1:",
+            emoji="👍",
             current_user=PublicUser.model_validate(current_user),
             db_session=db,
         )
 
-    assert added == {"action": "added", "emoji": ":+1:"}
-    assert removed == {"action": "removed", "emoji": ":+1:"}
+    assert added == {"action": "added", "emoji": "👍"}
+    assert removed == {"action": "removed", "emoji": "👍"}
 
 
 @pytest.mark.asyncio
@@ -198,12 +198,12 @@ async def test_toggle_playground_reaction_concurrent_duplicate_is_idempotent(
         result = await toggle_playground_reaction(
             request=None,
             playground_uuid=playground.playground_uuid,
-            emoji=":+1:",
+            emoji="👍",
             current_user=PublicUser.model_validate(current_user),
             db_session=db,
         )
 
-    assert result == {"action": "added", "emoji": ":+1:"}
+    assert result == {"action": "added", "emoji": "👍"}
     assert rollback_calls["count"] == 1
 
     # Restore the real session methods for any later teardown.
@@ -237,3 +237,39 @@ async def test_toggle_playground_reaction_rejects_anonymous_and_missing_playgrou
             ),
             db_session=db,
         )
+
+
+@pytest.mark.asyncio
+async def test_toggle_playground_reaction_rejects_unknown_emoji(db, playground, reactor):
+    current_user, _ = reactor
+    with pytest.raises(HTTPException) as exc:
+        await toggle_playground_reaction(
+            request=None,
+            playground_uuid=playground.playground_uuid,
+            emoji="x" * 50,
+            current_user=PublicUser.model_validate(current_user),
+            db_session=db,
+        )
+    assert exc.value.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_draft_playground_reactions_hidden_from_non_owner(db, playground, reactor):
+    _, other_user = reactor
+    playground.published = False
+    db.add(playground)
+    await db.commit()
+    stranger = PublicUser.model_validate(other_user)
+
+    with pytest.raises(HTTPException) as read_exc:
+        await get_playground_reactions(
+            request=None, playground_uuid=playground.playground_uuid,
+            current_user=stranger, db_session=db,
+        )
+    with pytest.raises(HTTPException) as write_exc:
+        await toggle_playground_reaction(
+            request=None, playground_uuid=playground.playground_uuid, emoji="👍",
+            current_user=stranger, db_session=db,
+        )
+    assert read_exc.value.status_code == 404
+    assert write_exc.value.status_code == 404

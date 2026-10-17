@@ -18,7 +18,15 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.user_mfa import UserMFA
 from src.db.users import APITokenUser, PublicUser, SuperadminAPITokenUser, User, UserRead
-from src.security.auth import get_authenticated_user
+from src.security.auth import (
+    create_access_token,
+    create_refresh_token,
+    decode_jwt,
+    extract_jwt_from_request,
+    get_authenticated_user,
+    revoke_user_sessions_before,
+)
+from src.security.session_context import carry_session_claims
 from src.security.security import security_verify_password
 from src.services.auth.mfa import (
     build_provisioning_uri,
@@ -31,17 +39,20 @@ from src.services.auth.mfa import (
     get_user_mfa,
     replace_backup_codes,
     verify_and_consume_totp,
-    verify_totp_code,
 )
 from src.services.auth.session import (
+    decode_mfa_pending_custom_domain,
     decode_mfa_pending_token,
     decode_mfa_pending_provenance,
+    mfa_pending_token_usable,
     mint_session_tokens,
+    spend_mfa_pending_token,
 )
 from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
 from src.services.orgs.mfa_policy import evaluate_mfa_compliance, get_org_mfa_policy
 from src.services.security.rate_limiting import check_rate_limit, get_client_ip
-from src.security.org_auth import is_org_admin
+from src.security.org_auth import is_org_admin, org_owns_account
+from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.db.organization_config import OrganizationConfig
 from src.db.user_organizations import UserOrganization
 from src.routers.auth import get_token_expiry_ms, set_auth_cookies
@@ -115,6 +126,33 @@ def _verify_password_if_set(user: User, password: Optional[str]) -> None:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "INVALID_PASSWORD", "message": "Incorrect password."},
         )
+
+
+def _rotate_sessions(request: Request, response: Response, user: User) -> dict:
+    """Sign out every session of ``user`` and hand the caller a fresh one.
+
+    Cutting at the caller's own issue time left alive any session minted after
+    it, e.g. one an attacker refreshed a moment later. So revoke everything up
+    to now, then reissue the caller's session with the same provenance: its new
+    tokens are issued at or after the cutoff and are the only ones that survive.
+    """
+    token = extract_jwt_from_request(request)
+    payload = (decode_jwt(token) if token else None) or {}
+    try:
+        revoke_user_sessions_before(user.id)
+    except Exception:  # pragma: no cover - never fail the 2FA change on the revocation store
+        pass
+    # Same claims a refresh would carry, so the reissue can't launder the
+    # session's method, org binding or legacy grace deadline.
+    data = {"sub": user.email, "purpose": "session", **carry_session_claims(payload)}
+    access_token = create_access_token(data=data)
+    refresh_token = create_refresh_token(data=data)
+    set_auth_cookies(response, access_token, refresh_token, request)
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expiry": get_token_expiry_ms(),
+    }
 
 
 def _check_mfa_rate_limit(request: Request, scope: str, identifier: str) -> None:
@@ -198,7 +236,7 @@ async def api_mfa_setup(
     now = str(datetime.now())
 
     if existing is not None:
-        # Restarting an abandoned enrollment — overwrite the unconfirmed secret
+        # Restarting an abandoned enrollment: overwrite the unconfirmed secret
         # so the QR the user is looking at is the one we will verify against.
         existing.secret_encrypted = encrypt_secret(secret)
         existing.last_used_timestep = None
@@ -233,6 +271,7 @@ async def api_mfa_setup(
 )
 async def api_mfa_confirm(
     request: Request,
+    response: Response,
     form: MFACodeRequest,
     db_session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_authenticated_user),
@@ -280,7 +319,8 @@ async def api_mfa_confirm(
     await db_session.commit()
 
     codes = await replace_backup_codes(db_session, user.id)
-    return {"enabled": True, "backup_codes": codes}
+    tokens = _rotate_sessions(request, response, user)
+    return {"enabled": True, "backup_codes": codes, "tokens": tokens}
 
 
 @router.post(
@@ -292,6 +332,7 @@ async def api_mfa_confirm(
 )
 async def api_mfa_disable(
     request: Request,
+    response: Response,
     form: MFADisableRequest,
     db_session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_authenticated_user),
@@ -312,7 +353,10 @@ async def api_mfa_disable(
     # still needs a way to turn the factor off rather than being stuck with it.
     accepted = False
     if secret is not None:
-        accepted, _ = verify_totp_code(secret, form.code, mfa.last_used_timestep)
+        # Burn the timestep so a code seen once cannot be replayed here.
+        accepted = await verify_and_consume_totp(
+            db_session, user.id, secret, form.code, mfa.last_used_timestep
+        )
     if not accepted:
         accepted = await consume_backup_code(db_session, user.id, form.code)
     if not accepted:
@@ -322,7 +366,8 @@ async def api_mfa_disable(
         )
 
     await disable_mfa(db_session, user.id)
-    return {"enabled": False}
+    tokens = _rotate_sessions(request, response, user)
+    return {"enabled": False, "tokens": tokens}
 
 
 @router.post(
@@ -391,16 +436,25 @@ async def api_login_mfa(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "code": "MFA_SESSION_EXPIRED",
-                "message": "That took too long — please sign in again.",
+                "message": "That took too long. Please sign in again.",
             },
         )
 
     _check_mfa_rate_limit(request, "login", email)
 
+    # Refuse a spent (or pre-single-use) pending token before a code is
+    # consumed on it, so a refusal never costs the user a backup code.
+    if not await mfa_pending_token_usable(db_session, form.mfa_token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "MFA_SESSION_EXPIRED", "message": "Please sign in again."},
+        )
+
     # Provenance (how the user authenticated, which org for) was stamped into the
     # pending token at the password/magic-link/SSO step; carry it into the real
     # session so the org auth-method / sharing policy sees the true method.
     pending_amr, pending_org_id = decode_mfa_pending_provenance(form.mfa_token)
+    pending_custom_domain = decode_mfa_pending_custom_domain(form.mfa_token)
 
     user = (
         await db_session.execute(select(User).where(User.email == email))
@@ -416,7 +470,9 @@ async def api_login_mfa(
         # The factor was removed between password step and code step. Nothing
         # left to verify, so fall through to a normal session rather than
         # stranding the user at a challenge they can never satisfy.
-        result = mint_session_tokens(user.email, pending_amr, pending_org_id)
+        result = mint_session_tokens(
+            user.email, pending_amr, pending_org_id, pending_custom_domain
+        )
     else:
         accepted = False
         if form.is_backup_code:
@@ -429,7 +485,7 @@ async def api_login_mfa(
                 )
             if not accepted:
                 # Let a backup code through even if the user didn't tick the
-                # box — they are unambiguously distinguishable from 6 digits.
+                # box; they are unambiguously distinguishable from 6 digits.
                 accepted = await consume_backup_code(db_session, user.id, form.code)
 
         if not accepted:
@@ -441,18 +497,29 @@ async def api_login_mfa(
                 },
             )
 
-        result = mint_session_tokens(user.email, pending_amr, pending_org_id)
+        result = mint_session_tokens(
+            user.email, pending_amr, pending_org_id, pending_custom_domain
+        )
+
+    # One pending token, one session: replaying it with another valid code
+    # (a second backup code, the next TOTP step) must not mint a second one.
+    user_read = UserRead.model_validate(user)
+    if not await spend_mfa_pending_token(db_session, form.mfa_token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "MFA_SESSION_EXPIRED", "message": "Please sign in again."},
+        )
 
     set_auth_cookies(response, result.access_token, result.refresh_token, request)
 
     return {
-        "user": UserRead.model_validate(user),
+        "user": user_read,
         "tokens": {
             "access_token": result.access_token,
             "refresh_token": result.refresh_token,
             "expiry": get_token_expiry_ms(),
         },
-        "backup_codes_remaining": await count_unused_backup_codes(db_session, user.id),
+        "backup_codes_remaining": await count_unused_backup_codes(db_session, user_read.id),
     }
 
 
@@ -460,7 +527,7 @@ async def api_login_mfa(
 
 
 class OrgMFAPolicyUpdate(BaseModel):
-    """Partial update — every field is optional and an omitted one is left as-is.
+    """Partial update: every field is optional and an omitted one is left as-is.
 
     The dashboard splits this policy across two tabs (two-factor / sign-in
     methods); each must be able to save its own fields without resetting the
@@ -493,7 +560,7 @@ async def api_org_mfa_compliance(
     # The org's auth-method / session-sharing policy is enforced per request all
     # over the API, but this endpoint is the one the dashboard polls to decide
     # what to tell the user. Evaluating it here is what turns a scattering of
-    # 403s into the single "sign in to this org again" screen — without it the
+    # 403s into the single "sign in to this org again" screen; without it the
     # restriction is enforced but never explained, which reads as "the setting
     # does nothing unless two-factor is also on".
     block = await evaluate_org_auth(db_session, user.id, org_id)
@@ -552,7 +619,7 @@ async def _org_security_policy_payload(db_session: AsyncSession, org_id: int) ->
     "/mfa/org-policy/{org_id}",
     summary="Set the org-wide two-factor requirement",
     description=(
-        "Admin/maintainer only. Enabling the policy requires the calling admin "
+        "Admin only. Enabling the policy requires the calling admin "
         "to already have two-factor enabled themselves."
     ),
     tags=["auth"],
@@ -566,16 +633,27 @@ async def api_set_org_mfa_policy(
     db_session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_authenticated_user),
 ):
+    from src.services.orgs.orgs import is_org_admin_role
+
     user = await _require_human_user(current_user, db_session)
 
-    if not await is_org_admin(user.id, org_id, db_session):
+    # Admin role specifically: switching the requirement off weakens every
+    # account in the org, so Maintainers can read the policy but not change it.
+    if not await is_org_admin_role(user.id, org_id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"code": "NOT_ORG_ADMIN", "message": "Only org admins can change this setting."},
         )
 
+    # Every demo visitor is an admin; letting one rewrite the sign-in policy
+    # (require 2FA, refuse password sign-in, stop session sharing) would lock
+    # the other visitors out of the shared org.
+    from src.services.demo.guards import require_not_demo_org
+
+    await require_not_demo_org(org_id, db_session)
+
     # Self-lockout guard. With grace_days=0 an admin without a second factor
-    # would be blocked from their own org the instant this saves — and there
+    # would be blocked from their own org the instant this saves, and there
     # would be no admin left able to turn it back off.
     if form.require_2fa:
         mfa = await get_user_mfa(db_session, user.id)
@@ -630,7 +708,7 @@ async def api_set_org_mfa_policy(
         # A session with no recorded method is refused by the gate exactly like a
         # disallowed one, so it has to trip this guard too. Sessions minted before
         # the policy shipped carry no `amr`, and a refresh copies the missing
-        # claim forward — so without this the admin saves, is locked out on the
+        # claim forward, so without this the admin saves, is locked out on the
         # next request, and no re-login prompt can be reached from inside.
         unknown_method = provenance is None or provenance.amr is None
         if (
@@ -644,7 +722,7 @@ async def api_set_org_mfa_policy(
                 detail={
                     "code": "AUTH_METHOD_SELF_LOCKOUT",
                     "message": (
-                        "That would lock you out — this session isn't signed in with one of "
+                        "That would lock you out: this session isn't signed in with one of "
                         "the methods you're allowing. Sign in to this organization again with "
                         "an allowed method, then save."
                     ),
@@ -685,7 +763,7 @@ async def api_set_org_mfa_policy(
     summary="List members and whether they have two-factor enabled",
     description=(
         "Admin/maintainer only. Intended to be checked BEFORE switching the "
-        "policy on — enabling it blind is how an org locks out its own staff."
+        "policy on; enabling it blind is how an org locks out its own staff."
     ),
     tags=["auth"],
 )
@@ -752,17 +830,17 @@ async def api_org_mfa_compliance_list(
     "/mfa/org-reset/{org_id}/{user_id}",
     summary="Reset (clear) a member's two-factor factor",
     description=(
-        "Admin/maintainer recovery tool. Removes a member's TOTP factor and all "
-        "their backup codes so they can re-enroll — the supported path for a "
+        "Admin-only recovery tool. Removes a member's TOTP factor and all "
+        "their backup codes so they can re-enroll, the supported path for a "
         "member who lost their device with no backup codes left. Does not enroll "
         "anything on their behalf; if the org requires 2FA the member re-enters "
         "their grace window and must set it up again."
     ),
     tags=["auth"],
     responses={
-        403: {"description": "Not an org admin, or target is a platform superadmin"},
+        403: {"description": "Not an org admin, or target is an org admin or platform superadmin"},
         404: {"description": "Target user is not a member of this org"},
-        400: {"description": "Cannot reset your own factor here — use /mfa/disable"},
+        400: {"description": "Cannot reset your own factor here; use /mfa/disable"},
     },
 )
 async def api_org_reset_member_mfa(
@@ -775,9 +853,13 @@ async def api_org_reset_member_mfa(
     from src.security.superadmin import is_user_superadmin
     from src.services.auth.mfa import disable_mfa
 
+    from src.services.orgs.orgs import is_org_admin_role
+
     admin = await _require_human_user(current_user, db_session)
 
-    if not await is_org_admin(admin.id, org_id, db_session):
+    # Admin role specifically: stripping a colleague's factor is an account
+    # takeover aid, so Maintainers don't get it.
+    if not await is_org_admin_role(admin.id, org_id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"code": "NOT_ORG_ADMIN", "message": "Only org admins can reset a member's two-factor."},
@@ -787,7 +869,7 @@ async def api_org_reset_member_mfa(
     # UserMFABackupCode have no org column, so disable_mfa below strips the
     # target's factor everywhere they log in. That is the right tool for a real
     # organization recovering a colleague's account, and completely wrong for a
-    # sandbox that hands admin to anyone who clicks into it — an attacker could
+    # sandbox that hands admin to anyone who clicks into it: an attacker could
     # clear the two-factor of any other person who had ever opened the demo,
     # then attack their password with the second factor gone.
     from src.services.demo.guards import require_not_demo_org
@@ -803,10 +885,18 @@ async def api_org_reset_member_mfa(
             detail={"code": "CANNOT_RESET_SELF", "message": "Use the disable flow (with a code) to reset your own two-factor."},
         )
 
-    if await get_user_org(user_id, org_id, db_session) is None:
+    target_membership = await get_user_org(user_id, org_id, db_session)
+    if target_membership is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"code": "NOT_A_MEMBER", "message": "That user is not a member of this organization."},
+        )
+
+    # One admin must not be able to strip another admin's factor.
+    if target_membership.role_id == ADMIN_ROLE_ID and not await is_user_superadmin(admin.id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "TARGET_IS_ADMIN", "message": "You cannot reset another administrator's two-factor."},
         )
 
     # An org admin must not be able to clear a platform superadmin's factor.
@@ -816,6 +906,17 @@ async def api_org_reset_member_mfa(
             detail={"code": "TARGET_IS_SUPERADMIN", "message": "You cannot reset this user's two-factor."},
         )
 
+    # The factor protects the whole account. An org only gets to clear it for
+    # accounts that belong to it alone.
+    if not await org_owns_account(user_id, org_id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "ACCOUNT_SHARED", "message": "This account also belongs to other organizations; only the user can reset their two-factor."},
+        )
+
     had_factor = await get_user_mfa(db_session, user_id) is not None
     await disable_mfa(db_session, user_id)
+    # Whoever lost (or stole) the device may still hold a session; the member
+    # signs in again and re-enrolls.
+    revoke_user_sessions_before(user_id)
     return {"reset": True, "user_id": user_id, "had_factor": had_factor}

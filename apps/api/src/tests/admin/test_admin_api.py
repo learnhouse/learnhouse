@@ -77,6 +77,19 @@ from src.services.admin.admin import (
 )
 
 
+# Admin API endpoints enforce the token's rights buckets; these fixtures exercise
+# the endpoints' own logic, so the token holds every bucket they check.
+FULL_ADMIN_API_RIGHTS = {
+    bucket: {
+        "action_create": True,
+        "action_read": True,
+        "action_update": True,
+        "action_delete": True,
+    }
+    for bucket in ("users", "roles", "courses", "certifications", "usergroups")
+}
+
+
 # ── Fixtures ────────────────────────────────────────────────────────────────
 
 
@@ -166,7 +179,7 @@ async def user(db, org):
 
 @pytest.fixture
 async def learner_user(db, org):
-    """A plain member — a legitimate magic-link target.
+    """A plain member, a legitimate magic-link target.
 
     issue_magic_link refuses Admins, Maintainers and superadmins, the same rule
     issue_user_token applies: a leaked API token must not be able to borrow an
@@ -203,6 +216,7 @@ def token_user(org, user):
         user_uuid="apitoken_test123",
         username="api_token",
         org_id=org.id,
+        rights=FULL_ADMIN_API_RIGHTS,
         token_name="Test Token",
         created_by_user_id=user.id,
     )
@@ -215,6 +229,7 @@ def other_org_token(other_org):
         user_uuid="apitoken_other456",
         username="api_token",
         org_id=other_org.id,
+        rights=FULL_ADMIN_API_RIGHTS,
         token_name="Other Org Token",
         created_by_user_id=99,
     )
@@ -385,7 +400,7 @@ async def second_user(db, org):
 
 @pytest.fixture
 async def org_admin_user(db, org):
-    """A user with the admin role in the org — required for last-admin tests."""
+    """A user with the admin role in the org, required for last-admin tests."""
     u = User(
         id=30,
         username="orgadmin",
@@ -444,7 +459,7 @@ async def usergroup(db, org):
 
 @pytest.fixture
 async def other_org_usergroup(db, other_org):
-    """A user group in a DIFFERENT org — used for cross-org tests."""
+    """A user group in a DIFFERENT org, used for cross-org tests."""
     group = UserGroup(
         id=2,
         name="Other Cohort",
@@ -462,7 +477,7 @@ async def other_org_usergroup(db, other_org):
 
 @pytest.fixture
 async def student_role(db, org):
-    """A student role in the test org — used for role-change tests."""
+    """A student role in the test org, used for role-change tests."""
     role = Role(
         id=4,
         name="Student",
@@ -837,7 +852,11 @@ class TestCompleteCourse:
     async def test_no_activities(self, mock_track, mock_cert, token_user, user, course, db, mock_request):
         result = await complete_course(mock_request, token_user, user.id, "course_test123", db)
         assert result["completed_count"] == 0
-        assert result["detail"] == "No activities in course"
+        assert result["total_activities"] == 0
+        assert result["course_completed"] is False
+        # The router's response model must accept the empty-course result.
+        from src.routers.admin import CourseCompletionResponse
+        CourseCompletionResponse(**result)
         mock_cert.assert_not_awaited()
         mock_track.assert_not_awaited()
 
@@ -1091,13 +1110,13 @@ class TestIssueUserToken:
 
     @pytest.fixture
     def reader_token(self, token_user):
-        """Impersonation needs the token to actually hold users.action_read."""
-        token_user.rights = {"users": {"action_read": True}}
+        """Impersonation needs the token to actually hold users.action_update."""
+        token_user.rights = {"users": {"action_read": True, "action_update": True}}
         return token_user
 
     @pytest.fixture
     async def member(self, org, db):
-        """A non-privileged target — admins/maintainers cannot be impersonated."""
+        """A non-privileged target; admins/maintainers cannot be impersonated."""
         u = User(
             id=77,
             username="member",
@@ -1215,13 +1234,10 @@ class TestProvisionUser:
                 first_name="", last_name="", password=None, role_id=4,
                 request=mock_request, db_session=db,
             )
-        assert exc.value.status_code == 400
-        assert "in this organization" in exc.value.detail
+        assert exc.value.status_code == 409
 
-    async def test_existing_user_in_other_org_is_attached(self, token_user, other_org, student_role, mock_request, db, mock_admin_side_effects):
-        # Seed a user that exists ONLY in another org → simulates the orphan case
-        # the original bug created. provision_user should attach them to the
-        # caller's org instead of failing.
+    async def test_existing_user_in_other_org_is_refused(self, token_user, other_org, student_role, mock_request, db, mock_admin_side_effects):
+        # A token must not claim someone else's global account into its org.
         foreign = User(
             id=42,
             username="foreign",
@@ -1239,30 +1255,27 @@ class TestProvisionUser:
         ))
         await db.commit()
 
-        result = await provision_user(
-            token_user=token_user,
-            email="foreign@example.com",
-            username="ignored_username",
-            first_name="ignored", last_name="ignored",
-            password=None, role_id=4,
-            request=mock_request, db_session=db,
-        )
-        # Same underlying user, now linked to the caller's org
-        assert result.id == foreign.id
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="foreign@example.com",
+                username="ignored_username",
+                first_name="ignored", last_name="ignored",
+                password=None, role_id=4,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 409
         membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == foreign.id,
                 UserOrganization.org_id == token_user.org_id,
             )
         )).scalars().first()
-        assert membership is not None
-        assert membership.role_id == 4
-        mock_admin_side_effects["increase_feature_usage"].assert_called_once()
+        assert membership is None
+        mock_admin_side_effects["increase_feature_usage"].assert_not_called()
 
-    async def test_orphan_user_is_attached(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
-        # An orphan user (in users table, no UserOrganization anywhere)
-        # — created by the pre-fix bug — should be recoverable by re-calling
-        # provision_user with the same email.
+    async def test_orgless_user_is_refused(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
+        # An account with no org (e.g. a platform signup) is still someone's.
         orphan = User(
             id=99,
             username="orphan",
@@ -1274,21 +1287,15 @@ class TestProvisionUser:
         db.add(orphan)
         await db.commit()
 
-        result = await provision_user(
-            token_user=token_user,
-            email="orphan@example.com",
-            username="newname",
-            first_name="", last_name="", password=None, role_id=4,
-            request=mock_request, db_session=db,
-        )
-        assert result.id == orphan.id
-        membership = (await db.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == orphan.id,
-                UserOrganization.org_id == token_user.org_id,
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="orphan@example.com",
+                username="newname",
+                first_name="", last_name="", password=None, role_id=4,
+                request=mock_request, db_session=db,
             )
-        )).scalars().first()
-        assert membership is not None
+        assert exc.value.status_code == 409
 
     async def test_duplicate_username_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
@@ -1329,7 +1336,7 @@ class TestProvisionUser:
         assert exc.value.status_code == 403
 
     async def test_unknown_role_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
-        # No role with id=999 exists — must 400 before any user record is created.
+        # No role with id=999 exists, so this must 400 before any user record is created.
         with pytest.raises(HTTPException) as exc:
             await provision_user(
                 token_user=token_user,
@@ -1442,7 +1449,7 @@ class TestProvisionUser:
 
     async def test_creator_no_longer_member_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
         # If the user who created the token is no longer a member of the org,
-        # the token can't be used to provision anyone — even into a low-priv role.
+        # the token can't be used to provision anyone, even into a low-priv role.
         creator_membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == token_user.created_by_user_id,
@@ -1467,7 +1474,7 @@ class TestProvisionUser:
 
     async def test_creator_privilege_cap_rejects_higher_role(self, token_user, user, mock_request, db, mock_admin_side_effects):
         # Demote the token creator to role 4 (User), then attempt to grant role 3
-        # (Instructor — higher privilege). Must be rejected by the creator-cap layer.
+        # (Instructor, higher privilege). Must be rejected by the creator-cap layer.
         creator_membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == token_user.created_by_user_id,
@@ -1597,12 +1604,14 @@ class TestRemoveUserFromOrg:
             user_uuid="apitoken_admin",
             username="api_token",
             org_id=org.id,
+            rights=FULL_ADMIN_API_RIGHTS,
             token_name="Admin Token",
             created_by_user_id=org_admin_user.id,
         )
         with pytest.raises(HTTPException) as exc:
             await remove_user_from_org_admin(admin_token, org_admin_user.id, db)
-        assert exc.value.status_code == 400
+        # Admin targets are refused outright, before the last-admin guard.
+        assert exc.value.status_code == 403
 
     async def test_user_not_in_org(self, token_user, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
@@ -1648,9 +1657,9 @@ class TestGetUserByEmail:
 
 class TestIssueMagicLink:
 
-    @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="https://academy.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_abc")
-    async def test_issues_link(self, mock_create, mock_base_url, token_user, learner_user, mock_request, db):
+    async def test_issues_link(self, mock_create, mock_org_base, token_user, learner_user, mock_request, db):
         result = await issue_magic_link(
             token_user=token_user,
             user_id=learner_user.id,
@@ -1661,13 +1670,26 @@ class TestIssueMagicLink:
             db_session=db,
         )
         assert result["token"] == "magic_jwt_abc"
-        # URL should use frontend origin and include the /api/v1 prefix
-        assert result["url"] == "https://myorg.example.com/api/v1/admin/test-org/auth/magic-consume?token=magic_jwt_abc"
+        # The link opens the redeeming page on the org's own site, not the API.
+        assert result["url"] == "https://academy.example.com/auth/magic?token=magic_jwt_abc&next=%2Fcourse%2Ffoo"
         assert "expires_at" in result
+        # Built for the token's org, so a custom domain wins over the request host.
+        assert mock_org_base.call_args.kwargs["org_id"] == token_user.org_id
 
         call_kwargs = mock_create.call_args.kwargs
         assert call_kwargs["data"]["purpose"] == "magic_link"
         assert call_kwargs["data"]["redirect_to"] == "/course/foo"
+        assert call_kwargs["data"]["jti"]
+
+    @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="")
+    @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_abc")
+    async def test_falls_back_to_request_host_without_org_site(self, _create, _org_base, _base, token_user, learner_user, mock_request, db):
+        result = await issue_magic_link(
+            token_user=token_user, user_id=learner_user.id, redirect_to=None,
+            ttl_seconds=300, org_slug="test-org", request=mock_request, db_session=db,
+        )
+        assert result["url"] == "https://myorg.example.com/auth/magic?token=magic_jwt_abc"
 
     @patch("src.services.admin.admin.get_base_url_from_request", return_value="https://myorg.example.com")
     @patch("src.services.admin.admin.create_access_token", return_value="magic_jwt_clamp")
@@ -1765,32 +1787,35 @@ class TestMagicLinkConsume:
     # patch targets follow it there.
     @patch("src.services.auth.session.create_refresh_token", return_value="refresh_consumed")
     @patch("src.services.auth.session.create_access_token", return_value="access_consumed")
-    async def test_valid_token(self, mock_access, mock_refresh, token_user, user, db):
+    async def test_valid_token(self, mock_access, mock_refresh, token_user, learner_user, db):
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
-                "sub": user.email,
+                "sub": learner_user.email,
                 "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
                 "org_id": token_user.org_id,
                 "redirect_to": "/course/bar",
             }
             consumed_user, access, refresh, redirect, mfa_token = await consume_magic_link_token(
                 token="fake_token", db_session=db,
             )
-        assert consumed_user.id == user.id
+        assert consumed_user.id == learner_user.id
         assert access == "access_consumed"
         assert refresh == "refresh_consumed"
         assert redirect == "/course/bar"
         assert mfa_token is None
 
     @patch("src.services.auth.session.create_access_token", return_value="unused")
-    async def test_enrolled_user_gets_challenge_not_session(self, mock_access, token_user, user, db):
+    async def test_enrolled_user_gets_challenge_not_session(self, mock_access, token_user, learner_user, db):
         """A magic link for a 2FA-enabled user must not mint a session."""
         from datetime import datetime as _dt
         from src.db.user_mfa import UserMFA
 
         db.add(
             UserMFA(
-                user_id=user.id,
+                user_id=learner_user.id,
                 secret_encrypted="ciphertext",
                 confirmed_at=str(_dt.now()),
                 creation_date=str(_dt.now()),
@@ -1801,8 +1826,11 @@ class TestMagicLinkConsume:
 
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
-                "sub": user.email,
+                "sub": learner_user.email,
                 "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
                 "org_id": token_user.org_id,
                 "redirect_to": "/course/bar",
             }
@@ -1820,18 +1848,70 @@ class TestMagicLinkConsume:
                 await consume_magic_link_token(token="bogus", db_session=db)
             assert exc.value.status_code == 401
 
-    async def test_wrong_purpose(self, user, db):
+    async def test_token_without_jti_rejected(self, token_user, learner_user, db):
+        """Every issued link has a jti; one without it is incomplete, not exempt."""
         with patch("src.security.auth.decode_jwt") as mock_decode:
-            mock_decode.return_value = {"sub": user.email, "purpose": "other"}
+            mock_decode.return_value = {
+                "sub": learner_user.email,
+                "purpose": "magic_link",
+                "type": "access",
+                "exp": 4102444800,
+                "org_id": token_user.org_id,
+            }
             with pytest.raises(HTTPException) as exc:
                 await consume_magic_link_token(token="t", db_session=db)
-            assert exc.value.status_code == 410
+        assert exc.value.status_code == 410
 
-    async def test_user_no_longer_member(self, user, other_org, db):
+    @patch("src.services.auth.session.create_refresh_token", return_value="r")
+    @patch("src.services.auth.session.create_access_token", return_value="a")
+    async def test_second_use_rejected(self, _a, _r, token_user, learner_user, db):
+        with patch("src.security.auth.decode_jwt") as mock_decode:
+            mock_decode.return_value = {
+                "sub": learner_user.email,
+                "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
+                "org_id": token_user.org_id,
+            }
+            await consume_magic_link_token(token="t", db_session=db)
+            with pytest.raises(HTTPException) as exc:
+                await consume_magic_link_token(token="t", db_session=db)
+        assert exc.value.status_code == 410
+        assert exc.value.detail["code"] == "MAGIC_LINK_USED"
+
+    async def test_admin_target_refused_at_redemption(self, token_user, user, db):
+        """A link for someone the token may no longer sign in (here an org
+        Admin, e.g. promoted after the link was issued) is refused on click."""
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
                 "sub": user.email,
                 "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
+                "org_id": token_user.org_id,
+            }
+            with pytest.raises(HTTPException) as exc:
+                await consume_magic_link_token(token="t", db_session=db)
+        assert exc.value.status_code == 410
+        assert exc.value.detail["code"] == "MAGIC_LINK_INVALID"
+
+    async def test_wrong_purpose(self, learner_user, db):
+        with patch("src.security.auth.decode_jwt") as mock_decode:
+            mock_decode.return_value = {"sub": learner_user.email, "purpose": "other"}
+            with pytest.raises(HTTPException) as exc:
+                await consume_magic_link_token(token="t", db_session=db)
+            assert exc.value.status_code == 410
+
+    async def test_user_no_longer_member(self, learner_user, other_org, db):
+        with patch("src.security.auth.decode_jwt") as mock_decode:
+            mock_decode.return_value = {
+                "sub": learner_user.email,
+                "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
                 "org_id": other_org.id,  # user is not in other_org
                 "redirect_to": "",
             }
@@ -1843,12 +1923,15 @@ class TestMagicLinkConsume:
     # factories are patched there, not on the admin module.
     @patch("src.services.auth.session.create_refresh_token", return_value="refresh_x")
     @patch("src.services.auth.session.create_access_token", return_value="access_x")
-    async def test_sanitizes_bad_redirect_to_default(self, mock_access, mock_refresh, token_user, user, db):
+    async def test_sanitizes_bad_redirect_to_default(self, mock_access, mock_refresh, token_user, learner_user, db):
         """An older token might have an unvalidated redirect_to. Consume must not honor an absolute URL."""
         with patch("src.security.auth.decode_jwt") as mock_decode:
             mock_decode.return_value = {
-                "sub": user.email,
+                "sub": learner_user.email,
                 "purpose": "magic_link",
+                "type": "access",
+                "jti": "test-jti",
+                "exp": 4102444800,
                 "org_id": token_user.org_id,
                 "redirect_to": "https://evil.com/phish",
             }
@@ -1856,6 +1939,58 @@ class TestMagicLinkConsume:
                 token="t", db_session=db,
             )
         assert redirect is None  # falls through to "/" in the router
+
+
+class TestLegacyConsumeForwarding:
+    """Links in the older API form are forwarded, unspent, to the redeeming page."""
+
+    def _link(self, org_id, **extra):
+        from datetime import timedelta
+        from src.security.auth import create_access_token
+
+        data = {"sub": "a@b.co", "purpose": "magic_link", "org_id": org_id, "jti": "j", **extra}
+        return create_access_token(data=data, expires_delta=timedelta(minutes=5))
+
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="https://academy.example.com")
+    async def test_forwards_to_org_site_with_redirect(self, mock_base, token_user, mock_request, db):
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        token = self._link(token_user.org_id, redirect_to="/course/x")
+        url = await magic_link_landing_url_for_token(token, "ignored-slug", mock_request, db)
+        assert url == f"https://academy.example.com/auth/magic?token={token}&next=%2Fcourse%2Fx"
+        assert mock_base.call_args.kwargs["org_id"] == token_user.org_id
+
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="https://academy.example.com")
+    async def test_drops_unsafe_redirect(self, _base, token_user, mock_request, db):
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        token = self._link(token_user.org_id, redirect_to="https://evil.example/x")
+        url = await magic_link_landing_url_for_token(token, "x", mock_request, db)
+        assert "next=" not in url
+
+    @patch("src.services.admin.admin.get_org_signup_base_url", new_callable=AsyncMock, return_value="https://academy.example.com")
+    async def test_unverifiable_token_uses_url_slug(self, mock_base, org, mock_request, db):
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        url = await magic_link_landing_url_for_token("garbage", org.slug, mock_request, db)
+        assert url == "https://academy.example.com/auth/magic?token=garbage"
+        assert mock_base.call_args.kwargs["org_id"] == org.id
+
+    @patch("src.services.email.utils.get_platform_base_url", return_value="https://platform.example.com")
+    async def test_unknown_org_lands_on_the_platform(self, _platform, mock_request, db):
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        url = await magic_link_landing_url_for_token("garbage", "no-such-org", mock_request, db)
+        assert url == "https://platform.example.com/auth/magic?token=garbage"
+
+    @patch("src.services.email.utils.get_platform_base_url", return_value="https://platform.example.com")
+    async def test_valid_link_never_borrows_the_url_slug(self, _platform, org, mock_request, db):
+        # A link whose org is gone must not be sent to whichever org the URL names.
+        from src.services.admin.admin import magic_link_landing_url_for_token
+
+        token = self._link(987654)
+        url = await magic_link_landing_url_for_token(token, org.slug, mock_request, db)
+        assert url.startswith("https://platform.example.com/auth/magic?token=")
 
 
 # ── Bulk enroll tests ───────────────────────────────────────────────────────
@@ -1886,7 +2021,7 @@ class TestBulkEnroll:
             token_user=token_user, course_uuid=course.course_uuid,
             user_ids=[user.id], request=mock_request, db_session=db,
         )
-        # Second enroll — should be flagged as already_enrolled
+        # Second enroll should be flagged as already_enrolled
         result = await bulk_enroll_users(
             token_user=token_user, course_uuid=course.course_uuid,
             user_ids=[user.id], request=mock_request, db_session=db,
@@ -2164,33 +2299,33 @@ class TestUserGroupMembers:
 
 class TestUpdateUserProfile:
 
-    async def test_updates_fields(self, token_user, user, db):
+    async def test_updates_fields(self, token_user, learner_user, db):
         result = await update_user_profile(
-            token_user, user.id,
+            token_user, learner_user.id,
             {"first_name": "Updated", "bio": "New bio"},
             db,
         )
         assert result.first_name == "Updated"
         assert result.bio == "New bio"
 
-    async def test_partial_update_preserves_other_fields(self, token_user, user, db):
-        original_email = user.email
-        await update_user_profile(token_user, user.id, {"first_name": "Changed"}, db)
-        await db.refresh(user)
-        assert user.first_name == "Changed"
-        assert user.email == original_email
+    async def test_partial_update_preserves_other_fields(self, token_user, learner_user, db):
+        original_email = learner_user.email
+        await update_user_profile(token_user, learner_user.id, {"first_name": "Changed"}, db)
+        await db.refresh(learner_user)
+        assert learner_user.first_name == "Changed"
+        assert learner_user.email == original_email
 
-    async def test_duplicate_email_rejected(self, token_user, user, second_user, db):
+    async def test_duplicate_email_rejected(self, token_user, learner_user, second_user, db):
         with pytest.raises(HTTPException) as exc:
             await update_user_profile(
-                token_user, user.id, {"email": second_user.email}, db
+                token_user, learner_user.id, {"email": second_user.email}, db
             )
         assert exc.value.status_code == 400
 
-    async def test_duplicate_username_rejected(self, token_user, user, second_user, db):
+    async def test_duplicate_username_rejected(self, token_user, learner_user, second_user, db):
         with pytest.raises(HTTPException) as exc:
             await update_user_profile(
-                token_user, user.id, {"username": second_user.username}, db
+                token_user, learner_user.id, {"username": second_user.username}, db
             )
         assert exc.value.status_code == 400
 
@@ -2199,11 +2334,11 @@ class TestUpdateUserProfile:
             await update_user_profile(token_user, 9999, {"first_name": "X"}, db)
         assert exc.value.status_code == 404
 
-    async def test_rejects_url_in_display_name(self, token_user, user, db):
+    async def test_rejects_url_in_display_name(self, token_user, learner_user, db):
         # The admin API path must not be a way around the display-name URL guard.
         with pytest.raises(HTTPException) as exc:
             await update_user_profile(
-                token_user, user.id, {"username": "win money http://evil.io"}, db
+                token_user, learner_user.id, {"username": "win money http://evil.io"}, db
             )
         assert exc.value.status_code == 400
         assert exc.value.detail["code"] == "PROFILE_FIELD_INVALID"
@@ -2241,26 +2376,29 @@ class TestChangeUserRole:
         )).scalars().first()
         assert membership.role_id == student_role.id
 
-    async def test_api_token_cannot_grant_admin_role(self, token_user, user, admin_role, db):
+    async def test_api_token_cannot_grant_admin_role(self, token_user, learner_user, admin_role, db):
         # API tokens must never be able to mint org admins/maintainers.
         with pytest.raises(HTTPException) as exc:
-            await change_user_role(token_user, user.id, admin_role.id, db)
+            await change_user_role(token_user, learner_user.id, admin_role.id, db)
         assert exc.value.status_code == 403
 
-    async def test_role_not_found(self, token_user, user, db):
+    async def test_role_not_found(self, token_user, learner_user, db):
         with pytest.raises(HTTPException) as exc:
-            await change_user_role(token_user, user.id, 9999, db)
+            await change_user_role(token_user, learner_user.id, 9999, db)
         assert exc.value.status_code == 404
 
     async def test_cannot_demote_last_admin(self, org, org_admin_user, student_role, admin_role, db):
         admin_token = APITokenUser(
             id=77, user_uuid="apitoken_admin", username="api_token",
-            org_id=org.id, token_name="Admin Token",
+            org_id=org.id,
+            rights=FULL_ADMIN_API_RIGHTS,
+            token_name="Admin Token",
             created_by_user_id=org_admin_user.id,
         )
         with pytest.raises(HTTPException) as exc:
             await change_user_role(admin_token, org_admin_user.id, student_role.id, db)
-        assert exc.value.status_code == 400
+        # Admin targets are refused outright, before the last-admin guard.
+        assert exc.value.status_code == 403
 
 
 # ── User group CRUD tests ───────────────────────────────────────────────────
@@ -2499,21 +2637,21 @@ class TestExportUserData:
 
 class TestAnonymizeUser:
 
-    async def test_scrubs_pii(self, token_user, user, db, mock_admin_side_effects):
-        original_email = user.email
-        result = await anonymize_user(token_user, user.id, db)
+    async def test_scrubs_pii(self, token_user, learner_user, db, mock_admin_side_effects):
+        original_email = learner_user.email
+        result = await anonymize_user(token_user, learner_user.id, db)
         assert result["api_tokens_revoked"] == 0
         assert "deleted-user-" in result["anonymized_email"]
 
-        await db.refresh(user)
-        assert user.email != original_email
-        assert user.email == f"deleted-user-{user.id}@anonymized.example.com"
-        assert user.first_name == "Deleted"
-        assert user.password == ""
-        assert user.email_verified is False
-        assert user.signup_method == "anonymized"
+        await db.refresh(learner_user)
+        assert learner_user.email != original_email
+        assert learner_user.email == f"deleted-user-{learner_user.id}@anonymized.example.com"
+        assert learner_user.first_name == "Deleted"
+        assert learner_user.password == ""
+        assert learner_user.email_verified is False
+        assert learner_user.signup_method == "anonymized"
 
-    async def test_revokes_api_tokens(self, token_user, user, db, mock_admin_side_effects):
+    async def test_revokes_api_tokens(self, token_user, learner_user, db, mock_admin_side_effects):
         api_token = APIToken(
             id=500,
             name="User's token",
@@ -2521,7 +2659,7 @@ class TestAnonymizeUser:
             token_prefix="lh_user500",
             token_hash="abc" * 20,
             org_id=token_user.org_id,
-            created_by_user_id=user.id,
+            created_by_user_id=learner_user.id,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
             is_active=True,
@@ -2529,15 +2667,15 @@ class TestAnonymizeUser:
         db.add(api_token)
         await db.commit()
 
-        result = await anonymize_user(token_user, user.id, db)
+        result = await anonymize_user(token_user, learner_user.id, db)
         assert result["api_tokens_revoked"] == 1
 
         remaining = (await db.execute(
-            select(APIToken).where(APIToken.created_by_user_id == user.id)
+            select(APIToken).where(APIToken.created_by_user_id == learner_user.id)
         )).scalars().all()
         assert remaining == []
 
-    async def test_does_not_revoke_other_org_api_tokens(self, token_user, user, other_org, db, mock_admin_side_effects):
+    async def test_does_not_revoke_other_org_api_tokens(self, token_user, learner_user, other_org, db, mock_admin_side_effects):
         """Anonymize in org A must NOT delete the user's API tokens in org B."""
         other_org_token = APIToken(
             id=600,
@@ -2546,7 +2684,7 @@ class TestAnonymizeUser:
             token_prefix="lh_user600",
             token_hash="def" * 20,
             org_id=other_org.id,
-            created_by_user_id=user.id,
+            created_by_user_id=learner_user.id,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
             is_active=True,
@@ -2554,7 +2692,7 @@ class TestAnonymizeUser:
         db.add(other_org_token)
         await db.commit()
 
-        result = await anonymize_user(token_user, user.id, db)
+        result = await anonymize_user(token_user, learner_user.id, db)
         assert result["api_tokens_revoked"] == 0
 
         remaining = (await db.execute(

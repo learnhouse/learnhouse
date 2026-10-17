@@ -304,6 +304,21 @@ describe("pricing plans linked to store offers", () => {
     expect(r.priceIsMinimum).toBe(true);
   });
 
+  test("a linked subscription takes its billing period from the offer, not the typed period", () => {
+    const yearly = resolvePricingPlan(plan({ offer_uuid: "offer_1", period: "/ month" }), [{ ...offer, billing_interval: "year" }], fmt);
+    expect(yearly.period).toBe("");
+    expect(yearly.billingInterval).toBe("year");
+    // Offers saved before the period existed renew monthly.
+    expect(resolvePricingPlan(plan({ offer_uuid: "offer_1" }), [offer], fmt).billingInterval).toBe("month");
+  });
+
+  test("one-time offers keep the typed period and carry no billing period", () => {
+    const r = resolvePricingPlan(plan({ offer_uuid: "offer_1", period: "lifetime" }), [{ ...offer, offer_type: "one_time" }], fmt);
+    expect(r.period).toBe("lifetime");
+    expect(r.billingInterval).toBeNull();
+    expect(resolvePricingPlan(plan({ period: "/ mo" }), [offer], fmt).billingInterval).toBeNull();
+  });
+
   test("loading shows no price; an offer missing from the listing drops the plan", () => {
     expect(resolvePricingPlan(plan({ offer_uuid: "offer_1" }), undefined, fmt)).toMatchObject({ loading: true, price: "" });
     expect(resolvePricingPlan(plan({ offer_uuid: "offer_gone" }), [offer], fmt)).toBeNull();

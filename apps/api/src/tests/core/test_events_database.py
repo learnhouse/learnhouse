@@ -282,7 +282,7 @@ async def test_org_config_change_busts_slug_cache_without_the_org_loaded(db, mon
     This is the shape of every org-policy save: the endpoint selects only
     OrganizationConfig, so the identity map has no Organization to read the slug
     from. The lookup misses without raising, so the SQL fallback has to run on a
-    miss and not only on an exception — otherwise the slug cache keeps serving
+    miss and not only on an exception; otherwise the slug cache keeps serving
     the pre-write config and the dashboard shows the old values back.
     """
     sync_session = db.sync_session
@@ -296,7 +296,7 @@ async def test_org_config_change_busts_slug_cache_without_the_org_loaded(db, mon
     db.add(org_config)
     await db.flush()
 
-    # No Organization in the identity map — exactly what the org-policy PUT does.
+    # No Organization in the identity map, exactly what the org-policy PUT does.
     connection = _FakeConnection(row=("policy-only-org",))
     org_config_changed(None, connection, org_config)
 
@@ -438,7 +438,7 @@ def test_reload_module_covers_production_branch(monkeypatch, caplog):
     assert (sync_eng, "checkout") in engine_callbacks
     assert (sync_eng, "checkin") in engine_callbacks
 
-    # The callbacks just do logging.debug — invoke them to cover those branches.
+    # The callbacks just do logging.debug; invoke them to cover those branches.
     engine_callbacks[(sync_eng, "connect")](None, None)
     engine_callbacks[(sync_eng, "checkout")](None, None, None)
     engine_callbacks[(sync_eng, "checkin")](None, None)

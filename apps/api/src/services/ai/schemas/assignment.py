@@ -2,7 +2,7 @@
 
 The AI emits a strict ``AIAssignmentPlan`` whose per-task ``contents`` are
 keyed by named sub-objects (quiz/form/short_answer/number_answer) rather than a
-discriminated union — this is markedly more reliable for LLM structured output.
+discriminated union; this is markedly more reliable for LLM structured output.
 The service then post-processes each task into the exact ``AssignmentTask``
 ``contents`` shape the server graders expect (stamping the questionUUID /
 optionUUID / blankUUID ids), so what the frontend previews and saves is valid.
@@ -15,8 +15,10 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from src.services.ai.schemas.limits import AI_MESSAGE_MAX_CHARS
+
 # The subset of AssignmentTaskTypeEnum the AI can generate. CODE (Judge0 test
-# cases) and CUSTOM/OTHER (headless) are intentionally excluded — they need
+# cases) and CUSTOM/OTHER (headless) are intentionally excluded; they need
 # human-authored specifics. Teachers add those manually.
 AIGeneratableTaskType = Literal[
     "QUIZ", "FORM", "SHORT_ANSWER", "NUMBER_ANSWER", "FILE_SUBMISSION"
@@ -100,7 +102,7 @@ class AIAssignmentPlan(BaseModel):
 class GenerateAssignmentRequest(BaseModel):
     org_id: int
     course_uuid: str
-    prompt: str
+    prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     session_uuid: Optional[str] = None
     num_tasks: int = 3
     allowed_task_types: Optional[List[AIGeneratableTaskType]] = None

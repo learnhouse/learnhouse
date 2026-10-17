@@ -5,10 +5,10 @@ import { regionFromHeaders, currencyForRegion } from "@services/billing/region";
 import { guardBilling } from "../_lib";
 
 // GET /api/billing/prices
-// → { plans, packs, limits, region } — the public-ish price/limit catalog used
+// → { plans, packs, limits, region }: the public-ish price/limit catalog used
 // by the billing UI to override the static fallback catalog with live Stripe
 // prices, localized to the visitor's region (EUR for the EU via the CDN geo
-// header, USD otherwise — see services/billing/region.ts).
+// header, USD otherwise; see services/billing/region.ts).
 //
 // Prices are not per-user data, so this is gated on SaaS availability only
 // (guardBilling) and needs no authentication: any visitor on a SaaS deployment

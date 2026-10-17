@@ -8,7 +8,7 @@ import BoundaryError from '@components/Objects/StyledElements/Error/BoundaryErro
  * Without one, a render-phase crash in a single tab (a chapter row, a lock
  * popover, the structure tree) unmounted the entire dashboard and left the user
  * on a blank page with no way back. Keeping the boundary here means the failure
- * is contained to the tab body — the surrounding dashboard chrome survives and
+ * is contained to the tab body; the surrounding dashboard chrome survives and
  * the retry action re-renders just this subtree.
  */
 export default function CourseEditorError({

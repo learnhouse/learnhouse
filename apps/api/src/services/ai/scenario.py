@@ -95,6 +95,7 @@ async def generate_scenario(
     activity_content: dict | None = None,
     num_scenarios: int = 5,
     session_uuid: str | None = None,
+    user_id: int | None = None,
 ) -> tuple[dict, str]:
     """Generate a `scenarios` block payload. Returns ``(block_attrs, session_uuid)``."""
     num_scenarios = max(2, min(num_scenarios, MAX_SCENARIOS))
@@ -122,7 +123,10 @@ async def generate_scenario(
 
     # Persist the actual generated scenario so a refine turn can amend it.
     try:
-        save_message_to_history(resolved_session_uuid, prompt.strip(), json.dumps(block), org_id=org_id)
+        save_message_to_history(
+            resolved_session_uuid, prompt.strip(), json.dumps(block),
+            user_id=user_id, org_id=org_id, listed=False,
+        )
     except Exception:
         logger.debug("Failed to persist scenario refine history", exc_info=True)
 

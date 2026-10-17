@@ -1,6 +1,6 @@
 """Add organization_plan_history table (plan-at-time for arrears billing)
 
-Active-user overage is billed in arrears — a month behind for monthly
+Active-user overage is billed in arrears: a month behind for monthly
 subscriptions, up to a year for annual ones. Without a record of which plan an
 org held during the billed month, the overage would be priced against whatever
 plan the org happens to be on when the invoice is cut. This append-only table

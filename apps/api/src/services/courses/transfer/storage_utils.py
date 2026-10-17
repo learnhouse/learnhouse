@@ -59,7 +59,7 @@ def _validate_local_path(file_path: str) -> Optional[str]:
 
 @functools.cache
 def get_content_delivery_type() -> str:
-    """Get the configured content delivery type (cached — config doesn't change at runtime)."""
+    """Get the configured content delivery type (cached; config doesn't change at runtime)."""
     learnhouse_config = get_learnhouse_config()
     return learnhouse_config.hosting_config.content_delivery.type
 
@@ -102,7 +102,7 @@ def get_storage_client():
 
 @functools.cache
 def get_s3_bucket_name() -> str:
-    """Get the S3 bucket name from config (cached — config doesn't change at runtime)."""
+    """Get the S3 bucket name from config (cached; config doesn't change at runtime)."""
     learnhouse_config = get_learnhouse_config()
     return learnhouse_config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
 
@@ -128,7 +128,7 @@ def generate_presigned_get_url(
     every byte through the API.
 
     Returns None when S3 is not enabled, the client is unavailable, or signing
-    fails — callers fall back to streaming the file through the API.
+    fails; callers fall back to streaming the file through the API.
     """
     if not is_s3_enabled():
         return None
@@ -195,6 +195,28 @@ def read_file_content(file_path: str) -> Optional[bytes]:
             with open(safe_path, 'rb') as f:
                 return f.read()
         return None
+
+
+def write_file_content(file_path: str, content: bytes) -> bool:
+    """Write a file under the content root (filesystem or S3).
+
+    Counterpart of :func:`read_file_content`. Returns False when the path is
+    unsafe or the write fails.
+    """
+    if get_content_delivery_type() == "s3api":
+        return upload_to_s3(file_path, content)
+    safe_path = _validate_local_path(file_path)
+    if safe_path is None:
+        logger.warning("Rejected unsafe local file path: %s", file_path)
+        return False
+    try:
+        os.makedirs(os.path.dirname(safe_path), exist_ok=True)
+        with open(safe_path, "wb") as f:
+            f.write(content)
+        return True
+    except OSError as e:
+        logger.error("Error writing %s: %s", file_path, e)
+        return False
 
 
 def file_exists(file_path: str) -> bool:
@@ -585,7 +607,7 @@ def upload_directory_to_s3_parallel(
     """
     Upload an entire directory to S3 with concurrent per-file uploads.
 
-    Same contract as upload_directory_to_s3, but uploads files in parallel —
+    Same contract as upload_directory_to_s3, but uploads files in parallel:
     for directories with many files (e.g. extracted SCORM packages) sequential
     per-file round-trips dominate the wall clock. The cached boto3 client is
     thread-safe.
@@ -622,3 +644,35 @@ def upload_directory_to_s3_parallel(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         return all(list(pool.map(_upload, uploads)))
+
+
+def rewrite_sqlite_db_paths(content, old_activity_uuid: str, new_activity_key: str):
+    """Point code blocks' ``sqliteDbPath`` at a copied activity's own files.
+
+    A code block stores the full storage key of its SQLite database
+    (``orgs/{org}/courses/{course}/activities/{activity}/...``). When the
+    activity is cloned or imported its files move under ``new_activity_key``
+    (``orgs/{org}/courses/{course}/activities/{activity}``), so a key under
+    ``old_activity_uuid`` is re-rooted there. Other values are left alone.
+    Returns a new structure; ``content`` is not modified.
+    """
+    if isinstance(content, list):
+        return [rewrite_sqlite_db_paths(item, old_activity_uuid, new_activity_key) for item in content]
+    if not isinstance(content, dict):
+        return content
+    rewritten = {
+        k: rewrite_sqlite_db_paths(v, old_activity_uuid, new_activity_key)
+        for k, v in content.items()
+    }
+    path = content.get("sqliteDbPath")
+    if isinstance(path, str):
+        parts = path.split("/")
+        if (
+            len(parts) > 6
+            and parts[0] == "orgs"
+            and parts[2] == "courses"
+            and parts[4] == "activities"
+            and parts[5] == old_activity_uuid
+        ):
+            rewritten["sqliteDbPath"] = "/".join([new_activity_key, *parts[6:]])
+    return rewritten

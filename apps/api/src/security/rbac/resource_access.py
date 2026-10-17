@@ -22,7 +22,7 @@ from fastapi import HTTPException, Request, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.users import AnonymousUser, PublicUser, APITokenUser
+from src.db.users import AnonymousUser, PublicUser, APITokenUser, SuperadminAPITokenUser
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
@@ -70,6 +70,8 @@ class ResourceAccessChecker:
         self._public_published_cache: dict[str, tuple[bool, bool]] = {}
         self._usergroup_cache: dict[tuple[str, bool], bool] = {}
         self._parent_uuid_cache: dict[str, Optional[str]] = {}
+        self._folder_trees: dict = {}
+        self._viewer_folder_grants: Optional[tuple] = None
 
     async def check_access(
         self,
@@ -110,7 +112,7 @@ class ResourceAccessChecker:
                 context=context.value,
             )
 
-        # Superadmin bypass — platform admins act on any tenant without an org
+        # Superadmin bypass: platform admins act on any tenant without an org
         # membership row. The flag is loaded onto PublicUser by get_current_user
         # so this is a free attribute read, no DB hit. API tokens and anonymous
         # users carry no superadmin flag and continue through the normal path.
@@ -121,6 +123,21 @@ class ResourceAccessChecker:
                 via_admin=True,
                 resource_uuid=resource_uuid,
                 user_id=self.current_user.id,
+                action=action.value,
+                context=context.value,
+            )
+
+        # Superadmin API tokens are cross-org by design and re-check at auth
+        # time that their minter is still a superadmin. Their id is the token
+        # row id, so they must never fall through to the user-id based checks
+        # below, where that id would be read as some unrelated user's.
+        if isinstance(self.current_user, SuperadminAPITokenUser):
+            return AccessDecision(
+                allowed=True,
+                reason="Superadmin API token access",
+                via_admin=True,
+                resource_uuid=resource_uuid,
+                user_id=self.current_user.created_by_user_id,
                 action=action.value,
                 context=context.value,
             )
@@ -152,7 +169,7 @@ class ResourceAccessChecker:
         # users: anonymous public browsing is unaffected, superadmins bypassed
         # above, and API tokens are a separate credential class handled above.
         # Raises rather than returning a denial so the structured error code
-        # survives to the client — the UI needs to tell "enable 2FA" apart from
+        # survives to the client; the UI needs to tell "enable 2FA" apart from
         # "you don't have permission", which a plain reason string cannot do.
         await self._enforce_org_mfa_policy(resource_uuid, config)
 
@@ -264,7 +281,7 @@ class ResourceAccessChecker:
 
         # Fall through to public view rules. Note: public_view's usergroup rule
         # requires is_published=True, so usergroup members on unpublished
-        # resources still get denied here — which is the intended behavior.
+        # resources still get denied here, which is the intended behavior.
         return await self._check_public_view_read_access(resource_uuid, config)
 
     async def _check_public_view_read_access(
@@ -330,8 +347,12 @@ class ResourceAccessChecker:
         # Rule 4: Check role-based permissions (only for public resources)
         # Non-public resources should only be accessible via authorship, admin, or usergroup membership
         if is_public:
+            # A draft (public but unpublished) is only for people who can edit
+            # it: every member role carries the read right, so reading a draft
+            # takes the role's update right instead.
+            role_action = "update" if config.has_published_field and not is_published else "read"
             has_role_permission = await authorization_verify_based_on_roles(
-                self.request, user_id, "read", resource_uuid, self.db_session
+                self.request, user_id, role_action, resource_uuid, self.db_session
             )
             if has_role_permission:
                 return AccessDecision(
@@ -346,6 +367,8 @@ class ResourceAccessChecker:
         # Rule 5: Check UserGroup membership (if supported)
         if config.supports_usergroups:
             has_usergroup_access = await self._check_usergroup_membership(resource_uuid, is_public)
+            if has_usergroup_access and await self._blocked_by_enclosing_folder(resource_uuid, config):
+                has_usergroup_access = False
             logger.info(f"[ACCESS_CHECK] Rule 5 - has_usergroup_access={has_usergroup_access}, is_published={is_published}")
 
             # For resources with published field, UserGroup access requires published=True
@@ -513,9 +536,13 @@ class ResourceAccessChecker:
                 action=action.value,
             )
 
-        # Check role-based permissions
+        # Check role-based permissions. Adding content to an existing resource
+        # changes that resource, so it needs the role's update right (any, or
+        # own via authorship). The role's create right only covers making new
+        # top-level resources, which every instructor has.
+        role_action = "update" if action == AccessAction.CREATE else action.value
         has_role_permission = await authorization_verify_based_on_roles(
-            self.request, user_id, action.value, resource_uuid, self.db_session
+            self.request, user_id, role_action, resource_uuid, self.db_session
         )
         if has_role_permission:
             return AccessDecision(
@@ -604,13 +631,17 @@ class ResourceAccessChecker:
                 action=action.value,
             )
 
+        # Adding content to an existing resource changes it, so it takes the
+        # token's update right, same as the user path; action_create only
+        # covers new top-level resources (handled above).
+        right_action = "update" if action == AccessAction.CREATE else action.value
         rights = api_token_user.rights
         if isinstance(rights, dict):
             resource_rights = rights.get(config.resource_type, {})
-            has_permission = resource_rights.get(f"action_{action.value}", False)
+            has_permission = resource_rights.get(f"action_{right_action}", False)
         else:
             resource_rights = getattr(rights, config.resource_type, None)
-            has_permission = getattr(resource_rights, f"action_{action.value}", False) if resource_rights else False
+            has_permission = getattr(resource_rights, f"action_{right_action}", False) if resource_rights else False
 
         if has_permission:
             return AccessDecision(
@@ -630,8 +661,8 @@ class ResourceAccessChecker:
 
     def _get_user_id(self) -> int:
         """Get the current user's ID."""
-        if isinstance(self.current_user, APITokenUser):
-            return 0  # API tokens don't have a user ID in the same sense
+        if isinstance(self.current_user, (APITokenUser, SuperadminAPITokenUser)):
+            return 0  # token ids are not user ids
         return self.current_user.id if self.current_user else 0
 
     async def _resolve_parent_resource_uuid(
@@ -731,22 +762,56 @@ class ResourceAccessChecker:
         else:
             is_public = getattr(resource, 'public', False)
             is_published = getattr(resource, 'published', True) if config.has_published_field else True
-            # Media privacy is folder-aware: a file placed in ANY private folder
-            # is private even if its own `public` flag is True (most-restrictive
-            # wins). This makes a direct media read deny for a public media that
-            # lives inside a private folder, for every caller of check_access.
-            if is_public and config.resource_type == "media":
-                if await self._media_in_any_private_folder(resource_uuid):
+            # Library privacy is folder-aware: a media or folder below ANY
+            # private folder, at any depth, is private even if its own `public`
+            # flag is True (most-restrictive wins). This makes a direct read
+            # deny for every caller of check_access.
+            if is_public and config.resource_type in ("media", "folders"):
+                enclosing = await self._enclosing_folders(resource, config)
+                if enclosing and enclosing[0].any_private(enclosing[1]):
                     is_public = False
             result = (is_public, is_published)
 
         self._public_published_cache[resource_uuid] = result
         return result
 
-    async def _media_in_any_private_folder(self, media_uuid: str) -> bool:
-        """True if this media is placed in at least one non-public folder."""
-        from src.services.media.media_access import media_in_any_private_folder
-        return await media_in_any_private_folder(self.db_session, media_uuid)
+    async def _enclosing_folders(self, resource, config: ResourceConfig):
+        """(org folder tree, folder ids directly holding ``resource``) for a
+        media or folder, or None when it sits at the library root."""
+        from src.services.media.media_access import load_folder_tree, media_folder_ids
+
+        if config.resource_type == "media":
+            folder_ids = await media_folder_ids(self.db_session, resource.media_uuid)
+        elif config.resource_type == "folders" and resource.parent_folder_id is not None:
+            folder_ids = [resource.parent_folder_id]
+        else:
+            return None
+        if not folder_ids:
+            return None
+        tree = self._folder_trees.get(resource.org_id)
+        if tree is None:
+            tree = await load_folder_tree(self.db_session, resource.org_id)
+            self._folder_trees[resource.org_id] = tree
+        return tree, folder_ids
+
+    async def _blocked_by_enclosing_folder(self, resource_uuid: str, config: ResourceConfig) -> bool:
+        """True if a private folder above this media/folder is restricted to
+        UserGroups the caller is not in: the restriction covers its content."""
+        if config.resource_type not in ("media", "folders"):
+            return False
+        resource = await self._get_resource(resource_uuid, config)
+        enclosing = await self._enclosing_folders(resource, config) if resource else None
+        if not enclosing:
+            return False
+        if self._viewer_folder_grants is None:
+            from src.services.media.media_access import viewer_folder_grants
+
+            self._viewer_folder_grants = await viewer_folder_grants(
+                self.db_session, self._get_user_id()
+            )
+        groups, authored = self._viewer_folder_grants
+        tree, folder_ids = enclosing
+        return tree.blocks(folder_ids, groups, authored)
 
     async def _is_resource_author(self, resource_uuid: str) -> bool:
         """Check if current user is the author of the resource."""
@@ -778,6 +843,10 @@ class ResourceAccessChecker:
             resource_author.authorship in valid_authorships and
             resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
         )
+        # Authorship is an org-scoped grant: someone removed from the org must
+        # not keep editing its content through a leftover author row.
+        if is_valid:
+            is_valid = await self._is_member_of_resource_org(resource_uuid, user_id)
         self._author_cache[resource_uuid] = is_valid
         return is_valid
 
@@ -869,7 +938,9 @@ class ResourceAccessChecker:
         )
         membership = (await self.db_session.execute(membership_stmt)).scalars().first()
 
-        result = membership is not None
+        result = membership is not None and await self._is_member_of_resource_org(
+            resource_uuid, user_id
+        )
         self._usergroup_cache[cache_key] = result
         return result
 
@@ -987,7 +1058,9 @@ def _get_request_checker(
     that request. This collapses what was previously 2–3× redundant author /
     admin / usergroup / resource lookups per course endpoint.
     """
-    existing = getattr(request.state, "rbac_checker", None)
+    # Service helpers are sometimes called without a live request (tests,
+    # background tasks); only memoize when there is one.
+    existing = getattr(getattr(request, "state", None), "rbac_checker", None)
     if (
         existing is not None
         and existing.db_session is db_session

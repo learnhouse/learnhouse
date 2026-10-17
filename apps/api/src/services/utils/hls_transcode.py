@@ -5,7 +5,7 @@ Turns a source video into an adaptive HLS ladder: a master playlist plus one
 rendition (index playlist + .ts segments) per quality level, so the player can
 switch quality to match live bandwidth instead of stalling.
 
-Everything here is CPU-heavy and slow — it is meant to run in a worker/CLI, not
+Everything here is CPU-heavy and slow; it is meant to run in a worker/CLI, not
 in a request. The ladder is *source-capped*: we never upscale, and the top rung
 never exceeds the source resolution.
 """
@@ -19,6 +19,8 @@ import shutil
 import tempfile
 from dataclasses import dataclass
 from typing import Optional
+
+from src.services.utils.video_processing import SAFE_INPUT_ARGS
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +56,7 @@ THUMB_HEIGHT = 90
 THUMB_COLUMNS = 10
 
 # AES-128 segment encryption. The key lives in the private bucket and is only
-# handed out by the authed key endpoint — a deterrent against casual segment
+# handed out by the authed key endpoint, a deterrent against casual segment
 # stitching (not DRM). The URI is relative so it resolves back to our API from
 # a rendition playlist at v{name}/index.m3u8.
 ENC_KEY_NAME = "enc.key"
@@ -77,7 +79,7 @@ async def _run_subprocess(args, timeout: int):
     Uses a blocking `subprocess.run` on a worker thread rather than
     `asyncio.create_subprocess_exec`: the async variant can hang indefinitely
     when spawned from a server (uvicorn) event loop whose child watcher isn't
-    reliably attached — which stalled every in-app transcode before ffmpeg even
+    reliably attached, which stalled every in-app transcode before ffmpeg even
     started. Running in a thread keeps the event loop free AND sidesteps asyncio's
     subprocess machinery entirely. On timeout the process is killed and the
     return code is -1.
@@ -131,7 +133,7 @@ def build_ffmpeg_args(
     """Build the single-invocation ffmpeg command for the whole ladder.
 
     Output layout under out_dir: master.m3u8, v{name}/index.m3u8, v{name}/seg_*.ts
-    (relative refs — master → rendition playlists, rendition → segments).
+    (relative refs: master → rendition playlists, rendition → segments).
 
     When key_info_file is given, segments are AES-128 encrypted and the playlists
     carry an #EXT-X-KEY pointing at the (authed) key URI from that file.
@@ -144,8 +146,8 @@ def build_ffmpeg_args(
         filters.append(f"[v{i}]scale=-2:{r.height}[v{i}out]")
     filter_complex = ";".join(filters)
 
-    args = [_ffmpeg() or "ffmpeg", "-y", "-loglevel", "error", "-i", src_path,
-            "-filter_complex", filter_complex]
+    args = [_ffmpeg() or "ffmpeg", "-y", "-loglevel", "error", *SAFE_INPUT_ARGS,
+            "-i", src_path, "-filter_complex", filter_complex]
     # Cap CPU so a transcode doesn't peg the whole pod (which spikes the API
     # autoscaler). Default 1 thread ≈ ~1 core instead of ~all cores; raise via
     # LEARNHOUSE_HLS_FFMPEG_THREADS if you have headroom and want faster encodes.
@@ -185,30 +187,23 @@ def build_ffmpeg_args(
     return args
 
 
-async def _probe(src_path: str) -> tuple[int, bool, float]:
-    """Return (height, has_audio, duration_s).
+async def _probe(src_path: str) -> tuple[int, bool, float, Optional[bool]]:
+    """Return (height, has_audio, duration_s, has_video).
 
-    On any probe failure returns (0, False, 0.0): height 0 → a single lowest
-    rung (never upscale a source we can't measure), and has_audio False → no
-    audio maps (so a silent source can't fail the transcode with a bad a:0 map).
-    """
-    height, has_audio, duration, _ = await _probe_streams(src_path)
-    return height, has_audio, duration
-
-
-async def _probe_streams(src_path: str) -> tuple[int, bool, float, Optional[bool]]:
-    """Like _probe, plus whether the source has a video stream at all.
-
-    The last element is None when the probe itself failed (unknown — try the
-    transcode anyway), False when ffprobe read the file and found no video
-    stream (an audio-only upload: ffmpeg's `[0:v]` filtergraph can never match).
+    On any probe failure returns (0, False, 0.0, None): height 0 → a single
+    lowest rung (never upscale a source we can't measure), has_audio False → no
+    audio maps (so a silent source can't fail the transcode with a bad a:0 map),
+    and has_video None → unknown, so the transcode is still attempted.
+    has_video False means ffprobe read the file and found no video stream (an
+    audio-only upload: ffmpeg's `[0:v]` filtergraph can never match).
     """
     probe = _ffprobe()
     if not probe:
         return 0, False, 0.0, None
     try:
         rc, out, _ = await _run_subprocess(
-            [probe, "-v", "error", "-show_streams", "-show_format", "-of", "json", src_path],
+            [probe, "-v", "error", *SAFE_INPUT_ARGS, "-show_streams", "-show_format",
+             "-of", "json", src_path],
             PROBE_TIMEOUT_S,
         )
         if rc != 0:
@@ -302,7 +297,7 @@ async def generate_sprite_thumbnails(
     )
     try:
         rc, _, stderr = await _run_subprocess(
-            [_ffmpeg(), "-y", "-loglevel", "error", "-i", src_path,
+            [_ffmpeg(), "-y", "-loglevel", "error", *SAFE_INPUT_ARGS, "-i", src_path,
              "-vf", vf, "-frames:v", "1", "-an", sprite_path],
             SPRITE_TIMEOUT_S,
         )
@@ -336,7 +331,7 @@ async def transcode_source_to_hls(src_path: str, out_dir: str) -> Optional[dict]
         logger.error("HLS source missing: %s", src_path)
         return None
 
-    height, has_audio, duration, has_video = await _probe_streams(src_path)
+    height, has_audio, duration, has_video = await _probe(src_path)
     if has_video is False:
         # Nothing to transcode, and retrying will never change that. Report it
         # as unsupported so the job stops re-queueing it; playback keeps using

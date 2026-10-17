@@ -36,6 +36,6 @@ export async function trackEvent(
       keepalive: true,
     })
   } catch {
-    // Silently swallow — analytics should never break the app
+    // Swallow silently; analytics should never break the app
   }
 }

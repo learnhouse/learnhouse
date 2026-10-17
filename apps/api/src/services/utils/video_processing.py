@@ -20,6 +20,12 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Input options for every ffmpeg/ffprobe run on stored media. The file is
+# user-supplied, and a playlist or concat script disguised as media would
+# otherwise let it pull other local files or URLs into the output. Output
+# writers (HLS segments, sprites) are unaffected: this applies to inputs only.
+SAFE_INPUT_ARGS = ("-protocol_whitelist", "file,pipe")
+
 # Only MP4-family containers have a movable `moov` atom. WebM/Ogg/MKV stream
 # fine as-is and are left untouched.
 _FASTSTART_EXTENSIONS = {".mp4", ".mov", ".m4v", ".m4a"}
@@ -55,7 +61,7 @@ def ensure_faststart(path: str) -> bool:
 
     Returns True if the file is faststart afterwards (either already was, or we
     remuxed it), False if it was left as-is (unsupported type, ffmpeg missing,
-    or remux failed). Never raises — callers treat this as best-effort.
+    or remux failed). Never raises; callers treat this as best-effort.
     """
     ext = Path(path).suffix.lower()
     if ext not in _FASTSTART_EXTENSIONS:
@@ -81,6 +87,7 @@ def ensure_faststart(path: str) -> bool:
                 "ffmpeg",
                 "-y",
                 "-loglevel", "error",
+                *SAFE_INPUT_ARGS,
                 "-i", path,
                 "-c", "copy",
                 "-map", "0",

@@ -45,7 +45,7 @@ export async function setupSubmittedScenario(
 }
 
 // Cache the admin token across specs (workers: 1 ⇒ one process) so we don't
-// re-login per spec — the API enforces 30 logins / 5 min / IP.
+// re-login per spec. The API enforces 30 logins / 5 min / IP.
 let cachedAdminToken: string | null = null
 
 async function adminToken(): Promise<string> {
@@ -63,7 +63,7 @@ export async function setupScenario(
   const org = await api.getOrg()
   const seeded = await api.seedAssignment(token, org, opts)
   // Reuse the single shared student (created in global-setup) so specs share
-  // one authenticated session via storageState — keeps the suite far under the
+  // one authenticated session via storageState, which keeps the suite far under the
   // login rate limit. `label` is kept for call-site readability only.
   void label
   const shared = sharedStudent()

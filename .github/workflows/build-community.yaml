@@ -4,7 +4,7 @@ name: Build Community Images
 # Dockerfile). A README edit or a CLI-only change cannot alter the image, so it
 # does not need one. Deliberately a deny-list rather than an allow-list:
 # anything new at the repo root still triggers a build. The list is spelled out
-# twice because GitHub Actions does not support YAML anchors — keep both copies
+# twice because GitHub Actions does not support YAML anchors, so keep both copies
 # in sync.
 on:
   push:
@@ -36,7 +36,7 @@ permissions:
   contents: read
   packages: write
 
-# See api-lint.yaml — one live run per PR, dev runs always finish.
+# See api-lint.yaml: one live run per PR, dev runs always finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -58,13 +58,13 @@ jobs:
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@v4.4.1
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.6.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -77,7 +77,7 @@ jobs:
 
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v7.4.0
         with:
           context: .
           file: ./Dockerfile
@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload digest
         if: github.event_name == 'push'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: digests-${{ steps.prep.outputs.platform_pair }}
           path: ${{ runner.temp }}/digests/*
@@ -111,19 +111,19 @@ jobs:
     # images. Nothing in this repo built them: the job above only builds the
     # root Dockerfile, so a change that broke a service image passed every
     # check here and failed later, in the pipeline that ships it. Build them,
-    # never push them — publishing those tags stays with the image pipeline.
+    # never push them; publishing those tags stays with the image pipeline.
     strategy:
       fail-fast: false
       matrix:
         service: [api, web, collab]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@v4.4.1
 
       - name: Build ${{ matrix.service }} image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v7.4.0
         with:
           context: ./apps/${{ matrix.service }}
           platforms: linux/amd64
@@ -138,14 +138,14 @@ jobs:
     needs: build
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v8.0.2
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-*
           merge-multiple: true
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.6.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}

@@ -270,6 +270,23 @@ class TestTrailService:
         assert missing_course_exc.value.status_code == 404
 
     @pytest.mark.asyncio
+    async def test_add_activity_to_trail_rejects_assignments(
+        self, db, org, course, regular_user, mock_request
+    ):
+        db.add(Activity(
+            id=77, name="Essay", activity_type=ActivityTypeEnum.TYPE_ASSIGNMENT,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_ASSIGNMENT_ANY, content={},
+            published=True, org_id=org.id, course_id=course.id,
+            activity_uuid="activity_essay", creation_date="now", update_date="now",
+        ))
+        await db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await add_activity_to_trail(mock_request, regular_user, "activity_essay", db)
+        assert exc.value.status_code == 400
+        assert (await db.execute(TrailStep.__table__.select())).all() == []
+
+    @pytest.mark.asyncio
     async def test_remove_activity_from_trail_deletes_step_and_checks_guards(
         self, db, org, admin_user, mock_request, activity, course
     ):
@@ -413,7 +430,7 @@ class TestTrailService:
 
         trail = await _make_trail(db, org, admin_user)
         trail_run = await _make_trail_run(db, trail, course, admin_user)
-        # One completion step per (run, activity, user) — enforced by a UNIQUE
+        # One completion step per (run, activity, user), enforced by a UNIQUE
         # constraint. A single step is enough to verify removal deletes it.
         await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
 

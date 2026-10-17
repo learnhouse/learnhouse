@@ -1,6 +1,6 @@
 """Runs the demo refresh on an interval from inside the API.
 
-Modelled on ``src/services/nudges/scheduler.py`` — same shape, same guarantees:
+Modelled on ``src/services/nudges/scheduler.py``, with the same shape and guarantees:
 a failed run never kills the loop, and nothing here can stop the application
 booting.
 
@@ -90,14 +90,14 @@ async def _run_once() -> None:
 async def _loop() -> None:
     interval_minutes = flags.refresh_minutes()
 
-    # Build immediately on boot rather than waiting a full interval — otherwise
+    # Build immediately on boot rather than waiting a full interval; otherwise
     # a fresh install has no demo for up to an hour after enabling it.
     #
     # Jittered and lock-claimed like any other tick, matching the nudge
     # scheduler this is modelled on. Straight through to _run_once() meant a
     # rolling deploy had every replica provisioning the same demo at the same
     # instant: on a database with no demo yet they all reach the INSERT
-    # together, and Organization.slug is unique, so all but one crash — and the
+    # together, and Organization.slug is unique, so all but one crash, and the
     # one that wins may lose its media uploads to the others' rollbacks.
     await asyncio.sleep(STARTUP_JITTER_SECONDS * random.random())
     try:

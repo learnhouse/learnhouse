@@ -5,7 +5,7 @@ required for the feature to work.
 Correctness does not depend on only one replica running this. The ledger's
 unique dedupe key is written before the provider is called, so if several pods
 wake at the same moment they collide in the database rather than in someone's
-inbox — the loser of the race simply skips. The Redis day-lock below is an
+inbox, and the loser of the race skips. The Redis day-lock below is an
 optimisation that stops N pods each doing the same full scan; when Redis is
 absent the job still runs correctly, just more than once.
 
@@ -102,7 +102,7 @@ async def _tick() -> None:
 async def _loop() -> None:
     # Try immediately on boot rather than sleeping first. A pod restarts on
     # every deploy, so a loop that waits for a fixed hour resets its timer each
-    # time — on a daily-or-faster deploy cadence it would never fire at all.
+    # time; on a daily-or-faster deploy cadence it would never fire at all.
     # The day-lock and the ledger make an extra attempt free.
     await asyncio.sleep(STARTUP_DELAY_SECONDS)
     await _tick()
@@ -118,7 +118,7 @@ def start_scheduler() -> None:
     Never raises: this runs during application startup, and a background email
     job must not be able to stop the API from booting.
 
-    Deliberately checks the kill switch here as well as inside the job — an
+    Deliberately checks the kill switch here as well as inside the job: an
     instance with nudges disabled should not carry a background task at all.
     """
     global _task

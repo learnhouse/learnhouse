@@ -235,7 +235,8 @@ async def test_boards_playground_same_org_passes_membership_gate(db, org, regula
         context=BoardsPlaygroundContext(board_name="x", board_description="y"),
     )
 
-    with patch("src.routers.boards.boards_playground.reserve_ai_credit"):
+    with patch("src.routers.boards.boards_playground.reserve_ai_credit"), \
+         patch("src.routers.boards.boards_playground.check_resource_access", new=AsyncMock()):
         with patch(
             "src.routers.boards.boards_playground.create_boards_playground_session",
             return_value=SimpleNamespace(

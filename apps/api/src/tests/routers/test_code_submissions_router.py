@@ -10,6 +10,14 @@ from src.routers.code_submissions import router as code_submissions_router
 from src.security.auth import get_current_user
 
 
+@pytest.fixture(autouse=True)
+def _no_rate_limit(monkeypatch):
+    # The save limiter talks to Redis, which CI doesn't run.
+    monkeypatch.setattr(
+        "src.routers.code_submissions.check_rate_limit", lambda *a, **k: (True, 1, 60)
+    )
+
+
 @pytest.fixture
 def app(db, admin_user):
     app = FastAPI()
@@ -29,7 +37,7 @@ async def client(app):
 
 
 class TestCodeSubmissionsRouter:
-    async def test_save_and_history_submission(self, client):
+    async def test_save_and_history_submission(self, client, activity):
         body = {
             "activity_uuid": "activity_test",
             "block_id": "block_1",

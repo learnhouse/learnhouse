@@ -26,7 +26,7 @@ def _mode(mode: str):
     """Patch deployment mode everywhere it is resolved.
 
     usage.py binds get_deployment_mode at import time (module attr), while
-    plans.py imports it per-call (source attr) — patch both so limits and the
+    plans.py imports it per-call (source attr); patch both so limits and the
     saas gate agree.
     """
     stack = ExitStack()
@@ -68,6 +68,8 @@ async def _add_member(db, org_id, user_id, creation_date="2026-01-01"):
 
 class TestCountActiveUsers:
     async def test_threshold_two_distinct_days(self, db):
+        for uid in (10, 11, 12):
+            await _add_member(db, ORG, uid)
         await _add_days(db, ORG, 10, [date(2026, 7, 1), date(2026, 7, 2)])   # active
         await _add_days(db, ORG, 11, [date(2026, 7, 5)])                      # 1 day -> not
         await _add_days(db, ORG, 12, [date(2026, 7, 3), date(2026, 7, 9), date(2026, 7, 20)])  # active
@@ -80,6 +82,8 @@ class TestCountActiveUsers:
         assert await count_active_users(ORG, 2026, 8, db) == 0
 
     async def test_org_scoped(self, db):
+        await _add_member(db, ORG, 30)
+        await _add_member(db, OTHER_ORG, 30)
         await _add_days(db, ORG, 30, [date(2026, 7, 1), date(2026, 7, 2)])
         await _add_days(db, OTHER_ORG, 30, [date(2026, 7, 1), date(2026, 7, 2)])
         assert await count_active_users(ORG, 2026, 7, db) == 1
@@ -312,7 +316,7 @@ class _FakeRedis:
 
 
 class _BrokenRedis:
-    """Redis whose get and/or set raise. The cache is an optimisation — a dead
+    """Redis whose get and/or set raise. The cache is an optimisation; a dead
     Redis must never break org resolution or activity capture."""
 
     def __init__(self, fail_get=False, fail_set=False):
@@ -350,6 +354,7 @@ class TestActivityCapture:
         with _saas(), _patch_session_factory(db), patch(
             "src.services.security.activity.get_redis_client", return_value=None
         ):
+            await _add_member(db, ORG, 55)
             await activity.record_user_activity(55, org_id=ORG)
         assert await _count_rows(db, ORG) == 1
 
@@ -362,12 +367,43 @@ class TestActivityCapture:
             await activity.record_user_activity(56, org_id=ORG)
         assert await _count_rows(db, ORG) == 0
 
+    async def test_non_member_is_not_recorded_and_rechecked_soon(self, db, org):
+        from src.services.security import activity
+        redis = _FakeRedis(set_result=True)
+        with _saas(), _patch_session_factory(db), patch(
+            "src.services.security.activity.get_redis_client", return_value=redis
+        ):
+            await activity.record_user_activity(59, org_id=ORG)
+        assert await _count_rows(db, ORG) == 0
+        # The day guard is downgraded so a same-day join still counts.
+        assert list(redis.store.values()) == ["0"]
+
+    async def test_non_member_guard_downgrade_failure_is_swallowed(self, db, org):
+        from src.services.security import activity
+
+        class _GuardThenFail(_FakeRedis):
+            def set(self, key, value, **kwargs):
+                if value == "0":
+                    raise RuntimeError("redis down")
+                return super().set(key, value, **kwargs)
+
+        redis = _GuardThenFail(set_result=True)
+        with _saas(), _patch_session_factory(db), patch(
+            "src.services.security.activity.get_redis_client", return_value=redis
+        ), patch.object(activity.logger, "debug") as debug:
+            await activity.record_user_activity(60, org_id=ORG)
+        assert await _count_rows(db, ORG) == 0
+        # The day guard stays as first written; only the downgrade failed.
+        assert list(redis.store.values()) == ["1"]
+        assert [c.args[0] for c in debug.call_args_list] == ["activity Redis guard update failed"]
+
     async def test_redis_guard_allows_first_touch(self, db, org):
         from src.services.security import activity
         with _saas(), _patch_session_factory(db), patch(
             "src.services.security.activity.get_redis_client",
             return_value=_FakeRedis(set_result=True),  # first touch of the day
         ):
+            await _add_member(db, ORG, 57)
             await activity.record_user_activity(57, org_id=ORG)
         assert await _count_rows(db, ORG) == 1
 
@@ -376,6 +412,7 @@ class TestActivityCapture:
         with _saas(), _patch_session_factory(db), patch(
             "src.services.security.activity.get_redis_client", return_value=None
         ):
+            await _add_member(db, ORG, 58)
             await activity.record_user_activity(58, org_id=ORG)
             await activity.record_user_activity(58, org_id=ORG)  # second insert -> no-op
         assert await _count_rows(db, ORG) == 1
@@ -496,7 +533,7 @@ class TestAuthActivityHooks:
         await asyncio.sleep(0.01)
 
     async def test_record_activity_without_org_ref_is_noop(self):
-        """Non org-scoped routes carry no org reference — nothing to record."""
+        """Non org-scoped routes carry no org reference, so there is nothing to record."""
         from src.security import auth
         scheduled = []
 
@@ -632,6 +669,7 @@ class TestSummaryUsesPlanHistory:
         await _add_plan_change(db, ORG, "pro", _utc(2026, 3, 1))
         await _add_plan_change(db, ORG, "standard", _utc(2026, 8, 10))
         for user_id in range(1000, 1000 + 243):
+            await _add_member(db, ORG, user_id)
             await _add_days(db, ORG, user_id, [date(2026, 7, 4), date(2026, 7, 5)])
         with _saas():
             summary = await get_active_user_summary(ORG, db, year=2026, month=7)
@@ -644,6 +682,7 @@ class TestSummaryUsesPlanHistory:
 class TestEdgeBranches:
     async def test_december_month_bounds(self, db):
         # Exercises the December branch of _month_bounds (year rollover).
+        await _add_member(db, ORG, 900)
         await _add_days(db, ORG, 900, [date(2026, 12, 3), date(2026, 12, 20)])
         await _add_days(db, ORG, 901, [date(2027, 1, 2)])  # next year, excluded
         assert await count_active_users(ORG, 2026, 12, db) == 1

@@ -75,5 +75,5 @@ async def test_cap_allows_user_under_limit(db):
     user = _User(1)
     await _add_admin_org(db, user_id=1, org_id=1)
 
-    # Under the limit — no query into configs, no raise.
+    # Under the limit: no query into configs, no raise.
     await _enforce_free_org_cap(user, db)

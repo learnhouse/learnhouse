@@ -6,7 +6,7 @@ from sqlalchemy import func, cast, String, literal
 
 from src.db.courses.courses import Course, CourseRead, AuthorWithRole
 from src.db.organizations import Organization, OrganizationRead
-from src.db.users import User, UserRead
+from src.db.users import User, UserReadAuthor
 from src.db.resource_authors import ResourceAuthor
 from src.services.search.normalization import (
     LIKE_ESCAPE_CHAR,
@@ -45,7 +45,7 @@ async def get_orgs_for_explore(
         .where(
             Organization.explore == True,
             # The demo org is created with explore=False and rejects being
-            # flipped on, so this is belt and braces — but Explore is a public
+            # flipped on, so this is belt and braces. But Explore is a public
             # directory of real schools, and listing a shared sandbox whose
             # contents reset every hour would be misleading whatever else goes
             # wrong.
@@ -134,7 +134,7 @@ async def get_course_for_explore(
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
-            user=UserRead.model_validate(user),
+            user=UserReadAuthor.model_validate(user),
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,

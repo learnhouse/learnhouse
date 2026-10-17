@@ -117,7 +117,7 @@ class TestAuthHelpers:
 
     def test_get_cookie_domain_single_tenancy_is_always_host_only(self):
         # In single tenancy the same code path serves localhost dev and any
-        # self-hosted VPS hostname — cookies are always host-only.
+        # self-hosted VPS hostname; cookies are always host-only.
         for origin in (
             "https://app.learnhouse.test",  # would be subdomain match in multi
             "https://learn.someschool.edu",  # arbitrary VPS host
@@ -422,10 +422,10 @@ class TestAuthRouter:
             )
         assert response.status_code == 429
 
-        # SECURITY: a locked account only surfaces 423 once the caller has
-        # proven they know the password — otherwise the status leaks that the
-        # account exists (enumeration). authenticate_user is mocked to succeed
-        # here to simulate the correct-password branch.
+        # SECURITY: a locked account answers exactly like a wrong password even
+        # when the password is right; a distinct status would let an attacker
+        # keep guessing through the lock. authenticate_user is mocked to
+        # succeed here to simulate the correct-password branch.
         with patch(
             "src.routers.auth.check_login_rate_limit",
             return_value=(True, None),
@@ -436,18 +436,26 @@ class TestAuthRouter:
             "src.routers.auth.authenticate_user",
             new_callable=AsyncMock,
             return_value=auth_user,
-        ):
+        ), patch(
+            "src.routers.auth.record_failed_login",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.routers.auth.issue_session_or_challenge",
+            new_callable=AsyncMock,
+        ) as issue_mock:
             response = await client.post(
                 "/api/v1/auth/login",
                 data={"username": auth_user.email, "password": "secret"},
             )
-        assert response.status_code == 423
+        assert response.status_code == 401
+        assert response.json()["detail"]["code"] == "INVALID_CREDENTIALS"
+        issue_mock.assert_not_called()
 
     async def test_login_failed_attempt_records_but_returns_generic_401(
         self, client, auth_user
     ):
         """A failed password attempt must return the same generic 401 whether
-        or not the account is (or becomes) locked — otherwise the status leaks
+        or not the account is (or becomes) locked; otherwise the status leaks
         account existence and lockout state to unauthenticated callers."""
         with patch(
             "src.routers.auth.check_login_rate_limit",
@@ -741,7 +749,7 @@ class TestRefreshOutcomeTelemetry:
     """Every exit path from /auth/refresh must emit one tagged outcome.
 
     Added after an unexplained wave of sign-outs could not be diagnosed from
-    telemetry — there was none on this endpoint — and required a code audit.
+    telemetry (there was none on this endpoint) and required a code audit.
     A rising replay_detected/revoked_before rate is the signal that sessions are
     being destroyed rather than expiring naturally.
     """
@@ -779,8 +787,8 @@ class TestRefreshOutcomeTelemetry:
     async def test_replay_logs_replay_detected_at_warning_with_token_age(
         self, client, auth_user, caplog
     ):
-        """Replay is the most destructive outcome — it revokes every session on
-        every device — so it is logged at WARNING with the token's age, which is
+        """Replay is the most destructive outcome (it revokes every session on
+        every device), so it is logged at WARNING with the token's age, which is
         what separates a benign desync from real theft."""
         issued_at = int((datetime.now(timezone.utc) - timedelta(hours=3)).timestamp())
         with patch(
@@ -818,7 +826,7 @@ class TestRefreshOutcomeTelemetry:
         )
         assert record is not None
         assert record.levelno == logging.WARNING
-        # ~3 hours old — old enough to look like theft rather than a tab race.
+        # ~3 hours old: enough to look like theft rather than a tab race.
         assert record.token_age_seconds is not None
         assert record.token_age_seconds > 3000
 

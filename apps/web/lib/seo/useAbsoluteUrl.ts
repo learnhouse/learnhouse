@@ -7,7 +7,7 @@ import { getCanonicalUrl } from './utils'
 const subscribe = () => () => {}
 
 /**
- * Absolute, shareable URL for a path on the current org — for links the user
+ * Absolute, shareable URL for a path on the current org, for links the user
  * copies out of the app (RSS feeds, sitemap/robots, invite links) rather than
  * navigates with.
  *

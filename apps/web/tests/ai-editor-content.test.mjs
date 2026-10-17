@@ -47,6 +47,7 @@ const {
   addStreamingMarks,
   extractTextFromTiptap,
   insertAIContent,
+  markdownToNodes,
   normalizeAINodes,
   parseAIContentJson,
   prepareAIContent,
@@ -372,5 +373,95 @@ describe("insertAIContent", () => {
     editor.chain().setTextSelection({ from, to }).unsetMark(AI_STREAMING_MARK).run();
     const remaining = collectMarks(editor.getJSON()).filter((t) => t.marks.includes(AI_STREAMING_MARK));
     expect(remaining).toEqual([]);
+  });
+});
+
+describe("markdown replies", () => {
+  const text = (value, marks) => (marks ? { type: "text", text: value, marks } : { type: "text", text: value });
+  const para = (...content) => ({ type: "paragraph", content });
+
+  test("plain text keeps the paragraph and hard break behaviour", () => {
+    expect(markdownToNodes("one\ntwo\n\nthree")).toEqual(textToParagraphs("one\ntwo\n\nthree"));
+  });
+
+  test("headings, lists, quotes, rules and code fences become nodes", () => {
+    const reply = [
+      "## Summary",
+      "",
+      "- first point",
+      "* second point",
+      "",
+      "3. third",
+      "4. fourth",
+      "",
+      "> quoted",
+      "",
+      "---",
+      "",
+      "```python",
+      "print('hi')",
+      "```",
+    ].join("\n");
+    expect(markdownToNodes(reply)).toEqual([
+      { type: "heading", attrs: { level: 2 }, content: [text("Summary")] },
+      {
+        type: "bulletList",
+        content: [
+          { type: "listItem", content: [para(text("first point"))] },
+          { type: "listItem", content: [para(text("second point"))] },
+        ],
+      },
+      {
+        type: "orderedList",
+        attrs: { start: 3 },
+        content: [
+          { type: "listItem", content: [para(text("third"))] },
+          { type: "listItem", content: [para(text("fourth"))] },
+        ],
+      },
+      { type: "blockquote", content: [para(text("quoted"))] },
+      { type: "horizontalRule" },
+      { type: "codeBlock", attrs: { language: "python" }, content: [text("print('hi')")] },
+    ]);
+  });
+
+  test("inline bold, italic, code and links become marks", () => {
+    expect(markdownToNodes("A **bold _mixed_** *it* `x**y` [site](https://example.com) snake_case_name 2 * 3")).toEqual([
+      para(
+        text("A "),
+        text("bold ", [{ type: "bold" }]),
+        text("mixed", [{ type: "bold" }, { type: "italic" }]),
+        text(" "),
+        text("it", [{ type: "italic" }]),
+        text(" "),
+        text("x**y", [{ type: "code" }]),
+        text(" "),
+        text("site", [{ type: "link", attrs: { href: "https://example.com" } }]),
+        text(" snake_case_name 2 * 3"),
+      ),
+    ]);
+  });
+
+  test("a markdown reply is inserted as formatted content, not literal markdown", () => {
+    const editor = makeEditor();
+    editor.commands.setTextSelection(1);
+    const { nodes, error } = prepareAIContent(
+      "## Summary\n\nThis is **important**.\n\n- first point\n- second point",
+      schema
+    );
+    expect(error).toBeUndefined();
+
+    const result = insertAIContent(editor, nodes, SPECIAL);
+    expect(result.failed).toBe(0);
+
+    const types = collectTypes(editor.getJSON());
+    expect(types).toContain("heading");
+    expect(types).toContain("bulletList");
+    const plain = editor.getText();
+    for (const literal of ["##", "**", "- first"]) {
+      expect(plain).not.toContain(literal);
+    }
+    const important = collectMarks(editor.getJSON()).find((t) => t.text === "important");
+    expect(important.marks).toContain("bold");
   });
 });

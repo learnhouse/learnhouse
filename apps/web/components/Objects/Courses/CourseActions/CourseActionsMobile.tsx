@@ -15,6 +15,7 @@ import Link from 'next/link'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '@/lib/format'
+import { billingIntervalSuffix } from '@/lib/payments/billingInterval'
 
 interface Author {
   user: {
@@ -149,7 +150,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
     }
   ) ?? false;
 
-  // Public endpoint — no auth needed, works for unauthenticated visitors too
+  // Public endpoint: no auth needed, works for unauthenticated visitors too
   const { data: offersResult, isLoading } = useQuery({
     queryKey: ['offers', 'by-resource', org?.id, resourceUuid],
     queryFn: () => getOffersByResource(org.id, resourceUuid!),
@@ -303,7 +304,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
                       <div>
                         <span className="text-gray-900 text-sm font-semibold">{offer.offer_name}</span>
                         {formattedPrice && (
-                          <p className="text-gray-500 text-xs">{formattedPrice}{offer.offer_type === 'subscription' ? ' / month' : ' one-time'}</p>
+                          <p className="text-gray-500 text-xs">{formattedPrice}{offer.offer_type === 'subscription' ? ` ${billingIntervalSuffix(offer.billing_interval, t)}` : ' one-time'}</p>
                         )}
                       </div>
                     </div>
@@ -319,7 +320,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
                       className="w-full py-2 px-4 rounded-lg bg-neutral-900 text-white font-semibold text-sm hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {formattedPrice ? `Get Access — ${formattedPrice}` : 'Purchase Course'}
+                      {formattedPrice ? `Get Access for ${formattedPrice}` : 'Purchase Course'}
                     </button>
                   </Link>
                 </>

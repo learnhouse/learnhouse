@@ -29,15 +29,25 @@ from src.db.courses.activities import Activity, ActivitySubTypeEnum
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.services.ai import captions as cap
+from src.services.ai.rag.media import Media, read_transcript
+from src.services.ai.rag.queue import index_activity
 from src.services.courses.transfer.storage_utils import (
     is_s3_enabled,
     upload_directory_to_s3,
 )
-from src.services.utils.hls_jobs import _fetch_source  # reuse the R2 download helper
+from src.services.courses.activities.video import (
+    MAX_CAPTION_LANGUAGES,
+    _CAPTION_LANG_RE,
+)
+from src.services.utils.hls_jobs import _fetch_source, _safe_filename
 
 logger = logging.getLogger(__name__)
 
 REDIS_QUEUE_KEY = "learnhouse:captions:queue"
+# Per-activity "already queued" marker so repeated saves can't stack jobs.
+# Cleared when the job finishes; the TTL covers a worker dying mid-job.
+QUEUED_MARKER_PREFIX = "caption_queued:"
+QUEUED_MARKER_TTL_SECONDS = 60 * 60
 JOB_TIMEOUT_SECONDS = 40 * 60
 CONSUMER_POLL_SECONDS = 2
 STALE_PROCESSING_SECONDS = 20 * 60
@@ -121,9 +131,22 @@ def enqueue(activity_uuid: str) -> None:
         logger.warning("Captions: no Redis; cannot enqueue %s", activity_uuid)
         return
     try:
+        if not client.set(
+            f"{QUEUED_MARKER_PREFIX}{activity_uuid}", "1",
+            nx=True, ex=QUEUED_MARKER_TTL_SECONDS,
+        ):
+            logger.info("Captions: %s already queued; skipping", activity_uuid)
+            return
         client.rpush(REDIS_QUEUE_KEY, activity_uuid)
     except Exception as e:
         logger.warning("Captions: could not enqueue %s: %s", activity_uuid, e)
+
+
+def _clear_queued_marker(client, activity_uuid: str) -> None:
+    try:
+        client.delete(f"{QUEUED_MARKER_PREFIX}{activity_uuid}")
+    except Exception:
+        pass
 
 
 # --------------------------------------------------------------------------
@@ -142,11 +165,16 @@ async def _resolve(activity_uuid: str) -> Optional[dict]:
         captions = (a.extra_metadata or {}).get("captions") or {}
         if not filename or not captions.get("enabled"):
             return None
+        # Stored values are re-checked here: the reaper re-queues jobs without
+        # going through configure_captions, and the filename becomes a key.
+        if not isinstance(filename, str) or not _safe_filename(filename):
+            return None
         org = (await db.execute(select(Organization).where(Organization.id == a.org_id))).scalars().first()
         course = (await db.execute(select(Course).where(Course.id == a.course_id))).scalars().first()
         if not org or not course:
             return None
         return {
+            "activity_id": a.id,
             "org_id": a.org_id,
             "org_uuid": org.org_uuid,
             "course_uuid": course.course_uuid,
@@ -155,9 +183,34 @@ async def _resolve(activity_uuid: str) -> Optional[dict]:
         }
 
 
+def _valid_targets(languages) -> list[dict]:
+    """Target languages with a well-formed code, deduped and capped, exactly as
+    configure_captions accepts them. A code becomes a file and storage key name."""
+    targets: list[dict] = []
+    seen: set[str] = set()
+    for entry in languages if isinstance(languages, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        code = entry.get("code")
+        if not isinstance(code, str) or not _CAPTION_LANG_RE.match(code) or code in seen:
+            continue
+        seen.add(code)
+        targets.append(dict(entry))
+    return targets[:MAX_CAPTION_LANGUAGES]
+
+
+def _vtt_path(out_dir: str, code: str) -> str:
+    """Output path for one language, refused unless it stays inside ``out_dir``."""
+    base = os.path.realpath(out_dir)
+    path = os.path.realpath(os.path.join(base, f"{code}.vtt"))
+    if os.path.dirname(path) != base:
+        raise ValueError(f"unsafe caption language code: {code!r}")
+    return path
+
+
 async def generate_activity_captions(activity_uuid: str) -> bool:
     """Full caption job: transcribe + translate + upload. Returns True on (partial)
-    success. Never raises for expected failures — records status instead."""
+    success. Never raises for expected failures; records status instead."""
     info = await _resolve(activity_uuid)
     if not info:
         logger.warning("Captions: nothing to generate for %s", activity_uuid)
@@ -172,7 +225,11 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
     captions_prefix = f"{base}/captions"
     cfg = info["captions"]
     source_language = cfg.get("source_language") or "auto"
-    targets = [dict(x) for x in (cfg.get("languages") or []) if x.get("code")]
+    if source_language != "auto" and not (
+        isinstance(source_language, str) and _CAPTION_LANG_RE.match(source_language)
+    ):
+        source_language = "auto"
+    targets = _valid_targets(cfg.get("languages"))
     if not targets:
         await _patch_captions(activity_uuid, status="failed", error="no_languages")
         return False
@@ -189,35 +246,45 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
 
     model_name = model_for_tier("standard")
     reserved = 0
+    need_translation = [
+        t for t in targets
+        if not (source_language != "auto" and t["code"] == source_language)
+    ]
+    # The AI search index may already hold a transcript of this exact file;
+    # reusing it skips the download and the transcription charge.
+    existing_transcript = await read_transcript(
+        Media(org_id=org_id, owner="activity", owner_id=info["activity_id"], source_key=src_key)
+    )
     try:
         with tempfile.TemporaryDirectory() as td:
-            # 1. Download source video + extract audio.
-            local_src = os.path.join(td, os.path.basename(info["filename"]))
-            if not await asyncio.to_thread(_fetch_source, src_key, local_src):
-                await _patch_captions(activity_uuid, status="failed", error="source_unavailable")
-                return False
-            audio_dir = os.path.join(td, "audio")
-            os.makedirs(audio_dir, exist_ok=True)
-            chunks = await cap.extract_audio_chunks(local_src, audio_dir)
-            if not chunks:
-                await _patch_captions(activity_uuid, status="failed", error="audio_extract_failed")
-                return False
-            duration = await cap.probe_duration(local_src)
+            if existing_transcript:
+                chunks = []
+                cost = max(1, len(need_translation))
+            else:
+                # 1. Download source video + extract audio.
+                local_src = os.path.join(td, os.path.basename(info["filename"]))
+                if not await asyncio.to_thread(_fetch_source, src_key, local_src):
+                    await _patch_captions(activity_uuid, status="failed", error="source_unavailable")
+                    return False
+                audio_dir = os.path.join(td, "audio")
+                os.makedirs(audio_dir, exist_ok=True)
+                chunks = await cap.extract_audio_chunks(local_src, audio_dir)
+                if not chunks:
+                    await _patch_captions(activity_uuid, status="failed", error="audio_extract_failed")
+                    return False
+                duration = await cap.probe_duration(local_src)
+                # Cost scales with duration + number of languages that need a
+                # real translation.
+                cost = cap.estimate_credits(duration, len(need_translation))
 
-            # 2. Credit gate (feature + atomic reserve). Cost scales with duration
-            #    + number of languages that need a real translation.
-            need_translation = [
-                t for t in targets
-                if not (source_language != "auto" and t["code"] == source_language)
-            ]
-            cost = cap.estimate_credits(duration, len(need_translation))
+            # 2. Credit gate (feature + atomic reserve).
             async with _async_session_factory() as db:
                 await check_feature_enabled("ai", org_id, db)
                 await reserve_ai_credit(org_id, db, amount=cost)
             reserved = cost
 
             # 3. Transcribe once (source language).
-            source_vtt = await cap.transcribe_to_vtt(chunks, model_name, source_language)
+            source_vtt = existing_transcript or await cap.transcribe_to_vtt(chunks, model_name, source_language)
 
             # 4. Produce a VTT per target language (translate unless it IS the source).
             out_dir = os.path.join(td, "captions")
@@ -231,7 +298,8 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
                         vtt = source_vtt
                     else:
                         vtt = await cap.translate_vtt(source_vtt, t.get("label") or code, model_name)
-                    with open(os.path.join(out_dir, f"{code}.vtt"), "w", encoding="utf-8") as f:
+                    vtt_path = _vtt_path(out_dir, code)
+                    with open(vtt_path, "w", encoding="utf-8") as f:
                         f.write(vtt)
                     await _set_lang_status(activity_uuid, code, "ready")
                     done += 1
@@ -264,9 +332,10 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
             error=None,
         )
         logger.info("Captions ready for %s (%s/%s langs)", activity_uuid, done, len(targets))
+        index_activity(info["activity_id"])
         return True
     except HTTPException as e:
-        # e.g. AI disabled or quota exceeded (reserve raises 403) — do NOT refund
+        # e.g. AI disabled or quota exceeded (reserve raises 403): do NOT refund
         # (nothing was reserved on a 403), record a clear status.
         detail = getattr(e, "detail", "ai_error")
         await _patch_captions(activity_uuid, status="failed", error=str(detail)[:200])
@@ -295,10 +364,11 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
 
     async def _run(uuid: str) -> None:
         _inflight.add(uuid)
+        requeued = False
         try:
             await asyncio.wait_for(generate_activity_captions(uuid), timeout=JOB_TIMEOUT_SECONDS)
         except asyncio.TimeoutError:
-            logger.error("Captions: job %s exceeded %ss — marking failed", uuid, JOB_TIMEOUT_SECONDS)
+            logger.error("Captions: job %s exceeded %ss, marking failed", uuid, JOB_TIMEOUT_SECONDS)
             try:
                 await _patch_captions(uuid, status="failed", error="timeout")
             except Exception:
@@ -306,16 +376,19 @@ async def _consumer_loop(poll_seconds: int = CONSUMER_POLL_SECONDS) -> None:
         except asyncio.CancelledError:
             try:
                 client.rpush(REDIS_QUEUE_KEY, uuid)
+                requeued = True
             except Exception:
                 pass
             raise
         except Exception as e:
             logger.error("Captions consumer: job %s failed: %s", uuid, e)
         finally:
+            if not requeued:
+                _clear_queued_marker(client, uuid)
             _inflight.discard(uuid)
             sem.release()
 
-    # A single failed poll means nothing — Redis read timeouts happen on an idle
+    # A single failed poll means nothing. Redis read timeouts happen on an idle
     # connection and the next poll reconnects. Only a *run* of failures means
     # Redis is actually down.
     poll_failures = 0

@@ -438,7 +438,7 @@ def validate_event_data(event_name: str, data: dict) -> None:
     """
     Check that *data* matches the ``data_schema`` registered for *event_name*.
 
-    Logs a warning on mismatch — never raises, so webhook delivery is not
+    Logs a warning on mismatch and never raises, so webhook delivery is not
     blocked by a schema drift bug.
     """
     event = WEBHOOK_EVENTS.get(event_name)

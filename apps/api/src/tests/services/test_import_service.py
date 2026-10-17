@@ -34,6 +34,10 @@ from src.services.courses.transfer.import_service import (
 )
 from src.services.courses.transfer.models import ImportOptions
 
+# Imported media must match its extension's magic bytes.
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + b"\x00" * 17
+MP4_BYTES = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 16
+
 
 def _zip_bytes(files: dict[str, bytes]) -> bytes:
     buffer = BytesIO()
@@ -514,7 +518,7 @@ class TestImportHelpers:
     ):
         """
         F-10: zip entries with the S_IFLNK mode flag in external_attr are
-        symbolic links — extracting them lets a malicious archive redirect
+        symbolic links. Extracting them lets a malicious archive redirect
         later writes. We refuse the archive.
         """
         import zipfile as zf
@@ -537,7 +541,7 @@ class TestImportHelpers:
             )
             z.writestr("c1/course.json", json.dumps({"course_uuid": "c1", "name": "x"}))
             # Symlink entry: 0xA1ED (S_IFLNK | 0o755) shifted into the upper
-            # 16 bits of external_attr — matches the convention zipfile uses.
+            # 16 bits of external_attr, matching the convention zipfile uses.
             sym_info = zf.ZipInfo("c1/evil_link")
             sym_info.external_attr = (0xA1ED) << 16
             z.writestr(sym_info, "/etc/passwd")
@@ -563,7 +567,7 @@ class TestImportHelpers:
         Every Unix zip tool (Info-Zip, Finder's "Compress", zipfile when given
         an explicit ZipInfo) records the real mode in the upper 16 bits of
         external_attr, so ordinary files arrive carrying S_IFREG. Those must
-        pass the guard — otherwise the export -> edit -> re-zip -> re-import
+        pass the guard; otherwise the export -> edit -> re-zip -> re-import
         round trip dies on the first regular file in the archive.
         """
         _set_import_temp_dir(monkeypatch, tmp_path)
@@ -729,7 +733,7 @@ class TestImportHelpers:
         _set_import_temp_dir(monkeypatch, tmp_path)
 
         import_side_effect = [
-            SimpleNamespace(course_uuid="course-new-1", name="Imported One"),
+            SimpleNamespace(id=101, course_uuid="course-new-1", name="Imported One"),
             RuntimeError("boom"),
         ]
         new_uuid_sequence = iter([UUID(int=1), UUID(int=2)])
@@ -843,7 +847,7 @@ class TestImportHelpers:
         (course_path / "course.json").write_text(
             json.dumps({"name": "Course", "thumbnail_type": "not-valid", "thumbnail_image": "thumb.png"})
         )
-        (thumbnails_dir / "thumb.png").write_bytes(b"thumb")
+        (thumbnails_dir / "thumb.png").write_bytes(PNG_BYTES)
 
         with patch(
             "src.services.courses.transfer.import_service.is_s3_enabled",
@@ -963,8 +967,8 @@ class TestImportHelpers:
                 }
             )
         )
-        (thumbnails_dir / "thumb.png").write_bytes(b"thumb")
-        (thumbnails_dir / "video.mp4").write_bytes(b"video")
+        (thumbnails_dir / "thumb.png").write_bytes(PNG_BYTES)
+        (thumbnails_dir / "video.mp4").write_bytes(MP4_BYTES)
 
         new_course_uuid = "course-new"
         current_user = APITokenUser(
@@ -1014,7 +1018,7 @@ class TestImportHelpers:
         thumbnails_dir = course_path / "thumbnails"
         thumbnails_dir.mkdir(parents=True)
         (course_path / "course.json").write_text(json.dumps({"name": "Course", "thumbnail_image": "thumb.png"}))
-        (thumbnails_dir / "thumb.png").write_bytes(b"thumb")
+        (thumbnails_dir / "thumb.png").write_bytes(PNG_BYTES)
 
         with patch(
             "src.services.courses.transfer.import_service.is_s3_enabled",

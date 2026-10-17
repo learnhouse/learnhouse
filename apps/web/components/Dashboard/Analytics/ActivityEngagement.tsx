@@ -82,7 +82,7 @@ export default function ActivityEngagement({ days = '30' }: { days?: string }) {
                     <td className="py-2 text-right text-gray-500">{row.views}</td>
                     <td className="py-2 text-right text-gray-500">{row.completions}</td>
                     <td className="py-2 text-right text-gray-500">
-                      {row.avg_seconds_spent != null && row.avg_seconds_spent > 0 ? `${Math.round(row.avg_seconds_spent)}s` : '—'}
+                      {row.avg_seconds_spent != null && row.avg_seconds_spent > 0 ? `${Math.round(row.avg_seconds_spent)}s` : 'n/a'}
                     </td>
                   </tr>
                 )

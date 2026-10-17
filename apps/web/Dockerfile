@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.2-alpine AS base
+FROM oven/bun:1.4.3-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -18,14 +18,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN rm -f .env*
 
-# Remove Enterprise Edition folder for public/OSS builds
+# Remove Enterprise Edition folder for public/OSS builds, and drop an ee
+# symlink that does not resolve inside the image (it points outside the build
+# context), which would otherwise fail the build
 ARG LEARNHOUSE_PUBLIC=false
-RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/ee; fi
+RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ] || { [ -L /app/ee ] && [ ! -e /app/ee ]; }; then rm -rf /app/ee; fi
 
 RUN bun run build
 
-# Production image — the Next.js standalone server runs on Bun
-FROM oven/bun:1.4.2-alpine AS runner
+# Production image: the Next.js standalone server runs on Bun
+FROM oven/bun:1.4.3-alpine AS runner
 WORKDIR /app
 
 RUN apk upgrade --no-cache && apk add --no-cache curl

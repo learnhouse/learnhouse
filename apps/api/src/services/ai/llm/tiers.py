@@ -22,10 +22,10 @@ Tier = Literal["fast", "standard", "pro"]
 Purpose = Literal["chat", "planning"]
 
 # Three tiers, defaulting to the current Gemini 3 family (verified live against the API,
-# June 2026 — these exact IDs return from models.list() and support generateContent):
-#   fast     -> gemini-3.1-flash-lite (GA)      — titles, follow-ups, migration
-#   standard -> gemini-3.5-flash (GA)           — chat, RAG, planning/blocks (std plans)
-#   pro      -> gemini-3.1-pro-preview          — planning/blocks (Pro+ plans)
+# June 2026; these exact IDs return from models.list() and support generateContent):
+#   fast     -> gemini-3.1-flash-lite (GA):      titles, follow-ups, migration
+#   standard -> gemini-3.5-flash (GA):           chat, RAG, planning/blocks (std plans)
+#   pro      -> gemini-3.1-pro-preview:          planning/blocks (Pro+ plans)
 _TIER_DEFAULTS: dict[str, str] = {
     "fast": "gemini-3.1-flash-lite",
     "standard": "gemini-3.5-flash",
@@ -41,7 +41,7 @@ _TIER_CONFIG_ATTR: dict[str, str] = {
 # Maps a feature purpose to its (standard-plan tier, pro-plan tier). `planning` (course
 # planning) uses `standard` for free/standard plans and `pro` for Pro+ plans; `chat` always
 # uses `standard`. Interactive widget features (MagicBlocks, boards, playgrounds) intentionally
-# bypass this and use the `fast` tier directly for low latency — see their routers.
+# bypass this and use the `fast` tier directly for low latency; see their routers.
 _PURPOSE_TIERS: dict[str, tuple[Tier, Tier]] = {
     "chat": ("standard", "standard"),
     "planning": ("standard", "pro"),

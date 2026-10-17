@@ -18,7 +18,7 @@ const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://
 // it returns tokens just like login/signup and its cookies must be mirrored.
 // `magic-link` covers /magic-link/verify, which mints a session (or an mfa_token)
 // from a passwordless login link.
-const TOKEN_RESPONSE_PATHS = ['login', 'refresh', 'oauth', 'signup', 'verify-email', 'magic-link']
+const TOKEN_RESPONSE_PATHS = ['login', 'refresh', 'oauth', 'signup', 'verify-email', 'magic-link', 'mfa/confirm', 'mfa/disable']
 
 function shouldExtractTokens(path: string): boolean {
   return TOKEN_RESPONSE_PATHS.some(p => path.startsWith(p))
@@ -51,7 +51,7 @@ const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
 // Clear every auth + instance cookie in BOTH its domain-scoped (.{top_domain})
 // and host-only variants. The browser can hold two cookies with the same name
 // but different Domain attributes; clearing only one leaves the stale one to
-// keep being sent — the user appears logged in with a dead token ("cookie
+// keep being sent, so the user appears logged in with a dead token ("cookie
 // staling").
 //
 // Crucially, the domain-scoped attribute is derived from env/host (via
@@ -64,14 +64,14 @@ const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
 // "session exists" marker (LH_session), the current-org marker (LH_org), and the
 // per-session custom-domain marker. We deliberately do NOT clear the instance
 // metadata cookies (LH_tenancy/LH_mode/LH_top_domain/LH_frontend_domain/
-// LH_default_org) — those describe the deployment, are non-sensitive, are needed
+// LH_default_org): those describe the deployment, are non-sensitive, are needed
 // by anonymous visitors, and the proxy re-sets them on the very next request, so
 // clearing them is both pointless and would briefly break tenancy resolution.
 const CLEAR_HTTPONLY = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, 'LH_custom_domain']
 const CLEAR_MARKERS = ['LH_session', 'LH_org']
 
 // A refresh failure only justifies destroying the session when the backend
-// rejected the CREDENTIAL itself. 401/403 are terminal — the refresh cookie is
+// rejected the CREDENTIAL itself. 401/403 are terminal: the refresh cookie is
 // expired, revoked, or was flagged as replayed, and re-sending it will never
 // work. Everything else (429 rate limit, 5xx during a deploy, gateway
 // timeouts) is a server-side hiccup that says nothing about the token's
@@ -109,8 +109,8 @@ function appendClearAuthCookies(response: NextResponse, request: NextRequest) {
 // Headers that identify the ORIGINAL caller, relayed to the backend untouched.
 //
 // This proxy is server-to-server: with nothing forwarded, the backend sees the
-// Next.js pod as the client for EVERY request. Its per-IP limits — login
-// (30/5min), signup (10/hour), refresh (600/min) — then share ONE bucket across
+// Next.js pod as the client for EVERY request. Its per-IP limits for login
+// (30/5min), signup (10/hour) and refresh (600/min) then share ONE bucket across
 // the whole deployment instead of being per caller. A single person retrying a
 // password could lock every user out of signing in, and the limits stop being
 // brute-force protection at all because they cannot tell callers apart. The
@@ -123,11 +123,62 @@ function appendClearAuthCookies(response: NextResponse, request: NextRequest) {
 // same header is interpreted two different ways in two places.
 //
 // NOTE: this inherits the deployment requirement the backend already documents
-// — the ingress MUST overwrite, not append to, a client-supplied
+// about the ingress: it MUST overwrite, not append to, a client-supplied
 // X-Forwarded-For. Otherwise a caller can prepend a fake IP and evade the
 // limits. That requirement is unchanged by this proxy; it applies equally to
 // requests that reach the API directly.
 const CLIENT_IDENTITY_HEADERS = ['x-forwarded-for', 'x-real-ip', 'user-agent']
+
+// Same-origin policy for state-changing requests, shared by every path this
+// proxy serves (login, signup, refresh, logout, MFA, magic links...). Compares
+// HOST rather than full origin because protocol detection behind a
+// TLS-terminating proxy is unreliable. A browser always sends Origin on a
+// cross-site POST; when it is absent we fall back to Sec-Fetch-Site, and a
+// request carrying neither did not come from a browser page at all.
+function requestHosts(request: NextRequest): string[] {
+  return [request.headers.get('x-forwarded-host'), request.headers.get('host')]
+    .map((h) => (h || '').split(',')[0].trim().toLowerCase())
+    .filter(Boolean)
+}
+
+const CLIENT_HOST_HEADER = 'x-learnhouse-client-host'
+
+/** The host the browser addressed (the proxy's x-forwarded-host, else Host). */
+function browserHost(request: NextRequest): string | null {
+  return requestHosts(request)[0] ?? null
+}
+
+function isCrossSiteRequest(request: NextRequest): boolean {
+  const origin = request.headers.get('origin')
+  if (origin) {
+    let originHost = ''
+    try {
+      originHost = new URL(origin).host.toLowerCase()
+    } catch {
+      /* "null" or malformed: treated as cross-origin */
+    }
+    return !originHost || !requestHosts(request).includes(originHost)
+  }
+  const fetchSite = request.headers.get('sec-fetch-site')
+  return fetchSite !== null && fetchSite !== 'same-origin' && fetchSite !== 'none'
+}
+
+function stripRefreshToken(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value
+  const { refresh_token: _refreshToken, ...rest } = value as Record<string, unknown>
+  return rest
+}
+
+// Remove refresh_token from both response shapes the backend uses: top-level
+// ({ access_token, refresh_token }) and nested ({ user, tokens: {...} }).
+function withoutRefreshToken(data: unknown): unknown {
+  const stripped = stripRefreshToken(data)
+  if (stripped && typeof stripped === 'object' && 'tokens' in stripped) {
+    const record = stripped as Record<string, unknown>
+    return { ...record, tokens: stripRefreshToken(record.tokens) }
+  }
+  return stripped
+}
 
 async function proxyRequest(
   request: NextRequest,
@@ -173,12 +224,26 @@ async function proxyRequest(
     if (value) headers[name] = value
   }
 
+  // The host the browser is on. The backend can't see it through this proxy,
+  // and needs it to hold a session signed in on an org's custom domain to that
+  // org (and to refuse platform superadmins there).
+  const clientHost = browserHost(request)
+  if (clientHost) headers[CLIENT_HOST_HEADER] = clientHost
+
+  // Login CSRF: every state-changing call here can mint or destroy session
+  // cookies, and the backend never sees the browser's Origin, so its own CSRF
+  // check cannot run. A cross-site form POST to /api/auth/login would otherwise
+  // sign the victim in to an attacker-controlled account.
+  if (method !== 'GET' && method !== 'HEAD' && isCrossSiteRequest(request)) {
+    return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 })
+  }
+
   // Forward cookies to backend
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)
 
   // Short-circuit: no refresh token cookie means nothing to refresh. Clear the
-  // stale LH_session marker (and any orphaned cookies) too — otherwise the
+  // stale LH_session marker (and any orphaned cookies) too; otherwise the
   // client keeps seeing "a session exists" and loops on failed refreshes.
   if (pathSegments === 'refresh' && !refreshToken?.value) {
     const response = NextResponse.json({ error: 'No refresh token' }, { status: 401 })
@@ -203,14 +268,21 @@ async function proxyRequest(
     }
   }
 
-  // Handle logout locally — clear cookies and return 200
+  // Handle logout locally: clear cookies and return 200
   // Try backend invalidation but don't fail if it errors
   if (pathSegments === 'logout' || pathSegments.endsWith('/logout')) {
+    // POST only, same-origin when the browser says where it came from: a GET
+    // (or cross-site POST) would let any page or <img> log users out.
+    // (The cross-site check itself runs for every non-GET request above.)
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405, headers: { Allow: 'POST' } })
+    }
+
     // Best-effort backend token invalidation
     try {
       const logoutHeaders: HeadersInit = {}
       // Both cookies must go: the backend identifies the session to revoke from
-      // LH_access (Authorization header or the LH_access cookie — never
+      // LH_access (Authorization header or the LH_access cookie, never
       // LH_refresh), so sending only the refresh cookie made every logout 401
       // and skipped server-side revocation entirely.
       const logoutCookieParts: string[] = []
@@ -226,7 +298,7 @@ async function proxyRequest(
       if (authHeader) {
         logoutHeaders['Authorization'] = authHeader
       }
-      // Backend logout is DELETE /auth/logout — using POST returned 405 and
+      // Backend logout is DELETE /auth/logout. Using POST returned 405 and
       // silently skipped server-side session revocation, so revoked tokens
       // stayed valid until natural expiry. Match the contract and surface drift.
       const logoutRes = await fetch(`${BACKEND_URL}/api/v1/auth/logout`, {
@@ -235,10 +307,10 @@ async function proxyRequest(
         signal: AbortSignal.timeout(3000),
       }).catch(() => null)
       if (logoutRes && !logoutRes.ok) {
-        console.warn(`[auth] backend logout returned ${logoutRes.status} — server session may not be revoked`)
+        console.warn(`[auth] backend logout returned ${logoutRes.status}; server session may not be revoked`)
       }
     } catch {
-      // Backend logout failed — that's fine, cookies are cleared below
+      // Backend logout failed. That's fine, cookies are cleared below
     }
 
     const response = NextResponse.json({ ok: true })
@@ -291,7 +363,9 @@ async function proxyRequest(
 
   if (responseContentType?.includes('application/json')) {
     responseData = await backendResponse.json()
-    responseBody = JSON.stringify(responseData)
+    // The refresh token lives only in its httpOnly cookie (set below). Relaying
+    // it in the body would hand any script on the page a 30-day credential.
+    responseBody = JSON.stringify(withoutRefreshToken(responseData))
   } else {
     responseBody = await backendResponse.text()
   }
@@ -340,13 +414,13 @@ async function proxyRequest(
   }
 
   // Only destroy the session when the backend says the refresh CREDENTIAL is
-  // dead — 401 (expired/revoked/replayed) or 403. Those are terminal: the
+  // dead: 401 (expired/revoked/replayed) or 403. Those are terminal: the
   // cookie will never work again, so we clear it and let the client fall back
   // to the login screen instead of looping on failed refreshes.
   //
   // Every other failure is transient and MUST NOT log the user out. A 429 from
   // the per-IP refresh rate limit, a 502 while the API rolls out, a 500, a
-  // gateway timeout — none of those mean the user's 30-day refresh token is
+  // gateway timeout. None of those mean the user's 30-day refresh token is
   // invalid. Clearing cookies on those was silently ending sessions that had
   // weeks of life left, and because the httpOnly refresh cookie was deleted
   // the user could not recover except by signing in again. Whole classrooms

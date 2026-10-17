@@ -420,7 +420,7 @@ export default function PlaygroundEditor({
           minHeight: 'calc(100vh - 120px)',
         }}
       >
-        {/* Preview — takes all space in fullscreen */}
+        {/* Preview: takes all space in fullscreen */}
         <div
           className="flex-1 flex overflow-hidden"
           style={{ borderRight: isFullscreen ? 'none' : '1px solid rgba(229,231,235,0.8)' }}
@@ -433,7 +433,7 @@ export default function PlaygroundEditor({
           />
         </div>
 
-        {/* Chat panel — hidden in fullscreen */}
+        {/* Chat panel, hidden in fullscreen */}
         {!isFullscreen && (
           <div className="flex-shrink-0 flex flex-col overflow-hidden" style={{ width: 320 }}>
             <PlaygroundChatPanel

@@ -1,5 +1,5 @@
 /**
- * Text direction — the single source of truth.
+ * Text direction: the single source of truth.
  *
  * Deliberately dependency-free: `app/global-error.tsx` renders outside every
  * provider (no i18n, no router) and still needs to import from here.
@@ -13,7 +13,7 @@ export type Direction = 'ltr' | 'rtl'
 
 /**
  * Superset of the locales we translate to. A browser can report `he` or `ur`
- * even though we don't ship those bundles yet — direction should still be
+ * even though we don't ship those bundles yet; direction should still be
  * right, with the UI falling back to English text.
  */
 export const RTL_LANGUAGES = new Set([
@@ -46,7 +46,7 @@ export function dirMultiplier(dir: Direction): 1 | -1 {
 
 /**
  * Detect the language the same way i18next's LanguageDetector does, in the same
- * order (see `detection.order` in lib/i18n.ts). Client-only — returns 'en' on
+ * order (see `detection.order` in lib/i18n.ts). Client-only; returns 'en' on
  * the server.
  *
  * Kept byte-for-byte equivalent to the detector in public/dir-init.js.

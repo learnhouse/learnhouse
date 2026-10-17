@@ -4,7 +4,7 @@ import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCo
 import CourseCreationTypeSelector from '@components/Objects/Modals/Course/Create/CourseCreationTypeSelector'
 import AICourseCreationModal from '@components/Objects/Modals/Course/Create/AICourse/AICourseCreationModal'
 import { BookCopy, Search, X, Trash2, Users, Info } from 'lucide-react'
-import ScormCourseImport from '../../../../../ee/components/Modals/ScormCourseImport'
+import ScormCourseImport from '@ee/components/Modals/ScormCourseImport'
 import { ImportTypeSelector, LearnHouseCourseImport } from '@components/Objects/Modals/Course/Import'
 import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
@@ -60,7 +60,7 @@ function CoursesHome(params: CourseProps) {
   const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
   const queryClient = useQueryClient()
 
-  // TanStack Query for courses — cached on the client, instant on return visits
+  // TanStack Query for courses: cached on the client, instant on return visits
   const { data: coursesData, isLoading: isCoursesLoading } = useQuery({
     queryKey: queryKeys.courses.list(orgslug),
     queryFn: async () => {
@@ -96,7 +96,7 @@ function CoursesHome(params: CourseProps) {
   const courseLimitReached = usageData?.features?.courses?.limit_reached ?? false
   const courseLimit = usageData?.features?.courses?.limit ?? 0
 
-  // Usergroup filter — shown only when the org's plan actually includes
+  // Usergroup filter, shown only when the org's plan actually includes
   // usergroups (a standard+ feature per the backend), via resolved features.
   const usergroupsAvailable = org?.config?.config?.resolved_features?.usergroups?.enabled ?? false
   const [usergroups, setUsergroups] = useState<any[]>([])

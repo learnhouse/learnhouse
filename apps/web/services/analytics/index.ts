@@ -1,5 +1,5 @@
 /**
- * learnhouse-analytics — the single import surface for product analytics.
+ * learnhouse-analytics: the single import surface for product analytics.
  *
  *   import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
  *   const { track } = useLHAnalytics('learner')

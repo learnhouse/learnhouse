@@ -8,7 +8,7 @@ export type InstanceMode = 'saas' | 'oss' | 'ee'
  *
  * Blocks only on a definitive 'oss'. A null mode means the lookup failed, and
  * that renders the dashboard: failing closed would lock real SaaS superadmins
- * out of /admin during any brief API blip — which is exactly when they need
+ * out of /admin during any brief API blip, which is exactly when they need
  * it. The API-side check is what actually enforces this; the web gate exists
  * to show a clean message instead of dead chrome.
  */
@@ -19,9 +19,9 @@ export function isSuperadminSurfaceBlocked(mode: InstanceMode | null): boolean {
 /**
  * Resolve the deployment mode without trusting anything client-supplied.
  *
- * Deliberately not lib/saas.ts::getInstanceMode(), which prefers a value the
- * client can influence. The URL here comes from server env, never from the
- * request, so nothing on this path is caller-controlled.
+ * The URL here comes from server env, never from the request, so nothing on
+ * this path is caller-controlled. lib/saas.ts::getInstanceMode() caches on top
+ * of this for the SaaS-only integrations.
  */
 export async function fetchInstanceMode(): Promise<InstanceMode | null> {
   try {

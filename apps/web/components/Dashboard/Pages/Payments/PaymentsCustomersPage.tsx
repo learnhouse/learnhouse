@@ -57,7 +57,7 @@ function CardChip({ brand, last4 }: { brand?: string; last4?: string }) {
     visa: 'Visa', mastercard: 'MC', amex: 'Amex',
     discover: 'Disc', jcb: 'JCB', unionpay: 'UP',
   }
-  if (!brand) return <span className="text-gray-400">—</span>
+  if (!brand) return <span className="text-gray-400">n/a</span>
   return (
     <div className="flex items-center space-x-1.5">
       <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
@@ -242,7 +242,7 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="font-medium">{offer?.name ?? '—'}</TableCell>
+                <TableCell className="font-medium">{offer?.name ?? 'n/a'}</TableCell>
                 <TableCell>
                   {offer?.offer_type === 'subscription' ? (
                     <Badge variant="outline" className="flex items-center gap-1 w-fit"><RefreshCcw size={11} /><span>Subscription</span></Badge>
@@ -250,8 +250,8 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
                     <Badge variant="outline" className="flex items-center gap-1 w-fit"><SquareCheck size={11} /><span>One-time</span></Badge>
                   )}
                 </TableCell>
-                <TableCell>{offer ? fmt(offer.amount, offer.currency) : '—'}</TableCell>
-                <TableCell>{pm ? <CardChip brand={pm.brand} last4={pm.last4} /> : <span className="text-gray-400">—</span>}</TableCell>
+                <TableCell>{offer ? fmt(offer.amount, offer.currency) : 'n/a'}</TableCell>
+                <TableCell>{pm ? <CardChip brand={pm.brand} last4={pm.last4} /> : <span className="text-gray-400">n/a</span>}</TableCell>
                 <TableCell>
                   {stripe?.last_charge_date ? (
                     <div className="flex flex-col">
@@ -260,7 +260,7 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
                         <span className="text-xs text-gray-400">{fmt(stripe.last_charge_amount, offer?.currency)}</span>
                       )}
                     </div>
-                  ) : <span className="text-gray-400">—</span>}
+                  ) : <span className="text-gray-400">n/a</span>}
                 </TableCell>
                 <TableCell>
                   {stripe?.next_billing_date ? (
@@ -268,7 +268,7 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
                       <span className="text-sm">{fmtDate(stripe.next_billing_date)}</span>
                       {stripe.cancel_at_period_end && <span className="text-xs text-red-500">Cancels then</span>}
                     </div>
-                  ) : <span className="text-gray-400">—</span>}
+                  ) : <span className="text-gray-400">n/a</span>}
                 </TableCell>
                 <TableCell><StatusPill status={item.status} /></TableCell>
                 <TableCell className="text-sm text-gray-500">{fmtDate(item.creation_date)}</TableCell>
@@ -341,7 +341,7 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
                 <TableCell className="text-sm text-gray-500 whitespace-nowrap">{fmtDate(ch.created)}</TableCell>
                 <TableCell>
                   <div className="flex flex-col min-w-0">
-                    <span className="font-medium truncate">{ch.customer?.name ?? ch.customer?.email ?? '—'}</span>
+                    <span className="font-medium truncate">{ch.customer?.name ?? ch.customer?.email ?? 'n/a'}</span>
                     {ch.customer?.name && ch.customer?.email && (
                       <span className="text-xs text-gray-400 truncate">{ch.customer.email}</span>
                     )}
@@ -352,10 +352,10 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
                 <TableCell className="text-sm">
                   {ch.amount_refunded > 0 ? (
                     <span className="text-purple-600">{fmt(ch.amount_refunded, ch.currency)}</span>
-                  ) : '—'}
+                  ) : 'n/a'}
                 </TableCell>
                 <TableCell><StatusPill status={ch.paid ? 'succeeded' : ch.status} /></TableCell>
-                <TableCell className="text-sm text-gray-500 max-w-[200px] truncate">{ch.description ?? '—'}</TableCell>
+                <TableCell className="text-sm text-gray-500 max-w-[200px] truncate">{ch.description ?? 'n/a'}</TableCell>
                 <TableCell>
                   {ch.receipt_url && (
                     <a href={ch.receipt_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600 transition" title="View receipt">
@@ -436,7 +436,7 @@ function SubscriptionsTab({ orgId, accessToken }: { orgId: number; accessToken: 
                 <TableRow key={sub.id}>
                   <TableCell>
                     <div className="flex flex-col min-w-0">
-                      <span className="font-medium truncate">{sub.customer?.name ?? sub.customer?.email ?? '—'}</span>
+                      <span className="font-medium truncate">{sub.customer?.name ?? sub.customer?.email ?? 'n/a'}</span>
                       {sub.customer?.name && sub.customer?.email && (
                         <span className="text-xs text-gray-400 truncate">{sub.customer.email}</span>
                       )}
@@ -448,7 +448,7 @@ function SubscriptionsTab({ orgId, accessToken }: { orgId: number; accessToken: 
                         <span className="font-medium">{fmt(sub.plan.amount, sub.plan.currency)}/{sub.plan.interval}</span>
                         {sub.plan.nickname && <span className="text-xs text-gray-400">{sub.plan.nickname}</span>}
                       </div>
-                    ) : '—'}
+                    ) : 'n/a'}
                   </TableCell>
                   <TableCell><CardChip brand={sub.card?.brand} last4={sub.card?.last4} /></TableCell>
                   <TableCell className="text-sm text-gray-600 whitespace-nowrap">

@@ -13,7 +13,7 @@ export type DemoStatus = {
 /**
  * Whether this instance offers the shared demo organization.
  *
- * Public and unauthenticated — the onboarding page calls it before the visitor
+ * Public and unauthenticated: the onboarding page calls it before the visitor
  * has done anything, and a failure here must never block org creation, so
  * callers treat any error as "no demo available".
  */

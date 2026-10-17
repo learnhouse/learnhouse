@@ -8,7 +8,7 @@ name: Publish CLI to npm
 on:
   push:
     tags:
-      # e.g. `cli-1.4.9` — NOT `cli-v1.4.9`. The version (everything after `cli-`)
+      # e.g. `cli-1.4.9`, NOT `cli-v1.4.9`. The version (everything after `cli-`)
       # must equal apps/cli/package.json "version".
       - 'cli-[0-9]*'
 
@@ -33,14 +33,14 @@ jobs:
     name: Build, Test & Publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version-file: .bun-version
 
@@ -74,7 +74,7 @@ jobs:
           fi
           BIN_VERSION="$(node dist/bin/learnhouse.js --version)"
           if [ "$BIN_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::Built binary reports '$BIN_VERSION' but the tag is '$TAG_VERSION' — is src/constants.ts out of sync with package.json?"
+            echo "::error::Built binary reports '$BIN_VERSION' but the tag is '$TAG_VERSION'. Is src/constants.ts out of sync with package.json?"
             exit 1
           fi
           echo "Versions agree: $TAG_VERSION"

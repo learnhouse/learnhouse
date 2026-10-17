@@ -15,7 +15,7 @@ This mirrors the web helper's contact shape exactly (``userGroup``,
 Design mirrors ``src/services/analytics/analytics.py``:
   - fire-and-forget via ``asyncio.create_task`` (never blocks the request),
   - SaaS-gated and a no-op when ``LOOPS_API_KEY`` is unset,
-  - all errors swallowed + logged — a marketing-sync failure must NEVER break
+  - all errors swallowed + logged; a marketing-sync failure must NEVER break
     org creation or a role change.
 
 Loops REST API (matches what the npm client calls):
@@ -88,7 +88,7 @@ def record_org_admin_in_loops(
     """
     Fire-and-forget: ensure an org ADMIN is on the Loops marketing audience.
 
-    Best-effort and non-blocking — safe to call from inside a request handler.
+    Best-effort and non-blocking: safe to call from inside a request handler.
     No-op when the email is missing, when not in SaaS mode, or when
     ``LOOPS_API_KEY`` is unset.
     """
@@ -113,7 +113,7 @@ async def _record_org_admin(
     if client is None:
         return
 
-    # Contact properties — mirror apps/web/services/emails/loops.ts so both
+    # Contact properties: mirror apps/web/services/emails/loops.ts so both
     # sides upsert the same shape. update (PUT) upserts, so it's idempotent.
     properties: dict = {
         "email": email,

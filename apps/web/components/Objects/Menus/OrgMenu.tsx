@@ -337,7 +337,7 @@ export const OrgMenu = (props: any) => {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a
-                        href="https://discord.gg/learnhouse"
+                        href="http://learnhouse.to/discord"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2"
@@ -442,7 +442,7 @@ const CopilotMenuButton = ({
   const accessToken = session?.data?.tokens?.access_token
   const [isOpen, setIsOpen] = useState(false)
 
-  // Only fetch when the dropdown is open — avoids firing on every page load
+  // Only fetch when the dropdown is open; avoids firing on every page load
   const { data: sessions } = useQuery<RAGChatSession[]>({
     queryKey: queryKeys.ai.ragSessions(orgslug),
     queryFn: () => fetchRAGChatSessions(accessToken, orgslug),

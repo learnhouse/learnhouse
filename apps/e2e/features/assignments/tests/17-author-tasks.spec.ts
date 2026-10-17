@@ -1,7 +1,7 @@
 /**
  * Goal: prove a teacher can AUTHOR task content through the editor UI (not just
  * "Add Task"): set a task's General fields (title/hint) and its Content
- * (a short-answer prompt + accepted answer + match mode), and DELETE a task —
+ * (a short-answer prompt + accepted answer + match mode), and DELETE a task,
  * each verified against the persisted API state. Uses the shared admin session.
  */
 import { test, expect } from '../../../core/fixtures'

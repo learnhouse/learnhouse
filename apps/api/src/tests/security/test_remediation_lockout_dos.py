@@ -18,7 +18,7 @@ from src.services.security import account_lockout
 async def test_single_ip_does_not_lock_account_even_past_threshold():
     """
     F-08: 10 failed attempts from the SAME IP must not trigger the lockout
-    (distinct_ips < 2). Previously this was the DoS primitive — any attacker
+    (distinct_ips < 2). Previously this was the DoS primitive: any attacker
     could lock any victim's account with 10 requests to /auth/login.
     """
     user = SimpleNamespace(id=7, locked_until=None)
@@ -33,7 +33,7 @@ async def test_single_ip_does_not_lock_account_even_past_threshold():
                 user, db_session, ip_address="1.2.3.4"
             )
 
-    # db_session.refresh is an AsyncMock — so user.locked_until stays None —
+    # db_session.refresh is an AsyncMock, so user.locked_until stays None,
     # and we expect no lock.
     assert user.locked_until is None
     assert is_locked is False
@@ -79,3 +79,27 @@ async def test_record_failed_login_is_backwards_compatible_without_ip():
     is_locked, duration = await account_lockout.record_failed_login(user, db_session)
     assert is_locked is False
     assert duration is None
+
+
+@pytest.mark.asyncio
+async def test_active_lock_is_not_extended_by_further_failures(monkeypatch):
+    """
+    Login answers a locked account like a wrong password even when the
+    password is right, so further failures must not push the lock forward,
+    or the owner retrying their real password would never get back in.
+    """
+    monkeypatch.setattr(
+        account_lockout, "_record_failed_ip", lambda user_id, ip: 3
+    )
+    future = "2999-01-01T00:00:00+00:00"
+    user = SimpleNamespace(id=10, locked_until=future)
+    db_session = AsyncMock()
+
+    await account_lockout.record_failed_login(
+        user, db_session, ip_address="3.3.3.3"
+    )
+
+    stmt = db_session.execute.await_args.args[0]
+    sql = str(stmt.compile(compile_kwargs={"literal_binds": True}))
+    # The lock branch is disabled outright, so locked_until keeps its value.
+    assert "CASE WHEN false" in sql

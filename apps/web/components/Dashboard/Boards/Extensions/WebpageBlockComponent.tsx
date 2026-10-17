@@ -8,6 +8,7 @@ import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
 import { useBoardSelection } from '../BoardSelectionContext'
+import { useUrlEmbedSandbox } from '@/lib/media/useUrlEmbedSandbox'
 
 function normalizeUrl(input: string): string {
   const trimmed = input.trim()
@@ -95,6 +96,7 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
   }
 
   const showWebpage = url && !editing
+  const iframeSandbox = useUrlEmbedSandbox(url)
 
   /* ── Empty / editing state ─────────────────────────────── */
 
@@ -196,7 +198,7 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
       className="rounded-2xl"
       stopWheel
     >
-      {/* Floating toolbar — appears on hover or when selected */}
+      {/* Floating toolbar: appears on hover or when selected */}
       <div className={`absolute inset-x-0 top-0 z-20 flex justify-center pt-2.5 transition-opacity pointer-events-none ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <div
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/90 backdrop-blur-sm nice-shadow pointer-events-auto cursor-grab active:cursor-grabbing"
@@ -254,12 +256,12 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
             </div>
           </div>
         )}
-        <iframe
+        {iframeSandbox && <iframe
           ref={iframeRef}
           src={url}
           className="w-full h-full bg-white block"
           style={{ border: 'none', overscrollBehavior: 'contain' }}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+          sandbox={iframeSandbox}
           referrerPolicy="no-referrer"
           onLoad={() => {
             setLoading(false)
@@ -267,7 +269,7 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
           }}
           tabIndex={-1}
           title={title || 'Webpage'}
-        />
+        />}
       </div>
 
       <ResizeHandle onMouseDown={handleResizeStart} selected={selected} />

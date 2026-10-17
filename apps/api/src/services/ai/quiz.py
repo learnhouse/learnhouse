@@ -30,15 +30,15 @@ Rules:
 - Each question has 3-5 answer options; mark exactly the correct one(s) correct.
   At least one option MUST be correct.
 - Set response_type per question:
-    * "single" — exactly one answer is correct, the learner picks one.
-    * "multiple" — a select-all-that-apply question: mark EVERY correct answer
+    * "single": exactly one answer is correct, the learner picks one.
+    * "multiple": a select-all-that-apply question; mark EVERY correct answer
       correct (two or more) and the learner must find all of them.
   response_type MUST match the number of answers you marked correct. Use
   "multiple" only when the content genuinely has several right answers.
 - Write in the same language as the user's request/content.
 - Base questions strictly on the provided course content when it is supplied;
   do not invent facts that contradict it.
-- Return ONLY the structured quiz — no commentary."""
+- Return ONLY the structured quiz, no commentary."""
 
 
 def _build_prompt(prompt: str, num_questions: int, difficulty: str | None, context: str) -> str:
@@ -91,8 +91,13 @@ async def generate_quiz(
     num_questions: int = 5,
     difficulty: str | None = None,
     session_uuid: str | None = None,
+    user_id: int | None = None,
 ) -> tuple[dict, str]:
-    """Generate a `blockQuiz` payload. Returns ``(block_quiz_attrs, session_uuid)``."""
+    """Generate a `blockQuiz` payload. Returns ``(block_quiz_attrs, session_uuid)``.
+
+    ``user_id`` is recorded as the refine session's owner; the router checks
+    ownership of a client-supplied ``session_uuid`` before calling this.
+    """
     num_questions = max(1, min(num_questions, MAX_QUESTIONS))
 
     context = ""
@@ -122,7 +127,10 @@ async def generate_quiz(
     # (persist the generated questions, not just a count).
     assistant_turn = json.dumps(block_quiz.get("questions", []))
     try:
-        save_message_to_history(resolved_session_uuid, prompt.strip(), assistant_turn, org_id=org_id)
+        save_message_to_history(
+            resolved_session_uuid, prompt.strip(), assistant_turn,
+            user_id=user_id, org_id=org_id, listed=False,
+        )
     except Exception:
         logger.debug("Failed to persist quiz refine history", exc_info=True)
 

@@ -125,7 +125,7 @@ export default function ActivitySwitcher({
     event: React.MouseEvent<HTMLAnchorElement>,
     href: string
   ) => {
-    // Same-activity click — let the default no-op happen.
+    // Same-activity click: let the default no-op happen.
     if (href.includes(`/activity/${(currentActivityUuid ?? '').replace('activity_', '')}/`)) {
       return
     }

@@ -19,8 +19,17 @@ from src.services.search.normalization import (
     build_like_pattern,
     escape_like_wildcards,
 )
+from src.security.api_token_utils import require_token_content_read, token_has_right
 from src.security.auth import resolve_acting_user_id
-from src.security.org_auth import is_org_member
+from src.services.orgs.auth_policy import viewer_for_org
+from src.security.org_auth import is_org_admin, is_org_member
+from src.services.communities.communities import (
+    accessible_community_ids_select,
+    can_read_all_communities,
+    community_read,
+)
+from src.services.folders.folders import accessible_folder_ids_select
+from src.services.podcasts.podcasts import accessible_podcast_ids_query
 
 
 class SearchDiscussionRead(DiscussionRead):
@@ -44,7 +53,7 @@ class SearchResult(BaseModel):
     # SECURITY: the stripped projection, never ``UserRead``. Search is open to
     # every org member, and ``UserRead`` carries email / signup_method /
     # is_superadmin / extra_metadata (the answers to the org's custom signup
-    # fields) — PII the member directory deliberately restricts to admins.
+    # fields): PII the member directory deliberately restricts to admins.
     users: List[UserReadPublic]
     communities: List[CommunityRead]
     discussions: List[SearchDiscussionRead]
@@ -75,11 +84,22 @@ def _empty_result() -> SearchResult:
 _escape_like_wildcards = escape_like_wildcards  # back-compat alias for existing tests
 
 
+def _token_reads_content(current_user: APITokenUser, resource: str) -> bool:
+    """``require_token_content_read`` as a yes/no, for filtering results."""
+    from fastapi import HTTPException
+
+    try:
+        require_token_content_read(current_user, resource)
+    except HTTPException:
+        return False
+    return True
+
+
 def _ilike_any(columns: Sequence[ColumnElement[Any]], pattern: str) -> ColumnElement[bool]:
     """Return a SQL boolean matching `pattern` against any of the given columns.
 
     Uses SQLAlchemy's `ilike`, which is parameterized and keeps the driver
-    responsible for escaping — no string interpolation on user input.
+    responsible for escaping; no string interpolation on user input.
     """
     return or_(*(column.ilike(pattern, escape=LIKE_ESCAPE_CHAR) for column in columns))
 
@@ -142,10 +162,12 @@ async def search_across_org(
     - Org members additionally see org-scoped non-public content where the
       resource itself doesn't restrict it further (e.g. unpublished items and
       usergroup-restricted playgrounds are always excluded from search).
+      Usergroup-restricted communities (and their discussions) and podcasts
+      only show up for members of a linked group, as in their listings.
     - User hits are serialized as ``UserReadPublic``, never ``UserRead``: search
       is open to every member, so it must not expose the PII the dedicated
       member directory restricts to admins.
-    - Pattern matching goes through SQLAlchemy `ilike` — fully parameterized.
+    - Pattern matching goes through SQLAlchemy `ilike`, which is fully parameterized.
     - Limit is capped at 50 per page.
     """
     from fastapi import HTTPException, status
@@ -166,33 +188,36 @@ async def search_across_org(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="API token cannot search in organizations outside its scope",
             )
-        if current_user.rights:
-            rights = current_user.rights
-            if isinstance(rights, dict):
-                search_rights = rights.get("search", {})
-                has_permission = search_rights.get("action_read", False)
-            else:
-                search_rights = getattr(rights, "search", None)
-                has_permission = bool(
-                    search_rights and getattr(search_rights, "action_read", False)
-                )
-            if not has_permission:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="API token does not have search permission",
-                )
+        # A token with no rights at all holds no search right either.
+        if not token_has_right(current_user, "search", "action_read"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token does not have search permission",
+            )
 
+    current_user = await viewer_for_org(db_session, current_user, org.id)
     is_anon = isinstance(current_user, AnonymousUser)
+    # API tokens are judged on their own rights buckets below, never on their
+    # creator's role: without a bucket's read right a token sees only what
+    # anyone could see.
+    is_token = isinstance(current_user, APITokenUser)
     user_is_member = (
         not is_anon and await is_org_member(resolve_acting_user_id(current_user), org.id, db_session)
     )
     only_public = is_anon or not user_is_member
+    acting_user_id = 0 if is_anon else resolve_acting_user_id(current_user)
 
     # ── Courses ──────────────────────────────────────────────────────────────
     # `search_courses` already applies its own per-user access filter.
-    courses = await search_courses(
-        request, current_user, org_slug, search_query, db_session, page, limit
-    )
+    if isinstance(current_user, APITokenUser) and not token_has_right(
+        current_user, "courses", "action_read"
+    ):
+        # search_courses refuses such a token; leave courses out instead.
+        courses = []
+    else:
+        courses = await search_courses(
+            request, current_user, org_slug, search_query, db_session, page, limit
+        )
     total_courses = len(courses)
 
     # ── Folders ──────────────────────────────────────────────────────────────
@@ -201,14 +226,24 @@ async def search_across_org(
         .where(Folder.org_id == org.id)
         .where(_ilike_any([Folder.name, Folder.description], pattern))
     )
-    if only_public:
+    if only_public or (
+        is_token and not token_has_right(current_user, "folders", "action_read")
+    ):
         folders_q = folders_q.where(Folder.public == sa_true())
+    elif not is_token and not await is_org_admin(acting_user_id, org.id, db_session):
+        # Same visibility as the folder listing: UserGroup-restricted folders
+        # only for members of a linked group (or active authors).
+        folders_q = folders_q.where(
+            Folder.id.in_(accessible_folder_ids_select(org.id, acting_user_id))  # type: ignore[union-attr]
+        )
     folders, total_folders = await _paginate_and_count(
         db_session, folders_q, page, limit
     )
 
     # ── Users (org members only; anonymous and non-member traffic is denied) ─
-    if only_public:
+    if only_public or (
+        is_token and not token_has_right(current_user, "users", "action_read")
+    ):
         users: list = []
         total_users = 0
     else:
@@ -227,7 +262,7 @@ async def search_across_org(
         )
 
         # Membership is what gates this, and in the shared demo everyone who
-        # ever opened it is a member — so a two-letter query returned a roster
+        # ever opened it is a member, so a two-letter query returned a roster
         # of real people, with their names, usernames, bios and avatars, to any
         # visitor. The seeded students remain searchable; they are the point.
         from src.services.demo.guards import hide_other_visitors
@@ -245,8 +280,19 @@ async def search_across_org(
         .where(Community.org_id == org.id)
         .where(_ilike_any([Community.name, Community.description], pattern))
     )
-    if only_public:
-        communities_q = communities_q.where(Community.public == sa_true())
+    # Members get the same usergroup-aware visibility as the community
+    # listing; only community managers / org admins see every community.
+    community_filter = None
+    if only_public or (is_token and not _token_reads_content(current_user, "communities")):
+        community_filter = Community.public == sa_true()
+    elif is_token:
+        pass  # communities read right: every community of the token's org
+    elif not await can_read_all_communities(request, org, acting_user_id, db_session):
+        community_filter = Community.id.in_(  # type: ignore[attr-defined]
+            accessible_community_ids_select(org.id, acting_user_id)
+        )
+    if community_filter is not None:
+        communities_q = communities_q.where(community_filter)
     communities, total_communities = await _paginate_and_count(
         db_session, communities_q, page, limit
     )
@@ -258,8 +304,8 @@ async def search_across_org(
         .where(Discussion.org_id == org.id)
         .where(_ilike_any([Discussion.title, Discussion.content], pattern))
     )
-    if only_public:
-        discussions_q = discussions_q.where(Community.public == sa_true())
+    if community_filter is not None:
+        discussions_q = discussions_q.where(community_filter)
     discussions, total_discussions = await _paginate_and_count_rows(
         db_session, discussions_q, page, limit
     )
@@ -271,7 +317,9 @@ async def search_across_org(
         .where(Playground.published == sa_true())
         .where(_ilike_any([Playground.name, Playground.description], pattern))
     )
-    if only_public:
+    if only_public or (
+        is_token and not token_has_right(current_user, "playgrounds", "action_read")
+    ):
         playgrounds_q = playgrounds_q.where(
             Playground.access_type == PlaygroundAccessType.PUBLIC
         )
@@ -293,8 +341,14 @@ async def search_across_org(
         .where(Podcast.published == sa_true())
         .where(_ilike_any([Podcast.name, Podcast.description, Podcast.tags], pattern))
     )
-    if only_public:
+    if only_public or (is_token and not _token_reads_content(current_user, "podcasts")):
         podcasts_q = podcasts_q.where(Podcast.public == sa_true())
+    elif not is_token and not await is_org_admin(acting_user_id, org.id, db_session):
+        # Same visibility as the podcast listing: usergroup-restricted
+        # podcasts only for members of a linked group (or active authors).
+        podcasts_q = podcasts_q.where(
+            Podcast.id.in_(accessible_podcast_ids_query(acting_user_id))  # type: ignore[union-attr]
+        )
     podcasts, total_podcasts = await _paginate_and_count(
         db_session, podcasts_q, page, limit
     )
@@ -302,7 +356,7 @@ async def search_across_org(
     folder_reads = [FolderRead.model_validate(f) for f in folders]
 
     user_reads = [UserReadPublic.model_validate(u) for u in users]
-    community_reads = [CommunityRead.model_validate(c) for c in communities]
+    community_reads = [community_read(c) for c in communities]
     discussion_reads = [
         SearchDiscussionRead(
             **discussion.model_dump(),

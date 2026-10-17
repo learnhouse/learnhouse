@@ -29,7 +29,7 @@ type QuizSchema = {
     questionText: string;
     questionUUID?: string;
     // 'single' = pick one, 'multiple' = select all that apply. Absent on
-    // questions authored before the mode existed — always read it through
+    // questions authored before the mode existed, so always read it through
     // `questionResponseType`, never directly.
     response_type?: QuizResponseType;
     options: {
@@ -177,7 +177,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
         if (responseType === QUIZ_RESPONSE_SINGLE) {
             // Switching a multi-correct question to pick-one would otherwise
             // leave a key the learner cannot satisfy. Keep the first correct
-            // option and drop the rest — explicitly, rather than relying on the
+            // option and drop the rest explicitly, rather than relying on the
             // grader to sort it out.
             let kept = false;
             options = question.options.map((option) => {
@@ -222,12 +222,12 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
     // Whether the answer key actually reached the client.
     //
     // The API strips `assigned_right_answer` from every option whenever the
-    // student is not yet allowed to see it — notably while retries remain
+    // student is not yet allowed to see it, notably while retries remain
     // (see _student_may_see_answer_key). The client cannot re-derive that rule
     // (it has no attempt_number here), so `showCorrectAnswers` can be true
     // while the key is absent. Rendering the key markers in that state made
-    // `undefined` read as "not the right answer", so EVERY option — including
-    // the one the learner correctly picked — was labelled "Wrong", even on a
+    // `undefined` read as "not the right answer", so EVERY option (including
+    // the one the learner correctly picked) was labelled "Wrong", even on a
     // 100% submission. Only trust the key when it is genuinely present.
     const answerKeyPresent = useMemo(
         () => questions.some((question) =>
@@ -283,7 +283,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
         if (submissionIndex === -1) {
             updatedSubmissions.push({ questionUUID, optionUUID, answer: true });
         } else {
-            // Immutable replace — mutating the element in place would also mutate
+            // Immutable replace: mutating the element in place would also mutate
             // the shared baseline (initialUserSubmissions) and defeat dirty
             // detection after hydration.
             const prev = updatedSubmissions[submissionIndex];
@@ -292,7 +292,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
 
         // Radio semantics on a single-response question: picking an option
         // replaces the previous pick. Clicking the selected option still clears
-        // it — there is no other way for the learner to un-answer a question.
+        // it; there is no other way for the learner to un-answer a question.
         if (willBeSelected && questionResponseType(question) === QUIZ_RESPONSE_SINGLE) {
             for (let i = 0; i < updatedSubmissions.length; i++) {
                 const entry = updatedSubmissions[i];
@@ -308,7 +308,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
         });
     }
 
-    // Used only by grading view — student view hydrates from useAssignments() context
+    // Used only by grading view; student view hydrates from useAssignments() context
     async function getAssignmentTaskUI() {
         if (assignmentTaskUUID) {
             const res = await getAssignmentTask(assignmentTaskUUID, access_token);
@@ -355,7 +355,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             // Always seed the saved baseline so dirty detection is correct.
             setInitialUserSubmissions(clone());
             if (preserveLiveAnswers) {
-                // The learner started answering before the batch resolved — keep
+                // The learner started answering before the batch resolved, so keep
                 // their in-progress answers, but adopt the server submission uuid
                 // so their save UPDATES the existing row instead of creating a
                 // duplicate.
@@ -412,7 +412,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                 // Baseline = exactly the payload we persisted.
                 setInitialUserSubmissions({ ...updatedUserSubmissions, assignment_task_submission_uuid: savedUUID });
                 // Live = the LATEST answers (from prev), re-completed to the same
-                // shape. Never revert to the call-time snapshot — that would erase
+                // shape. Never revert to the call-time snapshot; that would erase
                 // any selection the learner made during the save round-trip. If a
                 // mid-flight change exists, live stays ahead of baseline so the
                 // dirty flag re-asserts and the next auto-save persists it.
@@ -434,7 +434,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                 }));
                 // Silent auto-saves skip the refetch: it isn't needed for a
                 // draft save and would re-hydrate the batch every ~1s. They
-                // must still PATCH the cache though — with staleTime 60_000 the
+                // must still PATCH the cache though: with staleTime 60_000 the
                 // batch query otherwise keeps serving the page-load snapshot,
                 // so a remount (task retry, tab switch, route change) re-seeded
                 // the baseline from pre-autosave data and overwrote answers
@@ -445,7 +445,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                     queryClient.setQueryData(
                         queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid),
                         (old: any) => {
-                            // Only patch an existing map — never fabricate one, or a
+                            // Only patch an existing map, never fabricate one, or a
                             // task with no fetched batch would hydrate from thin air.
                             if (!old || typeof old !== 'object') return old;
                             const previous = old[assignmentTaskUUID] ?? {};
@@ -495,7 +495,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
         // Without an existing submission row there is nothing to grade: the API
         // would fall through to a branch keyed on the SUBMITTER (here the
         // instructor), writing the grade onto the instructor's own row where it
-        // is forced to 0 — while the UI toasted success and the learner's grade
+        // is forced to 0, while the UI toasted success and the learner's grade
         // never moved. `userSubmissions` is seeded with a truthy default object
         // in this component, so the uuid field itself must be checked.
         if (!userSubmissions?.assignment_task_submission_uuid) {
@@ -650,7 +650,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                         const responseType = questionResponseType(question);
                         const isSingleResponse = responseType === QUIZ_RESPONSE_SINGLE;
                         const hasNoCorrectOption = correctOptionCount(question) === 0;
-                        const optionsGroupLabel = `${question.questionText || t('assignments.quiz.question_fallback_label', { defaultValue: 'Question' })} — ${isSingleResponse ? t('assignments.quiz.select_one') : t('assignments.quiz.select_all_that_apply')}`;
+                        const optionsGroupLabel = `${question.questionText || t('assignments.quiz.question_fallback_label', { defaultValue: 'Question' })}: ${isSingleResponse ? t('assignments.quiz.select_one') : t('assignments.quiz.select_all_that_apply')}`;
                         return (
                         <div key={qIndex} className="flex flex-col space-y-1.5">
                             <div className="flex space-x-2 items-center">
@@ -699,7 +699,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                     {hasNoCorrectOption && (
                                         // Non-blocking: the server skips a question with no
                                         // correct option entirely, so the teacher should know
-                                        // it will not count — but they may still be mid-edit.
+                                        // it will not count, but they may still be mid-edit.
                                         <span className="flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">
                                             <AlertTriangle size={11} />
                                             <span>{t('assignments.quiz.no_correct_option_warning')}</span>
@@ -796,7 +796,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                 chose get a right/wrong verdict; the option that
                                                 WAS correct is highlighted separately so they can
                                                 still learn from the review. Untouched wrong
-                                                options get no badge at all — previously every
+                                                options get no badge at all; previously every
                                                 option was labelled, which read as "you got all
                                                 of these wrong". */}
                                             {view === 'student' && revealAnswerKey && (() => {
@@ -819,7 +819,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                         </div>
                                                     );
                                                 }
-                                                // Correct but not chosen — show what the answer was.
+                                                // Correct but not chosen: show what the answer was.
                                                 return (
                                                     <div className="w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg bg-emerald-50/70 text-emerald-700 border border-emerald-200">
                                                         <Check size={10} />

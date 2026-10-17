@@ -3,7 +3,7 @@ import "server-only";
 //
 // SaaS subscription billing must ONLY run on the canonical SaaS deployment.
 // Two independent conditions must both hold:
-//   1. The backend reports `mode === "saas"` (instance/info — same source the
+//   1. The backend reports `mode === "saas"` (instance/info, the same source the
 //      proxy/middleware uses for tenancy + mode).
 //   2. `STRIPE_SECRET_KEY` is configured in this environment.
 //
@@ -47,7 +47,7 @@ async function getInstanceInfo(): Promise<InstanceInfo> {
       return data;
     }
   } catch {
-    // Backend unavailable — treat as non-SaaS (safe default: block billing).
+    // Backend unavailable; treat as non-SaaS (safe default: block billing).
   }
   return { mode: "oss" };
 }

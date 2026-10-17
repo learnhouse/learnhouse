@@ -21,7 +21,6 @@ from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.db.user_organizations import UserOrganization
 from src.security.auth import get_current_user, resolve_acting_user_id
-from src.security.superadmin import is_user_superadmin
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.services.orgs.users import _csv_safe
@@ -58,7 +57,7 @@ async def _enforce_plan(org_id: int, db_session: AsyncSession) -> None:
     from src.security.features_utils.plan_check import _check_mode_bypass
 
     bypass = _check_mode_bypass("analytics_advanced")
-    if bypass is None:  # SaaS mode — enforce plan
+    if bypass is None:  # SaaS mode: enforce plan
         current_plan = await get_org_plan(org_id, db_session)
         if not plan_meets_requirement(current_plan, "pro"):
             raise HTTPException(
@@ -74,7 +73,7 @@ async def _org_member_ids(
 
     Membership is the rule everywhere else. In the shared demo it is not
     enough: every visitor is a member and an admin, so "member of this org"
-    includes every stranger who has ever opened the demo — and a dossier is the
+    includes every stranger who has ever opened the demo, and a dossier is the
     most revealing thing in the product, carrying an email address, login IPs,
     user agents and a cross-organization connection history. Only the seeded
     students, and the caller themselves, are answerable there.
@@ -99,9 +98,11 @@ async def _org_member_ids(
 async def _verify_target_in_org(
     user_id: int, org_id: int, db_session: AsyncSession, acting_user_id: int
 ) -> None:
-    """Ensure the TARGET user belongs to this org (no cross-org disclosure)."""
-    if await is_user_superadmin(user_id, db_session):
-        return
+    """Ensure the TARGET user belongs to this org (no cross-org disclosure).
+
+    No exception for superadmin targets: being a platform operator is not a
+    reason to hand an org admin that person's email, login IPs and history.
+    """
     if not await _org_member_ids([user_id], org_id, db_session, acting_user_id):
         raise HTTPException(status_code=404, detail="User is not a member of this organization")
 
@@ -144,7 +145,7 @@ def _parse_user_ids(request: Request) -> list[int]:
 # Tinybird behavioral enrichment (per-user, uncached)
 # -------------------------------------------------------------------
 def _build_user_sql(template: str, org_id: int, user_id: int, days: int) -> str:
-    # All three are validated ints — safe to interpolate into the Tinybird SQL.
+    # All three are validated ints, safe to interpolate into the Tinybird SQL.
     if not all(isinstance(v, int) for v in (org_id, user_id, days)):
         raise HTTPException(status_code=400, detail="Invalid query parameter types")
     return template.format(org_id=org_id, user_id=user_id, days=days)
@@ -158,7 +159,7 @@ async def _make_behavior_fetcher(org_id: int, user_id: int, days: int):
     async def fetch(u_id: int, o_id: int, d: int) -> dict:
         client = _get_read_client()
         if client is None:
-            return {}  # analytics not configured — dossier still renders from Postgres
+            return {}  # analytics not configured; dossier still renders from Postgres
 
         out: dict = {}
         for name, (template, default_days) in USER_QUERIES.items():
@@ -176,7 +177,7 @@ async def _make_behavior_fetcher(org_id: int, user_id: int, days: int):
 
 
 # -------------------------------------------------------------------
-# GET /audit/user/{user_id} — full dossier
+# GET /audit/user/{user_id}: full dossier
 # -------------------------------------------------------------------
 @router.get(
     "/user/{user_id}",
@@ -188,7 +189,7 @@ async def _make_behavior_fetcher(org_id: int, user_id: int, days: int):
         "rendered as readable question/answer pairs including the teacher's answer key "
         "(admin-only surface); reference solutions and hidden test-case data are excluded. "
         "Pass include_raw=true to also receive each task's original stored submission "
-        "payload — otherwise every task carries only a sha256 answer_digest of it. "
+        "payload; otherwise every task carries only a sha256 answer_digest of it. "
         "Org admin + Pro plan."
     ),
     responses={
@@ -222,12 +223,12 @@ async def get_user_dossier(
 
 
 # -------------------------------------------------------------------
-# GET /audit/users/summary — summary rows for list + comparison
+# GET /audit/users/summary: summary rows for list + comparison
 # -------------------------------------------------------------------
 @router.get(
     "/users/summary",
     summary="Per-student audit summary rows",
-    description="Lightweight summary (last connection, courses enrolled/completed, certificates) for one or more students — powers the user list and multi-select comparison. Org admin + Pro plan.",
+    description="Lightweight summary (last connection, courses enrolled/completed, certificates) for one or more students; powers the user list and multi-select comparison. Org admin + Pro plan.",
     responses={
         200: {"description": "Summary rows for the requested users"},
         401: {"description": "Authentication required"},
@@ -244,7 +245,7 @@ async def get_users_summary(
     await _enforce_plan(org_id, db_session)
 
     user_ids = _parse_user_ids(request)
-    # Only include users this caller may see (silently drop the others —
+    # Only include users this caller may see (silently drop the others;
     # never disclose that a given id exists elsewhere).
     members = await _org_member_ids(user_ids, org_id, db_session, acting_user_id)
     scoped_ids = [uid for uid in user_ids if uid in members]
@@ -254,7 +255,7 @@ async def get_users_summary(
 
 
 # -------------------------------------------------------------------
-# GET /audit/export — CSV / JSON export for one or many students
+# GET /audit/export: CSV / JSON export for one or many students
 # -------------------------------------------------------------------
 _CSV_COLUMNS = [
     "user_id", "username", "email",
@@ -277,7 +278,7 @@ def _dossier_to_csv_rows(dossier: dict):
 
     Assignment answers get two extra sections: one ``assignment_task`` row per task
     and one ``assignment_answer`` row per question or blank, so the spreadsheet
-    carries the actual questions and what the student answered — not just a grade.
+    carries the actual questions and what the student answered, not just a grade.
     """
     user = dossier.get("user", {})
     uid = user.get("id")
@@ -289,7 +290,7 @@ def _dossier_to_csv_rows(dossier: dict):
         base.update({"user_id": uid, "username": uname, "email": email, "section": section})
         base.update(kw)
         # Formula-injection guard. Applies to every field, which now includes
-        # free-form learner and teacher text (question/answer/expected) — the most
+        # free-form learner and teacher text (question/answer/expected), the most
         # likely injection vector in this file.
         return {k: _csv_safe(v) for k, v in base.items()}
 
@@ -406,7 +407,7 @@ async def export_audit(
     if fmt == "json":
         return {"data": dossiers}
 
-    # CSV — stream normalized rows across all requested students.
+    # CSV: stream normalized rows across all requested students.
     def generate():
         buffer = io.StringIO()
         writer = csv.DictWriter(buffer, fieldnames=_CSV_COLUMNS)

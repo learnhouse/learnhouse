@@ -81,7 +81,7 @@ class TestScorm2004CompletionStatusToken:
         act = await _make_activity(db, org, "SCORM_2004", "activity_2004status")
         init = await rt.initialize_scorm_session(None, act.activity_uuid, admin_user, db)
         status = init["cmi_data"]["cmi.completion_status"]
-        # Must be a real 2004 token — never the enum slug "not_attempted".
+        # Must be a real 2004 token, never the enum slug "not_attempted".
         assert status in VALID_2004_COMPLETION, f"invalid 2004 token: {status!r}"
 
     async def test_completion_and_success_are_independent(self, db, org, admin_user):

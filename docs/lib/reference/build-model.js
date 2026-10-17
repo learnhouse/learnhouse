@@ -48,7 +48,7 @@ function collectByGroup(spec) {
 
   for (const group of API_GROUPS) {
     if (byGroup.get(group.slug).length === 0) {
-      console.warn(`[reference] group "${group.slug}" matched zero operations — spec drift?`)
+      console.warn(`[reference] group "${group.slug}" matched zero operations (spec drift?)`)
     }
   }
 
@@ -186,7 +186,7 @@ export async function buildGroupModel(spec, slug) {
       method,
       url: exampleUrl(path, queryParams),
       auth,
-      // Session-only endpoints reject lh_ tokens — show a JWT placeholder
+      // Session-only endpoints reject lh_ tokens, so show a JWT placeholder
       // instead so the examples can't mislead (token substitution leaves it alone).
       authValue: group.access === 'session' ? 'YOUR_JWT' : undefined,
       contentType: requestBody?.contentType || null,

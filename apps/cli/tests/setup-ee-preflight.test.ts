@@ -61,7 +61,7 @@ const CI = {
   adminPassword: 'password123', tenancy: 'single' as const, start: false,
 }
 
-describe('EE setup — Docker readiness preflight (CI)', () => {
+describe('EE setup: Docker readiness preflight (CI)', () => {
   let origPlatform: PropertyDescriptor | undefined
   let errSpy: ReturnType<typeof vi.spyOn>
   beforeEach(() => {
@@ -111,7 +111,7 @@ describe('EE setup — Docker readiness preflight (CI)', () => {
   })
 })
 
-describe('EE setup — start, DNS and file variants (CI)', () => {
+describe('EE setup: start, DNS and file variants (CI)', () => {
   let home: string
   let origHome: string | undefined
   beforeEach(async () => {
@@ -192,7 +192,7 @@ describe('EE setup — start, DNS and file variants (CI)', () => {
   })
 })
 
-describe('EE setup — interactive Docker preflight', () => {
+describe('EE setup: interactive Docker preflight', () => {
   let origPlatform: PropertyDescriptor | undefined
   beforeEach(() => {
     dk.installed = true; dk.composeWorks = true; dk.running = true

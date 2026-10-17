@@ -16,6 +16,7 @@ from src.db.communities.discussion_comment_votes import (
     DiscussionCommentVoteRead,
 )
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
+from src.services.communities.access import require_community_participant
 
 
 async def upvote_comment(
@@ -64,10 +65,12 @@ async def upvote_comment(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
+    voter_id = await require_community_participant(current_user, community, db_session)
+
     # Check if user has already voted
     existing_vote_statement = select(DiscussionCommentVote).where(
         DiscussionCommentVote.comment_id == comment.id,
-        DiscussionCommentVote.user_id == current_user.id,
+        DiscussionCommentVote.user_id == voter_id,
     )
     existing_vote = (await db_session.execute(existing_vote_statement)).scalars().first()
 
@@ -80,7 +83,7 @@ async def upvote_comment(
     # Create vote
     vote = DiscussionCommentVote(
         comment_id=comment.id,
-        user_id=current_user.id,
+        user_id=voter_id,
         vote_uuid=f"commentvote_{uuid4()}",
         creation_date=str(datetime.now()),
     )
@@ -133,10 +136,20 @@ async def remove_comment_upvote(
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
 
+    community = (await db_session.execute(
+        select(Community)
+        .join(Discussion, Discussion.community_id == Community.id)
+        .where(Discussion.id == comment.discussion_id)
+    )).scalars().first()
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    voter_id = await require_community_participant(current_user, community, db_session)
+
     # Find existing vote
     vote_statement = select(DiscussionCommentVote).where(
         DiscussionCommentVote.comment_id == comment.id,
-        DiscussionCommentVote.user_id == current_user.id,
+        DiscussionCommentVote.user_id == voter_id,
     )
     vote = (await db_session.execute(vote_statement)).scalars().first()
 

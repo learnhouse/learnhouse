@@ -1,5 +1,5 @@
 /**
- * Goal: prove the FORM (fill-in-the-blank) task type works end-to-end — a
+ * Goal: prove the FORM (fill-in-the-blank) task type works end-to-end: a
  * student filling a blank with the correct value is auto-graded 100, in the UI
  * and in persisted server state.
  */

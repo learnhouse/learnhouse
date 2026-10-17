@@ -5,6 +5,11 @@ from typing import Literal, Optional
 from uuid import uuid4
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.security.org_auth import (
+    enforce_org_mfa,
+    require_org_destroy_right,
+    require_org_role_permission,
+)
 from src.db.organization_config import (
     OrganizationConfig,
     OrganizationConfigBase,
@@ -13,8 +18,12 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_org_admin_status,
     authorization_verify_if_user_is_anon,
 )
+from src.security.rbac.utils import get_element_organization_id
 from src.security.rbac.constants import ADMIN_ROLE_ID
-from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser
+from src.security.org_auth import get_user_org
+from src.security.superadmin import is_user_superadmin
+from src.services.security.profile_validation import validate_profile_fields
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, SuperadminAPITokenUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
     Organization,
@@ -77,6 +86,32 @@ def _build_org_read_with_resolved(org, org_config) -> OrganizationRead:
     return org_read
 
 
+async def _redact_org_email_unless_manager(
+    request: Request,
+    org_read: OrganizationRead,
+    current_user,
+    db_session: AsyncSession,
+) -> OrganizationRead:
+    """Null ``email`` unless the caller holds the organizations update right.
+
+    SECURITY: the slug/uuid reads are public (logged-out visitors, signup
+    page), and ``org.email`` defaults to the creator's personal address. Only
+    people who may edit it (the settings form) need it back.
+    """
+    if org_read.email is None:
+        return org_read
+    allowed = False
+    if not isinstance(current_user, AnonymousUser) and current_user is not None:
+        try:
+            await rbac_check(request, org_read.org_uuid, current_user, "update", db_session)
+            allowed = True
+        except HTTPException:
+            allowed = False
+    if allowed:
+        return org_read
+    return org_read.model_copy(update={"email": None})
+
+
 async def get_organization_by_uuid(
     request: Request,
     org_uuid: str,
@@ -102,7 +137,9 @@ async def get_organization_by_uuid(
     if org_config is None:
         logging.warning(f"Organization {org_uuid} has no config")
 
-    return _build_org_read_with_resolved(org, org_config)
+    return await _redact_org_email_unless_manager(
+        request, _build_org_read_with_resolved(org, org_config), current_user, db_session
+    )
 
 
 async def get_organization_by_slug(
@@ -116,7 +153,9 @@ async def get_organization_by_slug(
     # Check Redis cache first (org read is public, no RBAC needed)
     cached = get_cached_org_by_slug(org_slug)
     if cached is not None:
-        return OrganizationRead(**cached)
+        return await _redact_org_email_unless_manager(
+            request, OrganizationRead(**cached), current_user, db_session
+        )
 
     statement = select(Organization).where(Organization.slug == org_slug).order_by(Organization.id)
     org = (await db_session.execute(statement)).scalars().first()
@@ -141,7 +180,9 @@ async def get_organization_by_slug(
     except Exception:
         pass
 
-    return org_read
+    return await _redact_org_email_unless_manager(
+        request, org_read, current_user, db_session
+    )
 
 
 # Free-plan organizations a single user may own (as admin) before an upgrade is
@@ -160,7 +201,7 @@ async def _enforce_free_org_cap(
 
     The shared demo organization is excluded. Visitors are joined to it as
     admin, so without this filter simply looking at the demo would consume one
-    of a user's three free slots — and a user who looked at it three times over
+    of a user's three free slots, and a user who looked at it three times over
     could not create a real organization at all.
     """
     admin_org_ids = (
@@ -207,7 +248,7 @@ async def _try_send_org_created(request: Request, org, current_user, db_session)
     The CTA lands on the new org's own dashboard, on the org's host. It used to
     point at `{request-host}/home`, which is wrong twice over: orgs are created
     from the platform apex, so the host was the apex rather than the new org,
-    and `/home` is the org picker on every host — the creator was sent to a list
+    and `/home` is the org picker on every host, so the creator was sent to a list
     of organizations instead of into the one they had just made.
     """
     try:
@@ -228,7 +269,7 @@ async def _try_send_org_created(request: Request, org, current_user, db_session)
 
 
 def _try_record_org_admin_in_loops(current_user, org) -> None:
-    """Best-effort: the org creator is now an ADMIN — add them to the Loops
+    """Best-effort: the org creator is now an ADMIN, so add them to the Loops
     marketing audience. Fire-and-forget, SaaS-gated, never fails the create."""
     try:
         from src.services.marketing.loops import record_org_admin_in_loops
@@ -257,6 +298,7 @@ async def create_org(
                 detail="Multi-organization mode requires Enterprise Edition",
             )
 
+    org_object.slug = normalize_org_slug(org_object.slug)
     statement = select(Organization).where(Organization.slug == org_object.slug)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -265,6 +307,8 @@ async def create_org(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"The slug '{org_object.slug}' is already taken. Please choose a different slug.",
         )
+
+    reject_url_in_org_name(org_object.name)
 
     org = Organization.model_validate(org_object)
 
@@ -353,6 +397,7 @@ async def create_org_with_config(
                 detail="Multi-organization mode requires Enterprise Edition",
             )
 
+    org_object.slug = normalize_org_slug(org_object.slug)
     statement = select(Organization).where(Organization.slug == org_object.slug)
     org = (await db_session.execute(statement)).scalars().first()
 
@@ -361,6 +406,8 @@ async def create_org_with_config(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"The slug '{org_object.slug}' is already taken. Please choose a different slug.",
         )
+
+    reject_url_in_org_name(org_object.name)
 
     org = Organization.model_validate(org_object)
 
@@ -431,6 +478,14 @@ async def create_org_with_config(
     return org_read
 
 
+def _acting_user_id(current_user) -> int:
+    # Lazy: src.security.auth -> services.users.users -> orgs.invites -> this module.
+    from src.security.auth import resolve_acting_user_id
+
+    return resolve_acting_user_id(current_user)
+
+
+
 async def update_org(
     request: Request,
     org_object: OrganizationUpdate,
@@ -450,7 +505,12 @@ async def update_org(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    # Everything else on the demo org is fair game — editing the name or logo
+    reject_url_in_org_name(org_object.name)
+    # Only a changed slug is validated: existing slugs keep working as-is.
+    if org_object.slug is not None and org_object.slug != org.slug:
+        org_object.slug = normalize_org_slug(org_object.slug)
+
+    # Everything else on the demo org is fair game; editing the name or logo
     # is part of what a prospect is here to try, and the refresh puts it back.
     # Two fields are not:
     #
@@ -475,6 +535,21 @@ async def update_org(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Custom scripts cannot be set on the demo organization.",
             )
+
+    # `scripts` runs as JavaScript on every page of the org, and slug/email
+    # are its identity: changing any of them takes the organizations.update
+    # right, not just maintainer status. Unchanged values pass so the general
+    # settings form can resubmit the whole org.
+    identity_changes = (
+        (org_object.scripts is not None and org_object.scripts != (org.scripts or {}))
+        or (org_object.slug is not None and org_object.slug != org.slug)
+        or (org_object.email is not None and org_object.email != org.email)
+    )
+    if identity_changes:
+        await require_org_role_permission(
+            _acting_user_id(current_user), org.id, db_session,
+            "organizations", "action_update",
+        )
 
     # Verify if the new slug is already in use
     statement = select(Organization).where(Organization.slug == org_object.slug)
@@ -717,6 +792,7 @@ async def update_org_thumbnail(
 
     return {"detail": "Thumbnail updated"}
 
+
 async def update_org_preview(
     request: Request,
     preview_file: UploadFile,
@@ -740,6 +816,7 @@ async def update_org_preview(
     name_in_disk = await upload_org_preview(preview_file, org.org_uuid)
 
     return {"name_in_disk": name_in_disk}
+
 
 async def delete_org(
     request: Request,
@@ -766,7 +843,7 @@ async def delete_org(
             detail="Organization not found",
         )
 
-    # The demo organization is shared, and every visitor holds admin on it — so
+    # The demo organization is shared, and every visitor holds admin on it, so
     # the RBAC check below would happily let any one of them delete it for
     # everybody. It also has its own teardown path: this one leaves the org's
     # media behind in storage and sends a "your organization was deleted"
@@ -784,6 +861,7 @@ async def delete_org(
 
     # RBAC check - verifies user is admin of THIS specific organization
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    await require_org_destroy_right(_acting_user_id(current_user), org.id, db_session)
 
     # AUDIT LOG: Record the deletion for security audit trail
     user_id = current_user.id if hasattr(current_user, 'id') else 'unknown'
@@ -852,6 +930,7 @@ async def wipe_org_content(
 
     # RBAC check - verifies the caller is an admin of THIS organization
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
+    await require_org_destroy_right(_acting_user_id(current_user), org.id, db_session)
 
     courses = (await db_session.execute(
         select(Course).where(Course.org_id == org_id)
@@ -878,6 +957,45 @@ async def wipe_org_content(
         await decrease_feature_usage("courses", org_id, db_session)
 
     return {"detail": "Organization content wiped", "deleted_courses": deleted_count}
+
+
+async def _org_ids_user_may_manage(
+    user_id: int, org_ids: list[int], db_session: AsyncSession
+) -> set[int]:
+    """Org ids among ``org_ids`` where the user holds organizations.update
+    (mirrors require_org_role_permission, including its role-id fallback)."""
+    if await is_user_superadmin(user_id, db_session):
+        return set(org_ids)
+    from src.db.roles import Role
+    from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+
+    rows = (await db_session.execute(
+        select(UserOrganization.org_id, Role)
+        .join(Role, Role.id == UserOrganization.role_id)
+        .where(UserOrganization.user_id == user_id, UserOrganization.org_id.in_(org_ids))
+    )).all()
+    allowed = set()
+    for org_id, role in rows:
+        if role.rights and isinstance(role.rights, dict):
+            if (role.rights.get("organizations") or {}).get("action_update", False):
+                allowed.add(org_id)
+        elif role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+            allowed.add(org_id)
+    return allowed
+
+
+async def _redact_emails_for_member(
+    orgs: list[OrganizationRead], user_id: int, db_session: AsyncSession
+) -> list[OrganizationRead]:
+    """``org.email`` is the creator's address by default; only members who may
+    edit it get it back (same rule as _redact_org_email_unless_manager)."""
+    if not orgs:
+        return orgs
+    managed = await _org_ids_user_may_manage(user_id, [o.id for o in orgs], db_session)
+    return [
+        o if o.id in managed or o.email is None else o.model_copy(update={"email": None})
+        for o in orgs
+    ]
 
 
 async def get_orgs_by_user_admin(
@@ -915,7 +1033,7 @@ async def get_orgs_by_user_admin(
         org_read = OrganizationRead(**org.model_dump(), config=config)
         orgsWithConfig.append(org_read)
 
-    return orgsWithConfig
+    return await _redact_emails_for_member(orgsWithConfig, user_id, db_session)
 
 
 async def get_orgs_by_user(
@@ -952,7 +1070,7 @@ async def get_orgs_by_user(
         org_read = OrganizationRead(**org.model_dump(), config=config)
         orgsWithConfig.append(org_read)
 
-    return orgsWithConfig
+    return await _redact_emails_for_member(orgsWithConfig, user_id, db_session)
 
 
 # Config related
@@ -984,6 +1102,12 @@ async def update_org_signup_mechanism(
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+    # Opening an invite-only org to anyone takes organizations.update, not
+    # just the maintainer status rbac_check accepts.
+    await require_org_role_permission(
+        _acting_user_id(current_user), org.id, db_session,
+        "organizations", "action_update",
+    )
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
@@ -1014,7 +1138,7 @@ async def update_org_signup_mechanism(
     await db_session.commit()
     await db_session.refresh(org_config)
 
-    # Explicit Redis invalidation — the SA after_update hook does this too,
+    # Explicit Redis invalidation. The SA after_update hook does this too,
     # but signup method changes must take effect instantly on the public
     # /signup page, so we don't want to rely on the hook's success.
     from src.services.orgs.cache import invalidate_org_cache
@@ -1378,7 +1502,7 @@ async def update_org_email_sender_name_config(
     """Set the display name on transactional email sent for this org.
 
     Only the NAME is configurable. The From address stays the platform's
-    ``system_email_address`` — it is the domain holding the verified SPF/DKIM
+    ``system_email_address``; it is the domain holding the verified SPF/DKIM
     records, and letting an org pick its own address would break DKIM
     alignment and damage a sending reputation shared by every tenant.
 
@@ -1405,6 +1529,7 @@ async def update_org_email_sender_name_config(
             status_code=400,
             detail="Sender name contains no usable characters",
         )
+    reject_url_in_org_name(sanitized, field="email_sender_name")
 
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
@@ -1726,7 +1851,7 @@ async def update_org_signup_fields_config(
     """Replace the org's custom signup field definitions.
 
     Note these definitions are served publicly (the signup form is anonymous),
-    so labels/options are public strings — the admin UI says as much.
+    so labels/options are public strings; the admin UI says as much.
     """
     statement = select(Organization).where(Organization.id == org_id)
     org = (await db_session.execute(statement)).scalars().first()
@@ -1895,6 +2020,7 @@ async def get_org_join_mechanism(
 
     return signup_mechanism
 
+
 async def upload_org_preview_service(
     preview_file: UploadFile,
     org_uuid: str,
@@ -1908,6 +2034,7 @@ async def upload_org_preview_service(
         "detail": "Preview uploaded successfully",
         "filename": name_in_disk
     }
+
 
 async def update_org_landing(
     request: Request,
@@ -1956,6 +2083,7 @@ async def update_org_landing(
 
     return {"detail": "Landing object updated"}
 
+
 async def upload_org_landing_content_service(
     request: Request,
     content_file: UploadFile,
@@ -1982,6 +2110,7 @@ async def upload_org_landing_content_service(
         "detail": "Landing content uploaded successfully",
         "filename": name_in_disk
     }
+
 
 async def update_org_seo_config(
     request: Request,
@@ -2075,7 +2204,7 @@ async def rbac_check(
     # its join mechanism are all served to logged-out visitors, and the OAuth
     # signup flow validates an invite code as AnonymousUser.
     #
-    # SECURITY: this makes "read" a no-op — it is NOT an authorization gate.
+    # SECURITY: this makes "read" a no-op; it is NOT an authorization gate.
     # Never guard org-scoped data that is not public (member lists, pending
     # invites, config secrets) with rbac_check(..., "read", ...); gate those on
     # require_org_membership / is_org_admin at the call site instead.
@@ -2084,6 +2213,12 @@ async def rbac_check(
 
     # Internal users can do anything
     if isinstance(current_user, InternalUser):
+        return True
+
+    # Superadmin API tokens are cross-org by design, and auth re-checks that
+    # their minter is still a superadmin. Their id is a token row id, so they
+    # must not reach the user-id based checks below.
+    if isinstance(current_user, SuperadminAPITokenUser):
         return True
 
     # API Token path: verify token has permissions for this action on organizations
@@ -2151,6 +2286,56 @@ async def rbac_check(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User rights (admin status) : You don't have the right to perform this action",
             )
+
+        # Org session policies (2FA requirement, allowed sign-in methods) apply
+        # to org writes too; superadmins are exempt inside the policy itself.
+        target_org_id = await get_element_organization_id(org_uuid, db_session)
+        if target_org_id is not None:
+            await enforce_org_mfa(current_user.id, target_org_id, db_session)
+
+
+async def is_org_admin_role(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """True if the user holds the Admin role in the org, or is a superadmin.
+
+    Unlike ``is_org_admin`` this excludes Maintainers, whose seeded role has no
+    organization update/delete rights.
+    """
+    if await is_user_superadmin(user_id, db_session):
+        return True
+    user_org = await get_user_org(user_id, org_id, db_session)
+    return user_org is not None and user_org.role_id == ADMIN_ROLE_ID
+
+
+def normalize_org_slug(slug: str) -> str:
+    """Lower-case and validate an org slug as a single DNS label.
+
+    Slugs become hostnames in emailed links ({slug}.{domain}), so anything
+    outside a DNS label (/ ? # " ...) would let the slug rewrite the link.
+    """
+    from src.services.email.utils import ORG_SLUG_LABEL
+
+    normalized = (slug or "").strip().lower().strip("-")
+    if not ORG_SLUG_LABEL.fullmatch(normalized):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization address may only contain lowercase letters, numbers and dashes",
+        )
+    return normalized
+
+
+def reject_url_in_org_name(name: Optional[str], field: str = "name") -> None:
+    """Org names are relayed in invite/role emails; links in them are phishing bait."""
+    result = validate_profile_fields({field: name})
+    if not result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Organization names may not contain URLs or links",
+                "errors": result.errors,
+                "invalid_fields": result.invalid_fields,
+            },
+        )
 
 
 ## 🔒 RBAC Utils ##

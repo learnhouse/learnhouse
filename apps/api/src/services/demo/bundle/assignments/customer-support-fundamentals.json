@@ -33,7 +33,7 @@
             "questionUUID": "question_cs_t1_q2",
             "questionText": "Three customers report the same fault within an hour. What is this?",
             "options": [
-              { "optionUUID": "option_cs_t1_q2_a", "text": "An incident — say so in the team channel now", "type": "text", "fileID": "", "assigned_right_answer": true },
+              { "optionUUID": "option_cs_t1_q2_a", "text": "An incident: say so in the team channel now", "type": "text", "fileID": "", "assigned_right_answer": true },
               { "optionUUID": "option_cs_t1_q2_b", "text": "Three tickets to work through in priority order", "type": "text", "fileID": "", "assigned_right_answer": false }
             ]
           },
@@ -70,7 +70,7 @@
       "slug": "cs-t2-first-reply",
       "title": "Draft the first reply",
       "description": "A customer's order shipped to their previous address. Write the first reply.",
-      "hint": "Acknowledge, restate, commit — with a time attached.",
+      "hint": "Acknowledge, restate, commit, with a time attached.",
       "type": "SHORT_ANSWER",
       "max_grade_value": 40,
       "contents": {
@@ -84,7 +84,7 @@
       },
       "submissions": {
         "correct": { "answer": "Your order went to your old address and that is our error. I am arranging a replacement now and will come back to you by end of day with the new delivery date." },
-        "partial": { "answer": "Sorry about that — it looks like it went to the old address. I will come back to you by tomorrow." },
+        "partial": { "answer": "Sorry about that, it looks like it went to the old address. I will come back to you by tomorrow." },
         "incorrect": { "answer": "Apologies for any inconvenience caused. I will look into this and get back to you." }
       }
     }

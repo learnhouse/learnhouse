@@ -1,8 +1,8 @@
 name: Lockfiles
 
 # Manifests are the source of truth; lockfiles are derived from them. When the
-# two disagree, every frozen install downstream fails — the Docker build, the
-# web lint, the API tests — with an error that says nothing about the cause:
+# two disagree, every frozen install downstream fails (the Docker build, the
+# web lint, the API tests) with an error that says nothing about the cause:
 #
 #   error: lockfile had changes, but lockfile is frozen
 #
@@ -38,7 +38,7 @@ on:
 permissions:
   contents: read
 
-# See api-lint.yaml — one live run per PR, dev runs always finish.
+# See api-lint.yaml: one live run per PR, dev runs always finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -60,10 +60,10 @@ jobs:
             && github.event.pull_request.head.repo.full_name == github.repository
             && endsWith(github.event.pull_request.user.login, '[bot]') }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           # The head commit, not the merge commit, so the regenerated
-          # lockfiles apply to the branch. A SHA rather than the branch name —
+          # lockfiles apply to the branch. A SHA rather than the branch name:
           # a ref taken from the event payload is attacker-controlled.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           # A commit pushed with GITHUB_TOKEN does not start a new CI run, so
@@ -72,20 +72,20 @@ jobs:
           # have the fix re-trigger them.
           token: ${{ secrets.LOCKFILE_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version-file: .bun-version
 
       # No setup-python step: `uv lock` resolves from package metadata and
       # never needs an interpreter.
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
-          version: latest
+          version: "0.13.1"
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
 
       - name: Cache bun install cache
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-lockfiles-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
@@ -104,7 +104,7 @@ jobs:
         id: push
         if: steps.check.outcome == 'failure' && env.AUTOFIX == 'true'
         env:
-          # Never interpolated into the script body — a branch name is
+          # Never interpolated into the script body, since a branch name is
           # attacker-controlled text.
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           HAS_PAT: ${{ secrets.LOCKFILE_SYNC_TOKEN != '' }}
@@ -113,7 +113,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A -- '*package.json' '*bun.lock' apps/api/uv.lock
           if git diff --cached --quiet; then
-            echo "Nothing to commit — the drift is outside the lockfiles."
+            echo "Nothing to commit: the drift is outside the lockfiles."
             exit 1
           fi
           git commit -m "chore(deps): regenerate lockfiles"
@@ -126,7 +126,7 @@ jobs:
             if [ "$HAS_PAT" != "true" ]; then
               echo
               echo "Pushed with \`GITHUB_TOKEN\`, so the other checks will not"
-              echo "re-run on their own — re-run them to see the new commit."
+              echo "re-run on their own; re-run them to see the new commit."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

@@ -7,7 +7,7 @@ import { shouldSendHlsCredentials, type CaptionTrack } from './videoSource'
 
 const SEEK_SECONDS = 15
 
-/* Register ±15s seek-button components once (Video.js Button API — no plugin). */
+/* Register ±15s seek-button components once (Video.js Button API, no plugin). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function registerSeekButtons(videojs: any) {
   const Button = videojs.getComponent('Button')
@@ -133,7 +133,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       const player = videojs(videoEl, {
         controls: true,
         // fill (not fluid) so the player always fills its aspect-video parent and
-        // the control bar is visible IMMEDIATELY — even before video metadata
+        // the control bar is visible IMMEDIATELY, even before video metadata
         // loads or if the source errors. `fluid` sized from metadata, so a slow/
         // broken source left the player collapsed with no visible controls.
         fill: true,
@@ -184,7 +184,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
             try { if (resume > 0) player.currentTime(resume) } catch { /* noop */ }
           })
           // Recovery can fire without a user gesture, so the autoplay policy
-          // rejects this promise — expected, and not something to report.
+          // rejects this promise. That's expected, and not something to report.
           void Promise.resolve(player.play?.()).catch(() => { /* autoplay blocked */ })
           armWatchdog()
         } catch {
@@ -225,7 +225,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
         /* seek buttons are best-effort */
       }
 
-      // Casual-download deterrents (cosmetic — not real protection; the segments
+      // Casual-download deterrents (cosmetic, not real protection; the segments
       // are AES-128 encrypted server-side for the actual bar-raising). Picture-in-
       // picture is intentionally LEFT ENABLED (users asked for it).
       try {
@@ -321,7 +321,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   return (
     // h-full chain is required for the player's `fill` mode to size to the
     // aspect-video parent (otherwise the video collapses to zero height).
-    // dir="ltr": video.js styles its controls physically throughout — progress
+    // dir="ltr": video.js styles its controls physically throughout, including progress
     // fill, buffered overlay, volume slider. Under dir=rtl the DOM flips but
     // those styles don't, so the progress bar and the buffered overlay end up
     // filling in opposite directions. Transport controls are left-to-right

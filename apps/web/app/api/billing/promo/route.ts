@@ -7,7 +7,7 @@ import { guardBilling, authenticateUser, badRequest } from "../_lib";
 //
 // Gated on SaaS availability AND authentication (so anonymous callers can't
 // probe the account's promotion codes), but NOT on per-org admin: a promo code
-// is not org-scoped — it's only resolved/applied server-side during checkout or
+// is not org-scoped; it's only resolved/applied server-side during checkout or
 // switch, both of which independently enforce org-admin.
 export async function POST(request: NextRequest) {
   const blocked = await guardBilling();

@@ -77,7 +77,7 @@ export async function loginWithOAuthToken(
 }
 
 // Password reset is PLATFORM-level (org-less): the backend finds the user by
-// email, so no org_id is needed — matching how the platform worked and working
+// email, so no org_id is needed, matching how the platform worked and working
 // for org-less accounts created on the apex.
 export async function sendResetLink(email: string) {
   const result = await fetch(
@@ -177,33 +177,6 @@ export async function getNewAccessTokenUsingRefreshToken(): Promise<any> {
   return fetch(`${getAPIUrl()}auth/refresh`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log('error', error))
-}
-
-export async function getNewAccessTokenUsingRefreshTokenServer(
-  refresh_token_cookie: any
-): Promise<any> {
-  const requestOptions: any = {
-    method: 'GET',
-    redirect: 'follow',
-    headers: {
-      Cookie: `LH_refresh=${refresh_token_cookie}`,
-    },
-    credentials: 'include',
-  }
-  return fetch(`${getAPIUrl()}auth/refresh`, requestOptions)
-    .then((result) => result.json())
-    .catch((error) => console.log('error', error))
-}
-
-// cookies
-
-export async function getAccessTokenFromRefreshTokenCookie(cookieStore: any) {
-  const refresh_token_cookie: any = cookieStore.get('LH_refresh')
-  const access_token_cookie: any =
-    await getNewAccessTokenUsingRefreshTokenServer(refresh_token_cookie?.value)
-  return access_token_cookie && refresh_token_cookie
-    ? access_token_cookie.access_token
-    : null
 }
 
 // signup

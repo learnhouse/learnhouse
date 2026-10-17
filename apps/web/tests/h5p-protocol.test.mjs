@@ -14,7 +14,7 @@ import {
   SIZE_MODES,
 } from "../lib/media/h5pProtocol.ts";
 
-describe("parseH5PMessage — the shapes H5P sends", () => {
+describe("parseH5PMessage: the shapes H5P sends", () => {
   test("hello", () => {
     expect(parseH5PMessage({ context: "h5p", action: "hello" })).toEqual({ kind: "hello" });
   });
@@ -38,7 +38,7 @@ describe("parseH5PMessage — the shapes H5P sends", () => {
   });
 });
 
-describe("parseH5PMessage — everything else is ignored", () => {
+describe("parseH5PMessage: everything else is ignored", () => {
   test("another library's messages", () => {
     expect(parseH5PMessage({ context: "iframe-resizer", action: "resize", scrollHeight: 900 })).toBeNull();
     expect(parseH5PMessage({ action: "resize", scrollHeight: 900 })).toBeNull();
@@ -66,7 +66,7 @@ describe("parseH5PMessage — everything else is ignored", () => {
   });
 });
 
-describe("shouldPrepareResize — the anti-oscillation guard", () => {
+describe("shouldPrepareResize: the anti-oscillation guard", () => {
   test("stays silent once frame, content and scroll heights agree", () => {
     expect(shouldPrepareResize(600, { clientHeight: 600, scrollHeight: 600 })).toBe(false);
   });
@@ -114,7 +114,7 @@ describe("SIZE_MODES", () => {
     expect(SIZE_MODES).toEqual(["auto", "widescreen", "classic", "short", "medium", "tall"]);
   });
 
-  test("'custom' is deliberately not a button — dragging produces it", () => {
+  test("'custom' is deliberately not a button: dragging produces it", () => {
     expect(SIZE_MODES).not.toContain("custom");
     expect(normalizeSizeMode("custom")).toBe("custom");
   });

@@ -9,7 +9,7 @@ import { createBeforeUnloadHandler } from '@components/Objects/Editor/unsavedCha
 // reseeds the baseline on every save. Because "dirty" is a pure content
 // predicate (currentValue !== savedValue) rather than a boolean flag, it is
 // immune to query refetches, window focus, submission-status changes, and
-// unrelated re-renders — the failure modes of the previous flag+poller design.
+// unrelated re-renders: the failure modes of the previous flag+poller design.
 
 export type AutoSaveStatus =
   | 'idle'
@@ -43,7 +43,7 @@ type Args = {
   retryMs?: number
   // Hard cap on automatic retries for a given value. Without it a permanently
   // failing write re-armed the debounce effect forever (~every 5s for the life
-  // of the mount) behind a "Couldn't save — retrying…" chip that never resolved.
+  // of the mount) behind a "Couldn't save" chip that promised a retry and never resolved.
   maxRetries?: number
 }
 
@@ -98,7 +98,7 @@ export function useAutoSave({
   const lastAttemptedValue = React.useRef<string | null>(null)
   // The exact value the server permanently refused. Kept so we don't replay a
   // doomed write (on unmount, on tab hide, on a manual click) while the learner
-  // hasn't changed anything — but a real edit gets a fresh attempt.
+  // hasn't changed anything, but a real edit gets a fresh attempt.
   const blockedValue = React.useRef<string | null>(null)
 
   // Always read the freshest value/baseline/save fn from refs so the debounce
@@ -164,7 +164,7 @@ export function useAutoSave({
           return 'ok'
         }
         if (outcome === 'blocked') {
-          // Permanent policy refusal — a retry would fail identically forever.
+          // Permanent policy refusal: a retry would fail identically forever.
           // Surface a terminal state instead of an eternal "retrying…" chip.
           if (retryTimer.current) clearTimeout(retryTimer.current)
           blockedValue.current = attemptedValue
@@ -178,7 +178,7 @@ export function useAutoSave({
       } catch {
         // A failed save must NOT reseed the baseline (the value isn't on the
         // server): mark 'error' so the UI shows a distinct indicator instead of
-        // a stuck spinner, and re-arm a retry so a transient failure recovers —
+        // a stuck spinner, and re-arm a retry so a transient failure recovers,
         // but only while the attempt budget lasts.
         attempts.current += 1
         if (mounted.current) setStatus('error')
@@ -229,11 +229,11 @@ export function useAutoSave({
   )
 
   // Trailing debounce. Deps are the primitive strings, so an edit re-arms and a
-  // post-save baseline reseed re-runs the effect — following a mid-flight edit
+  // post-save baseline reseed re-runs the effect, following a mid-flight edit
   // to completion, then settling when currentValue === savedValue.
   React.useEffect(() => {
     if (!enabled || currentValue === savedValue) return
-    // Nothing is in flight yet — say so instead of showing "Saving…" for a
+    // Nothing is in flight yet, so say so instead of showing "Saving…" for a
     // request that hasn't been made. A failure indicator survives a re-arm of
     // the SAME value (the retry tick), but a genuine new edit clears it.
     setStatus((s) => {
@@ -259,7 +259,7 @@ export function useAutoSave({
       // Route through the persist-based flush: it awaits an in-flight save and
       // then writes the latest dirty value. Firing the raw save here (as it
       // used to) skipped whenever a save was already running, dropping the
-      // newer edit. Fire-and-forget — the request is what matters.
+      // newer edit. Fire-and-forget; the request is what matters.
       void flushRef.current?.()
     }
     mounted.current = false

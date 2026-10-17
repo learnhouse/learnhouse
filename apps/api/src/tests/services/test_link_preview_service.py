@@ -166,7 +166,8 @@ async def test_fetch_link_preview_blocks_redirect_url_validation_errors():
             await fetch_link_preview("https://example.com/page")
 
     assert exc_info.value.status_code == 400
-    assert "blocked redirect URL" in exc_info.value.detail
+    # blocked redirect URL; the reason stays server-side.
+    assert exc_info.value.detail == "This URL cannot be previewed"
     assert handler.requested_urls == ["https://example.com/page"]
     mock_peer_allowed.assert_called_once()
 
@@ -207,7 +208,8 @@ async def test_fetch_link_preview_blocks_invalid_url_before_request():
             await fetch_link_preview("http://localhost/page")
 
     assert exc_info.value.status_code == 400
-    assert "Blocked hostname" in exc_info.value.detail
+    # Blocked hostname; the reason stays server-side.
+    assert exc_info.value.detail == "This URL cannot be previewed"
     # The client is opened, but the guard runs before the first hop is sent.
     assert handler.requested_urls == []
 
@@ -227,7 +229,8 @@ async def test_fetch_link_preview_blocks_peer_validation_errors():
             await fetch_link_preview("https://example.com/page")
 
     assert exc_info.value.status_code == 400
-    assert "DNS rebinding detected" in exc_info.value.detail
+    # DNS rebinding detected; the reason stays server-side.
+    assert exc_info.value.detail == "This URL cannot be previewed"
 
 
 @pytest.mark.asyncio
@@ -281,7 +284,8 @@ async def test_fetch_link_preview_blocks_redirect_peer_validation_and_fallback_f
             await fetch_link_preview("https://example.com/page")
 
     assert exc_info.value.status_code == 400
-    assert "blocked redirect peer" in exc_info.value.detail
+    # blocked redirect peer; the reason stays server-side.
+    assert exc_info.value.detail == "This URL cannot be previewed"
     assert handler.requested_urls == ["https://example.com/page", redirect_url]
 
 

@@ -14,7 +14,7 @@ export const revalidate = 3600
 export const metadata = {
   title: 'API Reference',
   description:
-    'Complete reference for the LearnHouse REST API — endpoints, request and response schemas, code examples and a live playground.',
+    'Complete reference for the LearnHouse REST API: endpoints, request and response schemas, code examples and a live playground.',
   alternates: { canonical: '/reference' },
 }
 
@@ -23,8 +23,8 @@ const ERROR_STATUSES = [
   ['403', 'Authenticated, but not allowed to perform this action.'],
   ['404', 'The requested resource does not exist.'],
   ['409', 'The request conflicts with existing state (e.g. duplicate resource).'],
-  ['422', 'Request validation failed — see the error format below.'],
-  ['429', 'Rate limit exceeded — retry later.'],
+  ['422', 'Request validation failed. See the error format below.'],
+  ['429', 'Rate limit exceeded. Retry later.'],
 ]
 
 export default async function ReferenceOverviewPage() {
@@ -50,7 +50,7 @@ export default async function ReferenceOverviewPage() {
         <p className="lh-ref-overview-kicker">API Reference</p>
         <h1 className="lh-ref-overview-title">The LearnHouse API</h1>
         <p className="lh-ref-overview-lede">
-          A REST API for driving LearnHouse programmatically — {totalOps} documented endpoints
+          A REST API for driving LearnHouse programmatically, with {totalOps} documented endpoints
           across courses, learners, assignments, payments and more. This reference is generated
           directly from the live OpenAPI specification, so it is always in sync with the API.
         </p>
@@ -73,7 +73,7 @@ export default async function ReferenceOverviewPage() {
             <h2 className="lh-ref-overview-h2">Authentication</h2>
             <p className="lh-ref-op-desc">
               Programmatic access uses organization API tokens, prefixed <code>lh_</code>. Create
-              them in your dashboard under <strong>Developers → API Access</strong> (Pro plan) —
+              them in your dashboard under <strong>Developers → API Access</strong> (Pro plan);
               the full token is shown once, at creation, and can be scoped to least-privilege
               rights. Send it as a bearer token on every request:
             </p>
@@ -112,7 +112,7 @@ export default async function ReferenceOverviewPage() {
           <section className="lh-ref-section">
             <h2 className="lh-ref-overview-h2">Pagination</h2>
             <p className="lh-ref-op-desc">
-              List endpoints paginate with <code>page</code> and <code>limit</code> parameters —
+              List endpoints paginate with <code>page</code> and <code>limit</code> parameters, passed
               as query parameters or path segments (e.g.{' '}
               <code>/courses/org_slug/{'{org_slug}'}/page/1/limit/20</code>), depending on the
               endpoint. Page numbering starts at 1.

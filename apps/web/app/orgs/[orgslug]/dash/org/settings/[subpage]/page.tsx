@@ -126,7 +126,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     requiresPlan: tab.requiredPlan,
   }))
 
-  // Moved subpages redirect (above) — render nothing while it happens.
+  // Moved subpages redirect (above); render nothing while it happens.
   if (movedTo || movedToUsers) return null
 
   return (

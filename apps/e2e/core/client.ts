@@ -45,7 +45,7 @@ export function apiGet<T = any>(path: string, token: string): Promise<T> {
 }
 
 // Cache API tokens per email so repeated read-backs / seeds for the same user
-// don't each spend a login — the API enforces 30 logins / 5 min / IP.
+// don't each spend a login. The API enforces 30 logins / 5 min / IP.
 const _tokenCache = new Map<string, string>()
 
 function sleep(ms: number): Promise<void> {

@@ -48,7 +48,7 @@ export default function PeakUsageHeatmap({ days = '30' }: { days?: string }) {
                     <div
                       key={h}
                       className={`w-5 h-5 rounded-sm ${intensity(count)} text-[8px] flex items-center justify-center`}
-                      title={`${day} ${h}:00 — ${count} events`}
+                      title={`${day} ${h}:00, ${count} events`}
                     />
                   )
                 })}

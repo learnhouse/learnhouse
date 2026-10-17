@@ -6,6 +6,7 @@ from src.db.courses.assignments import (
     AssignmentCreate,
     AssignmentRead,
     AssignmentTaskCreate,
+    AssignmentTaskOrder,
     AssignmentTaskSubmissionUpdate,
     AssignmentTaskUpdate,
     AssignmentUpdate,
@@ -14,6 +15,7 @@ from src.db.courses.assignments import (
 from src.db.users import PublicUser
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
+from src.services.security.rate_limiting import check_rate_limit
 from src.services.courses.activities.assignments import (
     create_assignment,
     create_assignment_submission,
@@ -38,6 +40,7 @@ from src.services.courses.activities.assignments import (
     read_assignment_task,
     read_assignment_task_submissions,
     read_assignment_tasks,
+    reorder_assignment_tasks,
     read_user_assignment_submissions,
     read_user_assignment_submissions_me,
     read_user_assignment_task_submissions,
@@ -58,6 +61,8 @@ class GradeSubmissionBody(BaseModel):
 
 
 router = APIRouter()
+
+SUB_FILE_UPLOADS_PER_HOUR = 30
 
 ## ASSIGNMENTS ##
 
@@ -323,6 +328,33 @@ async def api_read_assignment_tasks(
     )
 
 
+@router.put(
+    "/{assignment_uuid}/tasks/order",
+    summary="Reorder assignment tasks",
+    description="Set the order of an assignment's tasks. The body lists every task UUID of the assignment, in the new order. The authenticated user must have permission to edit the parent course.",
+    responses={
+        200: {"description": "Tasks reordered; returns the tasks in their new order."},
+        400: {"description": "The list does not match the assignment's tasks"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to edit this assignment"},
+        404: {"description": "Assignment not found"},
+    },
+)
+async def api_reorder_assignment_tasks(
+    request: Request,
+    assignment_uuid: str,
+    order_object: AssignmentTaskOrder,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Reorder tasks for an assignment
+    """
+    return await reorder_assignment_tasks(
+        request, assignment_uuid, order_object, current_user, db_session
+    )
+
+
 @router.get(
     "/task/{assignment_task_uuid}",
     summary="Get assignment task",
@@ -421,6 +453,23 @@ async def api_put_assignment_task_sub_file(
     """
     Update tasks for an assignment
     """
+    if sub_file is not None and sub_file.filename:
+        # Per-user upload throttle: each call writes to storage
+        is_allowed, _count, retry_after = check_rate_limit(
+            key=f"sub_file_upload:{current_user.id}",
+            max_attempts=SUB_FILE_UPLOADS_PER_HOUR,
+            window_seconds=60 * 60,
+        )
+        if not is_allowed:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "code": "RATE_LIMITED",
+                    "message": "Too many file uploads. Please wait before trying again.",
+                    "retry_after": retry_after,
+                },
+                headers={"Retry-After": str(retry_after)},
+            )
     return await put_assignment_task_submission_file(
         request, db_session, assignment_task_uuid, current_user, sub_file
     )
@@ -879,7 +928,7 @@ async def api_retry_assignment_submission(
 ):
     """
     Reset the current user's submission so they can re-attempt the
-    assignment. Strictly self-service — instructors who want to force a
+    assignment. Strictly self-service; instructors who want to force a
     retry should reject the submission via the existing delete endpoint.
     """
     return await retry_assignment_submission(

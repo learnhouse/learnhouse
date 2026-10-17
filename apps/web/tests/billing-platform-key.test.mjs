@@ -3,7 +3,7 @@
 //
 // Same class of failure as the internal plan key: the key was read with a
 // `|| ""` fallback, so an unset env var sent an empty header and the backend
-// answered 500 "not configured on the server" — which read as a backend fault
+// answered 500 "not configured on the server", which read as a backend fault
 // rather than a missing credential here. Both call sites must resolve it
 // through one helper that fails loud.
 

@@ -39,7 +39,7 @@ interface EERequiredDetail {
  *
  * Distinct from `isEELicenseInactiveError` (503): that one means EE is
  * installed but its license check is failing, which is transient. This one
- * means the feature does not exist on this deployment, which is permanent —
+ * means the feature does not exist on this deployment, which is permanent,
  * so it must not be presented as something to retry or reconfigure.
  */
 export function isEERequiredError(err: unknown): err is { status: 403; detail: EERequiredDetail } {
@@ -102,7 +102,7 @@ export default function EELicenseError({ error }: { error: unknown }) {
                 {error.detail.diagnostics && (
                   <li>
                     Open{' '}
-                    <code className="font-mono">{error.detail.diagnostics}</code> — it
+                    <code className="font-mono">{error.detail.diagnostics}</code>. It
                     answers even while the license is inactive, and its{' '}
                     <code className="font-mono">hint</code> field names the fix.
                   </li>

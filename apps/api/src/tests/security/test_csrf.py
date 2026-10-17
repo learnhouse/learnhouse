@@ -172,7 +172,7 @@ class TestCSRFExemptions:
         assert mw._is_csrf_exempt(req) is True
 
     def test_regular_bearer_jwt_not_exempt(self):
-        """Regular Bearer JWT should NOT be exempt — get_current_user falls back to cookies."""
+        """Regular Bearer JWT should NOT be exempt; get_current_user falls back to cookies."""
         mw = self._make_middleware()
         req = _make_request(headers={"authorization": "Bearer eyJ0eXAiOiJKV1Q..."})
         assert mw._is_csrf_exempt(req) is False
@@ -198,13 +198,15 @@ class TestCSRFExemptions:
         """Internal service-to-service calls (collab server) use a shared key, not cookies."""
         mw = self._make_middleware()
         req = _make_request(headers={"x-internal-key": "some_secret_key"})
-        assert mw._is_csrf_exempt(req) is True
+        with patch.dict("os.environ", {"COLLAB_INTERNAL_KEY": "some_secret_key"}):
+            assert mw._is_csrf_exempt(req) is True
 
     def test_platform_key_exempt(self):
         """Platform service-to-service calls use a shared key, not cookies."""
         mw = self._make_middleware()
         req = _make_request(headers={"x-platform-key": "some_platform_key"})
-        assert mw._is_csrf_exempt(req) is True
+        with patch.dict("os.environ", {"LEARNHOUSE_PLATFORM_API_KEY": "some_platform_key"}):
+            assert mw._is_csrf_exempt(req) is True
 
     def test_no_auth_not_exempt(self):
         middleware = self._make_middleware()

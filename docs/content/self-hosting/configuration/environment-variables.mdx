@@ -27,14 +27,15 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_TENANCY` | Selects `single` host tenancy or `multi` subdomain tenancy. Multi-tenancy requires EE or SaaS mode. | enum: `single`, `multi` | `single` unless inferred as multi-tenant | API, EE CLI |
 | `LEARNHOUSE_DOMAIN` | Public domain used for org routing, cookie decisions, and custom-domain CNAME targets. Include the port for local development. | hostname | `localhost:3000` | API, CLI |
 | `LEARNHOUSE_FRONTEND_DOMAIN` | Frontend host used by the API when it needs the public frontend domain separately from the backend host. | hostname | `localhost:3000` | API, EE CLI |
-| `LEARNHOUSE_SSL` | Backend-side SSL flag: picks `https` vs `http` for generated links (password reset, email verification, invites, magic links, SSO redirect, media URLs). Accepts `true`/`1`/`yes`/`on` (case-insensitive); anything else is off. Previously any non-empty value enabled it, including the string `false` — check your value before upgrading. | boolean | `false` | API |
+| `LEARNHOUSE_SSL` | Backend-side SSL flag: picks `https` vs `http` for generated links (password reset, email verification, invites, magic links, SSO redirect, media URLs). Accepts `true`/`1`/`yes`/`on` (case-insensitive); anything else is off. Previously any non-empty value enabled it, including the string `false`, so check your value before upgrading. | boolean | `false` | API |
 | `LEARNHOUSE_PORT` | Backend port. Local config defaults to `1338`; the production CLI template emits `9000`. | integer | `1338` locally, `9000` in generated Docker installs | API, CLI, API container |
 | `LEARNHOUSE_ALLOWED_ORIGINS` | Comma-separated CORS allowlist. | CSV of URLs | `http://localhost:3000,http://localhost:3001` | API |
 | `LEARNHOUSE_ALLOWED_REGEXP` | Additional CORS origin regex used by multi-tenant deployments. | regex string | `\b((?:https?://)[^\s/$.?#].[^\s]*)\b` | API |
+| `LEARNHOUSE_MAX_REQUEST_BODY_MB` | Largest JSON, form or raw request body the API accepts before returning `413`. Multipart uploads keep their own per-type limits. `0` disables the cap. | integer | `25` | API |
 | `LEARNHOUSE_COOKIE_DOMAIN` | Cookie domain for auth cookies. Use a leading dot only when subdomains must share auth. | hostname | `.localhost` | API, CLI |
 | `LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD` | Acknowledges intentionally broad cookie domains such as `.example.com` and silences the safety warning. | boolean | `false` | API, EE CLI |
 | `LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE` | Skips DNS verification for all custom domains and marks them verified immediately. Development/testing only. | boolean | `false` | API |
-| `LEARNHOUSE_PUBLIC` | Docker build argument that produces a community build by excluding non-community code. | boolean | `false` | Dockerfiles (root, API, Web) |
+| `LEARNHOUSE_PUBLIC` | Docker build argument that produces a community build by excluding non-community code. Also forces the community build of the web app when set to `true`. | boolean | `false` | Dockerfiles (root, API, Web), Web build |
 | `LEARNHOUSE_PLATFORM_URL` | Base URL for LearnHouse platform links, upgrade URLs, and email allowlist checks. | URL | unset; backend flows fall back to `https://www.learnhouse.app` and the web token-exchange to `https://learnhouse.app` | API, Web |
 | `LEARNHOUSE_PLATFORM_API_KEY` | Shared secret for platform-only internal endpoints such as packs. When unset, those endpoints reject every request with a 403 and the API logs an error on the first rejected request. | secret string | required for SaaS/platform endpoints | API |
 | `CLOUD_INTERNAL_KEY` | Shared secret for SaaS-internal endpoints (custom-domain sync and the `cloud_internal` router). When unset, those endpoints reject every request and the API logs a startup warning. | secret string | unset; required for SaaS custom-domain provisioning | API |
@@ -156,7 +157,7 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_LICENSE_SERVER_URL` | Enterprise license server URL. | URL | `https://partners.learnhouse.app` | EE backend, EE CLI |
 | `LEARNHOUSE_LICENSE_GRACE_HOURS` | Offline grace period (hours) the EE backend allows before an unvalidated license is rejected. | integer | `25` (max `168`) | EE backend |
 | `LEARNHOUSE_DATA_DIR` | Data directory path inside the Enterprise backend container. | path | `/app/data` | EE backend container |
-| `LEARNHOUSE_DISABLE_EE` | Disables local Enterprise hooks even if the `ee/` folder exists. | boolean-like string | unset; CLI dev sets `1` unless `--ee` is used | API, CLI dev |
+| `LEARNHOUSE_DISABLE_EE` | Disables local Enterprise hooks even if the `ee/` folder exists. | boolean-like string | unset; CLI dev sets `1` unless `--ee` is used | API, Web build, CLI dev |
 | `LEARNHOUSE_FORCE_EE` | Forces EE mode during development when EE code is present. Ignored unless development mode is enabled. | boolean-like string | unset | API, CLI dev |
 | `WORKOS_API_KEY` | WorkOS API key for Enterprise SSO. Required (with `WORKOS_CLIENT_ID`) to enable WorkOS-backed SSO. | secret string | unset; required for SSO | EE backend |
 | `WORKOS_CLIENT_ID` | WorkOS client ID for Enterprise SSO. | string | unset; required for SSO | EE backend |

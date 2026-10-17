@@ -65,7 +65,7 @@ mdxFiles.sort((a, b) => {
 
 const sections = []
 
-sections.push('# LearnHouse Documentation — Full Content')
+sections.push('# LearnHouse Documentation: Full Content')
 sections.push('')
 sections.push('> This file contains the complete text of all LearnHouse documentation pages.')
 sections.push(`> Source: ${SITE_URL}`)
@@ -133,7 +133,7 @@ sections.push('')
 sections.push('# LearnHouse API Reference')
 sections.push(`URL: ${SITE_URL}/reference`)
 sections.push('')
-sections.push(`Base URL: ${API_BASE_URL} — all endpoints are prefixed with /api/v1.`)
+sections.push(`Base URL: ${API_BASE_URL} (all endpoints are prefixed with /api/v1).`)
 sections.push('Authentication: send an organization API token (prefix lh_, Pro plan) as')
 sections.push('`Authorization: Bearer <token>`. Session-only endpoints reject API tokens and')
 sections.push('need a user JWT from POST /api/v1/auth/login (form-encoded username/password).')
@@ -149,7 +149,7 @@ for (const group of API_GROUPS) {
   const accessNote = {
     token: 'Auth: API token (rights bucket "' + group.rightsBucket + '") or user session.',
     'token-required': 'Auth: API token required.',
-    session: 'Auth: user session only — API tokens are rejected.',
+    session: 'Auth: user session only (API tokens are rejected).',
     public: 'Auth: public/credential endpoints.',
   }[group.access]
   if (accessNote) sections.push(accessNote)
@@ -163,7 +163,7 @@ for (const group of API_GROUPS) {
       group.rightsBucket && METHOD_TO_ACTION[method]
         ? ` Requires ${group.rightsBucket}:${METHOD_TO_ACTION[method]}.`
         : ''
-    sections.push(`- ${method} ${opPath} — ${op.summary || ''}${params ? ` Params: ${params}.` : ''}${body}${right}`)
+    sections.push(`- ${method} ${opPath}: ${op.summary || ''}${params ? ` Params: ${params}.` : ''}${body}${right}`)
   }
   sections.push('')
 }

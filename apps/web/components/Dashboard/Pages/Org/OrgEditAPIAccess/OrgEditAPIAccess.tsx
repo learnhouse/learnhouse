@@ -716,6 +716,8 @@ const PermissionsEditor: React.FC<{
     { key: 'certifications', label: 'Certifications', hasCrud: true },
     { key: 'usergroups', label: 'User Groups', hasCrud: true },
     { key: 'payments', label: 'Payments', hasCrud: true },
+    { key: 'users', label: 'Users (Admin API)', hasCrud: true },
+    { key: 'roles', label: 'Roles (Admin API)', hasCrud: true },
   ]
 
   const togglePermission = (resource: string, permission: string) => {

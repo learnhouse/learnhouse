@@ -62,13 +62,16 @@ def get_course_planning_session(session_uuid: str) -> Optional[CoursePlanningSes
     return None
 
 
-def create_course_planning_session(org_id: int, language: str = "en") -> CoursePlanningSessionData:
+def create_course_planning_session(
+    org_id: int, language: str = "en", user_id: Optional[int] = None
+) -> CoursePlanningSessionData:
     """Create a new course planning session"""
     session_uuid = f"cp_{uuid4()}"
 
     session = CoursePlanningSessionData(
         session_uuid=session_uuid,
         org_id=org_id,
+        user_id=user_id,
         language=language,
         planning_iteration_count=0,
         max_planning_iterations=MAX_PLANNING_ITERATIONS,

@@ -13,7 +13,7 @@ interface BoardCanvasClientProps {
   boardUuid: string
   /**
    * Server-read access token. Absent whenever the access-token cookie has
-   * lapsed (every visit more than 8 hours after the last one) — the server
+   * lapsed (every visit more than 8 hours after the last one); the server
    * deliberately does not refresh, because refreshing there would consume the
    * browser's one-time-use refresh token. We fall back to the client session,
    * which holds a freshly refreshed token once AuthContext has hydrated.
@@ -31,7 +31,7 @@ export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, use
 
   const { data: board, isLoading, error } = useQuery({
     queryKey: queryKeys.boards.detail(boardUuid),
-    // Guarded by `enabled` — queryFn never runs without a token.
+    // Guarded by `enabled`: queryFn never runs without a token.
     queryFn: () => getBoard(boardUuid, token as string),
     enabled: !!token,
     staleTime: 60_000,

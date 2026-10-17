@@ -1,7 +1,7 @@
 """Add unique constraints on assignment submission rows
 
 A learner has exactly one AssignmentUserSubmission per (user, assignment) and one
-AssignmentTaskSubmission per (user, task) — retries reset the row in place. Without
+AssignmentTaskSubmission per (user, task); retries reset the row in place. Without
 DB constraints, two concurrent submit / save-progress requests could each pass the
 "does a row already exist?" SELECT and both INSERT, producing duplicate rows that
 split grading and double-fire webhooks.

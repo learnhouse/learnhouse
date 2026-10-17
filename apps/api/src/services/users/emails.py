@@ -6,6 +6,7 @@ from urllib.parse import quote
 from pydantic import EmailStr
 from src.db.organizations import OrganizationRead
 from src.db.users import UserRead
+from src.services.email.safe_text import email_org_name, email_user_name
 from src.services.email.translations import t
 from src.services.email.utils import send_email
 
@@ -16,7 +17,7 @@ def _send_notification_email(**kwargs):
     """Send mail whose failure must not fail the caller's request.
 
     Welcome/lifecycle notifications are a side effect of an action that has
-    already happened and been committed — the account exists, the org was
+    already happened and been committed: the account exists, the org was
     created, the role changed. When the provider is rate-limited or times out,
     raising here turned "no welcome email" into "signup returned 503", which the
     user then retried. Delivery failures are logged and swallowed instead.
@@ -31,7 +32,7 @@ def _send_notification_email(**kwargs):
         return False
 
 
-# Public academy — footer "learn more" target, and last-resort CTA fallback.
+# Public academy: footer "learn more" target, and last-resort CTA fallback.
 ACADEMY_URL = "https://university.learnhouse.io"
 
 
@@ -73,7 +74,7 @@ def _org_logo_img(logo_url: str, alt: str) -> str:
     ``square_logos/``) sits in a 56px rounded box; a wide logo is letterboxed
     into the same footprint as the LearnHouse wordmark. Raster logos (PNG/JPG)
     render in every mail client; an SVG logo may be stripped by some (e.g.
-    Gmail), in which case the ``alt`` (the org name) shows instead — still
+    Gmail), in which case the ``alt`` (the org name) shows instead: still
     org-branded, never a broken LearnHouse mark.
 
     The ``height``/``width`` attributes are for desktop Outlook, whose
@@ -99,14 +100,14 @@ def _org_logo_img(logo_url: str, alt: str) -> str:
 def _org_wordmark(org_name: str) -> str:
     """The org's name set as a wordmark, for orgs that have not uploaded a logo.
 
-    An org-scoped email must never open with the LearnHouse mark — the
+    An org-scoped email must never open with the LearnHouse mark. The
     recipient has a relationship with the academy, not the platform, and a
     foreign logo above "Reset your Acme Academy password" reads as phishing.
     """
     return (
         f'<span style="display: inline-block; font-size: 20px; font-weight: 900; '
         f'color: #000000; letter-spacing: -0.02em; line-height: 1.2;">'
-        f"{html.escape(org_name)}</span>"
+        f"{html.escape(email_org_name(org_name))}</span>"
     )
 
 
@@ -120,7 +121,7 @@ def _brand_logo_html(logo_url: str | None, org_name: str) -> str:
 def _button_style(brand_color: str | None) -> str:
     """CTA button style, tinted with the org's brand color when it has one.
 
-    ``brand_color`` must already be normalized (``#rrggbb``) — see
+    ``brand_color`` must already be normalized (``#rrggbb``); see
     ``services.email.branding.normalize_brand_color``; anything else keeps the
     default black button rather than risk an unbalanced ``style`` attribute.
     """
@@ -150,8 +151,8 @@ def _powered_by_html(lang: str) -> str:
 def _first_sentence(text: str, limit: int = 110) -> str:
     """Opening sentence of a body string, for use as preheader text.
 
-    Handles the full stops of every locale we ship — the CJK ideographic
-    period, the Arabic and Devanagari terminators — then falls back to a word
+    Handles the full stops of every locale we ship (the CJK ideographic
+    period, the Arabic and Devanagari terminators), then falls back to a word
     boundary. Inbox previews are cut around 100 characters anyway.
     """
     if not text:
@@ -181,7 +182,7 @@ def _stat_strip(stats: list[tuple[str, int]]) -> str:
     """A row of label/value pairs, e.g. "LESSONS 8   LEARNERS 0".
 
     Deliberately not prose. Writing "8 lessons" into copy means solving plural
-    agreement in twenty languages — Russian has three forms, Arabic six — and
+    agreement in twenty languages (Russian has three forms, Arabic six), and
     without an ICU library the result is "1 lessons" in production. A label
     beside a bare figure needs no agreement in any of them, and it reads faster
     than a sentence anyway.
@@ -212,7 +213,7 @@ def _stat_strip(stats: list[tuple[str, int]]) -> str:
 def _preheader_block(text: str) -> str:
     """The grey line an inbox list shows after the subject.
 
-    Without one, clients scrape the first visible text — which here is the
+    Without one, clients scrape the first visible text, which here is the
     heading, so the list entry reads as the subject said twice. Setting it
     explicitly buys a second line of information in the only place a reader
     looks before deciding to open.
@@ -250,12 +251,12 @@ def _email_layout(
     org's logo <img> (or its name as a wordmark) instead.
 
     ``powered_by`` adds the "Powered by LearnHouse" line to the footer. Only
-    org-branded mail sets it, and only when the org's watermark is on — a
+    org-branded mail sets it, and only when the org's watermark is on; a
     platform email already carries the LearnHouse mark up top.
 
     ``unsubscribe_url`` is set only by bulk lifecycle mail. Transactional email
     (password reset, invitation, verification) leaves it empty and renders
-    byte-identically to before — you cannot unsubscribe from a password reset.
+    byte-identically to before; you cannot unsubscribe from a password reset.
     The link is deliberately legible rather than hidden: someone who wants out
     and can't find the exit reports spam instead, which costs the sending domain
     far more than the opt-out does.
@@ -283,7 +284,7 @@ def _email_layout(
         </div>"""
 
     # Prefixed with its own newline so that an absent preheader leaves the
-    # document byte-identical to before — the twelve transactional emails
+    # document byte-identical to before; the twelve transactional emails
     # share this layout and none of their output may shift.
     block = _preheader_block(preheader)
     preheader_html = f"\n    {block}" if block else ""
@@ -331,9 +332,9 @@ def send_account_creation_email(
     line that ``powered_by=False`` removes. Org-less signups keep the
     LearnHouse-branded variant with the Academy footer link.
     """
-    safe_username = html.escape(user.username)
+    safe_username = html.escape(email_user_name(user.username))
     white_label = bool(org_name)
-    safe_org = html.escape(org_name) if org_name else ""
+    safe_org = html.escape(email_org_name(org_name)) if org_name else ""
 
     heading = t(lang, "account_creation.heading", username=safe_username)
     cta = t(lang, "account_creation.cta")
@@ -386,7 +387,7 @@ def send_org_created_email(
     lang: str = "en",
 ):
     """Confirmation email when a user creates a new organization."""
-    safe_name = html.escape(org_name)
+    safe_name = html.escape(email_org_name(org_name))
     heading = t(lang, "org_created.heading", org_name=safe_name)
     body_text = t(lang, "org_created.body")
     cta = t(lang, "org_created.cta")
@@ -413,7 +414,7 @@ def send_org_deleted_email(
     lang: str = "en",
 ):
     """Confirmation email sent to org admins after an organization is deleted."""
-    safe_name = html.escape(org_name)
+    safe_name = html.escape(email_org_name(org_name))
     heading = t(lang, "org_deleted.heading", org_name=safe_name)
     body_text = t(lang, "org_deleted.body")
 
@@ -456,6 +457,35 @@ def send_account_deleted_email(
     )
 
 
+def send_email_changed_notice(
+    email: EmailStr,
+    new_email: str,
+    username: str = "",
+    lang: str = "en",
+):
+    """Tell the previous address that the account's email was changed, so a
+    hijacked session cannot quietly move the account to another inbox."""
+    safe_username = html.escape(email_user_name(username))
+    heading = t(lang, "email_changed.heading")
+    body_text = t(
+        lang, "email_changed.body", username=safe_username, new_email=html.escape(new_email)
+    )
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">{body_text}</p>
+    """
+    return _send_notification_email(
+        to=email,
+        subject=t(lang, "email_changed.subject"),
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "email_changed.footer"),
+        ),
+    )
+
+
 def send_password_reset_email(
     generated_reset_code: str,
     user: UserRead,
@@ -474,11 +504,11 @@ def send_password_reset_email(
     button, its name as the From display name. Platform-level resets go
     through ``send_password_reset_email_platform`` instead.
     """
-    safe_username = html.escape(user.username)
+    safe_username = html.escape(email_user_name(user.username))
     safe_code = html.escape(generated_reset_code)
     safe_email = quote(str(email), safe='')
     safe_code_param = quote(generated_reset_code, safe='')
-    reset_url = f"{base_url}/reset?email={safe_email}&amp;resetCode={safe_code_param}"
+    reset_url = html.escape(f"{base_url}/reset?email={safe_email}&resetCode={safe_code_param}")
 
     heading = t(lang, "password_reset.heading")
     body_text = t(lang, "password_reset.body", username=safe_username)
@@ -519,11 +549,11 @@ def send_password_reset_email_platform(
     base_url: str,
     lang: str = "en",
 ):
-    safe_username = html.escape(user.username)
+    safe_username = html.escape(email_user_name(user.username))
     safe_code = html.escape(generated_reset_code)
     safe_email = quote(str(email), safe='')
     safe_code_param = quote(generated_reset_code, safe='')
-    reset_url = f"{base_url}/reset?email={safe_email}&amp;resetCode={safe_code_param}"
+    reset_url = html.escape(f"{base_url}/reset?email={safe_email}&resetCode={safe_code_param}")
 
     heading = t(lang, "password_reset.heading")
     body_text = t(lang, "password_reset.body", username=safe_username)
@@ -566,8 +596,8 @@ def send_invitation_email(
     powered_by: bool = True,
 ):
     """Invitation into an organization, branded to that organization."""
-    safe_org_name = html.escape(org_name)
-    safe_inviter = html.escape(inviter_username)
+    safe_org_name = html.escape(email_org_name(org_name))
+    safe_inviter = html.escape(email_user_name(inviter_username))
 
     code_section = ""
     if invite_code:
@@ -596,7 +626,7 @@ def send_invitation_email(
             {intro}
         </p>
         {code_section}
-        <a href="{signup_url}" style="{_button_style(brand_color)}">
+        <a href="{html.escape(signup_url)}" style="{_button_style(brand_color)}">
             {cta}
         </a>
     """
@@ -634,11 +664,11 @@ def send_org_join_email(
     (invite code, open join, OAuth invite, admin provisioning) previously got no
     mail at all and had to find their way to the org on their own.
 
-    Always white-labeled to the org — the user is being welcomed into that
-    academy, not onto LearnHouse — with the org's logo (or name) up top.
+    Always white-labeled to the org (the user is being welcomed into that
+    academy, not onto LearnHouse), with the org's logo (or name) up top.
     """
-    safe_username = html.escape(username)
-    safe_org_name = html.escape(org_name)
+    safe_username = html.escape(email_user_name(username))
+    safe_org_name = html.escape(email_org_name(org_name))
 
     heading = t(lang, "org_join.heading", username=safe_username)
     body_text = t(lang, "org_join.body", org_name=safe_org_name)
@@ -689,8 +719,8 @@ def send_role_changed_email(
     custom domain when it has one). Without it the mail told someone their
     permissions had changed and then gave them nowhere to go.
     """
-    safe_username = html.escape(username)
-    safe_org_name = html.escape(org_name)
+    safe_username = html.escape(email_user_name(username))
+    safe_org_name = html.escape(email_org_name(org_name))
     safe_role_name = html.escape(new_role_name)
 
     heading = t(lang, "role_changed.heading")
@@ -763,13 +793,15 @@ def send_email_verification_email(
     Returns:
         Boolean indicating if email was sent successfully
     """
-    safe_username = html.escape(user.username)
-    brand = html.escape(organization.name) if organization else "LearnHouse"
+    safe_username = html.escape(email_user_name(user.username))
+    brand = html.escape(email_org_name(organization.name)) if organization else "LearnHouse"
     safe_token = quote(token, safe='')
     safe_user_uuid = quote(user.user_uuid, safe='')
     org_uuid = organization.org_uuid if organization else "none"
     safe_org_uuid = quote(org_uuid, safe='')
-    verification_url = f"{base_url}/verify-email?token={safe_token}&amp;user={safe_user_uuid}&amp;org={safe_org_uuid}"
+    verification_url = html.escape(
+        f"{base_url}/verify-email?token={safe_token}&user={safe_user_uuid}&org={safe_org_uuid}"
+    )
 
     heading = t(lang, "email_verification.heading")
     body_text = t(lang, "email_verification.body", username=safe_username, brand=brand)
@@ -825,7 +857,7 @@ def send_nudge_email(
     Generic over the catalog: the nudge id selects its copy from the
     ``nudge.<id>.*`` namespace, so adding a nudge never means adding a function
     here. ``copy_vars`` fills the placeholders that nudge's strings declare
-    (course name, plan name, and so on) — every value is escaped before it
+    (course name, plan name, and so on); every value is escaped before it
     reaches the template.
 
     ``track`` selects the illustration. It is drawn as a table mosaic rather
@@ -841,7 +873,7 @@ def send_nudge_email(
     Failures are swallowed via ``_send_notification_email``: a nudge nobody
     asked for must never be the reason a batch job dies.
     """
-    safe_org_name = html.escape(org_name)
+    safe_org_name = html.escape(email_org_name(org_name))
     raw_vars = {key: str(value) for key, value in copy_vars.items() if value is not None}
     raw_vars.setdefault("org_name", org_name)
     safe_vars = {key: html.escape(value) for key, value in raw_vars.items()}

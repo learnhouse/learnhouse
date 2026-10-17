@@ -675,7 +675,7 @@ DETAIL_QUERIES: dict[str, tuple[str, int]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Registry — maps query names to (sql_template, default_days)
+# Registry: maps query names to (sql_template, default_days)
 # ---------------------------------------------------------------------------
 
 CORE_QUERIES: dict[str, tuple[str, int]] = {
@@ -708,7 +708,7 @@ ADVANCED_QUERIES: dict[str, tuple[str, int]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Course-level queries (Pro only — filtered by course_uuid)
+# Course-level queries (Pro only, filtered by course_uuid)
 # ---------------------------------------------------------------------------
 
 COURSE_OVERVIEW_STATS = """
@@ -903,7 +903,7 @@ FROM completers, cert_claims
 """
 
 # ---------------------------------------------------------------------------
-# Course-level queries — batch 2 (10 additional visuals)
+# Course-level queries, batch 2 (10 additional visuals)
 # ---------------------------------------------------------------------------
 
 COURSE_VIEW_TO_ENROLLMENT = """
@@ -1174,7 +1174,7 @@ ALL_QUERIES = {**CORE_QUERIES, **ADVANCED_QUERIES, **DETAIL_QUERIES}
 # ---------------------------------------------------------------------------
 # Per-user queries (behavioral enrichment for the student audit dossier).
 # Parameterized by {org_id}, {user_id} and {days}. Used ONLY by the audit
-# router — never exposed on the public analytics dashboard.
+# router, never exposed on the public analytics dashboard.
 # ---------------------------------------------------------------------------
 
 USER_TIME_TOTAL = """

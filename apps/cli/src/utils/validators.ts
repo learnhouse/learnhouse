@@ -24,7 +24,7 @@ export function validateEmail(value: string): string | undefined {
     return `Reserved TLD ".${tld}" is not accepted. Use a real domain (e.g. admin@yourdomain.com).`
   }
   if (RESERVED_DOMAINS.has(domain)) {
-    return `Reserved domain "${domain}" is not accepted — the seeder would create no admin. Use a real domain.`
+    return `Reserved domain "${domain}" is not accepted; the seeder would create no admin. Use a real domain.`
   }
   return undefined
 }
@@ -45,7 +45,7 @@ export function validateDomain(value: string): string | undefined {
 }
 
 export function validatePort(value: string): string | undefined {
-  // Require pure digits — parseInt would otherwise accept "8080abc" as 8080.
+  // Require pure digits; parseInt would otherwise accept "8080abc" as 8080.
   if (!/^\d+$/.test(value.trim())) return 'Port must be between 1 and 65535'
   const num = parseInt(value, 10)
   if (num < 1 || num > 65535) return 'Port must be between 1 and 65535'

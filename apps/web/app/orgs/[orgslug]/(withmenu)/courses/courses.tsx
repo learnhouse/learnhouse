@@ -43,7 +43,7 @@ function Courses(props: CourseProps) {
 
   const allCourses = coursesData || []
 
-  // Usergroup filter — shown only when the org's plan actually includes
+  // Usergroup filter, shown only when the org's plan actually includes
   // usergroups (a standard+ feature per the backend), via resolved features.
   const usergroupsAvailable = org?.config?.config?.resolved_features?.usergroups?.enabled ?? false
   const [usergroups, setUsergroups] = useState<any[]>([])
@@ -323,7 +323,7 @@ function Courses(props: CourseProps) {
                   )}
                 </p>
                 {/* An anonymous visitor sees an empty list whenever the org has no
-                    PUBLIC courses — the API filters non-public ones out rather than
+                    PUBLIC courses: the API filters non-public ones out rather than
                     erroring, so "no courses" and "not signed in" are indistinguishable
                     from here. Prompt for sign-in instead of implying the academy is
                     empty. */}

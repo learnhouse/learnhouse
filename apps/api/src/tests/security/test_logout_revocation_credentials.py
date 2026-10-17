@@ -1,6 +1,6 @@
 """
 ``DELETE /auth/logout`` must revoke server-side sessions whenever it can name
-the user — from the access token or from the refresh cookie.
+the user, whether from the access token or from the refresh cookie.
 
 It used to accept the access credential only. A caller presenting just the
 refresh cookie got a 401, ``revoke_user_sessions_before`` never ran, and the
@@ -81,7 +81,7 @@ async def test_logout_revokes_with_both_cookies(db, admin_user):
 @pytest.mark.asyncio
 async def test_logout_falls_back_to_refresh_when_access_token_is_junk(db, admin_user):
     """An expired or malformed access cookie must not shadow a usable refresh
-    cookie — otherwise the most common real-world logout (stale access token)
+    cookie; otherwise the most common real-world logout (stale access token)
     is exactly the one that skips revocation."""
     request = _request_with_cookies(
         **{

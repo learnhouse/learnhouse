@@ -3,7 +3,7 @@
 //
 // These deliberately live OUTSIDE stripe.ts (which imports the Stripe SDK and is
 // server-only). Keeping the pure decision logic here lets us unit-test it in
-// isolation — no Stripe SDK, no network.
+// isolation: no Stripe SDK, no network.
 
 export type Subscriptionish = {
   status?: string;
@@ -14,11 +14,11 @@ export type Subscriptionish = {
 // Statuses we treat as a live plan subscription the user can switch/cancel,
 // ordered best → worst (used for ranking when an org has more than one).
 //
-//   active / trialing     — healthy, currently paying.
-//   past_due / unpaid     — a renewal failed, but the FIRST payment succeeded,
+//   active / trialing:      healthy, currently paying.
+//   past_due / unpaid:      a renewal failed, but the FIRST payment succeeded,
 //                           so this is still the customer's subscription. If we
 //                           ignored these the UI would think they have no sub
-//                           and route them into a brand-new checkout — billing
+//                           and route them into a brand-new checkout, billing
 //                           them twice. They must remain switchable/cancelable.
 //
 // `incomplete` / `incomplete_expired` are intentionally excluded: no payment
@@ -27,6 +27,15 @@ export const SWITCHABLE_STATUSES = ["active", "trialing", "past_due", "unpaid"] 
 
 export function isSwitchableStatus(status: string | undefined): boolean {
   return status !== undefined && (SWITCHABLE_STATUSES as readonly string[]).includes(status);
+}
+
+// Statuses in good standing. Only these may gain entitlements (an upgrade or a
+// checkout fulfillment); past_due/unpaid stay switchable for downgrade/cancel
+// only, so an unpaid balance can't be used to unlock a higher plan.
+export const PAID_UP_STATUSES = ["active", "trialing"] as const;
+
+export function isPaidUpStatus(status: string | undefined): boolean {
+  return status !== undefined && (PAID_UP_STATUSES as readonly string[]).includes(status);
 }
 
 /**
@@ -75,7 +84,7 @@ export function selectCheckoutCustomerId(
 // The org's plan must be derived from the subscription's PRICE id, not from
 // `subscription.metadata.plan`. Metadata is only written at checkout/switch; if
 // a customer changes their plan through the Stripe billing portal, the price
-// changes but the metadata stays stale — so reconciling org config from
+// changes but the metadata stays stale, so reconciling org config from
 // metadata would set the WRONG (old) plan. The price id is the source of truth.
 
 export type PriceMapEntry = { plan: string; billing?: "monthly" | "annual"; isPack: boolean };

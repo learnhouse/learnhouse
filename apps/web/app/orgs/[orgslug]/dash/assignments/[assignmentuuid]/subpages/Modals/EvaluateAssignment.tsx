@@ -19,6 +19,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
+import { sortTasksByOrder } from '@/lib/assignments/taskOrder'
 
 function pctToLetterGrade(pct: number): string {
     if (pct >= 90) return 'A';
@@ -48,7 +49,7 @@ function pctToGpa(pct: number): string {
 // PERSISTED aggregate, while `tasks` is rebuilt live from the current task
 // submissions. Inline grading a task writes only the task row, so the header
 // banner kept reading e.g. "40/100 pts · 40.00% · Not passing" while the chip
-// directly below it flipped to 100% — one response contradicting itself.
+// directly below it flipped to 100%: one response contradicting itself.
 // Recompute the banner from the live task rows, mirroring the backend's
 // compute_assignment_grade() so both halves always agree.
 function buildLiveGrade(gradePreview: any) {
@@ -167,7 +168,7 @@ function EvaluateAssignment({ user_id }: any) {
             queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })
         }
         else {
-            // FastAPI error bodies carry `detail`, never `message` — reading
+            // FastAPI error bodies carry `detail`, never `message`; reading
             // `.message` rendered a wordless red toast for 404/403/500 alike.
             toast.error(res.data?.detail || t('common.something_went_wrong'))
         }
@@ -200,7 +201,7 @@ function EvaluateAssignment({ user_id }: any) {
         const res = await deleteUserSubmission(user_id, assignmentUuid, access_token)
         if (!res.success) {
             // Fall back to a generic error, not the *success* string this used
-            // to reuse — an error toast that reads "rejected successfully" is
+            // to reuse; an error toast that reads "rejected successfully" is
             // worse than no message at all.
             toast.error(res.data?.detail || t('common.something_went_wrong'))
             return
@@ -214,7 +215,7 @@ function EvaluateAssignment({ user_id }: any) {
         setGradePreview(null)
     }
 
-    const sortedTasks = assignments?.assignment_tasks?.slice().sort((a: any, b: any) => a.id - b.id) || [];
+    const sortedTasks = sortTasksByOrder(assignments?.assignment_tasks);
 
     // Banner numbers derived from the live per-task rows in the same response
     // (see buildLiveGrade) so the header can't contradict the chips below it.
@@ -222,7 +223,7 @@ function EvaluateAssignment({ user_id }: any) {
 
     // Build a uuid → per-task breakdown map from the backend's `tasks` array
     // so we can render "85%" badges next to each task header. Memoizing with
-    // useMemo would be overkill here — the array is tiny.
+    // useMemo would be overkill here; the array is tiny.
     const taskBreakdownByUuid: Record<string, any> = {};
     if (gradePreview?.tasks) {
         for (const tb of gradePreview.tasks) {
@@ -238,7 +239,7 @@ function EvaluateAssignment({ user_id }: any) {
                     <ClipboardCheck size={18} className='text-teal-600 shrink-0' />
                     <div className='flex flex-col'>
                         <p className='text-xs font-bold text-teal-900'>
-                            {t('dashboard.assignments.submissions.ungraded_title', { defaultValue: 'Formative — not graded' })}
+                            {t('dashboard.assignments.submissions.ungraded_title', { defaultValue: 'Formative (not graded)' })}
                         </p>
                         <p className='text-[11px] text-teal-700/90'>
                             {t('dashboard.assignments.submissions.ungraded_description', { defaultValue: 'This assignment is handed in for review only. No score is recorded.' })}
@@ -355,7 +356,7 @@ function EvaluateAssignment({ user_id }: any) {
             </div>
 
             {/* Overall feedback. Only the grading endpoint persists it, and that
-                endpoint refuses a formative assignment — so on one, this box
+                endpoint refuses a formative assignment, so on one, this box
                 could never deliver anything to the learner. */}
             {!isUngraded && (
             <div className='flex flex-col space-y-2 pt-5 mt-3 border-t border-gray-100'>

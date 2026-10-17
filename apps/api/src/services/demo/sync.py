@@ -2,7 +2,7 @@
 
 One function, ``sync_demo``, does both jobs the demo needs: it builds the
 organization the first time, and it puts it back afterwards. There is
-deliberately no separate "provision" and "refresh" implementation — two code
+deliberately no separate "provision" and "refresh" implementation: two code
 paths that must produce identical results are two code paths that eventually
 do not, and the property this whole design rests on is that running the sync
 twice in a row changes nothing.
@@ -116,8 +116,8 @@ class _Sweep(NamedTuple):
 
     Named rather than a bare 3-tuple so the loop reads as what it is. It also
     keeps CodeQL honest: unpacking anonymous tuples let its taint analysis
-    conflate the elements, and it reported the sweep's `kind` — a constant like
-    "course" — as a password being written to the log.
+    conflate the elements, and it reported the sweep's `kind` (a constant like
+    "course") as a password being written to the log.
     """
 
     model: Any
@@ -174,7 +174,7 @@ def _unusable_password_hash() -> str:
     """A valid Argon2 hash of a secret that is generated and then discarded.
 
     Not an empty string: pwdlib raises UnknownHashError when it cannot identify
-    a stored hash, and authenticate_user does not guard that call — so an empty
+    a stored hash, and authenticate_user does not guard that call, so an empty
     password would turn a login attempt against a demo student into a 500
     rather than a clean 401.
 
@@ -201,7 +201,7 @@ def _days_ago(epoch: str, days: float, hour: int = 10) -> str:
 def _demo_org_config() -> dict:
     """Config for the demo org: the pro plan, with the rest forced on.
 
-    The demo exists to show the product, so it runs on `pro` — the tier that
+    The demo exists to show the product, so it runs on `pro`, the tier that
     enables boards, playgrounds, communities, podcasts, collaboration,
     certifications, roles, versioning, webhooks, the API and analytics. Anything
     a prospect cannot see is a feature they will not buy.
@@ -221,7 +221,7 @@ def _demo_org_config() -> dict:
       change; without it, pro here would quietly hand every visitor unlimited
       free organizations.
     * `get_active_user_summary` returns a zeroed summary reporting plan
-      "demo", which is not in the frontend's BILLABLE_PLANS — two independent
+      "demo", which is not in the frontend's BILLABLE_PLANS: two independent
       barriers between synthetic activity and a Stripe invoice.
     * The billing routes and the plan-write endpoint refuse demo orgs, so a
       visitor cannot buy a subscription for a shared sandbox.
@@ -248,7 +248,7 @@ def _demo_org_config() -> dict:
             # visitor is an admin of this org, and those three surfaces are
             # served by Enterprise routers that know nothing about the demo:
             # they have no is_demo guard, and none of their tables is in the
-            # drift sweep. The audit one is the sharp case — the sync sweeps
+            # drift sweep. The audit one is the sharp case: the sync sweeps
             # UserAuditEvent and the audit router hides other visitors
             # precisely so one prospect cannot read another's identity, and
             # force-enabling the Enterprise audit surface would hand it back.
@@ -333,7 +333,7 @@ async def _record_sync_failure(
     """Persist a failed run on the state row, in its own transaction.
 
     The sync's own transaction is being rolled back, so the failure has to be
-    written after that — otherwise it would be discarded along with the partial
+    written after that; otherwise it would be discarded along with the partial
     work it is describing. Never raises: losing the error record must not
     replace the original exception with a less useful one.
     """
@@ -342,13 +342,13 @@ async def _record_sync_failure(
         state = await _load_state(db_session)
 
         # The rollback means this row is re-read now, not as it was when the
-        # run started — so another replica's successful run may already have
+        # run started, so another replica's successful run may already have
         # committed READY over it. Marking a demo that is currently healthy as
         # FAILED would be worse than losing the error: the status endpoint
         # reports it and the entry point hides the demo on that basis. The
         # error is recorded either way; only the state is withheld.
         # `started_from is None` means there was no state row when this run
-        # began — the first provision. That is precisely the run where the race
+        # began: the first provision. That is precisely the run where the race
         # is most likely, not least: several replicas reach the INSERT on a
         # unique slug together, one wins and writes READY, and the losers would
         # each stamp FAILED over it. So a row that is READY now is treated as
@@ -408,7 +408,7 @@ async def _sync_demo_inner(
     # grading inbox are the sales asset, and a demo that refuses to exist
     # because one optional feature drifted is the worse outcome.
     #
-    # Deliberately narrow — the surrounding phases stay fatal, because a
+    # Deliberately narrow: the surrounding phases stay fatal, because a
     # failure in any of them means the demo is wrong rather than incomplete.
     # Inside a savepoint, not a bare try: a statement that fails mid-step
     # aborts the surrounding transaction on Postgres, so catching the exception
@@ -519,7 +519,7 @@ async def _sync_org(
                 f"organization {slug!r} already exists and is not a demo org; "
                 f"set LEARNHOUSE_DEMO_SLUG to something else"
             )
-        # update_date is deliberately not part of the comparison — it is always
+        # update_date is deliberately not part of the comparison. It is always
         # "now" and would make every field look changed, which is the exact
         # failure _apply exists to prevent.
         if _apply(
@@ -572,7 +572,7 @@ async def _sync_org(
 
 # --- media ------------------------------------------------------------------
 
-#: Fixed namespace for derived upload filenames. Never change it — every stored
+#: Fixed namespace for derived upload filenames. Never change it: every stored
 #: logo, thumbnail and avatar reference is computed from it.
 _UPLOAD_NAMESPACE = UUID("2b7c1f52-9a44-5c6e-8d31-70e5a4c9b18f")
 
@@ -610,7 +610,7 @@ async def _upload(
     """Copy a bundle image into org/user storage through the normal funnel.
 
     Uses upload_content rather than upload_file because there is no UploadFile
-    here — just bytes on disk — and the same funnel handles both the filesystem
+    here (just bytes on disk), and the same funnel handles both the filesystem
     and S3 backends.
     """
     from src.services.utils.upload_content import upload_content
@@ -644,7 +644,7 @@ async def _sync_branding(
     The column is compared against the filename the bundle asset derives, not
     merely checked for emptiness. Emptiness was the wrong question: a visitor
     who uploads their own logo through the org settings leaves a non-empty
-    column, so the demo kept their branding permanently — the one piece of the
+    column, so the demo kept their branding permanently: the one piece of the
     org every prospect sees first.
 
     The upload itself still happens only when the column does not already name
@@ -760,7 +760,7 @@ async def _sync_students(
                 db_session.add(user)
                 stats.updated += 1
         elif user.avatar_image:
-            # The bundle gives this persona no picture on purpose — a real org
+            # The bundle gives this persona no picture on purpose; a real org
             # is full of people who never uploaded one.
             user.avatar_image = ""
             db_session.add(user)
@@ -940,7 +940,7 @@ async def _sync_courses(
             published=course_spec.published,
             # Reverted alongside the image below. Uploading a video thumbnail
             # switches thumbnail_type to VIDEO, and the catalogue then renders
-            # thumbnail_video — so restoring only thumbnail_image left the
+            # thumbnail_video, so restoring only thumbnail_image left the
             # visitor's video playing on the course card.
             thumbnail_type=ThumbnailType.IMAGE,
             thumbnail_video="",
@@ -1001,7 +1001,7 @@ async def _sync_resource_author_for(
     Courses and podcasts without an author render with an empty byline.
 
     Deliberately a demo student rather than "the org's first admin": the sync
-    never creates an admin, so the first admin is the first *visitor* — and
+    never creates an admin, so the first admin is the first *visitor*, and
     attributing every course and podcast to them publishes a real person's name
     and email as the author of content they have never seen. The byline belongs
     to a fictional person because the content is fictional.
@@ -1045,9 +1045,9 @@ async def _sync_resource_author_for(
 
     # Authorship on bundle content is the bundle's to decide. Adding a
     # contributor is an ordinary admin action and every visitor is an admin, so
-    # without this a visitor could put their own name — or, since the
+    # without this a visitor could put their own name (or, since the
     # contributor endpoint resolves usernames globally with no org scoping, any
-    # username on the platform — permanently on a demo course's byline.
+    # username on the platform) permanently on a demo course's byline.
     intruders = [row.id for row in rows if row.user_id != admin_id and row.id]
     if intruders:
         await db_session.execute(
@@ -1508,7 +1508,7 @@ async def _sync_certifications(
                 )
             ).scalars().first()
 
-        # The certificate is rendered entirely from these five keys — the
+        # The certificate is rendered entirely from these five keys; the
         # editor reads config.certification_name / _description /
         # certification_type / certificate_pattern / certificate_instructor.
         # A config of {"title": ...} left every certificate falling back to
@@ -1630,7 +1630,7 @@ async def _sync_engagement(
 
     The plan enables these features; this is what makes them worth looking at.
     An enabled Boards page with nothing on it demonstrates less than a disabled
-    one — a prospect reads "empty" as "nobody uses this".
+    one; a prospect reads "empty" as "nobody uses this".
 
     Podcasts are deliberately absent: an episode needs a real audio file, which
     carries the same repo-weight and transcoding cost as shipping video.
@@ -1668,7 +1668,7 @@ async def _sync_podcast(
 
     The audio is short spoken clips generated by scripts/build_demo_media.py.
     An episode with no audio file leaves the player spinning on a flat
-    waveform, which looks broken rather than empty — so the bundle validator
+    waveform, which looks broken rather than empty, so the bundle validator
     refuses a podcast whose media is missing.
     """
     from src.db.podcasts.episodes import PodcastEpisode
@@ -1887,7 +1887,7 @@ async def _sync_community(
             upvote_count=discussion_spec.upvotes,
             is_pinned=discussion_spec.pinned,
             # A visitor can lock a discussion, and locking it stops everyone
-            # after them replying — a seeded conversation that quietly closes
+            # after them replying; a seeded conversation that quietly closes
             # for good is a worse demo than one nobody has touched.
             is_locked=False,
         )
@@ -1976,7 +1976,7 @@ def _board_canvas(slug: str) -> Optional[bytes]:
     A board's content is a CRDT binary rather than ordinary columns, so it is
     generated by apps/collab/scripts/build_demo_boards.mjs (where yjs lives)
     and committed. The collaboration server loads this from the database the
-    first time a board is opened — without it every demo board opens blank,
+    first time a board is opened; without it every demo board opens blank,
     which reads as a feature nobody uses.
     """
     import os
@@ -2040,7 +2040,7 @@ async def _sync_board(
         #
         # Comparing the bytes first keeps a settled demo silent. The board is a
         # live CRDT document, so a visitor drawing at the moment of a refresh
-        # loses that stroke — which is what a demo that resets every ten
+        # loses that stroke, which is what a demo that resets every ten
         # minutes is supposed to do. Note the collaboration server holds the
         # document in memory, so an open session keeps rendering its own copy
         # until it reconnects.
@@ -2164,7 +2164,7 @@ def _store_unsupported_reason() -> Optional[str]:
     debugging round trip while somebody watched a demo refuse to build.
 
     Both store steps ask the same question here so they can never disagree
-    about whether the storefront exists — the seeding skipping while the drift
+    about whether the storefront exists; the seeding skipping while the drift
     sweep carried on is exactly how the second production failure happened.
     """
     from src.core.deployment_mode import get_deployment_mode
@@ -2181,7 +2181,7 @@ def _store_unsupported_reason() -> Optional[str]:
         )
     except ImportError as exc:
         return (
-            f"payments models unavailable ({exc}) — expected on a community install"
+            f"payments models unavailable ({exc}); expected on a community install"
         )
 
     # CUSTOM means "this organization drives its own enrolments", the only
@@ -2218,7 +2218,7 @@ async def _sync_store(
 ) -> None:
     """Fill the storefront: offers, bundles and who has bought them.
 
-    Payments are an Enterprise Edition feature — the models live in the private
+    Payments are an Enterprise Edition feature: the models live in the private
     ee/ tree and their tables are created by SQLModel rather than a migration,
     so a community install has no payments schema at all. The import is
     therefore guarded and the whole step is skipped rather than failing the
@@ -2230,7 +2230,7 @@ async def _sync_store(
 
     # One question, asked in one place: can this build host the storefront at
     # all? "Can I import the models?" is not the same as "is this feature on
-    # and complete?" — payments is Enterprise-gated, and an Enterprise tree can
+    # and complete?" Payments is Enterprise-gated, and an Enterprise tree can
     # be present, importable, and still older than the demo needs.
     unsupported = _store_unsupported_reason()
     if unsupported:
@@ -2397,7 +2397,7 @@ async def _sync_store(
             is_publicly_listed=True,
             payments_group_id=group.id if group else None,
             # Reconciled, not merely set on create. A visitor-admin can point
-            # this at any URL, and the storefront sends buyers there — so an
+            # this at any URL, and the storefront sends buyers there, so an
             # unreconciled value is a phishing page living in the demo store
             # until someone notices. The bundle never sets one.
             external_checkout_url=None,
@@ -2522,7 +2522,7 @@ async def _delete_drift(
     """Remove anything in the demo org the bundle does not own.
 
     That is, by definition, whatever a visitor created. Their membership of the
-    org is left alone — visitors are not drift, their content is.
+    org is left alone: visitors are not drift, their content is.
     """
     stats.steps.append("drift")
 
@@ -2547,7 +2547,7 @@ async def _delete_drift(
         _Sweep(PodcastEpisode, PodcastEpisode.episode_uuid, DemoEntityKind.PODCAST_EPISODE),
         # Not cosmetic. Every visitor joins the demo as an admin, so any of
         # them can mint an API token scoped to the org or point a webhook at a
-        # server they control. The bundle owns neither, so both are drift — and
+        # server they control. The bundle owns neither, so both are drift, and
         # without these two lines a token minted once would survive every
         # refresh and keep working indefinitely.
         _Sweep(APIToken, APIToken.token_uuid, DemoEntityKind.API_TOKEN),
@@ -2592,7 +2592,7 @@ async def _delete_drift(
         # its thumbnail and the images and video inside its activities, a
         # podcast its cover and episode audio, a media row its file. Deleting
         # the row without the file leaves bytes in shared storage with nothing
-        # pointing at them, and nothing else ever collects them — teardown only
+        # pointing at them, and nothing else ever collects them; teardown only
         # runs when the whole demo is destroyed. The demo would grow at
         # whatever rate prospects try the upload button.
         #
@@ -2617,7 +2617,7 @@ async def _delete_drift(
     # other half of the storefront, it touches the same Enterprise models, and
     # a version skew here must cost the storefront rather than the demo. The
     # capability gate above should already have stopped it, but the gate can
-    # only know about the gaps we have met so far — this covers the next one.
+    # only know about the gaps we have met so far; this covers the next one.
     #
     # A savepoint rather than a bare try: a statement failing mid-sweep aborts
     # the surrounding transaction on Postgres, and every later phase would then
@@ -2673,7 +2673,7 @@ async def _delete_unowned_org_drift(
     """Sweep org-scoped tables the bundle never writes to.
 
     These carry an org_id but no uuid column, so they cannot join the
-    uuid-matched sweep above — and since the sync creates none of them, every
+    uuid-matched sweep above, and since the sync creates none of them, every
     row in the demo org belongs to a visitor.
 
     Activity versions are the reason this is not merely tidiness: the sync puts
@@ -2681,7 +2681,7 @@ async def _delete_unowned_org_drift(
     kept, carrying their name and a one-click restore.
 
     Note what is *not* swept here. Audit events for logins and logouts carry a
-    NULL org_id by design — a connection is not an organization's event — so
+    NULL org_id by design (a connection is not an organization's event), so
     they are not the demo's rows to delete, and a sweep matching NULL would be
     writing outside the demo org. The dossier that exposed them is scoped in
     routers/audit.py instead, which is where the leak actually was.
@@ -2706,7 +2706,7 @@ async def _delete_unowned_org_drift(
         logger.info("Demo drift: removed %s %s row(s)", len(stale), label)
 
     # Library-root entries. The bundle files every course inside one of its
-    # three sections, so it never writes a row with a NULL folder_id — that is
+    # three sections, so it never writes a row with a NULL folder_id. That is
     # the Drive-like root, and only the folders service puts anything there.
     # Left alone, a visitor could pin a copy of a bundle course to the root and
     # it would sit beside the real one for good.
@@ -2757,7 +2757,7 @@ async def _delete_unowned_org_drift(
 
     # Only delete roles nothing references any more. A role assigned by
     # update_user_role, which resolves a role by uuid with no org scoping, can
-    # be held by a membership in a *different* organization — and role_id is a
+    # be held by a membership in a *different* organization, and role_id is a
     # plain foreign key with no ON DELETE, so deleting it raises and takes the
     # whole sync transaction with it. That would not be a one-off: every
     # subsequent refresh would hit the same row and the demo would stay frozen
@@ -2795,8 +2795,8 @@ async def _delete_reaction_drift(
 ) -> None:
     """Remove every vote and reaction inside the demo.
 
-    The bundle seeds none of these — discussion upvote counts are a column on
-    the discussion, not rows — so anything here was left by a visitor. They
+    The bundle seeds none of these (discussion upvote counts are a column on
+    the discussion, not rows), so anything here was left by a visitor. They
     hang off a discussion, a comment or a playground rather than carrying an
     org_id, so the generic uuid sweep cannot see them at all, and their parents
     are bundle-owned and survive every refresh.
@@ -2854,7 +2854,7 @@ async def _delete_visitor_progress_drift(
     learners against the current epoch and deliberately scopes itself to them.
     Nothing removed a visitor's own trail, submissions or certificate, so a
     prospect who tried a course appeared in the learners table, the grading
-    inbox and the certificate list of the next prospect — who is also an admin
+    inbox and the certificate list of the next prospect, who is also an admin
     and can read the lot, under that person's real name.
 
     Every table here scopes through a parent rather than an org_id of its own,
@@ -2919,7 +2919,7 @@ async def _delete_certification_drift(
     Also scoped through a parent rather than an ``org_id``: Certifications
     hangs off the course. The sync only ever looks up its own certification by
     registry entry, so a second one added through the UI is invisible to it and
-    would survive every refresh — leaving the course offering two certificates
+    would survive every refresh, leaving the course offering two certificates
     and the next prospect wondering which is real.
     """
     course_ids = (
@@ -3005,7 +3005,7 @@ async def _delete_store_drift(
 
     Separate from the main sweep because the payments models are Enterprise
     Edition only and must stay behind a guarded import. Without this an offer
-    a visitor invents — at whatever price they like — sits in the public
+    a visitor invents, at whatever price they like, sits in the public
     storefront until someone notices.
 
     Groups are matched by primary key rather than uuid: PaymentsGroup has no
@@ -3113,7 +3113,7 @@ async def _sync_progress(
         key: entry.entity_id for key, entry in course_rows.items() if entry is not None
     }
 
-    # Ordered activity ids per course — the prefix a learner completes.
+    # Ordered activity ids per course: the prefix a learner completes.
     activities_by_course: dict[str, list[int]] = {}
     for course_key, course_id in course_ids.items():
         rows = (
@@ -3187,12 +3187,12 @@ async def _delete_progress_drift(
 
     The daily epoch roll re-draws every persona, so a learner's enrolled course
     set changes. The per-learner passes above only ever visit courses in the
-    CURRENT plan, so anything that fell out was left behind — and because it is
+    CURRENT plan, so anything that fell out was left behind, and because it is
     only ever added to, enrolments accumulate until all forty learners appear
     enrolled in the entire catalogue with frozen progress bars, stale rows in
     the grading inbox and certificates their plan says they never earned.
 
-    That is the persona design — lurkers take one course, completers take six —
+    That is the persona design (lurkers take one course, completers take six)
     quietly erasing itself over a fortnight of uptime. Reconciling here restores
     the module's stated invariant: the demo is a function of (bundle, epoch),
     not of how long it has been running.
@@ -3508,7 +3508,7 @@ async def _sync_task_submission(
     )
 
     if row is None:
-        # No org_id on this table — it reaches the organization through
+        # No org_id on this table; it reaches the organization through
         # assignment_task, which is why teardown depends on that cascade.
         db_session.add(
             AssignmentTaskSubmission(
@@ -3559,7 +3559,7 @@ async def _sync_user_submission(
     )
 
     if row is None:
-        # Carries only user_id and assignment_id — it reaches the organization
+        # Carries only user_id and assignment_id; it reaches the organization
         # through the assignment, so teardown relies on that cascade.
         db_session.add(
             AssignmentUserSubmission(
@@ -3632,7 +3632,7 @@ async def _sync_certificates(
                         # created_at / updated_at, not creation_date /
                         # update_date: this table names them differently to the
                         # rest, and SQLModel silently drops kwargs that are not
-                        # fields — so the wrong names left every certificate
+                        # fields, so the wrong names left every certificate
                         # with an empty award date.
                         created_at=_days_ago(
                             epoch, 2 + (plan.index % 21), hour=9 + (plan.index % 8)

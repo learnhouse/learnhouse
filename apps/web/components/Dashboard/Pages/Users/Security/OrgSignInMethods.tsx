@@ -150,7 +150,7 @@ const OrgSignInMethods: React.FC = () => {
             <p className="text-xs text-gray-500 mt-0.5 leading-relaxed max-w-xl">
               {t('dashboard.organization.security.session_sharing_hint', {
                 defaultValue:
-                  'When off, signing in at learnhouse.io won’t let members into this org — they must sign in again from this org’s login page using an allowed method.',
+                  'When off, signing in at learnhouse.io won’t let members into this org; they must sign in again from this org’s login page using an allowed method.',
               })}
             </p>
           </div>

@@ -489,6 +489,7 @@ async def validate_comment_content(
     community = (await db_session.execute(statement)).scalars().first()
     settings = get_community_settings(community)
 
+    validate_rich_content(content, settings, content_type="reply")
     await validate_content_for_community(
         content, community_id, db_session, content_type="reply",
         max_length=int(settings.get("max_comment_length", 0) or 0),

@@ -110,7 +110,7 @@ class TestMediaServiceCoverage:
 
     @pytest.mark.asyncio
     async def test_get_media_missing_404(self, db, admin_user, mock_request):
-        # Line 167 lives in get_media at line 148 — missing media -> 404.
+        # Line 167 lives in get_media at line 148: missing media -> 404.
         with _bypass():
             with pytest.raises(HTTPException) as exc:
                 await get_media(mock_request, "media_does_not_exist", admin_user, db)

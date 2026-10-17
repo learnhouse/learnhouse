@@ -46,7 +46,27 @@ import { Extension } from '@tiptap/core'
 import { BoardYjsProvider } from './BoardYjsContext'
 import { BoardSelectionProvider } from './BoardSelectionContext'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useAuth } from '@components/Contexts/AuthContext'
+import { useTranslation } from 'react-i18next'
 
+
+// The collab server closes a socket with these codes when retrying cannot
+// help: access was revoked, or the board outgrew the size it can persist.
+// Its close message (sent just before the socket closes) carries only the
+// reason, so both are matched. 4401 ("Token expired") is deliberately absent:
+// the provider reconnects on its own and the `token` callback below supplies
+// a fresh token for the new connection.
+type TerminalClose = 'access_revoked' | 'too_large'
+const TERMINAL_CLOSES: { code: number; reason: string; kind: TerminalClose }[] = [
+  { code: 4403, reason: 'Access revoked', kind: 'access_revoked' },
+  { code: 4413, reason: 'Board is too large', kind: 'too_large' },
+]
+
+function terminalCloseOf(event: { code?: number; reason?: string } | undefined): TerminalClose | null {
+  if (!event) return null
+  const match = TERMINAL_CLOSES.find((c) => c.code === event.code || c.reason === event.reason)
+  return match ? match.kind : null
+}
 
 interface BoardCanvasProps {
   board: any
@@ -81,7 +101,7 @@ function pointsToSvgPath(points: { x: number; y: number }[]): string {
   return d
 }
 
-/** Inner component — only mounted once ydoc & provider are ready */
+/** Inner component, only mounted once ydoc & provider are ready */
 function BoardEditorInner({
   board,
   orgslug,
@@ -205,12 +225,12 @@ function BoardEditorInner({
         class: 'board-editor outline-none min-h-[2000px] min-w-[3000px] relative',
         // The canvas coordinate space is dir="ltr" in every locale. Cards store
         // absolute left/top pixels in the Yjs doc, and those coordinates are
-        // shared live between collaborators — mirroring the canvas for an RTL
+        // shared live between collaborators; mirroring the canvas for an RTL
         // client would put its cards somewhere else than everyone else sees.
         // Card *text* still follows its own direction via dir="auto".
         dir: 'ltr',
       },
-      // Block free-floating text at the canvas root — typing must happen inside
+      // Block free-floating text at the canvas root; typing must happen inside
       // a card or note. Without this, a click on empty canvas lets ProseMirror
       // insert text into the root paragraph, which renders "on the map".
       handleTextInput(view) {
@@ -334,11 +354,11 @@ function BoardEditorInner({
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
       e.preventDefault()
     } else if (mode === 'select' && e.button === 0) {
-      // Check if click landed on a block (node-view-wrapper) — if so, let the block handle it
+      // Check if click landed on a block (node-view-wrapper); if so, let the block handle it
       const target = e.target as HTMLElement
       const isOnBlock = target.closest('[data-node-view-wrapper]')
       if (!isOnBlock) {
-        // Clicked empty canvas — blur editor so it stops capturing keystrokes
+        // Clicked empty canvas: blur editor so it stops capturing keystrokes
         editor?.commands.blur()
 
         // Start marquee or just clear selection
@@ -690,7 +710,7 @@ function BoardEditorInner({
   } | null>(null)
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Ignore touches on blocks — let them handle their own
+    // Ignore touches on blocks; let them handle their own
     const target = e.target as HTMLElement
     if (target.closest('[data-node-view-wrapper]')) return
 
@@ -894,7 +914,7 @@ function BoardEditorInner({
         />
       </div>
 
-      {/* Feedback button — bottom left */}
+      {/* Feedback button, bottom left */}
       <button
         onClick={() => setFeedbackOpen(true)}
         className="absolute bottom-5 start-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed board-feedback"
@@ -918,12 +938,26 @@ function BoardEditorInner({
   )
 }
 
-/** Outer component — handles Yjs lifecycle, only renders editor once ready */
+/** Outer component: handles Yjs lifecycle, only renders editor once ready */
 export default function BoardCanvas({ board, accessToken, orgslug, username, orgUuid }: BoardCanvasProps) {
+  const { t } = useTranslation()
+  const { getAccessToken } = useAuth()
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null)
   const [connStatus, setConnStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
   const [authFailed, setAuthFailed] = useState(false)
+  const [terminalClose, setTerminalClose] = useState<TerminalClose | null>(null)
+
+  // The provider asks for a token on every (re)connect. Reading it through refs
+  // means a reconnect after the 8-hour access token lapsed sends the session's
+  // current token instead of the one the page loaded with, without tearing
+  // down the document whenever the token rotates.
+  const accessTokenRef = useRef(accessToken)
+  const getAccessTokenRef = useRef(getAccessToken)
+  useEffect(() => {
+    accessTokenRef.current = accessToken
+    getAccessTokenRef.current = getAccessToken
+  })
 
   useEffect(() => {
     const doc = new Y.Doc()
@@ -931,9 +965,24 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
       url: getCollabUrl(),
       name: `board:${board.board_uuid}`,
       document: doc,
-      token: accessToken,
+      token: async () => {
+        try {
+          const fresh = await getAccessTokenRef.current()
+          if (fresh) return fresh
+        } catch {
+          // Fall back to the token the page was given
+        }
+        return accessTokenRef.current
+      },
       onStatus({ status }: { status: string }) {
         setConnStatus(status as 'connecting' | 'connected' | 'disconnected')
+      },
+      onClose({ event }: { event: { code?: number; reason?: string } }) {
+        const kind = terminalCloseOf(event)
+        if (!kind) return
+        // Runs before the socket schedules its reconnect, so this stops it
+        setTerminalClose(kind)
+        prov.disconnect()
       },
       onAuthenticationFailed({ reason }: { reason: string }) {
         console.error('[board] Authentication failed:', reason)
@@ -943,19 +992,41 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
     })
 
     // The Y.Doc / HocuspocusProvider are external systems created in this effect;
-    // storing them in state once per board/token is the intended synchronization,
+    // storing them in state once per board is the intended synchronization,
     // not a cascading render loop.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setYdoc(doc)
     setProvider(prov)
     setAuthFailed(false)
+    setTerminalClose(null)
     setConnStatus('connecting')
 
     return () => {
       prov.destroy()
       doc.destroy()
     }
-  }, [board.board_uuid, accessToken])
+  }, [board.board_uuid])
+
+  if (terminalClose) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-neutral-50">
+        <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl bg-white p-8 text-center shadow-lg">
+          <p className="text-sm font-medium text-neutral-700">
+            {t(`boards.connection.${terminalClose}_title`)}
+          </p>
+          <p className="text-xs text-neutral-400">
+            {t(`boards.connection.${terminalClose}_description`)}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 rounded-lg bg-neutral-900 px-4 py-2 text-xs font-medium text-white hover:bg-neutral-800 transition-colors"
+          >
+            {t('boards.connection.reload')}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (authFailed) {
     return (

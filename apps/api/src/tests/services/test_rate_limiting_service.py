@@ -70,8 +70,9 @@ def test_get_redis_connection_success_and_missing_config():
     [
         (
             "127.0.0.1",
-            {"X-Forwarded-For": "203.0.113.9, 10.0.0.2"},
-            "203.0.113.9",
+            # TEST-NET ranges count as private, so use a public address
+            {"X-Forwarded-For": "1.0.0.9, 10.0.0.2"},
+            "1.0.0.9",
         ),
         (
             "127.0.0.1",
@@ -302,7 +303,7 @@ def test_ip_based_wrappers_delegate_with_expected_limits(
     "func,input_value,expected_key",
     [
         (check_verification_resend_rate_limit, "User@Example.com", "verify_resend:user@example.com"),
-        (check_password_reset_rate_limit, "User@Example.com", "password_reset:user@example.com"),
+        (check_password_reset_rate_limit, "User@Example.com", "password_reset:change:user@example.com"),
         (check_email_verification_rate_limit, "User@Example.com", "email_verify:user@example.com"),
     ],
 )

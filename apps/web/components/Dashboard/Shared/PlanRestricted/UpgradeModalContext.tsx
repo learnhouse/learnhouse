@@ -73,7 +73,7 @@ export function UpgradeModalProvider({ children }: { children: React.ReactNode }
 }
 
 /**
- * Access the app-wide upgrade modal. Safe to call outside the provider — it
+ * Access the app-wide upgrade modal. Safe to call outside the provider: it
  * returns a no-op fallback (returns false / does nothing) so surfaces that can
  * render outside the dashboard shell don't crash; they simply fall back to
  * their normal error toast.

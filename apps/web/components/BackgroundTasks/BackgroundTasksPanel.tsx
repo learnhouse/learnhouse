@@ -83,7 +83,7 @@ function TaskRow({ task, onDismiss }: { task: BgTask; onDismiss: (_id: string) =
 }
 
 /**
- * Global, persistent, expandable notification panel (top-right — sits above
+ * Global, persistent, expandable notification panel (top-right; sits above
  * page content, survives navigation and reloads). Generic: renders whatever
  * background tasks are registered via useBackgroundTasks().
  */

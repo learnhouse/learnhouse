@@ -40,11 +40,11 @@ STRINGS: dict[str, str] = {
 
     "nudge.activation.whats_blocking_d14.subject": "是什么挡住了？",
     "nudge.activation.whats_blocking_d14.heading": "能问问是什么让您停下的吗？",
-    "nudge.activation.whats_blocking_d14.body": "您两周前创建了 {org_name}，到现在还没添加课程。如果有让人困惑或缺失的地方，我们很想知道——直接回复这封邮件就好，会直接到我们手上。",
+    "nudge.activation.whats_blocking_d14.body": "您两周前创建了 {org_name}，到现在还没添加课程。如果有让人困惑或缺失的地方，我们很想知道：直接回复这封邮件就好，会直接到我们手上。",
 
     "nudge.activation.last_call_d30.subject": "关于 {org_name} 的最后一封邮件",
     "nudge.activation.last_call_d30.heading": "这是最后一封",
-    "nudge.activation.last_call_d30.body": "{org_name} 已经安静了一个月，所以我们不再发这类邮件了。账户和里面的一切都会保留——您回来时，都还在原处。",
+    "nudge.activation.last_call_d30.body": "{org_name} 已经安静了一个月，所以我们不再发这类邮件了。账户和里面的一切都会保留；您回来时，都还在原处。",
     "nudge.activation.last_call_d30.cta": "打开控制台",
 
     "nudge.content.course_no_chapter_d1.subject": "《{course_name}》还缺第一个章节",
@@ -54,7 +54,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.content.chapter_no_activity_d1.subject": "为《{course_name}》添加第一节课",
     "nudge.content.chapter_no_activity_d1.heading": "章节已经就位",
-    "nudge.content.chapter_no_activity_d1.body": "《{course_name}》有章节，但里面还是空的。一节课可以是一页文字、一段视频、一份测验——只要贴合主题就行。",
+    "nudge.content.chapter_no_activity_d1.body": "《{course_name}》有章节，但里面还是空的。一节课可以是一页文字、一段视频、一份测验，只要贴合主题就行。",
     "nudge.content.chapter_no_activity_d1.cta": "添加课时",
 
     "nudge.content.activity_unpublished_d2.subject": "《{course_name}》中的课时还看不到",
@@ -64,12 +64,12 @@ STRINGS: dict[str, str] = {
 
     "nudge.content.course_draft_d3.subject": "《{course_name}》仍是草稿",
     "nudge.content.course_draft_d3.heading": "《{course_name}》就快好了",
-    "nudge.content.course_draft_d3.body": "您已经为《{course_name}》添加了课时，但课程尚未发布，所以没人能打开。它不需要完全做完——发布只是让它可见，之后还能继续编辑。",
+    "nudge.content.course_draft_d3.body": "您已经为《{course_name}》添加了课时，但课程尚未发布，所以没人能打开。它不需要完全做完；发布只是让它可见，之后还能继续编辑。",
     "nudge.content.course_draft_d3.cta": "发布",
 
     "nudge.content.course_draft_d10.subject": "《{course_name}》做草稿有一阵子了",
     "nudge.content.course_draft_d10.heading": "多半已经可以了",
-    "nudge.content.course_draft_d10.body": "《{course_name}》未发布已超过一周。课程很少会让人觉得真的做完了——发布让它可见，您可以在有人阅读的同时继续打磨。",
+    "nudge.content.course_draft_d10.body": "《{course_name}》未发布已超过一周。课程很少会让人觉得真的做完了；发布让它可见，您可以在有人阅读的同时继续打磨。",
     "nudge.content.course_draft_d10.cta": "发布",
 
     "nudge.content.thin_course_d5.subject": "《{course_name}》可以再充实一点",
@@ -94,10 +94,10 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.members_no_enrollment_d3.subject": "您的学员还没开始",
     "nudge.audience.members_no_enrollment_d3.heading": "加入了，但什么都没打开",
-    "nudge.audience.members_no_enrollment_d3.body": "有人加入了 {org_name}，但还没有人开始学习课程。通常一条带直达链接的简短消息就够了——多数人只是没找到入口。",
+    "nudge.audience.members_no_enrollment_d3.body": "有人加入了 {org_name}，但还没有人开始学习课程。通常一条带直达链接的简短消息就够了；多数人只是没找到入口。",
     "nudge.audience.members_no_enrollment_d3.cta": "查看成员",
 
-    "nudge.audience.share_public_page_d14.subject": "您的课程页面是公开的——链接在这里",
+    "nudge.audience.share_public_page_d14.subject": "您的课程页面是公开的，链接在这里",
     "nudge.audience.share_public_page_d14.heading": "任何拿到链接的人都能阅读",
     "nudge.audience.share_public_page_d14.body": "《{course_name}》是公开的，因此可以随处分享，别人不需要邀请。下面这个链接就是可以发出去的那个。",
     "nudge.audience.share_public_page_d14.cta": "查看公开页面",
@@ -124,7 +124,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.monetization.upgrade_recap_d21.subject": "{next_plan} 能为 {org_name} 带来什么",
     "nudge.monetization.upgrade_recap_d21.heading": "您已经做出了实在的东西",
-    "nudge.monetization.upgrade_recap_d21.body": "{org_name} 有已发布的课程，也有在读的人。{next_plan} 方案提供了成长空间，还包含一些 {plan_name} 方案没有的功能——如果打算扩展，值得看看。",
+    "nudge.monetization.upgrade_recap_d21.body": "{org_name} 有已发布的课程，也有在读的人。{next_plan} 方案提供了成长空间，还包含一些 {plan_name} 方案没有的功能；如果打算扩展，值得看看。",
     "nudge.monetization.upgrade_recap_d21.cta": "对比方案",
 
     "nudge.dormancy.no_login_14d.subject": "{org_name} 最近很安静",
@@ -134,7 +134,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.dormancy.no_login_30d.subject": "{org_name} 上的课程都还在",
     "nudge.dormancy.no_login_30d.heading": "已经过去几周了",
-    "nudge.dormancy.no_login_30d.body": "您不在的这段时间没有任何变化——{org_name} 和里面的一切都在原处。重新开始只需一次点击。",
+    "nudge.dormancy.no_login_30d.body": "您不在的这段时间没有任何变化：{org_name} 和里面的一切都在原处。重新开始只需一次点击。",
     "nudge.dormancy.no_login_30d.cta": "打开控制台",
 
     "nudge.dormancy.no_login_60d.subject": "关于 {org_name} 的最后一次问候",
@@ -149,7 +149,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_course_published.subject": "《{course_name}》已上线",
     "nudge.milestone.first_course_published.heading": "您发布了第一门课程",
-    "nudge.milestone.first_course_published.body": "《{course_name}》已经上线，可以阅读了。接下来真正起作用的，是有人来读——哪怕先只有一两个人。",
+    "nudge.milestone.first_course_published.body": "《{course_name}》已经上线，可以阅读了。接下来真正起作用的，是有人来读，哪怕先只有一两个人。",
     "nudge.milestone.first_course_published.cta": "邀请第一批学员",
 
     "nudge.milestone.first_learner_enrolled.subject": "有人开始学《{course_name}》了",
@@ -159,13 +159,13 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_completion.subject": "有人学完了 {org_name} 的一门课程",
     "nudge.milestone.first_completion.heading": "第一次结课",
-    "nudge.milestone.first_completion.body": "有学员把 {org_name} 的一门课程从头学到尾。想正式记录一下，可以添加证书——或者开始筹备下一门。",
+    "nudge.milestone.first_completion.body": "有学员把 {org_name} 的一门课程从头学到尾。想正式记录一下，可以添加证书，或者开始筹备下一门。",
     "nudge.milestone.first_completion.cta": "打开控制台",
 
     # -- reactivation ------------------------------------------------------
     "nudge.reactivation.opener.subject": "您在 {org_name} 的学院还在",
     "nudge.reactivation.opener.heading": "一切照旧，和您离开时一样",
-    "nudge.reactivation.opener.body": "自您上次来过之后，没人动过 {org_name}——每一门课程、章节和课时都在原处。想接着做，只需一次点击。",
+    "nudge.reactivation.opener.body": "自您上次来过之后，没人动过 {org_name}：每一门课程、章节和课时都在原处。想接着做，只需一次点击。",
     "nudge.reactivation.opener.cta": "打开控制台",
     "nudge.reactivation.whats_changed.subject": "LearnHouse 有了一些变化",
     "nudge.reactivation.whats_changed.heading": "自您上次来过之后",
@@ -173,9 +173,9 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "看看有什么新变化",
     "nudge.reactivation.need_a_hand.subject": "需要帮您重新上手 {org_name} 吗？",
     "nudge.reactivation.need_a_hand.heading": "是有什么挡住了吗？",
-    "nudge.reactivation.need_a_hand.body": "如果 {org_name} 停下来是有原因的——某处让人困惑、缺了什么，或者只是没时间——我们很想知道。直接回复这封邮件就好，会直接到我们手上。",
+    "nudge.reactivation.need_a_hand.body": "如果 {org_name} 停下来是有原因的（某处让人困惑、缺了什么，或者只是没时间），我们很想知道。直接回复这封邮件就好，会直接到我们手上。",
     "nudge.reactivation.closing.subject": "关于 {org_name} 的最后一封",
     "nudge.reactivation.closing.heading": "我们就说到这里",
-    "nudge.reactivation.closing.body": "这是这类邮件的最后一封。{org_name} 会原样保留，也不会过期——哪天想回来，一切都还在。",
+    "nudge.reactivation.closing.body": "这是这类邮件的最后一封。{org_name} 会原样保留，也不会过期；哪天想回来，一切都还在。",
     "nudge.reactivation.closing.cta": "打开控制台",
 }

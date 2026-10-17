@@ -63,7 +63,7 @@ export function CreateCommunityModal({
       )
 
       // getResponseMetadata() always resolves (never throws on HTTP error), so
-      // gate on result.success — previously `if (result)` treated a 403 limit
+      // gate on result.success. Previously `if (result)` treated a 403 limit
       // failure as success and closed the modal without creating anything.
       if (result?.success) {
         track(AnalyticsEvent.CommunityCreated, {

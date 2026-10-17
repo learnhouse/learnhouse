@@ -124,7 +124,7 @@ export async function updateOrgFooterTextConfig(
 /**
  * Set the display name shown on transactional email for this organization.
  *
- * Only the NAME is configurable — the sending address stays the platform's
+ * Only the NAME is configurable; the sending address stays the platform's
  * verified system address, so SPF/DKIM keep aligning. Pass an empty string to
  * fall back to the platform default.
  */
@@ -240,7 +240,7 @@ export type SignupFieldType =
   | 'date'
 
 export interface SignupFieldItem {
-  /** JSON key on the user's extra_metadata. Immutable once created — renaming
+  /** JSON key on the user's extra_metadata. Immutable once created, since renaming
    *  it orphans every answer already collected. */
   key: string
   label: string
@@ -250,7 +250,7 @@ export interface SignupFieldItem {
   order: number
   help_text?: string
   placeholder?: string
-  /** select only — also the server-side allowlist. */
+  /** select only; also the server-side allowlist. */
   options?: string[]
   max_length?: number | null
   min_value?: number | null

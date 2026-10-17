@@ -61,7 +61,7 @@ async def suppress_address(
 
     Keyed on the address rather than a user id because that is all a provider
     webhook gives us. Returns None when the address matches no account, which
-    is normal — the bounce may be for a user since deleted.
+    is normal; the bounce may be for a user since deleted.
 
     This is set independently of ``lifecycle_opt_out`` so that a later
     re-subscribe cannot silently undo it.
@@ -121,7 +121,7 @@ async def set_lifecycle_opt_out(
     """Upsert the user's lifecycle preference. Idempotent.
 
     One-click unsubscribe is retried by some mail providers, and people click
-    the link twice — repeating the call must not error or change the outcome.
+    the link twice; repeating the call must not error or change the outcome.
     """
     pref = (
         await db_session.execute(

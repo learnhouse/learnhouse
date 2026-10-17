@@ -40,11 +40,11 @@ STRINGS: dict[str, str] = {
 
     "nudge.activation.whats_blocking_d14.subject": "ما الذي حال دون ذلك؟",
     "nudge.activation.whats_blocking_d14.heading": "هل لنا أن نسأل ما الذي أوقفك؟",
-    "nudge.activation.whats_blocking_d14.body": "أنشأت {org_name} قبل أسبوعين ولم تضف دورة بعد. إن كان هناك ما أربكك أو نقص شيء، يهمّنا أن نعرف — يكفي أن ترد على هذه الرسالة، وستصلنا مباشرة.",
+    "nudge.activation.whats_blocking_d14.body": "أنشأت {org_name} قبل أسبوعين ولم تضف دورة بعد. إن كان هناك ما أربكك أو نقص شيء، يهمّنا أن نعرف. يكفي أن ترد على هذه الرسالة، وستصلنا مباشرة.",
 
     "nudge.activation.last_call_d30.subject": "آخر رسالة بخصوص {org_name}",
     "nudge.activation.last_call_d30.heading": "هذه الأخيرة",
-    "nudge.activation.last_call_d30.body": "{org_name} هادئة منذ شهر، لذا سنتوقف عن إرسال هذه الرسائل. حسابك وكل ما فيه يبقى كما هو — إن عدت، ستجد كل شيء في مكانه.",
+    "nudge.activation.last_call_d30.body": "{org_name} هادئة منذ شهر، لذا سنتوقف عن إرسال هذه الرسائل. حسابك وكل ما فيه يبقى كما هو. إن عدت، ستجد كل شيء في مكانه.",
     "nudge.activation.last_call_d30.cta": "افتح لوحة التحكم",
 
     "nudge.content.course_no_chapter_d1.subject": "«{course_name}» بحاجة إلى فصلها الأول",
@@ -54,7 +54,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.content.chapter_no_activity_d1.subject": "أضف درسك الأول إلى «{course_name}»",
     "nudge.content.chapter_no_activity_d1.heading": "الفصول جاهزة",
-    "nudge.content.chapter_no_activity_d1.body": "«{course_name}» فيها فصول لكنها ما زالت فارغة. الدرس قد يكون صفحة نص أو مقطع فيديو أو اختبارًا قصيرًا — ما يناسب الموضوع.",
+    "nudge.content.chapter_no_activity_d1.body": "«{course_name}» فيها فصول لكنها ما زالت فارغة. الدرس قد يكون صفحة نص أو مقطع فيديو أو اختبارًا قصيرًا، ما يناسب الموضوع.",
     "nudge.content.chapter_no_activity_d1.cta": "أضف درسًا",
 
     "nudge.content.activity_unpublished_d2.subject": "دروسك في «{course_name}» غير ظاهرة بعد",
@@ -64,12 +64,12 @@ STRINGS: dict[str, str] = {
 
     "nudge.content.course_draft_d3.subject": "«{course_name}» ما زالت مسودة",
     "nudge.content.course_draft_d3.heading": "«{course_name}» شارفت على الاكتمال",
-    "nudge.content.course_draft_d3.body": "أضفت دروسًا إلى «{course_name}» لكنها غير منشورة، فلا يستطيع أحد فتحها. لا يلزم أن تكون مكتملة — النشر يجعلها ظاهرة فقط، ويمكنك التعديل بعده.",
+    "nudge.content.course_draft_d3.body": "أضفت دروسًا إلى «{course_name}» لكنها غير منشورة، فلا يستطيع أحد فتحها. لا يلزم أن تكون مكتملة. النشر يجعلها ظاهرة فقط، ويمكنك التعديل بعده.",
     "nudge.content.course_draft_d3.cta": "انشرها",
 
     "nudge.content.course_draft_d10.subject": "«{course_name}» مسودة منذ فترة",
     "nudge.content.course_draft_d10.heading": "على الأرجح جاهزة",
-    "nudge.content.course_draft_d10.body": "«{course_name}» غير منشورة منذ أكثر من أسبوع. نادرًا ما تبدو الدورة مكتملة — النشر يجعلها ظاهرة، ويمكنك تحسينها بينما يقرأها الناس.",
+    "nudge.content.course_draft_d10.body": "«{course_name}» غير منشورة منذ أكثر من أسبوع. نادرًا ما تبدو الدورة مكتملة. النشر يجعلها ظاهرة، ويمكنك تحسينها بينما يقرأها الناس.",
     "nudge.content.course_draft_d10.cta": "انشرها",
 
     "nudge.content.thin_course_d5.subject": "«{course_name}» تحتمل المزيد",
@@ -94,10 +94,10 @@ STRINGS: dict[str, str] = {
 
     "nudge.audience.members_no_enrollment_d3.subject": "متعلموك لم يبدأوا بعد",
     "nudge.audience.members_no_enrollment_d3.heading": "انضموا لكنهم لم يفتحوا شيئًا",
-    "nudge.audience.members_no_enrollment_d3.body": "انضم أشخاص إلى {org_name} لكن لم يبدأ أحد دورة. رسالة قصيرة مع رابط مباشر تكفي عادة — معظمهم ببساطة لم يجدوا المدخل.",
+    "nudge.audience.members_no_enrollment_d3.body": "انضم أشخاص إلى {org_name} لكن لم يبدأ أحد دورة. رسالة قصيرة مع رابط مباشر تكفي عادة. معظمهم ببساطة لم يجدوا المدخل.",
     "nudge.audience.members_no_enrollment_d3.cta": "اطّلع على الأعضاء",
 
-    "nudge.audience.share_public_page_d14.subject": "صفحة دورتك عامة — هذا هو الرابط",
+    "nudge.audience.share_public_page_d14.subject": "صفحة دورتك عامة: هذا هو الرابط",
     "nudge.audience.share_public_page_d14.heading": "أي شخص لديه الرابط يستطيع القراءة",
     "nudge.audience.share_public_page_d14.body": "«{course_name}» عامة، فيمكنك مشاركتها في أي مكان دون حاجة أحد إلى دعوة. الرابط أدناه هو ما ترسله.",
     "nudge.audience.share_public_page_d14.cta": "اعرض الصفحة العامة",
@@ -124,7 +124,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.monetization.upgrade_recap_d21.subject": "ما ستضيفه {next_plan} إلى {org_name}",
     "nudge.monetization.upgrade_recap_d21.heading": "بنيت شيئًا حقيقيًا",
-    "nudge.monetization.upgrade_recap_d21.body": "لدى {org_name} دورات منشورة وأشخاص يقرؤونها. خطة {next_plan} تمنح مساحة للنمو وأشياء لا تتضمنها خطة {plan_name} — تستحق النظر إن كنت تنوي التوسّع.",
+    "nudge.monetization.upgrade_recap_d21.body": "لدى {org_name} دورات منشورة وأشخاص يقرؤونها. خطة {next_plan} تمنح مساحة للنمو وأشياء لا تتضمنها خطة {plan_name}، تستحق النظر إن كنت تنوي التوسّع.",
     "nudge.monetization.upgrade_recap_d21.cta": "قارن الخطط",
 
     "nudge.dormancy.no_login_14d.subject": "{org_name} كانت هادئة",
@@ -134,7 +134,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.dormancy.no_login_30d.subject": "دوراتك في {org_name} ما زالت هنا",
     "nudge.dormancy.no_login_30d.heading": "مضت بضعة أسابيع",
-    "nudge.dormancy.no_login_30d.body": "لم يتغير شيء أثناء غيابك — {org_name} وكل ما فيها تمامًا حيث تركته. العودة تحتاج نقرة واحدة.",
+    "nudge.dormancy.no_login_30d.body": "لم يتغير شيء أثناء غيابك. {org_name} وكل ما فيها تمامًا حيث تركته. العودة تحتاج نقرة واحدة.",
     "nudge.dormancy.no_login_30d.cta": "افتح لوحة التحكم",
 
     "nudge.dormancy.no_login_60d.subject": "آخر تواصل بخصوص {org_name}",
@@ -149,7 +149,7 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_course_published.subject": "«{course_name}» أصبحت منشورة",
     "nudge.milestone.first_course_published.heading": "نشرت دورتك الأولى",
-    "nudge.milestone.first_course_published.body": "«{course_name}» منشورة وقابلة للقراءة. ما يصنع الفارق الآن هو وجود من يقرؤها — ولو شخص أو اثنان في البداية.",
+    "nudge.milestone.first_course_published.body": "«{course_name}» منشورة وقابلة للقراءة. ما يصنع الفارق الآن هو وجود من يقرؤها، ولو شخص أو اثنان في البداية.",
     "nudge.milestone.first_course_published.cta": "ادعُ أول متعلمين لديك",
 
     "nudge.milestone.first_learner_enrolled.subject": "أحدهم بدأ «{course_name}»",
@@ -159,13 +159,13 @@ STRINGS: dict[str, str] = {
 
     "nudge.milestone.first_completion.subject": "أحدهم أنهى دورة في {org_name}",
     "nudge.milestone.first_completion.heading": "أول إتمام",
-    "nudge.milestone.first_completion.body": "أنهى متعلم دورة في {org_name} من أولها إلى آخرها. إن أردت توثيق ذلك، يمكنك إضافة شهادة — أو البدء ببناء ما يليها.",
+    "nudge.milestone.first_completion.body": "أنهى متعلم دورة في {org_name} من أولها إلى آخرها. إن أردت توثيق ذلك، يمكنك إضافة شهادة، أو البدء ببناء ما يليها.",
     "nudge.milestone.first_completion.cta": "افتح لوحة التحكم",
 
     # -- reactivation ------------------------------------------------------
     "nudge.reactivation.opener.subject": "أكاديميتك على {org_name} ما زالت هنا",
     "nudge.reactivation.opener.heading": "ما زالت هنا، تمامًا كما تركتها",
-    "nudge.reactivation.opener.body": "لم يمسّ أحد {org_name} منذ زيارتك الأخيرة — كل دورة وفصل ودرس في مكانه. للعودة يكفي نقرة واحدة.",
+    "nudge.reactivation.opener.body": "لم يمسّ أحد {org_name} منذ زيارتك الأخيرة. كل دورة وفصل ودرس في مكانه. للعودة يكفي نقرة واحدة.",
     "nudge.reactivation.opener.cta": "افتح لوحة التحكم",
     "nudge.reactivation.whats_changed.subject": "تغيّرت بعض الأمور في LearnHouse",
     "nudge.reactivation.whats_changed.heading": "منذ آخر زيارة لك",
@@ -173,9 +173,9 @@ STRINGS: dict[str, str] = {
     "nudge.reactivation.whats_changed.cta": "اطّلع على الجديد",
     "nudge.reactivation.need_a_hand.subject": "هل تحتاج مساعدة للعودة إلى {org_name}؟",
     "nudge.reactivation.need_a_hand.heading": "هل اعترض شيء طريقك؟",
-    "nudge.reactivation.need_a_hand.body": "إن كان هناك سبب لتوقّف {org_name} — شيء مربك أو ناقص أو ببساطة ضيق الوقت — فنحن نودّ سماعه. ردّ على هذه الرسالة وستصلنا مباشرة.",
+    "nudge.reactivation.need_a_hand.body": "إن كان هناك سبب لتوقّف {org_name} (شيء مربك أو ناقص أو ببساطة ضيق الوقت) فنحن نودّ سماعه. ردّ على هذه الرسالة وستصلنا مباشرة.",
     "nudge.reactivation.closing.subject": "آخر رسالة بخصوص {org_name}",
     "nudge.reactivation.closing.heading": "سنتوقف هنا",
-    "nudge.reactivation.closing.body": "هذه آخر رسالة من هذا النوع. تبقى {org_name} كما هي ولا ينتهي شيء — إن أردت العودة يومًا، سيكون كل شيء في انتظارك.",
+    "nudge.reactivation.closing.body": "هذه آخر رسالة من هذا النوع. تبقى {org_name} كما هي ولا ينتهي شيء. إن أردت العودة يومًا، سيكون كل شيء في انتظارك.",
     "nudge.reactivation.closing.cta": "افتح لوحة التحكم",
 }

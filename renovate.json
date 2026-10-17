@@ -92,7 +92,7 @@
       "groupSlug": "all-minor-patch"
     },
     {
-      "description": "workos declares a cryptography floor and both are pinned exactly. Split across two PRs, neither one resolves — uv fails the lock and every PR that touches them goes red. This rule is last so it wins over the groups above.",
+      "description": "workos declares a cryptography floor and both are pinned exactly. Split across two PRs, neither one resolves: uv fails the lock and every PR that touches them goes red. This rule is last so it wins over the groups above.",
       "matchPackageNames": ["workos", "cryptography"],
       "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "workos & cryptography",

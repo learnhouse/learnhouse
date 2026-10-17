@@ -101,7 +101,7 @@ def validate_zip_content(content: bytes) -> bool:
     import io
     import zipfile
 
-    # 500 MB uncompressed limit — protects against zip bomb attacks.
+    # 500 MB uncompressed limit; protects against zip bomb attacks.
     try:
         with zipfile.ZipFile(io.BytesIO(content)) as zf:
             total = sum(info.file_size for info in zf.infolist())
@@ -150,7 +150,7 @@ def _rewind(stream: Any) -> None:
 
 
 def _stream_length(stream: Any) -> Optional[int]:
-    """Byte length of a seekable stream, measured by seeking — never by reading.
+    """Byte length of a seekable stream, measured by seeking, never by reading.
 
     Returns ``None`` when the stream cannot be measured (non-seekable, or a test
     double), in which case the caller falls back to a bounded read.
@@ -169,21 +169,21 @@ def validate_ole_content(content: bytes) -> bool:
 
     Covers the binary .doc/.xls/.ppt formats. These can embed VBA macros, but
     media files are only ever served as downloads (never executed server-side
-    or rendered inline), so the residual risk is the same as any file-share —
+    or rendered inline), so the residual risk is the same as any file-share:
     the user must explicitly open and enable macros locally.
     """
     return content[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'
 
 
 # Per-type size caps. Two risks, not one: storage-fill DoS, and memory
-# exhaustion — an accepted upload is handed to the caller as a single `bytes`
-# object (see upload_content.upload_file), so the cap is also the per-request
-# RAM ceiling and a handful of concurrent uploads at the old multi-GB caps
-# could OOM the worker for every tenant on the pod.
+# exhaustion. `validate_upload` hands an accepted upload to the caller as a
+# single `bytes` object (`validate_upload_stream` does not), so for it the cap
+# is also the per-request RAM ceiling, and a handful of concurrent multi-GB
+# uploads could OOM the worker for every tenant on the pod.
 #
 # Caps are sized to the flows that actually reach this validator: media
 # library, activity/assignment attachments, org branding, podcasts. The course
-# migration dropzone's 5 GB-per-file ceiling does NOT come through here — that
+# migration dropzone's 5 GB-per-file ceiling does NOT come through here; that
 # path streams to a temp file in migration_service with its own limits.
 _GB = 1024 * 1024 * 1024
 _MB = 1024 * 1024
@@ -311,24 +311,16 @@ MIME_TO_SAFE_EXT = {
 }
 
 
-def validate_upload(
+def _validate_upload(
     file: UploadFile,
     allowed_types: List[str],
     max_size: Optional[int] = None
-) -> Tuple[str, bytes]:
-    """
-    Validate uploaded file for security and type compliance.
-    
-    Args:
-        file: The uploaded file
-        allowed_types: List of allowed file types ('image', 'video', 'document')
-        max_size: Maximum file size in bytes (auto-determined if None)
-        
-    Returns:
-        Tuple of (mime_type, file_content)
-        
-    Raises:
-        HTTPException: If validation fails
+) -> Tuple[str, Optional[bytes]]:
+    """Run every upload check without reading the body into memory.
+
+    Returns the canonical MIME type, plus the bytes already read when the
+    stream could not be measured by seeking (bounded by the size cap);
+    otherwise ``None`` and the stream is left rewound.
     """
     if not file or not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
@@ -394,13 +386,56 @@ def validate_upload(
     if not valid:
         raise HTTPException(status_code=415, detail="File appears to be corrupted or invalid")
 
-    # Callers still receive the bytes (see services/utils/upload_content.py),
-    # so the size cap above doubles as the per-request memory ceiling.
+    return EXT_TO_CANONICAL_MIME.get(ext, file.content_type), buffered
+
+
+def validate_upload(
+    file: UploadFile,
+    allowed_types: List[str],
+    max_size: Optional[int] = None
+) -> Tuple[str, bytes]:
+    """
+    Validate uploaded file for security and type compliance.
+
+    Args:
+        file: The uploaded file
+        allowed_types: List of allowed file types ('image', 'video', 'document')
+        max_size: Maximum file size in bytes (auto-determined if None)
+
+    Returns:
+        Tuple of (mime_type, file_content)
+
+    Raises:
+        HTTPException: If validation fails
+
+    This returns the whole body as ``bytes``, so the size cap is also the
+    request's memory ceiling. Large uploads should use
+    :func:`validate_upload_stream` and copy ``file.file`` in chunks instead.
+    """
+    canonical_type, buffered = _validate_upload(file, allowed_types, max_size)
     content = buffered if buffered is not None else file.file.read()
     _rewind(file.file)
-
-    canonical_type = EXT_TO_CANONICAL_MIME.get(ext, file.content_type)
     return canonical_type, content
+
+
+def validate_upload_stream(
+    file: UploadFile,
+    allowed_types: List[str],
+    max_size: Optional[int] = None
+) -> str:
+    """Same checks as :func:`validate_upload`, without returning the body.
+
+    Size is measured by seeking and the content checks read a bounded header
+    (or walk a zip's central directory), so nothing close to the multi-GB caps
+    is ever held in memory. ``file.file`` is left rewound for the caller to
+    copy to storage in chunks. Returns the canonical MIME type.
+    """
+    canonical_type, buffered = _validate_upload(file, allowed_types, max_size)
+    if buffered is not None:
+        # Only an unseekable stream gets here; it has been consumed and cannot
+        # be handed back for a chunked copy.
+        raise HTTPException(status_code=400, detail="Upload stream is not seekable")
+    return canonical_type
 
 
 def get_safe_filename(
@@ -412,7 +447,7 @@ def get_safe_filename(
 
     When ``content_type`` is provided (the validated, server-determined MIME
     type from ``validate_upload``), the stored extension is derived from that
-    type via ``MIME_TO_SAFE_EXT`` — NOT from the client-supplied filename.
+    type via ``MIME_TO_SAFE_EXT``, NOT from the client-supplied filename.
     This prevents a client from controlling the stored file's extension (e.g.
     uploading image bytes under a ".html" name). When no content_type is
     given, fall back to the (sanitized) client extension for backward

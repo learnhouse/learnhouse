@@ -13,7 +13,7 @@ export const onRequestError = async (
   request: Request,
   context: { routerKind: string; routePath: string; routeType: string; revalidateReason?: string }
 ) => {
-  // Sentry is already initialized via sentry.server.config — just capture if active
+  // Sentry is already initialized via sentry.server.config; just capture if active
   const Sentry = await import("@sentry/nextjs");
   if (Sentry.isInitialized()) {
     Sentry.captureException(error, {

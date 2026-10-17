@@ -29,7 +29,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     tags: ['organizations'],
   })
 
-  const title = `${getSubpageTitle(params.subpage)} — ${org.name}`
+  const title = `${getSubpageTitle(params.subpage)} | ${org.name}`
   const description = `Manage your account settings at ${org.name}`
 
   return {

@@ -3,12 +3,14 @@
 The AI emits a strict, schema-validated ``GeneratedQuiz``; the service then
 stamps the ids the editor's ``blockQuiz`` node expects (quizId / question_id /
 answer_id) so the frontend can insert it verbatim. This targets the *editor*
-quiz block — NOT the graded assignment QUIZ task, which has a different shape.
+quiz block, NOT the graded assignment QUIZ task, which has a different shape.
 """
 
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+from src.services.ai.schemas.limits import AI_MESSAGE_MAX_CHARS
 
 
 # --- Structured model output (ids assigned server-side afterwards) ---
@@ -39,7 +41,7 @@ class GeneratedQuiz(BaseModel):
 
 class GenerateQuizRequest(BaseModel):
     org_id: int
-    prompt: str
+    prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     # When set, the quiz is grounded on the activity's existing content.
     activity_uuid: Optional[str] = None
     # Ephemeral refine session (Redis). Omit on first call; pass back to refine.

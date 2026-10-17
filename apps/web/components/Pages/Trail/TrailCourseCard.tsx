@@ -50,7 +50,7 @@ function TrailCourseCard(props: TrailCourseCardProps) {
 
   // Only a definitive "this course has no certification" hides the certificate
   // row; a pending or failed lookup keeps the existing behaviour. Asked for only
-  // at 100% — that is the only progress where anything below consumes it, and a
+  // at 100%: that is the only progress where anything below consumes it, and a
   // trail of N unfinished courses must not fire N certification requests.
   const {
     isEnabled: certificationEnabled,

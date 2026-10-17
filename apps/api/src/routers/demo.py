@@ -13,6 +13,7 @@ from src.db.demo_state import DEMO_STATE_ID, DemoState, DemoStateEnum
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.users import AnonymousUser, PublicUser
+from src.security.api_token_utils import reject_api_token_access
 from src.security.auth import get_current_user
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.demo import flags
@@ -73,7 +74,7 @@ async def demo_status(db_session: AsyncSession = Depends(get_db_session)):
     if state.last_refresh_at:
         try:
             last = datetime.fromisoformat(state.last_refresh_at)
-            # last_refresh_at is stored as str(datetime.now()) — naive *server
+            # last_refresh_at is stored as str(datetime.now()), i.e. naive *server
             # local* time. Serialising that without an offset makes the browser
             # parse it as ITS OWN local time, so the countdown is wrong by the
             # difference between the two: on a UTC server with a UTC+2 viewer it
@@ -103,7 +104,7 @@ async def enter_demo(
     """Join the signed-in user to the demo organization as an admin.
 
     Idempotent: a returning visitor already has a membership and simply gets
-    the slug back. Admin is deliberate — the demo exists to show the
+    the slug back. Admin is deliberate: the demo exists to show the
     administrator's view, which is where the progress, cohorts and grading all
     live. The endpoints that would let an admin do real damage (invites,
     custom domains, billing, deleting the org) are blocked separately.
@@ -113,6 +114,9 @@ async def enter_demo(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="The demo is not available on this instance.",
         )
+
+    # Membership is granted to a person; a token's id is not a user id.
+    reject_api_token_access(current_user)
 
     if isinstance(current_user, AnonymousUser) or not getattr(current_user, "id", None):
         raise HTTPException(

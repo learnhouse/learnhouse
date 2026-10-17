@@ -58,7 +58,7 @@ function ActionButton({
 export interface ErrorActionsProps {
   /** Ordered resolution actions to render. */
   resolutions: ResolutionKind[]
-  /** Next error-boundary reset() — used by "retry" when available. */
+  /** Next error-boundary reset(), used by "retry" when available. */
   reset?: () => void
   /** Sentry event id to associate a feedback report with. */
   eventId?: string

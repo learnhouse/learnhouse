@@ -1,5 +1,5 @@
 /**
- * SCORM feature API — drives the EE SCORM endpoints over REST so the specs can
+ * SCORM feature API: drives the EE SCORM endpoints over REST so the specs can
  * exercise the full upload → analyze → import → runtime → reporting flow against
  * a running EE instance. Requires SCORM (Enterprise Edition); see README.
  *

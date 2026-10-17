@@ -4,7 +4,7 @@ Regression tests for teacher MANUAL grading vs. server-side re-verification.
 Bug: ``_apply_grade_and_finalize`` re-verified server-gradable task types
 (SHORT_ANSWER, NUMBER_ANSWER, QUIZ, FORM, CODE) on EVERY grading flow. On the
 teacher's manual grading path that silently overwrote the instructor's
-explicit per-task grade with a grade re-derived from the student's answer — so
+explicit per-task grade with a grade re-derived from the student's answer, so
 a teacher could never award credit the exact-matcher would mark wrong, and the
 dashboard "Full/Half/Zero" grade controls had no effect on submit.
 
@@ -437,7 +437,7 @@ class TestCodeUnverifiableDefersAutoGrade:
                 auto_graded=True,
             )
         assert computed == {"finalized": False, "reason": "code_unverifiable"}
-        # Left pending — NOT flipped to GRADED, and no graded webhook fired.
+        # Left pending: NOT flipped to GRADED, and no graded webhook fired.
         assert submission.submission_status == AssignmentUserSubmissionStatus.SUBMITTED
         dispatch.assert_not_called()
 

@@ -79,7 +79,7 @@
       "slug": "oe-t3-what-confused-you",
       "title": "What confused you most?",
       "description": "In a sentence or two: what was hardest to work out in your first fortnight? These answers are what this course gets rewritten from.",
-      "hint": "There is no wrong answer here — it is marked for being answered honestly.",
+      "hint": "There is no wrong answer here; it is marked for being answered honestly.",
       "type": "SHORT_ANSWER",
       "max_grade_value": 40,
       "contents": {
@@ -93,7 +93,7 @@
         "match_mode": "contains"
       },
       "submissions": {
-        "correct": { "answer": "Who to ask — I could not work out which team owned which question for the first week." },
+        "correct": { "answer": "Who to ask. I could not work out which team owned which question for the first week." },
         "partial": { "answer": "The acronyms, mostly. I nodded along for far too long before asking." },
         "incorrect": { "answer": "Nothing really, it was all quite clear." }
       }

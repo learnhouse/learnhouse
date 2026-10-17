@@ -12,7 +12,7 @@ import path from "node:path";
 
 import { resolveGateReason } from "../lib/features/gateReason.ts";
 
-describe("resolveGateReason — admin-disabled features", () => {
+describe("resolveGateReason: admin-disabled features", () => {
   test("blocks with the disabled reason by default", () => {
     const result = resolveGateReason({
       resolved: { enabled: false },
@@ -57,7 +57,7 @@ describe("resolveGateReason — admin-disabled features", () => {
   });
 });
 
-describe("resolveGateReason — the escape hatch is not a paywall bypass", () => {
+describe("resolveGateReason: the escape hatch is not a paywall bypass", () => {
   test("still demands an upgrade when the plan is too low", () => {
     const result = resolveGateReason({
       resolved: { enabled: true, required_plan: "standard" },
@@ -85,7 +85,7 @@ describe("resolveGateReason — the escape hatch is not a paywall bypass", () =>
   });
 });
 
-describe("resolveGateReason — granted features", () => {
+describe("resolveGateReason: granted features", () => {
   test("returns no reason when the plan is met and the feature is on", () => {
     const result = resolveGateReason({
       resolved: { enabled: true, required_plan: "standard" },
@@ -113,7 +113,7 @@ describe("resolveGateReason — granted features", () => {
   });
 });
 
-describe("resolveGateReason — the catalog fallback", () => {
+describe("resolveGateReason: the catalog fallback", () => {
   test("holds off while the org has not loaded", () => {
     // resolved_features arrives with the org. Falling back to the catalog tier
     // before then shows an upgrade card to orgs that are entitled to the

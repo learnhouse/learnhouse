@@ -180,7 +180,7 @@ async def test_invites_still_work_for_a_real_org(db, org, admin_user):
     Invite creation reaches Redis, which CI does not run, so the call is
     expected to blow up somewhere further along. Catching everything and
     asserting only on the 403 keeps the test about the one thing it can
-    honestly check — that a real org is not rejected as a demo org — instead of
+    honestly check (that a real org is not rejected as a demo org) instead of
     passing or failing on whether a Redis server happens to be listening.
     """
     from src.services.orgs.invites import create_invite_code
@@ -204,8 +204,8 @@ async def test_batch_invites_are_blocked_in_the_demo(db, ready_demo, admin_user)
     Guarding only create_invite_code guarded nothing that matters: the invite
     code is optional on this route, and without one the mail still goes out
     pointing at the org's signup page. Every visitor is an admin here, and the
-    free-tier age gate that exists to stop exactly this exempts paid plans —
-    which the demo runs on — so a minutes-old account could otherwise have the
+    free-tier age gate that exists to stop exactly this exempts paid plans,
+    which the demo runs on, so a minutes-old account could otherwise have the
     platform email 25 strangers at a time.
     """
     from src.services.orgs.users import invite_batch_users
@@ -238,7 +238,7 @@ async def test_custom_scripts_cannot_be_set_on_the_demo_org(
     OrgScripts injects every entry of `Organization.scripts` as a real <script>
     element on each page of that org. Every demo visitor holds admin, so
     without this guard one visitor could run arbitrary JavaScript in every
-    later visitor's browser — on a public subdomain, indefinitely.
+    later visitor's browser, on a public subdomain, indefinitely.
     """
     from src.db.organizations import OrganizationUpdate
     from src.services.orgs.orgs import update_org
@@ -288,7 +288,7 @@ async def test_resetting_a_members_two_factor_is_blocked_in_the_demo(
     Two-factor is a property of the account, not of a membership: UserMFA and
     UserMFABackupCode carry no org column, so the reset clears the target's
     factor everywhere they log in. Every visitor is an admin here, and anyone
-    who has ever opened the demo counts as a member of it — so without this
+    who has ever opened the demo counts as a member of it, so without this
     guard a visitor could strip the two-factor off a stranger's real account
     and then go after their password.
     """

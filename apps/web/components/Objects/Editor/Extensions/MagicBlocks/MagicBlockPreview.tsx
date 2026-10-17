@@ -11,7 +11,7 @@ interface MagicBlockPreviewProps {
 /**
  * Sandboxed iframe preview for MagicBlock HTML content.
  *
- * The document goes in through srcDoc rather than a blob: URL — a blob
+ * The document goes in through srcDoc rather than a blob: URL, because a blob
  * document inherits the creating page's origin, whereas a srcDoc frame without
  * allow-same-origin lands on an opaque one.
  */

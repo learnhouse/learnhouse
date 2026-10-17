@@ -24,7 +24,7 @@ function StripeConnectCallbackInner() {
   const [detail, setDetail] = useState('')
   const { track } = useLHAnalytics('dashboard')
   // Settled once: Stripe's code is single-use, so after it has been sent (or the
-  // page has given up) no later render — a session refresh, a rotated token —
+  // page has given up) no later render (a session refresh, a rotated token)
   // may act on it again.
   const handled = useRef(false)
 

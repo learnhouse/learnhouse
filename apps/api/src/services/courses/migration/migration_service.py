@@ -33,6 +33,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.security.auth import resolve_acting_user_id
+from src.services.courses.transfer.import_service import file_content_matches_extension
 from src.services.courses.transfer.storage_utils import (
     upload_file_to_s3,
     is_s3_enabled,
@@ -93,6 +94,22 @@ EXTENSION_TO_BLOCK_TYPE = {
     "mp3": ("audioBlock", BlockTypeEnum.BLOCK_AUDIO),
     "wav": ("audioBlock", BlockTypeEnum.BLOCK_AUDIO),
 }
+
+
+# QuickTime has no upload type to borrow a validator from: accept files whose
+# first atom is one a .mov starts with.
+_MOV_LEADING_ATOMS = {b"ftyp", b"moov", b"mdat", b"wide", b"free", b"skip", b"pnot"}
+
+
+def _migration_file_is_valid(path: str, ext: str) -> bool:
+    """Same magic-byte check upload_file applies, before anything is stored."""
+    if ext == "mov":
+        try:
+            with open(path, "rb") as f:
+                return f.read(8)[4:8] in _MOV_LEADING_ATOMS
+        except OSError:
+            return False
+    return file_content_matches_extension(path)
 
 
 def cleanup_old_temp_migrations(max_age_minutes: int = 60) -> None:
@@ -203,7 +220,7 @@ async def _upload_migration_files_inner(
                         break
                     f.write(chunk)
         except OSError as e:
-            # Disk full or I/O error — clean up partial file
+            # Disk full or I/O error: clean up the partial file
             if os.path.exists(file_real):
                 os.remove(file_real)
             raise ValueError(f"Disk write failed: {e}") from e
@@ -214,6 +231,11 @@ async def _upload_migration_files_inner(
         if size_exceeded:
             os.remove(file_real)
             skipped_files.append(f"{file.filename}: exceeds {MAX_SINGLE_FILE_SIZE // (1024**3)}GB limit")
+            continue
+
+        if not await asyncio.to_thread(_migration_file_is_valid, file_real, ext):
+            os.remove(file_real)
+            skipped_files.append(f"{file.filename}: content does not match its file type")
             continue
 
         total_size += file_size
@@ -403,7 +425,7 @@ async def create_course_from_migration(
 
     org_uuid = organization.org_uuid
 
-    # Enforce the course plan limit on the migration path too — this creates a
+    # Enforce the course plan limit on the migration path too. This creates a
     # real course and previously bypassed the cap other create paths enforce.
     # Skip only if the org has no config (a prod impossibility) so a config
     # anomaly can't hard-fail a migration.
@@ -440,7 +462,7 @@ async def create_course_from_migration(
         db_session.add(course)
         await db_session.flush()
 
-        # Create resource author — resolve through helper so API-token
+        # Create resource author. Resolve through the helper so API-token
         # callers record their creator as the author instead of user_id=0.
         author = ResourceAuthor(
             resource_uuid=course_uuid,
@@ -656,7 +678,7 @@ async def create_course_from_migration(
         # Track course usage for billing, consistent with the other create paths.
         await increase_feature_usage("courses", org_id, db_session)
 
-        # Clean up temp directory — temp_real already validated above
+        # Clean up temp directory (temp_real already validated above)
         shutil.rmtree(temp_real, ignore_errors=True)
 
         return MigrationCreateResult(

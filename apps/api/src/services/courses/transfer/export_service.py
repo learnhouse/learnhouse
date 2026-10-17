@@ -30,7 +30,7 @@ from src.security.rbac import check_resource_access, AccessAction
 from .models import ExportManifest, ExportCourseInfo
 from .storage_utils import read_file_content, list_directory, walk_directory
 
-# File extensions that are already compressed — use ZIP_STORED to skip
+# File extensions that are already compressed. Use ZIP_STORED to skip
 # re-compression, saving significant CPU on large media files.
 _ALREADY_COMPRESSED = frozenset({
     '.mp4', '.webm', '.mov', '.avi', '.mkv',
@@ -96,7 +96,10 @@ async def export_courses_batch(
                 detail=f"Course not found: {course_uuid}",
             )
 
-        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+        # The package holds every activity (unpublished, locked and paid ones
+        # included) plus its content files: exporting is an editor action, not
+        # a read. Learner submissions and answer keys are left out entirely.
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
         if org is None:
             org_statement = select(Organization).where(Organization.id == course.org_id)
@@ -115,10 +118,10 @@ async def export_courses_batch(
     course_export_data = []
     for course in courses_to_export:
         course_data, chapters = await _load_course_export_data(course, db_session)
-        # Extract plain values — can't access SQLModel objects from another thread
+        # Extract plain values; SQLModel objects can't be accessed from another thread
         course_export_data.append((course.course_uuid, course.name, course_data, chapters))
 
-    # Phase 2: Build ZIP in a thread pool (file I/O — don't block event loop)
+    # Phase 2: Build ZIP in a thread pool (file I/O must not block the event loop)
     org_uuid = org.org_uuid
     return await asyncio.to_thread(
         _build_export_zip, course_export_data, org_uuid,
@@ -237,7 +240,7 @@ def _build_export_zip(
     """
     Build the export ZIP file on disk. Runs in a thread pool so file I/O
     (reading from filesystem/S3, writing ZIP) doesn't block the event loop.
-    Only uses plain Python data — no SQLModel objects (not thread-safe).
+    Only uses plain Python data, no SQLModel objects (not thread-safe).
     """
     content_base = "content/orgs"
 
@@ -333,6 +336,23 @@ def _build_export_zip(
         raise
 
 
+def _is_private_assignment_file(rel_path: str) -> bool:
+    """Learner submissions and answer keys under an activity's assignments/.
+
+    A course export is a content package: other learners' work
+    (``assignments/<a>/tasks/<t>/subs/``) and the instructor's model answers
+    (``assignments/<a>/solution/``) are per-user or reveal-gated data that the
+    regular endpoints withhold, so they never go into it. Task reference files
+    stay.
+    """
+    parts = rel_path.split("/")
+    if len(parts) < 3 or parts[0] != "assignments":
+        return False
+    if parts[2] == "solution":
+        return True
+    return len(parts) >= 5 and parts[2] == "tasks" and parts[4] == "subs"
+
+
 def _export_directory_to_zip(
     zip_file: zipfile.ZipFile,
     source_path: str,
@@ -350,6 +370,8 @@ def _export_directory_to_zip(
         for filename in files:
             file_path = f"{root.rstrip('/')}/{filename}".replace("\\", "/")
             rel_path = file_path.removeprefix(source_prefix)
+            if _is_private_assignment_file(rel_path):
+                continue
             content = read_file_content(file_path)
             if content:
                 entry_path = f"{zip_path}/{rel_path}"

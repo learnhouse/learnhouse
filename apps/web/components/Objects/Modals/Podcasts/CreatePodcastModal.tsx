@@ -64,7 +64,7 @@ export function CreatePodcastModal({
       )
 
       // getResponseMetadata() always resolves (never throws on HTTP error), so
-      // gate on result.success — previously `if (result)` treated a 403 limit
+      // gate on result.success. Previously `if (result)` treated a 403 limit
       // failure as success and silently closed the modal.
       if (result?.success) {
         track(AnalyticsEvent.PodcastCreated, {

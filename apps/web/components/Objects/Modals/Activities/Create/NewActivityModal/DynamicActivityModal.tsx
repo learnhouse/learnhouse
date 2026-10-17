@@ -5,7 +5,6 @@ import { Browsers } from '@phosphor-icons/react'
 
 function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {
   const [activityName, setActivityName] = useState('')
-  const [activityDescription, setActivityDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: any) => {
@@ -54,20 +53,6 @@ function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {
               required
               placeholder="Enter a name..."
               className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
-            />
-          </Form.Control>
-        </Form.Field>
-
-        <Form.Field name="dynamic-activity-desc" className="space-y-1.5">
-          <Form.Label className="text-sm font-medium text-gray-700">
-            Description
-          </Form.Label>
-          <Form.Control asChild>
-            <textarea
-              onChange={(e) => setActivityDescription(e.target.value)}
-              placeholder="Optional description..."
-              rows={3}
-              className="w-full px-3 py-2 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors resize-none"
             />
           </Form.Control>
         </Form.Field>

@@ -8,7 +8,7 @@ import { AuthFooter } from '@components/Footers/LegalFooters'
 interface AuthLayoutProps {
   org: any
   welcomeText?: string
-  // No-org (apex) branding copy — platform-style title + subtitle.
+  // No-org (apex) branding copy: platform-style title + subtitle.
   title?: string
   subtitle?: string
   children: React.ReactNode
@@ -32,7 +32,7 @@ export default function AuthLayout({ org, welcomeText, title, subtitle, children
         }}
       />
 
-      {/* Language switcher — must sit ABOVE the right-hand branding panel
+      {/* Language switcher: must sit ABOVE the right-hand branding panel
           (z-10), otherwise the panel intercepts its clicks. `z-dropdown`
           resolves to z-index:auto here, so use a concrete z-50. */}
       <div className="absolute top-4 end-4 z-50">

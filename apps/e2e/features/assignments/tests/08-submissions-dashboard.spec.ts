@@ -1,5 +1,5 @@
 /**
- * Goal: prove the teacher submissions dashboard works — stats reflect a
+ * Goal: prove the teacher submissions dashboard works: stats reflect a
  * submitted-but-ungraded submission, the status filters segment by state, and
  * search narrows to a student (and clears for a bogus query). Uses the shared
  * admin session and auto-retrying assertions so it is stable under suite load.
@@ -39,7 +39,7 @@ test('submissions dashboard shows stats, filters, and search', async ({ page }) 
   const email = s.student.email
   const studentRow = page.getByText(email, { exact: false })
 
-  // Stats reflect one submitted, none graded yet (poll — the stat cards render
+  // Stats reflect one submitted, none graded yet (poll, since the stat cards render
   // asynchronously after the submissions load).
   await expect.poll(() => subs.statCount('Total'), { timeout: 15_000 }).toBeGreaterThanOrEqual(1)
   await expect.poll(() => subs.statCount('Submitted'), { timeout: 15_000 }).toBeGreaterThanOrEqual(1)

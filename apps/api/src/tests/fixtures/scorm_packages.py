@@ -1,8 +1,8 @@
 """
 Synthetic SCORM package corpus.
 
-A reproducible generator for SCORM 1.2 and SCORM 2004 packages — both valid
-and adversarial — used by the backend SCORM test suite and by the e2e fixture
+A reproducible generator for SCORM 1.2 and SCORM 2004 packages, both valid
+and adversarial, used by the backend SCORM test suite and by the e2e fixture
 dump script (`python -m src.tests.fixtures.scorm_packages <out_dir>`).
 
 Everything here is built in-memory; nothing depends on external authoring tools.

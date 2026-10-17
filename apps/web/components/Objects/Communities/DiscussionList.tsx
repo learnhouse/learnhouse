@@ -85,7 +85,7 @@ export function DiscussionList({
         return newCounts
       })
     } catch (_error) {
-      // silent — counts fall back to 0
+      // silent; counts fall back to 0
     }
   }
 

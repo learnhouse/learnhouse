@@ -196,7 +196,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
           {/* Search + selection action bar */}
           {allPlaygrounds.length > 0 && (
             <div className="mb-6 flex flex-wrap gap-3 items-center">
-              {/* Search — hidden while selection is active */}
+              {/* Search, hidden while selection is active */}
               {!hasSelection && (
                 <div className="relative w-full sm:w-80">
                   <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />

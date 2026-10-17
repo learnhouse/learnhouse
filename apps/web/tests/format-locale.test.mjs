@@ -32,3 +32,16 @@ describe("formatters never throw on a bad locale", () => {
     expect(() => formatNumber(1234.5, "@@")).not.toThrow();
   });
 });
+
+describe("intlLocale cache", () => {
+  test("returns the same answer on repeat calls", () => {
+    expect(intlLocale("en_GB")).toBe("en-GB");
+    expect(intlLocale("en_GB")).toBe("en-GB");
+  });
+
+  test("stays correct after many distinct inputs", () => {
+    for (let i = 0; i < 200; i++) intlLocale(`x-${i}`);
+    expect(intlLocale("ar")).toBe("ar-u-nu-latn");
+    expect(intlLocale("fr")).toBe("fr");
+  });
+});

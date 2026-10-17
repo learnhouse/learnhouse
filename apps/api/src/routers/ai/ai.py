@@ -27,7 +27,7 @@ from src.services.ai.schemas.editor import (
 )
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
-from src.security.auth import get_authenticated_user
+from src.security.auth import get_authenticated_user, resolve_acting_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,7 @@ async def api_ai_start_activity_chat_session(
     return await ai_start_activity_chat_session(
         request, chat_session_object, current_user, db_session
     )
+
 
 @router.post(
     "/send/activity_chat_message",
@@ -93,6 +94,8 @@ async def activity_chat_event_generator(
     ai_friendly_text: str,
     ai_model: str,
     org_id: int | None = None,
+    user_id: int | None = None,
+    course_uuid: str | None = None,
 ):
     """Convert async generator to SSE format with follow-up suggestions.
 
@@ -114,8 +117,11 @@ async def activity_chat_event_generator(
             full_response += chunk
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
 
-        # Save the message exchange to history
-        save_message_to_history(aichat_uuid, user_message, full_response)
+        # Save the message exchange to history (and who owns the session)
+        save_message_to_history(
+            aichat_uuid, user_message, full_response,
+            user_id=user_id, course_uuid=course_uuid, org_id=org_id,
+        )
 
         # Send done event immediately (without waiting for follow-ups)
         yield f"data: {json.dumps({'type': 'done', 'aichat_uuid': aichat_uuid, 'activity_uuid': activity_uuid})}\n\n"
@@ -197,6 +203,8 @@ async def api_ai_start_activity_chat_session_stream(
             context["ai_friendly_text"],
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
+            user_id=resolve_acting_user_id(current_user),
+            course_uuid=getattr(context.get("course", None), "course_uuid", None),
         ),
         media_type="text/event-stream",
         headers={
@@ -253,6 +261,8 @@ async def api_ai_send_activity_chat_message_stream(
             context["ai_friendly_text"],
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
+            user_id=resolve_acting_user_id(current_user),
+            course_uuid=getattr(context.get("course", None), "course_uuid", None),
         ),
         media_type="text/event-stream",
         headers={
@@ -283,6 +293,7 @@ async def editor_chat_event_generator(
     ai_friendly_text: str,
     ai_model: str,
     org_id: int | None = None,
+    user_id: int | None = None,
 ):
     """
     Convert async generator to SSE format for editor AI chat.
@@ -389,8 +400,12 @@ async def editor_chat_event_generator(
             else:
                 yield f"data: {json.dumps({'type': 'chat_chunk', 'content': buffer})}\n\n"
 
-        # Save the message exchange to history
-        save_message_to_history(aichat_uuid, user_message, full_response)
+        # Save the message exchange to history (and who owns the session, so
+        # a follow-up turn can only continue the caller's own session)
+        save_message_to_history(
+            aichat_uuid, user_message, full_response,
+            user_id=user_id, org_id=org_id, listed=False,
+        )
 
         # Send done event
         yield f"data: {json.dumps({'type': 'done', 'aichat_uuid': aichat_uuid, 'activity_uuid': activity_uuid})}\n\n"
@@ -471,6 +486,7 @@ async def api_editor_ai_start_chat_session_stream(
             context["ai_friendly_text"],
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
+            user_id=resolve_acting_user_id(current_user),
         ),
         media_type="text/event-stream",
         headers={
@@ -527,6 +543,7 @@ async def api_editor_ai_send_message_stream(
             context["ai_friendly_text"],
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
+            user_id=resolve_acting_user_id(current_user),
         ),
         media_type="text/event-stream",
         headers={

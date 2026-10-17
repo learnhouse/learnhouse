@@ -34,7 +34,7 @@ import { backupCommand } from '../src/commands/backup.js'
 
 class ProcessExit extends Error { code: number; constructor(c: number) { super(`exit ${c}`); this.code = c } }
 
-describe('backup — archive creation failure', () => {
+describe('backup: archive creation failure', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined

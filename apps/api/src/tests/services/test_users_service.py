@@ -43,6 +43,18 @@ from src.services.users.users import (
 )
 
 
+@pytest.fixture
+def act_as_superadmin():
+    """Identity fields and account deletion are owner-or-superadmin only now;
+    these tests exercise the mechanics, not that gate."""
+    with patch(
+        "src.services.users.users.is_user_superadmin",
+        new_callable=AsyncMock,
+        return_value=True,
+    ):
+        yield
+
+
 def _user_create(
     username: str,
     email: str,
@@ -143,7 +155,7 @@ class TestDeleteUserById:
         new_callable=AsyncMock,
     )
     async def test_delete_user_by_id(
-        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org, act_as_superadmin
     ):
         # Create a separate user to delete (id=10)
         user_to_delete = User(
@@ -199,11 +211,11 @@ class TestDeleteUserById:
         new_callable=AsyncMock,
     )
     async def test_delete_user_deletes_sole_admin_org_only(
-        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, org, act_as_superadmin
     ):
         """Deleting a user wipes orgs they solely administer, keeps the rest."""
         # org (id=1) already has admin_user as admin. Add a second org where the
-        # user-to-delete is the ONLY admin — that one should be deleted with them.
+        # user-to-delete is the ONLY admin; that one should be deleted with them.
         solo_org = Organization(
             id=777,
             name="Solo Org",
@@ -267,7 +279,7 @@ class TestDeleteUserById:
         new_callable=AsyncMock,
     )
     async def test_delete_user_skips_missing_admin_org(
-        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user
+        self, mock_rbac_roles, mock_rbac_anon, mock_request, db, admin_user, act_as_superadmin
     ):
         """An admin membership pointing at a missing org is safely skipped."""
         user_to_delete = User(
@@ -305,7 +317,7 @@ class TestDeleteUserById:
 class TestCreateAndUpdateUser:
     @pytest.mark.asyncio
     async def test_create_user_and_update_flows(
-        self, mock_request, db, admin_user, org
+        self, mock_request, db, admin_user, org, act_as_superadmin
     ):
         with patch(
             "src.services.users.users.validate_password_complexity",
@@ -330,6 +342,12 @@ class TestCreateAndUpdateUser:
             return_value="oss",
         ), patch(
             "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.users._require_reauth_for_email_change",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.users._after_email_change",
             new_callable=AsyncMock,
         ):
             created = await create_user(
@@ -754,7 +772,7 @@ class TestUserPasswordAvatarSession:
         assert created.email_verified is False
         mock_send.assert_awaited_once()
 
-        # Surface that send-email failures are intentionally not swallowed —
+        # Surface that send-email failures are intentionally not swallowed;
         # callers may need to react (e.g., roll back analytics, notify ops).
         with patch(
             "src.services.users.users.validate_password_complexity",
@@ -893,6 +911,12 @@ class TestUserPasswordAvatarSession:
             new_callable=AsyncMock,
         ), patch(
             "src.services.users.users.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.users._require_reauth_for_email_change",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.users.users._after_email_change",
             new_callable=AsyncMock,
         ):
             with pytest.raises(HTTPException) as missing_user_exc:
@@ -1067,14 +1091,19 @@ class TestSecurityHelpers:
     async def test_authorize_user_action_and_security_get_user(
         self, mock_request, db, admin_user
     ):
+        from src.security.rbac import AccessAction, AccessDecision
+
         with patch(
-            "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
+            "src.security.rbac.check_resource_access",
             new_callable=AsyncMock,
-            return_value=True,
-        ):
+            return_value=AccessDecision(allowed=True, reason="ok"),
+        ) as access_mock:
             assert await authorize_user_action(
                 mock_request, db, admin_user, "resource_x", "read"
             ) is True
+        args, kwargs = access_mock.await_args
+        assert args[3:] == ("resource_x", AccessAction.READ)
+        assert kwargs == {"raise_on_deny": False}
 
         fetched = await security_get_user(mock_request, db, admin_user.email)
         missing = await security_get_user(mock_request, db, "missing@test.com")
@@ -1087,10 +1116,12 @@ class TestSecurityHelpers:
     async def test_authorize_user_action_denied_and_duplicate_update(
         self, mock_request, db, admin_user, regular_user
     ):
+        from src.security.rbac import AccessDecision
+
         with patch(
-            "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
+            "src.security.rbac.check_resource_access",
             new_callable=AsyncMock,
-            return_value=False,
+            return_value=AccessDecision(allowed=False, reason="denied"),
         ):
             with pytest.raises(HTTPException) as auth_exc:
                 await authorize_user_action(
@@ -1107,7 +1138,7 @@ class TestSecurityHelpers:
                     mock_request,
                     db,
                     regular_user.id,
-                    admin_user,
+                    regular_user,
                     UserUpdate(
                         username="admin",
                         first_name="Regular",
@@ -1127,7 +1158,7 @@ class TestWelcomeCtaUrl:
 
     @pytest.mark.asyncio
     async def test_org_signup_lands_on_the_org_itself(self, mock_request, db, org):
-        """Not `/home` — that is the org PICKER on every host, so it would send
+        """Not `/home`: that is the org PICKER on every host, so it would send
         a new member straight back out of the org the email is about."""
         with patch(
             "src.services.email.utils.get_org_signup_base_url",

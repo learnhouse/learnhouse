@@ -5,12 +5,12 @@ Target: src/services/courses/activities/assignments.py
 These tests focus on the *wiring* of the two authorization guards, NOT on
 re-implementing RBAC:
 
-  1. ``_block_api_tokens`` — an early guard that rejects ``APITokenUser`` with
+  1. ``_block_api_tokens``, an early guard that rejects ``APITokenUser`` with
      HTTP 403 on every sensitive action. We assert it fires BEFORE any RBAC /
      DB work, so an API token is rejected even when ``check_resource_access``
      is patched to pass (proving the block is the thing doing the rejecting).
 
-  2. ``check_resource_access`` — the per-course RBAC gate. We patch it to raise
+  2. ``check_resource_access``, the per-course RBAC gate. We patch it to raise
      ``HTTPException(403)`` and assert each mutating action propagates that
      denial (a student with no instructor rights cannot grade, create, update,
      delete, or submit). When patched to pass, the happy path proceeds.
@@ -21,9 +21,9 @@ re-implementing RBAC:
      the deadline even when RBAC passes).
 
 Existing coverage we deliberately do NOT duplicate:
-  * ``test_assignments_service.py::TestBlockApiTokens`` — tests the helper in
+  * ``test_assignments_service.py::TestBlockApiTokens`` tests the helper in
     isolation only (raises for token user, passes for public user).
-  * ``test_api_token_access.py`` — asserts the *router* is in the protected
+  * ``test_api_token_access.py`` asserts the *router* is in the protected
     list; it does not exercise the service functions' inline guard.
 """
 
@@ -51,7 +51,7 @@ from src.services.courses.activities.assignments import (
 )
 
 # The assignment / submission / task fixtures come from the services-level
-# conftest.py (auto-discovered) — no cross-module import needed.
+# conftest.py (auto-discovered), so no cross-module import is needed.
 
 _PATCH_RBAC = "src.services.courses.activities.assignments.check_resource_access"
 _PATCH_LIMITS = "src.services.courses.activities.assignments.check_limits_with_usage"
@@ -85,14 +85,14 @@ def _rbac_denied():
 
 
 # ===========================================================================
-# 1. _block_api_tokens fires on every sensitive action — BEFORE RBAC
+# 1. _block_api_tokens fires on every sensitive action, BEFORE RBAC
 # ===========================================================================
 
 
 class TestApiTokensBlockedOnSensitiveActions:
     """An APITokenUser must be rejected with 403 on each action that calls
     ``_block_api_tokens``. RBAC is patched to PASS so the only thing that can
-    raise is the token guard — proving the guard is wired in and runs first.
+    raise is the token guard, proving the guard is wired in and runs first.
     """
 
     async def test_create_assignment_blocks_api_token(
@@ -304,7 +304,7 @@ class TestRbacDenialPropagates:
         self, mock_request, db, assignment, user_submission, regular_user
     ):
         """Grading requires AccessAction.UPDATE. A student fails that gate, so
-        ``grade_assignment_submission`` must raise 403 — proving grading is
+        ``grade_assignment_submission`` must raise 403, proving grading is
         teacher-only at the service layer."""
         with patch(_PATCH_RBAC, _rbac_denied()):
             with pytest.raises(HTTPException) as exc:
@@ -435,7 +435,7 @@ class TestGetGradeOwnershipGate:
 
 class TestSubmissionPastDueGate:
     """A student submitting after the deadline is blocked (403) even though the
-    RBAC READ gate passes — the deadline is enforced only for non-instructors.
+    RBAC READ gate passes; the deadline is enforced only for non-instructors.
     """
 
     async def test_student_blocked_after_due_date(

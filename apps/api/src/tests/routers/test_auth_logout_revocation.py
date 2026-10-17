@@ -61,7 +61,7 @@ async def test_logout_revokes_every_session_for_the_user(client, admin_user):
 async def test_logout_succeeds_when_revocation_store_raises(client, admin_user):
     """
     A transient Redis / DB error inside the revocation branch must not prevent
-    the user from logging out — cookies still need to clear. The exception is
+    the user from logging out; cookies still need to clear. The exception is
     swallowed and logout returns 200.
     """
     with patch(

@@ -12,7 +12,7 @@ const REDIS_URL = process.env.LEARNHOUSE_REDIS_URL || 'redis://localhost:6379';
 const FETCH_TIMEOUT_MS = 10_000;
 // Debounce interval before flushing ydoc state to the database (ms)
 const DB_FLUSH_DELAY = 5000;
-// Redis TTL for cached ydoc state (seconds) — 1 hour
+// Redis TTL for cached ydoc state (seconds): 1 hour
 const REDIS_YDOC_TTL = 3600;
 // ── Startup validation ──────────────────────────────────────────────────────
 if (!SECRET_KEY) {
@@ -115,7 +115,7 @@ const MAX_BOARD_USERS = 10;
 const server = Server.configure({
     port: PORT,
     async onRequest({ request, response }) {
-        // Health check endpoint — handles both "/" (k8s probe) and "/health"
+        // Health check endpoint. Handles both "/" (k8s probe) and "/health"
         if (request.url === '/' || request.url === '/health') {
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify({ status: 'ok' }));

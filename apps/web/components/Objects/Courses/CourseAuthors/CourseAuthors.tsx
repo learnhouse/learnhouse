@@ -26,6 +26,7 @@ import FormLayout, {
 import { useFormik } from 'formik'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { useAbsoluteUrl } from '@/lib/seo/useAbsoluteUrl'
 
 dayjs.extend(relativeTime)
 
@@ -153,11 +154,17 @@ const UpdatesSection = () => {
   const course = useCourse() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const org = useOrg() as any
   const courseUuid = course?.courseStructure?.course_uuid
+  const feedUrl = useAbsoluteUrl(
+    org?.slug ?? '',
+    `/course/${(courseUuid ?? '').replace('course_', '')}/updates/feed`
+  )
   const { data: updates } = useQuery({
     queryKey: queryKeys.courses.updates(courseUuid),
     queryFn: () => apiFetch(`${getAPIUrl()}courses/${courseUuid}/updates`, access_token),
-    enabled: !!(courseUuid && access_token),
+    // Updates of a readable course are public; wait only for the session to settle.
+    enabled: !!courseUuid && session?.status !== 'loading',
     staleTime: 60_000,
   })
 
@@ -166,7 +173,21 @@ const UpdatesSection = () => {
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
-            <Rss size={14} className="text-neutral-400" />
+            {/* Feed readers fetch anonymously, so only public courses have a feed. */}
+            {course?.courseStructure?.public && course?.courseStructure?.published !== false ? (
+              <a
+                href={feedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={t('courses.rss_feed')}
+                aria-label={t('courses.rss_feed')}
+                className="text-neutral-400 hover:text-orange-500 transition-colors"
+              >
+                <Rss size={14} />
+              </a>
+            ) : (
+              <Rss size={14} className="text-neutral-400" />
+            )}
             <span className="text-sm font-semibold text-neutral-600">{t('courses.course_updates')}</span>
           </div>
           {updates && updates.length > 0 && (
@@ -305,7 +326,8 @@ const UpdatesListView = () => {
   const { data: updates } = useQuery({
     queryKey: queryKeys.courses.updates(courseUuid),
     queryFn: () => apiFetch(`${getAPIUrl()}courses/${courseUuid}/updates`, access_token),
-    enabled: !!(courseUuid && access_token),
+    // Updates of a readable course are public; wait only for the session to settle.
+    enabled: !!courseUuid && session?.status !== 'loading',
     staleTime: 60_000,
   })
 

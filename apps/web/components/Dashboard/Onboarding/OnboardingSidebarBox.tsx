@@ -32,7 +32,7 @@ export default function OnboardingSidebarBox() {
       transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
       className="relative"
     >
-      {/* Blueprint grid — purple, edge-to-edge, fading down from the top border
+      {/* Blueprint grid: purple, edge-to-edge, fading down from the top border
           (same motif as the upgrade box, in the onboarding's violet tone). */}
       <div
         className="absolute -start-3 -end-3 -top-2 bottom-0 pointer-events-none"
@@ -57,7 +57,7 @@ export default function OnboardingSidebarBox() {
       />
 
       <div className="relative">
-        {/* Header — uppercase label, count right on the same line */}
+        {/* Header: uppercase label, count right on the same line */}
         <div className="flex items-center gap-2">
           <ListChecks size={14} weight="bold" className="text-violet-300 shrink-0" />
           <span className="text-[11px] font-bold uppercase tracking-wider text-violet-300 flex-1 truncate">
@@ -68,7 +68,7 @@ export default function OnboardingSidebarBox() {
           </span>
         </div>
 
-        {/* Up-next step — eyebrow + title */}
+        {/* Up-next step: eyebrow + title */}
         <div className="mt-2.5">
           <p className="text-[9px] font-bold uppercase tracking-wider text-white/30">
             {t('onboarding.up_next', { defaultValue: 'Up next' })}

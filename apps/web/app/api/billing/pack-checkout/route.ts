@@ -5,7 +5,7 @@ import { guardBilling, badRequest, requireOrgBillingAccess } from "../_lib";
 
 // POST /api/billing/pack-checkout
 // Body: { packId, orgId, orgSlug? }
-// → { id, url } — a Stripe Checkout session for a pack add-on subscription.
+// → { id, url }: a Stripe Checkout session for a pack add-on subscription.
 // Email comes from the authenticated session; caller must be an admin of orgId.
 export async function POST(request: NextRequest) {
   const blocked = await guardBilling();

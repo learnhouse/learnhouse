@@ -2,7 +2,7 @@
  * Whether a course actually hands out a certificate.
  *
  * A course has certification ON when a Certifications row exists for it and
- * OFF when it does not — the dashboard toggle creates and deletes that row.
+ * OFF when it does not; the dashboard toggle creates and deletes that row.
  * `getCourseCertifications()` goes through `getResponseMetadata`, which returns
  * `{ success, data, status }` and swallows parse errors, so a failed request
  * looks like a successful one with a non-list `data` (an error body) or

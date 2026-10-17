@@ -101,7 +101,7 @@ function Chapter(props: any) {
                     </button>
                   </div>
                 ) : (
-                  <p className="text-neutral-700 first-letter:uppercase">
+                  <p className="text-neutral-700">
                     {props.info.list.chapter.name}
                   </p>
                 )}

@@ -1,20 +1,18 @@
 """
-Admin API Router — Headless access to LearnHouse via API tokens.
+Admin API Router: headless access to LearnHouse via API tokens.
 
 All endpoints are scoped by org_slug and require API token authentication
 (Bearer lh_...). The token's organization must match the org_slug in the URL.
 """
 
 from typing import Any, Dict, List, Optional
-from urllib.parse import quote
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr, Field
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.trails import TrailRead
-from src.db.users import UserRead
-from src.routers.auth import set_auth_cookies
+from src.db.users import OrgMemberUserRead, UserRead
 from src.security.auth import get_current_user
 from src.services.admin.admin import (
     _require_api_token,
@@ -29,7 +27,6 @@ from src.services.admin.admin import (
     check_course_access,
     complete_activity,
     complete_course,
-    consume_magic_link_token,
     create_usergroup,
     delete_usergroup,
     enroll_user,
@@ -46,6 +43,7 @@ from src.services.admin.admin import (
     issue_user_token,
     list_course_enrollments,
     list_usergroup_members,
+    magic_link_landing_url_for_token,
     provision_user,
     remove_course_from_usergroup,
     remove_usergroup_member,
@@ -158,7 +156,7 @@ class ProvisionUserRequest(BaseModel):
     username: str = Field(min_length=1, max_length=150)
     first_name: str = Field(default="", max_length=150)
     last_name: str = Field(default="", max_length=150)
-    password: Optional[str] = Field(default=None, max_length=256, description="Optional — if omitted, treated as SSO user with empty password")
+    password: Optional[str] = Field(default=None, max_length=256, description="Optional; if omitted, treated as SSO user with empty password")
     role_id: int = Field(default=4, ge=1, description="Role id for the org membership (default 4 = student)")
     extra_metadata: Optional[dict] = Field(default=None, description="Optional arbitrary JSON metadata attached to the user for headless integrations")
 
@@ -170,13 +168,23 @@ class RemoveUserResponse(BaseModel):
 class MagicLinkRequest(BaseModel):
     """Request body for issuing a magic sign-in link."""
     user_id: int
-    redirect_to: Optional[str] = Field(default=None, description="Path to redirect to after the user lands on the consume endpoint")
+    redirect_to: Optional[str] = Field(default=None, description="Same-origin path to open once the user is signed in")
     ttl_seconds: int = Field(default=300, ge=60, le=900, description="Token lifetime in seconds (60–900)")
+    host: Optional[str] = Field(
+        default=None,
+        max_length=253,
+        description=(
+            "One of the organization's verified custom domains to build the link on, "
+            "e.g. a domain served through a CDN. The link goes to that host as given, "
+            "so only name a domain the organization still controls. Defaults to the "
+            "organization's own site."
+        ),
+    )
 
 
 class MagicLinkResponse(BaseModel):
     url: str = Field(description="Clickable URL to deliver to the user")
-    token: str = Field(description="Raw JWT (for integrations that prefer to build their own URL)")
+    token: str = Field(description="Raw JWT, for integrations that build their own URL: `https://{org site}/auth/magic?token={token}`")
     expires_at: str = Field(description="ISO8601 timestamp when the token expires")
 
 
@@ -377,7 +385,7 @@ class UserTrailDetail(BaseModel):
     summary="Issue a user token",
     description=(
         "Issue a JWT access token on behalf of a user. The user must belong to "
-        "the organization matching the org_slug. Requires `users.action_read` permission. "
+        "the organization matching the org_slug. Requires `users.action_update` permission. "
         "Privileged targets (org Admin/Maintainer, platform superadmin) are refused."
     ),
     responses={
@@ -410,7 +418,7 @@ async def api_admin_issue_token(
         "and whether the course is public. Requires `courses.action_read` permission."
     ),
     responses={
-        200: {"description": "Access check result — whether the user can view the course.", "model": CourseAccessResponse},
+        200: {"description": "Access check result: whether the user can view the course.", "model": CourseAccessResponse},
         404: {"description": "Course not found"},
     },
 )
@@ -437,7 +445,10 @@ async def api_admin_check_course_access(
     "/{org_slug}/enrollments/bulk/unenroll",
     response_model=BulkUnenrollResponse,
     summary="Bulk unenroll users from a course",
-    description="Mirror of bulk enroll. Users not currently enrolled are reported in `not_enrolled`.",
+    description=(
+        "Mirror of bulk enroll. Users not currently enrolled are reported in `not_enrolled`. "
+        "Requires `courses.action_update` permission."
+    ),
     responses={
         200: {"description": "Per-user unenroll summary: unenrolled, not_enrolled.", "model": BulkUnenrollResponse},
         404: {"description": "Course not found"},
@@ -467,10 +478,10 @@ async def api_admin_bulk_unenroll(
     description=(
         "Enroll a user in a course on their behalf. Creates the learning trail "
         "and trail run. The user must belong to the organization. "
-        "Requires `courses.action_read` permission."
+        "Requires `courses.action_update` permission."
     ),
     responses={
-        200: {"description": "User enrolled — returns the user's updated trail with all runs.", "model": TrailRead},
+        200: {"description": "User enrolled; returns the user's updated trail with all runs.", "model": TrailRead},
         400: {"description": "User is already enrolled"},
         404: {"description": "User or course not found"},
     },
@@ -494,10 +505,10 @@ async def api_admin_enroll_user(
     summary="Unenroll user from course",
     description=(
         "Unenroll a user from a course. Removes the enrollment and all associated "
-        "progress (trail steps). Requires `courses.action_read` permission."
+        "progress (trail steps). Requires `courses.action_update` permission."
     ),
     responses={
-        200: {"description": "User unenrolled — trail steps for this course are deleted.", "model": UnenrollResponse},
+        200: {"description": "User unenrolled; trail steps for this course are deleted.", "model": UnenrollResponse},
         404: {"description": "Enrollment not found"},
     },
 )
@@ -574,7 +585,7 @@ async def api_admin_get_user_progress(
     description=(
         "Mark an activity as completed on behalf of a user. Automatically creates "
         "enrollment if needed. If this completes the entire course, a certificate "
-        "is awarded (if configured). Requires `courses.action_read` permission."
+        "is awarded (if configured). Requires `courses.action_update` permission."
     ),
     responses={
         200: {"description": "Activity marked complete; includes whether this completed the course.", "model": ActivityCompletionResponse},
@@ -601,7 +612,7 @@ async def api_admin_complete_activity(
     summary="Undo activity completion",
     description=(
         "Remove a user's activity completion. Does not revoke certificates. "
-        "Requires `courses.action_read` permission."
+        "Requires `courses.action_update` permission."
     ),
     responses={
         200: {"description": "Activity completion removed.", "model": ActivityUncompletionResponse},
@@ -628,7 +639,7 @@ async def api_admin_uncomplete_activity(
     description=(
         "Mark all activities in a course as completed for a user. Skips activities "
         "that are already completed. Awards a certificate if configured. "
-        "Requires `courses.action_read` permission."
+        "Requires `courses.action_update` permission."
     ),
     responses={
         200: {"description": "All activities marked complete; indicates whether a certificate was awarded.", "model": CourseCompletionResponse},
@@ -776,11 +787,12 @@ async def api_admin_get_user_certificates(
     summary="Provision a user",
     description=(
         "Create a user and attach them to the organization in one call. Designed "
-        "for SSO/JIT provisioning — the user's email is auto-verified and the "
+        "for SSO/JIT provisioning: the user's email is auto-verified and the "
         "normal email-verification flow is skipped. If a user with the given "
         "email already exists in another organization, they are attached to this "
         "org (idempotent); the password/username/name fields in the request are "
-        "ignored in that case."
+        "ignored in that case. "
+        "Requires `users.action_create` permission."
     ),
     responses={
         200: {"description": "User created or attached to the org. Returns the user.", "model": UserRead},
@@ -828,7 +840,8 @@ async def api_admin_provision_user(
     summary="Remove a user from the organization",
     description=(
         "Remove a user's organization membership. The user account itself is "
-        "preserved (it may belong to other orgs). Blocks removing the last admin."
+        "preserved (it may belong to other orgs). Blocks removing the last admin. "
+        "Requires `users.action_delete` permission."
     ),
     responses={
         200: {"description": "Membership removed. The user account is preserved.", "model": RemoveUserResponse},
@@ -850,14 +863,15 @@ async def api_admin_remove_user(
 
 @router.get(
     "/{org_slug}/users/by-email/{email}",
-    response_model=UserRead,
+    response_model=OrgMemberUserRead,
     summary="Look up a user by email",
     description=(
         "Find a user by email within the organization. Returns 404 if the user "
-        "does not exist or is not a member of this org."
+        "does not exist or is not a member of this org. "
+        "Requires `users.action_read` permission."
     ),
     responses={
-        200: {"description": "The user matching the given email within this org.", "model": UserRead},
+        200: {"description": "The user matching the given email within this org.", "model": OrgMemberUserRead},
         404: {"description": "User not found in this organization"},
     },
 )
@@ -866,7 +880,7 @@ async def api_admin_get_user_by_email(
     email: str = Path(description="URL-encoded email address"),
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
-) -> UserRead:
+) -> OrgMemberUserRead:
     token_user = _require_api_token(current_user)
     await _resolve_org_slug(org_slug, token_user, db_session)
 
@@ -896,18 +910,23 @@ async def api_admin_get_user_by_email(
         "Generate a short-lived URL that, when opened in a browser, will log "
         "the target user in and optionally redirect them to a specific path. "
         "Token lifetime is clamped to 60–900 seconds.\n\n"
+        "The URL is on the organization's own site (its verified custom domain, "
+        "else its LearnHouse subdomain). Each link signs in once: any later use "
+        "is refused. A user with two-factor authentication enabled is still "
+        "asked for their code.\n\n"
         "The target must be an ordinary member. Consuming the link mints a full "
         "session, so the same rule as `/users/{user_id}/token` applies: an API "
         "token cannot sign in as an organization Admin or Maintainer, or as a "
-        "platform superadmin."
+        "platform superadmin. "
+        "Requires `users.action_update` permission."
     ),
     responses={
         200: {"description": "Magic sign-in URL and underlying JWT. Token lifetime is already clamped.", "model": MagicLinkResponse},
-        400: {"description": "redirect_to is not a same-origin path"},
+        400: {"description": "redirect_to is not a same-origin path, or host is not a verified custom domain of the organization"},
         403: {
             "description": (
                 "User not in this org, or the target is an Admin, Maintainer or "
-                "superadmin — distinguish by the detail message before treating "
+                "superadmin; distinguish by the detail message before treating "
                 "it as a membership problem"
             )
         },
@@ -931,105 +950,34 @@ async def api_admin_issue_magic_link(
         org_slug=org_slug,
         request=request,
         db_session=db_session,
+        host=body.host,
     )
     return MagicLinkResponse(**result)
 
 
-def _support_url() -> str:
-    """Return a support contact URL for the magic-link error page.
-
-    The old `{platform}/dashboard/support` path 404s (the platform dashboard is
-    gone on .io), so use a support mailto that can never break.
-    """
-    return "mailto:hello@learnhouse.app"
-
-
-def _render_magic_link_error(title: str, message: str) -> HTMLResponse:
-    """Render a friendly HTML error page when a magic link fails."""
-    support = _support_url()
-    # Plain HTML — no templating dependency. Values are hardcoded/escaped.
-    # title/message come from our own HTTPExceptions, not user input.
-    safe_title = title.replace("<", "&lt;").replace(">", "&gt;")
-    safe_message = message.replace("<", "&lt;").replace(">", "&gt;")
-    html = f"""<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sign-in link — LearnHouse</title>
-<style>
-  body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-         background: #f6f7f9; color: #111827; margin: 0;
-         display: flex; align-items: center; justify-content: center; min-height: 100vh; }}
-  .card {{ background: #fff; border-radius: 14px; padding: 40px 36px; max-width: 440px;
-           box-shadow: 0 10px 30px rgba(17,24,39,0.08); text-align: center; }}
-  h1 {{ font-size: 22px; margin: 0 0 12px; color: #111827; }}
-  p  {{ font-size: 15px; line-height: 1.55; color: #4b5563; margin: 0 0 24px; }}
-  .support {{ display: inline-block; background: #111827; color: #fff !important;
-              text-decoration: none; padding: 11px 20px; border-radius: 999px;
-              font-weight: 500; font-size: 14px; }}
-  .support:hover {{ background: #1f2937; }}
-  .hint {{ font-size: 13px; color: #9ca3af; margin-top: 20px; }}
-</style>
-</head>
-<body>
-  <div class="card">
-    <h1>{safe_title}</h1>
-    <p>{safe_message}</p>
-    <a class="support" href="{support}">Something not working as expected?</a>
-    <p class="hint">Our team can re-issue your sign-in link or help you access your account.</p>
-  </div>
-</body>
-</html>"""
-    return HTMLResponse(content=html, status_code=410)
-
-
 @router.get(
     "/{org_slug}/auth/magic-consume",
-    summary="Consume a magic sign-in link (browser-facing)",
+    summary="Open a magic sign-in link issued by an older version (browser-facing)",
     description=(
-        "Public endpoint — no API token required. Validates the magic-link "
-        "JWT from the query string, sets authentication cookies, and redirects "
-        "to the target path. On error, renders a friendly HTML page with a "
-        "support link instead of a raw JSON error."
+        "Public endpoint (no API token required). Links are now issued straight "
+        "to the org's sign-in page (`/auth/magic`), which redeems them. This "
+        "endpoint keeps links in the older API form working: it forwards the "
+        "browser to that page on the org's own domain without spending the link."
     ),
     responses={
-        302: {"description": "Success — cookies set and redirect to target"},
-        410: {"description": "Token invalid, expired, or user no longer a member (HTML page)"},
+        302: {"description": "Forward to the org's sign-in page, which redeems the link"},
     },
 )
 async def api_admin_magic_consume(
     request: Request,
-    response: Response,
     org_slug: str,
     token: str = Query(..., description="Magic-link JWT"),
     db_session: AsyncSession = Depends(get_db_session),
 ):
-    try:
-        _user, access_token, refresh_token, redirect_to, mfa_token = await consume_magic_link_token(
-            token=token,
-            db_session=db_session,
-        )
-    except HTTPException as exc:
-        return _render_magic_link_error(
-            title="This sign-in link can't be used",
-            message=str(exc.detail) if exc.detail else "The link may have expired or already been used.",
-        )
-
-    target = redirect_to or "/"
-
-    if mfa_token:
-        # No cookies set — the link only gets the user as far as the code
-        # challenge. The login page picks the pending token up from the query
-        # string and opens directly on the second-factor step.
-        challenge_url = f"/auth/login?mfa_token={quote(mfa_token, safe='')}"
-        if redirect_to:
-            challenge_url += f"&redirect_to={quote(redirect_to, safe='')}"
-        return RedirectResponse(url=challenge_url, status_code=302)
-
-    redirect = RedirectResponse(url=target, status_code=302)
-    set_auth_cookies(redirect, access_token, refresh_token, request)
-    return redirect
+    target = await magic_link_landing_url_for_token(
+        token=token, org_slug=org_slug, request=request, db_session=db_session
+    )
+    return RedirectResponse(url=target, status_code=302)
 
 
 # ── Bulk enrollment ──────────────────────────────────────────────────────────
@@ -1042,7 +990,8 @@ async def api_admin_magic_consume(
     description=(
         "Enroll a batch of users into a single course. Users who are already "
         "enrolled are reported in `already_enrolled`. Users who are not members "
-        "of the org are reported in `skipped`."
+        "of the org are reported in `skipped`. "
+        "Requires `courses.action_update` permission."
     ),
     responses={
         200: {"description": "Per-user enrollment summary: enrolled, already_enrolled, skipped.", "model": BulkEnrollResponse},
@@ -1074,7 +1023,8 @@ async def api_admin_bulk_enroll(
     summary="List users enrolled in a course",
     description=(
         "Reverse lookup: get all users currently enrolled in a course, with "
-        "pagination. Returns enrollment status and enrolled_at per user."
+        "pagination. Returns enrollment status and enrolled_at per user. "
+        "Requires `courses.action_read` permission."
     ),
     responses={
         200: {"description": "One row per enrolled user in this course, with status and enrolled_at."},
@@ -1106,7 +1056,8 @@ async def api_admin_list_course_enrollments(
     summary="Reset a user's progress in a course",
     description=(
         "Delete all of a user's trail steps for a course, keeping the "
-        "enrollment intact. The user can retake the course from scratch."
+        "enrollment intact. The user can retake the course from scratch. "
+        "Requires `courses.action_update` permission."
     ),
     responses={
         200: {"description": "Returns the number of trail steps deleted for this user/course.", "model": ResetProgressResponse},
@@ -1136,7 +1087,8 @@ async def api_admin_reset_user_progress(
     description=(
         "Award a certificate to a user bypassing the normal completion gate. "
         "Useful for migrations and manual overrides. The course must have a "
-        "certification configured."
+        "certification configured. "
+        "Requires `certifications.action_create` permission."
     ),
     responses={
         200: {"description": "Certificate awarded; returns the new user_certification_uuid.", "model": AwardCertificateResponse},
@@ -1164,7 +1116,10 @@ async def api_admin_award_certificate(
     "/{org_slug}/certifications/{user_id}/{user_certification_uuid}",
     response_model=RevokeCertificateResponse,
     summary="Revoke a user's certificate",
-    description="Delete a certificate row. Does not affect course enrollment or progress.",
+    description=(
+        "Delete a certificate row. Does not affect course enrollment or progress. "
+        "Requires `certifications.action_delete` permission."
+    ),
     responses={
         200: {"description": "Certificate revoked. The cert row is hard-deleted.", "model": RevokeCertificateResponse},
         404: {"description": "Certificate not found"},
@@ -1192,7 +1147,10 @@ async def api_admin_revoke_certificate(
     "/{org_slug}/usergroups/{usergroup_uuid}/members/{user_id}",
     response_model=UserGroupMemberResponse,
     summary="Add a user to a user group",
-    description="Add a user to a cohort/group. Both must belong to the token's org.",
+    description=(
+        "Add a user to a cohort/group. Both must belong to the token's org. "
+        "Requires `usergroups.action_update` permission."
+    ),
     responses={
         200: {"description": "User added to the cohort.", "model": UserGroupMemberResponse},
         400: {"description": "User is already in this group"},
@@ -1218,7 +1176,10 @@ async def api_admin_add_usergroup_member(
     "/{org_slug}/usergroups/{usergroup_uuid}/members/{user_id}",
     response_model=UserGroupMemberResponse,
     summary="Remove a user from a user group",
-    description="Remove a user's membership from a cohort/group. The user account itself is preserved.",
+    description=(
+        "Remove a user's membership from a cohort/group. The user account itself is preserved. "
+        "Requires `usergroups.action_update` permission."
+    ),
     responses={
         200: {"description": "User removed from the cohort.", "model": UserGroupMemberResponse},
         404: {"description": "User, group, or membership not found"},
@@ -1244,15 +1205,16 @@ async def api_admin_remove_usergroup_member(
 
 @router.patch(
     "/{org_slug}/users/{user_id}",
-    response_model=UserRead,
+    response_model=OrgMemberUserRead,
     summary="Update a user's profile",
     description=(
-        "Update profile fields of an org member. Supports partial updates — "
+        "Update profile fields of an org member. Supports partial updates: "
         "only fields present in the request body are changed. Duplicate "
-        "email/username is rejected."
+        "email/username is rejected. "
+        "Requires `users.action_update` permission."
     ),
     responses={
-        200: {"description": "Updated user profile.", "model": UserRead},
+        200: {"description": "Updated user profile.", "model": OrgMemberUserRead},
         400: {"description": "Duplicate email or username"},
         404: {"description": "User not in org"},
     },
@@ -1263,7 +1225,7 @@ async def api_admin_update_user_profile(
     body: UpdateUserRequest,
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
-) -> UserRead:
+) -> OrgMemberUserRead:
     token_user = _require_api_token(current_user)
     await _resolve_org_slug(org_slug, token_user, db_session)
     updates = body.model_dump(exclude_unset=True)
@@ -1276,7 +1238,8 @@ async def api_admin_update_user_profile(
     summary="Change a user's org role",
     description=(
         "Change the user's role within the organization. Blocks demoting the "
-        "last admin. The target role must belong to this org or be a global role."
+        "last admin. The target role must belong to this org or be a global role. "
+        "Requires `users.action_update` and `roles.action_update` permissions."
     ),
     responses={
         200: {"description": "User role updated.", "model": ChangeRoleResponse},
@@ -1305,7 +1268,10 @@ async def api_admin_change_user_role(
     "/{org_slug}/usergroups",
     response_model=UserGroupResponse,
     summary="Create a user group",
-    description="Create a cohort/user group owned by the organization.",
+    description=(
+        "Create a cohort/user group owned by the organization. "
+        "Requires `usergroups.action_create` permission."
+    ),
     responses={
         200: {"description": "The newly created cohort.", "model": UserGroupResponse},
     },
@@ -1328,7 +1294,8 @@ async def api_admin_create_usergroup(
     summary="Delete a user group",
     description=(
         "Delete a user group and all its memberships and course links. "
-        "The underlying users and courses are untouched."
+        "The underlying users and courses are untouched. "
+        "Requires `usergroups.action_delete` permission."
     ),
     responses={
         200: {"description": "Cohort and all its memberships/course links deleted.", "model": DeleteUserGroupResponse},
@@ -1351,7 +1318,10 @@ async def api_admin_delete_usergroup(
     "/{org_slug}/usergroups/{usergroup_uuid}/members",
     response_model=List[UserGroupMemberListItem],
     summary="List members of a user group",
-    description="Reverse lookup: list users belonging to a cohort, with pagination.",
+    description=(
+        "Reverse lookup: list users belonging to a cohort, with pagination. "
+        "Requires `usergroups.action_read` permission."
+    ),
     responses={
         200: {"description": "Members of the cohort, paginated."},
         404: {"description": "UserGroup not found"},
@@ -1377,7 +1347,10 @@ async def api_admin_list_usergroup_members(
     "/{org_slug}/users/{user_id}/groups",
     response_model=List[UserUserGroupItem],
     summary="List user groups a user belongs to",
-    description="Reverse lookup: which cohorts is this user a member of?",
+    description=(
+        "Reverse lookup: which cohorts is this user a member of? "
+        "Requires `usergroups.action_read` permission."
+    ),
     responses={
         200: {"description": "Cohorts the user belongs to within this org."},
         404: {"description": "User not in org"},
@@ -1403,8 +1376,9 @@ async def api_admin_get_user_groups(
     response_model=UserGroupCourseResponse,
     summary="Grant a cohort access to a course",
     description=(
-        "Link a course to a user group — all members of the group gain the "
-        "access rights configured for that group."
+        "Link a course to a user group; all members of the group gain the "
+        "access rights configured for that group. "
+        "Requires `usergroups.action_update` permission."
     ),
     responses={
         200: {"description": "Course linked to the cohort.", "model": UserGroupCourseResponse},
@@ -1431,7 +1405,10 @@ async def api_admin_add_course_to_usergroup(
     "/{org_slug}/usergroups/{usergroup_uuid}/courses/{course_uuid}",
     response_model=UserGroupCourseResponse,
     summary="Revoke a cohort's access to a course",
-    description="Unlink a course from a user group. Members of the cohort lose access unless granted through another path.",
+    description=(
+        "Unlink a course from a user group. Members of the cohort lose access unless granted through another path. "
+        "Requires `usergroups.action_update` permission."
+    ),
     responses={
         200: {"description": "Course unlinked from the cohort.", "model": UserGroupCourseResponse},
         404: {"description": "Group or link not found"},
@@ -1463,7 +1440,8 @@ async def api_admin_remove_course_from_usergroup(
         "Return a JSON bundle containing the user's profile, org memberships, "
         "trails, runs, steps, certificates, and cohort memberships. Intended "
         "for GDPR Article 15 (Right of Access) compliance. All sub-collections "
-        "are scoped to the caller's org."
+        "are scoped to the caller's org. "
+        "Requires `users.action_read` permission."
     ),
     responses={
         200: {"description": "Bundle of all user data scoped to this org.", "model": UserDataExportResponse},
@@ -1490,7 +1468,8 @@ async def api_admin_export_user_data(
         "Scrub a user's PII (email, name, avatar, bio, details, profile, "
         "password). Delete API tokens the user created. Keeps trails and "
         "certificates so course analytics remain accurate. Invalidates "
-        "session cache."
+        "session cache. "
+        "Requires `users.action_delete` permission."
     ),
     responses={
         200: {"description": "User PII scrubbed; reports how many API tokens were revoked.", "model": AnonymizeUserResponse},
@@ -1518,7 +1497,8 @@ async def api_admin_anonymize_user(
     summary="Aggregate stats for a course",
     description=(
         "Returns enrollment/completion counts, average completion percentage "
-        "across all enrollees, and total certificates awarded."
+        "across all enrollees, and total certificates awarded. "
+        "Requires `courses.action_read` permission."
     ),
     responses={
         200: {"description": "Aggregate course stats: enrollment, completion, certificates, etc.", "model": CourseAnalyticsResponse},

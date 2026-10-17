@@ -108,7 +108,7 @@ describe("editor unsaved changes guard", () => {
   });
 });
 
-describe("getEditorContentSnapshot — H5P height", () => {
+describe("getEditorContentSnapshot: H5P height", () => {
   const doc = (height, url = "https://team.h5p.com/content/1/embed") => ({
     type: "doc",
     content: [{ type: "blockH5P", attrs: { h5pUrl: url, title: "Quiz", height } }],
@@ -134,7 +134,7 @@ describe("getEditorContentSnapshot — H5P height", () => {
 
   test("a height an author dragged does make the doc dirty", () => {
     // Under `custom` the height IS the author's edit, and a drag on a block
-    // already set to custom moves no other attribute — so if this were treated
+    // already set to custom moves no other attribute, so if this were treated
     // as volatile the resize would be lost with no leave-confirm.
     const dragged = (height) => ({
       type: "doc",

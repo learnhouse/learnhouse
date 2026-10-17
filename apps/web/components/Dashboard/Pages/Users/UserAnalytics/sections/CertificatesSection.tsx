@@ -20,7 +20,7 @@ export default function CertificatesSection({ certificates }: { certificates: an
               <div className="min-w-0">
                 <div className="font-semibold truncate">{c.course_name}</div>
                 <div className="text-xs text-gray-400">{fmtDate(c.created_at)}</div>
-                {/* The uuid is the verifiable credential number — worth keeping, but
+                {/* The uuid is the verifiable credential number, worth keeping, but
                     only once it says what it is. */}
                 <div className="text-[11px] text-gray-400 truncate">
                   {t(`${P}.certificates.credential_id`, { defaultValue: 'Credential ID' })}:{' '}

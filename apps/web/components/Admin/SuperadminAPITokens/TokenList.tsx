@@ -34,7 +34,7 @@ function tokenStatus(t: SuperadminToken): 'active' | 'revoked' | 'expired' {
 }
 
 function fmtDate(s: string | null | undefined): string {
-  if (!s) return '—'
+  if (!s) return 'n/a'
   const d = new Date(s)
   if (Number.isNaN(d.getTime())) return s
   return d.toLocaleString()

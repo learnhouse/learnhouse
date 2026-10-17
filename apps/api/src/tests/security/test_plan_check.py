@@ -168,7 +168,7 @@ class TestPlanCheck:
             ("Analytics", require_plan("pro", "Analytics"), {"path_params": {"org_id": "abc"}}, 400),
             ("Analytics", require_plan("pro", "Analytics"), {"query_params": {"org_id": "abc"}}, 400),
             # The specialised wrappers fall through when the discriminator
-            # can't be resolved — their routers mount handlers whose
+            # can't be resolved, since their routers mount handlers whose
             # discriminator sometimes lives in the request body or in
             # child uuids (discussion_uuid, comment_uuid) we don't expand.
             # Tenant isolation is still enforced by each handler's RBAC.

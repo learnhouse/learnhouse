@@ -7,6 +7,7 @@ All functions require an APITokenUser and operate within the token's org scope.
 
 from datetime import datetime, timedelta
 from typing import List, Optional
+from urllib.parse import quote
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from sqlmodel import select, func
@@ -32,7 +33,13 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.user_organizations import UserOrganization
-from src.db.users import APITokenUser, User, UserRead
+from src.db.users import (
+    APITokenUser,
+    OrgMemberUserRead,
+    SuperadminAPITokenUser,
+    User,
+    UserRead,
+)
 from src.services.trail.trail import _build_trail_read
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
@@ -40,12 +47,14 @@ from src.services.courses.certifications import (
     sync_trailrun_status,
     create_certificate_user,
 )
-from src.services.email.utils import get_base_url_from_request
+from src.services.email.utils import get_base_url_from_request, get_org_signup_base_url
 from src.services.orgs.join_notifications import notify_user_joined_org
+from src.services.orgs.users import _rights_within
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.auth import create_access_token
+from src.security.org_auth import org_owns_account
 from src.security.session_context import AUTH_METHOD_API_TOKEN, session_claims
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -60,6 +69,7 @@ from src.security.features_utils.usage import (
 from src.security.security import security_hash_password
 from src.security.rbac.constants import ADMIN_ROLE_ID, MAINTAINER_ROLE_ID
 from src.services.security.password_validation import validate_password_complexity
+from src.services.security.profile_validation import validate_profile_fields
 
 
 def _require_api_token(current_user) -> APITokenUser:
@@ -70,6 +80,35 @@ def _require_api_token(current_user) -> APITokenUser:
             detail="This endpoint requires API token authentication",
         )
     return current_user
+
+
+_TOKEN_ACTIONS = frozenset({"create", "read", "update", "delete"})
+
+
+def _require_token_right(token_user, resource: str, action: str) -> None:
+    """Refuse unless the token's rights grant ``action`` on ``resource``.
+
+    Passing the org boundary only says which org a token may touch; what it
+    may do there is its ``rights`` (``{"users": {"action_read": true, ...}}``,
+    stored as a dict or a ``Rights`` model). A missing bucket or flag denies.
+    Superadmin tokens are not org-scoped rights holders and keep full access.
+    """
+    if action not in _TOKEN_ACTIONS:
+        raise ValueError(f"Unknown token action: {action}")
+    if isinstance(token_user, SuperadminAPITokenUser):
+        return
+    rights = getattr(token_user, "rights", None) or {}
+    bucket = rights.get(resource) if isinstance(rights, dict) else getattr(rights, resource, None)
+    key = f"action_{action}"
+    if isinstance(bucket, dict):
+        granted = bucket.get(key)
+    else:
+        granted = getattr(bucket, key, None)
+    if granted is not True:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have '{action}' permission for {resource}",
+        )
 
 
 async def _resolve_org_slug(org_slug: str, token_user: APITokenUser, db_session: AsyncSession) -> Organization:
@@ -130,18 +169,62 @@ def _role_priority(role_id: int) -> int:
     return _ROLE_PRIORITY.get(role_id, _DEFAULT_ROLE_PRIORITY)
 
 
+# Role buckets an API token's rights can speak for. Participation buckets
+# (communities, discussions, podcasts, boards, playgrounds) and dashboard
+# access sit outside the token rights model and are not compared.
+_TOKEN_COMPARED_BUCKETS = frozenset({
+    "courses", "activities", "assignments", "coursechapters", "folders",
+    "media", "usergroups", "users", "roles", "organizations",
+})
+
+
+def _role_within_token_rights(role_rights, token_rights) -> bool:
+    """Whether a role grants no write authority the token does not hold.
+
+    Only create/update/delete are compared: read access is what every member
+    has, and comparing it would stop a users-only token from serving ordinary
+    learners. An ``action_x_own`` permission is covered by the token's
+    ``action_x``.
+    """
+    def as_dict(rights) -> dict:
+        if rights is None:
+            return {}
+        return rights if isinstance(rights, dict) else rights.model_dump()
+
+    granted = {}
+    for bucket, perms in as_dict(role_rights).items():
+        if bucket not in _TOKEN_COMPARED_BUCKETS or not isinstance(perms, dict):
+            continue
+        granted[bucket] = {
+            perm: value for perm, value in perms.items()
+            if not perm.startswith("action_read")
+        }
+    held = {}
+    for bucket, perms in as_dict(token_rights).items():
+        if not isinstance(perms, dict):
+            continue
+        held[bucket] = dict(perms)
+        for perm, value in perms.items():
+            if value is True:
+                held[bucket][f"{perm}_own"] = True
+    return _rights_within(granted, held)
+
+
 async def _check_token_can_impersonate(
     user: User,
-    org_id: int,
+    token_user: APITokenUser,
     db_session: AsyncSession,
+    *,
+    check_rights: bool = True,
 ) -> None:
     """Refuse to mint a session for a privileged account.
 
     Same reasoning as :func:`_check_token_can_assign_role`: elevated authority
     only comes from an interactive admin flow, so a leaked token cannot borrow
-    an org Admin/Maintainer's — or a platform superadmin's — session and inherit
+    an org Admin/Maintainer's (or a platform superadmin's) session and inherit
     every check that trusts it.
     """
+    org_id = token_user.org_id
     if user.is_superadmin:
         raise HTTPException(
             status_code=403,
@@ -160,6 +243,76 @@ async def _check_token_can_impersonate(
             detail="API tokens cannot issue tokens for Admin or Maintainer accounts",
         )
 
+    # The session carries the target's role, so the target may hold no write
+    # authority the token was not granted itself. (A role that no longer
+    # exists grants nothing.)
+    if check_rights and membership is not None:
+        target_role = await db_session.get(Role, membership.role_id)
+        if target_role is not None and not _role_within_token_rights(target_role.rights, token_user.rights):
+            raise HTTPException(
+                status_code=403,
+                detail="API tokens cannot issue tokens for accounts with rights beyond the token's own",
+            )
+
+    # A session for a shared account is usable in every org it belongs to.
+    await _check_not_member_elsewhere(
+        user, org_id, db_session,
+        detail="API tokens cannot issue tokens for accounts that belong to other organizations",
+    )
+
+
+async def _check_not_member_elsewhere(
+    user: User,
+    org_id: int,
+    db_session: AsyncSession,
+    *,
+    detail: str,
+) -> None:
+    """Refuse when the global account is not the token org's alone."""
+    if not await org_owns_account(user.id, org_id, db_session):
+        raise HTTPException(status_code=403, detail=detail)
+
+
+async def _check_token_can_manage_membership(
+    user_id: int,
+    org_id: int,
+    db_session: AsyncSession,
+) -> None:
+    """Role changes and removals never touch an Admin/Maintainer via a token."""
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
+    )).scalars().first()
+    if membership is not None and membership.role_id in {ADMIN_ROLE_ID, MAINTAINER_ROLE_ID}:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot modify Admin or Maintainer accounts",
+        )
+
+
+async def _check_token_can_edit_account(
+    user: User,
+    org_id: int,
+    db_session: AsyncSession,
+) -> None:
+    """Refuse edits to a global account the token's org does not solely own.
+
+    The ``User`` row is shared by every org it belongs to, so a token may only
+    rewrite it when the account is an ordinary member of the token's org alone.
+    """
+    if user.is_superadmin:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot modify superadmin accounts",
+        )
+    await _check_token_can_manage_membership(user.id, org_id, db_session)
+    await _check_not_member_elsewhere(
+        user, org_id, db_session,
+        detail="API tokens cannot modify accounts that belong to other organizations",
+    )
+
 
 async def _check_token_can_assign_role(
     token_user: APITokenUser,
@@ -168,11 +321,11 @@ async def _check_token_can_assign_role(
 ) -> None:
     """Defense-in-depth guard for role assignment via API tokens.
 
-    Layer 3 — API tokens never grant Admin or Maintainer. Elevated roles must
+    Layer 3: API tokens never grant Admin or Maintainer. Elevated roles must
     be assigned through interactive admin flows so a leaked token cannot mint
     org admins.
 
-    Layer 2 — The token's creator must still be a member of the org and must
+    Layer 2: The token's creator must still be a member of the org and must
     hold privilege at least as high as the role being granted. Stops a
     demoted/removed user's still-valid token from being used to escalate.
     """
@@ -180,6 +333,13 @@ async def _check_token_can_assign_role(
         raise HTTPException(
             status_code=403,
             detail="API tokens cannot grant Admin or Maintainer roles",
+        )
+
+    # Nor any custom role carrying rights the token does not hold itself.
+    if not _role_within_token_rights(role.rights, token_user.rights):
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot grant a role with rights beyond the token's own",
         )
 
     membership_q = select(UserOrganization).where(
@@ -210,25 +370,24 @@ async def issue_user_token(
 ) -> dict:
     """Issue a JWT access token on behalf of a user in the token's org.
 
-    Refuses privileged targets: without that, any token — whatever its rights —
+    Refuses privileged targets: without that, any token, whatever its rights,
     could mint a full session for the org's administrator and inherit every
     permission the token itself was never granted.
 
-    Deliberately not gated on a ``users`` rights bucket: tokens are issued with
-    content buckets only (courses, activities, usergroups, …), so requiring one
-    would reject every token in existence rather than scope anything. Scoping
-    impersonation properly needs ``users`` to become a grantable bucket first.
+    Minting a session acts as the user, so the token needs ``users.action_update``
+    on top of the privileged-target refusal.
     """
+    _require_token_right(token_user, "users", "update")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    await _check_token_can_impersonate(user, token_user.org_id, db_session)
+    await _check_token_can_impersonate(user, token_user, db_session)
 
-    # Issue a short-lived token (1 hour) for headless use — shorter than the
+    # Issue a short-lived token (1 hour) for headless use, shorter than the
     # default 8-hour session token to limit blast radius if leaked.
     from datetime import timedelta
-    # ``purpose`` has to stay "session" — get_current_user rejects every other
-    # value — so the machine origin is recorded in ``amr`` instead: the session
+    # ``purpose`` has to stay "session" (get_current_user rejects every other
+    # value), so the machine origin is recorded in ``amr`` instead: the session
     # is auditable as API-token-minted rather than indistinguishable from a
     # human login, and stays bound to the token's org via ``sorg``.
     access_token = create_access_token(
@@ -257,6 +416,7 @@ async def check_course_access(
     db_session: AsyncSession,
 ) -> dict:
     """Check if a user can access a specific course within the token's org."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -297,6 +457,7 @@ async def enroll_user(
     db_session: AsyncSession,
 ) -> TrailRead:
     """Enroll a user in a course on their behalf."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -368,6 +529,7 @@ async def unenroll_user(
     db_session: AsyncSession,
 ) -> dict:
     """Unenroll a user from a course."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -413,6 +575,7 @@ async def get_user_enrollments(
     db_session: AsyncSession,
 ) -> TrailRead:
     """Get all enrollments for a user in the token's org."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -443,6 +606,7 @@ async def get_user_progress(
     db_session: AsyncSession,
 ) -> dict:
     """Get a user's progress in a specific course."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -489,6 +653,7 @@ async def complete_activity(
     db_session: AsyncSession,
 ) -> dict:
     """Mark an activity as completed on behalf of a user."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -580,7 +745,7 @@ async def complete_activity(
 
     # Check course completion. The completion signal must come from actual
     # completion (is_course_fully_completed), NOT from the certificate helper's
-    # return value — that is True only when it creates a *new* certificate row,
+    # return value, which is True only when it creates a *new* certificate row,
     # so a course with no certification, an already-issued certificate, or an
     # unpassed assignment would wrongly report course_completed=False and drop
     # the COURSE_COMPLETED event. The cert helper is still called for its side
@@ -618,6 +783,7 @@ async def uncomplete_activity(
     db_session: AsyncSession,
 ) -> dict:
     """Remove an activity completion for a user."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -642,7 +808,7 @@ async def uncomplete_activity(
     if step:
         await db_session.delete(step)
         await db_session.commit()
-        # Completion may have been lost — demote the enrollment so analytics
+        # Completion may have been lost; demote the enrollment so analytics
         # stop counting it as completed.
         if course.id:
             await sync_trailrun_status(user_id, course.id, db_session)
@@ -662,6 +828,7 @@ async def complete_course(
     db_session: AsyncSession,
 ) -> dict:
     """Mark all activities in a course as completed for a user."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -718,7 +885,15 @@ async def complete_course(
 
     activity_ids = [ca.activity_id for ca in chapter_activities]
     if not activity_ids:
-        return {"detail": "No activities in course", "completed_count": 0}
+        return {
+            "course_uuid": course_uuid,
+            "user_id": user_id,
+            "completed_count": 0,
+            "already_completed_count": 0,
+            "total_activities": 0,
+            "course_completed": False,
+            "certificate_awarded": False,
+        }
 
     # Get already completed activities
     existing_steps = (await db_session.execute(
@@ -752,7 +927,7 @@ async def complete_course(
     await db_session.commit()
 
     # Create the certificate if eligible. Its return value means "a NEW
-    # certificate row was created", so it maps to certificate_awarded — NOT to
+    # certificate row was created", so it maps to certificate_awarded, NOT to
     # course_completed. The completion signal must come from actual completion,
     # otherwise a course with no certification (or an already-issued one) would
     # report course_completed=False and drop the COURSE_COMPLETED event.
@@ -788,6 +963,7 @@ async def get_all_user_progress(
     db_session: AsyncSession,
 ) -> List[dict]:
     """Get progress summary for all courses a user is enrolled in."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -859,8 +1035,9 @@ async def get_user_trail_detail(
     db_session: AsyncSession,
     course_uuid: Optional[str] = None,
 ) -> dict:
-    """Build a full trail breakdown for a user — every chapter + every activity
+    """Build a full trail breakdown for a user: every chapter + every activity
     with per-activity completion status. Optionally filtered to a single course."""
+    _require_token_right(token_user, "courses", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1052,9 +1229,26 @@ async def provision_user(
 ) -> UserRead:
     """Create a user and attach them to the token's org in one call.
 
-    Designed for SSO/JIT provisioning — email is auto-verified and the user
+    Designed for SSO/JIT provisioning: email is auto-verified and the user
     bypasses the normal email-verification flow.
     """
+    _require_token_right(token_user, "users", "create")
+
+    name_check = validate_profile_fields({
+        "username": username,
+        "first_name": first_name,
+        "last_name": last_name,
+    })
+    if not name_check.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "PROFILE_FIELD_INVALID",
+                "message": "Display name fields may not contain URLs or links",
+                "errors": name_check.errors,
+                "invalid_fields": name_check.invalid_fields,
+            },
+        )
 
     if password:
         validation = validate_password_complexity(password)
@@ -1082,68 +1276,20 @@ async def provision_user(
     await check_limits_with_usage("members", token_user.org_id, db_session)
 
     # Provisioning always creates a NET-NEW membership, so a dashboard-access
-    # role consumes a fresh admin seat — enforce the plan's seat cap.
+    # role consumes a fresh admin seat; enforce the plan's seat cap.
     if _role_grants_dashboard_access(role):
         await check_admin_seat_limit(token_user.org_id, db_session)
 
     now = datetime.now()
 
+    # Never attach an existing global account: the token's org would gain
+    # control of someone else's identity without their consent.
     existing_user = (await db_session.execute(select(User).where(User.email == email))).scalars().first()
     if existing_user:
-        # Email matches an existing account — treat this as "attach to org"
-        # rather than "create new user". Previously this raised 400 and left
-        # any user that had been created in a prior aborted call as an orphan
-        # (in the users table but with no UserOrganization row).
-        existing_membership = (await db_session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == existing_user.id,
-                UserOrganization.org_id == token_user.org_id,
-            )
-        )).scalars().first()
-        if existing_membership:
-            raise HTTPException(
-                status_code=400,
-                detail="Email already exists in this organization",
-            )
-
-        membership = UserOrganization(
-            user_id=existing_user.id if existing_user.id else 0,
-            org_id=token_user.org_id,
-            role_id=role_id,
-            creation_date=str(now),
-            update_date=str(now),
+        raise HTTPException(
+            status_code=409,
+            detail="A user with this email already exists; invite them instead",
         )
-        db_session.add(membership)
-        await db_session.commit()
-
-        await increase_feature_usage("members", token_user.org_id, db_session)
-
-        await track(
-            event_name=analytics_events.USER_SIGNED_UP,
-            org_id=token_user.org_id,
-            user_id=existing_user.id if existing_user.id else 0,
-            properties={"signup_method": "admin_api_attach"},
-        )
-        await dispatch_webhooks(
-            event_name=analytics_events.USER_SIGNED_UP,
-            org_id=token_user.org_id,
-            data={
-                "user": {
-                    "user_uuid": existing_user.user_uuid,
-                    "email": existing_user.email,
-                    "username": existing_user.username,
-                    "first_name": existing_user.first_name,
-                    "last_name": existing_user.last_name,
-                },
-                "signup_method": "admin_api_attach",
-            },
-        )
-
-        await notify_user_joined_org(
-            request, db_session, existing_user, token_user.org_id
-        )
-
-        return UserRead.model_validate(existing_user)
 
     if (await db_session.execute(select(User).where(User.username == username))).scalars().first():
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -1212,8 +1358,10 @@ async def remove_user_from_org_admin(
     db_session: AsyncSession,
 ) -> dict:
     """Remove a user's org membership (scope: membership only)."""
+    _require_token_right(token_user, "users", "delete")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _check_token_can_manage_membership(user_id, token_user.org_id, db_session)
 
     membership = (await db_session.execute(
         select(UserOrganization).where(
@@ -1263,8 +1411,9 @@ async def get_user_by_email(
     token_user: APITokenUser,
     email: str,
     db_session: AsyncSession,
-) -> UserRead:
+) -> OrgMemberUserRead:
     """Find a user by email within the token's org. 404 if not a member."""
+    _require_token_right(token_user, "users", "read")
 
     row = (await db_session.execute(
         select(User)
@@ -1276,7 +1425,9 @@ async def get_user_by_email(
     )).scalars().first()
     if not row:
         raise HTTPException(status_code=404, detail="User not found in this organization")
-    return UserRead.model_validate(row)
+    # The account is global: show only what this org may see of it.
+    meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
+    return OrgMemberUserRead.for_org(row, meta_keys)
 
 
 # -- Magic link ---------------------------------------------------------------
@@ -1286,7 +1437,7 @@ def _validate_magic_link_redirect(redirect_to: Optional[str]) -> Optional[str]:
     """Validate that a magic-link redirect_to is a same-origin path.
 
     Rejects anything that contains a scheme or looks like a protocol-relative
-    URL — only allows paths like "/course/foo" that resolve on the same host
+    URL. Only allows paths like "/course/foo" that resolve on the same host
     the consume endpoint was hit on. Prevents open-redirect phishing.
     """
     if redirect_to is None or redirect_to == "":
@@ -1313,6 +1464,79 @@ def _validate_magic_link_redirect(redirect_to: Optional[str]) -> Optional[str]:
     return value
 
 
+def _magic_link_error(status_code: int, code: str, message: str) -> HTTPException:
+    """A refusal in the shape the /auth/magic page reads: ``{"code", "message"}``,
+    the same shape the emailed login link uses, so both kinds of link fail the
+    same way on screen."""
+    return HTTPException(status_code=status_code, detail={"code": code, "message": message})
+
+
+def _magic_link_landing_url(base: str, token: str, redirect_to: Optional[str]) -> str:
+    """The web page that redeems a sign-in link: ``{base}/auth/magic?token=…``.
+
+    Redemption happens in the web app (the same page emailed login links use),
+    not on an API redirect, because only the web app sets the session cookies
+    from the host the browser is actually on: the token cookies plus the
+    ``LH_session`` marker the client needs to see the session, scoped right on
+    org subdomains and custom domains alike. Opening the page does not spend
+    the link; its script does, so link previewers and mail scanners can't.
+    """
+    url = f"{base.rstrip('/')}/auth/magic?token={quote(token, safe='')}"
+    if redirect_to:
+        url += f"&next={quote(redirect_to, safe='')}"
+    return url
+
+
+async def _magic_link_base_url(
+    org: Organization, request: Request, db_session: AsyncSession, host: Optional[str] = None
+) -> str:
+    """The org's own frontend: its verified custom domain, else ``{slug}.{domain}``.
+
+    Never the request's own host: integrations call this server to server, so
+    the request carries no Origin and that fallback is the platform apex, where
+    the student lands outside their org.
+
+    ``host`` lets the integration name one of the org's verified custom domains
+    outright. A domain behind a CDN fails the live DNS check behind
+    ``get_org_signup_base_url`` (it resolves to the CDN), and nothing the
+    platform can probe tells a CDN from a server relaying to us, so this is the
+    org's explicit choice rather than a guess. It adds no exposure: the
+    integration receives the raw token anyway and could put it on any host.
+    """
+    if host:
+        from config.config import get_learnhouse_config
+        from src.db.custom_domains import CustomDomain
+
+        wanted = host.strip().lower().rstrip(".")
+        domain = (await db_session.execute(
+            select(CustomDomain).where(
+                CustomDomain.org_id == org.id,
+                CustomDomain.domain == wanted,
+                CustomDomain.status == "verified",
+            )
+        )).scalars().first()
+        if domain is None:
+            raise HTTPException(
+                status_code=400,
+                detail="host must be one of the organization's verified custom domains",
+            )
+        from src.services.orgs.custom_domains import _org_plan_includes_custom_domains
+
+        # A domain the platform no longer serves for this org (plan lapsed)
+        # would strand the student on a dead host.
+        if not await _org_plan_includes_custom_domains(org.id, db_session):
+            raise HTTPException(
+                status_code=400,
+                detail="The organization's plan no longer includes custom domains",
+            )
+        scheme = "https" if get_learnhouse_config().hosting_config.ssl else "http"
+        return f"{scheme}://{domain.domain}"
+
+    return await get_org_signup_base_url(
+        org.slug, request, db_session=db_session, org_id=org.id
+    ) or get_base_url_from_request(request)
+
+
 async def issue_magic_link(
     token_user: APITokenUser,
     user_id: int,
@@ -1321,13 +1545,11 @@ async def issue_magic_link(
     org_slug: str,
     request: Request,
     db_session: AsyncSession,
+    host: Optional[str] = None,
 ) -> dict:
-    """Issue a short-lived JWT wrapped in a browser-clickable consume URL.
-
-    The URL is built on the same frontend base URL the email system uses
-    (``get_base_url_from_request``), so it respects custom domains and the
-    deployment's allowed-origin config.
-    """
+    """Issue a short-lived, single-use JWT wrapped in a browser-clickable URL
+    on the org's own frontend (see ``_magic_link_base_url``)."""
+    _require_token_right(token_user, "users", "update")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1336,14 +1558,14 @@ async def issue_magic_link(
     # magic-link route a way around the impersonation rules rather than a
     # variation on them. A token that may not mint a session for an Admin,
     # Maintainer or superadmin directly must not be able to mail itself one.
-    await _check_token_can_impersonate(user, token_user.org_id, db_session)
+    await _check_token_can_impersonate(user, token_user, db_session)
 
     safe_redirect = _validate_magic_link_redirect(redirect_to)
 
     ttl = max(60, min(ttl_seconds, 900))
     expires_delta = timedelta(seconds=ttl)
-    # Every link carries a random jti so the consume endpoint can enforce
-    # single-use via a Redis SETNX marker.
+    # Every link carries a random jti; redeeming it records the jti in
+    # used_link_token, which is what makes the link single-use.
     import secrets as _secrets
     jti = _secrets.token_urlsafe(16)
     payload = {
@@ -1352,11 +1574,15 @@ async def issue_magic_link(
         "org_id": token_user.org_id,
         "redirect_to": safe_redirect or "",
         "jti": jti,
+        # The issuing API token, so redemption can re-check it (see
+        # consume_magic_link_token).
+        "tid": token_user.id,
     }
     token = create_access_token(data=payload, expires_delta=expires_delta)
 
-    base = get_base_url_from_request(request).rstrip("/")
-    url = f"{base}/api/v1/admin/{org_slug}/auth/magic-consume?token={token}"
+    org = await db_session.get(Organization, token_user.org_id)
+    base = await _magic_link_base_url(org, request, db_session, host=host)
+    url = _magic_link_landing_url(base, token, safe_redirect)
 
     expires_at = (datetime.now() + expires_delta).isoformat()
 
@@ -1367,67 +1593,128 @@ async def issue_magic_link(
     }
 
 
+async def magic_link_landing_url_for_token(
+    token: str, org_slug: str, request: Request, db_session: AsyncSession
+) -> str:
+    """Where the legacy API consume URL forwards a link, without spending it.
+
+    Links issued before redemption moved to the web app point at the API
+    endpoint; they are sent on to the redeeming page on the org's own frontend.
+    The org comes from the signed token. Only a token that does not verify
+    (expired, garbage) falls back to the slug in the URL, so the page can show
+    its usual "link not valid" state on the right site.
+    """
+    from src.security.auth import decode_jwt
+    from src.services.email.utils import get_platform_base_url
+
+    payload = decode_jwt(token)
+    is_link = bool(payload) and payload.get("purpose") == "magic_link"
+
+    redirect_to = None
+    if is_link:
+        try:
+            redirect_to = _validate_magic_link_redirect(payload.get("redirect_to") or None)
+        except HTTPException:
+            redirect_to = None
+
+    org = None
+    if is_link:
+        org_id = payload.get("org_id")
+        if isinstance(org_id, int):
+            org = await db_session.get(Organization, org_id)
+    elif not payload:
+        org = (await db_session.execute(
+            select(Organization).where(Organization.slug == org_slug)
+        )).scalars().first()
+    base = (
+        await _magic_link_base_url(org, request, db_session)
+        if org
+        else get_platform_base_url(request)
+    )
+    return _magic_link_landing_url(base, token, redirect_to)
+
+
+async def _recheck_magic_link_issuer(
+    token_id, user: User, org_id: int, db_session: AsyncSession
+) -> None:
+    """Refuse a link whose issuing API token may no longer sign ``user`` in."""
+    from src.security.auth import api_token_user_from
+    from src.services.api_tokens.api_tokens import get_live_api_token
+
+    refused = _magic_link_error(
+        410, "MAGIC_LINK_INVALID", "This sign-in link is no longer valid. Please request a new one."
+    )
+
+    if token_id is None:
+        # Issued before links named their token (only during the rollout of
+        # this check; links live at most 15 minutes). Apply every rule that
+        # does not need the token itself.
+        # TODO(1.5): refuse links without a tid.
+        token_user = APITokenUser(org_id=org_id)
+        try:
+            await _check_token_can_impersonate(user, token_user, db_session, check_rights=False)
+        except HTTPException:
+            raise refused
+        return
+
+    api_token = await get_live_api_token(token_id, db_session) if type(token_id) is int else None
+    if api_token is None or api_token.org_id != org_id:
+        raise refused
+    try:
+        await _check_token_can_impersonate(user, api_token_user_from(api_token), db_session)
+    except HTTPException:
+        raise refused
+
+
 async def consume_magic_link_token(
     token: str,
     db_session: AsyncSession,
 ) -> tuple[User, Optional[str], Optional[str], Optional[str], Optional[str]]:
-    """Validate a magic-link JWT.
+    """Validate and spend a magic-link JWT.
 
     Returns ``(user, access_token, refresh_token, redirect_to, mfa_token)``.
     Exactly one of ``access_token``/``mfa_token`` is populated: when the user has
     two-factor enabled the link buys a second-factor challenge, not a session.
 
-    Raises HTTPException on expired/invalid token or if the user is no longer
-    a member of the org encoded in the token. Re-validates ``redirect_to``
-    defense-in-depth even though it was validated at issue time, so an older
-    unvalidated token can't slip through.
+    Raises HTTPException on an expired, invalid, incomplete or already-used
+    token, or if the user is no longer a member of the org encoded in the token.
+    Re-validates ``redirect_to`` defense-in-depth even though it was validated
+    at issue time.
     """
 
     from src.security.auth import decode_jwt
+    from src.services.auth.link_tokens import redeem_link_token
     from src.services.auth.session import issue_session_or_challenge
 
+    # decode_jwt checks signature and expiry and returns None on any failure.
     try:
         payload = decode_jwt(token)
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or expired magic link")
+        payload = None
+    if not payload:
+        raise _magic_link_error(401, "MAGIC_LINK_INVALID", "This sign-in link is invalid or has expired.")
 
-    if not payload or payload.get("purpose") != "magic_link":
-        raise HTTPException(status_code=410, detail="Token is not a magic link")
+    # Links are minted by create_access_token, which stamps type "access".
+    if payload.get("purpose") != "magic_link" or payload.get("type") != "access":
+        raise _magic_link_error(410, "MAGIC_LINK_INVALID", "This is not a valid sign-in link.")
 
     email = payload.get("sub")
     org_id = payload.get("org_id")
     raw_redirect = payload.get("redirect_to") or None
     jti = payload.get("jti")
+    exp = payload.get("exp")
 
-    if not email or not org_id:
-        raise HTTPException(status_code=410, detail="Magic link payload incomplete")
+    # Every link issued since single-use enforcement has a jti. One without it
+    # is incomplete, not "legacy and therefore exempt".
+    if not email or not org_id or not jti or not isinstance(exp, int):
+        raise _magic_link_error(410, "MAGIC_LINK_INVALID", "This is not a valid sign-in link.")
 
-    # Enforce single-use: the first consume claims the jti; any replay hits
-    # an existing key and is rejected. Tokens minted before jti was added
-    # have none — let them through; the JWT exp (max 15 min) bounds them.
-    # A Redis outage also falls through for the same reason.
-    if jti:
-        try:
-            import redis as _redis
-            from config.config import get_learnhouse_config as _get_cfg
-            _lh_cfg = _get_cfg()
-            _redis_url = _lh_cfg.redis_config.redis_connection_string
-            if _redis_url:
-                _r = _redis.Redis.from_url(
-                    _redis_url, socket_connect_timeout=2, socket_timeout=2
-                )
-                # TTL matches the magic-link max lifetime so the marker
-                # outlives any window the token could still be replayed in.
-                claimed = _r.set(f"magic_link_used:{jti}", "1", nx=True, ex=900)
-                if not claimed:
-                    raise HTTPException(
-                        status_code=410,
-                        detail="Magic link has already been used",
-                    )
-        except HTTPException:
-            raise
-        except Exception:
-            pass
+    # Spend the link before anything else. The record is durable and a failure
+    # to write it refuses the link, so no outage can make it work twice.
+    if not await redeem_link_token(db_session, jti, "magic_link", exp):
+        raise _magic_link_error(
+            410, "MAGIC_LINK_USED", "This sign-in link has already been used. Please request a new one."
+        )
 
     try:
         redirect_to = _validate_magic_link_redirect(raw_redirect)
@@ -1436,7 +1723,7 @@ async def consume_magic_link_token(
 
     user = (await db_session.execute(select(User).where(User.email == email))).scalars().first()
     if not user:
-        raise HTTPException(status_code=410, detail="User no longer exists")
+        raise _magic_link_error(410, "MAGIC_LINK_INVALID", "This sign-in link is for a user that no longer exists.")
 
     membership = (await db_session.execute(
         select(UserOrganization).where(
@@ -1445,13 +1732,27 @@ async def consume_magic_link_token(
         )
     )).scalars().first()
     if not membership:
-        raise HTTPException(status_code=410, detail="User is no longer a member of this organization")
+        raise _magic_link_error(
+            410, "MAGIC_LINK_INVALID", "This sign-in link is for a user who is no longer a member of this organization."
+        )
+
+    # Re-check what issuing checked, as of now: a link must not outlive the API
+    # token that issued it (revoked, expired, plan lapsed), nor sign in someone
+    # the token may no longer sign in (promoted to Admin, joined another org)
+    # in the minutes between issue and click.
+    await _recheck_magic_link_issuer(payload.get("tid"), user, org_id, db_session)
 
     # An admin-issued magic link is a password-equivalent credential, so it must
     # not walk past a second factor the user has deliberately enabled. When MFA
     # is active this yields a pending token instead of a session, and the caller
     # redirects the browser to the code challenge.
-    issue = await issue_session_or_challenge(db_session, user)
+    #
+    # The session is stamped exactly like the one /users/{id}/token mints: an
+    # API-token sign-in, bound to the org that issued it, so org sign-in and
+    # session-sharing policies treat it as what it is.
+    issue = await issue_session_or_challenge(
+        db_session, user, amr=AUTH_METHOD_API_TOKEN, org_id=org_id
+    )
     if issue.mfa_required:
         return user, None, None, redirect_to, issue.mfa_token
 
@@ -1469,6 +1770,7 @@ async def bulk_enroll_users(
     db_session: AsyncSession,
 ) -> dict:
     """Enroll a batch of users in a course. Returns summary of results."""
+    _require_token_right(token_user, "courses", "update")
 
     course = (await db_session.execute(
         select(Course).where(
@@ -1573,6 +1875,13 @@ async def bulk_enroll_users(
     }
 
 
+async def _org_signup_field_keys(org_id: int, db_session: AsyncSession) -> set[str]:
+    """Keys of the org's declared signup fields (what its admins may read)."""
+    from src.services.orgs.signup_fields import get_org_signup_fields
+
+    return {f.key for f in await get_org_signup_fields(org_id, db_session)}
+
+
 async def list_course_enrollments(
     token_user: APITokenUser,
     course_uuid: str,
@@ -1581,6 +1890,7 @@ async def list_course_enrollments(
     limit: int = 25,
 ) -> List[dict]:
     """List users enrolled in a course within the token's org."""
+    _require_token_right(token_user, "courses", "read")
 
     course = (await db_session.execute(
         select(Course).where(
@@ -1604,9 +1914,12 @@ async def list_course_enrollments(
         .limit(limit)
     )).all()
 
+    # SECURITY: org-scoped member view (no is_superadmin, extra_metadata cut
+    # down to this org's signup fields), not the global UserRead.
+    meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
     return [
         {
-            "user": UserRead.model_validate(user).model_dump(),
+            "user": OrgMemberUserRead.for_org(user, meta_keys).model_dump(),
             "enrolled_at": trail_run.creation_date,
             "status": trail_run.status.value if hasattr(trail_run.status, "value") else str(trail_run.status),
         }
@@ -1624,6 +1937,7 @@ async def reset_user_progress(
     db_session: AsyncSession,
 ) -> dict:
     """Delete a user's trail steps for a course. Keeps TrailRun enrollment intact."""
+    _require_token_right(token_user, "courses", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1681,6 +1995,7 @@ async def award_certificate(
     db_session: AsyncSession,
 ) -> dict:
     """Manually award a certificate, bypassing the completion gate."""
+    _require_token_right(token_user, "certifications", "create")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1724,6 +2039,7 @@ async def revoke_certificate(
     db_session: AsyncSession,
 ) -> dict:
     """Delete a user's certificate. Verifies cross-org boundary."""
+    _require_token_right(token_user, "certifications", "delete")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1793,6 +2109,7 @@ async def add_usergroup_member(
     db_session: AsyncSession,
 ) -> dict:
     """Add a user to a user group. User and group must both be in the token's org."""
+    _require_token_right(token_user, "usergroups", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
@@ -1841,6 +2158,7 @@ async def remove_usergroup_member(
     db_session: AsyncSession,
 ) -> dict:
     """Remove a user from a user group."""
+    _require_token_right(token_user, "usergroups", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
@@ -1882,6 +2200,7 @@ async def get_user_certificates(
     db_session: AsyncSession,
 ) -> List[dict]:
     """Get all certificates for a user in the token's org."""
+    _require_token_right(token_user, "certifications", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -1942,10 +2261,12 @@ async def update_user_profile(
     user_id: int,
     updates: dict,
     db_session: AsyncSession,
-) -> UserRead:
-    """Update a user's profile fields. Org-scoped — user must be a member."""
+) -> OrgMemberUserRead:
+    """Update a user's profile fields. Org-scoped: user must be a member."""
+    _require_token_right(token_user, "users", "update")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _check_token_can_edit_account(user, token_user.org_id, db_session)
 
     if "email" in updates and updates["email"] != user.email:
         existing = (await db_session.execute(
@@ -1961,10 +2282,8 @@ async def update_user_profile(
         if existing:
             raise HTTPException(status_code=400, detail="Username already in use")
 
-    # Reject phishing links in display-name fields here too — the admin API
+    # Reject phishing links in display-name fields here too; the admin API
     # token path must not be a way around the signup/profile-update guard.
-    from src.services.security.profile_validation import validate_profile_fields
-
     name_check = validate_profile_fields({
         "username": updates.get("username"),
         "first_name": updates.get("first_name"),
@@ -1981,6 +2300,12 @@ async def update_user_profile(
             },
         )
 
+    # A new address must be re-verified, same as the self-service path.
+    new_email = updates.get("email")
+    if new_email is not None and new_email != user.email:
+        user.email_verified = False
+        user.email_verified_at = None
+
     for field, value in updates.items():
         if field in _USER_UPDATABLE_FIELDS and value is not None:
             setattr(user, field, value)
@@ -1996,7 +2321,8 @@ async def update_user_profile(
     except Exception:
         pass
 
-    return UserRead.model_validate(user)
+    meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
+    return OrgMemberUserRead.for_org(user, meta_keys)
 
 
 async def change_user_role(
@@ -2006,8 +2332,11 @@ async def change_user_role(
     db_session: AsyncSession,
 ) -> dict:
     """Change a user's org role. Blocks demoting the last admin."""
+    _require_token_right(token_user, "users", "update")
+    _require_token_right(token_user, "roles", "update")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _check_token_can_manage_membership(user_id, token_user.org_id, db_session)
 
     role = (await db_session.execute(select(Role).where(Role.id == new_role_id))).scalars().first()
     if not role:
@@ -2025,7 +2354,7 @@ async def change_user_role(
         raise HTTPException(status_code=404, detail="User not in org")
 
     # Defense-in-depth: API tokens must never be able to mint Admin/Maintainer
-    # or grant a role above their creator's privilege — same guard enforced at
+    # or grant a role above their creator's privilege, the same guard enforced at
     # provisioning time. Without this, a low-privilege token could escalate any
     # member to org Admin via this endpoint.
     await _check_token_can_assign_role(token_user, role, db_session)
@@ -2082,6 +2411,7 @@ async def create_usergroup(
     db_session: AsyncSession,
 ) -> UserGroupRead:
     """Create a user group / cohort in the token's org."""
+    _require_token_right(token_user, "usergroups", "create")
 
     # Enforce the usergroups plan limit on the API path too (it is disabled on
     # free and count-limited on higher tiers); previously this bypassed it.
@@ -2118,6 +2448,7 @@ async def delete_usergroup(
     db_session: AsyncSession,
 ) -> dict:
     """Delete a user group and all its memberships + resource links."""
+    _require_token_right(token_user, "usergroups", "delete")
 
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
@@ -2153,6 +2484,7 @@ async def list_usergroup_members(
     limit: int = 25,
 ) -> List[dict]:
     """List users in a cohort, with pagination."""
+    _require_token_right(token_user, "usergroups", "read")
 
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
@@ -2166,9 +2498,11 @@ async def list_usergroup_members(
         .limit(limit)
     )).all()
 
+    # SECURITY: org-scoped member view, see list_course_enrollments.
+    meta_keys = await _org_signup_field_keys(token_user.org_id, db_session)
     return [
         {
-            "user": UserRead.model_validate(user).model_dump(),
+            "user": OrgMemberUserRead.for_org(user, meta_keys).model_dump(),
             "added_at": membership.creation_date,
         }
         for user, membership in rows
@@ -2181,6 +2515,7 @@ async def get_user_groups(
     db_session: AsyncSession,
 ) -> List[dict]:
     """List user groups a user belongs to within the token's org."""
+    _require_token_right(token_user, "usergroups", "read")
 
     await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -2213,6 +2548,7 @@ async def add_course_to_usergroup(
     db_session: AsyncSession,
 ) -> dict:
     """Grant a cohort access to a course."""
+    _require_token_right(token_user, "usergroups", "update")
 
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
@@ -2268,6 +2604,7 @@ async def remove_course_from_usergroup(
     db_session: AsyncSession,
 ) -> dict:
     """Revoke a cohort's access to a course."""
+    _require_token_right(token_user, "usergroups", "update")
 
     group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
@@ -2309,6 +2646,7 @@ async def bulk_unenroll_users(
     db_session: AsyncSession,
 ) -> dict:
     """Unenroll a batch of users from a course. Returns summary."""
+    _require_token_right(token_user, "courses", "update")
     from sqlmodel import delete as sql_delete
 
     course = (await db_session.execute(
@@ -2366,10 +2704,11 @@ async def export_user_data(
 ) -> dict:
     """Full GDPR data export scoped to the token's org.
 
-    Only returns data that belongs to the token's organization — other-org
+    Only returns data that belongs to the token's organization. Other-org
     memberships and certificates are intentionally excluded so a token for
     org A cannot read a user's history in org B.
     """
+    _require_token_right(token_user, "users", "read")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
@@ -2421,7 +2760,9 @@ async def export_user_data(
     )).all()
 
     return {
-        "profile": UserRead.model_validate(user).model_dump(),
+        "profile": OrgMemberUserRead.for_org(
+            user, await _org_signup_field_keys(token_user.org_id, db_session)
+        ).model_dump(),
         "memberships": [m.model_dump() for m in memberships],
         "trails": [t.model_dump() for t in trails],
         "trail_runs": [tr.model_dump() for tr in trail_runs],
@@ -2436,6 +2777,40 @@ async def export_user_data(
     }
 
 
+def _purge_user_ai_chats(user_id: int) -> int:
+    """Delete every AI chat the user has in Redis. Returns how many were purged.
+
+    Mirrors the key layout of services/ai/base.py: ``user_chats:{user_id}`` is a
+    sorted set of chat uuids, each with ``chat_history:{uuid}`` and
+    ``chat_meta:{uuid}``. Best effort: Redis being down must not fail the
+    erasure of the database record.
+    """
+    try:
+        from src.services.ai.base import _get_redis
+
+        r = _get_redis()
+        if not r:
+            return 0
+        index_key = f"user_chats:{user_id}"
+        chat_uuids = [
+            c.decode("utf-8") if isinstance(c, bytes) else str(c)
+            for c in (r.zrange(index_key, 0, -1) or [])
+        ]
+        keys = [index_key]
+        for chat_uuid in chat_uuids:
+            keys.append(f"chat_history:{chat_uuid}")
+            keys.append(f"chat_meta:{chat_uuid}")
+        r.delete(*keys)
+        return len(chat_uuids)
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "AI chat purge failed during anonymization", exc_info=True
+        )
+        return 0
+
+
 async def anonymize_user(
     token_user: APITokenUser,
     user_id: int,
@@ -2443,16 +2818,14 @@ async def anonymize_user(
 ) -> dict:
     """GDPR right-to-be-forgotten. Scrub PII, delete API tokens, invalidate session.
 
-    Cross-org note: the ``User`` row is global (shared across all orgs the
-    user belongs to), so scrubbing PII fields (email, name, avatar, bio,
-    details, profile) affects every org. API token cleanup is scoped to the
-    *caller's* org — tokens the user created in other orgs are NOT touched.
-    If the user also belongs to other orgs, the caller should coordinate a
-    purge in each org, or use a dedicated "global anonymize" flow (not
-    exposed here) that has platform-wide authority.
+    Cross-org note: the ``User`` row is global, so scrubbing it would affect
+    every org the user belongs to. Accounts that also belong to another org
+    (or are privileged) are refused; erasing those needs platform authority.
     """
+    _require_token_right(token_user, "users", "delete")
 
     user = await _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _check_token_can_edit_account(user, token_user.org_id, db_session)
 
     # example.com is reserved by RFC 2606 and has no MX record, so the address
     # is undeliverable while still being a well-formed one. The previous
@@ -2482,11 +2855,30 @@ async def anonymize_user(
     user.password = ""
     user.email_verified = False
     user.email_verified_at = None
+    # Signup answers (from any org) and login/lockout traces are personal data
+    # too; leaving them behind made the erasure partial.
+    user.extra_metadata = {}
+    user.last_login_at = None
     user.last_login_ip = None
+    user.failed_login_attempts = 0
+    user.locked_until = None
     user.signup_method = "anonymized"
     user.update_date = str(datetime.now())
     db_session.add(user)
+
+    # The audit trail stays (it is the legal record), but the network
+    # identifiers on it are personal data and go.
+    from sqlalchemy import update as sa_update
+    from src.db.user_audit_events import UserAuditEvent
+
+    await db_session.execute(
+        sa_update(UserAuditEvent)
+        .where(UserAuditEvent.user_id == user_id)
+        .values(ip=None, user_agent=None)
+    )
     await db_session.commit()
+
+    _purge_user_ai_chats(user_id)
 
     try:
         from src.routers.users import _invalidate_session_cache
@@ -2521,6 +2913,7 @@ async def get_course_analytics(
     db_session: AsyncSession,
 ) -> dict:
     """Aggregate course stats: enrollment, completion, in-progress, cert count."""
+    _require_token_right(token_user, "courses", "read")
 
     from src.db.trail_runs import StatusEnum
 

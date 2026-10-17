@@ -3,6 +3,7 @@ import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import { MarkdownImageLink } from './MarkdownImageLink'
 
 type AIMarkdownRendererProps = {
   content: string
@@ -103,6 +104,10 @@ function AIMarkdownRenderer({ content, isStreaming = false }: AIMarkdownRenderer
             >
               {children}
             </a>
+          ),
+          // Images render as links, never loaded
+          img: ({ src, alt }) => (
+            <MarkdownImageLink src={src} alt={alt} className="text-purple-400 hover:text-purple-300 underline" />
           ),
           // Horizontal rule
           hr: () => <hr className="border-white/10 my-3" />,

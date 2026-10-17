@@ -3,7 +3,7 @@
 Four defects, all in the sign-in path:
 
 * the Google OAuth audience check was skipped whenever no client_id was
-  configured — which was the default state — so any Google access token was
+  configured (which was the default state), so any Google access token was
   accepted as proof of identity;
 * Google sign-in minted a session directly and therefore walked past an
   enrolled TOTP factor;
@@ -109,7 +109,7 @@ async def _enroll_confirmed_factor(db, user_id: int) -> None:
 
 @pytest.fixture
 def no_google_client_id(monkeypatch):
-    """Neither spelling set — the default state of a stock deployment."""
+    """Neither spelling set: the default state of a stock deployment."""
     for name in GOOGLE_ENV_VARS:
         monkeypatch.delenv(name, raising=False)
     # The "not configured" log line is emitted once per process; reset it so the
@@ -118,7 +118,7 @@ def no_google_client_id(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# F3 / F12 — Google OAuth audience verification
+# F3 / F12: Google OAuth audience verification
 # ---------------------------------------------------------------------------
 
 
@@ -203,7 +203,7 @@ class TestGoogleAudienceFailsClosed:
 
 
 # ---------------------------------------------------------------------------
-# F18 — Google sign-in must honour an enrolled second factor
+# F18: Google sign-in must honour an enrolled second factor
 # ---------------------------------------------------------------------------
 
 
@@ -211,7 +211,7 @@ class TestGoogleAudienceFailsClosed:
 class TestGoogleSignInHonoursSecondFactor:
     async def test_enrolled_totp_gets_a_challenge_not_a_session(self, db, regular_user):
         """Google sign-in used to mint cookies directly, so a confirmed TOTP
-        factor was simply not asked for — and the org-wide require_2fa policy
+        factor was never asked for, and the org-wide require_2fa policy
         reports the account as compliant because the factor exists."""
         await _enroll_confirmed_factor(db, regular_user.id)
         signed_in = SimpleNamespace(id=regular_user.id, email=regular_user.email)
@@ -273,7 +273,7 @@ class TestGoogleSignInHonoursSecondFactor:
 
 
 # ---------------------------------------------------------------------------
-# F22 — accounts with no local password hash
+# F22: accounts with no local password hash
 # ---------------------------------------------------------------------------
 
 
@@ -300,7 +300,7 @@ class TestEmptyPasswordHashLogin:
     async def test_authenticate_user_returns_false_instead_of_raising(self, db):
         """Every Google signup, admin-provisioned and anonymized account stores
         an empty sentinel. pwdlib raises UnknownHashError on it, which escaped as
-        a 500 — a reliable oracle separating "SSO account" from "no such user"."""
+        a 500, a reliable oracle separating "SSO account" from "no such user"."""
         await _add_user(db, email="sso@example.com", password="", user_id=901)
 
         result = await authenticate_user(
@@ -396,7 +396,7 @@ class TestEmptyPasswordHashLogin:
 
 
 # ---------------------------------------------------------------------------
-# F27 — a refresh JWT is not a session token
+# F27: a refresh JWT is not a session token
 # ---------------------------------------------------------------------------
 
 
@@ -419,7 +419,7 @@ def _legacy_access_token(email: str) -> str:
 @pytest.mark.asyncio
 class TestRefreshTokenIsNotASession:
     async def test_refresh_jwt_as_bearer_is_rejected(self, db, regular_user):
-        """A refresh token carries sub/exp/iat and — via mint_session_tokens —
+        """A refresh token carries sub/exp/iat and (via mint_session_tokens)
         purpose "session" too, so the purpose gate alone let it authenticate a
         full session for ~30 days, bypassing rotation and replay detection."""
         refresh = create_refresh_token({"sub": regular_user.email, "purpose": "session"})

@@ -15,7 +15,7 @@ _get_redis_client = get_redis_client
 
 logger = logging.getLogger(__name__)
 
-CACHE_TTL_COURSES_LIST = 60  # 1 min — public course list
+CACHE_TTL_COURSES_LIST = 60  # 1 min, public course list
 
 _KEY_PREFIX = "courses_cache"
 

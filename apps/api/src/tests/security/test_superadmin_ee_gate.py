@@ -4,7 +4,7 @@ Tests for the Enterprise Edition gate on the superadmin surface.
 The contract these pin down:
   - OSS deployments get 403 with a machine-readable `ee_required` detail that
     the web client matches on.
-  - SaaS and EE are completely unaffected. Those two cases are the SEV guard —
+  - SaaS and EE are completely unaffected. Those two cases are the SEV guard:
     a gate written as `!= 'ee'` instead of `== 'oss'` would 403 live SaaS.
   - Anonymous callers still get 401, not 403, so the gate never becomes an
     authentication oracle.

@@ -237,7 +237,7 @@ class TestNudgeRendering:
         )
 
     def test_no_unsubscribe_url_means_no_unsubscribe_headers(self):
-        """Reply-To survives — a reader should be able to answer a lifecycle
+        """Reply-To survives; a reader should be able to answer a lifecycle
         email whether or not it carried an opt-out link."""
         captured = self._send(unsubscribe_url="")
         headers = captured["headers"] or {}
@@ -255,7 +255,7 @@ class TestNudgeRendering:
         assert "https://acme.test/dash/courses/course/abc/general" in captured["body"]
 
     def test_no_cta_renders_a_button_free_email(self):
-        """The "what stopped you?" nudge is a genuine question — a button
+        """The "what stopped you?" nudge is a genuine question; a button
         would undercut the ask to just reply.
 
         The unsubscribe link is still an anchor, so this checks for the button

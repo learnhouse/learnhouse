@@ -14,9 +14,11 @@ from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
 from src.security.org_auth import is_org_member, enforce_org_mfa
+from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.llm import model_for_tier
 from src.services.boards.boards_playground import (
     get_boards_playground_session,
+    get_boards_playground_session_owner,
     create_boards_playground_session,
     generate_boards_playground_stream,
     MAX_ITERATIONS,
@@ -87,6 +89,11 @@ async def start_boards_playground_session(
             status_code=403,
             detail="You are not a member of this organization",
         )
+    # Generating into a board spends the org's credits on that board's behalf:
+    # require edit rights on it, not just membership of the org.
+    await check_resource_access(
+        request, db_session, current_user, board.board_uuid, AccessAction.UPDATE
+    )
 
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(start_acting_user_id, org.id, db_session)
@@ -101,6 +108,7 @@ async def start_boards_playground_session(
         block_uuid=session_request.block_uuid,
         board_uuid=session_request.board_uuid,
         context=session_request.context,
+        user_id=start_acting_user_id,
     )
 
     # Generate with streaming
@@ -143,6 +151,14 @@ async def iterate_boards_playground_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    # A session belongs to whoever started it: another board editor must not
+    # read its prompts back through the model or spend credits on it.
+    # Sessions created before owners were recorded have no owner and stay
+    # behind the board UPDATE check below.
+    session_owner = get_boards_playground_session_owner(session.session_uuid)
+    if session_owner is not None and session_owner != resolve_acting_user_id(current_user):
+        raise HTTPException(status_code=404, detail="Session not found")
+
     if session.iteration_count >= session.max_iterations:
         raise HTTPException(
             status_code=400,
@@ -174,6 +190,11 @@ async def iterate_boards_playground_session(
             status_code=403,
             detail="You are not a member of this organization",
         )
+    # Generating into a board spends the org's credits on that board's behalf:
+    # require edit rights on it, not just membership of the org.
+    await check_resource_access(
+        request, db_session, current_user, board.board_uuid, AccessAction.UPDATE
+    )
 
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(iterate_acting_user_id, org.id, db_session)
@@ -216,6 +237,7 @@ async def iterate_boards_playground_session(
     },
 )
 async def get_session_state(
+    request: Request,
     session_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
@@ -251,6 +273,15 @@ async def get_session_state(
 
     # Org-wide two-factor policy, applied after the membership gate.
     await enforce_org_mfa(acting_user_id, org.id, db_session)
+
+    # Membership alone is not enough: the session holds the creator's prompts
+    # and generated HTML. Only the creator, or someone who can edit the board,
+    # may read it.
+    if get_boards_playground_session_owner(session.session_uuid) != acting_user_id:
+        await check_resource_access(
+            request, db_session, current_user, board.board_uuid, AccessAction.UPDATE
+        )
+
     return BoardsPlaygroundSessionResponse(
         session_uuid=session.session_uuid,
         iteration_count=session.iteration_count,

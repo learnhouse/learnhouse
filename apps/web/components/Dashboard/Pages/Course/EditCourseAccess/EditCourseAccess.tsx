@@ -150,7 +150,7 @@ function EditCourseAccess(_props: EditCourseAccessProps) {
             <div className="h-6" />
             <div className="ms-10 me-10 mx-auto bg-white rounded-xl shadow-xs">
 
-                {/* Header — matches OrgUsers header */}
+                {/* Header, matches OrgUsers header */}
                 <div className="px-6 py-5 border-b border-gray-100">
                     <h1 className="font-bold text-xl text-gray-800">
                         {t('dashboard.courses.access.title')}

@@ -2,7 +2,7 @@ import { Callout } from 'nextra/components'
 
 # Backups
 
-Regular backups are essential for protecting your LearnHouse data. The LearnHouse CLI provides built-in backup and restore commands for the PostgreSQL database.
+Back up your LearnHouse data regularly. The LearnHouse CLI has built-in backup and restore commands for the PostgreSQL database.
 
 <Callout type="warning">
 The built-in backup only covers the database and your `.env` file. Uploaded content (images, videos, documents) stored on the filesystem is **not** included. See [Filesystem Content](#filesystem-content) below for recommendations.
@@ -18,8 +18,8 @@ learnhouse backup
 
 This creates a timestamped archive containing:
 
-- **`database.sql`** — a `pg_dump` of the LearnHouse PostgreSQL database
-- **`.env`** — a copy of your instance's environment file (if present)
+- **`database.sql`**: a `pg_dump` of the LearnHouse PostgreSQL database
+- **`.env`**: a copy of your instance's environment file (if present)
 
 Backups are written to `<installDir>/backups/learnhouse-backup-<timestamp>.tar.gz`. The CLI prints the absolute path when the backup completes.
 
@@ -35,7 +35,7 @@ To restore from a backup file:
 learnhouse restore <installDir>/backups/learnhouse-backup-<timestamp>.tar.gz
 ```
 
-The restore command replays `database.sql` into the running database container. It does **not** stop or restart services — restart them yourself if needed.
+The restore command replays `database.sql` into the running database container. It does **not** stop or restart services, so restart them yourself if needed.
 
 <Callout type="warning">
 Restoring a backup overwrites the database. Make sure you are restoring to the correct instance.
@@ -63,6 +63,6 @@ find <installDir>/backups -name "learnhouse-backup-*.tar.gz" -mtime +7 -delete
 
 ## Filesystem Content
 
-When `LEARNHOUSE_CONTENT_DELIVERY_TYPE=filesystem`, uploaded files live on the host (or in a Docker volume) and are **not** captured by `learnhouse backup`. You are responsible for backing up this directory separately — for example with `rsync`, a volume snapshot, or a scheduled `tar` job.
+When `LEARNHOUSE_CONTENT_DELIVERY_TYPE=filesystem`, uploaded files live on the host (or in a Docker volume) and are **not** captured by `learnhouse backup`. You are responsible for backing up this directory separately, for example with `rsync`, a volume snapshot, or a scheduled `tar` job.
 
 When using `s3api` storage, rely on your S3 provider's versioning, lifecycle, or cross-region replication features to protect uploaded content.

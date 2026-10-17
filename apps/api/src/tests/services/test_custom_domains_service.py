@@ -872,7 +872,7 @@ class TestResolveAndSslStatus:
                 mock_request, db, org.id, domain.domain_uuid, admin_user
             )
 
-        # Socket must never have been touched — this is the whole point.
+        # Socket must never have been touched; this is the whole point.
         socket_mock.assert_not_called()
         assert result["has_ssl"] is False
         assert result["status"] == "invalid"
@@ -905,7 +905,7 @@ class TestResolveAndSslStatus:
                     admin_user,
                 )
         with patch(
-            "src.services.orgs.custom_domains.require_org_admin",
+            "src.services.orgs.custom_domains.require_org_role_permission",
             return_value=None,
         ):
             with pytest.raises(HTTPException) as verify_org_exc:

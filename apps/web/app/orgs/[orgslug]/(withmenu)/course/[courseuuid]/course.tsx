@@ -18,6 +18,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
 import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
+import LinkifiedText from '@components/Objects/StyledElements/LinkifiedText/LinkifiedText'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -69,7 +70,7 @@ const CourseClient = (props: any) => {
     }
   }, [courseId, courseUuidForTracking, track])
 
-  // Fetch trail data — shared cache with useTrail hook used elsewhere
+  // Fetch trail data; shared cache with useTrail hook used elsewhere
   const { data: trailData } = useTrail(org?.id);
 
   // Must be before any early returns (React rules of hooks)
@@ -143,7 +144,7 @@ const CourseClient = (props: any) => {
                     <div className="h-5 bg-gray-200 rounded w-5 flex-shrink-0" />
                     <div className="h-5 bg-gray-200 rounded w-1/3" />
                   </div>
-                  {/* Activity rows — only expand first chapter */}
+                  {/* Activity rows: only expand first chapter */}
                   {chIdx === 0 && Array.from({ length: 3 }).map((_, aIdx) => (
                     <div key={aIdx} className="flex items-center gap-3 px-4 py-4 border-t border-neutral-100">
                       <div className="h-4 w-4 bg-gray-200 rounded flex-shrink-0" />
@@ -476,7 +477,7 @@ const CourseClient = (props: any) => {
 
                 <div className="course_metadata_left space-y-2">
                   <div className="">
-                    <p className="py-5 whitespace-pre-line break-words w-full leading-relaxed tracking-normal text-pretty hyphens-auto">{course.about}</p>
+                    <LinkifiedText text={course.about} className="py-5 whitespace-pre-line break-words w-full leading-relaxed tracking-normal text-pretty hyphens-auto" />
                   </div>
                 </div>
               </div>

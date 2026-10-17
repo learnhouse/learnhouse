@@ -65,7 +65,7 @@ async def client(app):
 
 @pytest.fixture(autouse=True)
 def _bypass_resource_rbac():
-    """Only the resource-level RBAC is stubbed — the org gates under test run."""
+    """Only the resource-level RBAC is stubbed; the org gates under test run."""
     with patch(
         "src.services.media.media.check_resource_access", new_callable=AsyncMock
     ), patch(
@@ -167,7 +167,7 @@ async def _mk_media(db, org, *, name, storage_key="", file_format="pdf",
 
 
 # ---------------------------------------------------------------------------
-# F1 / F23 / F34 — served Content-Type + Content-Disposition clamp
+# F1 / F23 / F34: served Content-Type + Content-Disposition clamp
 # ---------------------------------------------------------------------------
 
 class TestServedDispositionIsClamped:
@@ -310,7 +310,7 @@ class TestUploadedMimeIsServerDerived:
 
 
 # ---------------------------------------------------------------------------
-# F20 / F30 — the listing is scoped by org membership, not by being logged in
+# F20 / F30: the listing is scoped by org membership, not by being logged in
 # ---------------------------------------------------------------------------
 
 async def _seed_library(db, org):
@@ -375,7 +375,7 @@ class TestMediaListOrgScoping:
 
 
 # ---------------------------------------------------------------------------
-# F31 — creation is pinned to the org the caller actually belongs to
+# F31: creation is pinned to the org the caller actually belongs to
 # ---------------------------------------------------------------------------
 
 class TestMediaCreateOrgScoping:

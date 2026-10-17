@@ -3,7 +3,12 @@
  * All traffic (including /collab WebSocket) goes to the app container,
  * which has its own internal nginx routing.
  */
-export function generateNginxConf(): string {
+export function generateNginxConf(config: { useHttps?: boolean } = {}): string {
+  // This proxy only ever listens on plain HTTP. With manual HTTPS, TLS ends at
+  // the operator's own proxy in front of it, so $scheme would always be "http"
+  // and the app would issue non-Secure cookies. The public scheme is known from
+  // setup, so pin it rather than trusting $scheme or a client-sent header.
+  const forwardedProto = config.useHttps ? 'https' : '$scheme'
   return `
 server {
     listen 80;
@@ -11,7 +16,7 @@ server {
     server_name _;
     # Must match the app container's internal nginx (6G). A lower value here
     # makes the outer proxy reject large uploads (e.g. videos) with a 413
-    # before the request ever reaches the app — see docker/nginx.conf.
+    # before the request ever reaches the app; see docker/nginx.conf.
     client_max_body_size 6G;
 
     # Increase header buffer size
@@ -27,13 +32,14 @@ server {
     # The app container has internal nginx routing between frontend, backend, and collab
     location / {
         proxy_pass http://learnhouse-app:80;
-        # Use $http_host (not $host) so the port is preserved — Next.js Server
+        # Use $http_host (not $host) so the port is preserved; Next.js Server
         # Actions reject POSTs where origin and x-forwarded-host disagree.
         proxy_set_header Host $http_host;
         proxy_set_header X-Forwarded-Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        # Edge proxy: overwrite any client-supplied X-Forwarded-For.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto ${forwardedProto};
 
         # WebSocket support (needed for /collab)
         proxy_http_version 1.1;

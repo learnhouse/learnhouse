@@ -1,4 +1,4 @@
-"""Tests for src/services/orgs/orgs.py — org CRUD functions."""
+"""Tests for src/services/orgs/orgs.py: org CRUD functions."""
 
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
@@ -77,7 +77,9 @@ class TestGetOrgBySlug:
 
         assert isinstance(result, OrganizationRead)
         assert result.slug == "cached-org"
-        mock_rbac.assert_not_called()
+        # The cached read skips the (no-op) "read" gate; the only check left
+        # is the "update" probe that decides whether org.email is returned.
+        assert all(c.args[3] == "update" for c in mock_rbac.call_args_list)
 
     @pytest.mark.asyncio
     async def test_get_org_by_slug_found(self, mock_request, db, org, admin_user):
@@ -545,7 +547,7 @@ class TestLeaveOrg:
 
     @pytest.mark.asyncio
     async def test_leave_org_last_admin_blocked(self, mock_request, db, org, admin_user):
-        # The sole admin cannot leave — would orphan the org.
+        # The sole admin cannot leave; it would orphan the org.
         with pytest.raises(HTTPException) as exc:
             await leave_org(mock_request, org.id, db, admin_user)
         assert exc.value.status_code == 400

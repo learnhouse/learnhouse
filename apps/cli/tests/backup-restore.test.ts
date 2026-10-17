@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
 
-// Real tar runs (execSync is NOT mocked here — tar is a deterministic system
+// Real tar runs (execSync is NOT mocked here; tar is a deterministic system
 // tool, no daemon needed). Only the database exec calls are stubbed: the dump
 // writer produces a real database.sql so the archive is genuine.
 const promptStub = vi.hoisted(() => {
@@ -38,7 +38,7 @@ class ProcessExit extends Error {
   constructor(code: number) { super(`process.exit(${code})`); this.code = code }
 }
 
-describe('backup / restore — real tar, stubbed database', () => {
+describe('backup / restore: real tar, stubbed database', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined
@@ -87,8 +87,12 @@ describe('backup / restore — real tar, stubbed database', () => {
     const archives = fs.readdirSync(backupsDir).filter((f) => f.endsWith('.tar.gz'))
     expect(archives).toHaveLength(1)
 
-    // The temp working dir must have been cleaned up — only the archive remains.
+    // The temp working dir must have been cleaned up; only the archive remains.
     expect(fs.readdirSync(backupsDir).filter((e) => !e.endsWith('.tar.gz'))).toHaveLength(0)
+
+    // The archive holds the database and .env: owner-only.
+    expect(fs.statSync(backupsDir).mode & 0o777).toBe(0o700)
+    expect(fs.statSync(path.join(backupsDir, archives[0])).mode & 0o777).toBe(0o600)
 
     // Extract for real and verify contents.
     const out = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-br-x-'))
@@ -97,6 +101,25 @@ describe('backup / restore — real tar, stubbed database', () => {
     expect(fs.readFileSync(path.join(out, sub, 'database.sql'), 'utf-8')).toContain('DROP TABLE IF EXISTS')
     expect(fs.existsSync(path.join(out, sub, '.env'))).toBe(true)
     fs.rmSync(out, { recursive: true, force: true })
+  })
+
+  it('backup still runs when backups/ belongs to another user', async () => {
+    const backupsDir = path.join(installDir, 'backups')
+    const realChmod = fs.chmodSync
+    vi.spyOn(fs, 'chmodSync').mockImplementation(((target: fs.PathLike, mode: fs.Mode) => {
+      if (String(target) === backupsDir) {
+        throw Object.assign(new Error('operation not permitted'), { code: 'EPERM' })
+      }
+      return realChmod(target, mode)
+    }) as typeof fs.chmodSync)
+    const warn = vi.spyOn(promptStub.log, 'warn')
+
+    await backupCommand()
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('EPERM'))
+    const archives = fs.readdirSync(backupsDir).filter((f) => f.endsWith('.tar.gz'))
+    expect(archives).toHaveLength(1)
+    expect(fs.statSync(path.join(backupsDir, archives[0])).mode & 0o777).toBe(0o600)
   })
 
   it('restore extracts a real archive, runs psql, and cleans up', async () => {
@@ -240,7 +263,7 @@ describe('backup / restore — real tar, stubbed database', () => {
     dockerMock.dockerExecFromFile.mockClear()
     try {
       await backupCommand()
-      // Prove the menu actually ROUTED to restore (ran psql) rather than no-opping —
+      // Prove the menu actually ROUTED to restore (ran psql) rather than no-opping;
       // the previous version of this test had no assertion at all.
       expect(dockerMock.dockerExecFromFile).toHaveBeenCalledWith(
         'learnhouse-db-dep1', 'psql -U learnhouse -d learnhouse', expect.stringMatching(/database\.sql$/),
@@ -257,7 +280,7 @@ describe('backup / restore — real tar, stubbed database', () => {
     dockerMock.dockerExecFromFile.mockClear()
     await expect(backupCommand(archive, { restore: true })).resolves.toBeUndefined()
     // Prove the restore ACTUALLY ran psql against the right container with the
-    // extracted dump — not merely that the command returned without throwing.
+    // extracted dump, not merely that the command returned without throwing.
     expect(dockerMock.dockerExecFromFile).toHaveBeenCalledWith(
       'learnhouse-db-dep1',
       'psql -U learnhouse -d learnhouse',
@@ -371,7 +394,7 @@ describe('backup / restore — real tar, stubbed database', () => {
     await backupCommand()
     const backupsDir = path.join(installDir, 'backups')
     const archive = path.join(backupsDir, fs.readdirSync(backupsDir).find((f) => f.endsWith('.tar.gz'))!)
-    // Change the live .env, then restore — the archived .env should come back.
+    // Change the live .env, then restore; the archived .env should come back.
     fs.writeFileSync(path.join(installDir, '.env'), 'LEARNHOUSE_DOMAIN=changed\n')
     await backupCommand(archive, { restore: true })
     expect(fs.readFileSync(path.join(installDir, '.env'), 'utf-8')).toContain('LEARNHOUSE_DOMAIN=localhost')

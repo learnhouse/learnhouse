@@ -21,12 +21,12 @@ The backend connects to PostgreSQL through SQLModel.
 
 ## Redis
 
-Redis serves as the caching, session management, and collaboration persistence layer:
+Redis is the caching, session management, and collaboration persistence layer:
 
-- **Caching** -- Reduces database load by storing frequently accessed data in memory.
-- **Session storage** -- Manages user session data for fast access.
-- **Collaboration state** -- Stores Yjs document state from the Collab server with a 1-hour TTL before it is persisted to PostgreSQL.
-- **Pub/Sub** -- Enables communication between services when needed.
+- **Caching**: Reduces database load by storing frequently accessed data in memory.
+- **Session storage**: Manages user session data for fast access.
+- **Collaboration state**: Stores Yjs document state from the Collab server with a 1-hour TTL before it is persisted to PostgreSQL.
+- **Pub/Sub**: Enables communication between services when needed.
 
 The dev compose uses `redis:8.6.1-alpine`; the CLI-generated self-host production compose uses `redis:7.2.3-alpine`.
 
@@ -46,8 +46,8 @@ The Collab server performs JWT verification using the same secret as the API bac
 
 Document state follows a two-tier persistence strategy:
 
-1. **Redis** -- Yjs state is first stored in Redis with a 1-hour TTL (`REDIS_YDOC_TTL = 3600`) for fast access.
-2. **PostgreSQL** -- State is persisted to the database via the API with a 5-second debounce (`DB_FLUSH_DELAY = 5000`) to avoid excessive writes.
+1. **Redis**: Yjs state is first stored in Redis with a 1-hour TTL (`REDIS_YDOC_TTL = 3600`) for fast access.
+2. **PostgreSQL**: State is persisted to the database via the API with a 5-second debounce (`DB_FLUSH_DELAY = 5000`) to avoid excessive writes.
 
 ### Rate Limiting and Capacity
 
@@ -56,9 +56,9 @@ Document state follows a two-tier persistence strategy:
 
 ### Key Features
 
-- **Real-time document synchronization** -- Multiple users can edit the same board simultaneously.
-- **Conflict resolution** -- Yjs CRDTs handle concurrent edits without conflicts.
-- **Durable persistence** -- Document state survives server restarts through Redis and PostgreSQL.
+- **Real-time document synchronization**: Multiple users can edit the same board simultaneously.
+- **Conflict resolution**: Yjs CRDTs handle concurrent edits without conflicts.
+- **Durable persistence**: Document state survives server restarts through Redis and PostgreSQL.
 
 The frontend connects to Hocuspocus directly over WebSocket using the `@hocuspocus/provider` client for low-latency collaborative editing.
 
@@ -66,8 +66,8 @@ The frontend connects to Hocuspocus directly over WebSocket using the `@hocuspoc
 
 The CLI-generated self-host stack uses one of two reverse proxies depending on the SSL choice made during setup:
 
-- **Caddy** (`caddy:2-alpine`) — selected when "Automatic SSL" is enabled; handles Let's Encrypt certificate issuance and renewal automatically.
-- **nginx** (`nginx:alpine`) — selected for manual SSL or HTTP-only setups.
+- **Caddy** (`caddy:2-alpine`): selected when "Automatic SSL" is enabled; handles Let's Encrypt certificate issuance and renewal automatically.
+- **nginx** (`nginx:alpine`): selected for manual SSL or HTTP-only setups.
 
 Both route traffic to the single `learnhouse-app` container, which internally serves the Next.js frontend, the FastAPI backend, and the Hocuspocus collaboration server.
 

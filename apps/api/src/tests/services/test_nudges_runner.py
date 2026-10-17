@@ -84,7 +84,7 @@ async def verified_admin(db, admin_user):
 
 @pytest.fixture
 async def activation_org(db, org, verified_admin):
-    """An org one and a half days old with no course — the day-1 case."""
+    """An org one and a half days old with no course: the day-1 case."""
     org.creation_date = _stored(1.5)
     org.update_date = _stored(1.5)
     db.add(org)
@@ -549,7 +549,7 @@ class TestActivationBoundary:
         assert boundary > NOW - timedelta(days=1)
 
     async def test_seeding_pins_the_boundary(self, db, activation_org, sender):
-        """`nudges-seed` writes rows, so seeding is what fixes the date — there
+        """`nudges-seed` writes rows, so seeding is what fixes the date; there
         is no separate value to set, and none to get wrong."""
         from sqlmodel import delete
 
@@ -696,7 +696,7 @@ class TestBudgetMidOrganization:
     async def test_budget_stops_between_admins_of_one_org(
         self, db, org, admin_role, verified_admin, sender
     ):
-        """The inner loop needs its own budget check — an org with several
+        """The inner loop needs its own budget check; an org with several
         admins could otherwise overrun the cap on a single iteration."""
         from datetime import datetime as dt
 
@@ -794,7 +794,7 @@ class TestStatStripReachesTheEmail:
 class TestPreexistingEdgeCase:
     def test_an_org_with_no_parseable_creation_date_is_not_preexisting(self):
         """A malformed date must not silently move an org into the winback
-        tracks — treat it as new and let day_max do the bounding."""
+        tracks; treat it as new and let day_max do the bounding."""
         from src.services.nudges.runner import _is_preexisting
         from src.services.nudges.snapshot import OrgSnapshot
 
@@ -807,7 +807,7 @@ class TestPreexistingEdgeCase:
 
 class TestExplicitActivationDate:
     """The boundary was derived from the ledger's own first row, so the first
-    run wrote it and read it — the cutoff became whatever instant the job
+    run wrote it and read it: the cutoff became whatever instant the job
     happened to start, and no org could ever leave the pre-existing set."""
 
     async def test_an_explicit_date_wins(self, db, monkeypatch):
@@ -892,7 +892,7 @@ class TestBudgetCountsAttempts:
         self, db, org, admin_role, verified_admin, sender
     ):
         """Counting only successes meant a broken provider could burn a
-        once-forever key for every eligible org in a single pass — the fuse
+        once-forever key for every eligible org in a single pass; the fuse
         could never trip because nothing ever succeeded."""
         from datetime import datetime as dt
 

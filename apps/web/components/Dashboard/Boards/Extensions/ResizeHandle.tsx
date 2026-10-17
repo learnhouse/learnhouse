@@ -6,9 +6,9 @@ interface ResizeHandleProps {
   onMouseDown: (e: React.MouseEvent) => void
   selected?: boolean
   dark?: boolean
-  /** @deprecated kept for backwards compat — ignored */
+  /** @deprecated kept for backwards compat, ignored */
   size?: string
-  /** @deprecated kept for backwards compat — ignored */
+  /** @deprecated kept for backwards compat, ignored */
   color?: string
 }
 

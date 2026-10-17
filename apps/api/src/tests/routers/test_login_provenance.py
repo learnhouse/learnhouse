@@ -74,7 +74,7 @@ async def _set_allowed_methods(db, org_id, methods):
 
 
 def _login_patches():
-    """The environmental stubs shared by both tests — everything except the
+    """The environmental stubs shared by both tests: everything except the
     token factories, which we deliberately leave real."""
     return [
         patch("src.routers.auth.check_login_rate_limit", return_value=(True, None)),
@@ -151,7 +151,7 @@ class TestLoginProvenance:
 
     async def test_org_policy_does_not_block_the_apex_login(self, client, db, login_user, org):
         # Same restricted org, but a login that names no org is not that org's to
-        # refuse — the per-request gate handles it once they reach the org.
+        # refuse; the per-request gate handles it once they reach the org.
         await _set_allowed_methods(db, org.id, ["google"])
 
         stubs = _login_patches() + [

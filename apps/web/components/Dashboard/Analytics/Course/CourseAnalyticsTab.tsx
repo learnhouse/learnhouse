@@ -143,17 +143,17 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
         />
       </div>
 
-      {/* Overview KPIs — 4 columns */}
+      {/* Overview KPIs, 4 columns */}
       <CourseOverviewStats courseId={courseId} days={days} />
 
-      {/* Row: 3 columns — Enrollment trend, Active learners, Unique viewers */}
+      {/* Row of 3 columns: Enrollment trend, Active learners, Unique viewers */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <CourseEnrollmentTrend courseId={courseId} days={days} />
         <CourseActiveLearners courseId={courseId} days={days} />
         <CourseUniqueViewers courseId={courseId} days={days} />
       </div>
 
-      {/* Row: 2 columns — View-to-enrollment conversion, Daily completions */}
+      {/* Row of 2 columns: View-to-enrollment conversion, Daily completions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CourseViewToEnrollment courseId={courseId} days={days} />
         <CourseDailyCompletions courseId={courseId} days={days} />
@@ -168,7 +168,7 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
         courseUuid={cleanCourseUuid}
       />
 
-      {/* Row: 2 columns — Time per activity, Drop-off points */}
+      {/* Row of 2 columns: Time per activity, Drop-off points */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CourseTimePerActivity
           courseId={courseId}
@@ -186,20 +186,20 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
         />
       </div>
 
-      {/* Row: 2 columns — Activity type breakdown, Engagement by type */}
+      {/* Row of 2 columns: Activity type breakdown, Engagement by type */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CourseActivityTypeBreakdown courseId={courseId} days={days} />
         <CourseEngagementByType courseId={courseId} days={days} />
       </div>
 
-      {/* Row: 3 columns — Completion velocity, Time to completion, Certification rate */}
+      {/* Row of 3 columns: Completion velocity, Time to completion, Certification rate */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <CourseCompletionVelocity courseId={courseId} days={days} />
         <CourseTimeToCompletion courseId={courseId} days={days} />
         <CourseCertificationRate courseId={courseId} days={days} />
       </div>
 
-      {/* Row: 2 columns — Avg session duration, Learner progress */}
+      {/* Row of 2 columns: Avg session duration, Learner progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CourseAvgSessionDuration courseId={courseId} days={days} />
         <CourseLearnerProgress courseId={courseId} days={days} />
@@ -208,7 +208,7 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
       {/* Full-width: Peak learning hours heatmap */}
       <CoursePeakHours courseId={courseId} days={days} />
 
-      {/* Row: 2 columns — Learner retention, Top learners */}
+      {/* Row of 2 columns: Learner retention, Top learners */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CourseLearnerRetention courseId={courseId} days={days} />
         <CourseTopLearners courseId={courseId} days={days} />

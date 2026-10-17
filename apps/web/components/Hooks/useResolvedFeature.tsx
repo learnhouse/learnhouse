@@ -13,10 +13,10 @@ export interface ResolvedFeatureState {
   currentPlan: PlanLevel
   /** True when the current plan meets the gate's minimum requirement. */
   meetsPlan: boolean
-  /** True while the org config has not arrived yet — nothing is decided. */
+  /** True while the org config has not arrived yet; nothing is decided. */
   loading: boolean
   /**
-   * Why the gate blocks the user — undefined when the feature is granted.
+   * Why the gate blocks the user; undefined when the feature is granted.
    * `plan` = upgrade needed; `disabled` = plan is OK but feature is toggled off.
    */
   reason?: GateReason

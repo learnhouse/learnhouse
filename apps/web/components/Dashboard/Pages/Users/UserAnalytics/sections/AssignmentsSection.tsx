@@ -60,7 +60,7 @@ function AssignmentRow({ a }: { a: any }) {
           {/* Server-computed and grading-type aware, so an ALPHABET assignment shows
               its letter rather than a made-up "/100". */}
           <span className="text-sm font-semibold" title={a.points_summary || undefined}>
-            {a.grade_display || (a.grade != null ? `${a.grade}` : '—')}
+            {a.grade_display || (a.grade != null ? `${a.grade}` : 'n/a')}
           </span>
           <span className="text-xs text-gray-400">{t(`${P}.assignments.attempt`, { number: a.attempt_number })}</span>
           <StatusBadge status={a.status} />

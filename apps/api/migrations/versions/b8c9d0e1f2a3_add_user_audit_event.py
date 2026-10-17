@@ -11,12 +11,12 @@ place). See ``src/db/user_audit_events.py`` and ``src/services/audit/``.
 
 Guarded (idempotent) so a partially-applied DB is safe.
 
-Descends from ``r5s6t7u8v9w0`` — the revision production is actually on. The other
+Descends from ``r5s6t7u8v9w0``, the revision production is actually on. The other
 open head on ``dev`` (``a2b3c4d5e6f7``) is a disconnected legacy lineage that was
 never applied to prod and includes destructive ops (e.g. dropping collections
 tables); this revision deliberately does NOT merge it in, so applying this table is a
 single additive step that can never re-run that branch. Deploy this revision with an
-explicit target — ``alembic upgrade b8c9d0e1f2a3`` — not ``upgrade head`` (which fails
+explicit target (``alembic upgrade b8c9d0e1f2a3``), not ``upgrade head`` (which fails
 on the pre-existing multi-head tree) and never ``upgrade heads`` (which would run the
 orphan branch).
 

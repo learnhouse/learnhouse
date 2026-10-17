@@ -1,3 +1,6 @@
+import asyncio
+import hashlib
+import hmac
 import os
 import re
 import ssl
@@ -6,7 +9,7 @@ import secrets
 import logging
 from typing import List, Optional, Tuple
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request, status
@@ -22,7 +25,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
-from src.security.org_auth import require_org_membership, require_org_admin
+from src.security.org_auth import require_org_membership, require_org_role_permission
 from src.services.utils.ssrf_guard import SSRFBlockedError, resolve_and_validate_url
 
 logger = logging.getLogger(__name__)
@@ -66,12 +69,12 @@ def is_own_agency_subdomain(domain: str, org_slug: str) -> bool:
 
     In agency (multi-tenant) deployments the whole `*.{LEARNHOUSE_DOMAIN}` space
     is under the operator's control (wildcard DNS + wildcard TLS served by Caddy
-    via DNS-01). That proves the *operator* controls the namespace — it does NOT
+    via DNS-01). That proves the *operator* controls the namespace; it does NOT
     prove a given org owns an arbitrary label within it. Only `{slug}.{apex}` is
     provably this org's, so we auto-verify exactly that host and nothing else:
     the bare apex and every other label (including other orgs' slugs) must still
     go through the DNS TXT proof-of-ownership flow. Without this restriction any
-    tenant admin could claim another org's subdomain — or the apex — and hijack
+    tenant admin could claim another org's subdomain (or the apex) and hijack
     its routing.
 
     Guarded so we never auto-verify when no real agency domain is configured
@@ -157,7 +160,7 @@ async def verify_domain_dns(domain: CustomDomain, db_session: AsyncSession, org_
         return True, "Verified (dev mode)"
 
     # This org's own slug host under the agency apex is provably theirs (wildcard
-    # DNS+TLS), so there's nothing to prove via a DNS TXT record — verify it now.
+    # DNS+TLS), so there's nothing to prove via a DNS TXT record; verify it now.
     # Any other label still has to go through the TXT flow below.
     if is_own_agency_subdomain(domain.domain, org_slug):
         logger.info(f"Auto-verifying {domain.domain} (own slug host under agency domain {LEARNHOUSE_DOMAIN})")
@@ -236,6 +239,75 @@ async def verify_domain_dns(domain: CustomDomain, db_session: AsyncSession, org_
         return False, f"DNS verification failed: {str(e)}"
 
 
+# How long an unverified claim holds a domain against other organizations.
+UNVERIFIED_CLAIM_TTL = timedelta(days=7)
+
+
+def _is_unverified_foreign_claim(existing: Optional[CustomDomain], org_id: int) -> bool:
+    """True for another org's claim that was never verified."""
+    return bool(
+        existing
+        and existing.org_id != org_id
+        and not existing.verified_at
+        and existing.status not in ("verified", "active")
+    )
+
+
+def _is_abandoned_claim(existing: CustomDomain, org_id: int) -> bool:
+    """True for another org's claim that was never verified and has gone stale."""
+    if existing.org_id == org_id or existing.verified_at or existing.status in ("verified", "active"):
+        return False
+    try:
+        created = datetime.fromisoformat(existing.creation_date)
+    except (TypeError, ValueError):
+        return False
+    return datetime.now() - created > UNVERIFIED_CLAIM_TTL
+
+
+def takeover_verification_token(domain: str, org_id: int) -> str:
+    """The TXT token an org publishes to take over another org's unverified
+    claim. Derived (not stored) so the claimant can learn it without holding
+    the domain row, and bound to that org so it proves nothing for anyone else."""
+    from src.security.security import SECRET_KEY
+
+    digest = hmac.new(
+        SECRET_KEY.encode(), f"domain-takeover:{org_id}:{domain}".encode(), hashlib.sha256
+    ).hexdigest()
+    return digest[:43]
+
+
+def _txt_record_present(domain: str, token: str) -> bool:
+    """Whether the verification TXT record for ``token`` is published on ``domain``."""
+    try:
+        import dns.resolver
+
+        answers = dns.resolver.resolve(f"_learnhouse-verification.{domain}", "TXT")
+    except Exception:
+        return False
+    expected = f"learnhouse-verify={token}"
+    return any(str(rdata).strip('"') == expected for rdata in answers)
+
+
+async def _can_manage_domains(acting_user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """Whether the caller holds the right that manages the org's domains."""
+    try:
+        await require_org_role_permission(
+            acting_user_id, org_id, db_session, "organizations", "action_update"
+        )
+    except HTTPException:
+        return False
+    return True
+
+
+def _domain_read(domain: CustomDomain, can_manage: bool) -> CustomDomainRead:
+    """The verification token is a DNS ownership secret for the org's admins;
+    other members see the domain without it."""
+    data = domain.model_dump()
+    if not can_manage:
+        data["verification_token"] = ""
+    return CustomDomainRead(**data)
+
+
 async def add_custom_domain(
     request: Request,
     db_session: AsyncSession,
@@ -265,8 +337,11 @@ async def add_custom_domain(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3+4: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 3+4: Membership + organizations.update (superadmins bypass).
+    # Routing the org's traffic is not everyday editing for Maintainers.
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # VERIFICATION 4b: Free-tier abuse gate. Custom domains are an unenforced,
     # unlimited surface and a phishing/brand-impersonation amplifier, so a
@@ -307,6 +382,36 @@ async def add_custom_domain(
     statement = select(CustomDomain).where(CustomDomain.domain == domain)
     existing_domain = (await db_session.execute(statement)).scalars().first()
 
+    takeover_verified = False
+    if existing_domain and _is_abandoned_claim(existing_domain, org_id):
+        # A claim nobody ever proved with DNS can't hold the domain forever,
+        # or anyone could squat a domain before its real owner signs up. The
+        # new claimant still has to pass the TXT check to get any traffic.
+        logger.info(f"Releasing stale unverified claim on {domain} (org {existing_domain.org_id})")
+        await db_session.delete(existing_domain)
+        await db_session.flush()
+        existing_domain = None
+    elif _is_unverified_foreign_claim(existing_domain, org_id):
+        # The age rule alone can be reset by deleting and re-adding the claim,
+        # so DNS proof wins outright: whoever publishes their own TXT record
+        # takes over an unverified claim of any age. Verified claims stay put.
+        takeover_token = takeover_verification_token(domain, org_id)
+        if not await asyncio.to_thread(_txt_record_present, domain, takeover_token):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "This domain is already claimed by another organization but not yet "
+                    "verified. To prove you own it, add a TXT record at "
+                    f"_learnhouse-verification.{domain} with the value "
+                    f"learnhouse-verify={takeover_token}, then add the domain again."
+                ),
+            )
+        logger.info(f"DNS-proven takeover of unverified claim on {domain} (org {existing_domain.org_id})")
+        await db_session.delete(existing_domain)
+        await db_session.flush()
+        existing_domain = None
+        takeover_verified = True
+
     if existing_domain:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -318,8 +423,12 @@ async def add_custom_domain(
     # (wildcard DNS + wildcard TLS), so skip the manual DNS TXT step and mark
     # them verified right away.
     now = str(datetime.now())
-    verification_token = generate_verification_token()
-    auto_verified = is_own_agency_subdomain(domain, organization.slug)
+    verification_token = (
+        takeover_verification_token(domain, org_id)
+        if takeover_verified
+        else generate_verification_token()
+    )
+    auto_verified = takeover_verified or is_own_agency_subdomain(domain, organization.slug)
 
     custom_domain = CustomDomain(
         domain_uuid=f"domain_{uuid4()}",
@@ -373,7 +482,8 @@ async def list_custom_domains(
 
     domains = (await db_session.execute(statement)).scalars().all()
 
-    return [CustomDomainRead(**domain.model_dump()) for domain in domains]
+    can_manage = await _can_manage_domains(acting_user_id, org_id, db_session)
+    return [_domain_read(domain, can_manage) for domain in domains]
 
 
 async def get_custom_domain(
@@ -404,7 +514,8 @@ async def get_custom_domain(
             detail="Custom domain not found",
         )
 
-    return CustomDomainRead(**domain.model_dump())
+    can_manage = await _can_manage_domains(acting_user_id, org_id, db_session)
+    return _domain_read(domain, can_manage)
 
 
 async def get_domain_verification_info(
@@ -430,6 +541,14 @@ async def get_domain_verification_info(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Organization not found",
+        )
+
+    # VERIFICATION 3: The TXT value is the domain's ownership secret, so the
+    # instructions are for whoever manages the org's domains.
+    if not await _can_manage_domains(acting_user_id, org_id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only organization administrators can view domain verification details",
         )
 
     # Get the custom domain
@@ -462,8 +581,10 @@ async def verify_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 2: Membership + organizations.update (superadmins bypass)
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
@@ -512,8 +633,10 @@ async def delete_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(acting_user_id)
 
-    # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    await require_org_admin(acting_user_id, org_id, db_session)
+    # VERIFICATION 2: Membership + organizations.update (superadmins bypass)
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -643,13 +766,136 @@ async def check_domain_ssl_status(
         }
 
 
+# Live "does this verified domain still point at us" results, keyed by
+# (domain, org_slug). Verification is a one-time TXT proof, so a tenant can
+# verify a domain and later repoint its DNS at their own server; anything that
+# hands credentials (OAuth codes, emailed reset/magic links) to a custom domain
+# must re-check this first.
+_POINTS_AT_PLATFORM_CACHE: dict[tuple[str, str], tuple[bool, float]] = {}
+_POINTS_AT_PLATFORM_TTL_SECONDS = 300.0
+_POINTS_AT_PLATFORM_CACHE_MAX = 2048
+_DNS_LIFETIME_SECONDS = 3.0
+
+
+def _normalize_host(value: str) -> str:
+    return (value or "").strip().lower().rstrip(".").split(":")[0]
+
+
+def _dns_records(name: str, rdtype: str) -> set:
+    """Records of ``rdtype`` for ``name``; empty when the name has none.
+
+    Any other resolver failure (timeout, SERVFAIL) propagates so the caller
+    fails closed instead of treating it as "no record".
+    """
+    import dns.resolver
+
+    try:
+        answers = dns.resolver.resolve(name, rdtype, lifetime=_DNS_LIFETIME_SECONDS)
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+        return set()
+    if rdtype == "CNAME":
+        return {_normalize_host(str(r.target)) for r in answers}
+    return {str(r.address) for r in answers}
+
+
+def _addresses(name: str) -> set:
+    return _dns_records(name, "A") | _dns_records(name, "AAAA")
+
+
+def _check_points_at_platform(domain: str, org_slug: str) -> bool:
+    base = _normalize_host(LEARNHOUSE_DOMAIN)
+    if not base or not domain:
+        return False
+    slug_host = f"{org_slug}.{base}" if org_slug else ""
+    if domain == base or domain.endswith(f".{base}"):
+        # Platform-owned namespace (wildcard DNS): always served by us.
+        return True
+
+    cnames = _dns_records(domain, "CNAME")
+    for target in cnames:
+        if target == slug_host or target == base or target.endswith(f".{base}"):
+            return True
+
+    # Apex domains can't CNAME (ALIAS/flattening, or plain A records): require
+    # the resolved addresses to overlap with the platform's.
+    domain_ips = _addresses(domain)
+    if not domain_ips:
+        return False
+    platform_ips = _addresses(base)
+    if slug_host:
+        platform_ips |= _addresses(slug_host)
+    return bool(domain_ips & platform_ips)
+
+
+def domain_points_at_platform(domain: str, org_slug: str = "") -> bool:
+    """True when ``domain``'s live DNS still routes to this platform.
+
+    Accepts a CNAME to ``{org_slug}.{LEARNHOUSE_DOMAIN}`` (or anything under the
+    platform domain), else A/AAAA overlap with the platform's addresses. Fails
+    closed on any DNS error. Results are cached for a few minutes. Blocking;
+    async callers use ``custom_domain_points_at_platform``.
+    """
+    import time
+
+    domain = _normalize_host(domain)
+    org_slug = (org_slug or "").strip().lower()
+    if os.getenv("LEARNHOUSE_CUSTOM_DOMAIN_DEV_MODE") == "true":
+        return True
+
+    key = (domain, org_slug)
+    now = time.monotonic()
+    cached = _POINTS_AT_PLATFORM_CACHE.get(key)
+    if cached and cached[1] > now:
+        return cached[0]
+
+    try:
+        ok = _check_points_at_platform(domain, org_slug)
+    except Exception as e:
+        logger.warning("Live DNS check failed for custom domain %s: %s", domain, e)
+        ok = False
+
+    if len(_POINTS_AT_PLATFORM_CACHE) >= _POINTS_AT_PLATFORM_CACHE_MAX:
+        _POINTS_AT_PLATFORM_CACHE.clear()
+    _POINTS_AT_PLATFORM_CACHE[key] = (ok, now + _POINTS_AT_PLATFORM_TTL_SECONDS)
+    return ok
+
+
+async def custom_domain_points_at_platform(domain: str, org_slug: str = "") -> bool:
+    import asyncio
+
+    return await asyncio.to_thread(domain_points_at_platform, domain, org_slug)
+
+
+async def _org_plan_includes_custom_domains(org_id: int, db_session: AsyncSession) -> bool:
+    """Stop routing a domain once the org's plan no longer includes it.
+
+    Same plan level as the management routes (router.py). A plan lookup that
+    errors for any reason other than a definite "not entitled" serves the
+    domain: a transient DB/config hiccup must not take a paying org offline,
+    and the domain was verified while the org was entitled.
+    """
+    from src.security.features_utils.plan_check import check_org_plan
+
+    try:
+        await check_org_plan(org_id, "standard", "Custom Domains", db_session)
+    except HTTPException as exc:
+        return exc.status_code != status.HTTP_403_FORBIDDEN
+    except Exception:
+        logger.warning("Plan lookup failed for custom domain of org %s", org_id, exc_info=True)
+    return True
+
+
 async def resolve_org_by_domain(
     db_session: AsyncSession,
     domain: str,
+    for_auth: bool = False,
 ) -> Optional[CustomDomainResolveResponse]:
     """
     Resolve an organization by custom domain.
     This is a public endpoint that doesn't require authentication.
+
+    ``for_auth`` additionally requires the domain's live DNS to still point at
+    the platform, for callers about to hand it credentials (OAuth code bounce).
     """
     # Normalize domain
     domain = domain.lower().strip()
@@ -669,6 +915,12 @@ async def resolve_org_by_domain(
     organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
+        return None
+
+    if not await _org_plan_includes_custom_domains(organization.id, db_session):
+        return None
+
+    if for_auth and not await custom_domain_points_at_platform(domain, organization.slug):
         return None
 
     return CustomDomainResolveResponse(

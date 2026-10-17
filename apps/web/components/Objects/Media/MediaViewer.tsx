@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { getMediaFileDirectory } from '@services/media/media-resource'
 import { formatFileSize, mediaKind, type MediaKind, type MediaLike } from '@/lib/media/mediaKind'
 import { toEmbedUrl } from '@/lib/media/embedUrl'
+import { urlEmbedSandboxFor } from '@/lib/media/embedSanitize'
 import { safeExternalUrl } from '@components/Dashboard/Library/resourceLink'
 import InlineAudioPlayer from '@components/Objects/Media/InlineAudioPlayer'
 
@@ -17,7 +18,7 @@ const LearnHousePlayer = dynamic(
 )
 
 /*
- The actual in-app player/reader for a Library media asset — no modal chrome,
+ The actual in-app player/reader for a Library media asset: no modal chrome,
  no card. Used by MediaLightbox (library views) and by the Library editor block,
  so "watch / read / listen / download" behaves identically in both.
 */
@@ -129,6 +130,10 @@ export default function MediaViewer({
           className="w-full h-full border-0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           allowFullScreen
+          sandbox={urlEmbedSandboxFor(
+            toEmbedUrl(url),
+            typeof window !== 'undefined' ? window.location.origin : undefined,
+          )}
         />
       </div>
     )

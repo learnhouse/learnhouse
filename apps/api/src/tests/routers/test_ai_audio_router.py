@@ -5,6 +5,7 @@ db_session whose .execute() returns a result supporting .scalars().first().
 Mirrors test_ai_images_router.py.
 """
 
+from itertools import chain, repeat
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -31,13 +32,19 @@ def _result(value):
 
 
 def _db_returning(*values):
+    """Serve ``values`` in order, then the activity's course for any further
+    lookup (the org policy checks and the authoring gate each query once)."""
     db = AsyncMock()
-    db.execute.side_effect = [_result(v) for v in values]
+    db.execute.side_effect = chain((_result(v) for v in values), repeat(_result(_course())))
     return db
 
 
+def _course():
+    return SimpleNamespace(id=1, course_uuid="course_1")
+
+
 def _activity(org_id=5):
-    return SimpleNamespace(org_id=org_id)
+    return SimpleNamespace(org_id=org_id, course_id=1)
 
 
 def _user(id=1):
@@ -54,6 +61,14 @@ def _script_body(**kw):
     base = dict(activity_uuid="act_1", text="Explain photosynthesis")
     base.update(kw)
     return GenerateScriptRequest(**base)
+
+
+@pytest.fixture(autouse=True)
+def _authoring_gate_passes():
+    """These tests cover the endpoint mechanics; the authoring-rights gate
+    added on top of org membership is exercised in the security suite."""
+    with patch.object(aud, "check_resource_access", new=AsyncMock()):
+        yield
 
 
 def _happy_patches():
@@ -186,13 +201,13 @@ async def test_store_generic_error_refunds_and_500():
 
 async def test_script_empty_text_400():
     with pytest.raises(HTTPException) as e:
-        await aud.api_generate_script(_script_body(text="  "), _user(), _db_returning(_activity()))
+        await aud.api_generate_script(MagicMock(), _script_body(text="  "), _user(), _db_returning(_activity()))
     assert e.value.status_code == 400
 
 
 async def test_script_activity_not_found_404():
     with pytest.raises(HTTPException) as e:
-        await aud.api_generate_script(_script_body(), _user(), _db_returning(None))
+        await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(None))
     assert e.value.status_code == 404
 
 
@@ -200,7 +215,7 @@ async def test_script_non_member_403_no_spend():
     with patch.object(aud, "is_org_member", new=AsyncMock(return_value=False)), \
          patch.object(aud, "reserve_ai_credit", new=AsyncMock()) as reserve:
         with pytest.raises(HTTPException) as e:
-            await aud.api_generate_script(_script_body(), _user(), _db_returning(_activity()))
+            await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 403
     reserve.assert_not_called()
 
@@ -210,7 +225,7 @@ async def test_script_happy_path_podcast():
          patch.object(aud, "enforce_ai_rate_limit"), \
          patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_spoken_script", new=AsyncMock(return_value="Host: hi\nGuest: hey")) as gps:
-        resp = await aud.api_generate_script(
+        resp = await aud.api_generate_script(MagicMock(),
             _script_body(mode="podcast", minutes=5, speakers=[
                 GenerateAudioSpeaker(name="Host", voice="Kore"),
                 GenerateAudioSpeaker(name="Guest", voice="Puck"),
@@ -228,7 +243,7 @@ async def test_script_happy_path_speak_monologue():
          patch.object(aud, "enforce_ai_rate_limit"), \
          patch.object(aud, "reserve_ai_credit", new=AsyncMock()), \
          patch.object(aud, "generate_spoken_script", new=AsyncMock(return_value="Photosynthesis is...")) as gps:
-        resp = await aud.api_generate_script(
+        resp = await aud.api_generate_script(MagicMock(),
             _script_body(mode="speak", minutes=3), _user(), _db_returning(_activity())
         )
     assert resp.transcript.startswith("Photosynthesis")
@@ -243,7 +258,7 @@ async def test_script_not_configured_refunds_and_403():
          patch.object(aud, "generate_spoken_script", new=AsyncMock(side_effect=AINotConfiguredError("no key"))), \
          patch.object(aud, "refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
-            await aud.api_generate_script(_script_body(), _user(), _db_returning(_activity()))
+            await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 403
     refund.assert_called_once_with(5, aud.SCRIPT_CREDIT_COST)
 
@@ -255,7 +270,7 @@ async def test_script_value_error_refunds_and_400():
          patch.object(aud, "generate_spoken_script", new=AsyncMock(side_effect=ValueError("empty"))), \
          patch.object(aud, "refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
-            await aud.api_generate_script(_script_body(), _user(), _db_returning(_activity()))
+            await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 400
     refund.assert_called_once()
 
@@ -267,6 +282,6 @@ async def test_script_generation_failure_refunds_and_502():
          patch.object(aud, "generate_spoken_script", new=AsyncMock(side_effect=RuntimeError("boom"))), \
          patch.object(aud, "refund_ai_credit") as refund:
         with pytest.raises(HTTPException) as e:
-            await aud.api_generate_script(_script_body(), _user(), _db_returning(_activity()))
+            await aud.api_generate_script(MagicMock(), _script_body(), _user(), _db_returning(_activity()))
     assert e.value.status_code == 502
     refund.assert_called_once()

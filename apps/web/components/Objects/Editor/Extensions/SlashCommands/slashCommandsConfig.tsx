@@ -422,7 +422,7 @@ export const slashCommands: SlashCommandItem[] = [
       editor.chain().focus().insertContent({
         type: 'callout',
         attrs: { type: 'info' },
-        content: [],
+        content: [{ type: 'paragraph' }],
       }).run()
     },
   },

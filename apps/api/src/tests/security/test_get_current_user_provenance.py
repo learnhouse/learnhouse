@@ -1,8 +1,8 @@
 """get_current_user publishes session provenance on every auth path.
 
 These call get_current_user directly (rather than relying on a whole request
-flow) so each provenance branch — JWT session, org API token, superadmin API
-token — is covered deterministically, independent of suite ordering.
+flow) so each provenance branch (JWT session, org API token, superadmin API
+token) is covered deterministically, independent of suite ordering.
 """
 
 from types import SimpleNamespace

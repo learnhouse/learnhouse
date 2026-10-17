@@ -2,7 +2,7 @@ import { Callout } from 'nextra/components'
 
 # Event Catalogue
 
-Every event that can fire from LearnHouse, grouped by category. Each event delivers the same envelope (`event`, `delivery_id`, `timestamp`, `org_id`, `data`) — only the shape of `data` varies.
+Every event that can fire from LearnHouse, grouped by category. Each event delivers the same envelope (`event`, `delivery_id`, `timestamp`, `org_id`, `data`). Only the shape of `data` varies.
 
 <Callout type="info">
 The event registry is the single source of truth. At runtime, dispatched payloads are validated against these schemas and any drift is logged as a warning. You can also fetch the live registry from your LearnHouse instance:

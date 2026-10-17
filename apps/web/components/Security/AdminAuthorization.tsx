@@ -24,7 +24,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
   const router = useRouter();
   const { isAdmin, loading } = useAdminStatus() as any
   // `null` is "not decided yet", distinct from a decided `false`. The decision
-  // is made in an effect, which runs after the commit — so a `false` initial
+  // is made in an effect, which runs after the commit, so a `false` initial
   // state paints the denial page for a frame on every load, including for the
   // admins about to be let in. Only `false` means denied.
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -70,7 +70,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
     authorizeUser();
   }, [authorizeUser]);
 
-  // Undecided counts as loading, but only in page mode — component mode renders
+  // Undecided counts as loading, but only in page mode; component mode renders
   // inline (the sidebar, the dashboard home), where a full-screen spinner in
   // place of the component would be worse than rendering nothing.
   if (loading || (authorizationMode === 'page' && isAuthorized === null)) {

@@ -39,7 +39,7 @@ _UPGRADE_INDEXES = [
 
 
 def upgrade() -> None:
-    # Skip indexes whose target table is missing — DBs vary by which payment /
+    # Skip indexes whose target table is missing; DBs vary by which payment /
     # collection tables have been provisioned.
     existing = set(inspect(op.get_bind()).get_table_names())
     for name, table, cols in _UPGRADE_INDEXES:

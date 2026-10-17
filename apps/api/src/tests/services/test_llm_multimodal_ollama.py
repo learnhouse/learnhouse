@@ -2,7 +2,7 @@
 
 This proves that an uploaded image (the `AttachmentData` shape course planning produces) is
 converted by ``attachments_to_parts`` into a Pydantic AI part and actually consumed by a
-vision-capable model through the provider-agnostic ``generate`` — i.e. image *context* still
+vision-capable model through the provider-agnostic ``generate``, i.e. image *context* still
 works after the refactor.
 
 Scope note: PDFs (BinaryContent application/pdf) and YouTube (VideoUrl) are Gemini-specific

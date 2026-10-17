@@ -1,6 +1,6 @@
 # LearnHouse CLI
 
-The official [LearnHouse](https://learnhouse.app) CLI — deploy, manage, and operate your LearnHouse instance.
+The official [LearnHouse](https://learnhouse.app) CLI for deploying, managing, and operating your LearnHouse instance.
 
 [Website](https://learnhouse.app) | [Documentation](https://docs.learnhouse.app) | [GitHub](https://github.com/learnhouse/learnhouse)
 
@@ -64,12 +64,12 @@ npx learnhouse@1.0.0 setup
 
 The setup wizard walks through:
 
-1. **Install directory** — where files are generated
-2. **Domain** — hostname, port, HTTPS/SSL
-3. **Database & Redis** — local (Docker) or external
-4. **Organization** — name for your instance
-5. **Admin account** — email and password
-6. **Features** — AI, email, S3, OAuth
+1. **Install directory**: where files are generated
+2. **Domain**: hostname, port, HTTPS/SSL
+3. **Database & Redis**: local (Docker) or external
+4. **Organization**: name for your instance
+5. **Admin account**: email and password
+6. **Features**: AI, email, S3, OAuth
 
 You can go back to any step, and edit from the summary before confirming.
 

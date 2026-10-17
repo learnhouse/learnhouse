@@ -2,7 +2,7 @@
 
 Only the display NAME is per-org. The From address stays the platform's
 verified system address, so these tests never assert anything about an
-org-supplied address — there is none.
+org-supplied address; there is none.
 """
 
 from datetime import datetime
@@ -101,7 +101,7 @@ class TestUpdateOrgEmailSenderNameConfig:
     async def test_stores_the_sanitized_value_not_the_raw_one(
         self, mock_request, db, other_org, admin_user
     ):
-        """What is stored is what will be sent, so it is cleaned on write too —
+        """What is stored is what will be sent, so it is cleaned on write too,
         never trusting that the read side is the only guard."""
         await _make_org_config(
             db,
@@ -116,7 +116,7 @@ class TestUpdateOrgEmailSenderNameConfig:
         ):
             await update_org_email_sender_name_config(
                 mock_request,
-                "  Acme\r\nBcc: attacker@example.com  ",
+                "  Acme\r\nAcademy  ",
                 other_org.id,
                 admin_user,
                 db,
@@ -128,7 +128,7 @@ class TestUpdateOrgEmailSenderNameConfig:
         stored = (await db.execute(stmt)).scalars().first()
         saved = stored.config["customization"]["general"]["email_sender_name"]
         assert "\r" not in saved and "\n" not in saved
-        assert saved == "AcmeBcc: attacker@example.com"
+        assert saved == "AcmeAcademy"
 
     @pytest.mark.asyncio
     async def test_rejects_a_name_that_sanitizes_to_empty(

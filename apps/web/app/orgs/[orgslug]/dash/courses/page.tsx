@@ -16,7 +16,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   })
 
   return {
-    title: 'Courses — ' + org.name,
+    title: 'Courses | ' + org.name,
     description: org.description,
     keywords: `${org.name}, ${org.description}, courses, learning, education, online learning, edu, online courses, ${org.name} courses`,
     robots: {
@@ -30,7 +30,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       },
     },
     openGraph: {
-      title: 'Courses — ' + org.name,
+      title: 'Courses | ' + org.name,
       description: org.description,
       type: 'website',
     },

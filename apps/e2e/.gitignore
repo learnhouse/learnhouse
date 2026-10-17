@@ -5,5 +5,5 @@ playwright-report/
 playwright/.cache/
 *.log
 
-# Recorded walkthroughs (demo/formative-demo.ts) — regenerate, do not commit.
+# Recorded walkthroughs (demo/formative-demo.ts). Regenerate, do not commit.
 demo/output/

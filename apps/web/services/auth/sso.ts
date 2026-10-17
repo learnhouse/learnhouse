@@ -84,11 +84,14 @@ export interface SSOCallbackResponse {
   user: any
   tokens: {
     access_token: string
-    refresh_token: string
+    refresh_token?: string
     expiry: number | null
   }
   redirect_url: string
   org_slug?: string
+  // Set instead of user/tokens when the account has two-factor enabled.
+  mfa_required?: boolean
+  mfa_token?: string
 }
 
 export interface SSOErrorDetail {
@@ -98,6 +101,9 @@ export interface SSOErrorDetail {
   message?: string
   provider?: string
   details?: Record<string, any>
+  // Set with error_code 'continue_on_login_host': the sign-in started on an
+  // org's custom domain and has to be finished there.
+  continue_url?: string
 }
 
 export class SSOError extends Error {
@@ -106,6 +112,7 @@ export class SSOError extends Error {
   errorDescription: string
   provider?: string
   details?: Record<string, any>
+  continueUrl?: string
 
   constructor(detail: SSOErrorDetail) {
     super(detail.message || detail.error_description)
@@ -114,6 +121,7 @@ export class SSOError extends Error {
     this.errorDescription = detail.error_description
     this.provider = detail.provider
     this.details = detail.details
+    this.continueUrl = detail.continue_url
     this.name = 'SSOError'
   }
 }
@@ -323,6 +331,9 @@ export async function initiateSSOLogin(
       headers: {
         'Content-Type': 'application/json',
       },
+      // The response sets the cookie that binds this sign-in to the browser;
+      // the callback is refused without it.
+      credentials: 'include',
     }
   )
 
@@ -449,6 +460,7 @@ export function getErrorMessage(errorCode: string, errorDescription?: string): s
     invalid_state: 'The authentication session has expired. Please try again.',
     missing_params: 'Missing required parameters. Please try logging in again.',
     state_invalid_or_expired: 'Your SSO session has expired. Please try logging in again.',
+    state_browser_mismatch: 'This sign-in was started in a different browser or has expired. Please start the login again from this browser.',
     email_domain_rejected: 'Your email domain is not allowed for this organization.',
     auto_provision_disabled: 'Your account does not exist. Please contact your administrator for access.',
     sso_misconfigured: 'SSO is not configured correctly. Please contact your administrator.',
@@ -456,4 +468,21 @@ export function getErrorMessage(errorCode: string, errorDescription?: string): s
   }
 
   return errorMessages[errorCode] || errorDescription || `Authentication error: ${errorCode}`
+}
+
+/**
+ * The URL to resume an SSO callback on, when the API says the flow must be
+ * finished on the host it started on. Only a callback URL on https (or plain
+ * http when this page is itself on http, i.e. local development) is accepted.
+ */
+export function ssoContinueUrl(err: SSOError, currentProtocol: string): string | null {
+  if (err.errorCode !== 'continue_on_login_host' || !err.continueUrl) return null
+  try {
+    const u = new URL(err.continueUrl)
+    const protocolOk = u.protocol === 'https:' || (u.protocol === 'http:' && currentProtocol === 'http:')
+    if (!protocolOk || u.pathname !== '/auth/sso/callback' || u.username || u.password) return null
+    return u.toString()
+  } catch {
+    return null
+  }
 }

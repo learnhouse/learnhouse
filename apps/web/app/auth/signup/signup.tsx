@@ -45,7 +45,7 @@ function SignUpClient(props: SignUpClientProps) {
   }, [isAuthenticated, hasOrgToJoin, router])
 
   useEffect(() => {
-    // On the org-less apex (learn.io/signup) props.org is null — guard it and
+    // On the org-less apex (learn.io/signup) props.org is null; guard it and
     // fall back to open signup instead of crashing.
     if (props.org?.config) {
       const config = props.org?.config?.config
@@ -71,7 +71,7 @@ function SignUpClient(props: SignUpClientProps) {
     >
       {session.status === 'loading' && (
         // Don't flash the open/invite signup form while the session is still
-        // resolving — a logged-in user would otherwise briefly see it.
+        // resolving; a logged-in user would otherwise briefly see it.
         <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
           <Loader2 size={22} className="animate-spin text-black/30" />
         </div>
@@ -81,7 +81,7 @@ function SignUpClient(props: SignUpClientProps) {
           hasOrgToJoin ? (
             <LoggedInJoinScreen inviteCode={inviteCode} org={props.org} />
           ) : (
-            // Signed in on the org-less apex — the effect above redirects to /home.
+            // Signed in on the org-less apex; the effect above redirects to /home.
             <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
               <Loader2 size={22} className="animate-spin text-black/30" />
             </div>
@@ -261,7 +261,7 @@ const NoTokenScreen = ({ org }: NoTokenScreenProps) => {
       setShowMessage(true)
       return
     }
-    // A whitespace-only code isn't a real invite — treat it as empty.
+    // A whitespace-only code isn't a real invite, so treat it as empty.
     const trimmedCode = inviteCode.trim()
     if (!trimmedCode) {
       setError(t('auth.invite_code_invalid'))

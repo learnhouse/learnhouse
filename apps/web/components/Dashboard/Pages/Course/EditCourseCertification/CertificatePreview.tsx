@@ -436,7 +436,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
   // dir="ltr" deliberately, and this file keeps its physical utilities.
   //
   // The certificate is rasterised by html2canvas for PDF export, and CSS
-  // logical properties are the family html2canvas reproduces worst — it
+  // logical properties are the family html2canvas reproduces worst: it
   // reimplements layout rather than reading the browser's, and it clones into
   // an offscreen iframe where dir inheritance is unreliable. Converting this
   // file would risk silently breaking every downloaded certificate, and PDFs

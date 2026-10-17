@@ -211,7 +211,7 @@ class TestFeatureResolve:
 
     def test_paid_plan_feature_cannot_be_admin_disabled(self):
         # A feature INCLUDED in a paid plan must stay enabled even when an admin
-        # toggles it off — paying users always keep their plan features.
+        # toggles it off; paying users always keep their plan features.
         base = {"config_version": "2.0", "plan": "pro"}
         toggled_off = {**base, "admin_toggles": {"roles": {"disabled": True}}}
 

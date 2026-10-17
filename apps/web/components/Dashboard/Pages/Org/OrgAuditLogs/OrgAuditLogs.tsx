@@ -420,7 +420,7 @@ const OrgAuditLogs = () => {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1 text-xs text-gray-400 font-mono">
                       <Globe className="w-3 h-3" />
-                      {log.ip_address || '—'}
+                      {log.ip_address || 'n/a'}
                     </div>
                   </td>
                   <td className="py-3 px-4 text-end">
@@ -450,7 +450,7 @@ const OrgAuditLogs = () => {
                         }
                       />
                     ) : (
-                      <span className="text-gray-300 text-xs">—</span>
+                      <span className="text-gray-300 text-xs">n/a</span>
                     )}
                   </td>
                 </tr>

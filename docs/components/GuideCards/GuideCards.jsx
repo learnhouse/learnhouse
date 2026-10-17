@@ -20,7 +20,7 @@ const SETS = {
       icon: GraduationCap,
       color: '#6366f1',
       title: 'Build a learning platform',
-      desc: 'Ship your own headless learning platform with Next.js and the LearnHouse API — anonymous browsing first, then auth, enrollment and progress.',
+      desc: 'Ship your own headless learning platform with Next.js and the LearnHouse API: anonymous browsing first, then auth, enrollment and progress.',
     },
     {
       href: '/guides/custom-features',
@@ -30,7 +30,7 @@ const SETS = {
       desc: 'Drive the API with tokens, automate with webhooks, and extend LearnHouse with your own integrations.',
     },
   ],
-  // build-learning-platform landing — the two paths
+  // build-learning-platform landing: the two paths
   build: [
     {
       href: '/guides/build-learning-platform/do-it-yourself',

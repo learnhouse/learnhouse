@@ -122,7 +122,7 @@ async def test_import_constructors_restore_extra_metadata(db, org, tmp_path):
     onto the new DB rows."""
     now = str(datetime.now())
     # Course import is ``Course(..., extra_metadata=course_data["extra_metadata"])``
-    # in ``_import_single_course`` — mirror that constructor call directly.
+    # in ``_import_single_course``, so mirror that constructor call directly.
     new_course = Course(
         org_id=org.id, name="Imported", description="", public=True,
         published=True, open_to_contributors=False,

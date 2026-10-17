@@ -39,7 +39,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   >
     {children}
     {/* Radix icons carry no per-icon class, so the RTL mirror rule in
-        globals.css can't target this one by name — flag it explicitly. */}
+        globals.css can't target this one by name, so flag it explicitly. */}
     <ChevronRightIcon className="ms-auto h-4 w-4" data-dir-flip />
   </DropdownMenuPrimitive.SubTrigger>
 ))

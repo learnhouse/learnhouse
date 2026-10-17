@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 // ToolbarButtons pulls in @phosphor-icons/react (~360KB) and only renders
-// after the editor is interactive — defer it so it doesn't block first paint.
+// after the editor is interactive; defer it so it doesn't block first paint.
 const ToolbarButtons = dynamic(
   () => import('./Toolbar/ToolbarButtons').then((m) => m.ToolbarButtons),
   { ssr: false, loading: () => null }
@@ -25,6 +25,7 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import InfoCallout from './Extensions/Callout/Info/InfoCallout'
 import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
 import Callout from './Extensions/Callout/Callout'
+import { normalizeCalloutContent } from './Extensions/Callout/calloutContent'
 import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
@@ -45,7 +46,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getLinkExtension } from './EditorConf'
 import WebPreview from './Extensions/WebPreview/WebPreview'
 
-// Lowlight — slim grammar set; see editorLowlight.ts
+// Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from './editorLowlight'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { CourseProvider } from '@components/Contexts/CourseContext'
@@ -208,7 +209,7 @@ function Editor(props: EditorProps) {
   )
 
   React.useEffect(() => {
-    savedContentSnapshotRef.current = getEditorContentSnapshot(props.content)
+    savedContentSnapshotRef.current = getEditorContentSnapshot(normalizeCalloutContent(props.content))
     setHasUnsavedChanges(false)
   }, [props.activity.activity_uuid, props.content])
 
@@ -286,15 +287,21 @@ function Editor(props: EditorProps) {
     setHasUnsavedChanges(false)
   }, [])
 
+  // Wrap the inline text of callouts saved before they could hold lists
+  const editorContent = React.useMemo(
+    () => normalizeCalloutContent(props.content),
+    [props.content]
+  )
+
   const editor: any = useEditor({
     editable: true,
     extensions,
-    content: props.content,
+    content: editorContent,
     immediatelyRender: false,
     onCreate: ({ editor }) => {
       // Re-baseline against the editor's own normalized doc. The initial
       // snapshot is taken from props.content (the stored ProseMirror doc),
-      // but onUpdate compares editor.getJSON() — TipTap may normalize the
+      // but onUpdate compares editor.getJSON(), and TipTap may normalize the
       // doc on load, so aligning the baseline here avoids a false "unsaved"
       // state before any real edit.
       savedContentSnapshotRef.current = getEditorContentSnapshot(editor.getJSON())
@@ -392,7 +399,7 @@ function Editor(props: EditorProps) {
     if (!editor) return
 
     // Update editor with merged content
-    editor.commands.setContent(mergedContent)
+    editor.commands.setContent(normalizeCalloutContent(mergedContent))
 
     // Save the merged content (force overwrite since we've manually merged)
     const result = await props.setContent(mergedContent, true)
@@ -426,7 +433,7 @@ function Editor(props: EditorProps) {
 
   return (
     <div className="activity-editor-page">
-      {/* Version History Panel — only mount when first opened so the chunk
+      {/* Version History Panel: only mount when first opened so the chunk
           + the versions list fetch don't run on every editor load. */}
       {canUseVersioning && showVersionHistory && (
         <VersionHistoryPanel
@@ -439,7 +446,7 @@ function Editor(props: EditorProps) {
         />
       )}
 
-      {/* Merge Conflict Modal — same: only mount when actually needed. */}
+      {/* Merge Conflict Modal, same idea: only mount when actually needed. */}
       {editor && showMergeModal && (
         <MergeConflictModal
           isOpen={showMergeModal}

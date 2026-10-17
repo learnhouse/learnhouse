@@ -1,10 +1,12 @@
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from src.services.ai.schemas.limits import AI_MESSAGE_MAX_CHARS
 
 
 class StartActivityAIChatSession(BaseModel):
     activity_uuid: str
-    message: str
+    message: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
 
 class ActivityAIChatSessionResponse(BaseModel):
     aichat_uuid: str
@@ -15,7 +17,7 @@ class ActivityAIChatSessionResponse(BaseModel):
 class SendActivityAIChatMessage(BaseModel):
     aichat_uuid: str
     activity_uuid: str
-    message: str
+    message: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
 
 
 # Streaming response types

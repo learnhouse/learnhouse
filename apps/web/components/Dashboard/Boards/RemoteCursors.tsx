@@ -55,7 +55,7 @@ export default function RemoteCursors({ provider, canvasRef, pan, zoom }: Remote
   panRef.current = pan
   zoomRef.current = zoom
 
-  // Broadcast local cursor position — throttled to CURSOR_BROADCAST_INTERVAL
+  // Broadcast local cursor position, throttled to CURSOR_BROADCAST_INTERVAL
   const flushCursorBroadcast = useCallback(() => {
     broadcastRafRef.current = 0
     const pending = pendingCursorRef.current
@@ -117,7 +117,7 @@ export default function RemoteCursors({ provider, canvasRef, pan, zoom }: Remote
   // to be applied to a cursor until the next full paint.
   const elementsRef = useRef<Map<number, HTMLElement>>(new Map())
 
-  // Listen for remote awareness updates — paint directly to DOM, skip React state
+  // Listen for remote awareness updates: paint directly to DOM, skip React state
   useEffect(() => {
     if (!provider.awareness) return
 

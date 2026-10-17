@@ -7,7 +7,7 @@ assignment model so the FK on ``aigeneration.assignment_id`` resolves during
 
 import pytest
 
-import src.db.courses.assignments  # noqa: F401 — register FK target table
+import src.db.courses.assignments  # noqa: F401 (registers the FK target table)
 from src.db.ai.generations import AIGenerationKind
 from src.services.ai.generations import (
     delete_generation,

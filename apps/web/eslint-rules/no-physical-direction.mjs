@@ -2,7 +2,7 @@
  * Flags physical-direction Tailwind utilities in class strings, so the RTL
  * sweep doesn't quietly rot back to `ml-2` and `text-left`.
  *
- * Mirrors scripts/codemod-logical.mjs — if you change one, change both.
+ * Mirrors scripts/codemod-logical.mjs; if you change one, change both.
  * Paths that are LTR by design are excluded via `ignores` in eslint.config.mjs
  * rather than here, so the deny list lives in one place.
  */

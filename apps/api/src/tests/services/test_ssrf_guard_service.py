@@ -34,7 +34,7 @@ def test_normalize_unwraps_ipv4_mapped_ipv6():
 
 def test_is_ip_blocked_matches_private_and_public_ranges():
     assert _is_ip_blocked(ipaddress.ip_address("10.1.2.3"))
-    assert not _is_ip_blocked(ipaddress.ip_address("203.0.113.10"))
+    assert not _is_ip_blocked(ipaddress.ip_address("93.184.216.34"))
 
 
 def test_resolve_and_validate_url_rejects_disallowed_scheme():

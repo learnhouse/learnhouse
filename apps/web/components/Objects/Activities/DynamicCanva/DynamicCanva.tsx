@@ -26,6 +26,7 @@ function normalizeMarkTypes(content: any): any {
 }
 // Custom Extensions
 import Callout from '@components/Objects/Editor/Extensions/Callout/Callout'
+import { normalizeCalloutContent } from '@components/Objects/Editor/Extensions/Callout/calloutContent'
 import InfoCallout from '@components/Objects/Editor/Extensions/Callout/Info/InfoCallout'
 import WarningCallout from '@components/Objects/Editor/Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from '@components/Objects/Editor/Extensions/Image/ImageBlock'
@@ -38,7 +39,7 @@ import LibraryBlock from '@components/Objects/Editor/Extensions/Library/LibraryB
 import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
 import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicBlock'
 
-// Lowlight — slim grammar set; see editorLowlight.ts
+// Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from '@components/Objects/Editor/editorLowlight'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { NoTextInput } from '@components/Objects/Editor/Extensions/NoTextInput/NoTextInput'
@@ -82,13 +83,14 @@ function Canva(props: Editor) {
   const isEditable = true
 
   // Normalize content to fix AI-generated mark types (strong -> bold, em -> italic)
+  // and to wrap the inline text of callouts saved before they could hold lists
   const normalizedContent = useMemo(() => {
     if (!props.content) return props.content;
     try {
       const parsed = typeof props.content === 'string'
         ? JSON.parse(props.content)
         : props.content;
-      return normalizeMarkTypes(parsed);
+      return normalizeCalloutContent(normalizeMarkTypes(parsed));
     } catch {
       return props.content;
     }
@@ -119,7 +121,7 @@ function Canva(props: Editor) {
       NoTextInput,
       // Custom Extensions
       Callout,
-      // Legacy nodes — backward compat with existing calloutInfo/calloutWarning content
+      // Legacy nodes: backward compat with existing calloutInfo/calloutWarning content
       InfoCallout.configure({ editable: isEditable }),
       WarningCallout.configure({ editable: isEditable }),
       ImageBlock.configure({

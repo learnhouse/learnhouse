@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 
 // Last-resort boundary: catches errors thrown in the root layout itself, so it
 // renders OUTSIDE every provider (no router, no AuthContext, no i18n). Kept
-// fully self-contained — it classifies the error for a meaningful message and
+// fully self-contained: it classifies the error for a meaningful message and
 // offers reload / home / sign out / report, all via plain DOM + the Sentry SDK.
 
 export default function GlobalError({
@@ -25,7 +25,7 @@ export default function GlobalError({
 
   // dir-init.js can't help here: this boundary renders its own <html>, so the
   // attribute has to come from React. Detect once, on the client. A
-  // server-rendered error page is LTR for one frame — acceptable on an error
+  // server-rendered error page is LTR for one frame, acceptable on an error
   // screen, and not worth a second blocking script.
   const [dir] = useState<Direction>(() =>
     typeof window === 'undefined' ? 'ltr' : directionForLanguage(detectClientLanguage())
@@ -72,7 +72,7 @@ export default function GlobalError({
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     } catch {
-      // ignore — we redirect to login regardless
+      // ignore; we redirect to login regardless
     }
     window.location.href = '/login'
   }

@@ -1,6 +1,6 @@
 """The tick that keeps the demo fresh.
 
-Nothing here touches the database — the sync itself is covered in
+Nothing here touches the database; the sync itself is covered in
 test_demo_sync.py. What matters at this level is that the scheduler cannot take
 the API down with it: it must not raise during startup, must not die on a failed
 refresh, and must not have every replica of a rolling deploy provision the same
@@ -97,7 +97,7 @@ async def test_claim_runs_anyway_when_redis_raises(monkeypatch):
 async def test_start_does_nothing_when_the_demo_is_off(monkeypatch):
     """Async on purpose: a sync test has no running event loop, so
     start_scheduler would fail at create_task and leave _task None whatever the
-    flag said — the assertion would hold with the guard deleted."""
+    flag said, so the assertion would hold with the guard deleted."""
     monkeypatch.delenv("LEARNHOUSE_DEMO_ENABLED", raising=False)
 
     scheduler.start_scheduler()
@@ -163,7 +163,7 @@ async def test_boot_sync_goes_through_the_lock(monkeypatch):
     """Otherwise a rolling deploy has every replica provisioning at once.
 
     On a database with no demo yet they all reach the same INSERT, and the org
-    slug is unique — so all but one crash, and the winner can lose its uploads
+    slug is unique, so all but one crash, and the winner can lose its uploads
     to the others' rollbacks.
     """
     claims = []
@@ -232,7 +232,7 @@ async def test_a_failed_refresh_does_not_kill_the_loop(monkeypatch):
 
     # Collapse the wait between ticks so the loop comes round again
     # immediately. Patched through the module path rather than
-    # `scheduler.asyncio`, which is the stdlib module object itself — setting an
+    # `scheduler.asyncio`, which is the stdlib module object itself; setting an
     # attribute on it would rebind asyncio.sleep for the whole process.
     real_sleep = asyncio.sleep
 
@@ -345,7 +345,7 @@ async def test_cancelling_during_a_steady_state_tick_propagates(monkeypatch):
 
     The boot tick's is covered above; this is the one that runs for the life of
     the process. The cancel has to land *inside* the tick rather than during the
-    wait between ticks, since only the tick is wrapped in the try — and if that
+    wait between ticks, since only the tick is wrapped in the try. If that
     handler swallowed CancelledError, shutdown would hang on a task that kept
     looping.
     """

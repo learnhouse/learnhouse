@@ -27,7 +27,7 @@ vi.mock('@clack/prompts', () => ({
 
 import { text } from '../src/utils/prompt.js'
 
-describe('utils/prompt — custom text()', () => {
+describe('utils/prompt: custom text()', () => {
   it('resolves to the prompt value and validates against the default when empty', async () => {
     const validate = vi.fn(() => undefined)
     expect(await text({ message: 'Name', defaultValue: 'def', validate })).toBe('typed-value')
@@ -41,7 +41,7 @@ describe('utils/prompt — custom text()', () => {
     await text({ message: 'Name', placeholder: 'fill-me' })
     const inst = core.instances.at(-1) as any
     expect(typeof inst.handlers.key).toBe('function')
-    // Simulate Tab on empty input — fills the placeholder via the closure prompt.
+    // Simulate Tab on empty input; it fills the placeholder via the closure prompt.
     ;(inst.handlers.key as (k: string, i: { name: string }) => void)('\t', { name: 'tab' })
     expect(inst.setCalls).toContainEqual(['fill-me', true])
   })

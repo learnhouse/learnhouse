@@ -86,7 +86,7 @@ async def test_login_known_user_wrong_password_returns_same_shape(auth_client):
     assert response.status_code == 401
     assert response.json()["detail"] == {
         "code": "INVALID_CREDENTIALS",
-        "message": "Incorrect Email or password",
+        "message": "Incorrect email or password. After several failed attempts, sign-in is paused for a few minutes.",
     }
 
 

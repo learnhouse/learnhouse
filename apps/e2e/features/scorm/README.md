@@ -11,7 +11,7 @@ SCORM is an EE-only feature, so these specs need an **EE** instance (the default
 routes). Point the suite at a running EE stack instead of booting one:
 
 ```bash
-# From the repo root, in one terminal — start an isolated EE dev stack:
+# From the repo root, in one terminal, start an isolated EE dev stack:
 learnhouse dev --ee
 
 # Then, against that instance:

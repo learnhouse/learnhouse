@@ -18,6 +18,7 @@ from src.security.security import ALGORITHM, SECRET_KEY, security_hash_password
 from src.security.session_context import (
     AMR_CLAIM,
     AUTH_METHOD_API_TOKEN,
+    CUSTOM_DOMAIN_CLAIM,
     LEGACY_GRACE_CLAIM,
     SORG_CLAIM,
     SessionProvenance,
@@ -25,11 +26,11 @@ from src.security.session_context import (
 )
 
 
-def _publish_session_provenance(amr, org_id, legacy_grace_expires=None) -> None:
+def _publish_session_provenance(amr, org_id, legacy_grace_expires=None, custom_domain=False) -> None:
     """Store the current request's session provenance for the org-policy gates.
 
     Coerces ``sorg`` to int defensively (JWT numbers survive as int, but a
-    hand-crafted token could carry a string). Never raises — provenance is an
+    hand-crafted token could carry a string). Never raises: provenance is an
     enrichment, and a bad claim must not break authentication itself.
     """
     try:
@@ -41,7 +42,12 @@ def _publish_session_provenance(amr, org_id, legacy_grace_expires=None) -> None:
     except (TypeError, ValueError):  # pragma: no cover - defensive coercion of a hand-crafted claim
         parsed_grace = None
     set_session_provenance(
-        SessionProvenance(amr=amr, org_id=parsed_org, legacy_grace_expires=parsed_grace)
+        SessionProvenance(
+            amr=amr,
+            org_id=parsed_org,
+            legacy_grace_expires=parsed_grace,
+            custom_domain=custom_domain is True,
+        )
     )
 
 
@@ -57,17 +63,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def resolve_acting_user_id(
-    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser, SuperadminAPITokenUser],
 ) -> int:
     """Return the real user id behind an authenticated principal.
 
     API tokens authenticate as APITokenUser with id=0 (the token id, not a
     user id). The real user is APITokenUser.created_by_user_id. Use this
-    whenever a check needs a real user_id — ResourceAuthor lookups, org
-    admin/role checks, author comparisons — so tokens resolve to their
+    whenever a check needs a real user_id (ResourceAuthor lookups, org
+    admin/role checks, author comparisons) so tokens resolve to their
     creator instead of silently failing against id=0.
     """
-    if isinstance(current_user, APITokenUser):
+    if isinstance(current_user, (APITokenUser, SuperadminAPITokenUser)):
         return current_user.created_by_user_id
     return current_user.id
 
@@ -166,7 +172,7 @@ async def authenticate_user(
         # admin-provisioned users, anonymized users) store an empty sentinel.
         # pwdlib raises UnknownHashError on it, which escaped as a 500 and made
         # "this address has an SSO account" distinguishable from "unknown
-        # address" — the very oracle the dummy-hash branch above exists to close.
+        # address", the very oracle the dummy-hash branch above exists to close.
         # Treat it exactly like an unknown user, timing included.
         security_verify_password(password, _DUMMY_PASSWORD_HASH)
         return False
@@ -185,7 +191,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     which can work on tokens missing an issuance timestamp.
 
     Also stamps ``type: "access"`` so a token minted for one role can never be
-    spent in the other — see the token-type gate in :func:`get_current_user`.
+    spent in the other; see the token-type gate in :func:`get_current_user`.
     """
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
@@ -217,7 +223,7 @@ def _refresh_token_lifetime() -> timedelta:
 
     Overridable with ``LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS`` for operators who
     want a longer or shorter window, but never below
-    ``MIN_REFRESH_TOKEN_DAYS`` — a shorter window is nearly always a
+    ``MIN_REFRESH_TOKEN_DAYS``, since a shorter window is nearly always a
     misconfiguration that shows up as users complaining they get logged out.
     """
     import os
@@ -263,7 +269,7 @@ def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
 def _get_revocation_redis_client():
     """Return a Redis client for the session-revocation blocklist, or ``None``
     if Redis isn't configured. Failing open is acceptable here because JWTs
-    still honour ``exp`` and ``password_changed_at`` — the blocklist is a
+    still honour ``exp`` and ``password_changed_at``; the blocklist is a
     defense-in-depth timer, not the only wall.
     """
     try:
@@ -297,7 +303,7 @@ def revoke_user_sessions_before(user_id: int, cutoff: Optional[datetime] = None)
 
 def _is_token_revoked_for_user(user_id: int, token_iat: Optional[datetime]) -> bool:
     if token_iat is None:
-        # Without ``iat`` we cannot compare — treat as potentially revoked only
+        # Without ``iat`` we cannot compare, so treat as potentially revoked only
         # if the user has an active revocation key. This prevents pre-upgrade
         # tokens from silently bypassing logout once the key is set.
         r = _get_revocation_redis_client()
@@ -359,7 +365,7 @@ def _mark_refresh_jti_used(user_id: int, jti: str) -> bool:
     """
     r = _get_revocation_redis_client()
     if r is None:
-        # Redis unavailable — fail open for usability (tokens still honour exp
+        # Redis unavailable: fail open for usability (tokens still honour exp
         # and password_changed_at). This is the same defense-in-depth posture
         # as the logout blocklist.
         return True
@@ -381,7 +387,7 @@ def _mark_refresh_jti_used(user_id: int, jti: str) -> bool:
 # refresh (multiple browser tabs sharing the cookie jar, a network retry)
 # re-presents the SAME refresh jti within milliseconds. Without a grace
 # window, the second presentation trips one-time-use replay detection and
-# revokes EVERY session for the user — the classic "I keep getting logged
+# revokes EVERY session for the user, the classic "I keep getting logged
 # out" bug. Within this window we instead re-serve the exact rotated pair the
 # first call issued. Only a replay AFTER the window is treated as theft.
 #
@@ -462,7 +468,7 @@ async def _verify_api_token_org_boundary(
     path_params = request.path_params
 
     # Check org_id in path AND query string. Many list/collection endpoints take
-    # org_id as a query parameter (e.g. ?org_id=42), not a path param — checking
+    # org_id as a query parameter (e.g. ?org_id=42), not a path param. Checking
     # only path params let an org-scoped token reach another org's data simply by
     # passing a different org_id in the query string.
     org_id_param = path_params.get("org_id")
@@ -556,8 +562,8 @@ async def get_current_user(
 
     # ORDER MATTERS: the superadmin prefix "lh_sa_" also starts with "lh_",
     # so the broader org-token branch below would shadow it. Keep this
-    # branch above the org-token branch — do not reorder for "alphabetical
-    # cleanliness" — or every superadmin token will silently fall through
+    # branch above the org-token branch (do not reorder for "alphabetical
+    # cleanliness") or every superadmin token will silently fall through
     # to org-token validation and fail.
     if auth_lower.startswith("bearer lh_sa_"):
         # Superadmin tokens are an Enterprise Edition credential. On an OSS
@@ -605,7 +611,7 @@ async def get_current_user(
         if payload:
             # Reject tokens minted for a single-purpose flow (e.g. magic-link
             # one-time sign-in, password reset, email verification). Those tokens
-            # are only valid at their specific consume endpoint — allowing them as
+            # are only valid at their specific consume endpoint; allowing them as
             # session tokens would let an intercepted single-use token act as a
             # full session for its entire TTL.
             token_purpose = payload.get("purpose")
@@ -623,8 +629,8 @@ async def get_current_user(
                 raise credentials_exception
 
             # SECURITY: a refresh JWT is signed with the same key and carries the
-            # same sub/exp/iat — and, via mint_session_tokens, the same
-            # ``purpose: "session"`` — so the purpose gate alone let one act as a
+            # same sub/exp/iat and, via mint_session_tokens, the same
+            # ``purpose: "session"``, so the purpose gate alone let one act as a
             # full session token. That granted a stolen refresh token ~30 days of
             # API access instead of 8 hours, with no rotation and none of the
             # one-time-use / replay detection that /auth/refresh applies.
@@ -680,6 +686,7 @@ async def get_current_user(
             payload.get(AMR_CLAIM),
             payload.get(SORG_CLAIM),
             payload.get(LEGACY_GRACE_CLAIM),
+            payload.get(CUSTOM_DOMAIN_CLAIM),
         )
         _record_activity_from_request(request, public_user.id)
         return public_user
@@ -720,6 +727,39 @@ async def get_authenticated_user(
     return user
 
 
+def api_token_user_from(api_token) -> APITokenUser:
+    """The request identity for an ``APIToken`` row."""
+    # Normalize rights to a plain dict of plain dicts so .get() works everywhere
+    raw_rights = api_token.rights
+    if raw_rights is None:
+        rights = None
+    elif isinstance(raw_rights, dict):
+        # Already a dict, but inner values might be Pydantic models
+        rights = {}
+        for k, v in raw_rights.items():
+            if isinstance(v, dict):
+                rights[k] = v
+            elif hasattr(v, 'model_dump'):
+                rights[k] = v.model_dump()
+            elif hasattr(v, 'dict'):
+                rights[k] = v.dict()
+            else:
+                rights[k] = v
+    else:
+        # Full Pydantic Rights model
+        rights = raw_rights.model_dump() if hasattr(raw_rights, 'model_dump') else raw_rights.dict()
+
+    return APITokenUser(
+        id=api_token.id,
+        user_uuid=api_token.token_uuid,
+        username=f"api_token_{api_token.name}",
+        org_id=api_token.org_id,
+        rights=rights,
+        token_name=api_token.name,
+        created_by_user_id=api_token.created_by_user_id,
+    )
+
+
 async def validate_api_token(
     token: str,
     db_session: AsyncSession,
@@ -742,36 +782,7 @@ async def validate_api_token(
     if not api_token:
         return None
 
-    # Normalize rights to a plain dict of plain dicts so .get() works everywhere
-    raw_rights = api_token.rights
-    if raw_rights is None:
-        rights = None
-    elif isinstance(raw_rights, dict):
-        # Already a dict, but inner values might be Pydantic models
-        rights = {}
-        for k, v in raw_rights.items():
-            if isinstance(v, dict):
-                rights[k] = v
-            elif hasattr(v, 'model_dump'):
-                rights[k] = v.model_dump()
-            elif hasattr(v, 'dict'):
-                rights[k] = v.dict()
-            else:
-                rights[k] = v
-    else:
-        # Full Pydantic Rights model
-        rights = raw_rights.model_dump() if hasattr(raw_rights, 'model_dump') else raw_rights.dict()
-
-    # Create and return an APITokenUser
-    return APITokenUser(
-        id=api_token.id,
-        user_uuid=api_token.token_uuid,
-        username=f"api_token_{api_token.name}",
-        org_id=api_token.org_id,
-        rights=rights,
-        token_name=api_token.name,
-        created_by_user_id=api_token.created_by_user_id,
-    )
+    return api_token_user_from(api_token)
 
 
 async def validate_superadmin_api_token(
@@ -781,7 +792,7 @@ async def validate_superadmin_api_token(
     """Validate a cross-org superadmin API token (lh_sa_...).
 
     Returns a SuperadminAPITokenUser principal on success, None otherwise.
-    The principal's `id` is the token id (not a user id) — code that needs
+    The principal's `id` is the token id (not a user id); code that needs
     the acting user must use `created_by_user_id`.
     """
     from src.services.api_tokens.superadmin_api_tokens import (
@@ -790,6 +801,17 @@ async def validate_superadmin_api_token(
 
     api_token = await validate_superadmin_token_for_auth(token, db_session)
     if not api_token:
+        return None
+
+    # The token only carries its minter's authority: once that account is gone
+    # or no longer a superadmin, every token it minted stops working. Several
+    # core paths allow these tokens outright, so this can't be left to the
+    # require_superadmin dependency alone.
+    from src.security.superadmin import is_user_superadmin
+
+    if not api_token.created_by_user_id or not await is_user_superadmin(
+        api_token.created_by_user_id, db_session
+    ):
         return None
 
     return SuperadminAPITokenUser(

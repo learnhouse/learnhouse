@@ -9,7 +9,8 @@ from src.db.courses.certifications import (
     CertificationUpdate,
 )
 from src.db.users import PublicUser
-from src.security.auth import get_current_user, get_authenticated_user
+from src.security.auth import get_current_user
+from src.security.api_token_utils import get_authenticated_non_api_token_user
 from src.services.courses.certifications import (
     create_certification,
     get_certification,
@@ -128,7 +129,7 @@ async def api_update_certification(
     summary="Delete certification",
     description=(
         "Delete a certification template by its UUID. Only allowed while no "
-        "certificates have been awarded from it — deleting the template also "
+        "certificates have been awarded from it, since deleting the template also "
         "destroys every awarded certificate and invalidates their verification "
         "links. Revoke awarded certificates individually first."
     ),
@@ -165,7 +166,7 @@ async def api_delete_certification(
 async def api_get_user_certificates_for_course(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser = Depends(get_authenticated_user),
+    current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> List[dict]:
     """
@@ -209,7 +210,7 @@ async def api_get_certificate_by_user_certification_uuid(
 )
 async def api_get_all_user_certificates(
     request: Request,
-    current_user: PublicUser = Depends(get_authenticated_user),
+    current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> List[dict]:
     """

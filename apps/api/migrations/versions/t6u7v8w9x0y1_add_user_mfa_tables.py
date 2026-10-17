@@ -5,7 +5,7 @@ Revises: e9f0a1b2c3d4
 Create Date: 2026-07-21 12:00:00.000000
 
 Chains onto the current dev head (e9f0a1b2c3d4) so the migration graph stays a
-single linear head — `alembic upgrade head` reaches these tables without a merge
+single linear head; `alembic upgrade head` reaches these tables without a merge
 revision.
 """
 from typing import Sequence, Union
@@ -31,7 +31,7 @@ def upgrade() -> None:
             sa.ForeignKey('user.id', ondelete='CASCADE'),
             nullable=False,
         ),
-        # Fernet ciphertext of the TOTP shared secret — never a plaintext seed.
+        # Fernet ciphertext of the TOTP shared secret, never a plaintext seed.
         sa.Column('secret_encrypted', sa.String(), nullable=False, server_default=''),
         # NULL until the user proves the authenticator works. Only non-NULL rows
         # gate login.

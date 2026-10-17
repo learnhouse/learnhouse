@@ -11,7 +11,6 @@ from src.db.courses.course_updates import (
     CourseUpdateUpdate,
 )
 from src.db.courses.courses import Course
-from src.db.organizations import Organization
 from src.db.users import AnonymousUser, PublicUser
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -24,15 +23,6 @@ async def create_update(
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ) -> CourseUpdateRead:
-
-    # CHekc if org exists
-    statement_org = select(Organization).where(Organization.id == update_object.org_id)
-    org = (await db_session.execute(statement_org)).scalars().first()
-
-    if not org or org.id is None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
-        )
 
     statement = select(Course).where(Course.course_uuid == course_uuid)
     course = (await db_session.execute(statement)).scalars().first()
@@ -48,8 +38,10 @@ async def create_update(
     # Generate UUID
     courseupdate_uuid = str(f"courseupdate_{uuid4()}")
 
+    # The update belongs to the course's org, whatever the body says.
     update = CourseUpdate(
-        **update_object.model_dump(),
+        **update_object.model_dump(exclude={"org_id"}),
+        org_id=course.org_id,
         course_id=course.id,
         courseupdate_uuid=courseupdate_uuid,
         creation_date=str(datetime.now()),
@@ -63,7 +55,7 @@ async def create_update(
 
     await dispatch_webhooks(
         event_name="course_update_published",
-        org_id=update_object.org_id,
+        org_id=course.org_id,
         data={
             "courseupdate_uuid": update.courseupdate_uuid,
             "course_uuid": course_uuid,
@@ -73,6 +65,30 @@ async def create_update(
     return CourseUpdateRead(**update.model_dump())
 
 
+async def _authorize_update_write(
+    request: Request,
+    update: CourseUpdate,
+    course_uuid: str | None,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+) -> None:
+    """Editing or deleting a post takes UPDATE on its parent course, the same
+    right that creates one; ``course_uuid`` (from the URL) must be that course.
+
+    RBAC has no resource type for ``courseupdate_*`` uuids, so checking the
+    update's own uuid denied every caller."""
+    course = (await db_session.execute(
+        select(Course).where(Course.id == update.course_id)
+    )).scalars().first()
+    if not course or (course_uuid is not None and course.course_uuid != course_uuid):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Update does not exist"
+        )
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+
+
 # Update Course Update
 async def update_update(
     request: Request,
@@ -80,6 +96,7 @@ async def update_update(
     update_object: CourseUpdateUpdate,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
+    course_uuid: str | None = None,
 ) -> CourseUpdateRead:
     statement = select(CourseUpdate).where(
         CourseUpdate.courseupdate_uuid == courseupdate_uuid
@@ -91,10 +108,7 @@ async def update_update(
             status_code=status.HTTP_409_CONFLICT, detail="Update does not exist"
         )
 
-    # RBAC check
-    await check_resource_access(
-        request, db_session, current_user, update.courseupdate_uuid, AccessAction.UPDATE
-    )
+    await _authorize_update_write(request, update, course_uuid, current_user, db_session)
 
     for key, value in update_object.model_dump().items():
         if value is not None:
@@ -114,6 +128,7 @@ async def delete_update(
     courseupdate_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
+    course_uuid: str | None = None,
 ):
     statement = select(CourseUpdate).where(
         CourseUpdate.courseupdate_uuid == courseupdate_uuid
@@ -125,10 +140,7 @@ async def delete_update(
             status_code=status.HTTP_409_CONFLICT, detail="Update does not exist"
         )
 
-    # RBAC check
-    await check_resource_access(
-        request, db_session, current_user, update.courseupdate_uuid, AccessAction.DELETE
-    )
+    await _authorize_update_write(request, update, course_uuid, current_user, db_session)
 
     await db_session.delete(update)
     await db_session.commit()
@@ -152,7 +164,7 @@ async def get_updates_by_course_uuid(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
         )
 
-    # RBAC check — course updates inherit the course's visibility. Without this
+    # RBAC check: course updates inherit the course's visibility. Without this
     # any caller (including anonymous users) could read the update feed of a
     # private / unpublished course just by knowing its uuid.
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)

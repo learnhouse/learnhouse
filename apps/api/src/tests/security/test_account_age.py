@@ -1,7 +1,7 @@
 """Tests for the free-tier account/organization age gate.
 
 The trickiest correctness point is that ``creation_date`` is a varchar written
-by ``str(datetime.now())`` — a naive, space-separated, server-local timestamp.
+by ``str(datetime.now())``: a naive, space-separated, server-local timestamp.
 All age math happens in Python; unparseable/legacy dates fail OPEN.
 """
 from datetime import datetime, timezone

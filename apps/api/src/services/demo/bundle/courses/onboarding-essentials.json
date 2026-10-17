@@ -48,7 +48,7 @@
                 "Friday: a half-hour with your manager to say what is still confusing."
               ]
             },
-            "p:Everything else is yours to fill. If a day looks empty, that is on purpose — use it to read, to poke at the product, and to write down what does not make sense yet.",
+            "p:Everything else is yours to fill. If a day looks empty, that is on purpose: use it to read, to poke at the product, and to write down what does not make sense yet.",
             {
               "info": "Keep a running list of things that confused you. It is the most useful document you will ever write here, and it expires within a month."
             },
@@ -183,7 +183,7 @@
           "kind": "document",
           "body": [
             "h2:If it is not written down, it did not happen",
-            "p:Riverbend runs across three sites and two time zones. A decision made in conversation and never recorded will be re-made, differently, within a month. That is not a hypothetical — it is the single most common source of rework here.",
+            "p:Riverbend runs across three sites and two time zones. A decision made in conversation and never recorded will be re-made, differently, within a month. That is not a hypothetical; it is the single most common source of rework here.",
             "h2:What is worth recording",
             {
               "ul": [
@@ -213,7 +213,7 @@
               ]
             },
             {
-              "info": "Asking in a shared channel rather than a direct message means the answer helps the next person too — and you are rarely the first to hit it."
+              "info": "Asking in a shared channel rather than a direct message means the answer helps the next person too, and you are rarely the first to hit it."
             },
             {
               "quiz": {
@@ -272,7 +272,7 @@
                 "Waiting to be given work. Nobody is holding a queue for you. Ask what would be useful and pick something up.",
                 "Nodding along to acronyms. Ask the first time and it takes ten seconds; ask in month four and it is awkward for everyone.",
                 "Promising a customer a date you have not checked. Once said, it is very hard to unsay.",
-                "Assuming everything undocumented is deliberate. Most of it is just nobody having got to it — including things you could write up yourself."
+                "Assuming everything undocumented is deliberate. Most of it is just nobody having got to it, including things you could write up yourself."
               ]
             },
             {
@@ -286,7 +286,7 @@
           "kind": "assignment",
           "body": [
             "h2:Show that you have landed",
-            "p:A short check covering the ground in this course: who owns what, how we record decisions, and how to ask for help well. It is marked, but it is not a trap — everything here is answered somewhere in the three chapters above.",
+            "p:A short check covering the ground in this course: who owns what, how we record decisions, and how to ask for help well. It is marked, but it is not a trap: everything here is answered somewhere in the three chapters above.",
             "p:There is a written question at the end asking what confused you most in your first fortnight. Answer it honestly. Those answers are what this course gets rewritten from."
           ]
         }

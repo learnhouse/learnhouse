@@ -31,7 +31,7 @@ vi.mock('../src/utils/network.js', async () => {
 
 import { doctorCommand } from '../src/commands/doctor.js'
 
-describe('doctor — configured port in use', () => {
+describe('doctor: configured port in use', () => {
   let home: string
   let installDir: string
   let origHome: string | undefined

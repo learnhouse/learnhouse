@@ -6,7 +6,7 @@ tenant is ever checked. These tests pin that behaviour for the three org-scoped
 readers (list / root / search) and the org-scoped root-content writes:
 
 * a signed-in **non-member** is served exactly what an anonymous visitor is
-  served — public folders and public resources, never private ones;
+  served: public folders and public resources, never private ones;
 * a real **member** still sees the private rows (no regression);
 * an **anonymous** visitor still sees the public rows (public library browsing
   keeps working);
@@ -34,8 +34,18 @@ from src.routers.folders.folders import router
 from src.security.auth import get_current_user
 
 
+@pytest.fixture(autouse=True)
+def _no_rate_limit():
+    """The limiters count in Redis, which these tests don't run against."""
+    with patch("src.routers.folders.folders.check_rate_limit", return_value=(True, 1, 60)), patch(
+        "src.routers.folders.folders.check_search_rate_limit", return_value=(True, 0)
+    ):
+        yield
+
+
+
 # ---------------------------------------------------------------------------
-# App / client wiring — the acting principal is swapped per test.
+# App / client wiring: the acting principal is swapped per test.
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
@@ -329,7 +339,7 @@ class TestSearchLibraryTenantScope:
 
 
 # ---------------------------------------------------------------------------
-# Org-scoped writes — "folder_x" carries no org, so membership is the only gate.
+# Org-scoped writes: "folder_x" carries no org, so membership is the only gate.
 # ---------------------------------------------------------------------------
 
 class TestOrgScopedWrites:

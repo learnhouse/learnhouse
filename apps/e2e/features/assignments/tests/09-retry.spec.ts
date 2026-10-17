@@ -10,7 +10,7 @@
  * any running instance. The follow-on "resubmit for a better grade" path
  * depends on the fix in apps/web/.../AssignmentBoxUI.tsx (the student "Save
  * your progress" control was hidden on retries because it was gated on the
- * existence of an AssignmentUserSubmission row, which a retry keeps in place —
+ * existence of an AssignmentUserSubmission row, which a retry keeps in place,
  * so students could not save new answers and always re-scored 0). Once that
  * fixed web image is running, extend this spec to re-answer + resubmit and
  * assert grade 100.

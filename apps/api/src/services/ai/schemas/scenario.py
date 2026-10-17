@@ -12,6 +12,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
+from src.services.ai.schemas.limits import AI_MESSAGE_MAX_CHARS
+
 
 class GenScenarioOption(BaseModel):
     text: str
@@ -35,7 +37,7 @@ class GeneratedScenarioSet(BaseModel):
 
 class GenerateScenarioRequest(BaseModel):
     org_id: int
-    prompt: str
+    prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     activity_uuid: Optional[str] = None
     session_uuid: Optional[str] = None
     num_scenarios: int = 5

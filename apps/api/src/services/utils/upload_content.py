@@ -1,13 +1,14 @@
 import asyncio
 import logging
-from typing import Literal, Optional
+import shutil
+from typing import BinaryIO, Literal, Optional, Union
 import boto3
 import botocore.config
 from botocore.exceptions import BotoCoreError, ClientError
 import os
 from fastapi import HTTPException, UploadFile
 from config.config import get_learnhouse_config
-from src.security.file_validation import validate_upload
+from src.security.file_validation import validate_upload_stream
 from src.services.utils.video_processing import ensure_faststart
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,13 @@ def _safe_content_path(*parts: str) -> str:
     if not contained:
         raise HTTPException(status_code=400, detail="Invalid file path")
     return full_real
+
+
+def _write_body(dest: BinaryIO, body: Union[bytes, BinaryIO]) -> None:
+    if isinstance(body, (bytes, bytearray)):
+        dest.write(body)
+    else:
+        shutil.copyfileobj(body, dest, 1024 * 1024)
 
 
 def ensure_directory_exists(directory: str):
@@ -66,8 +74,9 @@ async def upload_file(
     from uuid import uuid4
     from src.security.file_validation import get_safe_filename
     
-    # Validate the file
-    content_type, content = validate_upload(file, allowed_types, max_size)
+    # Validate the file. The body stays in the upload's spooled temp file and is
+    # copied to storage in chunks, so multi-GB uploads never sit in memory.
+    content_type = validate_upload_stream(file, allowed_types, max_size)
 
     filename = get_safe_filename(
         file.filename, f"{uuid4()}_{filename_prefix}", content_type=content_type
@@ -78,7 +87,7 @@ async def upload_file(
         directory=directory,
         type_of_dir=type_of_dir,
         uuid=uuid,
-        file_binary=content,
+        file_binary=file.file,
         file_and_format=filename,
         allowed_formats=None,  # Already validated
     )
@@ -90,7 +99,7 @@ async def upload_content(
     directory: str,
     type_of_dir: Literal["orgs", "users"],
     uuid: str,  # org_uuid or user_uuid
-    file_binary: bytes,
+    file_binary: Union[bytes, BinaryIO],
     file_and_format: str,
     allowed_formats: Optional[list[str]] = None,
 ):
@@ -119,11 +128,10 @@ async def upload_content(
     if content_delivery == "filesystem":
         # upload file to server
         with open(safe_path, "wb") as f:
-            f.write(file_binary)
-            f.close()
+            _write_body(f, file_binary)
         # Move the MP4 index atom to the front so long videos stream/seek
         # smoothly over HTTP (no-op for non-MP4 and when ffmpeg is absent).
-        # Runs in a thread — the ffmpeg subprocess must not block the event loop.
+        # Runs in a thread; the ffmpeg subprocess must not block the event loop.
         await asyncio.to_thread(ensure_faststart, safe_path)
 
     elif content_delivery == "s3api":
@@ -140,12 +148,12 @@ async def upload_content(
 
         # Write to local temp file for S3 upload
         with open(local_path, "wb") as f:
-            f.write(file_binary)
+            _write_body(f, file_binary)
 
         # Move the MP4 index atom to the front before uploading so long videos
         # stream/seek smoothly from R2 (no-op for non-MP4 and when ffmpeg is
         # absent). Done on the temp file so the uploaded object is faststart.
-        # Threaded — the ffmpeg subprocess must not block the event loop.
+        # Threaded; the ffmpeg subprocess must not block the event loop.
         await asyncio.to_thread(ensure_faststart, local_path)
 
         try:
@@ -177,7 +185,7 @@ async def read_content(
     traversal-guarded; raises HTTP 404 when the file is missing.
     """
     # Defense in depth: the filesystem branch is guarded by _safe_content_path,
-    # but the S3 branch builds the key by string interpolation — reject any
+    # but the S3 branch builds the key by string interpolation, so reject any
     # separators/traversal in the caller-supplied filename for both.
     if (
         not file_and_format

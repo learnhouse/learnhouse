@@ -62,7 +62,7 @@ async def test_platform_reset_accepts_email_in_body(users_client):
 @pytest.mark.asyncio
 async def test_platform_reset_legacy_path_variant_still_works(users_client):
     """
-    F-15: legacy URL variant kept for backwards compatibility — marked
+    F-15: legacy URL variant kept for backwards compatibility. It is marked
     deprecated in OpenAPI but not removed, so any frontend caller on the
     old contract keeps working.
     """
@@ -105,7 +105,7 @@ def test_single_label_cookie_domain_refused_in_prod(monkeypatch):
 
 
 def test_dotted_cookie_domain_ok(monkeypatch):
-    """F-17: ``.app.example.com`` — normal SaaS setup — must load cleanly."""
+    """F-17: ``.app.example.com`` (the normal SaaS setup) must load cleanly."""
     monkeypatch.setenv("LEARNHOUSE_AUTH_JWT_SECRET_KEY", "x" * 40)
     monkeypatch.setenv("LEARNHOUSE_DEVELOPMENT_MODE", "false")
     monkeypatch.setenv("LEARNHOUSE_COOKIE_DOMAIN", ".app.example.com")
@@ -127,7 +127,7 @@ def test_dotted_cookie_domain_ok(monkeypatch):
 
 def test_webhook_rate_limiter_returns_standard_envelope():
     """
-    F-20: limiter signature returns (is_allowed, retry_after) — routers then
+    F-20: limiter signature returns (is_allowed, retry_after); routers then
     raise the existing ``{code, message, retry_after}`` envelope with a
     Retry-After header. Frontend 429 handler is unchanged.
     """

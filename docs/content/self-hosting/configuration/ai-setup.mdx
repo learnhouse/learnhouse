@@ -3,7 +3,7 @@ import { Callout, Tabs } from 'nextra/components'
 # AI Setup
 
 LearnHouse includes AI-powered features for learning assistance and content editing. The AI
-layer is **provider-agnostic** — point it at any major LLM provider by setting a provider name
+layer is **provider-agnostic**: point it at any major LLM provider by setting a provider name
 and an API key. These features are optional and disabled by default.
 
 Under the hood LearnHouse uses [Pydantic AI](https://ai.pydantic.dev/) for generation, and
@@ -57,7 +57,7 @@ learnhouse start
 `LEARNHOUSE_GEMINI_API_KEY`, `provider` defaults to `google` and that key is used automatically
 (for generation **and** embeddings). The one difference is that the default models are now the
 **Gemini 3 family** (`gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-3.1-pro-preview`)
-rather than Gemini 2.5 — so your key/project must have Gemini 3 access (the Pro tier uses a
+rather than Gemini 2.5, so your key/project must have Gemini 3 access (the Pro tier uses a
 *preview* model). To stay on the previous models, pin them explicitly:
 
 ```env
@@ -119,7 +119,7 @@ LEARNHOUSE_AI_MODEL_FAST=claude-haiku-4-5
 </Tabs.Tab>
 
 <Tabs.Tab>
-DeepSeek's OpenAI-compatible endpoint is auto-configured — just set the key.
+DeepSeek's OpenAI-compatible endpoint is auto-configured, so you only need to set the key.
 
 ```env
 LEARNHOUSE_AI_PROVIDER=deepseek
@@ -129,7 +129,7 @@ LEARNHOUSE_AI_MODEL_STANDARD=deepseek-chat
 </Tabs.Tab>
 
 <Tabs.Tab>
-Moonshot AI (Kimi) — endpoint auto-configured.
+The Moonshot AI (Kimi) endpoint is auto-configured.
 
 ```env
 LEARNHOUSE_AI_PROVIDER=moonshot
@@ -137,7 +137,7 @@ LEARNHOUSE_AI_API_KEY=sk-...
 LEARNHOUSE_AI_MODEL_STANDARD=kimi-k2-0905-preview
 ```
 
-Other Chinese models (Alibaba **Qwen**, Zhipu **GLM**) expose OpenAI-compatible APIs — use `provider: openai` with their `base_url`, e.g. `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`.
+Other Chinese models (Alibaba **Qwen**, Zhipu **GLM**) expose OpenAI-compatible APIs. Use `provider: openai` with their `base_url`, e.g. `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`.
 </Tabs.Tab>
 
 <Tabs.Tab>
@@ -149,7 +149,7 @@ LEARNHOUSE_AI_MODEL_STANDARD=mistral-large-latest
 </Tabs.Tab>
 
 <Tabs.Tab>
-OpenRouter's base URL is configured automatically; just use OpenRouter **model slugs** (`vendor/model`) — one key gives access to hundreds of models.
+OpenRouter's base URL is configured automatically; use OpenRouter **model slugs** (`vendor/model`). One key gives access to hundreds of models.
 
 ```env
 LEARNHOUSE_AI_PROVIDER=openrouter
@@ -160,7 +160,7 @@ LEARNHOUSE_AI_MODEL_FAST=openai/gpt-4o-mini
 </Tabs.Tab>
 
 <Tabs.Tab>
-Bedrock uses the **standard AWS credential chain** (env vars, IAM role, or `~/.aws` profile) plus a region — no `LEARNHOUSE_AI_API_KEY` is required. Use Bedrock model IDs.
+Bedrock uses the **standard AWS credential chain** (env vars, IAM role, or `~/.aws` profile) plus a region. No `LEARNHOUSE_AI_API_KEY` is required. Use Bedrock model IDs.
 
 ```env
 LEARNHOUSE_AI_PROVIDER=bedrock
@@ -173,7 +173,7 @@ AWS_SECRET_ACCESS_KEY=...
 </Tabs.Tab>
 
 <Tabs.Tab>
-Run any model locally with [Ollama](https://ollama.com) (`ollama serve`) — no API key needed.
+Run any model locally with [Ollama](https://ollama.com) (`ollama serve`). No API key is needed.
 
 ```env
 LEARNHOUSE_AI_PROVIDER=ollama
@@ -221,7 +221,7 @@ LEARNHOUSE_AI_EMBEDDING_DIMENSIONS=768           # default: 768
    produce 768-dim vectors. If you set `LEARNHOUSE_AI_EMBEDDING_DIMENSIONS` to another value
    (or use a model with a fixed, different size), you must migrate the `course_embedding`
    column and re-index existing courses.
-2. **Some providers have no embeddings API** — Anthropic, DeepSeek, Moonshot, Mistral, OpenRouter, and    Bedrock. With one of those selected for generation, embeddings automatically fall back to
+2. **Some providers have no embeddings API**: Anthropic, DeepSeek, Moonshot, Mistral, OpenRouter, and Bedrock. With one of those selected for generation, embeddings automatically fall back to
    **Google** when `LEARNHOUSE_GEMINI_API_KEY` is set; otherwise set
    `LEARNHOUSE_AI_EMBEDDING_PROVIDER` to `google`, `openai`, or `ollama`.
 </Callout>
@@ -242,9 +242,9 @@ the provider's own capabilities:
 | YouTube URLs | ✅ | ❌ | ❌ | ❌ |
 
 Images and PDFs are widely supported across vision/document-capable models. **YouTube links are
-a Gemini-only capability** — Gemini fetches the video directly, while other providers have no
+a Gemini-only capability**. Gemini fetches the video directly, while other providers have no
 equivalent. When an attachment type isn't supported, the request fails with a clear error rather
-than silently dropping it — so if you rely on **YouTube** course context, keep `provider: google`.
+than silently dropping it, so if you rely on **YouTube** course context, keep `provider: google`.
 
 ## Per-organization AI configuration
 

@@ -48,6 +48,11 @@ def _mock_common(monkeypatch, enqueued):
     import src.services.utils.caption_jobs as cj
     monkeypatch.setattr(cj, "enqueue", lambda uuid: enqueued.append(uuid))
 
+    import src.security.auth as auth_mod
+    import src.services.security.rate_limiting as rl
+    monkeypatch.setattr(auth_mod, "resolve_acting_user_id", lambda user: 1)
+    monkeypatch.setattr(rl, "enforce_ai_rate_limit", lambda user_id, org_id: None)
+
 
 async def test_configure_enables_and_enqueues(monkeypatch, db, org, course, chapter, activity):
     enqueued = []

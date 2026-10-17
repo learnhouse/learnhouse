@@ -119,7 +119,7 @@ const STEP_CONFIG: Record<
   },
 }
 
-// Shared easing — the same curve used across all onboarding animations
+// Shared easing: the same curve used across all onboarding animations
 const ease = [0.25, 0.1, 0.25, 1] as const
 
 export default function OnboardingBar() {
@@ -603,7 +603,7 @@ export default function OnboardingBar() {
                                       </div>
                                     )}
 
-                                  {/* Editor features guide — shown when user is in the editor */}
+                                  {/* Editor features guide, shown when user is in the editor */}
                                   {step.id === 'experience_editor' &&
                                     !step.completed &&
                                     isInEditor && (
@@ -662,7 +662,7 @@ export default function OnboardingBar() {
                                       </div>
                                     )}
 
-                                  {/* Teach the world — LearnHouse University link */}
+                                  {/* Teach the world: LearnHouse University link */}
                                   {step.id === 'teach_the_world' &&
                                     !step.completed && (
                                       <div className="relative px-3 pb-3 space-y-2">

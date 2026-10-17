@@ -60,7 +60,7 @@ def _patch_happy_path(payload):
 async def test_refresh_rejects_token_issued_before_password_change(client):
     """
     F-02: a refresh token issued at time T is invalid after the user changes
-    their password at time T+1 — stolen-token-survives-password-rotation gap.
+    their password at time T+1 (the stolen-token-survives-password-rotation gap).
     """
     token_iat = 1_000_000_000
     password_changed_at = datetime.fromtimestamp(token_iat + 3600, tz=timezone.utc)
