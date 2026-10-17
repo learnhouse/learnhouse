@@ -159,7 +159,6 @@
   "overrides": {
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@xmldom/xmldom": "^0.9.12",
     "brace-expansion@1": {
       ".": ">=1.1.21 <2",
     },
