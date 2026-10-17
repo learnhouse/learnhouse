@@ -14,6 +14,7 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { meaningfulMessage } from '@lib/errors/classify'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { billingIntervalLabel } from '@/lib/payments/billingInterval'
 
 interface AccountPurchasesProps {
   orgId: number
@@ -64,7 +65,7 @@ function EnrollmentCard({ enrollment, orgslug, onManageBilling, billingLoading }
                 {formattedPrice}
               </p>
               {isSubscription && (
-                <p className="text-xs text-indigo-400 leading-none">recurring</p>
+                <p className="text-xs text-indigo-400 leading-none">{billingIntervalLabel(enrollment.billing_interval)}</p>
               )}
             </div>
           )}

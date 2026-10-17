@@ -480,6 +480,7 @@
     "course_count_plural": "{{count}} دورات",
     "authors_and_updates": "المؤلفون والتحديثات",
     "course_updates": "تحديثات الدورة",
+    "rss_feed": "خلاصة RSS لتحديثات الدورة",
     "no_updates_yet": "لا توجد تحديثات بعد",
     "no_updates_desc": "تحديثات هذه الدورة ستظهر هنا",
     "quit_course": "الخروج من الدورة",
@@ -6714,7 +6715,9 @@
     },
     "pricing": {
       "from": "ابتداءً من",
-      "subscription": "اشتراك"
+      "subscription": "اشتراك",
+      "per_month": "/ شهر",
+      "per_year": "/ سنة"
     }
   }
 }

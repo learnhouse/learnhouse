@@ -2,6 +2,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '@/lib/format'
+import { billingIntervalLabel } from '@/lib/payments/billingInterval'
 import Link from 'next/link'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { getUriWithOrg } from '@services/config/config'
@@ -25,6 +26,7 @@ interface Offer {
   name: string
   description: string
   offer_type: 'one_time' | 'subscription'
+  billing_interval?: string
   price_type: 'fixed_price' | 'customer_choice'
   amount: number
   currency: string
@@ -192,7 +194,7 @@ function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslu
                 <p className="text-xs text-gray-400 leading-none">min.</p>
               )}
               {isSubscription && (
-                <p className="text-xs text-indigo-400 leading-none font-medium">recurring</p>
+                <p className="text-xs text-indigo-400 leading-none font-medium">{billingIntervalLabel(offer.billing_interval)}</p>
               )}
             </div>
             <div className={`flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-xl transition-colors ${

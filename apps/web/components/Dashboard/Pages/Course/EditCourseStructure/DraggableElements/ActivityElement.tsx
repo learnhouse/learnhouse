@@ -317,7 +317,7 @@ function ActivityElement(props: ActivitiyElementProps) {
               </div>
             ) : (
               <ActivityPreviewHoverCard activity={props.activity}>
-                <p className="first-letter:uppercase text-sm text-gray-600 truncate cursor-default">
+                <p className="text-sm text-gray-600 truncate cursor-default">
                   {props.activity.name}
                 </p>
               </ActivityPreviewHoverCard>

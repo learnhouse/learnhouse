@@ -472,6 +472,7 @@
     "course_count_plural": "{{count}} courses",
     "authors_and_updates": "Authors & Updates",
     "course_updates": "Course Updates",
+    "rss_feed": "RSS feed of course updates",
     "no_updates_yet": "No updates yet",
     "no_updates_desc": "Updates about this course will appear here",
     "quit_course": "Quit Course",
@@ -6695,7 +6696,9 @@
     },
     "pricing": {
       "from": "from",
-      "subscription": "subscription"
+      "subscription": "subscription",
+      "per_month": "/ month",
+      "per_year": "/ year"
     }
   }
 }

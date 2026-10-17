@@ -1525,16 +1525,19 @@ async def clone_course(
             # This handles all activity types: videos, documents, SCORM, assignments, etc.
             _copy_storage_directory(original_activity_path, new_activity_path)
 
+            # Identifiers the activity's own content JSON may reference. The
+            # editor document embeds each media block's uuid, file id and owning
+            # activity uuid, and builds the media URL from them, so every one of
+            # them has to point at the copied file or the copy shows no images.
+            content_ref_map = {original_activity.activity_uuid: new_activity_uuid}
+
             # Clone blocks for dynamic activities (use pre-fetched data)
             if original_activity.activity_type.value == "TYPE_DYNAMIC":
                 original_blocks = _blocks_by_activity.get(original_activity.id, [])
 
-                # Map old block UUIDs to new block UUIDs (for updating activity content references)
-                block_uuid_map = {}
-
                 for original_block in original_blocks:
                     new_block_uuid = f"block_{uuid4()}"
-                    block_uuid_map[original_block.block_uuid] = new_block_uuid
+                    content_ref_map[original_block.block_uuid] = new_block_uuid
 
                     # Clone block content and update file references
                     new_block_content = dict(original_block.content) if original_block.content else {}
@@ -1564,7 +1567,9 @@ async def clone_course(
                                 old_file_key = f"{old_copied_block_path}/{filename}"
                                 # Generate new file ID
                                 new_file_id = str(uuid4())
-                                file_ext = filename.split('.')[-1] if '.' in filename else ''
+                                file_stem, file_ext = (
+                                    filename.rsplit('.', 1) if '.' in filename else (filename, '')
+                                )
                                 new_filename = f"block_{new_file_id}.{file_ext}" if file_ext else f"block_{new_file_id}"
                                 new_file_key = f"{new_block_path_str}/{new_filename}"
 
@@ -1576,6 +1581,8 @@ async def clone_course(
                                 # Update file reference in block content
                                 if 'file_id' in new_block_content:
                                     new_block_content['file_id'] = f"block_{new_file_id}"
+                                if file_stem:
+                                    content_ref_map[file_stem] = f"block_{new_file_id}"
 
                     new_block = Block(
                         block_type=original_block.block_type,
@@ -1591,10 +1598,10 @@ async def clone_course(
 
                     db_session.add(new_block)
 
-                # Update activity content to reference new block UUIDs
-                if new_content and block_uuid_map:
-                    new_activity.content = _replace_uuids_in_content(new_content, block_uuid_map)
-                    db_session.add(new_activity)
+            # Point the activity content at the copied activity, blocks and files
+            if new_content:
+                new_activity.content = _replace_uuids_in_content(new_content, content_ref_map)
+                db_session.add(new_activity)
 
     # Single commit for all chapters, activities, blocks, and links
     await db_session.commit()

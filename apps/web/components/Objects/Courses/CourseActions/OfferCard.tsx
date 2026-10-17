@@ -6,6 +6,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '@/lib/format'
+import { billingIntervalLabel } from '@/lib/payments/billingInterval'
 
 interface OfferCardProps {
   offer: {
@@ -15,6 +16,7 @@ interface OfferCardProps {
     description?: string
     offer_type: 'subscription' | 'one_time'
     price_type?: string
+    billing_interval?: string
     amount: number
     currency: string
     benefits?: string
@@ -60,7 +62,7 @@ export function OfferCard({ offer, orgslug }: OfferCardProps) {
               <p className="text-xs text-gray-400 leading-none">min.</p>
             )}
             {isSubscription && (
-              <p className="text-xs text-indigo-400 leading-none font-medium">recurring</p>
+              <p className="text-xs text-indigo-400 leading-none font-medium">{billingIntervalLabel(offer.billing_interval)}</p>
             )}
           </div>
         </div>

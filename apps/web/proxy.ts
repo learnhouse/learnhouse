@@ -224,6 +224,7 @@ export const config = {
     '/robots.txt',
     '/payments/stripe/connect/oauth',
     '/podcast/:path*/feed',
+    '/course/:path*/updates/feed',
   ],
 }
 
@@ -491,9 +492,12 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
-  // 9. Per-org metadata endpoints (sitemap, robots, podcast feed)
+  // 9. Per-org metadata endpoints (sitemap, robots, podcast + course feeds)
   // -------------------------------------------------------------------------
-  if (pathname.match(/^\/podcast\/([^/]+)\/feed$/)) {
+  if (
+    pathname.match(/^\/podcast\/([^/]+)\/feed$/) ||
+    pathname.match(/^\/course\/([^/]+)\/updates\/feed$/)
+  ) {
     const resolved = await resolveTenant(req, instance)
     const feedUrl = new URL(`/api${pathname}`, req.url)
     const response = NextResponse.rewrite(feedUrl)

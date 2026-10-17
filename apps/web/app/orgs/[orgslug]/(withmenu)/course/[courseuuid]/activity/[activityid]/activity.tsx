@@ -641,7 +641,7 @@ function ActivityClient(props: ActivityClientProps) {
                           </div>
                           <div className="flex flex-col -space-y-1">
                             <p className="font-bold text-gray-700 text-sm">{t('search.course')} </p>
-                            <h1 className="font-bold text-gray-950 text-lg first-letter:uppercase">
+                            <h1 className="font-bold text-gray-950 text-lg">
                               {course.name}
                             </h1>
                           </div>
@@ -832,7 +832,7 @@ function ActivityClient(props: ActivityClientProps) {
                             </div>
                             <div className="flex flex-col -space-y-1">
                               <p className="font-bold text-gray-700 text-xs sm:text-md">{t('search.course')} </p>
-                              <h1 className="font-bold text-gray-950 text-lg sm:text-3xl first-letter:uppercase">
+                              <h1 className="font-bold text-gray-950 text-lg sm:text-3xl">
                                 {course.name}
                               </h1>
                             </div>
@@ -866,7 +866,7 @@ function ActivityClient(props: ActivityClientProps) {
                               <p className="font-bold text-gray-700 text-xs sm:text-md">
                                 {getChapterNameByActivityId(course, activity?.id) ?? chapterNameFromCourse}
                               </p>
-                              <h1 className="font-bold text-gray-950 text-base sm:text-2xl first-letter:uppercase">
+                              <h1 className="font-bold text-gray-950 text-base sm:text-2xl">
                                 {displayName}
                               </h1>
                               {/* Authors and Dates Section */}

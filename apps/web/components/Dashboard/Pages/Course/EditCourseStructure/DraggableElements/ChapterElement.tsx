@@ -274,7 +274,7 @@ function ChapterElement(props: ChapterElementProps) {
                     </ToolTip>
                   </div>
                 ) : (
-                  <p className="text-neutral-700 first-letter:uppercase text-sm sm:text-base">
+                  <p className="text-neutral-700 text-sm sm:text-base">
                     {props.chapter.name}
                   </p>
                 )}
