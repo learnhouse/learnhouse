@@ -45,17 +45,19 @@ jobs:
       )
     steps:
       - name: Send repository dispatch
-        uses: peter-evans/repository-dispatch@v4
-        with:
-          token: ${{ secrets.INFRA_REPO_PAT }}
-          repository: ${{ vars.INFRA_REPO }}
-          event-type: source-update
-          client-payload: |
-            {
-              "sha": "${{ github.sha }}",
-              "branch": "${{ github.ref_name }}",
-              "event": "${{ github.event_name }}",
-              "pr_number": "${{ github.event.pull_request.number || '' }}",
-              "pr_action": "${{ github.event.action || '' }}",
-              "repo": "${{ github.repository }}"
-            }
+        env:
+          GH_TOKEN: ${{ secrets.INFRA_REPO_PAT }}
+          INFRA_REPO: ${{ vars.INFRA_REPO }}
+          BRANCH: ${{ github.ref_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number || '' }}
+          PR_ACTION: ${{ github.event.action || '' }}
+        run: |
+          jq -n \
+            --arg sha "$GITHUB_SHA" \
+            --arg branch "$BRANCH" \
+            --arg event "$GITHUB_EVENT_NAME" \
+            --arg pr_number "$PR_NUMBER" \
+            --arg pr_action "$PR_ACTION" \
+            --arg repo "$GITHUB_REPOSITORY" \
+            '{event_type: "source-update", client_payload: {sha: $sha, branch: $branch, event: $event, pr_number: $pr_number, pr_action: $pr_action, repo: $repo}}' \
+            | gh api "repos/$INFRA_REPO/dispatches" --input -

@@ -1316,6 +1316,16 @@ async def update_assignment(
     # Turning on formative mode turns auto-grading off; see create_assignment.
     if assignment.ungraded:
         assignment.auto_grading = False
+    # Publishing is one decision for the assignment and its activity. The
+    # dashboard used to flip them in two requests, and when the second failed
+    # a draft assignment stayed readable through its published activity.
+    if assignment_object.published is not None:
+        activity = (await db_session.execute(
+            select(Activity).where(Activity.id == assignment.activity_id)
+        )).scalars().first()
+        if activity:
+            activity.published = bool(assignment_object.published)
+            db_session.add(activity)
     assignment.update_date = str(datetime.now())
 
     # Insert Assignment in DB

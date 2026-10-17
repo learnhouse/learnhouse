@@ -38,6 +38,17 @@ from src.routers.integrations.zapier import (
 # fixtures backed by an async SQLite engine.
 
 
+@pytest.fixture(autouse=True)
+def _no_webhook_rate_limit():
+    # Subscription create shares the webhook create throttle; keep these
+    # tests off the real per-org Redis counter.
+    with patch(
+        "src.routers.webhooks.check_webhook_mutation_rate_limit",
+        return_value=(True, 0),
+    ):
+        yield
+
+
 @pytest.fixture
 async def role(db):
     # Prerequisite row for UserOrganization.role_id FK. Kept minimal; tests

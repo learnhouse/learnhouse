@@ -95,6 +95,8 @@ def test_zapier_subscribe_invalidates_active_cache():
         zapier, "_validate_webhook_url"
     ), patch.object(zapier, "_validate_event"), patch.object(
         zapier, "encrypt_secret", return_value="enc"
+    ), patch.object(zapier, "_enforce_webhook_rate_limit"), patch.object(
+        zapier, "enforce_webhook_endpoint_cap", new=AsyncMock()
     ), patch.object(zapier, "invalidate_active_endpoint_cache") as inv:
         asyncio.run(
             zapier.zapier_create_subscription(MagicMock(), payload, ctx=(api_user, session))

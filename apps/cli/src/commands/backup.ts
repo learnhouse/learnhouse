@@ -39,13 +39,25 @@ async function createBackup() {
   const tmpDir = path.join(backupDir, backupName)
   const archivePath = path.join(backupDir, `${backupName}.tar.gz`)
 
-  fs.mkdirSync(tmpDir, { recursive: true })
+  // Backups hold the full database and a copy of .env (every secret), so keep
+  // them owner-only. chmod as well: mkdir's mode does not touch an existing dir.
+  fs.mkdirSync(backupDir, { recursive: true, mode: 0o700 })
+  try {
+    fs.chmodSync(backupDir, 0o700)
+  } catch (err) {
+    // Owned by another user (e.g. an earlier run under sudo). Everything this
+    // command writes inside it is still owner-only.
+    p.log.warn(`Could not restrict ${backupDir} to owner-only (${(err as { code?: string }).code ?? err}); check who owns it.`)
+  }
+  fs.mkdirSync(tmpDir, { recursive: true, mode: 0o700 })
 
   const s = p.spinner()
   s.start('Creating database dump')
 
   try {
     const dumpPath = path.join(tmpDir, 'database.sql')
+    // Created up front so the shell redirect writes into an owner-only file.
+    fs.writeFileSync(dumpPath, '', { mode: 0o600 })
     dockerExecToFile(
       dbContainer,
       'pg_dump -U learnhouse --clean --if-exists learnhouse',
@@ -63,6 +75,7 @@ async function createBackup() {
   const envPath = path.join(installDir, '.env')
   if (fs.existsSync(envPath)) {
     fs.copyFileSync(envPath, path.join(tmpDir, '.env'))
+    fs.chmodSync(path.join(tmpDir, '.env'), 0o600)
   }
 
   // Create tar.gz archive
@@ -82,6 +95,7 @@ async function createBackup() {
 
   // Clean up temp directory
   fs.rmSync(tmpDir, { recursive: true, force: true })
+  fs.chmodSync(archivePath, 0o600)
 
   const stats = fs.statSync(archivePath)
   const sizeMb = (stats.size / (1024 * 1024)).toFixed(1)
@@ -136,7 +150,7 @@ async function restoreBackup(archivePath: string) {
 
   // Extract archive to temp directory
   const tmpDir = path.join(installDir, '.restore-tmp')
-  fs.mkdirSync(tmpDir, { recursive: true })
+  fs.mkdirSync(tmpDir, { recursive: true, mode: 0o700 })
 
   const s = p.spinner()
   s.start('Extracting backup archive')
@@ -192,6 +206,7 @@ async function restoreBackup(archivePath: string) {
     })
     if (!p.isCancel(restoreEnv) && restoreEnv) {
       fs.copyFileSync(envBackup, path.join(installDir, '.env'))
+      fs.chmodSync(path.join(installDir, '.env'), 0o600)
       p.log.info('.env file restored')
     }
   }

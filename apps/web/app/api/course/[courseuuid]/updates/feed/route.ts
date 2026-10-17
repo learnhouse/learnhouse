@@ -13,7 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ courseuuid: string }> }
 ) {
   const { courseuuid } = await params
-  const orgSlug = request.headers.get('X-Feed-Orgslug') || request.nextUrl.searchParams.get('orgslug')
+  const orgSlug = request.headers.get('X-Feed-Orgslug')
 
   if (!orgSlug) {
     return NextResponse.json({ error: 'Missing org context' }, { status: 400 })

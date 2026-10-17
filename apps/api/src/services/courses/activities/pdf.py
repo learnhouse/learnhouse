@@ -18,6 +18,7 @@ from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.courses.activities.activities import keep_server_owned_metadata
 from src.services.ai.rag.queue import index_activity
 
 
@@ -114,7 +115,7 @@ async def create_documentpdf_activity(
         activity_uuid=activity_uuid,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
-        extra_metadata=extra_metadata,
+        extra_metadata=extra_metadata and keep_server_owned_metadata(extra_metadata, None),
     )
 
     # Insert Activity in DB

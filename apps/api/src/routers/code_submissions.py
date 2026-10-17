@@ -12,12 +12,20 @@ from src.db.code_submissions import CodeSubmission, CodeSubmissionRead
 from src.db.users import AnonymousUser, PublicUser
 from src.security.auth import get_current_user
 from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
+from src.services.security.rate_limiting import check_rate_limit
 
 router = APIRouter()
 
 # Size caps on what a learner can store per submission.
 MAX_SOURCE_CODE_CHARS = 200_000
 MAX_RESULTS_BYTES = 1_000_000
+
+# The web client saves once per run, so this matches the /code/execute
+# throttle. Only the newest MAX_SUBMISSIONS_PER_ACTIVITY rows of a learner's
+# history on one activity are kept (block_id is caller-chosen, so the cap is
+# not per block); older ones are pruned on save.
+SAVE_MAX_PER_MINUTE = 60
+MAX_SUBMISSIONS_PER_ACTIVITY = 500
 
 
 class SaveSubmissionRequest(BaseModel):
@@ -109,6 +117,7 @@ async def get_submission_history(
         403: {"description": "User cannot access this activity"},
         404: {"description": "Activity not found"},
         413: {"description": "Source code or results exceed the size limit"},
+        429: {"description": "Too many submissions"},
     },
 )
 async def save_submission(
@@ -119,6 +128,18 @@ async def save_submission(
 ) -> CodeSubmissionRead:
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
+
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=f"code_submission_save:{current_user.id}",
+        max_attempts=SAVE_MAX_PER_MINUTE,
+        window_seconds=60,
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many submissions. Please wait a moment and try again.",
+            headers={"Retry-After": str(retry_after)},
+        )
 
     if len(body.source_code) > MAX_SOURCE_CODE_CHARS:
         raise HTTPException(status_code=413, detail="Source code is too large")
@@ -146,6 +167,21 @@ async def save_submission(
         execution_time_ms=body.execution_time_ms,
     )
     db_session.add(submission)
+    await db_session.flush()
+
+    # Bound the history: drop this learner's rows on the activity beyond the cap.
+    stale = (await db_session.execute(
+        select(CodeSubmission)
+        .where(
+            CodeSubmission.user_id == current_user.id,
+            CodeSubmission.activity_uuid == body.activity_uuid,
+        )
+        .order_by(col(CodeSubmission.id).desc())
+        .offset(MAX_SUBMISSIONS_PER_ACTIVITY)
+    )).scalars().all()
+    for old_submission in stale:
+        await db_session.delete(old_submission)
+
     await db_session.commit()
     await db_session.refresh(submission)
     return CodeSubmissionRead.model_validate(submission)

@@ -26,8 +26,8 @@ class TestUploadContentService:
         upload = UploadFile(filename="avatar.png", file=BytesIO(b"png"))
 
         with patch(
-            "src.services.utils.upload_content.validate_upload",
-            return_value=("image/png", b"content"),
+            "src.services.utils.upload_content.validate_upload_stream",
+            return_value="image/png",
         ), patch(
             "src.security.file_validation.get_safe_filename",
             return_value="safe_name.png",
@@ -46,6 +46,8 @@ class TestUploadContentService:
 
         assert filename == "safe_name.png"
         upload_content_mock.assert_awaited_once()
+        # The stream itself is handed on, not a bytes copy of the body.
+        assert upload_content_mock.await_args.kwargs["file_binary"] is upload.file
 
     @pytest.mark.asyncio
     async def test_upload_content_filesystem_and_format_guard(self, tmp_path):
@@ -96,10 +98,20 @@ class TestUploadContentService:
                     file_and_format="logo.png",
                     allowed_formats=["png"],
                 )
+                assert file_path.read_bytes() == b"ok"
+                # A file object is copied across in chunks.
+                await upload_content(
+                    directory="logos",
+                    type_of_dir="orgs",
+                    uuid="org_uuid",
+                    file_binary=BytesIO(b"streamed"),
+                    file_and_format="logo.png",
+                    allowed_formats=["png"],
+                )
             finally:
                 os.chdir(old_cwd)
 
-        assert file_path.read_bytes() == b"ok"
+        assert file_path.read_bytes() == b"streamed"
 
     @pytest.mark.asyncio
     async def test_upload_content_s3_success_and_failure(self, tmp_path):

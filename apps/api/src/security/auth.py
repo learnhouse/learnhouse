@@ -18,6 +18,7 @@ from src.security.security import ALGORITHM, SECRET_KEY, security_hash_password
 from src.security.session_context import (
     AMR_CLAIM,
     AUTH_METHOD_API_TOKEN,
+    CUSTOM_DOMAIN_CLAIM,
     LEGACY_GRACE_CLAIM,
     SORG_CLAIM,
     SessionProvenance,
@@ -25,7 +26,7 @@ from src.security.session_context import (
 )
 
 
-def _publish_session_provenance(amr, org_id, legacy_grace_expires=None) -> None:
+def _publish_session_provenance(amr, org_id, legacy_grace_expires=None, custom_domain=False) -> None:
     """Store the current request's session provenance for the org-policy gates.
 
     Coerces ``sorg`` to int defensively (JWT numbers survive as int, but a
@@ -41,7 +42,12 @@ def _publish_session_provenance(amr, org_id, legacy_grace_expires=None) -> None:
     except (TypeError, ValueError):  # pragma: no cover - defensive coercion of a hand-crafted claim
         parsed_grace = None
     set_session_provenance(
-        SessionProvenance(amr=amr, org_id=parsed_org, legacy_grace_expires=parsed_grace)
+        SessionProvenance(
+            amr=amr,
+            org_id=parsed_org,
+            legacy_grace_expires=parsed_grace,
+            custom_domain=custom_domain is True,
+        )
     )
 
 
@@ -680,6 +686,7 @@ async def get_current_user(
             payload.get(AMR_CLAIM),
             payload.get(SORG_CLAIM),
             payload.get(LEGACY_GRACE_CLAIM),
+            payload.get(CUSTOM_DOMAIN_CLAIM),
         )
         _record_activity_from_request(request, public_user.id)
         return public_user
@@ -794,6 +801,17 @@ async def validate_superadmin_api_token(
 
     api_token = await validate_superadmin_token_for_auth(token, db_session)
     if not api_token:
+        return None
+
+    # The token only carries its minter's authority: once that account is gone
+    # or no longer a superadmin, every token it minted stops working. Several
+    # core paths allow these tokens outright, so this can't be left to the
+    # require_superadmin dependency alone.
+    from src.security.superadmin import is_user_superadmin
+
+    if not api_token.created_by_user_id or not await is_user_superadmin(
+        api_token.created_by_user_id, db_session
+    ):
         return None
 
     return SuperadminAPITokenUser(

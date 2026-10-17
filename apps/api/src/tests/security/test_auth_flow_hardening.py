@@ -584,21 +584,43 @@ class TestMagicLinkBranding:
 
 
 class TestMfaSessionRevocation:
-    def test_revocation_cuts_at_the_current_session(self):
-        from src.routers.mfa import _revoke_older_sessions
-        from src.security.auth import create_access_token
+    def test_rotation_revokes_everything_and_reissues_the_caller(self):
+        """Every session up to now is revoked (no cutoff at the caller's own
+        issue time, which let a later-minted session survive); the caller gets
+        a fresh pair carrying the same provenance."""
+        from types import SimpleNamespace
 
-        token = create_access_token({"sub": "a@test.com"})
+        from fastapi import Response
+
+        from src.routers.mfa import _rotate_sessions
+        from src.security.auth import create_access_token, decode_jwt
+
+        token = create_access_token(
+            {"sub": "a@test.com", "purpose": "session", "amr": "password", "sorg": 3}
+        )
         request = Request({
             "type": "http", "method": "POST", "path": "/", "query_string": b"",
             "headers": [(b"authorization", f"Bearer {token}".encode())],
         })
+        response = Response()
         with patch("src.routers.mfa.revoke_user_sessions_before") as revoke_mock:
-            _revoke_older_sessions(request, 7)
-        user_id, cutoff = revoke_mock.call_args.args
-        assert user_id == 7
-        # The cutoff is this session's own issue time, so it survives.
-        assert abs(cutoff.timestamp() - datetime.now(timezone.utc).timestamp()) < 5
+            tokens = _rotate_sessions(
+                request, response, SimpleNamespace(id=7, email="a@test.com")
+            )
+        # No cutoff argument: revoke up to now.
+        revoke_mock.assert_called_once_with(7)
+
+        assert set(tokens) == {"access_token", "refresh_token", "expiry"}
+        for issued in (tokens["access_token"], tokens["refresh_token"]):
+            claims = decode_jwt(issued)
+            assert claims["sub"] == "a@test.com"
+            assert claims["amr"] == "password"
+            assert claims["sorg"] == 3
+            # Issued at/after the revocation cutoff, so the new pair survives.
+            assert abs(claims["iat"] - datetime.now(timezone.utc).timestamp()) < 5
+        cookies = " ".join(response.headers.getlist("set-cookie"))
+        assert tokens["access_token"] in cookies
+        assert tokens["refresh_token"] in cookies
 
     async def test_disable_burns_the_code_and_revokes(self, db, regular_user):
         import time
@@ -628,7 +650,10 @@ class TestMfaSessionRevocation:
         app.dependency_overrides[get_authenticated_user] = lambda: regular_user
         with patch("src.routers.mfa.check_rate_limit", return_value=(True, 0, None)), patch(
             "src.routers.mfa.security_verify_password", return_value=True
-        ), patch("src.routers.mfa._revoke_older_sessions") as revoke_mock, patch(
+        ), patch(
+            "src.routers.mfa._rotate_sessions",
+            return_value={"access_token": "a", "refresh_token": "r", "expiry": 1},
+        ) as revoke_mock, patch(
             "src.routers.mfa.verify_and_consume_totp", new=AsyncMock(return_value=True)
         ) as consume_mock:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
@@ -638,6 +663,11 @@ class TestMfaSessionRevocation:
         assert resp.status_code == 200
         consume_mock.assert_awaited_once()
         revoke_mock.assert_called_once()
+        assert revoke_mock.call_args.args[2].id == regular_user.id
+        assert resp.json() == {
+            "enabled": False,
+            "tokens": {"access_token": "a", "refresh_token": "r", "expiry": 1},
+        }
 
     async def test_org_reset_revokes_the_members_sessions(self, db, org, admin_user, regular_user):
         from fastapi import FastAPI

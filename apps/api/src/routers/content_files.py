@@ -237,7 +237,9 @@ async def _check_content_access(
 
     Path patterns:
     - orgs/{uuid}/courses/{uuid}/activities/{uuid}/... → check course access
-    - orgs/{uuid}/courses/{uuid}/...                   → course metadata (public)
+    - orgs/{uuid}/courses/{uuid}/thumbnails/...        → course thumbnail (public)
+    - orgs/{uuid}/courses/{uuid}/{file}                → course metadata (public)
+    - orgs/{uuid}/courses/{uuid}/{other}/...           → denied (e.g. SCORM)
     - orgs/{uuid}/podcasts/{uuid}/episodes/{uuid}/...  → check podcast access
     - orgs/{uuid}/...                                  → org-level (public)
     """
@@ -305,6 +307,15 @@ async def _check_content_access(
         # Randomized keys don't embed the media_uuid → deny direct /content
         # access (these are only served via /media/{uuid}/file).
         raise HTTPException(status_code=403, detail="Access denied")
+
+    # Anything else under a course is not public. Only thumbnails (shown in
+    # listings) and files at the course root are; other subtrees such as
+    # shared SCORM packages are served by their own gated route, so they are
+    # refused here rather than handed out with a public Cache-Control.
+    if len(parts) >= 3 and parts[0] == 'orgs' and parts[2] == 'courses':
+        if len(parts) > 5 and parts[4] != 'thumbnails':
+            raise HTTPException(status_code=403, detail="Access denied")
+        return True
 
     # Course metadata (thumbnails, etc.) and org-level content: always public
     if len(parts) >= 2 and parts[0] == 'orgs':

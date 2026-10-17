@@ -144,6 +144,46 @@ async def _require_admin_to_touch_admins(
     )
 
 
+async def _require_rights_over_members(
+    org: Organization,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    user_ids: list[int],
+    db_session: AsyncSession,
+) -> None:
+    """Below Admin, a caller may only act on members whose role grants nothing
+    the caller's own role lacks.
+
+    The seeded Admin/Maintainer ids are guarded separately; this covers custom
+    roles, which can be more powerful than the Maintainer acting on them.
+    """
+    if isinstance(current_user, (InternalUser, APITokenUser)) or not user_ids:
+        return
+    from src.security.superadmin import is_user_superadmin
+
+    acting_user_id = resolve_acting_user_id(current_user)
+    if await is_user_superadmin(acting_user_id, db_session):
+        return
+    caller_membership = await get_user_org(acting_user_id, org.id, db_session)
+    if caller_membership is not None and caller_membership.role_id == ADMIN_ROLE_ID:
+        return
+    caller_role = (
+        await db_session.get(Role, caller_membership.role_id)
+        if caller_membership is not None
+        else None
+    )
+    target_rights = (await db_session.execute(
+        select(Role.rights)
+        .join(UserOrganization, UserOrganization.role_id == Role.id)
+        .where(UserOrganization.org_id == org.id, UserOrganization.user_id.in_(user_ids))
+    )).scalars().all()
+    for rights in target_rights:
+        if caller_role is None or not _rights_within(rights, caller_role.rights):
+            raise HTTPException(
+                status_code=403,
+                detail="You cannot manage a member whose role has permissions you don't have",
+            )
+
+
 async def _revoke_org_grants(
     db_session: AsyncSession, org: Organization, user_ids: list[int]
 ) -> None:
@@ -735,6 +775,7 @@ async def remove_user_from_org(
     # Maintainers may remove members, but not Admins or other Maintainers.
     if user_org.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS:
         await _require_admin_to_touch_admins(request, org, current_user, db_session)
+    await _require_rights_over_members(org, current_user, [user_id], db_session)
 
     # Check if user is the last admin
     statement = select(UserOrganization).where(
@@ -859,6 +900,7 @@ async def remove_batch_users_from_org(
     )).scalars().all())
     if staff_ids & set(user_ids):
         await _require_admin_to_touch_admins(request, org, current_user, db_session)
+    await _require_rights_over_members(org, current_user, user_ids, db_session)
 
     # Check if removing these users would remove all admins
     remaining_admins = admin_ids - set(user_ids)
@@ -1018,6 +1060,8 @@ async def update_user_role(
                     status_code=403,
                     detail="Only organization administrators can change an Admin's or Maintainer's role",
                 )
+            # Nor demote a member on a custom role more powerful than their own.
+            await _require_rights_over_members(org, current_user, [user_id], db_session)
             caller_role = (
                 await db_session.get(Role, caller_membership.role_id)
                 if caller_membership is not None

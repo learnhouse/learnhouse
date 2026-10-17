@@ -806,6 +806,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
+            activity_uuid: activityUuid,
             language_id: languageId,
             source_code: code,
             stdin: '',
@@ -858,6 +859,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
+            activity_uuid: activityUuid,
             language_id: languageId,
             source_code: code,
             test_cases: allTestCases.map((tc) => ({

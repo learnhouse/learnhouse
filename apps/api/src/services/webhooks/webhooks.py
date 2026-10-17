@@ -31,6 +31,7 @@ from src.security.org_auth import require_org_admin, require_org_role_permission
 from src.services.webhooks.crypto import encrypt_secret
 from src.services.webhooks.events import WEBHOOK_EVENTS
 from src.services.webhooks.dispatch import invalidate_active_endpoint_cache
+from src.services.utils.ssrf_guard import _is_ip_blocked
 
 # Each endpoint multiplies outbound deliveries per event
 MAX_WEBHOOK_ENDPOINTS_PER_ORG = 20
@@ -67,8 +68,8 @@ def _validate_webhook_url(url: str) -> None:
         )
 
     for _, _, _, _, sockaddr in resolved:
-        ip = ipaddress.ip_address(sockaddr[0])
-        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+        # Same address policy the dispatcher enforces at delivery time.
+        if _is_ip_blocked(ipaddress.ip_address(sockaddr[0])):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Webhook URL must not point to a private or internal address.",
@@ -103,6 +104,24 @@ def _to_read(endpoint: WebhookEndpoint) -> WebhookEndpointRead:
         creation_date=endpoint.creation_date,
         update_date=endpoint.update_date,
     )
+
+
+async def enforce_webhook_endpoint_cap(db_session: AsyncSession, org_id: int) -> None:
+    """Raise 400 once the org holds MAX_WEBHOOK_ENDPOINTS_PER_ORG endpoints,
+    whatever created them (dashboard or Zapier)."""
+    from sqlalchemy import func
+
+    existing = (await db_session.execute(
+        select(func.count()).select_from(WebhookEndpoint).where(WebhookEndpoint.org_id == org_id)
+    )).scalar() or 0
+    if existing >= MAX_WEBHOOK_ENDPOINTS_PER_ORG:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"An organization can have at most {MAX_WEBHOOK_ENDPOINTS_PER_ORG} "
+                "webhook endpoints. Delete one before adding another."
+            ),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -142,19 +161,7 @@ async def create_webhook_endpoint(
     _validate_events(webhook_object.events)
     _validate_webhook_url(webhook_object.url)
 
-    from sqlalchemy import func
-
-    existing = (await db_session.execute(
-        select(func.count()).select_from(WebhookEndpoint).where(WebhookEndpoint.org_id == org_id)
-    )).scalar() or 0
-    if existing >= MAX_WEBHOOK_ENDPOINTS_PER_ORG:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"An organization can have at most {MAX_WEBHOOK_ENDPOINTS_PER_ORG} "
-                "webhook endpoints. Delete one before adding another."
-            ),
-        )
+    await enforce_webhook_endpoint_cap(db_session, org_id)
 
     plaintext_secret = _generate_signing_secret()
     now = str(datetime.now())

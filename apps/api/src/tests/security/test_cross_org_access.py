@@ -201,12 +201,15 @@ class TestAuditDossier:
 class TestMediaRespectsThePaywall:
     async def test_stream_refuses_unpaid_reader(self, db, course, activity, regular_user, mock_request):
         from src.routers.stream import _verify_course_activity_access
-        from src.security.rbac.resource_access import AccessDecision
+        from src.security.rbac.resource_access import AccessAction, AccessDecision
+
+        async def read_only(_request, _db, _user, _uuid, action, *_args, **_kwargs):
+            # A reader, not an editor: course editors bypass the paywall.
+            return AccessDecision(allowed=action == AccessAction.READ, reason="ok")
 
         with patch(
             "src.services.courses.activities.access.check_resource_access",
-            new_callable=AsyncMock,
-            return_value=AccessDecision(allowed=True, reason="ok"),
+            side_effect=read_only,
         ), patch(
             "src.services.courses.activities.access.check_ee_activity_paid_access",
             new_callable=AsyncMock, return_value=False,

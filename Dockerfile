@@ -78,7 +78,7 @@ FROM python:3.14.7-alpine3.24 AS runner
 # image can be published before a newer package fix reaches Alpine's mirrors.
 RUN apk upgrade --no-cache \
     && apk add --no-cache nginx curl netcat-openbsd ca-certificates bash nodejs npm libstdc++ \
-    && npm install -g pm2 \
+    && npm install -g pm2@7.0.4 \
     && rm -rf /root/.npm \
     && mkdir -p /run/nginx
 

@@ -17,6 +17,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import APITokenUser, PublicUser
 from src.security.auth import get_authenticated_user, resolve_acting_user_id
+from src.security.features_utils.usage import check_feature_enabled
 from src.security.rbac.rbac import authorization_verify_based_on_roles_and_authorship
 from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
 from src.services.security.rate_limiting import check_rate_limit
@@ -54,6 +55,12 @@ SQL_LANGUAGE_ID = 82
 # We run SQL via Python's sqlite3 module
 PYTHON3_LANGUAGE_ID = 71
 
+# Where /code/upload-sqlite stores a code block's database:
+# orgs/{org}/courses/{course}/activities/{activity}/dynamic/blocks/codePlayground/{block}/{file}
+_PLAYGROUND_DB_DIR = ("dynamic", "blocks", "codePlayground")
+_SQLITE_DB_EXTENSIONS = (".sqlite3", ".sqlite", ".db")
+_SQLITE_HEADER = b"SQLite format 3\x00"
+
 
 class AdditionalFile(BaseModel):
     name: str = Field(max_length=255)
@@ -62,6 +69,8 @@ class AdditionalFile(BaseModel):
 
 class ExecuteRequest(BaseModel):
     language_id: int
+    # The activity the code runs in; optional only when sqlite_db_path names it.
+    activity_uuid: Optional[str] = Field(default=None, max_length=255)
     source_code: str = Field(max_length=MAX_SOURCE_CODE_CHARS)
     stdin: str = Field(default="", max_length=MAX_STDIN_CHARS)
     sqlite_db_path: Optional[str] = Field(default=None, max_length=1024)
@@ -77,6 +86,7 @@ class TestCase(BaseModel):
 
 class ExecuteBatchRequest(BaseModel):
     language_id: int
+    activity_uuid: Optional[str] = Field(default=None, max_length=255)
     source_code: str = Field(max_length=MAX_SOURCE_CODE_CHARS)
     test_cases: list[TestCase]
     sqlite_db_path: Optional[str] = Field(default=None, max_length=1024)
@@ -110,7 +120,12 @@ def _wrap_sql_in_python(sql: str) -> str:
     """
     import base64
     encoded = base64.b64encode(sql.encode()).decode()
-    return f"""import sqlite3, base64
+    # The caller's additional files are unpacked next to this script, so drop
+    # the script directory from the import path first: a user-supplied
+    # sqlite3.py or base64.py must not stand in for the stdlib module.
+    return f"""import sys
+sys.path[:] = [p for p in sys.path[1:] if p not in ('', '.')]
+import sqlite3, base64
 
 sql = base64.b64decode('{encoded}').decode()
 conn = sqlite3.connect('db.sqlite3')
@@ -216,7 +231,7 @@ async def _require_sqlite_reader(
     current_user: Union[PublicUser, APITokenUser],
     sqlite_path: str,
     db_session: AsyncSession,
-) -> None:
+):
     """The caller must be able to consume the activity that owns the sqlite
     file (drafts, locks and paywall included), not just read its course."""
     if isinstance(current_user, APITokenUser):
@@ -225,9 +240,70 @@ async def _require_sqlite_reader(
             detail="API tokens cannot use code execution or playground uploads",
         )
     course_uuid, activity_uuid = _sqlite_path_owner(sqlite_path)
-    await verify_activity_reader_access_by_uuid(
+    return await verify_activity_reader_access_by_uuid(
         request, activity_uuid, current_user, db_session, course_uuid=course_uuid
     )
+
+
+def _require_playground_db_path(sqlite_path: str) -> None:
+    """Only a code block's uploaded database may be mounted for a SQL run.
+
+    Any other file under the activity (assignment solutions, other learners'
+    submissions, reference files) would otherwise be shipped into the sandbox
+    as ``db.sqlite3`` and read back by the caller's code.
+    """
+    parts = sqlite_path.split('/')
+    if (
+        len(parts) != 11
+        or not all(parts)
+        or tuple(parts[6:9]) != _PLAYGROUND_DB_DIR
+        or not parts[10].lower().endswith(_SQLITE_DB_EXTENSIONS)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="sqlite_db_path must reference a code block database",
+        )
+
+
+async def _authorize_execution(
+    request: Request,
+    current_user: Union[PublicUser, APITokenUser],
+    activity_uuid: Optional[str],
+    language_id: int,
+    sqlite_db_path: Optional[str],
+    db_session: AsyncSession,
+) -> Optional[str]:
+    """Tie a run to an activity the caller can open, in an org that has
+    courses enabled, so an account can't use Judge0 outside course content.
+
+    Returns the canonical sqlite path when a database will be mounted.
+    """
+    sqlite_path = None
+    if language_id == SQL_LANGUAGE_ID and sqlite_db_path:
+        # Authorize against the activity that owns the sqlite file, which may
+        # differ from activity_uuid (a block copied from another activity):
+        # what gets mounted is that activity's file, so its gate and its org's
+        # plan apply.
+        sqlite_path = _canonical_sqlite_path(sqlite_db_path)
+        activity, _course = await _require_sqlite_reader(
+            request, current_user, sqlite_path, db_session
+        )
+        _require_playground_db_path(sqlite_path)
+    elif activity_uuid:
+        activity, _course = await verify_activity_reader_access_by_uuid(
+            request, activity_uuid, current_user, db_session
+        )
+    else:
+        raise HTTPException(status_code=400, detail="activity_uuid is required")
+    await check_feature_enabled("courses", activity.org_id, db_session)
+    return sqlite_path
+
+
+def _load_sqlite_db(sqlite_path: str) -> bytes:
+    db_bytes = _read_storage_file(sqlite_path)
+    if not db_bytes.startswith(_SQLITE_HEADER):
+        raise HTTPException(status_code=400, detail="sqlite_db_path is not a SQLite database")
+    return db_bytes
 
 
 def _check_execution_caller(current_user, scope: str, max_per_minute: int) -> None:
@@ -334,13 +410,14 @@ async def _submit_single(
 @router.post(
     "/execute",
     summary="Execute a code snippet",
-    description="Submit a single code snippet to the Judge0 sandbox and return its result. Supports SQL execution via a bundled SQLite database; API tokens are not permitted for this endpoint.",
+    description="Submit a single code snippet to the Judge0 sandbox and return its result. The run must belong to an activity the caller can open (activity_uuid, or the activity owning sqlite_db_path). Supports SQL execution via a code block's SQLite database; API tokens are not permitted for this endpoint.",
     responses={
         200: {"description": "Judge0 submission result for the executed code."},
-        400: {"description": "Invalid sqlite_db_path or file path"},
+        400: {"description": "Missing activity_uuid, or invalid sqlite_db_path or file path"},
         401: {"description": "Authentication required"},
-        403: {"description": "API tokens not permitted, or no access to the referenced course"},
-        404: {"description": "SQLite database file not found"},
+        402: {"description": "The activity requires a purchase"},
+        403: {"description": "API tokens not permitted, no access to the activity, or courses disabled for the organization"},
+        404: {"description": "Activity or SQLite database file not found"},
         429: {"description": "Too many code executions"},
         503: {"description": "Code execution is not configured on this instance"},
     },
@@ -353,6 +430,10 @@ async def execute_code(
 ):
     judge0_cfg = _get_judge0_config()
     _check_execution_caller(current_user, "code_execute", EXECUTE_MAX_PER_MINUTE)
+    sqlite_path = await _authorize_execution(
+        request, current_user, body.activity_uuid, body.language_id,
+        body.sqlite_db_path, db_session,
+    )
 
     language_id = body.language_id
     source_code = body.source_code
@@ -362,12 +443,8 @@ async def execute_code(
     if body.additional_files:
         zip_files = [{"name": f.name, "content": f.content} for f in body.additional_files]
 
-    if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
-        # Authorize against the activity that owns the sqlite file.
-        sqlite_path = _canonical_sqlite_path(body.sqlite_db_path)
-        await _require_sqlite_reader(request, current_user, sqlite_path, db_session)
-
-        db_bytes = _read_storage_file(sqlite_path)
+    if sqlite_path:
+        db_bytes = _load_sqlite_db(sqlite_path)
         language_id = PYTHON3_LANGUAGE_ID
         source_code = _wrap_sql_in_python(body.source_code)
         additional_files_b64 = _make_additional_files_zip(db_bytes=db_bytes, text_files=zip_files)
@@ -383,13 +460,14 @@ async def execute_code(
 @router.post(
     "/execute-batch",
     summary="Execute code against a batch of test cases",
-    description="Run a code snippet against multiple test cases in parallel and return per-test pass/fail results. Supports SQL execution via a bundled SQLite database; API tokens are not permitted.",
+    description="Run a code snippet against multiple test cases in parallel and return per-test pass/fail results. The run must belong to an activity the caller can open (activity_uuid, or the activity owning sqlite_db_path). Supports SQL execution via a code block's SQLite database; API tokens are not permitted.",
     responses={
         200: {"description": "Per-test execution results for the submitted code."},
-        400: {"description": "Invalid sqlite_db_path or file path"},
+        400: {"description": "Missing activity_uuid, or invalid sqlite_db_path or file path"},
         401: {"description": "Authentication required"},
-        403: {"description": "API tokens not permitted, or no access to the referenced course"},
-        404: {"description": "SQLite database file not found"},
+        402: {"description": "The activity requires a purchase"},
+        403: {"description": "API tokens not permitted, no access to the activity, or courses disabled for the organization"},
+        404: {"description": "Activity or SQLite database file not found"},
         429: {"description": "Too many code executions"},
         503: {"description": "Code execution is not configured on this instance"},
     },
@@ -408,6 +486,10 @@ async def execute_batch(
             status_code=400,
             detail=f"Too many test cases (max {MAX_BATCH_TEST_CASES})",
         )
+    sqlite_path = await _authorize_execution(
+        request, current_user, body.activity_uuid, body.language_id,
+        body.sqlite_db_path, db_session,
+    )
 
     language_id = body.language_id
     source_code = body.source_code
@@ -417,12 +499,8 @@ async def execute_batch(
     if body.additional_files:
         zip_files = [{"name": f.name, "content": f.content} for f in body.additional_files]
 
-    if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
-        # Authorize against the activity that owns the sqlite file.
-        sqlite_path = _canonical_sqlite_path(body.sqlite_db_path)
-        await _require_sqlite_reader(request, current_user, sqlite_path, db_session)
-
-        db_bytes = _read_storage_file(sqlite_path)
+    if sqlite_path:
+        db_bytes = _load_sqlite_db(sqlite_path)
         language_id = PYTHON3_LANGUAGE_ID
         source_code = _wrap_sql_in_python(body.source_code)
         additional_files_b64 = _make_additional_files_zip(db_bytes=db_bytes, text_files=zip_files)
@@ -485,6 +563,7 @@ async def execute_batch(
         400: {"description": "Invalid course_uuid or file path"},
         401: {"description": "Authentication required"},
         403: {"description": "API tokens not permitted, or no update access to the course"},
+        404: {"description": "Course not found, or the activity is not in it"},
     },
 )
 async def upload_sqlite_db(
@@ -531,6 +610,18 @@ async def upload_sqlite_db(
         raise HTTPException(status_code=404, detail="Course not found")
     if course_org_uuid != org_uuid:
         raise HTTPException(status_code=400, detail="org_uuid does not match course organization")
+
+    from src.db.courses.activities import Activity
+
+    activity_course_uuid = (
+        await db_session.execute(
+            select(Course.course_uuid)
+            .join(Activity, Activity.course_id == Course.id)
+            .where(Activity.activity_uuid == activity_uuid)
+        )
+    ).scalars().first()
+    if activity_course_uuid != course_uuid:
+        raise HTTPException(status_code=404, detail="Activity not found in this course")
 
     directory = f"courses/{course_uuid}/activities/{activity_uuid}/dynamic/blocks/codePlayground/{block_id}"
 

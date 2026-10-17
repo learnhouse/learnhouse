@@ -12,10 +12,15 @@ from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.communities.communities import Community
+from src.db.communities.discussions import Discussion
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, SuperadminAPITokenUser
 from src.security.api_token_utils import require_token_right
 from src.security.org_auth import require_org_role_permission
-from src.security.rbac import authorization_verify_if_user_is_anon
+from src.security.rbac import (
+    AccessAction,
+    authorization_verify_if_user_is_anon,
+    check_resource_access,
+)
 
 
 def require_token_in_community_org(
@@ -53,3 +58,24 @@ async def require_community_participant(
         current_user.id, community.org_id, db_session, "discussions", "action_create"
     )
     return current_user.id
+
+
+async def require_author_may_still_post(
+    request,
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    community: Community,
+    discussion: Discussion,
+    db_session: AsyncSession,
+) -> None:
+    """Gate an author (not a moderator) editing their own post or comment.
+
+    Authorship alone is not enough: the thread must still be open, and the
+    author must still be able to read the community and post in it, so a
+    removed member or a locked thread stops further edits.
+    """
+    if discussion.is_locked:
+        raise HTTPException(status_code=403, detail="This discussion is locked")
+    await check_resource_access(
+        request, db_session, current_user, community.community_uuid, AccessAction.READ
+    )
+    await require_community_participant(current_user, community, db_session)
