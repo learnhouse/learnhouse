@@ -10,14 +10,21 @@ export function normalizeBillingInterval(value: unknown): BillingInterval {
   return value === 'year' ? 'year' : 'month'
 }
 
+/** Accepts i18next's `t`; without one, labels fall back to English. */
+type Translate = (key: string, options: { defaultValue: string }) => string
+
 /** "per month" / "per year", for price captions. */
-export function billingIntervalLabel(value: unknown): string {
-  return normalizeBillingInterval(value) === 'year' ? 'per year' : 'per month'
+export function billingIntervalLabel(value: unknown, t?: Translate): string {
+  const year = normalizeBillingInterval(value) === 'year'
+  const fallback = year ? 'per year' : 'per month'
+  return t ? t(year ? 'payments.billing_per_year' : 'payments.billing_per_month', { defaultValue: fallback }) : fallback
 }
 
 /** "/ month" / "/ year", for inline price suffixes. */
-export function billingIntervalSuffix(value: unknown): string {
-  return normalizeBillingInterval(value) === 'year' ? '/ year' : '/ month'
+export function billingIntervalSuffix(value: unknown, t?: Translate): string {
+  const year = normalizeBillingInterval(value) === 'year'
+  const fallback = year ? '/ year' : '/ month'
+  return t ? t(year ? 'payments.billing_suffix_year' : 'payments.billing_suffix_month', { defaultValue: fallback }) : fallback
 }
 
 /** "Monthly" / "Yearly", for selects and badges. */

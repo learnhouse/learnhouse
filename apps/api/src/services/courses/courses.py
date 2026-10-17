@@ -1226,6 +1226,12 @@ def _replace_uuids_in_content(content, uuid_map):
     return content
 
 
+def _delete_storage_directory(dir_path: str) -> None:
+    """Delete a directory from S3 or local filesystem."""
+    from src.services.courses.transfer.storage_utils import delete_storage_directory
+    delete_storage_directory(dir_path)
+
+
 def _copy_storage_directory(src_dir: str, dst_dir: str) -> None:
     """Recursively copy a directory using S3 or local filesystem."""
     import os
@@ -1571,6 +1577,8 @@ async def clone_course(
 
                         # Move files from old block path to new block path (rename folder)
                         block_files = list_directory(old_copied_block_path)
+                        original_file_id = new_block_content.get('file_id')
+                        file_id_matched = False
                         if block_files:
                             for filename in block_files:
                                 old_file_key = f"{old_copied_block_path}/{filename}"
@@ -1587,11 +1595,20 @@ async def clone_course(
                                 # Delete old file
                                 _delete_storage_file(old_file_key)
 
-                                # Update file reference in block content
-                                if 'file_id' in new_block_content:
+                                # Update file reference in block content. A
+                                # block folder can hold more than one file, so
+                                # only the file the block points at replaces it.
+                                if file_stem == original_file_id:
+                                    new_block_content['file_id'] = f"block_{new_file_id}"
+                                    file_id_matched = True
+                                elif 'file_id' in new_block_content and not file_id_matched:
                                     new_block_content['file_id'] = f"block_{new_file_id}"
                                 if file_stem:
                                     content_ref_map[file_stem] = f"block_{new_file_id}"
+
+                        # Nothing references the old block id in the copy; drop
+                        # what's left under it (emptied folder, HLS renditions).
+                        _delete_storage_directory(old_copied_block_path)
 
                     new_block = Block(
                         block_type=original_block.block_type,

@@ -25,7 +25,7 @@ interface OfferCardProps {
 }
 
 export function OfferCard({ offer, orgslug }: OfferCardProps) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { track } = useLHAnalytics('learner')
   const [expanded, setExpanded] = useState(false)
   const isSubscription = offer.offer_type === 'subscription'
@@ -62,7 +62,7 @@ export function OfferCard({ offer, orgslug }: OfferCardProps) {
               <p className="text-xs text-gray-400 leading-none">min.</p>
             )}
             {isSubscription && (
-              <p className="text-xs text-indigo-400 leading-none font-medium">{billingIntervalLabel(offer.billing_interval)}</p>
+              <p className="text-xs text-indigo-400 leading-none font-medium">{billingIntervalLabel(offer.billing_interval, t)}</p>
             )}
           </div>
         </div>

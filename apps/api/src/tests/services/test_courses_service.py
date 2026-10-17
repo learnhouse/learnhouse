@@ -1664,14 +1664,17 @@ class TestCourseMutationsAndRights:
             "src.services.courses.transfer.storage_utils.file_exists", return_value=False,
         ), patch(
             "src.services.courses.transfer.storage_utils.list_directory",
-            return_value=["block_media_old.mp3"],
+            # Extra files around the block's own file must not take its place.
+            return_value=["block_extra_a.vtt", "block_media_old.mp3", "block_extra_b.vtt"],
         ), patch(
             "src.services.courses.courses._copy_storage_file"
         ) as mock_copy_file, patch(
             "src.services.courses.courses._delete_storage_file"
         ), patch(
             "src.services.courses.courses._copy_storage_directory"
-        ) as mock_copy_dir, patch("os.makedirs"):
+        ) as mock_copy_dir, patch(
+            "src.services.courses.courses._delete_storage_directory"
+        ) as mock_delete_dir, patch("os.makedirs"):
             cloned = await clone_course(mock_request, course.course_uuid, admin_user, db)
 
         new_activity = (await db.execute(
@@ -1684,6 +1687,7 @@ class TestCourseMutationsAndRights:
 
         destinations = [c.args[1] for c in mock_copy_file.call_args_list]
         assert any(d.endswith(f"{block_dir}/{new_block.content['file_id']}.mp3") for d in destinations), destinations
+        assert len(destinations) == 3
 
         hls_copies = [c.args for c in mock_copy_dir.call_args_list if c.args[0].endswith("/hls")]
         if folder == "videoBlock":
@@ -1692,6 +1696,11 @@ class TestCourseMutationsAndRights:
             assert hls_copies[0][1].endswith(f"{block_dir}/hls")
         else:
             assert hls_copies == []
+        # What's left under the old block id in the copy is cleaned up.
+        mock_delete_dir.assert_called_once()
+        assert mock_delete_dir.call_args.args[0].endswith(
+            f"/activities/{new_activity.activity_uuid}/dynamic/blocks/{folder}/block_media_old"
+        )
 
 
 class TestSearchCourses:
@@ -2049,6 +2058,15 @@ class TestGetUserCoursesAndRights:
             _copy_storage_directory("srcdir", "dstdir")
 
         mock_copytree.assert_called_once_with("srcdir", "dstdir", dirs_exist_ok=True)
+
+        with patch(
+            "src.services.courses.transfer.storage_utils.delete_storage_directory"
+        ) as mock_delete_dir:
+            from src.services.courses.courses import _delete_storage_directory
+
+            _delete_storage_directory("somedir")
+
+        mock_delete_dir.assert_called_once_with("somedir")
 
         class _FakePaginator:
             def paginate(self, Bucket, Prefix):  # noqa: N803

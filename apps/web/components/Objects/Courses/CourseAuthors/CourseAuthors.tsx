@@ -163,7 +163,8 @@ const UpdatesSection = () => {
   const { data: updates } = useQuery({
     queryKey: queryKeys.courses.updates(courseUuid),
     queryFn: () => apiFetch(`${getAPIUrl()}courses/${courseUuid}/updates`, access_token),
-    enabled: !!(courseUuid && access_token),
+    // Updates of a readable course are public; wait only for the session to settle.
+    enabled: !!courseUuid && session?.status !== 'loading',
     staleTime: 60_000,
   })
 
@@ -325,7 +326,8 @@ const UpdatesListView = () => {
   const { data: updates } = useQuery({
     queryKey: queryKeys.courses.updates(courseUuid),
     queryFn: () => apiFetch(`${getAPIUrl()}courses/${courseUuid}/updates`, access_token),
-    enabled: !!(courseUuid && access_token),
+    // Updates of a readable course are public; wait only for the session to settle.
+    enabled: !!courseUuid && session?.status !== 'loading',
     staleTime: 60_000,
   })
 

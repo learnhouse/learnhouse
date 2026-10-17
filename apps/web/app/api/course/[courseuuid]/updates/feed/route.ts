@@ -37,15 +37,17 @@ export async function GET(
     }
     const updates: any[] = await updatesRes.json()
 
-    // RSS requires absolute URLs, and the host the feed was fetched on is the
-    // right one (org subdomain or custom domain). `getUriWithOrg` would hand
-    // back a relative path in single tenancy, producing an invalid feed.
+    // RSS requires absolute URLs. The host the feed was fetched on is the
+    // right one (org subdomain or custom domain); the configured org URL is
+    // only a fallback for internal hosts. `getUriWithOrg` is relative in
+    // single tenancy, so it can't be used alone.
     const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host')
+    const isInternalHost = !forwardedHost || INTERNAL_HOST.test(forwardedHost)
     const forwardedProto = request.headers.get('x-forwarded-proto')
-      || (forwardedHost?.startsWith('localhost') || forwardedHost?.startsWith('127.') ? 'http' : 'https')
+      || (isInternalHost ? 'http' : 'https')
     const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin
-    const relativeBase = getUriWithOrg(orgSlug, '/')
-    const baseUrl = /^https?:\/\//i.test(relativeBase) ? relativeBase : `${origin}/`
+    const orgBase = getUriWithOrg(orgSlug, '/')
+    const baseUrl = isInternalHost && /^https?:\/\//i.test(orgBase) ? orgBase : `${origin}/`
     const courseUrl = `${baseUrl}course/${courseuuid}`
     const feedUrl = `${baseUrl}course/${courseuuid}/updates/feed`
 
@@ -99,6 +101,8 @@ ${items}
     return NextResponse.json({ error: 'Failed to generate feed' }, { status: 500 })
   }
 }
+
+const INTERNAL_HOST = /^(localhost|127\.|0\.0\.0\.0|\[::1\])/i
 
 function escapeXml(str: string): string {
   return String(str)

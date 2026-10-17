@@ -27,7 +27,7 @@ function EnrollmentCard({ enrollment, orgslug, onManageBilling, billingLoading }
   onManageBilling: () => void
   billingLoading: boolean
 }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isSubscription = enrollment.offer_type === 'subscription'
   const isActive = enrollment.status === 'active'
 
@@ -65,7 +65,7 @@ function EnrollmentCard({ enrollment, orgslug, onManageBilling, billingLoading }
                 {formattedPrice}
               </p>
               {isSubscription && (
-                <p className="text-xs text-indigo-400 leading-none">{billingIntervalLabel(enrollment.billing_interval)}</p>
+                <p className="text-xs text-indigo-400 leading-none">{billingIntervalLabel(enrollment.billing_interval, t)}</p>
               )}
             </div>
           )}
