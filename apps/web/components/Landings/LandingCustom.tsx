@@ -370,7 +370,12 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
             pad={pad}
             offers={publicOffers}
             formatPrice={(amount, currency) => formatCurrency(amount, currency, i18n.language)}
-            labels={{ from: t('landing.pricing.from'), subscription: t('landing.pricing.subscription') }}
+            labels={{
+              from: t('landing.pricing.from'),
+              subscription: t('landing.pricing.subscription'),
+              perMonth: t('landing.pricing.per_month'),
+              perYear: t('landing.pricing.per_year'),
+            }}
           />
         )
       case 'steps':

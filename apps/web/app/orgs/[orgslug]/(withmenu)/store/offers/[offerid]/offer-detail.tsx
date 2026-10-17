@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '@/lib/format'
+import { billingIntervalLabel } from '@/lib/payments/billingInterval'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -99,7 +100,7 @@ function ResourceCard({ resource, orgslug }: { resource: Resource; orgslug: stri
 }
 
 export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, access_token }: OfferDetailClientProps) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token ?? access_token
   const router = useRouter()
@@ -241,7 +242,7 @@ export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, ac
                   {formatCurrency(offer.amount, offer.currency, i18n.language)}
                 </div>
                 {isSubscription && (
-                  <p className="text-sm text-indigo-400 font-medium mt-0.5">recurring</p>
+                  <p className="text-sm text-indigo-400 font-medium mt-0.5">{billingIntervalLabel(offer.billing_interval, t)}</p>
                 )}
               </div>
 

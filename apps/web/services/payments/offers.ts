@@ -95,6 +95,9 @@ export async function getUserEnrollments(orgId: number, access_token: string) {
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   );
   const metadata = await getResponseMetadata(result);
+  // Orgs whose plan has no payments answer 403: nothing was ever bought there,
+  // which is an empty list, not an error.
+  if (metadata.status === 403) return { ...metadata, success: true, data: [] };
   if (!metadata.success) throw new Error(metadata.HTTPmessage || 'Failed to fetch enrollments')
   return metadata;
 }

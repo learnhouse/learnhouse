@@ -480,6 +480,7 @@
     "course_count_plural": "{{count}} دورات",
     "authors_and_updates": "المؤلفون والتحديثات",
     "course_updates": "تحديثات الدورة",
+    "rss_feed": "خلاصة RSS لتحديثات الدورة",
     "no_updates_yet": "لا توجد تحديثات بعد",
     "no_updates_desc": "تحديثات هذه الدورة ستظهر هنا",
     "quit_course": "الخروج من الدورة",
@@ -1191,6 +1192,10 @@
     "one_time_payment": "دفع لمرة واحدة",
     "per_month": "(لكل شهر)",
     "per_month_short": "/شهر",
+    "billing_per_month": "في الشهر",
+    "billing_per_year": "في السنة",
+    "billing_suffix_month": "/ شهر",
+    "billing_suffix_year": "/ سنة",
     "subscribe_now": "اشترك الآن",
     "purchase_now": "اشترِ الآن",
     "failed_checkout": "فشل بدء عملية الدفع",
@@ -6721,7 +6726,9 @@
     },
     "pricing": {
       "from": "ابتداءً من",
-      "subscription": "اشتراك"
+      "subscription": "اشتراك",
+      "per_month": "/ شهر",
+      "per_year": "/ سنة"
     }
   }
 }

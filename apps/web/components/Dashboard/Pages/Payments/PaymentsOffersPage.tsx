@@ -22,6 +22,7 @@ import { usePaymentsEnabled } from '@hooks/usePaymentsEnabled';
 import UnconfiguredPaymentsDisclaimer from '@components/Pages/Payments/UnconfiguredPaymentsDisclaimer';
 import CreateOfferForm from './SubComponents/CreateOfferForm';
 import OfferResourcesPanel from './SubComponents/OfferResourcesPanel';
+import { BILLING_INTERVALS, billingIntervalName, billingIntervalSuffix, normalizeBillingInterval } from '@lib/payments/billingInterval';
 
 const editValidationSchema = Yup.object().shape({
   name: Yup.string().required('Name is required'),
@@ -31,6 +32,7 @@ const editValidationSchema = Yup.object().shape({
   currency: Yup.string().required('Currency is required'),
   offer_type: Yup.string().oneOf(['one_time', 'subscription']).required('Offer type is required'),
   price_type: Yup.string().oneOf(['fixed_price', 'customer_choice']).required('Price type is required'),
+  billing_interval: Yup.string().oneOf(BILLING_INTERVALS).required('Billing period is required'),
 });
 
 function PaymentsOffersPage() {
@@ -129,7 +131,7 @@ function PaymentsOffersPage() {
                       <Badge className="w-fit flex items-center space-x-2" variant="outline">
                         {offer.offer_type === 'subscription' ? <RefreshCcw size={12} /> : <SquareCheck size={12} />}
                         <span className="text-sm">
-                          {offer.offer_type === 'subscription' ? 'Subscription' : 'One-time payment'}
+                          {offer.offer_type === 'subscription' ? `Subscription · ${billingIntervalName(offer.billing_interval)}` : 'One-time payment'}
                         </span>
                       </Badge>
                       <h3 className="font-bold text-lg">{offer.name}</h3>
@@ -209,6 +211,9 @@ function PaymentsOffersPage() {
                         style: 'currency',
                         currency: offer.currency,
                       }).format(offer.amount)}
+                      {offer.offer_type === 'subscription' && (
+                        <span className="text-sm font-normal text-gray-500"> {billingIntervalSuffix(offer.billing_interval)}</span>
+                      )}
                     </span>
                   </div>
                 </div>
@@ -268,6 +273,7 @@ const EditOfferForm = ({
     currency: offer.currency || 'USD',
     offer_type: offer.offer_type as 'one_time' | 'subscription',
     price_type: (offer.price_type || 'fixed_price') as 'fixed_price' | 'customer_choice',
+    billing_interval: normalizeBillingInterval(offer.billing_interval),
   };
 
   const handleSubmit = async (
@@ -275,7 +281,11 @@ const EditOfferForm = ({
     { setSubmitting }: { setSubmitting: (b: boolean) => void }
   ) => {
     try {
-      await updateOffer(org.id, offer.id, values, session.data?.tokens?.access_token);
+      const res = await updateOffer(org.id, offer.id, values, session.data?.tokens?.access_token);
+      if (!res?.success) {
+        toast.error(res?.data?.detail || 'Failed to update offer');
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.offers(org.id) });
       onSuccess();
       toast.success('Offer updated successfully');
@@ -342,6 +352,28 @@ const EditOfferForm = ({
               </Select>
               <ErrorMessage name="price_type" component="div" className="text-red-500 text-sm mt-1" />
             </div>
+
+            {values.offer_type === 'subscription' && (
+              <div>
+                <Label htmlFor="billing_interval">Billing Period</Label>
+                <Select
+                  value={values.billing_interval}
+                  onValueChange={(value) => setFieldValue('billing_interval', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Billing Period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BILLING_INTERVALS.map((interval) => (
+                      <SelectItem key={interval} value={interval}>
+                        {billingIntervalName(interval)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <ErrorMessage name="billing_interval" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+            )}
 
             <div className="flex space-x-2">
               <div className="grow">

@@ -15,6 +15,7 @@ import Link from 'next/link'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '@/lib/format'
+import { billingIntervalSuffix } from '@/lib/payments/billingInterval'
 
 interface Author {
   user: {
@@ -303,7 +304,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
                       <div>
                         <span className="text-gray-900 text-sm font-semibold">{offer.offer_name}</span>
                         {formattedPrice && (
-                          <p className="text-gray-500 text-xs">{formattedPrice}{offer.offer_type === 'subscription' ? ' / month' : ' one-time'}</p>
+                          <p className="text-gray-500 text-xs">{formattedPrice}{offer.offer_type === 'subscription' ? ` ${billingIntervalSuffix(offer.billing_interval, t)}` : ' one-time'}</p>
                         )}
                       </div>
                     </div>

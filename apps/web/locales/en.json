@@ -472,6 +472,7 @@
     "course_count_plural": "{{count}} courses",
     "authors_and_updates": "Authors & Updates",
     "course_updates": "Course Updates",
+    "rss_feed": "RSS feed of course updates",
     "no_updates_yet": "No updates yet",
     "no_updates_desc": "Updates about this course will appear here",
     "quit_course": "Quit Course",
@@ -1633,6 +1634,10 @@
     "one_time_payment": "One-time payment",
     "per_month": "(per month)",
     "per_month_short": "/month",
+    "billing_per_month": "per month",
+    "billing_per_year": "per year",
+    "billing_suffix_month": "/ month",
+    "billing_suffix_year": "/ year",
     "subscribe_now": "Subscribe Now",
     "purchase_now": "Purchase Now",
     "failed_checkout": "Failed to initiate checkout process",
@@ -6702,7 +6707,9 @@
     },
     "pricing": {
       "from": "from",
-      "subscription": "subscription"
+      "subscription": "subscription",
+      "per_month": "/ month",
+      "per_year": "/ year"
     }
   }
 }

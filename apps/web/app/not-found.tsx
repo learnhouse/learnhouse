@@ -3,6 +3,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import learnhouseIcon from 'public/black_logo.png'
 
+// Rendered per request, not prerendered. Next 16 answers an unknown Server
+// Action posted to a missing path from the static 404 entry, finds a text/plain
+// error where it expects an RSC payload and throws a 500 instead of a 404.
+export const dynamic = 'force-dynamic'
+
 export default function NotFound() {
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center 

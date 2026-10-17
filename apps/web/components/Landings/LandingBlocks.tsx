@@ -241,7 +241,7 @@ export function PricingBlock({
   // Public store offers; undefined while loading. Only read by linked plans.
   offers: LandingOffer[] | undefined
   formatPrice: (amount: number, currency: string) => string
-  labels: { from: string; subscription: string }
+  labels: { from: string; subscription: string; perMonth: string; perYear: string }
 }) {
   const plans = section.plans
     .map((plan) => resolvePricingPlan(plan, offers, formatPrice))
@@ -267,7 +267,12 @@ export function PricingBlock({
                 <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
               )}
               {(plan.period || plan.subscription) && (
-                <span className="text-sm text-gray-500">{plan.period || labels.subscription}</span>
+                <span className="text-sm text-gray-500">
+                  {plan.period
+                    || (plan.billingInterval === 'year' ? labels.perYear
+                      : plan.billingInterval === 'month' ? labels.perMonth
+                        : labels.subscription)}
+                </span>
               )}
             </div>
             {plan.description && <p className="text-sm text-gray-600 mt-2">{plan.description}</p>}

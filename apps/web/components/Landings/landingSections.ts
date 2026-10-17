@@ -1,3 +1,4 @@
+import { normalizeBillingInterval, type BillingInterval } from '@lib/payments/billingInterval'
 import type { LandingBackground, LandingPricingPlan, LandingSection, LandingSectionStyle } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
 import type { SessionStatus } from '@components/Contexts/AuthContext'
 import { youTubeId, vimeoId, toEmbedUrl } from '@/lib/media/embedUrl'
@@ -184,6 +185,7 @@ export interface LandingOffer {
   description: string
   offer_type: 'one_time' | 'subscription'
   price_type: 'fixed_price' | 'customer_choice'
+  billing_interval?: string
   amount: number
   currency: string
   benefits: string
@@ -202,6 +204,8 @@ export interface ResolvedPricingPlan {
   // "Pay what you want" offers: `price` is the minimum.
   priceIsMinimum: boolean
   subscription: boolean
+  // Renewal period of a linked subscription offer; null for everything else.
+  billingInterval: BillingInterval | null
 }
 
 const splitLines = (value: string, separator: RegExp) =>
@@ -231,6 +235,7 @@ export function resolvePricingPlan(
     loading: false,
     priceIsMinimum: false,
     subscription: false,
+    billingInterval: null,
   }
   if (!plan.offer_uuid) return base
   if (!offers) return { ...base, price: '', loading: true }
@@ -244,8 +249,12 @@ export function resolvePricingPlan(
     description: plan.description || offer.description || '',
     features: base.features.length ? base.features : splitLines(offer.benefits, /,/),
     price: formatPrice(offer.amount, offer.currency),
+    // Like the price, a subscription's period comes from the offer: a typed
+    // "/ month" must not survive the offer switching to yearly billing.
+    period: offer.offer_type === 'subscription' ? '' : plan.period,
     priceIsMinimum: offer.price_type === 'customer_choice',
     subscription: offer.offer_type === 'subscription',
+    billingInterval: offer.offer_type === 'subscription' ? normalizeBillingInterval(offer.billing_interval) : null,
     button: { ...plan.button, link: `/store/offers/${offer.offer_uuid}` },
   }
 }
