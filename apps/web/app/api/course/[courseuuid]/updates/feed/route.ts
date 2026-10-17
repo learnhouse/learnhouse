@@ -88,6 +88,10 @@ ${items}
       headers: {
         'Content-Type': 'application/rss+xml; charset=utf-8',
         'Cache-Control': 'public, max-age=900, s-maxage=900',
+        // Absolute URLs come from the request host in single tenancy; keep
+        // cached variants separated by host so one tenant's feed is never
+        // served under another's name.
+        'Vary': 'Host, X-Forwarded-Host, X-Forwarded-Proto',
       },
     })
   } catch {
