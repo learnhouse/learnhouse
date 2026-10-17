@@ -52,6 +52,10 @@ LEGACY_SESSION_GRACE = _legacy_session_grace()
 AMR_CLAIM = "amr"       # authentication method: password | magic_login | google | sso | api_token
 SORG_CLAIM = "sorg"     # id of the org the session was established for (int), or absent
 LEGACY_GRACE_CLAIM = "lgc"  # unix seconds after which a method-less session stops being admitted
+# Present (true) on a session signed in on an org's own custom domain. The org
+# controls that host (its DNS, and scripts on its pages), so such a session is
+# only ever honoured for the org in ``sorg``, whatever the org's sharing setting.
+CUSTOM_DOMAIN_CLAIM = "cdm"
 
 # Recognised authentication methods. "api_token" is internal: a machine
 # credential that already carries its own org boundary and is exempt from the
@@ -76,6 +80,7 @@ class SessionProvenance:
     amr: Optional[str] = None
     org_id: Optional[int] = None
     legacy_grace_expires: Optional[int] = None
+    custom_domain: bool = False
 
 
 _current: contextvars.ContextVar[Optional[SessionProvenance]] = contextvars.ContextVar(
@@ -95,11 +100,13 @@ def session_claims(
     amr: Optional[str],
     org_id: Optional[int],
     legacy_grace_expires: Optional[int] = None,
+    custom_domain: bool = False,
 ) -> dict:
     """Build the provenance claims to merge into a token's ``data`` dict.
 
     Omits keys that are ``None`` so a central (org-less) or method-less token
-    stays as small as it was before this feature.
+    stays as small as it was before this feature. The custom-domain mark only
+    means something next to the org it binds the session to.
     """
     claims: dict = {}
     if amr is not None:
@@ -108,6 +115,8 @@ def session_claims(
         claims[SORG_CLAIM] = org_id
     if legacy_grace_expires is not None:
         claims[LEGACY_GRACE_CLAIM] = legacy_grace_expires
+    if custom_domain and org_id is not None:
+        claims[CUSTOM_DOMAIN_CLAIM] = True
     return claims
 
 
@@ -128,4 +137,6 @@ def carry_session_claims(payload: dict) -> dict:
         grace = int(time.time()) + int(LEGACY_SESSION_GRACE.total_seconds())
     if amr is not None:
         grace = None
-    return session_claims(amr, payload.get(SORG_CLAIM), grace)
+    return session_claims(
+        amr, payload.get(SORG_CLAIM), grace, payload.get(CUSTOM_DOMAIN_CLAIM) is True
+    )

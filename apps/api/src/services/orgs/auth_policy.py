@@ -133,12 +133,21 @@ async def evaluate_org_auth(
         # by that tenant's own policy.
         if not await is_user_superadmin(user_id, db_session):
             policy = await get_org_auth_policy(db_session, org_id)
+            provenance = get_session_provenance() or SessionProvenance()
+            # A session signed in on an org's custom domain went through a host
+            # that org controls, so it is bound to that org even when the org
+            # leaves session sharing on: sharing lets sessions in, it never lets
+            # one org's session out into another org.
+            domain_bound = provenance.custom_domain and provenance.org_id is not None
 
             # Fast path: default config (all methods, sharing on) is a pure no-op,
             # so unmodified orgs (and every existing test that never sets
             # provenance) are unaffected.
-            if policy.method_restricted or not policy.allow_central_session_sharing:
-                provenance = get_session_provenance() or SessionProvenance()
+            if (
+                policy.method_restricted
+                or not policy.allow_central_session_sharing
+                or domain_bound
+            ):
 
                 # Machine credentials carry their own org boundary
                 # (_verify_api_token_org_boundary) and are exempt from the human
@@ -175,7 +184,7 @@ async def evaluate_org_auth(
                         "allowed_methods": sorted(allowed),
                     }
                 elif (
-                    not policy.allow_central_session_sharing
+                    (not policy.allow_central_session_sharing or domain_bound)
                     and not cross_org_token
                     and provenance.org_id != org_id
                 ):

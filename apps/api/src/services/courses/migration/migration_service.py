@@ -33,6 +33,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.security.auth import resolve_acting_user_id
+from src.services.courses.transfer.import_service import file_content_matches_extension
 from src.services.courses.transfer.storage_utils import (
     upload_file_to_s3,
     is_s3_enabled,
@@ -93,6 +94,22 @@ EXTENSION_TO_BLOCK_TYPE = {
     "mp3": ("audioBlock", BlockTypeEnum.BLOCK_AUDIO),
     "wav": ("audioBlock", BlockTypeEnum.BLOCK_AUDIO),
 }
+
+
+# QuickTime has no upload type to borrow a validator from: accept files whose
+# first atom is one a .mov starts with.
+_MOV_LEADING_ATOMS = {b"ftyp", b"moov", b"mdat", b"wide", b"free", b"skip", b"pnot"}
+
+
+def _migration_file_is_valid(path: str, ext: str) -> bool:
+    """Same magic-byte check upload_file applies, before anything is stored."""
+    if ext == "mov":
+        try:
+            with open(path, "rb") as f:
+                return f.read(8)[4:8] in _MOV_LEADING_ATOMS
+        except OSError:
+            return False
+    return file_content_matches_extension(path)
 
 
 def cleanup_old_temp_migrations(max_age_minutes: int = 60) -> None:
@@ -214,6 +231,11 @@ async def _upload_migration_files_inner(
         if size_exceeded:
             os.remove(file_real)
             skipped_files.append(f"{file.filename}: exceeds {MAX_SINGLE_FILE_SIZE // (1024**3)}GB limit")
+            continue
+
+        if not await asyncio.to_thread(_migration_file_is_valid, file_real, ext):
+            os.remove(file_real)
+            skipped_files.append(f"{file.filename}: content does not match its file type")
             continue
 
         total_size += file_size

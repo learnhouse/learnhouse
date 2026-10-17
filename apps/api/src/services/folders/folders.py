@@ -3,7 +3,7 @@ from typing import List, Optional
 from uuid import uuid4
 
 from fastapi import HTTPException, Request
-from sqlmodel import select
+from sqlmodel import and_, or_, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
@@ -18,11 +18,15 @@ from src.db.folders.folders import (
 )
 from src.db.folders.folder_content import FolderContent
 from src.db.organization_config import OrganizationConfig
+from src.db.user_organizations import UserOrganization
+from src.db.usergroup_resources import UserGroupResource
+from src.db.usergroup_user import UserGroupUser
 from src.db.resource_authors import (
     ResourceAuthor,
     ResourceAuthorshipEnum,
     ResourceAuthorshipStatusEnum,
 )
+from src.security.api_token_utils import require_token_right
 from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import (
     is_org_member,
@@ -162,13 +166,18 @@ def _public_resource_dump(resource) -> dict:
     reachable via GET /media/{uuid}/file).
     """
     from src.db.boards import Board, BoardRead
+    from src.db.communities.communities import Community
     from src.db.media.media import Media, MediaRead
+    from src.services.communities.communities import community_read
 
     if isinstance(resource, Media):
         return MediaRead.model_validate(resource, from_attributes=True).model_dump()
     if isinstance(resource, Board):
         # The table row carries the raw collaborative document (ydoc_state).
         return BoardRead.model_validate(resource, from_attributes=True).model_dump()
+    if isinstance(resource, Community):
+        # The moderators' word list is not for readers.
+        return community_read(resource).model_dump()
     return resource.model_dump()
 
 
@@ -188,6 +197,24 @@ async def _can_read(request, current_user, db_session: AsyncSession, resource_uu
         # in a listing that just means the item is not shown.
         return False
     return bool(decision.allowed)
+
+
+async def _can_read_item(
+    request, current_user, db_session: AsyncSession, resource_type: str, resource, resource_uuid: str
+) -> bool:
+    """Per-item read for the RBAC-gated types. Boards go through the boards
+    service's own rule, which also keeps private boards with no linked
+    UserGroup to their members."""
+    if resource_type == "boards":
+        from src.services.boards.boards import _check_board_read
+
+        try:
+            return await _check_board_read(
+                request, resource, current_user, db_session, raise_on_deny=False
+            )
+        except HTTPException:
+            return False
+    return await _can_read(request, current_user, db_session, resource_uuid)
 
 
 # Resource types whose rows carry draft / usergroup restrictions of their own.
@@ -316,7 +343,9 @@ async def _resolve_items(
                 current_user is not None
                 and viewer_id is not None
                 and resource_type in _RBAC_GATED_RESOURCE_TYPES
-                and not await _can_read(request, current_user, db_session, r_uuid)
+                and not await _can_read_item(
+                    request, current_user, db_session, resource_type, resource, r_uuid
+                )
             ):
                 continue
             items.append(
@@ -421,6 +450,41 @@ async def _folder_to_read(
     )
 
 
+def accessible_folder_ids_select(org_id: int, acting_user_id: int):
+    """IDs of the folders of ``org_id`` a signed-in, non-admin user may read.
+
+    Same rules as the folder RBAC read check the listing applies per folder:
+    public folders; private folders not linked to any UserGroup, for members
+    of the org; folders linked to a UserGroup the user belongs to; folders the
+    user actively authors. Lets search filter in SQL and keep its totals right.
+    """
+    is_member = select(UserOrganization.id).where(
+        UserOrganization.user_id == acting_user_id,
+        UserOrganization.org_id == Folder.org_id,
+    ).exists()
+    return (
+        select(Folder.id)
+        .where(Folder.org_id == org_id)
+        .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Folder.folder_uuid)
+        .outerjoin(UserGroupUser, and_(
+            UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
+            UserGroupUser.user_id == acting_user_id,
+        ))
+        .outerjoin(ResourceAuthor, and_(
+            ResourceAuthor.resource_uuid == Folder.folder_uuid,
+            ResourceAuthor.user_id == acting_user_id,
+            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
+        ))
+        .where(or_(
+            Folder.public == True,  # noqa: E712
+            and_(UserGroupResource.resource_uuid.is_(None), is_member),
+            and_(UserGroupUser.user_id == acting_user_id, is_member),
+            ResourceAuthor.user_id == acting_user_id,
+        ))
+        .distinct()
+    )
+
+
 def _is_anonymous(current_user) -> bool:
     return resolve_acting_user_id(current_user) == 0
 
@@ -482,6 +546,10 @@ async def create_folder(
             raise HTTPException(status_code=404, detail="Parent folder not found")
         if parent.org_id != folder_object.org_id:
             raise HTTPException(status_code=400, detail="Parent folder is in another organization")
+        # A sub-folder changes its parent, so it takes the right to edit it.
+        await check_resource_access(
+            request, db_session, current_user, parent.folder_uuid, AccessAction.UPDATE
+        )
         parent_folder_id = parent.id
 
     folder = Folder(
@@ -577,6 +645,9 @@ async def update_folder(
                 raise HTTPException(status_code=400, detail="A folder cannot be its own parent")
             if await _would_create_cycle(db_session, folder.id, parent.id):
                 raise HTTPException(status_code=400, detail="Cannot move a folder into its own descendant")
+            await check_resource_access(
+                request, db_session, current_user, parent.folder_uuid, AccessAction.UPDATE
+            )
             folder.parent_folder_id = parent.id
 
     for key, value in data.items():
@@ -695,6 +766,11 @@ async def get_folders(
         ).scalars().first()
         if not parent:
             raise HTTPException(status_code=404, detail="Parent folder not found")
+        # A folder's sub-folders are its content: listing them takes READ on
+        # the folder (and so on every folder above it).
+        await check_resource_access(
+            request, db_session, current_user, parent.folder_uuid, AccessAction.READ
+        )
         parent_id = parent.id
 
     include_private = await _may_see_private(current_user, int(org_id), db_session)
@@ -1073,7 +1149,9 @@ async def search_library(
 
     folder_results = []
     for f in folder_rows:
-        if include_private and not await _can_read(request, current_user, db_session, f.folder_uuid):
+        # Also for public-only viewers: a public folder below a private one is
+        # private (folder rules reach down the tree).
+        if not await _can_read(request, current_user, db_session, f.folder_uuid):
             continue
         crumbs = await _build_breadcrumbs(db_session, f)
         d = f.model_dump()
@@ -1136,7 +1214,9 @@ async def search_library(
                 continue
             if (
                 rtype in _RBAC_GATED_RESOURCE_TYPES
-                and not await _can_read(request, current_user, db_session, r.resource_uuid)
+                and not await _can_read_item(
+                    request, current_user, db_session, rtype, res, r.resource_uuid
+                )
             ):
                 continue
             seen.add(r.resource_uuid)
@@ -1194,6 +1274,16 @@ async def add_org_root_content(
     # "folder_x" carries no organization, so the check above is satisfied by any
     # role the caller holds anywhere. org_id is caller-supplied, so gate it.
     await require_org_create_permission(current_user, int(org_id), db_session, "folders")
+    # The library root is the org's own top-level folder: pinning someone
+    # else's item to it edits the whole library, so it takes the org-wide
+    # folder update right, the same one removing from the root needs. Authors
+    # may still pin their own items (e.g. an instructor's fresh upload).
+    if isinstance(current_user, APITokenUser):
+        require_token_right(current_user, "folders", "action_update")
+    elif not await _authors_item(request, current_user, db_session, resource_uuid):
+        await require_org_role_permission(
+            current_user.id, int(org_id), db_session, "folders", "action_update"
+        )
     await check_resource_access(
         request, db_session, current_user, resource_uuid, AccessAction.READ
     )
@@ -1223,6 +1313,18 @@ async def add_org_root_content(
 
     items = await get_org_root_items(request, str(org_id), current_user, db_session)
     return next((i for i in items if i.resource_uuid == resource_uuid), None)
+
+
+async def _authors_item(request, current_user, db_session: AsyncSession, resource_uuid: str) -> bool:
+    """Whether the caller may edit this item as its active author."""
+    try:
+        decision = await check_resource_access(
+            request, db_session, current_user, resource_uuid, AccessAction.UPDATE,
+            raise_on_deny=False,
+        )
+    except HTTPException:
+        return False
+    return bool(decision.allowed and decision.via_authorship)
 
 
 async def remove_org_root_content(

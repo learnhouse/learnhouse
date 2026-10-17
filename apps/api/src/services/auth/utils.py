@@ -121,6 +121,21 @@ async def get_google_user_info(access_token: str):
     return response.json()
 
 
+async def _drop_unverified_sso_links(user_id: int, db_session: AsyncSession) -> None:
+    """Detach identity-provider links made before the owner proved the inbox.
+
+    Same reasoning as the password drop in the pre-hijack guard: an org's IdP
+    that provisioned or linked this account while it was unclaimed must not
+    keep signing in as the real owner. SSO lives in the Enterprise Edition, so
+    it does the removal through its hook; without EE there is nothing to drop.
+    """
+    from src.core.ee_hooks import get_ee_hooks
+
+    hooks = get_ee_hooks()
+    if hooks is not None and hasattr(hooks, "revoke_unverified_sso_links"):
+        await hooks.revoke_unverified_sso_links(user_id, db_session)
+
+
 async def signWithGoogle(
     request: Request,
     access_token: str,
@@ -230,6 +245,9 @@ async def signWithGoogle(
     # signing in with Google. Drop it and end any session it opened; the
     # owner keeps Google sign-in and can set a password via reset.
     needs_update = False
+    # Anything attached to the account before its owner proved the inbox
+    # (here, through Google) was attached by someone who may not be them.
+    untrusted_account = not user.email_verified
     untrusted_password = bool(user.password) and (
         not user.email_verified
         or (user.signup_method == "admin_api" and user.password_changed_at is None)
@@ -263,6 +281,9 @@ async def signWithGoogle(
         from src.security.auth import revoke_user_sessions_before
 
         revoke_user_sessions_before(user.id)
+
+    if (untrusted_account or untrusted_password) and user.id is not None:
+        await _drop_unverified_sso_links(user.id, db_session)
 
     # If the caller supplied (and the router validated, via a pending invite)
     # an ``org_id``, an *existing* user signing in with Google must still be

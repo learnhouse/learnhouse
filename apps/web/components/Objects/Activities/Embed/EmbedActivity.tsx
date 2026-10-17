@@ -5,6 +5,7 @@ import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { toEmbedUrl } from '@/lib/media/embedUrl'
+import { useUrlEmbedSandbox } from '@/lib/media/useUrlEmbedSandbox'
 import { safeExternalUrl } from '@services/security/url'
 
 interface EmbedActivityProps {
@@ -45,6 +46,8 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
   }
 
   const displayUrl = safeExternalUrl(editable ? editUrl : embedUrl)
+  const iframeSrc = displayUrl ? toEmbedUrl(displayUrl) : ''
+  const iframeSandbox = useUrlEmbedSandbox(iframeSrc)
 
   if (!displayUrl && !editable) {
     return (
@@ -84,13 +87,13 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
 
       {displayUrl ? (
         <div className="w-full rounded-xl overflow-hidden nice-shadow" style={{ aspectRatio: '16/9' }}>
-          <iframe
-            src={toEmbedUrl(displayUrl)}
+          {iframeSandbox && <iframe
+            src={iframeSrc}
             className="w-full h-full border-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
-          />
+            sandbox={iframeSandbox}
+          />}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 gap-3 rounded-xl border-2 border-dashed border-gray-200">

@@ -108,20 +108,12 @@ def get_cookie_domain_for_request(request: Request) -> str | None:
     if tenancy == "single":
         return None
 
-    origin = request.headers.get("origin", "")
-    referer = request.headers.get("referer", "")
-    host = request.headers.get("host", "")
-
     config_domain = config.hosting_config.domain
     config_cookie_domain = config.hosting_config.cookie_config.domain
 
-    check_value = origin or referer or host
-    if not check_value:
+    check_value = _request_hostname(request)
+    if check_value is None:
         return config_cookie_domain
-
-    # Strip protocol, path, and port for hostname comparison.
-    check_value = check_value.replace("https://", "").replace("http://", "")
-    check_value = check_value.split("/")[0].split(":")[0]
 
     # In multi mode, localhost should not appear in practice (would indicate
     # misconfig). Treat it as host-only as a safety net.
@@ -153,6 +145,96 @@ def get_cookie_domain_for_request(request: Request) -> str | None:
     # Host header), enforce it in a dedicated dependency on the login/oauth
     # routes, not in this cookie-scope resolver.
     return None
+
+
+# Set by the web app's auth proxy to the host the browser is on. The proxy
+# rebuilds request headers, so without it a sign-in made through the proxy only
+# shows the backend's own host here. A client can send it too, but it can only
+# narrow its own session (bind it to an org, or refuse a superadmin), never widen it.
+CLIENT_HOST_HEADER = "x-learnhouse-client-host"
+
+
+def _request_hostname(request: Request, *, trust_client_host: bool = False) -> Optional[str]:
+    """The browser-facing hostname of a request (Origin, else Referer, else
+    Host), without protocol, path or port. None when none is present.
+
+    ``trust_client_host`` also consults the auth proxy's client-host header,
+    after Origin; only for checks where a forged value can only restrict."""
+    check_value = (
+        request.headers.get("origin", "")
+        or (request.headers.get(CLIENT_HOST_HEADER, "") if trust_client_host else "")
+        or request.headers.get("referer", "")
+        or request.headers.get("host", "")
+    )
+    if not check_value:
+        return None
+    # Strip protocol, path, and port for hostname comparison.
+    check_value = check_value.replace("https://", "").replace("http://", "")
+    return check_value.split("/")[0].split(":")[0]
+
+
+async def custom_domain_org_id(request: Request, db_session: AsyncSession) -> Optional[int]:
+    """The org whose custom domain this sign-in request arrived on, or None.
+
+    Same host classification as :func:`get_cookie_domain_for_request`: only a
+    multi-tenant deployment has custom domains, and the platform's own hosts
+    (and localhost) never count as one.
+    """
+    config = get_learnhouse_config()
+    if config.hosting_config.tenancy == "single":
+        return None
+    hostname = (_request_hostname(request, trust_client_host=True) or "").lower()
+    if not hostname or "localhost" in hostname or "127.0.0.1" in hostname:
+        return None
+    config_domain = config.hosting_config.domain
+    if hostname == config_domain or hostname.endswith(f".{config_domain}"):
+        return None
+    from src.db.custom_domains import CustomDomain
+
+    domain = (
+        await db_session.execute(
+            select(CustomDomain).where(
+                CustomDomain.domain == hostname,
+                CustomDomain.status.in_(("verified", "active")),  # type: ignore[union-attr]
+            )
+        )
+    ).scalars().first()
+    return domain.org_id if domain else None
+
+
+async def _bind_session_to_custom_domain(
+    request: Request,
+    db_session: AsyncSession,
+    user_id: int,
+    org_id: Optional[int],
+    method: str,
+) -> tuple[Optional[int], bool]:
+    """The org a new session is minted for, and whether it is custom-domain bound.
+
+    A sign-in on an org's custom domain goes through a host that org controls,
+    so the session is bound to that org whatever the page said, and a platform
+    superadmin may not sign in there at all: their session would be readable by
+    one tenant and valid in every other.
+    """
+    domain_org_id = await custom_domain_org_id(request, db_session)
+    if domain_org_id is None:
+        return org_id, False
+
+    from src.security.superadmin import is_user_superadmin
+
+    if await is_user_superadmin(user_id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "PLATFORM_SIGN_IN_REQUIRED",
+                "message": "Platform administrators must sign in on the platform's own sign-in page.",
+            },
+        )
+    if domain_org_id != org_id:
+        from src.services.orgs.auth_policy import enforce_login_auth_method
+
+        await enforce_login_auth_method(db_session, domain_org_id, method)
+    return domain_org_id, True
 
 
 def is_request_secure(request: Request | None) -> bool:
@@ -584,7 +666,13 @@ async def login(
     # the refusal can never be used to probe which orgs exist.
     from src.services.orgs.auth_policy import enforce_login_auth_method
 
-    session_org_id = await _resolve_org_id_from_slug(org_slug, db_session)
+    session_org_id, on_custom_domain = await _bind_session_to_custom_domain(
+        request,
+        db_session,
+        user.id,
+        await _resolve_org_id_from_slug(org_slug, db_session),
+        AUTH_METHOD_PASSWORD,
+    )
     await enforce_login_auth_method(db_session, session_org_id, AUTH_METHOD_PASSWORD)
 
     # Step 6: Reset failed attempts and update login info
@@ -608,7 +696,11 @@ async def login(
     # must complete /auth/login/mfa. No cookies and no user object are returned
     # on that branch: nothing is authenticated until the code is verified.
     issue = await issue_session_or_challenge(
-        db_session, user, amr=AUTH_METHOD_PASSWORD, org_id=session_org_id
+        db_session,
+        user,
+        amr=AUTH_METHOD_PASSWORD,
+        org_id=session_org_id,
+        custom_domain=on_custom_domain,
     )
     if issue.mfa_required:
         return {
@@ -886,8 +978,15 @@ async def third_party_login(
     # entirely, and the org-wide require_2fa policy did not catch it either,
     # because the factor exists and so the user counts as compliant. The
     # provenance (amr/sorg) is stamped either way for the org auth-method policy.
+    session_org_id, on_custom_domain = await _bind_session_to_custom_domain(
+        request, db_session, user.id, org_id, AUTH_METHOD_GOOGLE
+    )
     issue = await issue_session_or_challenge(
-        db_session, user, amr=AUTH_METHOD_GOOGLE, org_id=org_id
+        db_session,
+        user,
+        amr=AUTH_METHOD_GOOGLE,
+        org_id=session_org_id,
+        custom_domain=on_custom_domain,
     )
     if issue.mfa_required:
         return {
@@ -1116,11 +1215,19 @@ async def magic_link_verify(
             detail={"code": "MAGIC_LINK_INVALID", "message": "This login link is no longer valid."},
         )
 
+    org_id, on_custom_domain = await _bind_session_to_custom_domain(
+        request, db_session, user.id, org_id, AUTH_METHOD_MAGIC_LOGIN
+    )
+
     # Issue first, then the bookkeeping: its rollback on failure expires
     # ``user``, which issuing reads.
     user_read = UserRead.model_validate(user)
     issue = await issue_session_or_challenge(
-        db_session, user, amr=AUTH_METHOD_MAGIC_LOGIN, org_id=org_id
+        db_session,
+        user,
+        amr=AUTH_METHOD_MAGIC_LOGIN,
+        org_id=org_id,
+        custom_domain=on_custom_domain,
     )
     await _record_login_quietly(user, request, db_session)
     if issue.mfa_required:
@@ -1264,17 +1371,39 @@ async def api_verify_email(
     # session here meant a freshly-verified member could not be matched against
     # the org's allowed-method policy at all.
     from src.security.session_context import AUTH_METHOD_MAGIC_LOGIN
+    from src.services.orgs.auth_policy import is_login_method_allowed
 
     verified_org = (
         await db_session.execute(
             select(Organization).where(Organization.org_uuid == body.org_uuid)
         )
     ).scalars().first()
+
+    # The address is verified either way; the automatic sign-in is held to the
+    # same gates as any other sign-in (account lockout, the org's allowed
+    # methods, no superadmin session on a custom domain). When one refuses, the
+    # user simply signs in normally afterwards.
+    try:
+        session_org_id, on_custom_domain = await _bind_session_to_custom_domain(
+            request,
+            db_session,
+            user.id,
+            verified_org.id if verified_org else None,
+            AUTH_METHOD_MAGIC_LOGIN,
+        )
+    except HTTPException:
+        return {"message": message}
+    if check_account_locked(user)[0] or not await is_login_method_allowed(
+        db_session, session_org_id, AUTH_METHOD_MAGIC_LOGIN
+    ):
+        return {"message": message}
+
     issue = await issue_session_or_challenge(
         db_session,
         user,
         amr=AUTH_METHOD_MAGIC_LOGIN,
-        org_id=verified_org.id if verified_org else None,
+        org_id=session_org_id,
+        custom_domain=on_custom_domain,
     )
     if issue.mfa_required:  # pragma: no cover - same 2FA branch as /login, exercised there
         return {

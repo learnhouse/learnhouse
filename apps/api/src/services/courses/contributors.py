@@ -10,6 +10,9 @@ from src.security.auth import resolve_acting_user_id
 from src.services.security.rate_limiting import enforce_batch_size_limit
 from src.security.rbac import authorization_verify_if_user_is_anon, check_resource_access, AccessAction
 from src.security.rbac.rbac import authorization_verify_based_on_org_admin_status
+from src.security.rbac.constants import ADMIN_ROLE_IDS
+from src.security.org_auth import get_user_org
+from src.security.superadmin import is_user_superadmin
 from src.services.webhooks.dispatch import dispatch_webhooks
 from typing import List
 
@@ -156,7 +159,24 @@ async def update_course_contributor(
             detail="Course not found",
         )
 
-    await _require_contributor_manager(request, course_uuid, current_user, db_session)
+    owner_role, is_admin = await _require_contributor_manager(
+        request, course_uuid, current_user, db_session
+    )
+
+    # Making someone CREATOR hands them the course for good (the role can't be
+    # changed or removed afterwards), so it's an org admin decision, not one a
+    # course or org maintainer can make.
+    if authorship == ResourceAuthorshipEnum.CREATOR:
+        acting_user_id = resolve_acting_user_id(current_user)
+        caller_org = await get_user_org(acting_user_id, course.org_id, db_session)
+        if not (
+            (caller_org is not None and caller_org.role_id in ADMIN_ROLE_IDS)
+            or await is_user_superadmin(acting_user_id, db_session)
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Only organization admins can assign the CREATOR role",
+            )
 
     # Check if the contributor exists for this course
     existing_authorship = (await db_session.execute(
@@ -179,6 +199,18 @@ async def update_course_contributor(
         raise HTTPException(
             status_code=400,
             detail="Cannot modify the role of the course creator",
+        )
+
+    # SECURITY: maintainers manage contributors, not each other (same rule as
+    # removal; demoting or deactivating a maintainer is a removal in effect).
+    if (
+        existing_authorship.authorship == ResourceAuthorshipEnum.MAINTAINER
+        and owner_role != ResourceAuthorshipEnum.CREATOR
+        and not is_admin
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the course creator or an admin can change a maintainer",
         )
 
     # Update the contributor's role and status

@@ -1288,6 +1288,7 @@ async def clone_course(
         is_s3_enabled,
         file_exists,
         list_directory,
+        rewrite_sqlite_db_paths,
     )
     from collections import defaultdict
     from src.db.courses.chapters import Chapter
@@ -1486,6 +1487,12 @@ async def clone_course(
             # Clone activity content (will update file references for blocks)
             new_content = dict(original_activity.content) if original_activity.content else {}
             new_details = dict(original_activity.details) if original_activity.details else {}
+            # Code blocks keep their SQLite database's full storage key.
+            new_content = rewrite_sqlite_db_paths(
+                new_content,
+                original_activity.activity_uuid,
+                f"orgs/{org.org_uuid}/courses/{new_course_uuid}/activities/{new_activity_uuid}",
+            )
 
             new_activity = Activity(
                 name=original_activity.name,

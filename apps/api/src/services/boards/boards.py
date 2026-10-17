@@ -19,6 +19,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
 from src.security.auth import resolve_acting_user_id
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
+from src.db.usergroup_resources import UserGroupResource
 from src.security.rbac import AccessAction, check_resource_access
 from src.security.org_auth import is_org_admin, is_org_member, require_org_create_permission, require_org_membership
 from src.services.utils.upload_content import upload_file
@@ -89,7 +90,7 @@ async def get_board(
     db_session: AsyncSession,
 ) -> BoardRead:
     board = await _get_board_or_404(board_uuid, db_session)
-    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
+    await _check_board_read(request, board, current_user, db_session)
     return await _board_to_read(board, db_session)
 
 
@@ -112,15 +113,10 @@ async def get_boards_by_org(
     # Each board decides who may see it (public, member, author), the same
     # rule as opening one directly. Org admins see all of them.
     if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
-        visible = []
-        for b in boards:
-            decision = await check_resource_access(
-                request, db_session, current_user, b.board_uuid, AccessAction.READ,
-                raise_on_deny=False,
-            )
-            if decision.allowed:
-                visible.append(b)
-        boards = visible
+        boards = [
+            b for b in boards
+            if await _check_board_read(request, b, current_user, db_session, raise_on_deny=False)
+        ]
     if not boards:
         return []
 
@@ -167,7 +163,7 @@ async def duplicate_board(
     db_session: AsyncSession,
 ) -> BoardRead:
     source = await _get_board_or_404(board_uuid, db_session)
-    await check_resource_access(request, db_session, current_user, source.board_uuid, AccessAction.READ)
+    await _check_board_read(request, source, current_user, db_session)
     # Also need create permission
     await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
 
@@ -241,6 +237,7 @@ async def add_board_member(
     # `role` as a bare str, so without this an arbitrary string (or a second
     # "owner") could be persisted, corrupting role-based access logic.
     role = _validate_member_role(member_object.role)
+    await _require_owner_grant_right(role, board, current_user, db_session)
 
     # Ensure the target user actually belongs to this board's organization.
     # Otherwise a board manager could add users from *other* organizations,
@@ -312,6 +309,7 @@ async def add_board_members_batch(
         # Validate role and ensure the user belongs to this board's org
         # (prevents cross-tenant member additions and invalid/escalated roles).
         role = _validate_member_role(member_create.role)
+        await _require_owner_grant_right(role, board, current_user, db_session)
         await require_org_membership(member_create.user_id, board.org_id, db_session)
 
         # Skip duplicates silently
@@ -359,7 +357,13 @@ async def remove_board_member(
     if not member:
         raise HTTPException(status_code=404, detail="Board member not found")
 
-    if member.role == BoardMemberRole.OWNER:
+    # Owners leave only through an org admin, and never by removing themselves
+    # (that would orphan the board).
+    if member.role == BoardMemberRole.OWNER and (
+        user_id == current_user.id
+        or not isinstance(current_user, PublicUser)
+        or not await is_org_admin(current_user.id, board.org_id, db_session)
+    ):
         raise HTTPException(status_code=400, detail="Cannot remove the board owner")
 
     await db_session.delete(member)
@@ -402,9 +406,10 @@ async def check_board_membership(
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
-    # Not a direct member: fall back to RBAC so public boards, linked usergroups,
-    # resource authors, and org admins can still join the collab session as viewers.
-    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
+    # Not a direct member: fall back to the read rule so public boards, linked
+    # usergroups, resource authors, and org admins can still join the collab
+    # session as viewers.
+    await _check_board_read(request, board, current_user, db_session)
 
     user = (await db_session.execute(select(User).where(User.id == current_user.id))).scalars().first()
     return BoardMemberRead(
@@ -427,7 +432,7 @@ async def get_board_members(
     db_session: AsyncSession,
 ) -> List[BoardMemberRead]:
     board = await _get_board_or_404(board_uuid, db_session)
-    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
+    await _check_board_read(request, board, current_user, db_session)
     # Member emails are for whoever manages the board, not every viewer
     # (a public board is readable anonymously).
     can_manage = (await check_resource_access(
@@ -524,8 +529,8 @@ def _validate_member_role(role) -> BoardMemberRole:
     """Coerce/validate an incoming board-member role into the allowed enum.
 
     The API schema types `role` as a plain str, so we must reject anything
-    outside BoardMemberRole (e.g. arbitrary strings, or escalating to
-    "owner") before it is persisted.
+    outside BoardMemberRole before it is persisted. Who may grant "owner" is
+    checked separately by _require_owner_grant_right.
     """
     try:
         return BoardMemberRole(role.value if isinstance(role, BoardMemberRole) else role)
@@ -534,6 +539,87 @@ def _validate_member_role(role) -> BoardMemberRole:
             status_code=400,
             detail=f"Invalid board member role. Allowed: {', '.join(r.value for r in BoardMemberRole)}",
         )
+
+
+async def _is_board_member(
+    board: Board,
+    current_user,
+    db_session: AsyncSession,
+    role: Optional[BoardMemberRole] = None,
+) -> bool:
+    """True when the signed-in user has a member row (of `role`, if given) on
+    the board and still belongs to the board's org."""
+    if not isinstance(current_user, PublicUser) or not current_user.id:
+        return False
+    statement = select(BoardMember.id).where(
+        BoardMember.board_id == board.id,
+        BoardMember.user_id == current_user.id,
+    )
+    if role is not None:
+        statement = statement.where(BoardMember.role == role)
+    if (await db_session.execute(statement)).first() is None:
+        return False
+    return await is_org_member(current_user.id, board.org_id, db_session)
+
+
+async def _check_board_read(
+    request: Request,
+    board: Board,
+    current_user,
+    db_session: AsyncSession,
+    raise_on_deny: bool = True,
+) -> bool:
+    """Board read rule: the RBAC read check, narrowed for private boards.
+
+    RBAC opens a private resource with no linked usergroup to every member of
+    its org. A private board with no linked usergroup belongs to its members
+    instead; authors and org admins/maintainers still get in through their own
+    RBAC rules. Board members can always read their board.
+    """
+    decision = await check_resource_access(
+        request, db_session, current_user, board.board_uuid, AccessAction.READ,
+        raise_on_deny=False,
+    )
+    if decision.allowed and (
+        decision.via_usergroup is not True
+        or await _board_has_linked_usergroup(board, db_session)
+    ):
+        return True
+    if await _is_board_member(board, current_user, db_session):
+        return True
+    if raise_on_deny:
+        raise HTTPException(
+            status_code=403,
+            detail=decision.reason if not decision.allowed else "This board is private to its members",
+        )
+    return False
+
+
+async def _board_has_linked_usergroup(board: Board, db_session: AsyncSession) -> bool:
+    statement = select(UserGroupResource.id).where(
+        UserGroupResource.resource_uuid == board.board_uuid
+    )
+    return (await db_session.execute(statement)).first() is not None
+
+
+async def _require_owner_grant_right(
+    role: BoardMemberRole,
+    board: Board,
+    current_user,
+    db_session: AsyncSession,
+) -> None:
+    """Only a board owner or an org admin may make someone else an owner."""
+    if role != BoardMemberRole.OWNER:
+        return
+    if isinstance(current_user, PublicUser) and (
+        await _is_board_member(board, current_user, db_session, BoardMemberRole.OWNER)
+        or await is_org_admin(current_user.id, board.org_id, db_session)
+    ):
+        return
+    raise HTTPException(
+        status_code=403,
+        detail="Only a board owner or an org admin can add an owner",
+    )
 
 
 async def _get_board_or_404(board_uuid: str, db_session: AsyncSession) -> Board:

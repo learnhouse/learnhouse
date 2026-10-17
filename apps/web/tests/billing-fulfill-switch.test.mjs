@@ -43,6 +43,11 @@ const fakeStripe = {
     },
   },
   checkout: { sessions: { retrieve: async () => sessionFixture } },
+  promotionCodes: {
+    list: async () => ({
+      data: [{ id: "promo_test", promotion: { coupon: { id: "coupon_test", valid: true, percent_off: 20 } } }],
+    }),
+  },
   customers: { list: async () => ({ data: [{ id: "cus_test" }] }) },
   subscriptions: {
     list: async () => ({ data: orgSubscriptions }),
@@ -162,5 +167,29 @@ describe("switchSubscriptionPlan upgrade", () => {
     expect(result).toEqual({ scheduled: true, plan: "standard" });
     expect(scheduleUpdates).toHaveLength(1);
     expect(subscriptionUpdates).toHaveLength(0);
+  });
+
+  test("refuses to schedule a 'downgrade' to a higher plan", async () => {
+    orgSubscriptions = [
+      subscription({
+        metadata: { org_id: "4242", plan: "standard", billing: "monthly" },
+        items: { data: [{ id: "si_test", current_period_end: 2, price: { id: "price_test_standard" } }] },
+      }),
+    ];
+    const err = await switchSubscriptionPlan("owner@example.test", "4242", "pro", "monthly", true).catch((e) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err.status).toBe(400);
+    expect(scheduleUpdates).toHaveLength(0);
+  });
+
+  test("a scheduled downgrade applies the promotion code, not its bare coupon", async () => {
+    orgSubscriptions = [
+      subscription({
+        items: { data: [{ id: "si_test", current_period_end: 2, price: { id: "price_test_pro" } }] },
+      }),
+    ];
+    await switchSubscriptionPlan("owner@example.test", "4242", "standard", "monthly", true, "SAVE20");
+    expect(scheduleUpdates).toHaveLength(1);
+    expect(scheduleUpdates[0].params.phases[1].discounts).toEqual([{ promotion_code: "promo_test" }]);
   });
 });

@@ -276,7 +276,7 @@ export async function setupCommand(options: SetupOptions) {
     fs.writeFileSync(path.join(resolvedDir, '.env'), generateEnvFile(config), { mode: 0o600 })
     // mode only applies on create; tighten a pre-existing .env too
     fs.chmodSync(path.join(resolvedDir, '.env'), 0o600)
-    fs.writeFileSync(path.join(resolvedDir, 'extra', 'nginx.prod.conf'), generateNginxConf())
+    fs.writeFileSync(path.join(resolvedDir, 'extra', 'nginx.prod.conf'), generateNginxConf(config))
     writeConfig(config)
 
     console.log('Configuration files generated')
@@ -563,7 +563,7 @@ export async function setupCommand(options: SetupOptions) {
     if (config.autoSsl) {
       fs.writeFileSync(path.join(finalDir, 'extra', 'Caddyfile'), generateCaddyfile(config))
     } else {
-      fs.writeFileSync(path.join(finalDir, 'extra', 'nginx.prod.conf'), generateNginxConf())
+      fs.writeFileSync(path.join(finalDir, 'extra', 'nginx.prod.conf'), generateNginxConf(config))
     }
 
     writeConfig(config)

@@ -110,8 +110,12 @@ function TwoFactorAuthSection() {
   // out mid-enrolment.
   const mfaFetch = React.useCallback(
     async (path: string, method: 'GET' | 'POST', body?: any) => {
+      // Turning 2FA on or off signs out every session, this one included, and
+      // returns a fresh pair. Those calls go through the auth proxy so the new
+      // pair lands in this site's cookies (the handlers then reload the session).
+      const rotates = path === '/confirm' || path === '/disable'
       const result = await fetch(
-        `${getAPIUrl()}auth/mfa${path}`,
+        rotates ? `/api/auth/mfa${path}` : `${getAPIUrl()}auth/mfa${path}`,
         RequestBodyWithAuthHeader(method, body ?? null, null, access_token)
       )
       return getResponseMetadata(result)
@@ -308,6 +312,7 @@ function TwoFactorAuthSection() {
     try {
       const res = await mfaFetch('/confirm', 'POST', { code })
       if (res.success) {
+        await session?.update?.(true)
         setBackupCodes(Array.isArray(res.data?.backup_codes) ? res.data.backup_codes : [])
         setCodesAcknowledged(false)
         setCode('')
@@ -386,6 +391,7 @@ function TwoFactorAuthSection() {
         status?.has_password ? { password, code } : { code }
       )
       if (res.success) {
+        await session?.update?.(true)
         toast.success(
           t('user.settings.security.mfa.disabled_toast', {
             defaultValue: 'Two-factor authentication has been turned off.',

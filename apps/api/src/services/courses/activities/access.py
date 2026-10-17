@@ -132,16 +132,27 @@ async def _reader_state(
     parent_chapter: Chapter | None = None,
 ) -> ReaderState:
     """Classify ``current_user``'s access to ``activity``; applies the lock
-    scrub to ``activity_read`` as a side effect so both callers share it."""
+    scrub to ``activity_read`` as a side effect so both callers share it.
+
+    Anyone who can edit the course passes: they manage its paid and locked
+    content (editor, grading, test runs) and can rewrite it anyway."""
     if not activity.published:
         return "ok" if await can_edit_course(request, course.course_uuid, current_user, db_session) else "draft"
     paid = await check_ee_activity_paid_access(request, activity.id, current_user, db_session)
+    content, details = activity_read.content, activity_read.details
     await apply_activity_lock(
         activity_read, activity, course, current_user, db_session, parent_chapter=parent_chapter
     )
+    if paid and not activity_read.is_locked:
+        return "ok"
+    # Only reached for a gated activity, so ungated reads skip the extra check.
+    if await can_edit_course(request, course.course_uuid, current_user, db_session):
+        activity_read.content, activity_read.details = content, details
+        activity_read.is_locked = False
+        return "ok"
     if not paid:
         return "unpaid"
-    return "locked" if activity_read.is_locked else "ok"
+    return "locked"
 
 
 async def verify_activity_reader_access(
@@ -155,7 +166,8 @@ async def verify_activity_reader_access(
 
     401/403 when the course itself can't be read, 404 for an unpublished
     activity the caller can't edit, 402 when the course is paid and unpaid
-    for, 403 when a chapter/activity lock applies. Editors pass everything.
+    for, 403 when a chapter/activity lock applies. Course editors pass the
+    draft, paywall and lock checks.
     """
     decision = await check_resource_access(
         request, db_session, current_user, course.course_uuid,

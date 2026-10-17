@@ -8,6 +8,7 @@ from src.db.users import PublicUser
 from src.db.organizations import Organization
 from src.db.communities.communities import CommunityRead, CommunityUpdate
 from src.security.auth import get_current_user
+from src.routers.communities.discussions import require_communities_plan_by_child
 from src.services.communities.communities import (
     create_community,
     get_community,
@@ -148,6 +149,7 @@ async def api_get_communities_by_org(
 
 @router.get(
     "/course/{course_uuid}",
+    dependencies=[Depends(require_communities_plan_by_child)],
     summary="Get community for a course",
     description="Retrieve the community that is linked to a specific course, if one exists.",
     responses={

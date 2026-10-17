@@ -522,7 +522,7 @@ async def _code_submissions(db_session: AsyncSession, user_id: int, org_id: int)
 
     # Adds activity_name + course_uuid/course_name in batch, so the Code tab shows
     # "Recursion exercise" rather than the activity uuid it used to print.
-    return await enrich_with_metadata(result, db_session)
+    return await enrich_with_metadata(result, db_session, org_id=org_id)
 
 
 async def _community(db_session: AsyncSession, user_id: int, org_id: int) -> dict:

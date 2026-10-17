@@ -10,6 +10,7 @@ from src.db.courses.courses import Course
 from src.db.users import AnonymousUser, PublicUser
 from src.security.org_auth import is_org_member, enforce_org_mfa
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.courses.activities.access import verify_activity_reader_access
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
 from src.services.ai.rag.queue import index_activity
 
@@ -140,4 +141,8 @@ async def get_image_block(
 
         # Org-wide two-factor policy, applied after the membership gate.
         await enforce_org_mfa(current_user.id, block.org_id, db_session)  # pragma: no cover - guard mirrors tested call sites; enforce_org_mfa covered centrally
+
+    # The block is activity content: the activity's own gate (drafts,
+    # paywall, chapter/activity locks) applies, not just course READ.
+    await verify_activity_reader_access(request, activity, course, current_user, db_session)
     return BlockRead.model_validate(block)

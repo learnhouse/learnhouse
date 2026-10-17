@@ -282,6 +282,8 @@ async def update_episode(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
+    # Same plan gate as adding an episode
+    await check_feature_access("podcasts", podcast.org_id, db_session)
 
     # Update only the fields that were passed in
     # Skip empty strings for file fields to prevent accidental clearing
@@ -373,6 +375,8 @@ async def upload_episode_audio_file(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
+    # Same plan gate as adding an episode
+    await check_feature_access("podcasts", podcast.org_id, db_session)
 
     # Get organization
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
@@ -427,6 +431,8 @@ async def upload_episode_thumbnail_file(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
+    # Same plan gate as adding an episode
+    await check_feature_access("podcasts", podcast.org_id, db_session)
 
     # Get organization
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
@@ -472,6 +478,8 @@ async def reorder_episodes(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
+    # Same plan gate as adding an episode
+    await check_feature_access("podcasts", podcast.org_id, db_session)
 
     # Update episode orders
     for item in episode_orders:

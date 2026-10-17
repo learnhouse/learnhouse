@@ -20,6 +20,8 @@ import tempfile
 from dataclasses import dataclass
 from typing import Optional
 
+from src.services.utils.video_processing import SAFE_INPUT_ARGS
+
 logger = logging.getLogger(__name__)
 
 
@@ -144,8 +146,8 @@ def build_ffmpeg_args(
         filters.append(f"[v{i}]scale=-2:{r.height}[v{i}out]")
     filter_complex = ";".join(filters)
 
-    args = [_ffmpeg() or "ffmpeg", "-y", "-loglevel", "error", "-i", src_path,
-            "-filter_complex", filter_complex]
+    args = [_ffmpeg() or "ffmpeg", "-y", "-loglevel", "error", *SAFE_INPUT_ARGS,
+            "-i", src_path, "-filter_complex", filter_complex]
     # Cap CPU so a transcode doesn't peg the whole pod (which spikes the API
     # autoscaler). Default 1 thread ≈ ~1 core instead of ~all cores; raise via
     # LEARNHOUSE_HLS_FFMPEG_THREADS if you have headroom and want faster encodes.
@@ -200,7 +202,8 @@ async def _probe(src_path: str) -> tuple[int, bool, float, Optional[bool]]:
         return 0, False, 0.0, None
     try:
         rc, out, _ = await _run_subprocess(
-            [probe, "-v", "error", "-show_streams", "-show_format", "-of", "json", src_path],
+            [probe, "-v", "error", *SAFE_INPUT_ARGS, "-show_streams", "-show_format",
+             "-of", "json", src_path],
             PROBE_TIMEOUT_S,
         )
         if rc != 0:
@@ -294,7 +297,7 @@ async def generate_sprite_thumbnails(
     )
     try:
         rc, _, stderr = await _run_subprocess(
-            [_ffmpeg(), "-y", "-loglevel", "error", "-i", src_path,
+            [_ffmpeg(), "-y", "-loglevel", "error", *SAFE_INPUT_ARGS, "-i", src_path,
              "-vf", vf, "-frames:v", "1", "-an", sprite_path],
             SPRITE_TIMEOUT_S,
         )
