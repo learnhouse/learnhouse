@@ -28,6 +28,7 @@ from src.db.courses.courses import (
 )
 from src.security.api_token_utils import require_token_right
 from src.security.auth import resolve_acting_user_id
+from src.services.orgs.auth_policy import viewer_for_org
 from src.security.org_auth import require_org_create_permission
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
@@ -309,6 +310,7 @@ async def get_courses_orgslug(
     is_token = isinstance(current_user, APITokenUser)
     if is_token:
         _require_token_course_listing(current_user, org.id)
+    current_user = await viewer_for_org(db_session, current_user, org.id)
 
     # Check if user can view unpublished courses (must be admin/editor in org)
     can_view_unpublished = False
@@ -557,6 +559,12 @@ async def search_courses(
         )
     )
 
+    if not isinstance(current_user, (AnonymousUser, APITokenUser)):
+        search_org_id = (await db_session.execute(
+            select(Organization.id).where(Organization.slug == org_slug)
+        )).scalars().first()
+        if search_org_id is not None:
+            current_user = await viewer_for_org(db_session, current_user, search_org_id)
     search_acting_user_id = resolve_acting_user_id(current_user)
 
     if isinstance(current_user, AnonymousUser):

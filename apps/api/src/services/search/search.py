@@ -21,6 +21,7 @@ from src.services.search.normalization import (
 )
 from src.security.api_token_utils import require_token_content_read, token_has_right
 from src.security.auth import resolve_acting_user_id
+from src.services.orgs.auth_policy import viewer_for_org
 from src.security.org_auth import is_org_admin, is_org_member
 from src.services.communities.communities import (
     accessible_community_ids_select,
@@ -194,6 +195,7 @@ async def search_across_org(
                 detail="API token does not have search permission",
             )
 
+    current_user = await viewer_for_org(db_session, current_user, org.id)
     is_anon = isinstance(current_user, AnonymousUser)
     # API tokens are judged on their own rights buckets below, never on their
     # creator's role: without a bucket's read right a token sees only what

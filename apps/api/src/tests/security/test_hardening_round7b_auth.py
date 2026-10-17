@@ -413,6 +413,56 @@ class TestDomainBoundPolicy:
         set_session_provenance(SessionProvenance(amr="password", org_id=org.id))
         assert await evaluate_org_auth(db, regular_user.id, other_org.id) is None
 
+    async def test_bound_session_lists_other_org_as_a_visitor(
+        self, db, org, other_org, regular_user, mock_request
+    ):
+        from src.db.courses.courses import Course
+        from src.services.courses.courses import get_courses_orgslug, search_courses
+        from src.services.search.search import search_across_org
+
+        db.add(UserOrganization(
+            user_id=regular_user.id, org_id=other_org.id, role_id=4, creation_date=NOW, update_date=NOW,
+        ))
+        db.add(Course(
+            name="Members Only", description="hidden", public=False, published=True,
+            open_to_contributors=False, org_id=other_org.id, course_uuid="course_members_only",
+            creation_date=NOW, update_date=NOW,
+        ))
+        await db.commit()
+
+        async def visible():
+            db._auth_policy_cache = {}  # memoized per request; provenance changes here
+            listed = await get_courses_orgslug(mock_request, regular_user, other_org.slug, db)
+            found = await search_courses(mock_request, regular_user, other_org.slug, "Members", db)
+            searched = await search_across_org(mock_request, regular_user, other_org.slug, "Members", db)
+            return [
+                [c.course_uuid for c in listed],
+                [c.course_uuid for c in found],
+                [c.course_uuid for c in searched.courses],
+            ]
+
+        set_session_provenance(SessionProvenance(amr="password", org_id=org.id))
+        assert await visible() == [["course_members_only"]] * 3
+
+        set_session_provenance(SessionProvenance(amr="password", org_id=org.id, custom_domain=True))
+        assert await visible() == [[], [], []]
+
+        # Its own org still lists as a member.
+        set_session_provenance(SessionProvenance(amr="password", org_id=other_org.id, custom_domain=True))
+        assert await visible() == [["course_members_only"]] * 3
+
+    async def test_viewer_for_org_keeps_machine_and_anonymous_callers(self, db, other_org):
+        from src.db.users import APITokenUser
+        from src.services.orgs.auth_policy import viewer_for_org
+
+        set_session_provenance(SessionProvenance(amr="password", org_id=1, custom_domain=True))
+        anon = AnonymousUser()
+        token = APITokenUser(id=1, user_uuid="t", username="t", org_id=other_org.id, token_name="t", created_by_user_id=1)
+        assert await viewer_for_org(db, anon, other_org.id) is anon
+        assert await viewer_for_org(db, token, other_org.id) is token
+        nobody = SimpleNamespace(id=None)
+        assert await viewer_for_org(db, nobody, other_org.id) is nobody
+
 
 class TestCustomDomainDetection:
     async def test_custom_domain_org_id(self, db, org):
