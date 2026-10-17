@@ -1413,6 +1413,7 @@
     }
   },
   "activities": {
+    "video_chapters": "Chapters",
     "video": "Video",
     "document": "Document",
     "page": "Page",

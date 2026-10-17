@@ -977,6 +977,7 @@
     "search_results": "تم العثور على {{count}} بودكاست لـ \"{{query}}\""
   },
   "activities": {
+    "video_chapters": "الفصول",
     "video": "فيديو",
     "document": "مستند",
     "page": "صفحة",

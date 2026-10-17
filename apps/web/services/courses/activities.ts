@@ -306,6 +306,33 @@ export async function updateVideoCaptions(
   return getResponseMetadata(result)
 }
 
+export interface VideoChapterPayload {
+  start: number
+  title: string
+}
+
+/** Generate chapters from the video's ready captions (runs in the background). */
+export async function generateVideoChapters(activityUuid: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/video/${activityUuid}/chapters`,
+    RequestBodyWithAuthHeader('POST', {}, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+/** Replace the video's chapters with an edited list (empty clears them). */
+export async function saveVideoChapters(
+  activityUuid: string,
+  items: VideoChapterPayload[],
+  access_token: string,
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/video/${activityUuid}/chapters`,
+    RequestBodyWithAuthHeader('PUT', { items }, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
 export async function updateExternalVideoActivity(
   activityUuid: string,
   youtubeUrl: string,

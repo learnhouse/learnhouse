@@ -1,0 +1,30 @@
+/* Dark theater band behind video activities. It runs full width and down to
+   the end of the page without widening the layout: the colour is a
+   box-shadow, which is ink overflow and never adds a scrollbar. The clip-path
+   keeps it below the band's top edge. No stacking context on the band, so
+   the pseudo paints behind the content that follows it. */
+.lh-theater-band {
+  position: relative;
+}
+
+.lh-theater-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  background: #141414;
+  box-shadow: 0 0 0 100vmax #141414;
+  clip-path: inset(0 -100vmax -100vmax -100vmax);
+}
+
+/* Soft shade under the top edge, so the band reads as recessed. */
+.lh-theater-band::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 3rem;
+  z-index: -10;
+  pointer-events: none;
+  border-image: linear-gradient(rgb(0 0 0 / 0.45), transparent) fill 0 / 0 / 0 100vmax;
+}

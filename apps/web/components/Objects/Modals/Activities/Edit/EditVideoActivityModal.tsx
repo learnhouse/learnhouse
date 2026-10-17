@@ -7,6 +7,7 @@ import CaptionsSettings, {
   type CaptionsValue,
   EMPTY_CAPTIONS,
 } from '@components/Objects/Activities/Video/CaptionsSettings'
+import ChaptersSettings, { type ChaptersMeta } from '@components/Objects/Activities/Video/ChaptersSettings'
 import {
   getActivity,
   updateHostedVideoActivity,
@@ -54,6 +55,8 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
   const [captions, setCaptions] = useState<CaptionsValue>(EMPTY_CAPTIONS)
   const [capStatus, setCapStatus] = useState<string | null>(null)
   const [isSavingCaptions, setIsSavingCaptions] = useState(false)
+  const [chaptersMeta, setChaptersMeta] = useState<ChaptersMeta | null>(null)
+  const [hasReadyCaptions, setHasReadyCaptions] = useState(false)
 
   useEffect(() => {
     async function loadActivity() {
@@ -69,7 +72,9 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
       if (data?.content?.uri) {
         setYoutubeUrl(data.content.uri)
       }
+      setChaptersMeta(data?.extra_metadata?.chapters || null)
       const caps = data?.extra_metadata?.captions
+      setHasReadyCaptions(!!caps?.languages?.some((l: any) => l?.status === 'ready'))
       if (caps) {
         setCapStatus(caps.status || null)
         setCaptions({
@@ -354,6 +359,12 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
               )}
             </button>
           </div>
+          <ChaptersSettings
+            activityUuid={activity.activity_uuid}
+            accessToken={access_token}
+            initial={chaptersMeta}
+            hasCaptions={hasReadyCaptions}
+          />
         </div>
       )}
 
