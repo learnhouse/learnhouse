@@ -1,5 +1,5 @@
 # ── Build stage ──────────────────────────────────────────────────────────────
-FROM oven/bun:1.4.2-alpine AS builder
+FROM oven/bun:1.4.3-alpine AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN bun run build
 # ── Production dependencies ─────────────────────────────────────────────────
 # Resolved from bun.lock, never re-resolved: a fresh `npm install` here would
 # pick whatever versions the registry serves on the day of the build.
-FROM oven/bun:1.4.2-alpine AS prod-deps
+FROM oven/bun:1.4.3-alpine AS prod-deps
 
 WORKDIR /app
 
