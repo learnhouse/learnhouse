@@ -8,13 +8,18 @@ const courseMeta = {
   description: "A micro course",
   about: "",
   thumbnail_image: "cover.png",
+  org_id: 1,
 };
+let orgInfo = { id: 1, org_uuid: "org_1", slug: "acme", name: "Acme" };
 
 mock.module("@services/courses/courses", () => ({
   getCourseMetadata: async () => courseMeta,
 }));
 mock.module("@services/organizations/orgs", () => ({
-  getOrganizationContextInfo: async () => ({ org_uuid: "org_1", slug: "acme", name: "Acme" }),
+  getOrganizationContextInfo: async () => {
+    if (!orgInfo) throw new Error("Organization not found");
+    return orgInfo;
+  },
 }));
 mock.module("@services/config/config", () => ({
   getAPIUrl: () => "http://api.test/api/v1/",
@@ -44,6 +49,7 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = realFetch;
+  orgInfo = { id: 1, org_uuid: "org_1", slug: "acme", name: "Acme" };
 });
 
 describe("course updates RSS feed", () => {
@@ -88,6 +94,18 @@ describe("course updates RSS feed", () => {
       params: Promise.resolve({ courseuuid: "abc" }),
     });
 
+    expect(response.status).toBe(404);
+  });
+
+  test("unknown orgs and courses of another org are not found", async () => {
+    globalThis.fetch = async () => new Response("[]", { status: 200 });
+
+    orgInfo = null;
+    let response = await GET(withNextUrl(makeRequest()), { params: Promise.resolve({ courseuuid: "abc" }) });
+    expect(response.status).toBe(404);
+
+    orgInfo = { id: 2, org_uuid: "org_2", slug: "other", name: "Other" };
+    response = await GET(withNextUrl(makeRequest()), { params: Promise.resolve({ courseuuid: "abc" }) });
     expect(response.status).toBe(404);
   });
 

@@ -8,24 +8,32 @@ export type TextSegment =
   | { type: 'text'; value: string }
   | { type: 'link'; value: string; href: string }
 
-const URL_PATTERN = /(?:https?:\/\/|www\.)[^\s<>"'`]+/gi
+// URL characters stop at whitespace, quotes, angle brackets and full-width
+// CJK / Arabic punctuation, which never appears inside a real link.
+const URL_PATTERN = /(?:https?:\/\/|www\.)[^\s<>"'`\u060C\u061B\u061F\u3001\u3002\uFF01\uFF08\uFF09\uFF0C\uFF1A\uFF1B\uFF1F\u300C\u300D\u300E\u300F]+/gi
 
 // Punctuation that usually belongs to the sentence, not to the URL.
-const TRAILING_PUNCTUATION = /[.,;:!?'")\]}]+$/
+const TRAILING_PUNCTUATION = new Set(['.', ',', ';', ':', '!', '?', "'", '"', ')', ']', '}'])
 
+/**
+ * Drop sentence punctuation from the end of a URL match, keeping a closing
+ * bracket when the URL opened one (e.g. wiki links). Single pass, linear in
+ * the match length: user text is unbounded, so no backtracking regexes here.
+ */
 function trimTrailingPunctuation(raw: string): string {
-  let url = raw.replace(TRAILING_PUNCTUATION, '')
-  // Keep a closing bracket when the URL itself opened one, e.g. wiki links.
-  while (raw.length > url.length && raw[url.length] === ')' && countChar(url, '(') > countChar(url, ')')) {
-    url = raw.slice(0, url.length + 1)
+  let open = 0
+  let close = 0
+  for (const c of raw) {
+    if (c === '(') open++
+    else if (c === ')') close++
   }
-  return url
-}
-
-function countChar(value: string, char: string): number {
-  let count = 0
-  for (const c of value) if (c === char) count++
-  return count
+  let end = raw.length
+  while (end > 0 && TRAILING_PUNCTUATION.has(raw[end - 1])) {
+    if (raw[end - 1] === ')' && close <= open) break
+    if (raw[end - 1] === ')') close--
+    end--
+  }
+  return raw.slice(0, end)
 }
 
 export function splitLinks(text: string | null | undefined): TextSegment[] {

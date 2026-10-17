@@ -1554,11 +1554,20 @@ async def clone_course(
                         block_type_folder = "imageBlock"
                     elif original_block.block_type.value == "BLOCK_DOCUMENT_PDF":
                         block_type_folder = "pdfBlock"
+                    elif original_block.block_type.value == "BLOCK_AUDIO":
+                        block_type_folder = "audioBlock"
 
                     if block_type_folder:
                         # The copy already copied files with old UUIDs, we need to rename folders
                         old_copied_block_path = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{original_block.block_uuid}"
                         new_block_path_str = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{new_block_uuid}"
+
+                        # Transcoded HLS renditions live in a sub-folder that the
+                        # file loop below doesn't see; move them with the block.
+                        if block_type_folder == "videoBlock":
+                            _copy_storage_directory(
+                                f"{old_copied_block_path}/hls", f"{new_block_path_str}/hls"
+                            )
 
                         # Move files from old block path to new block path (rename folder)
                         block_files = list_directory(old_copied_block_path)

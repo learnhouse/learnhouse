@@ -20,10 +20,11 @@ export async function GET(
   }
 
   try {
-    const org = await getOrganizationContextInfo(orgSlug, null)
+    const org = await getOrganizationContextInfo(orgSlug, null).catch(() => null)
     const course = await getCourseMetadata(courseuuid, null, null, { slim: true }).catch(() => null)
 
-    if (!course?.course_uuid || !org?.org_uuid) {
+    // Only serve a course under its own org's host.
+    if (!course?.course_uuid || !org?.org_uuid || (org.id != null && course.org_id != null && course.org_id !== org.id)) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
 

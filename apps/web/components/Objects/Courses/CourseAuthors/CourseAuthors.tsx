@@ -172,16 +172,21 @@ const UpdatesSection = () => {
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
-            <a
-              href={feedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={t('courses.rss_feed')}
-              aria-label={t('courses.rss_feed')}
-              className="text-neutral-400 hover:text-orange-500 transition-colors"
-            >
-              <Rss size={14} />
-            </a>
+            {/* Feed readers fetch anonymously, so only public courses have a feed. */}
+            {course?.courseStructure?.public && course?.courseStructure?.published !== false ? (
+              <a
+                href={feedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={t('courses.rss_feed')}
+                aria-label={t('courses.rss_feed')}
+                className="text-neutral-400 hover:text-orange-500 transition-colors"
+              >
+                <Rss size={14} />
+              </a>
+            ) : (
+              <Rss size={14} className="text-neutral-400" />
+            )}
             <span className="text-sm font-semibold text-neutral-600">{t('courses.course_updates')}</span>
           </div>
           {updates && updates.length > 0 && (

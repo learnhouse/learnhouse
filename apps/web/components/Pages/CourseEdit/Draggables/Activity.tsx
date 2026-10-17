@@ -139,7 +139,7 @@ function Activity(props: any) {
                 </button>
               </div>
             ) : (
-              <p className=""> {props.activity.name} </p>
+              <p> {props.activity.name} </p>
             )}
             <Pencil
               onClick={() => setSelectedActivity(props.activity.id)}

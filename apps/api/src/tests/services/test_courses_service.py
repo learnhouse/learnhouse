@@ -1229,7 +1229,9 @@ class TestCourseMutationsAndRights:
         assert cloned_course.course_uuid == cloned.course_uuid
         assert mock_copy_file.call_count >= 3
         mock_delete_file.assert_called_once()
-        mock_copy_dir.assert_called_once()
+        # The activity folder, then the video block's HLS renditions.
+        assert mock_copy_dir.call_count == 2
+        assert mock_copy_dir.call_args_list[1].args[0].endswith("/videoBlock/block_old/hls")
 
     @pytest.mark.asyncio
     async def test_clone_course_missing_course_and_org_failures(
@@ -1607,6 +1609,89 @@ class TestCourseMutationsAndRights:
             f"{new_block.block_uuid}/{new_block.content['file_id']}.png"
         )
         assert any(dst.endswith(expected_suffix) for dst in destinations), destinations
+
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "block_type,folder",
+        [(BlockTypeEnum.BLOCK_AUDIO, "audioBlock"), (BlockTypeEnum.BLOCK_VIDEO, "videoBlock")],
+    )
+    async def test_clone_course_moves_audio_and_video_block_media(
+        self, db, org, course, admin_user, mock_request, block_type, folder
+    ):
+        chapter = Chapter(
+            name="Media Chapter", description="", thumbnail_image="", org_id=org.id,
+            course_id=course.id, chapter_uuid=f"chapter_media_{folder}",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(chapter)
+        await db.commit()
+        await db.refresh(chapter)
+        db.add(CourseChapter(
+            order=1, course_id=course.id, chapter_id=chapter.id, org_id=org.id,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        activity = Activity(
+            name="Media Activity", activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            content={"type": "doc", "content": []}, details={}, published=True,
+            org_id=org.id, course_id=course.id, activity_uuid=f"activity_media_{folder}",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(activity)
+        await db.commit()
+        await db.refresh(activity)
+        db.add(ChapterActivity(
+            order=1, chapter_id=chapter.id, activity_id=activity.id, course_id=course.id,
+            org_id=org.id, creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        db.add(Block(
+            block_type=block_type,
+            content={"file_id": "block_media_old", "file_format": "mp3"},
+            org_id=org.id, course_id=course.id, chapter_id=chapter.id, activity_id=activity.id,
+            block_uuid="block_media_old",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        with patch(
+            "src.services.courses.courses.check_resource_access", new_callable=AsyncMock,
+        ), patch("src.services.courses.courses.check_limits_with_usage"), patch(
+            "src.services.courses.courses.increase_feature_usage"
+        ), patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled", return_value=False,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.file_exists", return_value=False,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.list_directory",
+            return_value=["block_media_old.mp3"],
+        ), patch(
+            "src.services.courses.courses._copy_storage_file"
+        ) as mock_copy_file, patch(
+            "src.services.courses.courses._delete_storage_file"
+        ), patch(
+            "src.services.courses.courses._copy_storage_directory"
+        ) as mock_copy_dir, patch("os.makedirs"):
+            cloned = await clone_course(mock_request, course.course_uuid, admin_user, db)
+
+        new_activity = (await db.execute(
+            select(Activity).where(Activity.course_id == cloned.id)
+        )).scalars().first()
+        new_block = (await db.execute(
+            select(Block).where(Block.activity_id == new_activity.id)
+        )).scalars().first()
+        block_dir = f"/activities/{new_activity.activity_uuid}/dynamic/blocks/{folder}/{new_block.block_uuid}"
+
+        destinations = [c.args[1] for c in mock_copy_file.call_args_list]
+        assert any(d.endswith(f"{block_dir}/{new_block.content['file_id']}.mp3") for d in destinations), destinations
+
+        hls_copies = [c.args for c in mock_copy_dir.call_args_list if c.args[0].endswith("/hls")]
+        if folder == "videoBlock":
+            assert len(hls_copies) == 1
+            assert hls_copies[0][0].endswith("/videoBlock/block_media_old/hls")
+            assert hls_copies[0][1].endswith(f"{block_dir}/hls")
+        else:
+            assert hls_copies == []
 
 
 class TestSearchCourses:

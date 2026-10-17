@@ -249,6 +249,9 @@ export function resolvePricingPlan(
     description: plan.description || offer.description || '',
     features: base.features.length ? base.features : splitLines(offer.benefits, /,/),
     price: formatPrice(offer.amount, offer.currency),
+    // Like the price, a subscription's period comes from the offer: a typed
+    // "/ month" must not survive the offer switching to yearly billing.
+    period: offer.offer_type === 'subscription' ? '' : plan.period,
     priceIsMinimum: offer.price_type === 'customer_choice',
     subscription: offer.offer_type === 'subscription',
     billingInterval: offer.offer_type === 'subscription' ? normalizeBillingInterval(offer.billing_interval) : null,

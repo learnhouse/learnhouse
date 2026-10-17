@@ -281,7 +281,11 @@ const EditOfferForm = ({
     { setSubmitting }: { setSubmitting: (b: boolean) => void }
   ) => {
     try {
-      await updateOffer(org.id, offer.id, values, session.data?.tokens?.access_token);
+      const res = await updateOffer(org.id, offer.id, values, session.data?.tokens?.access_token);
+      if (!res?.success) {
+        toast.error(res?.data?.detail || 'Failed to update offer');
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.offers(org.id) });
       onSuccess();
       toast.success('Offer updated successfully');

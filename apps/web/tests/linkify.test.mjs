@@ -43,6 +43,30 @@ describe("splitLinks", () => {
     expect(segments[2]).toEqual({ type: "text", value: "\nb " });
   });
 
+  test("keeps a balanced closing parenthesis that is part of the URL", () => {
+    const [, link, rest] = splitLinks("see https://en.wikipedia.org/wiki/Foo_(bar)).");
+    expect(link.value).toBe("https://en.wikipedia.org/wiki/Foo_(bar)");
+    expect(rest).toEqual({ type: "text", value: ")." });
+  });
+
+  test("stops at Arabic and CJK punctuation", () => {
+    expect(splitLinks("راجع www.example.com، ثم")[1].href).toBe("https://www.example.com");
+    expect(splitLinks("https://example.com。next")[0].value).toBe("https://example.com");
+  });
+
+  test("stays linear on long adversarial input", () => {
+    const n = 100_000;
+    const inputs = [
+      "https://a" + "(".repeat(n / 2) + ")".repeat(n / 2),
+      "www.a" + ".".repeat(n) + "b",
+      "www.a" + ".".repeat(n),
+      "https://a" + ")".repeat(n),
+    ];
+    const started = performance.now();
+    for (const input of inputs) splitLinks(input);
+    expect(performance.now() - started).toBeLessThan(500);
+  });
+
   test("returns nothing for empty input", () => {
     expect(splitLinks("")).toEqual([]);
     expect(splitLinks(null)).toEqual([]);
