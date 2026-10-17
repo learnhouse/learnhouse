@@ -51,6 +51,15 @@ from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 
+def _session_epoch_now() -> datetime:
+    """Value for ``password_changed_at`` that invalidates every earlier session.
+
+    Whole seconds: a session minted right after carries an integer ``iat`` and
+    must not count as issued before the stamp.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
+
+
 def _reject_urls_in_profile_fields(**fields) -> None:
     """Reject display-name fields containing URLs/links (S: phishing relay).
 
@@ -218,6 +227,9 @@ async def create_user(
 
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
+    # Sessions are keyed by email, so a token left over from an earlier
+    # account with this address must not attach to the new one.
+    user.password_changed_at = _session_epoch_now()
 
     # Verifications
 
@@ -465,6 +477,9 @@ async def create_user_without_org(
 
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
+    # Sessions are keyed by email, so a token left over from an earlier
+    # account with this address must not attach to the new one.
+    user.password_changed_at = _session_epoch_now()
 
     # SECURITY: this endpoint is public and has no org, so there are no declared
     # signup fields to validate against, so nothing may be stored. Dropping the
@@ -620,6 +635,11 @@ async def update_user(
     if email_changed:
         user.email_verified = False
         user.email_verified_at = None
+        # Sessions are keyed by email: end every session minted before the
+        # change, including any token still around for the new address from
+        # an account that held it before. The web app signs the user out after
+        # an email change, so they come back through a fresh sign-in.
+        user.password_changed_at = _session_epoch_now()
 
     for key, value in user_data.items():
         if key not in _PROTECTED_FIELDS:
@@ -1024,15 +1044,21 @@ async def get_user_session(
             "User %s has 100+ org memberships, result truncated", user.id
         )
 
-    roles = []
+    # org.email defaults to the creator's personal address; only the people
+    # who can edit the org settings get it back. Same rights-based rule as the
+    # org reads, so a custom role holding organizations.update sees it and a
+    # role id alone never does.
+    from src.services.orgs.orgs import _redact_emails_for_member
 
-    for role, org in results:
-        roles.append(
-            UserRoleWithOrg(
-                role=RoleRead.model_validate(role),
-                org=OrganizationRead.model_validate(org),
-            )
-        )
+    org_reads = await _redact_emails_for_member(
+        [OrganizationRead.model_validate(org) for _role, org in results],
+        user.id,
+        db_session,
+    )
+    roles = [
+        UserRoleWithOrg(role=RoleRead.model_validate(role), org=org_read)
+        for (role, _org), org_read in zip(results, org_reads)
+    ]
 
     user_session = UserSession(
         user=user,
@@ -1059,14 +1085,23 @@ async def authorize_user_action(
             detail="User does not exist",
         )
 
-    # RBAC check
-    authorized = (
-        await authorization_verify_based_on_roles_and_authorship(
-            request, current_user.id, action, resource_uuid, db_session
-        )
+    # Same resource checker the content routes use: it scopes the answer to
+    # the resource's own org and visibility. The legacy role/authorship helper
+    # granted read on any group-less resource in any org, and its paywall
+    # branch answered 402 with offer details, turning this into a cross-org
+    # existence and pricing oracle.
+    from src.security.rbac import AccessAction, check_resource_access
+
+    decision = await check_resource_access(
+        request,
+        db_session,
+        current_user,
+        resource_uuid,
+        AccessAction(action),
+        raise_on_deny=False,
     )
 
-    if authorized:
+    if decision.allowed:
         return True
     else:
         raise HTTPException(

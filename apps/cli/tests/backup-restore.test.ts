@@ -90,6 +90,10 @@ describe('backup / restore: real tar, stubbed database', () => {
     // The temp working dir must have been cleaned up; only the archive remains.
     expect(fs.readdirSync(backupsDir).filter((e) => !e.endsWith('.tar.gz'))).toHaveLength(0)
 
+    // The archive holds the database and .env: owner-only.
+    expect(fs.statSync(backupsDir).mode & 0o777).toBe(0o700)
+    expect(fs.statSync(path.join(backupsDir, archives[0])).mode & 0o777).toBe(0o600)
+
     // Extract for real and verify contents.
     const out = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-br-x-'))
     execSync(`tar -xzf "${path.join(backupsDir, archives[0])}" -C "${out}"`, { stdio: 'pipe' })
@@ -97,6 +101,25 @@ describe('backup / restore: real tar, stubbed database', () => {
     expect(fs.readFileSync(path.join(out, sub, 'database.sql'), 'utf-8')).toContain('DROP TABLE IF EXISTS')
     expect(fs.existsSync(path.join(out, sub, '.env'))).toBe(true)
     fs.rmSync(out, { recursive: true, force: true })
+  })
+
+  it('backup still runs when backups/ belongs to another user', async () => {
+    const backupsDir = path.join(installDir, 'backups')
+    const realChmod = fs.chmodSync
+    vi.spyOn(fs, 'chmodSync').mockImplementation(((target: fs.PathLike, mode: fs.Mode) => {
+      if (String(target) === backupsDir) {
+        throw Object.assign(new Error('operation not permitted'), { code: 'EPERM' })
+      }
+      return realChmod(target, mode)
+    }) as typeof fs.chmodSync)
+    const warn = vi.spyOn(promptStub.log, 'warn')
+
+    await backupCommand()
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('EPERM'))
+    const archives = fs.readdirSync(backupsDir).filter((f) => f.endsWith('.tar.gz'))
+    expect(archives).toHaveLength(1)
+    expect(fs.statSync(path.join(backupsDir, archives[0])).mode & 0o777).toBe(0o600)
   })
 
   it('restore extracts a real archive, runs psql, and cleans up', async () => {

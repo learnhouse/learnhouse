@@ -1100,6 +1100,13 @@
       "page_of": "Page {{current}} of {{total}}",
       "results": "{{count}} result for \"{{query}}\"",
       "results_plural": "{{count}} results for \"{{query}}\""
+    },
+    "connection": {
+      "access_revoked_title": "You no longer have access to this board",
+      "access_revoked_description": "Your access was removed while the board was open. Reload to check again.",
+      "too_large_title": "This board is too large to keep syncing",
+      "too_large_description": "It passed the size limit, so live editing has stopped. Your most recent changes may not have been saved.",
+      "reload": "Reload"
     }
   },
   "podcasts": {

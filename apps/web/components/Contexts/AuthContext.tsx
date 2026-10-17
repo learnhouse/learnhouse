@@ -56,7 +56,6 @@ export interface SignInOptions {
   // SSO fields
   sso?: string
   sso_access_token?: string
-  sso_refresh_token?: string
   sso_user?: string
   sso_expiry?: number
   // For OAuth
@@ -613,7 +612,6 @@ export function SessionProvider({
         roles: [],
         tokens: {
           access_token: data.tokens.access_token,
-          refresh_token: data.tokens.refresh_token,
           expiry: data.tokens.expiry,
         },
       }
@@ -847,7 +845,6 @@ export function SessionProvider({
               roles: [],
               tokens: {
                 access_token: options.sso_access_token,
-                refresh_token: options.sso_refresh_token,
                 expiry,
               },
             }

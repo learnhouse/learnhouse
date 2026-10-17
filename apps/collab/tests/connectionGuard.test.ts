@@ -1,7 +1,11 @@
 import { after, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { Server } from '@hocuspocus/server'
-import type { onAuthenticatePayload, onUpgradePayload } from '@hocuspocus/server'
+import type {
+  beforeHandleMessagePayload,
+  onAuthenticatePayload,
+  onUpgradePayload,
+} from '@hocuspocus/server'
 import * as encoding from 'lib0/encoding'
 import {
   CONNECTION_ID_HEADER,
@@ -11,6 +15,7 @@ import {
 } from '../src/connectionGuard.ts'
 
 const DOC = 'board:board_00000000-0000-0000-0000-000000000000'
+const OTHER_DOC = 'board:board_11111111-1111-1111-1111-111111111111'
 
 const defaults: ConnectionGuardOptions = {
   trustProxy: true, // so loopback test clients get their own bucket
@@ -20,6 +25,8 @@ const defaults: ConnectionGuardOptions = {
   maxPendingConnections: 100,
   authDeadlineMs: 300,
   preAuthMaxBytes: 4096,
+  maxUnhandledBytes: 16 * 1024, // a few messages in flight
+  maxHandledBytesPerWindow: 64 * 1024,
 }
 
 const servers: Server[] = []
@@ -40,6 +47,11 @@ async function startServer(overrides: Partial<ConnectionGuardOptions> = {}) {
     async onAuthenticate({ token, requestHeaders }: onAuthenticatePayload) {
       if (token !== 'valid') throw new Error('Invalid token')
       guard.markAuthenticated(requestHeaders.get(CONNECTION_ID_HEADER))
+    },
+    async beforeHandleMessage({ update, requestHeaders }: beforeHandleMessagePayload) {
+      if (!guard.markHandled(requestHeaders.get(CONNECTION_ID_HEADER), update.byteLength)) {
+        throw new Error('Too much traffic')
+      }
     },
   })
   await server.listen()
@@ -77,9 +89,9 @@ function authMessage(token: string): Uint8Array {
 }
 
 /** A message for the document that is not an auth message, so it gets queued. */
-function filler(bytes: number): Uint8Array {
+function filler(bytes: number, doc = DOC): Uint8Array {
   const enc = encoding.createEncoder()
-  encoding.writeVarString(enc, DOC)
+  encoding.writeVarString(enc, doc)
   encoding.writeVarUint(enc, 1) // MessageType.Awareness
   encoding.writeVarUint8Array(enc, new Uint8Array(bytes))
   return encoding.toUint8Array(enc)
@@ -126,6 +138,25 @@ describe('connection guard', () => {
     for (let i = 0; i < 4; i++) ws.send(filler(2048))
     assert.equal(await closed(ws, 800), false)
     ws.close()
+  })
+
+  it('closes an authenticated socket that queues too much for another document', async () => {
+    const { url } = await startServer()
+    const ws = await connect(url)
+    await authenticate(ws)
+    for (let i = 0; i < 10; i++) ws.send(filler(2048, OTHER_DOC))
+    assert.equal(await closed(ws, 2000), true)
+  })
+
+  it('caps how much an authenticated socket sends per window', async () => {
+    const { url } = await startServer({
+      maxUnhandledBytes: 1024 * 1024,
+      maxHandledBytesPerWindow: 16 * 1024,
+    })
+    const ws = await connect(url)
+    await authenticate(ws)
+    for (let i = 0; i < 12; i++) ws.send(filler(2048))
+    assert.equal(await closed(ws, 2000), true)
   })
 
   it('still enforces the deadline after a rejected token', async () => {

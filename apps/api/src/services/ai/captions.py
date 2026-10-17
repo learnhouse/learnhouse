@@ -17,6 +17,8 @@ import re
 import subprocess
 from typing import Optional
 
+from src.services.utils.video_processing import SAFE_INPUT_ARGS
+
 logger = logging.getLogger(__name__)
 
 # Segment length for transcription. Kept well under provider audio limits and short
@@ -61,7 +63,7 @@ async def probe_duration(src_path: str) -> float:
     """Media duration in seconds (0.0 if it can't be determined)."""
     rc, out, _ = await asyncio.to_thread(
         _run,
-        [_ffprobe(), "-v", "error", "-show_entries", "format=duration",
+        [_ffprobe(), "-v", "error", *SAFE_INPUT_ARGS, "-show_entries", "format=duration",
          "-of", "default=nw=1:nk=1", src_path],
         60,
     )
@@ -82,7 +84,7 @@ async def extract_audio_chunks(src_path: str, out_dir: str) -> list[str]:
     pattern = os.path.join(out_dir, "chunk_%04d.mp3")
     rc, _, stderr = await asyncio.to_thread(
         _run,
-        [_ffmpeg(), "-y", "-loglevel", "error", "-i", src_path,
+        [_ffmpeg(), "-y", "-loglevel", "error", *SAFE_INPUT_ARGS, "-i", src_path,
          "-vn", "-ac", "1", "-ar", "16000", "-b:a", "64k",
          "-f", "segment", "-segment_time", str(CHUNK_SECONDS), pattern],
         AUDIO_EXTRACT_TIMEOUT_S,

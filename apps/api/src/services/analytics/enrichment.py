@@ -16,10 +16,16 @@ from src.db.courses.activities import Activity
 from src.db.courses.courses import Course
 
 
-async def enrich_with_metadata(rows: list[dict], db_session: AsyncSession) -> list[dict]:
+async def enrich_with_metadata(
+    rows: list[dict], db_session: AsyncSession, org_id: int | None = None
+) -> list[dict]:
     """Enrich analytics result rows with course/activity metadata from PostgreSQL.
 
     Mutates and returns ``rows``. Rows without a recognised uuid are left untouched.
+
+    Event uuids come from client-supplied event properties, so pass ``org_id`` to
+    resolve names only for that org's courses and activities: a uuid from another
+    org must not turn into that org's course name on this org's dashboard.
     """
     if not rows:
         return rows
@@ -33,9 +39,10 @@ async def enrich_with_metadata(rows: list[dict], db_session: AsyncSession) -> li
     # Batch fetch courses
     course_map: dict[str, Course] = {}
     if course_uuids:
-        courses = (await db_session.execute(
-            select(Course).where(Course.course_uuid.in_(list(course_uuids)))  # type: ignore
-        )).scalars().all()
+        query = select(Course).where(Course.course_uuid.in_(list(course_uuids)))  # type: ignore
+        if org_id is not None:
+            query = query.where(Course.org_id == org_id)
+        courses = (await db_session.execute(query)).scalars().all()
         course_map = {c.course_uuid: c for c in courses}
 
     # Collect unique activity_uuids
@@ -48,18 +55,20 @@ async def enrich_with_metadata(rows: list[dict], db_session: AsyncSession) -> li
     # Batch fetch activities
     activity_map: dict[str, Activity] = {}
     if activity_uuids:
-        activities = (await db_session.execute(
-            select(Activity).where(Activity.activity_uuid.in_(list(activity_uuids)))  # type: ignore
-        )).scalars().all()
+        query = select(Activity).where(Activity.activity_uuid.in_(list(activity_uuids)))  # type: ignore
+        if org_id is not None:
+            query = query.where(Activity.org_id == org_id)
+        activities = (await db_session.execute(query)).scalars().all()
         activity_map = {a.activity_uuid: a for a in activities}
 
         # Also resolve course_uuid for activities (needed when rows don't have course_uuid)
         activity_course_ids = {a.course_id for a in activities if a.course_id}
         missing_course_ids = activity_course_ids - {c.id for c in course_map.values()}
         if missing_course_ids:
-            extra_courses = (await db_session.execute(
-                select(Course).where(Course.id.in_(list(missing_course_ids)))  # type: ignore
-            )).scalars().all()
+            query = select(Course).where(Course.id.in_(list(missing_course_ids)))  # type: ignore
+            if org_id is not None:
+                query = query.where(Course.org_id == org_id)
+            extra_courses = (await db_session.execute(query)).scalars().all()
             for c in extra_courses:
                 course_map[c.course_uuid] = c
 

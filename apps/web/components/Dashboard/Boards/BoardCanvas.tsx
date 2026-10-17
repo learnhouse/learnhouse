@@ -46,7 +46,27 @@ import { Extension } from '@tiptap/core'
 import { BoardYjsProvider } from './BoardYjsContext'
 import { BoardSelectionProvider } from './BoardSelectionContext'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useAuth } from '@components/Contexts/AuthContext'
+import { useTranslation } from 'react-i18next'
 
+
+// The collab server closes a socket with these codes when retrying cannot
+// help: access was revoked, or the board outgrew the size it can persist.
+// Its close message (sent just before the socket closes) carries only the
+// reason, so both are matched. 4401 ("Token expired") is deliberately absent:
+// the provider reconnects on its own and the `token` callback below supplies
+// a fresh token for the new connection.
+type TerminalClose = 'access_revoked' | 'too_large'
+const TERMINAL_CLOSES: { code: number; reason: string; kind: TerminalClose }[] = [
+  { code: 4403, reason: 'Access revoked', kind: 'access_revoked' },
+  { code: 4413, reason: 'Board is too large', kind: 'too_large' },
+]
+
+function terminalCloseOf(event: { code?: number; reason?: string } | undefined): TerminalClose | null {
+  if (!event) return null
+  const match = TERMINAL_CLOSES.find((c) => c.code === event.code || c.reason === event.reason)
+  return match ? match.kind : null
+}
 
 interface BoardCanvasProps {
   board: any
@@ -920,10 +940,24 @@ function BoardEditorInner({
 
 /** Outer component: handles Yjs lifecycle, only renders editor once ready */
 export default function BoardCanvas({ board, accessToken, orgslug, username, orgUuid }: BoardCanvasProps) {
+  const { t } = useTranslation()
+  const { getAccessToken } = useAuth()
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null)
   const [connStatus, setConnStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
   const [authFailed, setAuthFailed] = useState(false)
+  const [terminalClose, setTerminalClose] = useState<TerminalClose | null>(null)
+
+  // The provider asks for a token on every (re)connect. Reading it through refs
+  // means a reconnect after the 8-hour access token lapsed sends the session's
+  // current token instead of the one the page loaded with, without tearing
+  // down the document whenever the token rotates.
+  const accessTokenRef = useRef(accessToken)
+  const getAccessTokenRef = useRef(getAccessToken)
+  useEffect(() => {
+    accessTokenRef.current = accessToken
+    getAccessTokenRef.current = getAccessToken
+  })
 
   useEffect(() => {
     const doc = new Y.Doc()
@@ -931,9 +965,24 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
       url: getCollabUrl(),
       name: `board:${board.board_uuid}`,
       document: doc,
-      token: accessToken,
+      token: async () => {
+        try {
+          const fresh = await getAccessTokenRef.current()
+          if (fresh) return fresh
+        } catch {
+          // Fall back to the token the page was given
+        }
+        return accessTokenRef.current
+      },
       onStatus({ status }: { status: string }) {
         setConnStatus(status as 'connecting' | 'connected' | 'disconnected')
+      },
+      onClose({ event }: { event: { code?: number; reason?: string } }) {
+        const kind = terminalCloseOf(event)
+        if (!kind) return
+        // Runs before the socket schedules its reconnect, so this stops it
+        setTerminalClose(kind)
+        prov.disconnect()
       },
       onAuthenticationFailed({ reason }: { reason: string }) {
         console.error('[board] Authentication failed:', reason)
@@ -943,19 +992,41 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
     })
 
     // The Y.Doc / HocuspocusProvider are external systems created in this effect;
-    // storing them in state once per board/token is the intended synchronization,
+    // storing them in state once per board is the intended synchronization,
     // not a cascading render loop.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setYdoc(doc)
     setProvider(prov)
     setAuthFailed(false)
+    setTerminalClose(null)
     setConnStatus('connecting')
 
     return () => {
       prov.destroy()
       doc.destroy()
     }
-  }, [board.board_uuid, accessToken])
+  }, [board.board_uuid])
+
+  if (terminalClose) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-neutral-50">
+        <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl bg-white p-8 text-center shadow-lg">
+          <p className="text-sm font-medium text-neutral-700">
+            {t(`boards.connection.${terminalClose}_title`)}
+          </p>
+          <p className="text-xs text-neutral-400">
+            {t(`boards.connection.${terminalClose}_description`)}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 rounded-lg bg-neutral-900 px-4 py-2 text-xs font-medium text-white hover:bg-neutral-800 transition-colors"
+          >
+            {t('boards.connection.reload')}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (authFailed) {
     return (

@@ -125,11 +125,16 @@ async def create_media(
         # own `file.content_type` header is not persisted: this value becomes a
         # response header when the file is served, so it stays server-decided.
         media.file_mime = EXT_TO_CANONICAL_MIME.get(f".{media.file_format}".lower(), "")
-        try:
-            file.file.seek(0)
-            media.file_size = len(await file.read())
-        except Exception:
-            media.file_size = None
+        # The upload was already streamed to storage; take its size from the
+        # multipart parse (or the spooled file's end) rather than reading up to
+        # several GB back into memory.
+        media.file_size = file.size
+        if media.file_size is None:
+            try:
+                file.file.seek(0, 2)
+                media.file_size = file.file.tell()
+            except Exception:
+                media.file_size = None
     elif media_object.media_type == MediaTypeEnum.EMBED:
         if not media_object.url:
             raise HTTPException(status_code=400, detail="A url is required for EMBED media")
@@ -257,28 +262,80 @@ async def get_media_list(
     page: int = 1,
     limit: int = 50,
 ) -> List[MediaRead]:
+    from sqlalchemy import and_, or_
+
+    from src.db.folders.folder_content import FolderContent
+    from src.db.usergroup_resources import UserGroupResource
+    from src.db.usergroup_user import UserGroupUser
+    from src.security.api_token_utils import require_token_right
+    from src.security.org_auth import is_org_admin
+    from src.services.media.media_access import load_folder_tree, viewer_folder_grants
+
     org_id_int = int(org_id)
     # Bound page size; negative/zero values would yield bad offsets
     page = max(1, int(page if page is not None else 1))
     limit = min(max(1, int(limit if limit is not None else 50)), 100)
-    user_id = resolve_acting_user_id(current_user)
-    # Membership in the requested org, not merely being signed in, is what
-    # opens up the private library. A logged-in non-member sees exactly what an
-    # anonymous visitor sees, so `org_id` in the URL is not a way in.
-    restricted = not user_id or not await is_org_member(user_id, org_id_int, db_session)
     statement = select(Media).where(Media.org_id == org_id_int)
-    if restricted:
-        statement = statement.where(Media.public == True)  # noqa: E712
-        # Most-restrictive: also hide media that sit in any private folder.
-        from src.db.folders.folder_content import FolderContent
-        from src.db.folders.folders import Folder
 
-        private_media = (
-            select(FolderContent.resource_uuid)
-            .join(Folder, Folder.id == FolderContent.folder_id)
-            .where(Folder.public == False)  # noqa: E712
+    def placed_in(folder_ids: set[int]):
+        return Media.media_uuid.in_(
+            select(FolderContent.resource_uuid).where(FolderContent.folder_id.in_(folder_ids))
         )
-        statement = statement.where(Media.media_uuid.not_in(private_media))
+
+    if isinstance(current_user, APITokenUser):
+        # A token reads media through its own rights, as a single media read
+        # does, and only inside its own org.
+        if current_user.org_id != org_id_int:
+            raise HTTPException(
+                status_code=403,
+                detail="API token cannot access resources outside its organization",
+            )
+        require_token_right(current_user, "media", "action_read")
+    else:
+        user_id = resolve_acting_user_id(current_user)
+        # Membership in the requested org, not merely being signed in, is what
+        # opens up the private library. A logged-in non-member sees exactly what
+        # an anonymous visitor sees, so `org_id` in the URL is not a way in.
+        is_member = bool(user_id) and await is_org_member(user_id, org_id_int, db_session)
+        if not is_member or not await is_org_admin(user_id, org_id_int, db_session):
+            # Same per-item rules as a media read, evaluated in bulk: folder
+            # rules reach every item below a folder, at any depth.
+            tree = await load_folder_tree(db_session, org_id_int)
+            private_folders = tree.private_ids()
+            effectively_public = Media.public == True  # noqa: E712
+            if private_folders:
+                effectively_public = and_(effectively_public, ~placed_in(private_folders))
+            if not is_member:
+                statement = statement.where(effectively_public)
+            else:
+                groups, authored_folders = await viewer_folder_grants(db_session, user_id)
+                linked = select(UserGroupResource.resource_uuid).where(
+                    UserGroupResource.resource_uuid == Media.media_uuid
+                )
+                in_linked_group = (
+                    select(UserGroupResource.resource_uuid)
+                    .join(UserGroupUser, UserGroupUser.usergroup_id == UserGroupResource.usergroup_id)
+                    .where(
+                        UserGroupResource.resource_uuid == Media.media_uuid,
+                        UserGroupUser.user_id == user_id,
+                    )
+                )
+                visible = or_(effectively_public, ~linked.exists(), in_linked_group.exists())
+                blocked = tree.blocked_ids(groups, authored_folders)
+                if blocked:
+                    visible = and_(visible, ~placed_in(blocked))
+                authored_media = select(ResourceAuthor.resource_uuid).where(
+                    ResourceAuthor.user_id == user_id,
+                    ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
+                    ResourceAuthor.authorship.in_([
+                        ResourceAuthorshipEnum.CREATOR,
+                        ResourceAuthorshipEnum.MAINTAINER,
+                        ResourceAuthorshipEnum.CONTRIBUTOR,
+                    ]),
+                )
+                statement = statement.where(
+                    or_(Media.media_uuid.in_(authored_media), visible)
+                )
     statement = statement.offset((page - 1) * limit).limit(limit)
     media_items = (await db_session.execute(statement)).scalars().all()
     return [MediaRead.model_validate(m) for m in media_items]

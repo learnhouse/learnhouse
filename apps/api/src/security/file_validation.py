@@ -176,10 +176,10 @@ def validate_ole_content(content: bytes) -> bool:
 
 
 # Per-type size caps. Two risks, not one: storage-fill DoS, and memory
-# exhaustion. An accepted upload is handed to the caller as a single `bytes`
-# object (see upload_content.upload_file), so the cap is also the per-request
-# RAM ceiling and a handful of concurrent uploads at the old multi-GB caps
-# could OOM the worker for every tenant on the pod.
+# exhaustion. `validate_upload` hands an accepted upload to the caller as a
+# single `bytes` object (`validate_upload_stream` does not), so for it the cap
+# is also the per-request RAM ceiling, and a handful of concurrent multi-GB
+# uploads could OOM the worker for every tenant on the pod.
 #
 # Caps are sized to the flows that actually reach this validator: media
 # library, activity/assignment attachments, org branding, podcasts. The course
@@ -311,24 +311,16 @@ MIME_TO_SAFE_EXT = {
 }
 
 
-def validate_upload(
+def _validate_upload(
     file: UploadFile,
     allowed_types: List[str],
     max_size: Optional[int] = None
-) -> Tuple[str, bytes]:
-    """
-    Validate uploaded file for security and type compliance.
-    
-    Args:
-        file: The uploaded file
-        allowed_types: List of allowed file types ('image', 'video', 'document')
-        max_size: Maximum file size in bytes (auto-determined if None)
-        
-    Returns:
-        Tuple of (mime_type, file_content)
-        
-    Raises:
-        HTTPException: If validation fails
+) -> Tuple[str, Optional[bytes]]:
+    """Run every upload check without reading the body into memory.
+
+    Returns the canonical MIME type, plus the bytes already read when the
+    stream could not be measured by seeking (bounded by the size cap);
+    otherwise ``None`` and the stream is left rewound.
     """
     if not file or not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
@@ -394,13 +386,56 @@ def validate_upload(
     if not valid:
         raise HTTPException(status_code=415, detail="File appears to be corrupted or invalid")
 
-    # Callers still receive the bytes (see services/utils/upload_content.py),
-    # so the size cap above doubles as the per-request memory ceiling.
+    return EXT_TO_CANONICAL_MIME.get(ext, file.content_type), buffered
+
+
+def validate_upload(
+    file: UploadFile,
+    allowed_types: List[str],
+    max_size: Optional[int] = None
+) -> Tuple[str, bytes]:
+    """
+    Validate uploaded file for security and type compliance.
+
+    Args:
+        file: The uploaded file
+        allowed_types: List of allowed file types ('image', 'video', 'document')
+        max_size: Maximum file size in bytes (auto-determined if None)
+
+    Returns:
+        Tuple of (mime_type, file_content)
+
+    Raises:
+        HTTPException: If validation fails
+
+    This returns the whole body as ``bytes``, so the size cap is also the
+    request's memory ceiling. Large uploads should use
+    :func:`validate_upload_stream` and copy ``file.file`` in chunks instead.
+    """
+    canonical_type, buffered = _validate_upload(file, allowed_types, max_size)
     content = buffered if buffered is not None else file.file.read()
     _rewind(file.file)
-
-    canonical_type = EXT_TO_CANONICAL_MIME.get(ext, file.content_type)
     return canonical_type, content
+
+
+def validate_upload_stream(
+    file: UploadFile,
+    allowed_types: List[str],
+    max_size: Optional[int] = None
+) -> str:
+    """Same checks as :func:`validate_upload`, without returning the body.
+
+    Size is measured by seeking and the content checks read a bounded header
+    (or walk a zip's central directory), so nothing close to the multi-GB caps
+    is ever held in memory. ``file.file`` is left rewound for the caller to
+    copy to storage in chunks. Returns the canonical MIME type.
+    """
+    canonical_type, buffered = _validate_upload(file, allowed_types, max_size)
+    if buffered is not None:
+        # Only an unseekable stream gets here; it has been consumed and cannot
+        # be handed back for a chunked copy.
+        raise HTTPException(status_code=400, detail="Upload stream is not seekable")
+    return canonical_type
 
 
 def get_safe_filename(

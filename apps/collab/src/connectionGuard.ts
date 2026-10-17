@@ -7,6 +7,12 @@ import type { Socket } from 'node:net'
 // itself: per-IP rate and concurrency limits, a global cap on sockets that
 // have not authenticated yet, an authentication deadline and a byte budget
 // for everything sent before authentication.
+//
+// Authenticating one document does not stop the queueing: messages addressed
+// to any other document on the same socket are queued until that document
+// authenticates, which may be never. So after authentication the guard keeps
+// counting what the socket sends against what reached a document
+// (markHandled), and caps both the difference and the handled throughput.
 
 /** Set on the upgrade request so onAuthenticate can find its connection. */
 export const CONNECTION_ID_HEADER = 'x-learnhouse-collab-connection'
@@ -60,11 +66,23 @@ export interface ConnectionGuardOptions {
   maxPendingConnections: number
   authDeadlineMs: number
   preAuthMaxBytes: number
+  /** Bytes an authenticated socket may send that never reach a document. */
+  maxUnhandledBytes: number
+  /** Bytes of document messages a socket may send per rate limit window. */
+  maxHandledBytesPerWindow: number
 }
 
-interface PendingConnection {
+// Worst-case framing of a masked client frame: 2-10 header bytes + 4 mask
+// bytes. Credited per handled message so framing never counts as unhandled.
+const WS_FRAME_OVERHEAD = 14
+
+interface TrackedConnection {
   socket: Socket
-  timer: NodeJS.Timeout
+  timer: NodeJS.Timeout | null
+  received: number
+  handled: number
+  windowBytes: number
+  windowResetAt: number
   countBytes: (chunk: Buffer) => void
   watchForReader: (event: string | symbol) => void
 }
@@ -72,7 +90,8 @@ interface PendingConnection {
 export function createConnectionGuard(opts: ConnectionGuardOptions) {
   const limiter = createRateLimiter(opts.rateLimitWindowMs, opts.rateLimitMax)
   const openPerIp = new Map<string, number>()
-  const pending = new Map<string, PendingConnection>()
+  const tracked = new Map<string, TrackedConnection>()
+  const pending = new Set<string>()
   let warnedUntrustedProxy = false
 
   function reject(socket: Socket, status: string) {
@@ -108,10 +127,11 @@ export function createConnectionGuard(opts: ConnectionGuardOptions) {
     request.headers[CONNECTION_ID_HEADER] = id
     if (perIp) openPerIp.set(ip, (openPerIp.get(ip) ?? 0) + 1)
 
-    let received = 0
     const countBytes = (chunk: Buffer) => {
-      received += chunk.length
-      if (received > opts.preAuthMaxBytes) socket.destroy()
+      conn.received += chunk.length
+      const unhandled = conn.received - conn.handled
+      const budget = conn.timer ? opts.preAuthMaxBytes : opts.maxUnhandledBytes
+      if (unhandled > budget) socket.destroy()
     }
     // Attaching a 'data' listener now would start the socket flowing before
     // ws takes it over and drop those bytes. Join right as ws attaches its
@@ -123,8 +143,18 @@ export function createConnectionGuard(opts: ConnectionGuardOptions) {
     }
     socket.on('newListener', watchForReader)
 
-    const timer = setTimeout(() => socket.destroy(), opts.authDeadlineMs)
-    pending.set(id, { socket, timer, countBytes, watchForReader })
+    const conn: TrackedConnection = {
+      socket,
+      timer: setTimeout(() => socket.destroy(), opts.authDeadlineMs),
+      received: 0,
+      handled: 0,
+      windowBytes: 0,
+      windowResetAt: 0,
+      countBytes,
+      watchForReader,
+    }
+    tracked.set(id, conn)
+    pending.add(id)
 
     socket.once('close', () => {
       release(id)
@@ -137,22 +167,50 @@ export function createConnectionGuard(opts: ConnectionGuardOptions) {
   }
 
   function release(id: string) {
-    const conn = pending.get(id)
+    const conn = tracked.get(id)
     if (!conn) return
-    clearTimeout(conn.timer)
+    if (conn.timer) clearTimeout(conn.timer)
     conn.socket.off('newListener', conn.watchForReader)
     conn.socket.off('data', conn.countBytes)
+    tracked.delete(id)
     pending.delete(id)
   }
 
-  /** Lifts the deadline and byte budget once a document on the socket authenticates. */
+  /** Lifts the deadline and the pre-auth budget once a document on the socket authenticates. */
   function markAuthenticated(id: string | null) {
-    if (id) release(id)
+    const conn = id ? tracked.get(id) : undefined
+    if (!conn || !conn.timer) return
+    clearTimeout(conn.timer)
+    conn.timer = null
+    pending.delete(id!)
+  }
+
+  /**
+   * Credits a message that reached a document. Returns false, after closing
+   * the socket, once the socket sends more than its handled-bytes allowance
+   * for the current window.
+   */
+  function markHandled(id: string | null, bytes: number): boolean {
+    const conn = id ? tracked.get(id) : undefined
+    if (!conn) return true
+    conn.handled += bytes + WS_FRAME_OVERHEAD
+    const now = Date.now()
+    if (now >= conn.windowResetAt) {
+      conn.windowBytes = 0
+      conn.windowResetAt = now + opts.rateLimitWindowMs
+    }
+    conn.windowBytes += bytes
+    if (conn.windowBytes > opts.maxHandledBytesPerWindow) {
+      conn.socket.destroy()
+      return false
+    }
+    return true
   }
 
   return {
     admit,
     markAuthenticated,
+    markHandled,
     sweep: limiter.sweep,
     get pendingCount() {
       return pending.size

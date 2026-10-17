@@ -371,14 +371,17 @@ async def test_create_course_from_migration_skips_bad_files_and_validates_inputs
 async def test_upload_migration_files_branches(monkeypatch, tmp_path):
     base = tmp_path / "migrations"
     monkeypatch.setattr(migrations, "_TEMP_BASE_REAL", str(base))
-    monkeypatch.setattr(migrations, "MAX_SINGLE_FILE_SIZE", 1)
-    monkeypatch.setattr(migrations, "MAX_TOTAL_UPLOAD_SIZE", 1)
+    # Files must carry a real header to pass the magic-byte check.
+    mp4 = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 16
+    monkeypatch.setattr(migrations, "MAX_SINGLE_FILE_SIZE", len(mp4))
+    monkeypatch.setattr(migrations, "MAX_TOTAL_UPLOAD_SIZE", len(mp4))
 
     files = [
-        _FakeUploadFile("intro.mp4", "video/mp4", b"a"),
+        _FakeUploadFile("intro.mp4", "video/mp4", mp4),
         _FakeUploadFile("bad.txt", "text/plain", b"b"),
-        _FakeUploadFile("overflow.png", "image/png", b"cc"),
-        _FakeUploadFile("second.mp4", "video/mp4", b"d"),
+        _FakeUploadFile("overflow.png", "image/png", b"c" * (len(mp4) + 1)),
+        _FakeUploadFile("fake.mp4", "video/mp4", b"not a video"),
+        _FakeUploadFile("second.mp4", "video/mp4", mp4),
     ]
 
     result = await migrations.upload_migration_files(files)
@@ -386,6 +389,7 @@ async def test_upload_migration_files_branches(monkeypatch, tmp_path):
     assert result.skipped == [
         "bad.txt: unsupported format",
         "overflow.png: exceeds 0GB limit",
+        "fake.mp4: content does not match its file type",
         "second.mp4: total upload size exceeded",
     ]
     assert len(result.files) == 1

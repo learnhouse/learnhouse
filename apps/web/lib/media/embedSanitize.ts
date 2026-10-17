@@ -6,6 +6,9 @@
 import DOMPurify from 'dompurify'
 
 const BASE_SANDBOX = 'allow-scripts allow-popups allow-presentation allow-forms'
+// For frames we trust with their own origin: links they open land in a normal
+// tab instead of a sandboxed one, and file downloads work.
+const TRUSTED_SANDBOX = `${BASE_SANDBOX} allow-popups-to-escape-sandbox allow-downloads allow-same-origin`
 
 // Hosts (and their subdomains) of the providers the embed UI advertises.
 const SAME_ORIGIN_EMBED_HOSTS = [
@@ -35,12 +38,30 @@ export function iframeSandboxFor(src: string | null | undefined): string {
     if (u.protocol !== 'https:') return BASE_SANDBOX
     const host = u.hostname.toLowerCase()
     if (SAME_ORIGIN_EMBED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) {
-      return `${BASE_SANDBOX} allow-same-origin`
+      return TRUSTED_SANDBOX
     }
   } catch {
     /* relative or unparseable src */
   }
   return BASE_SANDBOX
+}
+
+/**
+ * The sandbox for a URL-mode embed (an author-entered page shown in an iframe).
+ * Any site can be embedded this way, so it keeps its own origin and can run
+ * scripts, submit forms, download files and open links in normal tabs, but can
+ * never navigate the top window. A URL on our own origin gets only the base
+ * sandbox: allow-same-origin combined with allow-scripts would let it reach
+ * into the parent page and lift its own sandbox.
+ */
+export function urlEmbedSandboxFor(src: string | null | undefined, pageOrigin?: string): string {
+  try {
+    const u = new URL(src || '', pageOrigin)
+    if (pageOrigin && u.origin === pageOrigin) return BASE_SANDBOX
+  } catch {
+    return BASE_SANDBOX
+  }
+  return TRUSTED_SANDBOX
 }
 
 const ALLOWED_ATTR = [

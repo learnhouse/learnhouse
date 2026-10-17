@@ -525,8 +525,12 @@ async def get_user_certificates_for_course(
             detail="Course not found",
         )
 
-    # RBAC check
-    await _check_certification_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+    # RBAC check. A signed-in user always reads their OWN certificates, even
+    # once the course is unpublished or out of reach: the query below only
+    # returns the caller's own records (empty for anyone who earned none) and
+    # no course content, so course access isn't what guards it.
+    if isinstance(current_user, APITokenUser) or not current_user.id:
+        await _check_certification_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get all certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)

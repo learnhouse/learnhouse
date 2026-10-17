@@ -558,14 +558,16 @@ class TestPodcastsService:
         admin_uuids = {podcast.podcast_uuid for podcast in admin_results}
         anon_uuids = {podcast.podcast_uuid for podcast in anonymous_results}
 
+        # The usergroup podcast is unpublished, so its group's members don't
+        # see it; admins and superadmins do.
         assert regular_uuids == {
             public_podcast.podcast_uuid,
             published_private.podcast_uuid,
-            grouped_podcast.podcast_uuid,
             author_podcast.podcast_uuid,
         }
-        assert admin_uuids == regular_uuids
-        assert {podcast.podcast_uuid for podcast in superadmin_results} == regular_uuids
+        everything = regular_uuids | {grouped_podcast.podcast_uuid}
+        assert admin_uuids == everything
+        assert {podcast.podcast_uuid for podcast in superadmin_results} == everything
         assert anon_uuids == {public_podcast.podcast_uuid}
 
         assert await get_podcasts_count_orgslug(
@@ -579,7 +581,7 @@ class TestPodcastsService:
 
         assert await get_podcasts_count_orgslug(
             mock_request, regular_user, org.slug, db
-        ) == 4
+        ) == 3
 
     @pytest.mark.asyncio
     async def test_thumbnail_update_sensitive_update_and_delete_errors(

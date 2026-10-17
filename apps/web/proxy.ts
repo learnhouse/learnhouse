@@ -2,6 +2,7 @@ import { getAPIUrl } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
+import { isThirdPartyRelayPath, withoutCredentialHeaders } from './lib/thirdPartyRelay'
 
 // =============================================================================
 // Tenancy
@@ -201,6 +202,10 @@ function tenantRequestHeaders(
   return headers
 }
 
+// Org-context headers the per-org metadata route handlers trust. Only the proxy
+// may set them; incoming copies are stripped before forwarding.
+const ORGSLUG_HEADERS = ['x-feed-orgslug', 'x-sitemap-orgslug', 'x-robots-orgslug']
+
 // =============================================================================
 // Middleware
 // =============================================================================
@@ -218,8 +223,13 @@ export const config = {
      * 7. /embed (activity embeds)
      * 8. /ingest (PostHog reverse proxy; must reach the next.config rewrite
      *    untouched; otherwise the middleware mis-routes it and ingestion 404s)
+     *
+     * /ingest and /monitoring are matched again below on their own, only so
+     * the credentials can be stripped before the rewrite forwards them.
      */
     '/((?!api|_next|fonts|umami|ingest|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
+    '/ingest/:path*',
+    '/monitoring/:path*',
     '/sitemap.xml',
     '/robots.txt',
     '/payments/stripe/connect/oauth',
@@ -228,6 +238,13 @@ export const config = {
 }
 
 export default async function proxy(req: NextRequest) {
+  // PostHog / Sentry relays: these are external rewrites that would otherwise
+  // hand the browser's session cookies to a third party. Drop credentials and
+  // let the rewrite run; no tenancy routing applies to them.
+  if (isThirdPartyRelayPath(req.nextUrl.pathname)) {
+    return NextResponse.next({ request: { headers: withoutCredentialHeaders(req.headers) } })
+  }
+
   const instance = await getInstanceInfo()
   const { pathname, search } = req.nextUrl
   const fullhost = req.headers.get('host')
@@ -493,26 +510,29 @@ export default async function proxy(req: NextRequest) {
   // -------------------------------------------------------------------------
   // 9. Per-org metadata endpoints (sitemap, robots, podcast feed)
   // -------------------------------------------------------------------------
+  // The route handlers read the org from a REQUEST header. It used to be set on
+  // the response, where the handler never saw it, so these endpoints 400'd.
+  // Any client-sent copy is dropped first so only the resolved tenant counts.
+  const orgslugRequestHeaders = (name: string, slug: string) => {
+    const headers = new Headers(req.headers)
+    for (const h of ORGSLUG_HEADERS) headers.delete(h)
+    headers.set(name, slug)
+    return { request: { headers } }
+  }
   if (pathname.match(/^\/podcast\/([^/]+)\/feed$/)) {
     const resolved = await resolveTenant(req, instance)
     const feedUrl = new URL(`/api${pathname}`, req.url)
-    const response = NextResponse.rewrite(feedUrl)
-    response.headers.set('X-Feed-Orgslug', resolved.slug)
-    return response
+    return NextResponse.rewrite(feedUrl, orgslugRequestHeaders('X-Feed-Orgslug', resolved.slug))
   }
   if (pathname.startsWith('/sitemap.xml')) {
     const resolved = await resolveTenant(req, instance)
-    const sitemapUrl = new URL(`/api/sitemap`, req.url)
-    const response = NextResponse.rewrite(sitemapUrl)
-    response.headers.set('X-Sitemap-Orgslug', resolved.slug)
-    return response
+    const sitemapUrl = new URL(`/api/sitemap${search}`, req.url)
+    return NextResponse.rewrite(sitemapUrl, orgslugRequestHeaders('X-Sitemap-Orgslug', resolved.slug))
   }
   if (pathname === '/robots.txt') {
     const resolved = await resolveTenant(req, instance)
     const robotsUrl = new URL(`/api/robots`, req.url)
-    const response = NextResponse.rewrite(robotsUrl)
-    response.headers.set('X-Robots-Orgslug', resolved.slug)
-    return response
+    return NextResponse.rewrite(robotsUrl, orgslugRequestHeaders('X-Robots-Orgslug', resolved.slug))
   }
 
   // -------------------------------------------------------------------------

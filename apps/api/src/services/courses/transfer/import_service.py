@@ -32,7 +32,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
-from src.security.file_validation import EXT_TO_CANONICAL_MIME, MIME_TO_SAFE_EXT
+from src.security.file_validation import EXT_TO_CANONICAL_MIME, FILE_TYPES, MIME_TO_SAFE_EXT
 from src.security.org_auth import require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
@@ -45,7 +45,14 @@ from .models import (
     ImportResult,
     ImportCourseResult,
 )
-from .storage_utils import upload_directory_to_s3, upload_file_to_s3, is_s3_enabled, delete_storage_file, delete_storage_directory
+from .storage_utils import (
+    upload_directory_to_s3,
+    upload_file_to_s3,
+    is_s3_enabled,
+    delete_storage_file,
+    delete_storage_directory,
+    rewrite_sqlite_db_paths,
+)
 
 
 # Temp storage for analyzed packages
@@ -120,6 +127,32 @@ def safe_stored_extension(filename: str) -> Optional[str]:
     return ext
 
 
+# Magic-byte validators only look at a header; zip types read the stream.
+_CONTENT_SNIFF_BYTES = 64 * 1024
+
+
+def file_content_matches_extension(path: str) -> bool:
+    """Apply the upload validator (FILE_TYPES) for ``path``'s extension.
+
+    A package or migration file named like an uploadable media type must carry
+    that type's content, as it would through ``upload_file``: stored media is
+    later handed to ffmpeg and served back by its extension. Extensions with no
+    upload type (subtitles, HLS output, other containers) are not checked here.
+    """
+    ext = os.path.splitext(path)[1].lower()
+    spec = next((t for t in FILE_TYPES.values() if ext in t["extensions"]), None)
+    if spec is None:
+        return True
+    try:
+        with open(path, "rb") as f:
+            stream_validator = spec.get("stream_validator")
+            if stream_validator is not None:
+                return bool(stream_validator(f))
+            return bool(spec["validator"](f.read(_CONTENT_SNIFF_BYTES)))
+    except OSError:
+        return False
+
+
 # A SCORM package *is* a web app: its manifest, entry HTML, JS and CSS are the
 # activity. Those live under `.../<activity>/scorm/`, are served by the EE SCORM
 # route rather than the content router, and dropping them would silently import
@@ -133,13 +166,17 @@ def _is_scorm_subtree(src_dir: str) -> bool:
 
 
 def _ignore_unsafe_package_files(src_dir: str, names: list[str]) -> set[str]:
-    """copytree filter dropping package files with a non-importable extension."""
+    """copytree filter dropping package files with a non-importable extension
+    or content that doesn't match it."""
     if _is_scorm_subtree(src_dir):
         return set()
     return {
         name for name in names
         if not os.path.isdir(os.path.join(src_dir, name))
-        and safe_stored_extension(name) is None
+        and (
+            safe_stored_extension(name) is None
+            or not file_content_matches_extension(os.path.join(src_dir, name))
+        )
     }
 
 
@@ -651,7 +688,7 @@ async def _import_single_course(
                 # Generate new filename. The stored extension is derived from
                 # the media allowlist, never carried over from the package.
                 ext = safe_stored_extension(filename)
-                if not ext:
+                if not ext or not file_content_matches_extension(source_file):
                     continue
                 new_filename = f"{new_course_uuid}_thumbnail_{uuid4()}.{ext}"
                 dest_file = os.path.join(f"{new_course_path}/thumbnails", new_filename)
@@ -820,6 +857,13 @@ async def _import_activity(
     # Clone content (will update block references)
     new_content = dict(activity_data.get("content", {})) if activity_data.get("content") else {}
     _drop_foreign_file_refs(new_content, new_course_path)
+    # Code blocks keep their SQLite database's full storage key; the package's
+    # files land under the new activity, so re-root keys under the old one.
+    new_content = rewrite_sqlite_db_paths(
+        new_content,
+        os.path.basename(os.path.normpath(activity_path)),
+        f"{new_course_path.removeprefix('content/')}/activities/{new_activity_uuid}",
+    )
     new_details = dict(activity_data.get("details", {})) if activity_data.get("details") else {}
 
     new_activity = Activity(

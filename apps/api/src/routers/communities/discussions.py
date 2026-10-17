@@ -2,10 +2,13 @@ from typing import List, Dict
 from fastapi import APIRouter, Depends, Request, Query
 from pydantic import BaseModel
 
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
+from src.db.courses.courses import Course
 from src.db.users import PublicUser
 from src.db.communities.discussions import (
+    Discussion,
     DiscussionReadWithVoteStatus,
     DiscussionUpdate,
     DiscussionPinUpdate,
@@ -15,6 +18,7 @@ from src.db.communities.discussions import (
 )
 from src.db.communities.discussion_votes import DiscussionVoteRead
 from src.db.communities.discussion_comments import (
+    DiscussionComment,
     DiscussionCommentReadWithVoteStatus,
     DiscussionCommentUpdate,
 )
@@ -23,6 +27,7 @@ from src.db.communities.discussion_reactions import (
     DiscussionReactionSummary,
 )
 from src.security.auth import get_current_user
+from src.security.features_utils.plan_check import check_org_plan
 from src.services.communities.discussions import (
     create_discussion,
     get_discussion,
@@ -55,7 +60,35 @@ from src.services.communities.reactions import (
 )
 
 
-router = APIRouter()
+async def require_communities_plan_by_child(
+    request: Request,
+    db_session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """Communities plan gate for routes addressed by a discussion, comment or
+    course uuid. The shared community gate only resolves a community_uuid and
+    lets everything else through, so resolve the org from the child here."""
+    params = request.path_params
+    statement = None
+    if "discussion_uuid" in params:
+        statement = select(Discussion.org_id).where(
+            Discussion.discussion_uuid == params["discussion_uuid"]
+        )
+    elif "comment_uuid" in params:
+        statement = (
+            select(Discussion.org_id)
+            .join(DiscussionComment, DiscussionComment.discussion_id == Discussion.id)
+            .where(DiscussionComment.comment_uuid == params["comment_uuid"])
+        )
+    elif "course_uuid" in params:
+        statement = select(Course.org_id).where(Course.course_uuid == params["course_uuid"])
+    if statement is None:
+        return
+    org_id = (await db_session.execute(statement)).scalars().first()
+    if org_id is not None:
+        await check_org_plan(org_id, "standard", "Communities", db_session)
+
+
+router = APIRouter(dependencies=[Depends(require_communities_plan_by_child)])
 
 
 class DiscussionCreateRequest(BaseModel):

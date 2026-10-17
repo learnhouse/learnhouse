@@ -4,7 +4,7 @@ import { Link as LinkIcon, DotsSixVertical, DotsSix, TextAlignCenter, Code, X, P
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiNotion, SiGoogledocs, SiX, SiFigma, SiGiphy, SiYoutube } from '@icons-pack/react-simple-icons'
 import DOMPurify from 'dompurify'
-import { sanitizeEmbedCode } from '@/lib/media/embedSanitize'
+import { sanitizeEmbedCode, urlEmbedSandboxFor } from '@/lib/media/embedSanitize'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 
@@ -97,6 +97,10 @@ const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType }: {
         className="w-full h-full rounded-lg"
         frameBorder="0"
         allowFullScreen
+        sandbox={urlEmbedSandboxFor(
+          processedUrl,
+          typeof window !== 'undefined' ? window.location.origin : undefined,
+        )}
       />
     );
   }

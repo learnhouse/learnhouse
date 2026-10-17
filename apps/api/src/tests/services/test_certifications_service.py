@@ -990,13 +990,8 @@ class TestUserCertificatesForCourse:
         assert len(result) == 1
         assert result[0]["certificate_user"].user_id == regular_user.id
         assert result[0]["certification"].certification_uuid == certification.certification_uuid
-        mock_access.assert_awaited_once_with(
-            mock_request,
-            db,
-            regular_user,
-            course.course_uuid,
-            AccessAction.READ,
-        )
+        # The caller's own certificates don't hinge on course access.
+        mock_access.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_get_user_certificates_for_course_empty_course(

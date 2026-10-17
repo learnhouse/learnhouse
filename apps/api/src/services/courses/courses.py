@@ -28,6 +28,7 @@ from src.db.courses.courses import (
 )
 from src.security.api_token_utils import require_token_right
 from src.security.auth import resolve_acting_user_id
+from src.services.orgs.auth_policy import viewer_for_org
 from src.security.org_auth import require_org_create_permission
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
@@ -309,6 +310,7 @@ async def get_courses_orgslug(
     is_token = isinstance(current_user, APITokenUser)
     if is_token:
         _require_token_course_listing(current_user, org.id)
+    current_user = await viewer_for_org(db_session, current_user, org.id)
 
     # Check if user can view unpublished courses (must be admin/editor in org)
     can_view_unpublished = False
@@ -557,6 +559,12 @@ async def search_courses(
         )
     )
 
+    if not isinstance(current_user, (AnonymousUser, APITokenUser)):
+        search_org_id = (await db_session.execute(
+            select(Organization.id).where(Organization.slug == org_slug)
+        )).scalars().first()
+        if search_org_id is not None:
+            current_user = await viewer_for_org(db_session, current_user, search_org_id)
     search_acting_user_id = resolve_acting_user_id(current_user)
 
     if isinstance(current_user, AnonymousUser):
@@ -1288,6 +1296,7 @@ async def clone_course(
         is_s3_enabled,
         file_exists,
         list_directory,
+        rewrite_sqlite_db_paths,
     )
     from collections import defaultdict
     from src.db.courses.chapters import Chapter
@@ -1486,6 +1495,12 @@ async def clone_course(
             # Clone activity content (will update file references for blocks)
             new_content = dict(original_activity.content) if original_activity.content else {}
             new_details = dict(original_activity.details) if original_activity.details else {}
+            # Code blocks keep their SQLite database's full storage key.
+            new_content = rewrite_sqlite_db_paths(
+                new_content,
+                original_activity.activity_uuid,
+                f"orgs/{org.org_uuid}/courses/{new_course_uuid}/activities/{new_activity_uuid}",
+            )
 
             new_activity = Activity(
                 name=original_activity.name,

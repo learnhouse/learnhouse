@@ -30,6 +30,7 @@ from src.services.communities.moderation import (
     enforce_posting_limits,
 )
 from src.services.communities.access import (
+    require_author_may_still_post,
     require_community_participant,
     require_token_in_community_org,
 )
@@ -448,6 +449,10 @@ async def update_discussion(
 
     if not is_author and not is_admin:
         raise HTTPException(status_code=403, detail="You don't have permission to update this discussion")
+    if not is_admin:
+        await require_author_may_still_post(
+            request, current_user, community, discussion, db_session
+        )
 
     # Check edit limit for authors (admins can edit unlimited)
     max_edits = 2

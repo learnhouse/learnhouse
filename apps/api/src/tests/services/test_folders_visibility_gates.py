@@ -67,7 +67,9 @@ async def test_root_items_gate_boards_and_strip_ydoc(
 ):
     for id_, uuid in ((1, "board_open"), (2, "board_staff")):
         db.add(Board(
-            id=id_, name=uuid, public=False, org_id=org.id, board_uuid=uuid,
+            # A private board with no linked UserGroup belongs to its members
+            # only, so the board every member sees is a public one.
+            id=id_, name=uuid, public=uuid == "board_open", org_id=org.id, board_uuid=uuid,
             created_by=admin_user.id, ydoc_state=b"secret", creation_date=_now(), update_date=_now(),
         ))
         db.add(FolderContent(folder_id=None, resource_uuid=uuid, org_id=org.id, position=id_))

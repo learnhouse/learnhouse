@@ -34,6 +34,10 @@ from src.services.courses.transfer.import_service import (
 )
 from src.services.courses.transfer.models import ImportOptions
 
+# Imported media must match its extension's magic bytes.
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + b"\x00" * 17
+MP4_BYTES = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 16
+
 
 def _zip_bytes(files: dict[str, bytes]) -> bytes:
     buffer = BytesIO()
@@ -843,7 +847,7 @@ class TestImportHelpers:
         (course_path / "course.json").write_text(
             json.dumps({"name": "Course", "thumbnail_type": "not-valid", "thumbnail_image": "thumb.png"})
         )
-        (thumbnails_dir / "thumb.png").write_bytes(b"thumb")
+        (thumbnails_dir / "thumb.png").write_bytes(PNG_BYTES)
 
         with patch(
             "src.services.courses.transfer.import_service.is_s3_enabled",
@@ -963,8 +967,8 @@ class TestImportHelpers:
                 }
             )
         )
-        (thumbnails_dir / "thumb.png").write_bytes(b"thumb")
-        (thumbnails_dir / "video.mp4").write_bytes(b"video")
+        (thumbnails_dir / "thumb.png").write_bytes(PNG_BYTES)
+        (thumbnails_dir / "video.mp4").write_bytes(MP4_BYTES)
 
         new_course_uuid = "course-new"
         current_user = APITokenUser(
@@ -1014,7 +1018,7 @@ class TestImportHelpers:
         thumbnails_dir = course_path / "thumbnails"
         thumbnails_dir.mkdir(parents=True)
         (course_path / "course.json").write_text(json.dumps({"name": "Course", "thumbnail_image": "thumb.png"}))
-        (thumbnails_dir / "thumb.png").write_bytes(b"thumb")
+        (thumbnails_dir / "thumb.png").write_bytes(PNG_BYTES)
 
         with patch(
             "src.services.courses.transfer.import_service.is_s3_enabled",

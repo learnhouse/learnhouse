@@ -5928,7 +5928,14 @@
     "select_all": "تحديد الكل",
     "selected_count": "{{count}} محدد",
     "no_boards": "لا توجد لوحات بعد",
-    "no_search_results": "لم يتم العثور على لوحات"
+    "no_search_results": "لم يتم العثور على لوحات",
+    "connection": {
+      "access_revoked_title": "لم تعد لديك صلاحية الوصول إلى هذه اللوحة",
+      "access_revoked_description": "أُزيلت صلاحية وصولك أثناء فتح اللوحة. أعد التحميل للتحقق مرة أخرى.",
+      "too_large_title": "هذه اللوحة أكبر من أن تستمر مزامنتها",
+      "too_large_description": "تجاوزت اللوحة الحد الأقصى للحجم، لذا توقف التحرير المباشر. قد لا تكون أحدث تغييراتك قد حُفظت.",
+      "reload": "إعادة التحميل"
+    }
   },
   "onboarding": {
     "getting_started": "البدء",

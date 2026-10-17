@@ -125,8 +125,10 @@ class TestGetEditorBootstrap:
 
     @pytest.mark.asyncio
     async def test_scrubs_content_when_no_paid_access(
-        self, mock_request, db, org, course, chapter, activity, admin_user
+        self, mock_request, db, org, course, chapter, activity, regular_user
     ):
+        # Course editors bypass the paywall scrub, so let a non-editor through
+        # the bootstrap gate (patched) and assert the reader-side scrub still runs.
         fake_org_read = MagicMock(spec=OrganizationRead)
 
         with patch(
@@ -148,7 +150,7 @@ class TestGetEditorBootstrap:
             return_value=fake_org_read,
         ):
             result = await get_editor_bootstrap(
-                mock_request, activity.activity_uuid, admin_user, db
+                mock_request, activity.activity_uuid, regular_user, db
             )
 
         assert result.activity.content == {"paid_access": False}
