@@ -147,7 +147,7 @@ app = FastAPI(
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
     # The schema lists every internal route; publish it only where the docs are.
     openapi_url="/openapi.json" if learnhouse_config.general_config.development_mode else None,
-    version="1.4.0",
+    version="1.4.1",
     lifespan=lifespan,
 )
 
