@@ -22,7 +22,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTrail } from '@/hooks/queries/useTrail'
 import { useCourseMeta } from '@/hooks/queries/useCourses'
-import { useActivity } from '@/hooks/queries/useActivity'
+import { activityQueryOptions, useActivity } from '@/hooks/queries/useActivity'
 import CourseAccessError from '@components/Objects/Courses/CourseAccessError/CourseAccessError'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -1197,10 +1197,10 @@ export function MarkStatus(props: {
   const findNextActivity = () => {
     const flat: any[] = [];
     let currentIndex = -1;
-    props.course.chapters.forEach((chapter: any) => {
-      chapter.activities.forEach((activity: any) => {
+    props.course?.chapters?.forEach((chapter: any) => {
+      chapter.activities?.forEach((activity: any) => {
         flat.push(activity);
-        if (activity.id === props.activity.id) {
+        if (activity.id === props.activity?.id) {
           currentIndex = flat.length - 1;
         }
       });
@@ -1208,20 +1208,60 @@ export function MarkStatus(props: {
     return currentIndex >= 0 && currentIndex < flat.length - 1 ? flat[currentIndex + 1] : null;
   };
 
+  // Completing an activity moves the learner to the next one, so warm its data
+  // and route now; the navigation then renders from cache.
+  const nextActivityUuid = findNextActivity()?.activity_uuid?.replace('activity_', '');
+  const accessToken = session.data?.tokens?.access_token;
+  useEffect(() => {
+    if (!isUserPartOfTheOrg || !nextActivityUuid) return;
+    const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
+    router.prefetch(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/${nextActivityUuid}`);
+    queryClient.prefetchQuery(activityQueryOptions(nextActivityUuid, accessToken));
+  }, [isUserPartOfTheOrg, nextActivityUuid, accessToken, props.course.course_uuid, props.orgslug, queryClient, router]);
+
   async function markActivityAsCompleteFront() {
+    const trailKey = queryKeys.trail.org(org?.id);
+    // A refetch already in flight would land after the optimistic write below
+    // and briefly undo it.
+    await queryClient.cancelQueries({ queryKey: trailKey });
+    const previousTrail = queryClient.getQueryData(trailKey);
     try {
       const willCompleteAll = areAllActivitiesCompleted();
       const nextActivity = findNextActivity();
+      const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
       setIsLoading(true);
 
-      await markActivityAsComplete(
+      // Show the activity as done right away; the server's trail replaces this
+      // once the request settles.
+      queryClient.setQueryData(trailKey, (trail: any) => trail && {
+        ...trail,
+        runs: trail.runs?.map((run: any) =>
+          run.course?.course_uuid?.replace('course_', '') === cleanCourseUuid
+            ? { ...run, steps: [...(run.steps || []), { activity_id: props.activity.id, course_id: run.course_id, complete: true }] }
+            : run
+        ),
+      });
+
+      const request = markActivityAsComplete(
         props.orgslug,
         props.course.course_uuid,
         props.activity.activity_uuid,
         session.data?.tokens?.access_token
-      );
+      ).then((trail: any) => {
+        // The response is the updated trail, so no refetch is needed.
+        if (trail?.runs) queryClient.setQueryData(trailKey, trail);
+      });
 
-      await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
+      // The end page shows the certificate, which the request creates, so only
+      // that navigation waits for it. Moving on to the next activity does not.
+      if (willCompleteAll || !nextActivity) {
+        await request;
+      } else {
+        request.catch(() => {
+          queryClient.setQueryData(trailKey, previousTrail);
+          toast.error(t('activities.failed_mark_complete'));
+        });
+      }
 
       track(AnalyticsEvent.ActivityMarkedComplete, {
         activity_uuid: props.activity.activity_uuid,
@@ -1237,8 +1277,6 @@ export function MarkStatus(props: {
         });
       }
 
-      const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
-      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid) });
       if (willCompleteAll || !nextActivity) {
         router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/end`);
       } else {
@@ -1247,6 +1285,7 @@ export function MarkStatus(props: {
       }
     } catch (error) {
       console.error('Error marking activity as complete:', error);
+      queryClient.setQueryData(trailKey, previousTrail);
       toast.error(t('activities.failed_mark_complete'));
     } finally {
       setIsLoading(false);
@@ -1257,15 +1296,20 @@ export function MarkStatus(props: {
     try {
       setIsLoading(true);
       
-      await unmarkActivityAsComplete(
+      const trail = await unmarkActivityAsComplete(
         props.orgslug,
         props.course.course_uuid,
         props.activity.activity_uuid,
         session.data?.tokens?.access_token
       );
 
-      await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(props.course.course_uuid.replace('course_', '')) });
+      // The response is the updated trail, and course metadata carries no
+      // progress, so neither needs a refetch.
+      if (trail?.runs) {
+        queryClient.setQueryData(queryKeys.trail.org(org?.id), trail);
+      } else {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
+      }
     } catch (_error) {
       toast.error(t('activities.failed_unmark_complete'));
     } finally {
