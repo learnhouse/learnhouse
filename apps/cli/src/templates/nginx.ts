@@ -3,7 +3,12 @@
  * All traffic (including /collab WebSocket) goes to the app container,
  * which has its own internal nginx routing.
  */
-export function generateNginxConf(): string {
+export function generateNginxConf(config: { useHttps?: boolean } = {}): string {
+  // This proxy only ever listens on plain HTTP. With manual HTTPS, TLS ends at
+  // the operator's own proxy in front of it, so $scheme would always be "http"
+  // and the app would issue non-Secure cookies. The public scheme is known from
+  // setup, so pin it rather than trusting $scheme or a client-sent header.
+  const forwardedProto = config.useHttps ? 'https' : '$scheme'
   return `
 server {
     listen 80;
@@ -34,7 +39,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         # Edge proxy: overwrite any client-supplied X-Forwarded-For.
         proxy_set_header X-Forwarded-For $remote_addr;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto ${forwardedProto};
 
         # WebSocket support (needed for /collab)
         proxy_http_version 1.1;

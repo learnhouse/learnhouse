@@ -22,13 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
       - name: Ruff lint
-        uses: chartboost/ruff-action@v1
-        with:
-          src: "./apps/api"
-          # Pin the ruff version. Without it the action's auto-detection can
-          # resolve to an empty version and fall back to a default rule set that
-          # floods the whole tree with thousands of unrelated findings. Pinning
-          # keeps lint deterministic and matched to the project config.
-          version: "0.15.9"
+        # Pinned so lint stays deterministic and matched to the project config.
+        run: pipx run ruff==0.15.9 check --output-format=github ./apps/api

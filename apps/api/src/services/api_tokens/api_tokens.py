@@ -24,6 +24,7 @@ from src.security.org_auth import (
     require_org_role_permission,
     get_user_org_role,
 )
+from src.security.superadmin import is_user_superadmin
 from src.security.security import (
     security_hash_token,
     security_token_needs_rehash,
@@ -424,6 +425,18 @@ async def regenerate_api_token(
             detail="Cannot regenerate a revoked token",
         )
 
+    # A new secret is the token's full authority in the caller's hands, so only
+    # its creator, or someone who already holds every right it carries, gets it.
+    if token.created_by_user_id != current_user.id and not await is_user_superadmin(
+        current_user.id, db_session
+    ):
+        caller_role = await get_user_org_role(current_user.id, org_id, db_session)
+        if cap_token_rights(token.rights, caller_role) != _rights_dict(token.rights):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only regenerate tokens you created or whose rights you hold yourself",
+            )
+
     # Generate new token secret
     full_token, token_prefix, token_hash = generate_api_token()
 
@@ -477,6 +490,110 @@ async def _require_api_access_plan(org_id: int, db_session: AsyncSession) -> Non
         )
 
 
+async def _api_token_is_live(api_token: APIToken, db_session: AsyncSession) -> bool:
+    """Whether an active token may still act: not expired, plan still includes
+    API access (403 otherwise), creator still a member of the org."""
+    # An expiry we cannot read fails closed: the admin meant the token to stop
+    # working at some point.
+    if api_token.expires_at:
+        try:
+            expires_at = _parse_expires_at(api_token.expires_at)
+            now = datetime.now(expires_at.tzinfo)
+        except (ValueError, TypeError, AttributeError):
+            return False
+        if now > expires_at:
+            return False
+
+    # API access is a plan feature, so a token minted while the org was on a
+    # qualifying plan stops working once the org drops below it.
+    await _require_api_access_plan(api_token.org_id, db_session)
+
+    # A token acts with its creator's standing in the org: once the creator
+    # has left (or been removed from) the org, the token stops working.
+    return await is_org_member(api_token.created_by_user_id, api_token.org_id, db_session)
+
+
+def _rights_dict(rights) -> dict:
+    """Token rights as a plain ``{bucket: {perm: value}}`` dict."""
+    if not rights:
+        return {}
+    if isinstance(rights, Rights):
+        return rights.model_dump()
+    return {
+        bucket: perms.model_dump() if hasattr(perms, "model_dump") else perms
+        for bucket, perms in rights.items()
+    }
+
+
+def cap_token_rights(token_rights, role) -> dict:
+    """``token_rights`` limited to what ``role`` grants right now.
+
+    Rights are capped against the creator's role when a token is created or
+    edited, but roles change afterwards: a demoted creator's token must not
+    keep the rights it was minted with. A permission survives only when the
+    token grants it as a boolean ``True`` and the role holds it too (token-only
+    buckets are capped by the closest role bucket, as at creation). A role with
+    no rights object is judged like ``require_org_role_permission`` judges it:
+    Admin/Maintainer hold everything, any other role nothing.
+    """
+    from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+
+    role_rights = _rights_dict(getattr(role, "rights", None))
+    unrestricted = role is not None and not role_rights and role.id in ADMIN_OR_MAINTAINER_ROLE_IDS
+    capped: dict = {}
+    for bucket, perms in _rights_dict(token_rights).items():
+        if not isinstance(perms, dict):
+            capped[bucket] = {}
+            continue
+        cap_key = bucket if bucket in role_rights else _TOKEN_BUCKET_CAPS.get(bucket)
+        role_perms = role_rights.get(cap_key) if cap_key else None
+        capped[bucket] = {
+            perm: value is True and (
+                unrestricted or (isinstance(role_perms, dict) and bool(role_perms.get(perm)))
+            )
+            for perm, value in perms.items()
+        }
+    return capped
+
+
+async def _with_creator_capped_rights(api_token: APIToken, db_session: AsyncSession) -> APIToken:
+    """The token as it may act now: its rights capped by its creator's current
+    role in the org. The stored row is never modified; when the cap removes
+    anything, a detached copy carrying the capped rights is returned instead."""
+    rights = getattr(api_token, "rights", None)
+    if not rights:
+        return api_token
+    role = await get_user_org_role(api_token.created_by_user_id, api_token.org_id, db_session)
+    capped = cap_token_rights(rights, role)
+    if capped == _rights_dict(rights):
+        return api_token
+    return APIToken(**{**api_token.model_dump(), "rights": capped})
+
+
+async def get_live_api_token(token_id: int, db_session: AsyncSession) -> Optional[APIToken]:
+    """The token with ``token_id`` if it could still authenticate a request now.
+
+    For credentials a token issued earlier (a sign-in link) that must stop
+    working once the token is revoked, expires or loses its plan.
+    """
+    api_token = (
+        await db_session.execute(
+            select(APIToken).where(
+                APIToken.id == token_id,
+                APIToken.is_active == True,  # noqa: E712
+            )
+        )
+    ).scalars().first()
+    if api_token is None:
+        return None
+    try:
+        if not await _api_token_is_live(api_token, db_session):
+            return None
+    except HTTPException:
+        return None
+    return await _with_creator_capped_rights(api_token, db_session)
+
+
 async def validate_api_token_for_auth(
     token: str,
     db_session: AsyncSession,
@@ -508,24 +625,7 @@ async def validate_api_token_for_auth(
     if not api_token:
         return None
 
-    # Check if token is expired. An expiry we cannot read fails closed: the
-    # admin meant the token to stop working at some point.
-    if api_token.expires_at:
-        try:
-            expires_at = _parse_expires_at(api_token.expires_at)
-            now = datetime.now(expires_at.tzinfo)
-        except (ValueError, TypeError, AttributeError):
-            return None
-        if now > expires_at:
-            return None
-
-    # API access is a plan feature, so a token minted while the org was on a
-    # qualifying plan stops working once the org drops below it.
-    await _require_api_access_plan(api_token.org_id, db_session)
-
-    # A token acts with its creator's standing in the org: once the creator
-    # has left (or been removed from) the org, the token stops working.
-    if not await is_org_member(api_token.created_by_user_id, api_token.org_id, db_session):
+    if not await _api_token_is_live(api_token, db_session):
         return None
 
     # Update last_used_at and opportunistically upgrade legacy hashes.
@@ -540,7 +640,7 @@ async def validate_api_token_for_auth(
         # Don't fail validation just because we couldn't update last_used_at
         pass
 
-    return api_token
+    return await _with_creator_capped_rights(api_token, db_session)
 
 
 # Token rights buckets that roles don't have, and the role bucket that caps them.
@@ -584,12 +684,24 @@ async def validate_rights_structure(
                 detail=f"Missing required right: {required_right}",
             )
 
-        right_data = rights_dict[required_right]
-        if not isinstance(right_data, dict):
+        if not isinstance(rights_dict[required_right], dict):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Right '{required_right}' must be a JSON object",
             )
+
+    # Every flag is a boolean: a truthy non-bool (``1``, ``"yes"``) would slip
+    # past the cap below and still read as granted to a permission lookup. A
+    # non-object extra bucket grants nothing to any reader and is left alone.
+    for right_key, right_data in rights_dict.items():
+        if not isinstance(right_data, dict):
+            continue
+        for perm_key, perm_value in right_data.items():
+            if not isinstance(perm_value, bool):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Permission '{perm_key}' for '{right_key}' must be a boolean",
+                )
 
     # Check that token rights don't exceed user rights
     if user_rights:
@@ -606,7 +718,7 @@ async def validate_rights_structure(
                 continue
 
             for perm_key, perm_value in right_permissions.items():
-                if isinstance(perm_value, bool) and perm_value:
+                if perm_value:
                     # The user must explicitly hold this permission to grant
                     # it. Previously, if the permission key was absent from
                     # the user's own rights object the check was skipped,

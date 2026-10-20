@@ -249,6 +249,13 @@ describe('generateNginxConf', () => {
     expect(conf).toContain('client_max_body_size 6G;')
     expect(conf).not.toContain('client_max_body_size 500M;')
   })
+
+  // With manual HTTPS, TLS ends in front of this plain-HTTP proxy, so $scheme
+  // would be "http" and the app would drop the Secure flag on cookies.
+  it('pins X-Forwarded-Proto to https for manual HTTPS', () => {
+    expect(generateNginxConf({ useHttps: true })).toContain('proxy_set_header X-Forwarded-Proto https;')
+    expect(generateNginxConf({ useHttps: false })).toContain('proxy_set_header X-Forwarded-Proto $scheme;')
+  })
 })
 
 // ─── Caddyfile template ─────────────────────────────────────

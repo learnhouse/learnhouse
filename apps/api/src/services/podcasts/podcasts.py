@@ -271,7 +271,7 @@ def accessible_podcast_ids_query(acting_user_id: int):
     1. published and public;
     2. published, not linked to any UserGroup, and the user is a member of
        its org (org-wide content);
-    3. linked to a UserGroup the user belongs to (including unpublished);
+    3. published and linked to a UserGroup the user belongs to;
     4. authored by the user with an ACTIVE authorship (including unpublished).
        Pending or inactive authorships grant nothing.
     """
@@ -297,7 +297,9 @@ def accessible_podcast_ids_query(acting_user_id: int):
                     UserOrganization.org_id == Podcast.org_id,
                 ).exists(),
             ),
-            UserGroupUser.user_id == acting_user_id,
+            # Drafts stay with authors and admins: the RBAC read check only
+            # lets UserGroup members open a podcast once it is published.
+            and_(Podcast.published == True, UserGroupUser.user_id == acting_user_id),
             ResourceAuthor.user_id == acting_user_id,
         ))
     )
@@ -601,6 +603,8 @@ async def update_podcast_thumbnail(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
+    # Same plan gate as creating a podcast
+    await check_feature_access("podcasts", podcast.org_id, db_session)
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
@@ -673,6 +677,8 @@ async def update_podcast(
 
     # SECURITY: Require podcast ownership or admin role for updating podcasts
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
+    # Same plan gate as creating a podcast
+    await check_feature_access("podcasts", podcast.org_id, db_session)
 
     # SECURITY: Additional checks for sensitive access control fields
     sensitive_fields_updated = []

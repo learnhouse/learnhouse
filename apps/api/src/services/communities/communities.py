@@ -31,6 +31,15 @@ from src.security.rbac import (
 )
 
 
+def community_read(community: Community, include_moderation_words: bool = False) -> CommunityRead:
+    """Serialize a community for a reader. ``moderation_words`` is the
+    moderators' blocklist and is left empty unless the caller moderates."""
+    read = CommunityRead.model_validate(community.model_dump())
+    if not include_moderation_words:
+        read.moderation_words = []
+    return read
+
+
 async def create_community(
     request: Request,
     org_id: int,
@@ -97,7 +106,16 @@ async def get_community(
     # RBAC check
     await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.READ)
 
-    return CommunityRead.model_validate(community.model_dump())
+    # Only the people who can edit the community (its moderators) get the
+    # word list; anyone else could read it to word around the filter.
+    try:
+        can_moderate = (await check_resource_access(
+            request, db_session, current_user, community_uuid, AccessAction.UPDATE,
+            raise_on_deny=False,
+        )).allowed
+    except HTTPException:
+        can_moderate = False
+    return community_read(community, include_moderation_words=can_moderate)
 
 
 async def can_read_all_communities(
@@ -181,7 +199,7 @@ async def get_communities_by_org(
         query = select(Community).where(Community.org_id == org_id)
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
         communities = (await db_session.execute(query)).scalars().all()
-        return [CommunityRead.model_validate(c.model_dump()) for c in communities]
+        return [community_read(c) for c in communities]
 
     acting_user_id = resolve_acting_user_id(current_user)
 
@@ -193,7 +211,7 @@ async def get_communities_by_org(
         )
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
         communities = (await db_session.execute(query)).scalars().all()
-        return [CommunityRead.model_validate(c.model_dump()) for c in communities]
+        return [community_read(c) for c in communities]
 
     # Superadmins bypass the admin check; they can see all communities
     if await is_user_superadmin(acting_user_id, db_session):
@@ -240,7 +258,7 @@ async def get_communities_by_org(
     )
 
     communities = (await db_session.execute(query)).scalars().all()
-    return [CommunityRead.model_validate(c.model_dump()) for c in communities]
+    return [community_read(c) for c in communities]
 
 
 async def get_community_by_course(
@@ -271,7 +289,7 @@ async def get_community_by_course(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
-    return CommunityRead.model_validate(community.model_dump())
+    return community_read(community)
 
 
 async def update_community(

@@ -6,7 +6,7 @@ challenge deliberately lives at ``/auth/login/mfa`` so the web app's auth proxy
 needing a separate allowlist entry.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -19,11 +19,14 @@ from src.core.events.database import get_db_session
 from src.db.user_mfa import UserMFA
 from src.db.users import APITokenUser, PublicUser, SuperadminAPITokenUser, User, UserRead
 from src.security.auth import (
+    create_access_token,
+    create_refresh_token,
     decode_jwt,
     extract_jwt_from_request,
     get_authenticated_user,
     revoke_user_sessions_before,
 )
+from src.security.session_context import carry_session_claims
 from src.security.security import security_verify_password
 from src.services.auth.mfa import (
     build_provisioning_uri,
@@ -38,9 +41,12 @@ from src.services.auth.mfa import (
     verify_and_consume_totp,
 )
 from src.services.auth.session import (
+    decode_mfa_pending_custom_domain,
     decode_mfa_pending_token,
     decode_mfa_pending_provenance,
+    mfa_pending_token_usable,
     mint_session_tokens,
+    spend_mfa_pending_token,
 )
 from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
 from src.services.orgs.mfa_policy import evaluate_mfa_compliance, get_org_mfa_policy
@@ -122,25 +128,31 @@ def _verify_password_if_set(user: User, password: Optional[str]) -> None:
         )
 
 
-def _revoke_older_sessions(request: Request, user_id: int) -> None:
-    """Sign out every session established before the one making this request.
+def _rotate_sessions(request: Request, response: Response, user: User) -> dict:
+    """Sign out every session of ``user`` and hand the caller a fresh one.
 
-    The revocation store is a single "issued before" cutoff per user, so the
-    closest it can get to "all other sessions" without logging the caller out
-    is to cut at this session's own issue time.
+    Cutting at the caller's own issue time left alive any session minted after
+    it, e.g. one an attacker refreshed a moment later. So revoke everything up
+    to now, then reissue the caller's session with the same provenance: its new
+    tokens are issued at or after the cutoff and are the only ones that survive.
     """
     token = extract_jwt_from_request(request)
-    payload = decode_jwt(token) if token else None
-    iat = payload.get("iat") if payload else None
-    if not iat:
-        return
+    payload = (decode_jwt(token) if token else None) or {}
     try:
-        # One second of slack: this session's access and refresh tokens are
-        # minted separately and can straddle a second boundary, and cutting
-        # between them would sign the caller out at their next refresh.
-        revoke_user_sessions_before(user_id, datetime.fromtimestamp(iat - 1, tz=timezone.utc))
+        revoke_user_sessions_before(user.id)
     except Exception:  # pragma: no cover - never fail the 2FA change on the revocation store
         pass
+    # Same claims a refresh would carry, so the reissue can't launder the
+    # session's method, org binding or legacy grace deadline.
+    data = {"sub": user.email, "purpose": "session", **carry_session_claims(payload)}
+    access_token = create_access_token(data=data)
+    refresh_token = create_refresh_token(data=data)
+    set_auth_cookies(response, access_token, refresh_token, request)
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expiry": get_token_expiry_ms(),
+    }
 
 
 def _check_mfa_rate_limit(request: Request, scope: str, identifier: str) -> None:
@@ -259,6 +271,7 @@ async def api_mfa_setup(
 )
 async def api_mfa_confirm(
     request: Request,
+    response: Response,
     form: MFACodeRequest,
     db_session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_authenticated_user),
@@ -306,8 +319,8 @@ async def api_mfa_confirm(
     await db_session.commit()
 
     codes = await replace_backup_codes(db_session, user.id)
-    _revoke_older_sessions(request, user.id)
-    return {"enabled": True, "backup_codes": codes}
+    tokens = _rotate_sessions(request, response, user)
+    return {"enabled": True, "backup_codes": codes, "tokens": tokens}
 
 
 @router.post(
@@ -319,6 +332,7 @@ async def api_mfa_confirm(
 )
 async def api_mfa_disable(
     request: Request,
+    response: Response,
     form: MFADisableRequest,
     db_session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_authenticated_user),
@@ -352,8 +366,8 @@ async def api_mfa_disable(
         )
 
     await disable_mfa(db_session, user.id)
-    _revoke_older_sessions(request, user.id)
-    return {"enabled": False}
+    tokens = _rotate_sessions(request, response, user)
+    return {"enabled": False, "tokens": tokens}
 
 
 @router.post(
@@ -428,10 +442,19 @@ async def api_login_mfa(
 
     _check_mfa_rate_limit(request, "login", email)
 
+    # Refuse a spent (or pre-single-use) pending token before a code is
+    # consumed on it, so a refusal never costs the user a backup code.
+    if not await mfa_pending_token_usable(db_session, form.mfa_token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "MFA_SESSION_EXPIRED", "message": "Please sign in again."},
+        )
+
     # Provenance (how the user authenticated, which org for) was stamped into the
     # pending token at the password/magic-link/SSO step; carry it into the real
     # session so the org auth-method / sharing policy sees the true method.
     pending_amr, pending_org_id = decode_mfa_pending_provenance(form.mfa_token)
+    pending_custom_domain = decode_mfa_pending_custom_domain(form.mfa_token)
 
     user = (
         await db_session.execute(select(User).where(User.email == email))
@@ -447,7 +470,9 @@ async def api_login_mfa(
         # The factor was removed between password step and code step. Nothing
         # left to verify, so fall through to a normal session rather than
         # stranding the user at a challenge they can never satisfy.
-        result = mint_session_tokens(user.email, pending_amr, pending_org_id)
+        result = mint_session_tokens(
+            user.email, pending_amr, pending_org_id, pending_custom_domain
+        )
     else:
         accepted = False
         if form.is_backup_code:
@@ -472,18 +497,29 @@ async def api_login_mfa(
                 },
             )
 
-        result = mint_session_tokens(user.email, pending_amr, pending_org_id)
+        result = mint_session_tokens(
+            user.email, pending_amr, pending_org_id, pending_custom_domain
+        )
+
+    # One pending token, one session: replaying it with another valid code
+    # (a second backup code, the next TOTP step) must not mint a second one.
+    user_read = UserRead.model_validate(user)
+    if not await spend_mfa_pending_token(db_session, form.mfa_token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "MFA_SESSION_EXPIRED", "message": "Please sign in again."},
+        )
 
     set_auth_cookies(response, result.access_token, result.refresh_token, request)
 
     return {
-        "user": UserRead.model_validate(user),
+        "user": user_read,
         "tokens": {
             "access_token": result.access_token,
             "refresh_token": result.refresh_token,
             "expiry": get_token_expiry_ms(),
         },
-        "backup_codes_remaining": await count_unused_backup_codes(db_session, user.id),
+        "backup_codes_remaining": await count_unused_backup_codes(db_session, user_read.id),
     }
 
 
@@ -583,7 +619,7 @@ async def _org_security_policy_payload(db_session: AsyncSession, org_id: int) ->
     "/mfa/org-policy/{org_id}",
     summary="Set the org-wide two-factor requirement",
     description=(
-        "Admin/maintainer only. Enabling the policy requires the calling admin "
+        "Admin only. Enabling the policy requires the calling admin "
         "to already have two-factor enabled themselves."
     ),
     tags=["auth"],
@@ -597,13 +633,24 @@ async def api_set_org_mfa_policy(
     db_session: AsyncSession = Depends(get_db_session),
     current_user=Depends(get_authenticated_user),
 ):
+    from src.services.orgs.orgs import is_org_admin_role
+
     user = await _require_human_user(current_user, db_session)
 
-    if not await is_org_admin(user.id, org_id, db_session):
+    # Admin role specifically: switching the requirement off weakens every
+    # account in the org, so Maintainers can read the policy but not change it.
+    if not await is_org_admin_role(user.id, org_id, db_session):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"code": "NOT_ORG_ADMIN", "message": "Only org admins can change this setting."},
         )
+
+    # Every demo visitor is an admin; letting one rewrite the sign-in policy
+    # (require 2FA, refuse password sign-in, stop session sharing) would lock
+    # the other visitors out of the shared org.
+    from src.services.demo.guards import require_not_demo_org
+
+    await require_not_demo_org(org_id, db_session)
 
     # Self-lockout guard. With grace_days=0 an admin without a second factor
     # would be blocked from their own org the instant this saves, and there

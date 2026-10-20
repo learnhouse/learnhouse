@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Loader2, AlertTriangle, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth, validateOAuthState } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_DOMAIN_VAL, getLEARNHOUSE_TOP_DOMAIN_VAL, getAPIUrl } from '@services/config/config'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
+import { oauthBounceCheckUrl } from '@/lib/auth/oauthBounce'
 
 export default function GoogleCallbackPage() {
   const searchParams = useSearchParams()
@@ -14,8 +15,15 @@ export default function GoogleCallbackPage() {
   const { signIn } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'csrf_error'>('loading')
+  // The authorization code is single-use: a second run of the effect (React
+  // StrictMode, or signIn changing identity) would redeem it again and fail.
+  const handledRef = useRef<string | null>(null)
 
   useEffect(() => {
+    const callbackKey = searchParams.toString()
+    if (handledRef.current === callbackKey) return
+    handledRef.current = callbackKey
+
     const handleCallback = async () => {
       const code = searchParams.get('code')
       const state = searchParams.get('state')
@@ -60,23 +68,21 @@ export default function GoogleCallbackPage() {
 
       // When OAuth was initiated from a custom domain, Google redirects to the
       // main domain; bounce code+state back so CSRF validation and cookies
-      // happen on the right origin. Platform hosts are trusted as-is; a custom
-      // domain must still resolve AND its live DNS must still point at us
-      // (for_auth), or a repointed domain could harvest codes.
+      // happen on the right origin. Any other origin must be a configured org
+      // host: an existing org's platform subdomain, or a verified custom domain
+      // whose live DNS still points at us (for_auth), so neither an unrelated
+      // platform subdomain nor a repointed domain can harvest codes.
       if (returnOrigin) {
         let bounceOrigin: string | null = null
         try {
           const u = new URL(returnOrigin)
           if (u.protocol === 'http:' || u.protocol === 'https:') {
-            const host = u.hostname
-            const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL()
-            const isPlatformHost = !!topDomain && (host === topDomain || host.endsWith(`.${topDomain}`))
-            if (isPlatformHost || u.origin === window.location.origin) {
+            if (u.origin === window.location.origin) {
               bounceOrigin = u.origin
             } else {
               try {
                 const r = await fetch(
-                  `${getAPIUrl()}orgs/resolve/domain/${encodeURIComponent(host)}?for_auth=1`,
+                  oauthBounceCheckUrl(u, getLEARNHOUSE_DOMAIN_VAL(), getAPIUrl()),
                   { signal: AbortSignal.timeout(8000) },
                 )
                 if (r.ok) bounceOrigin = u.origin
@@ -250,7 +256,6 @@ export default function GoogleCallbackPage() {
           redirect: false,
           sso: 'true',
           sso_access_token: data.tokens.access_token,
-          sso_refresh_token: data.tokens.refresh_token,
           sso_user: JSON.stringify(data.user),
           sso_expiry: data.tokens.expiry,
           callbackUrl,

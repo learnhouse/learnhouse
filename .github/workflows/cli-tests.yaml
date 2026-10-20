@@ -26,15 +26,15 @@ jobs:
     name: "Unit Tests (pure: unit + ee templates)"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version-file: .bun-version
 
       # setup-bun restores the toolchain, not the packages.
       - name: Cache bun install cache
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-cli-${{ runner.os }}-${{ hashFiles('apps/cli/bun.lock') }}
@@ -51,15 +51,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version-file: .bun-version
 
       # setup-bun restores the toolchain, not the packages.
       - name: Cache bun install cache
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-cli-${{ runner.os }}-${{ hashFiles('apps/cli/bun.lock') }}

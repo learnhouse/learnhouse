@@ -4,6 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
+from src.db.courses.assignments import Assignment
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.organizations import Organization, OrganizationRead
 from src.db.organization_config import OrganizationConfig
@@ -63,6 +64,8 @@ async def create_activity(
     activity = Activity(**activity_object.model_dump())
 
     activity.activity_uuid = str(f"activity_{uuid4()}")
+    if activity.extra_metadata:
+        activity.extra_metadata = keep_server_owned_metadata(activity.extra_metadata, None)
     activity.creation_date = str(datetime.now())
     activity.update_date = str(datetime.now())
     activity.org_id = chapter.org_id
@@ -255,7 +258,21 @@ async def get_activityby_id(
     )
 
 
-_SERVER_OWNED_METADATA_KEYS = ("captions", "hls")
+_SERVER_OWNED_METADATA_KEYS = ("captions", "chapters", "hls")
+
+
+def keep_server_owned_metadata(incoming: dict | None, current: dict | None) -> dict:
+    """Client-supplied ``extra_metadata`` with the pipeline-owned keys taken
+    from ``current`` (or dropped when it has none), so a write can never
+    forge caption or HLS state."""
+    merged = dict(incoming or {})
+    current = current or {}
+    for key in _SERVER_OWNED_METADATA_KEYS:
+        if key in current:
+            merged[key] = current[key]
+        else:
+            merged.pop(key, None)
+    return merged
 
 
 async def update_activity(
@@ -308,13 +325,7 @@ async def update_activity(
     # the background jobs); a client-supplied copy would feed forged codes,
     # statuses or keys back into those jobs and the player.
     if 'extra_metadata' in update_data:
-        incoming = dict(update_data['extra_metadata'] or {})
-        current = activity.extra_metadata or {}
-        for key in _SERVER_OWNED_METADATA_KEYS:
-            if key in current:
-                incoming[key] = current[key]
-            else:
-                incoming.pop(key, None)
+        incoming = keep_server_owned_metadata(update_data['extra_metadata'], activity.extra_metadata)
         # Clearing (null) stays null unless pipeline state has to survive it
         if update_data['extra_metadata'] is not None or incoming:
             update_data['extra_metadata'] = incoming
@@ -324,6 +335,16 @@ async def update_activity(
 
     for field, value in update_data.items():
         setattr(activity, field, value)
+
+    # An assignment activity and its assignment each carry a published flag;
+    # publishing from the course structure only touches this one, so mirror it
+    # (update_assignment does the reverse) and the two can't drift apart.
+    if 'published' in update_data:
+        for assignment in (await db_session.execute(
+            select(Assignment).where(Assignment.activity_id == activity.id)
+        )).scalars().all():
+            assignment.published = activity.published
+            db_session.add(assignment)
 
     # Update the update_date timestamp
     activity.update_date = str(datetime.now())

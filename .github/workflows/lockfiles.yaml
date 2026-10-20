@@ -60,7 +60,7 @@ jobs:
             && github.event.pull_request.head.repo.full_name == github.repository
             && endsWith(github.event.pull_request.user.login, '[bot]') }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           # The head commit, not the merge commit, so the regenerated
           # lockfiles apply to the branch. A SHA rather than the branch name:
@@ -72,20 +72,20 @@ jobs:
           # have the fix re-trigger them.
           token: ${{ secrets.LOCKFILE_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version-file: .bun-version
 
       # No setup-python step: `uv lock` resolves from package metadata and
       # never needs an interpreter.
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
-          version: latest
+          version: "0.13.1"
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
 
       - name: Cache bun install cache
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-lockfiles-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}

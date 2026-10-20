@@ -481,6 +481,19 @@ async def folder(db, org, course):
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(autouse=True)
+def no_legacy_link_markers():
+    """Keep sign-in link redemption off any real Redis.
+
+    The single-use record is the database; the legacy Redis markers are a
+    best-effort rollout bridge. Reaching a local Redis from tests would leak
+    "spent" markers between tests that reuse a jti. Tests of the bridge patch
+    ``_legacy_redis`` themselves.
+    """
+    with patch("src.services.auth.link_tokens._legacy_redis", return_value=None):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def rag_dispatch():
     """Keep content saves from starting real AI indexing runs.
 

@@ -2,7 +2,9 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '@/lib/format'
+import { billingIntervalLabel } from '@/lib/payments/billingInterval'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { getUriWithOrg } from '@services/config/config'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -25,6 +27,7 @@ interface Offer {
   name: string
   description: string
   offer_type: 'one_time' | 'subscription'
+  billing_interval?: string
   price_type: 'fixed_price' | 'customer_choice'
   amount: number
   currency: string
@@ -93,11 +96,12 @@ function CourseBoxes({ resources, orgUuid }: { resources: Resource[]; orgUuid: s
 }
 
 function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslug: string; orgUuid: string; position: number }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isSubscription = offer.offer_type === 'subscription'
   const benefits = offer.benefits ? offer.benefits.split(',').map(b => b.trim()).filter(Boolean) : []
   const resources = offer.included_resources ?? []
   const { track } = useLHAnalytics('learner')
+  const router = useRouter()
 
   return (
     <Link
@@ -150,15 +154,24 @@ function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslu
                     <span className="truncate">{r.name}</span>
                   </>
                 )
+                // The whole card is already a link, and an <a> can't nest
+                // inside another one, so resource links navigate by script.
+                const openResource = (e: React.SyntheticEvent) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  router.push(url!)
+                }
                 return url ? (
-                  <a
+                  <span
                     key={r.resource_uuid}
-                    href={url}
-                    onClick={e => e.stopPropagation()}
+                    role="link"
+                    tabIndex={0}
+                    onClick={openResource}
+                    onKeyDown={e => { if (e.key === 'Enter') openResource(e) }}
                     className="flex items-center gap-2 text-xs text-gray-500 hover:text-indigo-600 transition-colors"
                   >
                     {inner}
-                  </a>
+                  </span>
                 ) : (
                   <div key={r.resource_uuid} className="flex items-center gap-2 text-xs text-gray-500">
                     {inner}
@@ -192,7 +205,7 @@ function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslu
                 <p className="text-xs text-gray-400 leading-none">min.</p>
               )}
               {isSubscription && (
-                <p className="text-xs text-indigo-400 leading-none font-medium">recurring</p>
+                <p className="text-xs text-indigo-400 leading-none font-medium">{billingIntervalLabel(offer.billing_interval, t)}</p>
               )}
             </div>
             <div className={`flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-xl transition-colors ${

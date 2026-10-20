@@ -61,9 +61,21 @@ const PG_CLIENT_IMAGE = 'postgres:17'
 export function backupDatabase(config: LearnHouseConfigJson, layout: EditionLayout, ui: UpdateLog): string {
   const dir = config.installDir
   const backupsDir = path.join(dir, 'backups')
-  fs.mkdirSync(backupsDir, { recursive: true })
+  // A full database dump: owner-only. chmod too, since mkdir's mode does not
+  // touch a directory that already exists. That directory may belong to
+  // another user (an earlier run under sudo); the dump file itself is still
+  // created 0600, so warn instead of aborting the update before the backup.
+  fs.mkdirSync(backupsDir, { recursive: true, mode: 0o700 })
+  try {
+    fs.chmodSync(backupsDir, 0o700)
+  } catch (err) {
+    ui.warn(`could not restrict ${backupsDir} to owner-only (${(err as { code?: string }).code ?? err}); check who owns it`)
+  }
   const stamp = execSync('date +%Y%m%d-%H%M%S').toString().trim()
   const out = path.join(backupsDir, `db-pre-upgrade-${stamp}.sql.gz`)
+  // Pre-create the file so the shell redirect below writes into it as 0600
+  // instead of creating it under the default umask.
+  const createOwnerOnly = () => fs.writeFileSync(out, '', { mode: 0o600 })
 
   if (isExternalDbInstall(dir)) {
     const conn = readEnvVar(dir, 'LEARNHOUSE_SQL_CONNECTION_STRING') || ''
@@ -74,6 +86,7 @@ export function backupDatabase(config: LearnHouseConfigJson, layout: EditionLayo
     const cid = execSync(`docker compose ps -q ${layout.appService}`, { cwd: dir }).toString().trim()
     if (!cid) throw new Error(`app container (${layout.appService}) is not running; start the stack before backing up`)
     ui.log('external database: dumping via a client sharing the app container network')
+    createOwnerOnly()
     execSync(
       `docker run --rm --network ${JSON.stringify('container:' + cid)} -e PGCONN -i ${PG_CLIENT_IMAGE} ` +
         `sh -c 'pg_dump "$PGCONN" | gzip' > ${JSON.stringify(out)}`,
@@ -81,6 +94,7 @@ export function backupDatabase(config: LearnHouseConfigJson, layout: EditionLayo
     )
   } else {
     ui.log('in-container database: pg_dump from the db service')
+    createOwnerOnly()
     execSync(
       `docker compose exec -T ${layout.dbService} sh -c 'pg_dump -U "$\{POSTGRES_USER:-learnhouse}" "$\{POSTGRES_DB:-learnhouse}"' | gzip > ${JSON.stringify(out)}`,
       { cwd: dir, stdio: ['ignore', 'inherit', 'inherit'] },

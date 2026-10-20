@@ -61,7 +61,7 @@ export async function restoreCommand(archivePath: string) {
 
   // Extract archive to temp directory
   const tmpDir = path.join(installDir, '.restore-tmp')
-  fs.mkdirSync(tmpDir, { recursive: true })
+  fs.mkdirSync(tmpDir, { recursive: true, mode: 0o700 })
 
   const s = p.spinner()
   s.start('Extracting backup archive')
@@ -118,6 +118,7 @@ export async function restoreCommand(archivePath: string) {
     })
     if (!p.isCancel(restoreEnv) && restoreEnv) {
       fs.copyFileSync(envBackup, path.join(installDir, '.env'))
+      fs.chmodSync(path.join(installDir, '.env'), 0o600)
       p.log.info('.env file restored')
     }
   }

@@ -39,7 +39,12 @@ from src.services.webhooks.events import WEBHOOK_EVENTS
 # paths enforce identical validation. The leading underscore is conventional,
 # not enforced; importing it here is deliberate to avoid duplicating the
 # logic across files.
-from src.services.webhooks.webhooks import _validate_webhook_url
+from src.services.webhooks.webhooks import (
+    _validate_webhook_url,
+    enforce_webhook_endpoint_cap,
+)
+# Same per-org creation throttle as the dashboard create route.
+from src.routers.webhooks import _enforce_webhook_rate_limit
 
 
 router = APIRouter()
@@ -360,6 +365,10 @@ async def zapier_create_subscription(
     _validate_event(payload.event)
     _require_subscription_rights(api_user, payload.event)
     _validate_webhook_url(payload.target_url)
+    # Subscriptions are webhook endpoints: same creation rate limit and
+    # per-org cap as the dashboard path, so a token cannot add them unbounded.
+    _enforce_webhook_rate_limit(api_user.org_id, "create")
+    await enforce_webhook_endpoint_cap(db_session, api_user.org_id)
 
     now = str(datetime.now())
     description = f"Zapier: {payload.zap_name}" if payload.zap_name else "Zapier integration"

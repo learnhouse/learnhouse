@@ -18,6 +18,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
 import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
+import LinkifiedText from '@components/Objects/StyledElements/LinkifiedText/LinkifiedText'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -476,7 +477,7 @@ const CourseClient = (props: any) => {
 
                 <div className="course_metadata_left space-y-2">
                   <div className="">
-                    <p className="py-5 whitespace-pre-line break-words w-full leading-relaxed tracking-normal text-pretty hyphens-auto">{course.about}</p>
+                    <LinkifiedText text={course.about} className="py-5 whitespace-pre-line break-words w-full leading-relaxed tracking-normal text-pretty hyphens-auto" />
                   </div>
                 </div>
               </div>

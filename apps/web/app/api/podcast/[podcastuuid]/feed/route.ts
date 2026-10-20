@@ -9,7 +9,10 @@ export async function GET(
   { params }: { params: Promise<{ podcastuuid: string }> }
 ) {
   const { podcastuuid } = await params
-  const orgSlug = request.headers.get('X-Feed-Orgslug') || request.nextUrl.searchParams.get('orgslug')
+  // Set by the proxy from the tenant it resolved for this host (any incoming
+  // value is stripped there). Never taken from the query string: the response
+  // is publicly cached, so the org must not be caller-selectable.
+  const orgSlug = request.headers.get('X-Feed-Orgslug')
 
   if (!orgSlug) {
     return NextResponse.json({ error: 'Missing org context' }, { status: 400 })
@@ -19,18 +22,22 @@ export async function GET(
     const org = await getOrganizationContextInfo(orgSlug, null)
     const podcastMeta = await getPodcastMeta(`podcast_${podcastuuid}`, null)
 
-    if (!podcastMeta?.podcast) {
+    // A podcast from another org must not be served under this org's host.
+    if (!podcastMeta?.podcast || podcastMeta.podcast.org_id !== org?.id) {
       return NextResponse.json({ error: 'Podcast not found' }, { status: 404 })
     }
 
     const { podcast, episodes } = podcastMeta
-    // RSS requires absolute URLs, and the host the feed was fetched on is the
-    // right one (org subdomain or custom domain). `getUriWithOrg` would hand
-    // back a relative path in single tenancy, producing an invalid feed.
-    const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host')
-    const forwardedProto = request.headers.get('x-forwarded-proto')
-      || (forwardedHost?.startsWith('localhost') || forwardedHost?.startsWith('127.') ? 'http' : 'https')
-    const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin
+    // RSS requires absolute URLs. In multi tenancy `getUriWithOrg` gives the
+    // org's canonical subdomain URL, resolved server-side. Only single tenancy
+    // (one org, served on whatever host the operator chose) falls back to the
+    // request Host, which the ingress sets. X-Forwarded-Host is not used: it is
+    // caller-controlled when the ingress passes it through, and this response
+    // is shared-cached.
+    const host = request.headers.get('host')
+    const proto = request.headers.get('x-forwarded-proto')
+      || (host?.startsWith('localhost') || host?.startsWith('127.') ? 'http' : 'https')
+    const origin = host ? `${proto}://${host}` : request.nextUrl.origin
     const relativeBase = getUriWithOrg(orgSlug, '/')
     const baseUrl = /^https?:\/\//i.test(relativeBase) ? relativeBase : `${origin}/`
     const podcastUrl = `${baseUrl}podcast/${podcastuuid}`
@@ -81,7 +88,7 @@ export async function GET(
     <description>${escapeXml(podcast.description || podcast.about || '')}</description>
     <language>en</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <atom:link href="${escapeXml(`${baseUrl}api/podcast/${podcastuuid}/feed`)}" rel="self" type="application/rss+xml" />
+    <atom:link href="${escapeXml(`${baseUrl}podcast/${podcastuuid}/feed`)}" rel="self" type="application/rss+xml" />
     <itunes:author>${escapeXml(authorName)}</itunes:author>
     <itunes:summary>${escapeXml(podcast.description || podcast.about || '')}</itunes:summary>
     ${imageUrl ? `<itunes:image href="${escapeXml(imageUrl)}" />` : ''}
@@ -103,6 +110,9 @@ ${episodeItems}
       headers: {
         'Content-Type': 'application/rss+xml; charset=utf-8',
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        // Every input that shapes the body, so a shared cache never hands one
+        // host's (or one forged header's) feed to another request.
+        Vary: 'Host, X-Forwarded-Proto, X-Feed-Orgslug',
       },
     })
   } catch {

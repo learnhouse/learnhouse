@@ -21,6 +21,7 @@ import {
   LandingTestimonialsSection,
 } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
 import { backgroundCss, countdownParts, LandingOffer, resolveLandingEmbed, resolvePricingPlan, safeHref } from './landingSections'
+import { useUrlEmbedSandbox } from '@/lib/media/useUrlEmbedSandbox'
 
 const SECTION = 'mx-2 sm:mx-4 lg:mx-16 w-full'
 const TITLE = 'text-2xl md:text-3xl font-bold mb-6'
@@ -240,7 +241,7 @@ export function PricingBlock({
   // Public store offers; undefined while loading. Only read by linked plans.
   offers: LandingOffer[] | undefined
   formatPrice: (amount: number, currency: string) => string
-  labels: { from: string; subscription: string }
+  labels: { from: string; subscription: string; perMonth: string; perYear: string }
 }) {
   const plans = section.plans
     .map((plan) => resolvePricingPlan(plan, offers, formatPrice))
@@ -266,7 +267,12 @@ export function PricingBlock({
                 <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
               )}
               {(plan.period || plan.subscription) && (
-                <span className="text-sm text-gray-500">{plan.period || labels.subscription}</span>
+                <span className="text-sm text-gray-500">
+                  {plan.period
+                    || (plan.billingInterval === 'year' ? labels.perYear
+                      : plan.billingInterval === 'month' ? labels.perMonth
+                        : labels.subscription)}
+                </span>
               )}
             </div>
             {plan.description && <p className="text-sm text-gray-600 mt-2">{plan.description}</p>}
@@ -349,7 +355,8 @@ export function ImageBlock({ section, pad }: BlockProps<LandingImageSection>) {
 
 export function EmbedBlock({ section, pad }: BlockProps<LandingEmbedSection>) {
   const src = resolveLandingEmbed(section.url)
-  if (!src) return null
+  const sandbox = useUrlEmbedSandbox(src)
+  if (!src || !sandbox) return null
   const height = Math.min(1600, Math.max(200, Number(section.height) || 600))
   return (
     <div className={`${pad} ${SECTION}`}>
@@ -360,7 +367,7 @@ export function EmbedBlock({ section, pad }: BlockProps<LandingEmbedSection>) {
         loading="lazy"
         className="w-full rounded-xl nice-shadow bg-white"
         style={{ height }}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+        sandbox={sandbox}
         allow="fullscreen; clipboard-write; encrypted-media; picture-in-picture"
       />
     </div>

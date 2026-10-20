@@ -56,7 +56,6 @@ export interface SignInOptions {
   // SSO fields
   sso?: string
   sso_access_token?: string
-  sso_refresh_token?: string
   sso_user?: string
   sso_expiry?: number
   // For OAuth
@@ -74,6 +73,9 @@ export interface SignInResult {
   // `mfa_token` back to completeMfaLogin() along with a code.
   mfa_required?: boolean
   mfa_token?: string
+  // Sign-in links only: where the link itself asks to land, for a link URL
+  // that carries no ?next of its own.
+  redirect_to?: string | null
 }
 
 export interface SignOutOptions {
@@ -602,12 +604,14 @@ export function SessionProvider({
   // drift apart: a session established one way must be identical to the other.
   const establishSession = useCallback(
     async (data: any, callbackUrl: string, redirect: boolean): Promise<SignInResult> => {
+      // A refresh still in flight for whoever was signed in before must not
+      // write its (older) session over this one when it resolves.
+      authEpochRef.current++
       const newSession: Session = {
         user: data.user,
         roles: [],
         tokens: {
           access_token: data.tokens.access_token,
-          refresh_token: data.tokens.refresh_token,
           expiry: data.tokens.expiry,
         },
       }
@@ -618,12 +622,18 @@ export function SessionProvider({
       setStatus('authenticated')
       sessionCacheRef.current = { data: newSession, timestamp: Date.now() }
 
-      // Fetch full session with roles
-      const fullSession = await fetchUserSession(data.tokens.access_token, data.tokens.expiry)
-      if (fullSession) {
-        fullSession.tokens = newSession.tokens
-        setSession(fullSession)
-        sessionCacheRef.current = { data: fullSession, timestamp: Date.now() }
+      // Fetch full session with roles. The sign-in already succeeded (cookies
+      // are set), so a failed lookup only means the roles arrive on the next
+      // session fetch; reporting it as a failed sign-in would misdescribe it.
+      try {
+        const fullSession = await fetchUserSession(data.tokens.access_token, data.tokens.expiry)
+        if (fullSession) {
+          fullSession.tokens = newSession.tokens
+          setSession(fullSession)
+          sessionCacheRef.current = { data: fullSession, timestamp: Date.now() }
+        }
+      } catch (error) {
+        console.warn('[auth] session lookup after sign-in failed, keeping session:', error)
       }
 
       // Notify other tabs
@@ -759,10 +769,13 @@ export function SessionProvider({
           credentials: 'include',
         })
 
-        const data = await response.json()
+        // A gateway error page is not JSON; keep its status so the caller can
+        // tell "try again" from "this link is dead".
+        const data = await response.json().catch(() => ({}))
 
         if (!response.ok) {
-          const errorData = data.detail || data
+          const detail = data.detail ?? data
+          const errorData = typeof detail === 'string' ? { message: detail } : detail
           return {
             ok: false,
             error: JSON.stringify({
@@ -784,6 +797,7 @@ export function SessionProvider({
             status: response.status,
             mfa_required: true,
             mfa_token: data.mfa_token,
+            redirect_to: data.redirect_to ?? null,
           }
         }
 
@@ -796,7 +810,10 @@ export function SessionProvider({
           }
         }
 
-        return await establishSession(data, callbackUrl, redirect)
+        return {
+          ...(await establishSession(data, callbackUrl, redirect)),
+          redirect_to: data.redirect_to ?? null,
+        }
       } catch (error) {
         console.error('Magic link verification error:', error)
         return {
@@ -828,7 +845,6 @@ export function SessionProvider({
               roles: [],
               tokens: {
                 access_token: options.sso_access_token,
-                refresh_token: options.sso_refresh_token,
                 expiry,
               },
             }

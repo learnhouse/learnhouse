@@ -26,17 +26,21 @@ from src.db.courses.activities import (
 )
 from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.chapter_activities import ChapterActivity
-from src.db.courses.blocks import Block, BlockTypeEnum
+from src.db.courses.blocks import Block, BlockRead, BlockTypeEnum
 from src.db.resource_authors import (
     ResourceAuthor,
     ResourceAuthorshipEnum,
     ResourceAuthorshipStatusEnum,
 )
 from src.security.auth import resolve_acting_user_id
+from src.services.ai.rag.queue import index_activity
+from src.services.blocks.schemas.files import BlockFile
+from src.services.courses.transfer.import_service import file_content_matches_extension
 from src.services.courses.transfer.storage_utils import (
     upload_file_to_s3,
     is_s3_enabled,
 )
+from src.services.utils.video_processing import ensure_faststart
 from src.services.courses.migration.models import (
     UploadedFileInfo,
     MigrationUploadResponse,
@@ -93,6 +97,22 @@ EXTENSION_TO_BLOCK_TYPE = {
     "mp3": ("audioBlock", BlockTypeEnum.BLOCK_AUDIO),
     "wav": ("audioBlock", BlockTypeEnum.BLOCK_AUDIO),
 }
+
+
+# QuickTime has no upload type to borrow a validator from: accept files whose
+# first atom is one a .mov starts with.
+_MOV_LEADING_ATOMS = {b"ftyp", b"moov", b"mdat", b"wide", b"free", b"skip", b"pnot"}
+
+
+def _migration_file_is_valid(path: str, ext: str) -> bool:
+    """Same magic-byte check upload_file applies, before anything is stored."""
+    if ext == "mov":
+        try:
+            with open(path, "rb") as f:
+                return f.read(8)[4:8] in _MOV_LEADING_ATOMS
+        except OSError:
+            return False
+    return file_content_matches_extension(path)
 
 
 def cleanup_old_temp_migrations(max_age_minutes: int = 60) -> None:
@@ -216,6 +236,11 @@ async def _upload_migration_files_inner(
             skipped_files.append(f"{file.filename}: exceeds {MAX_SINGLE_FILE_SIZE // (1024**3)}GB limit")
             continue
 
+        if not await asyncio.to_thread(_migration_file_is_valid, file_real, ext):
+            os.remove(file_real)
+            skipped_files.append(f"{file.filename}: content does not match its file type")
+            continue
+
         total_size += file_size
         if total_size > MAX_TOTAL_UPLOAD_SIZE:
             os.remove(file_real)
@@ -295,6 +320,8 @@ async def suggest_structure(
         "name (not the filename).\n\n"
         "Rules:\n"
         "- Every file must be assigned to exactly one activity\n"
+        "- A video or PDF activity holds exactly one file; images and audio "
+        "can share one activity\n"
         "- Each chapter should have a clear theme\n"
         "- Activity types based on extension: mp4/webm/mov = TYPE_VIDEO, "
         "pdf = TYPE_DOCUMENT, png/jpg/jpeg/webp = TYPE_DYNAMIC, mp3/wav = TYPE_DYNAMIC\n"
@@ -368,6 +395,180 @@ def _fallback_structure(
         course_description=description,
         chapters=[MigrationChapterNode(name="Content", activities=activities)],
     )
+
+
+# Activity types that play a single file, and the folder their player reads it
+# from (the same layout upload_video and upload_pdf write).
+_MEDIA_FOLDERS = {
+    ActivityTypeEnum.TYPE_VIDEO: "video",
+    ActivityTypeEnum.TYPE_DOCUMENT: "documentpdf",
+}
+
+_BLOCK_EDITOR_NODES = {
+    BlockTypeEnum.BLOCK_IMAGE: "blockImage",
+    BlockTypeEnum.BLOCK_AUDIO: "blockAudio",
+}
+
+
+def _resolve_source_file(
+    file_id: str, file_lookup: dict, temp_real: str
+) -> tuple[dict, str] | None:
+    """Return (manifest entry, real path) for an uploaded file, or None if unusable."""
+    # Validate file_id is a UUID to prevent path traversal
+    if not _UUID_RE.match(file_id):
+        return None
+
+    fi = file_lookup.get(file_id)
+    if not fi or fi["extension"] not in EXTENSION_TO_ACTIVITY_TYPE:
+        return None
+
+    # Resolve source path with realpath and verify containment
+    src_real = os.path.realpath(
+        os.path.join(temp_real, f"{file_id}.{fi['extension']}")
+    )
+    if not src_real.startswith(temp_real + os.sep):
+        return None
+    if not os.path.exists(src_real):
+        return None
+    return fi, src_real
+
+
+def _plan_activities(
+    act_node: MigrationActivityNode, file_lookup: dict, temp_real: str
+) -> list[tuple[str, ActivityTypeEnum, ActivitySubTypeEnum, list[tuple[dict, str]]]]:
+    """Split one tree node into the activities it becomes.
+
+    A video or PDF activity plays a single file, so each such file gets its own
+    activity, typed from its extension rather than the node (the tree editor
+    retypes a node after the last file dropped on it). Images and audio share
+    one page. A node with no usable file stays a single empty activity.
+    """
+    planned: list[tuple[ActivityTypeEnum, ActivitySubTypeEnum, list]] = []
+    page_files: list[tuple[dict, str]] = []
+    for file_id in act_node.file_ids:
+        resolved = _resolve_source_file(file_id, file_lookup, temp_real)
+        if not resolved:
+            continue
+        activity_type, sub_type = EXTENSION_TO_ACTIVITY_TYPE[resolved[0]["extension"]]
+        if activity_type == ActivityTypeEnum.TYPE_DYNAMIC:
+            if not page_files:
+                planned.append((activity_type, sub_type, page_files))
+            page_files.append(resolved)
+        else:
+            planned.append((activity_type, sub_type, [resolved]))
+
+    if not planned:
+        return [(
+            act_node.name,
+            ActivityTypeEnum(act_node.activity_type),
+            ActivitySubTypeEnum(act_node.activity_sub_type),
+            [],
+        )]
+    return [
+        (act_node.name if i == 0 else f"{act_node.name} ({i + 1})", t, s, files)
+        for i, (t, s, files) in enumerate(planned)
+    ]
+
+
+async def _store_activity_file(
+    src_real: str,
+    org_uuid: str,
+    course_uuid: str,
+    activity_uuid: str,
+    folders: list[str],
+    filename: str,
+) -> bool:
+    """Copy a file to the content path the stream and media routes serve.
+
+    The path is the same on disk and as an S3 key. Returns False if the local
+    destination would escape its folder.
+    """
+    parts = [
+        "content", "orgs", org_uuid, "courses", course_uuid,
+        "activities", activity_uuid, *folders,
+    ]
+    if is_s3_enabled():
+        s3_key = "/".join([*parts, filename])
+        ok = await asyncio.to_thread(upload_file_to_s3, s3_key, src_real)
+        if not ok:
+            raise RuntimeError(f"S3 upload failed for {s3_key}")
+        return True
+
+    dir_real = os.path.realpath(os.path.join(*parts))
+    os.makedirs(dir_real, exist_ok=True)
+    dst_real = os.path.realpath(os.path.join(dir_real, filename))
+    if not dst_real.startswith(dir_real + os.sep):
+        return False
+    await asyncio.to_thread(shutil.copy2, src_real, dst_real)
+    return True
+
+
+async def _build_page_from_files(
+    db_session: AsyncSession,
+    files: list[tuple[dict, str]],
+    *,
+    org_id: int,
+    org_uuid: str,
+    course_id: int,
+    course_uuid: str,
+    activity_id: int,
+    activity_uuid: str,
+    now: str,
+) -> dict:
+    """Store image/audio files as blocks and return the page document showing them.
+
+    The document matches what the editor saves after an upload, so the page
+    renders and stays editable.
+    """
+    nodes = []
+    for fi, src_real in files:
+        ext = fi["extension"]
+        block_type_folder, block_type = EXTENSION_TO_BLOCK_TYPE[ext]
+        block_uuid = f"block_{uuid4()}"
+        file_id = str(uuid4())
+        if not await _store_activity_file(
+            src_real,
+            org_uuid,
+            course_uuid,
+            activity_uuid,
+            ["dynamic", "blocks", block_type_folder, block_uuid],
+            f"{file_id}.{ext}",
+        ):
+            continue
+
+        block = Block(
+            block_type=block_type,
+            content=BlockFile(
+                file_id=file_id,
+                file_format=ext,
+                file_name=fi["filename"],
+                file_size=fi["size"],
+                file_type=fi["file_type"],
+                activity_uuid=activity_uuid,
+            ).model_dump(),
+            org_id=org_id,
+            course_id=course_id,
+            activity_id=activity_id,
+            block_uuid=block_uuid,
+            creation_date=now,
+            update_date=now,
+        )
+        db_session.add(block)
+        await db_session.flush()
+
+        block_object = BlockRead.model_validate(block).model_dump(mode="json")
+        if block_type == BlockTypeEnum.BLOCK_AUDIO:
+            block_object.update(source_type="upload", size="medium")
+            attrs = {"blockObject": block_object}
+        else:
+            attrs = {
+                "blockObject": block_object,
+                "size": {"width": 300},
+                "alignment": "center",
+            }
+        nodes.append({"type": _BLOCK_EDITOR_NODES[block_type], "attrs": attrs})
+
+    return {"type": "doc", "content": nodes}
 
 
 async def create_course_from_migration(
@@ -452,15 +653,11 @@ async def create_course_from_migration(
         )
         db_session.add(author)
 
-        # Create course content directory (only needed for local filesystem storage)
-        course_dir = os.path.join(
-            "content", "orgs", org_uuid, "courses", course_uuid
-        )
-        if not is_s3_enabled():
-            os.makedirs(course_dir, exist_ok=True)
-
         chapters_created = 0
         activities_created = 0
+        # (activity id, activity uuid, type) of activities that got a file,
+        # indexed and transcoded once the course is committed.
+        stored_activities: list[tuple[int, str, ActivityTypeEnum]] = []
 
         for chapter_order, chapter_node in enumerate(structure.chapters):
             chapter_uuid = f"chapter_{uuid4()}"
@@ -488,166 +685,92 @@ async def create_course_from_migration(
             db_session.add(course_chapter)
             chapters_created += 1
 
-            for act_order, act_node in enumerate(chapter_node.activities):
-                activity_uuid = f"activity_{uuid4()}"
-                activity_type = ActivityTypeEnum(act_node.activity_type)
-                activity_sub_type = ActivitySubTypeEnum(act_node.activity_sub_type)
-
-                content = {}
-                activity_dir = os.path.join(
-                    course_dir, "activities", activity_uuid
-                )
-                if not is_s3_enabled():
-                    os.makedirs(activity_dir, exist_ok=True)
-
-                block_to_add = None
-
-                for file_id in act_node.file_ids:
-                    # Validate file_id is a UUID to prevent path traversal
-                    if not _UUID_RE.match(file_id):
-                        continue
-
-                    fi = file_lookup.get(file_id)
-                    if not fi:
-                        continue
-
-                    ext = fi["extension"]
-                    if ext not in ALLOWED_EXTENSIONS:
-                        continue
-
-                    # Resolve source path with realpath and verify containment
-                    src_real = os.path.realpath(
-                        os.path.join(temp_real, f"{file_id}.{ext}")
+            act_order = 0
+            for act_node in chapter_node.activities:
+                planned = _plan_activities(act_node, file_lookup, temp_real)
+                for name, activity_type, activity_sub_type, files in planned:
+                    activity_uuid = f"activity_{uuid4()}"
+                    activity = Activity(
+                        name=name,
+                        activity_type=activity_type,
+                        activity_sub_type=activity_sub_type,
+                        content={},
+                        details={},
+                        published=False,
+                        activity_uuid=activity_uuid,
+                        org_id=org_id,
+                        course_id=course.id,
+                        creation_date=now,
+                        update_date=now,
+                        current_version=1,
                     )
-                    if not src_real.startswith(temp_real + os.sep):
-                        continue
-                    if not os.path.exists(src_real):
-                        continue
+                    db_session.add(activity)
+                    await db_session.flush()
 
-                    new_file_id = str(uuid4())
-
-                    if activity_type in (
-                        ActivityTypeEnum.TYPE_VIDEO,
-                        ActivityTypeEnum.TYPE_DOCUMENT,
-                    ):
-                        content = {
-                            "file_id": new_file_id,
-                            "file_format": ext,
-                        }
-
-                        if is_s3_enabled():
-                            s3_key = f"orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/files/{new_file_id}.{ext}"
-                            ok = await asyncio.to_thread(upload_file_to_s3, s3_key, src_real)
-                            if not ok:
-                                raise RuntimeError(f"S3 upload failed for {s3_key}")
-                        else:
-                            files_dir = os.path.join(activity_dir, "files")
-                            os.makedirs(files_dir, exist_ok=True)
-                            dst_real = os.path.realpath(
-                                os.path.join(files_dir, f"{new_file_id}.{ext}")
+                    if files and activity_type in _MEDIA_FOLDERS:
+                        fi, src_real = files[0]
+                        ext = fi["extension"]
+                        saved_filename = f"{uuid4()}.{ext}"
+                        if activity_type == ActivityTypeEnum.TYPE_VIDEO:
+                            # Same remux upload_file applies, so long videos seek.
+                            await asyncio.to_thread(ensure_faststart, src_real)
+                        if await _store_activity_file(
+                            src_real,
+                            org_uuid,
+                            course_uuid,
+                            activity_uuid,
+                            [_MEDIA_FOLDERS[activity_type]],
+                            saved_filename,
+                        ):
+                            activity.content = {
+                                "filename": saved_filename,
+                                "activity_uuid": activity_uuid,
+                            }
+                            stored_activities.append(
+                                (activity.id, activity_uuid, activity_type)
                             )
-                            if not dst_real.startswith(
-                                os.path.realpath(files_dir) + os.sep
-                            ):
-                                continue
-                            await asyncio.to_thread(shutil.copy2, src_real, dst_real)
-
-                    elif activity_type == ActivityTypeEnum.TYPE_DYNAMIC:
-                        block_uuid = f"block_{uuid4()}"
-                        block_type_folder, block_type_enum = (
-                            EXTENSION_TO_BLOCK_TYPE.get(
-                                ext, ("imageBlock", BlockTypeEnum.BLOCK_IMAGE)
-                            )
-                        )
-
-                        block_content = {
-                            "file_id": new_file_id,
-                            "file_format": ext,
-                        }
-                        content = {
-                            "blocks": [
-                                {
-                                    "block_uuid": block_uuid,
-                                    "block_type": block_type_enum.value,
-                                    "content": block_content,
-                                }
-                            ]
-                        }
-
-                        block_to_add = Block(
-                            block_type=block_type_enum,
-                            content=block_content,
+                    elif files:
+                        activity.content = await _build_page_from_files(
+                            db_session,
+                            files,
                             org_id=org_id,
+                            org_uuid=org_uuid,
                             course_id=course.id,
-                            activity_id=0,
-                            block_uuid=block_uuid,
-                            creation_date=now,
-                            update_date=now,
+                            course_uuid=course_uuid,
+                            activity_id=activity.id,
+                            activity_uuid=activity_uuid,
+                            now=now,
+                        )
+                        stored_activities.append(
+                            (activity.id, activity_uuid, activity_type)
                         )
 
-                        if is_s3_enabled():
-                            s3_key = (
-                                f"orgs/{org_uuid}/courses/{course_uuid}"
-                                f"/activities/{activity_uuid}/dynamic/blocks"
-                                f"/{block_type_folder}/{block_uuid}"
-                                f"/{new_file_id}.{ext}"
-                            )
-                            ok = await asyncio.to_thread(upload_file_to_s3, s3_key, src_real)
-                            if not ok:
-                                raise RuntimeError(f"S3 upload failed for {s3_key}")
-                        else:
-                            block_dir = os.path.join(
-                                activity_dir,
-                                "dynamic",
-                                "blocks",
-                                block_type_folder,
-                                block_uuid,
-                            )
-                            os.makedirs(block_dir, exist_ok=True)
-                            dst_real = os.path.realpath(
-                                os.path.join(block_dir, f"{new_file_id}.{ext}")
-                            )
-                            if not dst_real.startswith(
-                                os.path.realpath(block_dir) + os.sep
-                            ):
-                                continue
-                            await asyncio.to_thread(shutil.copy2, src_real, dst_real)
-
-                activity = Activity(
-                    name=act_node.name,
-                    activity_type=activity_type,
-                    activity_sub_type=activity_sub_type,
-                    content=content,
-                    details={},
-                    published=False,
-                    activity_uuid=activity_uuid,
-                    org_id=org_id,
-                    course_id=course.id,
-                    creation_date=now,
-                    update_date=now,
-                    current_version=1,
-                )
-                db_session.add(activity)
-                await db_session.flush()
-
-                chapter_activity = ChapterActivity(
-                    chapter_id=chapter.id,
-                    activity_id=activity.id,
-                    course_id=course.id,
-                    org_id=org_id,
-                    order=act_order,
-                    creation_date=now,
-                    update_date=now,
-                )
-                db_session.add(chapter_activity)
-
-                if block_to_add:
-                    block_to_add.activity_id = activity.id
-                    db_session.add(block_to_add)
-
-                activities_created += 1
+                    chapter_activity = ChapterActivity(
+                        chapter_id=chapter.id,
+                        activity_id=activity.id,
+                        course_id=course.id,
+                        org_id=org_id,
+                        order=act_order,
+                        creation_date=now,
+                        update_date=now,
+                    )
+                    db_session.add(chapter_activity)
+                    act_order += 1
+                    activities_created += 1
 
         await db_session.commit()
+
+        # Same follow-up work the single-file upload paths queue.
+        for activity_id, activity_uuid, activity_type in stored_activities:
+            if activity_type == ActivityTypeEnum.TYPE_VIDEO:
+                index_activity(activity_id, transcribe=True)
+                try:
+                    from src.services.utils.hls_jobs import enqueue as enqueue_hls
+                    enqueue_hls(activity_uuid)
+                except Exception:
+                    logger.exception("Failed to enqueue HLS transcode for %s", activity_uuid)
+            else:
+                index_activity(activity_id)
 
         # Track course usage for billing, consistent with the other create paths.
         await increase_feature_usage("courses", org_id, db_session)

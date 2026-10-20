@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
@@ -339,7 +339,7 @@ class TestAdminRouter:
         assert response.json()["role_id"] == 3
 
     async def test_magic_link_issue_and_consume(self, client, api_user):
-        """Magic link endpoints: issue, consume (success + error HTML)."""
+        """Magic link endpoints: issue, and the legacy consume URL forwarding."""
         with _admin_context(api_user), patch(
             "src.routers.admin.issue_magic_link",
             new_callable=AsyncMock,
@@ -356,50 +356,24 @@ class TestAdminRouter:
         assert response.status_code == 200
         assert response.json()["token"] == "abc"
 
+        # Links in the older API form are forwarded, unspent, to the page that
+        # redeems them. The API sets no cookies: the web app does, for the host
+        # the browser is actually on.
+        landing = "https://acme.example.com/auth/magic?token=good&next=%2Fdashboard"
         with patch(
-            "src.routers.admin.consume_magic_link_token",
+            "src.routers.admin.magic_link_landing_url_for_token",
             new_callable=AsyncMock,
-            # 5th element is the MFA pending token; None = no second factor.
-            return_value=(_mock_user(), "access_tok", "refresh_tok", "/dashboard", None),
-        ):
+            return_value=landing,
+        ) as mock_landing:
             response = await client.get(
                 "/api/v1/admin/acme/auth/magic-consume",
                 params={"token": "good"},
                 follow_redirects=False,
             )
         assert response.status_code == 302
-        assert response.headers["location"] == "/dashboard"
-
-        # A 2FA-enabled user gets bounced to the code challenge instead of a
-        # session: the magic link must not walk past their second factor.
-        with patch(
-            "src.routers.admin.consume_magic_link_token",
-            new_callable=AsyncMock,
-            return_value=(_mock_user(), None, None, "/dashboard", "pending-tok"),
-        ):
-            response = await client.get(
-                "/api/v1/admin/acme/auth/magic-consume",
-                params={"token": "good"},
-                follow_redirects=False,
-            )
-        assert response.status_code == 302
-        assert response.headers["location"].startswith("/auth/login?mfa_token=pending-tok")
-        assert "redirect_to=%2Fdashboard" in response.headers["location"]
-        # No session cookies may be set on the challenge redirect.
-        assert "LH_access" not in response.headers.get("set-cookie", "")
-
-        with patch(
-            "src.routers.admin.consume_magic_link_token",
-            new_callable=AsyncMock,
-            side_effect=HTTPException(status_code=410, detail="Link expired"),
-        ):
-            response = await client.get(
-                "/api/v1/admin/acme/auth/magic-consume",
-                params={"token": "bad"},
-            )
-        assert response.status_code == 410
-        assert "text/html" in response.headers["content-type"]
-        assert "Link expired" in response.text
+        assert response.headers["location"] == landing
+        assert "set-cookie" not in response.headers
+        assert mock_landing.call_args.kwargs["org_slug"] == "acme"
 
     async def test_bulk_enrollment_and_course_listings(self, client, api_user):
         """Bulk enroll/unenroll, course enrollment listing, progress reset, course analytics."""

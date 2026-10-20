@@ -97,6 +97,10 @@ def startup_app(app: FastAPI) -> Callable:
         # Every few hours, queue whatever the index is missing or behind on.
         from src.services.ai.rag.scheduler import start_scheduler as start_rag_backfill
         start_rag_backfill()
+        # Every two days, re-run every content backfill (HLS, search index,
+        # video chapters) for whatever slipped through.
+        from src.services.backfill.scheduler import start_scheduler as start_backfill
+        start_backfill()
 
         # Start Enterprise Edition Startup tasks if available
         run_ee_startup(app)
@@ -120,6 +124,8 @@ def shutdown_app(app: FastAPI) -> Callable:
         await stop_captions_consumer()
         # Stop the RAG backfill tick, then the indexing consumer; in-flight
         # refs are re-queued.
+        from src.services.backfill.scheduler import stop_scheduler as stop_backfill
+        await stop_backfill()
         from src.services.ai.rag.scheduler import stop_scheduler as stop_rag_backfill
         await stop_rag_backfill()
         from src.services.ai.rag.queue import stop_consumer as stop_rag_consumer

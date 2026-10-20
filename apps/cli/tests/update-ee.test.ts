@@ -85,6 +85,25 @@ describe('update-ee shared upgrade helpers', () => {
     const out = backupDatabase({ installDir: dir } as never, LAYOUT, ui)
     expect(out).toMatch(/db-pre-upgrade-.*\.sql\.gz$/)
     expect(fs.existsSync(out)).toBe(true)
+    expect(fs.statSync(out).mode & 0o777).toBe(0o600)
+    expect(fs.statSync(path.dirname(out)).mode & 0o777).toBe(0o700)
+  })
+
+  it('backupDatabase warns and still backs up when backups/ belongs to another user', () => {
+    fs.writeFileSync(path.join(dir, '.env'), 'LEARNHOUSE_DOMAIN=localhost\n')
+    const backupsDir = path.join(dir, 'backups')
+    const realChmod = fs.chmodSync
+    vi.spyOn(fs, 'chmodSync').mockImplementation(((target: fs.PathLike, mode: fs.Mode) => {
+      if (String(target) === backupsDir) {
+        throw Object.assign(new Error('operation not permitted'), { code: 'EPERM' })
+      }
+      return realChmod(target, mode)
+    }) as typeof fs.chmodSync)
+    const warn = vi.fn()
+    const out = backupDatabase({ installDir: dir } as never, LAYOUT, { ...ui, warn })
+    expect(fs.existsSync(out)).toBe(true)
+    expect(fs.statSync(out).mode & 0o777).toBe(0o600)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('EPERM'))
   })
 
   it('backupDatabase dumps an external database via the app container network', () => {

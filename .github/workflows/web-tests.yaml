@@ -22,13 +22,13 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v7.0.1
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version-file: .bun-version
       # setup-bun restores the toolchain, not the packages.
       - name: Cache bun install cache
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-web-${{ runner.os }}-${{ hashFiles('apps/web/bun.lock') }}

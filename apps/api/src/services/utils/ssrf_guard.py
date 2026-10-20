@@ -49,9 +49,43 @@ def _normalize(ip: ipaddress._BaseAddress) -> ipaddress._BaseAddress:
     return ip
 
 
+# IPv6 prefixes that carry an IPv4 address in their low 32 bits: NAT64
+# (64:ff9b::/96) and the deprecated IPv4-compatible form (::/96).
+_IPV4_EMBEDDING_NETWORKS = [
+    ipaddress.ip_network("64:ff9b::/96"),
+    ipaddress.ip_network("::/96"),
+]
+
+
+def _embedded_ipv4(ip: ipaddress._BaseAddress) -> list[ipaddress.IPv4Address]:
+    """IPv4 addresses an IPv6 address can route to (mapped, 6to4, Teredo, NAT64)."""
+    if not isinstance(ip, ipaddress.IPv6Address):
+        return []
+    embedded = []
+    if ip.ipv4_mapped:
+        embedded.append(ip.ipv4_mapped)
+    if ip.sixtofour:
+        embedded.append(ip.sixtofour)
+    if ip.teredo:
+        embedded.extend(ip.teredo)
+    if any(ip in net for net in _IPV4_EMBEDDING_NETWORKS):
+        embedded.append(ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF))
+    return embedded
+
+
 def _is_ip_blocked(ip: ipaddress._BaseAddress) -> bool:
-    ip = _normalize(ip)
-    return any(ip in net for net in _BLOCKED_NETWORKS)
+    """Only globally routable unicast addresses are allowed, for the address
+    itself and for any IPv4 address embedded in it."""
+    for candidate in (_normalize(ip), *_embedded_ipv4(ip)):
+        # The explicit list backs up is_global, whose ranges vary by Python version.
+        if (
+            not candidate.is_global
+            or candidate.is_multicast
+            or getattr(candidate, "is_site_local", False)
+            or any(candidate in net for net in _BLOCKED_NETWORKS)
+        ):
+            return True
+    return False
 
 
 def resolve_and_validate_url(url: str, *, allow_http: bool = True) -> set[str]:

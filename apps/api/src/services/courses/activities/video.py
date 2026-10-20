@@ -23,6 +23,7 @@ from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.courses.activities.activities import keep_server_owned_metadata
 from src.services.ai.rag.queue import index_activity
 
 logger = logging.getLogger(__name__)
@@ -124,7 +125,7 @@ async def create_video_activity(
         details=details if isinstance(details, dict) else json.loads(details),
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
-        extra_metadata=extra_metadata,
+        extra_metadata=extra_metadata and keep_server_owned_metadata(extra_metadata, None),
     )
 
     # create activity
@@ -245,7 +246,7 @@ async def create_external_video_activity(
         details=details,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
-        extra_metadata=data.extra_metadata,
+        extra_metadata=data.extra_metadata and keep_server_owned_metadata(data.extra_metadata, None),
     )
 
     # create activity
@@ -463,6 +464,114 @@ async def configure_captions(
             )
 
     return captions
+
+
+class ChapterIn(BaseModel):
+    start: float
+    title: str
+
+
+class ChaptersIn(BaseModel):
+    items: list[ChapterIn] = []
+
+
+async def _load_video_for_update(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+) -> Activity:
+    """The hosted-video activity, after checking UPDATE rights on its course."""
+    activity = (
+        await db_session.execute(select(Activity).where(Activity.activity_uuid == activity_uuid))
+    ).scalars().first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    if activity.activity_sub_type != ActivitySubTypeEnum.SUBTYPE_VIDEO_HOSTED:
+        raise HTTPException(status_code=400, detail="Chapters are only available for hosted videos")
+    course = (
+        await db_session.execute(select(Course).where(Course.id == activity.course_id))
+    ).scalars().first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+    return activity
+
+
+async def _store_chapters(activity: Activity, db_session: AsyncSession, chapters: dict) -> dict:
+    from sqlalchemy.orm.attributes import flag_modified
+
+    meta = dict(activity.extra_metadata or {})
+    current = dict(meta.get("chapters") or {})
+    current.update(chapters)
+    current["updated_at"] = str(datetime.now())
+    meta["chapters"] = current
+    activity.extra_metadata = meta
+    flag_modified(activity, "extra_metadata")
+    db_session.add(activity)
+    await db_session.commit()
+    return current
+
+
+async def request_chapters_generation(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+) -> dict:
+    """Validate and mark a hosted video for AI chapter generation from its
+    captions. The caller runs ``chapter_jobs.generate_activity_chapters``
+    afterwards. Returns the stored `chapters` metadata block."""
+    activity = await _load_video_for_update(request, activity_uuid, current_user, db_session)
+
+    from src.services.utils.chapter_jobs import pick_caption_language
+
+    if not pick_caption_language((activity.extra_metadata or {}).get("captions") or {}):
+        raise HTTPException(status_code=400, detail="Generate captions for this video first")
+
+    from src.security.features_utils.usage import (
+        check_feature_enabled,
+        get_ai_credits_summary,
+    )
+    from src.security.auth import resolve_acting_user_id
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+
+    await check_feature_enabled("ai", activity.org_id, db_session)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), activity.org_id)
+    summary = await get_ai_credits_summary(activity.org_id, db_session)
+    remaining = summary.get("remaining_credits")
+    if isinstance(remaining, (int, float)) and remaining != -1 and remaining <= 0:
+        raise HTTPException(status_code=402, detail="No AI credits remaining")
+
+    return await _store_chapters(activity, db_session, {"status": "queued", "error": None})
+
+
+async def save_chapters(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+    payload: ChaptersIn,
+) -> dict:
+    """Replace a hosted video's chapters with an instructor's edited list. An
+    empty list clears them."""
+    activity = await _load_video_for_update(request, activity_uuid, current_user, db_session)
+
+    from src.services.ai.chapters import MIN_CHAPTERS, normalize_chapters
+
+    items = normalize_chapters([c.model_dump() for c in payload.items], None)
+    if payload.items and not items:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Provide at least {MIN_CHAPTERS} chapters with titles, at least 15 seconds apart",
+        )
+    return await _store_chapters(
+        activity,
+        db_session,
+        {"status": "ready" if items else "idle", "items": items, "model": None, "error": None},
+    )
 
 
 async def update_external_video_activity(

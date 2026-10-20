@@ -414,6 +414,13 @@ def _code_body(activity_uuid="activity_test", **overrides):
 
 
 class TestCodeSubmissions:
+    @pytest.fixture(autouse=True)
+    def _no_rate_limit(self, monkeypatch):
+        # The save limiter talks to Redis, which CI doesn't run.
+        monkeypatch.setattr(
+            "src.routers.code_submissions.check_rate_limit", lambda *a, **k: (True, 1, 60)
+        )
+
     async def test_passed_is_derived_not_trusted(self, code_client, activity):
         resp = await code_client.post("/code/submissions/save", json=_code_body())
         assert resp.status_code == 200

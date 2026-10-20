@@ -19,6 +19,7 @@ import { Label } from '@components/ui/label';
 import currencyCodes from 'currency-codes';
 import { BookOpen, X, Plus, Layers } from 'lucide-react';
 import { getOrgCourses } from '@services/courses/courses';
+import { BILLING_INTERVALS, billingIntervalName } from '@lib/payments/billingInterval';
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required('Name is required'),
@@ -28,6 +29,7 @@ const validationSchema = Yup.object().shape({
   currency: Yup.string().required('Currency is required'),
   offer_type: Yup.string().oneOf(['one_time', 'subscription']).required('Offer type is required'),
   price_type: Yup.string().oneOf(['fixed_price', 'customer_choice']).required('Price type is required'),
+  billing_interval: Yup.string().oneOf(BILLING_INTERVALS).required('Billing period is required'),
 });
 
 interface OfferFormValues {
@@ -35,6 +37,7 @@ interface OfferFormValues {
   description: string;
   offer_type: 'one_time' | 'subscription';
   price_type: 'fixed_price' | 'customer_choice';
+  billing_interval: 'month' | 'year';
   benefits: string;
   amount: number;
   currency: string;
@@ -80,6 +83,7 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
     description: '',
     offer_type: 'one_time',
     price_type: 'fixed_price',
+    billing_interval: 'month',
     benefits: '',
     amount: 1,
     currency: 'USD',
@@ -98,6 +102,7 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
         track(AnalyticsEvent.OfferCreated, {
           offer_type: values.offer_type,
           price_type: values.price_type,
+          billing_interval: values.offer_type === 'subscription' ? values.billing_interval : undefined,
           amount: values.amount,
         });
         toast.success('Offer created successfully');
@@ -169,6 +174,28 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
               </Select>
               <ErrorMessage name="price_type" component="div" className="text-red-500 text-sm mt-1" />
             </div>
+
+            {values.offer_type === 'subscription' && (
+              <div>
+                <Label htmlFor="billing_interval">Billing Period</Label>
+                <Select
+                  value={values.billing_interval}
+                  onValueChange={(value) => setFieldValue('billing_interval', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Billing Period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BILLING_INTERVALS.map((interval) => (
+                      <SelectItem key={interval} value={interval}>
+                        {billingIntervalName(interval)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <ErrorMessage name="billing_interval" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+            )}
 
             <div className="flex space-x-2">
               <div className="grow">

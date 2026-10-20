@@ -472,6 +472,7 @@
     "course_count_plural": "{{count}} courses",
     "authors_and_updates": "Authors & Updates",
     "course_updates": "Course Updates",
+    "rss_feed": "RSS feed of course updates",
     "no_updates_yet": "No updates yet",
     "no_updates_desc": "Updates about this course will appear here",
     "quit_course": "Quit Course",
@@ -1100,6 +1101,13 @@
       "page_of": "Page {{current}} of {{total}}",
       "results": "{{count}} result for \"{{query}}\"",
       "results_plural": "{{count}} results for \"{{query}}\""
+    },
+    "connection": {
+      "access_revoked_title": "You no longer have access to this board",
+      "access_revoked_description": "Your access was removed while the board was open. Reload to check again.",
+      "too_large_title": "This board is too large to keep syncing",
+      "too_large_description": "It passed the size limit, so live editing has stopped. Your most recent changes may not have been saved.",
+      "reload": "Reload"
     }
   },
   "podcasts": {
@@ -1405,6 +1413,7 @@
     }
   },
   "activities": {
+    "video_chapters": "Chapters",
     "video": "Video",
     "document": "Document",
     "page": "Page",
@@ -1626,6 +1635,10 @@
     "one_time_payment": "One-time payment",
     "per_month": "(per month)",
     "per_month_short": "/month",
+    "billing_per_month": "per month",
+    "billing_per_year": "per year",
+    "billing_suffix_month": "/ month",
+    "billing_suffix_year": "/ year",
     "subscribe_now": "Subscribe Now",
     "purchase_now": "Purchase Now",
     "failed_checkout": "Failed to initiate checkout process",
@@ -6695,7 +6708,9 @@
     },
     "pricing": {
       "from": "from",
-      "subscription": "subscription"
+      "subscription": "subscription",
+      "per_month": "/ month",
+      "per_year": "/ year"
     }
   }
 }

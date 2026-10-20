@@ -11,6 +11,7 @@ import { Checkbox } from '@components/ui/checkbox';
 import { Button } from '@components/ui/button';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { useUrlEmbedSandbox } from '@/lib/media/useUrlEmbedSandbox';
 
 interface EditorContext {
   isEditable: boolean;
@@ -51,6 +52,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
   };
 
   const previewUrl = safeExternalUrl(previewData.url);
+  const previewSandbox = useUrlEmbedSandbox(previewUrl);
   const previewImage = safeImageSrc(previewData.og_image);
   const favicon = safeImageSrc(previewData.favicon);
 
@@ -173,13 +175,13 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
         minWidth="xl"
         minHeight="xl"
         dialogContent={
-          previewUrl ? <iframe
+          previewUrl && previewSandbox ? <iframe
             src={previewUrl}
             title={t('editor.blocks.web_preview_block.embedded_preview')}
             className="w-full h-full border-0 bg-white"
             style={{ display: 'block', borderRadius: 0 }}
             allowFullScreen
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+            sandbox={previewSandbox}
             referrerPolicy="strict-origin-when-cross-origin"
           /> : null
         }

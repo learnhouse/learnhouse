@@ -371,14 +371,17 @@ async def test_create_course_from_migration_skips_bad_files_and_validates_inputs
 async def test_upload_migration_files_branches(monkeypatch, tmp_path):
     base = tmp_path / "migrations"
     monkeypatch.setattr(migrations, "_TEMP_BASE_REAL", str(base))
-    monkeypatch.setattr(migrations, "MAX_SINGLE_FILE_SIZE", 1)
-    monkeypatch.setattr(migrations, "MAX_TOTAL_UPLOAD_SIZE", 1)
+    # Files must carry a real header to pass the magic-byte check.
+    mp4 = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 16
+    monkeypatch.setattr(migrations, "MAX_SINGLE_FILE_SIZE", len(mp4))
+    monkeypatch.setattr(migrations, "MAX_TOTAL_UPLOAD_SIZE", len(mp4))
 
     files = [
-        _FakeUploadFile("intro.mp4", "video/mp4", b"a"),
+        _FakeUploadFile("intro.mp4", "video/mp4", mp4),
         _FakeUploadFile("bad.txt", "text/plain", b"b"),
-        _FakeUploadFile("overflow.png", "image/png", b"cc"),
-        _FakeUploadFile("second.mp4", "video/mp4", b"d"),
+        _FakeUploadFile("overflow.png", "image/png", b"c" * (len(mp4) + 1)),
+        _FakeUploadFile("fake.mp4", "video/mp4", b"not a video"),
+        _FakeUploadFile("second.mp4", "video/mp4", mp4),
     ]
 
     result = await migrations.upload_migration_files(files)
@@ -386,6 +389,7 @@ async def test_upload_migration_files_branches(monkeypatch, tmp_path):
     assert result.skipped == [
         "bad.txt: unsupported format",
         "overflow.png: exceeds 0GB limit",
+        "fake.mp4: content does not match its file type",
         "second.mp4: total upload size exceeded",
     ]
     assert len(result.files) == 1
@@ -726,7 +730,7 @@ async def test_create_course_from_migration_covers_local_copy_and_s3_failure_bra
     )
 
     def dst_escape_realpath(path):
-        if "/files/" in path and path.endswith(".mp4"):
+        if "/video/" in path and path.endswith(".mp4"):
             return str(tmp_path / "outside" / Path(path).name)
         if "/dynamic/blocks/" in path and path.endswith(".webp"):
             return str(tmp_path / "outside" / Path(path).name)
@@ -917,3 +921,197 @@ async def test_create_course_from_migration_reports_dynamic_s3_failure(
         )
     assert failure.success is False
     assert "S3 upload failed" in failure.error
+
+
+def _media_manifest(base: Path, temp_id: str, files: list[tuple[str, str, str]]) -> tuple[Path, dict]:
+    """Write a manifest plus the files it lists. files = (name, extension, mime)."""
+    entries = []
+    ids = {}
+    for name, ext, mime in files:
+        file_id = str(uuid4())
+        ids[name] = file_id
+        entries.append(
+            {"file_id": file_id, "filename": name, "file_type": mime, "size": 11, "extension": ext}
+        )
+    temp_dir = _write_manifest(base, temp_id, entries)
+    for name, ext, _ in files:
+        (temp_dir / f"{ids[name]}.{ext}").write_bytes(b"media-bytes")
+    return temp_dir, ids
+
+
+@pytest.mark.asyncio
+async def test_create_course_from_migration_stores_files_where_players_read_them(
+    monkeypatch, tmp_path, db, org, admin_user
+):
+    monkeypatch.chdir(tmp_path)
+    base = tmp_path / "migrations"
+    monkeypatch.setattr(migrations, "_TEMP_BASE_REAL", str(base))
+    monkeypatch.setattr(migrations, "is_s3_enabled", lambda: False)
+    faststarted = []
+    monkeypatch.setattr(migrations, "ensure_faststart", lambda path: faststarted.append(path) or True)
+    indexed = []
+    monkeypatch.setattr(
+        migrations, "index_activity", lambda activity_id, transcribe=False: indexed.append((activity_id, transcribe))
+    )
+    hls = []
+    monkeypatch.setattr("src.services.utils.hls_jobs.enqueue", hls.append)
+
+    temp_id = str(uuid4())
+    _, ids = _media_manifest(
+        base,
+        temp_id,
+        [
+            ("part1.mp4", "mp4", "video/mp4"),
+            ("diagram.png", "png", "image/png"),
+            ("part2.webm", "webm", "video/webm"),
+            ("handout.pdf", "pdf", "application/pdf"),
+            ("photo.jpg", "jpg", "image/jpeg"),
+            ("narration.mp3", "mp3", "audio/mpeg"),
+        ],
+    )
+
+    # One node holding everything, typed after the last file the editor saw.
+    structure = MigrationTreeStructure(
+        course_name="Mixed Lesson",
+        chapters=[
+            MigrationChapterNode(
+                name="Chapter 1",
+                activities=[
+                    MigrationActivityNode(
+                        name="Lesson",
+                        activity_type=ActivityTypeEnum.TYPE_DOCUMENT.value,
+                        activity_sub_type="SUBTYPE_DOCUMENT_PDF",
+                        file_ids=list(ids.values()),
+                    )
+                ],
+            )
+        ],
+    )
+
+    result = await migrations.create_course_from_migration(org.id, admin_user, db, temp_id, structure)
+    assert result.success is True, result.error
+    assert result.activities_created == 4
+
+    course = (await db.execute(select(Course).where(Course.course_uuid == result.course_uuid))).scalars().one()
+    links = (
+        await db.execute(
+            select(ChapterActivity).where(ChapterActivity.course_id == course.id).order_by(ChapterActivity.order)
+        )
+    ).scalars().all()
+    assert [link.order for link in links] == [0, 1, 2, 3]
+    by_id = {
+        a.id: a
+        for a in (await db.execute(select(Activity).where(Activity.course_id == course.id))).scalars().all()
+    }
+    video1, page, video2, pdf = (by_id[link.activity_id] for link in links)
+
+    assert [a.name for a in (video1, page, video2, pdf)] == ["Lesson", "Lesson (2)", "Lesson (3)", "Lesson (4)"]
+    assert video1.activity_type == video2.activity_type == ActivityTypeEnum.TYPE_VIDEO
+    assert pdf.activity_type == ActivityTypeEnum.TYPE_DOCUMENT
+    assert page.activity_type == ActivityTypeEnum.TYPE_DYNAMIC
+
+    activities_root = tmp_path / "content" / "orgs" / org.org_uuid / "courses" / course.course_uuid / "activities"
+    for activity, folder, ext in ((video1, "video", "mp4"), (video2, "video", "webm"), (pdf, "documentpdf", "pdf")):
+        assert set(activity.content) == {"filename", "activity_uuid"}
+        assert activity.content["activity_uuid"] == activity.activity_uuid
+        assert activity.content["filename"].endswith(f".{ext}")
+        stored = activities_root / activity.activity_uuid / folder / activity.content["filename"]
+        assert stored.read_bytes() == b"media-bytes"
+
+    # The page is an editor document whose nodes point at real block rows and files.
+    assert page.content["type"] == "doc"
+    nodes = page.content["content"]
+    assert [n["type"] for n in nodes] == ["blockImage", "blockImage", "blockAudio"]
+    blocks = {
+        b.block_uuid: b
+        for b in (await db.execute(select(Block).where(Block.activity_id == page.id))).scalars().all()
+    }
+    assert len(blocks) == 3
+    for node, folder, ext in zip(nodes, ("imageBlock", "imageBlock", "audioBlock"), ("png", "jpg", "mp3")):
+        block_object = node["attrs"]["blockObject"]
+        block = blocks[block_object["block_uuid"]]
+        assert block_object["content"] == block.content
+        assert block.content["file_format"] == ext
+        assert block.content["activity_uuid"] == page.activity_uuid
+        stored = (
+            activities_root / page.activity_uuid / "dynamic" / "blocks" / folder / block.block_uuid
+            / f"{block.content['file_id']}.{ext}"
+        )
+        assert stored.read_bytes() == b"media-bytes"
+    assert nodes[0]["attrs"]["size"] == {"width": 300}
+    assert nodes[2]["attrs"]["blockObject"]["source_type"] == "upload"
+
+    assert len(faststarted) == 2
+    assert sorted(hls) == sorted([video1.activity_uuid, video2.activity_uuid])
+    assert sorted(indexed) == sorted(
+        [(video1.id, True), (video2.id, True), (pdf.id, False), (page.id, False)]
+    )
+
+
+@pytest.mark.asyncio
+async def test_create_course_from_migration_uses_content_prefix_for_s3_keys(
+    monkeypatch, tmp_path, db, org, admin_user
+):
+    monkeypatch.chdir(tmp_path)
+    base = tmp_path / "migrations"
+    monkeypatch.setattr(migrations, "_TEMP_BASE_REAL", str(base))
+    monkeypatch.setattr(migrations, "is_s3_enabled", lambda: True)
+    monkeypatch.setattr(migrations, "ensure_faststart", lambda path: True)
+    monkeypatch.setattr(migrations, "index_activity", lambda *args, **kwargs: None)
+
+    def broken_hls(activity_uuid):
+        raise RuntimeError("redis down")
+
+    # A queue outage must not fail a course that is already committed.
+    monkeypatch.setattr("src.services.utils.hls_jobs.enqueue", broken_hls)
+    keys = []
+    monkeypatch.setattr(migrations, "upload_file_to_s3", lambda key, path: keys.append(key) or True)
+
+    temp_id = str(uuid4())
+    _, ids = _media_manifest(
+        base, temp_id, [("intro.mp4", "mp4", "video/mp4"), ("slide.webp", "webp", "image/webp")]
+    )
+    structure = MigrationTreeStructure(
+        course_name="S3 Course",
+        chapters=[
+            MigrationChapterNode(
+                name="Chapter 1",
+                activities=[
+                    MigrationActivityNode(
+                        name="Intro",
+                        activity_type=ActivityTypeEnum.TYPE_VIDEO.value,
+                        activity_sub_type="SUBTYPE_VIDEO_HOSTED",
+                        file_ids=[ids["intro.mp4"]],
+                    ),
+                    MigrationActivityNode(
+                        name="Slide",
+                        activity_type=ActivityTypeEnum.TYPE_DYNAMIC.value,
+                        activity_sub_type="SUBTYPE_DYNAMIC_PAGE",
+                        file_ids=[ids["slide.webp"]],
+                    ),
+                ],
+            )
+        ],
+    )
+
+    result = await migrations.create_course_from_migration(org.id, admin_user, db, temp_id, structure)
+    assert result.success is True, result.error
+
+    course = (await db.execute(select(Course).where(Course.course_uuid == result.course_uuid))).scalars().one()
+    activities = {
+        a.activity_type: a
+        for a in (await db.execute(select(Activity).where(Activity.course_id == course.id))).scalars().all()
+    }
+    video = activities[ActivityTypeEnum.TYPE_VIDEO]
+    page = activities[ActivityTypeEnum.TYPE_DYNAMIC]
+    block_object = page.content["content"][0]["attrs"]["blockObject"]
+    prefix = f"content/orgs/{org.org_uuid}/courses/{course.course_uuid}/activities"
+    assert keys == [
+        f"{prefix}/{video.activity_uuid}/video/{video.content['filename']}",
+        (
+            f"{prefix}/{page.activity_uuid}/dynamic/blocks/imageBlock/{block_object['block_uuid']}"
+            f"/{block_object['content']['file_id']}.webp"
+        ),
+    ]
+    # Nothing is written to local disk when S3 holds the content.
+    assert not (tmp_path / "content" / "orgs").exists()

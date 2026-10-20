@@ -311,6 +311,61 @@ def transcode_backfill(
 
 
 @cli.command()
+def backfill(
+    only: Annotated[str, typer.Option(help="Comma-separated jobs to run (default: all)")] = "",
+):
+    """Run every content backfill now: HLS transcodes, the AI search index and
+    video chapters. The API also runs this on its own every two days
+    (LEARNHOUSE_BACKFILL_INTERVAL_HOURS)."""
+    from src.services.backfill.jobs import JOBS, run_all
+
+    names = [n.strip() for n in only.split(",") if n.strip()]
+    unknown = sorted(set(names) - {job.name for job in JOBS})
+    if unknown:
+        print(f"Unknown backfill job(s): {', '.join(unknown)}. Available: {', '.join(j.name for j in JOBS)}")
+        raise typer.Exit(code=1)
+    for name, result in asyncio.run(run_all(names or None)).items():
+        print(f"{name}: {result}")
+
+
+@cli.command()
+def chapters_backfill(
+    org: Annotated[str, typer.Option(help="Only this organization (slug)")] = "",
+    force: Annotated[bool, typer.Option(help="Regenerate videos that already have chapters")] = False,
+    limit: Annotated[int, typer.Option(help="Max videos to process (0 = all)")] = 0,
+    dry_run: Annotated[bool, typer.Option(help="List the videos without generating")] = False,
+):
+    """Generate AI chapters for captioned videos in organizations on a paid plan.
+
+    Only videos with ready captions qualify, since chapters are built from
+    them. Each video costs its organization one AI credit."""
+    result = asyncio.run(_chapters_backfill(org, force, limit, dry_run))
+    print(
+        f"Chapters backfill done. candidates={result['candidates']} "
+        f"ready={result['ready']} failed={result['failed']}"
+        + (" (dry run)" if dry_run else "")
+    )
+
+
+async def _chapters_backfill(org_slug: str, force: bool, limit: int, dry_run: bool) -> dict:
+    from src.services.utils.chapter_jobs import backfill_targets, generate_activity_chapters
+
+    targets = await backfill_targets(org_slug=org_slug or None, force=force)
+    if limit > 0:
+        targets = targets[:limit]
+    ready = failed = 0
+    for activity_uuid in targets:
+        if dry_run:
+            print(f"  would generate: {activity_uuid}")
+            continue
+        if await generate_activity_chapters(activity_uuid, force=force):
+            ready += 1
+        else:
+            failed += 1
+    return {"candidates": len(targets), "ready": ready, "failed": failed}
+
+
+@cli.command()
 def index_backfill(
     org: Annotated[str, typer.Option(help="Only this organization (slug)")] = "",
     course: Annotated[str, typer.Option(help="Only this course (course_uuid)")] = "",

@@ -25,6 +25,7 @@ import {
   type PriceMapEntry,
 } from "./subscriptionUtils";
 import { updateOrganizationConfigInternally } from "./orgPlan";
+import { PLAN_HIERARCHY, type PlanLevel } from "@services/plans/plans";
 import { sendPlanSwitchMail, sendSubscriptionCanceledMail } from "./emails";
 import { invoiceSubscriptionId } from "./activeUserBillingUtils";
 
@@ -254,12 +255,25 @@ export async function switchSubscriptionPlan(
   const oldPlan = subscription.metadata.plan || "free";
 
   if (downgrade) {
-    // Resolve promotion code to coupon if provided
-    let downgradeCoupon: string | undefined;
+    // `downgrade` comes from the client. A scheduled switch keeps the current
+    // plan until period end with no proration, so it must never be usable to
+    // move to a HIGHER tier (that would defer paying for it). The same plan is
+    // allowed: that is a billing-interval change.
+    const currentPlan = effectivePlanForSubscription(subscription, PRICE_TO_PLAN);
+    const currentRank = PLAN_HIERARCHY.indexOf(currentPlan as PlanLevel);
+    const newRank = PLAN_HIERARCHY.indexOf(newPlan as PlanLevel);
+    if (currentRank === -1 || newRank === -1 || newRank > currentRank) {
+      throw Object.assign(new Error("This plan change is an upgrade, not a downgrade."), { status: 400 });
+    }
+
+    // Apply by `promotion_code` (not the bare coupon) so the promotion's own
+    // restrictions (customer, first-time, max redemptions, expiry, minimum
+    // amount) are enforced by Stripe, matching the checkout and upgrade paths.
+    let downgradePromotionCode: string | undefined;
     if (promotionCode?.trim()) {
       const resolved = await validatePromotionCode(promotionCode);
-      if (resolved.valid && resolved.couponId) {
-        downgradeCoupon = resolved.couponId;
+      if (resolved.valid && resolved.promotionCodeId) {
+        downgradePromotionCode = resolved.promotionCodeId;
       }
     }
 
@@ -295,7 +309,7 @@ export async function switchSubscriptionPlan(
           items: [{ price: newPriceId, quantity: 1 }],
           start_date: periodEnd,
           metadata: { org_id: orgId, plan: newPlan, billing: newBilling },
-          ...(downgradeCoupon ? { discounts: [{ coupon: downgradeCoupon }] } : {}),
+          ...(downgradePromotionCode ? { discounts: [{ promotion_code: downgradePromotionCode }] } : {}),
         },
       ],
     });

@@ -133,12 +133,21 @@ async def evaluate_org_auth(
         # by that tenant's own policy.
         if not await is_user_superadmin(user_id, db_session):
             policy = await get_org_auth_policy(db_session, org_id)
+            provenance = get_session_provenance() or SessionProvenance()
+            # A session signed in on an org's custom domain went through a host
+            # that org controls, so it is bound to that org even when the org
+            # leaves session sharing on: sharing lets sessions in, it never lets
+            # one org's session out into another org.
+            domain_bound = provenance.custom_domain and provenance.org_id is not None
 
             # Fast path: default config (all methods, sharing on) is a pure no-op,
             # so unmodified orgs (and every existing test that never sets
             # provenance) are unaffected.
-            if policy.method_restricted or not policy.allow_central_session_sharing:
-                provenance = get_session_provenance() or SessionProvenance()
+            if (
+                policy.method_restricted
+                or not policy.allow_central_session_sharing
+                or domain_bound
+            ):
 
                 # Machine credentials carry their own org boundary
                 # (_verify_api_token_org_boundary) and are exempt from the human
@@ -175,7 +184,7 @@ async def evaluate_org_auth(
                         "allowed_methods": sorted(allowed),
                     }
                 elif (
-                    not policy.allow_central_session_sharing
+                    (not policy.allow_central_session_sharing or domain_bound)
                     and not cross_org_token
                     and provenance.org_id != org_id
                 ):
@@ -272,6 +281,24 @@ async def enforce_login_auth_method(
             "allowed_methods": allowed,
         },
     )
+
+
+async def viewer_for_org(db_session: AsyncSession, current_user: Any, org_id: int) -> Any:
+    """``current_user``, or an anonymous viewer when the org's policy refuses
+    their session (e.g. one bound to another org's custom domain).
+
+    Listings and search shape their results instead of raising, so they read
+    the org through this: a refused session sees what a visitor would."""
+    from src.db.users import AnonymousUser, APITokenUser
+
+    if isinstance(current_user, (AnonymousUser, APITokenUser)):
+        return current_user
+    user_id = getattr(current_user, "id", None)
+    if not user_id:
+        return current_user
+    if await evaluate_org_auth(db_session, user_id, org_id) is not None:
+        return AnonymousUser()
+    return current_user
 
 
 async def enforce_org_auth_policy(

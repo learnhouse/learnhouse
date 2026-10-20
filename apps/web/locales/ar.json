@@ -480,6 +480,7 @@
     "course_count_plural": "{{count}} دورات",
     "authors_and_updates": "المؤلفون والتحديثات",
     "course_updates": "تحديثات الدورة",
+    "rss_feed": "خلاصة RSS لتحديثات الدورة",
     "no_updates_yet": "لا توجد تحديثات بعد",
     "no_updates_desc": "تحديثات هذه الدورة ستظهر هنا",
     "quit_course": "الخروج من الدورة",
@@ -976,6 +977,7 @@
     "search_results": "تم العثور على {{count}} بودكاست لـ \"{{query}}\""
   },
   "activities": {
+    "video_chapters": "الفصول",
     "video": "فيديو",
     "document": "مستند",
     "page": "صفحة",
@@ -1191,6 +1193,10 @@
     "one_time_payment": "دفع لمرة واحدة",
     "per_month": "(لكل شهر)",
     "per_month_short": "/شهر",
+    "billing_per_month": "في الشهر",
+    "billing_per_year": "في السنة",
+    "billing_suffix_month": "/ شهر",
+    "billing_suffix_year": "/ سنة",
     "subscribe_now": "اشترك الآن",
     "purchase_now": "اشترِ الآن",
     "failed_checkout": "فشل بدء عملية الدفع",
@@ -5928,7 +5934,14 @@
     "select_all": "تحديد الكل",
     "selected_count": "{{count}} محدد",
     "no_boards": "لا توجد لوحات بعد",
-    "no_search_results": "لم يتم العثور على لوحات"
+    "no_search_results": "لم يتم العثور على لوحات",
+    "connection": {
+      "access_revoked_title": "لم تعد لديك صلاحية الوصول إلى هذه اللوحة",
+      "access_revoked_description": "أُزيلت صلاحية وصولك أثناء فتح اللوحة. أعد التحميل للتحقق مرة أخرى.",
+      "too_large_title": "هذه اللوحة أكبر من أن تستمر مزامنتها",
+      "too_large_description": "تجاوزت اللوحة الحد الأقصى للحجم، لذا توقف التحرير المباشر. قد لا تكون أحدث تغييراتك قد حُفظت.",
+      "reload": "إعادة التحميل"
+    }
   },
   "onboarding": {
     "getting_started": "البدء",
@@ -6714,7 +6727,9 @@
     },
     "pricing": {
       "from": "ابتداءً من",
-      "subscription": "اشتراك"
+      "subscription": "اشتراك",
+      "per_month": "/ شهر",
+      "per_year": "/ سنة"
     }
   }
 }

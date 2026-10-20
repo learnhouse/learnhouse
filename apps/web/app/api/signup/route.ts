@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAPIUrl } from '@services/config/config'
-import { isSaaSMode, isCustomDomainRequest } from '@lib/saas'
+import { isSaaSMode, getCustomDomainOrgId } from '@lib/saas'
 import { verifyTurnstile, clientIpFromHeaders } from '@lib/turnstile'
 import { validateSignupEmail } from '@services/emails/disposableEmail'
 import { addContactWithLoops, sendLoopsEvent, LOOPS_SIGNED_USERS_GROUP } from '@services/emails/loops'
@@ -68,7 +68,14 @@ export async function POST(request: NextRequest) {
     // on org custom domains: the hostname-locked widget can't render there, so the
     // client sends no token and the challenge is disabled end-to-end (matches the
     // client widget + the /api/turnstile/verify route).
-    if (!(await isCustomDomainRequest())) {
+    //
+    // The skip only covers signups INTO the org that owns the domain. Without
+    // that, any registered custom domain was an open door: point a script at it
+    // and create org-less or other-org accounts with no challenge at all.
+    const customDomainOrgId = await getCustomDomainOrgId()
+    const turnstileExempt =
+      customDomainOrgId !== null && String(customDomainOrgId) === String(org_id ?? '')
+    if (!turnstileExempt) {
       const turnstile = await verifyTurnstile(turnstileToken, clientIpFromHeaders(request.headers))
       if (!turnstile.ok) {
         const detail =
@@ -129,11 +136,23 @@ export async function POST(request: NextRequest) {
     url = `${base}users/`
   }
 
+  // Relay the caller's IP. This is a server-to-server call, so without it the
+  // backend sees this Next.js server as the client for every signup and its
+  // per-IP signup limit becomes one shared bucket: a single caller could use it
+  // up and block signups for everyone. Forwarded verbatim, same as the auth
+  // proxy: the backend's get_client_ip owns the parsing and only trusts these
+  // headers from a private (proxy) address.
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  for (const ipHeader of ['x-forwarded-for', 'x-real-ip']) {
+    const value = request.headers.get(ipHeader)
+    if (value) headers[ipHeader] = value
+  }
+
   let backendRes: Response
   try {
     backendRes = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(backendBody),
       signal: AbortSignal.timeout(8000),
     })

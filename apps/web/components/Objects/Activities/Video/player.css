@@ -1,0 +1,21 @@
+/* LearnHouse tweaks on the packaged skin. Its own rules use :where(), so a
+   single class wins. */
+
+/* The activity name runs larger than the skin's 16px title. */
+.learnhouse-player .media-title {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+@container media-root (width >= 42rem) {
+  .learnhouse-player .media-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* The skin flashes a play/pause badge on each toggle; CenterIndicator replaces
+   it with one that stays while paused. */
+.learnhouse-player .media-playback-status-indicator {
+  display: none;
+}

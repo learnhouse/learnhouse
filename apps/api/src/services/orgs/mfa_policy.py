@@ -25,6 +25,7 @@ from src.services.orgs.org_config_lookup import get_session_org_config
 from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.services.auth.mfa import is_mfa_active
+from src.security.session_context import POLICY_AUTH_METHODS, get_session_provenance
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +105,22 @@ async def get_org_mfa_policy(db_session: AsyncSession, org_id: int) -> OrgMFAPol
         return OrgMFAPolicy()
 
 
+def _signed_in_externally(user: User) -> bool:
+    """Did an external identity provider vouch for *this* session?
+
+    The exemption is about how the user signed in now, not how the account was
+    created: someone who signed up with SSO and then logs in with a password
+    has had no second factor checked by anyone. Sessions that don't record a
+    human sign-in method (minted before methods were recorded, or by a machine
+    credential) fall back to the account's signup method as before.
+    """
+    provenance = get_session_provenance()
+    method = provenance.amr if provenance is not None else None
+    if method not in POLICY_AUTH_METHODS:
+        method = user.signup_method
+    return (method or "").lower() in EXTERNAL_AUTH_METHODS
+
+
 async def evaluate_mfa_compliance(
     db_session: AsyncSession,
     user: User,
@@ -118,7 +135,7 @@ async def evaluate_mfa_compliance(
     if await is_mfa_active(db_session, user.id):
         return MFAComplianceState(required=True, satisfied=True)
 
-    if policy.exempt_external_auth and (user.signup_method or "").lower() in EXTERNAL_AUTH_METHODS:
+    if policy.exempt_external_auth and _signed_in_externally(user):
         return MFAComplianceState(
             required=True,
             satisfied=True,

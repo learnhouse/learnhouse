@@ -220,6 +220,7 @@ async def test_events_startup_shutdown_and_reconcile(monkeypatch):
     monkeypatch.setattr(_hls_jobs, "get_redis_client", lambda: None)
     monkeypatch.setattr(_rag_queue, "get_redis_client", lambda: None)
     monkeypatch.setenv("LEARNHOUSE_RAG_BACKFILL_HOURS", "0")
+    monkeypatch.setenv("LEARNHOUSE_BACKFILL_INTERVAL_HOURS", "0")
 
     start_app = core_events.startup_app(app)
     await start_app()

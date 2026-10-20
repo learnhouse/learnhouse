@@ -1,6 +1,7 @@
 import 'server-only'
-import { cookies, headers } from 'next/headers'
+import { headers } from 'next/headers'
 import { getServerAPIUrl } from '@services/config/config'
+import { fetchInstanceMode, type InstanceMode } from '@lib/eeGate'
 
 // Server-side deployment-mode check. The consolidated "bells and whistles"
 // (Turnstile, Loops, disposable-email, Resend) must only ever run on the SaaS
@@ -8,42 +9,23 @@ import { getServerAPIUrl } from '@services/config/config'
 // Callers pair this with the per-integration env check, so an integration is
 // active only when: mode === 'saas'  AND  its key/secret is configured.
 //
-// Source of truth is the same as the proxy/billing guard: the backend instance
-// mode, surfaced to the frontend as the `LH_mode` cookie (zero-latency, set on
-// every request). We fall back to a short-cached instance/info fetch for the
-// rare non-request server contexts (crons) where no cookie is available.
+// Source of truth is the backend instance mode, fetched server-side and cached
+// briefly. The `LH_mode` cookie is deliberately NOT consulted: it is
+// client-settable, and sending `LH_mode=oss` would switch off Turnstile and the
+// disposable-email check on the SaaS signup path.
 
 let _modeCache: { mode: DeploymentMode; at: number } | null = null
 const MODE_TTL_MS = 60 * 1000
 
-export type DeploymentMode = 'saas' | 'oss' | 'ee'
-
-function coerce(mode: unknown): DeploymentMode | null {
-  return mode === 'saas' || mode === 'oss' || mode === 'ee' ? mode : null
-}
+export type DeploymentMode = InstanceMode
 
 /** Resolve the deployment mode server-side. Defaults to 'oss' when unknown. */
 export async function getInstanceMode(): Promise<DeploymentMode> {
-  // 1. LH_mode cookie (request-scoped, set by the proxy from instance/info).
-  try {
-    const store = await cookies()
-    const fromCookie = coerce(store.get('LH_mode')?.value)
-    if (fromCookie) return fromCookie
-  } catch {
-    // cookies() throws outside a request scope; fall through to the fetch.
-  }
-
-  // 2. Cached backend instance/info (for non-request contexts).
   if (_modeCache && Date.now() - _modeCache.at < MODE_TTL_MS) return _modeCache.mode
-  try {
-    const res = await fetch(`${getServerAPIUrl()}instance/info`, { signal: AbortSignal.timeout(3000) })
-    const data = await res.json().catch(() => ({}))
-    const mode = coerce(data?.mode) ?? 'oss'
-    _modeCache = { mode, at: Date.now() }
-    return mode
-  } catch {
-    return 'oss'
-  }
+  const mode = await fetchInstanceMode()
+  if (!mode) return 'oss'
+  _modeCache = { mode, at: Date.now() }
+  return mode
 }
 
 /** True only on the SaaS deployment. */
@@ -64,13 +46,23 @@ export async function isSaaSMode(): Promise<boolean> {
  * disable bot protection on the platform.
  */
 export async function isCustomDomainRequest(): Promise<boolean> {
+  return (await getCustomDomainOrgId()) !== null
+}
+
+/**
+ * The id of the org that owns the custom domain this request is served on, or
+ * null when it isn't a registered custom domain. Same Host-based rules as
+ * isCustomDomainRequest; callers that relax a control on custom domains use this
+ * to keep the relaxation scoped to that one org.
+ */
+export async function getCustomDomainOrgId(): Promise<number | null> {
   try {
     const host = (await headers()).get('host')?.split(':')[0]?.toLowerCase()
-    if (!host || host === 'localhost' || /^[\d.]+$/.test(host)) return false
+    if (!host || host === 'localhost' || /^[\d.]+$/.test(host)) return null
 
     const platform = (process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN || '').toLowerCase()
     // Platform apex or subdomain → not a custom domain (keep Turnstile on).
-    if (platform && (host === platform || host.endsWith(`.${platform}`))) return false
+    if (platform && (host === platform || host.endsWith(`.${platform}`))) return null
 
     // Otherwise only trust it if the backend resolves it to a registered custom
     // domain (200). Prevents a forged Host from turning off Turnstile.
@@ -78,8 +70,10 @@ export async function isCustomDomainRequest(): Promise<boolean> {
       `${getServerAPIUrl()}orgs/resolve/domain/${encodeURIComponent(host)}`,
       { signal: AbortSignal.timeout(3000) },
     )
-    return res.ok
+    if (!res.ok) return null
+    const data = (await res.json().catch(() => null)) as { org_id?: unknown } | null
+    return typeof data?.org_id === 'number' ? data.org_id : null
   } catch {
-    return false
+    return null
   }
 }

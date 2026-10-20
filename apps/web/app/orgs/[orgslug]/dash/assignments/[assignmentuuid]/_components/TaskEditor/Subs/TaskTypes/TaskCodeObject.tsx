@@ -516,6 +516,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
           Authorization: `Bearer ${access_token}`,
         },
         body: JSON.stringify({
+          activity_uuid: assignment?.activity_object?.activity_uuid,
           language_id: contents.language_id,
           source_code: code,
           test_cases: testCasesToRun.map((tc) => ({
@@ -593,6 +594,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskCod
           // Grading intentionally runs ALL test cases, hidden ones included:
           // this view is instructor-only and its contents are NOT stripped, so
           // stdin/expectedStdout are present. Do not filter here.
+          activity_uuid: assignment?.activity_object?.activity_uuid,
           language_id: contents.language_id,
           source_code: code,
           test_cases: contents.test_cases.map((tc) => ({

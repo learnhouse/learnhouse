@@ -182,10 +182,26 @@ async def test_org_uuid_mismatch_raises_400(
 # Happy path
 # ---------------------------------------------------------------------------
 
-async def test_valid_request_uploads_and_returns_path(
+async def test_activity_outside_the_course_raises_404(
     db, admin_user, course, mock_request, patched_deps
 ):
-    """Well-formed UUIDs, org matches the course, RBAC allows -> upload runs."""
+    """activity_test doesn't exist in course_test here, so nothing is stored."""
+    with pytest.raises(HTTPException) as exc:
+        await _call(
+            db, admin_user,
+            org_uuid="org_test", activity_uuid="activity_test", block_id="block_1",
+            course_uuid="course_test",
+            mock_request=mock_request,
+        )
+    assert exc.value.status_code == 404
+    patched_deps["upload"].assert_not_awaited()
+
+
+async def test_valid_request_uploads_and_returns_path(
+    db, admin_user, course, activity, mock_request, patched_deps
+):
+    """Well-formed UUIDs, org matches the course, activity is in the course,
+    RBAC allows -> upload runs."""
     result = await _call(
         db, admin_user,
         org_uuid="org_test", activity_uuid="activity_test", block_id="block_1",

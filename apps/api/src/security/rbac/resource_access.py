@@ -70,6 +70,8 @@ class ResourceAccessChecker:
         self._public_published_cache: dict[str, tuple[bool, bool]] = {}
         self._usergroup_cache: dict[tuple[str, bool], bool] = {}
         self._parent_uuid_cache: dict[str, Optional[str]] = {}
+        self._folder_trees: dict = {}
+        self._viewer_folder_grants: Optional[tuple] = None
 
     async def check_access(
         self,
@@ -345,8 +347,12 @@ class ResourceAccessChecker:
         # Rule 4: Check role-based permissions (only for public resources)
         # Non-public resources should only be accessible via authorship, admin, or usergroup membership
         if is_public:
+            # A draft (public but unpublished) is only for people who can edit
+            # it: every member role carries the read right, so reading a draft
+            # takes the role's update right instead.
+            role_action = "update" if config.has_published_field and not is_published else "read"
             has_role_permission = await authorization_verify_based_on_roles(
-                self.request, user_id, "read", resource_uuid, self.db_session
+                self.request, user_id, role_action, resource_uuid, self.db_session
             )
             if has_role_permission:
                 return AccessDecision(
@@ -361,6 +367,8 @@ class ResourceAccessChecker:
         # Rule 5: Check UserGroup membership (if supported)
         if config.supports_usergroups:
             has_usergroup_access = await self._check_usergroup_membership(resource_uuid, is_public)
+            if has_usergroup_access and await self._blocked_by_enclosing_folder(resource_uuid, config):
+                has_usergroup_access = False
             logger.info(f"[ACCESS_CHECK] Rule 5 - has_usergroup_access={has_usergroup_access}, is_published={is_published}")
 
             # For resources with published field, UserGroup access requires published=True
@@ -528,9 +536,13 @@ class ResourceAccessChecker:
                 action=action.value,
             )
 
-        # Check role-based permissions
+        # Check role-based permissions. Adding content to an existing resource
+        # changes that resource, so it needs the role's update right (any, or
+        # own via authorship). The role's create right only covers making new
+        # top-level resources, which every instructor has.
+        role_action = "update" if action == AccessAction.CREATE else action.value
         has_role_permission = await authorization_verify_based_on_roles(
-            self.request, user_id, action.value, resource_uuid, self.db_session
+            self.request, user_id, role_action, resource_uuid, self.db_session
         )
         if has_role_permission:
             return AccessDecision(
@@ -619,13 +631,17 @@ class ResourceAccessChecker:
                 action=action.value,
             )
 
+        # Adding content to an existing resource changes it, so it takes the
+        # token's update right, same as the user path; action_create only
+        # covers new top-level resources (handled above).
+        right_action = "update" if action == AccessAction.CREATE else action.value
         rights = api_token_user.rights
         if isinstance(rights, dict):
             resource_rights = rights.get(config.resource_type, {})
-            has_permission = resource_rights.get(f"action_{action.value}", False)
+            has_permission = resource_rights.get(f"action_{right_action}", False)
         else:
             resource_rights = getattr(rights, config.resource_type, None)
-            has_permission = getattr(resource_rights, f"action_{action.value}", False) if resource_rights else False
+            has_permission = getattr(resource_rights, f"action_{right_action}", False) if resource_rights else False
 
         if has_permission:
             return AccessDecision(
@@ -746,22 +762,56 @@ class ResourceAccessChecker:
         else:
             is_public = getattr(resource, 'public', False)
             is_published = getattr(resource, 'published', True) if config.has_published_field else True
-            # Media privacy is folder-aware: a file placed in ANY private folder
-            # is private even if its own `public` flag is True (most-restrictive
-            # wins). This makes a direct media read deny for a public media that
-            # lives inside a private folder, for every caller of check_access.
-            if is_public and config.resource_type == "media":
-                if await self._media_in_any_private_folder(resource_uuid):
+            # Library privacy is folder-aware: a media or folder below ANY
+            # private folder, at any depth, is private even if its own `public`
+            # flag is True (most-restrictive wins). This makes a direct read
+            # deny for every caller of check_access.
+            if is_public and config.resource_type in ("media", "folders"):
+                enclosing = await self._enclosing_folders(resource, config)
+                if enclosing and enclosing[0].any_private(enclosing[1]):
                     is_public = False
             result = (is_public, is_published)
 
         self._public_published_cache[resource_uuid] = result
         return result
 
-    async def _media_in_any_private_folder(self, media_uuid: str) -> bool:
-        """True if this media is placed in at least one non-public folder."""
-        from src.services.media.media_access import media_in_any_private_folder
-        return await media_in_any_private_folder(self.db_session, media_uuid)
+    async def _enclosing_folders(self, resource, config: ResourceConfig):
+        """(org folder tree, folder ids directly holding ``resource``) for a
+        media or folder, or None when it sits at the library root."""
+        from src.services.media.media_access import load_folder_tree, media_folder_ids
+
+        if config.resource_type == "media":
+            folder_ids = await media_folder_ids(self.db_session, resource.media_uuid)
+        elif config.resource_type == "folders" and resource.parent_folder_id is not None:
+            folder_ids = [resource.parent_folder_id]
+        else:
+            return None
+        if not folder_ids:
+            return None
+        tree = self._folder_trees.get(resource.org_id)
+        if tree is None:
+            tree = await load_folder_tree(self.db_session, resource.org_id)
+            self._folder_trees[resource.org_id] = tree
+        return tree, folder_ids
+
+    async def _blocked_by_enclosing_folder(self, resource_uuid: str, config: ResourceConfig) -> bool:
+        """True if a private folder above this media/folder is restricted to
+        UserGroups the caller is not in: the restriction covers its content."""
+        if config.resource_type not in ("media", "folders"):
+            return False
+        resource = await self._get_resource(resource_uuid, config)
+        enclosing = await self._enclosing_folders(resource, config) if resource else None
+        if not enclosing:
+            return False
+        if self._viewer_folder_grants is None:
+            from src.services.media.media_access import viewer_folder_grants
+
+            self._viewer_folder_grants = await viewer_folder_grants(
+                self.db_session, self._get_user_id()
+            )
+        groups, authored = self._viewer_folder_grants
+        tree, folder_ids = enclosing
+        return tree.blocks(folder_ids, groups, authored)
 
     async def _is_resource_author(self, resource_uuid: str) -> bool:
         """Check if current user is the author of the resource."""

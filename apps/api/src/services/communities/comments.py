@@ -17,7 +17,11 @@ from src.services.communities.comment_votes import get_user_votes_for_comments
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
 from src.services.communities.moderation import validate_comment_content, enforce_auto_lock
 from src.services.webhooks.dispatch import dispatch_webhooks
-from src.services.communities.access import require_community_participant
+from src.services.communities.access import (
+    require_author_may_still_post,
+    require_community_participant,
+)
+from src.services.communities.discussions import _can_moderate
 from src.security.api_token_utils import token_has_right
 from src.security.auth import resolve_acting_user_id
 
@@ -241,9 +245,26 @@ async def update_comment(
         Discussion.id == comment.discussion_id
     )
     discussion = (await db_session.execute(discussion_statement)).scalars().first()
+    community = None
+    if discussion:
+        community = (await db_session.execute(
+            select(Community).where(Community.id == discussion.community_id)
+        )).scalars().first()
+    if not community:
+        raise HTTPException(status_code=404, detail="Discussion not found")
+
+    # Moderators keep editing their own comments; other authors only while
+    # they can still post there and the thread is open.
+    if not await _can_moderate(
+        request, current_user, resolve_acting_user_id(current_user),
+        AccessAction.UPDATE, community, db_session,
+    ):
+        await require_author_may_still_post(
+            request, current_user, community, discussion, db_session
+        )
 
     # Check content moderation for updated content
-    if comment_update.content is not None and discussion:
+    if comment_update.content is not None:
         await validate_comment_content(
             comment_update.content, discussion.community_id, db_session
         )

@@ -15,6 +15,7 @@ import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
 import { useBoardSelection } from '../BoardSelectionContext'
+import { useUrlEmbedSandbox } from '@/lib/media/useUrlEmbedSandbox'
 
 /* ── Helpers ─────────────────────────────────────────────── */
 
@@ -156,6 +157,7 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
 
   // Resolve iframe src (handles YouTube conversion)
   const iframeSrc = embedUrl ? (getYouTubeEmbedUrl(embedUrl) ?? embedUrl) : ''
+  const iframeSandbox = useUrlEmbedSandbox(iframeSrc)
 
   /* ── Input form (empty state or editing) ───────────────── */
 
@@ -284,14 +286,14 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
       className="mx-4 mb-4 mt-1.5 overflow-hidden rounded-xl border border-neutral-100 nice-shadow relative"
       style={{ height: height - 80, overscrollBehavior: 'contain', pointerEvents: isBlockSelected ? 'auto' : 'none' }}
     >
-      {embedType === 'url' && iframeSrc ? (
+      {embedType === 'url' && iframeSrc ? (iframeSandbox &&
         <iframe
           src={iframeSrc}
           className="w-full h-full block"
           style={{ border: 'none', overscrollBehavior: 'contain' }}
           frameBorder="0"
           allowFullScreen
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+          sandbox={iframeSandbox}
           referrerPolicy="no-referrer"
           title={extractDomain(embedUrl)}
         />

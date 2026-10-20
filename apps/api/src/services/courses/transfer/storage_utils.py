@@ -644,3 +644,35 @@ def upload_directory_to_s3_parallel(
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         return all(list(pool.map(_upload, uploads)))
+
+
+def rewrite_sqlite_db_paths(content, old_activity_uuid: str, new_activity_key: str):
+    """Point code blocks' ``sqliteDbPath`` at a copied activity's own files.
+
+    A code block stores the full storage key of its SQLite database
+    (``orgs/{org}/courses/{course}/activities/{activity}/...``). When the
+    activity is cloned or imported its files move under ``new_activity_key``
+    (``orgs/{org}/courses/{course}/activities/{activity}``), so a key under
+    ``old_activity_uuid`` is re-rooted there. Other values are left alone.
+    Returns a new structure; ``content`` is not modified.
+    """
+    if isinstance(content, list):
+        return [rewrite_sqlite_db_paths(item, old_activity_uuid, new_activity_key) for item in content]
+    if not isinstance(content, dict):
+        return content
+    rewritten = {
+        k: rewrite_sqlite_db_paths(v, old_activity_uuid, new_activity_key)
+        for k, v in content.items()
+    }
+    path = content.get("sqliteDbPath")
+    if isinstance(path, str):
+        parts = path.split("/")
+        if (
+            len(parts) > 6
+            and parts[0] == "orgs"
+            and parts[2] == "courses"
+            and parts[4] == "activities"
+            and parts[5] == old_activity_uuid
+        ):
+            rewritten["sqliteDbPath"] = "/".join([new_activity_key, *parts[6:]])
+    return rewritten

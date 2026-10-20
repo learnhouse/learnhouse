@@ -1,3 +1,6 @@
+import asyncio
+import hashlib
+import hmac
 import os
 import re
 import ssl
@@ -6,7 +9,7 @@ import secrets
 import logging
 from typing import List, Optional, Tuple
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request, status
@@ -236,6 +239,75 @@ async def verify_domain_dns(domain: CustomDomain, db_session: AsyncSession, org_
         return False, f"DNS verification failed: {str(e)}"
 
 
+# How long an unverified claim holds a domain against other organizations.
+UNVERIFIED_CLAIM_TTL = timedelta(days=7)
+
+
+def _is_unverified_foreign_claim(existing: Optional[CustomDomain], org_id: int) -> bool:
+    """True for another org's claim that was never verified."""
+    return bool(
+        existing
+        and existing.org_id != org_id
+        and not existing.verified_at
+        and existing.status not in ("verified", "active")
+    )
+
+
+def _is_abandoned_claim(existing: CustomDomain, org_id: int) -> bool:
+    """True for another org's claim that was never verified and has gone stale."""
+    if existing.org_id == org_id or existing.verified_at or existing.status in ("verified", "active"):
+        return False
+    try:
+        created = datetime.fromisoformat(existing.creation_date)
+    except (TypeError, ValueError):
+        return False
+    return datetime.now() - created > UNVERIFIED_CLAIM_TTL
+
+
+def takeover_verification_token(domain: str, org_id: int) -> str:
+    """The TXT token an org publishes to take over another org's unverified
+    claim. Derived (not stored) so the claimant can learn it without holding
+    the domain row, and bound to that org so it proves nothing for anyone else."""
+    from src.security.security import SECRET_KEY
+
+    digest = hmac.new(
+        SECRET_KEY.encode(), f"domain-takeover:{org_id}:{domain}".encode(), hashlib.sha256
+    ).hexdigest()
+    return digest[:43]
+
+
+def _txt_record_present(domain: str, token: str) -> bool:
+    """Whether the verification TXT record for ``token`` is published on ``domain``."""
+    try:
+        import dns.resolver
+
+        answers = dns.resolver.resolve(f"_learnhouse-verification.{domain}", "TXT")
+    except Exception:
+        return False
+    expected = f"learnhouse-verify={token}"
+    return any(str(rdata).strip('"') == expected for rdata in answers)
+
+
+async def _can_manage_domains(acting_user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """Whether the caller holds the right that manages the org's domains."""
+    try:
+        await require_org_role_permission(
+            acting_user_id, org_id, db_session, "organizations", "action_update"
+        )
+    except HTTPException:
+        return False
+    return True
+
+
+def _domain_read(domain: CustomDomain, can_manage: bool) -> CustomDomainRead:
+    """The verification token is a DNS ownership secret for the org's admins;
+    other members see the domain without it."""
+    data = domain.model_dump()
+    if not can_manage:
+        data["verification_token"] = ""
+    return CustomDomainRead(**data)
+
+
 async def add_custom_domain(
     request: Request,
     db_session: AsyncSession,
@@ -310,6 +382,36 @@ async def add_custom_domain(
     statement = select(CustomDomain).where(CustomDomain.domain == domain)
     existing_domain = (await db_session.execute(statement)).scalars().first()
 
+    takeover_verified = False
+    if existing_domain and _is_abandoned_claim(existing_domain, org_id):
+        # A claim nobody ever proved with DNS can't hold the domain forever,
+        # or anyone could squat a domain before its real owner signs up. The
+        # new claimant still has to pass the TXT check to get any traffic.
+        logger.info(f"Releasing stale unverified claim on {domain} (org {existing_domain.org_id})")
+        await db_session.delete(existing_domain)
+        await db_session.flush()
+        existing_domain = None
+    elif _is_unverified_foreign_claim(existing_domain, org_id):
+        # The age rule alone can be reset by deleting and re-adding the claim,
+        # so DNS proof wins outright: whoever publishes their own TXT record
+        # takes over an unverified claim of any age. Verified claims stay put.
+        takeover_token = takeover_verification_token(domain, org_id)
+        if not await asyncio.to_thread(_txt_record_present, domain, takeover_token):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "This domain is already claimed by another organization but not yet "
+                    "verified. To prove you own it, add a TXT record at "
+                    f"_learnhouse-verification.{domain} with the value "
+                    f"learnhouse-verify={takeover_token}, then add the domain again."
+                ),
+            )
+        logger.info(f"DNS-proven takeover of unverified claim on {domain} (org {existing_domain.org_id})")
+        await db_session.delete(existing_domain)
+        await db_session.flush()
+        existing_domain = None
+        takeover_verified = True
+
     if existing_domain:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -321,8 +423,12 @@ async def add_custom_domain(
     # (wildcard DNS + wildcard TLS), so skip the manual DNS TXT step and mark
     # them verified right away.
     now = str(datetime.now())
-    verification_token = generate_verification_token()
-    auto_verified = is_own_agency_subdomain(domain, organization.slug)
+    verification_token = (
+        takeover_verification_token(domain, org_id)
+        if takeover_verified
+        else generate_verification_token()
+    )
+    auto_verified = takeover_verified or is_own_agency_subdomain(domain, organization.slug)
 
     custom_domain = CustomDomain(
         domain_uuid=f"domain_{uuid4()}",
@@ -376,7 +482,8 @@ async def list_custom_domains(
 
     domains = (await db_session.execute(statement)).scalars().all()
 
-    return [CustomDomainRead(**domain.model_dump()) for domain in domains]
+    can_manage = await _can_manage_domains(acting_user_id, org_id, db_session)
+    return [_domain_read(domain, can_manage) for domain in domains]
 
 
 async def get_custom_domain(
@@ -407,7 +514,8 @@ async def get_custom_domain(
             detail="Custom domain not found",
         )
 
-    return CustomDomainRead(**domain.model_dump())
+    can_manage = await _can_manage_domains(acting_user_id, org_id, db_session)
+    return _domain_read(domain, can_manage)
 
 
 async def get_domain_verification_info(
@@ -433,6 +541,14 @@ async def get_domain_verification_info(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Organization not found",
+        )
+
+    # VERIFICATION 3: The TXT value is the domain's ownership secret, so the
+    # instructions are for whoever manages the org's domains.
+    if not await _can_manage_domains(acting_user_id, org_id, db_session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only organization administrators can view domain verification details",
         )
 
     # Get the custom domain

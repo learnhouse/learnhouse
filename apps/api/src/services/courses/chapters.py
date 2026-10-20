@@ -17,6 +17,7 @@ from src.db.courses.chapters import (
     ChapterUpdateOrder,
 )
 from src.db.courses.courses import Course
+from src.db.organizations import Organization
 from fastapi import HTTPException, status, Request
 from src.core.ee_hooks import check_ee_activity_paid_access
 from src.security.rbac import check_resource_access, AccessAction
@@ -227,6 +228,36 @@ async def delete_chapter(
     statement = select(ChapterActivity).where(ChapterActivity.chapter_id == chapter.id)
     chapter_activities = (await db_session.execute(statement)).scalars().all()
 
+    # The activities go with their chapter, the same way delete_activity
+    # removes one (content files, then the row). Only unlinking them left them
+    # readable by uuid with the chapter's lock gone. An activity still linked
+    # from another chapter is kept.
+    activity_ids = {ca.activity_id for ca in chapter_activities}
+    if activity_ids:
+        still_linked = set((await db_session.execute(
+            select(ChapterActivity.activity_id).where(
+                ChapterActivity.activity_id.in_(activity_ids),  # type: ignore[attr-defined]
+                ChapterActivity.chapter_id != chapter.id,
+            )
+        )).scalars().all())
+        activities = (await db_session.execute(
+            select(Activity).where(
+                Activity.id.in_(activity_ids - still_linked),  # type: ignore[union-attr]
+                Activity.course_id == course.id,
+            )
+        )).scalars().all()
+        org = (await db_session.execute(
+            select(Organization).where(Organization.id == course.org_id)
+        )).scalars().first()
+        from src.services.courses.transfer.storage_utils import delete_storage_directory
+        for activity in activities:
+            if org:
+                delete_storage_directory(
+                    f"content/orgs/{org.org_uuid}/courses/{course.course_uuid}"
+                    f"/activities/{activity.activity_uuid}"
+                )
+            await db_session.delete(activity)
+
     for chapter_activity in chapter_activities:
         await db_session.delete(chapter_activity)
 
@@ -237,6 +268,15 @@ async def delete_chapter(
 
     return {"detail": "chapter deleted"}
 
+
+
+def _slim_extra_metadata(meta: dict | None) -> dict | None:
+    """The slice of an activity's metadata the slim course tree keeps: a video's
+    HLS status and storyboard, so navigation can preview neighbouring videos."""
+    hls = (meta or {}).get("hls") if isinstance(meta, dict) else None
+    if not isinstance(hls, dict) or hls.get("status") != "ready" or not hls.get("thumbnails"):
+        return None
+    return {"hls": {"status": "ready", "thumbnails": hls["thumbnails"]}}
 
 async def get_course_chapters(
     request: Request,
@@ -303,6 +343,7 @@ async def get_course_chapters(
                     Activity.current_version,
                     Activity.last_modified_by_id,
                     Activity.lock_type,
+                    Activity.extra_metadata,
                     ChapterActivity.order,
                 )
                 .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore
@@ -332,6 +373,7 @@ async def get_course_chapters(
                     a_version,
                     a_last_modified_by,
                     a_lock_type,
+                    a_extra_metadata,
                     _order,
                 ) = row
                 key = (chapter_id_val, a_id)
@@ -355,6 +397,7 @@ async def get_course_chapters(
                         current_version=a_version,
                         last_modified_by_id=a_last_modified_by,
                         lock_type=a_lock_type,
+                        extra_metadata=_slim_extra_metadata(a_extra_metadata),
                     )
                 )
         else:

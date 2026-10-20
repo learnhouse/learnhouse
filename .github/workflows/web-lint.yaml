@@ -20,16 +20,16 @@ jobs:
   next-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version-file: .bun-version
       # setup-bun restores the toolchain, not the packages. Without this the
       # web install re-downloads its whole tree on every lint run.
       - name: Cache bun install cache
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-web-${{ runner.os }}-${{ hashFiles('apps/web/bun.lock') }}
@@ -77,12 +77,12 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v7.0.1
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version-file: .bun-version
       - name: Cache bun install cache
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.bun/install/cache
           key: bun-web-${{ runner.os }}-${{ hashFiles('apps/web/bun.lock') }}
