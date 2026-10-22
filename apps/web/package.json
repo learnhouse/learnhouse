@@ -175,7 +175,7 @@
     "prosemirror-view": "1.42.6",
     "prosemirror-model": "1.25.12",
     "dompurify": ">=3.4.16",
-    "postcss": ">=8.4.31",
+    "postcss": ">=8.5.31",
     "ws": ">=8.21.1",
     "fast-uri": "^4.1.4",
     "brace-expansion@5": ">=5.0.12",
