@@ -1,6 +1,6 @@
 {
   "name": "learnhouse",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": true,
   "packageManager": "bun@1.4.3",
   "scripts": {
