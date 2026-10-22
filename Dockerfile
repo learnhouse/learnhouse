@@ -74,11 +74,18 @@ RUN bun run build
 # ───────────────────────────────────────────────
 FROM python:3.14.7-alpine3.24 AS runner
 
+# Node (for pm2 and collab) comes from the official image, not Alpine's nodejs
+# package, which trails Node security releases by weeks. Pinned so Renovate
+# raises the bump alongside the collab image.
+COPY --from=node:24.22.1-alpine3.24 /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:24.22.1-alpine3.24 /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+
 # Apply the stable distribution's security updates at build time. The Python
 # image can be published before a newer package fix reaches Alpine's mirrors.
 RUN apk upgrade --no-cache \
-    && apk add --no-cache nginx curl netcat-openbsd ca-certificates bash nodejs npm libstdc++ \
-    && npm install -g pm2@7.0.4 \
+    && apk add --no-cache nginx curl netcat-openbsd ca-certificates bash libstdc++ \
+    && ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && npm install -g pm2@7.1.0 \
     && rm -rf /root/.npm \
     && mkdir -p /run/nginx
 

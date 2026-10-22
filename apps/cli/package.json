@@ -41,15 +41,15 @@
   ],
   "author": "LearnHouse",
   "devDependencies": {
-    "@types/node": "^26.0.0",
-    "@vitest/coverage-v8": "^5.0.0",
+    "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "^5.0.5",
     "tsup": "^9.0.0",
-    "typescript": "^6.0.0",
-    "vitest": "^5.0.0"
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
   },
   "dependencies": {
-    "@clack/core": "^1.0.1",
-    "@clack/prompts": "^1.0.0",
+    "@clack/core": "^1.5.1",
+    "@clack/prompts": "^1.8.1",
     "commander": "^15.0.0",
     "picocolors": "^1.1.1"
   },

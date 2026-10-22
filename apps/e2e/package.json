@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.1",
-    "@types/node": "^26.0.0",
-    "typescript": "^6.0.0"
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "typescript": "^6.0.3"
   }
 }
