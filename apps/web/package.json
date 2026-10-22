@@ -174,7 +174,7 @@
     "jspdf": ">=4.2.1",
     "prosemirror-view": "1.42.6",
     "prosemirror-model": "1.25.12",
-    "dompurify": ">=3.4.16",
+    "dompurify": ">=3.4.17",
     "postcss": ">=8.5.31",
     "ws": ">=8.21.1",
     "fast-uri": "^4.2.2",
