@@ -1,6 +1,6 @@
 {
   "name": "@learnhouse/collab",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,18 +10,18 @@
     "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
-    "@hocuspocus/extension-database": "^4.0.0",
-    "@hocuspocus/server": "^4.0.0",
-    "dotenv": "^18.0.0",
+    "@hocuspocus/extension-database": "^4.7.1",
+    "@hocuspocus/server": "^4.7.1",
+    "dotenv": "^18.0.8",
     "ioredis": "^6.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "yjs": "^13.6.20"
+    "jsonwebtoken": "^9.0.3",
+    "yjs": "^13.6.33"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.7",
-    "@types/node": "^26.0.0",
-    "tsx": "^4.19.2",
-    "typescript": "^6.0.0"
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3"
   },
   "overrides": {
     "esbuild": ">=0.28.1"

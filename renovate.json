@@ -28,9 +28,20 @@
   "fetchChangeLogs": "pr",
   "minimumReleaseAge": "3 days",
   "rebaseWhen": "behind-base-branch",
+  "rangeStrategy": "bump",
+  "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
+    "description": [
+      "Security fixes open a PR the same day: no schedule window, no release-age wait, no dashboard approval, never grouped.",
+      "rangeStrategy is bump, not Renovate's update-lockfile default. When the fixed version already satisfies the range (^16.4.0 vs 16.4.1), a lockfile-only update leaves bun.lock unchanged and the PR ships without the fix. Bumping the range changes package.json, and the Lockfiles workflow regenerates bun.lock from it."
+    ],
     "labels": ["security", "renovate"],
-    "schedule": ["at any time"]
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null,
+    "dependencyDashboardApproval": false,
+    "prCreation": "immediate",
+    "groupName": null,
+    "rangeStrategy": "bump"
   },
   "ignoreDeps": ["@icons-pack/react-simple-icons", "prosemirror-transform", "python"],
   "packageRules": [
