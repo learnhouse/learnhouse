@@ -7,6 +7,7 @@ import CaptionsSettings, {
   type CaptionsValue,
   EMPTY_CAPTIONS,
 } from '@components/Objects/Activities/Video/CaptionsSettings'
+import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
@@ -31,6 +32,7 @@ function VideoModal({
   chapterId,
   course,
 }: any) {
+  const { t } = useTranslation()
   const [video, setVideo] = React.useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [name, setName] = React.useState('')
@@ -121,27 +123,27 @@ function VideoModal({
       >
         <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
           <PlayCircle size={18} weight="duotone" className="text-violet-400" />
-          Video
+          {t('dashboard.courses.structure.activity.types.video')}
         </span>
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">
-            Activity name
+            {t('dashboard.courses.structure.modals.new_activity.forms.activity_name')}
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             type="text"
             required
-            placeholder="Enter a name..."
+            placeholder={t('dashboard.courses.structure.modals.new_activity.forms.name_placeholder')}
             className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Source</label>
+          <label className="text-sm font-medium text-gray-700">{t('dashboard.courses.structure.modals.new_activity.forms.video.source')}</label>
           <div className="grid grid-cols-2 gap-0 rounded-lg overflow-hidden border border-gray-200">
             <button
               type="button"
@@ -153,7 +155,7 @@ function VideoModal({
               }`}
             >
               <Upload size={16} weight="duotone" />
-              Upload
+              {t('dashboard.courses.structure.modals.new_activity.forms.video.upload')}
             </button>
             <button
               type="button"
@@ -165,7 +167,7 @@ function VideoModal({
               }`}
             >
               <YoutubeLogo size={16} weight="duotone" />
-              YouTube
+              {t('dashboard.courses.structure.modals.new_activity.forms.video.youtube')}
             </button>
           </div>
         </div>
@@ -173,7 +175,7 @@ function VideoModal({
         {selectedView === 'file' && (
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">
-              Video file
+              {t('dashboard.courses.structure.modals.new_activity.forms.video.video_file')}
             </label>
             <input
               type="file"
@@ -188,14 +190,14 @@ function VideoModal({
         {selectedView === 'youtube' && (
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">
-              YouTube URL
+              {t('dashboard.courses.structure.modals.new_activity.forms.video.youtube_url')}
             </label>
             <input
               value={youtubeUrl}
               onChange={(e) => setYoutubeUrl(e.target.value)}
               type="text"
               required
-              placeholder="https://youtube.com/watch?v=..."
+              placeholder={t('dashboard.courses.structure.modals.new_activity.forms.video.youtube_url_placeholder')}
               className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
             />
           </div>
@@ -203,11 +205,11 @@ function VideoModal({
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
-        <h3 className="text-sm font-medium text-gray-700">Video Settings</h3>
+        <h3 className="text-sm font-medium text-gray-700">{t('dashboard.courses.structure.modals.new_activity.forms.video.settings')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-gray-500">
-              Start Time
+              {t('dashboard.courses.structure.modals.new_activity.forms.video.start_time')}
             </label>
             <div className="flex gap-2">
               <div className="flex-1">
@@ -229,7 +231,7 @@ function VideoModal({
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
                 <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  Min
+                  {t('dashboard.courses.structure.modals.new_activity.forms.video.min')}
                 </span>
               </div>
               <div className="flex-1">
@@ -255,7 +257,7 @@ function VideoModal({
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
                 <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  Sec
+                  {t('dashboard.courses.structure.modals.new_activity.forms.video.sec')}
                 </span>
               </div>
             </div>
@@ -263,7 +265,7 @@ function VideoModal({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-gray-500">
-              End Time (optional)
+              {t('dashboard.courses.structure.modals.new_activity.forms.video.end_time')}
             </label>
             <div className="flex gap-2">
               <div className="flex-1">
@@ -285,7 +287,7 @@ function VideoModal({
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
                 <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  Min
+                  {t('dashboard.courses.structure.modals.new_activity.forms.video.min')}
                 </span>
               </div>
               <div className="flex-1">
@@ -311,7 +313,7 @@ function VideoModal({
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
                 <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  Sec
+                  {t('dashboard.courses.structure.modals.new_activity.forms.video.sec')}
                 </span>
               </div>
             </div>
@@ -328,7 +330,7 @@ function VideoModal({
               }
               className="rounded border-gray-300 text-black focus:ring-black"
             />
-            <span className="text-sm text-gray-600">Autoplay</span>
+            <span className="text-sm text-gray-600">{t('dashboard.courses.structure.modals.new_activity.forms.video.autoplay')}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -339,7 +341,7 @@ function VideoModal({
               }
               className="rounded border-gray-300 text-black focus:ring-black"
             />
-            <span className="text-sm text-gray-600">Start muted</span>
+            <span className="text-sm text-gray-600">{t('dashboard.courses.structure.modals.new_activity.forms.video.start_muted')}</span>
           </label>
         </div>
       </div>
@@ -361,7 +363,7 @@ function VideoModal({
               color="#ffffff"
             />
           ) : (
-            'Create activity'
+            t('dashboard.courses.structure.modals.new_activity.forms.create_activity')
           )}
         </button>
       </div>

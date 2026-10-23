@@ -2734,7 +2734,49 @@
           },
           "new_activity": {
             "title": "ایجاد فعالیت",
-            "description": "برای افزودن به دوره، نوع فعالیت را انتخاب کنید"
+            "description": "برای افزودن به دوره، نوع فعالیت را انتخاب کنید",
+            "forms": {
+              "activity_name": "نام فعالیت",
+              "document_name": "نام سند",
+              "name_placeholder": "یک نام وارد کنید...",
+              "name_required": "لطفاً یک نام ارائه دهید",
+              "create_activity": "ایجاد فعالیت",
+              "video": {
+                "source": "منبع",
+                "upload": "بارگذاری",
+                "youtube": "یوتیوب",
+                "video_file": "فایل ویدیو",
+                "youtube_url": "آدرس یوتیوب",
+                "youtube_url_placeholder": "https://youtube.com/watch?v=...",
+                "settings": "تنظیمات ویدیو",
+                "start_time": "زمان شروع",
+                "end_time": "زمان پایان (اختیاری)",
+                "min": "دقیقه",
+                "sec": "ثانیه",
+                "autoplay": "پخش خودکار",
+                "start_muted": "شروع بیصدا"
+              },
+              "document": {
+                "name_required": "لطفاً یک نام ارائه دهید",
+                "pdf_file": "فایل PDF",
+                "pdf_required": "لطفاً یک فایل PDF ارائه دهید"
+              },
+              "markdown": {
+                "url_label": "آدرس مارکداون",
+                "url_placeholder": "https://github.com/user/repo/blob/main/README.md",
+                "url_required": "لطفاً آدرس فایل مارکداون را ارائه دهید",
+                "url_invalid": "لطفاً یک آدرس معتبر ارائه دهید"
+              },
+              "embed": {
+                "url_label": "آدرس جاسازی",
+                "url_placeholder": "https://docs.google.com/document/d/...",
+                "url_required": "لطفاً یک آدرس جاسازی ارائه دهید",
+                "url_invalid": "لطفاً یک آدرس معتبر ارائه دهید"
+              },
+              "resource": {
+                "pick_resource": "یک منبع انتخاب کنید"
+              }
+            }
           },
           "delete_activity": {
             "title": "حذف {{name}}؟",

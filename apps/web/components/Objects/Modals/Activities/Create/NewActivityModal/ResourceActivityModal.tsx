@@ -3,8 +3,10 @@ import * as Form from '@radix-ui/react-form'
 import BarLoader from 'react-spinners/BarLoader'
 import { Package } from '@phosphor-icons/react'
 import ResourcePicker, { SelectedResource } from '@components/Dashboard/Library/ResourcePicker'
+import { useTranslation } from 'react-i18next'
 
 function ResourceActivityModal({ submitActivity, chapterId, course, orgslug }: any) {
+  const { t } = useTranslation()
   const [activityName, setActivityName] = useState('')
   const [selected, setSelected] = useState<SelectedResource | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -49,17 +51,17 @@ function ResourceActivityModal({ submitActivity, chapterId, course, orgslug }: a
       >
         <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
           <Package size={18} weight="duotone" className="text-indigo-400" />
-          Resource
+          {t('dashboard.courses.structure.activity.types.resource')}
         </span>
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
         <Form.Field name="resource-activity-name" className="space-y-1.5">
           <Form.Label className="text-sm font-medium text-gray-700">
-            Activity name
+            {t('dashboard.courses.structure.modals.new_activity.forms.activity_name')}
           </Form.Label>
           <Form.Message match="valueMissing" className="text-xs text-red-500">
-            Please provide a name
+            {t('dashboard.courses.structure.modals.new_activity.forms.name_required')}
           </Form.Message>
           <Form.Control asChild>
             <input
@@ -67,14 +69,14 @@ function ResourceActivityModal({ submitActivity, chapterId, course, orgslug }: a
               onChange={(e) => setActivityName(e.target.value)}
               type="text"
               required
-              placeholder="Enter a name..."
+              placeholder={t('dashboard.courses.structure.modals.new_activity.forms.name_placeholder')}
               className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
             />
           </Form.Control>
         </Form.Field>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Pick a resource</label>
+          <label className="text-sm font-medium text-gray-700">{t('dashboard.courses.structure.modals.new_activity.forms.resource.pick_resource')}</label>
           <ResourcePicker
             mode="select"
             orgslug={orgslug}
@@ -98,7 +100,7 @@ function ResourceActivityModal({ submitActivity, chapterId, course, orgslug }: a
                 color="#ffffff"
               />
             ) : (
-              'Create activity'
+              t('dashboard.courses.structure.modals.new_activity.forms.create_activity')
             )}
           </button>
         </Form.Submit>

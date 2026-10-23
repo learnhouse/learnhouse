@@ -2732,7 +2732,49 @@
           },
           "new_activity": {
             "title": "Create Activity",
-            "description": "Choose between types of activities to add to the course"
+            "description": "Choose between types of activities to add to the course",
+            "forms": {
+              "activity_name": "Activity name",
+              "document_name": "Document name",
+              "name_placeholder": "Enter a name...",
+              "name_required": "Please provide a name",
+              "create_activity": "Create activity",
+              "video": {
+                "source": "Source",
+                "upload": "Upload",
+                "youtube": "YouTube",
+                "video_file": "Video file",
+                "youtube_url": "YouTube URL",
+                "youtube_url_placeholder": "https://youtube.com/watch?v=...",
+                "settings": "Video Settings",
+                "start_time": "Start Time",
+                "end_time": "End Time (optional)",
+                "min": "Min",
+                "sec": "Sec",
+                "autoplay": "Autoplay",
+                "start_muted": "Start muted"
+              },
+              "document": {
+                "name_required": "Please provide a name",
+                "pdf_file": "PDF file",
+                "pdf_required": "Please provide a PDF file"
+              },
+              "markdown": {
+                "url_label": "Markdown URL",
+                "url_placeholder": "https://github.com/user/repo/blob/main/README.md",
+                "url_required": "Please provide a markdown file URL",
+                "url_invalid": "Please provide a valid URL"
+              },
+              "embed": {
+                "url_label": "Embed URL",
+                "url_placeholder": "https://docs.google.com/document/d/...",
+                "url_required": "Please provide an embed URL",
+                "url_invalid": "Please provide a valid URL"
+              },
+              "resource": {
+                "pick_resource": "Pick a resource"
+              }
+            }
           },
           "delete_activity": {
             "title": "Delete {{name}} ?",
