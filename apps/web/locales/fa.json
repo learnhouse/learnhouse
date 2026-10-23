@@ -6379,11 +6379,11 @@
   "playgrounds": {
     "no_playgrounds_yet": "هنوز Playground وجود ندارد",
     "playgrounds_description": "تجربیات تعاملی تولید شده توسط هوش مصنوعی برای زبان‌آموزان خود ایجاد کنید.",
-    "new_playground": "New Playground",
+    "new_playground": "Playground جدید",
     "search_placeholder": "جستجوی Playgrounds...",
     "no_results_for": "نتیجه‌ای برای",
     "try_different_search": "عبارت جستجوی دیگری را امتحان کنید",
-    "new_playground_modal_title": "New Playground",
+    "new_playground_modal_title": "Playground جدید",
     "new_playground_modal_desc": "برای شروع به Playground خود یک نام بدهید.",
     "creating": "در حال ایجاد...",
     "create": "ایجاد",
