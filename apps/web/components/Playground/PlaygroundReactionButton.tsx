@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@components/ui/tooltip'
+import { useTranslation } from 'react-i18next'
 
 // 4 always-visible quick reactions + more available via picker
 const QUICK_REACTIONS = ['🔥', '❤️', '🎉', '🚀']
@@ -33,6 +34,7 @@ interface PlaygroundReactionButtonProps {
 }
 
 export function PlaygroundReactionButton({ playgroundUuid }: PlaygroundReactionButtonProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
@@ -64,7 +66,7 @@ export function PlaygroundReactionButton({ playgroundUuid }: PlaygroundReactionB
       const message =
         (error?.detail && typeof error.detail === 'object' && error.detail.message) ||
         error?.message ||
-        'Failed to react.'
+        t('admin.playground.react_failed')
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -76,7 +78,7 @@ export function PlaygroundReactionButton({ playgroundUuid }: PlaygroundReactionB
     if (users.length === 0) return ''
     if (users.length <= 3) return users.map((u) => u.first_name || u.username).join(', ')
     const first3 = users.slice(0, 3).map((u) => u.first_name || u.username).join(', ')
-    return `${first3} and ${users.length - 3} more`
+    return t('admin.playground.users_and_more', { names: first3, count: users.length - 3 })
   }
 
   // Existing reactions that are NOT in the quick row (show after the quick row)
@@ -122,7 +124,7 @@ export function PlaygroundReactionButton({ playgroundUuid }: PlaygroundReactionB
               <PopoverTrigger asChild>
                 <button
                   className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-500 hover:bg-gray-50 transition-colors"
-                  title="More reactions"
+                  title={t('admin.playground.more_reactions')}
                 >
                   <SmilePlus size={15} />
                 </button>

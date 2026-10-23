@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, Settings, Play, RotateCcw, ArrowRight, CheckCircle, Save, GitBranch, Image as ImageIcon } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { ButtonBlack } from '@components/Objects/StyledElements/Form/Form'
@@ -34,6 +35,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
   currentScenarioId: initialCurrentScenarioId,
   onSave
 }) => {
+  const { t } = useTranslation()
   const [title, setTitle] = useState(initialTitle)
   const [scenarios, setScenarios] = useState<Scenario[]>(initialScenarios)
   const [currentScenarioId, setCurrentScenarioId] = useState(initialCurrentScenarioId)
@@ -92,18 +94,18 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
 
   const addNewScenario = () => {
     if (scenarios.length >= 40) {
-      toast.error('Maximum of 40 scenarios allowed')
+      toast.error(t('editor.scenarios.max_scenarios'))
       return
     }
 
     const newId = (Math.max(...scenarios.map(s => parseInt(s.id))) + 1).toString()
     const newScenario: Scenario = {
       id: newId,
-      text: 'New scenario text...',
+      text: t('editor.scenarios.new_scenario_text'),
       imageUrl: '',
       options: [
-        { id: `opt${Date.now()}`, text: 'Option 1', nextScenarioId: null },
-        { id: `opt${Date.now() + 1}`, text: 'Option 2', nextScenarioId: null }
+        { id: `opt${Date.now()}`, text: t('editor.scenarios.option_n', { number: 1 }), nextScenarioId: null },
+        { id: `opt${Date.now() + 1}`, text: t('editor.scenarios.option_n', { number: 2 }), nextScenarioId: null }
       ]
     }
     setScenarios([...scenarios, newScenario])
@@ -111,7 +113,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
 
   const deleteScenario = (scenarioId: string) => {
     if (scenarios.length <= 1) {
-      toast.error('At least one scenario is required')
+      toast.error(t('editor.scenarios.min_scenarios'))
       return
     }
     
@@ -142,13 +144,13 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
   const addOption = (scenarioId: string) => {
     const scenario = scenarios.find(s => s.id === scenarioId)
     if (!scenario || scenario.options.length >= 4) {
-      toast.error('Maximum of 4 options per scenario')
+      toast.error(t('editor.scenarios.max_options'))
       return
     }
 
     const newOption: ScenarioOption = {
       id: `opt${Date.now()}`,
-      text: 'New option',
+      text: t('editor.scenarios.new_option'),
       nextScenarioId: null
     }
 
@@ -160,7 +162,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
   const deleteOption = (scenarioId: string, optionId: string) => {
     const scenario = scenarios.find(s => s.id === scenarioId)
     if (!scenario || scenario.options.length <= 1) {
-      toast.error('At least one option is required per scenario')
+      toast.error(t('editor.scenarios.min_options'))
       return
     }
 
@@ -205,7 +207,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-                <p className="text-sm text-slate-600">Interactive Preview</p>
+                <p className="text-sm text-slate-600">{t('editor.scenarios.interactive_preview')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -214,14 +216,14 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                 className="flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg transition-all text-sm font-medium shadow-sm"
               >
                 <RotateCcw size={14} />
-                Reset
+                {t('editor.scenarios.reset')}
               </button>
               <button
                 onClick={() => setShowPreview(false)}
                 className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all text-sm font-medium shadow-sm"
               >
                 <Settings size={14} />
-                Back to Edit
+                {t('editor.scenarios.back_to_edit')}
               </button>
             </div>
           </div>
@@ -234,16 +236,16 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle size={24} className="text-emerald-600" />
               </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-2">Scenario Complete!</h4>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">{t('editor.scenarios.complete_title')}</h4>
               <p className="text-slate-600 mb-6 leading-relaxed">
-                You've successfully navigated through this interactive scenario.
+                {t('editor.scenarios.complete_description')}
               </p>
               <button
                 onClick={resetPreview}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md mx-auto"
               >
                 <RotateCcw size={16} />
-                Start Over
+                {t('editor.scenarios.start_over')}
               </button>
             </div>
           ) : previewScenario ? (
@@ -254,7 +256,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                   <div className="mb-4">
                     <img 
                       src={previewScenario.imageUrl} 
-                      alt="Scenario illustration"
+                      alt={t('editor.scenarios.illustration_alt')}
                       className="w-full h-48 object-cover rounded-lg border border-slate-200"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none'
@@ -295,8 +297,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <GitBranch size={20} className="text-slate-400" />
               </div>
-              <h3 className="text-base font-medium text-slate-900 mb-2">Scenario Not Found</h3>
-              <p className="text-slate-500 text-sm">Please check your scenario configuration and try again.</p>
+              <h3 className="text-base font-medium text-slate-900 mb-2">{t('editor.scenarios.not_found_title')}</h3>
+              <p className="text-slate-500 text-sm">{t('editor.scenarios.not_found_description')}</p>
             </div>
           )}
         </div>
@@ -311,14 +313,14 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div className="flex-1 min-w-0">
             <label className="block text-sm font-semibold text-slate-900 mb-2">
-              Scenario Title
+              {t('editor.scenarios.scenario_title_label')}
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white text-slate-900 placeholder-slate-400 transition-all"
-              placeholder="Enter your scenario title..."
+              placeholder={t('editor.scenarios.scenario_title_placeholder')}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -333,7 +335,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md"
             >
               <Play size={14} />
-              Preview
+              {t('editor.scenarios.preview')}
             </button>
             <button
               onClick={addNewScenario}
@@ -341,7 +343,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-900"
             >
               <Plus size={14} />
-              Add
+              {t('editor.scenarios.add')}
             </button>
           </div>
         </div>
@@ -361,11 +363,11 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                         <span className="text-sm font-bold text-slate-700">{scenarioIndex + 1}</span>
                       </div>
                       <div>
-                        <h3 className="text-base font-semibold text-slate-900">Scenario {scenario.id}</h3>
+                        <h3 className="text-base font-semibold text-slate-900">{t('editor.scenarios.scenario_n', { id: scenario.id })}</h3>
                         {scenario.id === currentScenarioId && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full mt-1">
                             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                            Starting Point
+                            {t('editor.scenarios.starting_point')}
                           </span>
                         )}
                       </div>
@@ -378,15 +380,15 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                             ? 'bg-emerald-500 text-white shadow-sm' 
                             : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
                         }`}
-                        title="Set as starting scenario"
+                        title={t('editor.scenarios.set_as_starting')}
                       >
-                        {scenario.id === currentScenarioId ? 'Start' : 'Set Start'}
+                        {scenario.id === currentScenarioId ? t('editor.scenarios.start') : t('editor.scenarios.set_start')}
                       </button>
                       <button
                         onClick={() => deleteScenario(scenario.id)}
                         disabled={scenarios.length <= 1}
                         className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-slate-400 disabled:hover:bg-transparent"
-                        title="Delete scenario"
+                        title={t('editor.scenarios.delete_scenario')}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -400,7 +402,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-sm font-medium text-slate-700">
-                        Scenario Description
+                        {t('editor.scenarios.scenario_description_label')}
                       </label>
                       <button
                         onClick={() => toggleImageInput(scenario.id)}
@@ -411,11 +413,11 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                             ? 'text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100'
                             : 'text-slate-600 bg-white border-slate-200 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200'
                         }`}
-                        title={scenario.imageUrl && scenario.imageUrl.trim() !== '' ? "Edit image" : "Add image"}
+                        title={scenario.imageUrl && scenario.imageUrl.trim() !== '' ? t('editor.scenarios.edit_image') : t('editor.scenarios.add_image')}
                       >
                         <ImageIcon size={14} />
                         <span>
-                          {scenario.imageUrl && scenario.imageUrl.trim() !== '' ? 'Image' : 'Add Image'}
+                          {scenario.imageUrl && scenario.imageUrl.trim() !== '' ? t('editor.scenarios.image') : t('editor.scenarios.add_image')}
                         </span>
                         {scenario.imageUrl && scenario.imageUrl.trim() !== '' && (
                           <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-blue-600 rounded-full">
@@ -429,7 +431,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                       onChange={(e) => updateScenario(scenario.id, { text: e.target.value })}
                       className="w-full p-3 border border-slate-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white text-slate-900 placeholder-slate-400 transition-all"
                       rows={2}
-                      placeholder="Describe what happens in this scenario..."
+                      placeholder={t('editor.scenarios.description_placeholder')}
                     />
                   </div>
 
@@ -437,7 +439,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                   {showImageInputs[scenario.id] && (
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Image URL
+                        {t('editor.scenarios.image_url_label')}
                       </label>
                       <input
                         type="url"
@@ -450,7 +452,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                         <div className="mt-2">
                           <img 
                             src={scenario.imageUrl} 
-                            alt="Scenario preview"
+                            alt={t('editor.scenarios.preview_alt')}
                             className="w-full h-32 object-cover rounded-lg border border-slate-200"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
@@ -465,16 +467,16 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <label className="text-sm font-medium text-slate-700">
-                        Response Options ({scenario.options.length}/4)
+                        {t('editor.scenarios.response_options_label', { count: scenario.options.length })}
                       </label>
                       <button
                         onClick={() => addOption(scenario.id)}
                         disabled={scenario.options.length >= 4}
                         className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-all text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-100"
-                        title="Add response option"
+                        title={t('editor.scenarios.add_response_option')}
                       >
                         <Plus size={12} />
-                        Add
+                        {t('editor.scenarios.add')}
                       </button>
                     </div>
                     
@@ -493,7 +495,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                                 value={option.text}
                                 onChange={(e) => updateOption(scenario.id, option.id, { text: e.target.value })}
                                 className="w-full px-2 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white placeholder-slate-400 transition-all"
-                                placeholder="Enter response option..."
+                                placeholder={t('editor.scenarios.option_placeholder')}
                               />
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-slate-500 font-medium">→</span>
@@ -504,10 +506,10 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                                   })}
                                   className="flex-1 px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white transition-all"
                                 >
-                                  <option value="">End scenario</option>
+                                  <option value="">{t('editor.scenarios.end_scenario')}</option>
                                   {scenarios.map((s) => (
                                     <option key={s.id} value={s.id}>
-                                      Scenario {s.id}
+                                      {t('editor.scenarios.scenario_n', { id: s.id })}
                                     </option>
                                   ))}
                                 </select>
@@ -517,7 +519,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                               onClick={() => deleteOption(scenario.id, option.id)}
                               disabled={scenario.options.length <= 1}
                               className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 disabled:cursor-not-allowed flex-shrink-0"
-                              title="Delete option"
+                              title={t('editor.scenarios.delete_option')}
                             >
                               <Trash2 size={12} />
                             </button>
@@ -535,14 +537,14 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <GitBranch size={20} className="text-slate-400" />
                 </div>
-                <h3 className="text-base font-medium text-slate-900 mb-2">No scenarios yet</h3>
-                <p className="text-slate-500 text-sm mb-4">Create your first scenario to get started.</p>
+                <h3 className="text-base font-medium text-slate-900 mb-2">{t('editor.scenarios.no_scenarios_title')}</h3>
+                <p className="text-slate-500 text-sm mb-4">{t('editor.scenarios.no_scenarios_description')}</p>
                 <button
                   onClick={addNewScenario}
                   className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md mx-auto"
                 >
                   <Plus size={14} />
-                  Create First Scenario
+                  {t('editor.scenarios.create_first')}
                 </button>
               </div>
             )}
@@ -556,8 +558,8 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
     <Modal
       isDialogOpen={isOpen}
       onOpenChange={handleClose}
-      dialogTitle={showPreview ? "Scenario Preview" : "Edit Scenarios"}
-      dialogDescription={showPreview ? "Test your interactive scenario" : "Create and manage your interactive scenarios"}
+      dialogTitle={showPreview ? t('editor.scenarios.preview_dialog_title') : t('editor.scenarios.edit_dialog_title')}
+      dialogDescription={showPreview ? t('editor.scenarios.preview_dialog_description') : t('editor.scenarios.edit_dialog_description')}
       customHeight="max-h-[75vh]"
       customWidth="!w-[70vw] !max-w-[70vw] !sm:w-[70vw] !sm:max-w-[70vw] !md:w-[70vw] !md:max-w-[70vw] !lg:max-w-[70vw] !xl:max-w-[70vw]"
       dialogContent={showPreview ? renderPreviewContent() : renderEditContent()}
@@ -567,13 +569,13 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
             onClick={handleClose}
             className="bg-gray-200 text-gray-700 hover:bg-gray-300"
           >
-            Cancel
+            {t('editor.scenarios.cancel')}
           </ButtonBlack>
           {!showPreview && (
             <ButtonBlack onClick={handleSave}>
               <div className="flex items-center gap-2">
                 <Save size={16} />
-                Save Changes
+                {t('editor.scenarios.save_changes')}
               </div>
             </ButtonBlack>
           )}

@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, ChevronRight, Folder } from 'lucide-react'
@@ -53,6 +54,7 @@ export default function ActivitySwitcher({
   isDirty,
   onSave,
 }: ActivitySwitcherProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const { accessToken } = useAuth()
   const [open, setOpen] = React.useState(false)
@@ -132,7 +134,7 @@ export default function ActivitySwitcher({
     event.preventDefault()
     if (isDirty) {
       const proceed = window.confirm(
-        'You have unsaved changes. Save before switching activities?\n\nOK = Save and switch\nCancel = Stay on this activity'
+        t('editor.activity_switcher.unsaved_confirm')
       )
       if (!proceed) return
       try {
@@ -182,7 +184,7 @@ export default function ActivitySwitcher({
                 type="button"
                 onClick={() => scrollByAmount(-200)}
                 disabled={!canScrollLeft}
-                aria-label="Scroll left"
+                aria-label={t('editor.activity_switcher.scroll_left')}
                 className={
                   'flex items-center justify-center w-6 h-6 rounded-full bg-neutral-100 text-neutral-600 hover:bg-neutral-200 active:bg-neutral-300 transition-all flex-shrink-0 ' +
                   (canScrollLeft ? 'opacity-100' : 'opacity-30 pointer-events-none')
@@ -241,7 +243,7 @@ export default function ActivitySwitcher({
                 type="button"
                 onClick={() => scrollByAmount(200)}
                 disabled={!canScrollRight}
-                aria-label="Scroll right"
+                aria-label={t('editor.activity_switcher.scroll_right')}
                 className={
                   'flex items-center justify-center w-6 h-6 rounded-full bg-neutral-100 text-neutral-600 hover:bg-neutral-200 active:bg-neutral-300 transition-all flex-shrink-0 ' +
                   (canScrollRight ? 'opacity-100' : 'opacity-30 pointer-events-none')

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowElbowDownLeft, ArrowRight, CircleNotch, ClockCounterClockwise, GitBranch, MagicWand, Sparkle, Trash } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -50,6 +51,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
   onInsert,
   activityUuid,
 }) => {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -93,7 +95,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
         access_token
       )
       const detail = res.data?.detail
-      const message = typeof detail === 'string' ? detail : 'Scenario generation failed. Please try again.'
+      const message = typeof detail === 'string' ? detail : t('editor.ai.scenario.generation_failed')
       if (!res.success || !res.data?.scenario) {
         setError(message)
         return
@@ -101,7 +103,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
       setBlock(res.data.scenario)
       setSessionUuid(res.data.session_uuid)
     } catch {
-      setError('Scenario generation failed. Please try again.')
+      setError(t('editor.ai.scenario.generation_failed'))
     } finally {
       setGenerating(false)
     }
@@ -136,9 +138,9 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
   }
 
   const nodeLabel = (id: string, target: string | null) => {
-    if (!target) return 'End'
+    if (!target) return t('editor.ai.scenario.end')
     const idx = block?.scenarios.findIndex((s) => s.id === target)
-    return idx != null && idx >= 0 ? `Node ${idx + 1}` : 'End'
+    return idx != null && idx >= 0 ? t('editor.ai.scenario.node_n', { number: idx + 1 }) : t('editor.ai.scenario.end')
   }
 
   const modalContent = (
@@ -151,7 +153,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
             tab === 'generate' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <MagicWand weight="duotone" size={15} /> Generate
+          <MagicWand weight="duotone" size={15} /> {t('editor.ai.scenario.tab_generate')}
         </button>
         <button
           onClick={() => setTab('history')}
@@ -159,7 +161,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
             tab === 'history' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <ClockCounterClockwise weight="duotone" size={15} /> History
+          <ClockCounterClockwise weight="duotone" size={15} /> {t('editor.ai.scenario.tab_history')}
         </button>
       </div>
 
@@ -172,14 +174,14 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
               rows={2}
               placeholder={
                 activityUuid
-                  ? 'What should the scenario be about? (grounded on this activity)'
-                  : 'What should the interactive scenario be about?'
+                  ? t('editor.ai.scenario.prompt_placeholder_grounded')
+                  : t('editor.ai.scenario.prompt_placeholder')
               }
               className="w-full p-3 border border-neutral-200 rounded-xl resize-none focus:outline-hidden focus:ring-2 focus:ring-neutral-900/10 text-sm"
             />
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-1.5 text-xs text-neutral-500">
-                Nodes
+                {t('editor.ai.scenario.nodes')}
                 <input
                   type="number"
                   min={2}
@@ -196,18 +198,18 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                 className="px-3 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow disabled:opacity-40 transition-opacity"
               >
                 {generating ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <Sparkle weight="duotone" size={15} />}
-                {block ? 'Regenerate' : generating ? 'Generating' : 'Generate'}
+                {block ? t('editor.ai.scenario.regenerate') : generating ? t('editor.ai.scenario.generating') : t('editor.ai.scenario.generate')}
               </button>
             </div>
             {error && <p className="text-xs text-rose-500">{error}</p>}
-            <p className="text-[11px] text-neutral-400">Generating a scenario uses AI credits.</p>
+            <p className="text-[11px] text-neutral-400">{t('editor.ai.scenario.credits_hint')}</p>
           </div>
 
           {/* Editable preview */}
           <div className="flex-1 overflow-y-auto p-4 bg-neutral-50/50">
             {!block && !generating && (
               <p className="text-center text-sm text-neutral-400 mt-6">
-                Your branching scenario will appear here to review before inserting.
+                {t('editor.ai.scenario.preview_placeholder')}
               </p>
             )}
             {generating && <div className="w-full h-24 rounded-xl bg-neutral-100 animate-pulse" />}
@@ -220,8 +222,8 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                   <div key={node.id} className="bg-white rounded-lg p-4 nice-shadow">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs font-bold text-neutral-400">
-                        Node {ni + 1}
-                        {block.currentScenarioId === node.id && ' · start'}
+                        {t('editor.ai.scenario.node_n', { number: ni + 1 })}
+                        {block.currentScenarioId === node.id && t('editor.ai.scenario.start_suffix')}
                       </span>
                     </div>
                     <textarea
@@ -256,7 +258,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                 onClick={handleInsert}
                 className="px-4 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow"
               >
-                <ArrowElbowDownLeft weight="duotone" size={15} data-dir-flip /> Insert into editor
+                <ArrowElbowDownLeft weight="duotone" size={15} data-dir-flip /> {t('editor.ai.scenario.insert')}
               </button>
             </div>
           )}
@@ -264,16 +266,16 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
       ) : (
         <div className="flex-1 overflow-y-auto p-4">
           {historyLoading ? (
-            <p className="text-center text-sm text-neutral-400 mt-6">Loading…</p>
+            <p className="text-center text-sm text-neutral-400 mt-6">{t('editor.ai.scenario.loading')}</p>
           ) : history.length === 0 ? (
-            <p className="text-center text-sm text-neutral-400 mt-6">No generated scenarios yet.</p>
+            <p className="text-center text-sm text-neutral-400 mt-6">{t('editor.ai.scenario.no_history')}</p>
           ) : (
             <div className="space-y-2">
               {history.map((h) => (
                 <div key={h.ai_generation_uuid} className="flex items-center gap-3 bg-white rounded-lg p-3 nice-shadow">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-neutral-700 truncate">{h.prompt}</p>
-                    <p className="text-[11px] text-neutral-400">{h.scenario?.scenarios?.length || 0} node(s)</p>
+                    <p className="text-[11px] text-neutral-400">{t('editor.ai.scenario.node_count', { count: h.scenario?.scenarios?.length || 0 })}</p>
                   </div>
                   <button
                     onClick={() => {
@@ -283,12 +285,12 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
                     }}
                     className="px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-sm text-neutral-700"
                   >
-                    Load
+                    {t('editor.ai.scenario.load')}
                   </button>
                   <button
                     onClick={() => handleDeleteHistory(h.ai_generation_uuid)}
                     className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400"
-                    title="Delete"
+                    title={t('editor.ai.scenario.delete')}
                   >
                     <Trash weight="duotone" size={15} />
                   </button>
@@ -303,7 +305,7 @@ const AIScenarioGeneratorModal: React.FC<AIScenarioGeneratorModalProps> = ({
 
   return (
     <Modal
-      dialogTitle="Generate a scenario with AI"
+      dialogTitle={t('editor.ai.scenario.dialog_title')}
       dialogContent={modalContent}
       onOpenChange={onClose}
       isDialogOpen={isOpen}

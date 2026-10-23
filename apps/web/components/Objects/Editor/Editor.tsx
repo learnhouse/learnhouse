@@ -36,6 +36,7 @@ import PDFBlock from './Extensions/PDF/PDFBlock'
 import H5PBlock from './Extensions/H5P/H5PBlock'
 import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
+import SkyroomBlock from './Extensions/Skyroom/SkyroomBlock'
 import { Table } from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
@@ -179,6 +180,7 @@ function Editor(props: EditorProps) {
       H5PBlock.configure({ editable: true, activity: stableActivity }),
       LibraryBlock.configure({ editable: true, activity: stableActivity }),
       QuizBlock.configure({ editable: true, activity: stableActivity }),
+      SkyroomBlock.configure({ editable: true, activity: stableActivity }),
       Youtube.configure({ controls: true, modestBranding: true }),
       CodeBlockLowlight.configure({ lowlight }),
       EmbedObjects.configure({ editable: true, activity: stableActivity }),

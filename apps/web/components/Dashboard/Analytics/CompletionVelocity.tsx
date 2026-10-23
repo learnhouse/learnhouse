@@ -1,9 +1,10 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
 import { Lightning } from '@phosphor-icons/react'
 
-function formatVelocity(hours: number): { value: string; unit: string } {
+function formatVelocity(hours: number): { value: string; unit: 'minutes' | 'hours' | 'days' } {
   if (hours < 1) {
     return { value: `${Math.round(hours * 60)}`, unit: 'minutes' }
   }
@@ -15,6 +16,7 @@ function formatVelocity(hours: number): { value: string; unit: string } {
 }
 
 export default function CompletionVelocity({ days = '90' }: { days?: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('completion_velocity', { days })
   const rows = data?.data ?? []
 
@@ -29,12 +31,12 @@ export default function CompletionVelocity({ days = '90' }: { days?: string }) {
 
   return (
     <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Completion Velocity</h3>
-      <p className="text-xs text-gray-400 mb-4">Average time between activity completions</p>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('dash.analytics.completion_velocity')}</h3>
+      <p className="text-xs text-gray-400 mb-4">{t('dash.analytics.completion_velocity_sub')}</p>
       {isLoading ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('dash.analytics.loading')}</div>
       ) : !velocity ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">Not enough data yet</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('dash.analytics.not_enough_data')}</div>
       ) : (
         <div className="flex flex-col items-center justify-center h-48 gap-3">
           <div className="p-3 rounded-full bg-amber-50">
@@ -42,10 +44,10 @@ export default function CompletionVelocity({ days = '90' }: { days?: string }) {
           </div>
           <div className="text-center">
             <p className="text-4xl font-bold text-gray-900">{velocity.value}</p>
-            <p className="text-sm text-gray-500 mt-1">avg {velocity.unit} between completions</p>
+            <p className="text-sm text-gray-500 mt-1">{t(`dash.analytics.velocity_unit_${velocity.unit}`)}</p>
           </div>
           <p className="text-xs text-gray-400">
-            Based on {totalTransitions} activity transitions
+            {t('dash.analytics.based_on_transitions', { count: totalTransitions })}
           </p>
         </div>
       )}

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -26,6 +27,7 @@ function resourceLabel(uuid: string) {
 }
 
 function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
+  const { t } = useTranslation();
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const token = session?.data?.tokens?.access_token;
@@ -49,8 +51,8 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
     staleTime: 60_000,
   });
 
-  if (error) return <div className="text-sm text-red-500">Failed to load resources</div>;
-  if (!resources) return <div className="text-sm text-gray-400">Loading resources…</div>;
+  if (error) return <div className="text-sm text-red-500">{t('dash.payments.resources_load_failed')}</div>;
+  if (!resources) return <div className="text-sm text-gray-400">{t('dash.payments.loading_resources')}</div>;
 
   const list: string[] = Array.isArray(resources?.data) ? resources.data : Array.isArray(resources) ? resources : [];
   const courses: any[] = coursesData ?? [];
@@ -63,9 +65,9 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
     try {
       await removeOfferResource(org.id, offerId, resourceUuid, token);
       queryClient.invalidateQueries({ queryKey: resourceQueryKey });
-      toast.success('Resource removed from offer');
+      toast.success(t('dash.payments.resource_removed'));
     } catch {
-      toast.error('Failed to remove resource');
+      toast.error(t('dash.payments.resource_remove_failed'));
     }
   };
 
@@ -75,10 +77,10 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
     try {
       await addOfferResource(org.id, offerId, courseUuid, token);
       queryClient.invalidateQueries({ queryKey: resourceQueryKey });
-      toast.success('Course linked to offer');
+      toast.success(t('dash.payments.course_linked'));
       setShowPicker(false);
     } catch {
-      toast.error('Failed to link course');
+      toast.error(t('dash.payments.course_link_failed'));
     } finally {
       setIsLinking(false);
     }
@@ -87,11 +89,11 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
   return (
     <div className="space-y-2">
       <p className="text-xs text-gray-500">
-        Resources below are accessible to anyone enrolled in <strong>{offerName}</strong>.
+        {t('dash.payments.resources_accessible_prefix')} <strong>{offerName}</strong>.
       </p>
 
       {list.length === 0 ? (
-        <p className="text-sm text-gray-400 italic">No resources linked yet.</p>
+        <p className="text-sm text-gray-400 italic">{t('dash.payments.no_resources_linked')}</p>
       ) : (
         <ul className="space-y-1">
           {list.map((uuid: string) => (
@@ -118,23 +120,23 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
           className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 mt-1"
           onClick={() => setShowPicker(true)}
         >
-          <Plus size={12} /> Link a Course
+          <Plus size={12} /> {t('dash.payments.link_a_course')}
         </button>
       ) : (
         <div className="border rounded-md p-2 space-y-1 bg-gray-50">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-gray-700">Select a course to link</span>
+            <span className="text-xs font-medium text-gray-700">{t('dash.payments.select_course_to_link')}</span>
             <button onClick={() => setShowPicker(false)} className="text-gray-400 hover:text-gray-600">
               <X size={12} />
             </button>
           </div>
           {!coursesData ? (
             <div className="flex items-center gap-1 text-xs text-gray-500 py-1">
-              <Loader2 size={12} className="animate-spin" /> Loading courses…
+              <Loader2 size={12} className="animate-spin" /> {t('dash.payments.loading_courses')}
             </div>
           ) : availableCourses.length === 0 ? (
             <p className="text-xs text-gray-400 italic py-1">
-              {courses.length === 0 ? 'No courses in this org.' : 'All courses are already linked.'}
+              {courses.length === 0 ? t('dash.payments.no_courses_in_org') : t('dash.payments.all_courses_linked')}
             </p>
           ) : (
             <ul className="max-h-40 overflow-y-auto space-y-0.5">

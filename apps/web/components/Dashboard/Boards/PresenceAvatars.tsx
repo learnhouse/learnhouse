@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { HocuspocusProvider } from '@hocuspocus/provider'
 
 interface PresenceAvatarsProps {
@@ -14,6 +15,7 @@ interface AwarenessUser {
 }
 
 export default function PresenceAvatars({ provider }: PresenceAvatarsProps) {
+  const { t } = useTranslation()
   const [users, setUsers] = useState<AwarenessUser[]>([])
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function PresenceAvatars({ provider }: PresenceAvatarsProps) {
         if (state.user) {
           connected.push({
             clientId,
-            name: state.user.name || 'Unknown',
+            name: state.user.name || t('dash.boards.unknown_user'),
             color: state.user.color || '#958DF1',
           })
         }
@@ -42,7 +44,7 @@ export default function PresenceAvatars({ provider }: PresenceAvatarsProps) {
     return () => {
       provider.off('awarenessUpdate', updateUsers)
     }
-  }, [provider])
+  }, [provider, t])
 
   if (users.length === 0) return null
 

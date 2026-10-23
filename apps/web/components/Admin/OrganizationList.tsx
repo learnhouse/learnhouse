@@ -12,6 +12,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Buildings, Globe, User, CaretLeft, CaretRight, BookOpen, MagnifyingGlass, ArrowSquareOut, Plus } from '@phosphor-icons/react'
 import CreateOrganizationModal from '@components/Admin/CreateOrganizationModal'
 import EELicenseError from '@components/Admin/EELicenseError'
+import { useTranslation } from 'react-i18next'
 
 interface PaginatedOrgResponse {
   items: OrgWithCount[]
@@ -75,7 +76,8 @@ const PLANS_SAAS = ['all', 'free', 'paid', 'standard', 'pro', 'enterprise'] as c
 const PAGE_SIZE = 20
 
 function Sparkline({ data, max }: { data: number[]; max: number }) {
-  if (data.length === 0) return <span className="text-white/20 text-xs">n/a</span>
+  const { t } = useTranslation()
+  if (data.length === 0) return <span className="text-white/20 text-xs">{t('admin.common.na')}</span>
   const h = 20
   const w = 56
   const step = w / Math.max(data.length - 1, 1)
@@ -103,6 +105,7 @@ function Sparkline({ data, max }: { data: number[]; max: number }) {
 }
 
 function AdminUserTooltip({ users }: { users: AdminUserInfo[] }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState<{ top: number; left: number; rtl: boolean } | null>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -118,7 +121,7 @@ function AdminUserTooltip({ users }: { users: AdminUserInfo[] }) {
   }, [open])
 
   if (users.length === 0) {
-    return <span className="text-white/25 text-xs">None</span>
+    return <span className="text-white/25 text-xs">{t('admin.common.none')}</span>
   }
 
   return (
@@ -129,7 +132,7 @@ function AdminUserTooltip({ users }: { users: AdminUserInfo[] }) {
         onMouseLeave={() => setOpen(false)}
         className="text-sm text-white/60 hover:text-white/80 transition-colors underline decoration-dotted underline-offset-2"
       >
-        {users.length} admin{users.length !== 1 ? 's' : ''}
+        {t('admin.org_list.admins_count', { count: users.length })}
       </button>
       {open && pos && (
         <div
@@ -190,6 +193,7 @@ function ImgWithFallback({
 }
 
 export default function OrganizationList() {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const searchParams = useSearchParams()
@@ -337,27 +341,27 @@ export default function OrganizationList() {
               type="text"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search organizations..."
+              placeholder={t('admin.org_list.search_placeholder')}
               className="bg-white/[0.05] border border-white/[0.08] rounded-lg ps-8 pe-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-64"
             />
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs text-white/30">
-              {totalCount} org{totalCount !== 1 ? 's' : ''}
+              {t('admin.org_list.org_count', { count: totalCount })}
             </span>
             <button
               onClick={() => setCreateOpen(true)}
               className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors"
             >
               <Plus size={12} weight="bold" />
-              New organization
+              {t('admin.org_list.new_organization')}
             </button>
           </div>
         </div>
         <div className="flex items-center justify-between">
           {isSaaS ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-white/40 me-1">Plan:</span>
+              <span className="text-xs text-white/40 me-1">{t('admin.org_list.filter_plan')}</span>
               {PLANS_SAAS.map((p) => (
                 <button
                   key={p}
@@ -376,19 +380,19 @@ export default function OrganizationList() {
             <div />
           )}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/40 me-1">Sort:</span>
+            <span className="text-xs text-white/40 me-1">{t('admin.common.sort')}</span>
             {([
-              ['id', 'Default'],
-              ['newest', 'Newest'],
-              ['users_desc', 'Most users'],
-              ['users_asc', 'Least users'],
-              ['courses_desc', 'Most courses'],
-              ['most_visits', 'Most visits'],
-              ['most_trails', 'Most engaged'],
-              ['most_admins', 'Most admins'],
-              ['payments_active', 'Payments'],
-              ['recently_updated', 'Updated'],
-              ['oldest', 'Oldest'],
+              ['id', t('admin.org_list.sort_default')],
+              ['newest', t('admin.org_list.sort_newest')],
+              ['users_desc', t('admin.org_list.sort_users_desc')],
+              ['users_asc', t('admin.org_list.sort_users_asc')],
+              ['courses_desc', t('admin.org_list.sort_courses_desc')],
+              ['most_visits', t('admin.org_list.sort_most_visits')],
+              ['most_trails', t('admin.org_list.sort_most_engaged')],
+              ['most_admins', t('admin.org_list.sort_most_admins')],
+              ['payments_active', t('admin.org_list.sort_payments')],
+              ['recently_updated', t('admin.org_list.sort_updated')],
+              ['oldest', t('admin.org_list.sort_oldest')],
             ] as const).map(([key, label]) => (
               <button
                 key={key}
@@ -422,22 +426,22 @@ export default function OrganizationList() {
         ) : !orgs || orgs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-white/40">
             <Buildings size={48} weight="fill" />
-            <p className="mt-4 text-lg">No organizations found</p>
+            <p className="mt-4 text-lg">{t('admin.org_list.empty')}</p>
           </div>
         ) : (
           <>
       <table className="w-full text-start">
         <thead>
           <tr className="border-b border-white/[0.08]">
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Organization</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">URL</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Visits (7d)</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Users</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Courses</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Admins</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Plan</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Created</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Updated</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_list.col_organization')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_list.col_url')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_list.col_visits')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_list.col_users')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_list.col_courses')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_list.col_admins')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_list.col_plan')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.common.col_created')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.common.col_updated')}</th>
             <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider"></th>
           </tr>
         </thead>
@@ -520,10 +524,10 @@ export default function OrganizationList() {
                     href={safeHref(`${orgUrl}/dash`)}
                     rel="noopener"
                     className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white hover:bg-white/[0.08] px-2.5 py-1.5 rounded-lg transition-colors"
-                    title="Open org dashboard"
+                    title={t('admin.org_list.open_dashboard')}
                   >
                     <ArrowSquareOut size={14} weight="bold" />
-                    Dashboard
+                    {t('admin.common.dashboard')}
                   </a>
                 </td>
               </tr>
@@ -536,7 +540,7 @@ export default function OrganizationList() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 px-4">
           <span className="text-xs text-white/30">
-            Page {page} of {totalPages}
+            {t('admin.common.page_of', { page, total: totalPages })}
           </span>
           <div className="flex items-center gap-1">
             <button

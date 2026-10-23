@@ -11,6 +11,7 @@ import { queryKeys } from '@/lib/query/keys'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
 import { Input } from '@components/ui/input'
+import { DateInput } from '@components/ui/date-input'
 import {
   Select,
   SelectContent,
@@ -297,23 +298,21 @@ const OrgAuditLogs = () => {
 
               {filters.date_range === 'custom' && (
                 <div className="flex items-center gap-2">
-                  <Input
-                    type="date"
+                  <DateInput
                     className="h-9 text-xs w-[130px]"
                     value={filters.start_date ? dayjs(filters.start_date).format('YYYY-MM-DD') : ''}
-                    onChange={(e) => {
-                      const date = e.target.value ? dayjs(e.target.value).startOf('day').toISOString() : ''
+                    onChange={(v) => {
+                      const date = v ? dayjs(v).startOf('day').toISOString() : ''
                       setFilters({ ...filters, start_date: date })
                       setOffset(0)
                     }}
                   />
                   <span className="text-gray-400 text-xs">to</span>
-                  <Input
-                    type="date"
+                  <DateInput
                     className="h-9 text-xs w-[130px]"
                     value={filters.end_date ? dayjs(filters.end_date).format('YYYY-MM-DD') : ''}
-                    onChange={(e) => {
-                      const date = e.target.value ? dayjs(e.target.value).endOf('day').toISOString() : ''
+                    onChange={(v) => {
+                      const date = v ? dayjs(v).endOf('day').toISOString() : ''
                       setFilters({ ...filters, end_date: date })
                       setOffset(0)
                     }}

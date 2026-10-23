@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useQuery } from '@tanstack/react-query'
@@ -68,24 +69,25 @@ function CardChip({ brand, last4 }: { brand?: string; last4?: string }) {
   )
 }
 
-const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  active:    { label: 'Active',    cls: 'bg-green-100 text-green-700' },
-  completed: { label: 'Completed', cls: 'bg-blue-100 text-blue-700' },
-  succeeded: { label: 'Paid',      cls: 'bg-green-100 text-green-700' },
-  pending:   { label: 'Pending',   cls: 'bg-amber-100 text-amber-700' },
-  failed:    { label: 'Failed',    cls: 'bg-red-100 text-red-600' },
-  cancelled: { label: 'Cancelled', cls: 'bg-gray-100 text-gray-500' },
-  canceled:  { label: 'Cancelled', cls: 'bg-gray-100 text-gray-500' },
-  refunded:  { label: 'Refunded',  cls: 'bg-purple-100 text-purple-700' },
-  trialing:  { label: 'Trialing',  cls: 'bg-sky-100 text-sky-700' },
-  past_due:  { label: 'Past due',  cls: 'bg-red-100 text-red-600' },
+const STATUS_BADGE: Record<string, { key: string; cls: string }> = {
+  active:    { key: 'dash.payments.status_active',    cls: 'bg-green-100 text-green-700' },
+  completed: { key: 'dash.payments.status_completed', cls: 'bg-blue-100 text-blue-700' },
+  succeeded: { key: 'dash.payments.status_paid',      cls: 'bg-green-100 text-green-700' },
+  pending:   { key: 'dash.payments.status_pending',   cls: 'bg-amber-100 text-amber-700' },
+  failed:    { key: 'dash.payments.status_failed',    cls: 'bg-red-100 text-red-600' },
+  cancelled: { key: 'dash.payments.status_cancelled', cls: 'bg-gray-100 text-gray-500' },
+  canceled:  { key: 'dash.payments.status_cancelled', cls: 'bg-gray-100 text-gray-500' },
+  refunded:  { key: 'dash.payments.status_refunded',  cls: 'bg-purple-100 text-purple-700' },
+  trialing:  { key: 'dash.payments.status_trialing',  cls: 'bg-sky-100 text-sky-700' },
+  past_due:  { key: 'dash.payments.status_past_due',  cls: 'bg-red-100 text-red-600' },
 }
 
 function StatusPill({ status }: { status: string }) {
-  const s = STATUS_BADGE[status] ?? { label: status, cls: 'bg-gray-100 text-gray-500' }
+  const { t } = useTranslation()
+  const s = STATUS_BADGE[status]
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.cls}`}>
-      {s.label}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s?.cls ?? 'bg-gray-100 text-gray-500'}`}>
+      {s ? t(s.key) : status}
     </span>
   )
 }
@@ -115,17 +117,18 @@ function MetricCard({
 // ---------------------------------------------------------------------------
 type Tab = 'overview' | 'customers' | 'transactions' | 'subscriptions'
 
-const TABS: { id: Tab; label: string; icon: any }[] = [
-  { id: 'overview',      label: 'Overview',      icon: Activity },
-  { id: 'customers',     label: 'Customers',     icon: Users },
-  { id: 'transactions',  label: 'Transactions',  icon: CreditCard },
-  { id: 'subscriptions', label: 'Subscriptions', icon: RefreshCcw },
+const TABS: { id: Tab; labelKey: string; icon: any }[] = [
+  { id: 'overview',      labelKey: 'dash.payments.tab_overview',      icon: Activity },
+  { id: 'customers',     labelKey: 'dash.payments.tab_customers',     icon: Users },
+  { id: 'transactions',  labelKey: 'dash.payments.tab_transactions',  icon: CreditCard },
+  { id: 'subscriptions', labelKey: 'dash.payments.tab_subscriptions', icon: RefreshCcw },
 ]
 
 // ---------------------------------------------------------------------------
 // Overview tab
 // ---------------------------------------------------------------------------
 function OverviewTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
+  const { t } = useTranslation()
   const { data, error, isLoading } = useQuery({
     queryKey: ['stripe', 'overview', orgId],
     queryFn: () => getStripeOverview(orgId, accessToken),
@@ -142,21 +145,21 @@ function OverviewTab({ orgId, accessToken }: { orgId: number; accessToken: strin
     <div className="space-y-6">
       {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-        <MetricCard label="MRR"               value={fmt(d.mrr)}            icon={TrendingUp}  color="bg-blue-100 text-blue-600" />
-        <MetricCard label="ARR"               value={fmt(d.arr)}            icon={TrendingUp}  color="bg-indigo-100 text-indigo-600" />
-        <MetricCard label="Total revenue"     value={fmt(d.total_revenue)}  icon={DollarSign}  color="bg-green-100 text-green-600" />
-        <MetricCard label="Active subscribers" value={String(d.active_subscribers)} icon={RefreshCcw} color="bg-violet-100 text-violet-600" />
-        <MetricCard label="Total customers"   value={String(d.total_customers)} icon={Users}   color="bg-purple-100 text-purple-600" />
-        <MetricCard label="Churned (30d)"     value={String(d.churn_30d)}   icon={Activity}    color="bg-red-100 text-red-500" />
+        <MetricCard label={t('dash.payments.metric_mrr')}               value={fmt(d.mrr)}            icon={TrendingUp}  color="bg-blue-100 text-blue-600" />
+        <MetricCard label={t('dash.payments.metric_arr')}               value={fmt(d.arr)}            icon={TrendingUp}  color="bg-indigo-100 text-indigo-600" />
+        <MetricCard label={t('dash.payments.metric_total_revenue')}     value={fmt(d.total_revenue)}  icon={DollarSign}  color="bg-green-100 text-green-600" />
+        <MetricCard label={t('dash.payments.metric_active_subscribers')} value={String(d.active_subscribers)} icon={RefreshCcw} color="bg-violet-100 text-violet-600" />
+        <MetricCard label={t('dash.payments.metric_total_customers')}   value={String(d.total_customers)} icon={Users}   color="bg-purple-100 text-purple-600" />
+        <MetricCard label={t('dash.payments.metric_churned_30d')}     value={String(d.churn_30d)}   icon={Activity}    color="bg-red-100 text-red-500" />
       </div>
 
       {/* Recent charges */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-          <span className="font-semibold text-gray-800 text-sm">Recent transactions</span>
+          <span className="font-semibold text-gray-800 text-sm">{t('dash.payments.recent_transactions')}</span>
         </div>
         {d.recent_charges.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-gray-400">No transactions yet</div>
+          <div className="px-5 py-8 text-center text-sm text-gray-400">{t('dash.payments.no_transactions_yet')}</div>
         ) : (
           <div className="divide-y divide-gray-50">
             {d.recent_charges.map((ch: any) => (
@@ -167,7 +170,7 @@ function OverviewTab({ orgId, accessToken }: { orgId: number; accessToken: strin
                   </div>
                   <div>
                     <div className="text-sm font-medium text-gray-800">
-                      {ch.customer?.name ?? ch.customer?.email ?? ch.customer?.id ?? 'Unknown'}
+                      {ch.customer?.name ?? ch.customer?.email ?? ch.customer?.id ?? t('dash.payments.unknown')}
                     </div>
                     <div className="text-xs text-gray-400">{fmtDate(ch.created)}</div>
                   </div>
@@ -190,6 +193,7 @@ function OverviewTab({ orgId, accessToken }: { orgId: number; accessToken: strin
 // Customers tab
 // ---------------------------------------------------------------------------
 function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
+  const { t } = useTranslation()
   const { data: customers, error, isLoading } = useQuery({
     queryKey: queryKeys.payments.customers(orgId),
     queryFn: () => getOrgCustomers(orgId, accessToken),
@@ -198,9 +202,9 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
   })
 
   if (isLoading) return <PageLoading />
-  if (error) return <div className="p-6 text-sm text-red-500">Error loading customers</div>
+  if (error) return <div className="p-6 text-sm text-red-500">{t('dash.payments.customers_load_error')}</div>
   if (!customers || customers.length === 0) {
-    return <Empty message="No customers yet" />
+    return <Empty message={t('dash.payments.no_customers_yet')} />
   }
 
   return (
@@ -208,15 +212,15 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Customer</TableHead>
-            <TableHead>Offer</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Payment method</TableHead>
-            <TableHead>Last charge</TableHead>
-            <TableHead>Next billing</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Since</TableHead>
+            <TableHead>{t('dash.payments.col_customer')}</TableHead>
+            <TableHead>{t('dash.payments.col_offer')}</TableHead>
+            <TableHead>{t('dash.payments.col_type')}</TableHead>
+            <TableHead>{t('dash.payments.col_amount')}</TableHead>
+            <TableHead>{t('dash.payments.col_payment_method')}</TableHead>
+            <TableHead>{t('dash.payments.col_last_charge')}</TableHead>
+            <TableHead>{t('dash.payments.col_next_billing')}</TableHead>
+            <TableHead>{t('dash.payments.col_status')}</TableHead>
+            <TableHead>{t('dash.payments.col_since')}</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
@@ -245,9 +249,9 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
                 <TableCell className="font-medium">{offer?.name ?? 'n/a'}</TableCell>
                 <TableCell>
                   {offer?.offer_type === 'subscription' ? (
-                    <Badge variant="outline" className="flex items-center gap-1 w-fit"><RefreshCcw size={11} /><span>Subscription</span></Badge>
+                    <Badge variant="outline" className="flex items-center gap-1 w-fit"><RefreshCcw size={11} /><span>{t('dash.payments.subscription')}</span></Badge>
                   ) : (
-                    <Badge variant="outline" className="flex items-center gap-1 w-fit"><SquareCheck size={11} /><span>One-time</span></Badge>
+                    <Badge variant="outline" className="flex items-center gap-1 w-fit"><SquareCheck size={11} /><span>{t('dash.payments.one_time_label')}</span></Badge>
                   )}
                 </TableCell>
                 <TableCell>{offer ? fmt(offer.amount, offer.currency) : 'n/a'}</TableCell>
@@ -266,7 +270,7 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
                   {stripe?.next_billing_date ? (
                     <div className="flex flex-col">
                       <span className="text-sm">{fmtDate(stripe.next_billing_date)}</span>
-                      {stripe.cancel_at_period_end && <span className="text-xs text-red-500">Cancels then</span>}
+                      {stripe.cancel_at_period_end && <span className="text-xs text-red-500">{t('dash.payments.cancels_then')}</span>}
                     </div>
                   ) : <span className="text-gray-400">n/a</span>}
                 </TableCell>
@@ -292,6 +296,7 @@ function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: stri
 // Transactions tab (paginated, direct from Stripe)
 // ---------------------------------------------------------------------------
 function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
+  const { t } = useTranslation()
   const [cursor, setCursor] = useState<string | undefined>(undefined)
   const [cursorStack, setCursorStack] = useState<string[]>([])
 
@@ -317,7 +322,7 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
 
   if (isLoading) return <PageLoading />
   if (error) return <StripeUnavailable />
-  if (!data?.data?.length) return <Empty message="No transactions yet" />
+  if (!data?.data?.length) return <Empty message={t('dash.payments.no_transactions_yet')} />
 
   return (
     <div className="space-y-3">
@@ -325,13 +330,13 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Payment method</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Refunded</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead>{t('dash.payments.col_date')}</TableHead>
+              <TableHead>{t('dash.payments.col_customer')}</TableHead>
+              <TableHead>{t('dash.payments.col_payment_method')}</TableHead>
+              <TableHead>{t('dash.payments.col_amount')}</TableHead>
+              <TableHead>{t('dash.payments.col_refunded')}</TableHead>
+              <TableHead>{t('dash.payments.col_status')}</TableHead>
+              <TableHead>{t('dash.payments.col_description')}</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -358,7 +363,7 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
                 <TableCell className="text-sm text-gray-500 max-w-[200px] truncate">{ch.description ?? 'n/a'}</TableCell>
                 <TableCell>
                   {ch.receipt_url && (
-                    <a href={ch.receipt_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600 transition" title="View receipt">
+                    <a href={ch.receipt_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600 transition" title={t('dash.payments.view_receipt')}>
                       <ExternalLink size={13} />
                     </a>
                   )}
@@ -372,10 +377,10 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
       {/* Pagination */}
       <div className="flex items-center justify-end space-x-2">
         <Button variant="outline" size="sm" onClick={goPrev} disabled={cursorStack.length === 0}>
-          <ChevronLeft size={14} className="me-1" /> Previous
+          <ChevronLeft size={14} className="me-1" /> {t('dash.payments.previous')}
         </Button>
         <Button variant="outline" size="sm" onClick={goNext} disabled={!data?.has_more}>
-          Next <ChevronRight size={14} className="ms-1" />
+          {t('dash.payments.next')} <ChevronRight size={14} className="ms-1" />
         </Button>
       </div>
     </div>
@@ -386,7 +391,9 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
 // Subscriptions tab (direct from Stripe)
 // ---------------------------------------------------------------------------
 function SubscriptionsTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
+  const { t } = useTranslation()
   const [status, setStatus] = useState('active')
+  const statusLabel = (s: string) => t(`dash.payments.sub_status_${s}`, { defaultValue: s })
 
   const { data, error, isLoading } = useQuery({
     queryKey: ['stripe', 'subscriptions', orgId, status],
@@ -412,23 +419,23 @@ function SubscriptionsTab({ orgId, accessToken }: { orgId: number; accessToken: 
               status === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {s}
+            {statusLabel(s)}
           </button>
         ))}
       </div>
 
-      {(!data?.data?.length) ? <Empty message={`No ${status} subscriptions`} /> : (
+      {(!data?.data?.length) ? <Empty message={t('dash.payments.no_status_subscriptions', { status: statusLabel(status) })} /> : (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Payment method</TableHead>
-                <TableHead>Current period</TableHead>
-                <TableHead>Next billing</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Started</TableHead>
+                <TableHead>{t('dash.payments.col_customer')}</TableHead>
+                <TableHead>{t('dash.payments.col_plan')}</TableHead>
+                <TableHead>{t('dash.payments.col_payment_method')}</TableHead>
+                <TableHead>{t('dash.payments.col_current_period')}</TableHead>
+                <TableHead>{t('dash.payments.col_next_billing')}</TableHead>
+                <TableHead>{t('dash.payments.col_status')}</TableHead>
+                <TableHead>{t('dash.payments.col_started')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -459,7 +466,7 @@ function SubscriptionsTab({ orgId, accessToken }: { orgId: number; accessToken: 
                       <span className="text-sm">{fmtDate(sub.current_period_end)}</span>
                       {sub.cancel_at_period_end && (
                         <span className="text-xs text-red-500 flex items-center gap-1">
-                          <Clock size={10} /> Cancels then
+                          <Clock size={10} /> {t('dash.payments.cancels_then')}
                         </span>
                       )}
                     </div>
@@ -484,10 +491,11 @@ function Empty({ message }: { message: string }) {
 }
 
 function StripeUnavailable() {
+  const { t } = useTranslation()
   return (
     <div className="bg-white border border-gray-200 rounded-xl py-10 text-center space-y-1">
       <AlertCircle size={20} className="mx-auto text-gray-400" />
-      <p className="text-sm text-gray-500">Could not reach Stripe. Check your connection or configuration.</p>
+      <p className="text-sm text-gray-500">{t('dash.payments.stripe_unavailable')}</p>
     </div>
   )
 }
@@ -496,6 +504,7 @@ function StripeUnavailable() {
 // Page
 // ---------------------------------------------------------------------------
 function PaymentsCustomersPage() {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -509,7 +518,7 @@ function PaymentsCustomersPage() {
     <div className="ms-10 me-10 mx-auto space-y-4">
       {/* Inner tab bar */}
       <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-xl w-fit">
-        {TABS.map(({ id, label, icon: Icon }) => (
+        {TABS.map(({ id, labelKey, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
@@ -520,7 +529,7 @@ function PaymentsCustomersPage() {
             }`}
           >
             <Icon size={15} />
-            <span>{label}</span>
+            <span>{t(labelKey)}</span>
           </button>
         ))}
       </div>

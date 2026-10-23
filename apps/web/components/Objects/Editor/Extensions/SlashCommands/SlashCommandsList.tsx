@@ -20,9 +20,11 @@ import {
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { planMeetsRequirement } from '@services/plans/plans'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useTranslation } from 'react-i18next'
 
 const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProps>(
   ({ items, command, currentPlan = 'free' }, ref) => {
+    const { t } = useTranslation()
     const { track } = useLHAnalytics('editor')
     const [selectedIndex, setSelectedIndex] = useState(0)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -94,7 +96,7 @@ const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProp
     if (items.length === 0) {
       return (
         <div className="slash-commands-menu">
-          <div className="slash-commands-empty">No results found</div>
+          <div className="slash-commands-empty">{t('editor.slash.no_results')}</div>
         </div>
       )
     }
@@ -107,7 +109,7 @@ const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProp
         {Array.from(groupedCommands.entries()).map(([category, categoryItems]) => (
           <div key={category} className="slash-commands-category">
             <div className="slash-commands-category-label">
-              {categoryLabels[category]}
+              {t(`editor.slash.category_${category}`, categoryLabels[category])}
             </div>
             {categoryItems.map((item) => {
               const currentIndex = overallIndex
@@ -133,7 +135,7 @@ const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProp
                   <div className={`slash-commands-item-icon ${!available ? 'grayscale' : ''}`}>{item.icon}</div>
                   <div className="slash-commands-item-content">
                     <div className="slash-commands-item-title flex items-center gap-2">
-                      <span className={!available ? 'text-gray-400' : ''}>{item.title}</span>
+                      <span className={!available ? 'text-gray-400' : ''}>{t(`editor.slash.item.${item.id}.title`, item.title)}</span>
                       {item.requiredPlan && (
                         <PlanBadge
                           currentPlan={currentPlan}
@@ -143,7 +145,7 @@ const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProp
                       )}
                     </div>
                     <div className={`slash-commands-item-description ${!available ? 'text-gray-400' : ''}`}>
-                      {item.description}
+                      {t(`editor.slash.item.${item.id}.description`, item.description)}
                     </div>
                   </div>
                 </button>

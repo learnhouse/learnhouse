@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAnalyticsDetail } from './useAnalyticsDashboard'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 
@@ -47,29 +48,30 @@ function formatTime(seconds: number): string {
 }
 
 export default function LearnerEngagementScore({ days = '30' }: { days?: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsDetail('learner_engagement_score', { days })
   const rows = data?.data ?? []
   const users: Record<number, any> = data?.users ?? {}
 
   return (
     <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Learner Engagement Score</h3>
-      <p className="text-xs text-gray-400 mb-4">Top learners by composite engagement</p>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('dash.analytics.learner_engagement_score')}</h3>
+      <p className="text-xs text-gray-400 mb-4">{t('dash.analytics.learner_engagement_score_sub')}</p>
       {isLoading ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('dash.analytics.loading')}</div>
       ) : rows.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">No data yet</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('dash.analytics.no_data_yet')}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
-                <th className="pb-2">Learner</th>
-                <th className="pb-2 text-right">Score</th>
-                <th className="pb-2 text-right">Pages</th>
-                <th className="pb-2 text-right">Activities</th>
-                <th className="pb-2 text-right">Courses</th>
-                <th className="pb-2 text-right">Time</th>
+                <th className="pb-2">{t('dash.analytics.col_learner')}</th>
+                <th className="pb-2 text-right">{t('dash.analytics.col_score')}</th>
+                <th className="pb-2 text-right">{t('dash.analytics.col_pages')}</th>
+                <th className="pb-2 text-right">{t('dash.analytics.col_activities')}</th>
+                <th className="pb-2 text-right">{t('dash.analytics.col_courses')}</th>
+                <th className="pb-2 text-right">{t('dash.analytics.col_time')}</th>
               </tr>
             </thead>
             <tbody>

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import BoardBlockWrapper from './BoardBlockWrapper'
 import { useDragResize } from './useDragResize'
 import data from '@emoji-mart/data'
@@ -8,6 +9,7 @@ import data from '@emoji-mart/data'
 const Picker = lazy(() => import('@emoji-mart/react'))
 
 export default function StickerBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { x, y, emoji } = node.attrs
   const [pickerOpen, setPickerOpen] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
@@ -64,7 +66,7 @@ export default function StickerBlockComponent({ node, updateAttributes, selected
           style={{ top: '100%', left: 0, marginTop: 4 }}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <Suspense fallback={<div className="p-4 text-xs text-neutral-400">Loading…</div>}>
+          <Suspense fallback={<div className="p-4 text-xs text-neutral-400">{t('dash.boards.loading')}</div>}>
             <Picker
               data={data}
               onEmojiSelect={(emojiData: any) => {

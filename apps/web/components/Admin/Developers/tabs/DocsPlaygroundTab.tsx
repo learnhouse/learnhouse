@@ -4,12 +4,14 @@ import { Eye, EyeSlash, CodeSimple } from '@phosphor-icons/react'
 import { ENDPOINTS } from '@components/Admin/Developers/catalog'
 import EndpointList from '@components/Admin/Developers/playground/EndpointList'
 import EndpointDetail from '@components/Admin/Developers/playground/EndpointDetail'
+import { useTranslation } from 'react-i18next'
 
 export default function DocsPlaygroundTab({
   onGoToTokens,
 }: {
   onGoToTokens: () => void
 }) {
+  const { t } = useTranslation()
   const [token, setToken] = useState('')
   const [reveal, setReveal] = useState(false)
   const [selectedId, setSelectedId] = useState<string>(ENDPOINTS[0]?.id ?? '')
@@ -22,31 +24,31 @@ export default function DocsPlaygroundTab({
       <div className="rounded-xl border border-white/[0.08] bg-[#111112] p-4">
         <div className="flex items-center gap-2 mb-2">
           <CodeSimple size={14} weight="bold" className="text-white/60" />
-          <h2 className="text-sm font-semibold text-white">API Token (for testing)</h2>
+          <h2 className="text-sm font-semibold text-white">{t('admin.docs_playground.token_title')}</h2>
         </div>
         <div className="flex items-stretch gap-2">
           <input
             type={reveal ? 'text' : 'password'}
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            placeholder="Enter your API token (lh_sa_…)"
+            placeholder={t('admin.docs_playground.token_placeholder')}
             className="flex-1 bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 font-mono"
           />
           <button
             onClick={() => setReveal((v) => !v)}
-            title={reveal ? 'Hide' : 'Reveal'}
+            title={reveal ? t('admin.common.hide') : t('admin.common.reveal')}
             className="px-3 rounded-lg border border-white/[0.1] text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors"
           >
             {reveal ? <EyeSlash size={16} weight="fill" /> : <Eye size={16} weight="fill" />}
           </button>
         </div>
         <p className="text-[11px] text-white/40 mt-1.5">
-          Authenticates the live Send button below. Never persisted.{' '}
+          {t('admin.docs_playground.token_hint')}{' '}
           <button
             onClick={onGoToTokens}
             className="text-sky-300 hover:text-sky-200 underline underline-offset-2"
           >
-            Mint a token →
+            {t('admin.docs_playground.mint_token')}
           </button>
         </p>
       </div>

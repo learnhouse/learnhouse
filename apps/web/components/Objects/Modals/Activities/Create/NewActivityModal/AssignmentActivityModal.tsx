@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
+import { DateInput } from '@/components/ui/date-input'
 import {
   ALargeSmall,
   Hash,
@@ -204,14 +205,13 @@ function NewAssignment({ submitActivity: _submitActivity, chapterId, course, clo
               </button>
             )}
           </div>
-          <Form.Control asChild>
-            <input
-              onChange={(e) => setDueDate(e.target.value)}
-              value={dueDate}
-              type="date"
-              className={inputClass}
-            />
-          </Form.Control>
+          <DateInput
+            name="due_date"
+            value={dueDate}
+            onChange={setDueDate}
+            className={inputClass}
+            disableClear
+          />
           <p className="text-[10px] text-gray-400">
             {t('dashboard.assignments.modals.create.form.due_date_hint')}
           </p>

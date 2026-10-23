@@ -24,6 +24,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { startPlaygroundSession, iteratePlayground } from '@services/playgrounds/generator'
 import { updatePlayground, Playground } from '@services/playgrounds/playgrounds'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useTranslation } from 'react-i18next'
 
 interface Course {
   course_uuid: string
@@ -80,6 +81,7 @@ export default function PlaygroundEditor({
   accessToken,
   orgCourses = [],
 }: PlaygroundEditorProps) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('dashboard')
   const [playground, setPlayground] = useState(initialPlayground)
@@ -296,7 +298,7 @@ export default function PlaygroundEditor({
           className="flex items-center gap-1.5 text-sm text-neutral-400 hover:text-neutral-700 transition-colors flex-shrink-0 font-medium"
         >
           <ArrowLeft size={14} weight="bold" data-dir-flip />
-          <span>Playgrounds</span>
+          <span>{t('admin.playground_editor.playgrounds')}</span>
         </Link>
 
         <SlashIcon style={{ color: '#d1d5db', flexShrink: 0 }} />
@@ -317,7 +319,7 @@ export default function PlaygroundEditor({
               onBlur={handleTitleBlur}
               onKeyDown={(e) => { if (e.key === 'Enter') titleInputRef.current?.blur() }}
               className="flex-1 text-sm font-semibold text-gray-800 bg-transparent border-0 outline-none focus:ring-0 min-w-0"
-              placeholder="Playground title"
+              placeholder={t('admin.playground_editor.title_placeholder')}
             />
             {!titleFocused && !isSavingTitle && (
               <PencilSimple
@@ -336,11 +338,11 @@ export default function PlaygroundEditor({
           {titleSaveStatus === 'saved' && !isSavingTitle && (
             <span className="flex items-center gap-0.5 text-[10px] font-semibold text-green-500 flex-shrink-0">
               <Check size={10} weight="bold" />
-              Saved
+              {t('admin.playground_editor.saved')}
             </span>
           )}
           {titleDirty && !titleFocused && !isSavingTitle && titleSaveStatus === 'idle' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" title="Unsaved name change" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" title={t('admin.playground_editor.unsaved_name')} />
           )}
         </div>
 
@@ -353,7 +355,7 @@ export default function PlaygroundEditor({
             className="flex items-center gap-1.5 h-9 px-3 py-2 font-black text-sm nice-shadow rounded-lg transition-all ease-linear hover:cursor-pointer bg-neutral-100 hover:bg-neutral-200 text-neutral-600"
           >
             <SlidersHorizontal size={14} weight="bold" />
-            Options
+            {t('admin.playground_editor.options')}
           </button>
 
           <DividerVerticalIcon style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey', opacity: 0.5 }} />
@@ -369,9 +371,9 @@ export default function PlaygroundEditor({
             }`}
           >
             {saveStatus === 'saved' ? (
-              <><Check size={14} weight="bold" />Saved</>
+              <><Check size={14} weight="bold" />{t('admin.playground_editor.saved')}</>
             ) : (
-              <><FloppyDisk size={14} weight="bold" />Save</>
+              <><FloppyDisk size={14} weight="bold" />{t('admin.playground_editor.save')}</>
             )}
           </button>
 
@@ -385,9 +387,9 @@ export default function PlaygroundEditor({
             }`}
           >
             {playground.published ? (
-              <><Eye size={14} weight="bold" />Published</>
+              <><Eye size={14} weight="bold" />{t('admin.playground_editor.published')}</>
             ) : (
-              <><EyeSlash size={14} weight="bold" />Publish</>
+              <><EyeSlash size={14} weight="bold" />{t('admin.playground_editor.publish')}</>
             )}
           </button>
 
@@ -399,7 +401,7 @@ export default function PlaygroundEditor({
             className="flex items-center gap-1.5 h-9 px-3 py-2 font-black text-sm nice-shadow rounded-lg transition-all ease-linear bg-neutral-100 hover:bg-neutral-200 text-neutral-600"
           >
             <ArrowSquareOut size={14} weight="bold" />
-            Preview
+            {t('admin.playground_editor.preview')}
           </Link>
         </div>
       </div>

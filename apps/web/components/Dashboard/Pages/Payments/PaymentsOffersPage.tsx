@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -24,18 +25,19 @@ import CreateOfferForm from './SubComponents/CreateOfferForm';
 import OfferResourcesPanel from './SubComponents/OfferResourcesPanel';
 import { BILLING_INTERVALS, billingIntervalName, billingIntervalSuffix, normalizeBillingInterval } from '@lib/payments/billingInterval';
 
-const editValidationSchema = Yup.object().shape({
-  name: Yup.string().required('Name is required'),
-  description: Yup.string().required('Description is required'),
-  amount: Yup.number().min(0, 'Amount must be positive').required('Amount is required'),
+const buildEditValidationSchema = (t: (key: string) => string) => Yup.object().shape({
+  name: Yup.string().required(t('dash.payments.validation_name_required')),
+  description: Yup.string().required(t('dash.payments.validation_description_required')),
+  amount: Yup.number().min(0, t('dash.payments.validation_amount_positive')).required(t('dash.payments.validation_amount_required')),
   benefits: Yup.string(),
-  currency: Yup.string().required('Currency is required'),
-  offer_type: Yup.string().oneOf(['one_time', 'subscription']).required('Offer type is required'),
-  price_type: Yup.string().oneOf(['fixed_price', 'customer_choice']).required('Price type is required'),
-  billing_interval: Yup.string().oneOf(BILLING_INTERVALS).required('Billing period is required'),
+  currency: Yup.string().required(t('dash.payments.validation_currency_required')),
+  offer_type: Yup.string().oneOf(['one_time', 'subscription']).required(t('dash.payments.validation_offer_type_required')),
+  price_type: Yup.string().oneOf(['fixed_price', 'customer_choice']).required(t('dash.payments.validation_price_type_required')),
+  billing_interval: Yup.string().oneOf(BILLING_INTERVALS).required(t('dash.payments.validation_billing_period_required')),
 });
 
 function PaymentsOffersPage() {
+  const { t } = useTranslation();
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const queryClient = useQueryClient();
@@ -56,9 +58,9 @@ function PaymentsOffersPage() {
     const res = await archiveOffer(org.id, offerId, session.data?.tokens?.access_token);
     queryClient.invalidateQueries({ queryKey: queryKeys.payments.offers(org.id) });
     if (res.status === 200) {
-      toast.success('Offer archived successfully');
+      toast.success(t('dash.payments.offer_archived'));
     } else {
-      toast.error(res.data?.detail || 'Failed to archive offer');
+      toast.error(res.data?.detail || t('dash.payments.offer_archive_failed'));
     }
   };
 
@@ -70,7 +72,7 @@ function PaymentsOffersPage() {
     return <UnconfiguredPaymentsDisclaimer />;
   }
 
-  if (error) return <div className="p-8 text-sm text-red-500">Failed to load offers</div>;
+  if (error) return <div className="p-8 text-sm text-red-500">{t('dash.payments.offers_load_failed')}</div>;
   if (!offers) return (
     <div className="h-full w-full bg-[#f8f8f8]">
       <div className="ps-10 pe-10 mx-auto animate-pulse">
@@ -95,8 +97,8 @@ function PaymentsOffersPage() {
         <Modal
           isDialogOpen={isCreateModalOpen}
           onOpenChange={setIsCreateModalOpen}
-          dialogTitle="Create New Offer"
-          dialogDescription="Add a new offer linked to a UserGroup"
+          dialogTitle={t('dash.payments.create_new_offer')}
+          dialogDescription={t('dash.payments.create_offer_desc')}
           dialogContent={<CreateOfferForm onSuccess={() => setIsCreateModalOpen(false)} />}
         />
 
@@ -104,8 +106,8 @@ function PaymentsOffersPage() {
           <Modal
             isDialogOpen={!!resourcesPanelOffer}
             onOpenChange={(open) => { if (!open) setResourcesPanelOffer(null); }}
-            dialogTitle={`Resources: ${resourcesPanelOffer.name}`}
-            dialogDescription="Resources accessible to enrolled users"
+            dialogTitle={t('dash.payments.resources_title', { name: resourcesPanelOffer.name })}
+            dialogDescription={t('dash.payments.resources_desc')}
             dialogContent={
               <OfferResourcesPanel
                 offerId={resourcesPanelOffer.id}
@@ -131,7 +133,7 @@ function PaymentsOffersPage() {
                       <Badge className="w-fit flex items-center space-x-2" variant="outline">
                         {offer.offer_type === 'subscription' ? <RefreshCcw size={12} /> : <SquareCheck size={12} />}
                         <span className="text-sm">
-                          {offer.offer_type === 'subscription' ? `Subscription · ${billingIntervalName(offer.billing_interval)}` : 'One-time payment'}
+                          {offer.offer_type === 'subscription' ? t('dash.payments.subscription_interval', { interval: billingIntervalName(offer.billing_interval) }) : t('dash.payments.one_time_payment')}
                         </span>
                       </Badge>
                       <h3 className="font-bold text-lg">{offer.name}</h3>
@@ -144,9 +146,9 @@ function PaymentsOffersPage() {
                         <Pencil size={16} />
                       </button>
                       <ConfirmationModal
-                        confirmationButtonText="Archive Offer"
-                        confirmationMessage="Are you sure you want to archive this offer?"
-                        dialogTitle={`Archive ${offer.name}?`}
+                        confirmationButtonText={t('dash.payments.archive_offer')}
+                        confirmationMessage={t('dash.payments.archive_offer_confirm')}
+                        dialogTitle={t('dash.payments.archive_offer_title', { name: offer.name })}
                         dialogTrigger={
                           <button className="text-red-500 hover:text-red-700">
                             <Archive size={16} />
@@ -167,7 +169,7 @@ function PaymentsOffersPage() {
                       <p className="text-gray-600">{offer.description}</p>
                       {offer.benefits && (
                         <div className="mt-2">
-                          <h4 className="font-semibold text-sm">Benefits:</h4>
+                          <h4 className="font-semibold text-sm">{t('dash.payments.benefits_label')}</h4>
                           <p className="text-sm text-gray-600">{offer.benefits}</p>
                         </div>
                       )}
@@ -180,9 +182,9 @@ function PaymentsOffersPage() {
                       className="text-slate-500 hover:text-slate-700 text-sm flex items-center"
                     >
                       {expandedOffers[offer.id] ? (
-                        <><ChevronUp size={16} /><span>Show less</span></>
+                        <><ChevronUp size={16} /><span>{t('dash.payments.show_less')}</span></>
                       ) : (
-                        <><ChevronDown size={16} /><span>Show more</span></>
+                        <><ChevronDown size={16} /><span>{t('dash.payments.show_more')}</span></>
                       )}
                     </button>
                   </div>
@@ -190,7 +192,7 @@ function PaymentsOffersPage() {
                   {offer.payments_group_id && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-xs text-violet-600">
                       <Layers size={12} />
-                      <span>Payment Group #{offer.payments_group_id}</span>
+                      <span>{t('dash.payments.payment_group_number', { id: offer.payments_group_id })}</span>
                     </div>
                   )}
 
@@ -200,12 +202,12 @@ function PaymentsOffersPage() {
                       className="text-sm flex items-center space-x-1 text-indigo-600 hover:text-indigo-800"
                     >
                       <Users size={14} />
-                      <span>Manage Resources</span>
+                      <span>{t('dash.payments.manage_resources')}</span>
                     </button>
                   </div>
 
                   <div className="mt-2 flex items-center justify-between bg-gray-100 rounded-md p-2">
-                    <span className="text-sm text-gray-600">Price:</span>
+                    <span className="text-sm text-gray-600">{t('dash.payments.price_label')}</span>
                     <span className="font-semibold text-lg">
                       {new Intl.NumberFormat('en-US', {
                         style: 'currency',
@@ -225,7 +227,7 @@ function PaymentsOffersPage() {
         {offers.data.length === 0 && (
           <div className="flex mx-auto space-x-2 font-semibold mt-3 text-gray-600 items-center">
             <Info size={20} />
-            <p>No offers available. Create a new offer to get started.</p>
+            <p>{t('dash.payments.no_offers_available')}</p>
           </div>
         )}
 
@@ -235,7 +237,7 @@ function PaymentsOffersPage() {
             className="mb-4 flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-linear-to-bl text-white font-medium from-gray-700 to-gray-900 border border-gray-600 shadow-gray-900/20 nice-shadow transition duration-300 hover:from-gray-600 hover:to-gray-800"
           >
             <Plus size={18} />
-            <span className="text-sm font-bold">Create New Offer</span>
+            <span className="text-sm font-bold">{t('dash.payments.create_new_offer')}</span>
           </button>
         </div>
       </div>
@@ -252,10 +254,12 @@ const EditOfferForm = ({
   onSuccess: () => void;
   onCancel: () => void;
 }) => {
+  const { t } = useTranslation();
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const queryClient = useQueryClient();
   const [currencies, setCurrencies] = useState<{ code: string; name: string }[]>([]);
+  const editValidationSchema = buildEditValidationSchema(t);
 
   useEffect(() => {
     const allCurrencies = currencyCodes.data.map((c) => ({
@@ -283,14 +287,14 @@ const EditOfferForm = ({
     try {
       const res = await updateOffer(org.id, offer.id, values, session.data?.tokens?.access_token);
       if (!res?.success) {
-        toast.error(res?.data?.detail || 'Failed to update offer');
+        toast.error(res?.data?.detail || t('dash.payments.offer_update_failed'));
         return;
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.offers(org.id) });
       onSuccess();
-      toast.success('Offer updated successfully');
+      toast.success(t('dash.payments.offer_updated'));
     } catch {
-      toast.error('Failed to update offer');
+      toast.error(t('dash.payments.offer_update_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -302,19 +306,19 @@ const EditOfferForm = ({
         <Form className="space-y-4">
           <div className="px-1.5 py-2 flex-col space-y-3">
             <div>
-              <Label htmlFor="name">Offer Name</Label>
-              <Field name="name" as={Input} placeholder="Offer Name" />
+              <Label htmlFor="name">{t('dash.payments.offer_name')}</Label>
+              <Field name="name" as={Input} placeholder={t('dash.payments.offer_name')} />
               <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
-              <Field name="description" as={Textarea} placeholder="Offer Description" />
+              <Label htmlFor="description">{t('dash.payments.description')}</Label>
+              <Field name="description" as={Textarea} placeholder={t('dash.payments.offer_description')} />
               <ErrorMessage name="description" component="div" className="text-red-500 text-sm mt-1" />
             </div>
 
             <div>
-              <Label htmlFor="offer_type">Offer Type</Label>
+              <Label htmlFor="offer_type">{t('dash.payments.offer_type')}</Label>
               <Select
                 value={values.offer_type}
                 onValueChange={(value) => {
@@ -324,29 +328,29 @@ const EditOfferForm = ({
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Offer Type" />
+                  <SelectValue placeholder={t('dash.payments.offer_type')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="one_time">One Time</SelectItem>
-                  <SelectItem value="subscription">Subscription</SelectItem>
+                  <SelectItem value="one_time">{t('dash.payments.one_time')}</SelectItem>
+                  <SelectItem value="subscription">{t('dash.payments.subscription')}</SelectItem>
                 </SelectContent>
               </Select>
               <ErrorMessage name="offer_type" component="div" className="text-red-500 text-sm mt-1" />
             </div>
 
             <div>
-              <Label htmlFor="price_type">Price Type</Label>
+              <Label htmlFor="price_type">{t('dash.payments.price_type')}</Label>
               <Select
                 value={values.price_type}
                 onValueChange={(value) => setFieldValue('price_type', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Price Type" />
+                  <SelectValue placeholder={t('dash.payments.price_type')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fixed_price">Fixed Price</SelectItem>
+                  <SelectItem value="fixed_price">{t('dash.payments.fixed_price')}</SelectItem>
                   {values.offer_type !== 'subscription' && (
-                    <SelectItem value="customer_choice">Customer Choice</SelectItem>
+                    <SelectItem value="customer_choice">{t('dash.payments.customer_choice')}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -355,13 +359,13 @@ const EditOfferForm = ({
 
             {values.offer_type === 'subscription' && (
               <div>
-                <Label htmlFor="billing_interval">Billing Period</Label>
+                <Label htmlFor="billing_interval">{t('dash.payments.billing_period')}</Label>
                 <Select
                   value={values.billing_interval}
                   onValueChange={(value) => setFieldValue('billing_interval', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Billing Period" />
+                    <SelectValue placeholder={t('dash.payments.billing_period')} />
                   </SelectTrigger>
                   <SelectContent>
                     {BILLING_INTERVALS.map((interval) => (
@@ -378,24 +382,24 @@ const EditOfferForm = ({
             <div className="flex space-x-2">
               <div className="grow">
                 <Label htmlFor="amount">
-                  {values.price_type === 'fixed_price' ? 'Price' : 'Minimum Amount'}
+                  {values.price_type === 'fixed_price' ? t('dash.payments.price') : t('dash.payments.minimum_amount')}
                 </Label>
                 <Field
                   name="amount"
                   as={Input}
                   type="number"
-                  placeholder={values.price_type === 'fixed_price' ? 'Price' : 'Minimum Amount'}
+                  placeholder={values.price_type === 'fixed_price' ? t('dash.payments.price') : t('dash.payments.minimum_amount')}
                 />
                 <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1" />
               </div>
               <div className="w-1/3">
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="currency">{t('dash.payments.currency')}</Label>
                 <Select
                   value={values.currency}
                   onValueChange={(value) => setFieldValue('currency', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Currency" />
+                    <SelectValue placeholder={t('dash.payments.currency')} />
                   </SelectTrigger>
                   <SelectContent>
                     {currencies.map((c) => (
@@ -410,15 +414,15 @@ const EditOfferForm = ({
             </div>
 
             <div>
-              <Label htmlFor="benefits">Benefits</Label>
-              <Field name="benefits" as={Textarea} placeholder="Comma-separated benefits" />
+              <Label htmlFor="benefits">{t('dash.payments.benefits')}</Label>
+              <Field name="benefits" as={Textarea} placeholder={t('dash.payments.benefits_placeholder')} />
             </div>
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={onCancel}>{t('dash.payments.cancel')}</Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save'}
+              {isSubmitting ? t('dash.payments.saving') : t('dash.payments.save')}
             </Button>
           </div>
         </Form>

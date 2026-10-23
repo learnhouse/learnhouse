@@ -11,6 +11,7 @@ import * as Form from '@radix-ui/react-form';
 import { useFormik } from 'formik';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
 import { useTranslation } from 'react-i18next';
+import { DateInput } from '@/components/ui/date-input';
 
 // Same input class used by the create-assignment modal, so both forms look
 // identical to the user.
@@ -325,14 +326,13 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                         </button>
                     )}
                 </div>
-                <Form.Control asChild>
-                    <input
-                        type="date"
-                        onChange={formik.handleChange}
-                        value={formik.values.due_date}
-                        className={inputClass}
-                    />
-                </Form.Control>
+                <DateInput
+                    name="due_date"
+                    value={formik.values.due_date}
+                    onChange={(v) => formik.setFieldValue('due_date', v, false)}
+                    className={inputClass}
+                    disableClear
+                />
                 <p className="text-[10px] text-gray-400">
                     {t('dashboard.assignments.modals.edit.form.due_date_hint')}
                 </p>

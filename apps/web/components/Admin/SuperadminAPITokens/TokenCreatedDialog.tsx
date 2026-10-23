@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { Copy, Check, Warning } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 
 export interface CreatedToken {
   token: string
@@ -20,6 +21,7 @@ export default function TokenCreatedDialog({
   token: CreatedToken | null
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
   if (!token) return null
@@ -44,14 +46,13 @@ export default function TokenCreatedDialog({
         <div className="px-6 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
             <Warning size={18} weight="fill" className="text-amber-300" />
-            <h2 className="text-base font-semibold text-white">Save this token now</h2>
+            <h2 className="text-base font-semibold text-white">{t('admin.token_created.title')}</h2>
           </div>
         </div>
 
         <div className="px-6 py-5 space-y-4">
           <p className="text-sm text-white/70">
-            This is the only time the full token <strong>{token.name}</strong> will be shown.
-            Store it somewhere secure: you cannot retrieve it later. If you lose it, revoke this token and create a new one.
+            {t('admin.token_created.desc_before')}<strong>{token.name}</strong>{t('admin.token_created.desc_after')}
           </p>
 
           <div className="rounded-lg bg-black/40 border border-white/[0.1] overflow-hidden">
@@ -66,12 +67,12 @@ export default function TokenCreatedDialog({
                 {copied ? (
                   <>
                     <Check size={14} weight="bold" className="text-emerald-300" />
-                    Copied
+                    {t('admin.common.copied')}
                   </>
                 ) : (
                   <>
                     <Copy size={14} weight="fill" />
-                    Copy
+                    {t('admin.common.copy')}
                   </>
                 )}
               </button>
@@ -89,7 +90,7 @@ export default function TokenCreatedDialog({
             onClick={onClose}
             className="px-3.5 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors"
           >
-            I've saved the token
+            {t('admin.token_created.saved_button')}
           </button>
         </div>
       </div>

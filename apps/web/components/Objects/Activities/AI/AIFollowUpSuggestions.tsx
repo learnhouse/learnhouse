@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'motion/react'
 import { Sparkles } from 'lucide-react'
 
@@ -14,6 +15,7 @@ function AIFollowUpSuggestions({
   onSuggestionClick,
   disabled = false,
 }: AIFollowUpSuggestionsProps) {
+  const { t } = useTranslation()
   if (!suggestions || suggestions.length === 0) {
     return null
   }
@@ -22,7 +24,7 @@ function AIFollowUpSuggestions({
     <div className="flex flex-col items-center gap-2 mt-3 mb-2">
       <div className="flex items-center gap-1.5 text-white/40 text-xs">
         <Sparkles size={12} />
-        <span>Follow-up suggestions</span>
+        <span>{t('editor.activities.ai.followup_suggestions')}</span>
       </div>
       <AnimatePresence>
         <div className="flex flex-wrap justify-center gap-2">

@@ -1,9 +1,11 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Model output must not auto-load remote images (prompt-injection exfil), so
 // render markdown images as a plain link instead.
 export function MarkdownImageLink({ src, alt, className }: { src?: unknown; alt?: string; className?: string }) {
-  const label = alt || 'image'
+  const { t } = useTranslation()
+  const label = alt || t('editor.activities.ai.image_label')
   let href: string | null = null
   if (typeof src === 'string') {
     try {

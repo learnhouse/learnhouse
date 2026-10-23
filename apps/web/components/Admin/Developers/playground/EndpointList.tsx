@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react'
 import { CaretDown, MagnifyingGlass } from '@phosphor-icons/react'
 import { ENDPOINTS, CATEGORIES, type EndpointDoc, type HttpMethod } from '@components/Admin/Developers/catalog'
+import { useTranslation } from 'react-i18next'
 
 const METHOD_CLS: Record<HttpMethod, string> = {
   GET: 'bg-emerald-400/10 text-emerald-300 border-emerald-400/20',
@@ -18,6 +19,7 @@ export default function EndpointList({
   selectedId: string
   onSelect: (id: string) => void
 }) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
@@ -54,7 +56,7 @@ export default function EndpointList({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search endpoints…"
+          placeholder={t('admin.endpoint_list.search_placeholder')}
           className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg ps-8 pe-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
         />
       </div>
@@ -125,7 +127,7 @@ export default function EndpointList({
 
         {Object.values(byCategory).every((v) => v.length === 0) && (
           <div className="px-3 py-10 text-center text-xs text-white/40">
-            No endpoints match "{query}"
+            {t('admin.endpoint_list.no_match', { query })}
           </div>
         )}
       </div>

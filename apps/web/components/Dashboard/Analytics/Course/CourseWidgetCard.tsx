@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowsOutSimple, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import {
   Dialog,
@@ -212,6 +213,7 @@ export function PaginationBar({
   next,
   setPage,
 }: ReturnType<typeof usePagination>) {
+  const { t } = useTranslation()
   if (totalPages <= 1) return null
 
   // Build page numbers: show first, last, current ± 1
@@ -227,7 +229,7 @@ export function PaginationBar({
   return (
     <div className="flex items-center justify-between pt-4 border-t border-gray-100">
       <span className="text-xs text-gray-400">
-        {from}–{to} of {total}
+        {t('dash.analytics.pagination_range', { from, to, total })}
       </span>
       <div className="flex items-center gap-1">
         <button

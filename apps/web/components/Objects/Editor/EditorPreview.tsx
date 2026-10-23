@@ -17,6 +17,7 @@ import PDFBlock from './Extensions/PDF/PDFBlock'
 import H5PBlock from './Extensions/H5P/H5PBlock'
 import LibraryBlock from './Extensions/Library/LibraryBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
+import SkyroomBlock from './Extensions/Skyroom/SkyroomBlock'
 import { Table } from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
@@ -97,6 +98,10 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         activity: activity,
       }),
       QuizBlock.configure({
+        editable: false,
+        activity: activity,
+      }),
+      SkyroomBlock.configure({
         editable: false,
         activity: activity,
       }),

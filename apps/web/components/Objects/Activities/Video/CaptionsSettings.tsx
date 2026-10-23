@@ -3,6 +3,9 @@ import React from 'react'
 import { ClosedCaptioning, Plus, X } from '@phosphor-icons/react'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
+
+const CK = 'dashboard.courses.structure.activity.captions'
 
 export interface CaptionsValue {
   enabled: boolean
@@ -22,6 +25,7 @@ export default function CaptionsSettings({
   onChange: (_next: CaptionsValue) => void
   status?: string | null
 }) {
+  const { t } = useTranslation()
   const [customCode, setCustomCode] = React.useState('')
   const [customLabel, setCustomLabel] = React.useState('')
 
@@ -38,7 +42,7 @@ export default function CaptionsSettings({
   const addCustom = () => {
     const code = customCode.trim()
     if (!/^[A-Za-z0-9-]{2,20}$/.test(code)) {
-      toast.error('Enter a valid language code (e.g. sw, es-419)')
+      toast.error(t(`${CK}.invalid_code`))
       return
     }
     if (value.languages.some((l) => l.code === code)) return
@@ -52,7 +56,7 @@ export default function CaptionsSettings({
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-medium text-gray-700">
           <ClosedCaptioning size={18} weight="duotone" className="text-violet-400" />
-          AI Closed Captions
+          {t(`${CK}.title`)}
         </h3>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
@@ -61,24 +65,23 @@ export default function CaptionsSettings({
             onChange={(e) => onChange({ ...value, enabled: e.target.checked })}
             className="rounded border-gray-300 text-black focus:ring-black"
           />
-          <span className="text-sm text-gray-600">Generate with AI</span>
+          <span className="text-sm text-gray-600">{t(`${CK}.generate`)}</span>
         </label>
       </div>
       <p className="text-xs text-gray-400 -mt-1">
-        Transcribes the video and translates captions into the languages you choose. Uses your
-        organization&apos;s AI credits.
+        {t(`${CK}.description`)}
       </p>
 
       {value.enabled && (
         <>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">Spoken language</label>
+            <label className="text-xs font-medium text-gray-500">{t(`${CK}.spoken_language`)}</label>
             <select
               value={value.sourceLang}
               onChange={(e) => onChange({ ...value, sourceLang: e.target.value })}
               className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300"
             >
-              <option value="auto">Auto-detect</option>
+              <option value="auto">{t(`${CK}.auto_detect`)}</option>
               {AVAILABLE_LANGUAGES.map((l) => (
                 <option key={l.code} value={l.code}>{l.nativeName}</option>
               ))}
@@ -86,7 +89,7 @@ export default function CaptionsSettings({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">Caption languages</label>
+            <label className="text-xs font-medium text-gray-500">{t(`${CK}.caption_languages`)}</label>
             <div className="flex flex-wrap gap-1.5">
               {AVAILABLE_LANGUAGES.map((l) => {
                 const on = value.languages.some((c) => c.code === l.code)
@@ -110,20 +113,20 @@ export default function CaptionsSettings({
 
           <div className="flex items-end gap-2">
             <div className="flex-1 space-y-1">
-              <label className="text-[11px] text-gray-400">Custom code</label>
+              <label className="text-[11px] text-gray-400">{t(`${CK}.custom_code`)}</label>
               <input
                 value={customCode}
                 onChange={(e) => setCustomCode(e.target.value)}
-                placeholder="e.g. sw"
+                placeholder={t(`${CK}.custom_code_placeholder`)}
                 className="w-full h-8 px-2 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none"
               />
             </div>
             <div className="flex-1 space-y-1">
-              <label className="text-[11px] text-gray-400">Name</label>
+              <label className="text-[11px] text-gray-400">{t(`${CK}.name`)}</label>
               <input
                 value={customLabel}
                 onChange={(e) => setCustomLabel(e.target.value)}
-                placeholder="e.g. Swahili"
+                placeholder={t(`${CK}.name_placeholder`)}
                 className="w-full h-8 px-2 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none"
               />
             </div>
@@ -132,13 +135,13 @@ export default function CaptionsSettings({
               onClick={addCustom}
               className="inline-flex items-center gap-1 h-8 px-3 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
             >
-              <Plus size={14} /> Add
+              <Plus size={14} /> {t(`${CK}.add`)}
             </button>
           </div>
 
           {value.languages.length > 0 && (
             <div className="space-y-1.5">
-              <label className="text-[11px] text-gray-400">Selected ({value.languages.length})</label>
+              <label className="text-[11px] text-gray-400">{t(`${CK}.selected`, { count: value.languages.length })}</label>
               <div className="flex flex-wrap gap-1.5">
                 {value.languages.map((l) => (
                   <span
@@ -176,7 +179,7 @@ export default function CaptionsSettings({
         </>
       )}
 
-      {status && <p className="text-xs text-gray-400">Status: {status}</p>}
+      {status && <p className="text-xs text-gray-400">{t(`${CK}.status_label`, { status })}</p>}
     </div>
   )
 }

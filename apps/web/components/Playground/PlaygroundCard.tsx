@@ -7,6 +7,7 @@ import { Cube } from '@phosphor-icons/react'
 import { Playground } from '@services/playgrounds/playgrounds'
 import { getPlaygroundThumbnailMediaDirectory } from '@services/media/media'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useTranslation } from 'react-i18next'
 
 interface PlaygroundCardProps {
   playground: Playground
@@ -15,12 +16,13 @@ interface PlaygroundCardProps {
 }
 
 const accessConfig = {
-  public: { icon: Globe, label: 'Public', className: 'bg-green-100 text-green-700' },
-  authenticated: { icon: Lock, label: 'Members', className: 'bg-blue-100 text-blue-700' },
-  restricted: { icon: Users, label: 'Restricted', className: 'bg-amber-100 text-amber-700' },
+  public: { icon: Globe, labelKey: 'admin.playground.access_public', className: 'bg-green-100 text-green-700' },
+  authenticated: { icon: Lock, labelKey: 'admin.playground.access_members', className: 'bg-blue-100 text-blue-700' },
+  restricted: { icon: Users, labelKey: 'admin.playground.access_restricted', className: 'bg-amber-100 text-amber-700' },
 }
 
 export default function PlaygroundCard({ playground, orgslug: _orgslug, canEdit }: PlaygroundCardProps) {
+  const { t } = useTranslation()
   const { track } = useLHAnalytics('learner')
   const access = accessConfig[playground.access_type as keyof typeof accessConfig] || accessConfig.authenticated
   const AccessIcon = access.icon
@@ -77,11 +79,11 @@ export default function PlaygroundCard({ playground, orgslug: _orgslug, canEdit 
         <div className="absolute bottom-2 start-2 flex items-center gap-1.5">
           <span className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full ${access.className}`}>
             <AccessIcon className="w-2.5 h-2.5" />
-            {access.label}
+            {t(access.labelKey)}
           </span>
           {!playground.published && (
             <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-yellow-100 text-yellow-700 rounded-full">
-              Draft
+              {t('admin.playground.draft')}
             </span>
           )}
         </div>
@@ -109,7 +111,7 @@ export default function PlaygroundCard({ playground, orgslug: _orgslug, canEdit 
             onClick={handleOpen}
             className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
           >
-            Open Playground →
+            {t('admin.playground.open_playground')}
           </Link>
         </div>
       </div>

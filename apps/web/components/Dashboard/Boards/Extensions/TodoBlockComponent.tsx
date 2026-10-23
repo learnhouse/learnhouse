@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { CheckSquare, Plus, X } from '@phosphor-icons/react'
 import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
@@ -31,6 +32,7 @@ function genId() {
 }
 
 export default function TodoBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { x, y, width, height, color, zIndex, title, items: savedItems } = node.attrs
   const colorSet = getColorSet(color)
 
@@ -94,7 +96,7 @@ export default function TodoBlockComponent({ node, updateAttributes, selected, d
 
   const commitTitle = () => {
     setEditingTitle(false)
-    const trimmed = titleValue.trim() || 'To-do'
+    const trimmed = titleValue.trim() || t('dash.boards.todo_default_title')
     setTitleValue(trimmed)
     updateAttributes({ title: trimmed })
   }
@@ -262,7 +264,7 @@ export default function TodoBlockComponent({ node, updateAttributes, selected, d
             onChange={(e) => setNewItemText(e.target.value)}
             onKeyDown={handleKeyDown}
             onMouseDown={(e) => e.stopPropagation()}
-            placeholder="Add item..."
+            placeholder={t('dash.boards.add_item_placeholder')}
             className="flex-1 text-[13px] bg-transparent border-none outline-none placeholder:opacity-40"
             style={{ color: colorSet.text }}
           />
@@ -279,7 +281,7 @@ export default function TodoBlockComponent({ node, updateAttributes, selected, d
                 color: 'white',
               }}
             >
-              Add
+              {t('dash.boards.add')}
             </button>
           )}
         </div>

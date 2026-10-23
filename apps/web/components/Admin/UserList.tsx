@@ -8,6 +8,7 @@ import { safeImageSrc } from '@services/security/url'
 import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import {
   User,
   CaretLeft,
@@ -56,6 +57,7 @@ const SUPERADMIN_FILTERS = ['all', 'yes', 'no'] as const
 const PAGE_SIZE = 20
 
 function OrgListTooltip({ orgs }: { orgs: OrgMembership[] }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const btnRef = React.useRef<HTMLButtonElement>(null)
   const [pos, setPos] = useState<{ top: number; left: number; rtl: boolean } | null>(null)
@@ -71,7 +73,7 @@ function OrgListTooltip({ orgs }: { orgs: OrgMembership[] }) {
   }, [open])
 
   if (orgs.length === 0) {
-    return <span className="text-white/25 text-xs">None</span>
+    return <span className="text-white/25 text-xs">{t('admin.common.none')}</span>
   }
 
   return (
@@ -82,7 +84,7 @@ function OrgListTooltip({ orgs }: { orgs: OrgMembership[] }) {
         onMouseLeave={() => setOpen(false)}
         className="text-sm text-white/60 hover:text-white/80 transition-colors underline decoration-dotted underline-offset-2"
       >
-        {orgs.length} org{orgs.length !== 1 ? 's' : ''}
+        {t('admin.user_list.orgs_count', { count: orgs.length })}
       </button>
       {open && pos && (
         <div
@@ -118,6 +120,7 @@ function OrgListTooltip({ orgs }: { orgs: OrgMembership[] }) {
 }
 
 export default function UserList() {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const searchParams = useSearchParams()
@@ -246,18 +249,18 @@ export default function UserList() {
               type="text"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search users..."
+              placeholder={t('admin.user_list.search_placeholder')}
               className="bg-white/[0.05] border border-white/[0.08] rounded-lg ps-8 pe-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-64"
             />
           </div>
           <span className="text-xs text-white/30">
-            {totalCount} user{totalCount !== 1 ? 's' : ''}
+            {t('admin.user_list.user_count', { count: totalCount })}
           </span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-white/40 me-1">Role:</span>
+              <span className="text-xs text-white/40 me-1">{t('admin.user_list.role_label')}</span>
               {SUPERADMIN_FILTERS.map((f) => (
                 <button
                   key={f}
@@ -269,15 +272,15 @@ export default function UserList() {
                   }`}
                 >
                   {f === 'all'
-                    ? 'All'
+                    ? t('admin.user_list.filter_all')
                     : f === 'yes'
-                      ? 'Superadmin'
-                      : 'Regular'}
+                      ? t('admin.user_list.filter_superadmin')
+                      : t('admin.user_list.filter_regular')}
                 </button>
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-white/40">Min orgs:</span>
+              <span className="text-xs text-white/40">{t('admin.user_list.min_orgs_label')}</span>
               {[0, 1, 2, 3, 5].map((n) => (
                 <button
                   key={n}
@@ -288,22 +291,22 @@ export default function UserList() {
                       : 'text-white/40 hover:text-white/60 hover:bg-white/[0.05]'
                   }`}
                 >
-                  {n === 0 ? 'Any' : `${n}+`}
+                  {n === 0 ? t('admin.user_list.min_orgs_any') : `${n}+`}
                 </button>
               ))}
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/40 me-1">Sort:</span>
+            <span className="text-xs text-white/40 me-1">{t('admin.common.sort')}</span>
             {(
               [
-                ['id', 'Default'],
-                ['newest', 'Newest'],
-                ['oldest', 'Oldest'],
-                ['orgs_desc', 'Most orgs'],
-                ['orgs_asc', 'Least orgs'],
-                ['username', 'Username'],
-                ['recently_updated', 'Updated'],
+                ['id', t('admin.user_list.sort_default')],
+                ['newest', t('admin.user_list.sort_newest')],
+                ['oldest', t('admin.user_list.sort_oldest')],
+                ['orgs_desc', t('admin.user_list.sort_orgs_desc')],
+                ['orgs_asc', t('admin.user_list.sort_orgs_asc')],
+                ['username', t('admin.user_list.sort_username')],
+                ['recently_updated', t('admin.user_list.sort_updated')],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -336,7 +339,7 @@ export default function UserList() {
         ) : !users || users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-white/40">
             <User size={48} weight="fill" />
-            <p className="mt-4 text-lg">No users found</p>
+            <p className="mt-4 text-lg">{t('admin.user_list.empty')}</p>
           </div>
         ) : (
           <>
@@ -344,22 +347,22 @@ export default function UserList() {
               <thead>
                 <tr className="border-b border-white/[0.08]">
                   <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
-                    User
+                    {t('admin.user_list.col_user')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
-                    Email
+                    {t('admin.user_list.col_email')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
-                    Organizations
+                    {t('admin.user_list.col_organizations')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
-                    Role
+                    {t('admin.user_list.col_role')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
-                    Created
+                    {t('admin.common.col_created')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
-                    Updated
+                    {t('admin.common.col_updated')}
                   </th>
                 </tr>
               </thead>
@@ -420,11 +423,11 @@ export default function UserList() {
                         {u.is_superadmin ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-amber-400/10 text-amber-400">
                             <ShieldStar size={12} weight="fill" />
-                            Superadmin
+                            {t('admin.user_list.badge_superadmin')}
                           </span>
                         ) : (
                           <span className="text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-white/[0.06] text-white/40">
-                            User
+                            {t('admin.user_list.badge_user')}
                           </span>
                         )}
                       </td>
@@ -432,14 +435,14 @@ export default function UserList() {
                         <span className="text-sm text-white/40">
                           {u.creation_date
                             ? new Date(u.creation_date).toLocaleDateString()
-                            : 'n/a'}
+                            : t('admin.common.na')}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-sm text-white/40">
                           {u.update_date
                             ? new Date(u.update_date).toLocaleDateString()
-                            : 'n/a'}
+                            : t('admin.common.na')}
                         </span>
                       </td>
                     </tr>
@@ -452,7 +455,7 @@ export default function UserList() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4 px-4">
                 <span className="text-xs text-white/30">
-                  Page {page} of {totalPages}
+                  {t('admin.common.page_of', { page, total: totalPages })}
                 </span>
                 <div className="flex items-center gap-1">
                   <button

@@ -4,6 +4,7 @@ import { WarningCircle, Globe, FloppyDisk, SpinnerGap } from '@phosphor-icons/re
 import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { toEmbedUrl } from '@/lib/media/embedUrl'
 import { useUrlEmbedSandbox } from '@/lib/media/useUrlEmbedSandbox'
 import { safeExternalUrl } from '@services/security/url'
@@ -15,6 +16,7 @@ interface EmbedActivityProps {
 }
 
 function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const embedUrl = activity.content?.embed_url || ''
@@ -26,7 +28,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
   const handleSaveUrl = async () => {
     const validatedUrl = safeExternalUrl(editUrl)
     if (!validatedUrl) {
-      toast.error('Enter a valid http:// or https:// URL')
+      toast.error(t('editor.activities.embed.invalid_url'))
       return
     }
     setSaving(true)
@@ -36,10 +38,10 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
         activity.activity_uuid,
         access_token
       )
-      toast.success('Embed URL updated')
+      toast.success(t('editor.activities.embed.url_updated'))
       setError(false)
     } catch {
-      toast.error('Failed to update URL')
+      toast.error(t('editor.activities.embed.update_failed'))
     } finally {
       setSaving(false)
     }
@@ -53,7 +55,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <WarningCircle size={40} className="text-red-400" />
-        <p className="text-sm text-gray-600">No embed URL configured</p>
+        <p className="text-sm text-gray-600">{t('editor.activities.embed.no_url')}</p>
       </div>
     )
   }
@@ -80,7 +82,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
             ) : (
               <FloppyDisk size={16} />
             )}
-            Save
+            {t('editor.activities.embed.save')}
           </button>
         </div>
       )}

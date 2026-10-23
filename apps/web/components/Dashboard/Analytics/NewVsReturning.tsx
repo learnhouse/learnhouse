@@ -11,8 +11,10 @@ import {
   Tooltip,
   Legend,
 } from 'recharts'
+import { useTranslation } from 'react-i18next'
 
 export default function NewVsReturning({ days = '30' }: { days?: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('new_vs_returning', { days })
   const rows = data?.data ?? []
 
@@ -24,12 +26,12 @@ export default function NewVsReturning({ days = '30' }: { days?: string }) {
 
   return (
     <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">New vs Returning Users</h3>
-      <p className="text-xs text-gray-400 mb-4">Growth vs retention health</p>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('dash.analytics.new_vs_returning')}</h3>
+      <p className="text-xs text-gray-400 mb-4">{t('dash.analytics.new_vs_returning_sub')}</p>
       {isLoading ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('dash.analytics.loading')}</div>
       ) : rows.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">No data yet</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('dash.analytics.no_data_yet')}</div>
       ) : (
         <div style={{ height: 200 }}>
           <ResponsiveContainer width="100%" height={200}>
@@ -70,7 +72,7 @@ export default function NewVsReturning({ days = '30' }: { days?: string }) {
               <Area
                 type="monotone"
                 dataKey="new_users"
-                name="New"
+                name={t('dash.analytics.new_users')}
                 stroke="#60a5fa"
                 strokeWidth={2}
                 fill="url(#newUsersGrad)"
@@ -80,7 +82,7 @@ export default function NewVsReturning({ days = '30' }: { days?: string }) {
               <Area
                 type="monotone"
                 dataKey="returning_users"
-                name="Returning"
+                name={t('dash.analytics.returning_users')}
                 stroke="#8b5cf6"
                 strokeWidth={2}
                 fill="url(#retUsersGrad)"

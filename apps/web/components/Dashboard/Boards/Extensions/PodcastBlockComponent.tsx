@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Headphones, ArrowLeft, Play, Pause } from '@phosphor-icons/react'
 import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
@@ -14,6 +15,7 @@ import { getPodcastThumbnailMediaDirectory, getPodcastAudioStreamUrl } from '@se
 import { safePlay } from '@/lib/media/safePlay'
 
 export default function PodcastBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { podcastUuid, episodeUuid, x, y, width, height } = node.attrs
   const boardCtx = editor?.storage?.boardContext
   const orgslug: string = boardCtx?.orgslug || ''
@@ -154,14 +156,14 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
           <div className="flex items-center gap-1">
             <Headphones size={11} className="text-neutral-500" />
             <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-500">
-              Podcast
+              {t('dash.boards.podcast')}
             </span>
           </div>
         </div>
         <div className="px-4 pt-2 pb-4 flex flex-col gap-1.5 overflow-y-auto" style={{ maxHeight: height - 60 }}>
-          {loading && <p className="text-xs text-neutral-500">Loading...</p>}
+          {loading && <p className="text-xs text-neutral-500">{t('dash.boards.loading')}</p>}
           {!loading && podcasts.length === 0 && (
-            <p className="text-xs text-neutral-500">No podcasts found</p>
+            <p className="text-xs text-neutral-500">{t('dash.boards.no_podcasts_found')}</p>
           )}
           {podcasts.map((p) => (
             <button
@@ -210,14 +212,14 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
           <div className="flex items-center gap-1">
             <Headphones size={11} className="text-neutral-500" />
             <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-500">
-              {podcastMeta?.podcast?.name || 'Episodes'}
+              {podcastMeta?.podcast?.name || t('dash.boards.episodes')}
             </span>
           </div>
         </div>
         <div className="px-4 pt-2 pb-4 flex flex-col gap-1.5 overflow-y-auto" style={{ maxHeight: height - 60 }}>
-          {loading && <p className="text-xs text-neutral-500">Loading...</p>}
+          {loading && <p className="text-xs text-neutral-500">{t('dash.boards.loading')}</p>}
           {!loading && episodes.length === 0 && (
-            <p className="text-xs text-neutral-500">No episodes found</p>
+            <p className="text-xs text-neutral-500">{t('dash.boards.no_episodes_found')}</p>
           )}
           {episodes.map((ep) => (
             <button
@@ -256,14 +258,14 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
         <div className="flex items-center gap-1 mb-1">
           <Headphones size={11} className="text-neutral-500" />
           <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-500">
-            Podcast
+            {t('dash.boards.podcast')}
           </span>
         </div>
 
         {/* Episode info */}
         <div className="mb-3">
           <p className="text-sm font-medium text-neutral-100 truncate">
-            {episode?.title || 'Loading...'}
+            {episode?.title || t('dash.boards.loading')}
           </p>
           <p className="text-[10px] text-neutral-500 truncate">{podcastName}</p>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { Warning } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 
 /** Shape of the FastAPI detail for a deactivated EE license. */
 interface EELicenseDetail {
@@ -61,6 +62,7 @@ export function isEERequiredError(err: unknown): err is { status: 403; detail: E
  * no error to show.
  */
 export default function EELicenseError({ error }: { error: unknown }) {
+  const { t } = useTranslation()
   if (!error) return null
   if (isEERequiredError(error)) {
     return (
@@ -69,11 +71,10 @@ export default function EELicenseError({ error }: { error: unknown }) {
           <Warning size={20} weight="fill" className="text-sky-300 mt-0.5 shrink-0" />
           <div className="min-w-0">
             <div className="text-sm font-semibold text-sky-200">
-              Enterprise Edition license required
+              {t('admin.ee_error.required_title')}
             </div>
             <p className="text-xs text-sky-200/80 mt-1.5 leading-relaxed">
-              This endpoint is part of LearnHouse Enterprise Edition and is not
-              available on this deployment.
+              {t('admin.ee_error.required_endpoint_desc')}
             </p>
           </div>
         </div>
@@ -87,39 +88,38 @@ export default function EELicenseError({ error }: { error: unknown }) {
           <Warning size={20} weight="fill" className="text-amber-300 mt-0.5 shrink-0" />
           <div className="min-w-0">
             <div className="text-sm font-semibold text-amber-200">
-              Enterprise features are currently unavailable
+              {t('admin.ee_error.inactive_title')}
             </div>
             <p className="text-xs text-amber-200/80 mt-1.5 leading-relaxed">
-              The EE license check failed (<code className="font-mono">{error.detail.reason}</code>).
-              Every <code className="font-mono">/ee/*</code> endpoint is returning 503, so this
-              page can't load its data.
+              {t('admin.ee_error.inactive_desc_before')}(<code className="font-mono">{error.detail.reason}</code>).
+              {' '}{t('admin.ee_error.inactive_desc_after')}
             </p>
             <details className="mt-3 text-xs text-amber-200/70">
               <summary className="cursor-pointer hover:text-amber-200 select-none">
-                What to check
+                {t('admin.ee_error.what_to_check')}
               </summary>
               <ul className="mt-2 space-y-1 list-disc list-inside leading-relaxed">
                 {error.detail.diagnostics && (
                   <li>
-                    Open{' '}
-                    <code className="font-mono">{error.detail.diagnostics}</code>. It
-                    answers even while the license is inactive, and its{' '}
-                    <code className="font-mono">hint</code> field names the fix.
+                    {t('admin.ee_error.check_diagnostics_before')}{' '}
+                    <code className="font-mono">{error.detail.diagnostics}</code>.
+                    {' '}{t('admin.ee_error.check_diagnostics_after')}{' '}
+                    <code className="font-mono">hint</code>{' '}
+                    {t('admin.ee_error.check_diagnostics_hint_suffix')}
                   </li>
                 )}
                 <li>
-                  For SaaS deployments: confirm{' '}
-                  <code className="font-mono">LEARNHOUSE_SAAS=true</code> is set in the API
-                  environment. SaaS short-circuits the license check.
+                  {t('admin.ee_error.check_saas_before')}{' '}
+                  <code className="font-mono">LEARNHOUSE_SAAS=true</code>{' '}
+                  {t('admin.ee_error.check_saas_after')}
                 </li>
                 <li>
-                  For self-hosted EE: confirm{' '}
-                  <code className="font-mono">LEARNHOUSE_LICENSE_KEY</code> is set and the
-                  license server (or grace window) is reachable.
+                  {t('admin.ee_error.check_selfhosted_before')}{' '}
+                  <code className="font-mono">LEARNHOUSE_LICENSE_KEY</code>{' '}
+                  {t('admin.ee_error.check_selfhosted_after')}
                 </li>
                 <li>
-                  If you have shell access, the API logs carry the same reason
-                  with full detail: <code className="font-mono">[EE] license inactive …</code>
+                  {t('admin.ee_error.check_logs')} <code className="font-mono">[EE] license inactive …</code>
                 </li>
               </ul>
             </details>
@@ -136,7 +136,7 @@ export default function EELicenseError({ error }: { error: unknown }) {
       <div className="flex items-start gap-3">
         <Warning size={20} weight="fill" className="text-red-300 mt-0.5 shrink-0" />
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-red-200">Failed to load</div>
+          <div className="text-sm font-semibold text-red-200">{t('admin.ee_error.generic_failed')}</div>
           <p className="text-xs text-red-200/80 mt-1 leading-relaxed break-words">{msg}</p>
         </div>
       </div>

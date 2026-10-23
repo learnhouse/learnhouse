@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { CheckIcon, Cross2Icon } from '@radix-ui/react-icons'
 
 interface LinkInputTooltipProps {
@@ -8,6 +9,7 @@ interface LinkInputTooltipProps {
 }
 
 const LinkInputTooltip: React.FC<LinkInputTooltipProps> = ({ onSave, onCancel, currentUrl }) => {
+  const { t } = useTranslation()
   const [url, setUrl] = useState(currentUrl || '')
 
   useEffect(() => {
@@ -30,8 +32,8 @@ const LinkInputTooltip: React.FC<LinkInputTooltipProps> = ({ onSave, onCancel, c
       <form onSubmit={handleSubmit} className="flex items-center gap-1">
         <input
           type="text"
-          aria-label="Enter URL"
-          placeholder="Enter URL"
+          aria-label={t('editor.toolbar.enter_url')}
+          placeholder={t('editor.toolbar.enter_url')}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           autoFocus

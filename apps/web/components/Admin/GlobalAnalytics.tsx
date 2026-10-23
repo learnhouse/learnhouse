@@ -7,8 +7,10 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { ChartBar } from '@phosphor-icons/react'
 import { queryKeys } from '@/lib/query/keys'
+import { useTranslation } from 'react-i18next'
 
 export default function GlobalAnalytics({ days = 30 }: { days?: number }) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
 
@@ -26,10 +28,10 @@ export default function GlobalAnalytics({ days = 30 }: { days?: number }) {
       <div className="flex flex-col items-center justify-center py-20 text-white/40">
         <ChartBar size={48} weight="fill" />
         <p className="mt-4 text-lg">
-          {error ? 'Failed to load analytics' : 'No analytics data available'}
+          {error ? t('admin.analytics.load_failed') : t('admin.analytics.no_data')}
         </p>
         <p className="text-sm text-white/25 mt-1">
-          Ensure Tinybird analytics is configured
+          {t('admin.analytics.configure_hint')}
         </p>
       </div>
     )
@@ -69,7 +71,7 @@ export default function GlobalAnalytics({ days = 30 }: { days?: number }) {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-white/25">No data</p>
+              <p className="text-sm text-white/25">{t('admin.analytics.no_data_cell')}</p>
             )}
           </div>
         )

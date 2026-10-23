@@ -12,8 +12,10 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 function AdminTopMenu() {
+  const { t } = useTranslation()
   const session = useLHSession() as any
 
   async function logOutUI() {
@@ -41,9 +43,9 @@ function AdminTopMenu() {
         {/* Logo */}
         <Link className="flex items-center gap-2 transition-opacity hover:opacity-70 shrink-0" href="/admin">
           <img src="/lrn-dash.svg" alt="Learnhouse logo" className="h-7 w-7" />
-          <span className="font-semibold text-sm text-white">Admin</span>
+          <span className="font-semibold text-sm text-white">{t('admin.menu.admin')}</span>
           <span className="text-[9px] font-medium uppercase tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">
-            Superadmin
+            {t('admin.menu.superadmin')}
           </span>
         </Link>
 
@@ -52,22 +54,22 @@ function AdminTopMenu() {
           <NavLink
             href="/admin/organizations"
             icon={<Buildings size={16} weight="fill" />}
-            label="Organizations"
+            label={t('admin.menu.organizations')}
           />
           <NavLink
             href="/admin/users"
             icon={<Users size={16} weight="fill" />}
-            label="Users"
+            label={t('admin.menu.users')}
           />
           <NavLink
             href="/admin/analytics"
             icon={<ChartBar size={16} weight="fill" />}
-            label="Analytics"
+            label={t('admin.menu.analytics')}
           />
           <NavLink
             href="/admin/developers"
             icon={<Key size={16} weight="fill" />}
-            label="Developers"
+            label={t('admin.menu.developers')}
           />
         </nav>
 
@@ -80,7 +82,7 @@ function AdminTopMenu() {
             {avatarUrl ? (
               <img
                 src={avatarUrl}
-                alt="Avatar"
+                alt={t('admin.menu.avatar_alt')}
                 className="w-6 h-6 rounded-full object-cover bg-gray-700"
               />
             ) : (
@@ -95,10 +97,10 @@ function AdminTopMenu() {
           <button
             onClick={logOutUI}
             className="flex items-center gap-1.5 rounded-lg text-red-500 hover:text-red-400 hover:bg-white/[0.08] transition-all px-2 py-1.5"
-            title="Sign Out"
+            title={t('admin.menu.sign_out')}
           >
             <SignOut size={16} weight="fill" data-dir-flip />
-            <span className="text-xs font-medium hidden sm:inline">Sign Out</span>
+            <span className="text-xs font-medium hidden sm:inline">{t('admin.menu.sign_out')}</span>
           </button>
         </div>
       </div>

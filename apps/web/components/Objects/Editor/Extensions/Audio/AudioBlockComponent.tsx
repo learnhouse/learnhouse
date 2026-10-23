@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react'
 import React from 'react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { uploadNewAudioFile, generateAudioBlock, generateScript, type GenerateAudioSpeaker } from '../../../../../services/blocks/Audio/audio'
 import { getAudioBlockStreamUrl, getPodcastAudioStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -127,6 +128,7 @@ function PlaylistPlayer({
   orgUUID: string
   podcastUUID: string
 }) {
+  const { t } = useTranslation()
   const audioRef = React.useRef<HTMLAudioElement>(null)
   const progressRef = React.useRef<HTMLDivElement>(null)
   const [activeEpisode, setActiveEpisode] = React.useState<PodcastEpisode | null>(null)
@@ -204,7 +206,7 @@ function PlaylistPlayer({
       <div className="px-4 pt-3 pb-2 border-b border-gray-100 flex items-center gap-2">
         <Radio weight="duotone" size={14} className="text-gray-400 flex-shrink-0" />
         <span className="text-sm font-semibold text-gray-900">{podcastName}</span>
-        <span className="text-xs text-gray-400 ms-auto">{episodes.length} episodes</span>
+        <span className="text-xs text-gray-400 ms-auto">{t('editor.audio.episodes_count', { count: episodes.length })}</span>
       </div>
 
       {/* Episode list */}
@@ -314,6 +316,7 @@ function PlaylistPlayer({
 // ─── Main AudioBlockComponent ───
 
 function AudioBlockComponent(props: ExtendedNodeViewProps) {
+  const { t } = useTranslation()
   const { node, extension, updateAttributes } = props
   const org = useOrg() as Organization | null
   const { orgslug } = useOrgMembership()
@@ -484,7 +487,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
       setError(null)
       handleUpload(file)
     } else {
-      setError('Please upload a supported audio format (MP3, WAV, OGG, or M4A)')
+      setError(t('editor.audio.unsupported_format'))
     }
   }
 
@@ -505,7 +508,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
       updateAttributes({ blockObject: newBlockObject })
       setTimeout(() => setUploadProgress(0), 1000)
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to upload audio. Please try again.'
+      const errorMessage = err?.message || t('editor.audio.upload_failed')
       setError(errorMessage)
       toast.error(errorMessage)
     } finally {
@@ -516,7 +519,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
   const handleGenerate = async () => {
     if (!access_token) return
     if (!genText.trim()) {
-      setError('Write some text to generate audio from.')
+      setError(t('editor.audio.write_text_prompt'))
       return
     }
     try {
@@ -539,9 +542,9 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
       const newBlockObject: AudioBlockObject = { ...object, source_type: 'upload', size: selectedSize }
       setBlockObject(newBlockObject)
       updateAttributes({ blockObject: newBlockObject })
-      toast.success('Audio generated')
+      toast.success(t('editor.audio.audio_generated'))
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to generate audio. Please try again.'
+      const errorMessage = err?.message || t('editor.audio.generate_failed')
       setError(errorMessage)
       toast.error(errorMessage)
     } finally {
@@ -552,7 +555,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
   const handleGenerateScript = async () => {
     if (!access_token) return
     if (!genText.trim()) {
-      setError('Add a topic or some text to generate a script from.')
+      setError(t('editor.audio.add_topic_prompt'))
       return
     }
     try {
@@ -572,10 +575,10 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
       )
       if (res?.transcript) {
         setGenText(res.transcript)
-        toast.success('Script ready. Review it, then generate audio')
+        toast.success(t('editor.audio.script_ready'))
       }
     } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to generate script. Please try again.'
+      const errorMessage = err?.message || t('editor.audio.script_failed')
       setError(errorMessage)
       toast.error(errorMessage)
     } finally {
@@ -648,7 +651,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
               ) : (
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-6 text-center">
                   <CircleNotch weight="duotone" className="w-5 h-5 animate-spin mx-auto text-gray-400" />
-                  <p className="text-sm text-gray-400 mt-2">Loading playlist...</p>
+                  <p className="text-sm text-gray-400 mt-2">{t('editor.audio.loading_playlist')}</p>
                 </div>
               )
             )}
@@ -666,7 +669,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Headphones weight="duotone" className="text-neutral-400" size={16} />
-            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">Audio</span>
+            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">{t('editor.audio.title')}</span>
           </div>
           {blockObject && (
             <button onClick={handleRemove} className="text-neutral-400 hover:text-red-500 transition-colors">
@@ -681,10 +684,10 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
             {/* Tabs */}
             <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
               {([
-                { key: 'upload' as TabType, icon: UploadSimple, label: 'Upload' },
-                { key: 'generate' as TabType, icon: Sparkle, label: 'Generate' },
-                { key: 'episode' as TabType, icon: MusicNote, label: 'Episode' },
-                { key: 'podcast' as TabType, icon: List, label: 'Playlist' },
+                { key: 'upload' as TabType, icon: UploadSimple, label: t('editor.audio.tab_upload') },
+                { key: 'generate' as TabType, icon: Sparkle, label: t('editor.audio.tab_generate') },
+                { key: 'episode' as TabType, icon: MusicNote, label: t('editor.audio.tab_episode') },
+                { key: 'podcast' as TabType, icon: List, label: t('editor.audio.tab_playlist') },
               ]).map((tab) => (
                 <button
                   key={tab.key}
@@ -721,7 +724,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   {isLoading ? (
                     <div className="space-y-3">
                       <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                      <p className="text-sm text-neutral-600">Uploading... {uploadProgress}%</p>
+                      <p className="text-sm text-neutral-600">{t('editor.audio.uploading', { progress: uploadProgress })}</p>
                       <div className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden">
                         <div className="h-full bg-blue-500 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
                       </div>
@@ -730,8 +733,8 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     <div className="space-y-3">
                       <UploadSimple weight="duotone" className="w-8 h-8 mx-auto text-neutral-400" />
                       <div>
-                        <p className="text-sm font-medium text-neutral-700">Drop an audio file or click to browse</p>
-                        <p className="text-xs text-neutral-500 mt-1">Supports MP3, WAV, OGG, M4A</p>
+                        <p className="text-sm font-medium text-neutral-700">{t('editor.audio.drop_file')}</p>
+                        <p className="text-xs text-neutral-500 mt-1">{t('editor.audio.supports_formats')}</p>
                       </div>
                     </div>
                   )}
@@ -745,9 +748,9 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 {/* Mode toggle */}
                 <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
                   {([
-                    { key: 'tts' as const, icon: Sparkle, label: 'Text to speech' },
-                    { key: 'podcast' as const, icon: Users, label: 'Podcast (2 voices)' },
-                    { key: 'speak' as const, icon: Radio, label: 'Speak' },
+                    { key: 'tts' as const, icon: Sparkle, label: t('editor.audio.mode_tts') },
+                    { key: 'podcast' as const, icon: Users, label: t('editor.audio.mode_podcast') },
+                    { key: 'speak' as const, icon: Radio, label: t('editor.audio.mode_speak') },
                   ]).map((m) => (
                     <button
                       key={m.key}
@@ -770,10 +773,10 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   rows={genMode === 'tts' ? 4 : 5}
                   placeholder={
                     genMode === 'podcast'
-                      ? "What should the podcast be about? Add a topic or a question, or paste notes to turn into a discussion. Then generate a script."
+                      ? t('editor.audio.placeholder_podcast')
                       : genMode === 'speak'
-                        ? "What should the talk be about? e.g. “Explain how photosynthesis works, in detail.” Then generate a script."
-                        : 'Type the text you want spoken aloud…'
+                        ? t('editor.audio.placeholder_speak')
+                        : t('editor.audio.placeholder_tts')
                   }
                   className="w-full rounded-lg border border-neutral-200 p-3 text-sm outline-none focus:border-blue-400 resize-y"
                 />
@@ -781,14 +784,14 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 {/* Voice(s): single voice for text-to-speech and speak; two for podcast */}
                 {genMode !== 'podcast' ? (
                   <label className="block">
-                    <span className="text-xs font-medium text-neutral-600">Voice</span>
+                    <span className="text-xs font-medium text-neutral-600">{t('editor.audio.voice')}</span>
                     <select
                       value={genVoice}
                       onChange={(e) => setGenVoice(e.target.value)}
                       className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400 bg-white"
                     >
                       {TTS_VOICES.map((v) => (
-                        <option key={v.name} value={v.name}>{v.name}: {v.desc}</option>
+                        <option key={v.name} value={v.name}>{v.name}: {t(`editor.audio.voice_desc.${v.name}`)}</option>
                       ))}
                     </select>
                   </label>
@@ -803,7 +806,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                             next[i] = { ...next[i], name: e.target.value }
                             setGenSpeakers(next)
                           }}
-                          placeholder="Speaker name"
+                          placeholder={t('editor.audio.speaker_name')}
                           className="flex-1 rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400"
                         />
                         <select
@@ -822,7 +825,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                       </div>
                     ))}
                     <p className="text-[11px] text-neutral-400">
-                      Add a topic above and generate a discussion, or write the script yourself; each line starts with a speaker name (e.g. “Host:”).
+                      {t('editor.audio.speakers_hint')}
                     </p>
                   </div>
                 )}
@@ -831,36 +834,36 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 <div className="flex gap-2">
                   {genMode !== 'tts' && (
                     <label className="w-28 shrink-0">
-                      <span className="text-xs font-medium text-neutral-600">Length</span>
+                      <span className="text-xs font-medium text-neutral-600">{t('editor.audio.length')}</span>
                       <select
                         value={genMinutes}
                         onChange={(e) => setGenMinutes(Number(e.target.value))}
                         className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400 bg-white"
                       >
                         {LENGTH_OPTIONS.map((m) => (
-                          <option key={m} value={m}>{m} min</option>
+                          <option key={m} value={m}>{t('editor.audio.minutes', { count: m })}</option>
                         ))}
                       </select>
                     </label>
                   )}
                   <label className="flex-1">
-                    <span className="text-xs font-medium text-neutral-600">Language</span>
+                    <span className="text-xs font-medium text-neutral-600">{t('editor.audio.language')}</span>
                     <select
                       value={genLanguage}
                       onChange={(e) => setGenLanguage(e.target.value)}
                       className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400 bg-white"
                     >
                       {TTS_LANGUAGES.map((l) => (
-                        <option key={l} value={l}>{l}</option>
+                        <option key={l} value={l}>{l === 'Auto-detect' ? t('editor.audio.auto_detect') : l}</option>
                       ))}
                     </select>
                   </label>
                   <label className="flex-1">
-                    <span className="text-xs font-medium text-neutral-600">Tone / style</span>
+                    <span className="text-xs font-medium text-neutral-600">{t('editor.audio.tone_style')}</span>
                     <input
                       value={genStyle}
                       onChange={(e) => setGenStyle(e.target.value)}
-                      placeholder="warm and upbeat"
+                      placeholder={t('editor.audio.tone_placeholder')}
                       className="mt-1 w-full rounded-lg border border-neutral-200 p-2 text-sm outline-none focus:border-blue-400"
                     />
                   </label>
@@ -879,9 +882,9 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     )}
                   >
                     {isGeneratingScript ? (
-                      <><CircleNotch size={15} className="animate-spin" /> {genMode === 'podcast' ? 'Writing the discussion…' : 'Writing the talk…'}</>
+                      <><CircleNotch size={15} className="animate-spin" /> {genMode === 'podcast' ? t('editor.audio.writing_discussion') : t('editor.audio.writing_talk')}</>
                     ) : (
-                      <><Sparkle size={15} /> {genMode === 'podcast' ? 'Generate discussion script' : 'Generate talk script'}</>
+                      <><Sparkle size={15} /> {genMode === 'podcast' ? t('editor.audio.generate_discussion_script') : t('editor.audio.generate_talk_script')}</>
                     )}
                   </button>
                 )}
@@ -898,15 +901,15 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   )}
                 >
                   {isGenerating ? (
-                    <><CircleNotch size={15} className="animate-spin" /> Generating…</>
+                    <><CircleNotch size={15} className="animate-spin" /> {t('editor.audio.generating')}</>
                   ) : (
-                    <><Sparkle size={15} /> Generate audio</>
+                    <><Sparkle size={15} /> {t('editor.audio.generate_audio')}</>
                   )}
                 </button>
                 <p className="text-[11px] text-center text-neutral-400">
                   {genMode !== 'tts'
-                    ? `Script ${SCRIPT_CREDIT_COST} credit · Audio ${AI_CREDIT_COST} credits · Powered by Gemini`
-                    : `Uses ${AI_CREDIT_COST} AI credits · Powered by Gemini`}
+                    ? t('editor.audio.credits_script', { script: SCRIPT_CREDIT_COST, audio: AI_CREDIT_COST })
+                    : t('editor.audio.credits_tts', { credits: AI_CREDIT_COST })}
                 </p>
               </div>
             )}
@@ -921,7 +924,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 ) : !selectedPodcast ? (
                   <div className="space-y-1 max-h-60 overflow-y-auto">
                     {podcasts.length === 0 ? (
-                      <p className="text-sm text-neutral-400 text-center py-4">No podcasts found</p>
+                      <p className="text-sm text-neutral-400 text-center py-4">{t('editor.audio.no_podcasts')}</p>
                     ) : (
                       podcasts.map((p) => (
                         <div
@@ -941,7 +944,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                       onClick={() => { setSelectedPodcast(null); setEpisodes([]) }}
                       className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1 outline-none"
                     >
-                      &larr; Back to podcasts
+                      &larr; {t('editor.audio.back_to_podcasts')}
                     </button>
                     <p className="text-sm font-medium text-neutral-700">{selectedPodcast.name}</p>
                     {episodesLoading ? (
@@ -951,7 +954,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                     ) : (
                       <div className="space-y-1 max-h-48 overflow-y-auto">
                         {episodes.length === 0 ? (
-                          <p className="text-sm text-neutral-400 text-center py-4">No episodes found</p>
+                          <p className="text-sm text-neutral-400 text-center py-4">{t('editor.audio.no_episodes')}</p>
                         ) : (
                           episodes.map((ep) => (
                             <div
@@ -981,7 +984,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                 ) : (
                   <div className="space-y-1 max-h-60 overflow-y-auto">
                     {podcasts.length === 0 ? (
-                      <p className="text-sm text-neutral-400 text-center py-4">No podcasts found</p>
+                      <p className="text-sm text-neutral-400 text-center py-4">{t('editor.audio.no_podcasts')}</p>
                     ) : (
                       podcasts.map((p) => (
                         <div
@@ -1018,7 +1021,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
             <div className="flex items-center gap-2 flex-wrap">
               <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
                 <ArrowsLeftRight weight="duotone" size={14} />
-                Size:
+                {t('editor.audio.size')}
               </div>
               {(Object.keys(AUDIO_SIZES) as AudioSize[]).map((size) => (
                 <button
@@ -1032,7 +1035,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                   )}
                 >
                   {size === selectedSize && <CheckCircle weight="duotone" size={14} />}
-                  {AUDIO_SIZES[size].label}
+                  {t(`editor.audio.size_${size}`)}
                 </button>
               ))}
             </div>
@@ -1062,7 +1065,7 @@ function AudioBlockComponent(props: ExtendedNodeViewProps) {
                         <Radio size={14} className="text-gray-400" />
                         <span className="text-sm font-medium text-gray-700">{blockObject.podcast.name}</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">Loading playlist...</p>
+                      <p className="text-xs text-gray-400 mt-1">{t('editor.audio.loading_playlist')}</p>
                     </div>
                   )
                 )}

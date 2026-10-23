@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, memo, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, X, Link as LinkIcon, ExternalLink, GripVertical } from 'lucide-react';
 const Picker = lazy(() => import('@emoji-mart/react'));
 
@@ -31,6 +32,7 @@ const parseItems = (value: string): LearningItem[] => {
 const newId = () => `l_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 
 const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) => {
+  const { t } = useTranslation();
   // Fully controlled: items are always derived from `value`.
   // Tab switches and remounts stay in sync without a local shadow copy.
   const items = useMemo(() => parseItems(value), [value]);
@@ -117,8 +119,8 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
       <div className="rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
         {isEmpty && (
           <div className="px-4 py-8 text-center">
-            <div className="text-sm text-gray-400 mb-1">No learning objectives yet</div>
-            <div className="text-xs text-gray-300">Click “Add” below to create the first one.</div>
+            <div className="text-sm text-gray-400 mb-1">{t('dash.course_edit.no_learning_objectives')}</div>
+            <div className="text-xs text-gray-300">{t('dash.course_edit.click_add_first')}</div>
           </div>
         )}
 
@@ -138,7 +140,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                   onDragStart={onDragStart(item.id)}
                   onDragEnd={() => setDragId(null)}
                   className="shrink-0 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing p-0.5"
-                  title="Drag to reorder"
+                  title={t('dash.course_edit.drag_to_reorder')}
                 >
                   <GripVertical size={14} />
                 </div>
@@ -149,7 +151,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                     type="button"
                     onClick={() => setShowEmojiPicker(showEmojiPicker === item.id ? null : item.id)}
                     className="w-8 h-8 flex items-center justify-center text-xl leading-none rounded-md hover:bg-gray-50 transition-colors select-none"
-                    title="Change emoji"
+                    title={t('dash.course_edit.change_emoji')}
                   >
                     {item.emoji}
                   </button>
@@ -157,7 +159,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                     <div ref={pickerRef} className="absolute z-50 top-9 start-0">
                       <Suspense fallback={
                         <div className="p-3 text-xs text-gray-400 bg-white border border-gray-200 rounded-lg shadow-lg w-[280px]">
-                          Loading…
+                          {t('dash.course_edit.loading')}
                         </div>
                       }>
                         <Picker
@@ -179,7 +181,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                   type="text"
                   value={item.text}
                   onChange={(e) => updateText(item.id, e.target.value)}
-                  placeholder="What will learners achieve?"
+                  placeholder={t('dash.course_edit.learner_achieve_placeholder')}
                   className="flex-1 min-w-0 text-sm text-gray-700 bg-transparent border-none outline-none placeholder:text-gray-300 py-1"
                 />
 
@@ -206,7 +208,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                         setTimeout(() => linkInputRefs.current[item.id]?.focus(), 0);
                       }}
                       className="p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
-                      title="Add link"
+                      title={t('dash.course_edit.add_link')}
                     >
                       <LinkIcon size={13} />
                     </button>
@@ -215,7 +217,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                     type="button"
                     onClick={() => removeItem(item.id)}
                     className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                    title="Remove"
+                    title={t('dash.course_edit.remove')}
                   >
                     <X size={13} />
                   </button>
@@ -243,7 +245,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                         onClick={() => clearLink(item.id)}
                         className="text-[10px] text-gray-400 hover:text-red-500 transition-colors shrink-0"
                       >
-                        Remove
+                        {t('dash.course_edit.remove')}
                       </button>
                     ) : (
                       <button
@@ -251,7 +253,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                         onClick={() => setExpandedLink(null)}
                         className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors shrink-0"
                       >
-                        Close
+                        {t('dash.course_edit.close')}
                       </button>
                     )}
                   </div>
@@ -267,7 +269,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
           className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors rounded-b-xl"
         >
           <Plus size={13} className="text-blue-500 shrink-0" />
-          Add learning objective
+          {t('dash.course_edit.add_learning_objective')}
         </button>
       </div>
 

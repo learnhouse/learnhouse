@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import {
@@ -59,6 +60,7 @@ const PAYMENT_PROVIDERS: PaymentProviderDef[] = [
 // Page
 // ---------------------------------------------------------------------------
 const PaymentsConfigurationPage: React.FC = () => {
+  const { t } = useTranslation();
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -108,16 +110,16 @@ const PaymentsConfigurationPage: React.FC = () => {
       </div>
     </div>
   );
-  if (error) return <div className="p-6 text-sm text-red-500">Error loading payment configuration</div>;
+  if (error) return <div className="p-6 text-sm text-red-500">{t('dash.payments.config_load_error')}</div>;
 
   const configs: any[] = Array.isArray(paymentConfigs) ? paymentConfigs : [];
 
   return (
     <div className="ms-10 me-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
       <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-4">
-        <h1 className="font-bold text-xl text-gray-800">Payments Configuration</h1>
+        <h1 className="font-bold text-xl text-gray-800">{t('dash.payments.config_title')}</h1>
         <h2 className="text-gray-500 text-sm">
-          Connect a payment provider to accept payments from your learners.
+          {t('dash.payments.config_subtitle')}
         </h2>
       </div>
 
@@ -150,6 +152,7 @@ interface ProviderCardProps {
 }
 
 const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, accessToken }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { track } = useLHAnalytics('dashboard');
   const [isConnecting, setIsConnecting] = useState(false);
@@ -171,7 +174,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
       const url = await provider.getConnectUrl(orgId, accessToken, redirectUri);
       window.open(url, '_blank');
     } catch {
-      toast.error(`Failed to connect ${provider.name}`);
+      toast.error(t('dash.payments.provider_connect_failed', { provider: provider.name }));
     } finally {
       setIsConnecting(false);
     }
@@ -181,7 +184,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
     setDisconnectError(null);
     try {
       await deletePaymentConfig(orgId, config.id, accessToken);
-      toast.success(`${provider.name} connection removed`);
+      toast.success(t('dash.payments.provider_connection_removed', { provider: provider.name }));
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.configs(orgId) });
     } catch (err: any) {
       if (err?.status === 409 || err?.response?.status === 409) {
@@ -192,7 +195,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
           return;
         }
       }
-      toast.error(`Failed to remove ${provider.name} connection`);
+      toast.error(t('dash.payments.provider_remove_failed', { provider: provider.name }));
     }
   };
 
@@ -211,21 +214,21 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
                 isConnected ? (
                   <span className="inline-flex items-center space-x-1 text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
                     <CheckCircle2 size={10} />
-                    <span>Connected</span>
+                    <span>{t('dash.payments.connected')}</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center space-x-1 text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
                     <XCircle size={10} />
-                    <span>Authorization required</span>
+                    <span>{t('dash.payments.authorization_required')}</span>
                   </span>
                 )
               ) : (
                 <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                  Not configured
+                  {t('dash.payments.not_configured')}
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-500 mt-0.5">{provider.tagline}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{t(`dash.payments.provider_tagline_${provider.id}`, { defaultValue: provider.tagline })}</p>
             {isConnected && (
               <p className="text-xs text-gray-400 mt-0.5 font-mono truncate max-w-xs">
                 {config.provider_specific_id}
@@ -241,7 +244,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-400 hover:text-gray-600 transition p-1"
-            title={`${provider.name} docs`}
+            title={t('dash.payments.provider_docs', { provider: provider.name })}
           >
             <ExternalLink size={15} />
           </a>
@@ -260,16 +263,16 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
                 ) : (
                   <UnplugIcon size={12} className="me-1" />
                 )}
-                Reconnect
+                {t('dash.payments.reconnect')}
               </Button>
               <ConfirmationModal
-                confirmationButtonText="Remove"
-                confirmationMessage={`Remove the ${provider.name} connection? This will disable payments for this organization.`}
-                dialogTitle={`Remove ${provider.name} Connection`}
+                confirmationButtonText={t('dash.payments.remove')}
+                confirmationMessage={t('dash.payments.remove_provider_message', { provider: provider.name })}
+                dialogTitle={t('dash.payments.remove_provider_title', { provider: provider.name })}
                 dialogTrigger={
                   <Button variant="destructive" size="sm" className="text-xs">
                     <Trash2 size={12} className="me-1" />
-                    Remove
+                    {t('dash.payments.remove')}
                   </Button>
                 }
                 functionToExecute={handleDelete}
@@ -288,7 +291,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
               ) : (
                 <UnplugIcon size={12} className="me-1" />
               )}
-              {config ? 'Complete Setup' : 'Connect'}
+              {config ? t('dash.payments.complete_setup') : t('dash.payments.connect')}
             </Button>
           )}
         </div>
@@ -300,8 +303,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
           <div className="flex items-start space-x-2">
             <AlertTriangle size={16} className="shrink-0 mt-0.5" />
             <p>
-              You have <strong>{disconnectError.count} active subscriber{disconnectError.count !== 1 ? 's' : ''}</strong>.
-              Cancel all subscriptions first via your Stripe dashboard before removing.
+              {t('dash.payments.active_subscribers_warning', { count: disconnectError.count })}
             </p>
           </div>
         </div>
@@ -313,17 +315,16 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
           <div className="flex items-center space-x-1.5">
             <Info size={12} className="shrink-0" />
             <span>
-              Configuration started but OAuth authorization is not complete. Click{' '}
-              <strong>Complete Setup</strong> to finish connecting.
+              {t('dash.payments.oauth_incomplete')}
             </span>
           </div>
           <ConfirmationModal
-            confirmationButtonText="Start Over"
-            confirmationMessage={`This will delete the current ${provider.name} configuration so you can start fresh.`}
-            dialogTitle="Start Over?"
+            confirmationButtonText={t('dash.payments.start_over')}
+            confirmationMessage={t('dash.payments.start_over_message', { provider: provider.name })}
+            dialogTitle={t('dash.payments.start_over_title')}
             dialogTrigger={
               <button className="ms-4 shrink-0 underline hover:text-amber-900 transition-colors cursor-pointer">
-                Start over
+                {t('dash.payments.start_over')}
               </button>
             }
             functionToExecute={handleDelete}

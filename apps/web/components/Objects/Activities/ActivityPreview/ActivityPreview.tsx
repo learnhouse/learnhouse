@@ -109,6 +109,7 @@ const ATOM_BLOCK_LABELS: Record<string, string> = {
   blockAudio: 'Audio',
   blockPDF: 'PDF',
   blockQuiz: 'Quiz',
+  blockSkyroom: 'Live class',
 }
 
 function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElement | null {

@@ -5,6 +5,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useTranslation } from 'react-i18next'
 
 interface OrgItem {
   id: number
@@ -24,6 +25,7 @@ export default function OrgPicker({
   value: number | ''
   onChange: (orgId: number | '') => void
 }) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
 
@@ -47,11 +49,11 @@ export default function OrgPicker({
       className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
     >
       <option value="">
-        {isLoading ? 'Loading…' : items.length === 0 ? 'No organizations yet' : 'Select an organization'}
+        {isLoading ? t('admin.common.loading') : items.length === 0 ? t('admin.org_picker.none_yet') : t('admin.org_picker.select')}
       </option>
       {items.map((o) => (
         <option key={o.id} value={o.id}>
-          {o.name} (id: {o.id}, slug: {o.slug})
+          {t('admin.org_picker.option', { name: o.name, id: o.id, slug: o.slug })}
         </option>
       ))}
     </select>

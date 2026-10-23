@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { NodeViewContent } from '@tiptap/react'
 import { Article } from '@phosphor-icons/react'
 import BoardBlockWrapper from './BoardBlockWrapper'
@@ -9,6 +10,7 @@ import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
 
 export default function BoardCardComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { x, y, width, height, color, zIndex } = node.attrs
 
   const { handleDragStart, handleResizeStart } = useDragResize({
@@ -40,7 +42,7 @@ export default function BoardCardComponent({ node, updateAttributes, selected, d
         <div className="flex items-center gap-1">
           <Article size={11} weight="fill" className="text-neutral-400" />
           <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-400">
-            Card
+            {t('dash.boards.card')}
           </span>
         </div>
       </div>

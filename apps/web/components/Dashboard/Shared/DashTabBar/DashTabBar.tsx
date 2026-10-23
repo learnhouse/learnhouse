@@ -1,5 +1,6 @@
 'use client'
 import React, { useRef, useState, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PlanLevel } from '@services/plans/plans'
@@ -24,6 +25,7 @@ interface DashTabBarProps {
 }
 
 export function DashTabBar({ tabs }: DashTabBarProps) {
+  const { t } = useTranslation()
   const currentPlan = usePlan()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -87,7 +89,7 @@ export function DashTabBar({ tabs }: DashTabBarProps) {
       >
         <button
           onClick={() => scroll('left')}
-          aria-label="Scroll tabs left"
+          aria-label={t('dash.shared.scroll_tabs_left')}
           className="pointer-events-auto flex items-center justify-center w-6 h-6 rounded-full bg-white nice-shadow text-gray-500 hover:text-gray-900 transition-colors duration-150"
         >
           <ChevronLeft size={13} strokeWidth={2.5} />
@@ -162,7 +164,7 @@ export function DashTabBar({ tabs }: DashTabBarProps) {
       >
         <button
           onClick={() => scroll('right')}
-          aria-label="Scroll tabs right"
+          aria-label={t('dash.shared.scroll_tabs_right')}
           className="pointer-events-auto flex items-center justify-center w-6 h-6 rounded-full bg-white nice-shadow text-gray-500 hover:text-gray-900 transition-colors duration-150"
         >
           <ChevronRight size={13} strokeWidth={2.5} />

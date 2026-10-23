@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { NodeViewContent } from '@tiptap/react'
 import { Note } from '@phosphor-icons/react'
 import BoardBlockWrapper from './BoardBlockWrapper'
@@ -22,6 +23,7 @@ function getColorSet(colorName: string) {
 }
 
 export default function NoteBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { x, y, width, height, color, zIndex } = node.attrs
   const colorSet = getColorSet(color)
 
@@ -60,7 +62,7 @@ export default function NoteBlockComponent({ node, updateAttributes, selected, d
             className="text-[9px] font-semibold tracking-wider uppercase"
             style={{ color: colorSet.text }}
           >
-            Note
+            {t('dash.boards.note')}
           </span>
         </div>
 

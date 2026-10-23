@@ -1,8 +1,10 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
 
 export default function CohortRetention({ days = '90' }: { days?: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('cohort_retention', { days })
   const rows = data?.data ?? []
 
@@ -19,19 +21,19 @@ export default function CohortRetention({ days = '90' }: { days?: string }) {
 
   return (
     <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Cohort Retention</h3>
-      <p className="text-xs text-gray-400 mb-4">% users active after signup week</p>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('dash.analytics.cohort_retention')}</h3>
+      <p className="text-xs text-gray-400 mb-4">{t('dash.analytics.cohort_retention_sub')}</p>
       {isLoading ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('dash.analytics.loading')}</div>
       ) : rows.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">No data yet</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('dash.analytics.no_data_yet')}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                <th className="pb-2 text-left">Cohort</th>
-                <th className="pb-2">Size</th>
+                <th className="pb-2 text-left">{t('dash.analytics.col_cohort')}</th>
+                <th className="pb-2">{t('dash.analytics.col_size')}</th>
                 <th className="pb-2">W1</th>
                 <th className="pb-2">W2</th>
                 <th className="pb-2">W4</th>

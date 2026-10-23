@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
+import { useTranslation } from 'react-i18next'
 
 type SuperadminAuthorizationProps = {
   children: React.ReactNode
@@ -11,6 +12,7 @@ type SuperadminAuthorizationProps = {
 const SuperadminAuthorization: React.FC<SuperadminAuthorizationProps> = ({
   children,
 }) => {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const router = useRouter()
   const [isAuthorized, setIsAuthorized] = useState(false)
@@ -59,9 +61,9 @@ const SuperadminAuthorization: React.FC<SuperadminAuthorizationProps> = ({
     return (
       <div className="flex justify-center items-center h-screen bg-[#0f0f10]">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('admin.security.access_denied.title')}</h1>
           <p className="text-white/50">
-            You need superadmin privileges to access this page.
+            {t('admin.security.access_denied.description')}
           </p>
         </div>
       </div>

@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
 import {
   ResponsiveContainer,
@@ -30,16 +31,17 @@ const fullDate = (label: unknown) => {
 }
 
 export default function DAUChart({ days = '30' }: { days?: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('daily_active_users', { days })
   const rows = data?.data ?? []
 
   return (
     <div className="bg-white nice-shadow rounded-xl p-5">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">Daily Active Users</h3>
+      <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('dash.analytics.daily_active_users')}</h3>
       {isLoading ? (
-        <div className="h-[260px] flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-[260px] flex items-center justify-center text-gray-300">{t('dash.analytics.loading')}</div>
       ) : rows.length === 0 ? (
-        <div className="h-[260px] flex items-center justify-center text-gray-300">No data yet</div>
+        <div className="h-[260px] flex items-center justify-center text-gray-300">{t('dash.analytics.no_data_yet')}</div>
       ) : (
         <div style={{ height: 260 }}>
           <ResponsiveContainer width="100%" height={260}>
@@ -74,7 +76,7 @@ export default function DAUChart({ days = '30' }: { days?: string }) {
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
                 labelFormatter={fullDate}
-                formatter={(value = 0) => [`${value.toLocaleString()}`, 'Users']}
+                formatter={(value = 0) => [`${value.toLocaleString()}`, t('dash.analytics.users')]}
               />
               <Area
                 type="monotone"

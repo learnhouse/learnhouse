@@ -55,6 +55,12 @@ export const categoryOrder: SlashCommandCategory[] = [
   'tables',
 ]
 
+// i18n note: this is a plain config module with no React hook context, so the
+// `title`/`description` strings below are kept as English fallbacks and are used
+// for search matching in `filterCommands`. The human-readable labels are translated
+// at the render site (SlashCommandsList.tsx) via t(`editor.slash.item.${id}.title`)
+// and t(`editor.slash.item.${id}.description`). Keep each item's `id` stable since
+// it doubles as the translation key. Command keys/identifiers are never translated.
 export const slashCommands: SlashCommandItem[] = [
   // Text category
   {
@@ -258,6 +264,17 @@ export const slashCommands: SlashCommandItem[] = [
     keywords: ['quiz', 'question', 'test', 'interactive'],
     command: (editor) => {
       editor.chain().focus().insertContent({ type: 'blockQuiz' }).run()
+    },
+  },
+  {
+    id: 'skyroom',
+    title: 'Live Class',
+    description: 'Embed a Skyroom live online class',
+    icon: <Video size={18} />,
+    category: 'interactive',
+    keywords: ['live', 'class', 'skyroom', 'webinar', 'meeting', 'conference', 'online'],
+    command: (editor) => {
+      editor.chain().focus().insertContent({ type: 'blockSkyroom' }).run()
     },
   },
   {

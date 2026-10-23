@@ -6,6 +6,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl, getDeploymentMode } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { X, Buildings } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 
 function slugify(s: string): string {
   return s
@@ -23,6 +24,7 @@ export default function CreateOrganizationModal({
   open: boolean
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
@@ -81,14 +83,14 @@ export default function CreateOrganizationModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data?.detail || `Failed to create organization (${res.status})`)
+        setError(data?.detail || t('admin.create_org.error_failed', { status: res.status }))
         return
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.superadmin.orgs() })
       onClose()
       if (data?.id) router.push(`/admin/organizations/${data.id}`)
     } catch {
-      setError('Network error')
+      setError(t('admin.create_org.error_network'))
     } finally {
       setSubmitting(false)
     }
@@ -106,19 +108,19 @@ export default function CreateOrganizationModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
             <Buildings size={18} weight="fill" className="text-white/70" />
-            <h2 className="text-base font-semibold text-white">New organization</h2>
+            <h2 className="text-base font-semibold text-white">{t('admin.create_org.title')}</h2>
           </div>
           <button
             onClick={onClose}
             className="text-white/40 hover:text-white/80 transition-colors"
-            aria-label="Close"
+            aria-label={t('admin.common.close')}
           >
             <X size={18} weight="bold" />
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          <Field label="Name" required>
+          <Field label={t('admin.create_org.field_name')} required>
             <input
               autoFocus
               type="text"
@@ -130,9 +132,9 @@ export default function CreateOrganizationModal({
           </Field>
 
           <Field
-            label="Slug"
+            label={t('admin.create_org.field_slug')}
             required
-            hint="Lowercase, hyphens. Used in the org URL."
+            hint={t('admin.create_org.field_slug_hint')}
           >
             <input
               type="text"
@@ -146,7 +148,7 @@ export default function CreateOrganizationModal({
             />
           </Field>
 
-          <Field label="Email" required>
+          <Field label={t('admin.create_org.field_email')} required>
             <input
               type="email"
               value={email}
@@ -156,18 +158,18 @@ export default function CreateOrganizationModal({
             />
           </Field>
 
-          <Field label="Description">
+          <Field label={t('admin.create_org.field_description')}>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional"
+              placeholder={t('admin.create_org.field_description_placeholder')}
               rows={2}
               className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 resize-none"
             />
           </Field>
 
           {isSaaS && (
-            <Field label="Plan">
+            <Field label={t('admin.create_org.field_plan')}>
               <select
                 value={plan}
                 onChange={(e) => setPlan(e.target.value)}
@@ -192,14 +194,14 @@ export default function CreateOrganizationModal({
             disabled={submitting}
             className="px-3.5 py-2 text-sm text-white/60 hover:text-white/90 transition-colors disabled:opacity-40"
           >
-            Cancel
+            {t('admin.common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
             className="px-3.5 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Creating…' : 'Create organization'}
+            {submitting ? t('admin.create_org.submitting') : t('admin.create_org.submit')}
           </button>
         </div>
       </div>

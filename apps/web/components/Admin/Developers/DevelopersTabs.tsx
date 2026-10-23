@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Key, BookOpen } from '@phosphor-icons/react'
 import TokensTab from '@components/Admin/Developers/tabs/TokensTab'
 import DocsPlaygroundTab from '@components/Admin/Developers/tabs/DocsPlaygroundTab'
+import { useTranslation } from 'react-i18next'
 
 type Tab = 'tokens' | 'docs'
 
@@ -13,34 +14,34 @@ interface TabDef {
   description: string
 }
 
-const TABS: TabDef[] = [
-  {
-    key: 'tokens',
-    label: 'API Tokens',
-    icon: <Key size={14} weight="fill" />,
-    description: 'Mint, list, and revoke cross-org superadmin API tokens.',
-  },
-  {
-    key: 'docs',
-    label: 'Documentation & Playground',
-    icon: <BookOpen size={14} weight="fill" />,
-    description: 'Browse the superadmin API, then call it live with your token.',
-  },
-]
-
 export default function DevelopersTabs() {
+  const { t } = useTranslation()
+  const TABS: TabDef[] = [
+    {
+      key: 'tokens',
+      label: t('admin.developers.tab_tokens'),
+      icon: <Key size={14} weight="fill" />,
+      description: t('admin.developers.tab_tokens_desc'),
+    },
+    {
+      key: 'docs',
+      label: t('admin.developers.tab_docs'),
+      icon: <BookOpen size={14} weight="fill" />,
+      description: t('admin.developers.tab_docs_desc'),
+    },
+  ]
   const [active, setActive] = useState<Tab>('tokens')
-  const current = TABS.find((t) => t.key === active) ?? TABS[0]
+  const current = TABS.find((tab) => tab.key === active) ?? TABS[0]
 
   return (
     <div>
       <div className="flex items-center gap-1 mb-2 border-b border-white/[0.08]">
-        {TABS.map((t) => {
-          const isActive = active === t.key
+        {TABS.map((tab) => {
+          const isActive = active === tab.key
           return (
             <button
-              key={t.key}
-              onClick={() => setActive(t.key)}
+              key={tab.key}
+              onClick={() => setActive(tab.key)}
               className={
                 'inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm border-b-2 -mb-px transition-colors ' +
                 (isActive
@@ -48,8 +49,8 @@ export default function DevelopersTabs() {
                   : 'border-transparent text-white/40 hover:text-white/70')
               }
             >
-              {t.icon}
-              {t.label}
+              {tab.icon}
+              {tab.label}
             </button>
           )
         })}

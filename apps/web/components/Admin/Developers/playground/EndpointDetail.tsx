@@ -9,6 +9,7 @@ import CodeSnippetTabs from '@components/Admin/Developers/CodeSnippetTabs'
 import type { EndpointDoc, PathParam } from '@components/Admin/Developers/catalog'
 import OrgPicker from '@components/Admin/Developers/playground/OrgPicker'
 import EELicenseError, { isEELicenseInactiveError } from '@components/Admin/EELicenseError'
+import { useTranslation } from 'react-i18next'
 
 const METHOD_CLS: Record<HttpMethod, string> = {
   GET: 'bg-emerald-400/10 text-emerald-300 border-emerald-400/20',
@@ -44,6 +45,7 @@ export default function EndpointDetail({
   endpoint: EndpointDoc
   token: string
 }) {
+  const { t } = useTranslation()
   // ── Path params state ────────────────────────────────────────────────────
   const [pathValues, setPathValues] = useState<Record<string, string>>({})
   // Reset per-endpoint state when the user picks a different endpoint.
@@ -130,7 +132,7 @@ export default function EndpointDetail({
         qc.invalidateQueries({ queryKey: queryKeys.superadmin.apiTokens() })
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Network error')
+      setError(e instanceof Error ? e.message : t('admin.common.error_network'))
     } finally {
       setSending(false)
     }
@@ -157,9 +159,7 @@ export default function EndpointDetail({
           <div className="mt-3 rounded-lg bg-amber-400/[0.06] border border-amber-400/20 px-3 py-2 text-xs text-amber-200/90 flex items-start gap-2">
             <Warning size={14} weight="fill" className="text-amber-300 mt-0.5 shrink-0" />
             <span>
-              <strong>Session auth only.</strong> API tokens cannot call this endpoint
-              (privilege-escalation block). The live Send button will fail with 403 if you use a token;
-              copy the snippet and run it as a logged-in superadmin instead.
+              <strong>{t('admin.endpoint_detail.session_only_title')}</strong> {t('admin.endpoint_detail.session_only_desc')}
             </span>
           </div>
         )}
@@ -168,7 +168,7 @@ export default function EndpointDetail({
       {/* Parameters */}
       {endpoint.pathParams && endpoint.pathParams.length > 0 && (
         <section>
-          <h3 className="text-xs uppercase tracking-wider text-white/40 mb-2 font-semibold">Parameters</h3>
+          <h3 className="text-xs uppercase tracking-wider text-white/40 mb-2 font-semibold">{t('admin.endpoint_detail.parameters')}</h3>
           <div className="space-y-3">
             {endpoint.pathParams.map((p) => (
               <ParamRow
@@ -188,13 +188,13 @@ export default function EndpointDetail({
       {hasBody && (
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs uppercase tracking-wider text-white/40 font-semibold">Request Body (JSON)</h3>
+            <h3 className="text-xs uppercase tracking-wider text-white/40 font-semibold">{t('admin.endpoint_detail.request_body')}</h3>
             {endpoint.sampleBody != null && (
               <button
                 onClick={() => setBodyText(JSON.stringify(endpoint.sampleBody, null, 2))}
                 className="text-[11px] text-white/40 hover:text-white/70 transition-colors"
               >
-                Reset to sample
+                {t('admin.endpoint_detail.reset_sample')}
               </button>
             )}
           </div>
@@ -224,7 +224,7 @@ export default function EndpointDetail({
             placeholder='{"key": "value"}'
           />
           {!parsedBody.ok && (
-            <p className="text-xs text-red-400 mt-1">JSON parse error: {String(parsedBody.value)}</p>
+            <p className="text-xs text-red-400 mt-1">{t('admin.endpoint_detail.json_parse_error', { message: String(parsedBody.value) })}</p>
           )}
         </section>
       )}
@@ -237,16 +237,16 @@ export default function EndpointDetail({
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {sending ? <CircleNotch size={14} className="animate-spin" /> : <PaperPlaneRight size={14} weight="fill" />}
-          {sending ? 'Sending…' : 'Send Request'}
+          {sending ? t('admin.endpoint_detail.sending') : t('admin.endpoint_detail.send_request')}
         </button>
         {tokenMissing && (
           <span className="text-xs text-amber-300/80">
-            Paste a token at the top to enable live calls.
+            {t('admin.endpoint_detail.paste_token')}
           </span>
         )}
         {!tokenMissing && missingParams.length > 0 && (
           <span className="text-xs text-amber-300/80">
-            Fill in: {missingParams.join(', ')}
+            {t('admin.endpoint_detail.fill_in', { params: missingParams.join(', ') })}
           </span>
         )}
       </div>
@@ -255,7 +255,7 @@ export default function EndpointDetail({
       {/* Response */}
       <section>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xs uppercase tracking-wider text-white/40 font-semibold">Response</h3>
+          <h3 className="text-xs uppercase tracking-wider text-white/40 font-semibold">{t('admin.endpoint_detail.response')}</h3>
           {result && (
             <span
               className={
@@ -294,14 +294,14 @@ export default function EndpointDetail({
         ) : (
           <div className="rounded-lg border border-dashed border-white/[0.08] py-10 text-center">
             <BookOpen size={20} weight="fill" className="text-white/20 mx-auto mb-2" />
-            <p className="text-xs text-white/40">Send a request to see the response</p>
+            <p className="text-xs text-white/40">{t('admin.endpoint_detail.response_empty')}</p>
           </div>
         )}
       </section>
 
       {/* Snippets */}
       <section>
-        <h3 className="text-xs uppercase tracking-wider text-white/40 mb-2 font-semibold">Snippet</h3>
+        <h3 className="text-xs uppercase tracking-wider text-white/40 mb-2 font-semibold">{t('admin.endpoint_detail.snippet')}</h3>
         <CodeSnippetTabs snippets={snippets} />
       </section>
     </div>
@@ -317,16 +317,17 @@ function ParamRow({
   value: string
   onChange: (_v: string) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div>
       <div className="flex items-baseline gap-1.5 mb-1">
         <span className="font-mono text-sm text-white">{param.name}</span>
         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider border font-mono bg-white/[0.04] text-white/50 border-white/10">
-          path
+          {t('admin.endpoint_detail.badge_path')}
         </span>
         {param.required && (
           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border font-mono bg-red-400/10 text-red-300 border-red-400/20">
-            required
+            {t('admin.endpoint_detail.badge_required')}
           </span>
         )}
         <span className="text-[11px] text-white/40">{param.type}</span>
@@ -344,7 +345,7 @@ function ParamRow({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={param.type === 'integer' ? '42' : 'value'}
+          placeholder={param.type === 'integer' ? '42' : t('admin.endpoint_detail.value_placeholder')}
           className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 font-mono"
         />
       )}

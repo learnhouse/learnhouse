@@ -2,6 +2,7 @@ import React from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Plus, Trash2, GripVertical, ImageIcon, Link as LinkIcon, Award, Edit, TextIcon, Briefcase, GraduationCap, MapPin, BookOpen } from 'lucide-react'
 import { Input } from "@components/ui/input"
+import { DateInput } from "@components/ui/date-input"
 import { Textarea } from "@components/ui/textarea"
 import { Label } from "@components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
@@ -938,24 +939,22 @@ const ExperienceEditor: React.FC<{
                 <div className="grid grid-cols-[1fr_1fr_auto] gap-4">
                   <div>
                     <Label>{t('user.settings.profile_builder.editors.experience.start_date')}</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={experience.startDate}
-                      onChange={(e) => {
+                      onChange={(v) => {
                         const newExperiences = [...section.experiences]
-                        newExperiences[index] = { ...experience, startDate: e.target.value }
+                        newExperiences[index] = { ...experience, startDate: v }
                         onChange({ ...section, experiences: newExperiences })
                       }}
                     />
                   </div>
                   <div>
                     <Label>{t('user.settings.profile_builder.editors.experience.end_date')}</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={experience.endDate || ''}
-                      onChange={(e) => {
+                      onChange={(v) => {
                         const newExperiences = [...section.experiences]
-                        newExperiences[index] = { ...experience, endDate: e.target.value }
+                        newExperiences[index] = { ...experience, endDate: v }
                         onChange({ ...section, experiences: newExperiences })
                       }}
                       disabled={experience.current}
@@ -1113,24 +1112,22 @@ const EducationEditor: React.FC<{
                 <div className="grid grid-cols-[1fr_1fr_auto] gap-4">
                   <div>
                     <Label>{t('user.settings.profile_builder.editors.education.start_date')}</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={edu.startDate}
-                      onChange={(e) => {
+                      onChange={(v) => {
                         const newEducation = [...section.education]
-                        newEducation[index] = { ...edu, startDate: e.target.value }
+                        newEducation[index] = { ...edu, startDate: v }
                         onChange({ ...section, education: newEducation })
                       }}
                     />
                   </div>
                   <div>
                     <Label>{t('user.settings.profile_builder.editors.education.end_date')}</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={edu.endDate || ''}
-                      onChange={(e) => {
+                      onChange={(v) => {
                         const newEducation = [...section.education]
-                        newEducation[index] = { ...edu, endDate: e.target.value }
+                        newEducation[index] = { ...edu, endDate: v }
                         onChange({ ...section, education: newEducation })
                       }}
                       disabled={edu.current}

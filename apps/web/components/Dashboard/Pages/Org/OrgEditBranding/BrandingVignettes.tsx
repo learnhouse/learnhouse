@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Browser,
   Certificate,
@@ -108,6 +109,7 @@ interface PublicHeaderVignetteProps {
 
 /** The public site header (OrgMenu) plus the first strip of page under it. */
 export function PublicHeaderVignette({ wideUrl, name, primaryColor, font, label, large }: PublicHeaderVignetteProps) {
+  const { t } = useTranslation()
   const tinted = Boolean(primaryColor)
   const light = !tinted || isLightHex(primaryColor!)
   const ink = light ? 'text-gray-800' : 'text-white'
@@ -150,9 +152,9 @@ export function PublicHeaderVignette({ wideUrl, name, primaryColor, font, label,
               className={cn('rounded-md px-3 py-1.5 text-[11px] font-semibold', tinted ? '' : 'bg-black text-white')}
               style={tinted ? { backgroundColor: primaryColor, color: light ? '#111' : '#fff' } : undefined}
             >
-              Sign up
+              {t('dash.branding.sign_up')}
             </span>
-            <span className="text-[11px] text-gray-500">Welcome to {name || 'your school'}</span>
+            <span className="text-[11px] text-gray-500">{t('dash.branding.welcome_to', { name: name || t('dash.branding.your_school') })}</span>
           </div>
         )}
       </div>
@@ -237,6 +239,7 @@ interface OrgSwitcherVignetteProps extends LogoSources {
 
 /** The organization card on the hub's "Your organizations" list. */
 export function OrgSwitcherVignette({ squareUrl, wideUrl, name, description, label }: OrgSwitcherVignetteProps) {
+  const { t } = useTranslation()
   return (
     <Vignette icon={SquaresFour} label={label}>
       <div className="p-3 space-y-2 bg-[#f8f8f8]">
@@ -248,8 +251,8 @@ export function OrgSwitcherVignette({ squareUrl, wideUrl, name, description, lab
             className="h-9 w-9 shrink-0 rounded-lg ring-1 ring-inset ring-black/5"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[10px] font-semibold text-gray-900 leading-tight">{name || 'Your organization'}</p>
-            <p className="mt-0.5 truncate text-[8px] text-gray-400">{description || 'Choose an organization to continue'}</p>
+            <p className="truncate text-[10px] font-semibold text-gray-900 leading-tight">{name || t('dash.branding.your_organization')}</p>
+            <p className="mt-0.5 truncate text-[8px] text-gray-400">{description || t('dash.branding.choose_org')}</p>
           </div>
           <span className="h-3 w-1.5 rounded-full bg-gray-200" />
         </div>
@@ -272,6 +275,7 @@ interface SidebarVignetteProps extends LogoSources {
 
 /** The top of the dashboard's dark left rail (DashLeftMenu). */
 export function SidebarVignette({ squareUrl, wideUrl, name, plan, label }: SidebarVignetteProps) {
+  const { t } = useTranslation()
   return (
     <Vignette icon={SidebarSimple} label={label} size="w-[160px]">
       <div className="flex h-[150px] bg-[#f4f4f5]">
@@ -285,9 +289,9 @@ export function SidebarVignette({ squareUrl, wideUrl, name, plan, label }: Sideb
               insetClassName="p-0.5"
             />
             <div className="min-w-0">
-              <p className="truncate text-[9px] font-semibold leading-tight">{name || 'Your organization'}</p>
+              <p className="truncate text-[9px] font-semibold leading-tight">{name || t('dash.branding.your_organization')}</p>
               <span className="mt-0.5 inline-block rounded bg-white/10 px-1 text-[6px] font-bold uppercase tracking-wider text-white/70">
-                {plan || 'free'}
+                {plan || t('dash.branding.free')}
               </span>
             </div>
           </div>
@@ -317,6 +321,7 @@ interface BrowserTabVignetteProps {
 
 /** A browser tab strip: the favicon is the only thing an admin sees of it. */
 export function BrowserTabVignette({ faviconUrl, name, label }: BrowserTabVignetteProps) {
+  const { t } = useTranslation()
   return (
     <Vignette icon={Browser} label={label} size="w-[260px]">
       <div className="bg-[#dfe1e5]">
@@ -329,7 +334,7 @@ export function BrowserTabVignette({ faviconUrl, name, label }: BrowserTabVignet
                 <span className="h-full w-full rounded-sm bg-gray-300" />
               )}
             </span>
-            <span className="truncate text-[9px] text-gray-700">{name || 'Your organization'}</span>
+            <span className="truncate text-[9px] text-gray-700">{name || t('dash.branding.your_organization')}</span>
             <span className="ms-auto text-[9px] text-gray-400">×</span>
           </div>
           <div className="flex h-6 w-[70px] items-center gap-1.5 rounded-t-lg bg-white/40 px-2">
@@ -358,6 +363,7 @@ interface CertificateVignetteProps {
 
 /** The header of a completion certificate. */
 export function CertificateVignette({ wideUrl, squareUrl, name, label }: CertificateVignetteProps) {
+  const { t } = useTranslation()
   return (
     <Vignette icon={Certificate} label={label}>
       <div className="flex h-[130px] flex-col items-center justify-center gap-1.5 bg-[#fffdf7] p-3 text-center">
@@ -372,10 +378,10 @@ export function CertificateVignette({ wideUrl, squareUrl, name, label }: Certifi
           />
           <span className="h-px w-8 bg-amber-700/30" />
         </div>
-        <p className="text-[7px] uppercase tracking-[0.2em] text-amber-800/70">Certificate of completion</p>
+        <p className="text-[7px] uppercase tracking-[0.2em] text-amber-800/70">{t('dash.branding.certificate_of_completion')}</p>
         <Line w="w-20 bg-gray-300 h-1" />
         <Line w="w-28 bg-gray-200 h-1" />
-        <p className="mt-1 text-[7px] text-gray-400">{name || 'Your organization'}</p>
+        <p className="mt-1 text-[7px] text-gray-400">{name || t('dash.branding.your_organization')}</p>
       </div>
     </Vignette>
   )
@@ -390,6 +396,7 @@ interface ExploreCardVignetteProps {
 
 /** Your organization's card on the LearnHouse explore listing. */
 export function ExploreCardVignette({ thumbnailUrl, name, description, label }: ExploreCardVignetteProps) {
+  const { t } = useTranslation()
   return (
     <Vignette icon={Compass} label={label} size="w-[200px]">
       <div className="bg-[#f8f8f8] p-3">
@@ -398,9 +405,9 @@ export function ExploreCardVignette({ thumbnailUrl, name, description, label }: 
             {thumbnailUrl && <img src={thumbnailUrl} alt="" className="h-full w-full object-cover" />}
           </div>
           <div className="p-2">
-            <p className="truncate text-[10px] font-semibold text-gray-900">{name || 'Your organization'}</p>
+            <p className="truncate text-[10px] font-semibold text-gray-900">{name || t('dash.branding.your_organization')}</p>
             <p className="mt-0.5 line-clamp-2 text-[8px] leading-snug text-gray-400">
-              {description || 'A short description of what you teach.'}
+              {description || t('dash.branding.short_description')}
             </p>
           </div>
         </div>
@@ -418,6 +425,7 @@ interface LinkPreviewVignetteProps {
 
 /** The unfurled link card in chat apps and social feeds. */
 export function LinkPreviewVignette({ thumbnailUrl, name, host, label }: LinkPreviewVignetteProps) {
+  const { t } = useTranslation()
   return (
     <Vignette icon={ChatCircleText} label={label} size="w-[228px]">
       <div className="bg-white p-3">
@@ -427,7 +435,7 @@ export function LinkPreviewVignette({ thumbnailUrl, name, host, label }: LinkPre
         </div>
         <div className="ms-5 rounded-md border-s-2 border-gray-300 bg-[#f4f4f5] p-2">
           <p className="truncate text-[8px] text-gray-400">{host || 'learnhouse.io'}</p>
-          <p className="truncate text-[9px] font-semibold text-gray-900">{name || 'Your organization'}</p>
+          <p className="truncate text-[9px] font-semibold text-gray-900">{name || t('dash.branding.your_organization')}</p>
           <div className="mt-1.5 aspect-[1.91/1] w-full overflow-hidden rounded bg-gray-200">
             {thumbnailUrl && <img src={thumbnailUrl} alt="" className="h-full w-full object-cover" />}
           </div>
@@ -484,6 +492,7 @@ interface FooterLinksVignetteProps {
 
 /** The public footer, where social links and custom links are listed. */
 export function FooterLinksVignette({ socials, links, name, label }: FooterLinksVignetteProps) {
+  const { t } = useTranslation()
   const icons: { key: string; Icon: React.ElementType; color: string }[] = [
     { key: 'twitter', Icon: SiX, color: '#111' },
     { key: 'facebook', Icon: SiFacebook, color: '#1877F2' },
@@ -501,7 +510,7 @@ export function FooterLinksVignette({ socials, links, name, label }: FooterLinks
         <div className="border-t border-gray-200/70 px-4 py-3">
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
             {customLinks.length === 0 && active.length === 0 && (
-              <span className="text-[8px] text-gray-400">Links you add will show here</span>
+              <span className="text-[8px] text-gray-400">{t('dash.branding.links_show_here')}</span>
             )}
             {customLinks.map((k) => (
               <span key={k} className="text-[8px] font-medium text-gray-600">

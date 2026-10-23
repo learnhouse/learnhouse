@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   studentCode: string
@@ -39,12 +40,13 @@ const bgMap = {
 const prefixMap = { same: ' ', added: '+', removed: '-' }
 
 export default function CodeDiff({ studentCode, solutionCode }: Props) {
+  const { t } = useTranslation()
   const lines = diffLines(studentCode, solutionCode)
 
   return (
     <div className="rounded-lg border border-neutral-200 overflow-hidden nice-shadow">
       <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-50 border-b border-neutral-200">
-        <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Your Code vs Solution</span>
+        <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">{t('editor.code.your_code_vs_solution')}</span>
       </div>
       <pre className="text-[11px] font-mono leading-relaxed overflow-x-auto">
         {lines.map((line, i) => (

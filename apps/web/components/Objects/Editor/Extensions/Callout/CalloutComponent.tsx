@@ -10,6 +10,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export type CalloutType = 'info' | 'warning' | 'tip' | 'success' | 'error'
 
@@ -73,6 +74,7 @@ function resolveType(node: any): CalloutType {
 }
 
 function CalloutComponent(props: any) {
+  const { t } = useTranslation()
   const editorState = useEditorProvider() as any
   const isEditable = editorState?.isEditable ?? false
   const [dismissed, setDismissed] = useState(false)
@@ -148,7 +150,7 @@ function CalloutComponent(props: any) {
                 setShowPicker((v) => !v)
               }}
               className={`${config.iconColor} mt-[3px] hover:opacity-70 transition-opacity cursor-pointer`}
-              title="Change callout type"
+              title={t('editor.callout.change_type')}
             >
               <Icon size={18} weight="fill" />
             </button>
@@ -185,7 +187,7 @@ function CalloutComponent(props: any) {
                       }`}
                     >
                       <PickerIcon size={15} weight="fill" className={isActive ? cfg.iconColor : 'text-gray-400'} />
-                      {cfg.label}
+                      {t(`editor.callout.type_${type}`)}
                     </button>
                   )
                 }

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -36,6 +37,7 @@ import UnconfiguredPaymentsDisclaimer from '@components/Pages/Payments/Unconfigu
 // ---------------------------------------------------------------------------
 
 function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number; token: string }) {
+  const { t } = useTranslation();
   const org = useOrg() as any;
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -76,19 +78,19 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
     await addGroupResource(orgId, group.id, resourceUuid, token);
     queryClient.invalidateQueries({ queryKey: resourceQueryKey });
     setPickerOpen(false);
-    toast.success('Course added to group');
+    toast.success(t('dash.payments.course_added_to_group'));
   };
 
   const handleRemove = async (resourceUuid: string) => {
     await removeGroupResource(orgId, group.id, resourceUuid, token);
     queryClient.invalidateQueries({ queryKey: resourceQueryKey });
-    toast.success('Course removed');
+    toast.success(t('dash.payments.course_removed'));
   };
 
   return (
     <div className="space-y-2">
       {rawList.length === 0 ? (
-        <p className="text-xs text-gray-400 italic py-1">No courses yet. Add one below.</p>
+        <p className="text-xs text-gray-400 italic py-1">{t('dash.payments.no_courses_yet')}</p>
       ) : (
         <ul className="space-y-1">
           {rawList.map((uuid: string) => (
@@ -102,7 +104,7 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
               <button
                 onClick={() => handleRemove(uuid)}
                 className="text-gray-300 hover:text-red-500 transition-colors ms-2 shrink-0"
-                title="Remove"
+                title={t('dash.payments.remove')}
               >
                 <X size={13} />
               </button>
@@ -117,20 +119,20 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
           onClick={() => setPickerOpen(true)}
           className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors py-1"
         >
-          <Plus size={12} /> Add course
+          <Plus size={12} /> {t('dash.payments.add_course')}
         </button>
       ) : (
         <div className="border border-gray-200 rounded-lg bg-white shadow-sm">
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-            <span className="text-xs font-semibold text-gray-600">Select a course to add</span>
+            <span className="text-xs font-semibold text-gray-600">{t('dash.payments.select_course_to_add')}</span>
             <button onClick={() => setPickerOpen(false)} className="text-gray-400 hover:text-gray-600">
               <X size={13} />
             </button>
           </div>
           {!coursesData ? (
-            <p className="text-xs text-gray-400 px-3 py-2">Loading…</p>
+            <p className="text-xs text-gray-400 px-3 py-2">{t('dash.payments.loading')}</p>
           ) : available.length === 0 ? (
-            <p className="text-xs text-gray-400 px-3 py-2 italic">All courses are already in this group.</p>
+            <p className="text-xs text-gray-400 px-3 py-2 italic">{t('dash.payments.all_courses_in_group')}</p>
           ) : (
             <ul className="max-h-40 overflow-y-auto divide-y divide-gray-50">
               {available.map((c: any) => {
@@ -160,6 +162,7 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
 // ---------------------------------------------------------------------------
 
 function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; token: string }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const syncQueryKey = ['payments', orgId, 'groups', group.id, 'sync'];
@@ -189,19 +192,19 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
   const handleAdd = async (ugId: number) => {
     await addGroupSync(orgId, group.id, ugId, token);
     queryClient.invalidateQueries({ queryKey: syncQueryKey });
-    toast.success('UserGroup synced. Enrolled users will be auto-added');
+    toast.success(t('dash.payments.usergroup_synced'));
   };
 
   const handleRemove = async (ugId: number) => {
     await removeGroupSync(orgId, group.id, ugId, token);
     queryClient.invalidateQueries({ queryKey: syncQueryKey });
-    toast.success('Sync removed');
+    toast.success(t('dash.payments.sync_removed'));
   };
 
   return (
     <div className="space-y-2">
       <p className="text-xs text-gray-400 leading-relaxed">
-        When a user enrolls, they're automatically added to these groups. When cancelled, they're removed.
+        {t('dash.payments.sync_explanation')}
       </p>
 
       {syncList.length > 0 && (
@@ -210,12 +213,12 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
             <li key={s.usergroup_id} className="flex items-center justify-between bg-orange-50 rounded-lg px-3 py-2">
               <div className="flex items-center gap-2">
                 <Users size={13} className="text-orange-500 shrink-0" />
-                <span className="text-sm font-medium text-gray-800">{s.usergroup_name ?? `Group #${s.usergroup_id}`}</span>
+                <span className="text-sm font-medium text-gray-800">{s.usergroup_name ?? t('dash.payments.group_number', { id: s.usergroup_id })}</span>
               </div>
               <button
                 onClick={() => handleRemove(s.usergroup_id)}
                 className="text-gray-300 hover:text-red-500 transition-colors ms-2 shrink-0"
-                title="Remove sync"
+                title={t('dash.payments.remove_sync')}
               >
                 <X size={13} />
               </button>
@@ -231,7 +234,7 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
             value=""
             onChange={(e) => { if (e.target.value) handleAdd(Number(e.target.value)); }}
           >
-            <option value="">+ Link a UserGroup…</option>
+            <option value="">{t('dash.payments.link_a_usergroup')}</option>
             {available.map((ug: any) => (
               <option key={ug.id} value={ug.id}>{ug.name}</option>
             ))}
@@ -239,7 +242,7 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
           <ChevronDown size={12} className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
         </div>
       ) : syncList.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No UserGroups available to link.</p>
+        <p className="text-xs text-gray-400 italic">{t('dash.payments.no_usergroups_available')}</p>
       ) : null}
     </div>
   );
@@ -254,6 +257,7 @@ function GroupCard({ group, orgId, token, onEdit, onDelete }: {
   onEdit: (g: any) => void;
   onDelete: (id: number) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-white rounded-xl border border-gray-100 nice-shadow overflow-hidden flex flex-col">
       {/* Card header */}
@@ -273,16 +277,16 @@ function GroupCard({ group, orgId, token, onEdit, onDelete }: {
           <button
             onClick={() => onEdit(group)}
             className="p-1.5 rounded-md text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
-            title="Edit"
+            title={t('dash.payments.edit')}
           >
             <Pencil size={13} />
           </button>
           <ConfirmationModal
-            confirmationButtonText="Delete Group"
-            confirmationMessage="All resources and syncs will be removed. Active offers linked to this group will lose their group."
-            dialogTitle={`Delete "${group.name}"?`}
+            confirmationButtonText={t('dash.payments.delete_group')}
+            confirmationMessage={t('dash.payments.delete_group_warning')}
+            dialogTitle={t('dash.payments.delete_group_title', { name: group.name })}
             dialogTrigger={
-              <button className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Delete">
+              <button className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title={t('dash.payments.delete')}>
                 <Trash2 size={13} />
               </button>
             }
@@ -297,7 +301,7 @@ function GroupCard({ group, orgId, token, onEdit, onDelete }: {
         <div className="px-4 py-3">
           <div className="flex items-center gap-1.5 mb-2.5">
             <BookOpen size={12} className="text-indigo-400" />
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Courses</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('dash.payments.courses')}</span>
           </div>
           <GroupResourcePanel group={group} orgId={orgId} token={token} />
         </div>
@@ -306,7 +310,7 @@ function GroupCard({ group, orgId, token, onEdit, onDelete }: {
         <div className="px-4 py-3">
           <div className="flex items-center gap-1.5 mb-2.5">
             <RefreshCcw size={12} className="text-orange-400" />
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Access Groups</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('dash.payments.access_groups')}</span>
           </div>
           <GroupSyncPanel group={group} orgId={orgId} token={token} />
         </div>
@@ -324,13 +328,14 @@ function GroupForm({ initial, onSubmit, onCancel }: {
   onSubmit: (data: { name: string; description: string }) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) { toast.error('Name is required'); return; }
+    if (!name.trim()) { toast.error(t('dash.payments.validation_name_required')); return; }
     setLoading(true);
     try {
       await onSubmit({ name: name.trim(), description: description.trim() });
@@ -342,28 +347,28 @@ function GroupForm({ initial, onSubmit, onCancel }: {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 px-1.5 py-2">
       <div>
-        <Label htmlFor="pg-name">Group Name</Label>
+        <Label htmlFor="pg-name">{t('dash.payments.group_name')}</Label>
         <Input
           id="pg-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Full Access Bundle, Premium Subscription"
+          placeholder={t('dash.payments.group_name_placeholder')}
         />
       </div>
       <div>
-        <Label htmlFor="pg-desc">Description <span className="text-gray-400">(optional)</span></Label>
+        <Label htmlFor="pg-desc">{t('dash.payments.description')} <span className="text-gray-400">{t('dash.payments.optional')}</span></Label>
         <Textarea
           id="pg-desc"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="What resources are included in this group?"
+          placeholder={t('dash.payments.group_desc_placeholder')}
           rows={3}
         />
       </div>
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>{t('dash.payments.cancel')}</Button>
         <Button type="submit" disabled={loading}>
-          {loading ? 'Saving…' : initial ? 'Save Changes' : 'Create Group'}
+          {loading ? t('dash.payments.saving') : initial ? t('dash.payments.save_changes') : t('dash.payments.create_group')}
         </Button>
       </div>
     </form>
@@ -375,6 +380,7 @@ function GroupForm({ initial, onSubmit, onCancel }: {
 // ---------------------------------------------------------------------------
 
 export default function PaymentsGroupsPage() {
+  const { t } = useTranslation();
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const token = session?.data?.tokens?.access_token;
@@ -392,7 +398,7 @@ export default function PaymentsGroupsPage() {
   });
 
   if (!isEnabled && !isLoading) return <UnconfiguredPaymentsDisclaimer />;
-  if (error) return <div className="p-8 text-sm text-red-500">Failed to load groups.</div>;
+  if (error) return <div className="p-8 text-sm text-red-500">{t('dash.payments.groups_load_failed')}</div>;
   if (!groups) return (
     <div className="ms-10 me-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4 animate-pulse">
       <div className="flex items-center justify-between bg-gray-50 px-5 py-3 rounded-md mb-5">
@@ -419,11 +425,11 @@ export default function PaymentsGroupsPage() {
   const handleCreate = async (data: { name: string; description: string }) => {
     const res = await createPaymentsGroup(org.id, data, token);
     if (res.success) {
-      toast.success('Group created');
+      toast.success(t('dash.payments.group_created'));
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.groups(org.id) });
       setIsCreateOpen(false);
     } else {
-      toast.error(res.data?.detail || 'Failed to create group');
+      toast.error(res.data?.detail || t('dash.payments.group_create_failed'));
     }
   };
 
@@ -431,21 +437,21 @@ export default function PaymentsGroupsPage() {
     if (!editingGroup) return;
     const res = await updatePaymentsGroup(org.id, editingGroup.id, data, token);
     if (res.success) {
-      toast.success('Group updated');
+      toast.success(t('dash.payments.group_updated'));
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.groups(org.id) });
       setEditingGroup(null);
     } else {
-      toast.error(res.data?.detail || 'Failed to update group');
+      toast.error(res.data?.detail || t('dash.payments.group_update_failed'));
     }
   };
 
   const handleDelete = async (groupId: number) => {
     const res = await deletePaymentsGroup(org.id, groupId, token);
     if (res.success || res.status === 200) {
-      toast.success('Group deleted');
+      toast.success(t('dash.payments.group_deleted'));
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.groups(org.id) });
     } else {
-      toast.error(res.data?.detail || 'Failed to delete group');
+      toast.error(res.data?.detail || t('dash.payments.group_delete_failed'));
     }
   };
 
@@ -454,8 +460,8 @@ export default function PaymentsGroupsPage() {
       <Modal
         isDialogOpen={isCreateOpen}
         onOpenChange={setIsCreateOpen}
-        dialogTitle="Create Payment Group"
-        dialogDescription="Group courses together for subscriptions or bundles"
+        dialogTitle={t('dash.payments.create_payment_group')}
+        dialogDescription={t('dash.payments.create_payment_group_desc')}
         dialogContent={
           <GroupForm onSubmit={handleCreate} onCancel={() => setIsCreateOpen(false)} />
         }
@@ -463,8 +469,8 @@ export default function PaymentsGroupsPage() {
       <Modal
         isDialogOpen={!!editingGroup}
         onOpenChange={(open) => { if (!open) setEditingGroup(null); }}
-        dialogTitle="Edit Payment Group"
-        dialogDescription="Update group name and description"
+        dialogTitle={t('dash.payments.edit_payment_group')}
+        dialogDescription={t('dash.payments.edit_payment_group_desc')}
         dialogContent={
           editingGroup ? (
             <GroupForm
@@ -479,11 +485,11 @@ export default function PaymentsGroupsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between bg-gray-50 px-5 py-3 rounded-md mb-5">
         <div className="-space-y-0.5">
-          <h1 className="font-bold text-xl text-gray-800">Payment Groups</h1>
-          <p className="text-gray-500 text-sm">Bundle courses together for subscriptions or multi-course offers.</p>
+          <h1 className="font-bold text-xl text-gray-800">{t('dash.payments.payment_groups')}</h1>
+          <p className="text-gray-500 text-sm">{t('dash.payments.payment_groups_subtitle')}</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)} size="sm">
-          <Plus size={14} className="me-1.5" /> New Group
+          <Plus size={14} className="me-1.5" /> {t('dash.payments.new_group')}
         </Button>
       </div>
 
@@ -492,12 +498,12 @@ export default function PaymentsGroupsPage() {
           <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mx-auto mb-3">
             <Layers size={22} className="text-indigo-300" />
           </div>
-          <p className="font-semibold text-gray-600 mb-1">No groups yet</p>
+          <p className="font-semibold text-gray-600 mb-1">{t('dash.payments.no_groups_yet')}</p>
           <p className="text-sm text-gray-400 mb-4 max-w-xs mx-auto">
-            Groups let you attach multiple courses to a single offer, perfect for subscriptions or bundles.
+            {t('dash.payments.no_groups_description')}
           </p>
           <Button onClick={() => setIsCreateOpen(true)} variant="outline" size="sm">
-            <Plus size={13} className="me-1.5" /> Create your first group
+            <Plus size={13} className="me-1.5" /> {t('dash.payments.create_first_group')}
           </Button>
         </div>
       ) : (
