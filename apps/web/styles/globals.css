@@ -291,6 +291,22 @@
     font-family: var(--font-arabic), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   }
 
+  /* Persian is set in Vazirmatn, not Tajawal. The [dir='rtl'] rule above
+     would otherwise hand Persian the Arabic face; this rule comes after it and
+     is equally specific, so Vazirmatn wins for Persian by source order while
+     Arabic keeps Tajawal. Same reasoning as the Arabic block: forced with
+     !important to beat the org's inline custom font, and carries a Latin subset
+     so mixed Persian screens stay in one typeface. */
+  :lang(fa),
+  :lang(fa) body,
+  :lang(fa) input,
+  :lang(fa) textarea,
+  :lang(fa) select,
+  :lang(fa) button,
+  :lang(fa) .lh-org-font-root {
+    font-family: var(--font-persian), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  }
+
   a {
     color: inherit;
     text-decoration: none;
@@ -508,6 +524,22 @@
   :lang(ar) body,
   :lang(ar) .lh-org-font-root {
     font-family: var(--font-arabic), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  }
+
+  /* Persian is set in Vazirmatn, not Tajawal. The [dir='rtl'] rule above
+     would otherwise hand Persian the Arabic face; this rule comes after it and
+     is equally specific, so Vazirmatn wins for Persian by source order while
+     Arabic keeps Tajawal. Same reasoning as the Arabic block: forced with
+     !important to beat the org's inline custom font, and carries a Latin subset
+     so mixed Persian screens stay in one typeface. */
+  :lang(fa),
+  :lang(fa) body,
+  :lang(fa) input,
+  :lang(fa) textarea,
+  :lang(fa) select,
+  :lang(fa) button,
+  :lang(fa) .lh-org-font-root {
+    font-family: var(--font-persian), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   }
 
   /* Arabic has deep descenders (ج ح خ ع غ) and stacked diacritics that get

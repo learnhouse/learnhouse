@@ -1,7 +1,7 @@
 import '../styles/globals.css'
 import React from 'react'
 import Providers from '@components/Providers'
-import { Wix_Madefor_Text, Tajawal } from 'next/font/google'
+import { Wix_Madefor_Text, Tajawal, Vazirmatn } from 'next/font/google'
 
 const wixMadeforText = Wix_Madefor_Text({
   subsets: ['latin'],
@@ -28,6 +28,20 @@ const tajawal = Tajawal({
   variable: '--font-arabic',
 })
 
+// Tajawal is an Arabic-script face but is tuned for Arabic, not Persian: it
+// lacks the Persian forms of some letters and does not cover the Persian
+// digits and punctuation as naturally. Vazirmatn is the Persian face for the
+// whole product, forced whenever the UI is Persian (see globals.css). It ships
+// a Latin subset too, so a mixed Persian screen stays in one typeface.
+//
+// Vazirmatn is a variable font exposing weights 100-900, so standard weight
+// utilities (font-medium, font-semibold, font-bold) all resolve exactly.
+const vazirmatn = Vazirmatn({
+  subsets: ['arabic', 'latin'],
+  display: 'swap',
+  variable: '--font-persian',
+})
+
 export default function RootLayout({
   children,
 }: {
@@ -39,7 +53,7 @@ export default function RootLayout({
   // no-JS baseline for crawlers; the script overwrites it for everyone else.
   return (
     <html
-      className={`${wixMadeforText.variable} ${tajawal.variable}`}
+      className={`${wixMadeforText.variable} ${tajawal.variable} ${vazirmatn.variable}`}
       lang="en"
       suppressHydrationWarning
     >
