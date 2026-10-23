@@ -29,6 +29,57 @@ class Judge0Config(BaseModel):
     client_secret: str | None
 
 
+class SkyroomConfig(BaseModel):
+    # Skyroom web conferencing / live-class integration (https://www.skyroom.online).
+    # The API key is a ~50 char token that is itself part of the request URL:
+    #   https://www.skyroom.online/skyroom/api/{api_key}
+    # `api_url` is the base host (without the key); `api_key` is appended per request.
+    api_url: str
+    api_key: str | None
+
+
+class IranKishConfig(BaseModel):
+    # IranKish (Shaparak) Internet Payment Gateway (IPG) integration.
+    # Docs: docs/irankish/IPG_TechnicalGuide.V11.pdf
+    #
+    # `base_url` is the Shaparak host (default https://ikc.shaparak.ir). The three
+    # credentials below are issued by IranKish when a terminal is provisioned:
+    #   - terminal_id   : 8-digit terminal number (shaparak "terminalId").
+    #   - acceptor_id   : 15-digit acceptor/merchant id ("acceptorId").
+    #   - pass_phrase   : the 16-char pass phrase used to build the base string
+    #                     that goes into the AES-encrypted digital envelope.
+    #   - public_key    : the RSA public key (PEM) the gateway hands the merchant;
+    #                     used to encrypt the AES key + hash in the digital envelope.
+    # The integration is auto-enabled when all four are present.
+    base_url: str
+    terminal_id: str | None
+    acceptor_id: str | None
+    pass_phrase: str | None
+    public_key: str | None
+
+
+class ZarinPalConfig(BaseModel):
+    # ZarinPal payment gateway (REST API v4) integration.
+    # Docs: https://www.zarinpal.com/docs/paymentGateway/
+    #
+    # Flow: POST merchant_id+amount+callback_url to payment/request.json to get
+    # an `authority`, redirect the buyer to StartPay/{authority}, then POST
+    # merchant_id+amount+authority to payment/verify.json to settle.
+    #
+    #   - merchant_id : the 36-char merchant UUID issued by ZarinPal; the only
+    #                   credential required to talk to the gateway.
+    #   - base_url    : the API host. Defaults to the production host
+    #                   (https://payment.zarinpal.com). Point it at the sandbox
+    #                   (https://sandbox.zarinpal.com) for testing.
+    #   - start_pay_base_url : the host of the hosted payment page the buyer is
+    #                   redirected to (defaults to https://www.zarinpal.com for
+    #                   production, https://sandbox.zarinpal.com for sandbox).
+    # The integration is auto-enabled when `merchant_id` is present.
+    merchant_id: str | None
+    base_url: str
+    start_pay_base_url: str
+
+
 class GeneralConfig(BaseModel):
     development_mode: bool
     sentry_config: SentryConfig
@@ -157,6 +208,9 @@ class LearnHouseConfig(BaseModel):
     payments_config: InternalPaymentsConfig
     tinybird_config: TinybirdConfig | None
     judge0_config: Judge0Config | None
+    skyroom_config: SkyroomConfig | None
+    irankish_config: IranKishConfig | None
+    zarinpal_config: ZarinPalConfig | None
 
 
 def _env_bool(env_value, yaml_value):
@@ -560,6 +614,122 @@ def get_learnhouse_config() -> LearnHouseConfig:
             client_secret=judge0_client_secret,
         )
 
+    # Skyroom config, auto-enabled when an API key is set. The base host defaults
+    # to the public Skyroom endpoint and is only overridable for self-hosted /
+    # white-label deployments.
+    env_skyroom_api_url = os.environ.get("LEARNHOUSE_SKYROOM_API_URL")
+    env_skyroom_api_key = os.environ.get("LEARNHOUSE_SKYROOM_API_KEY")
+
+    skyroom_api_url = (
+        env_skyroom_api_url
+        or yaml_config.get("skyroom_config", {}).get("api_url", "")
+        or "https://www.skyroom.online"
+    )
+    skyroom_api_key = env_skyroom_api_key or yaml_config.get("skyroom_config", {}).get("api_key")
+
+    skyroom_config = None
+    if skyroom_api_key:
+        skyroom_config = SkyroomConfig(
+            api_url=skyroom_api_url.rstrip("/"),
+            api_key=skyroom_api_key,
+        )
+
+    # IranKish (Shaparak) IPG config, auto-enabled when the terminal credentials
+    # are all present. The base host defaults to the public Shaparak endpoint and
+    # is only overridable for sandbox / alternate deployments.
+    env_irankish_base_url = os.environ.get("LEARNHOUSE_IRANKISH_BASE_URL")
+    env_irankish_terminal_id = os.environ.get("LEARNHOUSE_IRANKISH_TERMINAL_ID")
+    env_irankish_acceptor_id = os.environ.get("LEARNHOUSE_IRANKISH_ACCEPTOR_ID")
+    env_irankish_pass_phrase = os.environ.get("LEARNHOUSE_IRANKISH_PASS_PHRASE")
+    env_irankish_public_key = os.environ.get("LEARNHOUSE_IRANKISH_PUBLIC_KEY")
+
+    _yaml_irankish = yaml_config.get("irankish_config", {}) or {}
+    irankish_base_url = (
+        env_irankish_base_url
+        or _yaml_irankish.get("base_url", "")
+        or "https://ikc.shaparak.ir"
+    )
+    irankish_terminal_id = env_irankish_terminal_id or _yaml_irankish.get("terminal_id")
+    irankish_acceptor_id = env_irankish_acceptor_id or _yaml_irankish.get("acceptor_id")
+    irankish_pass_phrase = env_irankish_pass_phrase or _yaml_irankish.get("pass_phrase")
+    irankish_public_key = env_irankish_public_key or _yaml_irankish.get("public_key")
+
+    irankish_config = None
+    # Only build the config when every credential required to talk to the gateway
+    # is present; a partial config would fail at the first request with a less
+    # obvious error than "integration not configured".
+    if all(
+        (
+            irankish_terminal_id,
+            irankish_acceptor_id,
+            irankish_pass_phrase,
+            irankish_public_key,
+        )
+    ):
+        irankish_config = IranKishConfig(
+            base_url=irankish_base_url.rstrip("/"),
+            terminal_id=irankish_terminal_id,
+            acceptor_id=irankish_acceptor_id,
+            pass_phrase=irankish_pass_phrase,
+            public_key=irankish_public_key,
+        )
+
+    # ZarinPal (REST API v4) config, auto-enabled when the merchant id is
+    # present. The API host and the StartPay redirect host default to the public
+    # production endpoints and are only overridable for sandbox / testing.
+    env_zarinpal_merchant_id = os.environ.get("LEARNHOUSE_ZARINPAL_MERCHANT_ID")
+    env_zarinpal_base_url = os.environ.get("LEARNHOUSE_ZARINPAL_BASE_URL")
+    env_zarinpal_start_pay_base_url = os.environ.get(
+        "LEARNHOUSE_ZARINPAL_START_PAY_BASE_URL"
+    )
+    env_zarinpal_sandbox = os.environ.get("LEARNHOUSE_ZARINPAL_SANDBOX")
+
+    _yaml_zarinpal = yaml_config.get("zarinpal_config", {}) or {}
+    zarinpal_merchant_id = env_zarinpal_merchant_id or _yaml_zarinpal.get("merchant_id")
+    # Sandbox toggle (env takes precedence over yaml) selects the default hosts
+    # when they are not explicitly overridden.
+    _zarinpal_sandbox_raw = (
+        env_zarinpal_sandbox
+        if env_zarinpal_sandbox is not None
+        else _yaml_zarinpal.get("sandbox")
+    )
+    zarinpal_sandbox = str(_zarinpal_sandbox_raw).strip().lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    )
+    _zarinpal_default_base = (
+        "https://sandbox.zarinpal.com"
+        if zarinpal_sandbox
+        else "https://payment.zarinpal.com"
+    )
+    _zarinpal_default_start_pay = (
+        "https://sandbox.zarinpal.com"
+        if zarinpal_sandbox
+        else "https://www.zarinpal.com"
+    )
+    zarinpal_base_url = (
+        env_zarinpal_base_url
+        or _yaml_zarinpal.get("base_url", "")
+        or _zarinpal_default_base
+    )
+    zarinpal_start_pay_base_url = (
+        env_zarinpal_start_pay_base_url
+        or _yaml_zarinpal.get("start_pay_base_url", "")
+        or _zarinpal_default_start_pay
+    )
+
+    zarinpal_config = None
+    # Only build the config when the merchant id is present; it is the single
+    # credential required to talk to the gateway.
+    if zarinpal_merchant_id:
+        zarinpal_config = ZarinPalConfig(
+            merchant_id=zarinpal_merchant_id,
+            base_url=zarinpal_base_url.rstrip("/"),
+            start_pay_base_url=zarinpal_start_pay_base_url.rstrip("/"),
+        )
+
     # Payments config
     env_stripe_secret_key = os.environ.get("LEARNHOUSE_STRIPE_SECRET_KEY")
     env_stripe_publishable_key = os.environ.get("LEARNHOUSE_STRIPE_PUBLISHABLE_KEY")
@@ -760,6 +930,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
         ),
         tinybird_config=tinybird_config,
         judge0_config=judge0_config,
+        skyroom_config=skyroom_config,
+        irankish_config=irankish_config,
+        zarinpal_config=zarinpal_config,
     )
 
     return config

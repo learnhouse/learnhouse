@@ -112,3 +112,41 @@ tinybird_config:
   api_url: ""
   ingest_token: ""
   read_token: ""
+
+skyroom_config:
+  # Skyroom live-class / web-conferencing integration (https://www.skyroom.online).
+  # Set api_key to enable it automatically. The key is the ~50-char token from your
+  # Skyroom web-service panel. Leave api_url empty to use the public host, or override
+  # it for a self-hosted / white-label deployment.
+  # Env overrides: LEARNHOUSE_SKYROOM_API_KEY, LEARNHOUSE_SKYROOM_API_URL
+  api_url: ""
+  api_key: ""
+
+irankish_config:
+  # IranKish (Shaparak) Internet Payment Gateway for selling courses in IRR.
+  # Docs: docs/irankish/IPG_TechnicalGuide.V11.pdf
+  # Auto-enabled once terminal_id, acceptor_id, pass_phrase and public_key are all set.
+  # Leave base_url empty to use the public Shaparak host (https://ikc.shaparak.ir).
+  # Env overrides: LEARNHOUSE_IRANKISH_BASE_URL, LEARNHOUSE_IRANKISH_TERMINAL_ID,
+  #   LEARNHOUSE_IRANKISH_ACCEPTOR_ID, LEARNHOUSE_IRANKISH_PASS_PHRASE,
+  #   LEARNHOUSE_IRANKISH_PUBLIC_KEY
+  base_url: ""
+  terminal_id: ""          # 8-digit terminal number issued by IranKish
+  acceptor_id: ""          # 15-digit acceptor / merchant id
+  pass_phrase: ""          # 16-char pass phrase used to build the digital envelope
+  public_key: ""           # RSA public key (PEM) issued by IranKish
+
+zarinpal_config:
+
+  # ZarinPal payment gateway (REST API v4) for selling courses in IRR.
+  # Docs: https://www.zarinpal.com/docs/paymentGateway/
+  # Auto-enabled once merchant_id is set.
+  # Set sandbox: true to use ZarinPal's sandbox hosts for testing; leave base_url
+  # and start_pay_base_url empty to use the defaults for the selected environment
+  # (production: https://payment.zarinpal.com + https://www.zarinpal.com).
+  # Env overrides: LEARNHOUSE_ZARINPAL_MERCHANT_ID, LEARNHOUSE_ZARINPAL_BASE_URL,
+  #   LEARNHOUSE_ZARINPAL_START_PAY_BASE_URL, LEARNHOUSE_ZARINPAL_SANDBOX
+  merchant_id: ""          # 36-char merchant UUID issued by ZarinPal
+  sandbox: false           # use the sandbox environment for testing
+  base_url: ""             # API host override (defaults by environment)
+  start_pay_base_url: ""   # StartPay redirect host override (defaults by environment)

@@ -17,6 +17,9 @@ from src.routers import stream
 from src.routers import api_tokens
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
+from src.routers.integrations import skyroom as skyroom_integration
+from src.routers.payments import irankish as irankish_payments
+from src.routers.payments import zarinpal as zarinpal_payments
 from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario, audio
 from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
@@ -125,6 +128,36 @@ v1_router.include_router(
     zapier_integration.router,
     prefix="/integrations/zapier",
     tags=["integrations", "zapier"],
+)
+# Skyroom live-class / web-conferencing integration. Requires an authenticated
+# session (admin/maintainer checks happen per-org in the service layer); the
+# /status probe is public-ish within an authenticated session.
+v1_router.include_router(
+    skyroom_integration.router,
+    prefix="/integrations/skyroom",
+    tags=["integrations", "skyroom"],
+    dependencies=[Depends(require_authenticated_user)],
+)
+# IranKish (Shaparak) course-payment gateway. NO router-level auth dependency:
+# this router deliberately contains public endpoints (/status probe and the
+# gateway result /callback, which the payment provider POSTs with no session).
+# The authenticated endpoints each take get_current_user and enforce auth +
+# org-permission checks in the service layer.
+v1_router.include_router(
+    irankish_payments.router,
+    prefix="/payments/irankish",
+    tags=["payments", "irankish"],
+)
+# ZarinPal course-payment gateway. Same rationale as IranKish above: NO
+# router-level auth dependency, because this router deliberately contains public
+# endpoints (the /status probe and the gateway result /callback, which ZarinPal
+# redirects the buyer's browser to with no session). The authenticated endpoints
+# each take get_current_user and enforce auth + org-permission checks in the
+# service layer.
+v1_router.include_router(
+    zarinpal_payments.router,
+    prefix="/payments/zarinpal",
+    tags=["payments", "zarinpal"],
 )
 v1_router.include_router(
     custom_domains.router,

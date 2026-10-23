@@ -64,7 +64,9 @@ const TableOfContents = ({ editor }: TableOfContentsProps) => {
           <li
             key={index}
             className="toc-item my-2 !list-none flex items-start gap-2"
-            style={{ paddingLeft: `${(heading.level - 1) * 1.2}rem` }}
+            // paddingInlineStart, not paddingLeft: the TOC indents each nested
+            // heading away from the reading edge, which is the right edge in RTL.
+            style={{ paddingInlineStart: `${(heading.level - 1) * 1.2}rem` }}
           >
             <span className="toc-check"><Check size={15} strokeWidth={1.7} /></span>
             <a className={`toc-link toc-link-h${heading.level}`} href={`#${heading.id}`}>{heading.text}</a>

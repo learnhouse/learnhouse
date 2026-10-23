@@ -135,6 +135,17 @@ def shutdown_app(app: FastAPI) -> Callable:
         if _webhook_tasks:  # pragma: no cover
             await asyncio.gather(*list(_webhook_tasks), return_exceptions=True)
         await close_webhook_client()
+        # Close the Skyroom integration HTTP client, if one was opened.
+        from src.services.skyroom.client import close_skyroom_client
+        await close_skyroom_client()
+
+        # Close the IranKish payment gateway HTTP client, if one was opened.
+        from src.services.payments.irankish.client import close_irankish_client
+        await close_irankish_client()
+
+        # Close the ZarinPal payment gateway HTTP client, if one was opened.
+        from src.services.payments.zarinpal.client import close_zarinpal_client
+        await close_zarinpal_client()
         # Stop the daily nudge tick.
         from src.services.nudges.scheduler import stop_scheduler
         await stop_scheduler()
