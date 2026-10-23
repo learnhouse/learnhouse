@@ -17,6 +17,8 @@ from src.db.skyroom import (
     SkyroomLiveClassCreate,
     SkyroomLiveClassRead,
     SkyroomLiveClassUpdate,
+    SkyroomRemoteRoom,
+    SkyroomRoomImportRequest,
 )
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
@@ -26,7 +28,9 @@ from src.services.skyroom.skyroom import (
     create_live_class,
     delete_live_class,
     get_live_class,
+    import_remote_room,
     list_live_classes,
+    list_remote_rooms,
     update_live_class,
 )
 
@@ -156,6 +160,56 @@ async def api_delete_live_class(
 ) -> dict:
     return await delete_live_class(
         request, db_session, org_id, liveclass_uuid, current_user
+    )
+
+
+@router.get(
+    "/{org_id}/remote-rooms",
+    response_model=List[SkyroomRemoteRoom],
+    summary="List pre-existing rooms on the Skyroom account",
+    description="Lists the rooms that already exist on the configured Skyroom account, each flagged with whether this organization has already imported it.",
+    responses={
+        200: {"description": "List of remote Skyroom rooms", "model": List[SkyroomRemoteRoom]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission"},
+        404: {"description": "Organization not found"},
+        502: {"description": "Could not reach Skyroom"},
+        503: {"description": "Skyroom integration not configured"},
+    },
+)
+async def api_list_remote_rooms(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> List[SkyroomRemoteRoom]:
+    return await list_remote_rooms(request, db_session, org_id, current_user)
+
+
+@router.post(
+    "/{org_id}/remote-rooms/{skyroom_room_id}/import",
+    response_model=SkyroomLiveClassRead,
+    summary="Import a pre-existing Skyroom room as a live class",
+    description="Adopts a room that already exists on Skyroom (created outside LearnHouse) into this organization without creating a new remote room. Idempotent per organization.",
+    responses={
+        200: {"description": "Room imported", "model": SkyroomLiveClassRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission"},
+        404: {"description": "Organization or room not found"},
+        502: {"description": "Could not reach Skyroom"},
+        503: {"description": "Skyroom integration not configured"},
+    },
+)
+async def api_import_remote_room(
+    request: Request,
+    org_id: int,
+    skyroom_room_id: int,
+    import_object: SkyroomRoomImportRequest,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> SkyroomLiveClassRead:
+    return await import_remote_room(
+        request, db_session, org_id, skyroom_room_id, import_object, current_user
     )
 
 

@@ -154,3 +154,27 @@ class SkyroomJoinLinkRequest(BaseModel):
 
 class SkyroomJoinLinkResponse(BaseModel):
     url: str
+
+
+class SkyroomRemoteRoom(BaseModel):
+    """A room that exists on the Skyroom account (from ``getRooms``), annotated
+    with whether it has already been imported as a local live class."""
+
+    skyroom_room_id: int
+    name: str
+    title: str
+    status: int
+    # True when an org already has a SkyroomLiveClass mapping this room_id, so
+    # the UI can show "already imported" instead of offering to import again.
+    already_imported: bool = False
+    # The local liveclass_uuid when already_imported is True (else None).
+    liveclass_uuid: Optional[str] = None
+
+
+class SkyroomRoomImportRequest(BaseModel):
+    """Optionally attach the imported room to a course/activity. All optional;
+    title/room_name are taken from the remote room but may be overridden."""
+
+    course_id: Optional[int] = None
+    activity_id: Optional[int] = None
+    title: Optional[str] = None

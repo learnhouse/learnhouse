@@ -29,6 +29,8 @@ from src.db.skyroom import (
     SkyroomLiveClassCreate,
     SkyroomLiveClassRead,
     SkyroomLiveClassUpdate,
+    SkyroomRemoteRoom,
+    SkyroomRoomImportRequest,
 )
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
 from src.security.auth import resolve_acting_user_id
@@ -317,6 +319,147 @@ async def delete_live_class(
     await db_session.delete(row)
     await db_session.commit()
     return {"detail": "Live class deleted"}
+
+
+async def list_remote_rooms(
+    request: Request,
+    db_session: AsyncSession,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+) -> List[SkyroomRemoteRoom]:
+    """List the rooms that exist on the Skyroom account, each annotated with
+    whether this org has already imported it.
+
+    This lets an admin adopt rooms they created directly in the Skyroom panel
+    instead of only rooms created through LearnHouse.
+    """
+    acting_user_id = resolve_acting_user_id(current_user)
+    await authorization_verify_if_user_is_anon(acting_user_id)
+    await _verify_org_exists(db_session, org_id)
+    await require_org_admin(acting_user_id, org_id, db_session)
+
+    try:
+        rooms = await skyroom_client.get_rooms()
+    except Exception as exc:  # noqa: BLE001 - translated to HTTPException
+        raise _translate_skyroom_error(exc)
+
+    # Map remote room_id -> local liveclass_uuid for rooms already imported by
+    # THIS org, so the UI can disable re-importing.
+    existing = (
+        await db_session.execute(
+            select(
+                SkyroomLiveClass.skyroom_room_id,
+                SkyroomLiveClass.liveclass_uuid,
+            ).where(SkyroomLiveClass.org_id == org_id)
+        )
+    ).all()
+    imported_by_room = {row[0]: row[1] for row in existing}
+
+    out: List[SkyroomRemoteRoom] = []
+    for room in rooms:
+        if not isinstance(room, dict) or "id" not in room:
+            continue
+        room_id = int(room["id"])
+        uuid = imported_by_room.get(room_id)
+        out.append(
+            SkyroomRemoteRoom(
+                skyroom_room_id=room_id,
+                name=str(room.get("name") or ""),
+                title=str(room.get("title") or room.get("name") or ""),
+                status=int(room.get("status", 0)),
+                already_imported=uuid is not None,
+                liveclass_uuid=uuid,
+            )
+        )
+    return out
+
+
+async def import_remote_room(
+    request: Request,
+    db_session: AsyncSession,
+    org_id: int,
+    skyroom_room_id: int,
+    import_object: SkyroomRoomImportRequest,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+) -> SkyroomLiveClassRead:
+    """Adopt a pre-existing Skyroom room as a local live class.
+
+    Unlike ``create_live_class`` this does not create a remote room; it looks up
+    the existing one (by id), verifies it really exists on Skyroom, and persists
+    the mapping. Idempotent per org: re-importing a room returns the existing
+    live class instead of creating a duplicate.
+    """
+    acting_user_id = resolve_acting_user_id(current_user)
+    await authorization_verify_if_user_is_anon(acting_user_id)
+    await _verify_org_exists(db_session, org_id)
+    await require_org_role_permission(
+        acting_user_id, org_id, db_session, "organizations", "action_update"
+    )
+
+    from src.services.demo.guards import require_not_demo_org
+
+    await require_not_demo_org(org_id, db_session)
+
+    # Idempotency: if this org already mapped the room, return that mapping.
+    existing = (
+        await db_session.execute(
+            select(SkyroomLiveClass).where(
+                SkyroomLiveClass.org_id == org_id,
+                SkyroomLiveClass.skyroom_room_id == skyroom_room_id,
+            )
+        )
+    ).scalars().first()
+    if existing:
+        return _to_read(existing)
+
+    await _enforce_live_class_cap(db_session, org_id)
+
+    # Verify the room exists on Skyroom and pull its canonical fields.
+    try:
+        room = await skyroom_client.get_room(skyroom_room_id)
+    except Exception as exc:  # noqa: BLE001
+        raise _translate_skyroom_error(exc)
+
+    if not isinstance(room, dict) or "id" not in room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="That room was not found on Skyroom.",
+        )
+
+    room_name = str(room.get("name") or f"room-{skyroom_room_id}")[:128]
+    title = (import_object.title or str(room.get("title") or room_name))[:128]
+
+    room_url: Optional[str] = None
+    try:
+        room_url = await skyroom_client.get_room_url(skyroom_room_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.info(
+            "Could not fetch Skyroom room url for %s: %s", skyroom_room_id, exc
+        )
+
+    now = str(datetime.now())
+    row = SkyroomLiveClass(
+        liveclass_uuid=f"liveclass_{uuid4()}",
+        org_id=org_id,
+        course_id=import_object.course_id,
+        activity_id=import_object.activity_id,
+        skyroom_room_id=skyroom_room_id,
+        room_name=room_name,
+        title=title,
+        room_url=room_url,
+        guest_login=bool(room.get("guest_login", False)),
+        op_login_first=bool(room.get("op_login_first", True)),
+        max_users=room.get("max_users"),
+        # Reflect the remote room's active state (Skyroom status: 1 = active).
+        is_active=int(room.get("status", 1)) == 1,
+        created_by_user_id=acting_user_id,
+        creation_date=now,
+        update_date=now,
+    )
+    db_session.add(row)
+    await db_session.commit()
+    await db_session.refresh(row)
+    return _to_read(row)
 
 
 async def create_join_link(

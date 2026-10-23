@@ -64,14 +64,19 @@ class SkyroomTransportError(Exception):
 # Lazy singleton httpx client, configured from LearnHouse config.
 _client: Optional[httpx.AsyncClient] = None
 _client_key: Optional[str] = None
+# The exact endpoint URL to POST to. Kept alongside the client because Skyroom
+# rejects a trailing slash: posting to an httpx ``base_url`` with an empty path
+# normalizes to ``.../{key}/`` (trailing slash) which Skyroom answers with 404.
+# We therefore POST to this absolute URL directly instead of using base_url.
+_endpoint: Optional[str] = None
 
 
 def is_skyroom_enabled() -> bool:
     return get_learnhouse_config().skyroom_config is not None
 
 
-def _get_client() -> httpx.AsyncClient:
-    global _client, _client_key
+def _get_client() -> tuple[httpx.AsyncClient, str]:
+    global _client, _client_key, _endpoint
 
     cfg = get_learnhouse_config().skyroom_config
     if cfg is None or not cfg.api_key:
@@ -84,12 +89,16 @@ def _get_client() -> httpx.AsyncClient:
     # client is dropped here and closed by the shutdown hook / GC; we avoid
     # scheduling an aclose() task because _get_client may run outside a running
     # loop (e.g. first request setup).
+    #
+    # IMPORTANT: Skyroom returns 404 if the request path has a trailing slash.
+    # We POST to this absolute endpoint directly (see ``call``) rather than
+    # using it as an httpx ``base_url``, because a base_url + empty-path POST
+    # normalizes to ``.../{key}/`` and breaks every call.
     endpoint = f"{cfg.api_url}/skyroom/api/{cfg.api_key}"
     if _client is not None and _client_key == endpoint:
-        return _client
+        return _client, endpoint
 
     _client = httpx.AsyncClient(
-        base_url=endpoint,
         headers={
             "Content-Type": "application/json",
             "User-Agent": "LearnHouse-Skyroom/1.0",
@@ -97,7 +106,8 @@ def _get_client() -> httpx.AsyncClient:
         timeout=15.0,
     )
     _client_key = endpoint
-    return _client
+    _endpoint = endpoint
+    return _client, endpoint
 
 
 async def call(action: str, params: Optional[dict] = None) -> Any:
@@ -109,13 +119,13 @@ async def call(action: str, params: Optional[dict] = None) -> Any:
             timeout, DNS, SSL, rate limit).
         SkyroomError: Skyroom application error (ok: false).
     """
-    client = _get_client()
+    client, endpoint = _get_client()
     payload: dict = {"action": action}
     if params:
         payload["params"] = params
 
     try:
-        response = await client.post("", json=payload)
+        response = await client.post(endpoint, json=payload)
     except httpx.HTTPError as exc:
         # DNS, timeout, SSL, connection errors. Log for later investigation as
         # the Skyroom docs recommend.
@@ -151,11 +161,12 @@ async def call(action: str, params: Optional[dict] = None) -> Any:
 
 async def close_skyroom_client() -> None:
     """Shutdown hook: close the singleton client if open."""
-    global _client, _client_key
+    global _client, _client_key, _endpoint
     if _client is not None:
         await _client.aclose()
         _client = None
         _client_key = None
+        _endpoint = None
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +176,17 @@ async def close_skyroom_client() -> None:
 
 async def get_services() -> list:
     return await call("getServices")
+
+
+async def get_rooms() -> list:
+    """List every room that exists on the configured Skyroom account.
+
+    Returns the raw Skyroom room objects (id, service_id, name, title, status).
+    Used to surface rooms that were created directly in Skyroom so they can be
+    imported/adopted as local live classes.
+    """
+    result = await call("getRooms")
+    return result if isinstance(result, list) else []
 
 
 async def create_room(

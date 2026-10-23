@@ -112,4 +112,13 @@ export const queryKeys = {
     customers: (orgId: number) => ['payments', orgId, 'customers'] as const,
     groups: (orgId: number) => ['payments', orgId, 'groups'] as const,
   },
+  skyroom: {
+    status: () => ['skyroom', 'status'] as const,
+    list: (orgId: number, courseId?: number) =>
+      ['skyroom', orgId, 'live-classes', courseId ?? null] as const,
+    detail: (orgId: number, uuid: string) =>
+      ['skyroom', orgId, 'live-class', uuid] as const,
+    remoteRooms: (orgId: number) =>
+      ['skyroom', orgId, 'remote-rooms'] as const,
+  },
 }
