@@ -171,12 +171,21 @@ async def api_irankish_callback(
         )
     ).scalars().first()
 
+    from src.services.email.utils import get_base_url_from_request
+
     status_flag = payment.status.value.lower()
     if org and course:
         base = await org_base_url(org.slug, db_session=db_session, org_id=org.id)
+        # In local/dev the configured frontend base can be empty (the localhost
+        # guard rejects it), which would yield a hostless relative redirect the
+        # browser resolves against the API origin -> a 500. Fall back to the
+        # request-derived frontend origin so the browser lands on the app.
+        if not base:
+            base = get_base_url_from_request(request)
         target = f"{public_course_url(base, course.course_uuid)}?payment={status_flag}"
     else:  # pragma: no cover - org/course deletion race
-        target = f"/?payment={status_flag}"
+        base = get_base_url_from_request(request)
+        target = f"{base}/?payment={status_flag}"
 
     return RedirectResponse(url=target, status_code=302)
 

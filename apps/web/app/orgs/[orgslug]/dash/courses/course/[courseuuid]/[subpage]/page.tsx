@@ -3,7 +3,7 @@ import React, { use, useEffect } from 'react';
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'motion/react'
-import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search } from 'lucide-react'
+import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search, Banknote } from 'lucide-react'
 import { ChartBar } from '@phosphor-icons/react'
 import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
 import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
@@ -11,6 +11,7 @@ import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAcces
 import EditCourseContributors from '@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'
 import EditCourseCertification from '@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'
 import EditCourseSEO from '@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'
+import EditCoursePricing from '@components/Dashboard/Pages/Course/EditCoursePricing/EditCoursePricing'
 import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
 import { getUriWithOrg } from '@services/config/config';
@@ -60,6 +61,13 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
       label: t('dashboard.courses.settings.tabs.access'),
       icon: Globe,
       href: `/dash/courses/course/${params.courseuuid}/access`,
+      requiredPermission: 'manage_access' as const
+    },
+    {
+      key: 'pricing',
+      label: t('dashboard.courses.settings.tabs.pricing'),
+      icon: Banknote,
+      href: `/dash/courses/course/${params.courseuuid}/pricing`,
       requiredPermission: 'manage_access' as const
     },
     {
@@ -177,6 +185,12 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
             ) : null}
             {!rightsLoading && params.subpage == 'access' && hasPermission('manage_access') ? (
               <EditCourseAccess orgslug={params.orgslug} />
+            ) : null}
+            {!rightsLoading && params.subpage == 'pricing' && hasPermission('manage_access') ? (
+              <>
+                <div className="h-6" />
+                <EditCoursePricing />
+              </>
             ) : null}
             {!rightsLoading && params.subpage == 'contributors' && hasPermission('manage_contributors') ? (
               <EditCourseContributors orgslug={params.orgslug} />

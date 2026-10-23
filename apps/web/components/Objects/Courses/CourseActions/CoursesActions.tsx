@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { removeCourse, startCourse } from '@services/courses/activity'
 import { revalidateTags, asArray } from '@services/utils/ts/requests'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg } from '@services/config/config'
 import { getOffersByResource } from '@services/payments/offers'
-import { UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus } from 'lucide-react'
+import { startZarinPalCheckout } from '@services/payments/providers/zarinpal'
+import { startIranKishCheckout } from '@services/payments/providers/irankish'
+import { UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus, Banknote } from 'lucide-react'
 import { OfferCard } from './OfferCard'
 import { applyForContributor } from '@services/courses/courses'
 import toast from 'react-hot-toast'
@@ -16,7 +18,37 @@ import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { formatCurrency } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+
+// Keys the backend stores a course's per-gateway IRR price under in extra_metadata.
+const ZARINPAL_PRICE_KEY = 'zarinpal_price_irr'
+const IRANKISH_PRICE_KEY = 'irankish_price_irr'
+
+// Read a positive integer IRR price for a gateway off the course, or null.
+function readPrice(course: any, key: string): number | null {
+  const raw = course?.extra_metadata?.[key]
+  const n = Number(raw)
+  return raw != null && Number.isFinite(n) && n > 0 ? n : null
+}
+
+// POST a set of form fields to a URL by building and auto-submitting a form.
+// IranKish requires the browser to POST tokenIdentity to its payment page
+// (unlike ZarinPal's simple GET redirect).
+function postToGateway(url: string, fields: Record<string, string>) {
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = url
+  for (const [name, value] of Object.entries(fields)) {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = name
+    input.value = value
+    form.appendChild(input)
+  }
+  document.body.appendChild(form)
+  form.submit()
+}
 
 interface CourseRun {
   status: string
@@ -54,17 +86,43 @@ interface CourseActionsProps {
 }
 
 function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseActionsProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
   const [isActionLoading, setIsActionLoading] = useState(false)
   const [isContributeLoading, setIsContributeLoading] = useState(false)
   const { contributorStatus, refetch } = useContributorStatus(courseuuid)
   const [isProgressOpen, setIsProgressOpen] = useState(false)
+  // Which gateway's checkout is currently in flight ('zarinpal' | 'irankish' | null).
+  const [checkoutLoading, setCheckoutLoading] = useState<'zarinpal' | 'irankish' | null>(null)
   const org = useOrg() as any
   const { isUserPartOfTheOrg } = useOrgMembership()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('learner')
+  const searchParams = useSearchParams()
+
+  // The course's per-gateway prices (in Iranian Rial), if the admin set them.
+  const zarinpalPriceIrr = readPrice(course, ZARINPAL_PRICE_KEY)
+  const irankishPriceIrr = readPrice(course, IRANKISH_PRICE_KEY)
+
+  // Both gateways redirect the buyer back to the course page with
+  // ?payment=completed|failed (see the backend callbacks). Surface that result
+  // once, then clear it from the URL.
+  useEffect(() => {
+    const payment = searchParams?.get('payment')
+    if (!payment) return
+    if (payment === 'completed') {
+      toast.success(t('courses.payment_success'))
+    } else if (payment === 'failed') {
+      toast.error(t('courses.payment_failed'))
+    }
+    if (org?.id) queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
+    const url = new URL(window.location.href)
+    url.searchParams.delete('payment')
+    window.history.replaceState({}, '', url.toString())
+    // Intentionally run once on mount for the incoming redirect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
@@ -145,6 +203,76 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       )
     } finally {
       setIsActionLoading(false)
+    }
+  }
+
+  // Shared guard for either gateway: must be a signed-in org member. Returns
+  // false (and redirects) when the buyer can't check out.
+  const ensureCanCheckout = (): boolean => {
+    if (!session.data?.user) {
+      track(AnalyticsEvent.CourseSignupPrompted, {
+        reason: 'unauthenticated',
+        intended_action: 'purchase_course',
+      })
+      router.push(getUriWithOrg(orgslug, '/signup'))
+      return false
+    }
+    if (!isUserPartOfTheOrg) {
+      router.push(getUriWithOrg(orgslug, '/signup'))
+      return false
+    }
+    return true
+  }
+
+  const handleZarinPalCheckout = async () => {
+    if (!ensureCanCheckout()) return
+
+    setCheckoutLoading('zarinpal')
+    const loadingToast = toast.loading(t('courses.payment_redirecting'))
+    try {
+      const res = await startZarinPalCheckout(
+        org.id,
+        Number((course as any).id),
+        session.data?.tokens?.access_token
+      )
+      if (res?.payment_url) {
+        // Hand the browser off to ZarinPal's hosted payment page (GET redirect).
+        window.location.href = res.payment_url
+        return
+      }
+      toast.error(t('courses.payment_start_error'), { id: loadingToast })
+      setCheckoutLoading(null)
+    } catch (error) {
+      console.error('Failed to start ZarinPal checkout:', error)
+      toast.error((error as any)?.message || t('courses.payment_start_error'), { id: loadingToast })
+      setCheckoutLoading(null)
+    }
+  }
+
+  const handleIranKishCheckout = async () => {
+    if (!ensureCanCheckout()) return
+
+    setCheckoutLoading('irankish')
+    const loadingToast = toast.loading(t('courses.payment_redirecting'))
+    try {
+      const res = await startIranKishCheckout(
+        org.id,
+        Number((course as any).id),
+        session.data?.tokens?.access_token
+      )
+      if (res?.payment_url && res?.form_fields) {
+        // IranKish requires the browser to POST the token to its payment page,
+        // so build and auto-submit a form rather than a GET redirect.
+        toast.dismiss(loadingToast)
+        postToGateway(res.payment_url, res.form_fields as Record<string, string>)
+        return
+      }
+      toast.error(t('courses.payment_start_error'), { id: loadingToast })
+      setCheckoutLoading(null)
+    } catch (error) {
+      console.error('Failed to start IranKish checkout:', error)
+      toast.error((error as any)?.message || t('courses.payment_start_error'), { id: loadingToast })
+      setCheckoutLoading(null)
     }
   }
 
@@ -253,6 +381,70 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
           </>
         )}
       </button>
+    );
+  };
+
+  const renderBuyCard = (
+    gatewayKey: 'zarinpal' | 'irankish',
+    priceIrr: number | null,
+    onBuy: () => void
+  ) => {
+    // Only when a price is set and the buyer doesn't already have access.
+    if (priceIrr === null || isStarted) return null;
+
+    const formattedPrice = formatCurrency(priceIrr, 'IRR', i18n.language);
+    const gatewayLabel = t(`courses.gateways.${gatewayKey}`);
+    const isLoadingThis = checkoutLoading === gatewayKey;
+    const anyLoading = checkoutLoading !== null;
+
+    return (
+      <div className="bg-white rounded-xl nice-shadow overflow-hidden">
+        <div className="px-4 py-2 flex items-center gap-2 bg-emerald-50">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+            <Banknote size={12} /> {gatewayLabel}
+          </span>
+        </div>
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-gray-900 text-base leading-snug">
+                {t('courses.purchase_course_title')}
+              </p>
+              <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                {t('courses.paid_course_description')}
+              </p>
+            </div>
+            <div className="shrink-0 text-end">
+              <div className="text-xl font-black text-gray-900">{formattedPrice}</div>
+            </div>
+          </div>
+          <button
+            onClick={onBuy}
+            disabled={anyLoading}
+            aria-label={t('courses.buy_course_with', { gateway: gatewayLabel })}
+            className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm transition-colors cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-emerald-400 disabled:cursor-not-allowed"
+          >
+            {isLoadingThis ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                {t('courses.buy_course_with', { gateway: gatewayLabel })}
+                <ArrowRight size={13} />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderBuyCards = () => {
+    if (isStarted || (zarinpalPriceIrr === null && irankishPriceIrr === null)) return null;
+    return (
+      <>
+        {renderBuyCard('zarinpal', zarinpalPriceIrr, handleZarinPalCheckout)}
+        {renderBuyCard('irankish', irankishPriceIrr, handleIranKishCheckout)}
+      </>
     );
   };
 
@@ -460,6 +652,10 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   }
 
   return (
+    <div className="space-y-3">
+      {/* Gateway buy cards: one per priced gateway, when the buyer lacks access */}
+      {renderBuyCards()}
+
     <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
       <div className="space-y-4">
         {/* Progress Section */}
@@ -495,6 +691,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
           trailData={trailData}
         />
       </div>
+    </div>
     </div>
   )
 }

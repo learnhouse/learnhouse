@@ -436,6 +436,16 @@
     "you_own_this_course_description": "You have purchased this course and have full access to all content.",
     "paid_course": "Paid Course",
     "paid_course_description": "This course requires purchase to access its content.",
+    "buy_course": "Buy Course",
+    "buy_course_with": "Buy with {{gateway}}",
+    "gateways": {
+      "zarinpal": "ZarinPal",
+      "irankish": "IranKish"
+    },
+    "payment_redirecting": "Redirecting you to the payment gateway...",
+    "payment_start_error": "Could not start the payment. Please try again later.",
+    "payment_success": "Payment successful. You now have access to this course.",
+    "payment_failed": "The payment was not completed. You have not been charged.",
     "join_org_required": "Organization Membership Required",
     "join_org_required_description": "You need to join this organization to enroll in courses.",
     "join_organization": "Join Organization",
@@ -2142,6 +2152,7 @@
           "general": "General",
           "content": "Content",
           "access": "Access",
+          "pricing": "Pricing",
           "contributors": "Contributors",
           "seo": "SEO",
           "certification": "Certification",
@@ -2156,6 +2167,28 @@
           "message": "You don't have permission to access {{tab}}"
         },
         "loading": "Loading..."
+      },
+      "pricing": {
+        "title": "Pricing",
+        "subtitle": "Sell this course through an Iranian payment gateway",
+        "gateways": {
+          "zarinpal": "ZarinPal",
+          "irankish": "IranKish"
+        },
+        "configured": "Configured",
+        "save": "Save",
+        "saving": "Saving price...",
+        "saved": "Course price saved",
+        "cleared": "Course price removed",
+        "error": "Could not save the price. Please try again.",
+        "price_label": "Price (IRR)",
+        "price_placeholder": "e.g. 500,000",
+        "price_help": "Amount in Iranian Rial. Leave empty to remove the price and unlist the course.",
+        "price_preview": "Buyers will pay {{price}}",
+        "price_invalid": "Enter a positive whole number of Rial, or leave it empty.",
+        "not_configured_title": "{{gateway}} is not configured",
+        "not_configured_description_zarinpal": "This instance has no ZarinPal merchant id set, so prices cannot be collected. Set LEARNHOUSE_ZARINPAL_MERCHANT_ID on the server to enable purchases.",
+        "not_configured_description_irankish": "This instance has no IranKish terminal credentials set, so prices cannot be collected. Set the LEARNHOUSE_IRANKISH_* variables on the server to enable purchases."
       },
       "general": {
         "form": {
