@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "तारीख़ चुनें",
+    "clear": "साफ़ करें",
+    "today": "आज",
+    "prev_month": "पिछला महीना",
+    "next_month": "अगला महीना"
+  },
   "common": {
     "hello": "नमस्ते",
     "home": "होम",

@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "Pilih tanggal",
+    "clear": "Hapus",
+    "today": "Hari ini",
+    "prev_month": "Bulan sebelumnya",
+    "next_month": "Bulan berikutnya"
+  },
   "common": {
     "hello": "Halo",
     "home": "Beranda",

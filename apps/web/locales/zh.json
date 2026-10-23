@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "选择日期",
+    "clear": "清除",
+    "today": "今天",
+    "prev_month": "上个月",
+    "next_month": "下个月"
+  },
   "common": {
     "hello": "你好",
     "home": "首页",

@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "Datum wählen",
+    "clear": "Löschen",
+    "today": "Heute",
+    "prev_month": "Vorheriger Monat",
+    "next_month": "Nächster Monat"
+  },
   "common": {
     "hello": "Hallo",
     "home": "Startseite",

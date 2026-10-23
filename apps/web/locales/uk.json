@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "Вибрати дату",
+    "clear": "Очистити",
+    "today": "Сьогодні",
+    "prev_month": "Попередній місяць",
+    "next_month": "Наступний місяць"
+  },
   "common": {
     "hello": "Привіт",
     "home": "Головна",

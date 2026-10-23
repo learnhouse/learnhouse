@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "เลือกวันที่",
+    "clear": "ล้าง",
+    "today": "วันนี้",
+    "prev_month": "เดือนก่อนหน้า",
+    "next_month": "เดือนถัดไป"
+  },
   "common": {
     "hello": "สวัสดี",
     "home": "หน้าแรก",

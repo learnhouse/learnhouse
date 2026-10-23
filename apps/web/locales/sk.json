@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "Vybrať dátum",
+    "clear": "Vymazať",
+    "today": "Dnes",
+    "prev_month": "Predchádzajúci mesiac",
+    "next_month": "Nasledujúci mesiac"
+  },
   "common": {
     "hello": "Ahoj",
     "home": "Domov",

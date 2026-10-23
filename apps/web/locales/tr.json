@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "Tarih seç",
+    "clear": "Temizle",
+    "today": "Bugün",
+    "prev_month": "Önceki ay",
+    "next_month": "Sonraki ay"
+  },
   "common": {
     "hello": "Merhaba",
     "home": "Ana Sayfa",

@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "তারিখ বাছুন",
+    "clear": "মুছুন",
+    "today": "আজ",
+    "prev_month": "আগের মাস",
+    "next_month": "পরের মাস"
+  },
   "common": {
     "hello": "হ্যালো",
     "home": "হোম",

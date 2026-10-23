@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "انتخاب تاریخ",
+    "clear": "پاک کردن",
+    "today": "امروز",
+    "prev_month": "ماه قبل",
+    "next_month": "ماه بعد"
+  },
   "common": {
     "hello": "سلام",
     "home": "خانه",

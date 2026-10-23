@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "Kies een datum",
+    "clear": "Wissen",
+    "today": "Vandaag",
+    "prev_month": "Vorige maand",
+    "next_month": "Volgende maand"
+  },
   "common": {
     "hello": "Hallo",
     "home": "Home",

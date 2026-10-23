@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "Scegli una data",
+    "clear": "Cancella",
+    "today": "Oggi",
+    "prev_month": "Mese precedente",
+    "next_month": "Mese successivo"
+  },
   "common": {
     "hello": "Ciao",
     "home": "Home",

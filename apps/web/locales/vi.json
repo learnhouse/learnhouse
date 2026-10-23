@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "Chọn ngày",
+    "clear": "Xóa",
+    "today": "Hôm nay",
+    "prev_month": "Tháng trước",
+    "next_month": "Tháng sau"
+  },
   "common": {
     "hello": "Xin chào",
     "home": "Trang chủ",

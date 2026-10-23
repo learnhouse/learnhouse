@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "اختر تاريخاً",
+    "clear": "مسح",
+    "today": "اليوم",
+    "prev_month": "الشهر السابق",
+    "next_month": "الشهر التالي"
+  },
   "common": {
     "hello": "مرحباً",
     "home": "الرئيسية",

@@ -1,4 +1,11 @@
 {
+  "datepicker": {
+    "placeholder": "날짜 선택",
+    "clear": "지우기",
+    "today": "오늘",
+    "prev_month": "이전 달",
+    "next_month": "다음 달"
+  },
   "common": {
     "hello": "안녕하세요",
     "home": "홈",
