@@ -62,6 +62,6 @@
   },
   "overrides": {
     "source-map-js": ">=1.2.2",
-    "esbuild": ">=0.28.1"
+    "esbuild": ">=0.28.2"
   }
 }
