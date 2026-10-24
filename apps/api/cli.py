@@ -29,6 +29,11 @@ from src.services.setup.setup import (
 
 cli = typer.Typer()
 
+# Converter for courses exported from other LMSes (no database access needed)
+from src.services.courses.lms_import.cli import app as lms_import_cli
+
+cli.add_typer(lms_import_cli, name="lms-import")
+
 
 def _to_async_url(url: str) -> str:
     if "+asyncpg" in url:

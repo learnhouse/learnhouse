@@ -1,13 +1,13 @@
 'use client'
 import React from 'react'
-import { FileArchive, GraduationCap } from 'lucide-react'
+import { ArrowLeftRight, FileArchive, GraduationCap } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
 
 interface ImportTypeSelectorProps {
-  onSelectType: (type: 'scorm' | 'learnhouse') => void
+  onSelectType: (type: 'scorm' | 'learnhouse' | 'lms') => void
   currentPlan: PlanLevel
 }
 
@@ -18,8 +18,8 @@ function ImportTypeSelector({ onSelectType, currentPlan }: ImportTypeSelectorPro
   const canUseScorm = rf?.scorm?.enabled === true
 
   return (
-    <div className="min-w-[400px] py-2">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="min-w-[400px] md:min-w-[680px] py-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* SCORM Import Option - Enterprise only */}
         <button
           onClick={() => canUseScorm && onSelectType('scorm')}
@@ -61,6 +61,23 @@ function ImportTypeSelector({ onSelectType, currentPlan }: ImportTypeSelectorPro
           </h3>
           <p className="text-sm text-gray-500 text-center">
             {t('courses.import.learnhouse_description')}
+          </p>
+        </button>
+
+        {/* Other LMS Import Option */}
+        <button
+          type="button"
+          onClick={() => onSelectType('lms')}
+          className="group flex flex-col items-center p-6 rounded-xl border-2 border-gray-200 bg-white hover:border-black hover:shadow-lg transition-all duration-200"
+        >
+          <div className="w-14 h-14 rounded-full bg-violet-50 flex items-center justify-center mb-4 group-hover:bg-violet-100 transition-colors">
+            <ArrowLeftRight size={28} className="text-violet-600" />
+          </div>
+          <h3 className="font-semibold text-gray-900 mb-1">
+            {t('courses.import.lms_courses')}
+          </h3>
+          <p className="text-sm text-gray-500 text-center">
+            {t('courses.import.lms_description')}
           </p>
         </button>
       </div>
