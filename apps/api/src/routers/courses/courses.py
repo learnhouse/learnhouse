@@ -59,7 +59,7 @@ from src.services.courses.transfer.lms_import_service import (
     LmsImportSources,
     get_lms_import_status,
     list_sources,
-    start_lms_import,
+    start_lms_import_request,
 )
 from src.services.courses.transfer import (
     export_course,
@@ -254,14 +254,30 @@ async def api_list_lms_import_sources() -> LmsImportSources:
         400: {"description": "Unknown source, invalid quiz_mode or empty file"},
         403: {"description": "User lacks permission to create courses in the organization"},
         404: {"description": "Organization not found"},
+        411: {"description": "The request has no Content-Length"},
         413: {"description": "Export larger than the configured limit"},
         429: {"description": "Too many conversions running, for this user or on this server"},
+    },
+    # The file is read by hand after authorization and a size check, so it is
+    # not a parameter here; this keeps it in the API schema
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "multipart/form-data": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["package"],
+                        "properties": {"package": {"type": "string", "format": "binary"}},
+                    }
+                }
+            },
+        }
     },
 )
 async def api_start_lms_import(
     request: Request,
     org_id: int,
-    package: UploadFile,
     source: str = Query("auto", description="auto, " + ", ".join(LMS_SOURCE_KEYS)),
     quiz_mode: str = Query(
         "assignment",
@@ -270,7 +286,7 @@ async def api_start_lms_import(
     db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> LmsImportStatus:
-    return await start_lms_import(request, package, org_id, source, quiz_mode, current_user, db_session)
+    return await start_lms_import_request(request, org_id, source, quiz_mode, current_user, db_session)
 
 
 @router.get(

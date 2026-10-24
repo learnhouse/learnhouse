@@ -130,5 +130,5 @@ curl -X POST "https://learn.example.com/api/v1/courses/import?org_id=1" -H "Auth
 `GET /api/v1/courses/import/lms/sources` lists the supported formats. All three calls need permission to create courses in the organization; a conversion is only visible to the user or token that uploaded it.
 
 <Callout type="info">
-Uploads are limited to 4 GB by default. Set `LEARNHOUSE_LMS_IMPORT_MAX_MB` on the API to change it, and make sure your reverse proxy accepts bodies that large. Like the LearnHouse package import, the upload and the import must reach the same API instance.
+Uploads are limited to 4 GB by default. Set `LEARNHOUSE_LMS_IMPORT_MAX_MB` on the API to change it, and make sure your reverse proxy accepts bodies that large. The upload request must carry a `Content-Length` header (browsers and `curl -F` always do); a larger declared size is refused before the body is read. Like the LearnHouse package import, the upload and the import must reach the same API instance.
 </Callout>

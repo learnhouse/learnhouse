@@ -193,13 +193,13 @@ async def test_routes(client):
     assert r.json()["max_upload_mb"] > 0
 
     started = svc.LmsImportStatus(temp_id="t", status="processing")
-    with patch("src.routers.courses.courses.start_lms_import", new_callable=AsyncMock,
+    with patch("src.routers.courses.courses.start_lms_import_request", new_callable=AsyncMock,
                return_value=started) as start:
         r = await client.post("/api/v1/courses/import/lms/analyze?org_id=1&source=moodle&quiz_mode=page",
                               files={"package": ("backup.mbz", b"data", "application/octet-stream")})
     assert r.status_code == 200 and r.json()["status"] == "processing"
     args = start.await_args.args
-    assert args[2:5] == (1, "moodle", "page")
+    assert args[1:4] == (1, "moodle", "page")  # request, org_id, source, quiz_mode, ...
 
     ready = svc.LmsImportStatus(temp_id="t", status="ready", source="moodle", source_label="Moodle")
     with patch("src.routers.courses.courses.get_lms_import_status", new_callable=AsyncMock, return_value=ready):
@@ -265,3 +265,71 @@ def test_run_conversion_removes_a_package_it_could_not_summarize(tmp_path):
         payload = svc._run_conversion(str(temp_dir), str(upload), "auto", "page")
     assert payload == {"status": "failed", "error": "Invalid package: manifest.json not found"}
     assert sorted(p.name for p in temp_dir.iterdir()) == []  # no half-published extracted/ left
+
+
+def _multipart_request(body: bytes | None, *, field: str = "package", content_length: str | None = "auto"):
+    """A Starlette Request whose body is one multipart part; a None body must never be read."""
+    from starlette.requests import Request
+
+    boundary = b"xyz"
+    if body is not None:
+        payload = (b"--" + boundary + b"\r\nContent-Disposition: form-data; name=\"" + field.encode()
+                   + b"\"; filename=\"export.imscc\"\r\nContent-Type: application/octet-stream\r\n\r\n"
+                   + body + b"\r\n--" + boundary + b"--\r\n")
+    else:
+        payload = b""
+    headers = [(b"content-type", b"multipart/form-data; boundary=" + boundary)]
+    if content_length == "auto":
+        headers.append((b"content-length", str(len(payload)).encode()))
+    elif content_length is not None:
+        headers.append((b"content-length", content_length.encode()))
+
+    async def receive():
+        assert body is not None, "the body was read although the request should have been refused first"
+        return {"type": "http.request", "body": payload, "more_body": False}
+
+    return Request({"type": "http", "method": "POST", "path": "/", "headers": headers, "query_string": b""}, receive)
+
+
+@pytest.mark.asyncio
+async def test_read_upload_refuses_before_reading_the_body(monkeypatch):
+    monkeypatch.setattr(f"{SVC}.MAX_LMS_UPLOAD_SIZE", 1024 * 1024)
+    with pytest.raises(HTTPException) as exc:
+        await svc._read_upload(_multipart_request(None, content_length=None))
+    assert exc.value.status_code == 411
+    with pytest.raises(HTTPException) as exc:
+        await svc._read_upload(_multipart_request(None, content_length=str(10 * 1024 * 1024)))
+    assert exc.value.status_code == 413 and "1MB" in exc.value.detail
+    with pytest.raises(HTTPException) as exc:
+        await svc._read_upload(_multipart_request(b"PK", field="other"))
+    assert exc.value.status_code == 400
+    upload = await svc._read_upload(_multipart_request(b"PK\x03\x04"))
+    assert upload.filename == "export.imscc" and await upload.read() == b"PK\x03\x04"
+
+
+@pytest.mark.asyncio
+async def test_start_lms_import_request_authorizes_before_reading(db, org, admin_user, lms_env):
+    # A caller without rights is refused with the body untouched
+    with patch(f"{SVC}.check_resource_access", side_effect=HTTPException(status_code=403, detail="no")):
+        with pytest.raises(HTTPException) as exc:
+            await svc.start_lms_import_request(_multipart_request(None), org.id, "auto", "page", admin_user, db)
+    assert exc.value.status_code == 403
+    with patch(f"{SVC}.convert_to_directory", side_effect=_fake_convert):
+        started = await svc.start_lms_import_request(_multipart_request(b"PK\x03\x04 export"), org.id, "auto",
+                                                     "page", admin_user, db)
+        await _wait_all()
+    assert started.status == "processing"
+    assert (lms_env / started.temp_id / "extracted" / "manifest.json").is_file()
+
+
+@pytest.mark.asyncio
+async def test_route_reads_a_real_multipart_upload(client, lms_env):
+    with patch(f"{SVC}.convert_to_directory", side_effect=_fake_convert):
+        r = await client.post("/api/v1/courses/import/lms/analyze?org_id=1&source=auto&quiz_mode=page",
+                              files={"package": ("backup.mbz", b"PK\x03\x04 export", "application/octet-stream")})
+        await _wait_all()
+    assert r.status_code == 200 and r.json()["status"] == "processing", r.text
+    assert (lms_env / r.json()["temp_id"] / "extracted" / "manifest.json").is_file()
+    # No file part: refused before any conversion starts
+    r = await client.post("/api/v1/courses/import/lms/analyze?org_id=1", data={"note": "x"})
+    assert r.status_code == 400

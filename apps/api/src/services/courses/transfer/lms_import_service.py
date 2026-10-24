@@ -26,6 +26,7 @@ from typing import Literal, Optional
 from uuid import uuid4
 
 from fastapi import HTTPException, Request, UploadFile
+from starlette.datastructures import UploadFile as StarletteUploadFile
 from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -225,6 +226,27 @@ async def _convert_in_background(temp_dir: str, upload_path: str, source: str, q
         logger.exception("Could not record LMS conversion status")
 
 
+# Multipart framing and the other form fields, on top of the file itself
+_MULTIPART_OVERHEAD = 64 * 1024
+
+
+async def start_lms_import_request(
+    request: Request,
+    org_id: int,
+    source: str,
+    quiz_mode: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+) -> LmsImportStatus:
+    """The upload endpoint: the request body is read only after the caller is
+    authorized and its declared size fits, so an oversized or anonymous upload
+    is refused before anything is spooled to disk."""
+    await _authorize(request, org_id, current_user, db_session)
+    _check_options(source, quiz_mode)
+    upload = await _read_upload(request)
+    return await _begin(upload, source, quiz_mode, current_user)
+
+
 async def start_lms_import(
     request: Request,
     upload: UploadFile,
@@ -235,11 +257,41 @@ async def start_lms_import(
     db_session: AsyncSession,
 ) -> LmsImportStatus:
     await _authorize(request, org_id, current_user, db_session)
+    _check_options(source, quiz_mode)
+    return await _begin(upload, source, quiz_mode, current_user)
+
+
+def _check_options(source: str, quiz_mode: str) -> None:
     if source != "auto" and source not in SOURCE_MODULES:
         raise HTTPException(status_code=400, detail=f"Unknown source '{source}'")
     if quiz_mode not in QUIZ_MODES:
         raise HTTPException(status_code=400, detail=f"quiz_mode must be one of: {', '.join(QUIZ_MODES)}")
 
+
+async def _read_upload(request: Request) -> StarletteUploadFile:
+    """The ``package`` file of a multipart request whose declared size is within the limit."""
+    length = request.headers.get("content-length")
+    if length is None or not length.isdigit():
+        raise HTTPException(status_code=411, detail="Content-Length is required for uploads")
+    if int(length) > MAX_LMS_UPLOAD_SIZE + _MULTIPART_OVERHEAD:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Export too large. Maximum size is {MAX_LMS_UPLOAD_SIZE // (1024 * 1024)}MB",
+        )
+    form = await request.form()
+    upload = form.get("package")
+    # request.form() yields Starlette's UploadFile, the base of FastAPI's
+    if not isinstance(upload, StarletteUploadFile):
+        raise HTTPException(status_code=400, detail="A 'package' file is required")
+    return upload
+
+
+async def _begin(
+    upload: StarletteUploadFile,
+    source: str,
+    quiz_mode: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+) -> LmsImportStatus:
     global _pending
     owner = lms_principal(current_user)
     if len(_running) + _pending >= MAX_QUEUED_CONVERSIONS or _running_by_owner[owner] >= MAX_CONVERSIONS_PER_USER:
@@ -272,7 +324,7 @@ def _release(owner: str) -> None:
         del _running_by_owner[owner]
 
 
-async def _store_upload(upload: UploadFile, owner: str) -> tuple[str, str]:
+async def _store_upload(upload: StarletteUploadFile, owner: str) -> tuple[str, str]:
     """Write the upload into a fresh temp folder; returns ``(temp_dir, upload_path)``."""
     await asyncio.to_thread(cleanup_old_temp_imports, max_age_minutes=STALE_PACKAGE_MINUTES)
 
