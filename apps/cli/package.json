@@ -54,7 +54,7 @@
     "picocolors": "^1.1.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=24.22.1"
   },
   "license": "GPL-3.0",
   "publishConfig": {
