@@ -23,10 +23,12 @@ from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.chapters import Chapter
 from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.courses import Course
+from src.db.media.media import Media, MediaTypeEnum
 from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.rbac import check_resource_access, AccessAction
 
+from .library_media import library_entry_name, library_refs
 from .models import ExportManifest, ExportCourseInfo
 from .storage_utils import read_file_content, list_directory, walk_directory
 
@@ -118,8 +120,9 @@ async def export_courses_batch(
     course_export_data = []
     for course in courses_to_export:
         course_data, chapters = await _load_course_export_data(course, db_session)
+        library = await _load_library_export_data(course, chapters, org.org_uuid, db_session)
         # Extract plain values; SQLModel objects can't be accessed from another thread
-        course_export_data.append((course.course_uuid, course.name, course_data, chapters))
+        course_export_data.append((course.course_uuid, course.name, course_data, chapters, library))
 
     # Phase 2: Build ZIP in a thread pool (file I/O must not block the event loop)
     org_uuid = org.org_uuid
@@ -233,6 +236,41 @@ async def _load_course_export_data(
     return course_data, chapters
 
 
+async def _load_library_export_data(
+    course: Course,
+    chapters: list,
+    org_uuid: str,
+    db_session: AsyncSession,
+) -> list[dict]:
+    """Library items the course's pages download, as plain dicts with their storage key."""
+    refs: set[str] = set()
+    for _chapter, activities in chapters:
+        for activity_dict, _blocks in activities:
+            refs |= library_refs(activity_dict.get("content"))
+    if not refs:
+        return []
+    rows = (await db_session.execute(
+        select(Media).where(Media.media_uuid.in_(refs), Media.org_id == course.org_id)  # type: ignore[attr-defined]
+    )).scalars().all()
+    library = []
+    for media in rows:
+        if media.media_type != MediaTypeEnum.UPLOAD or not media.file_id:
+            continue
+        # Randomized key for new uploads; legacy rows keep the media uuid layout
+        storage_key = media.storage_key or f"orgs/{org_uuid}/media/{media.media_uuid}/{media.file_id}"
+        library.append({
+            "media_uuid": media.media_uuid,
+            "name": media.name,
+            "description": media.description or "",
+            "file_format": media.file_format or "",
+            "file_mime": media.file_mime or "",
+            "file_size": media.file_size,
+            "public": bool(media.public),
+            "_storage_key": storage_key,
+        })
+    return library
+
+
 def _build_export_zip(
     course_export_data: list,
     org_uuid: str,
@@ -251,7 +289,8 @@ def _build_export_zip(
         with zipfile.ZipFile(tmp_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             manifest_courses = []
 
-            for course_uuid, course_name, course_data, chapters in course_export_data:
+            for course_uuid, course_name, course_data, chapters, *rest in course_export_data:
+                library = rest[0] if rest else []
                 course_path = f"courses/{course_uuid}"
                 course_content_path = f"{content_base}/{org_uuid}/courses/{course_uuid}"
 
@@ -310,6 +349,24 @@ def _build_export_zip(
                                 f"{block_path}/block.json",
                                 json.dumps(block_data, indent=2),
                             )
+
+                # Library files the pages download (Office documents, zips...)
+                for item in library:
+                    file_content = read_file_content(f"{content_base.split('/')[0]}/{item['_storage_key']}")
+                    if not file_content:
+                        continue
+                    file_name = library_entry_name(item["media_uuid"], item["file_format"])
+                    entry_path = f"{course_path}/library/{item['media_uuid']}/{file_name}"
+                    if os.path.splitext(file_name)[1].lower() in _ALREADY_COMPRESSED:
+                        zip_file.writestr(_stored_zipinfo(entry_path), file_content)
+                    else:
+                        zip_file.writestr(entry_path, file_content)
+                    meta = {k: v for k, v in item.items() if not k.startswith("_")}
+                    meta["file_name"] = file_name
+                    zip_file.writestr(
+                        f"{course_path}/library/{item['media_uuid']}/media.json",
+                        json.dumps(meta, indent=2),
+                    )
 
                 manifest_courses.append(ExportCourseInfo(
                     course_uuid=course_uuid,

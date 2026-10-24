@@ -30,6 +30,7 @@ from src.services.courses.transfer.import_service import (
     cleanup_old_temp_imports,
     import_courses,
     sanitize_path,
+    summarize_extracted_package,
     validate_zip,
 )
 from src.services.courses.transfer.models import ImportOptions
@@ -1186,10 +1187,11 @@ class TestImportHelpers:
 
         assert activity.activity_type == ActivityTypeEnum.TYPE_DYNAMIC
         assert activity.activity_sub_type is None
+        # A top-level activity_uuid (video/PDF content) names the new activity
         assert activity.content == {
             "block": "block-new",
             "file_id": "file-new",
-            "activity_uuid": "activity-new",
+            "activity_uuid": activity.activity_uuid,
         }
         assert activity.details == {"note": "keep"}
 
@@ -1261,7 +1263,7 @@ class TestImportHelpers:
         assert activity.content == {
             "block": "block-old",
             "file_id": "old-file",
-            "activity_uuid": "old-activity",
+            "activity_uuid": activity.activity_uuid,
         }
         assert (tmp_path / "content/orgs/org_test/courses/course_new/activities").exists()
 
@@ -1454,7 +1456,8 @@ class TestImportHelpers:
             ("BLOCK_VIDEO", "videoBlock"),
             ("BLOCK_IMAGE", "imageBlock"),
             ("BLOCK_DOCUMENT_PDF", "pdfBlock"),
-            ("BLOCK_AUDIO", None),
+            ("BLOCK_AUDIO", "audioBlock"),
+            ("BLOCK_QUIZ", None),
         ],
     )
     def test_get_block_type_folder(self, block_type, expected_folder):
@@ -1479,3 +1482,115 @@ class TestImportHelpers:
 
         assert not stale_root.exists()
         assert fresh_root.exists()
+
+
+# ---------------------------------------------------------------------------
+# Library files (blockLibrary nodes backed by library/<media>/ in the package)
+# ---------------------------------------------------------------------------
+
+from src.tests.lms_import.test_import_pipeline import SERVICE, _docx, import_env  # noqa: E402,F401  (fixture)
+
+
+def _library_package(tmp_path, imports, *, public=None):
+    """A one-page course whose page downloads one Library file."""
+    from src.services.courses.lms_import import PackageWriter, ir
+
+    src = tmp_path / "source"
+    src.mkdir()
+    _docx(src / "handout.docx")
+    course = ir.Course(title="Files", source="moodle", id="f9", sections=[ir.Section("W", items=[
+        ir.Page("Materials", [ir.FilePart(ir.Asset(str(src / "handout.docx"), "handout.docx"), title="Handout")]),
+    ])])
+    temp_id = str(uuid4())
+    extract_dir = imports / temp_id / "extracted"
+    PackageWriter(course, str(extract_dir)).write()
+    if public is not None:
+        meta_path = next((extract_dir / "courses").glob("*/library/*/media.json"))
+        meta = json.loads(meta_path.read_text())
+        meta["public"] = public
+        meta_path.write_text(json.dumps(meta))
+    summary = summarize_extracted_package(str(extract_dir), temp_id)
+    return temp_id, summary.courses[0].course_uuid
+
+
+def _library_files(org_uuid):
+    root = f"content/orgs/{org_uuid}/media"
+    return sorted(f for _d, _s, files in os.walk(root) for f in files)
+
+
+@pytest.mark.asyncio
+async def test_failed_import_removes_the_library_files_it_wrote(db, org, admin_user, mock_request, tmp_path,
+                                                                 import_env):  # noqa: F811
+    from src.db.media.media import Media
+
+    temp_id, course_key = _library_package(tmp_path, import_env["imports"])
+    org_id, org_uuid = org.id, org.org_uuid
+    with patch(f"{SERVICE}._import_chapter", side_effect=RuntimeError("chapter exploded")):
+        result = await import_courses(mock_request, temp_id, org_id, ImportOptions(course_uuids=[course_key]),
+                                      admin_user, db)
+    assert result.failed == 1 and "chapter exploded" in result.courses[0].error
+    assert (await db.execute(select(Media).where(Media.org_id == org_id))).scalars().all() == []
+    # The copied file lives outside the course folder and must not be orphaned
+    assert _library_files(org_uuid) == []
+
+
+@pytest.mark.asyncio
+async def test_library_file_above_the_library_limit_is_left_out(db, org, admin_user, mock_request, tmp_path,
+                                                                import_env):  # noqa: F811
+    from src.db.courses.activities import Activity
+    from src.db.media.media import Media
+
+    temp_id, course_key = _library_package(tmp_path, import_env["imports"])
+    with patch(f"{SERVICE}.library_max_size", return_value=1):
+        result = await import_courses(mock_request, temp_id, org.id, ImportOptions(course_uuids=[course_key]),
+                                      admin_user, db)
+    assert result.successful == 1, result.courses[0].error
+    assert (await db.execute(select(Media).where(Media.org_id == org.id))).scalars().all() == []
+    page = (await db.execute(select(Activity).where(Activity.name == "Materials"))).scalar_one()
+    node = next(n for n in page.content["content"] if n["type"] == "blockLibrary")
+    assert node["attrs"]["resourceUuid"] is None  # emptied rather than pointing at nothing
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("public", [True, False])
+async def test_library_file_visibility_is_kept(db, org, admin_user, mock_request, tmp_path, import_env, public):  # noqa: F811
+    from src.db.media.media import Media
+
+    temp_id, course_key = _library_package(tmp_path, import_env["imports"], public=public)
+    result = await import_courses(mock_request, temp_id, org.id, ImportOptions(course_uuids=[course_key]),
+                                  admin_user, db)
+    assert result.successful == 1, result.courses[0].error
+    media = (await db.execute(select(Media).where(Media.org_id == org.id))).scalar_one()
+    assert media.public is public
+
+
+@pytest.mark.asyncio
+async def test_malformed_library_entries_are_ignored(db, org, admin_user, mock_request, tmp_path, import_env):  # noqa: F811
+    from src.db.media.media import Media
+
+    temp_id, course_key = _library_package(tmp_path, import_env["imports"])
+    library = next((import_env["imports"] / temp_id / "extracted" / "courses").glob("*/library"))
+
+    def entry(name, meta, file=None, content=b"x"):
+        folder = library / name
+        folder.mkdir()
+        if meta is not None:
+            (folder / "media.json").write_text(meta if isinstance(meta, str) else json.dumps(meta))
+        if file:
+            (folder / file).write_bytes(content)
+
+    entry("no-meta", None, "a.pdf")
+    entry("bad-json", "{not json", "a.pdf")
+    entry("not-a-dict", [], "a.pdf")
+    entry("bad-uuid", {"media_uuid": "x", "file_name": "a.pdf"}, "a.pdf")
+    entry("path-in-name", {"media_uuid": "media_p", "file_name": "../a.pdf"})
+    entry("unknown-ext", {"media_uuid": "media_e", "file_name": "tool.exe"}, "tool.exe")
+    entry("missing-file", {"media_uuid": "media_m", "file_name": "gone.pdf"})
+    entry("empty-file", {"media_uuid": "media_0", "file_name": "empty.pdf"}, "empty.pdf", b"")
+    entry("wrong-content", {"media_uuid": "media_w", "file_name": "fake.pdf"}, "fake.pdf", b"not a pdf")
+
+    result = await import_courses(mock_request, temp_id, org.id, ImportOptions(course_uuids=[course_key]),
+                                  admin_user, db)
+    assert result.successful == 1, result.courses[0].error
+    media = (await db.execute(select(Media).where(Media.org_id == org.id))).scalars().all()
+    assert [m.name for m in media] == ["Handout"]  # only the genuine entry

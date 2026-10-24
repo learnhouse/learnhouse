@@ -310,6 +310,17 @@ MIME_TO_SAFE_EXT = {
     'application/vnd.ms-powerpoint': 'ppt',
 }
 
+# Media.file_size is a 32-bit integer column
+MAX_STORED_FILE_SIZE = 2**31 - 1
+
+
+def max_size_for_extension(ext: str) -> int:
+    """Largest upload accepted for ``ext`` (without the dot); 0 for an unknown extension."""
+    spec = next((t for t in FILE_TYPES.values() if f".{ext.lower()}" in t["extensions"]), None)
+    if spec is None:
+        return 0
+    return min(int(spec.get('max_size') or MAX_STORED_FILE_SIZE), MAX_STORED_FILE_SIZE)
+
 
 def _validate_upload(
     file: UploadFile,
