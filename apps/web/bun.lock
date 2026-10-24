@@ -173,7 +173,7 @@
     "lodash": ">=4.18.1",
     "lodash-es": ">=4.18.1",
     "postcss": ">=8.5.31",
-    "preact": ">=10.27.3",
+    "preact": ">=11.0.1",
     "prosemirror-model": "1.25.12",
     "prosemirror-view": "1.42.6",
     "source-map-js": ">=1.2.2",
