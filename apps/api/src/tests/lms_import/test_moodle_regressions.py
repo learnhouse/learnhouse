@@ -396,3 +396,15 @@ def test_module_name_is_validated_before_it_becomes_a_path(tmp_path):
     assert [it.title for it in c.sections[0].items] == ["Fine"]
     assert ("Evil", "activity", "unknown module type") in c.skipped
     assert c.warnings == []
+
+
+def test_oversized_backup_xml_is_a_warning(tmp_path, monkeypatch):
+    from src.services.courses.lms_import.xmlutil import FileTooLarge
+
+    path = tmp_path / "questions.xml"
+    path.write_text("<q/>")
+    monkeypatch.setattr(moodle, "read_limited", lambda _p: (_ for _ in ()).throw(FileTooLarge("questions.xml is 300 MB")))
+    warnings: list[str] = []
+    assert moodle._parse(str(path), warnings.append) is None
+    assert warnings == ["Skipped questions.xml is 300 MB"]
+    assert moodle._parse(str(path)) is None  # without a warn callback: silently None

@@ -871,6 +871,7 @@ def test_minimal_export_without_manifest(tmp_path):
     write(tmp_path, "course_settings/canvas_export.txt", "panda")
     course = canvas.read(str(tmp_path))
     assert course.title == "Imported course" and course.sections == [] and course.thumbnail is None
+    assert canvas.CanvasReader(str(tmp_path)).manifest_dir() == ""  # no manifest: inline documents sit at the root
 
 
 def test_empty_syllabus_is_skipped(tmp_path):

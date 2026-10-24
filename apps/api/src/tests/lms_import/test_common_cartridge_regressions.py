@@ -3,8 +3,11 @@ generated OER cartridges). Each test rebuilds the shape that broke, minimally.""
 
 from __future__ import annotations
 
+import pytest
+
 from src.services.courses.lms_import import ir
 from src.services.courses.lms_import.sources import common_cartridge as cc
+from src.services.courses.lms_import.xmlutil import XmlError
 
 from .test_common_cartridge import (
     PDF,
@@ -43,6 +46,40 @@ def test_html_entities_in_xml_moodle(tmp_path):
     assert course.sections[0].items[0].title == "Read\xa0this"
     assert cc.try_parse_xml_file(str(tmp_path / "missing.xml")) is None
     assert cc.try_parse_xml_file("") is None
+    # An entity nobody knows survives the numeric rewrite: the retry fails too and the file is unreadable
+    write(tmp_path, "bad.xml", "<a>&nbsp;&bogus;</a>")
+    with pytest.raises(XmlError):
+        cc.parse_xml_file(str(tmp_path / "bad.xml"))
+    assert cc.try_parse_xml_file(str(tmp_path / "bad.xml")) is None
+    assert cc._numeric_entities(b"&nbsp;&amp;&bogus;") == b"&#160;&amp;&bogus;"
+
+
+def test_module_with_its_own_page_and_children(tmp_path):
+    """Some exporters point the module item itself at an overview page and nest the rest under it."""
+    write(tmp_path, "overview.html", "<p>Overview</p>")
+    write(tmp_path, "p1.html", "<p>One</p>")
+    write(tmp_path, "imsmanifest.xml", manifest_xml("""
+      <resource identifier="O" type="webcontent" href="overview.html"/>
+      <resource identifier="P" type="webcontent" href="p1.html"/>
+    """, '<item identifier="M" identifierref="O"><title>Week 1</title>' + _item("p", "P", "Lesson one") + "</item>"))
+    (section,) = cc.read(str(tmp_path)).sections
+    assert section.title == "Week 1"
+    assert [i.title for i in section.items] == ["Week 1", "Lesson one"]
+    assert "Overview" in section.items[0].parts[0].content.html
+
+
+def test_discussions_without_text_or_file(tmp_path):
+    """A topic may carry only a title; a topic file may be missing altogether."""
+    write(tmp_path, "d/topic.xml", '<topic xmlns="http://www.imsglobal.org/xsd/imsccv1p1/imsdt_v1p1">'
+                                   "<title>Say hi</title></topic>")
+    write(tmp_path, "imsmanifest.xml", manifest_xml("""
+      <resource identifier="D" type="imsdt_xmlv1p1"><file href="d/topic.xml"/></resource>
+      <resource identifier="G" type="imsdt_xmlv1p1"><file href="d/gone.xml"/></resource>
+    """, _module(_item("d", "D"), _item("g", "G", "Lost topic"))))
+    course = cc.read(str(tmp_path))
+    (topic,) = course.sections[0].items
+    assert isinstance(topic, ir.Page) and topic.title == "Say hi" and topic.parts == []
+    assert course.skipped == [("Lost topic", "discussion", "missing from the export")] and course.warnings == []
 
 
 def test_moodle_item_titles_and_lms_links(tmp_path):
@@ -178,14 +215,18 @@ def test_survey_without_answer_key(tmp_path):
 def test_empty_quizzes(tmp_path):
     write(tmp_path, "q1.xml", _qti(title="Shell", rubric="&lt;p&gt;Read chapter 2 first&lt;/p&gt;"))
     write(tmp_path, "q2.xml", _qti(title="Bare"))
+    write(tmp_path, "q3.xml", "<questestinterop><objectbank ident='B'/></questestinterop>")
     write(tmp_path, "imsmanifest.xml", manifest_xml("""
       <resource identifier="Q1" type="imsqti_xmlv1p2"><file href="q1.xml"/></resource>
       <resource identifier="Q2" type="imsqti_xmlv1p2"><file href="q2.xml"/></resource>
-    """, _module(_item("a", "Q1"), _item("b", "Q2"))))
+      <resource identifier="Q3" type="imsqti_xmlv1p2"><file href="q3.xml"/></resource>
+    """, _module(_item("a", "Q1"), _item("b", "Q2"), _item("c", "Q3", "Bank file"))))
     course = cc.read(str(tmp_path))
-    shell, bare = course.sections[0].items
+    shell, bare, bank_file = course.sections[0].items
     assert isinstance(shell, ir.Page) and "Read chapter 2" in shell.parts[0].content.html
     assert isinstance(bare, ir.UnsupportedItem) and bare.reason == "the quiz has no questions in the export"
+    # A bank placed as a quiz holds no <assessment> at all
+    assert isinstance(bank_file, ir.UnsupportedItem) and bank_file.reason == "no QTI assessment in the file"
     assert course.skipped == [("Shell", "quiz", "no questions in the export")] and course.warnings == []
 
 
@@ -214,11 +255,14 @@ def test_bank_only_cartridge(tmp_path):
         "b1", "cc.true_false.v0p1", "Sky is blue?", choice_lid("b1_rl", [("t", "True"), ("f", "False")]),
         correct("b1_rl", "t")) + "</objectbank></questestinterop>")
     write(tmp_path, "empty_bank.xml", "<questestinterop><objectbank ident='B2'/></questestinterop>")
+    write(tmp_path, "broken_bank.xml", "<questestinterop><objectbank")
     write(tmp_path, "imsmanifest.xml", manifest_xml("""
       <resource identifier="B" type="imsqti_xmlv1p2/imscc_xmlv1p1/question-bank"><file href="bank.xml"/></resource>
       <resource identifier="E" type="imsqti_xmlv1p2/imscc_xmlv1p1/question-bank"><file href="empty_bank.xml"/>
       </resource>
       <resource identifier="G" type="imsqti_xmlv1p2/imscc_xmlv1p1/question-bank"><file href="gone.xml"/></resource>
+      <resource identifier="X" type="imsqti_xmlv1p2/imscc_xmlv1p1/question-bank"><file href="broken_bank.xml"/>
+      </resource>
     """))
     course = cc.read(str(tmp_path))
     section = course.sections[-1]

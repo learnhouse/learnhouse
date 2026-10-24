@@ -667,8 +667,6 @@ class _Reader:
                                  visible=cctx.visible)
             units: list[_Unit] = []
             for child in node.el:
-                if not isinstance(child.tag, str):
-                    continue
                 if child.tag in _SEQUENCES:
                     section.items.extend(self._unit_items(units, cctx, section.title))
                     units = []
@@ -781,8 +779,6 @@ class _Reader:
 
     def _collect(self, node: _Node, ctx: _Ctx, out: list, where: str) -> None:
         for child in node.el:
-            if not isinstance(child.tag, str):
-                continue
             cnode = self._definition(child)
             if cnode is None:
                 continue
@@ -1228,8 +1224,6 @@ class _Reader:
         parts = [prefix, html_lib.escape(r.text or "", quote=False)]
         has_label = False
         for c in r:
-            if not isinstance(c.tag, str):
-                continue
             if c.tag == "label":
                 has_label = True
                 parts.append(f"<p>{_inner(c).strip()}</p>")

@@ -368,6 +368,32 @@ def test_quiz_bowl_keeps_phrases_only():
     assert "form of a question" in q.text.html
 
 
+def test_quiz_bowl_without_phrase_groups_has_no_answer():
+    # The accepted phrases live in <or> groups; a key written as a plain varequal yields none
+    q = parse(item_xml("Quiz Bowl", "Where we all live", fib_response(), correct_cond(veq("a yellow submarine"))))
+    assert q.type == ir.QType.UNSUPPORTED and q.reason == "no accepted answer" and q.answers == []
+    assert "form of a question" not in q.text.html
+
+
+def test_scoring_conditions_that_do_not_mark_a_choice():
+    options = [("a1", "nose"), ("a2", "ear"), ("a3", "eye")]
+    conds = (
+        # an empty varequal in the key is skipped
+        correct_cond(veq("a1") + veq(""))
+        # a non-SCORE counter is not a score
+        + f'<respcondition><conditionvar>{veq("a2")}</conditionvar>'
+          '<setvar action="Add" variablename="ATTEMPTS">1</setvar>'
+          '<setvar action="Set" variablename="SCORE">0.0</setvar>'
+          '<displayfeedback feedbacktype="Response" linkrefid="incorrect"/></respcondition>'
+        # an untitled catch-all and a condition without a conditionvar never make an answer right
+        + '<respcondition><conditionvar><other/></conditionvar>'
+          '<setvar action="Set" variablename="SCORE">SCORE.max</setvar></respcondition>'
+        + '<respcondition><setvar action="Set" variablename="SCORE">SCORE.max</setvar></respcondition>'
+    )
+    q = parse(item_xml("Multiple Choice", "Which?", choice_response(options), conds))
+    assert q.type == ir.QType.MULTICHOICE and [c.correct for c in q.choices] == [True, False, False]
+
+
 def test_fill_in_multiple_blanks_markers():
     responses = fib_response("1") + fib_response("kind of being") + fib_response("family")
     cond = correct_cond(f"<and><or>{veq('poor', '1')}{veq('sad', '1')}</or><or>{veq('boy', 'kind of being')}"
@@ -483,6 +509,11 @@ def test_calculated_uses_first_answer_set():
     assert inf.type == ir.QType.UNSUPPORTED
     huge_tol = parse(item_xml("Calculated", "[x]", fib_response(), "", extension=calculated_ext(tolerance="1e999")))
     assert huge_tol.type == ir.QType.NUMERICAL and huge_tol.numeric[0].tolerance == 0.0
+    # A percentage of a huge answer overflows to infinity: no tolerance rather than an unstorable one
+    overflow = parse(item_xml("Calculated", "[x]", fib_response(), "", extension=calculated_ext(
+        tol_type="percent", tolerance="1e300").replace("<answer>8.5</answer>", "<answer>1e308</answer>")))
+    assert overflow.type == ir.QType.NUMERICAL
+    assert overflow.numeric[0].value == 1e308 and overflow.numeric[0].tolerance == 0.0
 
 
 def test_essay_short_response_file_upload_hot_spot_presentation():
@@ -1410,3 +1441,109 @@ def test_read_legacy_blackboard_6_export(tmp_path):
     assert ("Midterm", "quiz", bb._LEGACY_REASON) in course.skipped
     assert ("res00013", "quiz", bb._LEGACY_REASON) in course.skipped
     assert ("res00025", "question pool", bb._LEGACY_REASON) in course.skipped
+
+
+def test_manifest_resource_without_identifier_is_skipped(tmp_path):
+    p = Pkg(tmp_path)
+    settings = p.res("course/x-bb-coursesetting", course_xml())
+    p.manifest([])
+    manifest = tmp_path / "imsmanifest.xml"
+    manifest.write_text(manifest.read_text().replace(
+        "<resources>", '<resources><resource type="resource/x-bb-document" bb:file="ghost.dat"/>'))
+    pkg = bb._Package(str(tmp_path))
+    assert pkg.order == [settings] and "" not in pkg.resources
+    assert bb.read(str(tmp_path)).title == "Biology 101"
+
+
+def test_dangling_links_and_plain_xml_in_the_content_collection(tmp_path):
+    # Trimmed archives can keep symlinks whose targets are gone, and XML that is not a LOM sidecar
+    p = Pkg(tmp_path)
+    settings = p.res("course/x-bb-coursesetting", course_xml(banner="/xid-42_1"))
+    write(tmp_path, "csfiles/home_dir/config.xml", "<settings/>")
+    os.symlink("gone.pdf", str(tmp_path / "csfiles" / "home_dir" / "__xid-5_1.pdf.xml"))
+    os.makedirs(tmp_path / settings)
+    os.symlink("gone.jpg", str(tmp_path / settings / "xid-42_1"))
+    p.manifest([])
+    pkg = bb._Package(str(tmp_path))
+    # neither XML file is read as a sidecar
+    assert pkg.xid_names == {} and pkg.cs_paths == {}
+    # the extension-less banner cannot be sniffed, so it is not an image
+    assert pkg.xid_asset("42_1").name == "file"
+    assert bb.read(str(tmp_path)).thumbnail is None
+
+
+def test_folder_of_tool_links_keeps_its_summary(tmp_path):
+    p = Pkg(tmp_path)
+    toc = p.res("course/x-bb-coursetoc", toc_xml("Area"))
+    top = p.res("resource/x-bb-document", content_xml("_1_1", "--TOP--", "resource/x-bb-folder",
+                                                      parent="{unset id}", is_folder=True))
+    folder = p.res("resource/x-bb-document", content_xml("_2_1", "Tools", "resource/x-bb-folder", parent="_1_1",
+                                                         is_folder=True, body="<p>Use the discussion board.</p>"))
+    forum = p.res("resource/x-bb-document", content_xml("_3_1", "Forum", "resource/x-bb-forumlink", parent="_2_1"))
+    p.manifest([(toc, "Area", [(top, "--TOP--", [(folder, "Tools", [(forum, "Forum", [])])])])])
+    course = bb.read(str(tmp_path))
+    # The tool links are reported and dropped; the folder stays as a chapter for its summary
+    assert [(s.title, s.items) for s in course.sections] == [("Tools", [])]
+    assert "discussion board" in course.sections[0].summary.html
+    assert course.skipped == [("Forum", "discussion", "not imported")]
+
+
+def test_document_with_an_address_gets_a_link_part(tmp_path):
+    p = Pkg(tmp_path)
+    toc = p.res("course/x-bb-coursetoc", toc_xml("Area"))
+    top = p.res("resource/x-bb-document", content_xml("_1_1", "--TOP--", "resource/x-bb-folder",
+                                                      parent="{unset id}", is_folder=True))
+    page = p.res("resource/x-bb-document", content_xml("_2_1", "Reading", body="<p>Read this</p>",
+                                                       url="www.example.edu/reading"))
+    p.manifest([(toc, "Area", [(top, "--TOP--", [(page, "Reading", [])])])])
+    item = bb.read(str(tmp_path)).sections[0].items[0]
+    assert [type(pt).__name__ for pt in item.parts] == ["HtmlPart", "LinkPart"]
+    assert item.parts[1].url == "https://www.example.edu/reading" and item.parts[1].title == "Reading"
+
+
+def test_ultra_document_with_its_own_body(tmp_path):
+    p = Pkg(tmp_path)
+    toc = p.res("course/x-bb-coursetoc", toc_xml("Area"))
+    top = p.res("resource/x-bb-document", content_xml("_1_1", "--TOP--", "resource/x-bb-folder",
+                                                      parent="{unset id}", is_folder=True))
+    doc = p.res("resource/x-bb-document", content_xml(
+        "_2_1", "Overview", "resource/x-bb-folder", parent="_1_1", is_folder=True, folder_type="BB_PAGE",
+        body="<p>Summary first</p>"))
+    doc_body = p.res("resource/x-bb-document", content_xml("_3_1", "ultraDocumentBody", parent="_2_1",
+                                                           body="<p>Details</p>"))
+    p.manifest([(toc, "Area", [(top, "--TOP--", [(doc, "Overview", [(doc_body, "ultraDocumentBody", [])])])])])
+    page = bb.read(str(tmp_path)).sections[0].items[0]
+    assert isinstance(page, ir.Page) and page.title == "Overview"
+    assert [type(pt).__name__ for pt in page.parts] == ["HtmlPart", "HtmlPart"]
+    assert "Summary first" in page.parts[0].content.html and "Details" in page.parts[1].content.html
+
+
+def test_staff_entries_that_are_not_staff_records_are_dropped(tmp_path):
+    p = Pkg(tmp_path)
+    staff_toc = p.res("course/x-bb-coursetoc", toc_xml("Staff", "APPLICATION", handle="staff_information"))
+    odd = p.res("resource/x-bb-staffinfo", content_xml("_1_1", "Not a person"))
+    broken = p.res("resource/x-bb-staffinfo", "<STAFFINFO")
+    person = p.res("resource/x-bb-staffinfo", (
+        '<STAFFINFO id="_2_1"><TITLE value="Lecturer Jo"/><FLAGS><ISAVAILABLE value="true"/></FLAGS>'
+        '<CONTACT><NAME><GIVEN value="Jo"/></NAME><EMAIL value="jo@example.edu"/></CONTACT></STAFFINFO>'))
+    p.manifest([(staff_toc, "Staff", []), ("", "placeholder/staff-info", [
+        (odd, "Odd", []), (broken, "Broken", []), (person, "Lecturer Jo", [])])])
+    course = bb.read(str(tmp_path))
+    assert [i.title for i in course.sections[0].items] == ["Lecturer Jo"]
+    assert len(course.warnings) == 1 and course.warnings[0].startswith(f"{broken}.dat could not be parsed")
+
+
+def test_gradebook_column_with_unknown_assessment_id_falls_back_to_the_title(tmp_path):
+    p = Pkg(tmp_path)
+    toc = p.res("course/x-bb-coursetoc", toc_xml("Tests"))
+    top = p.res("resource/x-bb-document", content_xml("_1_1", "--TOP--", "resource/x-bb-folder",
+                                                      parent="{unset id}", is_folder=True))
+    link = p.res("resource/x-bb-document", content_xml("_2_1", "Pop quiz", "resource/x-bb-asmt-test-link"))
+    p.res("assessment/x-bb-qti-test", assessment_xml("Pop quiz", [mc_item()], oid="_1_1"), "Pop quiz")
+    # The column names an assessment id no resource, content item or QTI object carries
+    p.res("course/x-bb-gradebook", gradebook_xml([(link, "_404_1", "", "10")]))
+    p.manifest([(toc, "Tests", [(top, "--TOP--", [(link, "Pop quiz", [])])])])
+    course = bb.read(str(tmp_path))
+    quiz = course.sections[0].items[0]
+    assert isinstance(quiz, ir.Assessment) and quiz.title == "Pop quiz" and len(quiz.questions) == 1
+    assert course.warnings == [] and course.skipped == []

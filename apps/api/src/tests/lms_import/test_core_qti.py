@@ -433,6 +433,9 @@ def test_formula_question_rejects_non_finite_values():
     assert bad.type == QType.UNSUPPORTED and bad.reason == "formula question without a numeric answer"
     tol = parse(item(body, metadata=md, extra=calc("9", "1e999")))
     assert tol.type == QType.NUMERICAL and (tol.numeric[0].value, tol.numeric[0].tolerance) == (9.0, 0.0)
+    # A percentage of a huge answer overflows to infinity: no tolerance rather than an unstorable one
+    big = parse(item(body, metadata=md, extra=calc("1e308", "1e300%")))
+    assert big.type == QType.NUMERICAL and (big.numeric[0].value, big.numeric[0].tolerance) == (1e308, 0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -545,5 +548,7 @@ def test_looks_html():
 def test_strip_names_image_only_answers():
     assert qti._strip("<p>Paris</p>") == "Paris"
     assert qti._strip('<img src="x/cat.png" alt="A cat">') == "A cat"
+    # An image the text pass drops (icon-font class) is still named after its alt
+    assert qti._strip('<img class="fa" src="x/paw.png" alt="A paw">') == "A paw"
     assert qti._strip('<img src="https://h/files/dog.png?verifier=1">') == "Image: dog.png"
     assert qti._strip("") == ""

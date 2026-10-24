@@ -771,6 +771,15 @@ def test_multiple_choice():
     assert '<img src="quizzing\\fig.png"' in q.text.html
 
 
+def test_partial_credit_option_is_not_a_second_right_answer():
+    r = "P_LID"
+    body = mat("Capital of France?") + lid(r, [("P_A", "Paris"), ("P_B", "Lyon"), ("P_C", "Rome")])
+    rp = cond(r, "P_A", "100") + cond(r, "P_B", "25") + cond(r, "P_C", "0")
+    q = q_from(item("P", "Multiple Choice", body, rp))
+    assert q.type == ir.QType.MULTICHOICE and not q.multiple
+    assert [c.correct for c in q.choices] == [True, False, False]
+
+
 def test_multi_select_with_not_branches():
     q = q_from(ms_item())
     assert q.type == ir.QType.MULTICHOICE and q.multiple

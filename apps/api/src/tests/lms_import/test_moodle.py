@@ -788,6 +788,201 @@ def test_wiki_and_subsection(course4):
     assert isinstance(by["subsection_72"], ir.UnsupportedItem)
 
 
+def test_broken_handlers_are_reported(moodle4, monkeypatch):
+    def boom(*_a, **_k):
+        raise RuntimeError("kaput")
+
+    monkeypatch.setattr(moodle._Questions, "_q_truefalse", boom)
+    monkeypatch.setattr(moodle._Moodle2Reader, "_mod_url", boom)
+    c = moodle.read(moodle4.root)
+    qs, _quiz = _quiz_questions(c)
+    assert qs["Q103"].type == ir.QType.UNSUPPORTED and qs["Q103"].reason == "could not be read (kaput)"
+    assert not any(k.startswith("url_") for k in items_by_id(c))
+    assert any(w.startswith('Could not read url "url"') and "kaput" in w for w in c.warnings)
+
+
+def _quiz_backup(tmp_path, questions_xml: str, slots: str) -> ir.Course:
+    b = Mbz(tmp_path / "quiz")
+    b.activity("quiz", 1, 1, f"<name>Quiz</name><intro></intro><grade>10</grade>"
+               f"<question_instances>{slots}</question_instances>", 40)
+    b.section(1, 1, sequence=[1])
+    b.write(course_xml(), questions_xml)
+    return moodle.read(b.root)
+
+
+def test_question_bank_edge_cases(tmp_path):
+    v1 = question(202, "shortanswer", "First version", plugin=answers((1, "one", "1")))
+    v2 = question(203, "shortanswer", "Second version", plugin=answers((2, "two", "1")))
+    no_id = question(204, "truefalse", "No id", plugin=answers((3, "True", "1"))).replace(
+        '<question id="204">', "<question>")
+    no_cat_id = category4(6, "No id", QCTX, entry(3, 6, (1, "ready", question(205, "truefalse", "Lost")))).replace(
+        '<question_category id="6">', "<question_category>")
+    bank = category4(5, "Default", QCTX, entry(1, 5, (1, "ready", v1), (2, "ready", v2))
+                     + entry(2, 5, (1, "ready", no_id))) + no_cat_id
+    # Slot 1 is pinned to version 1, slot 4 takes the latest ready version of the same entry
+    c = _quiz_backup(tmp_path, bank, _slot(1, 1, version="1") + _slot(2, 2) + _slot(3, 3) + _slot(4, 1))
+    assert [q.title for q in c.sections[0].items[0].questions] == ["Q202", "Q203"]
+    assert any("missing from the question bank" in w for w in c.warnings)  # identical warnings are reported once
+
+
+def test_question_answer_edge_cases(tmp_path):
+    partial = question(301, "shortanswer", "Close?", plugin=answers((1, "close", "0.5"), (2, "far", "0.2")))
+    nothing = question(302, "shortanswer", "None right", plugin=answers((3, "x", "0")))
+    wildcard = question(303, "numerical", "Pi?", plugin=answers((4, "*", "1"), (5, "3.14", "1")))
+    stray = question(304, "gapselect", "Fill [[1]] and [[9]].", plugin=answers((6, "one", "0", "1")))
+    unknown_child = question(305, "multianswer", "A {#1}",
+                             plugin="<multianswer><sequence>999</sequence></multianswer>")
+    star_child = question(306, "multianswer", "B {#1}", plugin="<multianswer><sequence>307</sequence></multianswer>")
+    child = question(307, "numerical", "{1:NUMERICAL:=*}", parent="306", plugin=answers((7, "*", "1")))
+    gapless = question(308, "multianswer", "No gaps here", plugin="<multianswer><sequence></sequence></multianswer>")
+    bank = category4(5, "Default", QCTX, "".join(
+        entry(i, 5, (1, "ready", q)) for i, q in enumerate(
+            [partial, nothing, wildcard, stray, unknown_child, star_child, child, gapless], start=1)))
+    c = _quiz_backup(tmp_path, bank, "".join(_slot(i, i) for i in range(1, 7)) + _slot(7, 8))
+    qs = {q.title: q for q in c.sections[0].items[0].questions}
+    assert qs["Q301"].answers == ["close"]  # best partial credit when nothing scores fully
+    assert qs["Q302"].answers == []
+    assert [n.value for n in qs["Q303"].numeric] == [3.14]  # "*" accepts anything, so it is not a value
+    assert qs["Q304"].text.html == "Fill {{1}} and [[9]]." and len(qs["Q304"].blanks) == 1
+    assert qs["Q305"].type == ir.QType.CLOZE and qs["Q305"].blanks == [ir.Blank()]
+    assert qs["Q306"].blanks == [ir.Blank()]
+    assert qs["Q308"].type == ir.QType.UNSUPPORTED
+    assert qs["Q308"].reason == "embedded answers question without any gap"
+
+
+def test_calculated_edge_cases(tmp_path):
+    datasets = (
+        "<dataset_definitions>"
+        '<dataset_definition id="1"><name>a</name><dataset_items><dataset_item><number>1</number>'
+        "<value>3.14159</value></dataset_item></dataset_items></dataset_definition>"
+        '<dataset_definition id="2"><name>empty</name><dataset_items></dataset_items></dataset_definition>'
+        "</dataset_definitions>"
+    )
+    sig = question(401, "calculated", "Round {a}", plugin=(
+        answers((1, "{a}", "1"))
+        + "<calculated_records><calculated_record><answer>1</answer><tolerance>0.1</tolerance>"
+          "<tolerancetype>1</tolerancetype><correctanswerlength>3</correctanswerlength>"
+          "<correctanswerformat>2</correctanswerformat></calculated_record></calculated_records>" + datasets))
+    bare = question(402, "calculated", "Raw {a}", plugin=answers((2, "{a}", "1")) + datasets)
+    unknown = question(403, "calculated", "{a} + {b}", plugin=answers((3, "{a} + {b}", "1")) + datasets)
+    multi_none = question(404, "calculatedmulti", "{a}?", plugin=answers((4, "{={a}}", "1")))
+    multi_old = question(405, "calculatedmulti", "{a}?", plugin=(
+        answers((5, "{={a}}", "0.5"), (6, "{={a}+1}", "0.5"))
+        + "<calculated_options><calculated_option><single>0</single></calculated_option></calculated_options>"
+        + datasets))
+    bank = category4(5, "Default", QCTX, "".join(
+        entry(i, 5, (1, "ready", q)) for i, q in enumerate([sig, bare, unknown, multi_none, multi_old], start=1)))
+    c = _quiz_backup(tmp_path, bank, "".join(_slot(i, i) for i in range(1, 6)))
+    qs = {q.title: q for q in c.sections[0].items[0].questions}
+    # Three significant figures with a relative tolerance
+    assert qs["Q401"].numeric[0].value == 3.14 and qs["Q401"].numeric[0].tolerance == pytest.approx(0.314)
+    # No answer record: the value is kept as computed, with no tolerance
+    assert qs["Q402"].numeric[0].value == 3.14159 and qs["Q402"].numeric[0].tolerance == 0.0
+    assert qs["Q402"].text.html == "Raw 3.14159"
+    assert qs["Q403"].type == ir.QType.UNSUPPORTED
+    assert qs["Q403"].reason == "calculated question formula could not be evaluated"
+    assert qs["Q404"].type == ir.QType.UNSUPPORTED
+    assert qs["Q404"].reason == "calculated question without dataset values"
+    assert qs["Q405"].multiple is True and [c.correct for c in qs["Q405"].choices] == [True, True]
+    assert [c.text.html for c in qs["Q405"].choices] == ["3.14159", "4.14159"]
+
+
+def test_random_short_answer_matching_edge_cases(tmp_path):
+    opts = "<randomsamatch><choose>0</choose><subcats>0</subcats></randomsamatch>"
+    rsam = question(501, "randomsamatch", "Match", plugin=opts)
+    no_right = question(502, "shortanswer", "Nothing right", plugin=answers((1, "x", "0")))
+    ok = question(503, "shortanswer", "Two?", plugin=answers((2, "2", "1")))
+    alone = question(504, "randomsamatch", "Alone", plugin=opts)
+    bank = (category4(5, "Pool", QCTX, entry(1, 5, (1, "ready", rsam)) + entry(2, 5, (1, "ready", no_right))
+                      + entry(3, 5, (1, "ready", ok)))
+            + category4(6, "Empty", QCTX, entry(4, 6, (1, "ready", alone))))
+    c = _quiz_backup(tmp_path, bank, _slot(1, 1) + _slot(2, 4))
+    qs = {q.title: q for q in c.sections[0].items[0].questions}
+    assert [(p.prompt.html, p.answer) for p in qs["Q501"].pairs] == [("Two?", "2")]
+    assert qs["Q504"].type == ir.QType.UNSUPPORTED
+    assert qs["Q504"].reason == "random short-answer matching found no short-answer questions in its category"
+
+
+def test_lesson_numerical_skips_wrong_answers(tmp_path):
+    b = Mbz(tmp_path / "lesson")
+    pages = ('<pages><page id="1"><prevpageid>0</prevpageid><nextpageid>0</nextpageid><qtype>8</qtype>'
+             "<title>Num</title><contents>Guess</contents><answers>"
+             '<answer id="1"><jumpto>-1</jumpto><score>1</score><answer_text>4</answer_text></answer>'
+             '<answer id="2"><jumpto>0</jumpto><score>0</score><answer_text>99</answer_text></answer>'
+             "</answers></page></pages>")
+    b.activity("lesson", 1, 1, f"<name>L</name><intro></intro><custom>1</custom>{pages}", 40)
+    b.section(1, 1, sequence=[1])
+    b.write(course_xml())
+    lesson = moodle.read(b.root).sections[0].items[0]
+    quiz = next(p for p in lesson.parts if isinstance(p, ir.InlineQuizPart))
+    assert [(n.value, n.tolerance) for n in quiz.questions[0].numeric] == [(4.0, 0.0)]
+
+
+def test_module_and_section_edge_cases(tmp_path):
+    b = Mbz(tmp_path / "mods")
+    # A module whose deletion was in progress is dropped without a report
+    b.activity("page", 1, 1, "<name>Deleting</name><content>x</content>", 40)
+    module_xml = os.path.join(b.root, "activities", "page_1", "module.xml")
+    with open(module_xml) as f:
+        xml = f.read()
+    with open(module_xml, "w") as f:
+        f.write(xml.replace("</module>", "<deletioninprogress>1</deletioninprogress></module>"))
+    # A grade item without a pass grade gives no pass percentage
+    b.activity("quiz", 2, 1, "<name>No pass</name><intro></intro><grade>10</grade><question_instances/>", 41,
+               grades='<grade_item id="1"><itemnumber>0</itemnumber><grademax>10</grademax><gradepass>0</gradepass>'
+                      "</grade_item>")
+    # An HTML resource whose blob is missing from the archive is kept as a plain file
+    digest = b.add_file(b"<p>gone</p>", "42", "mod_resource", "content", 0, "index.html")
+    os.remove(os.path.join(b.root, "files", digest[:2], digest))
+    b.activity("resource", 3, 1, "<name>Lost page</name><intro></intro>", 42)
+    # cp1252 pages still render
+    b.add_file(b"<p>caf\xe9</p>", "43", "mod_resource", "content", 0, "latin.html")
+    b.activity("resource", 4, 1, "<name>Latin</name><intro></intro>", 43)
+    # IMS package with no HTML page
+    b.add_file(png_bytes(), "44", "mod_imscp", "content", 1, "only.png")
+    b.activity("imscp", 5, 1, "<name>Pictures</name><intro></intro><revision>1</revision>", 44)
+    # Delegated section with a summary of its own
+    b.activity("subsection", 6, 1, "<name>Deep</name>", 45, instance=9)
+    b.activity("page", 7, 3, "<name>Nested</name><content>n</content>", 46)
+    b.section(1, 1, sequence=[1, 2, 3, 4, 5, 6])
+    b.section(3, 2, name="Delegated", summary="<p>Deep summary</p>", sequence=[7], component="mod_subsection",
+              itemid="9")
+    # An excluded section and one whose directory escapes the backup are both left out
+    b.section(2, 3, name="Excluded")
+    b.exclude("section_2")
+    b.sections.append("<section><sectionid>8</sectionid><title>8</title><directory>../outside</directory></section>")
+    b.write(course_xml())
+    c = moodle.read(b.root)
+    assert [s.title for s in c.sections] == ["Topic 1"]
+    by = items_by_id(c)
+    assert "page_1" not in by and not any(t == "Deleting" for t, _k, _r in c.skipped)
+    assert by["quiz_2"].pass_percent is None
+    assert isinstance(by["resource_3"].parts[0], ir.FilePart)
+    assert html_parts(by["resource_4"])[0].content.html == "<p>café</p>"
+    assert isinstance(by["imscp_5"], ir.UnsupportedItem)
+    assert by["imscp_5"].reason == "no page to show in the content package"
+    assert html_parts(by["subsection_6:summary"])[0].content.html == "<p>Deep summary</p>"
+    assert by["page_7"].title == "Nested"
+
+
+def test_detect_and_text_file_fallbacks(tmp_path, monkeypatch):
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    (legacy / "moodle.xml").write_text("<MOODLE_BACKUP/>")
+    real_open = open
+
+    def deny(path, *args, **kwargs):
+        if str(path).endswith("moodle.xml"):
+            raise PermissionError("denied")
+        return real_open(path, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", deny)
+    assert moodle.detect(str(legacy)) == 0  # unreadable: not claimed
+    monkeypatch.undo()
+    assert moodle.detect(str(legacy)) == 90
+    assert moodle._read_text_file(str(tmp_path / "missing.html")) == ""
+
+
 # ---------------------------------------------------------------------------
 # Moodle 3.x / 2.x backups (question_instances without references)
 # ---------------------------------------------------------------------------

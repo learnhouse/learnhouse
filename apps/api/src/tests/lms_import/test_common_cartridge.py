@@ -780,6 +780,7 @@ def test_small_helpers(tmp_path):
     assert cc.max_attempts_from("4") == 4
     assert cc.max_attempts_from("x", 2) == 2
     assert cc.own_qti_metadata(None) == {}
+    assert cc.Resource(identifier="x", type="webcontent").inline is None  # built by a reader, not the manifest
     assert cc.is_scorm_zip(str(tmp_path / "none.zip")) is False
     index = FileIndex(str(tmp_path))
     assert cc.item_for_file(index, "missing.pdf", "X") is None

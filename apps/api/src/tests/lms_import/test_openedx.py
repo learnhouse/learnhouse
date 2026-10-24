@@ -1034,10 +1034,12 @@ def test_draft_only_units_are_imported_hidden(tmp_path):
     olx = Olx(tmp_path)
     olx.course(["ch1"])
     olx.chapter("ch1", "Ch", ["seq1"])
-    olx.sequential("seq1", "Seq", ["v1", "v2"])
+    olx.sequential("seq1", "Seq", ["v1", "v2", "v3"])  # v3 is listed but only exists as a draft
     olx.vertical("v1", "Published one", "<html><p>1</p></html>")
     olx.vertical("v2", "Published two", "<html><p>2</p></html>")
     parent = "block-v1:O+C+R+type@sequential+block@seq1"
+    olx.write("drafts/vertical/v3.xml", f'<vertical parent_url="{parent}" index_in_children_list="2" '
+                                        'display_name="Stale draft"><html><p>3</p></html></vertical>')
     olx.write("drafts/vertical/v1.xml", f'<vertical parent_url="{parent}" index_in_children_list="0" '
                                         'display_name="Edited copy"><html><p>draft</p></html></vertical>')
     olx.write("drafts/vertical/new.xml", f'<vertical parent_url="{parent}" index_in_children_list="1" '
@@ -1051,10 +1053,26 @@ def test_draft_only_units_are_imported_hidden(tmp_path):
     course = openedx.read(str(tmp_path))
     items = course.sections[0].items
     assert [(i.title, i.visible) for i in items] == [
-        ("Published one", True), ("Never published", False), ("Published two", True)]
+        ("Published one", True), ("Never published", False), ("Published two", True)]  # no "Stale draft"
     assert items[1].parts[0].content.html == "<p>Draft html</p>"
     # importing the draft hidden is the expected outcome, not a warning
     assert course.warnings == [] and course.skipped == []
+
+
+def test_broken_sequence_and_component_files_are_skipped(tmp_path):
+    """A subsection file or a component placed straight in a subsection that
+    does not parse is reported and left out; the rest of the chapter imports."""
+    olx = Olx(tmp_path)
+    olx.course(["ch1"])
+    olx.chapter("ch1", "Ch", ["bad", "s1"])
+    olx.write("sequential/bad.xml", "<sequential")
+    olx.block("sequential", "s1", '<sequential display_name="S"><problem url_name="broken"/>'
+                                  "<html><p>Loose in seq</p></html></sequential>")
+    olx.write("problem/broken.xml", "<problem><broken")
+    course = openedx.read(str(tmp_path))
+    assert [i.title for i in course.sections[0].items] == ["S"]
+    assert sorted(w.split(";")[0] for w in course.warnings) == [
+        "Could not parse problem/broken.xml", "Could not parse sequential/bad.xml"]
 
 
 @pytest.mark.parametrize("raw,expected", [
@@ -1168,7 +1186,8 @@ def test_drag_and_drop_old_format_and_broken(tmp_path):
                                                                         {"displayName": "y", "zone": "none"}]})
     old = old.replace('"', "&quot;")
     xml = (f'<drag-and-drop-v2 display_name="Old" question_text="Place it" data="{old}"/>'
-           '<drag-and-drop-v2 display_name="Empty" data="{&quot;items&quot;: [{&quot;zones&quot;: []}]}"/>')
+           '<drag-and-drop-v2 display_name="Empty" data="{&quot;items&quot;: [{&quot;zones&quot;: []}]}"/>'
+           '<drag-and-drop-v2 display_name="List" data="[1, 2]"/>')
     course = one_unit(tmp_path, xml)
     parts = items(course)[0].parts
     assert len(parts) == 1
@@ -1177,7 +1196,8 @@ def test_drag_and_drop_old_format_and_broken(tmp_path):
     assert q.text.html == "<p>Place it</p>"
     assert course.warnings == []
     assert course.skipped == [
-        ("Empty", "drag and drop question", "no interactive equivalent (drag-and-drop problem without items)")]
+        ("Empty", "drag and drop question", "no interactive equivalent (drag-and-drop problem without items)"),
+        ("List", "drag and drop question", "no interactive equivalent (drag-and-drop problem without items)")]
 
 
 def test_choices_without_a_correct_answer_are_left_out(tmp_path):
@@ -1219,3 +1239,10 @@ def test_unit_of_script_graded_problems_keeps_its_text(tmp_path):
     (page,) = items(course)
     assert page.parts[0].content.html == ("<h3>Basic Usage</h3><p>Enter <code>x^2</code></p>"
                                           "<p>Any equivalent form works.</p>")
+
+
+def test_unit_beyond_the_depth_limit_is_skipped(tmp_path, monkeypatch):
+    monkeypatch.setattr(openedx, "MAX_DEPTH", 2)  # chapter and subsection fill the stack
+    course = one_unit(tmp_path, '<html><p>Deep</p></html>')
+    assert items(course) == []  # the unit is gone, the course is otherwise intact
+    assert any("Nested vertical 'v1'" in w and "too deep" in w for w in course.warnings)

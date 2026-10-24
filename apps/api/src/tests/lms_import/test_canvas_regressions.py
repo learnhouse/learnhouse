@@ -11,9 +11,11 @@ from .test_canvas import (
     CC_NS,
     LAR,
     QUIZ_TYPE,
+    assignment_settings,
     eq,
     fib,
     item,
+    labels,
     lid,
     module_item,
     png_bytes,
@@ -164,7 +166,91 @@ def test_files_without_modules(tmp_path):
       <resource identifier="f2" type="webcontent" href="web_resources/inline.png"/>
       <resource identifier="f3" type="webcontent" href="web_resources/notes.txt"/>
       <resource identifier="w1" type="webcontent" href="wiki_content/p.html"/>""")
-    course = canvas.read(root)
+    reader = canvas.CanvasReader(root)
+    course = reader.read()
     files = next(s for s in course.sections if s.title == "Files")
     assert [(type(i).__name__, i.title) for i in files.items] == [("Page", "Meow"), ("Page", "Notes")]
     assert files.items[1].parts[0].content.html == "<p>Bring a pencil</p>"
+    assert reader._sections_by_type() == []  # a second pass places nothing twice
+
+
+def test_missing_course_card_image_is_skipped(tmp_path):
+    """course_settings.xml names a card image whose file left the export."""
+    root = str(tmp_path)
+    _export(root, '<resource identifier="f_card" type="webcontent" href="web_resources/card.png"/>')
+    write(root, "course_settings/course_settings.xml",
+          f'<course identifier="c" xmlns="{CANVAS_NS}"><title>Real course</title>'
+          "<image_identifier_ref>f_card</image_identifier_ref></course>")
+    course = canvas.read(root)
+    assert course.thumbnail is None and course.sections == []
+    assert course.skipped == [("Course card image", "image", "not in the export")]
+
+
+def test_topic_meta_behind_a_missing_dependency(tmp_path):
+    """A dependency that left the manifest is passed over on the way to the topicMeta."""
+    root = str(tmp_path)
+    write(root, "d1.xml", '<topic xmlns="http://www.imsglobal.org/xsd/imsccv1p1/imsdt_v1p1"><title>Hi</title>'
+                          "<text texttype=\"text/html\">&lt;p&gt;Say hi&lt;/p&gt;</text></topic>")
+    write(root, "d1_meta.xml", f'<topicMeta xmlns="{CANVAS_NS}"><topic_id>d1</topic_id><type>topic</type>'
+                               "<workflow_state>unpublished</workflow_state></topicMeta>")
+    _export(root, f"""<resource identifier="d1" type="imsdt_xmlv1p1"><file href="d1.xml"/>
+              <dependency identifierref="ghost"/><dependency identifierref="d1_meta"/></resource>
+              <resource identifier="d1_meta" type="{LAR}" href="d1_meta.xml"/>""",
+            _module(module_item("i1", "DiscussionTopic", "Hi", "d1")))
+    (topic,) = canvas.read(root).sections[0].items
+    assert isinstance(topic, ir.Page) and topic.visible is False
+
+
+def test_external_tool_assignment_with_exported_questions(tmp_path):
+    """New Quizzes are external-tool assignments; an export that still carries
+    their QTI imports them as a quiz, not as an unsupported tool."""
+    root = str(tmp_path)
+    write(root, "a1/a1.html", "<html><body><p>Take the quiz.</p></body></html>")
+    write(root, "a1/assignment_settings.xml", assignment_settings("a1", "Unit quiz", submission="external_tool"))
+    write(root, "non_cc_assessments/a1.xml.qti", f"""<questestinterop><assessment ident="a1" title="Unit quiz">
+      <section ident="root_section">{TF}</section></assessment></questestinterop>""")
+    _export(root, f"""<resource identifier="a1" type="{LAR}" href="a1/a1.html">
+              <file href="a1/a1.html"/><file href="a1/assignment_settings.xml"/></resource>""",
+            _module(module_item("i1", "Assignment", "Unit quiz", "a1")))
+    (quiz,) = canvas.read(root).sections[0].items
+    assert isinstance(quiz, ir.Assessment) and [q.type for q in quiz.questions] == [ir.QType.TRUEFALSE]
+
+
+def test_quiz_item_without_a_reference_is_skipped(tmp_path):
+    root = str(tmp_path)
+    _export(root, "", _module(module_item("i1", "Quizzes::Quiz", "Ghost quiz", "")))
+    course = canvas.read(root)
+    assert [s.items for s in course.sections] == [[]]
+    assert course.skipped == [("Ghost quiz", "quiz", "missing from the export")]
+
+
+def test_qti_listed_beside_the_meta_file(tmp_path):
+    """QTI-only exports keep the questions in the quiz folder, not under non_cc_assessments/."""
+    root = str(tmp_path)
+    write(root, "q1/assessment_meta.xml", f'<quiz identifier="q1" xmlns="{CANVAS_NS}"><title>Folder quiz</title>'
+                                          "<quiz_type>assignment</quiz_type></quiz>")
+    write(root, "q1/assessment_qti.xml", f"""<questestinterop><assessment ident="q1" title="Folder quiz">
+      <section ident="root_section">{TF}</section></assessment></questestinterop>""")
+    _export(root, f"""<resource identifier="q1" type="{QUIZ_TYPE}"><file href="q1/assessment_meta.xml"/>
+              <file href="q1/assessment_qti.xml"/></resource>""",
+            _module(module_item("i1", "Quizzes::Quiz", "", "q1")))
+    (quiz,) = canvas.read(root).sections[0].items
+    assert isinstance(quiz, ir.Assessment) and quiz.title == "Folder quiz" and len(quiz.questions) == 1
+
+
+def test_image_only_choices_are_kept(tmp_path):
+    """Canvas pads answer lists with blank options; an option that is only a picture is a real answer."""
+    root = str(tmp_path)
+    picture = ('<response_label ident="1"><material><mattext texttype="text/html">'
+               '&lt;img src="$IMS-CC-FILEBASE$/pic.png"&gt;</mattext></material></response_label>')
+    mc = item("mc", "multiple_choice_question", "<p>Which diagram?</p>",
+              f'<response_lid ident="response1" rcardinality="Single"><render_choice>{picture}'
+              f'{labels([("2", "The text one"), ("3", "")])}</render_choice></response_lid>',
+              set_score(eq("response1", "2")))
+    _quiz(root, "q1", "", mc)
+    _export(root, f'<resource identifier="q1" type="{QUIZ_TYPE}"/>',
+            _module(module_item("i1", "Quizzes::Quiz", "Pictures", "q1")))
+    (quiz,) = canvas.read(root).sections[0].items
+    (q,) = quiz.questions
+    assert len(q.choices) == 2 and "<img" in q.choices[0].text.html
+    assert [c.correct for c in q.choices] == [False, True]
