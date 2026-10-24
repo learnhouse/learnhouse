@@ -2,6 +2,7 @@
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import TrailCourseCard from '@components/Pages/Trail/TrailCourseCard'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import UserCertificates from '@components/Pages/Trail/UserCertificates'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -67,6 +68,7 @@ function Trail(params: any) {
   return (
     <FeatureGate feature="courses" orgslug={orgslug} context="public">
     <GeneralWrapperStyled>
+      <ListShortcuts />
       <div className="flex flex-col space-y-2 mb-6">
         <div className="flex items-center justify-between">
           <TypeOfContentTitle title={t('courses.progress')} type="tra" />

@@ -30,6 +30,8 @@ import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
 import CourseAccessError from '@components/Objects/Courses/CourseAccessError/CourseAccessError'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
+import { Keys } from '@components/Objects/Shortcuts/Kbd'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -58,6 +60,20 @@ const CourseClient = (props: any) => {
   const course = initialCourse || clientCourseData;
 
   const { track } = useLHAnalytics('learner')
+
+  // Keyboard: `e` opens every chapter, or folds them all once they are open.
+  const chapters: any[] = course?.chapters ?? []
+  const allChaptersExpanded = chapters.length > 0 && chapters.every(
+    (chapter: any, idx: number) => expandedChapters[chapter.chapter_uuid] ?? idx === 0,
+  )
+  const setAllChapters = (open: boolean) =>
+    setExpandedChapters(Object.fromEntries(chapters.map((chapter: any) => [chapter.chapter_uuid, open])))
+  useShortcut(
+    { id: 'course.chapters', keys: 'e', group: 'page',
+      label: allChaptersExpanded ? t('shortcuts.collapse_chapters') : t('shortcuts.expand_chapters'),
+      run: () => setAllChapters(!allChaptersExpanded) },
+    chapters.length > 0,
+  )
 
   // Track course view
   const courseId = course?.id
@@ -542,7 +558,19 @@ const CourseClient = (props: any) => {
             })()}
 
             <div className="w-full my-5 mb-10">
-              <h2 className="py-5 text-xl md:text-2xl font-bold">{t('courses.course_lessons')}</h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="py-5 text-xl md:text-2xl font-bold">{t('courses.course_lessons')}</h2>
+                {chapters.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setAllChapters(!allChaptersExpanded)}
+                    className="hidden sm:inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-black/50 transition-colors hover:bg-black/5 hover:text-black/75"
+                  >
+                    {allChaptersExpanded ? t('shortcuts.collapse_chapters') : t('shortcuts.expand_chapters')}
+                    <Keys keys="e" tone="muted" />
+                  </button>
+                )}
+              </div>
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
                 {(course.chapters ?? []).map((chapter: any, idx: number) => {
                   const isExpanded = expandedChapters[chapter.chapter_uuid] ?? (idx === 0); // Default to expanded for first chapter

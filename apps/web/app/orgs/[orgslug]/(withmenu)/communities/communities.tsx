@@ -6,6 +6,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import CommunityCard from '@components/Objects/Communities/CommunityCard'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import { CreateCommunityModal } from '@components/Objects/Modals/Communities/CreateCommunityModal'
 import { EditCommunityModal } from '@components/Objects/Modals/Communities/EditCommunityModal'
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlaceHolder'
@@ -32,6 +33,7 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
   return (
     <FeatureGate feature="communities" orgslug={orgslug} context="public">
     <GeneralWrapperStyled>
+      <ListShortcuts />
       <div className="flex flex-col space-y-2 mb-6">
         <div className="flex items-center justify-between">
           <TypeOfContentTitle title={t('communities.title')} type="col" />
