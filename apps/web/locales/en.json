@@ -6828,6 +6828,20 @@
     "start_course": "Start course",
     "continue_course": "Continue where you left off",
     "palette_actions": "Actions",
-    "help": "Help"
+    "help": "Help",
+    "next_item": "Next item",
+    "previous_item": "Previous item",
+    "open_item": "Open selected item",
+    "next_page": "Next page",
+    "previous_page": "Previous page",
+    "next_chapter": "Next chapter",
+    "previous_chapter": "Previous chapter",
+    "exit_focus": "Exit focus mode",
+    "play_pause": "Play or pause video",
+    "expand_chapters": "Expand all chapters",
+    "collapse_chapters": "Collapse all chapters",
+    "new_discussion": "New discussion",
+    "play_pause_podcast": "Play or pause podcast",
+    "or": "or"
   }
 }

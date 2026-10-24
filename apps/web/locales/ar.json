@@ -6847,6 +6847,20 @@
     "start_course": "بدء الدورة",
     "continue_course": "متابعة من حيث توقفت",
     "palette_actions": "إجراءات",
-    "help": "مساعدة"
+    "help": "مساعدة",
+    "next_item": "العنصر التالي",
+    "previous_item": "العنصر السابق",
+    "open_item": "فتح العنصر المحدد",
+    "next_page": "الصفحة التالية",
+    "previous_page": "الصفحة السابقة",
+    "next_chapter": "الفصل التالي",
+    "previous_chapter": "الفصل السابق",
+    "exit_focus": "الخروج من وضع التركيز",
+    "play_pause": "تشغيل الفيديو أو إيقافه مؤقتًا",
+    "expand_chapters": "توسيع كل الفصول",
+    "collapse_chapters": "طي كل الفصول",
+    "new_discussion": "نقاش جديد",
+    "play_pause_podcast": "تشغيل البودكاست أو إيقافه مؤقتًا",
+    "or": "أو"
   }
 }

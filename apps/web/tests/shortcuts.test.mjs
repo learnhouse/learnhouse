@@ -88,3 +88,36 @@ describe('ignored targets', () => {
     expect(isIgnoredTarget(null)).toBe(false)
   })
 })
+
+describe('aliases and activation keys', () => {
+  test('aliases expand into extra bindings for the same action', () => {
+    const { expandBindings } = require('../lib/shortcuts/matcher.ts')
+    expect(expandBindings([{ id: 'next', keys: 'j', aliases: ['arrowdown'] }, { id: 'help', keys: '?' }])).toEqual([
+      { id: 'next', keys: 'j' },
+      { id: 'next', keys: 'arrowdown' },
+      { id: 'help', keys: '?' },
+    ])
+  })
+
+  test('space and enter on a button or link belong to that control', () => {
+    const { isActivationKeyOnControl } = require('../lib/shortcuts/matcher.ts')
+    expect(isActivationKeyOnControl('space', { tagName: 'BUTTON' })).toBe(true)
+    expect(isActivationKeyOnControl('enter', { tagName: 'a' })).toBe(true)
+    expect(isActivationKeyOnControl('enter', { tagName: 'DIV', role: 'button' })).toBe(true)
+    expect(isActivationKeyOnControl('j', { tagName: 'BUTTON' })).toBe(false)
+    expect(isActivationKeyOnControl('space', { tagName: 'BODY' })).toBe(false)
+    expect(isActivationKeyOnControl('space', null)).toBe(false)
+  })
+})
+
+describe('list navigation index', () => {
+  const { nextIndex } = require('../lib/shortcuts/listNavigation.ts')
+  test('enters the list from either end and clamps', () => {
+    expect(nextIndex(-1, 1, 3)).toBe(0)
+    expect(nextIndex(-1, -1, 3)).toBe(2)
+    expect(nextIndex(2, 1, 3)).toBe(2)
+    expect(nextIndex(0, -1, 3)).toBe(0)
+    expect(nextIndex(1, 1, 3)).toBe(2)
+    expect(nextIndex(0, 1, 0)).toBe(-1)
+  })
+})

@@ -14,6 +14,7 @@ import { type FolderSortMode } from '@components/Dashboard/Library/FolderSortDro
 import { getOrgFolders, getOrgRootItems } from '@services/folders/folders'
 import { FolderSimple } from '@phosphor-icons/react'
 import { FolderCard, LibraryItemCard } from './library-cards'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 function LibraryClient({ orgslug }: { orgslug: string }) {
@@ -74,6 +75,7 @@ function LibraryClient({ orgslug }: { orgslug: string }) {
     <FeatureGate feature="folders" orgslug={orgslug} context="public">
       <div className="w-full">
         <GeneralWrapperStyled>
+          <ListShortcuts />
           <div className="flex flex-col space-y-2 mb-2">
             <div className="flex items-center justify-between">
               <TypeOfContentTitle title={t('library.library')} type="cou" />

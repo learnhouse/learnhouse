@@ -71,6 +71,12 @@ export default function ShortcutHelp() {
                             </span>
                           )}
                           <Keys keys={a.keys} />
+                          {a.aliases?.map((alias) => (
+                            <React.Fragment key={alias}>
+                              <span className="text-[10px] text-black/35">{t('shortcuts.or')}</span>
+                              <Keys keys={alias} tone="muted" />
+                            </React.Fragment>
+                          ))}
                         </span>
                       </li>
                     ))}

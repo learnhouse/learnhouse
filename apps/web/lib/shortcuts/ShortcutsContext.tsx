@@ -8,7 +8,14 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { IGNORED_ANCESTORS, SequenceMatcher, isIgnoredTarget, tokenFromEvent } from './matcher'
+import {
+  IGNORED_ANCESTORS,
+  SequenceMatcher,
+  expandBindings,
+  isActivationKeyOnControl,
+  isIgnoredTarget,
+  tokenFromEvent,
+} from './matcher'
 
 export type ShortcutGroup = 'global' | 'navigation' | 'page'
 
@@ -17,6 +24,8 @@ export interface ShortcutAction {
   id: string
   /** Binding as shown to the user: `j`, `?`, `g c`. */
   keys: string
+  /** Extra bindings that fire the same action (`arrowdown` next to `j`). */
+  aliases?: string[]
   /** Translated label for hints, the help sheet and the palette. */
   label: string
   group: ShortcutGroup
@@ -56,14 +65,13 @@ export function ShortcutsProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const matcher = new SequenceMatcher<string>(() =>
-      actionsRef.current.map((a) => ({ id: a.id, keys: a.keys })),
-    )
+    const matcher = new SequenceMatcher<string>(() => expandBindings(actionsRef.current))
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.repeat) return
       const token = tokenFromEvent(e)
       if (!token) return
       const target = e.target as HTMLElement | null
+      if (isActivationKeyOnControl(token, target ? { tagName: target.tagName, role: target.getAttribute('role') } : null)) return
       const inDialog = !!target?.closest?.('[role="dialog"]')
       const ignored = isIgnoredTarget(
         target
@@ -121,6 +129,7 @@ export function useShortcut(
   const runRef = useRef(action.run)
   runRef.current = action.run
   const { id, keys, label, group, allowInDialog, hideFromPalette } = action
+  const aliasKey = action.aliases?.join('|') ?? ''
   // Depend on the stable `register`, never on the context object: that
   // object changes with every registration, which would re-run this effect
   // and register again without end.
@@ -131,13 +140,14 @@ export function useShortcut(
     return register({
       id,
       keys,
+      aliases: aliasKey ? aliasKey.split('|') : undefined,
       label,
       group,
       allowInDialog,
       hideFromPalette,
       run: () => runRef.current(),
     })
-  }, [register, enabled, id, keys, label, group, allowInDialog, hideFromPalette])
+  }, [register, enabled, id, keys, aliasKey, label, group, allowInDialog, hideFromPalette])
 }
 
 export { IGNORED_ANCESTORS }

@@ -8,6 +8,7 @@ import { JsonLd } from '@components/SEO/JsonLd'
 import { getUriWithOrg } from '@services/config/config'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 
 export default function HomeClient({ orgslug }: { orgslug: string }) {
   const org = useOrg() as any
@@ -52,6 +53,7 @@ export default function HomeClient({ orgslug }: { orgslug: string }) {
 
   return (
     <div className="w-full">
+      <ListShortcuts />
       {orgJsonLd && <JsonLd data={orgJsonLd} />}
       {hasCustomLanding ? (
         <LandingCustom landing={landingConfig} orgslug={orgslug} />

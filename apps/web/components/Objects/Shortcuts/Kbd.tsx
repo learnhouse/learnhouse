@@ -8,7 +8,7 @@ const LABELS: Record<string, string> = {
   arrowright: '→',
   arrowup: '↑',
   arrowdown: '↓',
-  space: '␣',
+  space: 'Space',
 }
 
 export function keyLabel(token: string): string {

@@ -7,6 +7,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { PodcastSidebar } from '@components/Objects/Podcasts/PodcastSidebar'
 import EpisodeCard from '@components/Objects/Podcasts/EpisodeCard'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import { Podcast, PodcastEpisode, PodcastMeta, getPodcastMeta } from '@services/podcasts/podcasts'
 import { Headphones, ListMusic, Loader2 } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
@@ -72,6 +73,7 @@ export default function PodcastClient({
 
   return (
     <GeneralWrapperStyled>
+      <ListShortcuts />
       <div className={bottomPadding}>
         {/* Breadcrumbs */}
         <div className="pb-4">

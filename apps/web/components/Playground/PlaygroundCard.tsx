@@ -46,7 +46,7 @@ export default function PlaygroundCard({ playground, orgslug: _orgslug, canEdit 
   const editLink = `/editor/playground/${playground.playground_uuid}/edit`
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]">
+    <div data-kbd-item="" className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]">
       {/* Edit button: top right, appears on hover */}
       {canEdit && (
         <div className="absolute top-2 end-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">

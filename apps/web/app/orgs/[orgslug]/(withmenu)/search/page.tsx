@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { searchOrgContent } from '@services/search/search'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import {
   getCourseThumbnailMediaDirectory,
   getUserAvatarMediaDirectory,
@@ -487,6 +488,7 @@ function SearchPage() {
 
   return (
     <div className="min-h-screen">
+      <ListShortcuts />
       <div className="container mx-auto px-4 pt-10 pb-4 max-w-5xl">
         <h1 className="text-2xl font-semibold text-black/80 mb-1">
           {t('common.search')}
@@ -654,6 +656,7 @@ function ResourceCard({
 }) {
   return (
     <Link
+      data-kbd-item=""
       href={href}
       className="bg-white rounded-lg border border-black/5 hover:border-black/15 transition-colors overflow-hidden group flex flex-col"
     >
@@ -696,6 +699,7 @@ function InlineCard({
 }) {
   return (
     <Link
+      data-kbd-item=""
       href={href}
       className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/5 hover:border-black/15 transition-colors"
     >

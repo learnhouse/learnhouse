@@ -36,6 +36,22 @@ export function isIgnoredTarget(target: TargetLike | null | undefined): boolean 
   return !!target?.matchesAncestor?.(IGNORED_ANCESTORS)
 }
 
+const ACTIVATION_TOKENS = new Set(['space', 'enter'])
+const CONTROL_TAGS = new Set(['BUTTON', 'A', 'SUMMARY'])
+
+/**
+ * Space and Enter on a focused button or link are that control's own
+ * activation keys; a shortcut must never steal them.
+ */
+export function isActivationKeyOnControl(
+  token: string,
+  target: (TargetLike & { role?: string | null }) | null | undefined,
+): boolean {
+  if (!ACTIVATION_TOKENS.has(token) || !target) return false
+  if (target.tagName && CONTROL_TAGS.has(target.tagName.toUpperCase())) return true
+  return target.role === 'button' || target.role === 'link'
+}
+
 /** The token a key event contributes, or null when it cannot be part of a shortcut. */
 export function tokenFromEvent(e: KeyLike): string | null {
   if (e.ctrlKey || e.metaKey || e.altKey) return null
@@ -56,6 +72,18 @@ export function parseBinding(binding: string): string[] {
 export interface Binding<T = string> {
   id: T
   keys: string
+}
+
+/** One binding per key sequence: the primary `keys` plus every alias. */
+export function expandBindings<T>(
+  actions: ReadonlyArray<{ id: T; keys: string; aliases?: ReadonlyArray<string> }>,
+): Binding<T>[] {
+  const out: Binding<T>[] = []
+  for (const a of actions) {
+    out.push({ id: a.id, keys: a.keys })
+    for (const alias of a.aliases ?? []) out.push({ id: a.id, keys: alias })
+  }
+  return out
 }
 
 export interface MatchResult<T> {
