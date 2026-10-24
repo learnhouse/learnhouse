@@ -11,6 +11,8 @@ import './theater.css'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
+import { Keys } from '@components/Objects/Shortcuts/Kbd'
 import React, { useEffect, useRef, useMemo, lazy, Suspense } from 'react'
 import { getAssignmentFromActivityUUID, getFinalGrade, retryAssignmentSubmission, submitAssignmentForGrading } from '@services/courses/assignments'
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
@@ -397,6 +399,31 @@ function ActivityClient(props: ActivityClientProps) {
     router.push(getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/${activity.cleanUuid}`);
   };
 
+  // Keyboard: j / k step through lessons, f toggles focus mode, c goes back
+  // to the course. Registered only once the course is known, and never on
+  // the course-end screen, where there is no lesson to step from.
+  const shortcutsReady = !!course && activityid !== 'end'
+  useShortcut(
+    { id: 'activity.next', keys: 'j', label: t('shortcuts.next_lesson'), group: 'page',
+      run: () => navigateToActivity(nextActivity) },
+    shortcutsReady && (!!nextActivity || isLastActivity),
+  )
+  useShortcut(
+    { id: 'activity.prev', keys: 'k', label: t('shortcuts.previous_lesson'), group: 'page',
+      run: () => navigateToActivity(prevActivity) },
+    shortcutsReady && !!prevActivity,
+  )
+  useShortcut(
+    { id: 'activity.focus', keys: 'f', label: t('shortcuts.toggle_focus'), group: 'page',
+      run: () => setIsFocusMode((v) => !v) },
+    shortcutsReady,
+  )
+  useShortcut(
+    { id: 'activity.course', keys: 'c', label: t('shortcuts.back_to_course'), group: 'page',
+      run: () => router.push(getUriWithOrg(orgslug, `/course/${course?.course_uuid?.replace('course_', '')}`)) },
+    !!course,
+  )
+
   // Initialize focus mode from localStorage
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -746,6 +773,7 @@ function ActivityClient(props: ActivityClientProps) {
                               title={prevActivity ? `${t('common.previous')}: ${prevActivity.name}` : t('activities.no_previous_activity')}
                             >
                               <ChevronLeft size={20} className="text-gray-800 shrink-0" />
+                              <Keys keys="k" tone="muted" className="hidden sm:inline-flex" />
                               <div className="flex flex-col items-start">
                                 <span className="text-xs text-gray-500">{t('common.previous')}</span>
                                 <span className="text-sm capitalize font-semibold text-start">
@@ -790,6 +818,7 @@ function ActivityClient(props: ActivityClientProps) {
                                       : t('activities.no_next_activity')}
                                 </span>
                               </div>
+                              <Keys keys="j" tone="muted" className="hidden sm:inline-flex" />
                               <ChevronRight size={20} className="text-gray-800 shrink-0" />
                             </button>
                           </div>
@@ -1337,6 +1366,13 @@ export function MarkStatus(props: {
     return false;
   }
 
+  const completed = !!props.trailData && !!isActivityCompleted()
+  useShortcut(
+    { id: 'activity.complete', keys: 'm', label: t('shortcuts.mark_complete'), group: 'page',
+      run: () => { if (!isLoading) markActivityAsCompleteFront() } },
+    !!props.trailData && isUserPartOfTheOrg && !completed,
+  )
+
   // Don't render until we have trail data
   if (!props.trailData) {
     return null;
@@ -1431,6 +1467,7 @@ export function MarkStatus(props: {
                   </svg>
                 )}
                 <span className="text-xs font-bold min-w-[90px]">{isLoading ? t('activities.marking') : t('activities.mark_as_complete')}</span>
+                <Keys keys="m" tone="onDark" className="hidden sm:inline-flex" />
               </div>
             </div>
             {showUnmarkedTooltip && (

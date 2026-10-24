@@ -8,8 +8,13 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { OrgJoinBanner, OrgJoinBannerProvider } from '@components/Objects/Banners/OrgJoinBanner'
 import { OrgMFAPolicyGate } from '@components/Objects/Banners/OrgMFAPolicyGate'
 import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext'
+import { SiteCommandPaletteProvider } from '@components/Objects/Search/SiteCommandPaletteContext'
+import { ShortcutsProvider } from '@/lib/shortcuts/ShortcutsContext'
+import GlobalShortcuts from '@components/Objects/Shortcuts/GlobalShortcuts'
 import dynamic from 'next/dynamic'
 const PodcastPlayer = dynamic(() => import('@components/Objects/Podcasts/PodcastPlayer'), { ssr: false })
+const SiteCommandPalette = dynamic(() => import('@components/Objects/Search/SiteCommandPalette'), { ssr: false })
+const ShortcutHelp = dynamic(() => import('@components/Objects/Shortcuts/ShortcutHelp'), { ssr: false })
 import Image from 'next/image'
 import Link from 'next/link'
 import { PageViewTracker } from '@components/Analytics/PageViewTracker'
@@ -127,6 +132,9 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       </div>
       {!isFullBleedPage && !chromeless && <OrgFooter />}
       {!isFullBleedPage && !chromeless && <Watermark />}
+      {!chromeless && <SiteCommandPalette />}
+      {!chromeless && <GlobalShortcuts />}
+      {!chromeless && <ShortcutHelp />}
     </div>
   )
 }
@@ -148,9 +156,13 @@ export default function RootLayout(
       <SessionGate>
       <OrgJoinBannerProvider>
         <PodcastPlayerProvider>
-          <LayoutContent orgslug={params?.orgslug}>
-            {children}
-          </LayoutContent>
+          <SiteCommandPaletteProvider>
+            <ShortcutsProvider>
+              <LayoutContent orgslug={params?.orgslug}>
+                {children}
+              </LayoutContent>
+            </ShortcutsProvider>
+          </SiteCommandPaletteProvider>
           <PodcastPlayer />
         </PodcastPlayerProvider>
       </OrgJoinBannerProvider>

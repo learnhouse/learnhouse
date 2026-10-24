@@ -1614,10 +1614,104 @@
       "communities": "Communities",
       "discussions": "Discussions",
       "playgrounds": "Playgrounds",
-      "podcasts": "Podcasts"
+      "podcasts": "Podcasts",
+      "activities": "Lessons",
+      "folders": "Folders"
     },
     "course": "Course",
-    "user": "Member"
+    "user": "Member",
+    "lesson_location": "{{course}} · {{chapter}}",
+    "palette": {
+      "trigger": "Search",
+      "placeholder": "Search lessons, courses, people…",
+      "hint_mac": "⌘K",
+      "hint_other": "Ctrl K",
+      "loading": "Searching…",
+      "no_results": "No matches for \"{{query}}\"",
+      "empty_hint": "Type to search this space, or jump somewhere",
+      "view_all": "See all results for \"{{query}}\"",
+      "groups": {
+        "pages": "Go to",
+        "courses": "Courses",
+        "activities": "Lessons",
+        "folders": "Folders",
+        "communities": "Communities",
+        "discussions": "Discussions",
+        "playgrounds": "Playgrounds",
+        "podcasts": "Podcasts",
+        "users": "Members"
+      },
+      "keys": {
+        "navigate": "Navigate",
+        "open": "Open",
+        "new_tab": "New tab",
+        "close": "Close"
+      },
+      "entries": {
+        "home": {
+          "description": "Back to the start page",
+          "keywords": "home, start, landing, front page, main"
+        },
+        "courses": {
+          "description": "Browse every course",
+          "keywords": "courses, catalog, classes, lessons, learn, training, curriculum"
+        },
+        "library": {
+          "description": "Folders of grouped content",
+          "keywords": "library, folders, collections, bundles, paths"
+        },
+        "podcasts": {
+          "description": "Listen to episodes",
+          "keywords": "podcasts, audio, episodes, shows, listen"
+        },
+        "communities": {
+          "description": "Discussions with other members",
+          "keywords": "communities, forums, discussions, posts, threads, members"
+        },
+        "playgrounds": {
+          "description": "Interactive coding spaces",
+          "keywords": "playgrounds, code, sandbox, repl, practice, programming"
+        },
+        "store": {
+          "description": "Paid courses and bundles",
+          "keywords": "store, shop, buy, pricing, plans, offers, purchase"
+        },
+        "trail": {
+          "description": "Your progress across courses",
+          "keywords": "trail, progress, my courses, continue, history, enrolled"
+        },
+        "boards": {
+          "description": "Your boards",
+          "keywords": "boards, kanban, tasks, planning, notes"
+        },
+        "copilot": {
+          "title": "Copilot",
+          "description": "Ask the AI assistant",
+          "keywords": "copilot, ai, assistant, chat, ask, help"
+        },
+        "search": {
+          "description": "Full search with filters",
+          "keywords": "search, find, results, filter, browse"
+        },
+        "account_general": {
+          "title": "Account settings",
+          "description": "Email, name and language",
+          "keywords": "account, settings, email, name, language, preferences"
+        },
+        "account_profile": {
+          "description": "Your public profile and bio",
+          "keywords": "profile, bio, avatar, picture, public"
+        },
+        "account_security": {
+          "description": "Password, 2FA and sessions",
+          "keywords": "password, security, 2fa, mfa, sessions, sign out"
+        },
+        "account_purchases": {
+          "description": "Purchases and subscriptions",
+          "keywords": "purchases, subscriptions, billing, receipts, invoices"
+        }
+      }
+    }
   },
   "ai": {
     "ask_ai": "Ask AI",
@@ -6712,5 +6806,28 @@
       "per_month": "/ month",
       "per_year": "/ year"
     }
+  },
+  "shortcuts": {
+    "help_title": "Keyboard shortcuts",
+    "help_subtitle": "Press ? anywhere to open this sheet.",
+    "then": "then",
+    "groups": {
+      "global": "Everywhere",
+      "navigation": "Go to",
+      "page": "On this page"
+    },
+    "open_help": "Keyboard shortcuts",
+    "open_search": "Search",
+    "go_to": "Go to {{page}}",
+    "next_lesson": "Next lesson",
+    "previous_lesson": "Previous lesson",
+    "mark_complete": "Mark lesson complete",
+    "unmark_complete": "Unmark lesson",
+    "toggle_focus": "Toggle focus mode",
+    "back_to_course": "Back to course",
+    "start_course": "Start course",
+    "continue_course": "Continue where you left off",
+    "palette_actions": "Actions",
+    "help": "Help"
   }
 }

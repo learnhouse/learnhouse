@@ -3,6 +3,7 @@ from uuid import uuid4
 import json
 import logging
 from sqlmodel import select, or_, and_, func
+from sqlalchemy import true as sa_true
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
@@ -43,7 +44,7 @@ from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
 from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.thumbnails import upload_thumbnail
-from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
+from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_patterns
 from src.services.webhooks.dispatch import dispatch_webhooks
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
@@ -522,6 +523,78 @@ async def get_courses_count_orgslug(
     return count
 
 
+def accessible_courses_filter(
+    acting_user_id: int,
+    *,
+    is_anonymous: bool,
+    is_api_token: bool,
+    is_superadmin: bool,
+):
+    """SQL boolean selecting the courses ``acting_user_id`` may see in a listing.
+
+    One definition shared by course search and everything that hangs off a
+    course (lesson search), so a lesson can never surface from a course its
+    reader could not open. Built from EXISTS subqueries rather than joins so
+    it composes into any query without DISTINCT.
+
+    - Anonymous: published and public courses only.
+    - API tokens: every published course in their org (the org scope is the
+      caller's job).
+    - Superadmins: everything.
+    - Members: published public courses; published courses not attached to
+      any usergroup, when they belong to the course's org; published courses
+      in a usergroup they are in; and any course (drafts included) they are an
+      active author of.
+    """
+    if is_anonymous:
+        return and_(Course.public == True, Course.published == True)  # noqa: E712
+    if is_api_token:
+        return Course.published == True  # noqa: E712
+    if is_superadmin:
+        return sa_true()
+
+    in_any_usergroup = (
+        select(UserGroupResource.id)
+        .where(UserGroupResource.resource_uuid == Course.course_uuid)
+        .exists()
+    )
+    in_users_usergroup = (
+        select(UserGroupUser.id)
+        .join(
+            UserGroupResource,
+            UserGroupResource.usergroup_id == UserGroupUser.usergroup_id,  # type: ignore[arg-type]
+        )
+        .where(
+            UserGroupResource.resource_uuid == Course.course_uuid,
+            UserGroupUser.user_id == acting_user_id,
+        )
+        .exists()
+    )
+    is_active_author = (
+        select(ResourceAuthor.id)
+        .where(
+            ResourceAuthor.resource_uuid == Course.course_uuid,
+            ResourceAuthor.user_id == acting_user_id,
+            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
+        )
+        .exists()
+    )
+    is_org_member = (
+        select(UserOrganization.id)
+        .where(
+            UserOrganization.user_id == acting_user_id,
+            UserOrganization.org_id == Course.org_id,
+        )
+        .exists()
+    )
+    return or_(
+        and_(Course.published == True, Course.public == True),  # noqa: E712
+        and_(Course.published == True, ~in_any_usergroup, is_org_member),  # noqa: E712
+        and_(Course.published == True, in_users_usergroup),  # noqa: E712
+        is_active_author,
+    )
+
+
 async def search_courses(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -534,29 +607,33 @@ async def search_courses(
     """
     Search courses within an organization.
 
-    SECURITY FIX: Uses parameterized queries to prevent SQL injection.
-    Previously used f-string interpolation which was vulnerable.
+    Every word of the query has to match one of the searched fields (name,
+    description, about, learnings, tags), in any order. Pattern matching goes
+    through parameterized ``ilike``; there is no string interpolation of user
+    input.
     """
     # SECURITY: Enforce maximum limit to prevent data dumping
     limit = min(limit, 100)
     offset = (page - 1) * limit
 
-    pattern = build_like_pattern(search_query)
+    patterns = build_like_patterns(search_query)
+    searched_columns = [
+        Course.name,
+        Course.description,
+        Course.about,
+        Course.learnings,
+        Course.tags,
+    ]
+    term_filters = [
+        or_(*(column.ilike(pattern, escape=LIKE_ESCAPE_CHAR) for column in searched_columns))  # type: ignore[attr-defined]
+        for pattern in patterns
+    ]
 
-    needs_distinct = False
     query = (
         select(Course)
         .join(Organization)
         .where(Organization.slug == org_slug)
-        .where(
-            or_(
-                Course.name.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
-                Course.description.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
-                Course.about.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
-                Course.learnings.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
-                Course.tags.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
-            )
-        )
+        .where(*term_filters)
     )
 
     if not isinstance(current_user, (AnonymousUser, APITokenUser)):
@@ -567,59 +644,31 @@ async def search_courses(
             current_user = await viewer_for_org(db_session, current_user, search_org_id)
     search_acting_user_id = resolve_acting_user_id(current_user)
 
-    if isinstance(current_user, AnonymousUser):
-        # For anonymous users, only show public AND published courses
-        query = query.where(Course.public == True, Course.published == True)
-    elif isinstance(current_user, APITokenUser):
+    is_api_token = isinstance(current_user, APITokenUser)
+    is_anonymous = isinstance(current_user, AnonymousUser)
+    if is_api_token:
         org_id = (await db_session.execute(
             select(Organization.id).where(Organization.slug == org_slug)
         )).scalars().first()
         if org_id is None:
             return []
         _require_token_course_listing(current_user, org_id)
-        query = query.where(Course.published == True)
-    elif await is_user_superadmin(search_acting_user_id, db_session):
-        # Superadmins see all courses (no additional filter)
-        pass
-    else:
-        # For authenticated users, show:
-        # 1. Published AND public courses
-        # 2. Published courses not in any UserGroup
-        # 3. Published courses in UserGroups where the user is a member
-        #    (a member cannot open an unpublished one, so don't surface it)
-        # 4. Courses (including unpublished) where the user is a resource author
-        needs_distinct = True
-        query = (
-            query
-            .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
-            .outerjoin(UserGroupUser, and_(
-                UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                UserGroupUser.user_id == search_acting_user_id
-            ))
-            .outerjoin(ResourceAuthor, and_(
-                ResourceAuthor.resource_uuid == Course.course_uuid,
-                ResourceAuthor.user_id == search_acting_user_id,
-                ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
-            ))  # type: ignore
-            .where(or_(
-                and_(Course.published == True, Course.public == True),  # Published public courses
-                and_(  # Published courses not in any UserGroup: org-wide, so members of its org only
-                    Course.published == True,
-                    UserGroupResource.resource_uuid.is_(None),
-                    select(UserOrganization.id).where(
-                        UserOrganization.user_id == search_acting_user_id,
-                        UserOrganization.org_id == Course.org_id,
-                    ).exists(),
-                ),
-                and_(Course.published == True, UserGroupUser.user_id == search_acting_user_id),  # Published courses in UserGroups where user is a member
-                ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
-            ))
-        )
 
-    # Apply ordering and pagination; only use DISTINCT when outerjoins may produce duplicates
+    is_superadmin = (
+        not is_anonymous
+        and not is_api_token
+        and await is_user_superadmin(search_acting_user_id, db_session)
+    )
+    query = query.where(
+        accessible_courses_filter(
+            search_acting_user_id,
+            is_anonymous=is_anonymous,
+            is_api_token=is_api_token,
+            is_superadmin=is_superadmin,
+        )
+    )
+
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
-    if needs_distinct:
-        query = query.distinct()
 
     courses = (await db_session.execute(query)).scalars().all()
 

@@ -1174,7 +1174,101 @@
       "communities": "مجتمعات",
       "discussions": "مناقشات",
       "playgrounds": "ساحات التجربة",
-      "podcasts": "بودكاست"
+      "podcasts": "بودكاست",
+      "activities": "الدروس",
+      "folders": "المجلدات"
+    },
+    "lesson_location": "{{course}} · {{chapter}}",
+    "palette": {
+      "trigger": "بحث",
+      "placeholder": "ابحث في الدروس والدورات والأعضاء…",
+      "hint_mac": "⌘K",
+      "hint_other": "Ctrl K",
+      "loading": "جارٍ البحث…",
+      "no_results": "لا نتائج تطابق \"{{query}}\"",
+      "empty_hint": "اكتب للبحث في هذه المساحة، أو انتقل إلى صفحة",
+      "view_all": "عرض كل النتائج لـ \"{{query}}\"",
+      "groups": {
+        "pages": "انتقال إلى",
+        "courses": "الدورات",
+        "activities": "الدروس",
+        "folders": "المجلدات",
+        "communities": "المجتمعات",
+        "discussions": "النقاشات",
+        "playgrounds": "الساحات",
+        "podcasts": "البودكاست",
+        "users": "الأعضاء"
+      },
+      "keys": {
+        "navigate": "تنقّل",
+        "open": "فتح",
+        "new_tab": "تبويب جديد",
+        "close": "إغلاق"
+      },
+      "entries": {
+        "home": {
+          "description": "العودة إلى صفحة البداية",
+          "keywords": "الرئيسية, البداية, الصفحة الرئيسية, home, start"
+        },
+        "courses": {
+          "description": "تصفّح كل الدورات",
+          "keywords": "الدورات, الكتالوج, الفصول, الدروس, تعلّم, تدريب, courses"
+        },
+        "library": {
+          "description": "مجلدات المحتوى المجمّع",
+          "keywords": "المكتبة, المجلدات, المجموعات, الحزم, المسارات, library"
+        },
+        "podcasts": {
+          "description": "استمع إلى الحلقات",
+          "keywords": "البودكاست, الصوت, الحلقات, البرامج, استماع, podcasts"
+        },
+        "communities": {
+          "description": "نقاشات مع بقية الأعضاء",
+          "keywords": "المجتمعات, المنتديات, النقاشات, المنشورات, الأعضاء, communities"
+        },
+        "playgrounds": {
+          "description": "مساحات برمجة تفاعلية",
+          "keywords": "الساحات, الكود, البرمجة, التجربة, تمرين, playgrounds"
+        },
+        "store": {
+          "description": "الدورات والحزم المدفوعة",
+          "keywords": "المتجر, شراء, الأسعار, الخطط, العروض, store"
+        },
+        "trail": {
+          "description": "تقدّمك عبر الدورات",
+          "keywords": "المسار, التقدّم, دوراتي, متابعة, السجل, trail, progress"
+        },
+        "boards": {
+          "description": "لوحاتك",
+          "keywords": "اللوحات, كانبان, المهام, التخطيط, الملاحظات, boards"
+        },
+        "copilot": {
+          "title": "المساعد",
+          "description": "اسأل المساعد الذكي",
+          "keywords": "المساعد, الذكاء الاصطناعي, محادثة, اسأل, مساعدة, copilot, ai"
+        },
+        "search": {
+          "description": "بحث كامل مع فلاتر",
+          "keywords": "بحث, إيجاد, نتائج, فلترة, تصفّح, search"
+        },
+        "account_general": {
+          "title": "إعدادات الحساب",
+          "description": "البريد والاسم واللغة",
+          "keywords": "الحساب, الإعدادات, البريد, الاسم, اللغة, التفضيلات, account"
+        },
+        "account_profile": {
+          "description": "ملفك العام ونبذتك",
+          "keywords": "الملف الشخصي, النبذة, الصورة, عام, profile"
+        },
+        "account_security": {
+          "description": "كلمة المرور والمصادقة الثنائية والجلسات",
+          "keywords": "كلمة المرور, الأمان, المصادقة الثنائية, الجلسات, تسجيل الخروج, security, 2fa"
+        },
+        "account_purchases": {
+          "description": "المشتريات والاشتراكات",
+          "keywords": "المشتريات, الاشتراكات, الفوترة, الإيصالات, الفواتير, purchases"
+        }
+      }
     }
   },
   "ai": {
@@ -6731,5 +6825,28 @@
       "per_month": "/ شهر",
       "per_year": "/ سنة"
     }
+  },
+  "shortcuts": {
+    "help_title": "اختصارات لوحة المفاتيح",
+    "help_subtitle": "اضغط ? في أي مكان لفتح هذه اللوحة.",
+    "then": "ثم",
+    "groups": {
+      "global": "في كل مكان",
+      "navigation": "انتقال إلى",
+      "page": "في هذه الصفحة"
+    },
+    "open_help": "اختصارات لوحة المفاتيح",
+    "open_search": "بحث",
+    "go_to": "انتقال إلى {{page}}",
+    "next_lesson": "الدرس التالي",
+    "previous_lesson": "الدرس السابق",
+    "mark_complete": "تعليم الدرس كمكتمل",
+    "unmark_complete": "إلغاء اكتمال الدرس",
+    "toggle_focus": "تبديل وضع التركيز",
+    "back_to_course": "العودة إلى الدورة",
+    "start_course": "بدء الدورة",
+    "continue_course": "متابعة من حيث توقفت",
+    "palette_actions": "إجراءات",
+    "help": "مساعدة"
   }
 }
