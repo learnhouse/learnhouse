@@ -558,7 +558,7 @@ def test_read_files_by_type(tmp_path):
     assert isinstance(media["Interactive"], ir.ScormItem)
     assert isinstance(media["Archive"].parts[0], ir.FilePart)  # a .zip that is not SCORM
     video = media["Intro video"]
-    assert isinstance(video, ir.VideoItem) and urlparse(video.url).hostname.endswith("youtube.com")
+    assert isinstance(video, ir.VideoItem) and urlparse(video.url).hostname == "www.youtube.com"
 
 
 def test_read_assignments_and_header_split(tmp_path):

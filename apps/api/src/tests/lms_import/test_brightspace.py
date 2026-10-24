@@ -493,7 +493,7 @@ def test_file_topics(full):
 def test_link_topics(full):
     readings = section(full, "Week 1 › Readings")
     yt = by_title(readings, "YouTube")
-    assert isinstance(yt, ir.VideoItem) and urlparse(yt.url).hostname.endswith("youtube.com")
+    assert isinstance(yt, ir.VideoItem) and urlparse(yt.url).hostname == "www.youtube.com"
     assert yt.description is None
     vimeo = by_title(readings, "Vimeo")
     assert isinstance(vimeo, ir.VideoItem) and "Short film" in vimeo.description.html
