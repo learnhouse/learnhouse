@@ -34,7 +34,7 @@
     "zod": "4.6.6",
     "brace-expansion@5": ">=5.0.12",
     "source-map-js": ">=1.2.2",
-    "dompurify": ">=3.4.16",
+    "dompurify": ">=3.4.17",
     "katex": "^0.19.0",
     "sharp": ">=0.35.5"
   }
