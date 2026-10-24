@@ -15,6 +15,8 @@ import zipfile
 import zlib
 from html import escape
 
+from urllib.parse import urlparse
+
 import pytest
 
 from src.services.courses.lms_import import ir
@@ -556,7 +558,7 @@ def test_read_files_by_type(tmp_path):
     assert isinstance(media["Interactive"], ir.ScormItem)
     assert isinstance(media["Archive"].parts[0], ir.FilePart)  # a .zip that is not SCORM
     video = media["Intro video"]
-    assert isinstance(video, ir.VideoItem) and "youtube.com" in video.url
+    assert isinstance(video, ir.VideoItem) and urlparse(video.url).hostname.endswith("youtube.com")
 
 
 def test_read_assignments_and_header_split(tmp_path):

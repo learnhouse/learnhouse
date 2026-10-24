@@ -1095,9 +1095,14 @@ class _Reader:
         path = self.pkg.xid_files.get(m.group(1)) if m else None
         if not path or os.path.getsize(path) > _MAX_INLINE_HTML:
             return None
+        from bs4 import BeautifulSoup
+
         with open(path, "rb") as f:
             data = f.read().decode("utf-8", errors="replace")
-        return re.sub(r"<script\b.*?</script\s*>", "", data, flags=re.S | re.I)
+        soup = BeautifulSoup(data, "html.parser")
+        for tag in soup.find_all("script"):
+            tag.decompose()
+        return str(soup)
 
     def rich(self, value: str, *bases: str) -> ir.RichText:
         return ir.RichText(self.prepare_html(value), self.pkg.resolver(*bases))

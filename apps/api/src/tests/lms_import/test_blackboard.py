@@ -133,9 +133,9 @@ def link_xml(referrer, to, to_type):
 
 
 def course_assessment_xml(asmt, attempts="3", multiple=True, unlimited=False, time_limit="30", show=True,
-                          randomize=True, password="", feedback=""):
+                          randomize=True, access_code="", feedback=""):
     return (f'<COURSEASSESSMENT id="_127999_1"><ASMTID value="{asmt}"/><DELIVERYTYPE value="ALL_AT_ONCE"/>'
-            f'<PASSWORD value="{password}"/><TIMELIMIT value="{time_limit}"/><ATTEMPTCOUNT value="{attempts}"/>'
+            f'<PASSWORD value="{access_code}"/><TIMELIMIT value="{time_limit}"/><ATTEMPTCOUNT value="{attempts}"/>'
             f'<FEEDBACKSETTINGS value="{feedback}"/><FLAGS>'
             f'<ALLOWMULTIPLEATTEMPTS value="{str(multiple).lower()}"/>'
             f'<ISUNLIMITEDATTEMPTS value="{str(unlimited).lower()}"/>'
@@ -677,7 +677,7 @@ def build_original(root) -> Pkg:
         "Pool A")
     p.res("assessment/x-bb-qti-test", assessment_xml("Old quiz", [mc_item()]), "Old quiz")
     p.res("assessment/x-bb-qti-survey", assessment_xml("Survey", [mc_item()]), "Survey")
-    casmt = p.res("course/x-bb-courseassessment", course_assessment_xml(qti_test, password="secret"))
+    casmt = p.res("course/x-bb-courseassessment", course_assessment_xml(qti_test, access_code="secret"))
     p.res("resource/x-bb-link", link_xml(test_link, casmt, "COURSE_ASSESSMENT"))
     p.res("resource/x-bb-link", link_xml(course_link, assignment, "CONTENT"))
     p.res("resource/x-bb-link", link_xml(forum_link, "discussion_board", "TOOL"))
