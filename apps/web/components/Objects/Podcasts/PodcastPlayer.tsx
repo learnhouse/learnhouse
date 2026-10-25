@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
+import { useTranslation } from 'react-i18next'
+import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import {
   getPodcastThumbnailMediaDirectory,
@@ -33,6 +35,12 @@ export default function PodcastPlayer() {
   const [previousVolume, setPreviousVolume] = useState(1)
 
   const { currentEpisode, podcast, isPlaying, currentTime, duration, volume, isMinimized, isVisible } = state
+  const { t } = useTranslation()
+  useShortcut(
+    { id: 'podcast.toggle', keys: 'p', group: 'global', label: t('shortcuts.play_pause_podcast'),
+      run: togglePlay },
+    isVisible && !!currentEpisode,
+  )
 
   // Get audio URL
   const audioUrl = currentEpisode && podcast && org

@@ -11,6 +11,9 @@ import './theater.css'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
+import { Keys } from '@components/Objects/Shortcuts/Kbd'
+import { ShortcutHint } from '@components/Objects/Shortcuts/ShortcutHint'
 import React, { useEffect, useRef, useMemo, lazy, Suspense } from 'react'
 import { getAssignmentFromActivityUUID, getFinalGrade, retryAssignmentSubmission, submitAssignmentForGrading } from '@services/courses/assignments'
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
@@ -222,7 +225,7 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment, sh
 function ActivityClient(props: ActivityClientProps) {
   const { t, i18n } = useTranslation()
   // Slide offsets are physical pixels; flip their sign in RTL.
-  const { x: dx } = useDirection()
+  const { x: dx, isRTL } = useDirection()
   const activityid = props.activityid
 
   function getRelativeTime(date: Date): string {
@@ -396,6 +399,83 @@ function ActivityClient(props: ActivityClientProps) {
 
     router.push(getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/${activity.cleanUuid}`);
   };
+
+  // Keyboard: j / k (or the arrow pointing forward / back in the reading
+  // direction) step through lessons, ] / [ jump a whole chapter, f toggles
+  // focus mode and Esc leaves it, Space drives a video, c goes back to the
+  // course. Registered only once the course is known, and never on the
+  // course-end screen, where there is no lesson to step from.
+  const shortcutsReady = !!course && activityid !== 'end'
+  const forwardArrow = isRTL ? 'arrowleft' : 'arrowright'
+  const backArrow = isRTL ? 'arrowright' : 'arrowleft'
+  useShortcut(
+    { id: 'activity.next', keys: 'j', aliases: [forwardArrow], label: t('shortcuts.next_lesson'), group: 'page',
+      run: () => navigateToActivity(nextActivity) },
+    shortcutsReady && (!!nextActivity || isLastActivity),
+  )
+  useShortcut(
+    { id: 'activity.prev', keys: 'k', aliases: [backArrow], label: t('shortcuts.previous_lesson'), group: 'page',
+      run: () => navigateToActivity(prevActivity) },
+    shortcutsReady && !!prevActivity,
+  )
+
+  // First lesson of the neighbouring chapters, skipping empty chapters.
+  const chapterNeighbours = useMemo(() => {
+    const chapters: any[] = course?.chapters ?? []
+    const cleanId = activityid.replace('activity_', '')
+    const here = chapters.findIndex((ch) =>
+      (ch.activities ?? []).some((a: any) => a.activity_uuid?.replace('activity_', '') === cleanId))
+    const firstOf = (ch: any) => {
+      const a = (ch?.activities ?? [])[0]
+      return a ? { ...a, cleanUuid: a.activity_uuid?.replace('activity_', '') } : null
+    }
+    const pick = (from: number, step: 1 | -1) => {
+      for (let i = from; i >= 0 && i < chapters.length; i += step) {
+        const a = firstOf(chapters[i])
+        if (a) return a
+      }
+      return null
+    }
+    return here < 0
+      ? { next: null, prev: null }
+      : { next: pick(here + 1, 1), prev: pick(here - 1, -1) }
+  }, [course, activityid])
+  useShortcut(
+    { id: 'activity.nextChapter', keys: ']', label: t('shortcuts.next_chapter'), group: 'page',
+      run: () => navigateToActivity(chapterNeighbours.next) },
+    shortcutsReady && !!chapterNeighbours.next,
+  )
+  useShortcut(
+    { id: 'activity.prevChapter', keys: '[', label: t('shortcuts.previous_chapter'), group: 'page',
+      run: () => navigateToActivity(chapterNeighbours.prev) },
+    shortcutsReady && !!chapterNeighbours.prev,
+  )
+
+  useShortcut(
+    { id: 'activity.focus', keys: 'f', label: t('shortcuts.toggle_focus'), group: 'page',
+      run: () => setIsFocusMode((v) => !v) },
+    shortcutsReady,
+  )
+  useShortcut(
+    { id: 'activity.exitFocus', keys: 'escape', label: t('shortcuts.exit_focus'), group: 'page',
+      hideFromPalette: true, run: () => setIsFocusMode(false) },
+    shortcutsReady && isFocusMode,
+  )
+  useShortcut(
+    { id: 'activity.playPause', keys: 'space', label: t('shortcuts.play_pause'), group: 'page',
+      run: () => {
+        const video = document.querySelector<HTMLVideoElement>('.video-js video, video')
+        if (!video) return
+        if (video.paused) void video.play()
+        else video.pause()
+      } },
+    shortcutsReady && activity?.activity_type === 'TYPE_VIDEO',
+  )
+  useShortcut(
+    { id: 'activity.course', keys: 'c', label: t('shortcuts.back_to_course'), group: 'page',
+      run: () => router.push(getUriWithOrg(orgslug, `/course/${course?.course_uuid?.replace('course_', '')}`)) },
+    !!course,
+  )
 
   // Initialize focus mode from localStorage
   React.useEffect(() => {
@@ -683,15 +763,17 @@ function ActivityClient(props: ActivityClientProps) {
                             orgslug={orgslug}
                             trailData={trailData}
                           />
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setIsFocusMode(false)}
-                            className="bg-white nice-shadow p-2 rounded-full cursor-pointer hover:bg-gray-50"
-                            title={t('activities.exit_focus_mode')}
-                          >
-                            <Minimize2 size={16} className="text-gray-700" />
-                          </motion.button>
+                          <ShortcutHint label={t('activities.exit_focus_mode')} keys="escape">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => setIsFocusMode(false)}
+                              className="bg-white nice-shadow p-2 rounded-full cursor-pointer hover:bg-gray-50"
+                              aria-label={t('activities.exit_focus_mode')}
+                            >
+                              <Minimize2 size={16} className="text-gray-700" />
+                            </motion.button>
+                          </ShortcutHint>
                         </motion.div>
                       </div>
                     </div>
@@ -746,6 +828,7 @@ function ActivityClient(props: ActivityClientProps) {
                               title={prevActivity ? `${t('common.previous')}: ${prevActivity.name}` : t('activities.no_previous_activity')}
                             >
                               <ChevronLeft size={20} className="text-gray-800 shrink-0" />
+                              <Keys keys="k" tone="muted" className="hidden sm:inline-flex" />
                               <div className="flex flex-col items-start">
                                 <span className="text-xs text-gray-500">{t('common.previous')}</span>
                                 <span className="text-sm capitalize font-semibold text-start">
@@ -790,6 +873,7 @@ function ActivityClient(props: ActivityClientProps) {
                                       : t('activities.no_next_activity')}
                                 </span>
                               </div>
+                              <Keys keys="j" tone="muted" className="hidden sm:inline-flex" />
                               <ChevronRight size={20} className="text-gray-800 shrink-0" />
                             </button>
                           </div>
@@ -1337,6 +1421,14 @@ export function MarkStatus(props: {
     return false;
   }
 
+  const completed = !!props.trailData && !!isActivityCompleted()
+  // Unmarking stays behind its confirmation dialog, so `m` only ever marks.
+  useShortcut(
+    { id: 'activity.complete', keys: 'm', label: t('shortcuts.mark_complete'), group: 'page',
+      run: () => { if (!isLoading) markActivityAsCompleteFront() } },
+    !!props.trailData && isUserPartOfTheOrg && !completed,
+  )
+
   // Don't render until we have trail data
   if (!props.trailData) {
     return null;
@@ -1431,6 +1523,7 @@ export function MarkStatus(props: {
                   </svg>
                 )}
                 <span className="text-xs font-bold min-w-[90px]">{isLoading ? t('activities.marking') : t('activities.mark_as_complete')}</span>
+                <Keys keys="m" tone="onDark" className="hidden sm:inline-flex" />
               </div>
             </div>
             {showUnmarkedTooltip && (

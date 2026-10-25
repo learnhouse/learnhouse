@@ -76,7 +76,7 @@ export function FolderCard({ folder, orgslug }: { folder: any; orgslug: string }
     ? getFolderThumbnailMediaDirectory(org?.org_uuid, folder.folder_uuid, folder.thumbnail_image)
     : null
   return (
-    <Link href={getUriWithOrg(orgslug, `/library/folder/${removeFolderPrefix(folder.folder_uuid)}`)} className={CARD}>
+    <Link data-kbd-item="" href={getUriWithOrg(orgslug, `/library/folder/${removeFolderPrefix(folder.folder_uuid)}`)} className={CARD}>
       <button
         onClick={(e) => {
           e.preventDefault()
@@ -168,6 +168,6 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
       </>
     )
   }
-  if (href) return <Link href={href} className={BIG}>{body}</Link>
+  if (href) return <Link data-kbd-item="" href={href} className={BIG}>{body}</Link>
   return <div className={BIG}>{body}</div>
 }

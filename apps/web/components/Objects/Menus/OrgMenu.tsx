@@ -12,7 +12,7 @@ import MenuLinks from './OrgMenuLinks'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { SearchBar } from '@components/Objects/Search/SearchBar'
+import { SearchTrigger } from '@components/Objects/Search/SearchTrigger'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
@@ -48,6 +48,7 @@ import {
   TooltipTrigger,
 } from '@components/ui/tooltip'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { Keys } from '@components/Objects/Shortcuts/Kbd'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
@@ -176,7 +177,7 @@ export const OrgMenu = (props: any) => {
 
           {/* Search Section */}
           <div className="hidden md:flex flex-1 justify-center max-w-lg px-4">
-            <SearchBar orgslug={orgslug} className="w-full" primaryColor={primaryColor} />
+            <SearchTrigger className="w-full" primaryColor={primaryColor} />
           </div>
 
           <div className="flex items-center space-x-2">
@@ -194,8 +195,9 @@ export const OrgMenu = (props: any) => {
                         <Signpost size={20} weight="fill" />
                       </Link>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
+                    <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
                       {t('courses.progress')}
+                      <Keys keys="g t" />
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -216,8 +218,9 @@ export const OrgMenu = (props: any) => {
                           <ChalkboardSimple size={20} weight="fill" />
                         </Link>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="text-xs">
-                        Boards
+                      <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
+                        {t('common.boards')}
+                        <Keys keys="g b" />
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -391,7 +394,7 @@ export const OrgMenu = (props: any) => {
         <div className="flex flex-col px-4 py-3 space-y-4 justify-center items-center">
           {/* Mobile Search */}
           <div className="w-full px-2">
-            <SearchBar orgslug={orgslug} isMobile={true} />
+            <SearchTrigger isMobile />
           </div>
           <div className='py-4'>
             <MenuLinks orgslug={orgslug} />

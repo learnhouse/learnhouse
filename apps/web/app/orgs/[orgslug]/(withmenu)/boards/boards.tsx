@@ -13,6 +13,7 @@ import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 
 interface BoardsPublicClientProps {
   orgslug: string
@@ -59,6 +60,12 @@ export default function BoardsPublicClient({
     <FeatureGate feature="boards" orgslug={orgslug} context="public">
     <div className="w-full">
       <GeneralWrapperStyled>
+        <ListShortcuts
+          onNextPage={() => goToPage(currentPage + 1)}
+          onPrevPage={() => goToPage(currentPage - 1)}
+          hasNextPage={currentPage < totalPages}
+          hasPrevPage={currentPage > 1}
+        />
         <div className="flex flex-col space-y-2 mb-2">
           <div className="flex items-center justify-between">
             <TypeOfContentTitle title={t('common.boards')} type="board" />
@@ -158,6 +165,7 @@ function PublicBoardCard({ board, orgUuid, fromSearch }: { board: any; orgUuid: 
 
   return (
     <Link
+      data-kbd-item=""
       href={`/board/${board.board_uuid.replace('board_', '')}`}
       onClick={() => track(AnalyticsEvent.BoardOpened, { member_count: board.member_count, from_search: fromSearch })}
       className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]"

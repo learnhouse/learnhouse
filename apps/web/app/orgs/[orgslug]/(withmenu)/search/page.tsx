@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   BookCopy,
+  BookOpen,
   Folder,
   Users as UsersIcon,
   Search as SearchIcon,
@@ -20,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { searchOrgContent } from '@services/search/search'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import {
   getCourseThumbnailMediaDirectory,
   getUserAvatarMediaDirectory,
@@ -31,39 +33,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
-
-/**
- * Discussions store their body as a tiptap/ProseMirror JSON document
- * ({"type":"doc","content":[…]}). Old posts may also be plain strings.
- * Return a flat preview string either way.
- */
-function extractPreviewText(raw: string | undefined | null): string {
-  if (!raw) return ''
-  const trimmed = raw.trim()
-  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return trimmed
-
-  try {
-    const parsed = JSON.parse(trimmed)
-    const parts: string[] = []
-    const walk = (node: any): void => {
-      if (!node) return
-      if (typeof node === 'string') {
-        parts.push(node)
-        return
-      }
-      if (Array.isArray(node)) {
-        node.forEach(walk)
-        return
-      }
-      if (typeof node.text === 'string') parts.push(node.text)
-      if (node.content) walk(node.content)
-    }
-    walk(parsed)
-    return parts.join(' ').replace(/\s+/g, ' ').trim()
-  } catch {
-    return trimmed
-  }
-}
+import { extractPreviewText } from '@/lib/site-search/preview'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types mirror the backend SearchResult shape, kept flexible on purpose so
@@ -89,6 +59,18 @@ interface ApiCourse {
   thumbnail_image?: string
   course_uuid: string
   authors?: ApiAuthor[]
+}
+
+interface ApiActivity {
+  activity_uuid: string
+  name: string
+  activity_type: string
+  activity_sub_type: string
+  course_uuid: string
+  course_name: string
+  course_thumbnail_image?: string | null
+  chapter_uuid?: string
+  chapter_name?: string
 }
 
 interface ApiFolder {
@@ -132,6 +114,7 @@ interface ApiPodcast {
 
 interface SearchResults {
   courses: ApiCourse[]
+  activities: ApiActivity[]
   folders: ApiFolder[]
   users: ApiUser[]
   communities: ApiCommunity[]
@@ -139,6 +122,7 @@ interface SearchResults {
   playgrounds: ApiPlayground[]
   podcasts: ApiPodcast[]
   total_courses: number
+  total_activities: number
   total_folders: number
   total_users: number
   total_communities: number
@@ -149,6 +133,7 @@ interface SearchResults {
 
 const EMPTY_RESULTS: SearchResults = {
   courses: [],
+  activities: [],
   folders: [],
   users: [],
   communities: [],
@@ -156,6 +141,7 @@ const EMPTY_RESULTS: SearchResults = {
   playgrounds: [],
   podcasts: [],
   total_courses: 0,
+  total_activities: 0,
   total_folders: 0,
   total_users: 0,
   total_communities: 0,
@@ -166,6 +152,7 @@ const EMPTY_RESULTS: SearchResults = {
 
 type ResourceKey =
   | 'courses'
+  | 'activities'
   | 'folders'
   | 'users'
   | 'communities'
@@ -192,6 +179,7 @@ interface SectionDescriptor<T> {
 interface RenderContext {
   orgSlug: string
   orgUuid: string
+  t: (_k: string, _o?: any) => string
 }
 
 const sections: SectionDescriptor<any>[] = [
@@ -230,6 +218,29 @@ const sections: SectionDescriptor<any>[] = [
             </div>
           ) : null
         }
+      />
+    ),
+  },
+  {
+    key: 'activities',
+    icon: BookOpen,
+    items: (r) => r.activities,
+    total: (r) => r.total_activities,
+    itemKey: (a: ApiActivity) => a.activity_uuid,
+    renderCard: (activity: ApiActivity, ctx) => (
+      <InlineCard
+        href={getUriWithOrg(
+          ctx.orgSlug,
+          `/course/${removeCoursePrefix(activity.course_uuid)}/activity/${activity.activity_uuid.replace('activity_', '')}`,
+        )}
+        icon={BookOpen}
+        imageUrl={activity.course_thumbnail_image
+          ? getCourseThumbnailMediaDirectory(ctx.orgUuid, activity.course_uuid, activity.course_thumbnail_image)
+          : undefined}
+        title={activity.name}
+        subtitle={activity.chapter_name
+          ? ctx.t('search.lesson_location', { course: activity.course_name, chapter: activity.chapter_name })
+          : activity.course_name}
       />
     ),
   },
@@ -472,10 +483,12 @@ function SearchPage() {
   const renderContext: RenderContext = {
     orgSlug: org?.slug ?? '',
     orgUuid: org?.org_uuid ?? '',
+    t,
   }
 
   return (
     <div className="min-h-screen">
+      <ListShortcuts />
       <div className="container mx-auto px-4 pt-10 pb-4 max-w-5xl">
         <h1 className="text-2xl font-semibold text-black/80 mb-1">
           {t('common.search')}
@@ -643,6 +656,7 @@ function ResourceCard({
 }) {
   return (
     <Link
+      data-kbd-item=""
       href={href}
       className="bg-white rounded-lg border border-black/5 hover:border-black/15 transition-colors overflow-hidden group flex flex-col"
     >
@@ -672,22 +686,31 @@ function InlineCard({
   href,
   icon: Icon,
   emoji,
+  imageUrl,
   title,
   subtitle,
 }: {
   href: string
   icon: React.ComponentType<any>
   emoji?: string
+  imageUrl?: string
   title: string
   subtitle?: string
 }) {
   return (
     <Link
+      data-kbd-item=""
       href={href}
       className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/5 hover:border-black/15 transition-colors"
     >
-      <div className="w-9 h-9 bg-black/5 rounded-md flex items-center justify-center flex-shrink-0 text-base">
-        {emoji ? <span>{emoji}</span> : <Icon size={18} className="text-black/50" />}
+      <div className="w-9 h-9 bg-black/5 rounded-md flex items-center justify-center flex-shrink-0 text-base overflow-hidden">
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+        ) : emoji ? (
+          <span>{emoji}</span>
+        ) : (
+          <Icon size={18} className="text-black/50" />
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <h3 className="text-sm font-medium text-black/80 line-clamp-1">{title}</h3>
@@ -804,7 +827,7 @@ function Pagination({
 
 function gridClass(key: ResourceKey): string {
   // Dense list for inline types (folders/discussions), card grid for rich types.
-  if (key === 'folders' || key === 'discussions' || key === 'users') {
+  if (key === 'activities' || key === 'folders' || key === 'discussions' || key === 'users') {
     return 'grid gap-3 md:grid-cols-2 lg:grid-cols-3'
   }
   return 'grid gap-4 md:grid-cols-2 lg:grid-cols-3'
