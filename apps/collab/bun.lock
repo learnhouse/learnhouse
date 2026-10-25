@@ -21,7 +21,7 @@
     },
   },
   "overrides": {
-    "esbuild": ">=0.28.1",
+    "esbuild": ">=0.28.2",
   },
   "packages": {
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.28.2", "", { "os": "aix", "cpu": "ppc64" }, "sha512-XExcO+dvLKvVtNTibSTBej1NCAbaGhWn9Ww1ZPx80qsahhPFe/8jgWP0IchNe0F3HwkU7n8ejhH8bjonqht8mQ=="],

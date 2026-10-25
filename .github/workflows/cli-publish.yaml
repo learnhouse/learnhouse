@@ -37,7 +37,7 @@ jobs:
 
       - uses: actions/setup-node@v7.1.0
         with:
-          node-version: '24'
+          node-version: '24.22.1'
           registry-url: 'https://registry.npmjs.org'
 
       - uses: oven-sh/setup-bun@v2.2.0
