@@ -616,7 +616,61 @@
       "import_partial": "Import Partially Complete",
       "import_summary": "{{successful}} of {{total}} course(s) imported successfully",
       "created": "Created",
-      "done": "Done"
+      "done": "Done",
+      "open_course": "Open course",
+      "lms_courses": "Another LMS",
+      "lms_description": "Moodle, Canvas, Blackboard, Brightspace, Open edX or Common Cartridge",
+      "lms_source": "Source platform",
+      "lms_auto_detect": "Auto-detect",
+      "lms_hint_auto": "Detect the platform from the uploaded file",
+      "lms_hint_moodle": "Course backup (.mbz)",
+      "lms_hint_canvas": "Course export (.imscc)",
+      "lms_hint_blackboard": "Export/Archive package (.zip)",
+      "lms_hint_brightspace": "Export package (.zip)",
+      "lms_hint_openedx": "Studio course export (.tar.gz)",
+      "lms_hint_common_cartridge": ".imscc / .zip",
+      "lms_quiz_mode": "Quizzes",
+      "lms_quiz_assignment": "Graded assignments",
+      "lms_quiz_assignment_hint": "Each quiz becomes an assignment with graded tasks",
+      "lms_quiz_page": "Interactive quiz blocks in pages",
+      "lms_quiz_page_hint": "Each quiz becomes a page with quiz blocks",
+      "lms_format": "Course export (.mbz, .imscc, .zip, .tar.gz)",
+      "lms_ready_to_convert": "Ready to convert",
+      "lms_invalid_file_format": "Please upload a .mbz, .imscc, .zip or .tar.gz file",
+      "lms_file_too_large": "The export is larger than the {{size}} MB upload limit",
+      "lms_info": "The export is converted into LearnHouse content on the server. Large courses can take a few minutes, keep this window open until it finishes.",
+      "lms_start": "Upload and Convert",
+      "lms_uploading": "Uploading... {{progress}}%",
+      "lms_upload_finishing": "Finishing upload...",
+      "lms_upload_progress": "Upload progress",
+      "lms_upload_failed": "Failed to upload the export",
+      "lms_converting": "Converting course...",
+      "lms_converting_hint": "This can take a few minutes for large courses. Keep this window open.",
+      "lms_conversion_failed": "Conversion Failed",
+      "lms_conversion_failed_generic": "The export could not be converted.",
+      "lms_status_failed": "Could not get the conversion status",
+      "lms_unknown_course": "Unknown course",
+      "lms_retry": "Try again",
+      "lms_converted": "Course Converted Successfully",
+      "lms_detected": "From {{source}}",
+      "lms_no_courses": "No course was found in this export",
+      "lms_count_pages": "Pages",
+      "lms_count_videos": "Videos",
+      "lms_count_documents": "Documents",
+      "lms_count_assignments": "Assignments",
+      "lms_count_scorm": "SCORM packages",
+      "lms_count_questions": "Questions",
+      "lms_count_assignment_tasks": "Assignment tasks",
+      "lms_count_images": "Images",
+      "lms_count_video_files": "Video files",
+      "lms_count_audio_files": "Audio files",
+      "lms_count_pdfs": "PDF files",
+      "lms_count_files": "Downloadable files",
+      "lms_count_due_dates_removed": "Past due dates removed",
+      "lms_count_transcoded": "Transcoded media",
+      "lms_skipped": "Skipped items ({{count}})",
+      "lms_warnings": "Warnings ({{count}})",
+      "lms_and_more": "and {{count}} more"
     },
     "scorm": {
       "upload_package": "Upload SCORM Package",
@@ -1614,10 +1668,104 @@
       "communities": "Communities",
       "discussions": "Discussions",
       "playgrounds": "Playgrounds",
-      "podcasts": "Podcasts"
+      "podcasts": "Podcasts",
+      "activities": "Lessons",
+      "folders": "Folders"
     },
     "course": "Course",
-    "user": "Member"
+    "user": "Member",
+    "lesson_location": "{{course}} · {{chapter}}",
+    "palette": {
+      "trigger": "Search",
+      "placeholder": "Search lessons, courses, people…",
+      "hint_mac": "⌘K",
+      "hint_other": "Ctrl K",
+      "loading": "Searching…",
+      "no_results": "No matches for \"{{query}}\"",
+      "empty_hint": "Type to search this space, or jump somewhere",
+      "view_all": "See all results for \"{{query}}\"",
+      "groups": {
+        "pages": "Go to",
+        "courses": "Courses",
+        "activities": "Lessons",
+        "folders": "Folders",
+        "communities": "Communities",
+        "discussions": "Discussions",
+        "playgrounds": "Playgrounds",
+        "podcasts": "Podcasts",
+        "users": "Members"
+      },
+      "keys": {
+        "navigate": "Navigate",
+        "open": "Open",
+        "new_tab": "New tab",
+        "close": "Close"
+      },
+      "entries": {
+        "home": {
+          "description": "Back to the start page",
+          "keywords": "home, start, landing, front page, main"
+        },
+        "courses": {
+          "description": "Browse every course",
+          "keywords": "courses, catalog, classes, lessons, learn, training, curriculum"
+        },
+        "library": {
+          "description": "Folders of grouped content",
+          "keywords": "library, folders, collections, bundles, paths"
+        },
+        "podcasts": {
+          "description": "Listen to episodes",
+          "keywords": "podcasts, audio, episodes, shows, listen"
+        },
+        "communities": {
+          "description": "Discussions with other members",
+          "keywords": "communities, forums, discussions, posts, threads, members"
+        },
+        "playgrounds": {
+          "description": "Interactive coding spaces",
+          "keywords": "playgrounds, code, sandbox, repl, practice, programming"
+        },
+        "store": {
+          "description": "Paid courses and bundles",
+          "keywords": "store, shop, buy, pricing, plans, offers, purchase"
+        },
+        "trail": {
+          "description": "Your progress across courses",
+          "keywords": "trail, progress, my courses, continue, history, enrolled"
+        },
+        "boards": {
+          "description": "Your boards",
+          "keywords": "boards, kanban, tasks, planning, notes"
+        },
+        "copilot": {
+          "title": "Copilot",
+          "description": "Ask the AI assistant",
+          "keywords": "copilot, ai, assistant, chat, ask, help"
+        },
+        "search": {
+          "description": "Full search with filters",
+          "keywords": "search, find, results, filter, browse"
+        },
+        "account_general": {
+          "title": "Account settings",
+          "description": "Email, name and language",
+          "keywords": "account, settings, email, name, language, preferences"
+        },
+        "account_profile": {
+          "description": "Your public profile and bio",
+          "keywords": "profile, bio, avatar, picture, public"
+        },
+        "account_security": {
+          "description": "Password, 2FA and sessions",
+          "keywords": "password, security, 2fa, mfa, sessions, sign out"
+        },
+        "account_purchases": {
+          "description": "Purchases and subscriptions",
+          "keywords": "purchases, subscriptions, billing, receipts, invoices"
+        }
+      }
+    }
   },
   "ai": {
     "ask_ai": "Ask AI",
@@ -2098,6 +2246,8 @@
       "import_learnhouse": "Import LearnHouse Course",
       "import_learnhouse_description": "Import a course exported from LearnHouse",
       "import_select_type": "Select the type of course to import",
+      "import_lms": "Import from Another LMS",
+      "import_lms_description": "Convert a course exported from another learning platform",
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet",
@@ -6712,5 +6862,42 @@
       "per_month": "/ month",
       "per_year": "/ year"
     }
+  },
+  "shortcuts": {
+    "help_title": "Keyboard shortcuts",
+    "help_subtitle": "Press ? anywhere to open this sheet.",
+    "then": "then",
+    "groups": {
+      "global": "Everywhere",
+      "navigation": "Go to",
+      "page": "On this page"
+    },
+    "open_help": "Keyboard shortcuts",
+    "open_search": "Search",
+    "go_to": "Go to {{page}}",
+    "next_lesson": "Next lesson",
+    "previous_lesson": "Previous lesson",
+    "mark_complete": "Mark lesson complete",
+    "unmark_complete": "Unmark lesson",
+    "toggle_focus": "Toggle focus mode",
+    "back_to_course": "Back to course",
+    "start_course": "Start course",
+    "continue_course": "Continue where you left off",
+    "palette_actions": "Actions",
+    "help": "Help",
+    "next_item": "Next item",
+    "previous_item": "Previous item",
+    "open_item": "Open selected item",
+    "next_page": "Next page",
+    "previous_page": "Previous page",
+    "next_chapter": "Next chapter",
+    "previous_chapter": "Previous chapter",
+    "exit_focus": "Exit focus mode",
+    "play_pause": "Play or pause video",
+    "expand_chapters": "Expand all chapters",
+    "collapse_chapters": "Collapse all chapters",
+    "new_discussion": "New discussion",
+    "play_pause_podcast": "Play or pause podcast",
+    "or": "or"
   }
 }

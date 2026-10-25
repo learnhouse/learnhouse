@@ -635,7 +635,61 @@
       "import_partial": "اكتمل الاستيراد جزئياً",
       "import_summary": "تم استيراد {{successful}} من {{total}} دورة بنجاح",
       "created": "تم الإنشاء",
-      "done": "تم"
+      "done": "تم",
+      "open_course": "فتح الدورة",
+      "lms_courses": "نظام تعلم آخر",
+      "lms_description": "Moodle أو Canvas أو Blackboard أو Brightspace أو Open edX أو Common Cartridge",
+      "lms_source": "المنصة المصدر",
+      "lms_auto_detect": "اكتشاف تلقائي",
+      "lms_hint_auto": "اكتشاف المنصة من الملف المرفوع",
+      "lms_hint_moodle": "نسخة احتياطية للدورة (.mbz)",
+      "lms_hint_canvas": "تصدير الدورة (.imscc)",
+      "lms_hint_blackboard": "حزمة تصدير/أرشيف (.zip)",
+      "lms_hint_brightspace": "حزمة تصدير (.zip)",
+      "lms_hint_openedx": "تصدير الدورة من Studio (.tar.gz)",
+      "lms_hint_common_cartridge": ".imscc / .zip",
+      "lms_quiz_mode": "الاختبارات",
+      "lms_quiz_assignment": "واجبات مُقيَّمة",
+      "lms_quiz_assignment_hint": "يتحول كل اختبار إلى واجب بمهام مُقيَّمة",
+      "lms_quiz_page": "كتل اختبار تفاعلية داخل الصفحات",
+      "lms_quiz_page_hint": "يتحول كل اختبار إلى صفحة تحتوي على كتل اختبار",
+      "lms_format": "تصدير دورة (.mbz أو .imscc أو .zip أو .tar.gz)",
+      "lms_ready_to_convert": "جاهز للتحويل",
+      "lms_invalid_file_format": "يرجى رفع ملف .mbz أو .imscc أو .zip أو .tar.gz",
+      "lms_file_too_large": "ملف التصدير أكبر من حد الرفع البالغ {{size}} ميغابايت",
+      "lms_info": "يُحوَّل ملف التصدير إلى محتوى LearnHouse على الخادم. قد تستغرق الدورات الكبيرة بضع دقائق، أبقِ هذه النافذة مفتوحة حتى انتهاء العملية.",
+      "lms_start": "رفع وتحويل",
+      "lms_uploading": "جارٍ الرفع... {{progress}}%",
+      "lms_upload_finishing": "جارٍ إنهاء الرفع...",
+      "lms_upload_progress": "تقدم الرفع",
+      "lms_upload_failed": "فشل رفع ملف التصدير",
+      "lms_converting": "جارٍ تحويل الدورة...",
+      "lms_converting_hint": "قد يستغرق هذا بضع دقائق للدورات الكبيرة. أبقِ هذه النافذة مفتوحة.",
+      "lms_conversion_failed": "فشل التحويل",
+      "lms_conversion_failed_generic": "تعذّر تحويل ملف التصدير.",
+      "lms_status_failed": "تعذّر الحصول على حالة التحويل",
+      "lms_unknown_course": "مقرر غير معروف",
+      "lms_retry": "إعادة المحاولة",
+      "lms_converted": "تم تحويل الدورة بنجاح",
+      "lms_detected": "من {{source}}",
+      "lms_no_courses": "لم يتم العثور على أي دورة في ملف التصدير هذا",
+      "lms_count_pages": "الصفحات",
+      "lms_count_videos": "مقاطع الفيديو",
+      "lms_count_documents": "المستندات",
+      "lms_count_assignments": "الواجبات",
+      "lms_count_scorm": "حزم SCORM",
+      "lms_count_questions": "الأسئلة",
+      "lms_count_assignment_tasks": "مهام الواجبات",
+      "lms_count_images": "الصور",
+      "lms_count_video_files": "ملفات الفيديو",
+      "lms_count_audio_files": "الملفات الصوتية",
+      "lms_count_pdfs": "ملفات PDF",
+      "lms_count_files": "ملفات قابلة للتنزيل",
+      "lms_count_due_dates_removed": "مواعيد تسليم منتهية أُزيلت",
+      "lms_count_transcoded": "الوسائط المعاد ترميزها",
+      "lms_skipped": "العناصر المتخطاة ({{count}})",
+      "lms_warnings": "التحذيرات ({{count}})",
+      "lms_and_more": "و{{count}} أخرى"
     },
     "create": {
       "choose_type": "إنشاء دورة جديدة",
@@ -1174,7 +1228,101 @@
       "communities": "مجتمعات",
       "discussions": "مناقشات",
       "playgrounds": "ساحات التجربة",
-      "podcasts": "بودكاست"
+      "podcasts": "بودكاست",
+      "activities": "الدروس",
+      "folders": "المجلدات"
+    },
+    "lesson_location": "{{course}} · {{chapter}}",
+    "palette": {
+      "trigger": "بحث",
+      "placeholder": "ابحث في الدروس والدورات والأعضاء…",
+      "hint_mac": "⌘K",
+      "hint_other": "Ctrl K",
+      "loading": "جارٍ البحث…",
+      "no_results": "لا نتائج تطابق \"{{query}}\"",
+      "empty_hint": "اكتب للبحث في هذه المساحة، أو انتقل إلى صفحة",
+      "view_all": "عرض كل النتائج لـ \"{{query}}\"",
+      "groups": {
+        "pages": "انتقال إلى",
+        "courses": "الدورات",
+        "activities": "الدروس",
+        "folders": "المجلدات",
+        "communities": "المجتمعات",
+        "discussions": "النقاشات",
+        "playgrounds": "الساحات",
+        "podcasts": "البودكاست",
+        "users": "الأعضاء"
+      },
+      "keys": {
+        "navigate": "تنقّل",
+        "open": "فتح",
+        "new_tab": "تبويب جديد",
+        "close": "إغلاق"
+      },
+      "entries": {
+        "home": {
+          "description": "العودة إلى صفحة البداية",
+          "keywords": "الرئيسية, البداية, الصفحة الرئيسية, home, start"
+        },
+        "courses": {
+          "description": "تصفّح كل الدورات",
+          "keywords": "الدورات, الكتالوج, الفصول, الدروس, تعلّم, تدريب, courses"
+        },
+        "library": {
+          "description": "مجلدات المحتوى المجمّع",
+          "keywords": "المكتبة, المجلدات, المجموعات, الحزم, المسارات, library"
+        },
+        "podcasts": {
+          "description": "استمع إلى الحلقات",
+          "keywords": "البودكاست, الصوت, الحلقات, البرامج, استماع, podcasts"
+        },
+        "communities": {
+          "description": "نقاشات مع بقية الأعضاء",
+          "keywords": "المجتمعات, المنتديات, النقاشات, المنشورات, الأعضاء, communities"
+        },
+        "playgrounds": {
+          "description": "مساحات برمجة تفاعلية",
+          "keywords": "الساحات, الكود, البرمجة, التجربة, تمرين, playgrounds"
+        },
+        "store": {
+          "description": "الدورات والحزم المدفوعة",
+          "keywords": "المتجر, شراء, الأسعار, الخطط, العروض, store"
+        },
+        "trail": {
+          "description": "تقدّمك عبر الدورات",
+          "keywords": "المسار, التقدّم, دوراتي, متابعة, السجل, trail, progress"
+        },
+        "boards": {
+          "description": "لوحاتك",
+          "keywords": "اللوحات, كانبان, المهام, التخطيط, الملاحظات, boards"
+        },
+        "copilot": {
+          "title": "المساعد",
+          "description": "اسأل المساعد الذكي",
+          "keywords": "المساعد, الذكاء الاصطناعي, محادثة, اسأل, مساعدة, copilot, ai"
+        },
+        "search": {
+          "description": "بحث كامل مع فلاتر",
+          "keywords": "بحث, إيجاد, نتائج, فلترة, تصفّح, search"
+        },
+        "account_general": {
+          "title": "إعدادات الحساب",
+          "description": "البريد والاسم واللغة",
+          "keywords": "الحساب, الإعدادات, البريد, الاسم, اللغة, التفضيلات, account"
+        },
+        "account_profile": {
+          "description": "ملفك العام ونبذتك",
+          "keywords": "الملف الشخصي, النبذة, الصورة, عام, profile"
+        },
+        "account_security": {
+          "description": "كلمة المرور والمصادقة الثنائية والجلسات",
+          "keywords": "كلمة المرور, الأمان, المصادقة الثنائية, الجلسات, تسجيل الخروج, security, 2fa"
+        },
+        "account_purchases": {
+          "description": "المشتريات والاشتراكات",
+          "keywords": "المشتريات, الاشتراكات, الفوترة, الإيصالات, الفواتير, purchases"
+        }
+      }
     }
   },
   "ai": {
@@ -1656,6 +1804,8 @@
       "import_learnhouse": "استيراد دورات LearnHouse",
       "import_learnhouse_description": "استيراد الدورات من حزمة تصدير LearnHouse",
       "import_select_type": "اختر نوع الحزمة التي تريد استيرادها",
+      "import_lms": "الاستيراد من نظام تعلم آخر",
+      "import_lms_description": "تحويل دورة مُصدَّرة من منصة تعليمية أخرى",
       "no_courses": "لا توجد دورات بعد",
       "create_course_placeholder": "أنشئ دورة لإضافة محتوى",
       "no_courses_available": "لا توجد دورات متاحة بعد",
@@ -6731,5 +6881,42 @@
       "per_month": "/ شهر",
       "per_year": "/ سنة"
     }
+  },
+  "shortcuts": {
+    "help_title": "اختصارات لوحة المفاتيح",
+    "help_subtitle": "اضغط ? في أي مكان لفتح هذه اللوحة.",
+    "then": "ثم",
+    "groups": {
+      "global": "في كل مكان",
+      "navigation": "انتقال إلى",
+      "page": "في هذه الصفحة"
+    },
+    "open_help": "اختصارات لوحة المفاتيح",
+    "open_search": "بحث",
+    "go_to": "انتقال إلى {{page}}",
+    "next_lesson": "الدرس التالي",
+    "previous_lesson": "الدرس السابق",
+    "mark_complete": "تعليم الدرس كمكتمل",
+    "unmark_complete": "إلغاء اكتمال الدرس",
+    "toggle_focus": "تبديل وضع التركيز",
+    "back_to_course": "العودة إلى الدورة",
+    "start_course": "بدء الدورة",
+    "continue_course": "متابعة من حيث توقفت",
+    "palette_actions": "إجراءات",
+    "help": "مساعدة",
+    "next_item": "العنصر التالي",
+    "previous_item": "العنصر السابق",
+    "open_item": "فتح العنصر المحدد",
+    "next_page": "الصفحة التالية",
+    "previous_page": "الصفحة السابقة",
+    "next_chapter": "الفصل التالي",
+    "previous_chapter": "الفصل السابق",
+    "exit_focus": "الخروج من وضع التركيز",
+    "play_pause": "تشغيل الفيديو أو إيقافه مؤقتًا",
+    "expand_chapters": "توسيع كل الفصول",
+    "collapse_chapters": "طي كل الفصول",
+    "new_discussion": "نقاش جديد",
+    "play_pause_podcast": "تشغيل البودكاست أو إيقافه مؤقتًا",
+    "or": "أو"
   }
 }

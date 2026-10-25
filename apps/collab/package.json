@@ -1,6 +1,6 @@
 {
   "name": "@learnhouse/collab",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,6 +24,6 @@
     "typescript": "^6.0.3"
   },
   "overrides": {
-    "esbuild": ">=0.28.1"
+    "esbuild": ">=0.28.2"
   }
 }

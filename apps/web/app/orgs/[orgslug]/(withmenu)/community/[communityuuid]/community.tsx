@@ -14,6 +14,10 @@ import { isRichContentAllowed } from '@components/Objects/Communities/richConten
 import { DiscussionWithAuthor } from '@services/communities/discussions'
 import { useMediaQuery } from 'usehooks-ts'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
+import { useTranslation } from 'react-i18next'
+import { useCommunityRights } from '@components/Hooks/useCommunityRights'
+import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 
 interface CommunityClientProps {
   community: Community
@@ -29,6 +33,13 @@ const CommunityClient = ({
 }: CommunityClientProps) => {
   const [isCreateDiscussionModalOpen, setIsCreateDiscussionModalOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 768px)')
+  const { t } = useTranslation()
+  const { canCreateDiscussion } = useCommunityRights(community.community_uuid)
+  useShortcut(
+    { id: 'community.new', keys: 'n', group: 'page', label: t('shortcuts.new_discussion'),
+      run: () => setIsCreateDiscussionModalOpen(true) },
+    !!canCreateDiscussion,
+  )
 
   useTrackView(AnalyticsEvent.CommunityViewed, {
     is_public: community.public,
@@ -38,6 +49,7 @@ const CommunityClient = ({
   return (
     <>
       <GeneralWrapperStyled>
+        <ListShortcuts />
         {/* Breadcrumbs */}
         <div className="pb-4">
           <Breadcrumbs items={[
