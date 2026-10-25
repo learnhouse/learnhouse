@@ -23,14 +23,14 @@ jobs:
       - uses: actions/checkout@v7.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@v7.0.0
+        uses: actions/setup-python@v7.1.0
         with:
           python-version: "3.14"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.2
         with:
-          version: "0.13.1"
+          version: "0.13.5"
           # Resolving and downloading the API's wheels from scratch on every
           # run is pure repetition; the lockfile is what decides the answer,
           # so key the cache on it.
