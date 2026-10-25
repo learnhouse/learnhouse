@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14.7, <3.14.8"
 
 [[package]]
@@ -745,7 +745,7 @@ wheels = [
 
 [[package]]
 name = "learnhouse-api"
-version = "1.4.2"
+version = "1.4.3"
 source = { virtual = "." }
 dependencies = [
     { name = "aiosqlite" },
