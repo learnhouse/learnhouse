@@ -261,3 +261,12 @@ class TestSafeFilename:
             get_safe_filename("evil.png", "pfx", content_type="application/x-msdownload")
             == "pfx.bin"
         )
+
+
+def test_max_size_for_extension():
+    from src.security.file_validation import MAX_STORED_FILE_SIZE, FILE_TYPES, max_size_for_extension
+
+    assert max_size_for_extension("pdf") == FILE_TYPES["document"]["max_size"]
+    assert max_size_for_extension("PDF") == max_size_for_extension("pdf")
+    assert 0 < max_size_for_extension("mp4") <= MAX_STORED_FILE_SIZE  # 5 GB cap clamped to the column
+    assert max_size_for_extension("exe") == 0

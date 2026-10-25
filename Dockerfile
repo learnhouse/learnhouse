@@ -120,7 +120,8 @@ WORKDIR /app
 COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY ./apps/api/docker-entrypoint.sh /app/api/docker-entrypoint.sh
 COPY ./docker/start.sh /app/start.sh
-RUN chmod +x /app/api/docker-entrypoint.sh /app/start.sh
+RUN chmod +x /app/api/docker-entrypoint.sh /app/start.sh /app/api/bin/learnhouse-lms-import \
+    && ln -s /app/api/bin/learnhouse-lms-import /usr/local/bin/learnhouse-lms-import
 
 # PYTHONDONTWRITEBYTECODE: the image ships read-only source and gains nothing
 # from writing .pyc files back into it. It also keeps __pycache__ out of the
