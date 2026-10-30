@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import net from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
-import { FAKE_DOCKER, isWindows, itPosix } from './platform.js'
+import { FAKE_DOCKER, isWindows, itPosix, itWindows } from './platform.js'
 
 // Cross-platform behavior, run unmocked on every OS in CI (Linux, macOS,
 // Windows). Docker is the fake from tests/fixtures (LEARNHOUSE_DOCKER_BIN), so
@@ -245,6 +245,18 @@ describe('port probing', () => {
     } finally {
       Object.defineProperty(process, 'platform', { value: real, configurable: true })
     }
+  })
+
+  itWindows('the real netstat reports a listener on this Windows host', async () => {
+    const blocker = net.createServer()
+    await new Promise<void>((r) => blocker.listen(0, '127.0.0.1', r))
+    const port = (blocker.address() as net.AddressInfo).port
+    try {
+      expect(isTcpPortListening(port)).toBe(true)
+    } finally {
+      await new Promise<void>((r) => blocker.close(() => r()))
+    }
+    expect(isTcpPortListening(port)).toBe(false)
   })
 
   it('without lsof or ss (e.g. Windows), isTcpPortListening says no rather than throwing', () => {

@@ -470,7 +470,7 @@ describe('generateEnvFile: org propagation', () => {
 // doesn't depend on a real Docker daemon, and override the home dir
 // via a fresh `HOME` env so the lookup hits our temp tree.
 
-import { FAKE_DOCKER, expectMode } from './platform.js'
+import { FAKE_DOCKER, expectMode, itPosix } from './platform.js'
 vi.mock('../src/services/docker.js', async () => {
   const actual = await vi.importActual<typeof import('../src/services/docker.js')>(
     '../src/services/docker.js',
@@ -2221,14 +2221,14 @@ describe('network: port and connectivity probes', () => {
       expect(await checkPort(port)).toBe(true)  // now free
     })
 
-    it('consults lsof, then ss, after a successful bind', async () => {
+    itPosix('consults lsof, then ss, after a successful bind', async () => {
       const port = await freePort()
       expect(await checkPort(port)).toBe(true)
       const probes = execSync.mock.calls.map((c) => String(c[0]))
       expect(probes).toEqual([`lsof -nP -iTCP:${port} -sTCP:LISTEN`, `ss -ltnH sport = :${port}`])
     })
 
-    it('treats the port as taken when lsof reports a listener the bind did not see', async () => {
+    itPosix('treats the port as taken when lsof reports a listener the bind did not see', async () => {
       // e.g. macOS: a wildcard bind succeeds next to a listener on 127.0.0.1.
       const port = await freePort()
       execSync.mockImplementation((cmd: string) =>
@@ -2618,7 +2618,7 @@ describe('docker.ts command builders', () => {
     expect(dockerStatsForContainers([])).toBe('') // short-circuits, no command
   })
 
-  it('isTcpPortListening tries lsof then ss (true if either reports a listener)', () => {
+  itPosix('isTcpPortListening tries lsof then ss (true if either reports a listener)', () => {
     execSync.mockReturnValue(Buffer.from('node 123 LISTEN'))
     expect(isTcpPortListening(8080)).toBe(true)
     expect(cmd()).toContain('lsof -nP -iTCP:8080 -sTCP:LISTEN')
