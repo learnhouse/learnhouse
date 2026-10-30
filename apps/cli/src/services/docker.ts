@@ -149,6 +149,14 @@ function sleepBlockingMs(ms: number): void {
  * returns false (don't block; docker would surface a real conflict at `up`).
  */
 export function isTcpPortListening(port: number): boolean {
+  if (process.platform === 'win32') {
+    try {
+      const out = execFileSync('netstat', ['-an', '-p', 'TCP'], { stdio: 'pipe' }).toString()
+      return new RegExp(`^\\s*TCP\\s+\\S+:${port}\\s+\\S+\\s+LISTENING`, 'mi').test(out)
+    } catch {
+      return false
+    }
+  }
   const probes: [string, string[]][] = [
     ['lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN']],
     ['ss', ['-ltnH', `sport = :${port}`]],

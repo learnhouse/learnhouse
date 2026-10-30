@@ -2458,7 +2458,7 @@ describe('docker.ts command builders', () => {
     let shAttempts = 0
     execSync.mockImplementation((c: string) => {
       if (c.includes('pgrep')) throw new Error('lock free')
-      if (c.startsWith('sh ') && c.endsWith('/get-docker.sh')) {
+      if (c.startsWith('sh ') && /[\\/]get-docker\.sh$/.test(c)) {
         shAttempts++
         if (shAttempts === 1) throw new Error('dpkg was locked') // first run fails → retry
       }
@@ -2548,7 +2548,8 @@ describe('docker.ts command builders', () => {
 
     it('dockerExecToFile spawns docker exec with stdout on the output file', () => {
       // A path a shell would mangle: spaces, quotes, $.
-      const out = path.join(tmp, 'dump "$HOME" x.sql')
+      // `"` is not allowed in Windows file names; `$` and spaces still are
+      const out = path.join(tmp, process.platform === 'win32' ? 'dump $HOME x.sql' : 'dump "$HOME" x.sql')
       spawn.mockImplementation(((_f: string, _a: string[], o: { stdio: [unknown, number, unknown] }) => {
         fs.writeSync(o.stdio[1], 'DUMP')
         return { status: 0, stderr: Buffer.from('') }

@@ -21,14 +21,19 @@ export async function getPublicIp(): Promise<string | null> {
   return null
 }
 
-function tryBind(port: number): Promise<'free' | 'in-use' | 'denied'> {
+function tryBind(port: number, host: string): Promise<'free' | 'in-use' | 'denied'> {
   return new Promise((resolve) => {
     const server = net.createServer()
-    server.once('error', (err: NodeJS.ErrnoException) => resolve(err.code === 'EACCES' ? 'denied' : 'in-use'))
+    server.once('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EACCES') resolve('denied')
+      // No IPv6 on this host: nothing can be listening there
+      else if (err.code === 'EADDRNOTAVAIL' || err.code === 'EAFNOSUPPORT') resolve('free')
+      else resolve('in-use')
+    })
     server.once('listening', () => {
       server.close(() => resolve('free'))
     })
-    server.listen(port, '0.0.0.0')
+    server.listen(port, host)
   })
 }
 
@@ -36,10 +41,14 @@ function tryBind(port: number): Promise<'free' | 'in-use' | 'denied'> {
  * True if Docker could publish `port`. A bind attempt alone is not enough: a
  * non-root user can never bind ports below 1024 (EACCES, not "in use"), and on
  * macOS a wildcard bind succeeds next to a listener on 127.0.0.1. Both cases
- * defer to lsof/ss for whether something is actually listening.
+ * defer to lsof/ss/netstat for whether something is actually listening.
+ * Docker publishes on both 0.0.0.0 and ::, and Windows keeps the two apart, so
+ * both are probed.
  */
 export async function checkPort(port: number): Promise<boolean> {
-  if ((await tryBind(port)) === 'in-use') return false
+  for (const host of ['0.0.0.0', '::']) {
+    if ((await tryBind(port, host)) === 'in-use') return false
+  }
   return !isTcpPortListening(port)
 }
 

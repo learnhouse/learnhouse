@@ -204,6 +204,49 @@ describe('port probing', () => {
     }
   })
 
+  it('a port held only on :: (IPv6 wildcard) is in use', async () => {
+    const blocker = net.createServer()
+    const ok = await new Promise<boolean>((r) => {
+      blocker.once('error', () => r(false)) // no IPv6 on this host
+      blocker.listen(0, '::', () => r(true))
+    })
+    if (!ok) return
+    const port = (blocker.address() as net.AddressInfo).port
+    try {
+      expect(await checkPort(port)).toBe(false)
+    } finally {
+      await new Promise<void>((r) => blocker.close(() => r()))
+    }
+  })
+
+  // Runs Windows' code path (netstat) with a fake netstat script on POSIX
+  itPosix('on Windows, listeners are read from netstat (IPv4 and IPv6, exact port)', () => {
+    const fake = path.join(tmp, 'netstat')
+    const lines = [
+      '',
+      'Active Connections',
+      '',
+      '  Proto  Local Address          Foreign Address        State',
+      '  TCP    0.0.0.0:8080           0.0.0.0:0              LISTENING',
+      '  TCP    [::]:443               [::]:0                 LISTENING',
+      '  TCP    127.0.0.1:5432         127.0.0.1:61000        ESTABLISHED',
+    ]
+    // printf is a shell builtin: PATH holds nothing but this script
+    fs.writeFileSync(fake, '#!/bin/sh\n' + lines.map((l) => `printf '%s\\r\\n' '${l}'`).join('\n') + '\n')
+    fs.chmodSync(fake, 0o755)
+    process.env.PATH = tmp
+    const real = process.platform
+    Object.defineProperty(process, 'platform', { value: 'win32', configurable: true })
+    try {
+      expect(isTcpPortListening(8080)).toBe(true)
+      expect(isTcpPortListening(443)).toBe(true)
+      expect(isTcpPortListening(80)).toBe(false) // 8080 must not match 80
+      expect(isTcpPortListening(5432)).toBe(false) // established, not listening
+    } finally {
+      Object.defineProperty(process, 'platform', { value: real, configurable: true })
+    }
+  })
+
   it('without lsof or ss (e.g. Windows), isTcpPortListening says no rather than throwing', () => {
     process.env.PATH = tmp
     expect(isTcpPortListening(65000)).toBe(false)

@@ -260,7 +260,10 @@ describe.skipIf(!BASH)('install.sh on simulated hosts', () => {
         expect(r.out).toContain('Checksum verified')
         // no xz on this host → .tar.gz with -z
         expect(r.calls.some((c) => c.startsWith(`tar -xzf`) && c.includes(tarball) && c.includes('-C /usr/local'))).toBe(true)
-        expect(r.out).toContain('Node.js installed: v24.22.2')
+        // The installer puts /usr/local/bin first on PATH (where it unpacked
+        // Node); a host that already has a node there reports that one.
+        expect(r.out).toMatch(/Node\.js installed: v\d+/)
+        if (!fs.existsSync('/usr/local/bin/node')) expect(r.out).toContain('Node.js installed: v24.22.2')
       })
 
       it('aborts on a checksum mismatch without unpacking anything', () => {
