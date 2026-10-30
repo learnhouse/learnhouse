@@ -12,8 +12,8 @@ export async function logsCommand() {
   if (config?.installDir) {
     try {
       // Quick check: does docker compose see services here?
-      const { execSync } = await import('node:child_process')
-      const ps = execSync('docker compose ps -q', { cwd: config.installDir, stdio: 'pipe' }).toString().trim()
+      const { execFileSync } = await import('node:child_process')
+      const ps = execFileSync('docker', ['compose', 'ps', '-q'], { cwd: config.installDir, stdio: 'pipe' }).toString().trim()
       if (ps) {
         dockerComposeLogs(config.installDir)
         return

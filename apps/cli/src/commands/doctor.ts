@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
@@ -15,13 +15,16 @@ import {
   listDeploymentContainers,
 } from '../services/docker.js'
 import { checkPort } from '../utils/network.js'
+import { hasComposeService } from '../services/stack.js'
 
+let failures = 0
 function pass(msg: string) { console.log(`  ${pc.green('✓')} ${msg}`) }
 function warn(msg: string, fix?: string) {
   console.log(`  ${pc.yellow('!')} ${msg}`)
   if (fix) console.log(`    ${pc.dim(`Fix: ${fix}`)}`)
 }
 function fail(msg: string, fix?: string) {
+  failures++
   console.log(`  ${pc.red('✗')} ${msg}`)
   if (fix) console.log(`    ${pc.dim(`Fix: ${fix}`)}`)
 }
@@ -47,7 +50,6 @@ const EE_REQUIRED_ENV_VARS_BASE = [
   'LEARNHOUSE_LICENSE_KEY',
   'ACME_EMAIL',
   'EE_IMAGE_TAG',
-  'DB_PASSWORD',
   'LEARNHOUSE_AUTH_JWT_SECRET_KEY',
   'COLLAB_INTERNAL_KEY',
   'LEARNHOUSE_INITIAL_ADMIN_EMAIL',
@@ -64,6 +66,7 @@ export async function doctorCommand() {
   const config = readConfig(dir)
 
   p.intro(pc.cyan('LearnHouse Doctor'))
+  failures = 0
 
   // 1. Docker daemon
   p.log.step('Docker Environment')
@@ -74,7 +77,15 @@ export async function doctorCommand() {
   }
   pass('Docker installed')
 
-  if (!isDockerRunning()) {
+  let dockerUp = false
+  try {
+    dockerUp = isDockerRunning()
+  } catch (err) {
+    fail((err as Error).message)
+    p.outro(pc.red('Cannot continue without access to Docker'))
+    process.exit(1)
+  }
+  if (!dockerUp) {
     fail('Docker daemon not running', 'Start Docker Desktop or run: sudo systemctl start docker')
     p.outro(pc.red('Cannot continue without Docker running'))
     process.exit(1)
@@ -104,7 +115,7 @@ export async function doctorCommand() {
   } else {
     for (const c of containers) {
       const isUp = c.status.toLowerCase().startsWith('up')
-      const svcName = c.name.replace(`-${id}`, '')
+      const svcName = c.service
       if (isUp) {
         pass(`${svcName} running`)
       } else if (c.status.toLowerCase().includes('restarting')) {
@@ -119,7 +130,7 @@ export async function doctorCommand() {
   p.log.step('Restart Counts')
   for (const c of containers) {
     const count = getContainerRestartCount(c.name)
-    const svcName = c.name.replace(`-${id}`, '')
+    const svcName = c.service
     if (count > 3) {
       warn(`${svcName} has restarted ${count} times`, 'Check container logs for crash reasons')
     } else {
@@ -146,7 +157,8 @@ export async function doctorCommand() {
   if (config.domain !== 'localhost' && !config.domain.startsWith('127.')) {
     try {
       const { promises: dns } = await import('node:dns')
-      await dns.resolve(config.domain)
+      // lookup (not resolve) follows the system resolver: /etc/hosts and AAAA-only names count
+      await dns.lookup(config.domain)
       pass(`DNS resolves for ${config.domain}`)
     } catch {
       warn(`DNS resolution failed for ${config.domain}`, 'Check your DNS settings or /etc/hosts')
@@ -156,19 +168,16 @@ export async function doctorCommand() {
   // 7. Disk space
   p.log.step('Disk')
   try {
-    const dfOutput = execSync("df -h . | tail -1 | awk '{print $4}'", {
-      stdio: 'pipe',
-      cwd: installDir,
-    }).toString().trim()
-    const sizeStr = dfOutput.toLowerCase()
-    // Parse available space and warn if under 1G
-    const numericVal = parseFloat(sizeStr)
-    if (sizeStr.includes('g') && numericVal < 1) {
-      warn(`Low disk space: ${dfOutput} available`, 'Free up disk space or docker system prune')
-    } else if (sizeStr.includes('m')) {
-      warn(`Low disk space: ${dfOutput} available`, 'Free up disk space or docker system prune')
+    // POSIX output (-P) never wraps long device names; -k makes the unit fixed.
+    const lines = execFileSync('df', ['-Pk', installDir], { stdio: 'pipe' }).toString().trim().split('\n')
+    const availKb = parseInt(lines[lines.length - 1].trim().split(/\s+/)[3], 10)
+    if (!Number.isFinite(availKb)) throw new Error('unexpected df output')
+    const availGb = availKb / (1024 * 1024)
+    const label = availGb >= 1 ? `${availGb.toFixed(1)}G` : `${Math.round(availKb / 1024)}M`
+    if (availGb < 1) {
+      warn(`Low disk space: ${label} available`, 'Free up disk space or docker system prune')
     } else {
-      pass(`Disk space available: ${dfOutput}`)
+      pass(`Disk space available: ${label}`)
     }
   } catch {
     warn('Could not check disk space')
@@ -188,7 +197,7 @@ export async function doctorCommand() {
     try {
       const logs = getContainerLogs(c.name, 50)
       const errorLines = logs.split('\n').filter((l) => errorPatterns.test(l))
-      const svcName = c.name.replace(`-${id}`, '')
+      const svcName = c.service
       if (errorLines.length > 0) {
         warn(`${svcName}: ${errorLines.length} error(s) in last 50 log lines`)
         // Show first 3 errors
@@ -221,7 +230,12 @@ export async function doctorCommand() {
 
     const isEe = config.edition === 'enterprise'
     const requiredVars = isEe
-      ? [...EE_REQUIRED_ENV_VARS_BASE, config.eeTenancy === 'agency' ? 'AGENCY_DOMAIN' : 'DOMAIN']
+      ? [
+          ...EE_REQUIRED_ENV_VARS_BASE,
+          config.eeTenancy === 'agency' ? 'AGENCY_DOMAIN' : 'DOMAIN',
+          // An external database replaces the in-container one and its password.
+          hasComposeService(installDir, 'db') ? 'DB_PASSWORD' : 'LEARNHOUSE_SQL_CONNECTION_STRING',
+        ]
       : REQUIRED_ENV_VARS
     const secretVars = isEe ? EE_SECRET_ENV_VARS : SECRET_ENV_VARS
 
@@ -250,17 +264,19 @@ export async function doctorCommand() {
   p.log.step('Image Freshness')
   for (const c of containers) {
     try {
-      const localDigest = execSync(
-        `docker inspect --format '{{.Image}}' ${c.name}`,
-        { stdio: 'pipe' },
-      ).toString().trim()
-      const svcName = c.name.replace(`-${id}`, '')
-      pass(`${svcName}: image ${localDigest.slice(7, 19)}`)
+      const localDigest = execFileSync('docker', ['inspect', '--format', '{{.Image}}', c.name], { stdio: 'pipe' })
+        .toString().trim()
+      pass(`${c.service}: ${c.image} (${localDigest.slice(7, 19)})`)
     } catch {
       // Skip
     }
   }
 
   console.log()
-  p.outro(pc.dim('Diagnosis complete'))
+  if (failures > 0) {
+    p.outro(pc.red(`Diagnosis found ${failures} problem${failures === 1 ? '' : 's'}`))
+    process.exitCode = 1
+  } else {
+    p.outro(pc.dim('Diagnosis complete'))
+  }
 }

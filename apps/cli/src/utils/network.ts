@@ -1,4 +1,5 @@
 import net from 'node:net'
+import { isTcpPortListening } from '../services/docker.js'
 
 /** Best-effort public IPv4 of this host (for printing DNS records). */
 export async function getPublicIp(): Promise<string | null> {
@@ -20,15 +21,26 @@ export async function getPublicIp(): Promise<string | null> {
   return null
 }
 
-export function checkPort(port: number): Promise<boolean> {
+function tryBind(port: number): Promise<'free' | 'in-use' | 'denied'> {
   return new Promise((resolve) => {
     const server = net.createServer()
-    server.once('error', () => resolve(false))
+    server.once('error', (err: NodeJS.ErrnoException) => resolve(err.code === 'EACCES' ? 'denied' : 'in-use'))
     server.once('listening', () => {
-      server.close(() => resolve(true))
+      server.close(() => resolve('free'))
     })
-    server.listen(port)
+    server.listen(port, '0.0.0.0')
   })
+}
+
+/**
+ * True if Docker could publish `port`. A bind attempt alone is not enough: a
+ * non-root user can never bind ports below 1024 (EACCES, not "in use"), and on
+ * macOS a wildcard bind succeeds next to a listener on 127.0.0.1. Both cases
+ * defer to lsof/ss for whether something is actually listening.
+ */
+export async function checkPort(port: number): Promise<boolean> {
+  if ((await tryBind(port)) === 'in-use') return false
+  return !isTcpPortListening(port)
 }
 
 /**

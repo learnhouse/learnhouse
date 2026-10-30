@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { writeFileAtomic } from '../utils/fs-atomic.js'
 
 export type ContentMigrationStatus =
   | 'already_mounted'
@@ -17,9 +18,15 @@ export interface ContentMigrationResult {
 
 const CONTENT_PATH = '/app/api/content'
 
+/**
+ * Move uploads out of a legacy app container's writable layer into the
+ * `learnhouse_content_<id>` volume, and mount it. `beforeCopy` runs right
+ * before the copy (e.g. to stop the app so nothing is uploaded mid-copy).
+ */
 export function migrateContentVolume(
   installDir: string,
   deploymentId: string,
+  beforeCopy?: () => void,
 ): ContentMigrationResult {
   const composePath = path.join(installDir, 'docker-compose.yml')
   if (!fs.existsSync(composePath)) return { status: 'no_compose' }
@@ -43,11 +50,12 @@ export function migrateContentVolume(
   let copiedBytes = 0
   const hasContainer = dockerContainerExists(containerName)
   if (hasContainer) {
+    beforeCopy?.()
     copiedBytes = copyContainerContentIntoVolume(containerName, volumeFull)
   }
 
   compose = patchComposeAddContentVolume(compose, deploymentId)
-  fs.writeFileSync(composePath, compose)
+  writeFileAtomic(composePath, compose)
 
   return hasContainer
     ? { status: 'migrated', copiedBytes }

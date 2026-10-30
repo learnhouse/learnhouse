@@ -1,62 +1,60 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
-import { autoDetectDeploymentId, dockerComposeDown, dockerComposeUp, dockerStats, dockerStatsForContainers, listDeploymentContainers } from '../services/docker.js'
+import { scaleResources } from './scale.js'
 
 interface Deployment {
   id: string
-  containers: { name: string; status: string; image: string }[]
+  containers: { name: string; status: string; image: string; service: string }[]
 }
 
-const SERVICES = ['learnhouse-app', 'db', 'redis'] as const
+// Community names containers learnhouse-<service>-<id>; Enterprise leaves it to
+// compose (learnhouse-<id>-<service>-<n>). The compose project label is
+// learnhouse-<id> for both, so it is tried first.
+const PROJECT_RE = /^learnhouse-([a-z0-9][a-z0-9_-]*)$/
+const CE_NAME_RE = /^learnhouse-([\w-]+)-([a-f0-9]+)$/
+const EE_NAME_RE = /^learnhouse-([a-f0-9]+)-([\w-]+)-\d+$/
 
-// --- Deployments view ---
+export function parseDeploymentLine(line: string): { id: string; container: Deployment['containers'][number] } | null {
+  const [name, status = '', image = '', project = '', service = ''] = line.split('\t')
+  if (!name) return null
+  const fromLabel = project.match(PROJECT_RE)
+  if (fromLabel) {
+    return { id: fromLabel[1], container: { name, status, image, service: service || name } }
+  }
+  const ee = name.match(EE_NAME_RE)
+  if (ee) return { id: ee[1], container: { name, status, image, service: ee[2] } }
+  const ce = name.match(CE_NAME_RE)
+  if (ce) return { id: ce[2], container: { name, status, image, service: `learnhouse-${ce[1]}` } }
+  return null
+}
 
 function showDeployments() {
-  let psOutput: string
+  let output: string
   try {
-    psOutput = execSync(
-      'docker ps -a --filter "name=learnhouse-app-" --format "{{.Names}}\\t{{.Status}}\\t{{.Image}}"',
-      { stdio: 'pipe' },
-    ).toString().trim()
+    output = execFileSync('docker', [
+      'ps', '-a', '--filter', 'name=learnhouse-',
+      '--format', '{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.service"}}',
+    ], { stdio: 'pipe' }).toString().trim()
   } catch {
     p.log.error('Failed to query Docker. Is Docker running?')
     process.exit(1)
   }
 
-  if (!psOutput) {
+  const deployments = new Map<string, Deployment>()
+  for (const line of output.split('\n')) {
+    if (!line.trim()) continue
+    const parsed = parseDeploymentLine(line)
+    if (!parsed) continue
+    if (!deployments.has(parsed.id)) deployments.set(parsed.id, { id: parsed.id, containers: [] })
+    deployments.get(parsed.id)!.containers.push(parsed.container)
+  }
+
+  if (deployments.size === 0) {
     p.log.info('No LearnHouse deployments found.')
     p.log.message(pc.dim('  Run npx learnhouse setup to create one.'))
     return
-  }
-
-  const deployments = new Map<string, Deployment>()
-
-  let allOutput: string
-  try {
-    allOutput = execSync(
-      'docker ps -a --filter "name=learnhouse-" --format "{{.Names}}\\t{{.Status}}\\t{{.Image}}"',
-      { stdio: 'pipe' },
-    ).toString().trim()
-  } catch {
-    allOutput = psOutput
-  }
-
-  for (const line of allOutput.split('\n')) {
-    if (!line.trim()) continue
-    const [name, status, image] = line.split('\t')
-
-    const match = name.match(/learnhouse-\w+-([a-f0-9]+)$/)
-    if (!match) continue
-
-    const id = match[1]
-    if (!deployments.has(id)) {
-      deployments.set(id, { id, containers: [] })
-    }
-    deployments.get(id)!.containers.push({ name, status, image })
   }
 
   p.log.info(`Found ${pc.bold(String(deployments.size))} deployment${deployments.size === 1 ? '' : 's'}`)
@@ -74,174 +72,9 @@ function showDeployments() {
     for (const c of dep.containers) {
       const isUp = c.status.toLowerCase().startsWith('up')
       const icon = isUp ? pc.green('●') : pc.red('●')
-      const svcName = c.name.replace(`-${id}`, '')
-      console.log(`    ${icon}  ${pc.white(svcName.padEnd(24))} ${pc.dim(c.status)}`)
+      console.log(`    ${icon}  ${pc.white(c.service.padEnd(24))} ${pc.dim(c.status)}`)
     }
     console.log()
-  }
-}
-
-// --- Scale helpers ---
-
-function parseMemLimit(composePath: string): Map<string, string> {
-  const content = fs.readFileSync(composePath, 'utf-8')
-  const limits = new Map<string, string>()
-  let currentService: string | null = null
-  let inServices = false
-
-  for (const line of content.split('\n')) {
-    if (line.match(/^services:\s*$/)) {
-      inServices = true
-      continue
-    }
-    if (inServices && line.match(/^  \w/) && line.includes(':')) {
-      const match = line.match(/^\s{2}(\S+):/)
-      currentService = match ? match[1] : null
-    }
-    if (currentService && line.match(/^\s+mem_limit:/)) {
-      const value = line.split(':')[1].trim()
-      limits.set(currentService, value)
-    }
-  }
-
-  return limits
-}
-
-function setMemLimit(content: string, service: string, limit: string): string {
-  const lines = content.split('\n')
-  const result: string[] = []
-  let currentService: string | null = null
-  let inServices = false
-  let serviceIndent = 0
-  let insertedForService = false
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-
-    if (line.match(/^services:\s*$/)) {
-      inServices = true
-      result.push(line)
-      continue
-    }
-
-    if (inServices && line.match(/^  \w/) && line.includes(':')) {
-      const match = line.match(/^(\s{2})(\S+):/)
-      if (match) {
-        currentService = match[2]
-        serviceIndent = match[1].length
-        insertedForService = false
-      }
-    }
-
-    if (currentService === service && line.match(/^\s+mem_limit:/)) {
-      result.push(line.replace(/mem_limit:.*/, `mem_limit: ${limit}`))
-      insertedForService = true
-      continue
-    }
-
-    if (currentService === service && !insertedForService && line.match(/^\s+container_name:/)) {
-      result.push(line)
-      result.push(`${' '.repeat(serviceIndent + 2)}mem_limit: ${limit}`)
-      insertedForService = true
-      continue
-    }
-
-    result.push(line)
-  }
-
-  return result.join('\n')
-}
-
-async function scaleResources() {
-  const dir = findInstallDir()
-  const config = readConfig(dir)
-  if (!config) {
-    p.log.error('No LearnHouse installation found. Run setup first.')
-    process.exit(1)
-  }
-
-  // Show current usage
-  p.log.step('Current Resource Usage')
-  try {
-    const stats = dockerStats(config.installDir)
-    p.log.message(pc.dim(stats.trim()))
-  } catch {
-    try {
-      const id = config.deploymentId || autoDetectDeploymentId()
-      const running = listDeploymentContainers(id || undefined)
-        .filter((c) => c.status.toLowerCase().startsWith('up'))
-        .map((c) => c.name)
-      if (running.length > 0) {
-        const stats = dockerStatsForContainers(running)
-        p.log.message(pc.dim(stats.trim()))
-      } else {
-        p.log.warn('No running containers found.')
-      }
-    } catch {
-      p.log.warn('Could not retrieve current stats. Services may not be running.')
-    }
-  }
-
-  const composePath = path.join(config.installDir || dir, 'docker-compose.yml')
-  if (!fs.existsSync(composePath)) {
-    p.log.error('docker-compose.yml not found.')
-    process.exit(1)
-  }
-
-  let composeContent = fs.readFileSync(composePath, 'utf-8')
-  const currentLimits = parseMemLimit(composePath)
-
-  p.log.step('Set Memory Limits')
-  p.log.info(pc.dim('Examples: 256m, 512m, 1g, 2g (leave empty to skip)'))
-
-  let changed = false
-
-  for (const service of SERVICES) {
-    const current = currentLimits.get(service)
-    const label = current
-      ? `Memory limit for ${pc.bold(service)} (current: ${current})`
-      : `Memory limit for ${pc.bold(service)} (not set)`
-
-    const value = await p.text({
-      message: label,
-      placeholder: current ? undefined : 'e.g. 512m',
-      defaultValue: current || '',
-    })
-    if (p.isCancel(value)) { p.cancel(); process.exit(0) }
-
-    const trimmed = (value as string).trim()
-    if (trimmed && trimmed.match(/^\d+[mgMG]$/)) {
-      composeContent = setMemLimit(composeContent, service, trimmed)
-      changed = true
-      p.log.success(`${service}: ${trimmed}`)
-    } else if (trimmed) {
-      p.log.warn(`Invalid format "${trimmed}", skipping. Use format like 512m or 1g.`)
-    }
-  }
-
-  if (!changed) {
-    p.log.info('No changes made.')
-    return
-  }
-
-  fs.writeFileSync(composePath, composeContent)
-  p.log.success('docker-compose.yml updated')
-
-  const restart = await p.confirm({
-    message: 'Restart services to apply limits?',
-    initialValue: false,
-  })
-  if (!p.isCancel(restart) && restart) {
-    const s = p.spinner()
-    s.start('Restarting services')
-    try {
-      dockerComposeDown(config.installDir)
-      dockerComposeUp(config.installDir)
-      s.stop('Services restarted')
-    } catch {
-      s.stop('Restart failed')
-      p.log.error('Failed to restart services. Check Docker output above.')
-    }
   }
 }
 
@@ -262,7 +95,12 @@ export async function deploymentsCommand() {
   if (action === 'view') {
     showDeployments()
   } else {
-    await scaleResources()
+    const config = readConfig(findInstallDir())
+    if (!config) {
+      p.log.error('No LearnHouse installation found. Run setup first.')
+      process.exit(1)
+    }
+    await scaleResources(config)
   }
 
   p.outro(pc.dim('Done'))

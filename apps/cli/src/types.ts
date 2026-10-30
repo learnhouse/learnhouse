@@ -78,8 +78,12 @@ export interface LearnHouseConfigJson {
   autoSsl: boolean
   useExternalDb: boolean
   orgSlug: string
+  // Release channel picked at setup (absent on installs made before 1.6.0 = stable)
+  channel?: 'stable' | 'dev'
   // Enterprise metadata (absent/`community` for the OSS stack)
   edition?: Edition
   eeTenancy?: EeTenancy
   eeLocalTls?: boolean
+  dnsProvider?: 'cloudflare'
+  dockerIpv6?: boolean
 }

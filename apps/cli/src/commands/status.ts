@@ -2,6 +2,7 @@ import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
 import { dockerComposePs } from '../services/docker.js'
+import { publicUrl } from '../services/stack.js'
 
 export async function statusCommand() {
   const dir = findInstallDir()
@@ -13,9 +14,7 @@ export async function statusCommand() {
 
   p.intro(pc.cyan('LearnHouse Status'))
 
-  const protocol = config.useHttps ? 'https' : 'http'
-  const portSuffix = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80) ? '' : `:${config.httpPort}`
-  p.log.info(`URL: ${protocol}://${config.domain}${portSuffix}`)
+  p.log.info(`URL: ${publicUrl(config)}`)
 
   try {
     const output = dockerComposePs(config.installDir)
