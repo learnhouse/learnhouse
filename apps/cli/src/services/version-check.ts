@@ -1,5 +1,6 @@
 import pc from 'picocolors'
 import { VERSION, DEV_IMAGE } from '../constants.js'
+import { IMAGE_TAG_RE } from '../utils/validators.js'
 
 const NPM_REGISTRY_URL = 'https://registry.npmjs.org/learnhouse'
 const GHCR_BASE = 'ghcr.io/learnhouse/app'
@@ -14,29 +15,46 @@ function compareVersions(a: string, b: string): number {
   return 0
 }
 
+/** Skip the npm check in CI / non-interactive runs, or when opted out. */
+export function updateCheckEnabled(env: NodeJS.ProcessEnv = process.env, isTty = !!process.stdout.isTTY): boolean {
+  if (env.LEARNHOUSE_NO_UPDATE_CHECK || env.NO_UPDATE_NOTIFIER || env.CI) return false
+  return isTty
+}
+
+/** The update notice for `latest`, or null when this CLI is current. */
+export function updateNotice(latest: string | null): string | null {
+  if (!latest || compareVersions(latest, VERSION) <= 0) return null
+  return [
+    '',
+    pc.yellow(`  Update available: ${VERSION} → ${pc.bold(latest)}`),
+    pc.dim('  Run: npx learnhouse@latest'),
+    '',
+  ].join('\n')
+}
+
 /**
- * Check npm for the latest version and warn if outdated.
- * Non-blocking; silently fails on network errors.
+ * Check npm for the latest version. Returns it (null on any error). With
+ * `print`, also writes the update notice. Callers that run prompts pass
+ * `print: false` and show the notice once the command is done, so it never
+ * lands in the middle of an interactive prompt.
  */
-export async function checkForUpdates(): Promise<void> {
+export async function checkForUpdates(opts: { print?: boolean; signal?: AbortSignal } = {}): Promise<string | null> {
   try {
     const resp = await fetch(NPM_REGISTRY_URL, {
-      signal: AbortSignal.timeout(3000),
+      signal: opts.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(3000)]) : AbortSignal.timeout(3000),
       headers: { Accept: 'application/json' },
     })
-    if (!resp.ok) return
+    if (!resp.ok) return null
     const data = await resp.json() as { 'dist-tags'?: { latest?: string } }
-    const latest = data['dist-tags']?.latest
-    if (!latest) return
-
-    if (compareVersions(latest, VERSION) > 0) {
-      console.log()
-      console.log(pc.yellow(`  Update available: ${VERSION} → ${pc.bold(latest)}`))
-      console.log(pc.dim(`  Run: npx learnhouse@latest`))
-      console.log()
+    const latest = data['dist-tags']?.latest ?? null
+    if (opts.print !== false) {
+      const notice = updateNotice(latest)
+      if (notice) console.log(notice)
     }
+    return latest
   } catch {
     // Network error: skip silently
+    return null
   }
 }
 
@@ -71,6 +89,8 @@ export async function resolveAppImage(
     if (!appRelease) throw new Error('No app release found')
 
     const appVersion = appRelease.tag_name
+    // The tag is written into docker-compose.yml; only accept a plain image tag.
+    if (!IMAGE_TAG_RE.test(appVersion)) throw new Error('Unexpected release tag')
 
     // Verify the Docker image exists for this version
     const tokenResp = await fetch(
