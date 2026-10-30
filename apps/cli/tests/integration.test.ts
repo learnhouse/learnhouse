@@ -339,7 +339,7 @@ describe('CLI integration: live install (command coverage)', () => {
     })
 
     it('restores over the live DB with no "already exists" error', () => {
-      const r = cli(`restore ${archive}`, 120_000)
+      const r = cli(`restore ${archive} --yes`, 120_000)
       if (r.exitCode !== 0) console.error('restore:', r.stdout, r.stderr)
       expect(r.exitCode).toBe(0)
       expect(r.stdout + r.stderr).not.toContain('already exists')
@@ -351,7 +351,7 @@ describe('CLI integration: live install (command coverage)', () => {
     })
 
     it('restoring the same archive twice is still clean', () => {
-      const r = cli(`restore ${archive}`, 120_000)
+      const r = cli(`restore ${archive} --yes`, 120_000)
       expect(r.exitCode).toBe(0)
       expect(r.stdout + r.stderr).not.toContain('already exists')
     })
@@ -359,7 +359,7 @@ describe('CLI integration: live install (command coverage)', () => {
     it('a corrupt archive fails cleanly and leaves the live database intact', async () => {
       const junk = path.join(installDir, 'backups', 'corrupt.tar.gz')
       fs.writeFileSync(junk, 'this is not a gzip tarball')
-      const r = cli(`restore ${junk}`, 60_000)
+      const r = cli(`restore ${junk} --yes`, 60_000)
       expect(r.exitCode).not.toBe(0)
       // a failed extraction must not wipe the running database
       expect(await apiGet<{ slug: string }>(CMD_PORT, '/api/v1/orgs/slug/acme')).toMatchObject({ slug: 'acme' })

@@ -283,6 +283,13 @@ describe('setup --ci --edition enterprise (file generation)', () => {
     expect(r.stderr + r.stdout).toMatch(/tenancy/i)
   })
 
+  it('refuses agency without --dns-provider (wildcard cert) unless --local-tls', () => {
+    const r = cli(base('--tenancy agency'))
+    expect(r.exitCode).toBe(1)
+    expect(r.stderr + r.stdout).toMatch(/--dns-provider/)
+    expect(fs.existsSync(path.join(dir, '.env'))).toBe(false)
+  })
+
   it('rejects a reserved admin-email domain', () => {
     const r = cli(`setup --ci --edition enterprise --install-dir ${dir} --license lh_live_TEST --domain learn.acme.com --admin-email admin@example.com --admin-password supersecret --no-start`)
     expect(r.exitCode).toBe(1)

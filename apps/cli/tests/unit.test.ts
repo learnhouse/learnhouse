@@ -466,7 +466,7 @@ describe('generateEnvFile: org propagation', () => {
 // broke stop/status/health/etc. The fix: prefer whichever install has
 // an actually-running app container, falling back to most recent.
 //
-// We stub `isContainerRunning` from the docker module so the test
+// We stub `isDeploymentRunning` from the docker module so the test
 // doesn't depend on a real Docker daemon, and override the home dir
 // via a fresh `HOME` env so the lookup hits our temp tree.
 
@@ -477,6 +477,8 @@ vi.mock('../src/services/docker.js', async () => {
   return {
     ...actual,
     isContainerRunning: vi.fn(() => false),
+    // findInstallDir asks whether any container of the compose project runs.
+    isDeploymentRunning: vi.fn(() => false),
     // Stub out docker exec so unit tests never touch a real daemon.
     // Per-test overrides use vi.mocked(dockerComposeExec).mockReturnValue(...)
     dockerComposeExec: vi.fn(() => ''),
@@ -489,7 +491,8 @@ vi.mock('../src/services/docker.js', async () => {
 // subprocess and must not be stubbed.
 vi.mock('node:child_process', async () => {
   const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process')
-  return { ...actual, execSync: vi.fn(() => Buffer.from('')) }
+  const { routeExecFile } = await import('./exec-file-mock.js')
+  return routeExecFile({ ...actual, execSync: vi.fn(() => Buffer.from('')) })
 })
 
 describe('findInstallDir: picks the running install over a stale one', () => {
@@ -533,24 +536,25 @@ describe('findInstallDir: picks the running install over a stale one', () => {
   })
 
   it('returns the install whose app container is running when multiple exist', async () => {
-    const stale = writeInstall('default', 'aaaa1111', '2026-03-27T15:24:39Z')
-    const live = writeInstall('qa', 'bbbb2222', '2026-05-18T22:00:00Z')
+    const stale = writeInstall('default', 'aaaa1111', '2026-05-18T22:00:00Z')
+    const live = writeInstall('qa', 'bbbb2222', '2026-03-27T15:24:39Z')
 
-    const { isContainerRunning } = await import('../src/services/docker.js')
-    ;(isContainerRunning as ReturnType<typeof vi.fn>).mockImplementation((name: string) =>
-      name === 'learnhouse-app-bbbb2222',
-    )
+    const { isDeploymentRunning } = await import('../src/services/docker.js')
+    ;(isDeploymentRunning as ReturnType<typeof vi.fn>).mockImplementation((id: string) => id === 'bbbb2222')
 
+    // The running install is the older one, so "running wins" is what picks it
+    // (most-recent alone would pick the stale one).
     expect(findInstallDir()).toBe(live)
     expect(findInstallDir()).not.toBe(stale)
+    expect(isDeploymentRunning).toHaveBeenCalledWith('aaaa1111')
   })
 
   it('falls back to the most recent install when none are running', async () => {
     writeInstall('default', 'aaaa1111', '2026-03-27T15:24:39Z')
     const newer = writeInstall('qa', 'bbbb2222', '2026-05-18T22:00:00Z')
 
-    const { isContainerRunning } = await import('../src/services/docker.js')
-    ;(isContainerRunning as ReturnType<typeof vi.fn>).mockReturnValue(false)
+    const { isDeploymentRunning } = await import('../src/services/docker.js')
+    ;(isDeploymentRunning as ReturnType<typeof vi.fn>).mockReturnValue(false)
 
     expect(findInstallDir()).toBe(newer)
   })
@@ -558,8 +562,8 @@ describe('findInstallDir: picks the running install over a stale one', () => {
   it('uses the only install when exactly one exists', async () => {
     const only = writeInstall('default', 'aaaa1111', '2026-03-27T15:24:39Z')
 
-    const { isContainerRunning } = await import('../src/services/docker.js')
-    ;(isContainerRunning as ReturnType<typeof vi.fn>).mockReturnValue(false)
+    const { isDeploymentRunning } = await import('../src/services/docker.js')
+    ;(isDeploymentRunning as ReturnType<typeof vi.fn>).mockReturnValue(false)
 
     expect(findInstallDir()).toBe(only)
   })
@@ -1065,7 +1069,10 @@ describe('isExternalDbInstall', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true })
   })
 
-  it('returns true when LEARNHOUSE_SQL_CONNECTION_STRING is set', () => {
+  // Every Community .env carries LEARNHOUSE_SQL_CONNECTION_STRING (pointing at
+  // the bundled `db`), so the compose file decides: no `db` service = external.
+  it('returns true when the compose file has no db service', () => {
+    fs.writeFileSync(path.join(tmpDir, 'docker-compose.yml'), 'services:\n  learnhouse-app:\n    image: app\n  redis:\n    image: redis\n')
     fs.writeFileSync(
       path.join(tmpDir, '.env'),
       'LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://user:pw@rds.example.com:5432/lh\n',
@@ -1073,12 +1080,14 @@ describe('isExternalDbInstall', () => {
     expect(isExternalDbInstall(tmpDir)).toBe(true)
   })
 
-  it('returns false when the connection string key is absent', () => {
-    fs.writeFileSync(path.join(tmpDir, '.env'), 'SOME_OTHER_VAR=foo\n')
+  it('returns false when the compose file declares a db service, even with a connection string', () => {
+    fs.writeFileSync(path.join(tmpDir, 'docker-compose.yml'), 'services:\n  learnhouse-app:\n    image: app\n  db:\n    image: pg\n')
+    fs.writeFileSync(path.join(tmpDir, '.env'), 'LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://u:p@db:5432/lh\n')
     expect(isExternalDbInstall(tmpDir)).toBe(false)
   })
 
-  it('returns false when .env does not exist', () => {
+  it('returns false when there is no docker-compose.yml', () => {
+    fs.writeFileSync(path.join(tmpDir, '.env'), 'LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://user:pw@rds.example.com:5432/lh\n')
     expect(isExternalDbInstall(tmpDir)).toBe(false)
   })
 })
@@ -1457,7 +1466,12 @@ describe('CLI: setup --ci --no-start: real installation, real file assertions', 
     return spawnSync('node', [CLI_BIN, ...args], {
       encoding: 'utf-8',
       timeout: 30_000,
-      env: { ...process.env, HOME: tempHome, NO_COLOR: '1' },
+      env: {
+        ...process.env, HOME: tempHome, NO_COLOR: '1',
+        // The prerequisite check runs `docker compose version`; CLI plugins are
+        // found via DOCKER_CONFIG (default ~/.docker), so keep the real one.
+        DOCKER_CONFIG: process.env.DOCKER_CONFIG ?? path.join(os.homedir(), '.docker'),
+      },
       stdio: ['pipe', 'pipe', 'pipe'],
     })
   }
@@ -1912,11 +1926,16 @@ describe('docker output parsers', () => {
 
   describe('autoDetectDeploymentId', () => {
     it('pulls the hex id from the first learnhouse-app container', () => {
-      execSync.mockReturnValue(Buffer.from('learnhouse-app-ab12cd34\n'))
+      // db/redis containers come back from the same name=learnhouse- query and
+      // must be skipped, not latched onto.
+      execSync.mockReturnValue(Buffer.from('learnhouse-db-ab12cd34\nlearnhouse-redis-ab12cd34\nlearnhouse-app-ab12cd34\n'))
       expect(autoDetectDeploymentId()).toBe('ab12cd34')
-      // The detection MUST filter on the learnhouse-app- name prefix, otherwise it
-      // would latch onto db/redis/unrelated containers. Pin the actual filter string.
-      expect(execSync.mock.calls.at(-1)?.[0]).toContain('name=learnhouse-app-')
+      expect(execSync.mock.calls.at(-1)?.[0]).toBe('docker ps -a --filter name=learnhouse- --format {{.Names}}')
+    })
+
+    it('detects an Enterprise deployment from its compose-named api container', () => {
+      execSync.mockReturnValue(Buffer.from('learnhouse-ab12cd34-db-1\nlearnhouse-ab12cd34-api-1\n'))
+      expect(autoDetectDeploymentId()).toBe('ab12cd34')
     })
 
     it('uses the first line when several containers exist', () => {
@@ -1938,16 +1957,33 @@ describe('docker output parsers', () => {
   })
 
   describe('listDeploymentContainers', () => {
-    it('parses tab-separated name/status/image rows for the deployment', () => {
+    it('parses tab-separated name/status/image/service rows for the deployment', () => {
       execSync.mockReturnValue(Buffer.from(
-        'learnhouse-app-dep1\tUp 2 hours\tghcr.io/learnhouse/app:1.4.2\n' +
-        'learnhouse-db-dep1\tUp 2 hours (healthy)\tpgvector/pgvector:pg16\n' +
-        'unrelated-dep2\tUp\tnginx:alpine\n',
+        'learnhouse-app-dep1\tUp 2 hours\tghcr.io/learnhouse/app:1.4.2\tlearnhouse-app\n' +
+        'learnhouse-db-dep1\tUp 2 hours (healthy)\tpgvector/pgvector:pg16\tdb\n' +
+        'unrelated-dep2\tUp\tnginx:alpine\t\n',
       ))
       const rows = listDeploymentContainers('dep1')
       expect(rows).toHaveLength(2)
-      expect(rows[0]).toEqual({ name: 'learnhouse-app-dep1', status: 'Up 2 hours', image: 'ghcr.io/learnhouse/app:1.4.2' })
+      expect(rows[0]).toEqual({ name: 'learnhouse-app-dep1', status: 'Up 2 hours', image: 'ghcr.io/learnhouse/app:1.4.2', service: 'learnhouse-app' })
+      expect(rows[1].service).toBe('db')
       expect(rows.every((r) => r.name.includes('dep1'))).toBe(true)
+      expect(execSync.mock.calls.at(-1)?.[0]).toBe(
+        'docker ps -a --filter name=learnhouse- --format {{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Label "com.docker.compose.service"}}',
+      )
+    })
+
+    it('matches Enterprise compose names and derives the service when unlabeled', () => {
+      execSync.mockReturnValue(Buffer.from(
+        'learnhouse-dep1-api-1\tUp 1 hour\timages.learnhouse.app/enterprise-backend:prod\t\n' +
+        'learnhouse-dep1-collab-1\tUp 1 hour\timages.learnhouse.app/enterprise-collab:prod\tcollab\n' +
+        'learnhouse-dep10-api-1\tUp\tother\tapi\n',
+      ))
+      const rows = listDeploymentContainers('dep1')
+      expect(rows.map((r) => [r.name, r.service])).toEqual([
+        ['learnhouse-dep1-api-1', 'api'],
+        ['learnhouse-dep1-collab-1', 'collab'],
+      ])
     })
 
     it('returns [] when there is no matching output', () => {
@@ -2039,12 +2075,43 @@ describe('dockerComposeExec builds a non-interactive command', () => {
     execSync.mockReturnValue(Buffer.from('revision-abc (head)'))
     const real = await vi.importActual<typeof import('../src/services/docker.js')>('../src/services/docker.js')
 
-    const out = real.dockerComposeExec('/srv/lh', 'learnhouse-app', 'sh -c "uv run alembic current"')
-    expect(execSync.mock.calls.at(-1)?.[0]).toBe(
-      'docker compose exec -T learnhouse-app sh -c "uv run alembic current"',
-    )
-    expect((execSync.mock.calls.at(-1)?.[1] as { cwd?: string }).cwd).toBe('/srv/lh')
-    expect(out).toBe('revision-abc (head)')
+    // The command goes to the container's `sh -c` as ONE argv entry; the host
+    // shell never sees it.
+    const childProcess = await import('node:child_process')
+    const execFile = vi.spyOn(childProcess, 'execFileSync')
+    try {
+      const out = real.dockerComposeExec('/srv/lh', 'learnhouse-app', 'cd /app/api && uv run alembic current')
+      expect(execFile).toHaveBeenLastCalledWith(
+        'docker',
+        ['compose', 'exec', '-T', 'learnhouse-app', 'sh', '-c', 'cd /app/api && uv run alembic current'],
+        expect.objectContaining({ cwd: '/srv/lh' }),
+      )
+      expect(execSync.mock.calls.at(-1)?.[0]).toBe(
+        'docker compose exec -T learnhouse-app sh -c cd /app/api && uv run alembic current',
+      )
+      expect(out).toBe('revision-abc (head)')
+    } finally {
+      execFile.mockRestore()
+    }
+  })
+
+  it('dockerComposeRun starts a one-off --rm --no-deps -T container of the service', async () => {
+    const execSync = (await import('node:child_process')).execSync as unknown as ReturnType<typeof vi.fn>
+    execSync.mockReset()
+    execSync.mockReturnValue(Buffer.from(''))
+    const real = await vi.importActual<typeof import('../src/services/docker.js')>('../src/services/docker.js')
+    const childProcess = await import('node:child_process')
+    const execFile = vi.spyOn(childProcess, 'execFileSync')
+    try {
+      real.dockerComposeRun('/srv/lh', 'api', 'cd /app && uv run alembic upgrade heads')
+      expect(execFile).toHaveBeenLastCalledWith(
+        'docker',
+        ['compose', 'run', '--rm', '--no-deps', '-T', 'api', 'sh', '-c', 'cd /app && uv run alembic upgrade heads'],
+        expect.objectContaining({ cwd: '/srv/lh' }),
+      )
+    } finally {
+      execFile.mockRestore()
+    }
   })
 })
 
@@ -2117,13 +2184,23 @@ describe('migrateContentVolume', () => {
 describe('network: port and connectivity probes', () => {
   const close = (s: net.Server) => new Promise<void>((r) => s.close(() => r()))
 
-  // Bind on the SAME interface checkPort uses (host omitted) so occupancy
+  // After its bind attempt, checkPort asks lsof/ss whether anything listens
+  // (execFileSync, routed to the execSync mock). Default: they report nothing,
+  // so the real bind decides. Earlier tests leave other canned output behind.
+  let execSync: ReturnType<typeof vi.fn>
+  beforeEach(async () => {
+    execSync = (await import('node:child_process')).execSync as unknown as ReturnType<typeof vi.fn>
+    execSync.mockReset()
+    execSync.mockReturnValue(Buffer.from(''))
+  })
+
+  // Bind on the SAME interface checkPort uses (0.0.0.0) so occupancy
   // genuinely conflicts. Returns the live server + its port.
   function occupyAny(port?: number): Promise<{ server: net.Server; port: number }> {
     return new Promise((resolve, reject) => {
       const server = net.createServer()
       server.once('error', reject)
-      server.listen(port ?? 0, () => {
+      server.listen(port ?? 0, '0.0.0.0', () => {
         resolve({ server, port: (server.address() as net.AddressInfo).port })
       })
     })
@@ -2141,6 +2218,21 @@ describe('network: port and connectivity probes', () => {
       expect(await checkPort(port)).toBe(false) // held by our server
       await close(server)
       expect(await checkPort(port)).toBe(true)  // now free
+    })
+
+    it('consults lsof, then ss, after a successful bind', async () => {
+      const port = await freePort()
+      expect(await checkPort(port)).toBe(true)
+      const probes = execSync.mock.calls.map((c) => String(c[0]))
+      expect(probes).toEqual([`lsof -nP -iTCP:${port} -sTCP:LISTEN`, `ss -ltnH sport = :${port}`])
+    })
+
+    it('treats the port as taken when lsof reports a listener the bind did not see', async () => {
+      // e.g. macOS: a wildcard bind succeeds next to a listener on 127.0.0.1.
+      const port = await freePort()
+      execSync.mockImplementation((cmd: string) =>
+        Buffer.from(cmd.startsWith('lsof') ? `node 123 me 20u IPv4 TCP 127.0.0.1:${port} (LISTEN)\n` : ''))
+      expect(await checkPort(port)).toBe(false)
     })
   })
 
@@ -2284,9 +2376,11 @@ describe('health pollers', () => {
 
 // ─── docker.ts: command construction for the remaining helpers ──
 //
-// Each helper is a thin wrapper that builds a specific docker command.
-// Asserting the exact command (and the success/failure handling for the
-// boolean probes) pins the contract without a real daemon.
+// Each helper is a thin wrapper that builds a specific docker command, run
+// via execFileSync (argv array, no shell). The file routes execFileSync into
+// the execSync mock as one space-joined string (tests/exec-file-mock.ts), so
+// `cmd()` is that joined argv. Asserting it (and the success/failure handling
+// for the boolean probes) pins the contract without a real daemon.
 
 describe('docker.ts command builders', () => {
   let execSync: ReturnType<typeof vi.fn>
@@ -2347,15 +2441,23 @@ describe('docker.ts command builders', () => {
     })
     expect(() => installDockerLinux()).not.toThrow()
     const cmds = execSync.mock.calls.map((c) => c[0] as string)
-    expect(cmds.some((c) => c.includes('get.docker.com'))).toBe(true)
-    expect(cmds.some((c) => c.includes('sh /tmp/get-docker.sh'))).toBe(true)
+    // Downloaded into a private mkdtemp dir (a fixed /tmp path could be swapped
+    // by another local user before the root `sh` runs it), then run from there.
+    const curl = cmds.find((c) => c.startsWith('curl -fsSL https://get.docker.com -o '))
+    expect(curl).toBeDefined()
+    const script = curl!.slice('curl -fsSL https://get.docker.com -o '.length)
+    expect(path.basename(script)).toBe('get-docker.sh')
+    expect(path.basename(path.dirname(script))).toMatch(/^lh-get-docker-/)
+    expect(script).not.toBe('/tmp/get-docker.sh')
+    expect(cmds).toContain(`sh ${script}`)
+    expect(fs.existsSync(path.dirname(script))).toBe(false) // temp dir cleaned up
   })
 
   it('installDockerLinux retries the script once after a transient failure', () => {
     let shAttempts = 0
     execSync.mockImplementation((c: string) => {
       if (c.includes('pgrep')) throw new Error('lock free')
-      if (c.includes('sh /tmp/get-docker.sh')) {
+      if (c.startsWith('sh ') && c.endsWith('/get-docker.sh')) {
         shAttempts++
         if (shAttempts === 1) throw new Error('dpkg was locked') // first run fails → retry
       }
@@ -2411,20 +2513,98 @@ describe('docker.ts command builders', () => {
     expect(() => installDockerLinux()).not.toThrow()
   })
 
-  it('dockerExec / getContainerLogs / getDockerDiskUsage build their commands', () => {
-    dockerExec('learnhouse-app-x', 'env')
+  it('dockerExec / getContainerLogs / getDockerDiskUsage build their commands', async () => {
+    dockerExec('learnhouse-app-x', ['env'])
     expect(cmd()).toBe('docker exec learnhouse-app-x env')
+    // Each command word is its own argv entry: nothing is re-split by a shell.
+    const childProcess = await import('node:child_process')
+    const execFile = vi.spyOn(childProcess, 'execFileSync')
+    try {
+      dockerExec('db-x', ['sh', '-c', 'pg_isready -q && echo "ok; done"'])
+      expect(execFile).toHaveBeenLastCalledWith(
+        'docker', ['exec', 'db-x', 'sh', '-c', 'pg_isready -q && echo "ok; done"'], expect.any(Object))
+    } finally {
+      execFile.mockRestore()
+    }
     getContainerLogs('learnhouse-app-x', 25)
     expect(cmd()).toBe('docker logs --tail 25 learnhouse-app-x')
     getDockerDiskUsage()
     expect(cmd()).toBe('docker system df')
   })
 
-  it('dockerExecToFile / dockerExecFromFile redirect through a shell', () => {
-    dockerExecToFile('db-x', 'pg_dump learnhouse', '/tmp/out.sql')
-    expect(cmd()).toBe('docker exec db-x pg_dump learnhouse > "/tmp/out.sql"')
-    dockerExecFromFile('db-x', 'psql learnhouse', '/tmp/in.sql')
-    expect(cmd()).toBe('docker exec -i db-x psql learnhouse < "/tmp/in.sql"')
+  describe('dockerExecToFile / dockerExecFromFile stream through file descriptors (no shell)', () => {
+    let tmp: string
+    let spawn: ReturnType<typeof vi.spyOn>
+    beforeEach(async () => {
+      tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-execfile-'))
+      const childProcess = await import('node:child_process')
+      spawn = vi.spyOn(childProcess, 'spawnSync')
+    })
+    afterEach(() => {
+      spawn.mockRestore()
+      fs.rmSync(tmp, { recursive: true, force: true })
+    })
+
+    it('dockerExecToFile spawns docker exec with stdout on the output file', () => {
+      // A path a shell would mangle: spaces, quotes, $.
+      const out = path.join(tmp, 'dump "$HOME" x.sql')
+      spawn.mockImplementation(((_f: string, _a: string[], o: { stdio: [unknown, number, unknown] }) => {
+        fs.writeSync(o.stdio[1], 'DUMP')
+        return { status: 0, stderr: Buffer.from('') }
+      }) as never)
+      dockerExecToFile('db-x', ['pg_dump', '-U', 'learnhouse', 'learnhouse'], out)
+      expect(spawn).toHaveBeenCalledTimes(1)
+      const [file, args, o] = spawn.mock.calls[0] as [string, string[], { stdio: unknown[]; shell?: unknown }]
+      expect(file).toBe('docker')
+      expect(args).toEqual(['exec', 'db-x', 'pg_dump', '-U', 'learnhouse', 'learnhouse'])
+      expect(o.shell).toBeUndefined()
+      expect(o.stdio[0]).toBe('ignore')
+      expect(typeof o.stdio[1]).toBe('number')
+      expect(execSync).not.toHaveBeenCalled()
+      expect(fs.readFileSync(out, 'utf-8')).toBe('DUMP')
+      expect(fs.statSync(out).mode & 0o777).toBe(0o600) // dumps are owner-only
+    })
+
+    it('dockerExecToFile throws with stderr on a non-zero exit', () => {
+      spawn.mockReturnValue({ status: 1, stderr: Buffer.from('pg_dump: connection refused') } as never)
+      let err: (Error & { stderr?: Buffer }) | undefined
+      try { dockerExecToFile('db-x', ['pg_dump', 'learnhouse'], path.join(tmp, 'out.sql')) } catch (e) { err = e as Error & { stderr?: Buffer } }
+      expect(err?.message).toMatch(/pg_dump exited with 1/)
+      expect(err?.stderr?.toString()).toContain('connection refused')
+    })
+
+    it('dockerExecToFile surfaces a spawn error (docker missing)', () => {
+      spawn.mockReturnValue({ status: null, error: new Error('spawnSync docker ENOENT') } as never)
+      expect(() => dockerExecToFile('db-x', ['pg_dump'], path.join(tmp, 'out.sql'))).toThrow(/ENOENT/)
+    })
+
+    it('dockerExecFromFile spawns docker exec -i with stdin from the input file', () => {
+      const input = path.join(tmp, 'in put.sql')
+      fs.writeFileSync(input, 'SELECT 1;')
+      let fed = ''
+      spawn.mockImplementation(((_f: string, _a: string[], o: { stdio: [number, unknown, unknown] }) => {
+        const buf = Buffer.alloc(64)
+        fed = buf.subarray(0, fs.readSync(o.stdio[0], buf, 0, 64, 0)).toString()
+        return { status: 0, stderr: Buffer.from('') }
+      }) as never)
+      dockerExecFromFile('db-x', ['psql', '-v', 'ON_ERROR_STOP=1', 'learnhouse'], input)
+      const [file, args, o] = spawn.mock.calls[0] as [string, string[], { stdio: unknown[]; shell?: unknown }]
+      expect(file).toBe('docker')
+      expect(args).toEqual(['exec', '-i', 'db-x', 'psql', '-v', 'ON_ERROR_STOP=1', 'learnhouse'])
+      expect(o.shell).toBeUndefined()
+      expect(fed).toBe('SELECT 1;')
+      expect(execSync).not.toHaveBeenCalled()
+    })
+
+    it('dockerExecFromFile throws with stderr on a non-zero exit', () => {
+      const input = path.join(tmp, 'in.sql')
+      fs.writeFileSync(input, 'SELECT 1;')
+      spawn.mockReturnValue({ status: 3, stderr: Buffer.from('ERROR: syntax error') } as never)
+      let err: (Error & { stderr?: Buffer }) | undefined
+      try { dockerExecFromFile('db-x', ['psql', 'learnhouse'], input) } catch (e) { err = e as Error & { stderr?: Buffer } }
+      expect(err?.message).toMatch(/psql exited with 3/)
+      expect(err?.stderr?.toString()).toContain('syntax error')
+    })
   })
 
   it('dockerStats / dockerStatsForContainers build the table format', () => {
@@ -2452,7 +2632,7 @@ describe('docker.ts isContainerRunning (real impl)', () => {
     const real = await vi.importActual<typeof import('../src/services/docker.js')>('../src/services/docker.js')
     execSync.mockReturnValue(Buffer.from('true\n'))
     expect(real.isContainerRunning('learnhouse-app-x')).toBe(true)
-    expect(execSync.mock.calls.at(-1)?.[0]).toBe("docker inspect -f '{{.State.Running}}' learnhouse-app-x")
+    expect(execSync.mock.calls.at(-1)?.[0]).toBe('docker inspect -f {{.State.Running}} learnhouse-app-x')
     execSync.mockReturnValue(Buffer.from('false\n'))
     expect(real.isContainerRunning('x')).toBe(false)
     execSync.mockImplementation(() => { throw new Error('no container') })
@@ -2510,7 +2690,15 @@ describe('checkForUpdates', () => {
 
   it('never throws on a network error', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'))
-    await expect(checkForUpdates()).resolves.toBeUndefined()
+    await expect(checkForUpdates()).resolves.toBeNull()
+  })
+
+  it('returns the latest version, and prints nothing with print: false', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ 'dist-tags': { latest: '99.0.0' } }), { status: 200 }))
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    await expect(checkForUpdates({ print: false })).resolves.toBe('99.0.0')
+    expect(spy).not.toHaveBeenCalled()
   })
 })
 
