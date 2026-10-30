@@ -99,7 +99,7 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
 
       const password = await p.password({
         message: 'SMTP password?',
-        validate: validateRequired,
+        validate: (v) => validateRequired(v ?? ''),
       })
       if (p.isCancel(password)) { p.cancel(); process.exit(0) }
       config.smtpPassword = password as string

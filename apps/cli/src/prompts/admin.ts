@@ -16,7 +16,7 @@ export async function promptAdmin(): Promise<AdminConfig> {
 
   const password = await p.password({
     message: 'Admin password? (min 8 characters)',
-    validate: validatePassword,
+    validate: (v) => validatePassword(v ?? ''),
   })
   if (p.isCancel(password)) { p.cancel(); process.exit(0) }
 

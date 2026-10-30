@@ -377,7 +377,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
         defaultValue: 'admin@school.dev',
       })
       if (p.isCancel(emailInput)) process.exit(0)
-      adminEmail = emailInput
+      adminEmail = emailInput as string
     }
 
     if (!adminPassword) {
