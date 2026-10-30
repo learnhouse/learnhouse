@@ -1,6 +1,6 @@
 {
   "name": "learnhouse",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "The official LearnHouse CLI: deploy, manage, and operate your LearnHouse instance",
   "type": "module",
   "bin": {
@@ -13,13 +13,13 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "prepublishOnly": "tsup",
-    "test": "bun run build && vitest run tests/unit.test.ts tests/ee.test.ts tests/commands.test.ts tests/backup-restore.test.ts tests/prompt.test.ts tests/content-migration.test.ts tests/doctor-port.test.ts tests/doctor-dns.test.ts tests/start-migrated.test.ts tests/domain-port.test.ts tests/update-migration.test.ts tests/update-preboot-migration.test.ts tests/backup-archive-fail.test.ts tests/setup-ee-preflight.test.ts tests/update-ee.test.ts tests/setup-ci-port.test.ts",
+    "test": "bun run build && vitest run tests/unit.test.ts tests/ee.test.ts tests/commands.test.ts tests/backup-restore.test.ts tests/prompt.test.ts tests/content-migration.test.ts tests/doctor-port.test.ts tests/doctor-dns.test.ts tests/start-migrated.test.ts tests/domain-port.test.ts tests/update-migration.test.ts tests/update-preboot-migration.test.ts tests/backup-archive-fail.test.ts tests/setup-ee-preflight.test.ts tests/update-ee.test.ts tests/setup-ci-port.test.ts tests/hardening.test.ts tests/dev-process.test.ts tests/env-check-perms.test.ts tests/bump-version.test.ts",
     "test:integration": "bun run build && vitest run tests/integration.test.ts",
     "test:all": "bun run build && vitest run",
     "version:patch": "node scripts/bump-version.js patch",
     "version:minor": "node scripts/bump-version.js minor",
     "version:major": "node scripts/bump-version.js major",
-    "test:coverage": "bun run build && vitest run --coverage --coverage.provider=v8 --coverage.include='src/**' tests/unit.test.ts tests/ee.test.ts tests/commands.test.ts tests/backup-restore.test.ts tests/prompt.test.ts tests/content-migration.test.ts tests/doctor-port.test.ts tests/doctor-dns.test.ts tests/start-migrated.test.ts tests/domain-port.test.ts tests/update-migration.test.ts tests/update-preboot-migration.test.ts tests/backup-archive-fail.test.ts tests/setup-ee-preflight.test.ts tests/update-ee.test.ts tests/setup-ci-port.test.ts"
+    "test:coverage": "bun run build && vitest run --coverage --coverage.provider=v8 --coverage.include='src/**' tests/unit.test.ts tests/ee.test.ts tests/commands.test.ts tests/backup-restore.test.ts tests/prompt.test.ts tests/content-migration.test.ts tests/doctor-port.test.ts tests/doctor-dns.test.ts tests/start-migrated.test.ts tests/domain-port.test.ts tests/update-migration.test.ts tests/update-preboot-migration.test.ts tests/backup-archive-fail.test.ts tests/setup-ee-preflight.test.ts tests/update-ee.test.ts tests/setup-ci-port.test.ts tests/hardening.test.ts tests/dev-process.test.ts tests/env-check-perms.test.ts tests/bump-version.test.ts"
   },
   "repository": {
     "type": "git",
@@ -41,20 +41,18 @@
   ],
   "author": "LearnHouse",
   "devDependencies": {
+    "@clack/core": "^1.5.1",
+    "@clack/prompts": "^1.8.1",
     "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "^5.0.5",
+    "commander": "^15.0.0",
+    "picocolors": "^1.1.1",
     "tsup": "^9.0.0",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   },
-  "dependencies": {
-    "@clack/core": "^1.5.1",
-    "@clack/prompts": "^1.8.1",
-    "commander": "^15.0.0",
-    "picocolors": "^1.1.1"
-  },
   "engines": {
-    "node": ">=24.22.1"
+    "node": ">=22"
   },
   "license": "GPL-3.0",
   "publishConfig": {
