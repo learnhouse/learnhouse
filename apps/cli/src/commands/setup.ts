@@ -13,15 +13,28 @@ import { promptOrganization } from '../prompts/organization.js'
 import { promptAdmin } from '../prompts/admin.js'
 import { promptFeatures } from '../prompts/features.js'
 import { generateDockerCompose } from '../templates/docker-compose.js'
-import { generateEnvFile } from '../templates/env.js'
+import { generateEnvFile, type EnvSecrets } from '../templates/env.js'
 import { generateNginxConf } from '../templates/nginx.js'
 import { generateCaddyfile } from '../templates/caddyfile.js'
-import { writeConfig } from '../services/config-store.js'
-import { dockerComposeUp } from '../services/docker.js'
-import { waitForHealth, waitForOrgSeed } from '../services/health.js'
+import { readConfig, writeConfig } from '../services/config-store.js'
+import { dockerComposeRecreate, dockerComposeStop, dockerComposeUp, isDeploymentRunning } from '../services/docker.js'
+import { migrateContentVolume } from '../services/content-volume-migration.js'
+import { waitForAppHealth, waitForAppOrgSeed } from '../services/health.js'
+import { hasComposeService, publicUrl } from '../services/stack.js'
 import { checkPort, findAvailablePort } from '../utils/network.js'
 import { resolveAppImage } from '../services/version-check.js'
-import { validateEmail, validatePassword, validatePort, validateDomain } from '../utils/validators.js'
+import { readEnvVar } from '../utils/env-file.js'
+import { writeFileAtomic } from '../utils/fs-atomic.js'
+import {
+  validateEmail,
+  validateInstallName,
+  validatePassword,
+  validatePort,
+  validateDomain,
+  validatePostgresUrl,
+  validateRedisUrl,
+  validateSlug,
+} from '../utils/validators.js'
 import { setupEnterprise, type EeSetupOptions } from './setup-ee.js'
 
 const STEP_NAMES = [
@@ -37,7 +50,6 @@ const STEP_NAMES = [
 const BACK = Symbol('back')
 
 async function confirmOrBack(message: string): Promise<typeof BACK | boolean> {
-  if (STEP_NAMES.length === 0) return true
   const result = await p.select({
     message,
     options: [
@@ -49,6 +61,61 @@ async function confirmOrBack(message: string): Promise<typeof BACK | boolean> {
   return result === 'back' ? BACK : true
 }
 
+/** What a re-run of setup must keep from an install already in the target directory. */
+interface ExistingInstall {
+  edition: string
+  deploymentId: string
+  httpPort: number
+  dbPassword?: string
+  secrets: Partial<EnvSecrets>
+  running: boolean
+  /** App image the install runs; a reconfigure keeps it (upgrades go through `update`). */
+  image?: string
+  /** Connection strings of an external database / Redis (no db / redis service in compose). */
+  externalDb?: string
+  externalRedis?: string
+}
+
+function composeImage(dir: string): string | undefined {
+  const composePath = path.join(dir, 'docker-compose.yml')
+  if (!fs.existsSync(composePath)) return undefined
+  return fs.readFileSync(composePath, 'utf-8').match(/image:\s*(\S*learnhouse\/app:\S+)/)?.[1]
+}
+
+function readExistingInstall(dir: string): ExistingInstall | null {
+  const config = readConfig(dir)
+  if (!config?.deploymentId || !fs.existsSync(path.join(dir, '.env'))) return null
+  return {
+    edition: config.edition || 'community',
+    deploymentId: config.deploymentId,
+    httpPort: config.httpPort,
+    dbPassword: readEnvVar(dir, 'POSTGRES_PASSWORD'),
+    secrets: {
+      nextAuthSecret: readEnvVar(dir, 'NEXTAUTH_SECRET'),
+      jwtSecret: readEnvVar(dir, 'LEARNHOUSE_AUTH_JWT_SECRET_KEY'),
+      collabInternalKey: readEnvVar(dir, 'COLLAB_INTERNAL_KEY'),
+    },
+    running: isDeploymentRunning(config.deploymentId),
+    image: composeImage(dir),
+    externalDb: hasComposeService(dir, 'db') ? undefined : readEnvVar(dir, 'LEARNHOUSE_SQL_CONNECTION_STRING'),
+    externalRedis: hasComposeService(dir, 'redis') ? undefined : readEnvVar(dir, 'LEARNHOUSE_REDIS_CONNECTION_STRING'),
+  }
+}
+
+/**
+ * Before a reconfigure rewrites docker-compose.yml (which always mounts the
+ * content volume) and recreates the app: on installs from before that volume
+ * existed, the uploads live in the app container itself, so move them first.
+ */
+function preserveContent(dir: string, existing: ExistingInstall): void {
+  migrateContentVolume(dir, existing.deploymentId, () => dockerComposeStop(dir, 'learnhouse-app'))
+}
+
+/** A reconfigure may have rewritten the proxy config; restart the proxy so it reads it. */
+function reloadProxy(dir: string): void {
+  dockerComposeRecreate(dir, ['nginx', 'caddy'].filter((svc) => hasComposeService(dir, svc)))
+}
+
 async function stepInstallDir(): Promise<string | typeof BACK> {
   const baseDir = path.join(os.homedir(), '.learnhouse')
 
@@ -58,21 +125,22 @@ async function stepInstallDir(): Promise<string | typeof BACK> {
     message: 'Name for this installation:',
     placeholder: 'default',
     defaultValue: 'default',
-    validate: (value) => {
-      if (!value) return 'Name is required'
-      if (/[/\\]/.test(value)) return 'Name cannot contain slashes'
-      return undefined
-    },
+    validate: validateInstallName,
   })
   if (p.isCancel(name)) { p.cancel(); process.exit(0) }
 
   const resolved = path.join(baseDir, name as string)
 
   // Warn if target already contains a deployment
-  if (fs.existsSync(path.join(resolved, 'learnhouse.config.json'))) {
-    p.log.warn(`~/.learnhouse/${name} already contains a LearnHouse installation.`)
+  const existing = readExistingInstall(resolved)
+  if (existing?.edition === 'enterprise') {
+    p.log.error(`~/.learnhouse/${name as string} holds an Enterprise installation. Pick another name.`)
+    return BACK
+  }
+  if (existing) {
+    p.log.warn(`~/.learnhouse/${name as string} already contains a LearnHouse installation.`)
     const overwrite = await p.confirm({
-      message: 'Overwrite existing installation?',
+      message: 'Reconfigure it? Its deployment, database password and secrets are kept.',
       initialValue: false,
     })
     if (p.isCancel(overwrite) || !overwrite) {
@@ -81,8 +149,8 @@ async function stepInstallDir(): Promise<string | typeof BACK> {
     }
   }
 
-  // Ensure the directory exists
-  fs.mkdirSync(resolved, { recursive: true })
+  // Ensure the directory exists (owner-only: it will hold .env and backups)
+  fs.mkdirSync(resolved, { recursive: true, mode: 0o700 })
 
   return resolved
 }
@@ -119,7 +187,7 @@ export interface SetupOptions {
   ci?: boolean
   name?: string
   domain?: string
-  port?: number
+  port?: number | string
   adminEmail?: string
   adminPassword?: string
   orgName?: string
@@ -139,6 +207,21 @@ export interface SetupOptions {
   cfApiToken?: string
   dockerIpv6?: boolean
   installDir?: string
+}
+
+/**
+ * Secrets can come from the environment instead of flags, so they stay out of
+ * `ps` output and shell history. A flag, when given, wins.
+ */
+export function withSecretsFromEnv(options: SetupOptions, env: NodeJS.ProcessEnv = process.env): SetupOptions {
+  return {
+    ...options,
+    adminPassword: options.adminPassword ?? env.LEARNHOUSE_ADMIN_PASSWORD,
+    license: options.license ?? env.LEARNHOUSE_LICENSE_KEY,
+    cfApiToken: options.cfApiToken ?? env.LEARNHOUSE_CF_API_TOKEN,
+    externalDb: options.externalDb ?? env.LEARNHOUSE_EXTERNAL_DB,
+    externalRedis: options.externalRedis ?? env.LEARNHOUSE_EXTERNAL_REDIS,
+  }
 }
 
 function wantsEnterprise(edition?: string): boolean {
@@ -166,7 +249,53 @@ function toEeOptions(options: SetupOptions, ci: boolean): EeSetupOptions {
   }
 }
 
-export async function setupCommand(options: SetupOptions) {
+function summaryLines(config: SetupConfig): string {
+  return [
+    `  ${pc.dim('Directory:')}     ${config.installDir}`,
+    `  ${pc.dim('Channel:')}       ${config.channel === 'dev' ? pc.yellow('Dev (:dev)') : pc.green('Stable')}`,
+    `  ${pc.dim('URL:')}           ${publicUrl(config)}`,
+    `  ${pc.dim('HTTPS:')}         ${config.autoSsl ? 'Auto SSL (Caddy)' : config.useHttps ? 'Manual' : 'Disabled'}`,
+    `  ${pc.dim('Database:')}      ${config.useExternalDb ? 'External' : config.useAiDatabase ? 'Local (Docker, AI-enabled)' : 'Local (Docker)'}`,
+    `  ${pc.dim('Redis:')}         ${config.useExternalRedis ? 'External' : 'Local (Docker)'}`,
+    `  ${pc.dim('Organization:')} ${config.orgName}`,
+    `  ${pc.dim('Admin:')}        ${config.adminEmail}`,
+    `  ${pc.dim('AI:')}           ${config.aiEnabled ? 'Enabled' : 'Disabled'}`,
+    `  ${pc.dim('Email:')}        ${config.emailEnabled ? 'Enabled' : 'Disabled'}`,
+    `  ${pc.dim('S3 Storage:')}   ${config.s3Enabled ? 'Enabled' : 'Disabled'}`,
+    `  ${pc.dim('Google OAuth:')} ${config.googleOAuthEnabled ? 'Enabled' : 'Disabled'}`,
+  ].join('\n')
+}
+
+function writeInstallFiles(config: SetupConfig, appImage: string, secrets: Partial<EnvSecrets>): void {
+  const dir = config.installDir
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 })
+  fs.mkdirSync(path.join(dir, 'extra'), { recursive: true })
+  writeFileAtomic(path.join(dir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
+  writeFileAtomic(path.join(dir, '.env'), generateEnvFile(config, secrets), 0o600)
+  if (config.autoSsl) {
+    writeFileAtomic(path.join(dir, 'extra', 'Caddyfile'), generateCaddyfile(config))
+  } else {
+    writeFileAtomic(path.join(dir, 'extra', 'nginx.prod.conf'), generateNginxConf(config))
+  }
+  writeConfig(config)
+}
+
+function ciFail(message: string): never {
+  console.error(`Error: ${message}`)
+  process.exit(1)
+}
+
+export async function setupCommand(rawOptions: SetupOptions) {
+  const options = withSecretsFromEnv(rawOptions)
+
+  if (options.edition !== undefined && !wantsEnterprise(options.edition) && options.edition !== 'community') {
+    ciFail(`--edition "${options.edition}": expected community or enterprise`)
+  }
+
+  if (wantsEnterprise(options.edition) && options.externalRedis) {
+    ciFail('--external-redis is only supported for the Community edition')
+  }
+
   // ─── CI / non-interactive mode ──────────────────────────────
   if (options.ci) {
     if (wantsEnterprise(options.edition)) {
@@ -174,110 +303,134 @@ export async function setupCommand(options: SetupOptions) {
       return
     }
     if (!options.adminPassword) {
-      console.error('Error: --admin-password is required in --ci mode')
-      process.exit(1)
+      ciFail('--admin-password (or LEARNHOUSE_ADMIN_PASSWORD) is required in --ci mode')
     }
 
     const pwErr = validatePassword(options.adminPassword)
-    if (pwErr) {
-      console.error(`Error: --admin-password: ${pwErr}`)
-      process.exit(1)
-    }
+    if (pwErr) ciFail(`--admin-password: ${pwErr}`)
 
     if (options.adminEmail) {
       const emailErr = validateEmail(options.adminEmail)
-      if (emailErr) {
-        console.error(`Error: --admin-email "${options.adminEmail}": ${emailErr}`)
-        process.exit(1)
-      }
+      if (emailErr) ciFail(`--admin-email "${options.adminEmail}": ${emailErr}`)
     }
 
-    if (options.domain && options.domain !== 'localhost') {
-      const domainErr = validateDomain(options.domain)
-      if (domainErr) {
-        console.error(`Error: --domain "${options.domain}": ${domainErr}`)
-        process.exit(1)
-      }
+    const domain = (options.domain || 'localhost').toLowerCase()
+    if (domain !== 'localhost') {
+      const domainErr = validateDomain(domain)
+      if (domainErr) ciFail(`--domain "${options.domain}": ${domainErr}`)
     }
 
+    let requestedPort: number | undefined
     if (options.port !== undefined) {
       const portErr = validatePort(String(options.port))
-      if (portErr) {
-        console.error(`Error: --port ${options.port}: ${portErr}`)
-        process.exit(1)
-      }
+      if (portErr) ciFail(`--port ${options.port}: ${portErr}`)
+      requestedPort = Number(options.port)
+    }
+
+    const installName = options.name || 'default'
+    const nameErr = validateInstallName(installName)
+    if (nameErr) ciFail(`--name "${installName}": ${nameErr}`)
+
+    if (options.channel !== undefined && options.channel !== 'stable' && options.channel !== 'dev') {
+      ciFail(`--channel "${options.channel}": expected stable or dev`)
+    }
+
+    const orgSlug = (options.orgSlug || 'default').toLowerCase()
+    const slugErr = validateSlug(orgSlug)
+    if (slugErr) ciFail(`--org-slug "${options.orgSlug}": ${slugErr}`)
+
+    if (options.externalDb) {
+      const err = validatePostgresUrl(options.externalDb)
+      if (err) ciFail(`--external-db: ${err}`)
+    }
+    if (options.externalRedis) {
+      const err = validateRedisUrl(options.externalRedis)
+      if (err) ciFail(`--external-redis: ${err}`)
     }
 
     await checkPrerequisites()
 
-    const installName = options.name || 'default'
-    const baseDir = path.join(os.homedir(), '.learnhouse')
-    const resolvedDir = path.join(baseDir, installName)
-    fs.mkdirSync(resolvedDir, { recursive: true })
+    const explicitDir = options.installDir ?? process.env.LEARNHOUSE_DIR
+    const resolvedDir = explicitDir
+      ? path.resolve(explicitDir)
+      : path.join(os.homedir(), '.learnhouse', installName)
 
-    const deploymentId = crypto.randomBytes(4).toString('hex')
+    // Re-running setup on an existing install reconfigures it in place: same
+    // deployment (compose project + volumes) and the secrets its database and
+    // sessions were created with. New ones would orphan the data.
+    const existing = readExistingInstall(resolvedDir)
+    if (existing?.edition === 'enterprise') {
+      ciFail(`${resolvedDir} holds an Enterprise installation; pass --edition enterprise or pick another --name`)
+    }
+    fs.mkdirSync(resolvedDir, { recursive: true, mode: 0o700 })
+
+    const deploymentId = existing?.deploymentId ?? crypto.randomBytes(4).toString('hex')
     const channel = (options.channel === 'dev' ? 'dev' : 'stable') as 'stable' | 'dev'
-    const dbPassword = crypto.randomBytes(24).toString('base64url')
+    const dbPassword = existing?.dbPassword || crypto.randomBytes(24).toString('base64url')
 
-    // If the user didn't pin a port, prefer 80 but fall back automatically
-    // when it's taken; CI shouldn't fail just because the runner has another
-    // service on port 80.
-    let httpPort = options.port || 80
-    if (!options.port) {
-      const available = await findAvailablePort(httpPort)
-      if (available && available !== httpPort) {
-        console.log(`Port ${httpPort} is in use, falling back to ${available}.`)
-        httpPort = available
-      } else if (!available) {
-        console.error('No common port is available. Pass --port=<port> explicitly.')
-        process.exit(1)
+    // If the user didn't pin a port, prefer 80 (or the existing install's port)
+    // but fall back automatically when it's taken; CI shouldn't fail just
+    // because the runner has another service on port 80. A port held by this
+    // very install's running stack is not "taken".
+    let httpPort = requestedPort ?? existing?.httpPort ?? 80
+    const ownPort = !!existing?.running && existing.httpPort === httpPort
+    if (!ownPort) {
+      if (requestedPort === undefined) {
+        const available = await findAvailablePort(httpPort)
+        if (available && available !== httpPort) {
+          console.log(`Port ${httpPort} is in use, falling back to ${available}.`)
+          httpPort = available
+        } else if (!available) {
+          ciFail('No common port is available. Pass --port=<port> explicitly.')
+        }
+      } else if (!(await checkPort(httpPort))) {
+        ciFail(`Port ${httpPort} is already in use. Free it or pass a different --port.`)
       }
-    } else if (!(await checkPort(httpPort))) {
-      console.error(`Port ${httpPort} is already in use. Free it or pass a different --port.`)
-      process.exit(1)
     }
 
     const config: SetupConfig = {
       deploymentId,
       installDir: resolvedDir,
       channel,
-      domain: options.domain || 'localhost',
+      domain,
       useHttps: false,
       httpPort,
       autoSsl: false,
       // External DB/Redis work for the Community stack too: when a connection
       // string is supplied, the in-container service is omitted from the compose.
-      useExternalDb: !!options.externalDb,
-      externalDbConnectionString: options.externalDb,
+      useExternalDb: !!(options.externalDb ?? existing?.externalDb),
+      externalDbConnectionString: options.externalDb ?? existing?.externalDb,
       dbPassword,
       useAiDatabase: false,
-      useExternalRedis: !!options.externalRedis,
-      externalRedisConnectionString: options.externalRedis,
+      useExternalRedis: !!(options.externalRedis ?? existing?.externalRedis),
+      externalRedisConnectionString: options.externalRedis ?? existing?.externalRedis,
       // Needed when the external DB is IPv6-only.
       dockerIpv6: options.dockerIpv6,
       orgName: options.orgName || 'Default Organization',
-      orgSlug: (options.orgSlug || 'default').toLowerCase(),
+      orgSlug,
       adminEmail: options.adminEmail || 'admin@school.dev',
-      adminPassword: options.adminPassword,
+      adminPassword: options.adminPassword!,
       aiEnabled: false,
       emailEnabled: false,
       s3Enabled: false,
       googleOAuthEnabled: false,
     }
 
-    console.log(`Setting up LearnHouse in ~/.learnhouse/${installName}`)
+    console.log(`${existing ? 'Reconfiguring' : 'Setting up'} LearnHouse in ${resolvedDir}`)
 
-    const { image: appImage } = await resolveAppImage(config.channel)
-    console.log(`Using image: ${appImage}`)
+    // A reconfigure keeps the running image: a newer one needs the backup and
+    // migrations that `learnhouse update` does.
+    const appImage = existing?.image ?? (await resolveAppImage(config.channel)).image
+    console.log(`Using image: ${appImage}${existing?.image ? ' (kept; upgrade with `learnhouse update`)' : ''}`)
 
-    fs.mkdirSync(resolvedDir, { recursive: true })
-    fs.mkdirSync(path.join(resolvedDir, 'extra'), { recursive: true })
-    fs.writeFileSync(path.join(resolvedDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
-    fs.writeFileSync(path.join(resolvedDir, '.env'), generateEnvFile(config), { mode: 0o600 })
-    // mode only applies on create; tighten a pre-existing .env too
-    fs.chmodSync(path.join(resolvedDir, '.env'), 0o600)
-    fs.writeFileSync(path.join(resolvedDir, 'extra', 'nginx.prod.conf'), generateNginxConf(config))
-    writeConfig(config)
+    if (existing) {
+      try {
+        preserveContent(resolvedDir, existing)
+      } catch (err) {
+        ciFail(`could not move uploaded content into a persistent volume: ${(err as Error)?.message ?? err}. Nothing was changed.`)
+      }
+    }
+    writeInstallFiles(config, appImage, existing?.secrets ?? {})
 
     console.log('Configuration files generated')
 
@@ -285,21 +438,7 @@ export async function setupCommand(options: SetupOptions) {
       console.log('Starting services...')
       try {
         dockerComposeUp(resolvedDir)
-        const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
-        if (healthy) {
-          const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, config.orgSlug)
-          if (seeded) {
-            console.log('LearnHouse is ready!')
-          } else {
-            console.error('')
-            console.error(`API is healthy but organization "${config.orgSlug}" was not seeded.`)
-            console.error('Run `npx learnhouse logs` to inspect; pin a different image tag and re-run.')
-            console.error('')
-            process.exit(1)
-          }
-        } else {
-          console.log('Health check timed out; services may still be starting')
-        }
+        if (existing) reloadProxy(resolvedDir)
       } catch (err) {
         const stderr = (err as { stderr?: Buffer; message?: string })?.stderr?.toString?.() ?? ''
         const message = (err as { message?: string })?.message ?? ''
@@ -310,10 +449,24 @@ export async function setupCommand(options: SetupOptions) {
         }
         process.exit(1)
       }
+
+      const healthy = await waitForAppHealth(config)
+      if (!healthy) {
+        console.error('Health check timed out; LearnHouse did not become ready. Run `npx learnhouse logs` to inspect.')
+        process.exit(1)
+      }
+      const seeded = await waitForAppOrgSeed(config, config.orgSlug)
+      if (!seeded) {
+        console.error('')
+        console.error(`API is healthy but organization "${config.orgSlug}" was not seeded.`)
+        console.error('Run `npx learnhouse logs` to inspect; pin a different image tag and re-run.')
+        console.error('')
+        process.exit(1)
+      }
+      console.log('LearnHouse is ready!')
     }
 
-    const portSuffix = config.httpPort === 80 ? '' : `:${config.httpPort}`
-    console.log(`URL: http://${config.domain}${portSuffix}`)
+    console.log(`URL: ${publicUrl(config)}`)
     console.log(`Admin: ${config.adminEmail}`)
     console.log(`Install dir: ${resolvedDir}`)
     return
@@ -379,7 +532,7 @@ export async function setupCommand(options: SetupOptions) {
       case 0: {
         p.log.step(pc.cyan(`Step 1/${totalSteps}`) + ' Install Directory')
         const result = await stepInstallDir()
-        if (result === BACK) { step = Math.max(0, step - 1); break }
+        if (result === BACK) break
         resolvedDir = result
         step++
         break
@@ -434,25 +587,8 @@ export async function setupCommand(options: SetupOptions) {
   }
 
   // Summary
-  const protocol = config.useHttps ? 'https' : 'http'
-  const portSuffix = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80) ? '' : `:${config.httpPort}`
-  const url = `${protocol}://${config.domain}${portSuffix}`
-
   p.log.step('Configuration Summary')
-  p.log.message([
-    `  ${pc.dim('Directory:')}     ${resolvedDir}`,
-    `  ${pc.dim('Channel:')}       ${config.channel === 'dev' ? pc.yellow('Dev (:dev)') : pc.green('Stable')}`,
-    `  ${pc.dim('URL:')}           ${url}`,
-    `  ${pc.dim('HTTPS:')}         ${config.autoSsl ? 'Auto SSL (Caddy)' : config.useHttps ? 'Manual' : 'Disabled'}`,
-    `  ${pc.dim('Database:')}      ${config.useExternalDb ? 'External' : config.useAiDatabase ? 'Local (Docker, AI-enabled)' : 'Local (Docker)'}`,
-    `  ${pc.dim('Redis:')}         ${config.useExternalRedis ? 'External' : 'Local (Docker)'}`,
-    `  ${pc.dim('Organization:')} ${config.orgName}`,
-    `  ${pc.dim('Admin:')}        ${config.adminEmail}`,
-    `  ${pc.dim('AI:')}           ${config.aiEnabled ? 'Enabled' : 'Disabled'}`,
-    `  ${pc.dim('Email:')}        ${config.emailEnabled ? 'Enabled' : 'Disabled'}`,
-    `  ${pc.dim('S3 Storage:')}   ${config.s3Enabled ? 'Enabled' : 'Disabled'}`,
-    `  ${pc.dim('Google OAuth:')} ${config.googleOAuthEnabled ? 'Enabled' : 'Disabled'}`,
-  ].join('\n'))
+  p.log.message(summaryLines(config))
 
   // Confirm or go back to edit a step
   let confirmed = false
@@ -512,36 +648,27 @@ export async function setupCommand(options: SetupOptions) {
         }
       }
 
-      // Re-compute URL for updated summary
-      const p2 = config.useHttps ? 'https' : 'http'
-      const ps2 = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80) ? '' : `:${config.httpPort}`
-      const url2 = `${p2}://${config.domain}${ps2}`
-
       p.log.step('Updated Configuration Summary')
-      p.log.message([
-        `  ${pc.dim('Directory:')}     ${config.installDir}`,
-        `  ${pc.dim('Channel:')}       ${config.channel === 'dev' ? pc.yellow('Dev (:dev)') : pc.green('Stable')}`,
-        `  ${pc.dim('URL:')}           ${url2}`,
-        `  ${pc.dim('HTTPS:')}         ${config.autoSsl ? 'Auto SSL (Caddy)' : config.useHttps ? 'Manual' : 'Disabled'}`,
-        `  ${pc.dim('Database:')}      ${config.useExternalDb ? 'External' : config.useAiDatabase ? 'Local (Docker, AI-enabled)' : 'Local (Docker)'}`,
-        `  ${pc.dim('Redis:')}         ${config.useExternalRedis ? 'External' : 'Local (Docker)'}`,
-        `  ${pc.dim('Organization:')} ${config.orgName}`,
-        `  ${pc.dim('Admin:')}        ${config.adminEmail}`,
-        `  ${pc.dim('AI:')}           ${config.aiEnabled ? 'Enabled' : 'Disabled'}`,
-        `  ${pc.dim('Email:')}        ${config.emailEnabled ? 'Enabled' : 'Disabled'}`,
-        `  ${pc.dim('S3 Storage:')}   ${config.s3Enabled ? 'Enabled' : 'Disabled'}`,
-        `  ${pc.dim('Google OAuth:')} ${config.googleOAuthEnabled ? 'Enabled' : 'Disabled'}`,
-      ].join('\n'))
+      p.log.message(summaryLines(config))
     } else {
       confirmed = true
     }
   }
 
+  // Reconfiguring an existing install keeps its deployment and secrets (the
+  // database volume was initialized with that password).
+  const existing = readExistingInstall(config.installDir)
+  if (existing) {
+    config.deploymentId = existing.deploymentId
+    if (!config.useExternalDb && existing.dbPassword) config.dbPassword = existing.dbPassword
+  }
+
   // Resolve Docker image version
   const s0 = p.spinner()
   s0.start('Resolving LearnHouse image version')
-  const { image: appImage, isLatest } = await resolveAppImage(config.channel)
-  s0.stop(`Using image: ${appImage}`)
+  const resolved = existing?.image ? { image: existing.image, isLatest: false } : await resolveAppImage(config.channel)
+  const { image: appImage, isLatest } = resolved
+  s0.stop(`Using image: ${appImage}${existing?.image ? ' (kept; upgrade with `npx learnhouse update`)' : ''}`)
   if (isLatest) {
     p.log.warn('No versioned image found, using :latest tag. Pin to a version for stability.')
   }
@@ -552,21 +679,8 @@ export async function setupCommand(options: SetupOptions) {
 
   const finalDir = config.installDir
   try {
-    fs.mkdirSync(finalDir, { recursive: true })
-    fs.mkdirSync(path.join(finalDir, 'extra'), { recursive: true })
-
-    fs.writeFileSync(path.join(finalDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
-    fs.writeFileSync(path.join(finalDir, '.env'), generateEnvFile(config), { mode: 0o600 })
-    // mode only applies on create; tighten a pre-existing .env too
-    fs.chmodSync(path.join(finalDir, '.env'), 0o600)
-
-    if (config.autoSsl) {
-      fs.writeFileSync(path.join(finalDir, 'extra', 'Caddyfile'), generateCaddyfile(config))
-    } else {
-      fs.writeFileSync(path.join(finalDir, 'extra', 'nginx.prod.conf'), generateNginxConf(config))
-    }
-
-    writeConfig(config)
+    if (existing) preserveContent(finalDir, existing)
+    writeInstallFiles(config, appImage, existing?.secrets ?? {})
   } catch (err: any) {
     s.stop('Failed to generate configuration files')
     p.log.error(err?.message ?? String(err))
@@ -582,9 +696,7 @@ export async function setupCommand(options: SetupOptions) {
   })
   if (p.isCancel(startNow)) { p.cancel(); process.exit(0) }
 
-  const finalProtocol = config.useHttps ? 'https' : 'http'
-  const finalPortSuffix = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80) ? '' : `:${config.httpPort}`
-  const finalUrl = `${finalProtocol}://${config.domain}${finalPortSuffix}`
+  const finalUrl = publicUrl(config)
 
   if (startNow) {
     p.log.step('Starting LearnHouse')
@@ -593,6 +705,7 @@ export async function setupCommand(options: SetupOptions) {
 
     try {
       dockerComposeUp(finalDir)
+      if (existing) reloadProxy(finalDir)
       s2.stop('Services started')
     } catch (err) {
       s2.stop('Failed to start services')
@@ -624,10 +737,10 @@ export async function setupCommand(options: SetupOptions) {
     const s3 = p.spinner()
     s3.start('Waiting for LearnHouse to be ready (up to 3 minutes)')
 
-    const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
+    const healthy = await waitForAppHealth(config)
 
     if (healthy) {
-      const seeded = await waitForOrgSeed(`http://localhost:${config.httpPort}`, config.orgSlug)
+      const seeded = await waitForAppOrgSeed(config, config.orgSlug)
       if (seeded) {
         s3.stop('LearnHouse is ready!')
       } else {
@@ -640,17 +753,17 @@ export async function setupCommand(options: SetupOptions) {
       }
     } else {
       s3.stop('Health check timed out')
-      p.log.warn('LearnHouse may still be starting. Check status with:')
-      p.log.message(`  cd ${finalDir} && docker compose ps`)
+      p.log.warn('LearnHouse did not respond within 3 minutes; it may still be starting. Check with:')
+      p.log.message(`  npx learnhouse status   ${pc.dim('or')}   npx learnhouse logs`)
     }
 
-    // Success
-    p.log.success(pc.green(pc.bold('LearnHouse is installed!')))
+    // Success (the password is not echoed back: it was just typed, and
+    // terminals keep scrollback)
+    p.log.success(healthy ? pc.green(pc.bold('LearnHouse is installed!')) : pc.yellow(pc.bold('LearnHouse is installed, but not responding yet.')))
     p.log.message([
       '',
       `  ${pc.cyan('URL:')}       ${finalUrl}`,
       `  ${pc.cyan('Admin:')}     ${config.adminEmail}`,
-      `  ${pc.cyan('Password:')}  ${config.adminPassword}`,
       '',
       `  ${pc.dim('Management commands:')}`,
       `  ${pc.dim('$')} npx learnhouse start    ${pc.dim('Start services')}`,
@@ -663,6 +776,7 @@ export async function setupCommand(options: SetupOptions) {
       `  ${pc.dim('$')} npx learnhouse shell    ${pc.dim('Container shell')}`,
       '',
     ].join('\n'))
+    if (!healthy) process.exitCode = 1
   } else {
     p.log.info(`Files have been generated in ${finalDir}`)
     p.log.message(`  Start later with: cd ${finalDir} && docker compose up -d`)

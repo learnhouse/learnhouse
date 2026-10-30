@@ -2,12 +2,17 @@ import fs from 'node:fs'
 import path from 'node:path'
 import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
-import { findInstallDir, readConfig } from '../services/config-store.js'
-import { dockerComposeDown, dockerComposeUp } from '../services/docker.js'
+import { findInstallDir, readConfig, updateConfig } from '../services/config-store.js'
+import { applyComposeChanges } from './scale.js'
+import { quoteEnvValue } from '../utils/env-quote.js'
+import { unquoteEnvValue } from '../utils/env-file.js'
+import { writeFileAtomic } from '../utils/fs-atomic.js'
 
-const SECRET_PATTERNS = ['PASSWORD', 'SECRET', 'API_KEY', 'CLIENT_SECRET']
+const SECRET_PATTERNS = ['PASSWORD', 'SECRET', 'API_KEY', 'LICENSE_KEY', 'INTERNAL_KEY', 'TOKEN', 'CONNECTION_STRING', 'REDIS_URL']
 
-const CATEGORIES: Record<string, { label: string; keys: string[] }> = {
+type Categories = Record<string, { label: string; keys: string[] }>
+
+const COMMUNITY_CATEGORIES: Categories = {
   domain: {
     label: 'Domain & Hosting',
     keys: [
@@ -39,7 +44,11 @@ const CATEGORIES: Record<string, { label: string; keys: string[] }> = {
   },
   email: {
     label: 'Email',
-    keys: ['LEARNHOUSE_RESEND_API_KEY', 'LEARNHOUSE_SYSTEM_EMAIL_ADDRESS'],
+    keys: [
+      'LEARNHOUSE_EMAIL_PROVIDER', 'LEARNHOUSE_SYSTEM_EMAIL_ADDRESS', 'LEARNHOUSE_RESEND_API_KEY',
+      'LEARNHOUSE_SMTP_HOST', 'LEARNHOUSE_SMTP_PORT', 'LEARNHOUSE_SMTP_USERNAME',
+      'LEARNHOUSE_SMTP_PASSWORD', 'LEARNHOUSE_SMTP_USE_TLS',
+    ],
   },
   s3: {
     label: 'S3 Storage',
@@ -56,15 +65,44 @@ const CATEGORIES: Record<string, { label: string; keys: string[] }> = {
   },
 }
 
-function isSecret(key: string): boolean {
+// Enterprise services only receive the variables their compose file names
+// (no env_file), so only those are offered.
+const ENTERPRISE_CATEGORIES: Categories = {
+  license: {
+    label: 'License & Images',
+    keys: ['LEARNHOUSE_LICENSE_KEY', 'EE_IMAGE_TAG'],
+  },
+  domain: {
+    label: 'Domain & TLS',
+    keys: ['DOMAIN', 'AGENCY_DOMAIN', 'ACME_EMAIL', 'CLOUDFLARE_API_TOKEN', 'LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD'],
+  },
+  database: {
+    label: 'Database',
+    keys: ['LEARNHOUSE_SQL_CONNECTION_STRING', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'],
+  },
+  security: {
+    label: 'Security',
+    keys: [
+      'LEARNHOUSE_AUTH_JWT_SECRET_KEY', 'COLLAB_INTERNAL_KEY',
+      'LEARNHOUSE_INITIAL_ADMIN_EMAIL', 'LEARNHOUSE_INITIAL_ADMIN_PASSWORD',
+    ],
+  },
+}
+
+// Changing these in .env alone does not change the running database: Postgres
+// only reads its password when the data volume is first created.
+const DB_PASSWORD_KEYS = new Set(['POSTGRES_PASSWORD', 'DB_PASSWORD'])
+// Derived URLs and proxy configs are generated from these at setup.
+const DERIVED_KEYS = new Set(['LEARNHOUSE_DOMAIN', 'DOMAIN', 'AGENCY_DOMAIN'])
+
+export function isSecret(key: string): boolean {
   const upper = key.toUpperCase()
   return SECRET_PATTERNS.some((pat) => upper.includes(pat))
 }
 
-function maskValue(key: string, value: string): string {
-  if (isSecret(key) && value.length > 0) {
-    return value.slice(0, 4) + '****'
-  }
+/** Secrets are never shown, not even a prefix: an 8-character password would leak half of itself. */
+export function maskValue(key: string, value: string): string {
+  if (isSecret(key) && value.length > 0) return '********'
   return value
 }
 
@@ -75,30 +113,27 @@ function parseEnv(content: string): Map<string, string> {
     if (!trimmed || trimmed.startsWith('#')) continue
     const eqIdx = trimmed.indexOf('=')
     if (eqIdx === -1) continue
-    map.set(trimmed.slice(0, eqIdx), trimmed.slice(eqIdx + 1))
+    map.set(trimmed.slice(0, eqIdx), unquoteEnvValue(trimmed.slice(eqIdx + 1)))
   }
   return map
 }
 
-function serializeEnv(original: string, updated: Map<string, string>): string {
+/** Rewrite only the keys that changed, quoted for compose; everything else stays byte-for-byte. */
+export function serializeEnv(original: string, updated: Map<string, string>, changed: Set<string>): string {
   const lines = original.split('\n')
   const result: string[] = []
   const written = new Set<string>()
 
   for (const line of lines) {
     const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) {
-      result.push(line)
-      continue
-    }
     const eqIdx = trimmed.indexOf('=')
-    if (eqIdx === -1) {
+    if (!trimmed || trimmed.startsWith('#') || eqIdx === -1) {
       result.push(line)
       continue
     }
     const key = trimmed.slice(0, eqIdx)
-    if (updated.has(key)) {
-      result.push(`${key}=${updated.get(key)}`)
+    if (changed.has(key)) {
+      result.push(`${key}=${quoteEnvValue(updated.get(key) ?? '')}`)
       written.add(key)
     } else {
       result.push(line)
@@ -106,9 +141,9 @@ function serializeEnv(original: string, updated: Map<string, string>): string {
   }
 
   // Append any new keys
-  for (const [key, value] of updated) {
+  for (const key of changed) {
     if (!written.has(key)) {
-      result.push(`${key}=${value}`)
+      result.push(`${key}=${quoteEnvValue(updated.get(key) ?? '')}`)
     }
   }
 
@@ -131,8 +166,10 @@ export async function envCommand() {
 
   p.intro(pc.cyan('LearnHouse Environment Editor'))
 
+  const categories = config.edition === 'enterprise' ? ENTERPRISE_CATEGORIES : COMMUNITY_CATEGORIES
   const originalContent = fs.readFileSync(envPath, 'utf-8')
   const envMap = parseEnv(originalContent)
+  const changed = new Set<string>()
 
   // Category selection loop
   let editing = true
@@ -140,7 +177,7 @@ export async function envCommand() {
     const category = await p.select({
       message: 'Select a category to edit',
       options: [
-        ...Object.entries(CATEGORIES).map(([value, { label }]) => ({ value, label })),
+        ...Object.entries(categories).map(([value, { label }]) => ({ value, label })),
         { value: '_done', label: pc.dim('Done editing') },
       ],
     })
@@ -149,7 +186,7 @@ export async function envCommand() {
       break
     }
 
-    const cat = CATEGORIES[category as string]
+    const cat = categories[category as string]
     const presentKeys = cat.keys.filter((k) => envMap.has(k))
     const missingKeys = cat.keys.filter((k) => !envMap.has(k))
 
@@ -178,41 +215,58 @@ export async function envCommand() {
     const key = keyToEdit as string
     const currentValue = envMap.get(key) || ''
 
-    const newValue = await p.text({
-      message: `New value for ${key}`,
-      placeholder: currentValue,
-      defaultValue: currentValue,
-    })
-    if (p.isCancel(newValue)) continue
+    if (DB_PASSWORD_KEYS.has(key)) {
+      p.log.warn(
+        `${key} is only read when the database volume is first created. Changing it here does not change ` +
+        'the running database\'s password, and the app will fail to connect. Change it in Postgres first ' +
+        '(ALTER USER ... PASSWORD ...), then here.',
+      )
+    }
+    if (DERIVED_KEYS.has(key)) {
+      p.log.warn('The URLs, cookie domain and proxy config were generated from the domain at setup; re-run `npx learnhouse setup` to change the domain everywhere.')
+    }
 
-    envMap.set(key, newValue as string)
+    // Secrets: hidden input, and the current value is never echoed back as a placeholder.
+    const newValue = isSecret(key)
+      ? await p.password({ message: `New value for ${key} (leave empty to keep the current one)` })
+      : await p.text({
+          message: `New value for ${key}`,
+          placeholder: currentValue,
+          defaultValue: currentValue,
+          validate: (v) => (/[\r\n]/.test(v) ? 'Value must be a single line' : undefined),
+        })
+    if (p.isCancel(newValue)) continue
+    const value = newValue as string
+    if (isSecret(key) && value === '') continue
+    if (value === currentValue) continue
+
+    envMap.set(key, value)
+    changed.add(key)
     p.log.success(`Updated ${key}`)
   }
 
   // Write changes
-  const newContent = serializeEnv(originalContent, envMap)
-  if (newContent !== originalContent) {
-    fs.writeFileSync(envPath, newContent)
-    p.log.success('.env file updated')
-
-    const restart = await p.confirm({
-      message: 'Restart services to apply changes?',
-      initialValue: false,
-    })
-    if (!p.isCancel(restart) && restart) {
-      const s = p.spinner()
-      s.start('Restarting services')
-      try {
-        dockerComposeDown(config.installDir)
-        dockerComposeUp(config.installDir)
-        s.stop('Services restarted')
-      } catch {
-        s.stop('Restart failed')
-        p.log.error('Failed to restart services. Check Docker output above.')
-      }
-    }
-  } else {
+  if (changed.size === 0) {
     p.log.info('No changes made.')
+    p.outro(pc.dim('Done'))
+    return
+  }
+
+  writeFileAtomic(envPath, serializeEnv(originalContent, envMap, changed), 0o600)
+  p.log.success('.env file updated')
+
+  // Keep learnhouse.config.json (used by status/health/update) in sync.
+  if (changed.has('HTTP_PORT')) {
+    const port = parseInt(envMap.get('HTTP_PORT') ?? '', 10)
+    if (port > 0 && port < 65536) updateConfig(dir, { httpPort: port })
+  }
+
+  const restart = await p.confirm({
+    message: 'Restart services to apply changes?',
+    initialValue: false,
+  })
+  if (!p.isCancel(restart) && restart) {
+    await applyComposeChanges(config)
   }
 
   p.outro(pc.dim('Done'))

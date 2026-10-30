@@ -1,18 +1,23 @@
 import crypto from 'node:crypto'
 import type { SetupConfig } from '../types.js'
 import { quoteEnvValue } from '../utils/env-quote.js'
+import { publicUrl } from '../services/stack.js'
 
 function generateSecret(): string {
   return crypto.randomBytes(32).toString('base64')
 }
 
-export function generateEnvFile(config: SetupConfig): string {
-  const protocol = config.useHttps ? 'https' : 'http'
-  const portSuffix = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80)
-    ? ''
-    : `:${config.httpPort}`
-  const baseUrl = `${protocol}://${config.domain}${portSuffix}`
-  const domainWithPort = `${config.domain}${portSuffix}`
+/** Secrets an existing install already uses; re-running setup must keep them
+ *  (sessions, and the collab server's shared key, depend on them). */
+export interface EnvSecrets {
+  nextAuthSecret: string
+  jwtSecret: string
+  collabInternalKey: string
+}
+
+export function generateEnvFile(config: SetupConfig, existing: Partial<EnvSecrets> = {}): string {
+  const baseUrl = publicUrl(config)
+  const domainWithPort = baseUrl.replace(/^https?:\/\//, '')
 
   const topDomain = config.domain === 'localhost'
     ? 'localhost'
@@ -22,9 +27,9 @@ export function generateEnvFile(config: SetupConfig): string {
     ? '.localhost'
     : `.${topDomain}`
 
-  const nextAuthSecret = generateSecret()
-  const jwtSecret = generateSecret()
-  const collabInternalKey = generateSecret()
+  const nextAuthSecret = existing.nextAuthSecret || generateSecret()
+  const jwtSecret = existing.jwtSecret || generateSecret()
+  const collabInternalKey = existing.collabInternalKey || generateSecret()
 
   const lines: string[] = [
     '# LearnHouse Environment Variables',
@@ -98,9 +103,9 @@ export function generateEnvFile(config: SetupConfig): string {
     '',
     `COLLAB_INTERNAL_KEY=${collabInternalKey}`,
     `LEARNHOUSE_REDIS_URL=${config.useExternalRedis
-      ? config.externalRedisConnectionString
+      ? quoteEnvValue(config.externalRedisConnectionString!)
       : 'redis://redis:6379'}`,
-    `NEXT_PUBLIC_COLLAB_URL=${config.useHttps ? 'wss' : 'ws'}://${config.domain}${portSuffix}/collab`,
+    `NEXT_PUBLIC_COLLAB_URL=${config.useHttps ? 'wss' : 'ws'}://${domainWithPort}/collab`,
     '',
     '# =============================================================================',
     '# General Settings',
@@ -117,7 +122,7 @@ export function generateEnvFile(config: SetupConfig): string {
       '# AI Configuration',
       '# =============================================================================',
       '',
-      `LEARNHOUSE_GEMINI_API_KEY=${config.geminiApiKey}`,
+      `LEARNHOUSE_GEMINI_API_KEY=${quoteEnvValue(config.geminiApiKey)}`,
       'LEARNHOUSE_IS_AI_ENABLED=True',
     )
   } else {
@@ -140,18 +145,18 @@ export function generateEnvFile(config: SetupConfig): string {
       '# =============================================================================',
       '',
       `LEARNHOUSE_EMAIL_PROVIDER=${provider}`,
-      `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS=${config.systemEmailAddress || `noreply@${config.domain}`}`,
+      `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS=${quoteEnvValue(config.systemEmailAddress || `noreply@${config.domain}`)}`,
     )
 
     if (provider === 'resend' && config.resendApiKey) {
-      lines.push(`LEARNHOUSE_RESEND_API_KEY=${config.resendApiKey}`)
+      lines.push(`LEARNHOUSE_RESEND_API_KEY=${quoteEnvValue(config.resendApiKey)}`)
     }
 
     if (provider === 'smtp') {
-      if (config.smtpHost) lines.push(`LEARNHOUSE_SMTP_HOST=${config.smtpHost}`)
+      if (config.smtpHost) lines.push(`LEARNHOUSE_SMTP_HOST=${quoteEnvValue(config.smtpHost)}`)
       lines.push(`LEARNHOUSE_SMTP_PORT=${config.smtpPort || 587}`)
-      if (config.smtpUsername) lines.push(`LEARNHOUSE_SMTP_USERNAME=${config.smtpUsername}`)
-      if (config.smtpPassword) lines.push(`LEARNHOUSE_SMTP_PASSWORD=${config.smtpPassword}`)
+      if (config.smtpUsername) lines.push(`LEARNHOUSE_SMTP_USERNAME=${quoteEnvValue(config.smtpUsername)}`)
+      if (config.smtpPassword) lines.push(`LEARNHOUSE_SMTP_PASSWORD=${quoteEnvValue(config.smtpPassword)}`)
       lines.push(`LEARNHOUSE_SMTP_USE_TLS=${config.smtpUseTls !== false ? 'True' : 'False'}`)
     }
   }
@@ -164,10 +169,10 @@ export function generateEnvFile(config: SetupConfig): string {
       '# =============================================================================',
       '',
       'LEARNHOUSE_CONTENT_DELIVERY_TYPE=s3api',
-      `LEARNHOUSE_S3_API_BUCKET_NAME=${config.s3BucketName}`,
+      `LEARNHOUSE_S3_API_BUCKET_NAME=${quoteEnvValue(config.s3BucketName)}`,
     )
     if (config.s3EndpointUrl) {
-      lines.push(`LEARNHOUSE_S3_API_ENDPOINT_URL=${config.s3EndpointUrl}`)
+      lines.push(`LEARNHOUSE_S3_API_ENDPOINT_URL=${quoteEnvValue(config.s3EndpointUrl)}`)
     }
   } else {
     lines.push(
