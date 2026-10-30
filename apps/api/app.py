@@ -65,18 +65,21 @@ class _SelectiveGZipResponder(GZipResponder):
     """GZipResponder that opts out once the response's Content-Type is known.
 
     Starlette picks the responder from the request's Accept-Encoding alone, so
-    the content type is only visible on `http.response.start`. Marking the
-    response excluded there routes it down Starlette's own pass-through path,
-    which forwards every body chunk untouched.
+    the content type is only visible on `http.response.start`. Adding it to
+    the exclude list before Starlette sees that message routes the response
+    down Starlette's own pass-through path. Flipping `content_type_is_excluded`
+    afterwards is not enough: since Starlette 1.9 the pass-through path forwards
+    the start message while handling it, so a response excluded late (any
+    redirect, application/octet-stream) sent its body with no start and uvicorn
+    answered a bare 500.
     """
 
     async def send_with_compression(self, message: Message) -> None:
         if message["type"] == "http.response.start":
-            await super().send_with_compression(message)
-            if not self.content_type_is_excluded:
-                content_type = Headers(raw=message["headers"]).get("content-type", "")
-                self.content_type_is_excluded = not _is_compressible(content_type)
-            return
+            content_type = Headers(raw=message["headers"]).get("content-type", "")
+            if not _is_compressible(content_type):
+                media_type = content_type.partition(";")[0].strip().lower()
+                self.exclude_content_types = (*self.exclude_content_types, media_type)
         await super().send_with_compression(message)
 
 
