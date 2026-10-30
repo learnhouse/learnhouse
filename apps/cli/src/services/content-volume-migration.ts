@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { writeFileAtomic } from '../utils/fs-atomic.js'
+import { ALPINE_IMAGE } from '../constants.js'
 import { dockerExecFileSync } from './docker-bin.js'
 
 export type ContentMigrationStatus =
@@ -87,7 +88,7 @@ function copyContainerContentIntoVolume(
     dockerExecFileSync([
         'run', '--name', helperName, '-d',
         '-v', `${volumeFull}:/dst`,
-        'alpine', 'sh', '-c', 'sleep 60',
+        ALPINE_IMAGE, 'sh', '-c', 'sleep 60',
       ],
       { stdio: 'pipe' },
     )
