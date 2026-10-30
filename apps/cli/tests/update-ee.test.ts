@@ -14,6 +14,7 @@ const ctl = vi.hoisted(() => ({
   eeReady: 'ee' as string,
 }))
 const cp = vi.hoisted(() => ({ cid: 'abc123', dumpBytes: 4096 }))
+import { expectMode } from './platform.js'
 vi.mock('../src/services/docker.js', () => ({
   dockerComposeExec: (_cwd: string, _svc: string, _cmd: string) =>
     typeof ctl.composeExec === 'function' ? ctl.composeExec() : ctl.composeExec,
@@ -95,8 +96,8 @@ describe('update-ee shared upgrade helpers', () => {
     const out = await backupDatabase({ installDir: dir } as never, LAYOUT, ui)
     expect(out).toMatch(/db-pre-upgrade-.*\.sql\.gz$/)
     expect(fs.existsSync(out)).toBe(true)
-    expect(fs.statSync(out).mode & 0o777).toBe(0o600)
-    expect(fs.statSync(path.dirname(out)).mode & 0o777).toBe(0o700)
+    expectMode(out, 0o600)
+    expectMode(path.dirname(out), 0o700)
   })
 
   it('backupDatabase warns and still backs up when backups/ belongs to another user', async () => {
@@ -113,7 +114,7 @@ describe('update-ee shared upgrade helpers', () => {
     const warn = vi.fn()
     const out = await backupDatabase({ installDir: dir } as never, LAYOUT, { ...ui, warn })
     expect(fs.existsSync(out)).toBe(true)
-    expect(fs.statSync(out).mode & 0o777).toBe(0o600)
+    expectMode(out, 0o600)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('EPERM'))
   })
 

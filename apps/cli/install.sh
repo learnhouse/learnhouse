@@ -491,4 +491,8 @@ main() {
   launch
 }
 
-main "$@"
+# Tests source this file with LEARNHOUSE_INSTALL_SOURCE_ONLY=1 to call the
+# functions above against stub commands.
+if [ "${LEARNHOUSE_INSTALL_SOURCE_ONLY:-}" != "1" ]; then
+  main "$@"
+fi

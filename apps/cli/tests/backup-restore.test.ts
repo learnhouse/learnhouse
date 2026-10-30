@@ -22,6 +22,7 @@ const promptStub = vi.hoisted(() => {
     isCancel: () => false,
   }
 })
+import { expectMode } from './platform.js'
 vi.mock('@clack/prompts', () => promptStub)
 vi.mock('../src/utils/prompt.js', () => promptStub)
 const dockerMock = vi.hoisted(() => ({
@@ -130,8 +131,8 @@ describe('backup / restore: real tar, stubbed database', () => {
     expect(fs.readdirSync(backupsDir).filter((e) => !e.endsWith('.tar.gz'))).toHaveLength(0)
 
     // The archive holds the database and .env: owner-only.
-    expect(fs.statSync(backupsDir).mode & 0o777).toBe(0o700)
-    expect(fs.statSync(path.join(backupsDir, archives[0])).mode & 0o777).toBe(0o600)
+    expectMode(backupsDir, 0o700)
+    expectMode(path.join(backupsDir, archives[0]), 0o600)
 
     // Extract for real and verify contents.
     const out = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-br-x-'))
@@ -208,7 +209,7 @@ describe('backup / restore: real tar, stubbed database', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('EPERM'))
     const archives = fs.readdirSync(backupsDir).filter((f) => f.endsWith('.tar.gz'))
     expect(archives).toHaveLength(1)
-    expect(fs.statSync(path.join(backupsDir, archives[0])).mode & 0o777).toBe(0o600)
+    expectMode(path.join(backupsDir, archives[0]), 0o600)
   })
 
   it('restore extracts a real archive, runs psql, and cleans up', async () => {
@@ -647,7 +648,7 @@ describe('backup / restore: real tar, stubbed database', () => {
     fs.writeFileSync(path.join(installDir, '.env'), 'LEARNHOUSE_DOMAIN=changed\n')
     await restoreCommand(archive) // confirm=true (stub) → restore + .env restore
     expect(fs.readFileSync(path.join(installDir, '.env'), 'utf-8')).toContain('LEARNHOUSE_DOMAIN=localhost')
-    expect(fs.statSync(path.join(installDir, '.env')).mode & 0o777).toBe(0o600)
+    expectMode(path.join(installDir, '.env'), 0o600)
   })
 
   it('restore rejects an archive with no database.sql inside', async () => {

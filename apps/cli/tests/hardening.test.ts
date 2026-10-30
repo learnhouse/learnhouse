@@ -5,6 +5,7 @@ import path from 'node:path'
 
 // Pure helpers added for the 1.6.0 hardening pass. Docker is never touched:
 // execFileSync is stubbed so anything reaching the daemon fails loudly.
+import { expectMode } from './platform.js'
 vi.mock('node:child_process', async () => {
   const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process')
   return {
@@ -51,14 +52,14 @@ describe('writeFileAtomic', () => {
     fs.writeFileSync(f, 'old', { mode: 0o600 })
     writeFileAtomic(f, 'new')
     expect(fs.readFileSync(f, 'utf-8')).toBe('new')
-    expect(fs.statSync(f).mode & 0o777).toBe(0o600)
+    expectMode(f, 0o600)
     expect(fs.readdirSync(tmp)).toEqual(['.env']) // no temp file left behind
   })
 
   it('applies an explicit mode to a new file', () => {
     const f = path.join(tmp, 'secret')
     writeFileAtomic(f, 'x', 0o600)
-    expect(fs.statSync(f).mode & 0o777).toBe(0o600)
+    expectMode(f, 0o600)
   })
 })
 
@@ -75,7 +76,7 @@ describe('env-file read/write round-trip', () => {
     setEnvVar(tmp, 'KEY', value)
     expect(readEnvVar(tmp, 'KEY')).toBe(value)
     expect(readEnvVar(tmp, 'A')).toBe('1')
-    expect(fs.statSync(path.join(tmp, '.env')).mode & 0o777).toBe(0o600)
+    expectMode(path.join(tmp, '.env'), 0o600)
   })
 
   it('refuses multi-line values (they would inject extra .env entries)', () => {

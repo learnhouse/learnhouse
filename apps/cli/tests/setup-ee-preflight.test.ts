@@ -10,6 +10,7 @@ const dk = vi.hoisted(() => ({
 }))
 const CANCEL = Symbol.for('clack:cancel')
 const pq = vi.hoisted(() => ({ confirm: [] as unknown[], select: [] as unknown[], text: [] as unknown[], password: [] as unknown[] }))
+import { expectMode } from './platform.js'
 vi.mock('../src/services/docker.js', () => ({
   isDockerInstalled: () => dk.installed,
   dockerComposeWorks: () => dk.composeWorks,
@@ -230,7 +231,7 @@ describe('EE setup: start, DNS and file variants (CI)', () => {
     expect(cfg.dnsProvider).toBe('cloudflare')
     expect(fs.existsSync(path.join(dir, 'pgvector-init.sql'))).toBe(false)
     expect(fs.existsSync(path.join(dir, 'caddy.Dockerfile'))).toBe(true)
-    expect(fs.statSync(path.join(dir, '.env')).mode & 0o777).toBe(0o600)
+    expectMode(path.join(dir, '.env'), 0o600)
   })
 
   it('removes a stale local-TLS override when redeploying onto real certificates', async () => {

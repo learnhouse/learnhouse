@@ -161,8 +161,12 @@ function Install-LearnHouse {
     & npx.cmd learnhouse@latest setup
 }
 
-try {
-    Install-LearnHouse
-} catch {
-    Write-Host "[x] $($_.Exception.Message)" -ForegroundColor Red
+# Tests dot-source this file with LEARNHOUSE_INSTALL_SOURCE_ONLY=1 to call
+# Install-LearnHouse against mocked commands.
+if ($env:LEARNHOUSE_INSTALL_SOURCE_ONLY -ne "1") {
+    try {
+        Install-LearnHouse
+    } catch {
+        Write-Host "[x] $($_.Exception.Message)" -ForegroundColor Red
+    }
 }

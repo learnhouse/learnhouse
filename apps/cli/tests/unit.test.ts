@@ -470,6 +470,7 @@ describe('generateEnvFile: org propagation', () => {
 // doesn't depend on a real Docker daemon, and override the home dir
 // via a fresh `HOME` env so the lookup hits our temp tree.
 
+import { FAKE_DOCKER, expectMode } from './platform.js'
 vi.mock('../src/services/docker.js', async () => {
   const actual = await vi.importActual<typeof import('../src/services/docker.js')>(
     '../src/services/docker.js',
@@ -1467,10 +1468,10 @@ describe('CLI: setup --ci --no-start: real installation, real file assertions', 
       encoding: 'utf-8',
       timeout: 30_000,
       env: {
-        ...process.env, HOME: tempHome, NO_COLOR: '1',
-        // The prerequisite check runs `docker compose version`; CLI plugins are
-        // found via DOCKER_CONFIG (default ~/.docker), so keep the real one.
-        DOCKER_CONFIG: process.env.DOCKER_CONFIG ?? path.join(os.homedir(), '.docker'),
+        ...process.env, HOME: tempHome, USERPROFILE: tempHome, NO_COLOR: '1',
+        // A fake docker answers the prerequisite probes, so this runs the same
+        // on every OS and with or without a Docker daemon.
+        LEARNHOUSE_DOCKER_BIN: FAKE_DOCKER,
       },
       stdio: ['pipe', 'pipe', 'pipe'],
     })
@@ -2562,7 +2563,7 @@ describe('docker.ts command builders', () => {
       expect(typeof o.stdio[1]).toBe('number')
       expect(execSync).not.toHaveBeenCalled()
       expect(fs.readFileSync(out, 'utf-8')).toBe('DUMP')
-      expect(fs.statSync(out).mode & 0o777).toBe(0o600) // dumps are owner-only
+      expectMode(out, 0o600) // dumps are owner-only
     })
 
     it('dockerExecToFile throws with stderr on a non-zero exit', () => {

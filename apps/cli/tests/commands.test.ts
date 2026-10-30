@@ -7,6 +7,7 @@ import path from 'node:path'
 // touch a real daemon. spawn returns a fake long-lived child (so the dev
 // happy-path can reach its keep-alive without launching real servers);
 // spawnSync reports success (dependency installs are no-ops).
+import { expectMode } from './platform.js'
 vi.mock('node:child_process', async () => {
   const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process')
   const fakeChild = () => {
@@ -720,7 +721,7 @@ describe('interactive command flows', () => {
     expect(body).toContain("LEARNHOUSE_SYSTEM_EMAIL_ADDRESS='Ops Team <ops@x.dev>'")
     expect(body).toContain("LEARNHOUSE_SMTP_PASSWORD='new $ecret'")
     expect(body).toContain('LEARNHOUSE_DOMAIN=localhost\n') // untouched line stays byte-for-byte
-    expect(fs.statSync(path.join(installDir, '.env')).mode & 0o777).toBe(0o600)
+    expectMode(path.join(installDir, '.env'), 0o600)
 
     // The old secret never reached the screen: not in the value listing, the
     // select labels, nor any prompt's placeholder/default.
