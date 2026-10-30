@@ -36,6 +36,29 @@ def _submission_references_file(task_submission, filename: str) -> bool:
     return any(task_submission.get(k) == filename for k in _SUBMISSION_FILE_KEYS)
 
 
+# Structural segments the content access checks match on. Folded to lowercase
+# before matching: on a case-insensitive disk ``orgs/x/COURSES/...`` opens the
+# same file as ``orgs/x/courses/...`` but would miss every private pattern and
+# fall through to the public branch.
+_CONTENT_PATH_KEYWORDS = frozenset({
+    "orgs", "users", "courses", "activities", "assignments", "tasks", "subs",
+    "solution", "thumbnails", "podcasts", "episodes", "media",
+})
+
+
+def split_content_path(file_path: str) -> list[str]:
+    """Split a content-relative path, normalizing the case of structural segments.
+
+    The final segment (the filename) is kept as-is since the submission owner
+    check compares it exactly.
+    """
+    parts = file_path.split("/")
+    return [
+        p.lower() if i < len(parts) - 1 and p.lower() in _CONTENT_PATH_KEYWORDS else p
+        for i, p in enumerate(parts)
+    ]
+
+
 def is_submission_file(parts: list[str]) -> bool:
     """True when the split path points at an assignment submission file."""
     return (

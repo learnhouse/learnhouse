@@ -35,6 +35,7 @@ from src.security.submission_file_access import (
     enforce_submission_file_access,
     is_solution_file,
     is_submission_file,
+    split_content_path,
 )
 
 router = APIRouter()
@@ -148,7 +149,7 @@ async def _check_content_access(
     - orgs/{uuid}/podcasts/{uuid}/episodes/{uuid}/...  → check podcast access
     - orgs/{uuid}/...                                  → org-level (public)
     """
-    parts = file_path.split('/')
+    parts = split_content_path(file_path)
 
     # Course activity files (including submission files): the org segment must
     # be the course's org, so one org's path can't front another org's file.
