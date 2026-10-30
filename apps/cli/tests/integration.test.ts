@@ -339,7 +339,7 @@ describe('CLI integration: live install (command coverage)', () => {
     })
 
     it('restores over the live DB with no "already exists" error', () => {
-      const r = cli(`restore ${archive}`, 120_000)
+      const r = cli(`restore ${archive} --yes`, 120_000)
       if (r.exitCode !== 0) console.error('restore:', r.stdout, r.stderr)
       expect(r.exitCode).toBe(0)
       expect(r.stdout + r.stderr).not.toContain('already exists')
@@ -351,7 +351,7 @@ describe('CLI integration: live install (command coverage)', () => {
     })
 
     it('restoring the same archive twice is still clean', () => {
-      const r = cli(`restore ${archive}`, 120_000)
+      const r = cli(`restore ${archive} --yes`, 120_000)
       expect(r.exitCode).toBe(0)
       expect(r.stdout + r.stderr).not.toContain('already exists')
     })
@@ -359,7 +359,7 @@ describe('CLI integration: live install (command coverage)', () => {
     it('a corrupt archive fails cleanly and leaves the live database intact', async () => {
       const junk = path.join(installDir, 'backups', 'corrupt.tar.gz')
       fs.writeFileSync(junk, 'this is not a gzip tarball')
-      const r = cli(`restore ${junk}`, 60_000)
+      const r = cli(`restore ${junk} --yes`, 60_000)
       expect(r.exitCode).not.toBe(0)
       // a failed extraction must not wipe the running database
       expect(await apiGet<{ slug: string }>(CMD_PORT, '/api/v1/orgs/slug/acme')).toMatchObject({ slug: 'acme' })
@@ -455,9 +455,14 @@ describe('CLI integration: live install (command coverage)', () => {
 
 describe('CLI integration: upgrade (old → new image)', () => {
   // 1.0.1 is the oldest stable GHCR tag carrying alembic migrations; upgrading
-  // to latest applies the full delta of migrations.
+  // to the newest release applies the full delta of migrations. A plain
+  // `update` pins the newest versioned release (falling back to :latest), so
+  // "the new image" is any release tag other than the old one.
   const OLD_VERSION = '1.0.1'
-  const NEW_VERSION = 'latest'
+  const expectNewImage = (image: string) => {
+    expect(image).toMatch(/:(latest|v?\d+\.\d+\.\d+)$/)
+    expect(image.endsWith(':' + OLD_VERSION) || image.endsWith(':v' + OLD_VERSION)).toBe(false)
+  }
   const GHCR = 'ghcr.io/learnhouse/app'
 
   let home: string
@@ -576,7 +581,7 @@ describe('CLI integration: upgrade (old → new image)', () => {
       expect(getRunningContainers(`learnhouse-app-${deploymentId}`).length).toBe(0)
 
       expect(cli('start', 300_000).exitCode).toBe(0)
-      expect(getContainerImage(appContainer())).toContain(NEW_VERSION)
+      expectNewImage(getContainerImage(appContainer()))
       expect(await waitForUrl(`http://localhost:${INTEG_PORT}/api/v1/health`, 120_000)).toBe(true)
     }, 400_000)
 
@@ -626,7 +631,7 @@ describe('CLI integration: upgrade (old → new image)', () => {
       expect(r.exitCode).toBe(0)
 
       expect(preUpgrade(backupsDir).length).toBeGreaterThan(before)
-      expect(getContainerImage(appContainer())).toContain(NEW_VERSION)
+      expectNewImage(getContainerImage(appContainer()))
       expect(await waitForUrl(`http://localhost:${INTEG_PORT}/api/v1/health`, 120_000)).toBe(true)
     }, 600_000)
   })
@@ -643,11 +648,20 @@ describe('CLI integration: no installation (error paths)', () => {
   beforeAll(() => { emptyHome = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-empty-')) })
   afterAll(() => { try { fs.rmSync(emptyHome, { recursive: true, force: true }) } catch { /* ignore */ } })
 
-  it.each(['config', 'status', 'health', 'backup', 'scale', 'shell'])(
+  it.each(['config', 'status', 'health', 'backup'])(
     '%s fails with a "no installation / run setup" message', (cmd) => {
       const r = cli(cmd)
       expect(r.exitCode).not.toBe(0)
       expect(r.stdout + r.stderr).toMatch(/no learnhouse installation|setup/i)
+    })
+
+  // Interactive-only commands refuse to run without a terminal (exit 2) before
+  // looking for an installation.
+  it.each(['scale', 'shell', 'env', 'deployments'])(
+    '%s exits 2 without a terminal', (cmd) => {
+      const r = cli(cmd)
+      expect(r.exitCode).toBe(2)
+      expect(r.stdout + r.stderr).toContain('needs a terminal')
     })
 
   it('restore exits non-zero on a nonexistent archive', () => {

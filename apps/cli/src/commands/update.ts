@@ -1,12 +1,14 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
-import { dockerComposeDown, dockerComposeStop, dockerComposeUp, dockerComposePull } from '../services/docker.js'
+import { dockerComposeStop, dockerComposeUp, dockerComposePull } from '../services/docker.js'
 import { migrateContentVolume } from '../services/content-volume-migration.js'
-import { waitForHealth } from '../services/health.js'
+import { waitForAppHealth } from '../services/health.js'
 import { replaceComposeImageTag } from '../services/compose-utils.js'
+import { resolveAppImage } from '../services/version-check.js'
+import { writeFileAtomic } from '../utils/fs-atomic.js'
 import {
   updateEnterprise,
   backupDatabase,
@@ -14,6 +16,7 @@ import {
   migrateBeforeBoot,
   readAlembicHeads,
   runAlembicUpgrade,
+  IMAGE_TAG_RE,
   type EditionLayout,
 } from './update-ee.js'
 
@@ -32,7 +35,7 @@ async function resolveTag(version: string): Promise<boolean> {
     const { token } = (await tokenResp.json()) as { token: string }
 
     const manifestResp = await fetch(
-      `https://ghcr.io/v2/learnhouse/app/manifests/${version}`,
+      `https://ghcr.io/v2/learnhouse/app/manifests/${encodeURIComponent(version)}`,
       {
         signal: AbortSignal.timeout(5000),
         headers: {
@@ -70,7 +73,13 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     return
   }
 
-  const targetVersion = options.version?.replace(/^v/, '')
+  const targetVersion = options.version?.replace(/^v(?=\d)/, '')
+  // The tag ends up in docker-compose.yml's `image:` line; anything beyond a
+  // plain docker tag could inject YAML.
+  if (targetVersion !== undefined && !IMAGE_TAG_RE.test(targetVersion)) {
+    p.log.error(`Invalid version "${options.version}". Expected something like 1.6.0.`)
+    process.exit(1)
+  }
 
   if (targetVersion) {
     p.intro(pc.cyan(`Updating LearnHouse to v${targetVersion}`))
@@ -83,14 +92,20 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     ok: (m: string) => p.log.success(m),
     warn: (m: string) => p.log.warn(m),
   }
+  const composePath = join(config.installDir, 'docker-compose.yml')
+  const originalCompose = readFileSync(composePath, 'utf-8')
   const s = p.spinner()
+  // What to put back if anything fails after the image tag is rewritten.
+  let rollbackCompose: string | null = null
+  // Services this run stopped, which a failure must bring back up.
+  let appStopped = false
   try {
     // 1) Back up the database first (safety net for migrations). Works for the
     //    in-container db AND an external one via the .env string.
     if (options.backup !== false) {
       s.start('Backing up the database')
       try {
-        const b = backupDatabase(config, COMMUNITY_LAYOUT, ui)
+        const b = await backupDatabase(config, COMMUNITY_LAYOUT, ui)
         s.stop('Database backed up')
         ui.ok(`Backup: ${b}`)
       } catch (err) {
@@ -129,18 +144,23 @@ export async function updateCommand(options: { version?: string; migrate?: boole
       }
       s.stop(`Found v${targetVersion}`)
     } else {
-      targetImage = `${GHCR_BASE}:latest`
+      // Follow the install's channel: dev stays on :dev, stable moves to the
+      // newest versioned release (falling back to :latest).
+      // Configs written before 1.6.0 have no channel; their compose image says it.
+      const channel = config.channel ?? (/learnhouse\/app:dev\s*$/m.test(originalCompose) ? 'dev' : 'stable')
+      targetImage = (await resolveAppImage(channel)).image
     }
 
-    // Update the image in docker-compose.yml
-    const composePath = join(config.installDir, 'docker-compose.yml')
-    const composeContent = readFileSync(composePath, 'utf-8')
-    writeFileSync(composePath, replaceComposeImageTag(composeContent, targetImage))
-
-    // Preserve any uploaded media before the container is recreated.
+    // Preserve any uploaded media before the container is ever recreated. The
+    // app is stopped first so nothing is uploaded into the old container after
+    // the copy. A failure here aborts: recreating the container would delete
+    // the only copy of the uploads.
     s.start('Checking content storage')
     try {
-      const migration = migrateContentVolume(config.installDir, config.deploymentId)
+      const migration = migrateContentVolume(config.installDir, config.deploymentId, () => {
+        appStopped = true
+        dockerComposeStop(config.installDir, COMMUNITY_LAYOUT.appService)
+      })
       switch (migration.status) {
         case 'migrated':
           s.stop(
@@ -163,8 +183,18 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     } catch (err) {
       s.stop('Content migration failed')
       const msg = err instanceof Error ? err.message : String(err)
-      p.log.warn(`Could not migrate uploaded content: ${msg}`)
+      p.log.error(`Could not move uploaded content into a persistent volume: ${msg}`)
+      p.log.error('Aborting before the app container is recreated, so no uploads are lost. Nothing was updated.')
+      try { dockerComposeUp(config.installDir) } catch { /* reported by docker */ }
+      process.exit(1)
     }
+
+    // Point compose at the new image and pull it. The compose file is restored
+    // on any failure below, so a later `start` never boots an unpulled or
+    // un-migrated image.
+    const composeContent = readFileSync(composePath, 'utf-8')
+    rollbackCompose = composeContent
+    writeFileAtomic(composePath, replaceComposeImageTag(composeContent, targetImage))
 
     s.start('Pulling new image (this may take a minute)')
     dockerComposePull(config.installDir)
@@ -177,33 +207,44 @@ export async function updateCommand(options: { version?: string; migrate?: boole
     //    db, redis and the proxy keep running.
     if (options.migrate !== false) {
       p.log.step('Running database migrations')
+      appStopped = true
       dockerComposeStop(config.installDir, COMMUNITY_LAYOUT.appService)
       if (!migrateBeforeBoot(config.installDir, COMMUNITY_LAYOUT, previousHeads, ui)) {
-        const previousImage = composeContent.match(/image:\s*(\S*learnhouse\/app:\S+)/)?.[1]
-        if (previousImage) {
-          writeFileSync(composePath, replaceComposeImageTag(readFileSync(composePath, 'utf-8'), previousImage))
-        }
+        writeFileAtomic(composePath, composeContent)
+        rollbackCompose = null
         dockerComposeUp(config.installDir)
-        p.log.warn('The previous version has been started again; the compose file still points at its image.')
+        appStopped = false
+        p.log.warn('The previous version has been started again.')
         process.exit(1)
       }
+      // The schema now matches the new image: going back to the old one is no
+      // longer a safe rollback (restore the backup for that).
+      rollbackCompose = null
     }
 
+    // `up -d` recreates only what changed; everything was pulled above, so no
+    // registry round-trip can fail between stopping and starting.
     s.start('Restarting services')
-    dockerComposeDown(config.installDir)
-    dockerComposeUp(config.installDir, true)
+    dockerComposeUp(config.installDir)
+    rollbackCompose = null
+    appStopped = false
     s.stop('Services restarted')
 
     // 4) Wait for the app, then run migrations via the shared helper.
     s.start('Waiting for LearnHouse to be ready')
-    await waitForHealth(`http://localhost:${config.httpPort}`)
-    s.stop('LearnHouse is up')
+    const healthy = await waitForAppHealth(config)
+    if (healthy) {
+      s.stop('LearnHouse is up')
+    } else {
+      s.stop('LearnHouse did not become healthy')
+      p.log.warn('Check `npx learnhouse logs`. Your DB backup is in ./backups/.')
+    }
 
     if (options.migrate !== false) {
       // Normally a no-op after the pre-start run; catches anything the new
       // image's startup created that still needs a migration.
       p.log.step('Verifying database migrations')
-      if (!runAlembicUpgrade(config.installDir, COMMUNITY_LAYOUT, ui)) {
+      if (!runAlembicUpgrade(config.installDir, COMMUNITY_LAYOUT, ui, previousHeads)) {
         p.log.warn('Your DB backup is in ./backups/; restore it and re-pin the previous image to roll back.')
         process.exit(1)
       }
@@ -212,14 +253,30 @@ export async function updateCommand(options: { version?: string; migrate?: boole
       p.log.info('  docker compose exec learnhouse-app sh -c "cd /app/api && uv run alembic upgrade head"')
     }
 
+    if (!healthy) process.exit(1)
+
     if (targetVersion) {
       p.log.success(`LearnHouse has been updated to v${targetVersion}!`)
     } else {
       p.log.success('LearnHouse has been updated to the latest version!')
     }
-  } catch {
+  } catch (err) {
     s.stop('Update failed')
-    p.log.error('Failed to update. Check Docker output above.')
+    const detail = (err as { message?: string })?.message ?? String(err)
+    p.log.error(`Failed to update: ${detail}`)
+    if (rollbackCompose !== null) {
+      try {
+        writeFileAtomic(composePath, rollbackCompose)
+        p.log.info('docker-compose.yml was restored to the previous image.')
+      } catch { /* leave as-is; message above says what failed */ }
+    }
+    if (appStopped) {
+      // Never leave the site down because an update step failed.
+      try {
+        dockerComposeUp(config.installDir)
+        p.log.info('Services were started again.')
+      } catch { /* reported by docker */ }
+    }
     process.exit(1)
   }
 }
@@ -230,4 +287,3 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
 }
-

@@ -5,11 +5,16 @@ import path from 'node:path'
 import pc from 'picocolors'
 import * as p from '../utils/prompt.js'
 import type { EeTenancy, SetupConfig } from '../types.js'
-import { validateDomain, validateEmail, validatePassword } from '../utils/validators.js'
+import { validateDomain, validateEmail, validateInstallName, validatePassword } from '../utils/validators.js'
 import { getPublicIp } from '../utils/network.js'
 import { writeConfig, readConfig } from '../services/config-store.js'
+import { hasComposeService } from '../services/stack.js'
+import { readEnvVar } from '../utils/env-file.js'
+import { writeFileAtomic } from '../utils/fs-atomic.js'
 import {
   dockerLogin,
+  dockerLogout,
+  dockerComposeRecreate,
   dockerComposePull,
   dockerComposeUpRetry,
   isDockerInstalled,
@@ -132,23 +137,63 @@ function resolveSecrets(installDir: string): EeSecrets {
   }
 }
 
+/** Write `content` when `wanted`, otherwise remove a copy left by an earlier deploy. */
+function writeOrRemove(file: string, wanted: boolean, content: () => string): void {
+  if (wanted) writeFileAtomic(file, content())
+  else fs.rmSync(file, { force: true })
+}
+
 function writeEeFiles(config: SetupConfig, secrets: EeSecrets): void {
   const dir = config.installDir
-  fs.mkdirSync(dir, { recursive: true })
-  fs.writeFileSync(path.join(dir, 'docker-compose.yml'), generateEeDockerCompose(config))
-  fs.writeFileSync(path.join(dir, '.env'), generateEeEnv(config, secrets))
-  fs.chmodSync(path.join(dir, '.env'), 0o600)
-  fs.writeFileSync(path.join(dir, 'Caddyfile'), generateEeCaddyfile(config))
-  if (!isExternalDb(config)) {
-    fs.writeFileSync(path.join(dir, 'pgvector-init.sql'), generatePgvectorInit())
-  }
-  if (isCloudflareDns(config)) {
-    fs.writeFileSync(path.join(dir, 'caddy.Dockerfile'), generateCaddyDockerfile())
-  }
-  if (config.eeLocalTls) {
-    fs.writeFileSync(path.join(dir, 'docker-compose.override.yml'), generateEeLocalTlsOverride())
-  }
+  // Owner-only: .env holds the license, DB password, JWT secret and tokens.
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 })
+  writeFileAtomic(path.join(dir, 'docker-compose.yml'), generateEeDockerCompose(config))
+  writeFileAtomic(path.join(dir, '.env'), generateEeEnv(config, secrets), 0o600)
+  writeFileAtomic(path.join(dir, 'Caddyfile'), generateEeCaddyfile(config))
+  writeOrRemove(path.join(dir, 'pgvector-init.sql'), !isExternalDb(config), generatePgvectorInit)
+  writeOrRemove(path.join(dir, 'caddy.Dockerfile'), isCloudflareDns(config), generateCaddyDockerfile)
+  // The override disables TLS verification for the internal CA. A redeploy
+  // onto real certificates must not keep it (compose loads it automatically).
+  writeOrRemove(path.join(dir, 'docker-compose.override.yml'), !!config.eeLocalTls, generateEeLocalTlsOverride)
   writeConfig(config)
+}
+
+/**
+ * A redeploy keeps what the existing install was set up with when the flag is
+ * not repeated: its external database, pinned image tag (set by `update`),
+ * DNS-01 provider + token and IPv6 network. Rebuilding from flags alone would
+ * silently switch an external-DB install to an empty in-container database.
+ */
+function redeployDefaults(installDir: string, options: EeSetupOptions): Pick<EeSetupOptions, 'externalDb' | 'eeImageTag' | 'dnsProvider' | 'cfApiToken' | 'dockerIpv6'> {
+  const existing = readConfig(installDir)
+  if (!existing || !fs.existsSync(path.join(installDir, '.env'))) {
+    return { externalDb: options.externalDb, eeImageTag: options.eeImageTag, dnsProvider: options.dnsProvider, cfApiToken: options.cfApiToken, dockerIpv6: options.dockerIpv6 }
+  }
+  const externalDb = options.externalDb
+    ?? (hasComposeService(installDir, 'db') ? undefined : readEnvVar(installDir, 'LEARNHOUSE_SQL_CONNECTION_STRING'))
+  return {
+    externalDb,
+    eeImageTag: options.eeImageTag ?? readEnvVar(installDir, 'EE_IMAGE_TAG'),
+    // Installs made before 1.6.0 did not record these in learnhouse.config.json;
+    // the generated files still show them.
+    dnsProvider: options.dnsProvider ?? existing.dnsProvider
+      ?? (fs.existsSync(path.join(installDir, 'caddy.Dockerfile')) || readEnvVar(installDir, 'CLOUDFLARE_API_TOKEN') ? 'cloudflare' : undefined),
+    cfApiToken: options.cfApiToken ?? readEnvVar(installDir, 'CLOUDFLARE_API_TOKEN'),
+    dockerIpv6: options.dockerIpv6 ?? existing.dockerIpv6 ?? composeHasIpv6(installDir),
+  }
+}
+
+function composeHasIpv6(installDir: string): boolean | undefined {
+  const composePath = path.join(installDir, 'docker-compose.yml')
+  if (!fs.existsSync(composePath)) return undefined
+  return /enable_ipv6:\s*true/.test(fs.readFileSync(composePath, 'utf-8')) || undefined
+}
+
+/** The target directory must be empty or an Enterprise install: a Community
+ *  install there would be overwritten (and lose its DB password). */
+function communityInstallAt(installDir: string): boolean {
+  const existing = readConfig(installDir)
+  return !!existing && (existing.edition ?? 'community') !== 'enterprise'
 }
 
 function dnsBlock(config: SetupConfig, ip: string): string {
@@ -219,7 +264,7 @@ function buildConfig(opts: {
     useHttps: true,
     httpPort: 443,
     autoSsl: !opts.localTls,
-    useExternalDb: false,
+    useExternalDb: !!opts.externalDbUrl,
     useAiDatabase: true,
     useExternalRedis: false,
     orgName: 'Default Organization',
@@ -249,11 +294,14 @@ async function startEe(config: SetupConfig, interactive: boolean, firstDeploy: b
   }
 
   try {
-    dockerComposePull(dir)
+    try { dockerComposePull(dir) } finally { dockerLogout(EE_REGISTRY) }
     dockerComposeUpRetry(dir, 3, (n) => {
       const m = `Start attempt ${n} failed (often first-boot DB health timing); retrying in 15s…`
       interactive ? p.log.warn(m) : console.log(m)
     })
+    // A redeploy rewrote the Caddyfile (a single-file bind mount that `up`
+    // does not notice), so make Caddy read it.
+    if (!firstDeploy) dockerComposeRecreate(dir, ['caddy'])
   } catch (err) {
     const stderr = (err as { stderr?: Buffer })?.stderr?.toString?.() ?? ''
     const m = `Failed to pull or start the EE stack. Inspect with \`learnhouse logs\` (cd ${dir} && docker compose logs).`
@@ -307,14 +355,25 @@ async function setupEnterpriseCi(options: EeSetupOptions): Promise<void> {
   if (options.dnsProvider && options.dnsProvider !== 'cloudflare') fail('--dns-provider only supports "cloudflare"')
   if (options.dnsProvider === 'cloudflare' && !options.cfApiToken) fail('--cf-api-token is required with --dns-provider cloudflare')
   if (options.externalDb && !/^postgres(ql)?:\/\//.test(options.externalDb)) fail('--external-db must be a postgresql:// connection URI')
-
-  await ensureDockerReady(false)
+  if (options.eeImageTag && !/^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$/.test(options.eeImageTag)) fail(`--ee-image-tag "${options.eeImageTag}" is not a valid image tag`)
 
   const installName = options.name || 'default'
+  const nameErr = validateInstallName(installName)
+  if (nameErr) fail(`--name "${installName}": ${nameErr}`)
   const installDir = options.installDir
     ? path.resolve(options.installDir)
     : path.join(os.homedir(), '.learnhouse', installName)
+  if (communityInstallAt(installDir)) fail(`${installDir} holds a Community installation; pick another --name or --install-dir`)
   const firstDeploy = !fs.existsSync(path.join(installDir, '.env'))
+  const kept = redeployDefaults(installDir, options)
+  // Tenant subdomains need a wildcard certificate, which Let's Encrypt only
+  // issues over DNS-01.
+  if (tenancy === 'agency' && !options.localTls && !kept.dnsProvider) {
+    fail('--tenancy agency needs --dns-provider cloudflare (and --cf-api-token) for the wildcard certificate, or --local-tls for testing')
+  }
+  if (kept.dnsProvider === 'cloudflare' && !kept.cfApiToken) fail('--cf-api-token is required with --dns-provider cloudflare')
+
+  await ensureDockerReady(false)
 
   const config = buildConfig({
     installDir,
@@ -324,13 +383,13 @@ async function setupEnterpriseCi(options: EeSetupOptions): Promise<void> {
     acmeEmail,
     adminEmail: options.adminEmail!,
     adminPassword: options.adminPassword!,
-    eeImageTag: options.eeImageTag || EE_DEFAULT_IMAGE_TAG,
+    eeImageTag: kept.eeImageTag || EE_DEFAULT_IMAGE_TAG,
     localTls: !!options.localTls,
     deploymentId: resolveDeploymentId(installDir, firstDeploy),
-    externalDbUrl: options.externalDb,
-    dnsProvider: options.dnsProvider as 'cloudflare' | undefined,
-    cfApiToken: options.cfApiToken,
-    dockerIpv6: !!options.dockerIpv6,
+    externalDbUrl: kept.externalDb,
+    dnsProvider: kept.dnsProvider as 'cloudflare' | undefined,
+    cfApiToken: kept.cfApiToken,
+    dockerIpv6: !!kept.dockerIpv6,
   })
 
   const secrets = resolveSecrets(installDir)
@@ -402,11 +461,29 @@ async function setupEnterpriseInteractive(options: EeSetupOptions): Promise<void
   })) as boolean
 
   const installName = options.name || 'default'
+  const nameErr = validateInstallName(installName)
+  if (nameErr) { p.log.error(`--name "${installName}": ${nameErr}`); process.exit(1) }
   const installDir = options.installDir
     ? path.resolve(options.installDir)
     : path.join(os.homedir(), '.learnhouse', installName)
+  if (communityInstallAt(installDir)) {
+    p.log.error(`${installDir} holds a Community installation. Re-run with --name <other> (or --install-dir) to deploy Enterprise next to it.`)
+    process.exit(1)
+  }
 
   const firstDeploy = !fs.existsSync(path.join(installDir, '.env'))
+  const kept = redeployDefaults(installDir, options)
+  // Tenant subdomains need a wildcard certificate (DNS-01 only).
+  if (tenancy === 'agency' && !localTls && !kept.dnsProvider) {
+    p.log.info('Agency mode serves tenants on *.' + domain + ', which needs a wildcard certificate (Cloudflare DNS-01).')
+    kept.dnsProvider = 'cloudflare'
+  }
+  if (kept.dnsProvider === 'cloudflare' && !kept.cfApiToken) {
+    kept.cfApiToken = exit(await p.password({
+      message: 'Cloudflare API token (Zone:DNS:Edit) for the wildcard certificate',
+      validate: (v) => (v ? undefined : 'Token is required'),
+    })) as string
+  }
   if (!firstDeploy) {
     const overwrite = exit(await p.confirm({
       message: `An install exists at ${installDir}. Redeploy (keeps DB password + secrets)?`,
@@ -417,13 +494,13 @@ async function setupEnterpriseInteractive(options: EeSetupOptions): Promise<void
 
   const config = buildConfig({
     installDir, tenancy, license, domain, acmeEmail, adminEmail, adminPassword,
-    eeImageTag: options.eeImageTag || EE_DEFAULT_IMAGE_TAG,
+    eeImageTag: kept.eeImageTag || EE_DEFAULT_IMAGE_TAG,
     localTls,
     deploymentId: resolveDeploymentId(installDir, firstDeploy),
-    externalDbUrl: options.externalDb,
-    dnsProvider: options.dnsProvider as 'cloudflare' | undefined,
-    cfApiToken: options.cfApiToken,
-    dockerIpv6: !!options.dockerIpv6,
+    externalDbUrl: kept.externalDb,
+    dnsProvider: kept.dnsProvider as 'cloudflare' | undefined,
+    cfApiToken: kept.cfApiToken,
+    dockerIpv6: !!kept.dockerIpv6,
   })
 
   const secrets = resolveSecrets(installDir)

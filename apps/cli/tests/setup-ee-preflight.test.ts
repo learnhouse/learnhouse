@@ -10,6 +10,7 @@ const dk = vi.hoisted(() => ({
 }))
 const CANCEL = Symbol.for('clack:cancel')
 const pq = vi.hoisted(() => ({ confirm: [] as unknown[], select: [] as unknown[], text: [] as unknown[], password: [] as unknown[] }))
+import { expectMode } from './platform.js'
 vi.mock('../src/services/docker.js', () => ({
   isDockerInstalled: () => dk.installed,
   dockerComposeWorks: () => dk.composeWorks,
@@ -18,6 +19,7 @@ vi.mock('../src/services/docker.js', () => ({
   isTcpPortListening: (port: number) => dk.busyPorts.includes(port),
   dockerLogin: () => { if (dk.loginThrows) { const e = new Error('denied') as Error & { stderr?: string }; e.stderr = 'unauthorized'; throw e } },
   dockerComposePull: () => {},
+  dockerLogout: () => {},
   dockerComposeUpRetry: (_dir: string, _n: number, onRetry: (n: number) => void) => {
     if (dk.upInvokesRetry) onRetry(1) // exercise the retry-notice callback
     if (dk.upThrows) { const e = new Error('boom') as Error & { stderr?: Buffer }; e.stderr = Buffer.from('compose failed'); throw e }
@@ -157,8 +159,20 @@ describe('EE setup: start, DNS and file variants (CI)', () => {
 
   it('prints the wildcard DNS records for an agency install', async () => {
     const fs = await import('node:fs'); const path = await import('node:path')
-    await setupEnterprise({ ...CI, name: 'ee-agency', tenancy: 'agency', start: true }) // start → agency dnsBlock (160-161)
-    expect(fs.existsSync(path.join(home, '.learnhouse', 'ee-agency', 'docker-compose.yml'))).toBe(true)
+    // Agency needs a wildcard certificate: DNS-01 via Cloudflare (or --local-tls).
+    await setupEnterprise({ ...CI, name: 'ee-agency', tenancy: 'agency', dnsProvider: 'cloudflare', cfApiToken: 'cf-token', start: true })
+    const dir = path.join(home, '.learnhouse', 'ee-agency')
+    expect(fs.existsSync(path.join(dir, 'docker-compose.yml'))).toBe(true)
+    expect(fs.existsSync(path.join(dir, 'caddy.Dockerfile'))).toBe(true)
+    const out = vi.mocked(console.log).mock.calls.map((c) => String(c[0])).join('\n')
+    expect(out).toContain('*.learn.school.dev')
+  })
+
+  it('refuses an agency install without --dns-provider or --local-tls', async () => {
+    const fs = await import('node:fs'); const path = await import('node:path')
+    await expect(setupEnterprise({ ...CI, name: 'ee-agency-nodns', tenancy: 'agency', start: false })).rejects.toThrow(/exit 1/)
+    expect(vi.mocked(console.error).mock.calls.map((c) => String(c[0])).join('\n')).toMatch(/--dns-provider/)
+    expect(fs.existsSync(path.join(home, '.learnhouse', 'ee-agency-nodns', '.env'))).toBe(false)
   })
 
   it('aborts the start when 80/443 are already in use', async () => {
@@ -184,11 +198,61 @@ describe('EE setup: start, DNS and file variants (CI)', () => {
   })
 
   it('reuses the existing deployment id and secrets on redeploy', async () => {
+    const fs = await import('node:fs'); const path = await import('node:path')
+    const dir = path.join(home, '.learnhouse', 'ee-redeploy')
+    const read = () => ({
+      id: JSON.parse(fs.readFileSync(path.join(dir, 'learnhouse.config.json'), 'utf-8')).deploymentId,
+      db: fs.readFileSync(path.join(dir, '.env'), 'utf-8').match(/^DB_PASSWORD=(.*)$/m)?.[1],
+    })
     // First deploy creates the install; second (no-start) redeploys it.
     await setupEnterprise({ ...CI, name: 'ee-redeploy', start: false })
+    const first = read()
     await setupEnterprise({ ...CI, name: 'ee-redeploy', start: false })
+    expect(first.db).toBeTruthy()
+    expect(read()).toEqual(first)
+  })
+
+  it('keeps the pinned image tag, external DB and DNS provider on a redeploy without those flags', async () => {
     const fs = await import('node:fs'); const path = await import('node:path')
-    expect(fs.existsSync(path.join(home, '.learnhouse', 'ee-redeploy', '.env'))).toBe(true)
+    const dir = path.join(home, '.learnhouse', 'ee-keep')
+    await setupEnterprise({
+      ...CI, name: 'ee-keep', start: false, eeImageTag: '1.5.3',
+      externalDb: 'postgresql://u:p@db.school.dev:5432/lh', dnsProvider: 'cloudflare', cfApiToken: 'cf-token',
+    })
+    await setupEnterprise({ ...CI, name: 'ee-keep', start: false })
+    const env = fs.readFileSync(path.join(dir, '.env'), 'utf-8')
+    expect(env).toMatch(/^EE_IMAGE_TAG='?1\.5\.3'?$/m)
+    expect(env).toContain('postgresql://u:p@db.school.dev:5432/lh')
+    expect(env).toContain('cf-token')
+    const compose = fs.readFileSync(path.join(dir, 'docker-compose.yml'), 'utf-8')
+    expect(compose).not.toMatch(/^  db:\s*$/m)
+    const cfg = JSON.parse(fs.readFileSync(path.join(dir, 'learnhouse.config.json'), 'utf-8'))
+    expect(cfg.useExternalDb).toBe(true)
+    expect(cfg.dnsProvider).toBe('cloudflare')
+    expect(fs.existsSync(path.join(dir, 'pgvector-init.sql'))).toBe(false)
+    expect(fs.existsSync(path.join(dir, 'caddy.Dockerfile'))).toBe(true)
+    expectMode(path.join(dir, '.env'), 0o600)
+  })
+
+  it('removes a stale local-TLS override when redeploying onto real certificates', async () => {
+    const fs = await import('node:fs'); const path = await import('node:path')
+    const dir = path.join(home, '.learnhouse', 'ee-stale')
+    await setupEnterprise({ ...CI, name: 'ee-stale', localTls: true, start: false })
+    expect(fs.existsSync(path.join(dir, 'docker-compose.override.yml'))).toBe(true)
+    await setupEnterprise({ ...CI, name: 'ee-stale', start: false })
+    expect(fs.existsSync(path.join(dir, 'docker-compose.override.yml'))).toBe(false)
+    expect(fs.readFileSync(path.join(dir, 'Caddyfile'), 'utf-8')).not.toContain('local_certs')
+  })
+
+  it('refuses to overwrite a Community install in the target directory', async () => {
+    const fs = await import('node:fs'); const path = await import('node:path')
+    const dir = path.join(home, '.learnhouse', 'ce-here')
+    fs.mkdirSync(dir, { recursive: true })
+    const ceConfig = JSON.stringify({ version: '1.5.0', deploymentId: 'abc123', edition: 'community', installDir: dir })
+    fs.writeFileSync(path.join(dir, 'learnhouse.config.json'), ceConfig)
+    fs.writeFileSync(path.join(dir, '.env'), 'POSTGRES_PASSWORD=keepme\n')
+    await expect(setupEnterprise({ ...CI, name: 'ce-here', start: false })).rejects.toThrow(/exit 1/)
+    expect(fs.readFileSync(path.join(dir, '.env'), 'utf-8')).toBe('POSTGRES_PASSWORD=keepme\n')
   })
 })
 

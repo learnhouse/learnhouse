@@ -5,16 +5,26 @@ import path from 'node:path'
 
 // Isolated file: unit-test the shared EE/Community upgrade helpers and the
 // updateEnterprise command. docker.js + health.js are mocked so the alembic /
-// login / pull / start steps are programmable; execSync handles the pg_dump
-// backup (writing a real file so the size check passes).
+// login / pull / start steps are programmable. The pg_dump backup writes a real
+// file (dockerExecToFile for an in-container db, spawnSync into the output fd
+// for an external one) so the size check and gzip step run for real.
 const ctl = vi.hoisted(() => ({
   composeExec: '' as string | (() => string),
   loginThrows: false, pullThrows: false, upThrows: false, upRetryCb: false,
   eeReady: 'ee' as string,
 }))
+const cp = vi.hoisted(() => ({ cid: 'abc123', dumpBytes: 4096 }))
+import { expectMode } from './platform.js'
 vi.mock('../src/services/docker.js', () => ({
   dockerComposeExec: (_cwd: string, _svc: string, _cmd: string) =>
     typeof ctl.composeExec === 'function' ? ctl.composeExec() : ctl.composeExec,
+  dockerComposeRun: (_cwd: string, _svc: string, _cmd: string) =>
+    typeof ctl.composeExec === 'function' ? ctl.composeExec() : ctl.composeExec,
+  composeServiceContainer: () => cp.cid,
+  dockerExecToFile: (_c: string, _cmd: string[], out: string) => fs.writeFileSync(out, Buffer.alloc(cp.dumpBytes, 65)),
+  dockerComposeStop: () => {},
+  dockerComposeUp: () => {},
+  dockerLogout: () => {},
   dockerLogin: () => { if (ctl.loginThrows) { const e = new Error('denied') as Error & { stderr?: string }; e.stderr = 'unauthorized'; throw e } },
   dockerComposePull: () => { if (ctl.pullThrows) throw new Error('manifest unknown') },
   dockerComposeUpRetry: (_d: string, _n: number, cb: (n: number) => void) => {
@@ -24,16 +34,16 @@ vi.mock('../src/services/docker.js', () => ({
 }))
 vi.mock('../src/services/health.js', () => ({ waitForEeReady: async () => ctl.eeReady }))
 
-const cp = vi.hoisted(() => ({ cid: 'abc123', dumpBytes: 4096 }))
+// External-DB dump: `docker run ... pg_dump` with stdout pointed at the output file
 vi.mock('node:child_process', () => ({
-  execSync: vi.fn((cmd: string) => {
-    if (/date \+/.test(cmd)) return Buffer.from('20260101-000000')
-    if (/compose ps -q/.test(cmd)) return Buffer.from(cp.cid)
-    const redirect = String(cmd).match(/>\s*"([^"]+)"\s*$/) // capture the dump output path
-    if (redirect) { fs.writeFileSync(redirect[1], Buffer.alloc(cp.dumpBytes)); return Buffer.from('') }
-    return Buffer.from('')
+  spawnSync: vi.fn((_f: string, _a: string[], opts: { stdio: [unknown, number, unknown] }) => {
+    fs.writeSync(opts.stdio[1], Buffer.alloc(cp.dumpBytes, 65))
+    return { status: 0 }
   }),
 }))
+
+const IN_CONTAINER_COMPOSE = 'name: learnhouse-dep1\nservices:\n  db:\n    image: pg\n  api:\n    image: api\n'
+const EXTERNAL_COMPOSE = 'name: learnhouse-dep1\nservices:\n  api:\n    image: api\n'
 
 import {
   readEnvVar, setEnvVar, isExternalDbInstall, backupDatabase,
@@ -79,18 +89,20 @@ describe('update-ee shared upgrade helpers', () => {
     expect(env).toContain('NEW_KEY=x')
   })
 
-  it('backupDatabase dumps an in-container database', () => {
+  it('backupDatabase dumps an in-container database', async () => {
     fs.writeFileSync(path.join(dir, '.env'), 'LEARNHOUSE_DOMAIN=localhost\n')
+    fs.writeFileSync(path.join(dir, 'docker-compose.yml'), IN_CONTAINER_COMPOSE)
     expect(isExternalDbInstall(dir)).toBe(false)
-    const out = backupDatabase({ installDir: dir } as never, LAYOUT, ui)
+    const out = await backupDatabase({ installDir: dir } as never, LAYOUT, ui)
     expect(out).toMatch(/db-pre-upgrade-.*\.sql\.gz$/)
     expect(fs.existsSync(out)).toBe(true)
-    expect(fs.statSync(out).mode & 0o777).toBe(0o600)
-    expect(fs.statSync(path.dirname(out)).mode & 0o777).toBe(0o700)
+    expectMode(out, 0o600)
+    expectMode(path.dirname(out), 0o700)
   })
 
-  it('backupDatabase warns and still backs up when backups/ belongs to another user', () => {
+  it('backupDatabase warns and still backs up when backups/ belongs to another user', async () => {
     fs.writeFileSync(path.join(dir, '.env'), 'LEARNHOUSE_DOMAIN=localhost\n')
+    fs.writeFileSync(path.join(dir, 'docker-compose.yml'), IN_CONTAINER_COMPOSE)
     const backupsDir = path.join(dir, 'backups')
     const realChmod = fs.chmodSync
     vi.spyOn(fs, 'chmodSync').mockImplementation(((target: fs.PathLike, mode: fs.Mode) => {
@@ -100,31 +112,41 @@ describe('update-ee shared upgrade helpers', () => {
       return realChmod(target, mode)
     }) as typeof fs.chmodSync)
     const warn = vi.fn()
-    const out = backupDatabase({ installDir: dir } as never, LAYOUT, { ...ui, warn })
+    const out = await backupDatabase({ installDir: dir } as never, LAYOUT, { ...ui, warn })
     expect(fs.existsSync(out)).toBe(true)
-    expect(fs.statSync(out).mode & 0o777).toBe(0o600)
+    expectMode(out, 0o600)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('EPERM'))
   })
 
-  it('backupDatabase dumps an external database via the app container network', () => {
+  it('backupDatabase dumps an external database via the app container network', async () => {
     fs.writeFileSync(path.join(dir, '.env'),
       'LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://u:p@host:5432/lh\n')
+    fs.writeFileSync(path.join(dir, 'docker-compose.yml'), EXTERNAL_COMPOSE)
     expect(isExternalDbInstall(dir)).toBe(true)
-    const out = backupDatabase({ installDir: dir } as never, LAYOUT, ui) // 69-81
+    const out = await backupDatabase({ installDir: dir } as never, LAYOUT, ui) // 69-81
     expect(fs.existsSync(out)).toBe(true)
   })
 
-  it('backupDatabase throws when the app container is not running (external)', () => {
+  it('backupDatabase throws when the app container is not running (external)', async () => {
     fs.writeFileSync(path.join(dir, '.env'),
       'LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://u:p@host:5432/lh\n')
-    cp.cid = '' // compose ps -q returns nothing → not running (75)
-    expect(() => backupDatabase({ installDir: dir } as never, LAYOUT, ui)).toThrow(/not running/)
+    fs.writeFileSync(path.join(dir, 'docker-compose.yml'), EXTERNAL_COMPOSE)
+    cp.cid = '' // compose ps -q returns nothing → not running
+    await expect(backupDatabase({ installDir: dir } as never, LAYOUT, ui)).rejects.toThrow(/not running/)
   })
 
-  it('backupDatabase throws when the produced dump looks empty', () => {
+  it('backupDatabase throws when the produced dump looks empty', async () => {
     fs.writeFileSync(path.join(dir, '.env'), 'LEARNHOUSE_DOMAIN=localhost\n')
-    cp.dumpBytes = 10 // < 100 bytes → "looks empty" (90)
-    expect(() => backupDatabase({ installDir: dir } as never, LAYOUT, ui)).toThrow(/looks empty/)
+    fs.writeFileSync(path.join(dir, 'docker-compose.yml'), IN_CONTAINER_COMPOSE)
+    cp.dumpBytes = 10 // < 100 bytes → "looks empty"
+    await expect(backupDatabase({ installDir: dir } as never, LAYOUT, ui)).rejects.toThrow(/looks empty/)
+    expect(fs.readdirSync(path.join(dir, 'backups'))).toEqual([]) // no partial dump left behind
+  })
+
+  it('a Community .env (SQL string pointing at db) is not an external database', () => {
+    fs.writeFileSync(path.join(dir, '.env'), 'LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://learnhouse:x@db:5432/learnhouse\n')
+    fs.writeFileSync(path.join(dir, 'docker-compose.yml'), IN_CONTAINER_COMPOSE)
+    expect(isExternalDbInstall(dir)).toBe(false)
   })
 
   it('ensureAlembicBaseline reports a present baseline when already stamped', () => {
@@ -168,15 +190,31 @@ describe('update-ee shared upgrade helpers', () => {
     expect(runAlembicUpgrade(dir, LAYOUT, ui)).toBe(true)
   })
 
-  it('runAlembicUpgrade stamps when create_all tables already exist', () => {
+  it('runAlembicUpgrade stamps the PREVIOUS heads when create_all tables already exist', () => {
     let call = 0
     ctl.composeExec = () => {
       call++
       if (call === 1) return '' // no revisions
       if (call === 2) { const e = new Error('relation "x" already exists') as Error & { stderr: Buffer }; e.stderr = Buffer.from('already exists'); throw e } // 155-162
-      return '' // stamp heads
+      return '' // stamp <previous heads>, then upgrade heads
     }
-    expect(runAlembicUpgrade(dir, LAYOUT, ui)).toBe(true)
+    expect(runAlembicUpgrade(dir, LAYOUT, ui, ['aaaa1111'])).toBe(true)
+  })
+
+  it('runAlembicUpgrade refuses to stamp the new heads when the previous revision is unknown', () => {
+    const cmds: string[] = []
+    let call = 0
+    ctl.composeExec = () => {
+      call++
+      if (call === 1) return ''
+      if (call === 2) { const e = new Error('exists') as Error & { stderr: Buffer }; e.stderr = Buffer.from('DuplicateTable'); throw e }
+      cmds.push('unexpected')
+      return ''
+    }
+    // Stamping at the new heads would mark every column migration as applied
+    // without running it, so this must fail instead.
+    expect(runAlembicUpgrade(dir, LAYOUT, ui)).toBe(false)
+    expect(cmds).toEqual([])
   })
 
   it('runAlembicUpgrade returns false on a genuine migration error', () => {

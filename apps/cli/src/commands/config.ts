@@ -1,6 +1,7 @@
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
+import { publicUrl } from '../services/stack.js'
 
 export async function configCommand() {
   const dir = findInstallDir()
@@ -12,14 +13,12 @@ export async function configCommand() {
 
   p.intro(pc.cyan('LearnHouse Configuration'))
 
-  const protocol = config.useHttps ? 'https' : 'http'
-  const portSuffix = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80) ? '' : `:${config.httpPort}`
-
   p.log.message([
     `  ${pc.dim('Version:')}      ${config.version}`,
     `  ${pc.dim('Created:')}      ${config.createdAt}`,
     `  ${pc.dim('Directory:')}    ${config.installDir}`,
-    `  ${pc.dim('URL:')}          ${protocol}://${config.domain}${portSuffix}`,
+    `  ${pc.dim('Edition:')}      ${config.edition === 'enterprise' ? `Enterprise (${config.eeTenancy || 'single'})` : 'Community'}`,
+    `  ${pc.dim('URL:')}          ${publicUrl(config)}`,
     `  ${pc.dim('Org slug:')}     ${config.orgSlug}`,
   ].join('\n'))
 

@@ -1,10 +1,12 @@
-import { spawn, spawnSync, execSync, type ChildProcess } from 'node:child_process'
+import { spawn, spawnSync, execFileSync, type ChildProcess } from 'node:child_process'
+import { StringDecoder } from 'node:string_decoder'
 import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { isDockerInstalled, isDockerRunning } from '../services/docker.js'
 import { checkDevEnv } from '../services/env-check.js'
+import { dockerExecFileSync } from '../services/docker-bin.js'
 
 const PROJECT_NAME = 'learnhouse-dev'
 
@@ -79,7 +81,7 @@ function sleep(ms: number): Promise<void> {
 async function waitForHealth(label: string, command: string, args: string[], maxAttempts = 30): Promise<boolean> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      execSync([command, ...args].join(' '), { stdio: 'pipe', timeout: 5000 })
+      execFileSync(command, args, { stdio: 'pipe', timeout: 5000 })
       return true
     } catch {
       await sleep(1000)
@@ -104,28 +106,58 @@ function printControls() {
   lineCount = 0
 }
 
+/**
+ * Splits a stream into whole lines. Chunks can end mid-line (or mid UTF-8
+ * character), so the trailing partial line is held until the next chunk
+ * completes it, or until flush() when the stream ends.
+ */
+export function createLineBuffer(onLine: (line: string) => void) {
+  const decoder = new StringDecoder('utf8')
+  let pending = ''
+  const emit = (line: string) => {
+    if (line.length > 0) onLine(line)
+  }
+  return {
+    push(chunk: Buffer | string) {
+      pending += typeof chunk === 'string' ? chunk : decoder.write(chunk)
+      const lines = pending.split('\n')
+      pending = lines.pop() ?? ''
+      for (const line of lines) emit(line)
+    },
+    flush() {
+      pending += decoder.end()
+      emit(pending)
+      pending = ''
+    },
+  }
+}
+
 function prefixStream(proc: ChildProcess, label: string, color: (s: string) => string) {
   const prefix = color(`[${label}]`)
-  const handleData = (data: Buffer) => {
-    const lines = data.toString().split('\n')
-    for (const line of lines) {
-      if (line.length > 0) {
-        process.stdout.write(`${prefix} ${line}\n`)
-        lineCount++
-        if (lineCount >= CONTROLS_INTERVAL) {
-          printControls()
-        }
-      }
+  const writeLine = (line: string) => {
+    process.stdout.write(`${prefix} ${line}\n`)
+    lineCount++
+    if (lineCount >= CONTROLS_INTERVAL) {
+      printControls()
     }
   }
-  proc.stdout?.on('data', handleData)
-  proc.stderr?.on('data', handleData)
+  // One buffer per stream so stdout and stderr partial lines never mix
+  for (const stream of [proc.stdout, proc.stderr]) {
+    if (!stream) continue
+    const buffer = createLineBuffer(writeLine)
+    stream.on('data', (data: Buffer) => buffer.push(data))
+    stream.on('end', () => buffer.flush())
+  }
+}
+
+function hasCommand(cmd: string): boolean {
+  const result = spawnSync(cmd, ['--version'], { stdio: 'ignore', shell: process.platform === 'win32' })
+  return !result.error && result.status === 0
 }
 
 function isContainerRunning(name: string): boolean {
   try {
-    const state = execSync(
-      `docker inspect --format '{{.State.Running}}' ${name}`,
+    const state = dockerExecFileSync(['inspect', '--format', '{{.State.Running}}', name],
       { stdio: 'pipe' }
     ).toString().trim()
     return state === 'true'
@@ -140,7 +172,14 @@ function isInfraRunning(): boolean {
 
 let serviceEnv: Record<string, string> = {}
 
-function spawnService(command: string, args: string[], cwd: string, label: string, color: (s: string) => string): ChildProcess {
+function spawnService(
+  command: string,
+  args: string[],
+  cwd: string,
+  label: string,
+  color: (s: string) => string,
+  onError: () => void,
+): ChildProcess {
   const localBin = path.join(cwd, 'node_modules', '.bin')
   const child = spawn(command, args, {
     cwd,
@@ -158,22 +197,64 @@ function spawnService(command: string, args: string[], cwd: string, label: strin
       console.log(color(`[${label}]`) + ` exited with code ${code}`)
     }
   })
+  // Without a listener a spawn failure (e.g. ENOENT) would crash the CLI and
+  // leave the other services running
+  child.on('error', (err) => {
+    console.log(color(`[${label}]`) + ` failed: ${err.message}`)
+    onError()
+  })
   return child
 }
 
-function killProcess(child: ChildProcess | null): Promise<void> {
+/** Grace period between SIGTERM and SIGKILL. */
+const KILL_GRACE_MS = 5000
+/** How long to wait for 'exit' after SIGKILL before giving up on the child. */
+const KILL_HARD_TIMEOUT_MS = 2000
+
+/**
+ * `child.killed` only means a signal was sent, so exit is detected from
+ * exitCode/signalCode, which are set once the process has actually gone
+ * (a failed spawn, e.g. ENOENT, sets exitCode too).
+ */
+export function hasExited(child: ChildProcess): boolean {
+  return child.exitCode != null || child.signalCode != null
+}
+
+function signalChild(child: ChildProcess, signal: NodeJS.Signals): void {
+  if (process.platform === 'win32' && child.pid !== undefined) {
+    // With shell: true the child is cmd.exe; kill the whole tree so the
+    // next/uvicorn/tsx grandchildren don't survive as orphans.
+    spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' })
+    return
+  }
+  child.kill(signal)
+}
+
+export function killProcess(
+  child: ChildProcess | null,
+  graceMs = KILL_GRACE_MS,
+  hardTimeoutMs = KILL_HARD_TIMEOUT_MS,
+): Promise<void> {
   return new Promise((resolve) => {
-    if (!child || child.killed || child.exitCode !== null) {
+    if (!child || hasExited(child)) {
       resolve()
       return
     }
-    child.on('exit', () => resolve())
-    child.kill('SIGTERM')
-    setTimeout(() => {
-      if (!child.killed && child.exitCode === null) {
-        child.kill('SIGKILL')
-      }
-    }, 5000)
+    let killTimer: ReturnType<typeof setTimeout> | undefined
+    let hardTimer: ReturnType<typeof setTimeout> | undefined
+    const done = () => {
+      clearTimeout(killTimer)
+      clearTimeout(hardTimer)
+      resolve()
+    }
+    child.on('exit', done)
+    signalChild(child, 'SIGTERM')
+    killTimer = setTimeout(() => {
+      if (hasExited(child)) return
+      signalChild(child, 'SIGKILL')
+      // Never let shutdown hang on a child that won't report its exit
+      hardTimer = setTimeout(done, hardTimeoutMs)
+    }, graceMs)
   })
 }
 
@@ -195,6 +276,8 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   const eePath = path.join(root, 'apps', 'api', 'ee')
   if (opts.ee) {
     const parentDir = path.dirname(root)
+    // Directory symlinks need admin/Developer Mode on Windows; junctions don't
+    const symlinkType = process.platform === 'win32' ? 'junction' : undefined
     // A symlink whose target is gone reads as missing to existsSync but still
     // blocks symlinkSync (EEXIST); clear it so it can be re-created.
     const removeDanglingLink = (linkPath: string) => {
@@ -211,7 +294,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
       const eeRepoPath = path.join(parentDir, 'ee', 'apps', app, 'ee')
       if (fs.existsSync(eeRepoPath)) {
         try {
-          fs.symlinkSync(eeRepoPath, appEePath)
+          fs.symlinkSync(eeRepoPath, appEePath, symlinkType)
           p.log.success(`Linked ${app} EE folder → ${eeRepoPath}`)
         } catch (err: any) {
           p.log.warning(`Could not create ${app} EE symlink: ${err.message}`)
@@ -229,7 +312,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
       removeDanglingLink(webEeModules)
       if (!fs.existsSync(webEeModules)) {
         try {
-          fs.symlinkSync(path.join(root, 'apps', 'web', 'node_modules'), webEeModules)
+          fs.symlinkSync(path.join(root, 'apps', 'web', 'node_modules'), webEeModules, symlinkType)
         } catch (err: any) {
           p.log.warning(`Could not link web node_modules into the EE checkout: ${err.message}`)
         }
@@ -241,12 +324,33 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     }
   }
 
+  // bun and uv install dependencies and run the services; fail upfront with a
+  // clear message instead of a spawn error halfway through startup
+  const missingTools = [
+    { cmd: 'bun', url: 'https://bun.sh' },
+    { cmd: 'uv', url: 'https://docs.astral.sh/uv/' },
+  ].filter(({ cmd }) => !hasCommand(cmd))
+  if (missingTools.length > 0) {
+    for (const { cmd, url } of missingTools) {
+      p.log.error(`${cmd} is required for dev mode but was not found on PATH. Install it: ${url}`)
+    }
+    process.exit(1)
+  }
+
   if (!isDockerInstalled()) {
     p.log.error('Docker is not installed. Please install Docker and try again.')
     process.exit(1)
   }
 
-  if (!isDockerRunning()) {
+  let dockerRunning = false
+  try {
+    dockerRunning = isDockerRunning()
+  } catch (err: any) {
+    // e.g. permission denied on the Docker socket
+    p.log.error(err.message)
+    process.exit(1)
+  }
+  if (!dockerRunning) {
     p.log.error('Docker is not running. Please start Docker and try again.')
     process.exit(1)
   }
@@ -273,7 +377,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
         defaultValue: 'admin@school.dev',
       })
       if (p.isCancel(emailInput)) process.exit(0)
-      adminEmail = emailInput
+      adminEmail = emailInput as string
     }
 
     if (!adminPassword) {
@@ -293,7 +397,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     const infraSpinner = p.spinner()
     infraSpinner.start('Starting DB and Redis containers...')
     try {
-      execSync(`docker compose -f ${composePath} -p ${PROJECT_NAME} up -d`, {
+      dockerExecFileSync(['compose', '-f', composePath, '-p', PROJECT_NAME, 'up', '-d'], {
         cwd: root,
         stdio: 'pipe',
       })
@@ -367,32 +471,9 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   let webProc: ChildProcess | null = null
   let collabProc: ChildProcess | null = null
 
-  const startApi = () => {
-    return spawnService('uv', ['run', 'python', 'app.py'], path.join(root, 'apps', 'api'), 'api', pc.magenta)
-  }
-
-  const startWeb = () => {
-    return spawnService('next', ['dev', '--turbopack'], path.join(root, 'apps', 'web'), 'web', pc.cyan)
-  }
-
-  const startCollab = () => {
-    return spawnService('tsx', ['watch', 'src/index.ts'], path.join(root, 'apps', 'collab'), 'collab', pc.yellow)
-  }
-
-  apiProc = startApi()
-  webProc = startWeb()
-  collabProc = startCollab()
-
-  p.log.success('API, Web, and Collab servers started')
-  console.log()
-  console.log(pc.dim('  Thank you for contributing to LearnHouse!'))
-  console.log()
-
-  printControls()
-
   // Graceful shutdown; keep containers running for reuse
   let shuttingDown = false
-  const shutdown = async () => {
+  const shutdown = async (exitCode = 0) => {
     if (shuttingDown) return
     shuttingDown = true
     console.log('\n' + pc.dim('Shutting down dev servers...'))
@@ -407,11 +488,38 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     console.log(pc.dim('DB and Redis containers are still running for next session.'))
     console.log(pc.dim('To stop them: docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down'))
     console.log(pc.dim('Thanks for building with LearnHouse!'))
-    process.exit(0)
+    process.exit(exitCode)
   }
 
-  process.on('SIGINT', shutdown)
-  process.on('SIGTERM', shutdown)
+  // A service that fails to spawn takes the whole session down cleanly
+  const onServiceError = () => { void shutdown(1) }
+
+  const startApi = () => {
+    return spawnService('uv', ['run', 'python', 'app.py'], path.join(root, 'apps', 'api'), 'api', pc.magenta, onServiceError)
+  }
+
+  const startWeb = () => {
+    return spawnService('next', ['dev', '--turbopack'], path.join(root, 'apps', 'web'), 'web', pc.cyan, onServiceError)
+  }
+
+  const startCollab = () => {
+    return spawnService('tsx', ['watch', 'src/index.ts'], path.join(root, 'apps', 'collab'), 'collab', pc.yellow, onServiceError)
+  }
+
+  apiProc = startApi()
+  webProc = startWeb()
+  collabProc = startCollab()
+
+  p.log.success('API, Web, and Collab servers started')
+  console.log()
+  console.log(pc.dim('  Thank you for contributing to LearnHouse!'))
+  console.log()
+
+  printControls()
+
+  // Arrow wrappers: the signal name must not be passed as the exit code
+  process.on('SIGINT', () => { void shutdown() })
+  process.on('SIGTERM', () => { void shutdown() })
 
   // Interactive key handling
   if (process.stdin.isTTY) {

@@ -7,7 +7,8 @@ import path from 'node:path'
 // without disturbing the real-socket promptDomain tests elsewhere.
 vi.mock('node:child_process', async () => {
   const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process')
-  return {
+  const { routeExecFile } = await import('./exec-file-mock.js')
+  return routeExecFile({
     ...actual,
     execSync: vi.fn((cmd: string) =>
       cmd.includes('docker ps') ? Buffer.from('learnhouse-app-dep1\tUp 2 hours\tghcr.io/learnhouse/app:1.4.2\n')
@@ -15,7 +16,7 @@ vi.mock('node:child_process', async () => {
           : cmd.includes('RestartCount') ? Buffer.from('0')
             : cmd.includes('{{.Image}}') ? Buffer.from('sha256:abcdef0123456789')
               : Buffer.from('')),
-  }
+  })
 })
 const promptStub = vi.hoisted(() => ({
   log: { error: () => {}, info: () => {}, success: () => {}, warn: () => {}, warning: () => {}, message: () => {}, step: () => {} },

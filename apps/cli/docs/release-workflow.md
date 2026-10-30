@@ -36,15 +36,18 @@ The script does everything end-to-end:
 
 The tag push triggers `.github/workflows/cli-publish.yaml`, which:
 
-1. Checks out the code and sets up Node + Bun
+1. Checks out the code and sets up Node (24) + Bun (version from `.bun-version`)
 2. Installs dependencies (`bun install --frozen-lockfile`)
-3. Builds (`bun run build`)
-4. Verifies the tag version matches `package.json` (fails if mismatched)
-5. Publishes to npm (`npm publish --no-git-checks`)
+3. Builds and runs the unit suite (`bun run test`); any failure stops the job before publishing
+4. Verifies the tag version, `package.json` and the built binary (`node dist/bin/learnhouse.js --version`) all agree
+5. Validates the package without uploading (`npm publish --dry-run`)
+6. Publishes to npm with provenance (`npm publish --provenance --access public`)
+
+All steps run in `apps/cli`.
 
 ## Verify
 
-After the workflow completes (~1-2 minutes):
+After the workflow completes (several minutes, since the unit suite runs before publishing):
 
 - **npm:** https://www.npmjs.com/package/learnhouse should show the new version
 - **GitHub:** Releases page shows the new release
@@ -56,8 +59,8 @@ If the script can't run (no `gh`, not on macOS, etc.), do it by hand:
 
 ```bash
 cd apps/cli
-bun run version:patch   # or version:minor / version:major
-git add apps/cli/package.json apps/cli/src/constants.ts
+bun run version:patch   # or version:minor / version:major, or: node scripts/bump-version.js 1.4.3
+git add package.json src/constants.ts
 git commit -m "release(cli): bump version to 1.4.3"
 git push origin dev
 
@@ -77,7 +80,7 @@ The tag push still triggers the publish workflow. You'll need to create the GitH
 | `apps/cli/package.json` | `"version"` | npm uses this for publishing |
 | `apps/cli/src/constants.ts` | `VERSION` | CLI displays this at runtime (banner, `--version`) |
 
-The release script (and `scripts/bump-version.js`) update both at once so they never drift.
+The release script (and `scripts/bump-version.js`) update both at once and fail if either file wasn't updated, so they never drift. Bumping a prerelease releases it: `patch` on `1.5.1-beta.1` gives `1.5.1`.
 
 ### Tag format
 
@@ -90,7 +93,9 @@ The workflow only triggers on tags matching `cli-[0-9]*`. This means:
 
 ### Safety checks
 
-- **Version mismatch guard:** the workflow extracts the version from the tag and compares it to `package.json`. If they don't match, publish fails.
+- **Test gate:** `bun run test` builds the package and runs the unit suite; nothing is published if it fails.
+- **Version mismatch guard:** the workflow extracts the version from the tag and compares it to `package.json` and to the version the built binary prints (which comes from `src/constants.ts`). If any differ, publish fails.
+- **Dry run:** `npm publish --dry-run` validates the tarball before the real publish.
 - **prepublishOnly:** npm runs `tsup` before every publish, so `dist/` is always fresh.
 - **frozen lockfile:** `bun install --frozen-lockfile` prevents silent dependency updates in CI.
 
@@ -115,6 +120,6 @@ The workflow only triggers on tags matching `cli-[0-9]*`. This means:
 - Token must be an **Automation** type token from the npm org
 - Token must have publish permissions for the `learnhouse` package
 
-### Build fails
-- Run `bun run build` locally first to catch TypeScript errors
+### Build or tests fail
+- Run `bun run test` locally first (it builds, then runs the same unit suite as CI)
 - If `bun install --frozen-lockfile` fails, update `bun.lock` and commit it

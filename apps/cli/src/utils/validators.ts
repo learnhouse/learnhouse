@@ -19,6 +19,10 @@ export function validateEmail(value: string): string | undefined {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!re.test(value)) return 'Please enter a valid email address'
   const domain = value.slice(value.lastIndexOf('@') + 1).toLowerCase()
+  // Same label rules as a hostname: no empty labels (a@b..com), no leading/trailing hyphens
+  if (!domain.split('.').every((l) => /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(l))) {
+    return 'Please enter a valid email address'
+  }
   const tld = domain.includes('.') ? domain.slice(domain.lastIndexOf('.') + 1) : domain
   if (RESERVED_TLDS.has(tld)) {
     return `Reserved TLD ".${tld}" is not accepted. Use a real domain (e.g. admin@yourdomain.com).`
@@ -41,6 +45,9 @@ export function validateDomain(value: string): string | undefined {
   if (value === 'localhost') return undefined
   const re = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/
   if (!re.test(value)) return 'Please enter a valid domain (e.g., learnhouse.example.com)'
+  if (value.length > 253 || value.split('.').some((l) => l.length > 63)) {
+    return 'Domain is too long (max 253 characters, 63 per label)'
+  }
   return undefined
 }
 
@@ -56,6 +63,8 @@ export function validateSlug(value: string): string | undefined {
   if (!value) return 'Slug is required'
   const re = /^[a-z0-9]+(-[a-z0-9]+)*$/
   if (!re.test(value)) return 'Slug must be lowercase alphanumeric with hyphens only'
+  // The slug is used as a subdomain label, so it must fit in one (63 chars).
+  if (value.length > 63) return 'Slug must be at most 63 characters'
   return undefined
 }
 
@@ -63,3 +72,35 @@ export function validateRequired(value: string): string | undefined {
   if (!value || value.trim() === '') return 'This field is required'
   return undefined
 }
+
+/**
+ * Installation names become a directory under ~/.learnhouse, so they must be a
+ * single plain path segment: no separators, no `.`/`..`, nothing a shell or
+ * a compose file would interpret.
+ */
+export function validateInstallName(value: string): string | undefined {
+  if (!value) return 'Name is required'
+  if (!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(value)) {
+    return 'Name must start with a letter or digit and use only letters, digits, ".", "_" or "-" (max 64)'
+  }
+  // Windows can't create these as directories (device names, trailing dot)
+  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i.test(value) || value.endsWith('.')) {
+    return `"${value}" is reserved on Windows; pick another name`
+  }
+  return undefined
+}
+
+export function validatePostgresUrl(value: string): string | undefined {
+  if (!/^postgres(ql)?(\+\w+)?:\/\//.test(value)) return 'Must start with postgresql:// (or postgres://)'
+  return undefined
+}
+
+export function validateRedisUrl(value: string): string | undefined {
+  if (!/^rediss?:\/\//.test(value)) return 'Must start with redis:// or rediss://'
+  return undefined
+}
+
+/** Image tags we accept from `--to` / EE_IMAGE_TAG / a release lookup: a
+ *  docker tag, nothing that could break out of the compose `image:` line or
+ *  the .env entry. */
+export const IMAGE_TAG_RE = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$/

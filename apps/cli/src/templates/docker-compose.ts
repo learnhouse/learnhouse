@@ -1,4 +1,4 @@
-import { APP_IMAGE, POSTGRES_IMAGE, POSTGRES_AI_IMAGE } from '../constants.js'
+import { APP_IMAGE, CADDY_IMAGE, NGINX_IMAGE, POSTGRES_IMAGE, POSTGRES_AI_IMAGE, REDIS_IMAGE, SOCAT_IMAGE } from '../constants.js'
 import type { SetupConfig } from '../types.js'
 
 /**
@@ -22,7 +22,7 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
   const proxyService = config.autoSsl
     ? `
   caddy:
-    image: caddy:2-alpine
+    image: ${CADDY_IMAGE}
     container_name: learnhouse-caddy-${id}
     restart: unless-stopped
     ports:
@@ -46,7 +46,7 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
 `
     : `
   nginx:
-    image: nginx:alpine
+    image: ${NGINX_IMAGE}
     container_name: learnhouse-nginx-${id}
     restart: unless-stopped
     ports:
@@ -72,7 +72,7 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
   const ssrForwardService = needsSsrPortForward
     ? `
   ssr-fwd:
-    image: alpine/socat:1.8.0.0
+    image: ${SOCAT_IMAGE}
     container_name: learnhouse-ssr-fwd-${id}
     restart: unless-stopped
     network_mode: "service:learnhouse-app"
@@ -111,7 +111,7 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
   const redisService = useLocalRedis
     ? `
   redis:
-    image: redis:7.2.3-alpine
+    image: ${REDIS_IMAGE}
     container_name: learnhouse-redis-${id}
     restart: unless-stopped
     command: redis-server --appendonly yes

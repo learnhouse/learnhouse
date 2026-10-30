@@ -50,6 +50,51 @@ export async function waitForEeReady(cwd: string): Promise<EeReadyResult> {
   return sawOss ? 'oss' : 'timeout'
 }
 
+/**
+ * Poll an app URL from *inside* its container. Used when the host can't reach
+ * the stack over plain HTTP: with auto SSL, Caddy owns 80/443 and only answers
+ * for the real domain, which may not resolve here yet.
+ */
+export async function waitForHealthInContainer(
+  cwd: string,
+  service: string,
+  urlPath = '/api/v1/health',
+  timeoutMs = HEALTH_CHECK_TIMEOUT_MS,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    try {
+      dockerComposeExec(cwd, service, `curl -fsS -o /dev/null http://localhost${urlPath}`)
+      return true
+    } catch {
+      // not ready yet
+    }
+    await new Promise((r) => setTimeout(r, HEALTH_CHECK_INTERVAL_MS))
+  }
+  return false
+}
+
+/**
+ * Wait until a Community install answers its health check, probing the way
+ * that works for its proxy: over the published HTTP port for nginx, from
+ * inside the app container for Caddy (auto SSL).
+ */
+export async function waitForAppHealth(config: { installDir: string; autoSsl: boolean; httpPort: number }): Promise<boolean> {
+  return config.autoSsl
+    ? waitForHealthInContainer(config.installDir, 'learnhouse-app')
+    : waitForHealth(`http://localhost:${config.httpPort}`)
+}
+
+/** `waitForOrgSeed`, probed the same way as `waitForAppHealth`. */
+export async function waitForAppOrgSeed(
+  config: { installDir: string; autoSsl: boolean; httpPort: number },
+  orgSlug: string,
+): Promise<boolean> {
+  return config.autoSsl
+    ? waitForHealthInContainer(config.installDir, 'learnhouse-app', `/api/v1/orgs/slug/${encodeURIComponent(orgSlug)}`, 30_000)
+    : waitForOrgSeed(`http://localhost:${config.httpPort}`, orgSlug)
+}
+
 export async function waitForOrgSeed(baseUrl: string, orgSlug: string): Promise<boolean> {
   const url = `${baseUrl}/api/v1/orgs/slug/${encodeURIComponent(orgSlug)}`
   const deadline = Date.now() + 30_000
