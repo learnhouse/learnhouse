@@ -16,6 +16,7 @@ import {
 } from '../services/docker.js'
 import { checkPort } from '../utils/network.js'
 import { hasComposeService } from '../services/stack.js'
+import { dockerExecFileSync } from '../services/docker-bin.js'
 
 let failures = 0
 function pass(msg: string) { console.log(`  ${pc.green('✓')} ${msg}`) }
@@ -264,7 +265,7 @@ export async function doctorCommand() {
   p.log.step('Image Freshness')
   for (const c of containers) {
     try {
-      const localDigest = execFileSync('docker', ['inspect', '--format', '{{.Image}}', c.name], { stdio: 'pipe' })
+      const localDigest = dockerExecFileSync(['inspect', '--format', '{{.Image}}', c.name], { stdio: 'pipe' })
         .toString().trim()
       pass(`${c.service}: ${c.image} (${localDigest.slice(7, 19)})`)
     } catch {

@@ -1,7 +1,8 @@
-import { execFileSync, execSync, spawn, spawnSync, type StdioOptions } from 'node:child_process'
+import { execFileSync, execSync, type StdioOptions } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { dockerExecFileSync, dockerSpawnSync, dockerSpawn } from './docker-bin.js'
 
 // Every docker invocation goes through execFileSync with an argument array, so
 // nothing here is parsed by a shell: no quoting bugs on paths with spaces, no
@@ -15,7 +16,7 @@ function docker(
   args: string[],
   opts: { cwd?: string; stdio?: StdioOptions; timeout?: number } = {},
 ): string {
-  const out = execFileSync('docker', args, { stdio: 'pipe', ...opts })
+  const out = dockerExecFileSync(args, { stdio: 'pipe', ...opts })
   return out ? out.toString() : ''
 }
 
@@ -78,9 +79,7 @@ export function dockerComposeStop(cwd: string, service?: string): void {
  * Throws if login fails (e.g. invalid license key).
  */
 export function dockerLogin(registry: string, username: string, password: string): void {
-  const res = spawnSync(
-    'docker',
-    ['login', registry, '--username', username, '--password-stdin'],
+  const res = dockerSpawnSync(['login', registry, '--username', username, '--password-stdin'],
     { input: password, stdio: ['pipe', 'pipe', 'pipe'] },
   )
   if (res.status !== 0) {
@@ -228,7 +227,7 @@ export function dockerPull(image: string): void {
 }
 
 export function dockerComposeLogs(cwd: string): void {
-  const child = spawn('docker', ['compose', 'logs', '--tail', 'all', '-f'], {
+  const child = dockerSpawn(['compose', 'logs', '--tail', 'all', '-f'], {
     cwd,
     stdio: 'inherit',
   })
@@ -245,7 +244,7 @@ export function dockerComposeLogs(cwd: string): void {
 export function dockerLogsMulti(containerNames: string[]): void {
   // Spawn `docker logs --tail all -f` for each container, merge output
   const children = containerNames.map((name) =>
-    spawn('docker', ['logs', '--tail', 'all', '-f', '--timestamps', name], {
+    dockerSpawn(['logs', '--tail', 'all', '-f', '--timestamps', name], {
       stdio: ['ignore', 'inherit', 'inherit'],
     }),
   )
@@ -276,7 +275,7 @@ export function dockerLogsMulti(containerNames: string[]): void {
 export function dockerExecToFile(containerName: string, command: string[], outputPath: string, okStatuses: number[] = [0]): void {
   const fd = fs.openSync(outputPath, 'w', 0o600)
   try {
-    const res = spawnSync('docker', ['exec', containerName, ...command], {
+    const res = dockerSpawnSync(['exec', containerName, ...command], {
       stdio: ['ignore', fd, 'pipe'],
     })
     if (res.error) throw res.error
@@ -294,7 +293,7 @@ export function dockerExecToFile(containerName: string, command: string[], outpu
 export function dockerExecFromFile(containerName: string, command: string[], inputPath: string): void {
   const fd = fs.openSync(inputPath, 'r')
   try {
-    const res = spawnSync('docker', ['exec', '-i', containerName, ...command], {
+    const res = dockerSpawnSync(['exec', '-i', containerName, ...command], {
       stdio: [fd, 'ignore', 'pipe'],
     })
     if (res.error) throw res.error
@@ -452,7 +451,7 @@ export function getContainerRestartCount(containerName: string): number {
 }
 
 export function dockerExecInteractive(containerName: string, cmd: string): void {
-  const result = spawnSync('docker', ['exec', '-it', containerName, ...cmd.split(' ')], {
+  const result = dockerSpawnSync(['exec', '-it', containerName, ...cmd.split(' ')], {
     stdio: 'inherit',
   })
   if (result.status !== null) {

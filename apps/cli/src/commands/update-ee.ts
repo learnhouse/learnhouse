@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import zlib from 'node:zlib'
@@ -93,9 +92,7 @@ export async function backupDatabase(config: LearnHouseConfigJson, layout: Editi
       ui.log('external database: dumping via a client sharing the app container network')
       const fd = fs.openSync(raw, 'w', 0o600)
       try {
-        const res = spawnSync(
-          'docker',
-          ['run', '--rm', '--network', `container:${cid}`, '-e', 'PGCONN', PG_CLIENT_IMAGE, 'sh', '-c', 'pg_dump "$PGCONN"'],
+        const res = dockerSpawnSync(['run', '--rm', '--network', `container:${cid}`, '-e', 'PGCONN', PG_CLIENT_IMAGE, 'sh', '-c', 'pg_dump "$PGCONN"'],
           { cwd: dir, stdio: ['ignore', fd, 'inherit'], env: { ...process.env, PGCONN: conn } },
         )
         if (res.error) throw res.error
@@ -278,6 +275,7 @@ import {
 } from '../services/docker.js'
 import { waitForEeReady } from '../services/health.js'
 import { EE_REGISTRY, EE_REGISTRY_USERNAME } from '../constants.js'
+import { dockerSpawnSync } from '../services/docker-bin.js'
 
 const EE_LAYOUT: EditionLayout = { appService: 'api', alembicCwd: '/app', dbService: 'db' }
 

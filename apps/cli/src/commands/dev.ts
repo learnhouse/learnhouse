@@ -6,6 +6,7 @@ import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { isDockerInstalled, isDockerRunning } from '../services/docker.js'
 import { checkDevEnv } from '../services/env-check.js'
+import { dockerExecFileSync } from '../services/docker-bin.js'
 
 const PROJECT_NAME = 'learnhouse-dev'
 
@@ -156,9 +157,7 @@ function hasCommand(cmd: string): boolean {
 
 function isContainerRunning(name: string): boolean {
   try {
-    const state = execFileSync(
-      'docker',
-      ['inspect', '--format', '{{.State.Running}}', name],
+    const state = dockerExecFileSync(['inspect', '--format', '{{.State.Running}}', name],
       { stdio: 'pipe' }
     ).toString().trim()
     return state === 'true'
@@ -398,7 +397,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     const infraSpinner = p.spinner()
     infraSpinner.start('Starting DB and Redis containers...')
     try {
-      execFileSync('docker', ['compose', '-f', composePath, '-p', PROJECT_NAME, 'up', '-d'], {
+      dockerExecFileSync(['compose', '-f', composePath, '-p', PROJECT_NAME, 'up', '-d'], {
         cwd: root,
         stdio: 'pipe',
       })

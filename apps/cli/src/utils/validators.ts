@@ -83,6 +83,10 @@ export function validateInstallName(value: string): string | undefined {
   if (!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(value)) {
     return 'Name must start with a letter or digit and use only letters, digits, ".", "_" or "-" (max 64)'
   }
+  // Windows can't create these as directories (device names, trailing dot)
+  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i.test(value) || value.endsWith('.')) {
+    return `"${value}" is reserved on Windows; pick another name`
+  }
   return undefined
 }
 

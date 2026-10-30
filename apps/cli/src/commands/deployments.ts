@@ -1,8 +1,8 @@
-import { execFileSync } from 'node:child_process'
 import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
 import { scaleResources } from './scale.js'
+import { dockerExecFileSync } from '../services/docker-bin.js'
 
 interface Deployment {
   id: string
@@ -33,7 +33,7 @@ export function parseDeploymentLine(line: string): { id: string; container: Depl
 function showDeployments() {
   let output: string
   try {
-    output = execFileSync('docker', [
+    output = dockerExecFileSync([
       'ps', '-a', '--filter', 'name=learnhouse-',
       '--format', '{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.service"}}',
     ], { stdio: 'pipe' }).toString().trim()

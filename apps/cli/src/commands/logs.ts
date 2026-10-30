@@ -1,6 +1,7 @@
 import * as p from '@clack/prompts'
 import { findInstallDir, readConfig } from '../services/config-store.js'
 import { autoDetectDeploymentId, dockerComposeLogs, dockerLogsMulti, listDeploymentContainers } from '../services/docker.js'
+import { dockerExecFileSync } from '../services/docker-bin.js'
 
 export async function logsCommand() {
   const dir = findInstallDir()
@@ -12,8 +13,7 @@ export async function logsCommand() {
   if (config?.installDir) {
     try {
       // Quick check: does docker compose see services here?
-      const { execFileSync } = await import('node:child_process')
-      const ps = execFileSync('docker', ['compose', 'ps', '-q'], { cwd: config.installDir, stdio: 'pipe' }).toString().trim()
+      const ps = dockerExecFileSync(['compose', 'ps', '-q'], { cwd: config.installDir, stdio: 'pipe' }).toString().trim()
       if (ps) {
         dockerComposeLogs(config.installDir)
         return
