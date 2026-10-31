@@ -47,7 +47,7 @@ dependencies = [
     "dnspython==2.9.0",
     "defusedxml==0.7.1",
     "pgvector==0.5.1",
-    "pypdf==6.21.2",
+    "pypdf==6.21.4",
     "regex==2026.9.29",
 ]
 
