@@ -114,3 +114,39 @@ export async function searchDynamicLearners(activity_uuid: string, query: string
   )
   return getResponseMetadata(result)
 }
+
+export interface EditorAudience {
+  audience_uuid: string
+  org_id: number
+  name: string
+  description: string
+  rules: any
+}
+
+// Saved audiences: named rule sets blocks can refer to.
+export async function getEditorAudiences(org_id: number, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}editor-audiences/?org_id=${org_id}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export async function createEditorAudience(
+  body: { org_id: number; name: string; description: string; rules: any },
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}editor-audiences/`,
+    RequestBodyWithAuthHeader('POST', body, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export async function deleteEditorAudience(audience_uuid: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}editor-audiences/${audience_uuid}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  return getResponseMetadata(result)
+}

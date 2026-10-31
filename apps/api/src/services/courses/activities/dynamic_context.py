@@ -19,6 +19,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
+from src.db.editor_audiences import EditorAudience
 from src.db.organizations import Organization
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
@@ -29,6 +30,7 @@ from src.db.users import PublicUser, User
 from src.security.rbac.constants import ADMIN_ROLE_ID, MAINTAINER_ROLE_ID
 from src.services.courses.activities.dynamic_content import (
     RenderContext,
+    referenced_audiences,
     has_dynamic_content,
     render_document,
 )
@@ -76,6 +78,32 @@ async def _course_progress_totals(course_id: int, db_session: AsyncSession) -> i
         .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore[arg-type]
         .where(ChapterActivity.course_id == course_id, Activity.published == True)  # noqa: E712
     )).scalar_one()
+
+
+# Audiences may refer to audiences; follow that far, then stop (anything
+# deeper is unresolved and hides, like any rule the server can't evaluate).
+MAX_AUDIENCE_HOPS = 3
+
+
+async def load_audiences(org_id: int, content: Any, db_session: AsyncSession) -> dict[str, Any]:
+    """The saved audiences ``content`` refers to, within ``org_id`` only:
+    another org's audience uuid resolves to nothing."""
+    wanted = referenced_audiences(content)
+    loaded: dict[str, Any] = {}
+    for _ in range(MAX_AUDIENCE_HOPS):
+        wanted -= loaded.keys()
+        if not wanted:
+            break
+        rows = (await db_session.execute(
+            select(EditorAudience.audience_uuid, EditorAudience.rules).where(
+                EditorAudience.org_id == org_id,
+                EditorAudience.audience_uuid.in_(wanted),  # type: ignore[attr-defined]
+            )
+        )).all()
+        found = {uuid: rules for uuid, rules in rows}
+        loaded.update(found)
+        wanted = set().union(*(referenced_audiences(rules) for rules in found.values())) if found else set()
+    return loaded
 
 
 def bucket_for(org_id: int, user_uuid: str) -> int:
@@ -276,6 +304,8 @@ async def render_for_reader(
     )
     if context is not None:
         ctx = replace(ctx, activity_name=activity_name)
+    if referenced_audiences(content):
+        ctx = replace(ctx, audiences=await load_audiences(course.org_id, content, db_session))
     rendered, _ = render_document(content, ctx)
     return rendered
 

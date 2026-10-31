@@ -15,7 +15,13 @@ function ConditionalBlockComponent({ node, editor, getPos, updateAttributes }: N
   const { t } = useTranslation()
   const editorState = useEditorProvider() as any
   const isEditable = editorState?.isEditable ?? false
-  const [showBuilder, setShowBuilder] = useState(false)
+  // A block inserted from a shortcut that asks for it opens its rules once.
+  const [showBuilder, setShowBuilder] = useState(() => {
+    const storage = (editor.storage as any).conditionalBlock
+    if (!storage?.openRulesOnMount) return false
+    storage.openRulesOnMount = false
+    return isEditable
+  })
   const lookups = useDynamicLookups()
   const reach = useBlockReach(editor, getPos)
 
@@ -102,8 +108,16 @@ function ConditionalBlockComponent({ node, editor, getPos, updateAttributes }: N
         )}
         {reach && (
           <span
-            className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-violet-700 ring-1 ring-violet-200"
-            title={t('editor.dynamic.reach_hint', 'Learners enrolled in this course who see this block, from the current rules.')}
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${
+              reach.matched === 0 && reach.learners > 0
+                ? 'bg-amber-50 text-amber-800 ring-amber-200'
+                : 'bg-white text-violet-700 ring-violet-200'
+            }`}
+            title={
+              reach.matched === 0 && reach.learners > 0
+                ? t('editor.dynamic.reach_none', 'No enrolled learner matches these rules yet.')
+                : t('editor.dynamic.reach_hint', 'Learners enrolled in this course who see this block, from the current rules.')
+            }
           >
             {t('editor.dynamic.reach', {
               matched: reach.matched,
@@ -122,6 +136,17 @@ function ConditionalBlockComponent({ node, editor, getPos, updateAttributes }: N
           <Ungroup size={14} />
         </HeaderButton>
       </div>
+      {rules.conditions.length === 0 && !rules.negate && (
+        <div
+          contentEditable={false}
+          className="flex items-center gap-2 border-b border-violet-100 bg-amber-50/60 px-3 py-1.5 text-xs text-amber-900"
+        >
+          {t('editor.dynamic.empty_rules', 'Everyone sees this block for now.')}
+          <button type="button" onClick={() => setShowBuilder(true)} className="font-semibold underline">
+            {t('editor.dynamic.choose_who', 'Choose who sees it')}
+          </button>
+        </div>
+      )}
       <div className="px-3 py-1">
         <NodeViewContent className="content" />
       </div>

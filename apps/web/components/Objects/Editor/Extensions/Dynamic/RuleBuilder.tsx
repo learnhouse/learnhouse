@@ -1,13 +1,20 @@
 'use client'
 import React, { useMemo, useState } from 'react'
-import { Code2, Plus, Trash2, Wand2 } from 'lucide-react'
+import { BookmarkPlus, Code2, Plus, Sparkles, Trash2, Users, Wand2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { useAuth } from '@components/Contexts/AuthContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { queryKeys } from '@/lib/query/keys'
+import { createEditorAudience } from '@services/courses/dynamicContent'
 import {
   Condition,
   FIELDS,
   OPS,
   OP_LABELS,
+  PRESETS,
   ROLES,
   RuleGroup,
   RuleSyntaxError,
@@ -43,6 +50,36 @@ export default function RuleBuilder({ rules, label, hiddenMessage, lookups, onSa
   const [mode, setMode] = useState<Mode>(isFlatGroup(rules) ? 'visual' : 'code')
   const [code, setCode] = useState(() => stringifyRules(rules))
   const [codeError, setCodeError] = useState<string | null>(null)
+  const [audienceName, setAudienceName] = useState<string | null>(null)
+  const { accessToken } = useAuth()
+  const org = useOrg() as any
+  const queryClient = useQueryClient()
+
+  const applyRules = (next: RuleGroup, message?: string) => {
+    setDraft(next)
+    setCode(stringifyRules(next))
+    setCodeError(null)
+    if (message && !draftMessage) setDraftMessage(message)
+  }
+
+  const pickAudience = (uuid: string) =>
+    applyRules({ match: 'all', conditions: [{ field: 'audience', op: 'is', value: uuid }] })
+
+  // Turn the current rules into a named audience other blocks can reuse.
+  const saveAsAudience = async () => {
+    const name = audienceName?.trim()
+    const rules = previewRules
+    if (!name || !rules || !org?.id || !accessToken) return
+    const res = await createEditorAudience({ org_id: org.id, name, description: '', rules }, accessToken)
+    if (!res.success) {
+      toast.error(res.data?.detail || t('editor.dynamic.audience_save_error', 'Could not save the audience'))
+      return
+    }
+    await queryClient.invalidateQueries({ queryKey: queryKeys.editorAudiences.list(org.id) })
+    setAudienceName(null)
+    pickAudience(res.data.audience_uuid)
+    toast.success(t('editor.dynamic.audience_saved', { name, defaultValue: 'Saved "{{name}}". Any block can now use it.' }))
+  }
 
   const switchMode = (next: Mode) => {
     if (next === mode) return
@@ -106,6 +143,46 @@ export default function RuleBuilder({ rules, label, hiddenMessage, lookups, onSa
           </ModeTab>
         </div>
       </div>
+
+      {mode === 'visual' && (
+        <div className="space-y-2 rounded-lg border border-dashed border-violet-200 p-2.5">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-700">
+            <Sparkles size={13} /> {t('editor.dynamic.quick_start', 'Quick start')}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                title={t(`editor.dynamic.presets.${preset.id}_hint`, preset.description)}
+                onClick={() => applyRules(preset.rules(), preset.hiddenMessage && t(`editor.dynamic.presets.${preset.id}_message`, preset.hiddenMessage))}
+                className="rounded-full bg-white px-2.5 py-1 text-xs text-gray-700 ring-1 ring-gray-200 hover:bg-violet-50 hover:ring-violet-300"
+              >
+                {t(`editor.dynamic.presets.${preset.id}`, preset.label)}
+              </button>
+            ))}
+          </div>
+          {lookups.audienceOptions.length > 0 && (
+            <>
+              <div className="flex items-center gap-1.5 pt-1 text-xs font-semibold text-violet-700">
+                <Users size={13} /> {t('editor.dynamic.saved_audiences', 'Saved audiences')}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {lookups.audienceOptions.map((a) => (
+                  <button
+                    key={a.value}
+                    type="button"
+                    onClick={() => pickAudience(a.value)}
+                    className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-800 hover:bg-violet-200"
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {mode === 'visual' ? (
         <div className="space-y-3">
@@ -185,9 +262,38 @@ export default function RuleBuilder({ rules, label, hiddenMessage, lookups, onSa
         </div>
       )}
 
-      <div className="rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-800">
-        <span className="font-semibold">{t('editor.dynamic.visible_to', 'Visible to')}:</span>{' '}
-        {previewRules ? describeRules(previewRules, lookups.names) : '…'}
+      <div className="flex items-start gap-2 rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-800">
+        <div className="min-w-0 flex-1">
+          <span className="font-semibold">{t('editor.dynamic.visible_to', 'Visible to')}:</span>{' '}
+          {previewRules ? describeRules(previewRules, lookups.names) : '…'}
+        </div>
+        {audienceName === null ? (
+          previewRules && previewRules.conditions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setAudienceName('')}
+              className="inline-flex shrink-0 items-center gap-1 font-semibold hover:underline"
+              title={t('editor.dynamic.save_audience_hint', 'Name these rules to reuse them in other blocks')}
+            >
+              <BookmarkPlus size={13} /> {t('editor.dynamic.save_audience', 'Save as audience')}
+            </button>
+          )
+        ) : (
+          <div className="flex shrink-0 items-center gap-1">
+            <input
+              autoFocus
+              className="w-36 rounded-md border border-violet-200 bg-white px-2 py-1"
+              value={audienceName}
+              maxLength={80}
+              placeholder={t('editor.dynamic.audience_name', 'e.g. Internal staff')}
+              onChange={(e) => setAudienceName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveAsAudience()}
+            />
+            <button type="button" onClick={saveAsAudience} className="rounded-md bg-violet-600 px-2 py-1 font-semibold text-white">
+              {t('common.save', 'Save')}
+            </button>
+          </div>
+        )}
       </div>
 
       <div>
@@ -356,6 +462,21 @@ function ValueInput(props: {
       <input type="date" className="w-full rounded-lg border border-gray-200 px-2 py-1.5"
         value={typeof value === 'string' ? value : ''}
         onChange={(e) => onChange(e.target.value)} />
+    )
+  }
+
+  if (type === 'audience') {
+    return (
+      <select
+        className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5"
+        value={typeof value === 'string' ? value : ''}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">{t('editor.dynamic.pick_audience', 'Pick an audience…')}</option>
+        {props.lookups.audienceOptions.map((a) => (
+          <option key={a.value} value={a.value}>{a.label}</option>
+        ))}
+      </select>
     )
   }
 

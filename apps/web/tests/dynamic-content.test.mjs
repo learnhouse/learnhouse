@@ -232,3 +232,69 @@ describe("round two", () => {
     expect(doc.content[1].content[0].text).toBe("{{field.company}}");
   });
 });
+
+describe("round three", () => {
+  test("every preset round-trips through code mode and reads well", async () => {
+    const { PRESETS } = await import("../components/Objects/Editor/Extensions/Dynamic/dynamicRules.ts");
+    for (const preset of PRESETS) {
+      const rules = preset.rules();
+      expect(parseRules(stringifyRules(rules))).toEqual(rules);
+      expect(describeRules(rules)).not.toBe("Everyone");
+    }
+  });
+
+  test("audience rules", () => {
+    const rules = parseRules('audience is "audience_1" and not audience is_not "audience_2"');
+    expect(rules.conditions[0]).toEqual({ field: "audience", op: "is", value: "audience_1" });
+    expect(describeRules({ conditions: [{ field: "audience", op: "is", value: "audience_1" }] }, { audiences: { audience_1: "Staff" } })).toBe('"Staff"');
+    expect(describeRules({ conditions: [{ field: "audience", op: "is_not", value: "gone" }] })).toBe('not in "a deleted audience"');
+  });
+
+  test("starter templates are valid editor documents", async () => {
+    const { STARTER_TEMPLATES, isStarter } = await import("../components/Objects/Editor/Templates/starterTemplates.ts");
+    const { templateFields } = await import("../components/Objects/Editor/Templates/templateContent.ts");
+    const { default: ConditionalBlock } = await import(
+      "../components/Objects/Editor/Extensions/Dynamic/ConditionalBlock.ts"
+    );
+    const Plain = ConditionalBlock.extend({ addNodeView: () => null });
+    const VariableStub = Node.create({
+      name: "dynamicVariable",
+      group: "inline",
+      inline: true,
+      atom: true,
+      addAttributes: () => ({ path: { default: "user.first_name" }, fallback: { default: "" }, format: { default: null } }),
+      parseHTML: () => [{ tag: "dynamic-variable" }],
+      renderHTML: () => ["dynamic-variable"],
+    });
+    for (const tpl of STARTER_TEMPLATES) {
+      expect(isStarter(tpl)).toBe(true);
+      const editor = new Editor({ extensions: [StarterKit, Plain, VariableStub], content: tpl.content });
+      expect(editor.getJSON()).toEqual(tpl.content);
+      editor.destroy();
+    }
+    expect(templateFields(STARTER_TEMPLATES.find((t) => t.template_uuid === "starter:buddy").content)).toEqual(["buddy_name"]);
+  });
+
+  test("insertABTest adds both versions with opposite rules", async () => {
+    const { default: ConditionalBlock } = await import(
+      "../components/Objects/Editor/Extensions/Dynamic/ConditionalBlock.ts"
+    );
+    const Plain = ConditionalBlock.extend({ addNodeView: () => null });
+    const editor = new Editor({ extensions: [StarterKit, Plain], content: "<p>x</p>" });
+    editor.commands.insertABTest();
+    const blocks = editor.getJSON().content.filter((n) => n.type === "conditionalBlock");
+    expect(blocks.map((b) => b.attrs.label)).toEqual(["Version A", "Version B"]);
+    expect(blocks[1].attrs.rules.negate).toBe(true);
+    editor.commands.insertConditionalBlock({ label: "L", hiddenMessage: "Later", openRules: true });
+    expect(editor.storage.conditionalBlock.openRulesOnMount).toBe(true);
+    editor.destroy();
+  });
+
+  test("variable autocomplete filters by label and path", async () => {
+    const { filterVariables } = await import("../components/Objects/Editor/Extensions/Dynamic/VariableSuggestion.ts");
+    expect(filterVariables("").length).toBeGreaterThan(10);
+    expect(filterVariables("first").map((v) => v.path)).toContain("user.first_name");
+    expect(filterVariables("course.na}}").map((v) => v.path)).toEqual(["course.name"]);
+    expect(filterVariables("zzz")).toEqual([]);
+  });
+});

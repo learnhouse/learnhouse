@@ -476,3 +476,118 @@ class TestEditorEndpoints:
         assert [lr.username for lr in learners] == ["regular"]
         assert preview.content["content"] == [_p(_text("Hello Regular")), _p(_text("vip only"))]
         assert exc.value.status_code == 404
+
+
+class TestAudiences:
+    def test_audience_rules_resolve(self):
+        audience = {"conditions": [_cond("user.role", "in", ["admin"])]}
+        ctx = _ctx(audiences={"audience_admins": audience})
+        is_admin = {"conditions": [{"field": "audience", "op": "is", "value": "audience_admins"}]}
+        not_admin = {"conditions": [{"field": "audience", "op": "is_not", "value": "audience_admins"}]}
+        assert evaluate_rules(is_admin, ctx) is False
+        assert evaluate_rules(not_admin, ctx) is True
+        assert evaluate_rules(is_admin, _ctx(role="admin", audiences={"audience_admins": audience})) is True
+
+    @pytest.mark.parametrize(
+        "condition",
+        [
+            {"field": "audience", "op": "is", "value": "audience_missing"},
+            {"field": "audience", "op": "is_not", "value": "audience_missing"},
+            {"field": "audience", "op": "bogus", "value": "audience_a"},
+            {"field": "audience", "op": "is", "value": 3},
+        ],
+    )
+    def test_unknown_audience_hides(self, condition):
+        ctx = _ctx(audiences={"audience_a": {"conditions": []}})
+        assert evaluate_rules({"conditions": [condition]}, ctx) is False
+
+    def test_self_reference_stops(self):
+        loop = {"conditions": [{"field": "audience", "op": "is", "value": "audience_loop"}]}
+        assert evaluate_rules(loop, _ctx(audiences={"audience_loop": loop})) is False
+
+    def test_referenced_audiences(self):
+        from src.services.courses.activities.dynamic_content import referenced_audiences
+
+        doc = _doc(
+            _conditional({"conditions": [{"field": "audience", "op": "is", "value": "audience_a"}]}, _p()),
+            _conditional({"conditions": [{"conditions": [{"field": "audience", "op": "is_not", "value": "audience_b"}]}]}, _p()),
+        )
+        assert referenced_audiences(doc) == {"audience_a", "audience_b"}
+
+    @pytest.mark.asyncio
+    async def test_crud_and_render(self, mock_request, db, org, other_org, course, activity, admin_user, regular_user):
+        from src.db.editor_audiences import EditorAudience, EditorAudienceCreate, EditorAudienceUpdate
+        from src.services.courses.activities.dynamic_context import load_audiences, render_for_reader
+        from src.services.editor_audiences import (
+            create_editor_audience,
+            delete_editor_audience,
+            list_editor_audiences,
+            update_editor_audience,
+        )
+
+        group = await _add_group(db, org, regular_user)
+        vip = await create_editor_audience(
+            mock_request,
+            EditorAudienceCreate(org_id=org.id, name="VIPs", rules={"conditions": [_cond("user.groups", "contains_any", [group.usergroup_uuid])]}),
+            admin_user, db,
+        )
+        wrapper = await create_editor_audience(
+            mock_request,
+            EditorAudienceCreate(org_id=org.id, name="Wrapper", rules={"conditions": [{"field": "audience", "op": "is", "value": vip.audience_uuid}]}),
+            admin_user, db,
+        )
+        # Another org's audience with a known uuid must not resolve here.
+        db.add(EditorAudience(name="x", rules={"conditions": []}, org_id=other_org.id, audience_uuid="audience_foreign"))
+        await db.commit()
+
+        doc = _doc(
+            _conditional({"conditions": [{"field": "audience", "op": "is", "value": wrapper.audience_uuid}]}, _p(_text("vip"))),
+            _conditional({"conditions": [{"field": "audience", "op": "is_not", "value": "audience_foreign"}]}, _p(_text("foreign"))),
+        )
+        loaded = await load_audiences(org.id, doc, db)
+        assert set(loaded) == {vip.audience_uuid, wrapper.audience_uuid}
+
+        rendered = await render_for_reader(None, doc, course=course, current_user=regular_user, db_session=db, is_editor=False)
+        assert rendered["content"] == [_p(_text("vip"))]
+
+        listed = await list_editor_audiences(mock_request, org.id, admin_user, db)
+        renamed = await update_editor_audience(
+            mock_request, vip.audience_uuid,
+            EditorAudienceUpdate(name="Gold", description=" d ", rules={"conditions": []}), admin_user, db,
+        )
+        assert [a.name for a in listed] == ["VIPs", "Wrapper"] and renamed.name == "Gold" and renamed.description == "d"
+        with pytest.raises(HTTPException) as bad:
+            await update_editor_audience(mock_request, vip.audience_uuid, EditorAudienceUpdate(rules={"x": 1}), admin_user, db)
+        assert bad.value.status_code == 400
+        await delete_editor_audience(mock_request, vip.audience_uuid, admin_user, db)
+        with pytest.raises(HTTPException) as gone:
+            await delete_editor_audience(mock_request, vip.audience_uuid, admin_user, db)
+        assert gone.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_limits_and_learners(self, mock_request, db, org, admin_user, regular_user):
+        from src.db.editor_audiences import EditorAudienceCreate
+        from src.services import editor_audiences as svc
+
+        body = EditorAudienceCreate(org_id=org.id, name="A", rules={"conditions": []})
+        with pytest.raises(HTTPException) as learner:
+            await svc.create_editor_audience(mock_request, body, regular_user, db)
+        with patch.object(svc, "MAX_AUDIENCE_BYTES", 5):
+            with pytest.raises(HTTPException) as big:
+                await svc.create_editor_audience(mock_request, body, admin_user, db)
+        with patch.object(svc, "MAX_AUDIENCES_PER_ORG", 0):
+            with pytest.raises(HTTPException) as full:
+                await svc.create_editor_audience(mock_request, body, admin_user, db)
+        assert (learner.value.status_code, big.value.status_code, full.value.status_code) == (403, 413, 400)
+
+    @pytest.mark.asyncio
+    async def test_routes(self, mock_request, db, org, admin_user):
+        from src.db.editor_audiences import EditorAudienceCreate, EditorAudienceUpdate
+        from src.routers import editor_audiences as routes
+
+        created = await routes.api_create_editor_audience(
+            mock_request, EditorAudienceCreate(org_id=org.id, name="R", rules={"conditions": []}), admin_user, db
+        )
+        assert [a.name for a in await routes.api_list_editor_audiences(mock_request, org.id, admin_user, db)] == ["R"]
+        await routes.api_update_editor_audience(mock_request, created.audience_uuid, EditorAudienceUpdate(name="S"), admin_user, db)
+        await routes.api_delete_editor_audience(mock_request, created.audience_uuid, admin_user, db)
