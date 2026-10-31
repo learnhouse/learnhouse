@@ -14,7 +14,12 @@ from src.services.courses.activities.activities import (
     update_activity,
     delete_activity,
     get_editor_bootstrap,
+    get_dynamic_preview,
     EditorBootstrapResponse,
+)
+from src.services.courses.activities.dynamic_context import (
+    DynamicPreviewRequest,
+    DynamicPreviewResponse,
 )
 from src.services.courses.activities.versioning import (
     get_activity_versions,
@@ -255,6 +260,33 @@ async def api_get_editor_bootstrap(
 ) -> EditorBootstrapResponse:
     return await get_editor_bootstrap(
         request, activity_uuid, current_user=current_user, db_session=db_session
+    )
+
+
+@router.post(
+    "/{activity_uuid}/dynamic-preview",
+    response_model=DynamicPreviewResponse,
+    summary="Preview dynamic content as a persona",
+    description=(
+        "Render the activity (or an unsaved document) with conditional blocks and "
+        "variables resolved for a simulated reader. Requires edit rights on the course."
+    ),
+    responses={
+        200: {"description": "Rendered document.", "model": DynamicPreviewResponse},
+        403: {"description": "User cannot edit this course"},
+        404: {"description": "Activity not found"},
+        413: {"description": "Content too large"},
+    },
+)
+async def api_get_dynamic_preview(
+    request: Request,
+    activity_uuid: str,
+    preview: DynamicPreviewRequest,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> DynamicPreviewResponse:
+    return await get_dynamic_preview(
+        request, activity_uuid, preview, current_user=current_user, db_session=db_session
     )
 
 
