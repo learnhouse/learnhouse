@@ -406,6 +406,7 @@ class TestPasswordResetService:
         assert refreshed.password != old_password
         assert security_verify_password("NewPassword123!", refreshed.password)
         assert not inbox_unproven(refreshed)
+        fake_redis.getdel.assert_called_once_with(redis_key)
 
     @pytest.mark.asyncio
     async def test_change_password_with_reset_code_error_paths(
