@@ -37,5 +37,8 @@
     "dompurify": ">=3.4.17",
     "katex": "^0.19.0",
     "sharp": ">=0.35.5"
+  },
+  "patchedDependencies": {
+    "nextra-theme-docs@4.6.1": "patches/nextra-theme-docs@4.6.1.patch"
   }
 }
