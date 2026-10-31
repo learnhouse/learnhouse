@@ -53,6 +53,12 @@ export default Node.create({
         parseHTML: (el) => el.getAttribute('data-hidden-message') || '',
         renderHTML: (attrs) => (attrs.hiddenMessage ? { 'data-hidden-message': attrs.hiddenMessage } : {}),
       },
+      // Set on a block inserted from a shortcut so its own node view opens the
+      // rule builder once, then cleared. Never in HTML.
+      openRules: {
+        default: null,
+        rendered: false,
+      },
       // Author's own note, e.g. "Advanced track". Never shown to learners.
       label: {
         default: '',
@@ -70,10 +76,6 @@ export default Node.create({
     return ['conditional-block', mergeAttributes(HTMLAttributes), 0]
   },
 
-  addStorage() {
-    return { openRulesOnMount: false }
-  },
-
   addCommands() {
     return {
       insertConditionalBlock:
@@ -83,8 +85,8 @@ export default Node.create({
             rules: options.rules ?? DEFAULT_RULES,
             label: options.label ?? '',
             hiddenMessage: options.hiddenMessage ?? '',
+            openRules: options.openRules ? true : null,
           }
-          this.storage.openRulesOnMount = !!options.openRules
           // Wrap the selected blocks, or start an empty one at the cursor.
           const { from, to, empty } = state.selection
           if (!empty && from !== to) {
