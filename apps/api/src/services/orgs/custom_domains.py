@@ -26,7 +26,11 @@ from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import resolve_acting_user_id
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
 from src.security.org_auth import require_org_membership, require_org_role_permission
-from src.services.utils.ssrf_guard import SSRFBlockedError, resolve_and_validate_url
+from src.services.utils.ssrf_guard import (
+    SSRFBlockedError,
+    connect_validated,
+    resolve_and_validate_url,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -727,7 +731,8 @@ async def check_domain_ssl_status(
     try:
         context = ssl.create_default_context()
         context.minimum_version = ssl.TLSVersion.TLSv1_2
-        with socket.create_connection((domain.domain, 443), timeout=5) as sock:
+        # Connect to the address that passed the guard, not a fresh lookup
+        with connect_validated(domain.domain, 443, timeout=5) as sock:
             with context.wrap_socket(sock, server_hostname=domain.domain) as ssock:
                 cert = ssock.getpeercert()
                 not_after = cert.get("notAfter", "")

@@ -7,16 +7,20 @@ The guard has two steps:
 1. ``resolve_and_validate_url`` resolves the hostname once and rejects the
    request if any resolved address falls in a private/reserved range. It
    returns the set of validated IPs.
-2. ``assert_connected_peer_allowed`` runs after the httpx request completes
-   and verifies the TCP peer httpx actually connected to was one of the
-   IPs we validated. This closes the DNS-rebinding window between step 1
-   and the actual socket connect.
+2. ``pinned_transport`` gives httpx a network backend that resolves and
+   validates the host again at connect time and connects to the validated
+   IP itself, so a DNS answer that flips after step 1 (rebinding) never
+   receives a byte.
+3. ``assert_connected_peer_allowed`` runs once the response headers arrive
+   and re-checks the TCP peer, as a backstop.
 """
 
+import asyncio
 import ipaddress
 import socket
 from urllib.parse import urlparse
 
+import httpcore
 import httpx
 
 
@@ -106,6 +110,11 @@ def resolve_and_validate_url(url: str, *, allow_http: bool = True) -> set[str]:
     if not hostname:
         raise SSRFBlockedError("URL has no hostname")
 
+    return set(_resolve_and_validate_host(hostname))
+
+
+def _resolve_and_validate_host(hostname: str) -> list[str]:
+    """Resolve ``hostname`` and return its addresses, in resolver order, if all are public."""
     if hostname.lower() in _BLOCKED_HOSTNAMES:
         raise SSRFBlockedError(f"Blocked hostname: {hostname}")
 
@@ -114,19 +123,63 @@ def resolve_and_validate_url(url: str, *, allow_http: bool = True) -> set[str]:
     except socket.gaierror as exc:
         raise SSRFBlockedError(f"Could not resolve hostname: {hostname}") from exc
 
-    validated: set[str] = set()
+    validated: list[str] = []
     for _, _, _, _, sockaddr in addr_infos:
         ip = ipaddress.ip_address(sockaddr[0])
         if _is_ip_blocked(ip):
             raise SSRFBlockedError(
-                f"URL {url} resolves to blocked address range ({ip})"
+                f"{hostname} resolves to blocked address range ({ip})"
             )
-        validated.add(str(_normalize(ip)))
+        key = str(_normalize(ip))
+        if key not in validated:
+            validated.append(key)
 
     if not validated:
         raise SSRFBlockedError(f"No addresses resolved for hostname: {hostname}")
 
     return validated
+
+
+def connect_validated(hostname: str, port: int, timeout: float) -> socket.socket:
+    """Open a TCP connection to ``hostname`` on an address that passed the guard."""
+    ip = _resolve_and_validate_host(hostname)[0]
+    return socket.create_connection((ip, port), timeout=timeout)
+
+
+class _PinnedNetworkBackend(httpcore.AsyncNetworkBackend):
+    """Resolves and validates the host at connect time, then connects to that IP.
+
+    TLS still runs against the original hostname (httpcore passes it as the
+    server name), so certificate checks are unchanged.
+    """
+
+    def __init__(self) -> None:
+        self._backend = httpcore.AnyIOBackend()
+
+    async def connect_tcp(self, host, port, timeout=None, local_address=None, socket_options=None):
+        ips = await asyncio.to_thread(_resolve_and_validate_host, host)
+        return await self._backend.connect_tcp(
+            ips[0], port, timeout=timeout, local_address=local_address,
+            socket_options=socket_options,
+        )
+
+    async def connect_unix_socket(self, path, timeout=None, socket_options=None):
+        raise SSRFBlockedError("Unix sockets are not allowed")
+
+    async def sleep(self, seconds: float) -> None:
+        await self._backend.sleep(seconds)
+
+
+def pinned_transport() -> httpx.AsyncHTTPTransport:
+    """An httpx transport that only ever connects to guard-approved addresses."""
+    transport = httpx.AsyncHTTPTransport()
+    # httpx has no public hook for the network backend; httpx is pinned and
+    # tests/security cover this, so a layout change fails loudly.
+    pool = transport._pool
+    if not isinstance(pool, httpcore.AsyncConnectionPool):
+        raise RuntimeError("Unexpected httpx transport layout; cannot pin connections")
+    pool._network_backend = _PinnedNetworkBackend()
+    return transport
 
 
 def assert_connected_peer_allowed(
