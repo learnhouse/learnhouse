@@ -12,6 +12,7 @@ from src.db.users import AnonymousUser, PublicUser, User
 from src.db.usergroups import UserGroup
 from src.security.auth import resolve_acting_user_id
 from fastapi import HTTPException, Request
+from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from uuid import uuid4
 from dataclasses import replace
@@ -250,6 +251,7 @@ async def get_editor_bootstrap(
 
 # A larger body than any real page; stops the preview being used to burn CPU.
 MAX_PREVIEW_CONTENT_BYTES = 5 * 1024 * 1024
+MAX_REACH_BLOCKS = 200
 
 
 async def _load_for_editor(
@@ -299,6 +301,9 @@ async def get_dynamic_preview(
         )
         if ctx is None:
             raise HTTPException(status_code=404, detail="Learner not enrolled in this course")
+        # Course editors don't otherwise see learners' addresses: keep the
+        # domain (email-domain rules still apply) and hide the rest.
+        ctx = replace(ctx, email=f"***@{ctx.email_domain}" if ctx.email_domain else "")
         if persona.today:
             ctx = replace(ctx, today=persona.today)
     else:
@@ -333,14 +338,18 @@ async def get_dynamic_reach(
     Editors only; counts, never who."""
     activity, course = await _load_for_editor(request, activity_uuid, current_user, db_session)
     content = _editor_content(content, activity)
-    if not conditional_rule_chains(content):
+    chains = conditional_rule_chains(content)
+    if not chains:
         return DynamicReachResponse(learners=0, blocks=[])
+    # Work is blocks x learners x conditions: bound the first factor (the
+    # others are bounded already) and keep the loop off the event loop.
+    if len(chains) > MAX_REACH_BLOCKS:
+        raise HTTPException(status_code=413, detail="Too many conditional blocks to count")
     contexts, truncated = await course_learner_contexts(
         request, course, db_session, activity_name=activity.name
     )
-    return DynamicReachResponse(
-        learners=len(contexts), blocks=conditional_reach(content, contexts), truncated=truncated
-    )
+    blocks = await run_in_threadpool(conditional_reach, content, contexts)
+    return DynamicReachResponse(learners=len(contexts), blocks=blocks, truncated=truncated)
 
 
 async def list_dynamic_learners(
