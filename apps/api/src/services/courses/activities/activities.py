@@ -9,11 +9,14 @@ from src.db.courses.chapter_activities import ChapterActivity
 from src.db.organizations import Organization, OrganizationRead
 from src.db.organization_config import OrganizationConfig
 from src.db.users import AnonymousUser, PublicUser, User
+from src.db.usergroups import UserGroup
 from src.security.auth import resolve_acting_user_id
 from fastapi import HTTPException, Request
 from pydantic import BaseModel
 from uuid import uuid4
+from dataclasses import replace
 from datetime import datetime
+from typing import Optional
 
 import json
 import logging
@@ -24,12 +27,21 @@ from src.services.courses.activities.access import (
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import index_activity
 from src.services.courses.activities.versioning import create_activity_version
-from src.services.courses.activities.dynamic_content import render_document
+from src.services.courses.activities.dynamic_content import (
+    conditional_reach,
+    conditional_rule_chains,
+    render_document,
+)
 from src.services.courses.activities.dynamic_context import (
+    DynamicLearner,
     DynamicPreviewRequest,
     DynamicPreviewResponse,
+    DynamicReachResponse,
     build_render_context,
+    course_learner_contexts,
+    enrolled_learner_context,
     persona_context,
+    search_enrolled_learners,
 )
 
 logger = logging.getLogger(__name__)
@@ -240,6 +252,30 @@ async def get_editor_bootstrap(
 MAX_PREVIEW_CONTENT_BYTES = 5 * 1024 * 1024
 
 
+async def _load_for_editor(
+    request: Request, activity_uuid: str, current_user: PublicUser, db_session: AsyncSession
+) -> tuple[Activity, Course]:
+    row = (await db_session.execute(
+        select(Activity, Course)
+        .join(Course, Course.id == Activity.course_id)  # type: ignore[arg-type]
+        .where(Activity.activity_uuid == activity_uuid)
+    )).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    activity, course = row
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+    return activity, course
+
+
+def _editor_content(content: Optional[dict], activity: Activity) -> dict:
+    content = content if content is not None else activity.content
+    if len(json.dumps(content)) > MAX_PREVIEW_CONTENT_BYTES:
+        raise HTTPException(status_code=413, detail="Content too large to preview")
+    return content or {}
+
+
 async def get_dynamic_preview(
     request: Request,
     activity_uuid: str,
@@ -253,33 +289,76 @@ async def get_dynamic_preview(
     a way for a learner to read blocks hidden from them. ``preview.content``
     lets the editor preview its unsaved document.
     """
-    row = (await db_session.execute(
-        select(Activity, Course)
-        .join(Course, Course.id == Activity.course_id)  # type: ignore[arg-type]
-        .where(Activity.activity_uuid == activity_uuid)
-    )).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Activity not found")
-    activity, course = row
+    activity, course = await _load_for_editor(request, activity_uuid, current_user, db_session)
+    content = _editor_content(preview.content, activity)
 
-    await check_resource_access(
-        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
-    )
+    persona = preview.persona
+    if persona.user_uuid:
+        ctx = await enrolled_learner_context(
+            request, course, persona.user_uuid, db_session, activity_name=activity.name
+        )
+        if ctx is None:
+            raise HTTPException(status_code=404, detail="Learner not enrolled in this course")
+        if persona.today:
+            ctx = replace(ctx, today=persona.today)
+    else:
+        base = await build_render_context(
+            request, current_user, course, db_session, activity_name=activity.name
+        )
+        group_names = tuple((await db_session.execute(
+            select(UserGroup.name).where(
+                UserGroup.org_id == course.org_id,
+                UserGroup.usergroup_uuid.in_(persona.usergroup_uuids),  # type: ignore[attr-defined]
+            )
+        )).scalars().all()) if persona.usergroup_uuids else ()
+        ctx = persona_context(base, persona, current_user, group_names=group_names, org_id=course.org_id)
 
-    content = preview.content if preview.content is not None else activity.content
-    if len(json.dumps(content)) > MAX_PREVIEW_CONTENT_BYTES:
-        raise HTTPException(status_code=413, detail="Content too large to preview")
-
-    base = await build_render_context(
-        request, current_user, course, db_session, activity_name=activity.name
-    )
-    rendered, stats = render_document(content or {}, persona_context(base, preview.persona, current_user))
+    rendered, stats = render_document(content, ctx)
     return DynamicPreviewResponse(
         content=rendered if isinstance(rendered, dict) else {},
         shown_blocks=stats.shown_blocks,
         hidden_blocks=stats.hidden_blocks,
         variables=stats.variables,
     )
+
+
+async def get_dynamic_reach(
+    request: Request,
+    activity_uuid: str,
+    content: Optional[dict],
+    current_user: PublicUser,
+    db_session: AsyncSession,
+) -> DynamicReachResponse:
+    """How many of the course's enrolled learners see each conditional block.
+    Editors only; counts, never who."""
+    activity, course = await _load_for_editor(request, activity_uuid, current_user, db_session)
+    content = _editor_content(content, activity)
+    if not conditional_rule_chains(content):
+        return DynamicReachResponse(learners=0, blocks=[])
+    contexts, truncated = await course_learner_contexts(
+        request, course, db_session, activity_name=activity.name
+    )
+    return DynamicReachResponse(
+        learners=len(contexts), blocks=conditional_reach(content, contexts), truncated=truncated
+    )
+
+
+async def list_dynamic_learners(
+    request: Request,
+    activity_uuid: str,
+    query: str,
+    current_user: PublicUser,
+    db_session: AsyncSession,
+) -> list[DynamicLearner]:
+    """Enrolled learners an editor can preview the activity as."""
+    _, course = await _load_for_editor(request, activity_uuid, current_user, db_session)
+    return [
+        DynamicLearner(
+            user_uuid=u.user_uuid, username=u.username,
+            first_name=u.first_name or "", last_name=u.last_name or "",
+        )
+        for u in await search_enrolled_learners(course, query, db_session)
+    ]
 
 
 async def get_activityby_id(

@@ -45,13 +45,20 @@ class RenderContext:
     first_name: str = ""
     last_name: str = ""
     username: str = ""
+    email: str = ""
+    user_uuid: str = ""
+    account_days: int | None = None
+    # Stable 0-99 per learner and org, for splitting an audience (A/B content).
+    bucket: int | None = None
     role: str = "anonymous"  # admin | maintainer | member | anonymous
     group_uuids: frozenset[str] = frozenset()
+    group_names: tuple[str, ...] = ()
     locale: str = "en"
     org_name: str = ""
     course_name: str = ""
     activity_name: str = ""
     enrolled: bool = False
+    enrolled_on: date | None = None
     days_enrolled: int | None = None
     progress_completed: int = 0
     progress_total: int = 0
@@ -63,6 +70,14 @@ class RenderContext:
         if self.progress_total <= 0:
             return 0
         return min(100, round(self.progress_completed * 100 / self.progress_total))
+
+    @property
+    def email_domain(self) -> str:
+        return self.email.rsplit("@", 1)[-1].lower() if "@" in self.email else ""
+
+    @property
+    def course_completed(self) -> bool:
+        return self.progress_total > 0 and self.progress_completed >= self.progress_total
 
 
 # ---------------------------------------------------------------------------
@@ -78,13 +93,17 @@ VARIABLES: dict[str, Callable[[RenderContext], str]] = {
     "user.last_name": lambda c: c.last_name,
     "user.full_name": _full_name,
     "user.username": lambda c: c.username if c.signed_in else "",
+    "user.email": lambda c: c.email if c.signed_in else "",
+    "user.groups": lambda c: ", ".join(sorted(c.group_names)),
     "org.name": lambda c: c.org_name,
     "course.name": lambda c: c.course_name,
     "activity.name": lambda c: c.activity_name,
     "progress.percent": lambda c: str(c.progress_percent),
     "progress.completed": lambda c: str(c.progress_completed),
     "progress.total": lambda c: str(c.progress_total),
+    "progress.remaining": lambda c: str(max(0, c.progress_total - c.progress_completed)),
     "enrollment.days": lambda c: "" if c.days_enrolled is None else str(c.days_enrolled),
+    "enrollment.date": lambda c: c.enrolled_on.isoformat() if c.enrolled_on else "",
     "date.today": lambda c: c.today.isoformat(),
     "date.year": lambda c: str(c.today.year),
 }
@@ -145,6 +164,12 @@ def _locale_matches(locale: str, wanted: str) -> bool:
     return locale == wanted or locale.startswith(wanted + "-")
 
 
+def _domain_matches(domain: str, wanted: str) -> bool:
+    # "acme.com" also covers "eu.acme.com"; a leading "@" is tolerated.
+    wanted = wanted.lower().lstrip("@")
+    return bool(domain) and (domain == wanted or domain.endswith("." + wanted))
+
+
 def _as_str_list(value: Any) -> list[str] | None:
     if isinstance(value, str):
         return [value]
@@ -181,11 +206,11 @@ def _set_op(actual: frozenset[str], op: str, value: Any) -> bool:
     return False
 
 
-def _string_op(actual: str, op: str, value: Any, *, locale: bool = False) -> bool:
+def _string_op(actual: str, op: str, value: Any, *, match: Callable[[str, str], bool] | None = None) -> bool:
     wanted = _as_str_list(value)
     if wanted is None:
         return False
-    hit = any(_locale_matches(actual, v) if locale else actual == v for v in wanted)
+    hit = any(match(actual, v) if match else actual == v for v in wanted)
     if op in ("eq", "in"):
         return hit
     if op in ("neq", "not_in"):
@@ -239,8 +264,8 @@ def _bool_op(actual: bool, op: str) -> bool:
     return False
 
 
-def _days_enrolled(ctx: RenderContext) -> float | None:
-    return None if ctx.days_enrolled is None else float(ctx.days_enrolled)
+def _optional_number(value: int | None) -> float | None:
+    return None if value is None else float(value)
 
 
 # field -> evaluator(ctx, op, value). The editor's rule builder mirrors this table.
@@ -248,10 +273,15 @@ FIELDS: dict[str, Callable[[RenderContext, str, Any], bool]] = {
     "user.groups": lambda c, op, v: _set_op(c.group_uuids, op, v),
     "user.role": lambda c, op, v: _string_op(c.role, op, v),
     "user.signed_in": lambda c, op, v: _bool_op(c.signed_in, op),
-    "user.locale": lambda c, op, v: _string_op(c.locale, op, v, locale=True),
+    "user.locale": lambda c, op, v: _string_op(c.locale, op, v, match=_locale_matches),
+    "user.email_domain": lambda c, op, v: _string_op(c.email_domain, op, v, match=_domain_matches),
+    "user.account_days": lambda c, op, v: _number_op(_optional_number(c.account_days), op, v),
+    "user.bucket": lambda c, op, v: _number_op(_optional_number(c.bucket), op, v),
     "course.enrolled": lambda c, op, v: _bool_op(c.enrolled, op),
-    "enrollment.days": lambda c, op, v: _number_op(_days_enrolled(c), op, v),
+    "course.completed": lambda c, op, v: _bool_op(c.course_completed, op),
+    "enrollment.days": lambda c, op, v: _number_op(_optional_number(c.days_enrolled), op, v),
     "progress.percent": lambda c, op, v: _number_op(float(c.progress_percent), op, v),
+    "progress.completed_count": lambda c, op, v: _number_op(float(c.progress_completed), op, v),
     "progress.completed_activities": lambda c, op, v: _set_op(c.completed_activity_uuids, op, v),
     "date.today": lambda c, op, v: _date_op(c.today, op, v),
 }
@@ -327,6 +357,24 @@ def has_dynamic_content(doc: Any) -> bool:
     return False
 
 
+MAX_TEASER_LENGTH = 300
+
+
+def _teaser(message: Any, ctx: RenderContext | None) -> dict | None:
+    """What a reader who can't see a block gets instead, if the author set
+    one ("Unlocks after your first week"). Only the message, never the content."""
+    if ctx is None or not isinstance(message, str) or not message.strip():
+        return None
+    text = interpolate_text(message.strip()[:MAX_TEASER_LENGTH], ctx)
+    if not text:
+        return None
+    return {
+        "type": "callout",
+        "attrs": {"type": "info"},
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}],
+    }
+
+
 @dataclass
 class RenderStats:
     shown_blocks: int = 0
@@ -352,7 +400,11 @@ def _render_children(children: list, ctx: RenderContext | None, stats: RenderSta
                 out.extend(_render_children(child.get("content") or [], ctx, stats, depth + 1))
             else:
                 stats.hidden_blocks += 1
-                dropped_block = True
+                teaser = _teaser(attrs.get("hiddenMessage"), ctx)
+                if teaser:
+                    out.append(teaser)
+                else:
+                    dropped_block = True
             continue
 
         if node_type == VARIABLE_NODE:
@@ -407,3 +459,30 @@ def strip_dynamic_content(doc: Any) -> Any:
     if not isinstance(doc, dict) or not has_dynamic_content(doc):
         return doc
     return _render_node(doc, None, RenderStats(), 0)
+
+
+def conditional_rule_chains(doc: Any) -> list[list[Any]]:
+    """Every conditional block in document order (ProseMirror's descendants
+    order), each with its own rules preceded by those of the blocks around it:
+    a nested block is only seen by readers who pass all of them."""
+    chains: list[list[Any]] = []
+
+    def walk(node: Any, ancestors: list[Any], depth: int) -> None:
+        if not isinstance(node, dict) or depth > MAX_NODE_DEPTH:
+            return
+        if node.get("type") == CONDITIONAL_NODE:
+            ancestors = [*ancestors, (node.get("attrs") or {}).get("rules")]
+            chains.append(ancestors)
+        for child in node.get("content") or []:
+            walk(child, ancestors, depth + 1)
+
+    walk(doc, [], 0)
+    return chains
+
+
+def conditional_reach(doc: Any, contexts: list[RenderContext]) -> list[int]:
+    """How many of ``contexts`` see each conditional block, in document order."""
+    return [
+        sum(1 for ctx in contexts if all(evaluate_rules(rules, ctx) for rules in chain))
+        for chain in conditional_rule_chains(doc)
+    ]

@@ -16,6 +16,10 @@ export interface PreviewPersona {
   progress_percent: number
   completed_activity_uuids: string[]
   today?: string | null
+  email?: string | null
+  bucket?: number | null
+  // Preview as this enrolled learner; the other fields are then ignored.
+  user_uuid?: string | null
 }
 
 export interface DynamicPreviewResult {
@@ -77,6 +81,36 @@ export async function deleteEditorTemplate(template_uuid: string, access_token: 
   const result = await fetch(
     `${getAPIUrl()}editor-templates/${template_uuid}`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export interface DynamicReach {
+  learners: number
+  blocks: number[]
+  truncated: boolean
+}
+
+// How many enrolled learners see each conditional block, in document order.
+export async function getDynamicReach(activity_uuid: string, content: any, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/dynamic-reach`,
+    RequestBodyWithAuthHeader('POST', { content }, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export interface DynamicLearner {
+  user_uuid: string
+  username: string
+  first_name: string
+  last_name: string
+}
+
+export async function searchDynamicLearners(activity_uuid: string, query: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/dynamic-learners?q=${encodeURIComponent(query)}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   return getResponseMetadata(result)
 }

@@ -1,14 +1,16 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, UserRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import EditorPreview from '@components/Objects/Editor/EditorPreview'
 import { useAuth } from '@components/Contexts/AuthContext'
 import {
+  DynamicLearner,
   DynamicPreviewResult,
   PreviewPersona,
   getDynamicPreview,
+  searchDynamicLearners,
 } from '@services/courses/dynamicContent'
 import { ROLES } from './dynamicRules'
 import { useDynamicLookups } from './useDynamicLookups'
@@ -25,6 +27,9 @@ const DEFAULT_PERSONA: PreviewPersona = {
   progress_percent: 0,
   completed_activity_uuids: [],
   today: null,
+  email: null,
+  bucket: null,
+  user_uuid: null,
 }
 
 interface ViewAsPreviewProps {
@@ -46,13 +51,33 @@ export default function ViewAsPreview({ activity, getContent, onClose }: ViewAsP
   const [loading, setLoading] = useState(false)
   const content = useRef(getContent())
   const requestId = useRef(0)
+  const [mode, setMode] = useState<'persona' | 'learner'>('persona')
+  const [learnerQuery, setLearnerQuery] = useState('')
+  const [learners, setLearners] = useState<DynamicLearner[]>([])
+  const [learner, setLearner] = useState<DynamicLearner | null>(null)
 
   useEffect(() => {
-    if (!accessToken) return
+    if (mode !== 'learner' || !accessToken) return
+    const timer = window.setTimeout(async () => {
+      const res = await searchDynamicLearners(activity.activity_uuid, learnerQuery, accessToken)
+      setLearners(res.success && Array.isArray(res.data) ? res.data : [])
+    }, 250)
+    return () => window.clearTimeout(timer)
+  }, [mode, learnerQuery, accessToken, activity.activity_uuid])
+
+  // Real learner mode sends only who and when; the server fills in the rest.
+  const effectivePersona = useMemo<PreviewPersona | null>(() => {
+    if (mode === 'persona') return persona
+    if (!learner) return null
+    return { ...DEFAULT_PERSONA, user_uuid: learner.user_uuid, today: persona.today }
+  }, [mode, persona, learner])
+
+  useEffect(() => {
+    if (!accessToken || !effectivePersona) return
     const id = ++requestId.current
     const timer = window.setTimeout(async () => {
       setLoading(true)
-      const res = await getDynamicPreview(activity.activity_uuid, content.current, persona, accessToken)
+      const res = await getDynamicPreview(activity.activity_uuid, content.current, effectivePersona, accessToken)
       if (id !== requestId.current) return
       setLoading(false)
       if (res.success) {
@@ -63,7 +88,7 @@ export default function ViewAsPreview({ activity, getContent, onClose }: ViewAsP
       }
     }, 250)
     return () => window.clearTimeout(timer)
-  }, [persona, accessToken, activity.activity_uuid, t])
+  }, [effectivePersona, accessToken, activity.activity_uuid, t])
 
   const set = <K extends keyof PreviewPersona>(key: K, value: PreviewPersona[K]) =>
     setPersona((p) => ({ ...p, [key]: value }))
@@ -76,8 +101,57 @@ export default function ViewAsPreview({ activity, getContent, onClose }: ViewAsP
 
   const signedIn = persona.signed_in && persona.role !== 'anonymous'
 
+  const learnerPicker = (
+    <div className="space-y-2">
+      <input
+        className="w-full rounded-lg border border-gray-200 px-2 py-1.5"
+        value={learnerQuery}
+        placeholder={t('editor.dynamic.persona.search_learners', 'Search enrolled learners')}
+        onChange={(e) => setLearnerQuery(e.target.value)}
+      />
+      {learners.length === 0 ? (
+        <p className="text-xs text-gray-400">{t('editor.dynamic.persona.no_learners', 'No enrolled learner matches.')}</p>
+      ) : (
+        <div className="max-h-64 space-y-0.5 overflow-y-auto">
+          {learners.map((l) => (
+            <button
+              key={l.user_uuid}
+              type="button"
+              onClick={() => setLearner(l)}
+              className={`block w-full truncate rounded-lg px-2 py-1.5 text-start ${
+                learner?.user_uuid === l.user_uuid ? 'bg-violet-600 text-white' : 'hover:bg-gray-100'
+              }`}
+            >
+              {[l.first_name, l.last_name].filter(Boolean).join(' ') || l.username}
+              <span className={`ms-1 text-xs ${learner?.user_uuid === l.user_uuid ? 'text-violet-100' : 'text-gray-400'}`}>@{l.username}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="text-xs text-gray-400">
+        {t('editor.dynamic.persona.learner_hint', 'Uses their real groups, progress and enrollment.')}
+      </p>
+    </div>
+  )
+
   const sidebar = (
     <div className="w-full shrink-0 space-y-4 overflow-y-auto border-gray-100 p-4 text-sm md:w-72 md:border-e">
+      <div className="flex rounded-lg bg-gray-100 p-0.5 text-xs">
+        {(['persona', 'learner'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            className={`flex-1 rounded-md px-2 py-1 ${mode === m ? 'bg-white font-semibold text-gray-900 shadow-sm' : 'text-gray-500'}`}
+          >
+            {m === 'persona'
+              ? t('editor.dynamic.persona.mode_persona', 'Persona')
+              : t('editor.dynamic.persona.mode_learner', 'Real learner')}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'learner' ? learnerPicker : (<>
       <Field label={t('editor.dynamic.persona.role', 'Viewer')}>
         <select
           className="w-full rounded-lg border border-gray-200 px-2 py-1.5"
@@ -145,6 +219,23 @@ export default function ViewAsPreview({ activity, getContent, onClose }: ViewAsP
         </>
       )}
 
+      {signedIn && (
+        <>
+          <Field label={t('editor.dynamic.persona.email', 'Email')}>
+            <input
+              className="w-full rounded-lg border border-gray-200 px-2 py-1.5"
+              value={persona.email ?? ''}
+              placeholder={t('editor.dynamic.persona.your_email', 'Your own')}
+              onChange={(e) => set('email', e.target.value || null)}
+            />
+          </Field>
+          <Field label={`${t('editor.dynamic.fields.user_bucket', 'Audience split (0-99)')}: ${persona.bucket ?? t('editor.dynamic.persona.yours', 'yours')}`}>
+            <input type="range" min={0} max={99} className="w-full" value={persona.bucket ?? 0}
+              onChange={(e) => set('bucket', Number(e.target.value))} />
+          </Field>
+        </>
+      )}
+
       <Field label={t('editor.dynamic.fields.user_locale', 'Language')}>
         <input className="w-full rounded-lg border border-gray-200 px-2 py-1.5" value={persona.locale} maxLength={16}
           onChange={(e) => set('locale', e.target.value)} />
@@ -154,6 +245,7 @@ export default function ViewAsPreview({ activity, getContent, onClose }: ViewAsP
         <input type="date" className="w-full rounded-lg border border-gray-200 px-2 py-1.5" value={persona.today ?? ''}
           onChange={(e) => set('today', e.target.value || null)} />
       </Field>
+      </>)}
     </div>
   )
 

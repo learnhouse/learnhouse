@@ -166,11 +166,16 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
     immediatelyRender: false,
   })
 
-  // Update content when it changes
+  // Update content when it changes. The editor was created with the first
+  // value, so skip that one. Deferred: React node views mount with flushSync,
+  // which React refuses while it is still committing this render.
+  const initialContent = React.useRef(content)
   React.useEffect(() => {
-    if (editor && content) {
-      editor.commands.setContent(normalizeCalloutContent(content))
-    }
+    if (!editor || !content || content === initialContent.current) return
+    initialContent.current = content
+    queueMicrotask(() => {
+      if (!editor.isDestroyed) editor.commands.setContent(normalizeCalloutContent(content))
+    })
   }, [editor, content])
 
   if (!editor) {
