@@ -346,18 +346,37 @@ export async function switchSubscriptionPlan(
     }
   }
 
-  // Upgrade: apply immediately with proration. Preserve existing metadata
-  // (e.g. org_slug, used by the cancellation email) and only override the
-  // plan/billing keys.
-  await stripe.subscriptions.update(subscription.id, {
-    items: [{
-      id: subscription.items.data[0].id,
-      price: newPriceId,
-    }],
-    proration_behavior: "create_prorations",
-    metadata: { ...(subscription.metadata ?? {}), org_id: orgId, plan: newPlan, billing: newBilling },
-    ...discountParam,
-  });
+  // Upgrade: charge the prorated difference now and apply the new plan only if
+  // that payment goes through. With plain prorations the difference waited for
+  // the next renewal, so an upgrade followed by a cancellation was never billed.
+  // error_if_incomplete leaves the subscription untouched when the charge fails
+  // or needs the customer to authenticate. Preserve existing metadata (e.g.
+  // org_slug, used by the cancellation email) and only override plan/billing.
+  try {
+    await stripe.subscriptions.update(subscription.id, {
+      items: [{
+        id: subscription.items.data[0].id,
+        price: newPriceId,
+      }],
+      proration_behavior: "always_invoice",
+      payment_behavior: "error_if_incomplete",
+      metadata: { ...(subscription.metadata ?? {}), org_id: orgId, plan: newPlan, billing: newBilling },
+      ...discountParam,
+    });
+  } catch (err: any) {
+    // 402: declined, or the bank wants the customer to confirm the charge.
+    // A card error or a missing payment method means the same to the user.
+    if (err?.statusCode === 402 || err?.type === "StripeCardError" || err?.code === "resource_missing") {
+      throw Object.assign(
+        new Error(
+          "The upgrade payment couldn't be completed: it was declined or your bank needs to confirm it. " +
+          "Check your payment method in billing settings, or contact support to upgrade.",
+        ),
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 
   // Best-effort direct org-config update. Stripe has already applied the
   // upgrade at this point, so a backend hiccup here must NOT surface to the
