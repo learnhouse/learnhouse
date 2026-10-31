@@ -1,6 +1,9 @@
 import {
   AlertCircle,
   Braces,
+  CalendarClock,
+  SplitSquareHorizontal,
+  Users,
   LayoutTemplate,
   Save,
   Split,
@@ -41,6 +44,7 @@ import { SlashCommandItem, SlashCommandCategory } from './types'
 import React from 'react'
 import { searchMatchesAny, normalizeForSearch } from '@/lib/search/normalize'
 import { EDITOR_EVENTS, emitEditorEvent } from '../../Templates/templateContent'
+import { presetById } from '../Dynamic/dynamicRules'
 
 export const categoryLabels: Record<SlashCommandCategory, string> = {
   text: 'Text',
@@ -518,6 +522,45 @@ export const slashCommands: SlashCommandItem[] = [
     keywords: ['conditional', 'condition', 'rule', 'audience', 'group', 'show', 'hide', 'personalize', 'drip'],
     command: (editor) => {
       editor.chain().focus().insertConditionalBlock().run()
+    },
+  },
+  {
+    id: 'show-to-group',
+    title: 'Show to a group',
+    description: 'Content only members of a user group see',
+    icon: <Users size={18} />,
+    category: 'dynamic',
+    keywords: ['group', 'team', 'audience', 'members', 'only', 'restrict', 'personalize'],
+    command: (editor) => {
+      const preset = presetById('group')!
+      editor.chain().focus().insertConditionalBlock({ rules: preset.rules(), openRules: true }).run()
+    },
+  },
+  {
+    id: 'drip',
+    title: 'Unlock later',
+    description: 'Show content after days in the course',
+    icon: <CalendarClock size={18} />,
+    category: 'dynamic',
+    keywords: ['drip', 'unlock', 'later', 'schedule', 'days', 'week', 'release'],
+    command: (editor) => {
+      const preset = presetById('drip')!
+      editor
+        .chain()
+        .focus()
+        .insertConditionalBlock({ rules: preset.rules(), hiddenMessage: preset.hiddenMessage, label: 'After a week', openRules: true })
+        .run()
+    },
+  },
+  {
+    id: 'ab-test',
+    title: 'A/B test',
+    description: 'Two versions, each shown to half of learners',
+    icon: <SplitSquareHorizontal size={18} />,
+    category: 'dynamic',
+    keywords: ['ab', 'a/b', 'test', 'experiment', 'variant', 'split', 'version'],
+    command: (editor) => {
+      editor.chain().focus().insertABTest().run()
     },
   },
   {

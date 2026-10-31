@@ -5889,7 +5889,8 @@
         "user_email_domain": "Email domain",
         "user_account_days": "Days since sign-up",
         "course_completed": "Completed the course",
-        "progress_completed_count": "Activities completed"
+        "progress_completed_count": "Activities completed",
+        "audience": "Saved audience"
       },
       "format": "Format",
       "formats": {
@@ -5926,7 +5927,9 @@
         "neq": "≠",
         "not_in": "is not",
         "on_or_after": "on or after",
-        "on_or_before": "on or before"
+        "on_or_before": "on or before",
+        "is": "includes the learner",
+        "is_not": "excludes the learner"
       },
       "persona": {
         "first_name": "First name",
@@ -5989,7 +5992,38 @@
       "hidden_message_placeholder": "e.g. This section unlocks after your first week.",
       "hidden_message_hint": "Shown as a note in place of the block. Variables work here too.",
       "reach": "{{matched}} of {{learners}} learners",
-      "reach_hint": "Learners enrolled in this course who see this block, from the current rules."
+      "reach_hint": "Learners enrolled in this course who see this block, from the current rules.",
+      "for_example": "e.g.",
+      "no_variable_match": "No variable matches",
+      "insert_variable": "Insert a variable",
+      "audience_save_error": "Could not save the audience",
+      "audience_saved": "Saved \"{{name}}\". Any block can now use it.",
+      "quick_start": "Quick start",
+      "saved_audiences": "Saved audiences",
+      "save_audience_hint": "Name these rules to reuse them in other blocks",
+      "save_audience": "Save as audience",
+      "audience_name": "e.g. Internal staff",
+      "pick_audience": "Pick an audience…",
+      "reach_none": "No enrolled learner matches these rules yet.",
+      "empty_rules": "Everyone sees this block for now.",
+      "choose_who": "Choose who sees it",
+      "presets": {
+        "group": "Members of a group",
+        "group_hint": "Only learners in the user groups you pick",
+        "drip": "After a week",
+        "drip_hint": "Unlocks 7 days after the learner enrolls",
+        "halfway": "Halfway through",
+        "halfway_hint": "Learners with 50% or more of the course done",
+        "finished": "Finished the course",
+        "finished_hint": "A congratulations or next-steps note",
+        "ab": "A/B test (half)",
+        "ab_hint": "A stable half of learners; add the opposite block for the other half",
+        "visitors": "Signed-out visitors",
+        "visitors_hint": "People browsing without an account",
+        "dates": "Between two dates",
+        "dates_hint": "A time-limited announcement",
+        "drip_message": "This unlocks after your first week."
+      }
     },
     "templates": {
       "delete": "Delete",
@@ -6022,7 +6056,9 @@
       "select_first": "Select blocks first",
       "title": "Templates",
       "fill_fields": "Fill in this template",
-      "fields_hint": "Tip: write {{example}} for a blank that authors fill in when they insert the template."
+      "fields_hint": "Tip: write {{example}} for a blank that authors fill in when they insert the template.",
+      "starter_hint": "Starter template: insert it, then edit freely.",
+      "kind_starter": "Starters"
     }
   },
   "analytics": {

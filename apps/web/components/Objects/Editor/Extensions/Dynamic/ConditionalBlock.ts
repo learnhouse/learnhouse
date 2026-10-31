@@ -1,12 +1,22 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import ConditionalBlockComponent from './ConditionalBlockComponent'
-import { DEFAULT_RULES } from './dynamicRules'
+import { DEFAULT_RULES, RuleGroup, negateRules } from './dynamicRules'
+
+export interface ConditionalBlockOptions {
+  rules?: RuleGroup
+  label?: string
+  hiddenMessage?: string
+  // Open the rule builder as soon as the block appears.
+  openRules?: boolean
+}
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     conditionalBlock: {
-      insertConditionalBlock: () => ReturnType
+      insertConditionalBlock: (options?: ConditionalBlockOptions) => ReturnType
+      // Two blocks splitting learners in half: version A and version B.
+      insertABTest: () => ReturnType
     }
   }
 }
@@ -60,18 +70,44 @@ export default Node.create({
     return ['conditional-block', mergeAttributes(HTMLAttributes), 0]
   },
 
+  addStorage() {
+    return { openRulesOnMount: false }
+  },
+
   addCommands() {
     return {
       insertConditionalBlock:
-        () =>
+        (options = {}) =>
         ({ state, chain }) => {
+          const attrs = {
+            rules: options.rules ?? DEFAULT_RULES,
+            label: options.label ?? '',
+            hiddenMessage: options.hiddenMessage ?? '',
+          }
+          this.storage.openRulesOnMount = !!options.openRules
           // Wrap the selected blocks, or start an empty one at the cursor.
           const { from, to, empty } = state.selection
           if (!empty && from !== to) {
-            return chain().wrapIn(this.name).run()
+            return chain().wrapIn(this.name, attrs).run()
           }
           return chain()
-            .insertContent({ type: this.name, content: [{ type: 'paragraph' }] })
+            .insertContent({ type: this.name, attrs, content: [{ type: 'paragraph' }] })
+            .run()
+        },
+      insertABTest:
+        () =>
+        ({ chain }) => {
+          const a: RuleGroup = { match: 'all', conditions: [{ field: 'user.bucket', op: 'lt', value: 50 }] }
+          const block = (label: string, rules: RuleGroup, text: string) => ({
+            type: this.name,
+            attrs: { rules, label, hiddenMessage: '' },
+            content: [{ type: 'paragraph', content: [{ type: 'text', text }] }],
+          })
+          return chain()
+            .insertContent([
+              block('Version A', a, 'Version A: half of learners see this.'),
+              block('Version B', negateRules(a), 'Version B: the other half see this.'),
+            ])
             .run()
         },
     }

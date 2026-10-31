@@ -72,6 +72,7 @@ import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
 import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
+import VariableSuggestion from './Extensions/Dynamic/VariableSuggestion'
 import { DynamicReachProvider } from './Extensions/Dynamic/DynamicReach'
 import { EDITOR_EVENTS } from './Templates/templateContent'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -229,6 +230,7 @@ function Editor(props: EditorProps) {
       MagicBlock.configure({ editable: true, activity: stableActivity }),
       ConditionalBlock,
       DynamicVariable,
+      VariableSuggestion,
       AIStreamingMark,
       AISelectionHighlight,
     ],

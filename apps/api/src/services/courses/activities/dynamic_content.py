@@ -29,6 +29,7 @@ from typing import Any, Callable
 
 CONDITIONAL_NODE = "conditionalBlock"
 VARIABLE_NODE = "dynamicVariable"
+AUDIENCE_FIELD = "audience"
 
 # Bounds on author input so a crafted document can't make rendering expensive.
 MAX_RULE_DEPTH = 4
@@ -64,6 +65,8 @@ class RenderContext:
     progress_total: int = 0
     completed_activity_uuids: frozenset[str] = frozenset()
     today: date = field(default_factory=date.today)
+    # Saved audiences the document refers to: audience_uuid -> rule tree.
+    audiences: dict[str, Any] = field(default_factory=dict)
 
     @property
     def progress_percent(self) -> int:
@@ -306,15 +309,27 @@ def _evaluate_group(group: Any, ctx: RenderContext, depth: int, budget: _Budget)
         if isinstance(item, dict) and "conditions" in item:
             results.append(_evaluate_group(item, ctx, depth + 1, budget))
         else:
-            results.append(_evaluate_condition(item, ctx))
+            results.append(_evaluate_condition(item, ctx, depth, budget))
     # An empty group is "everyone": a block just dropped into the page.
     passed = any(results) if group.get("match") == "any" and results else all(results)
     return not passed if group.get("negate") is True else passed
 
 
-def _evaluate_condition(condition: Any, ctx: RenderContext) -> bool:
+def _evaluate_audience(op: str, value: Any, ctx: RenderContext, depth: int, budget: _Budget) -> bool:
+    # A saved audience is a named rule tree; it counts against the same depth
+    # and condition budget, so audiences that refer to each other stop there.
+    rules = ctx.audiences.get(value) if isinstance(value, str) else None
+    if rules is None or op not in ("is", "is_not"):
+        return False
+    inside = _evaluate_group(rules, ctx, depth + 1, budget)
+    return inside if op == "is" else not inside
+
+
+def _evaluate_condition(condition: Any, ctx: RenderContext, depth: int = 0, budget: _Budget | None = None) -> bool:
     if not isinstance(condition, dict):
         return False
+    if condition.get("field") == AUDIENCE_FIELD and isinstance(condition.get("op"), str):
+        return _evaluate_audience(condition["op"], condition.get("value"), ctx, depth, budget or _Budget())
     evaluator = FIELDS.get(condition.get("field"))  # type: ignore[arg-type]
     op = condition.get("op")
     if evaluator is None or not isinstance(op, str):
@@ -487,10 +502,15 @@ def count_conditions(rules: Any, depth: int = 0) -> int:
     items = rules.get("conditions")
     if not isinstance(items, list):
         return 0
-    return min(MAX_CONDITIONS, sum(
-        1 + (count_conditions(item, depth + 1) if isinstance(item, dict) and "conditions" in item else 0)
-        for item in items
-    ))
+    def cost(item: Any) -> int:
+        if isinstance(item, dict) and "conditions" in item:
+            return 1 + count_conditions(item, depth + 1)
+        # An audience can expand to a full rule tree: assume the worst.
+        if isinstance(item, dict) and item.get("field") == AUDIENCE_FIELD:
+            return MAX_CONDITIONS
+        return 1
+
+    return min(MAX_CONDITIONS, sum(cost(item) for item in items))
 
 
 def conditional_reach(doc: Any, contexts: list[RenderContext]) -> list[int]:
@@ -506,3 +526,19 @@ def conditional_reach(doc: Any, contexts: list[RenderContext]) -> list[int]:
             visible.append(seen)
             counts[index] += seen
     return counts
+
+
+def referenced_audiences(rules: Any, depth: int = 0) -> set[str]:
+    """Audience uuids a rule tree (or a whole document) refers to directly."""
+    found: set[str] = set()
+    if depth > MAX_NODE_DEPTH:
+        return found
+    if isinstance(rules, dict):
+        if rules.get("field") == AUDIENCE_FIELD and isinstance(rules.get("value"), str):
+            found.add(rules["value"])
+        if rules.get("type") == CONDITIONAL_NODE:
+            found |= referenced_audiences((rules.get("attrs") or {}).get("rules"), depth + 1)
+        for key in ("conditions", "content"):
+            for item in rules.get(key) or []:
+                found |= referenced_audiences(item, depth + 1)
+    return found

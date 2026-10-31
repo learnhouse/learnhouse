@@ -5,6 +5,7 @@ import { useAuth } from '@components/Contexts/AuthContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseContext } from '@components/Contexts/CourseContext'
 import { getUserGroups } from '@services/usergroups/usergroups'
+import { EditorAudience, getEditorAudiences } from '@services/courses/dynamicContent'
 import { queryKeys } from '@/lib/query/keys'
 import { asArray } from '@services/utils/ts/requests'
 
@@ -28,6 +29,14 @@ export function useDynamicLookups(enabled: boolean = true) {
     staleTime: 60_000,
   })
 
+  const { data: audiencesRaw } = useQuery({
+    queryKey: queryKeys.editorAudiences.list(org?.id),
+    queryFn: () => getEditorAudiences(org.id, accessToken as string),
+    select: (res: any) => asArray<EditorAudience>(res?.data),
+    enabled: enabled && !!(org?.id && accessToken),
+    staleTime: 30_000,
+  })
+
   return useMemo(() => {
     const usergroups: LookupOption[] = asArray(usergroupsRaw).map((g: any) => ({
       value: g.usergroup_uuid,
@@ -39,10 +48,18 @@ export function useDynamicLookups(enabled: boolean = true) {
     )
     const toRecord = (options: LookupOption[]) =>
       Object.fromEntries(options.map((o) => [o.value, o.label]))
+    const audiences: EditorAudience[] = audiencesRaw ?? []
+    const audienceOptions: LookupOption[] = audiences.map((a) => ({ value: a.audience_uuid, label: a.name }))
     return {
       usergroups,
       activities,
-      names: { usergroups: toRecord(usergroups), activities: toRecord(activities) },
+      audiences,
+      audienceOptions,
+      names: {
+        usergroups: toRecord(usergroups),
+        activities: toRecord(activities),
+        audiences: toRecord(audienceOptions),
+      },
     }
-  }, [usergroupsRaw, course?.courseStructure])
+  }, [usergroupsRaw, audiencesRaw, course?.courseStructure])
 }

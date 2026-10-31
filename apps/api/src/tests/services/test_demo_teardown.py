@@ -69,8 +69,9 @@ _SET_NULL_ALLOWED = {
     ("playground", "created_by"),
     ("activity", "last_modified_by_id"),
     ("activityversion", "created_by_id"),
-    # Templates belong to the org; an author leaving must not delete them.
+    # Templates and audiences belong to the org; an author leaving must not delete them.
     ("editortemplate", "creator_id"),
+    ("editoraudience", "creator_id"),
     # The demo state row deliberately outlives its organization so the next
     # provision can read last_error and bundle_version off it.
     ("demo_state", "org_id"),

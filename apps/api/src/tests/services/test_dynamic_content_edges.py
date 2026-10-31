@@ -268,3 +268,13 @@ class TestActivityRoutes:
             reach = await routes.api_get_dynamic_reach(mock_request, activity.activity_uuid, routes.DynamicReachRequest(content=DOC), admin_user, db)
             learners = await routes.api_list_dynamic_learners(mock_request, activity.activity_uuid, "", admin_user, db)
         assert preview.content == DOC and reach.blocks == [] and learners == []
+
+
+class TestAudienceEdges:
+    def test_audience_cost_and_depth(self):
+        rules = _all({"field": "audience", "op": "is", "value": "audience_a"})
+        assert dc.count_conditions(rules) == dc.MAX_CONDITIONS
+        deep: dict = {"field": "audience", "op": "is", "value": "audience_deep"}
+        for _ in range(dc.MAX_NODE_DEPTH + 2):
+            deep = {"conditions": [deep]}
+        assert dc.referenced_audiences(deep) == set()

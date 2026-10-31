@@ -35,7 +35,7 @@ function DynamicVariableComponent({ node, updateAttributes, selected, editor, ge
     <NodeViewWrapper as="span" ref={wrapperRef} className="relative inline-block align-baseline">
       <span
         contentEditable={false}
-        title={`{{${path}}}`}
+        title={def ? `{{${path}}} · ${t('editor.dynamic.for_example', 'e.g.')} ${def.sample}` : `{{${path}}}`}
         onMouseDown={(e) => {
           if (!isEditable) return
           e.preventDefault()

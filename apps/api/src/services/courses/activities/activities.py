@@ -42,6 +42,7 @@ from src.services.courses.activities.dynamic_context import (
     build_render_context,
     course_learner_contexts,
     enrolled_learner_context,
+    load_audiences,
     persona_context,
     search_enrolled_learners,
 )
@@ -321,6 +322,7 @@ async def get_dynamic_preview(
         )).scalars().all()) if persona.usergroup_uuids else ()
         ctx = persona_context(base, persona, current_user, group_names=group_names, org_id=course.org_id)
 
+    ctx = replace(ctx, audiences=await load_audiences(course.org_id, content, db_session))
     rendered, stats = render_document(content, ctx)
     return DynamicPreviewResponse(
         content=rendered if isinstance(rendered, dict) else {},
@@ -354,6 +356,9 @@ async def get_dynamic_reach(
     conditions = sum(max(1, count_conditions(rules)) for rules, _ in blocks)
     if conditions * len(contexts) > MAX_REACH_WORK:
         raise HTTPException(status_code=413, detail="Too many rules to count for this many learners")
+    audiences = await load_audiences(course.org_id, content, db_session)
+    if audiences:
+        contexts = [replace(ctx, audiences=audiences) for ctx in contexts]
     counts = await run_in_threadpool(conditional_reach, content, contexts)
     return DynamicReachResponse(learners=len(contexts), blocks=counts, truncated=truncated)
 

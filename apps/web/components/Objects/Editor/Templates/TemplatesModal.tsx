@@ -1,7 +1,7 @@
 'use client'
 import React, { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { FileText, LayoutTemplate, Loader2, Plus, Search, Trash2 } from 'lucide-react'
+import { FileText, LayoutTemplate, Loader2, Plus, Search, Sparkles, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -18,6 +18,7 @@ import {
   getEditorTemplates,
 } from '@services/courses/dynamicContent'
 import { fieldLabel, fillTemplateFields, mediaNodeTypes, templateFields } from './templateContent'
+import { STARTER_TEMPLATES, isStarter } from './starterTemplates'
 
 export type TemplatesModalMode = 'insert' | 'save'
 
@@ -54,16 +55,17 @@ function InsertTemplate({ editor, activity, onClose, onSaveNew }: TemplatesModal
   const { accessToken } = useAuth()
   const org = useOrg() as any
   const queryClient = useQueryClient()
-  const { data: templates = [], isLoading } = useTemplates()
+  const { data: saved = [], isLoading } = useTemplates()
+  const templates = useMemo(() => [...STARTER_TEMPLATES, ...saved], [saved])
   const [query, setQuery] = useState('')
-  const [kind, setKind] = useState<EditorTemplateKind | 'all'>('all')
+  const [kind, setKind] = useState<EditorTemplateKind | 'all' | 'starter'>('all')
   const [selectedUuid, setSelectedUuid] = useState<string | null>(null)
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     return templates.filter(
       (tpl) =>
-        (kind === 'all' || tpl.kind === kind) &&
+        (kind === 'all' || (kind === 'starter' ? isStarter(tpl) : !isStarter(tpl) && tpl.kind === kind)) &&
         (!q || tpl.name.toLowerCase().includes(q) || tpl.description.toLowerCase().includes(q))
     )
   }, [templates, query, kind])
@@ -109,14 +111,14 @@ function InsertTemplate({ editor, activity, onClose, onSaveNew }: TemplatesModal
             />
           </div>
           <div className="flex items-center gap-1 text-xs">
-            {(['all', 'block', 'page'] as const).map((k) => (
+            {(['all', 'starter', 'block', 'page'] as const).map((k) => (
               <button
                 key={k}
                 type="button"
                 onClick={() => setKind(k)}
                 className={`rounded-md px-2 py-1 ${kind === k ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}`}
               >
-                {t(`editor.templates.kind_${k}`, k === 'all' ? 'All' : k === 'block' ? 'Blocks' : 'Pages')}
+                {t(`editor.templates.kind_${k}`, { all: 'All', starter: 'Starters', block: 'Blocks', page: 'Pages' }[k])}
               </button>
             ))}
             <button
@@ -132,7 +134,7 @@ function InsertTemplate({ editor, activity, onClose, onSaveNew }: TemplatesModal
           {isLoading && <Loader2 className="mx-auto mt-6 animate-spin text-gray-400" size={18} />}
           {!isLoading && visible.length === 0 && (
             <p className="px-3 py-6 text-center text-gray-400">
-              {templates.length === 0
+              {kind !== 'starter' && saved.length === 0
                 ? t('editor.templates.empty', 'No templates yet. Select some blocks, then choose "Save new".')
                 : t('editor.templates.no_match', 'No template matches.')}
             </p>
@@ -146,7 +148,13 @@ function InsertTemplate({ editor, activity, onClose, onSaveNew }: TemplatesModal
                 selected?.template_uuid === tpl.template_uuid ? 'bg-violet-50 text-violet-900' : 'hover:bg-gray-50'
               }`}
             >
-              {tpl.kind === 'page' ? <FileText size={15} className="mt-0.5 shrink-0" /> : <LayoutTemplate size={15} className="mt-0.5 shrink-0" />}
+              {isStarter(tpl) ? (
+                <Sparkles size={15} className="mt-0.5 shrink-0 text-violet-500" />
+              ) : tpl.kind === 'page' ? (
+                <FileText size={15} className="mt-0.5 shrink-0" />
+              ) : (
+                <LayoutTemplate size={15} className="mt-0.5 shrink-0" />
+              )}
               <span className="min-w-0">
                 <span className="block truncate font-medium">{tpl.name}</span>
                 {tpl.description && <span className="block truncate text-xs text-gray-500">{tpl.description}</span>}
@@ -180,13 +188,19 @@ function InsertTemplate({ editor, activity, onClose, onSaveNew }: TemplatesModal
               </div>
             )}
             <div className="flex items-center gap-2 border-t border-gray-100 px-4 py-3">
-              <button
-                type="button"
-                onClick={() => remove(selected)}
-                className="me-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-gray-500 hover:bg-red-50 hover:text-red-600"
-              >
-                <Trash2 size={13} /> {t('editor.templates.delete', 'Delete')}
-              </button>
+              {isStarter(selected) ? (
+                <span className="me-auto text-xs text-gray-400">
+                  {t('editor.templates.starter_hint', 'Starter template: insert it, then edit freely.')}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => remove(selected)}
+                  className="me-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-gray-500 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 size={13} /> {t('editor.templates.delete', 'Delete')}
+                </button>
+              )}
               {selected.kind === 'page' && (
                 <button
                   type="button"
