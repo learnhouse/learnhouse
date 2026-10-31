@@ -364,9 +364,14 @@ export async function switchSubscriptionPlan(
       ...discountParam,
     });
   } catch (err: any) {
-    if (err?.statusCode === 402) {
+    // 402: declined, or the bank wants the customer to confirm the charge.
+    // A card error or a missing payment method means the same to the user.
+    if (err?.statusCode === 402 || err?.type === "StripeCardError" || err?.code === "resource_missing") {
       throw Object.assign(
-        new Error("We couldn't charge your payment method for the upgrade. Update your payment method and try again."),
+        new Error(
+          "The upgrade payment couldn't be completed: it was declined or your bank needs to confirm it. " +
+          "Check your payment method in billing settings, or contact support to upgrade.",
+        ),
         { status: 409 },
       );
     }
