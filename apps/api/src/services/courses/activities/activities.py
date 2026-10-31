@@ -43,6 +43,7 @@ from src.services.courses.activities.dynamic_context import (
     course_learner_contexts,
     enrolled_learner_context,
     load_audiences,
+    with_references,
     persona_context,
     search_enrolled_learners,
 )
@@ -301,7 +302,8 @@ async def get_dynamic_preview(
     persona = preview.persona
     if persona.user_uuid:
         ctx = await enrolled_learner_context(
-            request, course, persona.user_uuid, db_session, activity_name=activity.name
+            request, course, persona.user_uuid, db_session,
+            activity_name=activity.name, activity_uuid=activity.activity_uuid,
         )
         if ctx is None:
             raise HTTPException(status_code=404, detail="Learner not enrolled in this course")
@@ -312,7 +314,8 @@ async def get_dynamic_preview(
             ctx = replace(ctx, today=persona.today)
     else:
         base = await build_render_context(
-            request, current_user, course, db_session, activity_name=activity.name
+            request, current_user, course, db_session,
+            activity_name=activity.name, activity_uuid=activity.activity_uuid,
         )
         group_names = tuple((await db_session.execute(
             select(UserGroup.name).where(
@@ -322,7 +325,7 @@ async def get_dynamic_preview(
         )).scalars().all()) if persona.usergroup_uuids else ()
         ctx = persona_context(base, persona, current_user, group_names=group_names, org_id=course.org_id)
 
-    ctx = replace(ctx, audiences=await load_audiences(course.org_id, content, db_session))
+    ctx = await with_references(ctx, course.org_id, content, db_session)
     rendered, stats = render_document(content, ctx)
     return DynamicPreviewResponse(
         content=rendered if isinstance(rendered, dict) else {},
@@ -349,13 +352,15 @@ async def get_dynamic_reach(
     if len(blocks) > MAX_REACH_BLOCKS:
         raise HTTPException(status_code=413, detail="Too many conditional blocks to count")
     contexts, truncated = await course_learner_contexts(
-        request, course, db_session, activity_name=activity.name
+        request, course, db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid
     )
     # Work is (conditions in the document) x learners: cap the product, and
     # keep the loop off the event loop.
     conditions = sum(max(1, count_conditions(rules)) for rules, _ in blocks)
     if conditions * len(contexts) > MAX_REACH_WORK:
         raise HTTPException(status_code=413, detail="Too many rules to count for this many learners")
+    # Variants of custom variables don't change which blocks show, so only
+    # the audiences the blocks themselves use matter here.
     audiences = await load_audiences(course.org_id, content, db_session)
     if audiences:
         contexts = [replace(ctx, audiences=audiences) for ctx in contexts]

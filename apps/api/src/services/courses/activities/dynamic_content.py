@@ -58,6 +58,9 @@ class RenderContext:
     org_name: str = ""
     course_name: str = ""
     activity_name: str = ""
+    activity_uuid: str = ""
+    # activity_uuid -> (chapter name, next activity name), for the whole course.
+    navigation: dict[str, tuple[str, str]] = field(default_factory=dict)
     enrolled: bool = False
     enrolled_on: date | None = None
     days_enrolled: int | None = None
@@ -67,6 +70,9 @@ class RenderContext:
     today: date = field(default_factory=date.today)
     # Saved audiences the document refers to: audience_uuid -> rule tree.
     audiences: dict[str, Any] = field(default_factory=dict)
+    # The org's custom variables the document refers to:
+    # key -> {"default": str, "variants": [{"rules": ..., "value": str}]}.
+    custom_variables: dict[str, Any] = field(default_factory=dict)
 
     @property
     def progress_percent(self) -> int:
@@ -87,8 +93,44 @@ class RenderContext:
 # Variables
 # ---------------------------------------------------------------------------
 
+CUSTOM_PREFIX = "custom."
+MAX_VARIANTS = 20
+
+
 def _full_name(ctx: RenderContext) -> str:
     return " ".join(part for part in (ctx.first_name, ctx.last_name) if part)
+
+
+def _navigation(ctx: RenderContext) -> tuple[str, str]:
+    return ctx.navigation.get(ctx.activity_uuid, ("", ""))
+
+
+def _custom_value(ctx: RenderContext, key: str) -> str:
+    """An org-defined variable: the first variant whose rules this reader
+    passes, else its default. Values are plain text, never interpolated
+    again, so a value can't pull in other variables."""
+    definition = ctx.custom_variables.get(key)
+    if not isinstance(definition, dict):
+        return ""
+    variants = definition.get("variants")
+    for variant in variants[:MAX_VARIANTS] if isinstance(variants, list) else []:
+        if (
+            isinstance(variant, dict)
+            and isinstance(variant.get("value"), str)
+            and variant.get("rules") is not None
+            and evaluate_rules(variant["rules"], ctx)
+        ):
+            return variant["value"]
+    default = definition.get("default")
+    return default if isinstance(default, str) else ""
+
+
+def is_known_variable(path: Any, ctx: RenderContext) -> bool:
+    if not isinstance(path, str):
+        return False
+    if path.startswith(CUSTOM_PREFIX):
+        return path[len(CUSTOM_PREFIX):] in ctx.custom_variables
+    return path in VARIABLES
 
 
 VARIABLES: dict[str, Callable[[RenderContext], str]] = {
@@ -101,6 +143,8 @@ VARIABLES: dict[str, Callable[[RenderContext], str]] = {
     "org.name": lambda c: c.org_name,
     "course.name": lambda c: c.course_name,
     "activity.name": lambda c: c.activity_name,
+    "course.chapter": lambda c: _navigation(c)[0],
+    "course.next_activity": lambda c: _navigation(c)[1],
     "progress.percent": lambda c: str(c.progress_percent),
     "progress.completed": lambda c: str(c.progress_completed),
     "progress.total": lambda c: str(c.progress_total),
@@ -127,8 +171,11 @@ _FILTER = re.compile(r"\|\s*([a-z_]+)(?:\s*:\s*\"([^\"{}]*)\")?")
 
 def resolve_variable(path: Any, ctx: RenderContext, *, fallback: Any = "", fmt: Any = None) -> str:
     """Value of ``path`` for this reader, or ``fallback`` when empty/unknown."""
-    getter = VARIABLES.get(path) if isinstance(path, str) else None
-    value = getter(ctx) if getter else ""
+    if isinstance(path, str) and path.startswith(CUSTOM_PREFIX):
+        value = _custom_value(ctx, path[len(CUSTOM_PREFIX):])
+    else:
+        getter = VARIABLES.get(path) if isinstance(path, str) else None
+        value = getter(ctx) if getter else ""
     if not value:
         value = fallback if isinstance(fallback, str) else ""
     formatter = FORMATS.get(fmt) if isinstance(fmt, str) else None
@@ -145,7 +192,7 @@ def interpolate_text(text: str, ctx: RenderContext) -> str:
 
     def replace(match: re.Match) -> str:
         path = match.group(1)
-        if path not in VARIABLES:
+        if not is_known_variable(path, ctx):
             return match.group(0)
         fallback, fmt = "", None
         for name, arg in _FILTER.findall(match.group(2) or ""):
@@ -562,3 +609,30 @@ def referenced_audiences(rules: Any, depth: int = 0) -> set[str]:
             for item in rules.get(key) or []:
                 found |= referenced_audiences(item, depth + 1)
     return found
+
+
+def referenced_custom_variables(doc: Any) -> set[str]:
+    """Keys of the org's custom variables a document uses: as variable
+    chips, as ``{{ custom.key }}`` in text, or in a hidden-block message."""
+    keys: set[str] = set()
+
+    def from_text(text: Any) -> None:
+        if isinstance(text, str) and "{{" in text:
+            for path, _ in _PLACEHOLDER.findall(text):
+                if path.startswith(CUSTOM_PREFIX):
+                    keys.add(path[len(CUSTOM_PREFIX):])
+
+    def walk(node: Any, depth: int) -> None:
+        if not isinstance(node, dict) or depth > MAX_NODE_DEPTH:
+            return
+        attrs = node.get("attrs") or {}
+        path = attrs.get("path") if node.get("type") == VARIABLE_NODE else None
+        if isinstance(path, str) and path.startswith(CUSTOM_PREFIX):
+            keys.add(path[len(CUSTOM_PREFIX):])
+        from_text(node.get("text"))
+        from_text(attrs.get("hiddenMessage"))
+        for child in node.get("content") or []:
+            walk(child, depth + 1)
+
+    walk(doc, 0)
+    return keys

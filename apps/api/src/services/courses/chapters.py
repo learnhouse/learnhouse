@@ -559,7 +559,7 @@ async def _render_dynamic_chapter_content(
     for activity in dynamic:
         activity.content = await render_for_reader(
             request, activity.content, course=course, current_user=current_user,
-            db_session=db_session, activity_name=activity.name,
+            db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
             is_editor=False, context=context,
         )
 

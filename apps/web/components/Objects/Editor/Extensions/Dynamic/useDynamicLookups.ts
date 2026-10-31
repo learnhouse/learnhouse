@@ -5,7 +5,13 @@ import { useAuth } from '@components/Contexts/AuthContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseContext } from '@components/Contexts/CourseContext'
 import { getUserGroups } from '@services/usergroups/usergroups'
-import { EditorAudience, getEditorAudiences } from '@services/courses/dynamicContent'
+import {
+  EditorAudience,
+  EditorVariable,
+  getEditorAudiences,
+  getEditorVariables,
+} from '@services/courses/dynamicContent'
+import { VariableDef, customVariableDef } from './dynamicRules'
 import { queryKeys } from '@/lib/query/keys'
 import { asArray } from '@services/utils/ts/requests'
 
@@ -37,6 +43,14 @@ export function useDynamicLookups(enabled: boolean = true) {
     staleTime: 30_000,
   })
 
+  const { data: variablesRaw } = useQuery({
+    queryKey: queryKeys.editorVariables.list(org?.id),
+    queryFn: () => getEditorVariables(org.id, accessToken as string),
+    select: (res: any) => asArray<EditorVariable>(res?.data),
+    enabled: enabled && !!(org?.id && accessToken),
+    staleTime: 30_000,
+  })
+
   return useMemo(() => {
     const usergroups: LookupOption[] = asArray(usergroupsRaw).map((g: any) => ({
       value: g.usergroup_uuid,
@@ -50,16 +64,20 @@ export function useDynamicLookups(enabled: boolean = true) {
       Object.fromEntries(options.map((o) => [o.value, o.label]))
     const audiences: EditorAudience[] = audiencesRaw ?? []
     const audienceOptions: LookupOption[] = audiences.map((a) => ({ value: a.audience_uuid, label: a.name }))
+    const customVariables: EditorVariable[] = variablesRaw ?? []
+    const customDefs: VariableDef[] = customVariables.map(customVariableDef)
     return {
       usergroups,
       activities,
       audiences,
       audienceOptions,
+      customVariables,
+      customDefs,
       names: {
         usergroups: toRecord(usergroups),
         activities: toRecord(activities),
         audiences: toRecord(audienceOptions),
       },
     }
-  }, [usergroupsRaw, audiencesRaw, course?.courseStructure])
+  }, [usergroupsRaw, audiencesRaw, variablesRaw, course?.courseStructure])
 }

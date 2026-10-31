@@ -85,9 +85,12 @@ export const ROLES = ['admin', 'maintainer', 'member', 'anonymous'] as const
 export interface VariableDef {
   path: string
   label: string
-  group: 'user' | 'course' | 'progress' | 'date'
+  group: 'user' | 'course' | 'progress' | 'date' | 'custom'
   sample: string
+  description?: string
 }
+
+export const CUSTOM_PREFIX = 'custom.'
 
 export const VARIABLES: VariableDef[] = [
   { path: 'user.first_name', label: 'First name', group: 'user', sample: 'Ada' },
@@ -99,6 +102,8 @@ export const VARIABLES: VariableDef[] = [
   { path: 'org.name', label: 'Organization name', group: 'course', sample: 'Acme' },
   { path: 'course.name', label: 'Course name', group: 'course', sample: 'Intro course' },
   { path: 'activity.name', label: 'Activity name', group: 'course', sample: 'Lesson 1' },
+  { path: 'course.chapter', label: 'Chapter name', group: 'course', sample: 'Getting started' },
+  { path: 'course.next_activity', label: 'Next activity', group: 'course', sample: 'Lesson 2' },
   { path: 'progress.percent', label: 'Progress (%)', group: 'progress', sample: '40' },
   { path: 'progress.completed', label: 'Completed activities', group: 'progress', sample: '4' },
   { path: 'progress.total', label: 'Total activities', group: 'progress', sample: '10' },
@@ -119,8 +124,24 @@ export function fieldDef(field: string): FieldDef | undefined {
   return FIELDS.find((f) => f.field === field)
 }
 
-export function variableDef(path: string): VariableDef | undefined {
-  return VARIABLES.find((v) => v.path === path)
+export function variableDef(path: string, custom: VariableDef[] = []): VariableDef | undefined {
+  return VARIABLES.find((v) => v.path === path) ?? custom.find((v) => v.path === path)
+}
+
+// The picker and autocomplete entry for an org's custom variable.
+export function customVariableDef(variable: {
+  key: string
+  label: string
+  description?: string
+  default_value: string
+}): VariableDef {
+  return {
+    path: `${CUSTOM_PREFIX}${variable.key}`,
+    label: variable.label,
+    group: 'custom',
+    sample: variable.default_value,
+    description: variable.description,
+  }
 }
 
 export function isGroup(item: Condition | RuleGroup): item is RuleGroup {

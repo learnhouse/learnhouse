@@ -246,6 +246,6 @@ async def redact_activity_for_reader(
 
         activity_read.content = await render_for_reader(
             request, activity_read.content, course=course, current_user=current_user,
-            db_session=db_session, activity_name=activity.name,
+            db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
         )
     return activity_read

@@ -314,3 +314,30 @@ describe("slash menu order", () => {
     }
   });
 });
+
+describe("round four: variables everywhere", () => {
+  test("custom variables join the picker, autocomplete and labels", async () => {
+    const { customVariableDef, variableDef, VARIABLES } = await import(
+      "../components/Objects/Editor/Extensions/Dynamic/dynamicRules.ts"
+    );
+    const { filterVariables } = await import("../components/Objects/Editor/Extensions/Dynamic/VariableSuggestion.ts");
+    const support = customVariableDef({ key: "support_email", label: "Support email", default_value: "help@acme.com" });
+    expect(support).toEqual({
+      path: "custom.support_email", label: "Support email", group: "custom", sample: "help@acme.com", description: undefined,
+    });
+    expect(variableDef("custom.support_email", [support])).toBe(support);
+    expect(variableDef("custom.support_email")).toBeUndefined();
+    expect(filterVariables("support", [support]).map((v) => v.path)).toEqual(["custom.support_email"]);
+    expect(filterVariables("", [support]).length).toBe(VARIABLES.length + 1);
+    expect(VARIABLES.map((v) => v.path)).toEqual(expect.arrayContaining(["course.chapter", "course.next_activity"]));
+  });
+
+  test("show values toggle is shared", async () => {
+    const { setShowVariableValues } = await import(
+      "../components/Objects/Editor/Extensions/Dynamic/variableDisplay.ts"
+    );
+    // The hook reads through useSyncExternalStore; the setter must not throw without subscribers.
+    setShowVariableValues(true);
+    setShowVariableValues(false);
+  });
+});

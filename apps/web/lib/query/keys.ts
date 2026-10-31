@@ -62,6 +62,9 @@ export const queryKeys = {
   editorAudiences: {
     list: (orgId: number) => ['editor-audiences', orgId] as const,
   },
+  editorVariables: {
+    list: (orgId: number) => ['editor-variables', orgId] as const,
+  },
   usergroups: {
     list: (orgId: number) => ['usergroups', orgId] as const,
     resources: (ugId: string, orgId: number) => ['usergroup', ugId, 'resources', orgId] as const,
