@@ -24,7 +24,13 @@ logger = logging.getLogger(__name__)
 # user-supplied, and a playlist or concat script disguised as media would
 # otherwise let it pull other local files or URLs into the output. Output
 # writers (HLS segments, sprites) are unaffected: this applies to inputs only.
-SAFE_INPUT_ARGS = ("-protocol_whitelist", "file,pipe")
+# The protocol whitelist alone still lets an HLS playlist or concat script open
+# other local files by absolute path, so the input demuxer is restricted to
+# single-file media containers as well.
+SAFE_INPUT_FORMATS = (
+    "mov,mp4,m4a,3gp,3g2,mj2,matroska,webm,avi,asf,flv,mpeg,mpegts,ogg,wav,flac,aac,aiff,mp3"
+)
+SAFE_INPUT_ARGS = ("-protocol_whitelist", "file,pipe", "-format_whitelist", SAFE_INPUT_FORMATS)
 
 # Only MP4-family containers have a movable `moov` atom. WebM/Ogg/MKV stream
 # fine as-is and are left untouched.

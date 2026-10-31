@@ -60,6 +60,28 @@ def _session_epoch_now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
 
 
+# Self-hosted signups are marked verified without an email round trip. An
+# empty ``email_verified_at`` records that nothing has proven the signer
+# controls the inbox yet: the first Google or magic-link sign-in, or a password
+# reset, stamps it and drops any password set before then. Older rows hold NULL
+# or a timestamp, never an empty string, so they are unaffected.
+_INBOX_UNPROVEN = ""
+
+
+def inbox_unproven(user) -> bool:
+    return user.email_verified_at == _INBOX_UNPROVEN
+
+
+def _mark_inbox_unproven(user) -> None:
+    user.email_verified_at = _INBOX_UNPROVEN
+
+
+def clear_inbox_unproven(user) -> None:
+    """Record that something (Google, an emailed link or reset code) proved the inbox."""
+    if inbox_unproven(user):
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+
+
 def _reject_urls_in_profile_fields(**fields) -> None:
     """Reject display-name fields containing URLs/links (S: phishing relay).
 
@@ -254,6 +276,8 @@ async def create_user(
     user.extra_metadata = await _resolve_signup_custom_fields(
         user_object, org_id, db_session, enforce_required=not is_oauth
     )
+    if not is_oauth and get_deployment_mode() != 'saas':
+        _mark_inbox_unproven(user)
 
     # Usage check
     await check_limits_with_usage("members", org_id, db_session)
@@ -485,6 +509,8 @@ async def create_user_without_org(
     # signup fields to validate against, so nothing may be stored. Dropping the
     # submitted blob stops an anonymous caller writing arbitrary JSON.
     user.extra_metadata = None
+    if not is_oauth and get_deployment_mode() != 'saas':
+        _mark_inbox_unproven(user)
 
     # Verifications
 

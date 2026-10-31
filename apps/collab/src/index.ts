@@ -56,12 +56,16 @@ const MAX_UNVERIFIED_MS = 10 * 60_000
 
 // ── Startup validation ──────────────────────────────────────────────────────
 
-// Placeholders shipped in .env.example (old and current) must never be used.
+// Placeholders shipped in .env.example and the docs (old and current) must never be used.
 const PLACEHOLDER_SECRETS = new Set([
   'your-jwt-secret-key',
   'your-internal-key',
   'CHANGE_ME_generate_with_openssl_rand_hex_32',
+  'replace-with-random-shared-secret',
 ])
+// The docs' example JWT secret is only warned about: the API derives stored
+// encryption from it, so rotating it has to be planned, not forced at boot.
+const WARN_ONLY_PLACEHOLDER_SECRETS = new Set(['replace-with-at-least-32-random-characters'])
 const MIN_SECRET_LENGTH = 32
 
 function requireStrongSecret(name: string, value: string) {
@@ -74,6 +78,11 @@ function requireStrongSecret(name: string, value: string) {
       `[collab] FATAL: ${name} is still the example placeholder (generate one with: openssl rand -hex 32)`,
     )
     process.exit(1)
+  }
+  if (WARN_ONLY_PLACEHOLDER_SECRETS.has(value)) {
+    console.error(
+      `[collab] SECURITY: ${name} is the example value from the docs; anyone can forge sessions. Rotate it (openssl rand -hex 32)`,
+    )
   }
   // Warn rather than refuse so an existing deployment keeps booting.
   if (value.length < MIN_SECRET_LENGTH) {
