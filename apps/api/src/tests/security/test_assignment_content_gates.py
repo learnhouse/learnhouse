@@ -140,6 +140,18 @@ async def test_solution_gate_ignores_segment_case(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("router", [content_files, local_content])
+@pytest.mark.parametrize("old,new", [("/solution/", "/ſolution/"), ("/activities/", "/actıvities/")])
+async def test_content_path_refuses_non_ascii_directories(router, old, new, db, regular_user, mock_request):
+    # Some filesystems fold these onto ASCII letters, so they could name the same file
+    with pytest.raises(HTTPException) as exc:
+        await router._check_content_access(
+            SOLUTION_PATH.replace(old, new), regular_user, db, request=mock_request
+        )
+    assert exc.value.status_code == 400
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("router", [content_files, local_content])
 async def test_only_public_by_design_paths_are_shared_cacheable(router, db, org, anonymous_user):
     assert await router._check_content_access("orgs/org_test/logos/logo.png", anonymous_user, db) is True
     assert await router._check_content_access("users/user_x/avatars/a.png", anonymous_user, db) is True

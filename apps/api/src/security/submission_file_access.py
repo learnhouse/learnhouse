@@ -50,9 +50,14 @@ def split_content_path(file_path: str) -> list[str]:
     """Split a content-relative path, normalizing the case of structural segments.
 
     The final segment (the filename) is kept as-is since the submission owner
-    check compares it exactly.
+    check compares it exactly. Directory segments are always generated ASCII
+    (uuids and fixed names); anything else is refused, since filesystems fold
+    some non-ASCII letters onto ASCII ones (``ſ`` -> ``s``, ``ı`` -> ``I``) and
+    ``lower()`` alone would not catch them.
     """
     parts = file_path.split("/")
+    if not all(p.isascii() for p in parts[:-1]):
+        raise HTTPException(status_code=400, detail="Invalid path")
     return [
         p.lower() if i < len(parts) - 1 and p.lower() in _CONTENT_PATH_KEYWORDS else p
         for i, p in enumerate(parts)
