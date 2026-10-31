@@ -1,0 +1,4 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "[ \"$VERCEL_ENV\" = production ] && exit 1; base=\"${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}\"; git cat-file -e \"$base^{commit}\" 2>/dev/null || exit 1; git diff --quiet \"$base\" HEAD -- ."
+}
