@@ -298,3 +298,16 @@ describe("round three", () => {
     expect(filterVariables("zzz")).toEqual([]);
   });
 });
+
+describe("slash menu order", () => {
+  test("filtered items come in the order the menu draws them", async () => {
+    const { filterCommands, groupCommandsByCategory } = await import(
+      "../components/Objects/Editor/Extensions/SlashCommands/slashCommandsConfig.tsx"
+    );
+    for (const query of ["", "ab", "group", "t"]) {
+      const items = filterCommands(query);
+      const drawn = [...groupCommandsByCategory(items).values()].flat();
+      expect(items.map((i) => i.id)).toEqual(drawn.map((i) => i.id));
+    }
+  });
+});

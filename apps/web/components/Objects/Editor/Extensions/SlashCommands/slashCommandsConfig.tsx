@@ -597,13 +597,16 @@ export const slashCommands: SlashCommandItem[] = [
 ]
 
 export function filterCommands(query: string): SlashCommandItem[] {
-  if (!query) return slashCommands
-
-  return slashCommands.filter(
-    (item) =>
-      searchMatchesAny([item.title, item.description], query) ||
-      item.keywords.some((keyword) => normalizeForSearch(keyword).includes(normalizeForSearch(query)))
-  )
+  const matches = query
+    ? slashCommands.filter(
+        (item) =>
+          searchMatchesAny([item.title, item.description], query) ||
+          item.keywords.some((keyword) => normalizeForSearch(keyword).includes(normalizeForSearch(query)))
+      )
+    : slashCommands
+  // The menu draws items grouped by category but picks them by position in
+  // this list (keyboard and click), so return them in that same order.
+  return categoryOrder.flatMap((category) => matches.filter((item) => item.category === category))
 }
 
 export function groupCommandsByCategory(
