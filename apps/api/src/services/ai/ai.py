@@ -178,7 +178,7 @@ async def ai_start_activity_chat_session(
     # not quote a conditional block the learner can't see.
     content = await render_for_reader(
         request, activity.content, course=course, current_user=current_user,
-        db_session=db_session, activity_name=activity.name,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
     )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
@@ -334,7 +334,7 @@ async def ai_send_activity_chat_message(
     # not quote a conditional block the learner can't see.
     content = await render_for_reader(
         request, activity.content, course=course, current_user=current_user,
-        db_session=db_session, activity_name=activity.name,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
     )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
@@ -485,7 +485,7 @@ async def _get_activity_and_course_info(
     # not quote a conditional block the learner can't see.
     content = await render_for_reader(
         request, activity.content, course=course, current_user=current_user,
-        db_session=db_session, activity_name=activity.name,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
     )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI

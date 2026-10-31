@@ -150,3 +150,56 @@ export async function deleteEditorAudience(audience_uuid: string, access_token: 
   )
   return getResponseMetadata(result)
 }
+
+export interface EditorVariableVariant {
+  rules: any
+  value: string
+}
+
+export interface EditorVariable {
+  variable_uuid: string
+  org_id: number
+  key: string
+  label: string
+  description: string
+  default_value: string
+  variants: EditorVariableVariant[]
+}
+
+export type EditorVariableInput = Pick<EditorVariable, 'label' | 'description' | 'default_value' | 'variants'>
+
+// Custom variables: org-defined values used as {{ custom.key }}.
+export async function getEditorVariables(org_id: number, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}editor-variables/?org_id=${org_id}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export async function createEditorVariable(
+  body: EditorVariableInput & { org_id: number; key: string },
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}editor-variables/`,
+    RequestBodyWithAuthHeader('POST', body, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export async function updateEditorVariable(variable_uuid: string, body: EditorVariableInput, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}editor-variables/${variable_uuid}`,
+    RequestBodyWithAuthHeader('PUT', body, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export async function deleteEditorVariable(variable_uuid: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}editor-variables/${variable_uuid}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  return getResponseMetadata(result)
+}

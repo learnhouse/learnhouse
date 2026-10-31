@@ -10,10 +10,11 @@ import VariableSuggestionList, { VariableSuggestionListRef } from './VariableSug
 
 const variableSuggestionKey = new PluginKey('variableSuggestion')
 
-export function filterVariables(query: string): VariableDef[] {
+export function filterVariables(query: string, custom: VariableDef[] = []): VariableDef[] {
+  const all = [...VARIABLES, ...custom]
   const q = query.replace(/\}+$/, '').trim()
-  if (!q) return VARIABLES
-  return VARIABLES.filter(
+  if (!q) return all
+  return all.filter(
     (v) => searchMatchesAny([v.label, v.path], q) || normalizeForSearch(v.path).includes(normalizeForSearch(q))
   )
 }
@@ -21,6 +22,11 @@ export function filterVariables(query: string): VariableDef[] {
 // Typing "{{" opens a menu of variables; picking one inserts the chip.
 const VariableSuggestion = Extension.create({
   name: 'variableSuggestion',
+
+  // The org's custom variables, kept current by the toolbar.
+  addStorage() {
+    return { custom: [] as VariableDef[] }
+  },
 
   addProseMirrorPlugins() {
     return [
@@ -30,7 +36,7 @@ const VariableSuggestion = Extension.create({
         startOfLine: false,
         pluginKey: variableSuggestionKey,
         allow: ({ state, range }) => state.doc.resolve(range.from).parent.type.name !== 'codeBlock',
-        items: ({ query }) => filterVariables(query),
+        items: ({ query }) => filterVariables(query, this.storage.custom),
         command: ({ editor, range, props }) => {
           editor.chain().focus().deleteRange(range).insertDynamicVariable(props.path).run()
         },

@@ -5962,7 +5962,8 @@
         "course": "Course",
         "date": "Date",
         "progress": "Progress",
-        "user": "Learner"
+        "user": "Learner",
+        "custom": "Custom"
       },
       "variables": {
         "activity_name": "Activity name",
@@ -5981,7 +5982,9 @@
         "user_email": "Email",
         "user_groups": "User groups",
         "progress_remaining": "Activities left",
-        "enrollment_date": "Enrollment date"
+        "enrollment_date": "Enrollment date",
+        "course_chapter": "Chapter name",
+        "course_next_activity": "Next activity"
       },
       "view_as": "View as",
       "view_as_description": "See this page the way a learner with these details gets it, unsaved changes included.",
@@ -6023,6 +6026,48 @@
         "dates": "Between two dates",
         "dates_hint": "A time-limited announcement",
         "drip_message": "This unlocks after your first week."
+      },
+      "custom": {
+        "key_invalid": "Use lowercase letters and underscores for the key, e.g. support_email",
+        "no_rights": "Only admins and maintainers can change a variable, because it changes every course that uses it.",
+        "save_error": "Could not save the variable",
+        "saved": "Variable saved",
+        "delete_error": "Could not delete the variable",
+        "audience": "Audience",
+        "group": "Group",
+        "empty": "Set a value once, use it in every course: a support email, a meeting link, a manager per team.",
+        "no_default": "(empty by default)",
+        "variant_count": "{{count}} audience values",
+        "insert": "Insert",
+        "edit": "Edit",
+        "new": "New variable",
+        "label": "Name",
+        "label_placeholder": "Support email",
+        "key": "Key",
+        "default": "Value",
+        "default_placeholder": "help@example.com",
+        "variants": "Different value for some learners (optional, first match wins)",
+        "pick_who": "Who…",
+        "variant_value": "Their value",
+        "no_who": "Create a user group or a saved audience to give some learners a different value.",
+        "add_variant": "Add a value for a group or audience",
+        "title": "Custom variables",
+        "description": "Values your organization defines once and uses in any course. Change one and every page using it updates.",
+        "delete_confirm": "Delete {{key}}? Text using it shows its fallback, or nothing."
+      },
+      "picker": {
+        "search": "Search variables",
+        "no_custom": "Your own values, like a support email or a meeting link, set once for every course.",
+        "manage_custom": "Custom variables",
+        "show_values_hint": "Show sample values in the editor instead of variable names",
+        "show_names": "Show names",
+        "show_values": "Show values"
+      },
+      "toolbar": {
+        "variable": "Insert a variable (or type {{example}})",
+        "variable_label": "Variable",
+        "conditional": "Content only some learners see",
+        "conditional_label": "Conditional content"
       }
     },
     "templates": {

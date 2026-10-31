@@ -324,3 +324,14 @@ class TestAudiencePermissions:
             with pytest.raises(HTTPException) as delete:
                 await svc.delete_editor_audience(mock_request, created.audience_uuid, regular_user, db)
         assert (update.value.status_code, delete.value.status_code) == (403, 403)
+
+
+class TestVariableKeys:
+    @pytest.mark.parametrize("key", ["Bad Key", "1abc", "a" * 41, "with-dash"])
+    def test_rejects_keys_that_cannot_be_written_as_placeholders(self, key):
+        from pydantic import ValidationError
+
+        from src.db.editor_variables import EditorVariableCreate
+
+        with pytest.raises(ValidationError):
+            EditorVariableCreate(org_id=1, key=key, label="x")

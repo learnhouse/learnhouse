@@ -11,6 +11,7 @@ from src.db.trail_runs import TrailRun
 from src.db.trails import Trail
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup
+from src.db.users import AnonymousUser
 from src.services.courses.activities.access import redact_activity_for_reader
 from src.services.courses.activities.activities import get_dynamic_preview
 from src.services.courses.activities.dynamic_content import (
@@ -591,3 +592,170 @@ class TestAudiences:
         assert [a.name for a in await routes.api_list_editor_audiences(mock_request, org.id, admin_user, db)] == ["R"]
         await routes.api_update_editor_audience(mock_request, created.audience_uuid, EditorAudienceUpdate(name="S"), admin_user, db)
         await routes.api_delete_editor_audience(mock_request, created.audience_uuid, admin_user, db)
+
+
+class TestCustomVariables:
+    def _ctx_with(self, **overrides):
+        support = {
+            "default": "help@acme.com",
+            "variants": [
+                {"rules": {"conditions": [_cond("user.role", "in", ["admin"])]}, "value": "ops@acme.com"},
+                {"rules": {"conditions": [_cond("user.groups", "contains_any", ["usergroup_a"])]}, "value": "#team-a"},
+            ],
+        }
+        return _ctx(custom_variables={"support": support}, **overrides)
+
+    def test_first_matching_variant_then_default(self):
+        doc = _doc(_p({"type": "dynamicVariable", "attrs": {"path": "custom.support"}}))
+        assert render_document(doc, self._ctx_with())[0]["content"][0]["content"] == [_text("#team-a")]
+        assert render_document(doc, self._ctx_with(role="admin"))[0]["content"][0]["content"] == [_text("ops@acme.com")]
+        no_group = self._ctx_with(group_uuids=frozenset())
+        assert render_document(doc, no_group)[0]["content"][0]["content"] == [_text("help@acme.com")]
+
+    def test_text_placeholders_and_unknown_keys(self):
+        ctx = self._ctx_with(group_uuids=frozenset())
+        assert interpolate_text("Mail {{ custom.support | upper }}", ctx) == "Mail HELP@ACME.COM"
+        assert interpolate_text("{{custom.missing}}", ctx) == "{{custom.missing}}"
+        assert dc_resolve("custom.missing", ctx, fallback="x") == "x"
+
+    def test_values_are_not_interpolated_again(self):
+        ctx = _ctx(custom_variables={"loop": {"default": "{{custom.loop}} {{user.first_name}}", "variants": []}})
+        assert interpolate_text("{{custom.loop}}", ctx) == "{{custom.loop}} {{user.first_name}}"
+
+    def test_malformed_definitions(self):
+        ctx = _ctx(custom_variables={
+            "a": "nope",
+            "b": {"default": 3, "variants": "nope"},
+            "c": {"default": "d", "variants": ["x", {"rules": None, "value": "skip"}, {"rules": {"conditions": []}, "value": 7}]},
+        })
+        assert [dc_resolve(f"custom.{k}", ctx) for k in "abc"] == ["", "", "d"]
+
+    def test_referenced_keys(self):
+        from src.services.courses.activities.dynamic_content import referenced_custom_variables
+
+        block = _conditional(None, _p(_text("{{ custom.room }}")))
+        block["attrs"]["hiddenMessage"] = "Ask {{custom.manager}}"
+        doc = _doc(_p({"type": "dynamicVariable", "attrs": {"path": "custom.support"}}, _text("{{user.first_name}}")), block)
+        assert referenced_custom_variables(doc) == {"support", "room", "manager"}
+
+
+def dc_resolve(path, ctx, **kwargs):
+    from src.services.courses.activities.dynamic_content import resolve_variable
+
+    return resolve_variable(path, ctx, **kwargs)
+
+
+class TestCustomVariableService:
+    @pytest.mark.asyncio
+    async def test_crud_render_and_rights(self, mock_request, db, org, other_org, course, activity, admin_user, regular_user):
+        from src.db.editor_audiences import EditorAudienceCreate
+        from src.db.editor_variables import EditorVariable, EditorVariableCreate, EditorVariableUpdate
+        from src.services import editor_variables as svc
+        from src.services.courses.activities.dynamic_context import render_for_reader
+        from src.services.editor_audiences import create_editor_audience
+
+        group = await _add_group(db, org, regular_user)
+        vips = await create_editor_audience(
+            mock_request,
+            EditorAudienceCreate(org_id=org.id, name="VIPs", rules={"conditions": [_cond("user.groups", "contains_any", [group.usergroup_uuid])]}),
+            admin_user, db,
+        )
+        created = await svc.create_editor_variable(
+            mock_request,
+            EditorVariableCreate(
+                org_id=org.id, key="channel", label="Channel", default_value="#general",
+                variants=[{"rules": {"conditions": [{"field": "audience", "op": "is", "value": vips.audience_uuid}]}, "value": "#vip"}],
+            ),
+            admin_user, db,
+        )
+        with pytest.raises(HTTPException) as dup:
+            await svc.create_editor_variable(mock_request, EditorVariableCreate(org_id=org.id, key="channel", label="x"), admin_user, db)
+        # Same key in another org never resolves here.
+        db.add(EditorVariable(key="room", label="r", default_value="secret", variants=[], org_id=other_org.id, variable_uuid="variable_x"))
+        await db.commit()
+
+        doc = _doc(_p(_text("Join {{custom.channel}} in {{ custom.room | default: \"the lobby\" }}")))
+        vip = await render_for_reader(None, doc, course=course, current_user=regular_user, db_session=db, is_editor=False)
+        anon = await render_for_reader(None, doc, course=course, current_user=AnonymousUser(), db_session=db, is_editor=False)
+        assert vip["content"][0]["content"] == [_text("Join #vip in {{ custom.room | default: \"the lobby\" }}")]
+        assert anon["content"][0]["content"][0]["text"].startswith("Join #general")
+
+        listed = await svc.list_editor_variables(mock_request, org.id, admin_user, db)
+        updated = await svc.update_editor_variable(
+            mock_request, created.variable_uuid,
+            EditorVariableUpdate(label="Chat", description=" d ", default_value="#all", variants=[]), admin_user, db,
+        )
+        assert dup.value.status_code == 409 and [v.key for v in listed] == ["channel"]
+        assert (updated.label, updated.description, updated.default_value, updated.variants) == ("Chat", "d", "#all", [])
+
+        with pytest.raises(HTTPException) as bad_rules:
+            await svc.update_editor_variable(
+                mock_request, created.variable_uuid, EditorVariableUpdate(variants=[{"rules": {"x": 1}, "value": "v"}]), admin_user, db
+            )
+        with patch.object(svc, "_require_author", new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as not_course_wide:
+                await svc.delete_editor_variable(mock_request, created.variable_uuid, regular_user, db)
+        assert (bad_rules.value.status_code, not_course_wide.value.status_code) == (400, 403)
+        await svc.delete_editor_variable(mock_request, created.variable_uuid, admin_user, db)
+        with pytest.raises(HTTPException) as gone:
+            await svc.delete_editor_variable(mock_request, created.variable_uuid, admin_user, db)
+        assert gone.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_limits_and_routes(self, mock_request, db, org, admin_user, regular_user):
+        from src.db.editor_variables import EditorVariableCreate, EditorVariableUpdate
+        from src.routers import editor_variables as routes
+        from src.services import editor_variables as svc
+
+        body = EditorVariableCreate(org_id=org.id, key="k", label="K")
+        with pytest.raises(HTTPException) as learner:
+            await svc.create_editor_variable(mock_request, body, regular_user, db)
+        with patch.object(svc, "MAX_VARIABLES_PER_ORG", 0):
+            with pytest.raises(HTTPException) as full:
+                await svc.create_editor_variable(mock_request, body, admin_user, db)
+        with patch.object(svc, "MAX_VARIANT_RULES_BYTES", 5):
+            with pytest.raises(HTTPException) as big:
+                await svc.create_editor_variable(
+                    mock_request, EditorVariableCreate(org_id=org.id, key="k", label="K", variants=[{"rules": {"conditions": []}, "value": "v"}]),
+                    admin_user, db,
+                )
+        assert (learner.value.status_code, full.value.status_code, big.value.status_code) == (403, 400, 413)
+
+        created = await routes.api_create_editor_variable(mock_request, body, admin_user, db)
+        assert [v.key for v in await routes.api_list_editor_variables(mock_request, org.id, admin_user, db)] == ["k"]
+        await routes.api_update_editor_variable(mock_request, created.variable_uuid, EditorVariableUpdate(label="L"), admin_user, db)
+        await routes.api_delete_editor_variable(mock_request, created.variable_uuid, admin_user, db)
+
+
+class TestNavigation:
+    @pytest.mark.asyncio
+    async def test_chapter_and_next_activity(self, mock_request, db, org, course, chapter, activity, regular_user):
+        from src.db.courses.activities import Activity, ActivitySubTypeEnum, ActivityTypeEnum
+        from src.db.courses.chapter_activities import ChapterActivity
+        from src.services.courses.activities.dynamic_context import render_for_reader
+
+        nxt = Activity(
+            id=2, name="Lesson Two", activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE, content={}, published=True,
+            org_id=org.id, course_id=course.id, activity_uuid="activity_two",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(nxt)
+        await db.commit()
+        db.add(ChapterActivity(
+            chapter_id=chapter.id, activity_id=nxt.id, course_id=course.id, org_id=org.id, order=99,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+        doc = _doc(_p(_text("{{course.chapter}} -> {{ course.next_activity | default: \"the end\" }}")))
+        first = await render_for_reader(
+            None, doc, course=course, current_user=regular_user, db_session=db, is_editor=False,
+            activity_uuid=activity.activity_uuid,
+        )
+        last = await render_for_reader(
+            None, doc, course=course, current_user=regular_user, db_session=db, is_editor=False,
+            activity_uuid="activity_two",
+        )
+        assert first["content"][0]["content"] == [_text("Test Chapter -> Lesson Two")]
+        assert last["content"][0]["content"] == [_text("Test Chapter -> the end")]

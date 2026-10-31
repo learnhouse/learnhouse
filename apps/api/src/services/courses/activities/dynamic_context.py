@@ -19,7 +19,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
+from src.db.courses.chapters import Chapter
+from src.db.courses.course_chapters import CourseChapter
 from src.db.editor_audiences import EditorAudience
+from src.db.editor_variables import EditorVariable
 from src.db.organizations import Organization
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
@@ -31,6 +34,7 @@ from src.security.rbac.constants import ADMIN_ROLE_ID, MAINTAINER_ROLE_ID
 from src.services.courses.activities.dynamic_content import (
     RenderContext,
     referenced_audiences,
+    referenced_custom_variables,
     has_dynamic_content,
     render_document,
 )
@@ -106,6 +110,54 @@ async def load_audiences(org_id: int, content: Any, db_session: AsyncSession) ->
     return loaded
 
 
+async def load_custom_variables(org_id: int, content: Any, db_session: AsyncSession) -> dict[str, Any]:
+    """The org's custom variables ``content`` uses, by key."""
+    keys = referenced_custom_variables(content)
+    if not keys:
+        return {}
+    rows = (await db_session.execute(
+        select(EditorVariable.key, EditorVariable.default_value, EditorVariable.variants).where(
+            EditorVariable.org_id == org_id,
+            EditorVariable.key.in_(keys),  # type: ignore[attr-defined]
+        )
+    )).all()
+    return {key: {"default": default, "variants": variants or []} for key, default, variants in rows}
+
+
+async def with_references(ctx: RenderContext, org_id: int, content: Any, db_session: AsyncSession) -> RenderContext:
+    """``ctx`` plus the custom variables and saved audiences ``content``
+    needs, including audiences that only a variable's variants mention."""
+    custom = await load_custom_variables(org_id, content, db_session)
+    variant_rules = [
+        variant.get("rules")
+        for definition in custom.values()
+        for variant in definition["variants"]
+        if isinstance(variant, dict)
+    ]
+    scope = {"content": [content, *[r for r in variant_rules if isinstance(r, dict)]]}
+    audiences = await load_audiences(org_id, scope, db_session) if referenced_audiences(scope) else {}
+    if not custom and not audiences:
+        return ctx
+    return replace(ctx, custom_variables=custom, audiences=audiences)
+
+
+async def course_navigation(course_id: int, db_session: AsyncSession) -> dict[str, tuple[str, str]]:
+    """For each published activity of the course, in reading order: its
+    chapter's name and the next activity's name."""
+    rows = (await db_session.execute(
+        select(Activity.activity_uuid, Activity.name, Chapter.name)
+        .join(ChapterActivity, ChapterActivity.activity_id == Activity.id)  # type: ignore[arg-type]
+        .join(Chapter, Chapter.id == ChapterActivity.chapter_id)  # type: ignore[arg-type]
+        .join(CourseChapter, CourseChapter.chapter_id == Chapter.id)  # type: ignore[arg-type]
+        .where(CourseChapter.course_id == course_id, Activity.published == True)  # noqa: E712
+        .order_by(CourseChapter.order, ChapterActivity.order)  # type: ignore[arg-type]
+    )).all()
+    return {
+        uuid: (chapter, rows[i + 1][1] if i + 1 < len(rows) else "")
+        for i, (uuid, _, chapter) in enumerate(rows)
+    }
+
+
 def bucket_for(org_id: int, user_uuid: str) -> int:
     """Stable 0-99 per learner and org: the same learner always lands in the
     same half of a 50/50 split, and splits differ between orgs."""
@@ -114,9 +166,9 @@ def bucket_for(org_id: int, user_uuid: str) -> int:
 
 
 async def _course_context(
-    request: Optional[Request], course: Any, db_session: AsyncSession, activity_name: str
+    request: Optional[Request], course: Any, db_session: AsyncSession, activity_name: str, activity_uuid: str = ""
 ) -> RenderContext:
-    """The reader-independent half: org, course, date, totals."""
+    """The reader-independent half: org, course, date, totals, navigation."""
     org_name = (await db_session.execute(
         select(Organization.name).where(Organization.id == course.org_id)
     )).scalar_one_or_none() or ""
@@ -124,6 +176,8 @@ async def _course_context(
         org_name=org_name,
         course_name=course.name or "",
         activity_name=activity_name,
+        activity_uuid=activity_uuid,
+        navigation=await course_navigation(course.id, db_session),
         locale=request_locale(request),
         today=_today(),
         progress_total=await _course_progress_totals(course.id, db_session),
@@ -207,10 +261,11 @@ async def build_render_context(
     db_session: AsyncSession,
     *,
     activity_name: str = "",
+    activity_uuid: str = "",
 ) -> RenderContext:
     """Context for ``current_user`` reading ``course``. ``course`` only needs
     ``id``, ``org_id`` and ``name`` (Course or CourseRead)."""
-    base = await _course_context(request, course, db_session, activity_name)
+    base = await _course_context(request, course, db_session, activity_name, activity_uuid)
     # API tokens and anonymous readers have no person behind them.
     if not isinstance(current_user, PublicUser) or not current_user.id:
         return base
@@ -219,7 +274,8 @@ async def build_render_context(
 
 
 async def enrolled_learner_context(
-    request: Optional[Request], course: Any, user_uuid: str, db_session: AsyncSession, *, activity_name: str = ""
+    request: Optional[Request], course: Any, user_uuid: str, db_session: AsyncSession, *,
+    activity_name: str = "", activity_uuid: str = "",
 ) -> Optional[RenderContext]:
     """The real context of a learner enrolled in ``course``, or None when no
     such learner exists: previews only reach people the course already has."""
@@ -230,7 +286,7 @@ async def enrolled_learner_context(
     )).scalars().first()
     if user_id is None:
         return None
-    base = await _course_context(request, course, db_session, activity_name)
+    base = await _course_context(request, course, db_session, activity_name, activity_uuid)
     return (await _learner_contexts(base, course, [user_id], db_session)).get(user_id)
 
 
@@ -260,7 +316,8 @@ MAX_REACH_LEARNERS = 5000
 
 
 async def course_learner_contexts(
-    request: Optional[Request], course: Any, db_session: AsyncSession, *, activity_name: str = ""
+    request: Optional[Request], course: Any, db_session: AsyncSession, *,
+    activity_name: str = "", activity_uuid: str = "",
 ) -> tuple[list[RenderContext], bool]:
     """A context for every learner enrolled in ``course``, and whether the
     list was cut at MAX_REACH_LEARNERS. Language isn't stored per learner,
@@ -270,7 +327,7 @@ async def course_learner_contexts(
         .distinct().limit(MAX_REACH_LEARNERS + 1)
     )).scalars().all())
     truncated = len(user_ids) > MAX_REACH_LEARNERS
-    base = await _course_context(request, course, db_session, activity_name)
+    base = await _course_context(request, course, db_session, activity_name, activity_uuid)
     contexts = await _learner_contexts(base, course, user_ids[:MAX_REACH_LEARNERS], db_session)
     return list(contexts.values()), truncated
 
@@ -283,6 +340,7 @@ async def render_for_reader(
     current_user: Any,
     db_session: AsyncSession,
     activity_name: str = "",
+    activity_uuid: str = "",
     is_editor: Optional[bool] = None,
     context: Optional[RenderContext] = None,
 ) -> Any:
@@ -300,12 +358,11 @@ async def render_for_reader(
     if is_editor:
         return content
     ctx = context or await build_render_context(
-        request, current_user, course, db_session, activity_name=activity_name
+        request, current_user, course, db_session, activity_name=activity_name, activity_uuid=activity_uuid
     )
     if context is not None:
-        ctx = replace(ctx, activity_name=activity_name)
-    if referenced_audiences(content):
-        ctx = replace(ctx, audiences=await load_audiences(course.org_id, content, db_session))
+        ctx = replace(ctx, activity_name=activity_name, activity_uuid=activity_uuid)
+    ctx = await with_references(ctx, course.org_id, content, db_session)
     rendered, _ = render_document(content, ctx)
     return rendered
 

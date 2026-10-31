@@ -34,6 +34,7 @@ import {
   TextItalic,
   TextStrikethrough,
   User,
+  UsersThree,
   VideoCamera,
   Warning,
   XCircle,
@@ -46,6 +47,11 @@ import LinkInputTooltip from './LinkInputTooltip'
 import lrnaiIcon from 'public/lrnai_icon.png'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
+import dynamic from 'next/dynamic'
+import { useDynamicLookups } from '../Extensions/Dynamic/useDynamicLookups'
+
+const VariablePicker = dynamic(() => import('../Extensions/Dynamic/VariablePicker'), { ssr: false })
+const CustomVariablesModal = dynamic(() => import('../Extensions/Dynamic/CustomVariablesModal'), { ssr: false })
 
 export const ToolbarButtons = React.memo(({ editor }: any) => {
   const { t } = useTranslation()
@@ -54,6 +60,20 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
   const [showCodeMenu, setShowCodeMenu] = React.useState(false)
   const [showCalloutMenu, setShowCalloutMenu] = React.useState(false)
   const [showLinkInput, setShowLinkInput] = React.useState(false)
+  const [showVariables, setShowVariables] = React.useState(false)
+  const [showCustomVariables, setShowCustomVariables] = React.useState(false)
+  const lookups = useDynamicLookups()
+
+  // The {{ autocomplete reads the org's custom variables from here.
+  React.useEffect(() => {
+    if (editor?.storage?.variableSuggestion) editor.storage.variableSuggestion.custom = lookups.customDefs
+  }, [editor, lookups.customDefs])
+
+  const insertVariable = (path: string) => {
+    editor.chain().focus().insertDynamicVariable(path).run()
+    setShowVariables(false)
+    setShowCustomVariables(false)
+  }
   const linkButtonRef = React.useRef<HTMLDivElement>(null)
 
   // Get AI feature from resolved_features
@@ -657,6 +677,44 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
           <GitBranch size={15} weight="fill" />
         </div>
       </ToolTip>
+      <DividerVerticalIcon style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey', opacity: 0.5 }} />
+      <ToolTip content={t('editor.dynamic.toolbar.variable', { example: '{{', defaultValue: 'Insert a variable (or type {{example}})' })}>
+        <div style={{ position: 'relative' }}>
+          <div
+            className={`editor-tool-btn editor-tool-btn-dynamic ${showVariables ? 'is-active' : ''}`}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setShowVariables((v) => !v)}
+            role="button"
+            aria-label={t('editor.dynamic.toolbar.variable_label', 'Variable')}
+          >
+            <BracketsCurly size={15} weight="bold" />
+          </div>
+          {showVariables && (
+            <VariablePicker
+              customDefs={lookups.customDefs}
+              onPick={(def) => insertVariable(def.path)}
+              onManageCustom={() => {
+                setShowVariables(false)
+                setShowCustomVariables(true)
+              }}
+              onClose={() => setShowVariables(false)}
+            />
+          )}
+        </div>
+      </ToolTip>
+      <ToolTip content={t('editor.dynamic.toolbar.conditional', 'Content only some learners see')}>
+        <div
+          className="editor-tool-btn editor-tool-btn-dynamic"
+          onClick={() => editor.chain().focus().insertConditionalBlock({ openRules: true }).run()}
+          role="button"
+          aria-label={t('editor.dynamic.toolbar.conditional_label', 'Conditional content')}
+        >
+          <UsersThree size={15} weight="fill" />
+        </div>
+      </ToolTip>
+      {showCustomVariables && (
+        <CustomVariablesModal onClose={() => setShowCustomVariables(false)} onInsert={insertVariable} />
+      )}
       <ToolTip content={canUseAI ? t('editor.blocks.magic_block') : t('editor.blocks.magic_block_disabled')}>
         {canUseAI ? (
           <div

@@ -5,6 +5,16 @@ import { Braces } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { VARIABLES, VARIABLE_FORMATS, variableDef } from './dynamicRules'
+import { useDynamicLookups } from './useDynamicLookups'
+import { useShowVariableValues } from './variableDisplay'
+
+function applyFormat(value: string, format: string | null): string {
+  if (format === 'upper') return value.toUpperCase()
+  if (format === 'lower') return value.toLowerCase()
+  if (format === 'capitalize') return value.charAt(0).toUpperCase() + value.slice(1)
+  if (format === 'title') return value.replace(/\b\w/g, (c) => c.toUpperCase())
+  return value
+}
 
 const GROUP_ORDER = ['user', 'course', 'progress', 'date'] as const
 
@@ -19,8 +29,17 @@ function DynamicVariableComponent({ node, updateAttributes, selected, editor, ge
   const wrapperRef = useRef<HTMLSpanElement>(null)
 
   const { path, fallback, format } = node.attrs
-  const def = variableDef(path)
-  const label = def ? t(`editor.dynamic.variables.${path.replace('.', '_')}`, def.label) : path
+  const lookups = useDynamicLookups()
+  const showValues = useShowVariableValues()
+  const def = variableDef(path, lookups.customDefs)
+  const name = !def
+    ? path
+    : def.group === 'custom'
+      ? def.label
+      : t(`editor.dynamic.variables.${path.replace('.', '_')}`, def.label)
+  // "Show values" swaps names for what a learner would read.
+  const sample = def?.sample || fallback || ''
+  const label = showValues && sample ? applyFormat(sample, format) : name
 
   useEffect(() => {
     if (!open) return
@@ -35,7 +54,7 @@ function DynamicVariableComponent({ node, updateAttributes, selected, editor, ge
     <NodeViewWrapper as="span" ref={wrapperRef} className="relative inline-block align-baseline">
       <span
         contentEditable={false}
-        title={def ? `{{${path}}} · ${t('editor.dynamic.for_example', 'e.g.')} ${def.sample}` : `{{${path}}}`}
+        title={[name, `{{${path}}}`, def?.sample && `${t('editor.dynamic.for_example', 'e.g.')} ${def.sample}`].filter(Boolean).join(' · ')}
         onMouseDown={(e) => {
           if (!isEditable) return
           e.preventDefault()
@@ -53,7 +72,7 @@ function DynamicVariableComponent({ node, updateAttributes, selected, editor, ge
       >
         <Braces size={12} className="opacity-70" />
         {label}
-        {format && <span className="text-[0.75em] uppercase opacity-60">{format}</span>}
+        {format && !showValues && <span className="text-[0.75em] uppercase opacity-60">{format}</span>}
       </span>
 
       {open && (
@@ -79,6 +98,14 @@ function DynamicVariableComponent({ node, updateAttributes, selected, editor, ge
                 ))}
               </optgroup>
             ))}
+            {lookups.customDefs.length > 0 && (
+              <optgroup label={t('editor.dynamic.variable_groups.custom', 'Custom')}>
+                {lookups.customDefs.map((v) => (
+                  <option key={v.path} value={v.path}>{v.label}</option>
+                ))}
+              </optgroup>
+            )}
+            {!def && <option value={path}>{path}</option>}
           </select>
 
           <label className="block text-xs font-semibold text-gray-500 mt-3 mb-1">
