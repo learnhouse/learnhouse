@@ -278,3 +278,49 @@ class TestAudienceEdges:
         for _ in range(dc.MAX_NODE_DEPTH + 2):
             deep = {"conditions": [deep]}
         assert dc.referenced_audiences(deep) == set()
+
+
+class TestFailClosed:
+    @pytest.mark.parametrize(
+        "inner",
+        [
+            {"field": "audience", "op": "is", "value": "audience_missing"},
+            _cond("user.password", "eq", "x"),
+            _cond("progress.percent", "between", ["a", 5]),
+            _cond("date.today", "between", ["2026-01-01", "nope"]),
+            _cond("progress.percent", "bogus", 5),
+            _cond("date.today", "bogus", "2026-01-01"),
+        ],
+    )
+    def test_negation_cannot_reveal_unresolvable_rules(self, inner):
+        negated = {"negate": True, "conditions": [inner]}
+        is_not = {"conditions": [{"field": "audience", "op": "is_not", "value": "audience_x"}]}
+        assert evaluate_rules(negated, _ctx(audiences={"audience_x": {"conditions": [inner]}})) is False
+        assert evaluate_rules(is_not, _ctx(audiences={"audience_x": {"conditions": [inner]}})) is False
+
+    def test_over_budget_audience_is_not_shown(self):
+        big = {"conditions": [_cond("user.signed_in", "is_true")] * (dc.MAX_CONDITIONS + 1)}
+        rules = {"conditions": [{"field": "audience", "op": "is_not", "value": "audience_big"}]}
+        assert evaluate_rules(rules, _ctx(audiences={"audience_big": big})) is False
+
+    def test_missing_values_still_negate(self):
+        # Not enrolled is a real answer: "not after a week" includes them.
+        rules = {"negate": True, "conditions": [_cond("enrollment.days", "gte", 7)]}
+        assert evaluate_rules(rules, _ctx(enrolled=False, days_enrolled=None)) is True
+
+
+class TestAudiencePermissions:
+    @pytest.mark.asyncio
+    async def test_creator_without_course_wide_rights_cannot_change_it(self, mock_request, db, org, regular_user):
+        from src.db.editor_audiences import EditorAudienceCreate, EditorAudienceUpdate
+        from src.services import editor_audiences as svc
+
+        with patch.object(svc, "_require_author", new_callable=AsyncMock):
+            created = await svc.create_editor_audience(
+                mock_request, EditorAudienceCreate(org_id=org.id, name="Mine", rules={"conditions": []}), regular_user, db
+            )
+            with pytest.raises(HTTPException) as update:
+                await svc.update_editor_audience(mock_request, created.audience_uuid, EditorAudienceUpdate(name="x"), regular_user, db)
+            with pytest.raises(HTTPException) as delete:
+                await svc.delete_editor_audience(mock_request, created.audience_uuid, regular_user, db)
+        assert (update.value.status_code, delete.value.status_code) == (403, 403)
