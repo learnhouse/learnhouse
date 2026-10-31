@@ -8,6 +8,16 @@ from dotenv import load_dotenv
 # every request, and repeating the report drowns out every other startup log.
 _LOGGED_MISSING_INTERNAL_KEYS = False
 
+# Example values from .env.example files and the docs. A deployment that kept
+# one has a secret anyone can read. Keep in sync with apps/collab/src/index.ts.
+PLACEHOLDER_SECRETS = frozenset({
+    "your-jwt-secret-key",
+    "your-internal-key",
+    "CHANGE_ME_generate_with_openssl_rand_hex_32",
+    "replace-with-at-least-32-random-characters",
+    "replace-with-random-shared-secret",
+})
+
 
 class CookieConfig(BaseModel):
     domain: str
@@ -266,6 +276,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
     if not auth_jwt_secret_key:
         raise ValueError(
             "SECURITY ERROR: LEARNHOUSE_AUTH_JWT_SECRET_KEY must be set. "
+            "Generate a secure key with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+        )
+    if auth_jwt_secret_key in PLACEHOLDER_SECRETS:
+        raise ValueError(
+            "SECURITY ERROR: LEARNHOUSE_AUTH_JWT_SECRET_KEY is still the example value. "
             "Generate a secure key with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
         )
     if len(auth_jwt_secret_key) < 32:

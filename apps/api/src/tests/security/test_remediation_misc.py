@@ -121,6 +121,33 @@ def test_dotted_cookie_domain_ok(monkeypatch):
     assert cfg.hosting_config.cookie_config.domain == ".app.example.com"
 
 
+def test_documented_example_jwt_secret_refused(monkeypatch):
+    """The docs' example secret is long enough to pass the length check but is public."""
+    monkeypatch.setenv("LEARNHOUSE_AUTH_JWT_SECRET_KEY", "replace-with-at-least-32-random-characters")
+    monkeypatch.setenv("TESTING", "false")
+
+    import importlib
+
+    import config.config as cfg_module
+
+    importlib.reload(cfg_module)
+    with pytest.raises(ValueError) as exc:
+        cfg_module.get_learnhouse_config()
+    assert "example value" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_collab_internal_key_left_at_example_value_opens_nothing(monkeypatch):
+    from fastapi import HTTPException
+
+    from src.routers.boards.boards import verify_internal_key
+
+    monkeypatch.setenv("COLLAB_INTERNAL_KEY", "replace-with-random-shared-secret")
+    with pytest.raises(HTTPException) as exc:
+        await verify_internal_key("replace-with-random-shared-secret")
+    assert exc.value.status_code == 403
+
+
 # ---------------------------------------------------------------------------
 # F-20: rate limiters return the existing 429 envelope
 # ---------------------------------------------------------------------------

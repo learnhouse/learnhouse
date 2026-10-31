@@ -56,11 +56,14 @@ const MAX_UNVERIFIED_MS = 10 * 60_000
 
 // ── Startup validation ──────────────────────────────────────────────────────
 
-// Placeholders shipped in .env.example (old and current) must never be used.
+// Placeholders shipped in .env.example and the docs (old and current) must never be used.
+// Keep in sync with PLACEHOLDER_SECRETS in apps/api/config/config.py.
 const PLACEHOLDER_SECRETS = new Set([
   'your-jwt-secret-key',
   'your-internal-key',
   'CHANGE_ME_generate_with_openssl_rand_hex_32',
+  'replace-with-at-least-32-random-characters',
+  'replace-with-random-shared-secret',
 ])
 const MIN_SECRET_LENGTH = 32
 
