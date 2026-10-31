@@ -1,5 +1,11 @@
 """Saved audiences: named rule sets an organization's authors reuse across
-conditional blocks. Same permissions as editor templates."""
+conditional blocks.
+
+Any author may create one and point their own blocks at it. Changing or
+deleting one changes who sees every block that refers to it, in any course,
+so that takes the right to update every course in the org (admins and
+maintainers), not just being its creator.
+"""
 
 import json
 from datetime import datetime
@@ -15,7 +21,8 @@ from src.db.editor_audiences import (
     EditorAudienceRead,
     EditorAudienceUpdate,
 )
-from src.services.editor_templates import _require_author, _require_manager, _require_user
+from src.security.org_auth import require_org_role_permission
+from src.services.editor_templates import _require_author, _require_user
 
 MAX_AUDIENCE_BYTES = 50 * 1024
 MAX_AUDIENCES_PER_ORG = 200
@@ -26,6 +33,11 @@ def _validate_rules(rules: dict) -> None:
         raise HTTPException(status_code=400, detail="An audience needs a list of conditions")
     if len(json.dumps(rules)) > MAX_AUDIENCE_BYTES:
         raise HTTPException(status_code=413, detail="Audience rules are too large")
+
+
+async def _require_course_wide_editor(user, audience: EditorAudience, db_session: AsyncSession) -> None:
+    await _require_author(user, audience.org_id, db_session)
+    await require_org_role_permission(user.id, audience.org_id, db_session, "courses", "action_update")
 
 
 async def _get_audience(audience_uuid: str, db_session: AsyncSession) -> EditorAudience:
@@ -88,7 +100,7 @@ async def update_editor_audience(
 ) -> EditorAudienceRead:
     user = _require_user(current_user)
     audience = await _get_audience(audience_uuid, db_session)
-    await _require_manager(user, audience, db_session)
+    await _require_course_wide_editor(user, audience, db_session)
     if audience_object.name is not None:
         audience.name = audience_object.name.strip()
     if audience_object.description is not None:
@@ -110,7 +122,7 @@ async def delete_editor_audience(
     any rule the server can't resolve."""
     user = _require_user(current_user)
     audience = await _get_audience(audience_uuid, db_session)
-    await _require_manager(user, audience, db_session)
+    await _require_course_wide_editor(user, audience, db_session)
     await db_session.delete(audience)
     await db_session.commit()
     return {"detail": "Audience deleted"}

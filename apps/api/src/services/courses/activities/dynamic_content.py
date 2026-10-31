@@ -173,6 +173,12 @@ def _domain_matches(domain: str, wanted: str) -> bool:
     return bool(domain) and (domain == wanted or domain.endswith("." + wanted))
 
 
+class _Unresolvable(Exception):
+    """A rule the server can't evaluate (malformed, unknown, over a limit).
+    Raised rather than returned as False so a "not" or "is_not" around it
+    can't turn it into "show": it hides the block whatever wraps it."""
+
+
 def _as_str_list(value: Any) -> list[str] | None:
     if isinstance(value, str):
         return [value]
@@ -199,64 +205,75 @@ def _as_date(value: Any) -> date | None:
 def _set_op(actual: frozenset[str], op: str, value: Any) -> bool:
     wanted = _as_str_list(value)
     if wanted is None:
-        return False
+        raise _Unresolvable
     if op == "contains_any":
         return any(v in actual for v in wanted)
     if op == "contains_all":
         return all(v in actual for v in wanted)
     if op == "contains_none":
         return not any(v in actual for v in wanted)
-    return False
+    raise _Unresolvable
 
 
 def _string_op(actual: str, op: str, value: Any, *, match: Callable[[str, str], bool] | None = None) -> bool:
     wanted = _as_str_list(value)
     if wanted is None:
-        return False
+        raise _Unresolvable
     hit = any(match(actual, v) if match else actual == v for v in wanted)
     if op in ("eq", "in"):
         return hit
     if op in ("neq", "not_in"):
         return not hit
-    return False
+    raise _Unresolvable
 
 
 def _number_op(actual: float | None, op: str, value: Any) -> bool:
     if actual is None:
+        # No value (not enrolled, signed out): a real "no", not an error.
         return False
     if op == "between":
         if not isinstance(value, list) or len(value) != 2:
-            return False
+            raise _Unresolvable
         low, high = _as_number(value[0]), _as_number(value[1])
-        return low is not None and high is not None and low <= actual <= high
+        if low is None or high is None:
+            raise _Unresolvable
+        return low <= actual <= high
     target = _as_number(value)
     if target is None:
-        return False
-    return {
+        raise _Unresolvable
+    results = {
         "eq": actual == target,
         "neq": actual != target,
         "gt": actual > target,
         "gte": actual >= target,
         "lt": actual < target,
         "lte": actual <= target,
-    }.get(op, False)
+    }
+    if op not in results:
+        raise _Unresolvable
+    return results[op]
 
 
 def _date_op(actual: date, op: str, value: Any) -> bool:
     if op == "between":
         if not isinstance(value, list) or len(value) != 2:
-            return False
+            raise _Unresolvable
         start, end = _as_date(value[0]), _as_date(value[1])
-        return start is not None and end is not None and start <= actual <= end
+        if start is None or end is None:
+            raise _Unresolvable
+        return start <= actual <= end
     target = _as_date(value)
     if target is None:
-        return False
-    return {
+        raise _Unresolvable
+    results = {
         "on_or_after": actual >= target,
         "on_or_before": actual <= target,
         "before": actual < target,
         "after": actual > target,
-    }.get(op, False)
+    }
+    if op not in results:
+        raise _Unresolvable
+    return results[op]
 
 
 def _bool_op(actual: bool, op: str) -> bool:
@@ -264,7 +281,7 @@ def _bool_op(actual: bool, op: str) -> bool:
         return actual
     if op == "is_false":
         return not actual
-    return False
+    raise _Unresolvable
 
 
 def _optional_number(value: int | None) -> float | None:
@@ -297,15 +314,15 @@ class _Budget:
 
 def _evaluate_group(group: Any, ctx: RenderContext, depth: int, budget: _Budget) -> bool:
     if not isinstance(group, dict) or depth > MAX_RULE_DEPTH:
-        return False
+        raise _Unresolvable
     conditions = group.get("conditions", [])
     if not isinstance(conditions, list):
-        return False
+        raise _Unresolvable
     results = []
     for item in conditions:
         budget.remaining -= 1
         if budget.remaining < 0:
-            return False
+            raise _Unresolvable
         if isinstance(item, dict) and "conditions" in item:
             results.append(_evaluate_group(item, ctx, depth + 1, budget))
         else:
@@ -320,20 +337,20 @@ def _evaluate_audience(op: str, value: Any, ctx: RenderContext, depth: int, budg
     # and condition budget, so audiences that refer to each other stop there.
     rules = ctx.audiences.get(value) if isinstance(value, str) else None
     if rules is None or op not in ("is", "is_not"):
-        return False
+        raise _Unresolvable
     inside = _evaluate_group(rules, ctx, depth + 1, budget)
     return inside if op == "is" else not inside
 
 
 def _evaluate_condition(condition: Any, ctx: RenderContext, depth: int = 0, budget: _Budget | None = None) -> bool:
     if not isinstance(condition, dict):
-        return False
+        raise _Unresolvable
     if condition.get("field") == AUDIENCE_FIELD and isinstance(condition.get("op"), str):
         return _evaluate_audience(condition["op"], condition.get("value"), ctx, depth, budget or _Budget())
     evaluator = FIELDS.get(condition.get("field"))  # type: ignore[arg-type]
     op = condition.get("op")
     if evaluator is None or not isinstance(op, str):
-        return False
+        raise _Unresolvable
     return evaluator(ctx, op, condition.get("value"))
 
 
@@ -342,7 +359,10 @@ def evaluate_rules(rules: Any, ctx: RenderContext) -> bool:
     everyone; anything malformed means no one."""
     if rules is None:
         return True
-    return _evaluate_group(rules, ctx, 0, _Budget())
+    try:
+        return _evaluate_group(rules, ctx, 0, _Budget())
+    except _Unresolvable:
+        return False
 
 
 # ---------------------------------------------------------------------------
