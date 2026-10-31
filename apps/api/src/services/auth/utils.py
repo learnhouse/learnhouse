@@ -10,7 +10,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import User, UserCreate, UserRead
 from src.security.auth import get_current_user
-from src.services.users.users import create_user, create_user_without_org
+from src.services.users.users import (
+    INBOX_UNPROVEN_KEY,
+    create_user,
+    create_user_without_org,
+    inbox_unproven,
+)
 from src.services.security.rate_limiting import get_client_ip
 from src.services.security.account_lockout import update_login_info
 from src.services.audit.audit import record_audit_event
@@ -136,6 +141,52 @@ async def _drop_unverified_sso_links(user_id: int, db_session: AsyncSession) -> 
         await hooks.revoke_unverified_sso_links(user_id, db_session)
 
 
+async def claim_account_on_inbox_proof(user: User, db_session: AsyncSession) -> None:
+    """Run when a sign-in proves the caller controls the account's inbox
+    (Google, an emailed magic link).
+
+    Pre-hijack guard: a password set by someone who never proved control of
+    this inbox (an unverified or self-hosted signup, or one an org admin chose
+    through the admin API and the owner never changed) must not survive the
+    real owner signing in. Drop it and end any session it opened; the owner can
+    set a password via reset. SSO links made while the account was unclaimed
+    go too.
+    """
+    untrusted_account = not user.email_verified or inbox_unproven(user)
+    untrusted_password = bool(user.password) and (
+        untrusted_account
+        or (user.signup_method == "admin_api" and user.password_changed_at is None)
+    )
+    if not (untrusted_account or untrusted_password):
+        return
+
+    if untrusted_password:
+        user.password = ""
+        # Whole seconds: the session minted right after this carries an
+        # integer ``iat`` and must not count as issued before the change.
+        user.password_changed_at = datetime.now(timezone.utc).replace(
+            tzinfo=None, microsecond=0
+        )
+    if untrusted_account:
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+        meta = dict(user.extra_metadata or {})
+        meta.pop(INBOX_UNPROVEN_KEY, None)
+        user.extra_metadata = meta or None  # reassign so the JSONB change is detected
+
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    if user.id is None:
+        return
+    if untrusted_password:
+        from src.security.auth import revoke_user_sessions_before
+
+        revoke_user_sessions_before(user.id)
+    await _drop_unverified_sso_links(user.id, db_session)
+
+
 async def signWithGoogle(
     request: Request,
     access_token: str,
@@ -239,51 +290,14 @@ async def signWithGoogle(
 
             return user
 
-    # Pre-hijack guard: a password set by someone who never proved control of
-    # this inbox (an unverified signup, or one an org admin chose through the
-    # admin API and the owner never changed) must not survive the real owner
-    # signing in with Google. Drop it and end any session it opened; the
-    # owner keeps Google sign-in and can set a password via reset.
-    needs_update = False
-    # Anything attached to the account before its owner proved the inbox
-    # (here, through Google) was attached by someone who may not be them.
-    untrusted_account = not user.email_verified
-    untrusted_password = bool(user.password) and (
-        not user.email_verified
-        or (user.signup_method == "admin_api" and user.password_changed_at is None)
-    )
-    if untrusted_password:
-        user.password = ""
-        # Whole seconds: the session minted right after this carries an
-        # integer ``iat`` and must not count as issued before the change.
-        user.password_changed_at = datetime.now(timezone.utc).replace(
-            tzinfo=None, microsecond=0
-        )
-        needs_update = True
-
-    # For existing users, ensure email is verified (Google already verified it)
-    if not user.email_verified:
-        user.email_verified = True
-        user.email_verified_at = datetime.now(timezone.utc).isoformat()
-        needs_update = True
+    await claim_account_on_inbox_proof(user, db_session)
 
     # Backfill signup_method for existing users who sign in with Google
     if not user.signup_method:
         user.signup_method = "google"
-        needs_update = True
-
-    if needs_update:
         db_session.add(user)
         await db_session.commit()
         await db_session.refresh(user)
-
-    if untrusted_password and user.id is not None:
-        from src.security.auth import revoke_user_sessions_before
-
-        revoke_user_sessions_before(user.id)
-
-    if (untrusted_account or untrusted_password) and user.id is not None:
-        await _drop_unverified_sso_links(user.id, db_session)
 
     # If the caller supplied (and the router validated, via a pending invite)
     # an ``org_id``, an *existing* user signing in with Google must still be

@@ -60,6 +60,21 @@ def _session_epoch_now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
 
 
+# Self-hosted signups are marked verified without an email round trip, so this
+# flag records that nothing has proven the signer controls the inbox. The first
+# Google or magic-link sign-in (which does prove it) clears it and drops any
+# password set before then. Only new signups carry it; older rows never match.
+INBOX_UNPROVEN_KEY = "_lh_inbox_unproven"
+
+
+def inbox_unproven(user) -> bool:
+    return bool((user.extra_metadata or {}).get(INBOX_UNPROVEN_KEY))
+
+
+def _mark_inbox_unproven(user) -> None:
+    user.extra_metadata = {**(user.extra_metadata or {}), INBOX_UNPROVEN_KEY: True}
+
+
 def _reject_urls_in_profile_fields(**fields) -> None:
     """Reject display-name fields containing URLs/links (S: phishing relay).
 
@@ -254,6 +269,8 @@ async def create_user(
     user.extra_metadata = await _resolve_signup_custom_fields(
         user_object, org_id, db_session, enforce_required=not is_oauth
     )
+    if not is_oauth and get_deployment_mode() != 'saas':
+        _mark_inbox_unproven(user)
 
     # Usage check
     await check_limits_with_usage("members", org_id, db_session)
@@ -485,6 +502,8 @@ async def create_user_without_org(
     # signup fields to validate against, so nothing may be stored. Dropping the
     # submitted blob stops an anonymous caller writing arbitrary JSON.
     user.extra_metadata = None
+    if not is_oauth and get_deployment_mode() != 'saas':
+        _mark_inbox_unproven(user)
 
     # Verifications
 

@@ -30,7 +30,7 @@ from src.security.auth import (
     JWT_COOKIE_NAME,
 )
 from src.services.users.users import security_get_user
-from src.services.auth.utils import signWithGoogle, get_google_user_info
+from src.services.auth.utils import claim_account_on_inbox_proof, get_google_user_info, signWithGoogle
 from src.services.audit.audit import record_audit_event
 from src.db.user_audit_events import UserAuditEventType
 from src.services.dev.dev import isDevModeEnabled
@@ -1214,6 +1214,9 @@ async def magic_link_verify(
             status_code=status.HTTP_410_GONE,
             detail={"code": "MAGIC_LINK_INVALID", "message": "This login link is no longer valid."},
         )
+
+    # The emailed link proves the inbox, same as Google sign-in
+    await claim_account_on_inbox_proof(user, db_session)
 
     org_id, on_custom_domain = await _bind_session_to_custom_domain(
         request, db_session, user.id, org_id, AUTH_METHOD_MAGIC_LOGIN
