@@ -16,6 +16,7 @@ process.env.STRIPE_PRICE_PACK_AI_500 = "price_test_pack";
 
 const planWrites = [];
 const subscriptionUpdates = [];
+let subscriptionUpdateError = null;
 let sessionFixture = null;
 let orgSubscriptions = [];
 
@@ -52,6 +53,7 @@ const fakeStripe = {
   subscriptions: {
     list: async () => ({ data: orgSubscriptions }),
     update: async (id, params) => {
+      if (subscriptionUpdateError) throw subscriptionUpdateError;
       subscriptionUpdates.push({ id, params });
       return { id };
     },
@@ -82,6 +84,7 @@ function paidSession(sub) {
 beforeEach(() => {
   planWrites.length = 0;
   subscriptionUpdates.length = 0;
+  subscriptionUpdateError = null;
   scheduleUpdates.length = 0;
   sessionFixture = null;
   orgSubscriptions = [];
@@ -143,6 +146,21 @@ describe("switchSubscriptionPlan upgrade", () => {
     const result = await switchSubscriptionPlan("owner@example.test", "4242", "pro", "monthly");
     expect(result).toEqual({ updated: true, plan: "pro" });
     expect(subscriptionUpdates).toHaveLength(1);
+  });
+
+  test("charges the prorated difference at switch time", async () => {
+    orgSubscriptions = [subscription({ metadata: { org_id: "4242", plan: "standard", billing: "monthly" } })];
+    await switchSubscriptionPlan("owner@example.test", "4242", "pro", "monthly");
+    expect(subscriptionUpdates[0].params.proration_behavior).toBe("always_invoice");
+    expect(subscriptionUpdates[0].params.payment_behavior).toBe("error_if_incomplete");
+  });
+
+  test("a failed upgrade charge grants nothing", async () => {
+    orgSubscriptions = [subscription({ metadata: { org_id: "4242", plan: "standard", billing: "monthly" } })];
+    subscriptionUpdateError = Object.assign(new Error("Your card was declined."), { statusCode: 402 });
+    const err = await switchSubscriptionPlan("owner@example.test", "4242", "pro", "monthly").catch((e) => e);
+    expect(err.status).toBe(409);
+    expect(planWrites).toHaveLength(0);
   });
 
   for (const status of ["past_due", "unpaid"]) {
