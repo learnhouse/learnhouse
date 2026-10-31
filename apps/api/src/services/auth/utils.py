@@ -141,7 +141,11 @@ async def _drop_unverified_sso_links(user_id: int, db_session: AsyncSession) -> 
 
 
 async def claim_account_on_inbox_proof(
-    user: User, db_session: AsyncSession, *, drop_admin_set_password: bool = True
+    user: User,
+    db_session: AsyncSession,
+    *,
+    drop_admin_set_password: bool = True,
+    pending_changes: bool = False,
 ) -> None:
     """Run when a sign-in proves the caller controls the account's inbox
     (Google, an emailed magic link).
@@ -153,6 +157,8 @@ async def claim_account_on_inbox_proof(
     set a password via reset. SSO links made while the account was unclaimed
     go too. ``drop_admin_set_password`` also drops a password an org admin
     chose through the admin API that the owner never changed.
+    ``pending_changes`` commits the caller's own edits to ``user`` in the same
+    write.
     """
     untrusted_account = not user.email_verified or inbox_unproven(user)
     untrusted_password = bool(user.password) and (
@@ -164,6 +170,10 @@ async def claim_account_on_inbox_proof(
         )
     )
     if not (untrusted_account or untrusted_password):
+        if pending_changes:
+            db_session.add(user)
+            await db_session.commit()
+            await db_session.refresh(user)
         return
 
     if untrusted_password:
@@ -293,14 +303,13 @@ async def signWithGoogle(
 
             return user
 
-    await claim_account_on_inbox_proof(user, db_session)
-
     # Backfill signup_method for existing users who sign in with Google
+    needs_update = False
     if not user.signup_method:
         user.signup_method = "google"
-        db_session.add(user)
-        await db_session.commit()
-        await db_session.refresh(user)
+        needs_update = True
+
+    await claim_account_on_inbox_proof(user, db_session, pending_changes=needs_update)
 
     # If the caller supplied (and the router validated, via a pending invite)
     # an ``org_id``, an *existing* user signing in with Google must still be
