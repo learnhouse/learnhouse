@@ -98,6 +98,11 @@
       "rangeStrategy": "pin"
     },
     {
+      "description": "engines.node is the oldest Node the CLI supports, not the newest one released. rangeStrategy bump raises it to the latest patch or major, which locks out users on older supported releases.",
+      "matchDepTypes": ["engines"],
+      "enabled": false
+    },
+    {
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch"
