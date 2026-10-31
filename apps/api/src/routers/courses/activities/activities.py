@@ -14,7 +14,16 @@ from src.services.courses.activities.activities import (
     update_activity,
     delete_activity,
     get_editor_bootstrap,
+    get_dynamic_preview,
+    get_dynamic_reach,
+    list_dynamic_learners,
     EditorBootstrapResponse,
+)
+from src.services.courses.activities.dynamic_context import (
+    DynamicLearner,
+    DynamicPreviewRequest,
+    DynamicPreviewResponse,
+    DynamicReachResponse,
 )
 from src.services.courses.activities.versioning import (
     get_activity_versions,
@@ -255,6 +264,76 @@ async def api_get_editor_bootstrap(
 ) -> EditorBootstrapResponse:
     return await get_editor_bootstrap(
         request, activity_uuid, current_user=current_user, db_session=db_session
+    )
+
+
+@router.post(
+    "/{activity_uuid}/dynamic-preview",
+    response_model=DynamicPreviewResponse,
+    summary="Preview dynamic content as a persona",
+    description=(
+        "Render the activity (or an unsaved document) with conditional blocks and "
+        "variables resolved for a simulated reader. Requires edit rights on the course."
+    ),
+    responses={
+        200: {"description": "Rendered document.", "model": DynamicPreviewResponse},
+        403: {"description": "User cannot edit this course"},
+        404: {"description": "Activity not found"},
+        413: {"description": "Content too large"},
+    },
+)
+async def api_get_dynamic_preview(
+    request: Request,
+    activity_uuid: str,
+    preview: DynamicPreviewRequest,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> DynamicPreviewResponse:
+    return await get_dynamic_preview(
+        request, activity_uuid, preview, current_user=current_user, db_session=db_session
+    )
+
+
+class DynamicReachRequest(BaseModel):
+    content: Optional[dict] = None
+
+
+@router.post(
+    "/{activity_uuid}/dynamic-reach",
+    response_model=DynamicReachResponse,
+    summary="Count learners who see each conditional block",
+    description=(
+        "For the activity (or an unsaved document), how many of the course's enrolled "
+        "learners each conditional block reaches, in document order. Requires edit rights."
+    ),
+)
+async def api_get_dynamic_reach(
+    request: Request,
+    activity_uuid: str,
+    body: DynamicReachRequest,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> DynamicReachResponse:
+    return await get_dynamic_reach(
+        request, activity_uuid, body.content, current_user=current_user, db_session=db_session
+    )
+
+
+@router.get(
+    "/{activity_uuid}/dynamic-learners",
+    response_model=List[DynamicLearner],
+    summary="Search enrolled learners to preview as",
+    description="Up to 20 learners enrolled in the activity's course. Requires edit rights.",
+)
+async def api_list_dynamic_learners(
+    request: Request,
+    activity_uuid: str,
+    q: str = Query(default="", max_length=64),
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> List[DynamicLearner]:
+    return await list_dynamic_learners(
+        request, activity_uuid, q, current_user=current_user, db_session=db_session
     )
 
 

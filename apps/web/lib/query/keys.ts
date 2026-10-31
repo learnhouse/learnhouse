@@ -56,6 +56,15 @@ export const queryKeys = {
     analytics: (uuid: string) => ['assignment', uuid, 'analytics'] as const,
     allSubmissions: (uuid: string) => ['assignment', uuid, 'submissions'] as const,
   },
+  editorTemplates: {
+    list: (orgId: number) => ['editor-templates', orgId] as const,
+  },
+  editorAudiences: {
+    list: (orgId: number) => ['editor-audiences', orgId] as const,
+  },
+  editorVariables: {
+    list: (orgId: number) => ['editor-variables', orgId] as const,
+  },
   usergroups: {
     list: (orgId: number) => ['usergroups', orgId] as const,
     resources: (ugId: string, orgId: number) => ['usergroup', ugId, 'resources', orgId] as const,

@@ -239,4 +239,13 @@ async def redact_activity_for_reader(
     if state == "unpaid":
         activity_read.content = {"paid_access": False}
         activity_read.details = None
+    elif not activity_read.is_locked:
+        # Conditional blocks and variables resolve per reader, server side,
+        # so hidden blocks never leave the API. Editors keep the raw doc.
+        from src.services.courses.activities.dynamic_context import render_for_reader
+
+        activity_read.content = await render_for_reader(
+            request, activity_read.content, course=course, current_user=current_user,
+            db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+        )
     return activity_read

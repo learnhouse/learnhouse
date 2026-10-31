@@ -9,6 +9,9 @@ from src.routers import demo as demo_router_module
 from src.routers import instance
 from src.routers import plans
 from src.routers import usergroups
+from src.routers import editor_templates as editor_templates_router_module
+from src.routers import editor_audiences as editor_audiences_router_module
+from src.routers import editor_variables as editor_variables_router_module
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import mfa as mfa_router_module
 from src.routers import monitoring
@@ -219,6 +222,24 @@ v1_router.include_router(
 )
 v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
+v1_router.include_router(
+    editor_templates_router_module.router,
+    prefix="/editor-templates",
+    tags=["editor-templates"],
+    dependencies=[Depends(require_authenticated_user)],
+)
+v1_router.include_router(
+    editor_audiences_router_module.router,
+    prefix="/editor-audiences",
+    tags=["editor-audiences"],
+    dependencies=[Depends(require_authenticated_user)],
+)
+v1_router.include_router(
+    editor_variables_router_module.router,
+    prefix="/editor-variables",
+    tags=["editor-variables"],
+    dependencies=[Depends(require_authenticated_user)],
+)
 v1_router.include_router(
     folders_router_module.router, prefix="/folders", tags=["folders"]
 )

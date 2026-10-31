@@ -32,6 +32,10 @@ import Scenarios from './Extensions/Scenarios/Scenarios'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
 import UserBlock from './Extensions/Users/UserBlock'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
+import Callout from './Extensions/Callout/Callout'
+import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
+import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
+import { normalizeCalloutContent } from './Extensions/Callout/calloutContent'
 
 // Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from './editorLowlight'
@@ -62,6 +66,7 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
           },
         },
       }),
+      Callout,
       InfoCallout.configure({
         editable: false,
       }),
@@ -154,16 +159,23 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         editable: false,
         activity: activity,
       }),
+      ConditionalBlock,
+      DynamicVariable,
     ],
-    content: content,
+    content: normalizeCalloutContent(content),
     immediatelyRender: false,
   })
 
-  // Update content when it changes
+  // Update content when it changes. The editor was created with the first
+  // value, so skip that one. Deferred: React node views mount with flushSync,
+  // which React refuses while it is still committing this render.
+  const initialContent = React.useRef(content)
   React.useEffect(() => {
-    if (editor && content) {
-      editor.commands.setContent(content)
-    }
+    if (!editor || !content || content === initialContent.current) return
+    initialContent.current = content
+    queueMicrotask(() => {
+      if (!editor.isDestroyed) editor.commands.setContent(normalizeCalloutContent(content))
+    })
   }, [editor, content])
 
   if (!editor) {

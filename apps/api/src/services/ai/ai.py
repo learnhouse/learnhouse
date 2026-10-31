@@ -23,6 +23,7 @@ from src.services.ai.base import (
 )
 from src.services.ai.llm import model_for_tier
 from src.services.ai.rag.access import can_read_activity
+from src.services.courses.activities.dynamic_context import render_for_reader
 
 from src.services.ai.schemas.ai import (
     ActivityAIChatSessionResponse,
@@ -173,8 +174,12 @@ async def ai_start_activity_chat_session(
     # Reserve credit atomically before the AI call; refund below on failure.
     await reserve_ai_credit(org.id, db_session)
 
-    # Get Activity Content Blocks
-    content = activity.content
+    # Get Activity Content Blocks, as this reader sees them: the model must
+    # not quote a conditional block the learner can't see.
+    content = await render_for_reader(
+        request, activity.content, course=course, current_user=current_user,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+    )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
     structured = structure_activity_content_by_type(content)
@@ -325,8 +330,12 @@ async def ai_send_activity_chat_message(
     # Reserve credit atomically before the AI call; refund below on failure.
     await reserve_ai_credit(course.org_id, db_session)
 
-    # Get Activity Content Blocks
-    content = activity.content
+    # Get Activity Content Blocks, as this reader sees them: the model must
+    # not quote a conditional block the learner can't see.
+    content = await render_for_reader(
+        request, activity.content, course=course, current_user=current_user,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+    )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
     structured = structure_activity_content_by_type(content)
@@ -472,8 +481,12 @@ async def _get_activity_and_course_info(
         request, course, activity, org.id, current_user, db_session
     )
 
-    # Get Activity Content Blocks
-    content = activity.content
+    # Get Activity Content Blocks, as this reader sees them: the model must
+    # not quote a conditional block the learner can't see.
+    content = await render_for_reader(
+        request, activity.content, course=course, current_user=current_user,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+    )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
     structured = structure_activity_content_by_type(content)

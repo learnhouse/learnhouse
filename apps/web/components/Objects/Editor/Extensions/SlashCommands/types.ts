@@ -18,6 +18,7 @@ export type SlashCommandCategory =
   | 'media'
   | 'interactive'
   | 'callouts'
+  | 'dynamic'
   | 'ui'
   | 'tables'
 

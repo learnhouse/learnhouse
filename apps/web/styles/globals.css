@@ -1619,6 +1619,14 @@
 }
 .editor-tool-btn-media:hover { background: rgba(139, 92, 246, 0.12); }
 
+.editor-tool-btn-dynamic {
+  background: rgba(192, 38, 211, 0.06);
+  color: rgb(162, 28, 175);
+  outline: 1px solid rgba(192, 38, 211, 0.12);
+}
+.editor-tool-btn-dynamic:hover { background: rgba(192, 38, 211, 0.12); }
+.editor-tool-btn-dynamic.is-active { background: rgba(192, 38, 211, 0.18); }
+
 .editor-tool-btn-math {
   background: rgba(251, 146, 60, 0.06);
   color: rgb(234, 88, 12);
