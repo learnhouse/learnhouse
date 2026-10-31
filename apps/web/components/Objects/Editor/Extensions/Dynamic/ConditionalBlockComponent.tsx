@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { NodeViewContent, NodeViewWrapper, NodeViewProps } from '@tiptap/react'
 import { EyeOff, FlipHorizontal2, MessageSquareText, SlidersHorizontal, Split, Ungroup } from 'lucide-react'
@@ -16,12 +16,12 @@ function ConditionalBlockComponent({ node, editor, getPos, updateAttributes }: N
   const editorState = useEditorProvider() as any
   const isEditable = editorState?.isEditable ?? false
   // A block inserted from a shortcut that asks for it opens its rules once.
-  const [showBuilder, setShowBuilder] = useState(() => {
-    const storage = (editor.storage as any).conditionalBlock
-    if (!storage?.openRulesOnMount) return false
-    storage.openRulesOnMount = false
-    return isEditable
-  })
+  const [showBuilder, setShowBuilder] = useState(() => isEditable && !!node.attrs.openRules)
+  useEffect(() => {
+    if (node.attrs.openRules && isEditable) {
+      queueMicrotask(() => updateAttributes({ openRules: null }))
+    }
+  }, [node.attrs.openRules, isEditable, updateAttributes])
   const lookups = useDynamicLookups()
   const reach = useBlockReach(editor, getPos)
 

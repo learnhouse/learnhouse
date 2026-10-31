@@ -177,7 +177,7 @@ describe("conditional block schema", () => {
       content: [
         {
           type: "conditionalBlock",
-          attrs: { rules, label: "Admins", hiddenMessage: "Later" },
+          attrs: { rules, label: "Admins", hiddenMessage: "Later", openRules: null },
           content: [
             {
               type: "paragraph",
@@ -193,7 +193,7 @@ describe("conditional block schema", () => {
     // HTML (copy/paste) keeps the rules too.
     const html = editor.getHTML();
     const pasted = new Editor({ extensions: [StarterKit, Plain, VariableStub], content: html });
-    expect(pasted.getJSON().content[0].attrs).toEqual({ rules, label: "Admins", hiddenMessage: "Later" });
+    expect(pasted.getJSON().content[0].attrs).toEqual({ rules, label: "Admins", hiddenMessage: "Later", openRules: null });
     editor.destroy();
     pasted.destroy();
   });
@@ -269,7 +269,9 @@ describe("round three", () => {
     for (const tpl of STARTER_TEMPLATES) {
       expect(isStarter(tpl)).toBe(true);
       const editor = new Editor({ extensions: [StarterKit, Plain, VariableStub], content: tpl.content });
-      expect(editor.getJSON()).toEqual(tpl.content);
+      // The editor fills in the transient openRules attribute; nothing else changes.
+      const json = JSON.parse(JSON.stringify(editor.getJSON(), (k, v) => (k === "openRules" && v === null ? undefined : v)));
+      expect(json).toEqual(tpl.content);
       editor.destroy();
     }
     expect(templateFields(STARTER_TEMPLATES.find((t) => t.template_uuid === "starter:buddy").content)).toEqual(["buddy_name"]);
@@ -286,7 +288,8 @@ describe("round three", () => {
     expect(blocks.map((b) => b.attrs.label)).toEqual(["Version A", "Version B"]);
     expect(blocks[1].attrs.rules.negate).toBe(true);
     editor.commands.insertConditionalBlock({ label: "L", hiddenMessage: "Later", openRules: true });
-    expect(editor.storage.conditionalBlock.openRulesOnMount).toBe(true);
+    const inserted = editor.getJSON().content.filter((n) => n.type === "conditionalBlock");
+    expect(inserted.map((b) => b.attrs.openRules)).toEqual([null, null, true]);
     editor.destroy();
   });
 
