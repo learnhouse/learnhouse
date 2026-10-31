@@ -3,6 +3,8 @@
 import React, { useEffect } from 'react'
 import { useOrg } from '@/components/Contexts/OrgContext'
 import DOMPurify from 'dompurify'
+import { getLEARNHOUSE_DOMAIN_VAL, getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
+import { orgScriptsAllowedOn } from './orgScriptsAllowed'
 
 if (typeof window !== 'undefined') {
   DOMPurify.addHook('afterSanitizeAttributes', function (node) {
@@ -11,6 +13,13 @@ if (typeof window !== 'undefined') {
     }
   })
 }
+
+const orgScriptsAllowedHere = (): boolean =>
+  orgScriptsAllowedOn(
+    window.location.hostname,
+    document.cookie.match(/(?:^|;\s*)LH_tenancy=([^;]*)/)?.[1],
+    [getLEARNHOUSE_DOMAIN_VAL(), getLEARNHOUSE_TOP_DOMAIN_VAL()],
+  )
 
 const OrgScripts: React.FC = () => {
   const org = useOrg() as any
@@ -176,6 +185,9 @@ const OrgScripts: React.FC = () => {
 
   useEffect(() => {
     if (!org || !org?.scripts?.scripts || !Array.isArray(org.scripts.scripts)) {
+      return
+    }
+    if (!orgScriptsAllowedHere()) {
       return
     }
 
