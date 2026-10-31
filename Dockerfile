@@ -83,7 +83,7 @@ COPY --from=node:26.12.1-alpine3.24 /usr/local/lib/node_modules/npm /usr/local/l
 # Apply the stable distribution's security updates at build time. The Python
 # image can be published before a newer package fix reaches Alpine's mirrors.
 RUN apk upgrade --no-cache \
-    && apk add --no-cache nginx curl netcat-openbsd ca-certificates bash libstdc++ \
+    && apk add --no-cache nginx curl netcat-openbsd ca-certificates bash libstdc++ libatomic \
     && ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && npm install -g pm2@7.1.0 \
     && rm -rf /root/.npm \
