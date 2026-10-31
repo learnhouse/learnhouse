@@ -354,3 +354,125 @@ class TestDynamicPreview:
                     mock_request, activity.activity_uuid, DynamicPreviewRequest(), regular_user, db,
                 )
         assert exc.value.status_code == 403
+
+
+class TestMoreFields:
+    @pytest.mark.parametrize(
+        "condition,expected",
+        [
+            (_cond("user.email_domain", "in", ["acme.com"]), True),
+            (_cond("user.email_domain", "in", ["@ACME.com"]), True),
+            (_cond("user.email_domain", "in", ["cme.com"]), False),
+            (_cond("user.email_domain", "not_in", ["acme.com"]), False),
+            (_cond("user.account_days", "gte", 30), True),
+            (_cond("user.bucket", "lt", 50), True),
+            (_cond("progress.completed_count", "eq", 1), True),
+            (_cond("course.completed", "is_false"), True),
+        ],
+    )
+    def test_conditions(self, condition, expected):
+        ctx = _ctx(email="ada@eu.acme.com", account_days=40, bucket=12)
+        assert evaluate_rules({"conditions": [condition]}, ctx) is expected
+
+    def test_missing_bucket_hides(self):
+        assert evaluate_rules({"conditions": [_cond("user.bucket", "lt", 50)]}, _ctx()) is False
+
+    def test_course_completed(self):
+        ctx = _ctx(progress_completed=4, progress_total=4)
+        assert evaluate_rules({"conditions": [_cond("course.completed", "is_true")]}, ctx) is True
+
+    def test_new_variables(self):
+        ctx = _ctx(group_names=("VIP", "Beta"), enrolled_on=date(2026, 10, 21), email="ada@acme.com")
+        text = "{{user.groups}}|{{progress.remaining}}|{{enrollment.date}}|{{user.email}}"
+        assert interpolate_text(text, ctx) == "Beta, VIP|3|2026-10-21|ada@acme.com"
+
+    def test_bucket_is_stable_and_spread(self):
+        from src.services.courses.activities.dynamic_context import bucket_for
+
+        assert bucket_for(1, "user_a") == bucket_for(1, "user_a")
+        buckets = {bucket_for(1, f"user_{i}") for i in range(200)}
+        assert len(buckets) > 50 and all(0 <= b < 100 for b in buckets)
+
+
+class TestTeaser:
+    def test_hidden_block_leaves_its_message_only(self):
+        block = _conditional({"conditions": [_cond("enrollment.days", "gte", 30)]}, _p(_text("secret")))
+        block["attrs"]["hiddenMessage"] = "Unlocks after a month, {{user.first_name}}."
+        rendered, stats = render_document(_doc(block), _ctx())
+        assert rendered["content"] == [{
+            "type": "callout",
+            "attrs": {"type": "info"},
+            "content": [_p(_text("Unlocks after a month, ada."))],
+        }]
+        assert "secret" not in str(rendered) and stats.hidden_blocks == 1
+
+    def test_search_index_drops_teaser(self):
+        block = _conditional({"negate": True, "conditions": []}, _p(_text("secret")))
+        block["attrs"]["hiddenMessage"] = "Later"
+        assert strip_dynamic_content(_doc(_p(_text("x")), block))["content"] == [_p(_text("x"))]
+
+
+class TestReach:
+    def test_counts_nested_blocks_in_document_order(self):
+        from src.services.courses.activities.dynamic_content import conditional_reach
+
+        doc = _doc(
+            _conditional(
+                {"conditions": [_cond("user.signed_in", "is_true")]},
+                _conditional({"conditions": [_cond("progress.percent", "gte", 50)]}, _p()),
+            ),
+            _conditional({"conditions": [_cond("user.role", "in", ["admin"])]}, _p()),
+        )
+        contexts = [
+            _ctx(),
+            _ctx(progress_completed=3),
+            _ctx(role="admin", progress_completed=4),
+            _ctx(signed_in=False, role="anonymous", progress_completed=4),
+        ]
+        assert conditional_reach(doc, contexts) == [3, 2, 1]
+
+
+async def _enroll(db, org, course, user):
+    trail = Trail(
+        org_id=org.id, user_id=user.id, trail_uuid=f"trail_{user.id}",
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    )
+    db.add(trail)
+    await db.commit()
+    await db.refresh(trail)
+    db.add(TrailRun(
+        trail_id=trail.id, course_id=course.id, org_id=org.id, user_id=user.id,
+        creation_date=str(datetime.now()), update_date=str(datetime.now()),
+    ))
+    await db.commit()
+
+
+class TestEditorEndpoints:
+    @pytest.mark.asyncio
+    async def test_reach_and_real_learner_preview(self, mock_request, db, org, course, activity, admin_user, regular_user):
+        from src.services.courses.activities.activities import get_dynamic_reach, list_dynamic_learners
+
+        await _add_group(db, org, regular_user)
+        await _enroll(db, org, course, regular_user)
+        await _enroll(db, org, course, admin_user)
+        with patch(
+            "src.services.courses.activities.activities.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            reach = await get_dynamic_reach(mock_request, activity.activity_uuid, DYNAMIC_DOC, admin_user, db)
+            learners = await list_dynamic_learners(mock_request, activity.activity_uuid, "reg", admin_user, db)
+            preview = await get_dynamic_preview(
+                mock_request, activity.activity_uuid,
+                DynamicPreviewRequest(content=DYNAMIC_DOC, persona=PreviewPersona(user_uuid=regular_user.user_uuid)),
+                admin_user, db,
+            )
+            with pytest.raises(HTTPException) as exc:
+                await get_dynamic_preview(
+                    mock_request, activity.activity_uuid,
+                    DynamicPreviewRequest(persona=PreviewPersona(user_uuid="user_nobody")),
+                    admin_user, db,
+                )
+        assert (reach.learners, reach.blocks) == (2, [1])
+        assert [lr.username for lr in learners] == ["regular"]
+        assert preview.content["content"] == [_p(_text("Hello Regular")), _p(_text("vip only"))]
+        assert exc.value.status_code == 404

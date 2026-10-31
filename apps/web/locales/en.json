@@ -5884,7 +5884,12 @@
         "user_groups": "User group",
         "user_locale": "Language",
         "user_role": "Role",
-        "user_signed_in": "Signed in"
+        "user_signed_in": "Signed in",
+        "user_bucket": "Audience split (0-99)",
+        "user_email_domain": "Email domain",
+        "user_account_days": "Days since sign-up",
+        "course_completed": "Completed the course",
+        "progress_completed_count": "Activities completed"
       },
       "format": "Format",
       "formats": {
@@ -5926,7 +5931,15 @@
       "persona": {
         "first_name": "First name",
         "role": "Viewer",
-        "your_name": "Your own"
+        "your_name": "Your own",
+        "search_learners": "Search enrolled learners",
+        "no_learners": "No enrolled learner matches.",
+        "learner_hint": "Uses their real groups, progress and enrollment.",
+        "mode_persona": "Persona",
+        "mode_learner": "Real learner",
+        "email": "Email",
+        "your_email": "Your own",
+        "yours": "yours"
       },
       "preview_error": "Could not render the preview.",
       "preview_stats": "{{shown}} conditional blocks shown, {{hidden}} hidden",
@@ -5961,13 +5974,22 @@
         "user_first_name": "First name",
         "user_full_name": "Full name",
         "user_last_name": "Last name",
-        "user_username": "Username"
+        "user_username": "Username",
+        "user_email": "Email",
+        "user_groups": "User groups",
+        "progress_remaining": "Activities left",
+        "enrollment_date": "Enrollment date"
       },
       "view_as": "View as",
       "view_as_description": "See this page the way a learner with these details gets it, unsaved changes included.",
       "visible_to": "Visible to",
       "visual": "Visual",
-      "variable_hint": "Each learner sees their own value. Tip: type {{example}} to insert one."
+      "variable_hint": "Each learner sees their own value. Tip: type {{example}} to insert one.",
+      "hidden_message": "Message for everyone else (optional)",
+      "hidden_message_placeholder": "e.g. This section unlocks after your first week.",
+      "hidden_message_hint": "Shown as a note in place of the block. Variables work here too.",
+      "reach": "{{matched}} of {{learners}} learners",
+      "reach_hint": "Learners enrolled in this course who see this block, from the current rules."
     },
     "templates": {
       "delete": "Delete",
@@ -5998,7 +6020,9 @@
       "saved": "Template saved",
       "search": "Search templates",
       "select_first": "Select blocks first",
-      "title": "Templates"
+      "title": "Templates",
+      "fill_fields": "Fill in this template",
+      "fields_hint": "Tip: write {{example}} for a blank that authors fill in when they insert the template."
     }
   },
   "analytics": {

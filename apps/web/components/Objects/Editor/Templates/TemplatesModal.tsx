@@ -17,7 +17,7 @@ import {
   deleteEditorTemplate,
   getEditorTemplates,
 } from '@services/courses/dynamicContent'
-import { mediaNodeTypes } from './templateContent'
+import { fieldLabel, fillTemplateFields, mediaNodeTypes, templateFields } from './templateContent'
 
 export type TemplatesModalMode = 'insert' | 'save'
 
@@ -68,11 +68,14 @@ function InsertTemplate({ editor, activity, onClose, onSaveNew }: TemplatesModal
     )
   }, [templates, query, kind])
   const selected = visible.find((tpl) => tpl.template_uuid === selectedUuid) ?? visible[0] ?? null
+  const fields = useMemo(() => templateFields(selected?.content), [selected])
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
 
   const insert = (tpl: EditorTemplate, replace: boolean) => {
-    const blocks = asArray(tpl.content?.content)
+    const content = fields.length ? fillTemplateFields(tpl.content, fieldValues) : tpl.content
+    const blocks = asArray(content?.content)
     if (replace) {
-      editor.chain().focus().setContent(tpl.content, { emitUpdate: true }).run()
+      editor.chain().focus().setContent(content, { emitUpdate: true }).run()
     } else {
       editor.chain().focus().insertContent(blocks).run()
     }
@@ -159,6 +162,23 @@ function InsertTemplate({ editor, activity, onClose, onSaveNew }: TemplatesModal
             <div className="flex-1 overflow-y-auto px-6 py-4">
               <EditorPreview content={selected.content} activity={activity} />
             </div>
+            {fields.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 border-t border-gray-100 px-4 py-3">
+                <p className="col-span-2 text-xs font-semibold text-gray-500">
+                  {t('editor.templates.fill_fields', 'Fill in this template')}
+                </p>
+                {fields.map((name) => (
+                  <input
+                    key={name}
+                    className="rounded-lg border border-gray-200 px-2 py-1.5"
+                    placeholder={fieldLabel(name)}
+                    value={fieldValues[name] ?? ''}
+                    maxLength={200}
+                    onChange={(e) => setFieldValues((v) => ({ ...v, [name]: e.target.value }))}
+                  />
+                ))}
+              </div>
+            )}
             <div className="flex items-center gap-2 border-t border-gray-100 px-4 py-3">
               <button
                 type="button"
@@ -281,6 +301,12 @@ function SaveTemplate({ editor, onClose }: TemplatesModalProps) {
         placeholder={t('editor.templates.description_placeholder', 'What is it for? (optional)')}
         onChange={(e) => setDescription(e.target.value)}
       />
+      <p className="text-xs text-gray-400">
+        {t('editor.templates.fields_hint', {
+          example: '{{field.company}}',
+          defaultValue: 'Tip: write {{example}} for a blank that authors fill in when they insert the template.',
+        })}
+      </p>
       {media.length > 0 && (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
           {t(

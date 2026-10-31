@@ -36,6 +36,13 @@ export default Node.create({
         parseHTML: (el) => parseRules(el.getAttribute('data-rules')),
         renderHTML: (attrs) => ({ 'data-rules': JSON.stringify(attrs.rules ?? DEFAULT_RULES) }),
       },
+      // Shown instead of the block to readers who don't match, e.g.
+      // "Unlocks after your first week". Optional.
+      hiddenMessage: {
+        default: '',
+        parseHTML: (el) => el.getAttribute('data-hidden-message') || '',
+        renderHTML: (attrs) => (attrs.hiddenMessage ? { 'data-hidden-message': attrs.hiddenMessage } : {}),
+      },
       // Author's own note, e.g. "Advanced track". Never shown to learners.
       label: {
         default: '',

@@ -72,6 +72,7 @@ import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
 import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
+import { DynamicReachProvider } from './Extensions/Dynamic/DynamicReach'
 import { EDITOR_EVENTS } from './Templates/templateContent'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
@@ -736,7 +737,9 @@ function Editor(props: EditorProps) {
         >
           <div className="activity-editor-content-wrapper" style={{ flex: 1, margin: 0, marginTop: '97px' }}>
             <AIEditorToolkit activity={props.activity} editor={editor} />
-            <EditorContent editor={editor} />
+            <DynamicReachProvider editor={editor} activityUuid={props.activity.activity_uuid}>
+              <EditorContent editor={editor} />
+            </DynamicReachProvider>
           </div>
 
           {/* AI Editor Side Panel */}

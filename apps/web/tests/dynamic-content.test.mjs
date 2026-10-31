@@ -177,7 +177,7 @@ describe("conditional block schema", () => {
       content: [
         {
           type: "conditionalBlock",
-          attrs: { rules, label: "Admins" },
+          attrs: { rules, label: "Admins", hiddenMessage: "Later" },
           content: [
             {
               type: "paragraph",
@@ -193,8 +193,42 @@ describe("conditional block schema", () => {
     // HTML (copy/paste) keeps the rules too.
     const html = editor.getHTML();
     const pasted = new Editor({ extensions: [StarterKit, Plain, VariableStub], content: html });
-    expect(pasted.getJSON().content[0].attrs).toEqual({ rules, label: "Admins" });
+    expect(pasted.getJSON().content[0].attrs).toEqual({ rules, label: "Admins", hiddenMessage: "Later" });
     editor.destroy();
     pasted.destroy();
+  });
+});
+
+describe("round two", () => {
+  test("new fields parse in code mode", () => {
+    expect(
+      parseRules('user.email_domain in ["acme.com"] and user.bucket lt 50 and course.completed is_false')
+    ).toEqual({
+      match: "all",
+      conditions: [
+        { field: "user.email_domain", op: "in", value: ["acme.com"] },
+        { field: "user.bucket", op: "lt", value: 50 },
+        { field: "course.completed", op: "is_false" },
+      ],
+    });
+  });
+
+  test("template fields are found and filled", async () => {
+    const { templateFields, fillTemplateFields } = await import(
+      "../components/Objects/Editor/Templates/templateContent.ts"
+    );
+    const doc = {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Hi {{ field.company }}, see {{field.Link}} and {{ user.first_name }}" }] },
+        { type: "paragraph", content: [{ type: "text", text: "{{field.company}}" }] },
+      ],
+    };
+    expect(templateFields(doc)).toEqual(["company", "link"]);
+    const filled = fillTemplateFields(doc, { company: "Acme" });
+    expect(filled.content[0].content[0].text).toBe("Hi Acme, see  and {{ user.first_name }}");
+    // An emptied text node is dropped, not left empty.
+    expect(fillTemplateFields(doc, {}).content[1].content).toEqual([]);
+    expect(doc.content[1].content[0].text).toBe("{{field.company}}");
   });
 });

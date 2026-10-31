@@ -26,17 +26,19 @@ import type { LookupOption, useDynamicLookups } from './useDynamicLookups'
 interface RuleBuilderProps {
   rules: RuleGroup
   label: string
+  hiddenMessage: string
   lookups: ReturnType<typeof useDynamicLookups>
-  onSave: (rules: RuleGroup, label: string) => void
+  onSave: (rules: RuleGroup, meta: { label: string; hiddenMessage: string }) => void
   onClose: () => void
 }
 
 type Mode = 'visual' | 'code'
 
-export default function RuleBuilder({ rules, label, lookups, onSave, onClose }: RuleBuilderProps) {
+export default function RuleBuilder({ rules, label, hiddenMessage, lookups, onSave, onClose }: RuleBuilderProps) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState<RuleGroup>(() => structuredClone(rules))
   const [draftLabel, setDraftLabel] = useState(label)
+  const [draftMessage, setDraftMessage] = useState(hiddenMessage)
   // Nested groups can only be written in code mode.
   const [mode, setMode] = useState<Mode>(isFlatGroup(rules) ? 'visual' : 'code')
   const [code, setCode] = useState(() => stringifyRules(rules))
@@ -64,9 +66,10 @@ export default function RuleBuilder({ rules, label, lookups, onSave, onClose }: 
   }
 
   const save = () => {
-    if (mode === 'visual') return onSave(draft, draftLabel.trim())
+    const meta = { label: draftLabel.trim(), hiddenMessage: draftMessage.trim() }
+    if (mode === 'visual') return onSave(draft, meta)
     try {
-      onSave(parseRules(code), draftLabel.trim())
+      onSave(parseRules(code), meta)
     } catch (e) {
       setCodeError(e instanceof RuleSyntaxError ? e.message : String(e))
     }
@@ -187,6 +190,22 @@ export default function RuleBuilder({ rules, label, lookups, onSave, onClose }: 
         {previewRules ? describeRules(previewRules, lookups.names) : '…'}
       </div>
 
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-gray-500">
+          {t('editor.dynamic.hidden_message', 'Message for everyone else (optional)')}
+        </label>
+        <input
+          className="w-full rounded-lg border border-gray-200 px-3 py-2"
+          value={draftMessage}
+          maxLength={300}
+          placeholder={t('editor.dynamic.hidden_message_placeholder', 'e.g. This section unlocks after your first week.')}
+          onChange={(e) => setDraftMessage(e.target.value)}
+        />
+        <p className="mt-1 text-xs text-gray-400">
+          {t('editor.dynamic.hidden_message_hint', 'Shown as a note in place of the block. Variables work here too.')}
+        </p>
+      </div>
+
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-gray-600 hover:bg-gray-100">
           {t('common.cancel', 'Cancel')}
@@ -272,6 +291,7 @@ function ConditionRow(props: {
       </select>
       <div className="min-w-[180px] flex-1">
         <ValueInput
+          field={def.field}
           type={def.type}
           picker={def.picker}
           op={condition.op}
@@ -293,6 +313,7 @@ function ConditionRow(props: {
 }
 
 function ValueInput(props: {
+  field: string
   type: string
   picker?: string
   op: string
@@ -325,6 +346,7 @@ function ValueInput(props: {
     return (
       <input type="number" className="w-full rounded-lg border border-gray-200 px-2 py-1.5"
         value={typeof value === 'number' ? value : 0} min={0}
+        max={props.field === 'user.bucket' ? 99 : props.field === 'progress.percent' ? 100 : undefined}
         onChange={(e) => onChange(Number(e.target.value))} />
     )
   }
@@ -356,7 +378,7 @@ function ValueInput(props: {
     <input
       className="w-full rounded-lg border border-gray-200 px-2 py-1.5"
       value={selected.join(', ')}
-      placeholder="fr, de, pt-BR"
+      placeholder={props.field === 'user.email_domain' ? 'acme.com, partner.org' : 'fr, de, pt-BR'}
       onChange={(e) =>
         onChange(e.target.value.split(',').map((s) => s.trim()).filter(Boolean))
       }

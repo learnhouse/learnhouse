@@ -25,3 +25,43 @@ export const EDITOR_EVENTS = {
 export function emitEditorEvent(name: (typeof EDITOR_EVENTS)[keyof typeof EDITOR_EVENTS]) {
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(name))
 }
+
+// Blanks an author fills in when inserting a template: {{ field.company }}.
+// They only ever exist in templates; inserting replaces them with plain text.
+const FIELD_PATTERN = /\{\{\s*field\.([a-z0-9_]+)\s*\}\}/gi
+
+function mapText(node: any, fn: (text: string) => string): any {
+  if (!node || typeof node !== 'object') return node
+  const next = { ...node }
+  if (typeof next.text === 'string') next.text = fn(next.text)
+  if (Array.isArray(next.content)) {
+    next.content = next.content
+      .map((child: any) => mapText(child, fn))
+      // ProseMirror rejects empty text nodes.
+      .filter((child: any) => !(child?.type === 'text' && child.text === ''))
+  }
+  return next
+}
+
+export function templateFields(doc: any): string[] {
+  const found: string[] = []
+  mapText(doc, (text) => {
+    for (const match of text.matchAll(FIELD_PATTERN)) {
+      const name = match[1].toLowerCase()
+      if (!found.includes(name)) found.push(name)
+    }
+    return text
+  })
+  return found
+}
+
+export function fillTemplateFields(doc: any, values: Record<string, string>): any {
+  return mapText(doc, (text) =>
+    text.replace(FIELD_PATTERN, (_, name: string) => values[name.toLowerCase()] ?? '')
+  )
+}
+
+export function fieldLabel(name: string): string {
+  const words = name.replace(/_/g, ' ')
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}

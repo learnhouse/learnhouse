@@ -2,11 +2,12 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { NodeViewContent, NodeViewWrapper, NodeViewProps } from '@tiptap/react'
-import { EyeOff, FlipHorizontal2, SlidersHorizontal, Split, Ungroup } from 'lucide-react'
+import { EyeOff, FlipHorizontal2, MessageSquareText, SlidersHorizontal, Split, Ungroup } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { DEFAULT_RULES, RuleGroup, describeRules, negateRules } from './dynamicRules'
 import { useDynamicLookups } from './useDynamicLookups'
+import { useBlockReach } from './DynamicReach'
 
 const RuleBuilderModal = dynamic(() => import('./RuleBuilder'), { ssr: false })
 
@@ -16,9 +17,11 @@ function ConditionalBlockComponent({ node, editor, getPos, updateAttributes }: N
   const isEditable = editorState?.isEditable ?? false
   const [showBuilder, setShowBuilder] = useState(false)
   const lookups = useDynamicLookups()
+  const reach = useBlockReach(editor, getPos)
 
   const rules: RuleGroup = node.attrs.rules ?? DEFAULT_RULES
   const label: string = node.attrs.label ?? ''
+  const hiddenMessage: string = node.attrs.hiddenMessage ?? ''
   const summary = describeRules(rules, lookups.names)
 
   const position = () => (typeof getPos === 'function' ? getPos() : undefined)
@@ -92,6 +95,23 @@ function ConditionalBlockComponent({ node, editor, getPos, updateAttributes }: N
             {t('editor.dynamic.visible_to', 'Visible to')}: {summary}
           </span>
         </button>
+        {hiddenMessage && (
+          <span title={hiddenMessage} className="shrink-0">
+            <MessageSquareText size={13} className="opacity-60" />
+          </span>
+        )}
+        {reach && (
+          <span
+            className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-violet-700 ring-1 ring-violet-200"
+            title={t('editor.dynamic.reach_hint', 'Learners enrolled in this course who see this block, from the current rules.')}
+          >
+            {t('editor.dynamic.reach', {
+              matched: reach.matched,
+              learners: reach.truncated ? `${reach.learners}+` : reach.learners,
+              defaultValue: '{{matched}} of {{learners}} learners',
+            })}
+          </span>
+        )}
         <HeaderButton title={t('editor.dynamic.edit_rules', 'Edit rules')} onClick={() => setShowBuilder(true)}>
           <SlidersHorizontal size={14} />
         </HeaderButton>
@@ -110,10 +130,11 @@ function ConditionalBlockComponent({ node, editor, getPos, updateAttributes }: N
         <RuleBuilderModal
           rules={rules}
           label={label}
+          hiddenMessage={hiddenMessage}
           lookups={lookups}
           onClose={() => setShowBuilder(false)}
-          onSave={(next, nextLabel) => {
-            updateAttributes({ rules: next, label: nextLabel })
+          onSave={(next, meta) => {
+            updateAttributes({ rules: next, ...meta })
             setShowBuilder(false)
           }}
         />

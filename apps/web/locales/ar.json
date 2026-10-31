@@ -5451,7 +5451,12 @@
         "user_groups": "مجموعة المستخدمين",
         "user_locale": "اللغة",
         "user_role": "الدور",
-        "user_signed_in": "مسجّل الدخول"
+        "user_signed_in": "مسجّل الدخول",
+        "user_bucket": "تقسيم الجمهور (0-99)",
+        "user_email_domain": "نطاق البريد الإلكتروني",
+        "user_account_days": "أيام منذ إنشاء الحساب",
+        "course_completed": "أكمل الدورة",
+        "progress_completed_count": "الأنشطة المكتملة"
       },
       "format": "التنسيق",
       "formats": {
@@ -5493,7 +5498,15 @@
       "persona": {
         "first_name": "الاسم الأول",
         "role": "المشاهد",
-        "your_name": "اسمك"
+        "your_name": "اسمك",
+        "search_learners": "البحث في المتعلمين المسجّلين",
+        "no_learners": "لا يوجد متعلّم مسجّل مطابق.",
+        "learner_hint": "يستخدم مجموعاته وتقدّمه وتسجيله الفعلية.",
+        "mode_persona": "شخصية افتراضية",
+        "mode_learner": "متعلّم حقيقي",
+        "email": "البريد الإلكتروني",
+        "your_email": "بريدك",
+        "yours": "الخاص بك"
       },
       "preview_error": "تعذّر عرض المعاينة.",
       "preview_stats": "{{shown}} كتل مشروطة معروضة، {{hidden}} مخفية",
@@ -5528,13 +5541,22 @@
         "user_first_name": "الاسم الأول",
         "user_full_name": "الاسم الكامل",
         "user_last_name": "اسم العائلة",
-        "user_username": "اسم المستخدم"
+        "user_username": "اسم المستخدم",
+        "user_email": "البريد الإلكتروني",
+        "user_groups": "مجموعات المستخدم",
+        "progress_remaining": "الأنشطة المتبقية",
+        "enrollment_date": "تاريخ التسجيل"
       },
       "view_as": "عرض بصفة",
       "view_as_description": "شاهد هذه الصفحة كما يتلقاها متعلّم بهذه التفاصيل، بما في ذلك التغييرات غير المحفوظة.",
       "visible_to": "مرئي لـ",
       "visual": "مرئي",
-      "variable_hint": "يرى كل متعلّم قيمته الخاصة. نصيحة: اكتب {{example}} لإدراج متغيّر."
+      "variable_hint": "يرى كل متعلّم قيمته الخاصة. نصيحة: اكتب {{example}} لإدراج متغيّر.",
+      "hidden_message": "رسالة لبقية المتعلمين (اختياري)",
+      "hidden_message_placeholder": "مثال: يُفتح هذا القسم بعد أسبوعك الأول.",
+      "hidden_message_hint": "تظهر كملاحظة مكان الكتلة. المتغيرات تعمل هنا أيضًا.",
+      "reach": "{{matched}} من {{learners}} متعلّمين",
+      "reach_hint": "المتعلمون المسجّلون في هذه الدورة الذين يرون هذه الكتلة وفق القواعد الحالية."
     },
     "templates": {
       "delete": "حذف",
@@ -5565,7 +5587,9 @@
       "saved": "تم حفظ القالب",
       "search": "البحث في القوالب",
       "select_first": "حدّد الكتل أولًا",
-      "title": "القوالب"
+      "title": "القوالب",
+      "fill_fields": "املأ هذا القالب",
+      "fields_hint": "نصيحة: اكتب {{example}} لفراغ يملؤه المؤلفون عند إدراج القالب."
     }
   },
   "embed": {
