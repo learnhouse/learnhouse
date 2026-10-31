@@ -29,8 +29,9 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import index_activity
 from src.services.courses.activities.versioning import create_activity_version
 from src.services.courses.activities.dynamic_content import (
+    conditional_blocks,
     conditional_reach,
-    conditional_rule_chains,
+    count_conditions,
     render_document,
 )
 from src.services.courses.activities.dynamic_context import (
@@ -252,6 +253,8 @@ async def get_editor_bootstrap(
 # A larger body than any real page; stops the preview being used to burn CPU.
 MAX_PREVIEW_CONTENT_BYTES = 5 * 1024 * 1024
 MAX_REACH_BLOCKS = 200
+# Condition checks per reach request; a real page uses a few percent of it.
+MAX_REACH_WORK = 2_000_000
 
 
 async def _load_for_editor(
@@ -338,18 +341,21 @@ async def get_dynamic_reach(
     Editors only; counts, never who."""
     activity, course = await _load_for_editor(request, activity_uuid, current_user, db_session)
     content = _editor_content(content, activity)
-    chains = conditional_rule_chains(content)
-    if not chains:
+    blocks = conditional_blocks(content)
+    if not blocks:
         return DynamicReachResponse(learners=0, blocks=[])
-    # Work is blocks x learners x conditions: bound the first factor (the
-    # others are bounded already) and keep the loop off the event loop.
-    if len(chains) > MAX_REACH_BLOCKS:
+    if len(blocks) > MAX_REACH_BLOCKS:
         raise HTTPException(status_code=413, detail="Too many conditional blocks to count")
     contexts, truncated = await course_learner_contexts(
         request, course, db_session, activity_name=activity.name
     )
-    blocks = await run_in_threadpool(conditional_reach, content, contexts)
-    return DynamicReachResponse(learners=len(contexts), blocks=blocks, truncated=truncated)
+    # Work is (conditions in the document) x learners: cap the product, and
+    # keep the loop off the event loop.
+    conditions = sum(max(1, count_conditions(rules)) for rules, _ in blocks)
+    if conditions * len(contexts) > MAX_REACH_WORK:
+        raise HTTPException(status_code=413, detail="Too many rules to count for this many learners")
+    counts = await run_in_threadpool(conditional_reach, content, contexts)
+    return DynamicReachResponse(learners=len(contexts), blocks=counts, truncated=truncated)
 
 
 async def list_dynamic_learners(

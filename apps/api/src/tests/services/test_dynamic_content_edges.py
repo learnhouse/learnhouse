@@ -127,12 +127,19 @@ class TestDocumentWalk:
         rendered, _ = dc.render_document(_doc(_p(_text("{{user.last_name}}"))), _ctx(last_name=""))
         assert rendered["content"] == [{"type": "paragraph", "content": []}]
 
-    def test_rule_chains_depth_and_non_dicts(self):
-        assert dc.conditional_rule_chains("x") == []
+    def test_block_tree_depth_and_non_dicts(self):
+        assert dc.conditional_blocks("x") == []
         deep: dict = _conditional(None, _p())
         for _ in range(dc.MAX_NODE_DEPTH + 2):
             deep = {"type": "blockquote", "content": [deep]}
-        assert dc.conditional_rule_chains(_doc(deep)) == []
+        assert dc.conditional_blocks(_doc(deep)) == []
+
+    def test_count_conditions(self):
+        nested = _all(_cond("user.signed_in", "is_true"), _all(_cond("user.role", "in", ["admin"])))
+        assert dc.count_conditions(nested) == 3
+        assert dc.count_conditions(None) == 0
+        assert dc.count_conditions({"conditions": "x"}) == 0
+        assert dc.count_conditions(_all(*[_cond("user.signed_in", "is_true")] * 80)) == dc.MAX_CONDITIONS
 
 
 class TestContextHelpers:
@@ -187,7 +194,11 @@ class TestEditorEndpointEdges:
             many = _doc(*[_conditional(None, _p())] * (MAX_REACH_BLOCKS + 1))
             with pytest.raises(HTTPException) as too_many:
                 await get_dynamic_reach(mock_request, activity.activity_uuid, many, admin_user, db)
+            with patch("src.services.courses.activities.activities.MAX_REACH_WORK", -1):
+                with pytest.raises(HTTPException) as too_much:
+                    await get_dynamic_reach(mock_request, activity.activity_uuid, DYNAMIC_DOC, admin_user, db)
         assert (missing.value.status_code, big.value.status_code, too_many.value.status_code) == (404, 413, 413)
+        assert too_much.value.status_code == 413
         assert (empty.learners, empty.blocks) == (0, [])
 
     @pytest.mark.asyncio
