@@ -1215,8 +1215,10 @@ async def magic_link_verify(
             detail={"code": "MAGIC_LINK_INVALID", "message": "This login link is no longer valid."},
         )
 
-    # The emailed link proves the inbox, same as Google sign-in
-    await claim_account_on_inbox_proof(user, db_session)
+    # The emailed link proves the inbox, same as Google sign-in. Admin-set
+    # passwords are left alone here: dropping those has only ever been a
+    # Google sign-in rule, and changing it would sign such members out.
+    await claim_account_on_inbox_proof(user, db_session, drop_admin_set_password=False)
 
     org_id, on_custom_domain = await _bind_session_to_custom_domain(
         request, db_session, user.id, org_id, AUTH_METHOD_MAGIC_LOGIN

@@ -11,7 +11,7 @@ from src.core.events.database import get_db_session
 from src.db.users import User, UserCreate, UserRead
 from src.security.auth import get_current_user
 from src.services.users.users import (
-    INBOX_UNPROVEN_KEY,
+    clear_inbox_unproven,
     create_user,
     create_user_without_org,
     inbox_unproven,
@@ -141,7 +141,9 @@ async def _drop_unverified_sso_links(user_id: int, db_session: AsyncSession) -> 
         await hooks.revoke_unverified_sso_links(user_id, db_session)
 
 
-async def claim_account_on_inbox_proof(user: User, db_session: AsyncSession) -> None:
+async def claim_account_on_inbox_proof(
+    user: User, db_session: AsyncSession, *, drop_admin_set_password: bool = True
+) -> None:
     """Run when a sign-in proves the caller controls the account's inbox
     (Google, an emailed magic link).
 
@@ -150,12 +152,17 @@ async def claim_account_on_inbox_proof(user: User, db_session: AsyncSession) -> 
     through the admin API and the owner never changed) must not survive the
     real owner signing in. Drop it and end any session it opened; the owner can
     set a password via reset. SSO links made while the account was unclaimed
-    go too.
+    go too. ``drop_admin_set_password`` also drops a password an org admin
+    chose through the admin API that the owner never changed.
     """
     untrusted_account = not user.email_verified or inbox_unproven(user)
     untrusted_password = bool(user.password) and (
         untrusted_account
-        or (user.signup_method == "admin_api" and user.password_changed_at is None)
+        or (
+            drop_admin_set_password
+            and user.signup_method == "admin_api"
+            and user.password_changed_at is None
+        )
     )
     if not (untrusted_account or untrusted_password):
         return
@@ -170,9 +177,7 @@ async def claim_account_on_inbox_proof(user: User, db_session: AsyncSession) -> 
     if untrusted_account:
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
-        meta = dict(user.extra_metadata or {})
-        meta.pop(INBOX_UNPROVEN_KEY, None)
-        user.extra_metadata = meta or None  # reassign so the JSONB change is detected
+        clear_inbox_unproven(user)
 
     db_session.add(user)
     await db_session.commit()

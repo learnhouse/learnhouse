@@ -121,8 +121,9 @@ def test_dotted_cookie_domain_ok(monkeypatch):
     assert cfg.hosting_config.cookie_config.domain == ".app.example.com"
 
 
-def test_documented_example_jwt_secret_refused(monkeypatch):
-    """The docs' example secret is long enough to pass the length check but is public."""
+def test_documented_example_jwt_secret_warns_but_boots(monkeypatch, caplog):
+    """The docs' example secret is public, but rotating it re-keys stored secrets,
+    so an existing install must keep booting and get a loud warning instead."""
     monkeypatch.setenv("LEARNHOUSE_AUTH_JWT_SECRET_KEY", "replace-with-at-least-32-random-characters")
     monkeypatch.setenv("TESTING", "false")
 
@@ -131,9 +132,9 @@ def test_documented_example_jwt_secret_refused(monkeypatch):
     import config.config as cfg_module
 
     importlib.reload(cfg_module)
-    with pytest.raises(ValueError) as exc:
+    with caplog.at_level("CRITICAL"):
         cfg_module.get_learnhouse_config()
-    assert "example value" in str(exc.value)
+    assert "example value from the docs" in caplog.text
 
 
 @pytest.mark.asyncio

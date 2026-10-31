@@ -279,9 +279,16 @@ def get_learnhouse_config() -> LearnHouseConfig:
             "Generate a secure key with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
         )
     if auth_jwt_secret_key in PLACEHOLDER_SECRETS:
-        raise ValueError(
-            "SECURITY ERROR: LEARNHOUSE_AUTH_JWT_SECRET_KEY is still the example value. "
-            "Generate a secure key with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+        # Warn rather than refuse: the key also derives the encryption for
+        # stored webhook and MFA secrets and peppers API tokens, so rotating it
+        # is a planned migration, not something to force on an upgrade.
+        import logging as _cfg_log
+        _cfg_log.getLogger(__name__).critical(
+            "SECURITY: LEARNHOUSE_AUTH_JWT_SECRET_KEY is the example value from the docs, "
+            "so anyone can sign valid sessions for this instance. Rotate it to a random value "
+            "(python -c \"import secrets; print(secrets.token_urlsafe(32))\"). Rotating signs "
+            "everyone out and invalidates stored webhook secrets, API tokens and MFA enrolments "
+            "unless LEARNHOUSE_MFA_ENCRYPTION_KEY is set."
         )
     if len(auth_jwt_secret_key) < 32:
         raise ValueError(

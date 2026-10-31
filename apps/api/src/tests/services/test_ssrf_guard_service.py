@@ -221,3 +221,31 @@ async def test_pinned_transport_connects_to_the_validated_address(recording_serv
 
     assert response.status_code == 200
     assert recording_server.hits == [("/ok", f"pinned.test:{recording_server.port}")]
+
+
+@pytest.mark.asyncio
+async def test_pinned_transport_falls_back_to_the_next_validated_address(recording_server):
+    import httpx
+    from src.services.utils.ssrf_guard import pinned_transport
+
+    # First address refuses (nothing listens on ::1 here), the second works
+    with patch(
+        "src.services.utils.ssrf_guard._resolve_and_validate_host",
+        return_value=["::1", "127.0.0.1"],
+    ):
+        async with httpx.AsyncClient(transport=pinned_transport()) as client:
+            response = await client.get(f"http://multi.test:{recording_server.port}/ok")
+
+    assert response.status_code == 200
+    assert recording_server.hits == [("/ok", f"multi.test:{recording_server.port}")]
+
+
+def test_connect_validated_falls_back_to_the_next_address(recording_server):
+    from src.services.utils.ssrf_guard import connect_validated
+
+    with patch(
+        "src.services.utils.ssrf_guard._resolve_and_validate_host",
+        return_value=["::1", "127.0.0.1"],
+    ):
+        with connect_validated("multi.test", recording_server.port, timeout=2) as sock:
+            assert sock.getpeername()[0] == "127.0.0.1"

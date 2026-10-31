@@ -340,6 +340,17 @@ class TestMagicLinkVerify:
         assert verified_user.extra_metadata == {"school": "x"}
         assert verified_user.email_verified_at
 
+    async def test_admin_provisioned_password_is_kept(self, client, db, verified_user):
+        # Only Google sign-in drops these; a magic link must not sign such members out
+        verified_user.signup_method = "admin_api"
+        db.add(verified_user)
+        await db.commit()
+
+        response = await self._verify(client, verified_user.email)
+        assert response.status_code == 200
+        await db.refresh(verified_user)
+        assert verified_user.password == "hashed_password"
+
     async def test_unverified_address_loses_its_password(self, client, db, verified_user):
         # e.g. an address changed to someone else's and never confirmed
         verified_user.email_verified = False

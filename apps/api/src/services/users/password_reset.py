@@ -11,6 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.security.security import security_hash_password
+from src.services.users.users import clear_inbox_unproven
 from config.config import get_learnhouse_config
 from src.services.users.emails import (
     send_password_reset_email,
@@ -332,6 +333,8 @@ async def change_password_with_reset_code(
     # Change password
     user.password = security_hash_password(new_password)
     user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    # The reset code came through the inbox, so this password is the owner's
+    clear_inbox_unproven(user)
     db_session.add(user)
 
     await db_session.commit()
@@ -470,6 +473,8 @@ async def change_password_with_reset_code_platform(
 
     user.password = security_hash_password(new_password)
     user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    # The reset code came through the inbox, so this password is the owner's
+    clear_inbox_unproven(user)
     db_session.add(user)
 
     await db_session.commit()

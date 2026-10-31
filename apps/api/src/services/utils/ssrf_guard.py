@@ -141,9 +141,15 @@ def _resolve_and_validate_host(hostname: str) -> list[str]:
 
 
 def connect_validated(hostname: str, port: int, timeout: float) -> socket.socket:
-    """Open a TCP connection to ``hostname`` on an address that passed the guard."""
-    ip = _resolve_and_validate_host(hostname)[0]
-    return socket.create_connection((ip, port), timeout=timeout)
+    """Open a TCP connection to ``hostname`` on an address that passed the guard,
+    trying each one in resolver order like ``socket.create_connection`` does."""
+    last_error: OSError | None = None
+    for ip in _resolve_and_validate_host(hostname):
+        try:
+            return socket.create_connection((ip, port), timeout=timeout)
+        except OSError as exc:
+            last_error = exc
+    raise last_error or OSError(f"Could not connect to {hostname}")
 
 
 class _PinnedNetworkBackend(httpcore.AsyncNetworkBackend):
@@ -158,10 +164,18 @@ class _PinnedNetworkBackend(httpcore.AsyncNetworkBackend):
 
     async def connect_tcp(self, host, port, timeout=None, local_address=None, socket_options=None):
         ips = await asyncio.to_thread(_resolve_and_validate_host, host)
-        return await self._backend.connect_tcp(
-            ips[0], port, timeout=timeout, local_address=local_address,
-            socket_options=socket_options,
-        )
+        # Fall through the addresses in order (e.g. IPv6 then IPv4), as a
+        # plain connect to the hostname would.
+        last_error: Exception | None = None
+        for ip in ips:
+            try:
+                return await self._backend.connect_tcp(
+                    ip, port, timeout=timeout, local_address=local_address,
+                    socket_options=socket_options,
+                )
+            except (httpcore.ConnectError, httpcore.ConnectTimeout) as exc:
+                last_error = exc
+        raise last_error
 
     async def connect_unix_socket(self, path, timeout=None, socket_options=None):
         raise SSRFBlockedError("Unix sockets are not allowed")

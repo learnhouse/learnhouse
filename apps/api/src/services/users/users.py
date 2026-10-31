@@ -75,6 +75,15 @@ def _mark_inbox_unproven(user) -> None:
     user.extra_metadata = {**(user.extra_metadata or {}), INBOX_UNPROVEN_KEY: True}
 
 
+def clear_inbox_unproven(user) -> None:
+    """Drop the marker once something (Google, an emailed link or reset code) proves the inbox."""
+    if not inbox_unproven(user):
+        return
+    meta = dict(user.extra_metadata or {})
+    meta.pop(INBOX_UNPROVEN_KEY, None)
+    user.extra_metadata = meta or None  # reassign so the JSONB change is detected
+
+
 def _reject_urls_in_profile_fields(**fields) -> None:
     """Reject display-name fields containing URLs/links (S: phishing relay).
 
