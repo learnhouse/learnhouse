@@ -461,28 +461,48 @@ def strip_dynamic_content(doc: Any) -> Any:
     return _render_node(doc, None, RenderStats(), 0)
 
 
-def conditional_rule_chains(doc: Any) -> list[list[Any]]:
+def conditional_blocks(doc: Any) -> list[tuple[Any, int | None]]:
     """Every conditional block in document order (ProseMirror's descendants
-    order), each with its own rules preceded by those of the blocks around it:
-    a nested block is only seen by readers who pass all of them."""
-    chains: list[list[Any]] = []
+    order) as ``(rules, index of the enclosing conditional block or None)``:
+    a nested block is only seen by readers who also see its parent."""
+    blocks: list[tuple[Any, int | None]] = []
 
-    def walk(node: Any, ancestors: list[Any], depth: int) -> None:
+    def walk(node: Any, parent: int | None, depth: int) -> None:
         if not isinstance(node, dict) or depth > MAX_NODE_DEPTH:
             return
         if node.get("type") == CONDITIONAL_NODE:
-            ancestors = [*ancestors, (node.get("attrs") or {}).get("rules")]
-            chains.append(ancestors)
+            blocks.append(((node.get("attrs") or {}).get("rules"), parent))
+            parent = len(blocks) - 1
         for child in node.get("content") or []:
-            walk(child, ancestors, depth + 1)
+            walk(child, parent, depth + 1)
 
-    walk(doc, [], 0)
-    return chains
+    walk(doc, None, 0)
+    return blocks
+
+
+def count_conditions(rules: Any, depth: int = 0) -> int:
+    """Conditions in a rule tree, as evaluate_rules would visit them."""
+    if not isinstance(rules, dict) or depth > MAX_RULE_DEPTH:
+        return 0
+    items = rules.get("conditions")
+    if not isinstance(items, list):
+        return 0
+    return min(MAX_CONDITIONS, sum(
+        1 + (count_conditions(item, depth + 1) if isinstance(item, dict) and "conditions" in item else 0)
+        for item in items
+    ))
 
 
 def conditional_reach(doc: Any, contexts: list[RenderContext]) -> list[int]:
-    """How many of ``contexts`` see each conditional block, in document order."""
-    return [
-        sum(1 for ctx in contexts if all(evaluate_rules(rules, ctx) for rules in chain))
-        for chain in conditional_rule_chains(doc)
-    ]
+    """How many of ``contexts`` see each conditional block, in document order.
+    Each block's rules run once per reader; nested blocks reuse the parent's
+    result instead of re-checking it."""
+    blocks = conditional_blocks(doc)
+    counts = [0] * len(blocks)
+    for ctx in contexts:
+        visible: list[bool] = []
+        for index, (rules, parent) in enumerate(blocks):
+            seen = (parent is None or visible[parent]) and evaluate_rules(rules, ctx)
+            visible.append(seen)
+            counts[index] += seen
+    return counts
