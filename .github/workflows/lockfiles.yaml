@@ -80,7 +80,7 @@ jobs:
       # never needs an interpreter.
       - uses: astral-sh/setup-uv@v10.3.2
         with:
-          version: "0.13.5"
+          version: "0.13.6"
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
 
