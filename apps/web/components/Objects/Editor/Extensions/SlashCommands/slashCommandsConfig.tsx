@@ -1,5 +1,9 @@
 import {
   AlertCircle,
+  Braces,
+  LayoutTemplate,
+  Save,
+  Split,
   BadgeHelp,
   Code,
   CodeSquare,
@@ -36,12 +40,14 @@ import { SiYoutube } from '@icons-pack/react-simple-icons'
 import { SlashCommandItem, SlashCommandCategory } from './types'
 import React from 'react'
 import { searchMatchesAny, normalizeForSearch } from '@/lib/search/normalize'
+import { EDITOR_EVENTS, emitEditorEvent } from '../../Templates/templateContent'
 
 export const categoryLabels: Record<SlashCommandCategory, string> = {
   text: 'Text',
   media: 'Media',
   interactive: 'Interactive',
   callouts: 'Callouts',
+  dynamic: 'Dynamic content',
   ui: 'UI Elements',
   tables: 'Tables',
 }
@@ -51,6 +57,7 @@ export const categoryOrder: SlashCommandCategory[] = [
   'media',
   'interactive',
   'callouts',
+  'dynamic',
   'ui',
   'tables',
 ]
@@ -488,6 +495,48 @@ export const slashCommands: SlashCommandItem[] = [
     command: (editor) => {
       editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()
     },
+  },
+
+  // Dynamic content category
+  {
+    id: 'variable',
+    title: 'Variable',
+    description: "Learner's name, course name, progress…",
+    icon: <Braces size={18} />,
+    category: 'dynamic',
+    keywords: ['variable', 'placeholder', 'name', 'personalize', 'dynamic', 'template', '{{'],
+    command: (editor) => {
+      editor.chain().focus().insertDynamicVariable().run()
+    },
+  },
+  {
+    id: 'conditional',
+    title: 'Conditional content',
+    description: 'Show blocks only to some learners',
+    icon: <Split size={18} />,
+    category: 'dynamic',
+    keywords: ['conditional', 'condition', 'rule', 'audience', 'group', 'show', 'hide', 'personalize', 'drip'],
+    command: (editor) => {
+      editor.chain().focus().insertConditionalBlock().run()
+    },
+  },
+  {
+    id: 'insert-template',
+    title: 'Insert template',
+    description: 'Reuse saved blocks or pages',
+    icon: <LayoutTemplate size={18} />,
+    category: 'dynamic',
+    keywords: ['template', 'reuse', 'snippet', 'saved', 'library'],
+    command: () => emitEditorEvent(EDITOR_EVENTS.openTemplates),
+  },
+  {
+    id: 'save-template',
+    title: 'Save as template',
+    description: 'Save the selection or page for reuse',
+    icon: <Save size={18} />,
+    category: 'dynamic',
+    keywords: ['template', 'save', 'reuse', 'snippet'],
+    command: () => emitEditorEvent(EDITOR_EVENTS.saveTemplate),
   },
 
   // Tables category

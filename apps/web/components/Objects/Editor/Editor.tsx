@@ -30,7 +30,7 @@ import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
 import AudioBlock from './Extensions/Audio/AudioBlock'
-import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
+import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2, LayoutTemplate, UserRoundSearch } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import H5PBlock from './Extensions/H5P/H5PBlock'
@@ -70,12 +70,17 @@ import DragHandle from './Extensions/DragHandle/DragHandle'
 import { SlashCommands } from './Extensions/SlashCommands'
 import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
+import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
+import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
+import { EDITOR_EVENTS } from './Templates/templateContent'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
 const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
 const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
 const ActivitySwitcher = dynamic(() => import('./ActivitySwitcher'), { ssr: false, loading: () => null })
+const ViewAsPreview = dynamic(() => import('./Extensions/Dynamic/ViewAsPreview'), { ssr: false, loading: () => null })
+const TemplatesModal = dynamic(() => import('./Templates/TemplatesModal'), { ssr: false, loading: () => null })
 import { usePlan } from '@components/Hooks/usePlan'
 import {
   createBeforeUnloadHandler,
@@ -125,6 +130,25 @@ function Editor(props: EditorProps) {
   const [showMergeModal, setShowMergeModal] = React.useState(false)
   const [remoteContent, setRemoteContent] = React.useState<any>(null)
   const [isLoadingRemote, setIsLoadingRemote] = React.useState(false)
+
+  // Dynamic content dialogs
+  const [showViewAs, setShowViewAs] = React.useState(false)
+  const [templatesMode, setTemplatesMode] = React.useState<'insert' | 'save' | null>(null)
+
+  // The slash menu can't reach this component, so it opens these by event.
+  React.useEffect(() => {
+    const openTemplates = () => setTemplatesMode('insert')
+    const saveTemplate = () => setTemplatesMode('save')
+    const viewAs = () => setShowViewAs(true)
+    window.addEventListener(EDITOR_EVENTS.openTemplates, openTemplates)
+    window.addEventListener(EDITOR_EVENTS.saveTemplate, saveTemplate)
+    window.addEventListener(EDITOR_EVENTS.viewAs, viewAs)
+    return () => {
+      window.removeEventListener(EDITOR_EVENTS.openTemplates, openTemplates)
+      window.removeEventListener(EDITOR_EVENTS.saveTemplate, saveTemplate)
+      window.removeEventListener(EDITOR_EVENTS.viewAs, viewAs)
+    }
+  }, [])
 
   // Get feature flags from resolved_features (API is source of truth)
   const orgContext = useOrg() as any
@@ -202,6 +226,8 @@ function Editor(props: EditorProps) {
         getAccessToken,
       }),
       MagicBlock.configure({ editable: true, activity: stableActivity }),
+      ConditionalBlock,
+      DynamicVariable,
       AIStreamingMark,
       AISelectionHighlight,
     ],
@@ -463,6 +489,21 @@ function Editor(props: EditorProps) {
       )}
 
       <CourseProvider courseuuid={props.course.course_uuid} initialCourseStructure={props.course}>
+          {editor && showViewAs && (
+            <ViewAsPreview
+              activity={props.activity}
+              getContent={() => editor.getJSON()}
+              onClose={() => setShowViewAs(false)}
+            />
+          )}
+          {editor && templatesMode && (
+            <TemplatesModal
+              mode={templatesMode}
+              editor={editor}
+              activity={props.activity}
+              onClose={() => setTemplatesMode(null)}
+            />
+          )}
           <div className="activity-editor-top">
             <ActivitySwitcher
               course={props.course}
@@ -635,6 +676,26 @@ function Editor(props: EditorProps) {
                     </div>
                   )}
                 </div>
+                <ToolTip content={t('editor.templates.title', 'Templates')}>
+                  <div
+                    className="flex bg-neutral-100 hover:bg-neutral-200 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-neutral-600 rounded-lg hover:cursor-pointer"
+                    role="button"
+                    aria-label={t('editor.templates.title', 'Templates')}
+                    onClick={() => setTemplatesMode('insert')}
+                  >
+                    <LayoutTemplate size={15} />
+                  </div>
+                </ToolTip>
+                <ToolTip content={t('editor.dynamic.view_as', 'View as')}>
+                  <div
+                    className="flex bg-neutral-100 hover:bg-neutral-200 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-neutral-600 rounded-lg hover:cursor-pointer"
+                    role="button"
+                    aria-label={t('editor.dynamic.view_as', 'View as')}
+                    onClick={() => setShowViewAs(true)}
+                  >
+                    <UserRoundSearch size={15} />
+                  </div>
+                </ToolTip>
                 <ToolTip content={t('editor.preview')}>
                   <Link
                     target="_blank"

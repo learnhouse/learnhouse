@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from uuid import uuid4
 from datetime import datetime
 
+import json
 import logging
 
 from src.services.courses.activities.access import (
@@ -23,6 +24,13 @@ from src.services.courses.activities.access import (
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import index_activity
 from src.services.courses.activities.versioning import create_activity_version
+from src.services.courses.activities.dynamic_content import render_document
+from src.services.courses.activities.dynamic_context import (
+    DynamicPreviewRequest,
+    DynamicPreviewResponse,
+    build_render_context,
+    persona_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -225,6 +233,52 @@ async def get_editor_bootstrap(
             org_id=org.id or 0,
         ),
         org=org_read,
+    )
+
+
+# A larger body than any real page; stops the preview being used to burn CPU.
+MAX_PREVIEW_CONTENT_BYTES = 5 * 1024 * 1024
+
+
+async def get_dynamic_preview(
+    request: Request,
+    activity_uuid: str,
+    preview: DynamicPreviewRequest,
+    current_user: PublicUser,
+    db_session: AsyncSession,
+) -> DynamicPreviewResponse:
+    """Render the activity as a simulated reader ("view as") would get it.
+
+    Editors only: the persona can claim any group, so this must never become
+    a way for a learner to read blocks hidden from them. ``preview.content``
+    lets the editor preview its unsaved document.
+    """
+    row = (await db_session.execute(
+        select(Activity, Course)
+        .join(Course, Course.id == Activity.course_id)  # type: ignore[arg-type]
+        .where(Activity.activity_uuid == activity_uuid)
+    )).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    activity, course = row
+
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
+
+    content = preview.content if preview.content is not None else activity.content
+    if len(json.dumps(content)) > MAX_PREVIEW_CONTENT_BYTES:
+        raise HTTPException(status_code=413, detail="Content too large to preview")
+
+    base = await build_render_context(
+        request, current_user, course, db_session, activity_name=activity.name
+    )
+    rendered, stats = render_document(content or {}, persona_context(base, preview.persona, current_user))
+    return DynamicPreviewResponse(
+        content=rendered if isinstance(rendered, dict) else {},
+        shown_blocks=stats.shown_blocks,
+        hidden_blocks=stats.hidden_blocks,
+        variables=stats.variables,
     )
 
 

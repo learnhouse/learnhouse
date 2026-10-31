@@ -60,6 +60,8 @@ import { getLinkExtension } from '@components/Objects/Editor/EditorConf'
 import TableOfContents from './TableOfContents'
 import { CustomHeading } from './CustomHeadingExtenstion'
 import WebPreview from '@components/Objects/Editor/Extensions/WebPreview/WebPreview'
+import ConditionalBlock from '@components/Objects/Editor/Extensions/Dynamic/ConditionalBlock'
+import DynamicVariable from '@components/Objects/Editor/Extensions/Dynamic/DynamicVariable'
 import AICanvaToolkit from './AI/AICanvaToolkit'
 
 interface Editor {
@@ -209,6 +211,10 @@ function Canva(props: Editor) {
         editable: false,
         activity: props.activity,
       }),
+      // Learners get these already resolved by the API; course editors get
+      // the raw document, so the nodes still need a schema here.
+      ConditionalBlock,
+      DynamicVariable,
       TableRow,
       TableHeader,
       TableCell,

@@ -32,6 +32,10 @@ import Scenarios from './Extensions/Scenarios/Scenarios'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
 import UserBlock from './Extensions/Users/UserBlock'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
+import Callout from './Extensions/Callout/Callout'
+import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
+import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
+import { normalizeCalloutContent } from './Extensions/Callout/calloutContent'
 
 // Lowlight with a slim grammar set; see editorLowlight.ts
 import { lowlight } from './editorLowlight'
@@ -62,6 +66,7 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
           },
         },
       }),
+      Callout,
       InfoCallout.configure({
         editable: false,
       }),
@@ -154,15 +159,17 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         editable: false,
         activity: activity,
       }),
+      ConditionalBlock,
+      DynamicVariable,
     ],
-    content: content,
+    content: normalizeCalloutContent(content),
     immediatelyRender: false,
   })
 
   // Update content when it changes
   React.useEffect(() => {
     if (editor && content) {
-      editor.commands.setContent(content)
+      editor.commands.setContent(normalizeCalloutContent(content))
     }
   }, [editor, content])
 
