@@ -396,18 +396,18 @@ class TestGooglePreHijack:
         revoke_mock.assert_not_called()
 
     async def test_self_hosted_signup_password_is_dropped(self, db):
-        from src.services.users.users import INBOX_UNPROVEN_KEY
+        from src.services.users.users import _mark_inbox_unproven, inbox_unproven
 
         # Self-hosted signups are marked verified without proof of the inbox
         user = await _make_user(db, 84, "presignup@test.com")
-        user.extra_metadata = {INBOX_UNPROVEN_KEY: True}
+        _mark_inbox_unproven(user)
         db.add(user)
         await db.commit()
 
         revoke_mock = await self._sign_in(db, "presignup@test.com")
         await db.refresh(user)
         assert user.password == ""
-        assert not (user.extra_metadata or {}).get(INBOX_UNPROVEN_KEY)
+        assert not inbox_unproven(user)
         revoke_mock.assert_called_once_with(user.id)
 
 

@@ -355,10 +355,10 @@ class TestPasswordResetService:
             select(User).where(User.email == regular_user.email)
         )).scalars().first()
         assert user is not None
-        from src.services.users.users import INBOX_UNPROVEN_KEY, inbox_unproven
+        from src.services.users.users import _mark_inbox_unproven, inbox_unproven
 
         # A reset code arrives through the inbox, so it proves the owner
-        user.extra_metadata = {INBOX_UNPROVEN_KEY: True}
+        _mark_inbox_unproven(user)
         db.add(user)
         await db.commit()
         old_password = user.password

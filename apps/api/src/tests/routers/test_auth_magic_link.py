@@ -326,9 +326,9 @@ class TestMagicLinkVerify:
         assert verified_user.password == "hashed_password"
 
     async def test_unproven_signup_loses_its_password(self, client, db, verified_user):
-        from src.services.users.users import INBOX_UNPROVEN_KEY, inbox_unproven
+        from src.services.users.users import _mark_inbox_unproven, inbox_unproven
 
-        verified_user.extra_metadata = {INBOX_UNPROVEN_KEY: True, "school": "x"}
+        _mark_inbox_unproven(verified_user)
         db.add(verified_user)
         await db.commit()
 
@@ -337,7 +337,6 @@ class TestMagicLinkVerify:
         await db.refresh(verified_user)
         assert verified_user.password == ""
         assert not inbox_unproven(verified_user)
-        assert verified_user.extra_metadata == {"school": "x"}
         assert verified_user.email_verified_at
 
     async def test_admin_provisioned_password_is_kept(self, client, db, verified_user):

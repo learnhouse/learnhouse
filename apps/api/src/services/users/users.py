@@ -60,28 +60,26 @@ def _session_epoch_now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
 
 
-# Self-hosted signups are marked verified without an email round trip, so this
-# flag records that nothing has proven the signer controls the inbox. The first
-# Google or magic-link sign-in (which does prove it) clears it and drops any
-# password set before then. Only new signups carry it; older rows never match.
-INBOX_UNPROVEN_KEY = "_lh_inbox_unproven"
+# Self-hosted signups are marked verified without an email round trip. An
+# empty ``email_verified_at`` records that nothing has proven the signer
+# controls the inbox yet: the first Google or magic-link sign-in, or a password
+# reset, stamps it and drops any password set before then. Older rows hold NULL
+# or a timestamp, never an empty string, so they are unaffected.
+_INBOX_UNPROVEN = ""
 
 
 def inbox_unproven(user) -> bool:
-    return bool((user.extra_metadata or {}).get(INBOX_UNPROVEN_KEY))
+    return user.email_verified_at == _INBOX_UNPROVEN
 
 
 def _mark_inbox_unproven(user) -> None:
-    user.extra_metadata = {**(user.extra_metadata or {}), INBOX_UNPROVEN_KEY: True}
+    user.email_verified_at = _INBOX_UNPROVEN
 
 
 def clear_inbox_unproven(user) -> None:
-    """Drop the marker once something (Google, an emailed link or reset code) proves the inbox."""
-    if not inbox_unproven(user):
-        return
-    meta = dict(user.extra_metadata or {})
-    meta.pop(INBOX_UNPROVEN_KEY, None)
-    user.extra_metadata = meta or None  # reassign so the JSONB change is detected
+    """Record that something (Google, an emailed link or reset code) proved the inbox."""
+    if inbox_unproven(user):
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
 
 
 def _reject_urls_in_profile_fields(**fields) -> None:
