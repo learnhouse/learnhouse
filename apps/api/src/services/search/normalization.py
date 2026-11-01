@@ -41,3 +41,33 @@ def escape_like_wildcards(query: str) -> str:
 def build_like_pattern(query: Optional[str]) -> str:
     """Normalize, escape, and wrap a term as a substring LIKE/ILIKE pattern."""
     return f"%{escape_like_wildcards(normalize_search_term(query))}%"
+
+
+# A query is split into at most this many terms. Each term adds one ILIKE per
+# searched column, so an unbounded split would let a long query multiply the
+# cost of every search; past this many words the tail is dropped.
+MAX_SEARCH_TERMS = 6
+
+
+def split_search_terms(query: Optional[str]) -> list[str]:
+    """Split a query into the whitespace-separated terms to match on.
+
+    Every term has to appear somewhere in the row, in any order, so
+    "python intro" finds "Introduction to Python". The phrase itself is not
+    required: that is what the old single-pattern search did, and it missed
+    almost every multi-word query. An empty query yields no terms.
+    """
+    normalized = normalize_search_term(query)
+    if not normalized:
+        return []
+    return normalized.split()[:MAX_SEARCH_TERMS]
+
+
+def build_like_patterns(query: Optional[str]) -> list[str]:
+    """One substring ILIKE pattern per term of ``split_search_terms``.
+
+    Callers AND these together (each one matching any searched column). A
+    query with no terms gives an empty list, which callers treat as "match
+    everything" the same way ``build_like_pattern("")`` yields ``%%``.
+    """
+    return [f"%{escape_like_wildcards(term)}%" for term in split_search_terms(query)]

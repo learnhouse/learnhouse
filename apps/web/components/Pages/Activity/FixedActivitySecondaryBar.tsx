@@ -6,6 +6,7 @@ import React, { useEffect, useState, useRef, useMemo, memo } from 'react'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
+import { Keys } from '@components/Objects/Shortcuts/Kbd'
 
 interface FixedActivitySecondaryBarProps {
   course: any
@@ -50,6 +51,7 @@ const NavigationButtons = memo(({
         title={prevActivity ? `${t('common.previous')}: ${prevActivity.name}` : t('activities.no_previous_activity')}
       >
         <ChevronLeft size={16} className="shrink-0 sm:w-5 sm:h-5" />
+        <Keys keys="k" tone="muted" className="hidden sm:inline-flex" />
         <div className="flex flex-col items-start hidden sm:flex">
           <span className={`text-xs ${dark ? 'text-white/50' : 'text-gray-500'}`}>{t('common.previous')}</span>
           <span className="text-sm font-medium text-start truncate max-w-[100px] sm:max-w-[150px]">
@@ -84,6 +86,7 @@ const NavigationButtons = memo(({
                 : t('activities.no_next_activity')}
           </span>
         </div>
+        <Keys keys="j" tone="muted" className="hidden sm:inline-flex" />
         <ChevronRight size={16} className="shrink-0 sm:w-5 sm:h-5" />
       </button>
     </div>

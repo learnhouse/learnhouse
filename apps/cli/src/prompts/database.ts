@@ -124,20 +124,9 @@ export async function promptDatabase(): Promise<DatabaseConfig> {
     useAiDatabase = dbImageChoice === 'ai'
 
     dbPassword = crypto.randomBytes(24).toString('base64url')
-    p.log.message('')
-    p.log.info(pc.bold('Database credentials generated:'))
-    p.log.message([
-      '',
-      `  ${pc.dim('User:')}     learnhouse`,
-      `  ${pc.dim('Password:')} ${pc.cyan(dbPassword)}`,
-      `  ${pc.dim('Database:')} learnhouse`,
-      `  ${pc.dim('Host:')}     db:5432 (internal)`,
-      '',
-      `  ${pc.yellow('Copy the password now if needed; it will be saved in .env')}`,
-      '',
-    ].join('\n'))
-    const ack = await p.confirm({ message: 'Continue?', initialValue: true })
-    if (p.isCancel(ack) || !ack) { p.cancel(); process.exit(0) }
+    // The password is not printed (terminal scrollback, screen shares); it is
+    // saved in the install's .env as POSTGRES_PASSWORD.
+    p.log.info(`Database credentials generated (user ${pc.cyan('learnhouse')}, host db:5432); the password is saved in .env.`)
   }
 
   // --- Redis ---

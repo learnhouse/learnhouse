@@ -1,8 +1,9 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { MagnifyingGlass } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { useCommandPalette } from './CommandPaletteContext'
+import { useIsMac } from '@/hooks/useIsMac'
 
 interface Props {
   isCollapsed?: boolean
@@ -11,13 +12,7 @@ interface Props {
 export default function CommandPaletteTrigger({ isCollapsed = false }: Props) {
   const { t } = useTranslation()
   const { setOpen } = useCommandPalette()
-  const [isMac, setIsMac] = useState(true)
-
-  useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      setIsMac(/Mac|iPhone|iPad/.test(navigator.platform))
-    }
-  }, [])
+  const isMac = useIsMac()
 
   if (isCollapsed) {
     return (

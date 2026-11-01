@@ -1,8 +1,5 @@
 import { getAPIUrl } from '@services/config/config'
-import {
-  RequestBodyWithAuthHeader,
-  getResponseMetadata,
-} from '@services/utils/ts/requests'
+import { uploadFormWithProgress } from '@services/utils/ts/requests'
 
 /**
  * Course Transfer Service
@@ -116,12 +113,12 @@ export async function exportCourse(
     const total = parseInt(contentLength, 10)
     let loaded = 0
     const reader = response.body.getReader()
-    const chunks: BlobPart[] = []
+    const chunks: Uint8Array<ArrayBuffer>[] = []
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      chunks.push(value as BlobPart)
+      chunks.push(value as Uint8Array<ArrayBuffer>)
       loaded += value.length
       const progress = 55 + Math.round((loaded / total) * 40) // 55-95%
       onProgress?.(progress, getExportStatus(progress, true))
@@ -203,12 +200,12 @@ export async function exportCoursesBatch(
     const total = parseInt(contentLength, 10)
     let loaded = 0
     const reader = response.body.getReader()
-    const chunks: BlobPart[] = []
+    const chunks: Uint8Array<ArrayBuffer>[] = []
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      chunks.push(value as BlobPart)
+      chunks.push(value as Uint8Array<ArrayBuffer>)
       loaded += value.length
       const progress = 55 + Math.round((loaded / total) * 40) // 55-95%
       onProgress?.(progress, getExportStatus(progress, true))
@@ -298,6 +295,134 @@ export async function importCourses(
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Import failed' }))
     throw new Error(error.detail || 'Failed to import courses')
+  }
+
+  return response.json()
+}
+
+// Types for importing from another LMS
+export type LmsImportSourceKey =
+  | 'moodle'
+  | 'canvas'
+  | 'blackboard'
+  | 'brightspace'
+  | 'openedx'
+  | 'common_cartridge'
+
+export type LmsQuizMode = 'assignment' | 'page'
+
+export interface LmsImportSource {
+  key: LmsImportSourceKey
+  label: string
+}
+
+export interface LmsImportSources {
+  sources: LmsImportSource[]
+  max_upload_mb: number
+}
+
+export interface LmsSkippedItem {
+  title: string
+  kind: string
+  reason: string
+}
+
+export interface LmsImportReport {
+  counts: Record<string, number>
+  warnings: string[]
+  dropped_warnings: number
+  skipped: LmsSkippedItem[]
+  dropped_skipped?: number
+}
+
+export interface LmsImportStatus {
+  temp_id: string
+  status: 'processing' | 'ready' | 'failed'
+  source?: string | null
+  source_label?: string | null
+  error?: string | null
+  version?: string | null
+  courses: ImportCourseInfo[]
+  report?: LmsImportReport | null
+}
+
+/**
+ * List the LMS export formats the backend can convert
+ */
+export async function getLmsImportSources(
+  access_token: string | null | undefined
+): Promise<LmsImportSources> {
+  const response = await fetch(`${getAPIUrl()}courses/import/lms/sources`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Request failed' }))
+    throw new Error(error.detail || 'Failed to load import sources')
+  }
+
+  return response.json()
+}
+
+/**
+ * Upload a course export from another LMS. Conversion runs in the background:
+ * poll getLmsImportStatus with the returned temp_id until it is no longer
+ * "processing", then import with importCourses.
+ */
+export async function startLmsImport(
+  org_id: number,
+  file: File,
+  source: LmsImportSourceKey | 'auto',
+  quiz_mode: LmsQuizMode,
+  access_token: string,
+  onProgress?: (_percent: number) => void,
+  signal?: AbortSignal
+): Promise<LmsImportStatus> {
+  const formData = new FormData()
+  formData.append('package', file)
+
+  const params = new URLSearchParams({
+    org_id: String(org_id),
+    source,
+    quiz_mode,
+  })
+
+  return uploadFormWithProgress<LmsImportStatus>(
+    `${getAPIUrl()}courses/import/lms/analyze?${params.toString()}`,
+    formData,
+    access_token,
+    onProgress,
+    // LMS backups can be several GB: no time limit, only the user can cancel
+    { signal, timeoutMs: 0 }
+  )
+}
+
+/**
+ * Get the conversion status of an uploaded LMS export
+ */
+export async function getLmsImportStatus(
+  org_id: number,
+  temp_id: string,
+  access_token: string | null | undefined
+): Promise<LmsImportStatus> {
+  const response = await fetch(
+    `${getAPIUrl()}courses/import/lms/analyze/${encodeURIComponent(temp_id)}?org_id=${org_id}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    }
+  )
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Request failed' }))
+    throw Object.assign(new Error(error.detail || 'Failed to get conversion status'), {
+      status: response.status,
+    })
   }
 
   return response.json()

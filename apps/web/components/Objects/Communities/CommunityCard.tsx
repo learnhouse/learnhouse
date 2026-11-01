@@ -46,6 +46,7 @@ function CommunityCard(props: PropsType) {
 
   return (
     <div
+      data-kbd-item=""
       className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]"
     >
       {variant === 'dashboard' && (

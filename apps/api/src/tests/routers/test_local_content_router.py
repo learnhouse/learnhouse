@@ -447,3 +447,39 @@ class TestLocalContentRouter:
         assert head_invalid_response.status_code == 400
         if symlink_response is not None:
             assert symlink_response.status_code == 400
+
+
+class TestLocalContentPathCase:
+    @pytest.mark.parametrize("variant", ["subs", "SUBS", "Courses", "ACTIVITIES", "ſubs"])
+    async def test_submission_file_not_served_to_anonymous_under_any_casing(
+        self, client, app, db, org, course, activity, anonymous_user, tmp_path, variant
+    ):
+        # On a case-insensitive disk every variant opens the same file, so each
+        # must go through the submission gate rather than the public branch.
+        content_root = tmp_path / "content"
+        sub_dir = (
+            content_root / "orgs" / org.org_uuid / "courses" / course.course_uuid
+            / "activities" / activity.activity_uuid / "assignments" / "assignment_x"
+            / "tasks" / "task_x" / "subs"
+        )
+        sub_dir.mkdir(parents=True)
+        (sub_dir / "work.txt").write_text("private")
+        path = (
+            f"orgs/{org.org_uuid}/courses/{course.course_uuid}/activities/"
+            f"{activity.activity_uuid}/assignments/assignment_x/tasks/task_x/subs/work.txt"
+        )
+        if variant != "subs":
+            path = path.replace(f"/{variant.lower().replace('ſ', 's')}/", f"/{variant}/")
+
+        from src.routers import local_content
+
+        app.dependency_overrides[get_current_user] = lambda: anonymous_user
+        original_dir = local_content.CONTENT_DIR
+        local_content.CONTENT_DIR = content_root
+        try:
+            response = await client.get(f"/content/{path}")
+        finally:
+            local_content.CONTENT_DIR = original_dir
+
+        assert response.status_code != 200
+        assert b"private" not in response.content

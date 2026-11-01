@@ -25,6 +25,8 @@ export function cliWithHome(home: string, args: string, timeoutMs = 120_000): Cl
         NO_COLOR: '1',
         ...(home ? {
           HOME: home,
+          // Windows resolves the home directory from USERPROFILE, not HOME.
+          USERPROFILE: home,
           // Docker CLI plugins are resolved relative to HOME (~/.docker/cli-plugins).
           // Preserve the real DOCKER_CONFIG so compose/buildx still work when HOME is overridden.
           DOCKER_CONFIG: process.env.DOCKER_CONFIG ?? path.join(realHome, '.docker'),

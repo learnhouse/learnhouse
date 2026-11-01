@@ -11,6 +11,7 @@ import { queryKeys } from '@/lib/query/keys'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import PlaygroundCard from '@components/Playground/PlaygroundCard'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import { Playground, createPlayground } from '@services/playgrounds/playgrounds'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -99,6 +100,7 @@ export default function PlaygroundsClient({
     <FeatureGate feature="playgrounds" orgslug={orgslug} context="public">
       <div className="w-full">
         <GeneralWrapperStyled>
+          <ListShortcuts />
           <div className="flex flex-col space-y-2 mb-2">
             <div className="flex items-center justify-between">
               <TypeOfContentTitle title={t('common.playgrounds')} type="pg" />

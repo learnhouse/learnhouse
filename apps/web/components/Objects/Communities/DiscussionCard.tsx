@@ -168,6 +168,7 @@ export function DiscussionCard({
 
   return (
     <div
+      data-kbd-item=""
       onClick={isSelectMode ? handleClick : undefined}
       className={`flex items-center gap-4 py-3 px-4 transition-colors border-b border-gray-100 last:border-b-0 ${
         isSelectMode ? 'cursor-pointer' : ''

@@ -6,6 +6,7 @@ import { billingIntervalLabel } from '@/lib/payments/billingInterval'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import { getUriWithOrg } from '@services/config/config'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { ShoppingBag, RefreshCcw, SquareCheck, ArrowRight, Sparkles, BookOpen, Mic, Puzzle } from 'lucide-react'
@@ -105,6 +106,7 @@ function OfferCard({ offer, orgslug, orgUuid, position }: { offer: Offer; orgslu
 
   return (
     <Link
+      data-kbd-item=""
       href={getUriWithOrg(orgslug, `/store/offers/${offer.offer_uuid}`)}
       onClick={() => track(AnalyticsEvent.StoreOfferCardClicked, { offer_type: offer.offer_type, amount: offer.amount, position })}
     >
@@ -231,6 +233,7 @@ function Store({ orgslug, offers }: StoreProps) {
   return (
     <div className="w-full">
       <GeneralWrapperStyled>
+        <ListShortcuts />
         <div className="flex items-center gap-3 my-6">
           <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white nice-shadow">
             <ShoppingBag size={18} className="text-gray-800" />

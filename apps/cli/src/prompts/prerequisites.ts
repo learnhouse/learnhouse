@@ -1,6 +1,6 @@
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
-import { isDockerInstalled, isDockerRunning } from '../services/docker.js'
+import { dockerComposeWorks, isDockerInstalled, isDockerRunning } from '../services/docker.js'
 
 export async function checkPrerequisites(): Promise<void> {
   const s = p.spinner()
@@ -16,6 +16,11 @@ export async function checkPrerequisites(): Promise<void> {
       name: 'Docker daemon',
       check: isDockerRunning,
       failMsg: 'Docker daemon is not running. Please start Docker and try again.',
+    },
+    {
+      name: 'Docker Compose v2',
+      check: dockerComposeWorks,
+      failMsg: `The \`docker compose\` plugin is missing. Install it: ${pc.underline('https://docs.docker.com/compose/install/linux/')}`,
     },
   ]
 

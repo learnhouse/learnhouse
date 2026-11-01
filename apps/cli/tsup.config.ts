@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: ['bin/learnhouse.ts'],
   format: ['esm'],
-  target: 'node18',
+  target: 'node22',
   outDir: 'dist/bin',
   clean: true,
   splitting: false,

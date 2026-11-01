@@ -7,6 +7,8 @@ import { getUriWithOrg } from '@services/config/config'
 import { getOffersByResource } from '@services/payments/offers'
 import { UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus } from 'lucide-react'
 import { OfferCard } from './OfferCard'
+import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
+import { Keys } from '@components/Objects/Shortcuts/Kbd'
 import { applyForContributor } from '@services/courses/courses'
 import toast from 'react-hot-toast'
 import { useContributorStatus } from '../../../../hooks/useContributorStatus'
@@ -76,6 +78,34 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       return cleanRunCourseUuid === cleanCourseUuid;
     }
   ) ?? false;
+
+  // `s` starts the course, or resumes it at the first lesson not yet done.
+  const resumeCourse = () => {
+    const run = isStarted || null
+    const doneIds = new Set<number>(
+      (run?.steps ?? []).filter((step: any) => step.complete).map((step: any) => step.activity_id),
+    )
+    const flat: any[] = (course.chapters ?? []).flatMap((chapter: any) => chapter.activities ?? [])
+    const target = flat.find((activity: any) => !doneIds.has(activity.id)) ?? flat[0]
+    if (!target) return
+    router.push(
+      getUriWithOrg(orgslug, '') +
+        `/course/${cleanCourseUuid}/activity/${target.activity_uuid.replace('activity_', '')}`,
+    )
+  }
+  useShortcut(
+    {
+      id: 'course.start',
+      keys: 's',
+      label: isStarted ? t('shortcuts.continue_course') : t('shortcuts.start_course'),
+      group: 'page',
+      run: () => {
+        if (isStarted) resumeCourse()
+        else if (!isActionLoading) handleCourseAction()
+      },
+    },
+    !!session.data?.user && isUserPartOfTheOrg && !!course?.chapters,
+  )
 
   // Public endpoint: no auth needed, works for unauthenticated visitors too
   const { data: offersResult, isLoading } = useQuery({
@@ -196,6 +226,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
           borderColor="border-white"
         />
         <span>{action === 'start' ? t('courses.start_course') : t('courses.leave_course')}</span>
+        {action === 'start' ? <Keys keys="s" tone="onDark" className="hidden sm:inline-flex" /> : null}
         <ArrowRight className="w-5 h-5" />
       </>
     );

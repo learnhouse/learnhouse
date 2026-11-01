@@ -36,8 +36,8 @@ npx learnhouse@1.0.0 setup
 
 ## Requirements
 
-- **Node.js** >= 18
-- **Docker**
+- **Node.js** >= 22
+- **Docker** with the Compose v2 plugin (`docker compose`)
 
 ## Commands
 
@@ -45,16 +45,17 @@ npx learnhouse@1.0.0 setup
 |---------|-------------|
 | `learnhouse setup` | Interactive setup wizard |
 | `learnhouse start` | Start all services |
-| `learnhouse stop` | Stop all services |
+| `learnhouse stop` | Stop all services (containers are kept) |
 | `learnhouse update` | Update to the latest version |
-| `learnhouse update --version <x.y.z>` | Update to a specific version |
+| `learnhouse update --to <x.y.z>` | Update to a specific version |
 | `learnhouse logs` | Stream service logs |
 | `learnhouse config` | Show current configuration |
 | `learnhouse status` | Show service status |
 | `learnhouse health` | Run health checks |
-| `learnhouse backup` | Backup database |
-| `learnhouse restore <archive>` | Restore database from a backup |
+| `learnhouse backup` | Back up the database, `.env` and uploaded content |
+| `learnhouse restore <archive>` | Restore a backup (or a `.sql.gz` dump written by `update`) |
 | `learnhouse deployments` | View deployments and set resource limits |
+| `learnhouse scale` | Set memory limits per service |
 | `learnhouse doctor` | Diagnose common issues |
 | `learnhouse shell` | Open a shell in a running container |
 | `learnhouse env` | Edit environment variables |
@@ -83,10 +84,18 @@ npx learnhouse backup
 npx learnhouse update
 
 # Or a specific version
-npx learnhouse update --version 1.2.0
+npx learnhouse update --to 1.2.0
 ```
 
-The update command pulls the new image, restarts services, and asks if you want to run database migrations. Check [docs.learnhouse.app](https://docs.learnhouse.app) for migration guides before proceeding.
+The update command backs up the database to `backups/db-pre-upgrade-*.sql.gz`, pulls the new image, runs the database migrations with it before it starts, then restarts services. If a step fails, the previous version keeps running. To roll back the database, run `npx learnhouse restore backups/db-pre-upgrade-<timestamp>.sql.gz`.
+
+## Choosing an installation
+
+Commands act on the installation in the current directory, otherwise on the only one under `~/.learnhouse`. With several, pass `--dir`:
+
+```bash
+npx learnhouse --dir ~/.learnhouse/production status
+```
 
 ## Generated Files
 
@@ -101,19 +110,26 @@ learnhouse/
 
 ## CI / Non-interactive Mode
 
-All commands support non-interactive usage for CI pipelines:
+`setup --ci`, `start`, `stop`, `update`, `status`, `health`, `doctor`, `config`, `logs`, `backup` and `restore --yes` run without prompts. `env`, `scale`, `deployments` and `shell` are interactive and exit with code 2 when there is no terminal. `health` and `doctor` exit with code 1 when a check fails. The update check is skipped in CI; set `LEARNHOUSE_NO_UPDATE_CHECK=1` to turn it off elsewhere.
+
+Secrets can be passed as environment variables instead of flags, which keeps them out of the process list and shell history: `LEARNHOUSE_ADMIN_PASSWORD`, `LEARNHOUSE_LICENSE_KEY`, `LEARNHOUSE_CF_API_TOKEN`, `LEARNHOUSE_EXTERNAL_DB`, `LEARNHOUSE_EXTERNAL_REDIS`.
 
 ```bash
 # Setup without prompts
-npx learnhouse setup --ci \
+LEARNHOUSE_ADMIN_PASSWORD=secretpass123 npx learnhouse setup --ci \
   --name production \
   --domain example.com \
   --port 80 \
-  --admin-email admin@example.com \
-  --admin-password secretpass123
+  --admin-email admin@example.com
 
-# Update with auto-migration
-npx learnhouse update --version 1.2.0 --migrate
+# Re-running setup --ci on the same --name reconfigures it in place
+# (same deployment, database password and secrets).
+
+# Update to a specific version (migrations run by default)
+npx learnhouse update --to 1.2.0
+
+# Restore without a prompt
+npx learnhouse restore backups/learnhouse-backup-<timestamp>.tar.gz --yes
 
 # Update without migrations
 npx learnhouse update --no-migrate
@@ -128,8 +144,8 @@ npx learnhouse setup --ci --admin-password pass123 --no-start
 # Unit tests (no Docker required)
 bun run test
 
-# E2E tests (requires Docker)
-bun run test:e2e
+# Integration tests (requires Docker)
+bun run test:integration
 
 # All tests
 bun run test:all
@@ -137,15 +153,14 @@ bun run test:all
 
 **Unit tests** cover template generation (docker-compose, .env, nginx, caddyfile) and config store operations.
 
-**E2E tests** run the full lifecycle with real Docker containers: setup → start → status → health → doctor → stop → restart. They use `--ci` mode to run without prompts.
+**Integration tests** run the full lifecycle with real Docker containers: setup → start → status → health → doctor → stop → restart. They use `--ci` mode to run without prompts.
 
 **Not yet tested:**
-- Interactive commands (backup create/restore, env editor, shell, deployments scaling)
+- Interactive commands against a real terminal (env editor, shell, deployments scaling)
 - `update` with actual version swap between two published images
 - `update --migrate` with pending Alembic migrations
 - `logs` (streams indefinitely)
 - `dev` mode (requires full monorepo source)
-- Multi-installation discovery (`findInstallDir` with multiple `~/.learnhouse/*` entries)
 - Error recovery (Docker daemon down, port conflicts, corrupted config)
 
 ## License

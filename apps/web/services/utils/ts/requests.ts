@@ -116,7 +116,8 @@ export function uploadFormWithProgress<T = any>(
   url: string,
   formData: FormData,
   access_token: string,
-  onProgress?: (_percent: number) => void
+  onProgress?: (_percent: number) => void,
+  options: { signal?: AbortSignal; timeoutMs?: number } = {}
 ): Promise<T> {
   validateApiUrl(url)
   return new Promise<T>((resolve, reject) => {
@@ -124,7 +125,14 @@ export function uploadFormWithProgress<T = any>(
     xhr.open('POST', url)
     xhr.setRequestHeader('Authorization', `Bearer ${access_token}`)
     xhr.withCredentials = true
-    xhr.timeout = UPLOAD_TIMEOUT_MS
+    xhr.timeout = options.timeoutMs ?? UPLOAD_TIMEOUT_MS
+    if (options.signal) {
+      if (options.signal.aborted) {
+        reject(new Error('Upload cancelled.'))
+        return
+      }
+      options.signal.addEventListener('abort', () => xhr.abort(), { once: true })
+    }
 
     xhr.upload.onprogress = (e) => {
       if (onProgress && e.lengthComputable) {
@@ -144,10 +152,6 @@ export function uploadFormWithProgress<T = any>(
         }
         return
       }
-      if (xhr.status === 413) {
-        reject(new Error('The file is too large to upload.'))
-        return
-      }
       let detail: string | undefined
       try {
         const body = JSON.parse(xhr.responseText)
@@ -160,7 +164,12 @@ export function uploadFormWithProgress<T = any>(
       } catch {
         /* non-JSON error body (nginx / gateway HTML) */
       }
-      reject(new Error(detail || `Upload failed (HTTP ${xhr.status})`))
+      if (!detail && xhr.status === 413) detail = 'The file is too large to upload.'
+      reject(
+        Object.assign(new Error(detail || `Upload failed (HTTP ${xhr.status})`), {
+          status: xhr.status,
+        })
+      )
     }
 
     xhr.onerror = () =>
