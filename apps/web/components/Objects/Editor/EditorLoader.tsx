@@ -11,7 +11,7 @@ import MarkdownActivity from '@components/Objects/Activities/Markdown/MarkdownAc
 import EmbedActivity from '@components/Objects/Activities/Embed/EmbedActivity'
 import ResourceActivity from '@components/Objects/Activities/Resource/ResourceActivity'
 import OnboardingTracker from '@components/Dashboard/Onboarding/OnboardingTracker'
-import { useRegisterAtlasPageContext } from '@components/Dashboard/Atlas/AtlasMiniContext'
+import { useRegisterAtlasPageContext } from '@ee/components/Atlas/AtlasMiniContext'
 
 interface EditorLoaderProps {
   courseid: string

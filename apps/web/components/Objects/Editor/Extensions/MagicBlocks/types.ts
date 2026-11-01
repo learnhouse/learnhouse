@@ -39,3 +39,6 @@ export interface StreamChunk {
   session_uuid?: string
   message?: string
 }
+
+// Generations allowed per Magic Block session; mirrors MAX_ITERATIONS in the API.
+export const MAGIC_BLOCK_MAX_ITERATIONS = 6

@@ -405,6 +405,11 @@ export default async function proxy(req: NextRequest) {
     pathname.startsWith('/auth/sso/')
     || pathname.startsWith('/auth/callback/')
     || pathname.startsWith('/auth/token-exchange')
+    // Consent screen for AI apps connecting over MCP: org-less by design, the
+    // member picks the organization on the page.
+    || pathname === '/oauth/consent'
+    // Where a member approves a sensitive action an AI app asked for.
+    || pathname === '/oauth/approve'
   ) {
     const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
     setInstanceCookies(response, instance)

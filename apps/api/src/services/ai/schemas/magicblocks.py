@@ -20,7 +20,8 @@ class StartMagicBlockSession(BaseModel):
     block_uuid: str
     prompt: str = Field(max_length=AI_MESSAGE_MAX_CHARS)
     context: MagicBlockContext
-    style_reference: Optional[str] = None  # HTML of another block to match the design language of
+    # HTML of another block to match the design language of
+    style_reference: Optional[str] = Field(default=None, max_length=100_000)
 
 
 class SendMagicBlockMessage(BaseModel):

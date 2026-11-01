@@ -7,7 +7,6 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import func
 from sqlmodel import select
 from src.db.users import AnonymousUser, APITokenUser, User, UserRead
-from src.db.organizations import Organization
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config

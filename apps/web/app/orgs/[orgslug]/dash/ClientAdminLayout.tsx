@@ -9,7 +9,7 @@ import { SessionGate } from '@components/Contexts/LHSessionContext'
 import { CommandPaletteProvider } from '@components/Dashboard/CommandPalette/CommandPaletteContext'
 import CommandPalette from '@components/Dashboard/CommandPalette/CommandPalette'
 import { UpgradeModalProvider } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
-import { AtlasMiniProvider } from '@components/Dashboard/Atlas/AtlasMiniContext'
+import { AtlasMiniProvider } from '@ee/components/Atlas/AtlasMiniContext'
 import React from 'react'
 import { useMediaQuery } from 'usehooks-ts';
 

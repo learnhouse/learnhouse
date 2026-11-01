@@ -30,7 +30,6 @@ import {
   Puzzle,
   Save,
   Sparkles,
-  SquarePlus,
   Trash2,
   Video,
 } from 'lucide-react'
@@ -56,7 +55,7 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
 import { ActivityPreviewHoverCard } from '@components/Objects/Activities/ActivityPreview/ActivityPreview'
-import { useAtlasMini } from '@components/Dashboard/Atlas/AtlasMiniContext'
+import AtlasAttachButton from '@ee/components/Atlas/AtlasAttachButton'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -100,7 +99,6 @@ function ActivityElement(props: ActivitiyElementProps) {
   const _withUnpublishedActivities = course ? course.withUnpublishedActivities : false
   const queryClient = useQueryClient()
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
-  const { open: atlasOpen, attachReference: atlasAttachReference } = useAtlasMini()
 
   // Assignment UUID for edit link
   const [assignmentUUID, setAssignmentUUID] = useState('');
@@ -206,20 +204,6 @@ function ActivityElement(props: ActivitiyElementProps) {
     } finally {
       setIsPublishing(false)
     }
-  }
-
-  function copyTitleToAtlas() {
-    if (!props.activity?.activity_uuid || !props.activity?.name) return
-    atlasAttachReference({
-      type: 'activity',
-      uuid: props.activity.activity_uuid,
-      name: props.activity.name,
-      parent_course_uuid: props.course_uuid,
-      parent_chapter_id: props.chapter_id,
-      parent_chapter_name: props.chapter_name,
-      activity_type: props.activity.activity_type,
-    })
-    toast.success(t('dashboard.courses.structure.activity.toasts.added_to_atlas', { defaultValue: 'Added to Atlas chat' }))
   }
 
   async function updateActivityName(activityId: string) {
@@ -341,16 +325,18 @@ function ActivityElement(props: ActivitiyElementProps) {
                 </p>
               </ActivityPreviewHoverCard>
             )}
-            {atlasOpen && !props.selectionMode && (
-              <button
-                type="button"
-                onClick={copyTitleToAtlas}
-                title={t('dashboard.courses.structure.actions.send_to_atlas', { defaultValue: 'Send title to Atlas' })}
-                aria-label={t('dashboard.courses.structure.actions.send_to_atlas', { defaultValue: 'Send title to Atlas' })}
-                className="flex-shrink-0 h-6 w-6 inline-flex items-center justify-center rounded-md text-violet-500 hover:text-violet-700 hover:bg-violet-50 transition-colors"
-              >
-                <SquarePlus size={14} />
-              </button>
+            {!props.selectionMode && (
+              <AtlasAttachButton
+                reference={{
+                  type: 'activity',
+                  uuid: props.activity.activity_uuid,
+                  name: props.activity.name,
+                  parent_course_uuid: props.course_uuid,
+                  parent_chapter_id: props.chapter_id,
+                  parent_chapter_name: props.chapter_name,
+                  activity_type: props.activity.activity_type,
+                }}
+              />
             )}
           </div>
 

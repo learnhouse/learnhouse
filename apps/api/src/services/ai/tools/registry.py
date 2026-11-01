@@ -5,11 +5,12 @@ apply) funnels tool calls through `run_tool`, so authorization and the
 permission-mode gate are written exactly once:
 
     1. validate args against the tool's params model
-    2. org AI kill switch (admin toggle / plan, via resolve_feature)
-    3. principal gate — org membership (sessions) / org scope (API tokens)
-    4. rights pre-flight — token bucket rights; resource RBAC when the tool
+    2. org AI kill switch (in-app agent only: it spends AI credits), the
+       tool's plan feature, and the read-only scope
+    3. principal gate: org membership (sessions) / org scope (API tokens)
+    4. rights pre-flight: token bucket rights; resource RBAC when the tool
        names a target uuid; per-spec extra preflight (e.g. org admin)
-    5. permission-mode gate — execute now, or return a PendingProposal
+    5. permission-mode gate: execute now, or return a PendingProposal
     6. execute the wrapped service function (services re-check RBAC
        internally: defense in depth)
 """
@@ -28,11 +29,15 @@ from src.db.users import APITokenUser, PublicUser
 from src.security.auth import resolve_acting_user_id
 from src.security.features_utils.resolve import resolve_feature
 from src.security.org_auth import is_org_admin, is_org_member
+from src.security.org_scope import org_scope
 from src.security.rbac import AccessAction, AccessContext, check_resource_access
+from src.services.ai.tools import refs
 from src.services.ai.tools.base import (
     ActionTier,
+    ApprovalNeeded,
     PendingProposal,
     ToolContext,
+    ToolDenied,
     ToolOutcome,
     ToolSpec,
 )
@@ -47,7 +52,7 @@ logger = logging.getLogger(__name__)
 # (they link to chapters via the ChapterActivity association table), so the
 # shared checker's parent resolution can never find their parent and always
 # denies. The activity services resolve the parent course themselves and call
-# check_resource_access on it, so access is still enforced — just at the
+# check_resource_access on it, so access is still enforced, just at the
 # service layer, not this pre-flight.
 _RBAC_PREFIXES = (
     "course_",
@@ -109,8 +114,8 @@ def _token_bucket_allows(
     return bool(getattr(bucket_rights, field, False))
 
 
-async def _ai_enabled_for_org(ctx: ToolContext) -> bool:
-    """Org-level AI kill switch (admin toggle / plan entitlement)."""
+async def _org_config(ctx: ToolContext) -> dict | None:
+    """The org's config blob, or None when it cannot be read (fail closed)."""
     try:
         org_config = (
             await ctx.db_session.execute(
@@ -123,10 +128,36 @@ async def _ai_enabled_for_org(ctx: ToolContext) -> bool:
         logger.exception(
             "agent-tools: failed to load org config for org %s", ctx.org.id
         )
+        return None
+    return (org_config.config or {}) if org_config else {}
+
+
+async def _ai_enabled_for_org(ctx: ToolContext) -> bool:
+    """Org-level AI kill switch (admin toggle / plan entitlement)."""
+    config = await _org_config(ctx)
+    if config is None:
         return False
-    config = (org_config.config or {}) if org_config else {}
     resolved = resolve_feature("ai", config, ctx.org.id)
     return bool(resolved["enabled"])
+
+
+def feature_state(spec: ToolSpec, config: dict, org_id: int) -> dict | None:
+    """resolve_feature() for the tool's plan feature; None when it has none."""
+    if not spec.feature:
+        return None
+    return resolve_feature(spec.feature, config, org_id)
+
+
+def tool_available(
+    spec: ToolSpec, config: dict, org_id: int, read_only: bool, can_admin: bool = True
+) -> bool:
+    """Whether a caller with this org config and scope may see the tool."""
+    if read_only and spec.required_access != "read":
+        return False
+    if spec.required_access == "admin" and not can_admin:
+        return False
+    state = feature_state(spec, config, org_id)
+    return state is None or bool(state["enabled"])
 
 
 async def _effective_mode(ctx: ToolContext) -> str:
@@ -177,14 +208,39 @@ async def run_tool(
     except ValidationError as e:
         return ToolOutcome.denied("invalid_args", _validation_summary(e))
 
-    # 2. Org AI kill switch.
-    if not await _ai_enabled_for_org(ctx):
+    # 2. Org AI kill switch (the in-app agent spends org AI credits; an MCP
+    #    client brings its own model), plan feature, read-only scope.
+    if ctx.surface == "agent" and not await _ai_enabled_for_org(ctx):
         return ToolOutcome.denied(
             "ai_disabled", "AI is not enabled for this organization"
         )
+    if ctx.read_only and spec.required_access != "read":
+        return ToolOutcome.denied(
+            "insufficient_scope",
+            "This connection is read-only. Reconnect the app with write access "
+            "to make changes.",
+        )
+    if spec.required_access == "admin" and not ctx.can_admin:
+        return ToolOutcome.denied(
+            "insufficient_scope",
+            "This connection was not given admin access. Reconnect the app with "
+            "admin access to manage members, roles and settings.",
+        )
+    if spec.feature:
+        config = await _org_config(ctx)
+        state = feature_state(spec, config or {}, ctx.org.id) if config is not None else None
+        if state is None or not state["enabled"]:
+            return ToolOutcome.denied(
+                "feature_unavailable", _feature_denial(spec.feature, state, config or {})
+            )
 
     # 3. Principal gate.
     if isinstance(ctx.user, APITokenUser):
+        if not spec.api_tokens:
+            return ToolOutcome.denied(
+                "not_for_api_tokens",
+                "This tool acts as a person and does not accept API tokens.",
+            )
         if ctx.user.org_id != ctx.org.id:
             return ToolOutcome.denied(
                 "org_mismatch",
@@ -210,6 +266,49 @@ async def run_tool(
                 f"{_ACTION_FIELD[spec.access_action]}",
             )
 
+    with org_scope(ctx.org.id):
+        # 4. Names given where an id goes ("the solar course") become ids,
+        #    looked up only where the caller can see.
+        named = await resolve_names(spec, raw_args or {}, ctx)
+        if isinstance(named, ToolOutcome):
+            return named
+        args, resolved = named
+        if resolved:
+            try:
+                params = spec.params_model.model_validate(args)
+            except ValidationError as e:
+                return ToolOutcome.denied("invalid_args", _validation_summary(e))
+        outcome = await _gate_and_execute(spec, params, args, ctx)
+        if resolved and outcome.status == "executed" and isinstance(outcome.result, dict):
+            # Say what the names were taken to mean, so a wrong guess is visible.
+            outcome.result.setdefault("resolved", resolved)
+        return outcome
+
+
+async def resolve_names(
+    spec: ToolSpec, args: dict[str, Any], ctx: ToolContext
+) -> tuple[dict[str, Any], dict[str, dict]] | ToolOutcome:
+    """The call's arguments with names in id parameters swapped for ids
+    (discovery.resolve_names), or the refusal to return instead."""
+    from src.services.ai.tools import discovery
+
+    fields = set(spec.params_model.model_fields)
+    if not any(
+        param in fields and isinstance(args.get(param), str) and args[param].strip()
+        and not discovery._looks_like_id(args[param])
+        for param, _kind in discovery.NAMEABLE
+    ):
+        return args, {}
+    try:
+        return await discovery.resolve_names(ctx, fields, args)
+    except HTTPException as e:
+        return ToolOutcome.denied(f"http_{e.status_code}", str(e.detail))
+
+
+async def _gate_and_execute(
+    spec: ToolSpec, params: BaseModel, raw_args: dict[str, Any], ctx: ToolContext
+) -> ToolOutcome:
+    """Steps 4 to 6, inside the caller's organization boundary."""
     # 4b. Resource RBAC pre-flight when the tool names a registered target.
     target_uuid = (
         getattr(params, spec.target_param, None) if spec.target_param else None
@@ -217,13 +316,21 @@ async def run_tool(
     if target_uuid and isinstance(target_uuid, str) and target_uuid.startswith(
         _RBAC_PREFIXES
     ):
+        # Missing, wrong kind or another organization's: all answer "not
+        # found", so a call never confirms that an id exists elsewhere.
+        kind = refs.kind_of(target_uuid)
+        if kind:
+            try:
+                await refs.load(ctx, kind, target_uuid)
+            except HTTPException as e:
+                return ToolOutcome.denied(f"http_{e.status_code}", str(e.detail))
         try:
             decision = await check_resource_access(
                 ctx.request,
                 ctx.db_session,
                 ctx.user,
                 target_uuid,
-                spec.access_action,
+                spec.target_access or spec.access_action,
                 context=AccessContext.DASHBOARD,
                 raise_on_deny=False,
             )
@@ -253,7 +360,9 @@ async def run_tool(
     # 5. Permission-mode gate.
     mode = await _effective_mode(ctx)
     if spec.tier is not ActionTier.READ:
-        if mode == "confirm":
+        # In the in-app agent, changes that need a person's yes stay proposals
+        # even in autonomous mode.
+        if mode == "confirm" or (mode == "autonomous" and spec.approval_for(params)):
             proposal = PendingProposal(
                 tool=spec.name,
                 args=params.model_dump(mode="json"),
@@ -266,23 +375,61 @@ async def run_tool(
                 user_id=resolve_acting_user_id(ctx.user),
             )
             return ToolOutcome.proposed(proposal)
-        if mode == "execute" and spec.tier is ActionTier.DESTRUCTIVE:
-            # Token surface: destructive calls need the explicit opt-in arg
-            # (injected into the tool schema by the MCP adapter).
-            if not (raw_args or {}).get("confirm"):
-                return ToolOutcome.denied(
-                    "confirmation_required",
-                    "Destructive action: retry with confirm=true after "
-                    "reviewing what will be deleted",
-                )
+        if mode == "execute" and spec.approval_for(params) and not ctx.approved:
+            # The MCP layer collects the approval (a form in the client, a
+            # page in LearnHouse, or confirm=true for API tokens) and marks
+            # the context; nothing else can.
+            return ToolOutcome.denied(
+                "approval_required",
+                "This change needs the user's approval before it runs.",
+            )
 
     # 6. Execute.
     try:
         result = await spec.execute(ctx, params)
+    except ToolDenied as e:
+        return ToolOutcome.denied(e.code, e.reason)
+    except ApprovalNeeded as e:
+        if mode == "execute" and not ctx.approved:
+            return ToolOutcome.denied("approval_required", str(e) or "This change needs the user's approval.")
+        if mode != "execute":
+            return ToolOutcome.proposed(
+                PendingProposal(
+                    tool=spec.name,
+                    args=params.model_dump(mode="json"),
+                    tier=spec.tier,
+                    target=_target_for(spec, params),
+                    summary=_summary_for(spec, params),
+                    requires_confirmation=False,
+                    scope_key=ctx.scope_key,
+                    org_id=ctx.org.id,
+                    user_id=resolve_acting_user_id(ctx.user),
+                )
+            )
+        raise
     except HTTPException as e:
         # Services speak HTTP; translate to a denial the model can read.
-        return ToolOutcome.denied(f"http_{e.status_code}", str(e.detail))
+        detail = str(e.detail)
+        if e.status_code == 403 and "usage limit" in detail.lower():
+            return ToolOutcome.denied("plan_limit", detail)
+        return ToolOutcome.denied(f"http_{e.status_code}", detail)
     return ToolOutcome.executed(result)
+
+
+def _feature_denial(feature: str, state: dict | None, config: dict) -> str:
+    label = feature.replace("_", " ").capitalize()
+    if state is None or state.get("available"):
+        return f"{label} is turned off for this organization."
+    from src.security.features_utils.plans import plan_meets_requirement
+
+    if str(config.get("config_version", "1.0")).startswith("2"):
+        plan = config.get("plan", "free")
+    else:
+        plan = config.get("cloud", {}).get("plan", "free")
+    required = state.get("required_plan")
+    if required and not plan_meets_requirement(plan, required):
+        return f"{label} is not included in the {plan} plan; it is available from the {required} plan."
+    return f"{label} is not included in this organization's {plan} plan."
 
 
 def _validation_summary(e: ValidationError) -> str:
@@ -290,4 +437,4 @@ def _validation_summary(e: ValidationError) -> str:
     for err in e.errors()[:5]:
         loc = ".".join(str(p) for p in err.get("loc", ()))
         parts.append(f"{loc}: {err.get('msg')}")
-    return "Invalid arguments — " + "; ".join(parts)
+    return "Invalid arguments: " + "; ".join(parts)

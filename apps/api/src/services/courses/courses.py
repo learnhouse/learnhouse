@@ -1275,6 +1275,185 @@ def _copy_storage_directory(src_dir: str, dst_dir: str) -> None:
             shutil.copytree(src_dir, dst_dir, dirs_exist_ok=True)
 
 
+async def clone_activity(
+    db_session: AsyncSession,
+    original_activity,
+    original_blocks: list,
+    *,
+    org_uuid: str,
+    org_id: int,
+    source_course_path: str,
+    new_course_uuid: str,
+    new_course_path: str,
+    new_course_id: int,
+    new_chapter_id: int,
+    order: int,
+    published: bool | None = None,
+):
+    """Copy one activity (row, chapter link, files and blocks) into a chapter.
+
+    Used by clone_course and by the agent's copy tool. The activity's files are
+    copied under the new activity, and every block uuid, file id and activity
+    uuid its content names is pointed at the copies. ``published`` defaults to
+    the original's state. Adds to the session without committing.
+    """
+    from src.services.courses.transfer.storage_utils import (
+        list_directory,
+        rewrite_sqlite_db_paths,
+    )
+    from src.db.courses.activities import Activity
+    from src.db.courses.blocks import Block
+    from src.db.courses.chapter_activities import ChapterActivity
+
+    new_activity_uuid = f"activity_{uuid4()}"
+
+    # Clone activity content (will update file references for blocks)
+    new_content = dict(original_activity.content) if original_activity.content else {}
+    new_details = dict(original_activity.details) if original_activity.details else {}
+    # Code blocks keep their SQLite database's full storage key.
+    new_content = rewrite_sqlite_db_paths(
+        new_content,
+        original_activity.activity_uuid,
+        f"orgs/{org_uuid}/courses/{new_course_uuid}/activities/{new_activity_uuid}",
+    )
+
+    new_activity = Activity(
+        name=original_activity.name,
+        activity_type=original_activity.activity_type,
+        activity_sub_type=original_activity.activity_sub_type,
+        content=new_content,
+        details=new_details,
+        published=original_activity.published if published is None else published,
+        org_id=org_id,
+        course_id=new_course_id,
+        activity_uuid=new_activity_uuid,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+        extra_metadata=original_activity.extra_metadata,
+    )
+
+    db_session.add(new_activity)
+    await db_session.flush()  # Get new_activity.id without committing
+
+    # Create ChapterActivity link
+    new_chapter_activity = ChapterActivity(
+        chapter_id=new_chapter_id,
+        activity_id=new_activity.id,
+        course_id=new_course_id,
+        org_id=org_id,
+        order=order,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db_session.add(new_chapter_activity)
+
+    # Copy all activity files recursively
+    original_activity_path = f"{source_course_path}/activities/{original_activity.activity_uuid}"
+    new_activity_path = f"{new_course_path}/activities/{new_activity_uuid}"
+
+    # Copy entire activity directory structure if it exists
+    # This handles all activity types: videos, documents, SCORM, assignments, etc.
+    _copy_storage_directory(original_activity_path, new_activity_path)
+
+    # Identifiers the activity's own content JSON may reference. The
+    # editor document embeds each media block's uuid, file id and owning
+    # activity uuid, and builds the media URL from them, so every one of
+    # them has to point at the copied file or the copy shows no images.
+    content_ref_map = {original_activity.activity_uuid: new_activity_uuid}
+
+    # Clone blocks for dynamic activities (use pre-fetched data)
+    if original_activity.activity_type.value == "TYPE_DYNAMIC":
+        for original_block in original_blocks:
+            new_block_uuid = f"block_{uuid4()}"
+            content_ref_map[original_block.block_uuid] = new_block_uuid
+
+            # Clone block content and update file references
+            new_block_content = dict(original_block.content) if original_block.content else {}
+
+            # Update activity_uuid reference in block content
+            if 'activity_uuid' in new_block_content:
+                new_block_content['activity_uuid'] = new_activity_uuid
+
+            # Determine block type folder and rename copied folder from old UUID to new UUID
+            block_type_folder = ""
+            if original_block.block_type.value == "BLOCK_VIDEO":
+                block_type_folder = "videoBlock"
+            elif original_block.block_type.value == "BLOCK_IMAGE":
+                block_type_folder = "imageBlock"
+            elif original_block.block_type.value == "BLOCK_DOCUMENT_PDF":
+                block_type_folder = "pdfBlock"
+            elif original_block.block_type.value == "BLOCK_AUDIO":
+                block_type_folder = "audioBlock"
+
+            if block_type_folder:
+                # The copy already copied files with old UUIDs, we need to rename folders
+                old_copied_block_path = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{original_block.block_uuid}"
+                new_block_path_str = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{new_block_uuid}"
+
+                # Transcoded HLS renditions live in a sub-folder that the
+                # file loop below doesn't see; move them with the block.
+                if block_type_folder == "videoBlock":
+                    _copy_storage_directory(
+                        f"{old_copied_block_path}/hls", f"{new_block_path_str}/hls"
+                    )
+
+                # Move files from old block path to new block path (rename folder)
+                block_files = list_directory(old_copied_block_path)
+                original_file_id = new_block_content.get('file_id')
+                file_id_matched = False
+                if block_files:
+                    for filename in block_files:
+                        old_file_key = f"{old_copied_block_path}/{filename}"
+                        # Generate new file ID
+                        new_file_id = str(uuid4())
+                        file_stem, file_ext = (
+                            filename.rsplit('.', 1) if '.' in filename else (filename, '')
+                        )
+                        new_filename = f"block_{new_file_id}.{file_ext}" if file_ext else f"block_{new_file_id}"
+                        new_file_key = f"{new_block_path_str}/{new_filename}"
+
+                        # Copy file to new location
+                        _copy_storage_file(old_file_key, new_file_key)
+                        # Delete old file
+                        _delete_storage_file(old_file_key)
+
+                        # Update file reference in block content. A
+                        # block folder can hold more than one file, so
+                        # only the file the block points at replaces it.
+                        if file_stem == original_file_id:
+                            new_block_content['file_id'] = f"block_{new_file_id}"
+                            file_id_matched = True
+                        elif 'file_id' in new_block_content and not file_id_matched:
+                            new_block_content['file_id'] = f"block_{new_file_id}"
+                        if file_stem:
+                            content_ref_map[file_stem] = f"block_{new_file_id}"
+
+                # Nothing references the old block id in the copy; drop
+                # what's left under it (emptied folder, HLS renditions).
+                _delete_storage_directory(old_copied_block_path)
+
+            new_block = Block(
+                block_type=original_block.block_type,
+                content=new_block_content,
+                org_id=org_id,
+                course_id=new_course_id,
+                chapter_id=new_chapter_id,
+                activity_id=new_activity.id,
+                block_uuid=new_block_uuid,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+
+            db_session.add(new_block)
+
+    # Point the activity content at the copied activity, blocks and files
+    if new_content:
+        new_activity.content = _replace_uuids_in_content(new_content, content_ref_map)
+        db_session.add(new_activity)
+
+    return new_activity
+
+
 async def clone_course(
     request: Request,
     course_uuid: str,
@@ -1301,8 +1480,6 @@ async def clone_course(
     from src.services.courses.transfer.storage_utils import (
         is_s3_enabled,
         file_exists,
-        list_directory,
-        rewrite_sqlite_db_paths,
     )
     from collections import defaultdict
     from src.db.courses.chapters import Chapter
@@ -1496,153 +1673,19 @@ async def clone_course(
         activity_results = _activities_by_chapter.get(original_chapter.id, [])
 
         for original_activity, chapter_activity in activity_results:
-            new_activity_uuid = f"activity_{uuid4()}"
-
-            # Clone activity content (will update file references for blocks)
-            new_content = dict(original_activity.content) if original_activity.content else {}
-            new_details = dict(original_activity.details) if original_activity.details else {}
-            # Code blocks keep their SQLite database's full storage key.
-            new_content = rewrite_sqlite_db_paths(
-                new_content,
-                original_activity.activity_uuid,
-                f"orgs/{org.org_uuid}/courses/{new_course_uuid}/activities/{new_activity_uuid}",
-            )
-
-            new_activity = Activity(
-                name=original_activity.name,
-                activity_type=original_activity.activity_type,
-                activity_sub_type=original_activity.activity_sub_type,
-                content=new_content,
-                details=new_details,
-                published=original_activity.published,
+            await clone_activity(
+                db_session,
+                original_activity,
+                _blocks_by_activity.get(original_activity.id, []),
+                org_uuid=org.org_uuid,
                 org_id=original_course.org_id,
-                course_id=new_course.id,
-                activity_uuid=new_activity_uuid,
-                creation_date=str(datetime.now()),
-                update_date=str(datetime.now()),
-                extra_metadata=original_activity.extra_metadata,
-            )
-
-            db_session.add(new_activity)
-            await db_session.flush()  # Get new_activity.id without committing
-
-            # Create ChapterActivity link
-            new_chapter_activity = ChapterActivity(
-                chapter_id=new_chapter.id,
-                activity_id=new_activity.id,
-                course_id=new_course.id,
-                org_id=original_course.org_id,
+                source_course_path=original_course_path,
+                new_course_uuid=new_course_uuid,
+                new_course_path=new_course_path,
+                new_course_id=new_course.id,
+                new_chapter_id=new_chapter.id,
                 order=chapter_activity.order,
-                creation_date=str(datetime.now()),
-                update_date=str(datetime.now()),
             )
-            db_session.add(new_chapter_activity)
-
-            # Copy all activity files recursively
-            original_activity_path = f"{original_course_path}/activities/{original_activity.activity_uuid}"
-            new_activity_path = f"{new_course_path}/activities/{new_activity_uuid}"
-
-            # Copy entire activity directory structure if it exists
-            # This handles all activity types: videos, documents, SCORM, assignments, etc.
-            _copy_storage_directory(original_activity_path, new_activity_path)
-
-            # Identifiers the activity's own content JSON may reference. The
-            # editor document embeds each media block's uuid, file id and owning
-            # activity uuid, and builds the media URL from them, so every one of
-            # them has to point at the copied file or the copy shows no images.
-            content_ref_map = {original_activity.activity_uuid: new_activity_uuid}
-
-            # Clone blocks for dynamic activities (use pre-fetched data)
-            if original_activity.activity_type.value == "TYPE_DYNAMIC":
-                original_blocks = _blocks_by_activity.get(original_activity.id, [])
-
-                for original_block in original_blocks:
-                    new_block_uuid = f"block_{uuid4()}"
-                    content_ref_map[original_block.block_uuid] = new_block_uuid
-
-                    # Clone block content and update file references
-                    new_block_content = dict(original_block.content) if original_block.content else {}
-
-                    # Update activity_uuid reference in block content
-                    if 'activity_uuid' in new_block_content:
-                        new_block_content['activity_uuid'] = new_activity_uuid
-
-                    # Determine block type folder and rename copied folder from old UUID to new UUID
-                    block_type_folder = ""
-                    if original_block.block_type.value == "BLOCK_VIDEO":
-                        block_type_folder = "videoBlock"
-                    elif original_block.block_type.value == "BLOCK_IMAGE":
-                        block_type_folder = "imageBlock"
-                    elif original_block.block_type.value == "BLOCK_DOCUMENT_PDF":
-                        block_type_folder = "pdfBlock"
-                    elif original_block.block_type.value == "BLOCK_AUDIO":
-                        block_type_folder = "audioBlock"
-
-                    if block_type_folder:
-                        # The copy already copied files with old UUIDs, we need to rename folders
-                        old_copied_block_path = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{original_block.block_uuid}"
-                        new_block_path_str = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{new_block_uuid}"
-
-                        # Transcoded HLS renditions live in a sub-folder that the
-                        # file loop below doesn't see; move them with the block.
-                        if block_type_folder == "videoBlock":
-                            _copy_storage_directory(
-                                f"{old_copied_block_path}/hls", f"{new_block_path_str}/hls"
-                            )
-
-                        # Move files from old block path to new block path (rename folder)
-                        block_files = list_directory(old_copied_block_path)
-                        original_file_id = new_block_content.get('file_id')
-                        file_id_matched = False
-                        if block_files:
-                            for filename in block_files:
-                                old_file_key = f"{old_copied_block_path}/{filename}"
-                                # Generate new file ID
-                                new_file_id = str(uuid4())
-                                file_stem, file_ext = (
-                                    filename.rsplit('.', 1) if '.' in filename else (filename, '')
-                                )
-                                new_filename = f"block_{new_file_id}.{file_ext}" if file_ext else f"block_{new_file_id}"
-                                new_file_key = f"{new_block_path_str}/{new_filename}"
-
-                                # Copy file to new location
-                                _copy_storage_file(old_file_key, new_file_key)
-                                # Delete old file
-                                _delete_storage_file(old_file_key)
-
-                                # Update file reference in block content. A
-                                # block folder can hold more than one file, so
-                                # only the file the block points at replaces it.
-                                if file_stem == original_file_id:
-                                    new_block_content['file_id'] = f"block_{new_file_id}"
-                                    file_id_matched = True
-                                elif 'file_id' in new_block_content and not file_id_matched:
-                                    new_block_content['file_id'] = f"block_{new_file_id}"
-                                if file_stem:
-                                    content_ref_map[file_stem] = f"block_{new_file_id}"
-
-                        # Nothing references the old block id in the copy; drop
-                        # what's left under it (emptied folder, HLS renditions).
-                        _delete_storage_directory(old_copied_block_path)
-
-                    new_block = Block(
-                        block_type=original_block.block_type,
-                        content=new_block_content,
-                        org_id=original_course.org_id,
-                        course_id=new_course.id,
-                        chapter_id=new_chapter.id,
-                        activity_id=new_activity.id,
-                        block_uuid=new_block_uuid,
-                        creation_date=str(datetime.now()),
-                        update_date=str(datetime.now()),
-                    )
-
-                    db_session.add(new_block)
-
-            # Point the activity content at the copied activity, blocks and files
-            if new_content:
-                new_activity.content = _replace_uuids_in_content(new_content, content_ref_map)
-                db_session.add(new_activity)
 
     # Single commit for all chapters, activities, blocks, and links
     await db_session.commit()

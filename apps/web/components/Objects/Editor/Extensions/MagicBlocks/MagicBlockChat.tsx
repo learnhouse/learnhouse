@@ -12,6 +12,9 @@ interface MagicBlockChatProps {
   onSendMessage: (_message: string) => void
   styleReferenceActive?: boolean
   onClearStyleReference?: () => void
+  // Generations used in this session and the session's cap (enforced by the API).
+  iterationCount?: number
+  maxIterations?: number
 }
 
 function MagicBlockChat({
@@ -20,6 +23,8 @@ function MagicBlockChat({
   onSendMessage,
   styleReferenceActive = false,
   onClearStyleReference,
+  iterationCount = 0,
+  maxIterations,
 }: MagicBlockChatProps) {
   const { t } = useTranslation()
   const [inputValue, setInputValue] = React.useState('')
@@ -35,7 +40,8 @@ function MagicBlockChat({
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
-  const canSendMessage = !isLoading && inputValue.trim()
+  const isExhausted = maxIterations !== undefined && iterationCount >= maxIterations
+  const canSendMessage = !isLoading && !isExhausted && inputValue.trim()
 
   // Auto-scroll to bottom when new messages arrive
   React.useEffect(() => {
@@ -56,7 +62,7 @@ function MagicBlockChat({
   }
 
   const handleSuggestionClick = (prompt: string) => {
-    if (!isLoading) {
+    if (!isLoading && !isExhausted) {
       onSendMessage(prompt)
     }
   }
@@ -81,6 +87,16 @@ function MagicBlockChat({
           />
           <span className="font-semibold text-sm text-white/70">{t('editor.blocks.magic_block_content.magic_chat')}</span>
         </div>
+        {maxIterations !== undefined && (
+          <div className={cn(
+            "text-xs font-semibold px-3 py-1 rounded-full",
+            isExhausted
+              ? "bg-red-500/20 text-red-300 outline outline-1 outline-red-500/30"
+              : "bg-white/5 text-white/40 outline outline-1 outline-neutral-100/10"
+          )}>
+            {t('editor.blocks.magic_block_content.iterations', { count: iterationCount, max: maxIterations })}
+          </div>
+        )}
       </div>
 
       {/* Messages area */}
@@ -169,6 +185,11 @@ function MagicBlockChat({
             </button>
           </div>
         )}
+        {isExhausted ? (
+          <div className="text-center text-sm text-white/50 py-2">
+            {t('editor.blocks.magic_block_content.max_iterations_reached')}
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="relative">
           <textarea
             ref={inputRef}
@@ -206,6 +227,7 @@ function MagicBlockChat({
             )}
           </button>
         </form>
+        )}
       </div>
     </div>
   )

@@ -196,13 +196,13 @@ async def start_magicblock_session(
 @router.post(
     "/magicblocks/iterate",
     summary="Iterate MagicBlock session (streaming)",
-    description="Continue an existing MagicBlock session with a new user message. Streams the updated HTML as Server-Sent Events (SSE). Consumes AI credits.",
+    description="Continue an existing MagicBlock session with a new user message. Streams the updated HTML as Server-Sent Events (SSE). Consumes AI credits and is bounded by the session's max iterations.",
     responses={
         200: {
             "description": "SSE stream of generation events (chunk, done, error).",
             "content": {"text/event-stream": {}},
         },
-        400: {"description": "Activity/block UUID mismatch"},
+        400: {"description": "Maximum iterations reached or activity/block UUID mismatch"},
         401: {"description": "Authentication required"},
         403: {"description": "AI feature disabled or insufficient credits"},
         404: {"description": "Session, course, or organization not found"},

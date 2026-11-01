@@ -38,7 +38,7 @@ import { useMediaQuery } from 'usehooks-ts';
 import EditAssignmentModal from '@components/Objects/Modals/Activities/Assignments/EditAssignmentModal';
 import { useTranslation } from 'react-i18next';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
-import { useRegisterAtlasPageContext } from '@components/Dashboard/Atlas/AtlasMiniContext';
+import { useRegisterAtlasPageContext } from '@ee/components/Atlas/AtlasMiniContext';
 const AssignmentSubmissionsSubPage = dynamic(() => import('./subpages/AssignmentSubmissionsSubPage'))
 const AssignmentAnalyticsSubPage = dynamic(() => import('./subpages/AssignmentAnalyticsSubPage'))
 

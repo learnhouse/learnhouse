@@ -1,0 +1,98 @@
+import { Callout } from 'nextra/components'
+
+# Connect AI Apps (MCP)
+
+LearnHouse works with AI apps that support the [Model Context Protocol](https://modelcontextprotocol.io), such as Claude, ChatGPT, Cursor, VS Code and Claude Code. Once connected, you can ask the app to list your courses, draft a course from an outline, rewrite a lesson, add a quiz, look up learners' progress, or find content by meaning.
+
+Connecting AI apps is available on every plan.
+
+## How it works
+
+- You sign in to LearnHouse from the app, pick the organization and choose what the app may do:
+  - **Read only**: it can look but never change anything.
+  - **Read and edit**: it can also create and change courses, pages, assignments and posts.
+  - **Read, edit and administer** (admins and maintainers only): it can also manage members, groups, roles and organization settings.
+- Talk to it the way you would to a colleague, in your own words: "add a short quiz to the end of my solar course", "rename the myths page", "which pages are still drafts?". The app finds what you mean by name, only among what you can see, and asks you when a name could mean more than one thing.
+- What the app builds starts as a draft that only staff can see, and building drafts needs no approvals. It gives you the editor link, so you review, edit and publish when you're ready. Ask it to publish and it will, after your approval.
+- The app acts as you, inside the organization you picked. It can never do more than your role allows, and tools for features your plan doesn't include stay hidden.
+- Changes that matter always wait for your approval: deleting, making a course live or public, publishing or unpublishing inside a live course, find and replace across a live course, changing who can see or do what (co-authors included), revoking certificates, inviting people, organization settings, finalizing grades, adding embedded code or HTML to a page, and fetching files from outside links. Deletions and admin changes are always approved through a LearnHouse link, where you approve or decline while signed in. For the rest, apps that support it may ask you directly instead. An app can't approve its own requests.
+- Page edits are versioned, so you can always restore an earlier version.
+- You can disconnect an app at any time from **Account > AI apps**. Admins see every connected app in **Developers > AI apps** and can disconnect any of them, or turn AI app connections off for the whole organization. Changing your password or two-factor settings, or leaving the organization, disconnects your apps.
+
+## Server URL
+
+Your server URL is shown in **Account > AI apps** (and in **Developers > AI apps** for admins). On LearnHouse Cloud it is:
+
+```
+https://api.learnhouse.io/mcp
+```
+
+On a self-hosted instance it is your API address followed by `/mcp`.
+
+## Connect an app
+
+### Claude
+
+1. Open **Settings > Connectors** and choose **Add custom connector**.
+2. Paste the server URL and click **Connect**.
+3. Sign in to LearnHouse and pick your organization.
+
+### ChatGPT
+
+1. Open **Settings > Apps and connectors** and add a custom connector (developer mode may need to be on).
+2. Paste the server URL.
+3. Sign in to LearnHouse when asked.
+
+### Cursor
+
+Add the server in **Settings > MCP**:
+
+```json
+{
+  "mcpServers": {
+    "learnhouse": { "url": "https://api.learnhouse.io/mcp" }
+  }
+}
+```
+
+### VS Code
+
+Run **MCP: Add Server**, choose **HTTP** and paste the server URL.
+
+### Claude Code
+
+```bash
+claude mcp add --transport http learnhouse https://api.learnhouse.io/mcp
+```
+
+Then run `/mcp` inside Claude Code and choose `learnhouse` to sign in.
+
+## What the app can do
+
+Tools are grouped by area, and the app only sees the ones your role and plan allow:
+
+| Area | Examples |
+|---|---|
+| Search | find anything by name, or passages by meaning inside lessons, documents and transcripts, then open any result by its id |
+| Courses | create a whole course with its chapters and pages in one step, add many pages to a chapter at once, add YouTube videos, video files and PDFs as activities, set a cover image from a link, copy a whole course, update, publish, move chapters and pages |
+| Content | read a page as Markdown or an outline, rewrite it in Markdown (quizzes, flipcards, coding exercises with tests, timers and extra files, branching scenarios, video embeds and buttons included, as fenced blocks; images, videos, audio and PDFs from links, link previews, H5P and custom HTML widgets after your approval), make precise edits, add callouts and media |
+| Teaching | assignments, submissions and grading; course rosters with progress, overdue work and certificates; per-learner reports (activities, grades, feedback, timeline, time spent); course and assignment statistics (completion per activity, grade spread, per-question correct rates, who hasn't handed in); dashboard analytics |
+| Advanced | audit a whole course for problems (empty or placeholder pages, quizzes with no right answer, missing media, pages with no practice), find and replace across every page of a course, copy chapters and pages between courses, completion certificates, co-authors |
+| Library, communities, playgrounds, boards | browse and manage, when your plan includes them |
+| People and settings | members, invitations, groups, roles and organization settings (admin access only) |
+
+The server also offers ready-made prompts (draft a course, improve a page, review a course, learner report) that apps show as shortcuts.
+
+<Callout type="info">
+Some apps limit how many tools they load (Cursor uses about 40). Add `?toolsets=essentials` to the server URL for course building and teaching only, or pick groups yourself with `?toolsets=courses,content` (any of `courses`, `content`, `teaching`, `advanced`, `library`, `communities`, `playgrounds`, `boards`, `people`, `org`). Search, context and reading tools are always included.
+</Callout>
+
+## Scripts and automations
+
+For scripts, an [API token](/developers/api/authentication) also works as a bearer token on the same URL (API tokens are available on the Pro plan and above). The token's own permissions apply. Changes that need approval give back a LearnHouse link that the member who created the token opens to approve; the AI app can't approve them by itself. Boards, playgrounds and personal progress need a member connection.
+
+On Enterprise plans, every change an AI app makes is recorded in the audit log.
+
+## Self-hosting
+
+The MCP server is on by default. See [environment variables](/self-hosting/configuration/environment-variables#mcp) to turn it off or set its public URL behind a proxy.

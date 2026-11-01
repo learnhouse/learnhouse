@@ -4,7 +4,7 @@ import { Metadata } from 'next'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AIEditorProvider from '@components/Contexts/AI/AIEditorContext'
 import EditorLoader from '@components/Objects/Editor/EditorLoader'
-import { AtlasMiniProvider } from '@components/Dashboard/Atlas/AtlasMiniContext'
+import { AtlasMiniProvider } from '@ee/components/Atlas/AtlasMiniContext'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseid: string; activityuuid: string }>

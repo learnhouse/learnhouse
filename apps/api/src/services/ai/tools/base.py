@@ -9,7 +9,7 @@ are consumed by two surfaces that share one enforcement pipeline
 - the embedded MCP server, where external agents act with an API token and
   everything is bounded by the token's rights.
 
-Tools call service functions in-process — never HTTP — so the services'
+Tools call service functions in-process, never over HTTP, so the services'
 own RBAC checks remain the authoritative layer (the registry pre-flight is
 defense in depth, not a replacement).
 """
@@ -30,6 +30,10 @@ from src.db.users import APITokenUser, PublicUser
 from src.security.rbac import AccessAction
 
 ToolMode = Literal["confirm", "autonomous", "execute"]
+ToolSurface = Literal["agent", "mcp"]
+# What a connection must be allowed to do to use a tool: read, change
+# content, or administer the organization (members, roles, settings).
+ToolAccess = Literal["read", "write", "admin"]
 
 
 class ActionTier(str, Enum):
@@ -79,6 +83,17 @@ class ToolContext:
     # Pending-action index key: the chat uuid for the in-app agent, or
     # "token:{token_uuid}" for the MCP surface.
     scope_key: str = ""
+    # "agent" is the in-app agent (spends AI credits, so the org AI switch
+    # applies); "mcp" is an external client bringing its own model.
+    surface: ToolSurface = "agent"
+    # A read-only grant (OAuth `mcp:read` only) may run READ tools alone.
+    read_only: bool = False
+    # The connection may run admin tools (OAuth `mcp:admin`). API tokens and
+    # the in-app agent are bounded by their own rights instead.
+    can_admin: bool = True
+    # A person approved this exact call (MCP approval flow). Tools marked
+    # `approval` refuse to run in `execute` mode without it.
+    approved: bool = False
 
     def with_mode(self, mode: ToolMode) -> "ToolContext":
         return replace(self, mode=mode)
@@ -102,7 +117,7 @@ class ToolSpec:
     # uuid's prefix is RBAC-registered) the pipeline pre-flights
     # check_resource_access on it.
     target_param: str | None = None
-    # "course" | "community" | ... — used for events, summaries, challenges.
+    # "course" | "community" | ...: used for events, summaries, challenges.
     target_kind: str | None = None
     # Human summary for pending previews; defaults to the description.
     summarize: Callable[[BaseModel], str] | None = None
@@ -115,6 +130,81 @@ class ToolSpec:
     preflight: (
         Callable[[ToolContext, BaseModel], Awaitable[str | None]] | None
     ) = None
+    # Plan feature the tool belongs to ("communities", "boards", ...). When the
+    # org's plan or admin toggle has it off, the tool is hidden and denied,
+    # the same as the feature's HTTP routes.
+    feature: str | None = None
+    # Short human name for clients that show one (MCP `title`).
+    title: str | None = None
+    # Reaches outside LearnHouse (fetches a URL the caller gave).
+    open_world: bool = False
+    # Group name MCP clients can filter on (?toolsets=courses,content).
+    toolset: str | None = None
+    # Connection access the tool needs; None derives it from the tier
+    # (READ -> "read", anything else -> "write").
+    access: ToolAccess | None = None
+    # Needs a person's yes before it runs on MCP: deletions, changes to who
+    # can do or see what, publishing, sending email, fetching outside URLs.
+    # None derives it from the tier (DESTRUCTIVE only). `approval_if` makes it
+    # depend on the arguments (an update that publishes, not one that renames).
+    approval: bool | None = None
+    approval_if: Callable[[BaseModel], bool] | None = None
+    # The tool itself may decide mid-call (require_approval) that this call
+    # needs approval, from state the arguments do not show.
+    approval_in_call: bool = False
+    # Calling twice with the same arguments leaves the same state.
+    idempotent: bool = False
+    # False where the matching HTTP route refuses API tokens.
+    api_tokens: bool = True
+    # Access checked on `target_param` when it differs from `access_action`
+    # (posting in a community needs to read it, not to edit it).
+    target_access: AccessAction | None = None
+
+    @property
+    def required_access(self) -> ToolAccess:
+        if self.access:
+            return self.access
+        return "read" if self.tier is ActionTier.READ else "write"
+
+    @property
+    def may_need_approval(self) -> bool:
+        """Whether some call of this tool needs approval (for listings)."""
+        return self.approval_in_call or self.approval_if is not None or self.approval_for(None)
+
+    def approval_for(self, params: BaseModel | None) -> bool:
+        """Whether this call needs a person's approval."""
+        if self.approval is not None:
+            base = self.approval
+        else:
+            base = self.tier is ActionTier.DESTRUCTIVE
+        if base or self.approval_if is None or params is None:
+            return base
+        try:
+            return bool(self.approval_if(params))
+        except Exception:
+            return True  # fail closed
+
+
+class ApprovalNeeded(Exception):
+    """Raised by a tool, before it changes anything, when this particular call
+    needs a person's approval and the arguments alone could not tell (a
+    moderator rewriting someone else's post, not their own)."""
+
+
+class ToolDenied(Exception):
+    """Raised by a tool to refuse with an exact denial code, such as one
+    passed on from a tool it ran on the caller's behalf."""
+
+    def __init__(self, code: str, reason: str):
+        super().__init__(reason)
+        self.code = code
+        self.reason = reason
+
+
+def require_approval(ctx: "ToolContext", reason: str) -> None:
+    """Stop here unless a person approved this call."""
+    if not ctx.approved:
+        raise ApprovalNeeded(reason)
 
 
 @dataclass(frozen=True)

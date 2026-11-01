@@ -10,10 +10,9 @@ import {
   MoreVertical,
   Pencil,
   Save,
-  SquarePlus,
   Trash2,
 } from 'lucide-react'
-import { useAtlasMini } from '@components/Dashboard/Atlas/AtlasMiniContext'
+import AtlasAttachButton from '@ee/components/Atlas/AtlasAttachButton'
 import React from 'react'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import ActivityElement from './ActivityElement'
@@ -68,20 +67,6 @@ function ChapterElement(props: ChapterElementProps) {
   const _withUnpublishedActivities = course ? course.withUnpublishedActivities : false
   const queryClient = useQueryClient()
   const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
-  const { open: atlasOpen, attachReference: atlasAttachReference } = useAtlasMini()
-
-  function copyChapterTitleToAtlas() {
-    if (!props.chapter?.chapter_uuid || !props.chapter?.name) return
-    atlasAttachReference({
-      type: 'chapter',
-      uuid: props.chapter.chapter_uuid,
-      name: props.chapter.name,
-      parent_course_uuid: props.course_uuid,
-      parent_chapter_id: props.chapter.id,
-      parent_chapter_name: props.chapter.name,
-    })
-    toast.success(t('dashboard.courses.structure.activity.toasts.added_to_atlas', { defaultValue: 'Added to Atlas chat' }))
-  }
 
   const router = useRouter()
 
@@ -303,17 +288,16 @@ function ChapterElement(props: ChapterElementProps) {
                     <Pencil size={15} />
                   </button>
                 </ToolTip>
-                {atlasOpen && (
-                  <button
-                    type="button"
-                    onClick={copyChapterTitleToAtlas}
-                    title={t('dashboard.courses.structure.actions.send_to_atlas', { defaultValue: 'Send title to Atlas' })}
-                    aria-label={t('dashboard.courses.structure.actions.send_to_atlas', { defaultValue: 'Send title to Atlas' })}
-                    className="h-6 w-6 inline-flex items-center justify-center rounded-md text-violet-500 hover:text-violet-700 hover:bg-violet-50 transition-colors"
-                  >
-                    <SquarePlus size={14} />
-                  </button>
-                )}
+                <AtlasAttachButton
+                  reference={{
+                    type: 'chapter',
+                    uuid: props.chapter.chapter_uuid,
+                    name: props.chapter.name,
+                    parent_course_uuid: props.course_uuid,
+                    parent_chapter_id: props.chapter.id,
+                    parent_chapter_name: props.chapter.name,
+                  }}
+                />
               </div>
             </div>
             <div className="flex items-center space-x-2">

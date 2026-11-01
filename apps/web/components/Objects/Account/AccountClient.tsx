@@ -14,6 +14,7 @@ import AccountGeneral from '@components/Objects/Account/subpages/AccountGeneral'
 import AccountProfile from '@components/Objects/Account/subpages/AccountProfile'
 import AccountSecurity from '@components/Objects/Account/subpages/AccountSecurity'
 import AccountPurchases from '@components/Objects/Account/subpages/AccountPurchases'
+import OrgEditMCP from '@components/Dashboard/Pages/Org/OrgEditMCP/OrgEditMCP'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface AccountClientProps {
@@ -28,6 +29,7 @@ const getSubpageTitle = (subpage: string, t: (_key: string) => string): string =
     'profile': t('account.profile'),
     'security': t('account.security'),
     'purchases': t('account.purchases'),
+    'ai-apps': t('account.ai_apps'),
   }
   return titles[subpage] || t('account.title')
 }
@@ -59,6 +61,8 @@ const AccountClient = ({ orgslug, org_id, subpage }: AccountClientProps) => {
         return <AccountSecurity />
       case 'purchases':
         return <AccountPurchases orgId={org_id} orgslug={orgslug} />
+      case 'ai-apps':
+        return <OrgEditMCP scope="mine" />
       default:
         return <AccountGeneral />
     }

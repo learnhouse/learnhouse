@@ -376,14 +376,14 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsPreviewModalOpen(true)}
-                    className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
+                    className="flex gap-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
                   >
                     <ArrowsOut weight="duotone" className="w-4 h-4" />
                     <span>{t('editor.blocks.common.expand')}</span>
                   </button>
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
+                    className="flex gap-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
                   >
                     <PencilSimple weight="duotone" className="w-4 h-4" />
                     <span>{t('editor.blocks.magic_block_content.edit')}</span>

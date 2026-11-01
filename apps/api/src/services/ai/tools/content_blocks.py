@@ -1,217 +1,341 @@
-"""Activity content authoring — block catalog + discovery tool.
+"""The block palette of a page: what each block is, how to add it, and its
+exact editor shape.
 
-Activity content is a TipTap editor document: ``{"type": "doc", "content":
-[ ...block nodes... ]}``. Beyond standard prose nodes, LearnHouse ships
-custom blocks (quiz, callout, flipcard, math, …). The agent has no way to
-guess their JSON shape, so `describe_activity_blocks` returns the catalog
-with a copy-pasteable example for each — call it before writing content.
-
-The schemas here mirror the editor node definitions in
-apps/web/components/Objects/Editor/Extensions/*. Asset blocks (image /
-video / audio / pdf) are intentionally excluded: their `blockObject`
-references an uploaded file and needs a dedicated upload tool.
+Shapes here are what edit_activity_content accepts (and its validator
+checks, see doc_ops.SCHEMA); every example is a valid node. Without a type
+the tool returns a short catalog; with one, the full shape and an example.
 """
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+from typing import Any
+
+from fastapi import HTTPException
+from pydantic import BaseModel, Field
 
 from src.security.rbac import AccessAction
+from src.services.ai.tools import doc_ops as d
 from src.services.ai.tools.base import ActionTier, ToolContext, ToolSpec
+from src.services.ai.tools.fences import LANGUAGES
 
-DOC_ENVELOPE = {
-    "note": (
-        "Activity content is a single TipTap document. Wrap all blocks in "
-        '{"type": "doc", "content": [ ...blocks... ]}. Compose freely: mix '
-        "prose (heading/paragraph/lists) with the custom blocks below."
-    ),
-    "example_doc": {
-        "type": "doc",
-        "content": [
-            {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Section title"}]},
-            {"type": "paragraph", "content": [{"type": "text", "text": "A paragraph of explanation."}]},
-        ],
+
+def _p(text: str) -> dict:
+    return {"type": "paragraph", "content": [{"type": "text", "text": text}]}
+
+
+def _li(text: str) -> dict:
+    return {"type": "listItem", "content": [_p(text)]}
+
+
+# type -> purpose, how to add it, attrs (name -> meaning), example node
+CATALOG: dict[str, dict[str, Any]] = {
+    "paragraph": {
+        "use": "Body text.",
+        "add": "Markdown: plain lines.",
+        "example": {"type": "paragraph", "content": [
+            {"type": "text", "text": "Objects live in "},
+            {"type": "text", "text": "buckets", "marks": [{"type": "bold"}]},
+            {"type": "text", "text": "."},
+        ]},
+        "notes": "Inline content is text (marks: bold, italic, strike, underline, code, link {href}) and hardBreak. Code text takes no other mark.",
+    },
+    "heading": {
+        "use": "Section title.",
+        "add": "Markdown: ## Title",
+        "attrs": {"level": "1 to 6"},
+        "example": {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Storage classes"}]},
+    },
+    "bulletList": {
+        "use": "Bulleted list (orderedList: numbered, attrs.start).",
+        "add": "Markdown: - item / 1. item, nested by indentation.",
+        "attrs": {"start": "orderedList only: first number"},
+        "example": {"type": "bulletList", "content": [_li("First point"), _li("Second point")]},
+        "notes": "Holds listItem nodes; a listItem holds a paragraph first, then any blocks (nested lists). Item paths are [list, item].",
+    },
+    "blockquote": {
+        "use": "Quoted passage.",
+        "add": "Markdown: > text",
+        "example": {"type": "blockquote", "content": [_p("Simplicity is prerequisite for reliability.")]},
+    },
+    "codeBlock": {
+        "use": "Code listing (not runnable; see blockCode).",
+        "add": "Markdown: ```python fences",
+        "attrs": {"language": "e.g. python, js, sql"},
+        "example": {"type": "codeBlock", "attrs": {"language": "python"}, "content": [{"type": "text", "text": "print('hi')"}]},
+        "notes": "Plain text only, no marks.",
+    },
+    "horizontalRule": {"use": "Divider.", "add": "Markdown: ---", "example": {"type": "horizontalRule"}},
+    "table": {
+        "use": "Table.",
+        "add": "Markdown: | a | b | rows with a |---|---| separator.",
+        "example": {"type": "table", "content": [
+            {"type": "tableRow", "content": [
+                {"type": "tableHeader", "content": [_p("Class")]},
+                {"type": "tableHeader", "content": [_p("Use")]},
+            ]},
+            {"type": "tableRow", "content": [
+                {"type": "tableCell", "content": [_p("Standard")]},
+                {"type": "tableCell", "content": [_p("Hot data")]},
+            ]},
+        ]},
+        "notes": "Cell paths are [table, row, cell]; a cell holds blocks.",
+    },
+    "callout": {
+        "use": "Highlighted note box.",
+        "add": "insert {callout: {type, markdown}} or Markdown: > [!TIP] text (NOTE, TIP, WARNING, CAUTION, SUCCESS).",
+        "attrs": {"type": "info | tip | warning | success | error", "dismissible": "true lets learners hide it"},
+        "example": {"type": "callout", "attrs": {"type": "tip", "dismissible": False}, "content": [_p("Turn on versioning before you need it.")]},
+        "notes": "Holds paragraphs and lists only (never bare text). Change the style with set_attrs {type}.",
+    },
+    "blockMathEquation": {
+        "use": "Display math (LaTeX, rendered with KaTeX).",
+        "add": "Markdown: $$ ... $$ on their own lines.",
+        "attrs": {"math_equation": "LaTeX source"},
+        "example": {"type": "blockMathEquation", "attrs": {"math_equation": "E = mc^2"}},
+        "notes": "There is no inline math; $...$ inside a sentence stays text.",
+    },
+    "blockQuiz": {
+        "use": "Multiple-choice check for understanding (ungraded).",
+        "add": (
+            "Markdown: ```quiz fence (several questions, blank line between), or insert "
+            "{quiz: {questions: [{text, options: [{text, correct}]}]}}; ids are generated."
+        ),
+        "attrs": {
+            "quizId": "string id or null",
+            "questions": "[{question_id, question, type: multiple_choice, response_type: single|multiple, answers: [{answer_id, answer, correct}]}]",
+        },
+        "example": {"type": "blockQuiz", "attrs": {"quizId": "quiz_example", "questions": [{
+            "question_id": "question_1", "question": "Where does S3 store objects?",
+            "type": "multiple_choice", "response_type": "single",
+            "answers": [
+                {"answer_id": "answer_1", "answer": "In buckets", "correct": True},
+                {"answer_id": "answer_2", "answer": "On EC2 disks", "correct": False},
+            ],
+        }]}},
+        "notes": "2 to 12 answers, at least one correct; two or more correct make it select-all. set_attrs {questions} also accepts the simple shape and keeps existing ids.",
+    },
+    "flipcard": {
+        "use": "Click-to-reveal card for recall.",
+        "add": "Markdown fence: ```flipcards with one card per line as Front :: Back (optional columns: 3, color: green), or insert {node}.",
+        "attrs": {"question": "front", "answer": "back", "color": "blue, green, red, ...", "alignment": "left | center | right", "size": "small | medium | large"},
+        "example": {"type": "flipcard", "attrs": {"question": "What is a bucket?", "answer": "A container for objects.", "color": "blue", "alignment": "center", "size": "medium"}},
+        "notes": "Wrap several in a flipcardGrid {attrs: {columns: 2}, content: [flipcards]} to show them side by side.",
+    },
+    "flipcardGrid": {
+        "use": "Flipcards side by side.",
+        "add": "A ```flipcards fence with several cards makes one, or insert {node}.",
+        "attrs": {"columns": "1 to 6"},
+        "example": {"type": "flipcardGrid", "attrs": {"columns": 2}, "content": [
+            {"type": "flipcard", "attrs": {"question": "Hot data?", "answer": "S3 Standard"}},
+            {"type": "flipcard", "attrs": {"question": "Archive?", "answer": "Glacier"}},
+        ]},
+    },
+    "badge": {
+        "use": "Small labelled pill.",
+        "add": "Markdown fence: ```badge with the text on one line (optional color: green, emoji: ⭐), or insert {node}.",
+        "attrs": {"color": "sky, green, red, amber, ...", "emoji": "one emoji"},
+        "example": {"type": "badge", "attrs": {"color": "sky", "emoji": "⭐"}, "content": [{"type": "text", "text": "Key concept"}]},
+    },
+    "button": {
+        "use": "Call-to-action link button.",
+        "add": "Markdown fence: ```button with [Label](https://...) on one line (optional color: green, align: center), or insert {node}.",
+        "attrs": {"link": "http(s) URL", "emoji": "one emoji", "color": "blue, ...", "alignment": "left | center | right"},
+        "example": {"type": "button", "attrs": {"emoji": "🔗", "link": "https://docs.aws.amazon.com/s3/", "color": "blue", "alignment": "left"}, "content": [{"type": "text", "text": "Open the docs"}]},
+    },
+    "blockEmbed": {
+        "use": "Embedded YouTube, Vimeo, Loom, Figma, CodePen, Google Maps, ...",
+        "add": "Markdown fence: ```embed with the video or page URL on one line (optional height: 400), or insert {node}.",
+        "attrs": {"embedUrl": "embeddable http(s) URL", "embedType": "url (embedUrl) or code (embedCode)", "embedHeight": "pixels", "embedWidth": "e.g. 100%", "alignment": "left | center | right", "embedCode": "raw iframe code instead of embedUrl"},
+        "example": {"type": "blockEmbed", "attrs": {"embedUrl": "https://www.youtube.com/embed/aqz-KE-bpKQ", "embedType": "url", "embedHeight": 400, "embedWidth": "100%", "alignment": "center"}},
+        "notes": "The fence turns shared YouTube, Vimeo and Loom links into embed URLs; raw nodes need the provider's embed URL (YouTube: /embed/<id>).",
+    },
+    "blockWebPreview": {
+        "use": "Link card for a web page.",
+        "add": "Markdown: ```preview fence, or insert {node}.",
+        "attrs": {"url": "http(s) URL", "title": "optional", "description": "optional", "showButton": "true/false", "buttonLabel": "button text"},
+        "example": {"type": "blockWebPreview", "attrs": {"url": "https://aws.amazon.com/s3/", "title": "Amazon S3"}},
+    },
+    "scenarios": {
+        "use": "Branching decision scenario.",
+        "add": "Markdown: ```scenario fence, or insert {node}.",
+        "attrs": {"title": "name", "scenarios": "[{id, text, imageUrl, options: [{id, text, nextScenarioId or null}]}]"},
+        "example": {"type": "scenarios", "attrs": {"title": "Pick a storage class", "scenarios": [
+            {"id": "1", "text": "Data is read every minute. Which class?", "imageUrl": "", "options": [
+                {"id": "o1", "text": "Standard", "nextScenarioId": "2"},
+                {"id": "o2", "text": "Glacier", "nextScenarioId": "1"},
+            ]},
+            {"id": "2", "text": "Right: hot data belongs in Standard.", "imageUrl": "", "options": [
+                {"id": "o3", "text": "Finish", "nextScenarioId": None},
+            ]},
+        ]}},
+        "notes": "Every nextScenarioId names an existing step id or is null (end).",
+    },
+    "blockCode": {
+        "use": "Runnable coding exercise (learners write and run code).",
+        "add": "Markdown: ```exercise fence, or insert {node}.",
+        "attrs": {"languageId": "Judge0 id: 71 Python 3, 63 JavaScript, 62 Java, 54 C++, 50 C, 60 Go, 73 Rust", "languageName": "matches languageId", "starterCode": "code shown first", "description": "the task", "testCases": "[] or [{id, label, stdin, expectedStdout}]", "hints": "list of strings", "solutionCode": "optional", "difficulty": "easy | medium | hard"},
+        "example": {"type": "blockCode", "attrs": {"languageId": 71, "languageName": "Python 3", "starterCode": "print('hello')\n", "description": "Print hello.", "difficulty": "easy", "testCases": []}},
+        "notes": "Use insert {node} only for a SQLite database (sqliteDbPath), which the fence lacks.",
+    },
+    "blockMagic": {
+        "use": "Self-contained interactive HTML widget (sandboxed).",
+        "add": "Markdown: ```widget fence, or insert {node}.",
+        "attrs": {"blockUuid": "unique string", "title": "name", "height": "pixels", "htmlContent": "full HTML document, inline CSS/JS"},
+        "example": {"type": "blockMagic", "attrs": {"blockUuid": "mb_example", "title": "Cost calculator", "height": 400, "htmlContent": "<!DOCTYPE html><html><body><p>Widget</p></body></html>"}},
+    },
+    "blockH5P": {
+        "use": "Embedded H5P activity.",
+        "add": "Markdown: ```h5p fence, or insert {node}.",
+        "attrs": {"h5pUrl": "http(s) URL of the H5P embed", "title": "name", "height": "pixels"},
+        "example": {"type": "blockH5P", "attrs": {"h5pUrl": "https://h5p.org/h5p/embed/712", "title": "Drag the words"}},
+    },
+    "media": {
+        "use": "Image, video, audio or PDF (blockImage, blockVideo, blockAudio, blockPDF).",
+        "add": "Markdown: ![alt](url) line or ```image/pdf/audio/video fence (approval), or add_media_block.",
+        "notes": (
+            "The file is fetched from its public URL and stored; until then it shows as a link, and a "
+            "file that fails stays a link. Raw nodes cannot point at files. set_attrs can change an "
+            "image's alignment or size {width} later."
+        ),
     },
 }
 
+# The fence syntax, shown once in the catalog so a model can write rich
+# blocks straight into a page's Markdown (parsed in fences.py).
+FENCES = {
+    "quiz": "```quiz\nQ: Where does photosynthesis happen?\n- [x] In the chloroplasts\n- [ ] In the nucleus\n> Chloroplasts hold the chlorophyll.\n\nQ: Next question...\n- [x] ...\n- [ ] ...\n```",
+    "flipcards": "```flipcards\ncolumns: 3\nStomata :: Pores that let gases in and out\nXylem :: Tubes that carry water up\n```",
+    "embed": "```embed\nhttps://www.youtube.com/watch?v=aqz-KE-bpKQ\nheight: 400\n```",
+    "button": "```button\n[Open the lab sheet](https://example.org/lab.pdf)\ncolor: green\n```",
+    "badge": "```badge\nKey idea\nemoji: ⭐\n```",
+    "exercise": (
+        "```exercise\nlanguage: python\nPrint the sum of two input numbers.\n--- starter\na = int(input())\n"
+        "--- solution\nprint(int(input()) + int(input()))\n--- test Small\ninput:\n2\n3\noutput:\n5\n"
+        "--- hint\nUse int().\n```"
+    ),
+    "scenario": (
+        "```scenario\ntitle: Storage\n# start\nData is read every minute. Which class?\n"
+        "- Standard -> right\n- Glacier -> start\n# right\nRight: hot data belongs in Standard.\n- Finish\n```"
+    ),
+    "preview": "```preview\nhttps://aws.amazon.com/s3/\ntitle: Amazon S3\nbutton: Visit S3\n```",
+    "h5p": "```h5p\nhttps://h5p.org/h5p/embed/712\ntitle: Drag the words\n```",
+    "widget": "```widget\ntitle: Calculator\nheight: 500\n<!DOCTYPE html><html>...</html>\n```",
+    "media": "![Leaf](https://example.org/leaf.jpg)",
+}
 
-# Every value is a real, renderable node example.
-BLOCK_CATALOG: list[dict] = [
-    {
-        "node": "heading",
-        "purpose": "Section heading. attrs.level is 1-4.",
-        "example": {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Storage Classes"}]},
-    },
-    {
-        "node": "paragraph",
-        "purpose": "A paragraph of body text.",
-        "example": {"type": "paragraph", "content": [{"type": "text", "text": "Amazon S3 stores data as objects in buckets."}]},
-    },
-    {
-        "node": "bulletList",
-        "purpose": "Unordered list. Each listItem wraps a paragraph.",
-        "example": {
-            "type": "bulletList",
-            "content": [
-                {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "First point"}]}]},
-                {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Second point"}]}]},
-            ],
-        },
-    },
-    {
-        "node": "orderedList",
-        "purpose": "Numbered list. Same structure as bulletList.",
-        "example": {
-            "type": "orderedList",
-            "content": [
-                {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Step one"}]}]},
-                {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Step two"}]}]},
-            ],
-        },
-    },
-    {
-        "node": "callout",
-        "purpose": "Highlighted note box. attrs.type is one of info | warning | tip | success | error. Holds inline text.",
-        "example": {"type": "callout", "attrs": {"type": "tip", "dismissible": False}, "content": [{"type": "text", "text": "Keep Block Public Access on unless you truly need public objects."}]},
-    },
-    {
-        "node": "flipcard",
-        "purpose": "A click-to-reveal flashcard. Good for definitions and quick recall.",
-        "example": {"type": "flipcard", "attrs": {"question": "What is an S3 bucket?", "answer": "A globally-unique container for objects in a Region.", "color": "blue", "alignment": "center", "size": "medium"}},
-    },
-    {
-        "node": "blockMathEquation",
-        "purpose": "A KaTeX/LaTeX equation (attrs.math_equation is the LaTeX source).",
-        "example": {"type": "blockMathEquation", "attrs": {"math_equation": "\\text{durability} = 99.999999999\\%"}},
-    },
-    {
-        "node": "blockQuiz",
-        "purpose": (
-            "An interactive multiple-choice quiz. attrs.questions is a list of "
-            "questions; each question has answers with a `correct` flag. "
-            "question_id and answer_id must be unique non-empty strings within "
-            "the document (use short slugs or uuids). Set quizId to null."
-        ),
-        "example": {
-            "type": "blockQuiz",
-            "attrs": {
-                "quizId": None,
-                "questions": [
-                    {
-                        "question_id": "q1",
-                        "question": "Which statement about Amazon S3 is true?",
-                        "type": "multiple_choice",
-                        "answers": [
-                            {"answer_id": "q1a1", "answer": "S3 stores data as objects in buckets", "correct": True},
-                            {"answer_id": "q1a2", "answer": "S3 is a block storage service for EC2 disks", "correct": False},
-                            {"answer_id": "q1a3", "answer": "S3 requires you to provision capacity in advance", "correct": False},
-                        ],
-                    }
-                ],
-            },
-        },
-        "notes": "Multiple answers may have correct=true (multi-select). Keep 2-5 answers per question.",
-    },
-    {
-        "node": "badge",
-        "purpose": "A small inline pill/label with an emoji. Holds short text.",
-        "example": {"type": "badge", "attrs": {"color": "sky", "emoji": "⭐"}, "content": [{"type": "text", "text": "Key concept"}]},
-        "notes": "color is a tailwind-ish name (sky, green, red, amber, blue, purple, …).",
-    },
-    {
-        "node": "button",
-        "purpose": "A call-to-action link button with an emoji. Holds the label text.",
-        "example": {"type": "button", "attrs": {"emoji": "🔗", "link": "https://aws.amazon.com/s3/", "color": "blue", "alignment": "left"}, "content": [{"type": "text", "text": "Open the S3 docs"}]},
-    },
-    {
-        "node": "blockEmbed",
-        "purpose": "Embed external content (YouTube, Figma, Loom, CodePen, GitHub gist, Giphy, Google Maps, Canva). Provide embedUrl (an embeddable URL) or raw embedCode (an iframe).",
-        "example": {"type": "blockEmbed", "attrs": {"embedUrl": "https://www.youtube.com/embed/tp4gGvGl-mc", "embedType": "youtube", "embedCode": None, "embedHeight": 400, "embedWidth": "100%", "alignment": "center"}},
-        "notes": "embedType is a hint like youtube|figma|loom|codepen|github|giphy|maps|canva. Use an /embed URL for YouTube.",
-    },
-    {
-        "node": "blockWebPreview",
-        "purpose": "A rich link-preview card for a web page.",
-        "example": {"type": "blockWebPreview", "attrs": {"url": "https://aws.amazon.com/s3/", "title": "Amazon S3", "description": "Object storage built to store and retrieve any amount of data.", "og_image": None, "favicon": None, "og_type": None, "og_url": None, "alignment": "left", "showButton": True, "buttonLabel": "Visit Site", "openInPopup": False}},
-        "notes": "Only url is required; title/description/og_image are optional and can be refreshed later.",
-    },
-    {
-        "node": "blockUser",
-        "purpose": "Embed an organization member's profile card.",
-        "example": {"type": "blockUser", "attrs": {"user_id": "2"}},
-        "notes": "user_id is the member's numeric id — resolve it first with list_org_users / resolve_entity(kind='user').",
-    },
-    {
-        "node": "scenarios",
-        "purpose": "A branching interactive scenario: nodes with options that link to other nodes. Great for decision-tree practice.",
-        "example": {"type": "scenarios", "attrs": {"title": "Choose an S3 storage class", "scenarios": [
-            {"id": "1", "text": "Your data is read constantly with low latency. Which class?", "imageUrl": "", "options": [
-                {"id": "opt1", "text": "S3 Standard", "nextScenarioId": "2"},
-                {"id": "opt2", "text": "Glacier Deep Archive", "nextScenarioId": "3"}]},
-            {"id": "2", "text": "Correct — Standard fits hot, frequent access.", "imageUrl": "", "options": [
-                {"id": "opt3", "text": "Finish", "nextScenarioId": None}]},
-            {"id": "3", "text": "Not quite — Glacier is for cold archives with slow retrieval. Try again.", "imageUrl": "", "options": [
-                {"id": "opt4", "text": "Back to start", "nextScenarioId": "1"}]}]}},
-        "notes": "Every option.nextScenarioId must reference an existing scenario id, or be null to end. Node ids and option ids must be unique.",
-    },
-    {
-        "node": "blockCode",
-        "purpose": "An executable code-playground exercise (runs via Judge0). Learners write and run code against optional test cases.",
-        "example": {"type": "blockCode", "attrs": {"mode": "simple", "languageId": 71, "languageName": "Python 3", "starterCode": "# Print the S3 bucket name\nprint('my-bucket')\n", "description": "Print your bucket name.", "difficulty": "easy", "testCases": [], "hints": [], "solutionCode": "", "maxAttemptsBeforeReveal": 3}},
-        "notes": "languageId is a Judge0 id and MUST match languageName. Common ids: 71=Python 3, 63=JavaScript (Node), 62=Java, 54=C++, 50=C, 72=Ruby, 73=Rust, 60=Go. Leave testCases empty for a free-form playground.",
-    },
-    {
-        "node": "blockMagic",
-        "purpose": "A self-contained interactive HTML widget (rendered in a sandboxed iframe). Use for custom simulations/visualizations.",
-        "example": {"type": "blockMagic", "attrs": {"blockUuid": "mb_example_1", "sessionUuid": None, "title": "S3 request calculator", "height": 400, "htmlContent": "<!DOCTYPE html><html><body><p>Interactive widget HTML goes here.</p></body></html>"}},
-        "notes": "Normally produced by the Magic Blocks generator, but you may author a self-contained HTML document directly. blockUuid must be a unique string; keep htmlContent fully self-contained (inline CSS/JS, CDN libraries only).",
-    },
-]
+# How each fence reads, beyond its example.
+FENCE_RULES = {
+    "exercise": (
+        "Settings first (language: one of " + ", ".join(a[0] for _i, _n, a in LANGUAGES)
+        + "; difficulty: easy|medium|hard; attempts: tries before the solution shows; timed: 10m; "
+        "time limit: 5s per run; time complexity: / space complexity: expected), then the task, then "
+        "--- starter, --- solution, --- test <label> (input: and output: lines, each followed by its "
+        "text), --- hint and --- file <name> (extra files) sections. Indentation in code is kept."
+    ),
+    "scenario": (
+        "Each step starts with '# <step name>', then its text, an optional image: <url>, then "
+        "options as '- text -> <step name>'. An option without -> (or -> end) ends the scenario."
+    ),
+    "media": (
+        "An image alone on its line, or ```image / ```video (a .mp4/.webm file; other links embed) / "
+        "```audio / ```pdf with the URL, then caption:, width: and align: (image), height: (pdf). "
+        "Top level only, at most 20 per call; fetching needs the user's approval."
+    ),
+    "preview, h5p, widget": (
+        "They show outside content or run custom HTML, so adding one needs the user's approval. "
+        "A widget is one full HTML document with inline CSS and JS, after title: and height:."
+    ),
+}
 
-ASSET_BLOCKS_NOTE = (
-    "Image, video, audio and PDF blocks reference an uploaded file and cannot "
-    "be authored as plain JSON. Add them from a public URL with the dedicated "
-    "tools: add_image_block, add_video_block, add_pdf_block, add_audio_block "
-    "(each takes the activity_uuid and the asset URL, uploads it, and appends "
-    "the block to the activity)."
-)
+# Block type -> the fence that writes it.
+_FENCE_OF = {
+    "blockQuiz": "quiz", "flipcard": "flipcards", "flipcardGrid": "flipcards", "blockEmbed": "embed",
+    "button": "button", "badge": "badge", "blockCode": "exercise", "scenarios": "scenario",
+    "blockWebPreview": "preview", "blockH5P": "h5p", "blockMagic": "widget", "media": "media",
+}
+
+_ALIASES = {
+    "orderedList": "bulletList", "listItem": "bulletList", "tableRow": "table", "tableCell": "table",
+    "tableHeader": "table", "blockImage": "media", "blockVideo": "media", "blockAudio": "media",
+    "blockPDF": "media", "image": "media", "video": "media", "audio": "media", "pdf": "media",
+    "quiz": "blockQuiz", "math": "blockMathEquation", "embed": "blockEmbed", "code": "codeBlock",
+    "youtube": "blockEmbed", "vimeo": "blockEmbed", "iframe": "blockEmbed", "flashcard": "flipcard",
+    "linkPreview": "blockWebPreview", "exercise": "blockCode", "codeExercise": "blockCode",
+    "note": "callout", "alert": "callout", "equation": "blockMathEquation", "list": "bulletList",
+}
+
+def _key(name: str) -> str:
+    """Spelling-insensitive key: blockFlipcard, flip_card and Flipcards all
+    name the same block."""
+    key = "".join(c for c in name.lower() if c.isalnum())
+    key = key.removeprefix("block") or key
+    return key.removesuffix("s") if key.endswith("s") and key[:-1] else key
+
+
+# Exact names first, then aliases (blockCode, the runnable exercise, and
+# codeBlock, the listing, share a key; the alias "code" means the listing).
+_LOOKUP = {
+    **{_key(name): name for name in CATALOG},
+    **{_key(alias): target for alias, target in _ALIASES.items()},
+}
+
+_READ_ONLY ="blockUser (member card), blockLibrary (library item), youtube and calloutInfo / calloutWarning (older blocks) can be read, moved and deleted, not created."
 
 
 class DescribeBlocksParams(BaseModel):
-    pass
+    type: str | None = Field(
+        None, max_length=40, description="A block type (e.g. blockQuiz, callout) for its exact shape and an example."
+    )
 
 
 async def _describe_activity_blocks(ctx: ToolContext, p: DescribeBlocksParams):
+    if p.type:
+        name = p.type if p.type in CATALOG else _LOOKUP.get(_key(p.type))
+        if name is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No block type '{p.type}'. Pass one of: {', '.join(CATALOG)}, or omit type for the catalog.",
+            )
+        entry = {"type": name, **CATALOG[name]}
+        spec = d.SCHEMA.get(name)
+        if spec is not None:
+            entry["content"] = spec.content or "none (data lives in attrs)"
+        fence = _FENCE_OF.get(name)
+        if fence:
+            entry["fence"] = FENCES[fence]
+            rules = next((r for k, r in FENCE_RULES.items() if fence in k.split(", ")), None)
+            if rules:
+                entry["fence_rules"] = rules
+        return entry
     return {
-        "document": DOC_ENVELOPE,
-        "blocks": BLOCK_CATALOG,
-        "asset_blocks": ASSET_BLOCKS_NOTE,
-        "how_to_use": (
-            "Build NEW activity content by composing these node objects into "
-            "the doc.content array, then pass the whole doc to create_activity. "
-            "Prefer a rich mix: headings, paragraphs, a callout for key "
-            "warnings/tips, a flipcard or quiz to check understanding. "
-            "To EDIT an EXISTING activity, do not rebuild the whole doc — call "
-            "read_activity_content to get each block's path, then patch just "
-            "that block with edit_block_text / update_block_attrs / "
-            "replace_block / insert_block / delete_block / move_block."
+        "page": "A page is {type: doc, content: [blocks]}. Paths: [i] is a top-level block, [i, j] a child of it.",
+        "how": (
+            "Write Markdown (create_course or create_activities pages, write_activity_content, or "
+            "edit_activity_content insert {markdown}). The rich blocks below are Markdown fences, "
+            "so a whole page, images included, fits in one call; else insert {node}. "
+            "Media, preview, h5p and widget need approval."
         ),
+        "fences": FENCES,
+        "blocks": [{"type": name, "use": e["use"], "add": e["add"]} for name, e in CATALOG.items()],
+        "read_only": _READ_ONLY,
+        "detail": "Call again with type=<name> for shape, fence rules and an example.",
     }
 
 
 SPECS: list[ToolSpec] = [
     ToolSpec(
         name="describe_activity_blocks",
+        title="Page block types",
         description=(
-            "List the content block types an activity can contain (quiz, "
-            "callout, flipcard, math, headings, lists, …) with a JSON example "
-            "for each. Call this BEFORE writing activity content so you can "
-            "use rich blocks, not just paragraphs."
+            "List the block types a page can hold (text, lists, tables, callouts, quizzes, "
+            "flipcards, math, embeds, code exercises, media) and how to add each. Pass type for "
+            "one block's exact editor shape and a valid example."
         ),
         params_model=DescribeBlocksParams,
         tier=ActionTier.READ,
         rights_bucket=None,
         access_action=AccessAction.READ,
         execute=_describe_activity_blocks,
+        idempotent=True,
     ),
 ]

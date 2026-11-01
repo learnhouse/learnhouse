@@ -9,6 +9,7 @@ import MagicBlockChat from './MagicBlockChat'
 import MagicBlockRevisions from './MagicBlockRevisions'
 import { extractHtmlDocument } from './extractHtml'
 import type { MagicBlockMessage, MagicBlockContext, MagicBlockRevision } from './types'
+import { MAGIC_BLOCK_MAX_ITERATIONS } from './types'
 import {
   startMagicBlockSession,
   iterateMagicBlock,
@@ -203,7 +204,7 @@ function MagicBlockModal({
       await navigator.clipboard.writeText(displayedHtml)
       clipboardOk = true
     } catch {
-      // Clipboard blocked — fall back to localStorage only
+      // Clipboard blocked: fall back to localStorage only
     }
     try {
       window.localStorage.setItem(STYLE_STORAGE_KEY, displayedHtml)
@@ -312,7 +313,7 @@ function MagicBlockModal({
                   />
                   <span className="text-sm font-semibold text-white/70">{t('editor.blocks.magic_block_content.title')}</span>
                 </div>
-                <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center">
+                <div className="bg-white/5 text-white/40 py-0.5 px-3 flex gap-1 rounded-full items-center">
                   <Flask weight="duotone" size={14} />
                   <span className="text-xs font-semibold antialiased">{t('editor.blocks.magic_block_content.experimental')}</span>
                 </div>
@@ -460,6 +461,8 @@ function MagicBlockModal({
                       onSendMessage={handleSendMessage}
                       styleReferenceActive={!!styleReference}
                       onClearStyleReference={handleClearStyleReference}
+                      iterationCount={revisions.length}
+                      maxIterations={MAGIC_BLOCK_MAX_ITERATIONS}
                     />
                   ) : (
                     <MagicBlockRevisions

@@ -282,11 +282,13 @@ async def test_autonomous_admin_executes_create(registry, db, org, admin_user):
     assert out.status == "executed"
 
 
-async def test_autonomous_admin_executes_destructive(registry, db, org, admin_user):
+async def test_autonomous_still_proposes_what_needs_approval(registry, db, org, admin_user):
+    # Deletions (and anything else needing approval) wait for a person even
+    # when an admin turned autonomous mode on.
     out = await run_tool(
         registry, "t_destroy", {}, _ctx(db, org, admin_user, mode="autonomous")
     )
-    assert out.status == "executed"
+    assert out.status == "proposed" and out.proposal.requires_confirmation
 
 
 async def test_autonomous_downgraded_for_non_admin(registry, db, org, regular_user):
@@ -296,20 +298,18 @@ async def test_autonomous_downgraded_for_non_admin(registry, db, org, regular_us
     assert out.status == "proposed"
 
 
-async def test_execute_mode_destructive_requires_confirm_arg(registry, db, org):
+async def test_execute_mode_needs_an_approved_context(registry, db, org):
     token = _token(org_id=org.id, rights=_FULL_COURSES_RIGHT)
+    # The arguments cannot approve a call; only the calling surface can.
     out = await run_tool(
-        registry, "t_destroy", {}, _ctx(db, org, token, mode="execute")
+        registry, "t_destroy", {"confirm": True}, _ctx(db, org, token, mode="execute")
     )
     assert out.status == "denied"
-    assert out.denied_code == "confirmation_required"
+    assert out.denied_code == "approval_required"
 
-    out = await run_tool(
-        registry,
-        "t_destroy",
-        {"confirm": True},
-        _ctx(db, org, token, mode="execute"),
-    )
+    approved = _ctx(db, org, token, mode="execute")
+    approved.approved = True
+    out = await run_tool(registry, "t_destroy", {}, approved)
     assert out.status == "executed"
 
 

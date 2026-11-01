@@ -15,6 +15,7 @@ from src.db.roles import Rights, Role, RoleCreate, RoleRead, RoleUpdate, RoleTyp
 from src.db.organizations import Organization
 from fastapi import HTTPException, Request
 from datetime import datetime
+from types import SimpleNamespace
 
 
 async def create_role(
@@ -301,27 +302,24 @@ async def update_role(
     _seat_role_id = role.id
     _was_dashboard_role = _role_grants_dashboard_access(role)
 
-    # Complete the role object
-    role.update_date = str(datetime.now())
-
     # Remove the role_id from the role_object
     del role_object.role_id
 
     # Update only the fields that were passed in
     update_data = role_object.model_dump(exclude_unset=True)
+    new_rights = update_data.get("rights")
+    if new_rights is not None and not isinstance(new_rights, dict):
+        new_rights = new_rights.model_dump()
 
-    # Update the role with the new data
-    for key, value in update_data.items():
-        if value is not None:
-            setattr(role, key, value)
-
+    # Every check runs on the new rights BEFORE the row changes: with
+    # autoflush, a value set on the row reaches the database at the next
+    # query, and a refused escalation could then be committed by whoever
+    # commits the session next (an agent running several tools on it).
     # ============================================================================
     # VALIDATE RIGHTS STRUCTURE if rights are being updated
     # ============================================================================
-    if update_data.get('rights'):
-        rights_dict = role.rights if isinstance(role.rights, dict) else role.rights.model_dump()
-        _validate_rights_payload(rights_dict)
-        role.rights = rights_dict
+    if new_rights:
+        _validate_rights_payload(new_rights)
 
     # ============================================================================
     # VERIFICATION: Ensure user cannot escalate a role to have higher permissions
@@ -330,7 +328,7 @@ async def update_role(
     update_role_user_id = resolve_acting_user_id(current_user)
     if 'rights' in update_data and not await is_user_superadmin(update_role_user_id, db_session):
         await _enforce_rights_subset(
-            role.rights,
+            new_rights or {},
             update_role_user_id,
             role.org_id,
             db_session,
@@ -339,13 +337,26 @@ async def update_role(
 
     # Enforce the admin-seat cap if this update turns on dashboard access for a
     # role members already hold (bulk promotion the per-assignment gate misses).
+    will_grant_dashboard = (
+        _role_grants_dashboard_access(SimpleNamespace(rights=new_rights))
+        if new_rights
+        else _was_dashboard_role
+    )
     await enforce_admin_seat_limit_for_role_rights_change(
         role.org_id,
         _seat_role_id,
-        will_grant_dashboard=_role_grants_dashboard_access(role),
+        will_grant_dashboard=will_grant_dashboard,
         currently_grants_dashboard=_was_dashboard_role,
         db_session=db_session,
     )
+
+    # Complete the role object
+    role.update_date = str(datetime.now())
+    for key, value in update_data.items():
+        if value is not None:
+            setattr(role, key, value)
+    if new_rights:
+        role.rights = new_rights
 
     db_session.add(role)
     await db_session.commit()

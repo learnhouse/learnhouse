@@ -46,7 +46,7 @@ function MagicBlockRevisions({
         <span className="font-semibold text-sm text-white/70">
           {t('editor.blocks.magic_block_content.history')}
         </span>
-        <span className="ml-auto text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+        <span className="ms-auto text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
           {ordered.length}
         </span>
       </div>

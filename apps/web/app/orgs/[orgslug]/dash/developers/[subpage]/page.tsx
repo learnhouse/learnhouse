@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { Terminal, KeyIcon, Zap, Globe, Search, Shield, LucideIcon } from 'lucide-react'
+import { Terminal, KeyIcon, Zap, Globe, Search, Shield, Plug, LucideIcon } from 'lucide-react'
 import React, { useEffect, use } from 'react'
 import { motion } from 'motion/react'
 import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/OrgEditAPIAccess'
@@ -9,6 +9,7 @@ import OrgEditAutomations from '@components/Dashboard/Pages/Org/OrgEditAutomatio
 import OrgEditDomains from '@components/Dashboard/Pages/Org/OrgEditDomains/OrgEditDomains'
 import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
 import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
+import OrgEditMCP from '@components/Dashboard/Pages/Org/OrgEditMCP/OrgEditMCP'
 import { useTranslation } from 'react-i18next'
 import { PlanLevel, isFeatureAvailable } from '@services/plans/plans'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
@@ -26,6 +27,7 @@ interface TabConfig {
 }
 
 const getDevTabs = (t: any): TabConfig[] => [
+  { id: 'mcp', label: t('dashboard.organization.settings.tabs.mcp'), icon: Plug },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api', { defaultValue: 'API Access' }), icon: KeyIcon, requiredPlan: 'pro' },
   { id: 'automations', label: t('dashboard.organization.settings.tabs.automations', { defaultValue: 'Automations' }), icon: Zap, requiredPlan: 'pro' },
   { id: 'domains', label: t('dashboard.organization.settings.tabs.domains', { defaultValue: 'Domains' }), icon: Globe, requiredPlan: 'pro' },
@@ -45,7 +47,10 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
   const DEV_TABS = getDevTabs(t).filter((tab) => isFeatureAvailable(tab.id))
 
   function handleLabels() {
-    if (params.subpage == 'api') {
+    if (params.subpage == 'mcp') {
+      setH1Label(t('dashboard.organization.settings.pages.mcp.title'))
+      setH2Label(t('dashboard.organization.settings.pages.mcp.subtitle'))
+    } else if (params.subpage == 'api') {
       setH1Label(t('dashboard.organization.settings.pages.api.title', { defaultValue: 'API Access' }))
       setH2Label(t('dashboard.organization.settings.pages.api.subtitle', { defaultValue: 'Manage API tokens and access' }))
     } else if (params.subpage == 'automations') {
@@ -105,6 +110,7 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
         className="flex-1 overflow-y-auto"
       >
+        {params.subpage == 'mcp' ? <OrgEditMCP /> : ''}
         {params.subpage == 'api' ? <OrgEditAPIAccess /> : ''}
         {params.subpage == 'automations' ? <OrgEditAutomations /> : ''}
         {params.subpage == 'domains' ? <OrgEditDomains /> : ''}

@@ -28,6 +28,7 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.security.rbac.types import AccessAction, AccessContext, AccessDecision, ResourceConfig
 from src.security.rbac.config import get_resource_config, RESOURCE_CONFIGS
+from src.security.org_scope import get_org_scope
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles,
     authorization_verify_based_on_org_admin_status,
@@ -111,6 +112,22 @@ class ResourceAccessChecker:
                 action=action.value,
                 context=context.value,
             )
+
+        # A caller bound to one organization (an app connected over MCP, the
+        # in-app agent) never reaches another organization's resources, even
+        # when the member behind it belongs there too. Checked before every
+        # bypass below: the boundary is the caller's, not the member's.
+        scope = get_org_scope()
+        if scope is not None:
+            owner = await self._resource_org_id(resource_uuid, config)
+            if owner is not None and owner != scope:
+                return AccessDecision(
+                    allowed=False,
+                    reason="This resource belongs to another organization",
+                    resource_uuid=resource_uuid,
+                    action=action.value,
+                    context=context.value,
+                )
 
         # Superadmin bypass: platform admins act on any tenant without an org
         # membership row. The flag is loaded onto PublicUser by get_current_user
@@ -957,6 +974,16 @@ class ResourceAccessChecker:
         if not config:
             return True
 
+        org_id = await self._resource_org_id(resource_uuid, config)
+        if org_id is None:
+            return True
+
+        from src.security.org_auth import is_org_member
+
+        return await is_org_member(user_id, org_id, self.db_session)
+
+    async def _resource_org_id(self, resource_uuid: str, config: ResourceConfig) -> Optional[int]:
+        """The organization that owns a resource, or None when unknown."""
         resource = await self._get_resource(resource_uuid, config)
         org_id = getattr(resource, "org_id", None) if resource else None
 
@@ -969,13 +996,7 @@ class ResourceAccessChecker:
                 if parent_config:
                     parent = await self._get_resource(parent_uuid, parent_config)
                     org_id = getattr(parent, "org_id", None) if parent else None
-
-        if org_id is None:
-            return True
-
-        from src.security.org_auth import is_org_member
-
-        return await is_org_member(user_id, org_id, self.db_session)
+        return org_id
 
     async def _get_resource(self, resource_uuid: str, config: ResourceConfig):
         """Get the resource from the database with caching."""

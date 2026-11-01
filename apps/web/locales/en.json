@@ -1681,7 +1681,8 @@
       "deleting": "Deleting…",
       "zone_subtitle": "Permanently delete your account. This cannot be undone.",
       "zone_body": "This removes your account and access. Any organization you are the sole admin of, and all of its courses and content, will be deleted too. Organizations with other admins are kept; you are simply removed from them."
-    }
+    },
+    "ai_apps": "AI apps"
   },
   "user": {
     "user_settings": "User Settings",
@@ -2884,7 +2885,8 @@
           "automations": "Automations",
           "menu": "Menu",
           "danger": "Danger Zone",
-          "course_end": "Course completion"
+          "course_end": "Course completion",
+          "mcp": "AI apps"
         },
         "pages": {
           "general": {
@@ -2941,6 +2943,10 @@
           "course_end": {
             "title": "Course completion",
             "subtitle": "Customize the screen learners see when they finish a course"
+          },
+          "mcp": {
+            "title": "AI apps (MCP)",
+            "subtitle": "Connect Claude, ChatGPT, Cursor and other AI apps to your organization"
           }
         },
         "name": "Organization Name",
@@ -5392,6 +5398,243 @@
     },
     "developers": {
       "breadcrumb": "Developers"
+    },
+    "atlas": {
+      "title": "Atlas",
+      "pro_title": "Atlas is a Pro feature",
+      "pro_description": "Atlas is an AI agent that builds and edits your courses from a chat. Upgrade to the Pro plan to use it.",
+      "open": "Open Atlas",
+      "open_side_panel": "Open Atlas in side panel",
+      "toggle_quick_assist": "Toggle Atlas quick assist",
+      "close": "Close Atlas",
+      "retry": "Retry",
+      "loading_chat": "Loading chat...",
+      "placeholder": "Ask Atlas to build, edit, or explore...",
+      "placeholder_short": "Ask Atlas...",
+      "starting": "Starting Atlas...",
+      "stop": "Stop",
+      "send": "Send",
+      "chats": "Chats",
+      "new_chat": "New chat",
+      "no_chats": "No past chats yet. Send a message to start one.",
+      "untitled": "Untitled",
+      "favorite": "Favorite",
+      "unfavorite": "Unfavorite",
+      "rename": "Rename",
+      "delete": "Delete",
+      "delete_confirm": "Delete \"{{title}}\"?",
+      "remove_reference": "Remove reference",
+      "groups": {
+        "favorites": "Favorites",
+        "today": "Today",
+        "previous_7_days": "Previous 7 days",
+        "older": "Older"
+      },
+      "reference_types": {
+        "activity": "activity",
+        "chapter": "chapter"
+      },
+      "errors": {
+        "start_session": "Could not start Atlas session.",
+        "load_chat": "Could not load that chat.",
+        "stream_failed": "Stream failed."
+      },
+      "empty": {
+        "title": "Ask me to build or edit a course.",
+        "description": "I focus on one course at a time and work by name, so there are no IDs to copy. Creating, renaming, publishing, reordering, writing content, adding quizzes: just say it.",
+        "prompt_create_course": "Create a course about Python fundamentals with 4 chapters.",
+        "prompt_publish_all": "Publish every activity in my DNS course.",
+        "prompt_add_quiz": "Add a quiz about DNS records to the \"What is DNS?\" activity.",
+        "prompt_recent_courses": "Show me my 5 most recently updated courses."
+      },
+      "focus": {
+        "label": "Focus",
+        "none": "No focus",
+        "clear": "Clear focus",
+        "course": "Course",
+        "chapter": "Chapter",
+        "activity": "Activity"
+      },
+      "quick_actions": {
+        "activity_shorter": "Make this shorter",
+        "activity_friendlier": "Rewrite with a friendlier tone",
+        "activity_translate": "Translate to French",
+        "activity_quiz": "Add a 3-question quiz",
+        "course_summarize": "Summarize this course",
+        "course_add_chapter": "Add a new chapter at the end",
+        "course_publish_all": "Publish every activity",
+        "course_reorder": "Reorder chapters by topic",
+        "home_recent": "Show my 5 most recent courses",
+        "home_plan": "Plan a course about distributed systems",
+        "home_drafts": "List all my draft courses"
+      },
+      "picker": {
+        "attach": "Attach reference",
+        "search_placeholder": "Find activity or chapter...",
+        "no_course_focused": "No course focused",
+        "open_course_hint": "Open a course to pick references from it.",
+        "loading": "Loading...",
+        "no_matches": "Nothing matches.",
+        "untitled_chapter": "Untitled chapter",
+        "attached": "attached",
+        "load_failed": "Failed to load.",
+        "load_course_failed": "Failed to load course ({{status}})"
+      },
+      "thinking": "Thinking...",
+      "stopped": "Stopped",
+      "no_reply": "Atlas did not reply. Try rephrasing your request.",
+      "tool_status": {
+        "running": "Running",
+        "ok": "Done",
+        "error": "Failed",
+        "awaiting": "Waiting for approval",
+        "skipped": "Skipped"
+      },
+      "entity": {
+        "found": "Found",
+        "ambiguous": "Several matches for \"{{selector}}\"",
+        "not_found": "No {{kind}} matches \"{{selector}}\""
+      },
+      "entity_kinds": {
+        "course": "Course",
+        "chapter": "Chapter",
+        "activity": "Activity",
+        "assignment": "Assignment",
+        "assignment_task": "Assignment task",
+        "board": "Board",
+        "community": "Community",
+        "discussion": "Discussion",
+        "folder": "Folder",
+        "media": "Media",
+        "organization": "Organization",
+        "playground": "Playground",
+        "role": "Role",
+        "user": "User",
+        "usergroup": "User group",
+        "resource": "Item"
+      },
+      "results": {
+        "count": "{{count}} found",
+        "empty": "Nothing found.",
+        "show_more": "Show {{count}} more",
+        "show_less": "Show less",
+        "published": "Published",
+        "draft": "Draft",
+        "activities": "Activities: {{count}}"
+      },
+      "tier": {
+        "create": "Create",
+        "edit": "Edit",
+        "destructive": "Destructive"
+      },
+      "action": {
+        "awaiting": "Needs your approval",
+        "apply": "Apply",
+        "applying": "Applying...",
+        "applied": "Applied",
+        "retry": "Try again",
+        "cancel": "Cancel",
+        "cancelled": "Cancelled",
+        "open_course": "Open course",
+        "type_to_confirm": "To confirm, type",
+        "confirm_input": "Confirmation phrase",
+        "apply_failed": "Could not apply this action.",
+        "cancel_failed": "Could not cancel this action.",
+        "no_result": "The server did not report a result.",
+        "dropped": {
+          "superseded": "Replaced by a newer proposal",
+          "cancelled": "Cancelled",
+          "expired": "This proposal expired",
+          "subject_change": "No longer applies"
+        },
+        "in_parent": "In {{kind}}: {{name}}"
+      },
+      "tool_names": {
+        "resolve_entity": "Looking up by name",
+        "list_courses": "Courses",
+        "search_courses": "Course search",
+        "search": "Search",
+        "get_course": "Reading course",
+        "get_course_structure": "Reading course outline",
+        "list_course_chapters": "Chapters",
+        "get_activity": "Reading activity",
+        "read_activity_content": "Reading activity content",
+        "create_course": "Create course",
+        "update_course": "Update course",
+        "delete_course": "Delete course",
+        "create_chapter": "Create chapter",
+        "update_chapter": "Update chapter",
+        "delete_chapter": "Delete chapter",
+        "create_activity": "Create activity",
+        "update_activity": "Update activity",
+        "delete_activity": "Delete activity",
+        "write_activity_content": "Write activity content",
+        "reorder_course_structure": "Reorder course",
+        "list_org_users": "Members",
+        "list_usergroups": "User groups",
+        "list_communities": "Communities"
+      }
+    },
+    "mcp": {
+      "title": "Connect AI apps",
+      "description": "Let members use LearnHouse from Claude, ChatGPT, Cursor and other AI apps that support MCP. Each member signs in with their own account, picks this organization and chooses read-only or read and edit access. Apps can never do more than the member's role allows.",
+      "toggle": "Allow AI app connections",
+      "on": "On",
+      "off": "Off",
+      "server_disabled": "MCP is turned off on this server (LEARNHOUSE_MCP_ENABLED=false).",
+      "server_url": "Server URL",
+      "copy": "Copy",
+      "copied": "Copied",
+      "how_to": "How to connect",
+      "plans_note": "Available on every plan. Tools for features your plan doesn't include stay hidden. For scripts, an API token (Developers > API access) also works as a bearer token.",
+      "clients": {
+        "claude": [
+          "Open Claude and go to Settings > Connectors.",
+          "Choose Add custom connector and paste {{url}}.",
+          "Click Connect, sign in to LearnHouse and pick this organization."
+        ],
+        "chatgpt": [
+          "Open ChatGPT and go to Settings > Apps and connectors.",
+          "Add a custom connector (developer mode may need to be on) and paste {{url}}.",
+          "Sign in to LearnHouse when asked and pick this organization."
+        ],
+        "cursor": [
+          "Open Cursor Settings > MCP and add a new server.",
+          "Use the URL {{url}} as a streamable HTTP server.",
+          "Cursor opens LearnHouse to sign you in."
+        ],
+        "vscode": [
+          "Run the command MCP: Add Server and choose HTTP.",
+          "Paste {{url}} and give it a name.",
+          "Start the server and sign in to LearnHouse when prompted."
+        ],
+        "claude_code": [
+          "Run: claude mcp add --transport http learnhouse {{url}}",
+          "Inside Claude Code run /mcp and choose learnhouse to sign in."
+        ]
+      },
+      "connections_title": "Connected apps",
+      "connections_description": "Every AI app a member connected to this organization. Disconnecting signs the app out right away.",
+      "no_connections": "No apps connected yet.",
+      "connected_by": "Connected by {{name}}",
+      "connected_on": "on {{date}}",
+      "last_used": "last used {{date}}",
+      "access_write": "Read and edit",
+      "access_read": "Read only",
+      "disconnect": "Disconnect",
+      "toasts": {
+        "enabled": "AI app connections turned on",
+        "disabled": "AI app connections turned off",
+        "disconnected": "{{app}} disconnected",
+        "error": "Something went wrong",
+        "copy_failed": "Could not copy the URL"
+      },
+      "description_member": "Use LearnHouse from Claude, ChatGPT, Cursor and other AI apps that support MCP. You sign in with this account, choose the organization and pick read-only or read and edit access. The app can never do more than your role allows.",
+      "org_disabled": "An admin turned off AI app connections for this organization.",
+      "connections_description_member": "Apps you connected to this organization. Disconnecting signs the app out right away.",
+      "plans_note_member": "Available on every plan. Tools for features your plan or role doesn't include stay hidden.",
+      "toolsets_hint": "If an app limits how many tools it loads, add ?toolsets=courses,content to the URL to load only those groups (also: teaching, library, communities, playgrounds, boards, people, org). Search and reading tools are always included.",
+      "access_admin": "Admin"
     }
   },
   "editor": {
@@ -5713,12 +5956,12 @@
         "history_tab": "History",
         "copy_style": "Copy style",
         "copy_style_done": "Copied to clipboard!",
-        "copy_style_tooltip": "Copy this block's design to your clipboard — paste it into a magic block in any activity to match its design language",
+        "copy_style_tooltip": "Copy this block's design to your clipboard, then paste it into a magic block in any activity to match its design language",
         "paste_style": "Paste style",
         "paste_style_tooltip": "Paste a design copied from another magic block to match its style",
         "paste_style_invalid": "Clipboard doesn't contain a magic block design. Copy a block's style first.",
         "clipboard_unavailable": "Couldn't access the clipboard. Check browser permissions.",
-        "using_copied_style": "Design reference active — generations will match its style",
+        "using_copied_style": "Design reference active: generations will match its style",
         "style_ref_banner": "A design reference is active. New generations will match its visual style.",
         "clear_style": "Clear design reference",
         "placeholder_new": "Describe what you want to create...",
@@ -6737,6 +6980,53 @@
       "subscription": "subscription",
       "per_month": "/ month",
       "per_year": "/ year"
+    }
+  },
+  "oauth_consent": {
+    "title": "{{client}} wants to connect to LearnHouse",
+    "signed_in_as": "Signed in as {{user}}",
+    "redirects_to": "You will be sent back to {{host}}",
+    "unverified": "LearnHouse has not verified this app. Continue only if you started this connection yourself.",
+    "pick_org": "Organization",
+    "no_orgs": "You are not a member of any organization yet.",
+    "org_disabled": "An admin turned off AI app connections here",
+    "the_org": "the organization",
+    "access_title": "Access",
+    "access_write": "Read and edit",
+    "access_write_body": "View content and make changes, like creating courses or editing pages.",
+    "access_read": "Read only",
+    "access_read_body": "View courses, content and progress. Nothing can be changed.",
+    "limits": "The app acts as you in {{org}} and can never do more than your role allows. Deleting anything always asks you first.",
+    "allow": "Allow",
+    "deny": "Deny",
+    "revoke_hint": "You can disconnect the app at any time from Account > AI apps.",
+    "errors": {
+      "title": "This link can't be used",
+      "missing_request": "The connection request is missing.",
+      "start_again": "Go back to the app you were connecting and start again.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "access_admin": "Read, edit and administer",
+    "access_admin_body": "Also manage members, groups, roles and organization settings. Sensitive changes still ask you first."
+  },
+  "oauth_approve": {
+    "title": "{{client}} needs your approval",
+    "an_app": "An AI app",
+    "in_org": "In {{org}}",
+    "action": "What it wants to do",
+    "target": "Affects the {{kind}} \"{{name}}\"",
+    "why": "AI apps can't approve these changes themselves. Approve only if you asked for this.",
+    "approve": "Approve",
+    "decline": "Decline",
+    "expires": "This request expires 10 minutes after the app made it.",
+    "approved_title": "Approved",
+    "approved_body": "Go back to {{client}}; it can now make this change once.",
+    "declined_title": "Declined",
+    "declined_body": "Nothing was changed. {{client}} has been told you said no.",
+    "errors": {
+      "title": "This request can't be shown",
+      "missing": "The link is incomplete. Ask the app for a new approval link.",
+      "generic": "Your answer could not be saved. Try again."
     }
   }
 }

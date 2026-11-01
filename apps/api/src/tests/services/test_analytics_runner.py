@@ -1,8 +1,9 @@
 """Tests for the agent-facing analytics runner composites.
 
 Covers the auth gates and catalog restrictions of `execute_org_query`
-and `execute_course_query` in `src/services/analytics/runner.py` — the
-new surface both the dashboard endpoints and the analytics tools share.
+and `execute_course_query` in `src/services/analytics/runner.py`, which the
+analytics tools use. The Tinybird client and membership checks live in the
+analytics router, so that is where they are stubbed.
 """
 
 from unittest.mock import AsyncMock, patch
@@ -10,6 +11,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import HTTPException
 
+from src.routers import analytics as router
 from src.services.analytics import runner
 from src.services.analytics.queries import (
     ADVANCED_QUERIES,
@@ -28,16 +30,19 @@ _ROWS = {"data": [{"course_uuid": "course_x"}], "rows": 1, "meta": []}
 
 @pytest.fixture
 def _gates_open():
-    """Membership/admin pass; tinybird + enrichment stubbed."""
-    with patch.object(runner, "verify_org_membership", new_callable=AsyncMock), \
-         patch.object(runner, "verify_org_admin", new_callable=AsyncMock), \
+    """Membership/admin pass, Pro plan; tinybird + enrichment stubbed."""
+    tinybird = AsyncMock(return_value=dict(_ROWS))
+    with patch.object(router, "_verify_org_membership", new_callable=AsyncMock), \
+         patch.object(router, "_verify_org_admin", new_callable=AsyncMock), \
+         patch.object(router, "_execute_tinybird_query", tinybird), \
+         patch.object(runner, "get_org_plan", new_callable=AsyncMock, return_value="pro"), \
          patch.object(
-             runner, "execute_tinybird_query", new_callable=AsyncMock, return_value=dict(_ROWS)
-         ), \
-         patch.object(
-             runner, "enrich_with_metadata", new_callable=AsyncMock, side_effect=lambda rows, db: rows
+             runner,
+             "enrich_with_metadata",
+             new_callable=AsyncMock,
+             side_effect=lambda rows, db, org_id=None: rows,
          ):
-        yield
+        yield tinybird
 
 
 async def test_org_query_rejects_unknown_name(db, _gates_open):
@@ -119,3 +124,17 @@ async def test_course_query_runs(db, _gates_open):
             COURSE, "course_x", 1, 7, db, acting_user_id=1
         )
     assert result["data"] == _ROWS["data"]
+
+
+async def test_days_are_clamped_like_the_endpoint(db, _gates_open):
+    with patch(
+        "src.security.features_utils.plan_check._check_mode_bypass", return_value=True
+    ):
+        await runner.execute_org_query(CORE, 1, 99999, db, acting_user_id=1)
+    assert _gates_open.await_args.args[3] == runner.MAX_DAYS
+
+
+async def test_invalid_days_rejected(db, _gates_open):
+    with pytest.raises(HTTPException) as exc:
+        await runner.execute_org_query(CORE, 1, "abc", db, acting_user_id=1)
+    assert exc.value.status_code == 400
