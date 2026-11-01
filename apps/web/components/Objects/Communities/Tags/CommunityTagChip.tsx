@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Hash } from 'lucide-react'
+import { isCommunityUuid } from './communityTags'
 
 const CommunityHoverCard = dynamic(() => import('./CommunityHoverCard'), { ssr: false })
 
@@ -40,6 +41,9 @@ export default function CommunityTagChip({ communityUuid, name }: { communityUui
     window.clearTimeout(openTimer.current)
     window.clearTimeout(closeTimer.current)
   }, [])
+
+  // A malformed uuid never reaches the API: show the name, nothing more.
+  if (!isCommunityUuid(communityUuid)) return <span>#{name}</span>
 
   return (
     <span

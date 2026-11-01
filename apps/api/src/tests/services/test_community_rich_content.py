@@ -187,6 +187,8 @@ class TestCommunityTags:
         [
             {"communityUuid": "javascript:alert(1)"},
             {"communityUuid": "course_abc"},
+            {"communityUuid": "community_abc\n"},
+            {"communityUuid": "community_../../users"},
             {"communityUuid": 3},
             {"name": "x" * 101},
             {"name": None},
@@ -197,3 +199,12 @@ class TestCommunityTags:
         with pytest.raises(HTTPException) as exc:
             validate_rich_content(_doc(self._tag(**attrs)), _settings())
         assert _code(exc) == "MODERATION_UNSUPPORTED_CONTENT"
+
+
+def test_community_tag_names_are_moderated():
+    from src.services.communities.moderation import parse_content_for_moderation
+
+    doc = _doc({"type": "paragraph", "content": [
+        {"type": "communityTag", "attrs": {"communityUuid": "community_abc", "name": "badword lounge"}},
+    ]})
+    assert "badword lounge" in parse_content_for_moderation(doc)

@@ -385,3 +385,13 @@ describe("community hashtags", () => {
     pasted.destroy();
   });
 });
+
+describe("community tag safety", () => {
+  test("only well-formed community uuids are used", async () => {
+    const { isCommunityUuid } = await import("../components/Objects/Communities/Tags/communityTags.ts");
+    expect(isCommunityUuid("community_4bdcf7d0-e560-4e11-8f6c-9bab140ec078")).toBe(true);
+    for (const bad of ["community_../../users/me", "../orgs/1", "community_a?b=c", "community_a/b", "", null, 3]) {
+      expect(isCommunityUuid(bad)).toBe(false);
+    }
+  });
+});
