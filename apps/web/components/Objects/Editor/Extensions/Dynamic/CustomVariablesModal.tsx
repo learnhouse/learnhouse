@@ -41,6 +41,8 @@ function ruleFromChoice(choice: string): RuleGroup | null {
 }
 
 function choiceFromRule(rules: any): string {
+  // A row just added has no rules yet: show the picker, empty.
+  if (!rules) return ''
   const condition = rules?.conditions?.length === 1 ? rules.conditions[0] : null
   if (condition?.field === 'audience' && condition.op === 'is') return `audience:${condition.value}`
   if (condition?.field === 'user.groups' && condition.op === 'contains_any' && condition.value?.length === 1) {
