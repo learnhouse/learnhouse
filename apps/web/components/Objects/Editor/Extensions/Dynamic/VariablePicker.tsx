@@ -43,7 +43,7 @@ export default function VariablePicker({ customDefs, onPick, onManageCustom, onC
   return (
     <div
       ref={ref}
-      className="absolute end-0 top-full z-50 mt-2 w-80 rounded-xl bg-white text-sm text-gray-700 shadow-xl ring-1 ring-black/10"
+      className="absolute start-0 top-full z-50 mt-2 w-80 rounded-xl bg-white text-sm text-gray-700 shadow-xl ring-1 ring-black/10"
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2">
