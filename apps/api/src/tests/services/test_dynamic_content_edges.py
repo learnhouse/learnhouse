@@ -93,6 +93,15 @@ class TestVariables:
     def test_text_without_placeholders(self):
         assert dc.interpolate_text("plain", _ctx()) == "plain"
 
+    def test_known_variable_needs_a_string(self):
+        assert dc.is_known_variable(None, _ctx()) is False
+        assert dc.is_known_variable("user.first_name", _ctx()) is True
+
+    def test_custom_references_in_text(self):
+        doc = _doc(_p(_text("Ask in {{ custom.team_channel }} or {{user.first_name}}")))
+        assert dc.referenced_custom_variables(doc) == {"team_channel"}
+        assert dc.referenced_custom_variables({"type": "doc", "content": ["not a node"]}) == set()
+
 
 class TestDocumentWalk:
     def test_non_dict_documents(self):
@@ -179,6 +188,34 @@ class TestContextHelpers:
             activity_name="Lesson", context=_ctx(),
         )
         assert rendered["content"][0] == _p(_text("Hello ada"))
+
+
+class TestChapterTree:
+    @staticmethod
+    def _chapters(content):
+        from types import SimpleNamespace
+
+        lesson = SimpleNamespace(is_locked=False, content=content, name="Lesson", activity_uuid="activity_x")
+        return [SimpleNamespace(activities=[lesson])], lesson
+
+    @pytest.mark.asyncio
+    async def test_editors_get_the_raw_tree(self, mock_request, db, course, admin_user):
+        from src.services.courses.chapters import _render_dynamic_chapter_content
+
+        chapters, lesson = self._chapters(DYNAMIC_DOC)
+        with patch("src.services.courses.activities.access.can_edit_course", new_callable=AsyncMock, return_value=True):
+            await _render_dynamic_chapter_content(chapters, course, admin_user, db, mock_request)
+        assert lesson.content is DYNAMIC_DOC
+
+    @pytest.mark.asyncio
+    async def test_learners_get_the_rendered_tree(self, mock_request, db, course, regular_user):
+        from src.services.courses.chapters import _render_dynamic_chapter_content
+
+        chapters, lesson = self._chapters(DYNAMIC_DOC)
+        with patch("src.services.courses.activities.access.can_edit_course", new_callable=AsyncMock, return_value=False):
+            await _render_dynamic_chapter_content(chapters, course, regular_user, db, mock_request)
+        assert lesson.content is not DYNAMIC_DOC
+        assert not dc.has_dynamic_content(lesson.content)
 
 
 class TestEditorEndpointEdges:
