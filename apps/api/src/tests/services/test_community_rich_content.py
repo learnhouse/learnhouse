@@ -170,3 +170,30 @@ class TestValidateRichContent:
         with pytest.raises(HTTPException) as exc_info:
             validate_rich_content(json.dumps({"type": "doc", "content": ["nope"]}), _settings())
         assert _code(exc_info) == "MODERATION_UNSUPPORTED_CONTENT"
+
+
+class TestCommunityTags:
+    def _tag(self, **attrs):
+        return {"type": "paragraph", "content": [
+            {"type": "text", "text": "See "},
+            {"type": "communityTag", "attrs": {"communityUuid": "community_abc-123", "name": "Product", **attrs}},
+        ]}
+
+    def test_valid_tag_is_accepted(self):
+        validate_rich_content(_doc(self._tag()), _settings())
+
+    @pytest.mark.parametrize(
+        "attrs",
+        [
+            {"communityUuid": "javascript:alert(1)"},
+            {"communityUuid": "course_abc"},
+            {"communityUuid": 3},
+            {"name": "x" * 101},
+            {"name": None},
+            {"href": "https://evil.example"},
+        ],
+    )
+    def test_invalid_tags_are_rejected(self, attrs):
+        with pytest.raises(HTTPException) as exc:
+            validate_rich_content(_doc(self._tag(**attrs)), _settings())
+        assert _code(exc) == "MODERATION_UNSUPPORTED_CONTENT"

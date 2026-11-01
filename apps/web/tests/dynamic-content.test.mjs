@@ -339,3 +339,49 @@ describe("round four: variables everywhere", () => {
     setShowVariableValues(false);
   });
 });
+
+describe("community hashtags", () => {
+  test("slugs, plain-text splitting and filtering", async () => {
+    const { communitySlug, splitHashtags, filterCommunities } = await import(
+      "../components/Objects/Communities/Tags/communityTags.ts"
+    );
+    const communities = [
+      { community_uuid: "community_1", name: "Product Questions" },
+      { community_uuid: "community_2", name: "Café Lounge" },
+    ];
+    expect(communitySlug("Product Questions")).toBe("product-questions");
+    expect(communitySlug("Café Lounge!")).toBe("cafe-lounge");
+
+    const parts = splitHashtags("Ask in #product-questions or #cafe-lounge, not #nope or a#b (#Product-Questions)", communities);
+    expect(parts.filter((p) => "community" in p).map((p) => p.community.community_uuid)).toEqual([
+      "community_1", "community_2", "community_1",
+    ]);
+    expect(parts.map((p) => ("text" in p ? p.text : p.raw)).join("")).toBe(
+      "Ask in #product-questions or #cafe-lounge, not #nope or a#b (#Product-Questions)"
+    );
+    expect(splitHashtags("no tags here", communities)).toEqual([{ text: "no tags here" }]);
+    expect(filterCommunities("prod", communities).map((c) => c.name)).toEqual(["Product Questions"]);
+    expect(filterCommunities("", communities).length).toBe(2);
+  });
+
+  test("community tag round-trips through editor JSON and HTML", async () => {
+    const { CommunityTag } = await import("../components/Objects/Communities/Tags/CommunityTag.ts");
+    const Plain = CommunityTag.extend({ addNodeView: () => null });
+    const content = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [
+        { type: "text", text: "Ask in " },
+        { type: "communityTag", attrs: { communityUuid: "community_abc", name: "Product" } },
+      ] }],
+    };
+    const editor = new Editor({ extensions: [StarterKit, Plain], content });
+    expect(editor.getJSON()).toEqual(content);
+    expect(editor.getText()).toBe("Ask in #Product");
+    const pasted = new Editor({ extensions: [StarterKit, Plain], content: editor.getHTML() });
+    expect(pasted.getJSON()).toEqual(content);
+    editor.commands.insertCommunityTag({ community_uuid: "community_x", name: "X" });
+    expect(editor.getJSON().content[0].content.some((n) => n.attrs?.communityUuid === "community_x")).toBe(true);
+    editor.destroy();
+    pasted.destroy();
+  });
+});

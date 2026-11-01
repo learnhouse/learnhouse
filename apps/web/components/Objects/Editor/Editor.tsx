@@ -73,6 +73,7 @@ import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
 import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
 import VariableSuggestion from './Extensions/Dynamic/VariableSuggestion'
+import { CommunityTag, CommunityTagSuggestion } from '@components/Objects/Communities/Tags/CommunityTag'
 import { DynamicReachProvider } from './Extensions/Dynamic/DynamicReach'
 import { EDITOR_EVENTS } from './Templates/templateContent'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -231,6 +232,8 @@ function Editor(props: EditorProps) {
       ConditionalBlock,
       DynamicVariable,
       VariableSuggestion,
+      CommunityTag,
+      CommunityTagSuggestion,
       AIStreamingMark,
       AISelectionHighlight,
     ],

@@ -14,6 +14,7 @@ import {
   CursorClick,
   FileText,
   GitBranch,
+  Hash,
   Globe,
   Headphones,
   Image as ImageIcon,
@@ -49,6 +50,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
 import dynamic from 'next/dynamic'
 import { useDynamicLookups } from '../Extensions/Dynamic/useDynamicLookups'
+import { useTaggableCommunities } from '@components/Objects/Communities/Tags/communityTags'
 
 const VariablePicker = dynamic(() => import('../Extensions/Dynamic/VariablePicker'), { ssr: false })
 const CustomVariablesModal = dynamic(() => import('../Extensions/Dynamic/CustomVariablesModal'), { ssr: false })
@@ -63,6 +65,10 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
   const [showVariables, setShowVariables] = React.useState(false)
   const [showCustomVariables, setShowCustomVariables] = React.useState(false)
   const lookups = useDynamicLookups()
+  const communities = useTaggableCommunities()
+  React.useEffect(() => {
+    if (editor?.storage?.communityTagSuggestion) editor.storage.communityTagSuggestion.communities = communities
+  }, [editor, communities])
 
   // The {{ autocomplete reads the org's custom variables from here.
   React.useEffect(() => {
@@ -710,6 +716,16 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
           aria-label={t('editor.dynamic.toolbar.conditional_label', 'Conditional content')}
         >
           <UsersThree size={15} weight="fill" />
+        </div>
+      </ToolTip>
+      <ToolTip content={t('editor.dynamic.toolbar.community', { example: '#', defaultValue: 'Link a community (or type {{example}})' })}>
+        <div
+          className="editor-tool-btn editor-tool-btn-dynamic"
+          onClick={() => editor.chain().focus().insertContent(' #').run()}
+          role="button"
+          aria-label={t('editor.dynamic.toolbar.community_label', 'Community')}
+        >
+          <Hash size={15} weight="bold" />
         </div>
       </ToolTip>
       {showCustomVariables && (

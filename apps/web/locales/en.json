@@ -899,6 +899,25 @@
       "view_all": "View All",
       "no_discussions": "No discussions yet",
       "start_first": "Start the first discussion"
+    },
+    "tag": {
+      "loading": "Loading community…",
+      "unavailable": "This community is not available to you.",
+      "open": "Open",
+      "empty": "No discussions yet. Start the first one.",
+      "sign_in": "Sign in to join the discussion.",
+      "new_discussion": "Start a discussion",
+      "reply_error": "Could not post your reply",
+      "no_replies": "No replies yet.",
+      "reply_placeholder": "Write a reply…",
+      "reply": "Reply",
+      "open_discussion": "Open the full discussion",
+      "posted": "Discussion posted",
+      "post_error": "Could not post the discussion",
+      "title_placeholder": "Title",
+      "body_placeholder": "What would you like to ask or share?",
+      "post": "Post",
+      "link_community": "Link a community"
     }
   },
   "boards": {
@@ -6055,7 +6074,9 @@
         "variable": "Insert a variable (or type {{example}})",
         "variable_label": "Variable",
         "conditional": "Content only some learners see",
-        "conditional_label": "Conditional content"
+        "conditional_label": "Conditional content",
+        "community": "Link a community (or type {{example}})",
+        "community_label": "Community"
       },
       "your_groups": "Your user groups"
     },

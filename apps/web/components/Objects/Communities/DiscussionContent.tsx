@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Youtube from '@tiptap/extension-youtube'
 import { stripRichContent } from './richContent'
+import { CommunityTag } from './Tags/CommunityTag'
 
 interface DiscussionContentProps {
   content: any
@@ -43,6 +44,7 @@ function DiscussionContentEditor({
 }) {
   const editor = useEditor({
     extensions: [
+      CommunityTag,
       StarterKit.configure({
         // Disable link since we configure it separately below
         link: false,

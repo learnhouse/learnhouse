@@ -35,6 +35,7 @@ import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 import Callout from './Extensions/Callout/Callout'
 import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
 import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
+import { CommunityTag } from '@components/Objects/Communities/Tags/CommunityTag'
 import { normalizeCalloutContent } from './Extensions/Callout/calloutContent'
 
 // Lowlight with a slim grammar set; see editorLowlight.ts
@@ -161,6 +162,7 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
       }),
       ConditionalBlock,
       DynamicVariable,
+      CommunityTag,
     ],
     content: normalizeCalloutContent(content),
     immediatelyRender: false,
