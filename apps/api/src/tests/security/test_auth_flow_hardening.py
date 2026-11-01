@@ -411,6 +411,31 @@ class TestGooglePreHijack:
         revoke_mock.assert_called_once_with(user.id)
 
 
+    async def test_trusted_account_only_backfills_its_signup_method(self, db):
+        user = await _make_user(db, 85, "legacy@test.com", signup_method=None)
+        revoke_mock = await self._sign_in(db, "legacy@test.com")
+        await db.refresh(user)
+        assert user.signup_method == "google"
+        assert user.password
+        revoke_mock.assert_not_called()
+
+    async def test_claim_on_an_unsaved_user_stops_before_session_work(self):
+        from src.db.users import User
+        from src.services.auth.utils import claim_account_on_inbox_proof
+
+        user = User(username="u", first_name="", last_name="", email="new@test.com",
+                    password="hash", email_verified=False)
+        session = MagicMock(commit=AsyncMock(), refresh=AsyncMock())
+        with patch("src.security.auth.revoke_user_sessions_before") as revoke_mock, patch(
+            "src.services.auth.utils._drop_unverified_sso_links", new=AsyncMock()
+        ) as drop_mock:
+            await claim_account_on_inbox_proof(user, session)
+        assert user.password == ""
+        session.commit.assert_awaited_once()
+        revoke_mock.assert_not_called()
+        drop_mock.assert_not_awaited()
+
+
 class TestSignupInboxMarker:
     @pytest.mark.parametrize("mode,marked", [("oss", True), ("saas", False)])
     async def test_email_signup_marked_only_off_saas(self, db, mock_request, mode, marked):

@@ -249,3 +249,56 @@ def test_connect_validated_falls_back_to_the_next_address(recording_server):
     ):
         with connect_validated("multi.test", recording_server.port, timeout=2) as sock:
             assert sock.getpeername()[0] == "127.0.0.1"
+
+
+def _closed_port() -> int:
+    # Bind then release, so nothing listens there for the test
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+def test_connect_validated_raises_when_no_address_accepts():
+    from src.services.utils.ssrf_guard import connect_validated
+
+    with patch(
+        "src.services.utils.ssrf_guard._resolve_and_validate_host", return_value=["127.0.0.1"]
+    ):
+        with pytest.raises(OSError):
+            connect_validated("down.test", _closed_port(), timeout=2)
+
+
+@pytest.mark.asyncio
+async def test_pinned_transport_raises_connect_error_when_no_address_accepts():
+    import httpx
+    from src.services.utils.ssrf_guard import pinned_transport
+
+    with patch(
+        "src.services.utils.ssrf_guard._resolve_and_validate_host", return_value=["127.0.0.1"]
+    ):
+        async with httpx.AsyncClient(transport=pinned_transport()) as client:
+            with pytest.raises(httpx.ConnectError):
+                await client.get(f"http://down.test:{_closed_port()}/")
+
+
+@pytest.mark.asyncio
+async def test_pinned_backend_refuses_unix_sockets_and_delegates_sleep():
+    from src.services.utils.ssrf_guard import _PinnedNetworkBackend
+
+    backend = _PinnedNetworkBackend()
+    with pytest.raises(SSRFBlockedError):
+        await backend.connect_unix_socket("/var/run/docker.sock")
+    await backend.sleep(0)
+
+
+def test_pinned_transport_fails_loudly_on_an_unexpected_httpx_layout():
+    from types import SimpleNamespace
+
+    from src.services.utils.ssrf_guard import pinned_transport
+
+    with patch(
+        "src.services.utils.ssrf_guard.httpx.AsyncHTTPTransport",
+        return_value=SimpleNamespace(_pool=object()),
+    ):
+        with pytest.raises(RuntimeError):
+            pinned_transport()
