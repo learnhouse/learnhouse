@@ -6,9 +6,13 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseContext } from '@components/Contexts/CourseContext'
 import { getUserGroups } from '@services/usergroups/usergroups'
 import {
+  DynamicOptions,
   EditorVariable,
+  getDynamicOptions,
   getEditorVariables,
 } from '@services/courses/dynamicContent'
+import { useTaggableCommunities } from '@components/Objects/Communities/Tags/communityTags'
+import { DynamicActivityContext } from './DynamicReach'
 import { VariableDef, customVariableDef } from './dynamicRules'
 import { queryKeys } from '@/lib/query/keys'
 import { asArray } from '@services/utils/ts/requests'
@@ -18,12 +22,15 @@ export interface LookupOption {
   label: string
 }
 
-// Names for the uuids stored in rules: the org's user groups and the
-// course's activities. Only fetched where an editor actually shows rules.
+// Names for the uuids stored in rules: the org's user groups and
+// communities, the course's activities and assignments. Only fetched where
+// an editor actually shows rules.
 export function useDynamicLookups(enabled: boolean = true) {
   const org = useOrg() as any
   const { accessToken } = useAuth()
   const course = useContext(CourseContext) as any
+  const activityUuid = useContext(DynamicActivityContext)
+  const communitiesRaw = useTaggableCommunities()
 
   const { data: usergroupsRaw } = useQuery({
     queryKey: queryKeys.usergroups.list(org?.id),
@@ -41,6 +48,14 @@ export function useDynamicLookups(enabled: boolean = true) {
     staleTime: 30_000,
   })
 
+  const { data: optionsRaw } = useQuery({
+    queryKey: queryKeys.dynamicOptions.detail(activityUuid ?? ''),
+    queryFn: () => getDynamicOptions(activityUuid as string, accessToken as string),
+    select: (res: any) => (res?.success ? (res.data as DynamicOptions) : null),
+    enabled: enabled && !!(activityUuid && accessToken),
+    staleTime: 60_000,
+  })
+
   return useMemo(() => {
     const usergroups: LookupOption[] = asArray(usergroupsRaw).map((g: any) => ({
       value: g.usergroup_uuid,
@@ -50,6 +65,14 @@ export function useDynamicLookups(enabled: boolean = true) {
       (chapter: any) =>
         asArray(chapter.activities).map((a: any) => ({ value: a.activity_uuid, label: a.name }))
     )
+    const assignments: LookupOption[] = asArray(optionsRaw?.assignments).map((a: any) => ({
+      value: a.assignment_uuid,
+      label: a.title,
+    }))
+    const communities: LookupOption[] = communitiesRaw.map((c) => ({
+      value: c.community_uuid,
+      label: c.name,
+    }))
     const toRecord = (options: LookupOption[]) =>
       Object.fromEntries(options.map((o) => [o.value, o.label]))
     const customVariables: EditorVariable[] = variablesRaw ?? []
@@ -57,12 +80,16 @@ export function useDynamicLookups(enabled: boolean = true) {
     return {
       usergroups,
       activities,
+      assignments,
+      communities,
       customVariables,
       customDefs,
       names: {
         usergroups: toRecord(usergroups),
         activities: toRecord(activities),
+        assignments: toRecord(assignments),
+        communities: toRecord(communities),
       },
     }
-  }, [usergroupsRaw, variablesRaw, course?.courseStructure])
+  }, [usergroupsRaw, variablesRaw, optionsRaw, communitiesRaw, course?.courseStructure])
 }

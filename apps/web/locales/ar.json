@@ -5475,7 +5475,12 @@
         "user_email_domain": "نطاق البريد الإلكتروني",
         "user_account_days": "أيام منذ إنشاء الحساب",
         "course_completed": "أكمل الدورة",
-        "progress_completed_count": "الأنشطة المكتملة"
+        "progress_completed_count": "الأنشطة المكتملة",
+        "course_certified": "حصل على الشهادة",
+        "assignments_submitted": "المهام المسلّمة",
+        "assignments_average_grade": "متوسط درجات المهام",
+        "community_posts": "منشورات المجتمع",
+        "community_active_in": "نشط في المجتمعات"
       },
       "format": "التنسيق",
       "formats": {
@@ -5567,7 +5572,12 @@
         "progress_remaining": "الأنشطة المتبقية",
         "enrollment_date": "تاريخ التسجيل",
         "course_chapter": "اسم الفصل",
-        "course_next_activity": "النشاط التالي"
+        "course_next_activity": "النشاط التالي",
+        "certificate_date": "تاريخ الشهادة",
+        "assignments_submitted": "المهام المسلّمة",
+        "assignments_total": "مهام الدورة",
+        "assignments_average_grade": "متوسط الدرجات",
+        "community_posts": "منشورات المجتمع"
       },
       "view_as": "عرض بصفة",
       "view_as_description": "شاهد هذه الصفحة كما يتلقاها متعلّم بهذه التفاصيل، بما في ذلك التغييرات غير المحفوظة.",
@@ -5601,7 +5611,11 @@
         "visitors_hint": "أشخاص يتصفحون بدون حساب",
         "dates": "بين تاريخين",
         "dates_hint": "إعلان محدود المدة",
-        "drip_message": "يُفتح هذا بعد أسبوعك الأول."
+        "drip_message": "يُفتح هذا بعد أسبوعك الأول.",
+        "certified": "حصل على الشهادة",
+        "certified_hint": "المتعلمون الذين حصلوا على شهادة هذه الدورة",
+        "community": "نشط في المجتمع",
+        "community_hint": "المتعلمون الذين نشروا أو ردّوا في مجتمع"
       },
       "custom": {
         "key_invalid": "استخدم أحرفًا إنجليزية صغيرة وشرطات سفلية للمفتاح، مثال: support_email",

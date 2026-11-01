@@ -5,6 +5,9 @@ import { DynamicReach, getDynamicReach } from '@services/courses/dynamicContent'
 
 const ReachContext = createContext<DynamicReach | null>(null)
 
+// The activity being edited, for lookups scoped to its course.
+export const DynamicActivityContext = createContext<string | null>(null)
+
 // The rules of every conditional block, in document order: when it changes,
 // the reach counts are stale.
 function rulesSignature(editor: any): string {

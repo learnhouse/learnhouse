@@ -26,7 +26,7 @@ export interface FieldDef {
   type: FieldType
   label: string
   // Fields whose value is picked from org data rather than typed
-  picker?: 'usergroups' | 'roles' | 'activities'
+  picker?: 'usergroups' | 'roles' | 'activities' | 'assignments' | 'communities'
 }
 
 export const FIELDS: FieldDef[] = [
@@ -44,6 +44,11 @@ export const FIELDS: FieldDef[] = [
   { field: 'date.today', type: 'date', label: 'Date' },
   { field: 'user.locale', type: 'locale', label: 'Language' },
   { field: 'user.bucket', type: 'number', label: 'Audience split (0-99)' },
+  { field: 'course.certified', type: 'bool', label: 'Earned the certificate' },
+  { field: 'assignments.submitted', type: 'set', label: 'Submitted assignments', picker: 'assignments' },
+  { field: 'assignments.average_grade', type: 'number', label: 'Average assignment grade' },
+  { field: 'community.posts', type: 'number', label: 'Community posts' },
+  { field: 'community.active_in', type: 'set', label: 'Active in communities', picker: 'communities' },
 ]
 
 export const OPS: Record<FieldType, string[]> = {
@@ -106,6 +111,11 @@ export const VARIABLES: VariableDef[] = [
   { path: 'progress.remaining', label: 'Activities left', group: 'progress', sample: '6' },
   { path: 'enrollment.days', label: 'Days since enrollment', group: 'progress', sample: '12' },
   { path: 'enrollment.date', label: 'Enrollment date', group: 'progress', sample: '2026-10-19' },
+  { path: 'certificate.date', label: 'Certificate date', group: 'progress', sample: '2026-10-02' },
+  { path: 'assignments.submitted', label: 'Assignments submitted', group: 'progress', sample: '2' },
+  { path: 'assignments.total', label: 'Assignments in course', group: 'progress', sample: '4' },
+  { path: 'assignments.average_grade', label: 'Average grade', group: 'progress', sample: '82' },
+  { path: 'community.posts', label: 'Community posts', group: 'progress', sample: '3' },
   { path: 'date.today', label: "Today's date", group: 'date', sample: '2026-10-31' },
   { path: 'date.year', label: 'Current year', group: 'date', sample: '2026' },
 ]
@@ -362,6 +372,8 @@ export function stringifyRules(rules: RuleGroup | null | undefined): string {
 export interface DescribeLookups {
   usergroups?: Record<string, string>
   activities?: Record<string, string>
+  assignments?: Record<string, string>
+  communities?: Record<string, string>
 }
 
 function describeValue(field: string, value: RuleValue, lookups: DescribeLookups): string {
@@ -370,6 +382,8 @@ function describeValue(field: string, value: RuleValue, lookups: DescribeLookups
     const key = String(v)
     if (field === 'user.groups') return lookups.usergroups?.[key] ?? key
     if (field === 'progress.completed_activities') return lookups.activities?.[key] ?? key
+    if (field === 'assignments.submitted') return lookups.assignments?.[key] ?? key
+    if (field === 'community.active_in') return lookups.communities?.[key] ?? key
     return key
   })
   return names.join(', ') || '…'
@@ -450,6 +464,18 @@ export const PRESETS: RulePreset[] = [
     label: 'Finished the course',
     description: 'A congratulations or next-steps note',
     rules: () => ({ match: 'all', conditions: [{ field: 'course.completed', op: 'is_true' }] }),
+  },
+  {
+    id: 'certified',
+    label: 'Earned the certificate',
+    description: 'Learners who earned this course certificate',
+    rules: () => ({ match: 'all', conditions: [{ field: 'course.certified', op: 'is_true' }] }),
+  },
+  {
+    id: 'community',
+    label: 'Active in the community',
+    description: 'Learners who posted or replied in a community',
+    rules: () => ({ match: 'all', conditions: [{ field: 'community.posts', op: 'gte', value: 1 }] }),
   },
   {
     id: 'ab',

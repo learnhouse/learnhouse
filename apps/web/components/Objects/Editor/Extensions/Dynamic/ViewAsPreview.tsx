@@ -26,6 +26,9 @@ const DEFAULT_PERSONA: PreviewPersona = {
   days_enrolled: 0,
   progress_percent: 0,
   completed_activity_uuids: [],
+  certified: false,
+  assignments_submitted: [],
+  community_posts: 0,
   today: null,
   email: null,
   bucket: null,
@@ -93,11 +96,11 @@ export default function ViewAsPreview({ activity, getContent, onClose }: ViewAsP
   const set = <K extends keyof PreviewPersona>(key: K, value: PreviewPersona[K]) =>
     setPersona((p) => ({ ...p, [key]: value }))
 
-  const toggle = (key: 'usergroup_uuids' | 'completed_activity_uuids', value: string) =>
-    setPersona((p) => ({
-      ...p,
-      [key]: p[key].includes(value) ? p[key].filter((v) => v !== value) : [...p[key], value],
-    }))
+  const toggle = (key: 'usergroup_uuids' | 'completed_activity_uuids' | 'assignments_submitted', value: string) =>
+    setPersona((p) => {
+      const current = p[key] ?? []
+      return { ...p, [key]: current.includes(value) ? current.filter((v) => v !== value) : [...current, value] }
+    })
 
   const signedIn = persona.signed_in && persona.role !== 'anonymous'
 
@@ -216,6 +219,21 @@ export default function ViewAsPreview({ activity, getContent, onClose }: ViewAsP
               />
             </Field>
           )}
+
+          {lookups.assignments.length > 0 && (
+            <Field label={t('editor.dynamic.fields.assignments_submitted', 'Submitted assignments')}>
+              <Chips
+                options={lookups.assignments}
+                selected={persona.assignments_submitted ?? []}
+                onToggle={(v) => toggle('assignments_submitted', v)}
+              />
+            </Field>
+          )}
+
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={!!persona.certified} onChange={(e) => set('certified', e.target.checked)} />
+            {t('editor.dynamic.fields.course_certified', 'Earned the certificate')}
+          </label>
         </>
       )}
 
@@ -228,6 +246,10 @@ export default function ViewAsPreview({ activity, getContent, onClose }: ViewAsP
               placeholder={t('editor.dynamic.persona.your_email', 'Your own')}
               onChange={(e) => set('email', e.target.value || null)}
             />
+          </Field>
+          <Field label={`${t('editor.dynamic.fields.community_posts', 'Community posts')}: ${persona.community_posts ?? 0}`}>
+            <input type="range" min={0} max={20} className="w-full" value={persona.community_posts ?? 0}
+              onChange={(e) => set('community_posts', Number(e.target.value))} />
           </Field>
           <Field label={`${t('editor.dynamic.fields.user_bucket', 'Audience split (0-99)')}: ${persona.bucket ?? t('editor.dynamic.persona.yours', 'yours')}`}>
             <input type="range" min={0} max={99} className="w-full" value={persona.bucket ?? 0}

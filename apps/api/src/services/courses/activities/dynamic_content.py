@@ -66,6 +66,14 @@ class RenderContext:
     progress_completed: int = 0
     progress_total: int = 0
     completed_activity_uuids: frozenset[str] = frozenset()
+    # Certificates, assignments and communities: what the learner did elsewhere in LearnHouse.
+    certified: bool = False
+    certified_on: date | None = None
+    assignment_total: int = 0
+    assignments_submitted: frozenset[str] = frozenset()
+    assignment_average: float | None = None
+    community_posts: int = 0
+    communities_active: frozenset[str] = frozenset()
     today: date = field(default_factory=date.today)
     # The org's custom variables the document refers to:
     # key -> {"default": str, "variants": [{"rules": ..., "value": str}]}.
@@ -148,6 +156,11 @@ VARIABLES: dict[str, Callable[[RenderContext], str]] = {
     "progress.remaining": lambda c: str(max(0, c.progress_total - c.progress_completed)),
     "enrollment.days": lambda c: "" if c.days_enrolled is None else str(c.days_enrolled),
     "enrollment.date": lambda c: c.enrolled_on.isoformat() if c.enrolled_on else "",
+    "certificate.date": lambda c: c.certified_on.isoformat() if c.certified_on else "",
+    "assignments.submitted": lambda c: str(len(c.assignments_submitted)),
+    "assignments.total": lambda c: str(c.assignment_total),
+    "assignments.average_grade": lambda c: "" if c.assignment_average is None else str(round(c.assignment_average)),
+    "community.posts": lambda c: str(c.community_posts),
     "date.today": lambda c: c.today.isoformat(),
     "date.year": lambda c: str(c.today.year),
 }
@@ -348,6 +361,11 @@ FIELDS: dict[str, Callable[[RenderContext, str, Any], bool]] = {
     "progress.completed_count": lambda c, op, v: _number_op(float(c.progress_completed), op, v),
     "progress.completed_activities": lambda c, op, v: _set_op(c.completed_activity_uuids, op, v),
     "date.today": lambda c, op, v: _date_op(c.today, op, v),
+    "course.certified": lambda c, op, v: _bool_op(c.certified, op),
+    "assignments.submitted": lambda c, op, v: _set_op(c.assignments_submitted, op, v),
+    "assignments.average_grade": lambda c, op, v: _number_op(c.assignment_average, op, v),
+    "community.posts": lambda c, op, v: _number_op(float(c.community_posts), op, v),
+    "community.active_in": lambda c, op, v: _set_op(c.communities_active, op, v),
 }
 
 

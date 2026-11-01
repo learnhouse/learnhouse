@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -70,5 +71,5 @@ export function useTaggableCommunities() {
     enabled: !!org?.id,
     staleTime: 60_000,
   })
-  return asArray<TaggableCommunity>(data)
+  return useMemo(() => asArray<TaggableCommunity>(data), [data])
 }

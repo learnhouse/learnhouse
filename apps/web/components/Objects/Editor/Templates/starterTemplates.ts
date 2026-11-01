@@ -81,6 +81,37 @@ export const STARTER_TEMPLATES: EditorTemplate[] = [
     )),
   ),
   starter(
+    'certified',
+    'Certificate earned',
+    'Thanks learners who earned the certificate, with the date',
+    doc(block(
+      'Certified',
+      { match: 'all', conditions: [{ field: 'course.certified', op: 'is_true' }] },
+      [para(text('Well done '), variable('user.first_name'), text(', you earned your certificate on '), variable('certificate.date'), text('.'))],
+      'Finish the course to earn your certificate.',
+    )),
+  ),
+  starter(
+    'assignments',
+    'Assignment check-in',
+    'Reminds learners how many assignments are left',
+    doc(block(
+      'Assignments left',
+      { match: 'all', conditions: [{ field: 'course.enrolled', op: 'is_true' }] },
+      [para(text('You submitted '), variable('assignments.submitted'), text(' of '), variable('assignments.total'), text(' assignments. Average grade: '), variable('assignments.average_grade', 'none yet'), text('.'))],
+    )),
+  ),
+  starter(
+    'community',
+    'Join the conversation',
+    'Invites learners who have not posted in the community yet',
+    doc(block(
+      'No community posts yet',
+      { match: 'all', conditions: [{ field: 'user.signed_in', op: 'is_true' }, { field: 'community.posts', op: 'eq', value: 0 }] },
+      [para(text('Questions are welcome: start a discussion in the community, '), variable('user.first_name', 'friend'), text('.'))],
+    )),
+  ),
+  starter(
     'visitors',
     'Sign-in prompt',
     'Only shown to people browsing without an account',

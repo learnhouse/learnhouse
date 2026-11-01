@@ -395,3 +395,29 @@ describe("community tag safety", () => {
     }
   });
 });
+
+describe("learnhouse-native rules", () => {
+  test("certificate, assignment and community rules parse and describe", () => {
+    const rules = parseRules(
+      'course.certified is_true and assignments.submitted contains_any ["assignment_1"] and community.active_in contains_any ["community_1"] and community.posts gte 2'
+    );
+    expect(parseRules(stringifyRules(rules))).toEqual(rules);
+    const text = describeRules(rules, {
+      assignments: { assignment_1: "Final project" },
+      communities: { community_1: "Study hall" },
+    });
+    expect(text).toContain("Final project");
+    expect(text).toContain("Study hall");
+  });
+
+  test("every field and variable is known to the API", async () => {
+    const { FIELDS, VARIABLES } = await import("../components/Objects/Editor/Extensions/Dynamic/dynamicRules.ts");
+    const { readFileSync } = await import("node:fs");
+    const api = readFileSync(
+      new URL("../../api/src/services/courses/activities/dynamic_content.py", import.meta.url),
+      "utf8"
+    );
+    for (const def of FIELDS) expect(api).toContain(`"${def.field}"`);
+    for (const v of VARIABLES) expect(api).toContain(`"${v.path}"`);
+  });
+});

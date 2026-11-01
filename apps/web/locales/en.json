@@ -5908,7 +5908,12 @@
         "user_email_domain": "Email domain",
         "user_account_days": "Days since sign-up",
         "course_completed": "Completed the course",
-        "progress_completed_count": "Activities completed"
+        "progress_completed_count": "Activities completed",
+        "course_certified": "Earned the certificate",
+        "assignments_submitted": "Submitted assignments",
+        "assignments_average_grade": "Average assignment grade",
+        "community_posts": "Community posts",
+        "community_active_in": "Active in communities"
       },
       "format": "Format",
       "formats": {
@@ -6000,7 +6005,12 @@
         "progress_remaining": "Activities left",
         "enrollment_date": "Enrollment date",
         "course_chapter": "Chapter name",
-        "course_next_activity": "Next activity"
+        "course_next_activity": "Next activity",
+        "certificate_date": "Certificate date",
+        "assignments_submitted": "Assignments submitted",
+        "assignments_total": "Assignments in course",
+        "assignments_average_grade": "Average grade",
+        "community_posts": "Community posts"
       },
       "view_as": "View as",
       "view_as_description": "See this page the way a learner with these details gets it, unsaved changes included.",
@@ -6034,7 +6044,11 @@
         "visitors_hint": "People browsing without an account",
         "dates": "Between two dates",
         "dates_hint": "A time-limited announcement",
-        "drip_message": "This unlocks after your first week."
+        "drip_message": "This unlocks after your first week.",
+        "certified": "Earned the certificate",
+        "certified_hint": "Learners who earned this course certificate",
+        "community": "Active in the community",
+        "community_hint": "Learners who posted or replied in a community"
       },
       "custom": {
         "key_invalid": "Use lowercase letters and underscores for the key, e.g. support_email",
