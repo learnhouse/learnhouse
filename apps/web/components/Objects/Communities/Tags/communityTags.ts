@@ -10,6 +10,14 @@ export interface TaggableCommunity {
   description?: string
 }
 
+// The only shape a tag may point at. Lesson content is author-written JSON,
+// so a tag's uuid is checked before it goes into any API path.
+const COMMUNITY_UUID = /^community_[A-Za-z0-9-]{1,64}$/
+
+export function isCommunityUuid(value: unknown): value is string {
+  return typeof value === 'string' && COMMUNITY_UUID.test(value)
+}
+
 // How a community is written in plain text: "Product Questions" -> "product-questions".
 export function communitySlug(name: string): string {
   return name

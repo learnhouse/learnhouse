@@ -10,6 +10,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg } from '@services/config/config'
 import { Z_INDEX } from '@/lib/z-index'
+import { isCommunityUuid } from './communityTags'
 import { getCommunity } from '@services/communities/communities'
 import {
   DiscussionWithAuthor,
@@ -47,11 +48,13 @@ export default function CommunityHoverCard({ communityUuid, anchor, onMouseEnter
   const [open, setOpen] = useState<string | null>(null)
   const [composing, setComposing] = useState(false)
 
+  const validUuid = isCommunityUuid(communityUuid)
   const community = useQuery({
     queryKey: ['community', communityUuid],
     queryFn: () => getCommunity(communityUuid, {}, accessToken),
     staleTime: 60_000,
     retry: false,
+    enabled: validUuid,
   })
   const discussions = useQuery({
     queryKey: ['community', communityUuid, 'discussions', 'recent', 1, 'card'],

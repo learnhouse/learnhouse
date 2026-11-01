@@ -40,7 +40,7 @@ RICH_NODE_TYPES = frozenset({"youtube"})
 # "#community" tags: an inline pointer to another community, shown as a chip
 # with a hover card. Only the uuid and a display name are stored.
 COMMUNITY_TAG_NODE = "communityTag"
-COMMUNITY_UUID_PATTERN = re.compile(r"^community_[A-Za-z0-9-]{1,64}$")
+COMMUNITY_UUID_PATTERN = re.compile(r"community_[A-Za-z0-9-]{1,64}")
 MAX_COMMUNITY_TAG_NAME = 100
 ALLOWED_MARK_TYPES = frozenset({"bold", "italic", "strike", "code", "link", "underline"})
 ALLOWED_LINK_SCHEMES = frozenset({"http", "https", "mailto"})
@@ -121,7 +121,7 @@ def _walk_content_node(node: Any, allow_rich: bool, content_type: str) -> None:
         attrs = node.get("attrs") or {}
         uuid, name = attrs.get("communityUuid"), attrs.get("name")
         if (
-            not isinstance(uuid, str) or not COMMUNITY_UUID_PATTERN.match(uuid)
+            not isinstance(uuid, str) or not COMMUNITY_UUID_PATTERN.fullmatch(uuid)
             or not isinstance(name, str) or len(name) > MAX_COMMUNITY_TAG_NAME
             or set(attrs) - {"communityUuid", "name"}
         ):
@@ -339,6 +339,10 @@ def extract_text_from_tiptap(node: Any) -> str:
     if isinstance(node, dict):
         if node.get("type") == "text":
             return node.get("text", "")
+        # A community tag's display name is free text too: moderate it.
+        if node.get("type") == COMMUNITY_TAG_NODE:
+            name = (node.get("attrs") or {}).get("name")
+            return name if isinstance(name, str) else ""
 
         # Recursively process content array
         content = node.get("content", [])
