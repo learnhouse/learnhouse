@@ -31,22 +31,18 @@ interface Draft {
 
 const EMPTY: Draft = { uuid: null, key: '', label: '', description: '', default_value: '', variants: [] }
 
-// "audience:<uuid>" or "group:<uuid>": the who of a variant, as one select.
-function ruleFromChoice(choice: string): RuleGroup | null {
-  const [kind, uuid] = choice.split(':')
-  if (!uuid) return null
-  if (kind === 'audience') return { match: 'all', conditions: [{ field: 'audience', op: 'is', value: uuid }] }
-  if (kind === 'group') return { match: 'all', conditions: [{ field: 'user.groups', op: 'contains_any', value: [uuid] }] }
-  return null
+// A variant's "who" is one user group; other rule trees (written through the
+// API) still show, read-only.
+function ruleFromChoice(uuid: string): RuleGroup | null {
+  return uuid ? { match: 'all', conditions: [{ field: 'user.groups', op: 'contains_any', value: [uuid] }] } : null
 }
 
 function choiceFromRule(rules: any): string {
   // A row just added has no rules yet: show the picker, empty.
   if (!rules) return ''
   const condition = rules?.conditions?.length === 1 ? rules.conditions[0] : null
-  if (condition?.field === 'audience' && condition.op === 'is') return `audience:${condition.value}`
   if (condition?.field === 'user.groups' && condition.op === 'contains_any' && condition.value?.length === 1) {
-    return `group:${condition.value[0]}`
+    return condition.value[0]
   }
   return 'custom'
 }
@@ -56,7 +52,7 @@ function toKey(label: string): string {
 }
 
 // Create and edit the org's custom variables: a default value, and optional
-// variants for specific audiences or groups (first match wins).
+// variants for specific user groups (first match wins).
 export default function CustomVariablesModal({ onClose, onInsert }: { onClose: () => void; onInsert?: (path: string) => void }) {
   const { t } = useTranslation()
   const { accessToken } = useAuth()
@@ -123,10 +119,7 @@ export default function CustomVariablesModal({ onClose, onInsert }: { onClose: (
     await refresh()
   }
 
-  const whoOptions = [
-    ...lookups.audienceOptions.map((a) => ({ value: `audience:${a.value}`, label: `${t('editor.dynamic.custom.audience', 'Audience')}: ${a.label}` })),
-    ...lookups.usergroups.map((g) => ({ value: `group:${g.value}`, label: `${t('editor.dynamic.custom.group', 'Group')}: ${g.label}` })),
-  ]
+  const whoOptions = lookups.usergroups
 
   const list = (
     <div className="space-y-2">
@@ -145,7 +138,7 @@ export default function CustomVariablesModal({ onClose, onInsert }: { onClose: (
             </div>
             <div className="truncate text-xs text-gray-500">
               {v.default_value || t('editor.dynamic.custom.no_default', '(empty by default)')}
-              {v.variants.length > 0 && ` · ${t('editor.dynamic.custom.variant_count', { count: v.variants.length, defaultValue: '{{count}} audience values' })}`}
+              {v.variants.length > 0 && ` · ${t('editor.dynamic.custom.variant_count', { count: v.variants.length, defaultValue: '{{count}} group values' })}`}
             </div>
           </div>
           {onInsert && (
@@ -216,7 +209,7 @@ export default function CustomVariablesModal({ onClose, onInsert }: { onClose: (
 
       <div className="space-y-2 rounded-lg border border-dashed border-violet-200 p-2.5">
         <div className="text-xs font-semibold text-violet-700">
-          {t('editor.dynamic.custom.variants', 'Different value for some learners (optional, first match wins)')}
+          {t('editor.dynamic.custom.variants', 'Different value for some user groups (optional, first match wins)')}
         </div>
         {draft.variants.map((variant, index) => {
           const choice = choiceFromRule(variant.rules)
@@ -235,7 +228,7 @@ export default function CustomVariablesModal({ onClose, onInsert }: { onClose: (
                     setDraft((d) => d && { ...d, variants: d.variants.map((v, i) => (i === index ? { ...v, rules } : v)) })
                   }}
                 >
-                  <option value="">{t('editor.dynamic.custom.pick_who', 'Who…')}</option>
+                  <option value="">{t('editor.dynamic.custom.pick_who', 'User group…')}</option>
                   {whoOptions.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
@@ -263,7 +256,7 @@ export default function CustomVariablesModal({ onClose, onInsert }: { onClose: (
           )
         })}
         {whoOptions.length === 0 ? (
-          <p className="text-xs text-gray-400">{t('editor.dynamic.custom.no_who', 'Create a user group or a saved audience to give some learners a different value.')}</p>
+          <p className="text-xs text-gray-400">{t('editor.dynamic.custom.no_who', 'Create a user group to give its members a different value.')}</p>
         ) : (
           draft.variants.length < 20 && (
             <button
@@ -271,7 +264,7 @@ export default function CustomVariablesModal({ onClose, onInsert }: { onClose: (
               onClick={() => setDraft((d) => d && { ...d, variants: [...d.variants, { rules: null, value: '' }] })}
               className="inline-flex items-center gap-1 text-xs font-semibold text-violet-700 hover:underline"
             >
-              <Plus size={12} /> {t('editor.dynamic.custom.add_variant', 'Add a value for a group or audience')}
+              <Plus size={12} /> {t('editor.dynamic.custom.add_variant', 'Add a value for a user group')}
             </button>
           )
         )}

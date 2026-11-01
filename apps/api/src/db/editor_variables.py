@@ -20,7 +20,7 @@ class EditorVariableBase(SQLModel):
 
 class EditorVariable(EditorVariableBase, table=True):
     """An org-defined variable such as {{ custom.support_email }}: set once,
-    used everywhere, optionally with a different value per audience."""
+    used everywhere, optionally with a different value per user group."""
 
     __table_args__ = (UniqueConstraint("org_id", "key", name="uq_editorvariable_org_key"),)
 

@@ -59,9 +59,6 @@ export const queryKeys = {
   editorTemplates: {
     list: (orgId: number) => ['editor-templates', orgId] as const,
   },
-  editorAudiences: {
-    list: (orgId: number) => ['editor-audiences', orgId] as const,
-  },
   editorVariables: {
     list: (orgId: number) => ['editor-variables', orgId] as const,
   },

@@ -1,14 +1,8 @@
 'use client'
 import React, { useMemo, useState } from 'react'
-import { BookmarkPlus, Code2, Plus, Sparkles, Trash2, Users, Wand2 } from 'lucide-react'
+import { Code2, Plus, Sparkles, Trash2, Users, Wand2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { useAuth } from '@components/Contexts/AuthContext'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { queryKeys } from '@/lib/query/keys'
-import { createEditorAudience } from '@services/courses/dynamicContent'
 import {
   Condition,
   FIELDS,
@@ -50,10 +44,6 @@ export default function RuleBuilder({ rules, label, hiddenMessage, lookups, onSa
   const [mode, setMode] = useState<Mode>(isFlatGroup(rules) ? 'visual' : 'code')
   const [code, setCode] = useState(() => stringifyRules(rules))
   const [codeError, setCodeError] = useState<string | null>(null)
-  const [audienceName, setAudienceName] = useState<string | null>(null)
-  const { accessToken } = useAuth()
-  const org = useOrg() as any
-  const queryClient = useQueryClient()
 
   const applyRules = (next: RuleGroup, message?: string) => {
     setDraft(next)
@@ -62,24 +52,9 @@ export default function RuleBuilder({ rules, label, hiddenMessage, lookups, onSa
     if (message && !draftMessage) setDraftMessage(message)
   }
 
-  const pickAudience = (uuid: string) =>
-    applyRules({ match: 'all', conditions: [{ field: 'audience', op: 'is', value: uuid }] })
-
-  // Turn the current rules into a named audience other blocks can reuse.
-  const saveAsAudience = async () => {
-    const name = audienceName?.trim()
-    const rules = previewRules
-    if (!name || !rules || !org?.id || !accessToken) return
-    const res = await createEditorAudience({ org_id: org.id, name, description: '', rules }, accessToken)
-    if (!res.success) {
-      toast.error(res.data?.detail || t('editor.dynamic.audience_save_error', 'Could not save the audience'))
-      return
-    }
-    await queryClient.invalidateQueries({ queryKey: queryKeys.editorAudiences.list(org.id) })
-    setAudienceName(null)
-    pickAudience(res.data.audience_uuid)
-    toast.success(t('editor.dynamic.audience_saved', { name, defaultValue: 'Saved "{{name}}". Any block can now use it.' }))
-  }
+  // One click: everyone in this user group.
+  const pickGroup = (uuid: string) =>
+    applyRules({ match: 'all', conditions: [{ field: 'user.groups', op: 'contains_any', value: [uuid] }] })
 
   const switchMode = (next: Mode) => {
     if (next === mode) return
@@ -162,17 +137,17 @@ export default function RuleBuilder({ rules, label, hiddenMessage, lookups, onSa
               </button>
             ))}
           </div>
-          {lookups.audienceOptions.length > 0 && (
+          {lookups.usergroups.length > 0 && (
             <>
               <div className="flex items-center gap-1.5 pt-1 text-xs font-semibold text-violet-700">
-                <Users size={13} /> {t('editor.dynamic.saved_audiences', 'Saved audiences')}
+                <Users size={13} /> {t('editor.dynamic.your_groups', 'Your user groups')}
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {lookups.audienceOptions.map((a) => (
+                {lookups.usergroups.map((a) => (
                   <button
                     key={a.value}
                     type="button"
-                    onClick={() => pickAudience(a.value)}
+                    onClick={() => pickGroup(a.value)}
                     className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-800 hover:bg-violet-200"
                   >
                     {a.label}
@@ -267,33 +242,6 @@ export default function RuleBuilder({ rules, label, hiddenMessage, lookups, onSa
           <span className="font-semibold">{t('editor.dynamic.visible_to', 'Visible to')}:</span>{' '}
           {previewRules ? describeRules(previewRules, lookups.names) : '…'}
         </div>
-        {audienceName === null ? (
-          previewRules && previewRules.conditions.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setAudienceName('')}
-              className="inline-flex shrink-0 items-center gap-1 font-semibold hover:underline"
-              title={t('editor.dynamic.save_audience_hint', 'Name these rules to reuse them in other blocks')}
-            >
-              <BookmarkPlus size={13} /> {t('editor.dynamic.save_audience', 'Save as audience')}
-            </button>
-          )
-        ) : (
-          <div className="flex shrink-0 items-center gap-1">
-            <input
-              autoFocus
-              className="w-36 rounded-md border border-violet-200 bg-white px-2 py-1"
-              value={audienceName}
-              maxLength={80}
-              placeholder={t('editor.dynamic.audience_name', 'e.g. Internal staff')}
-              onChange={(e) => setAudienceName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && saveAsAudience()}
-            />
-            <button type="button" onClick={saveAsAudience} className="rounded-md bg-violet-600 px-2 py-1 font-semibold text-white">
-              {t('common.save', 'Save')}
-            </button>
-          </div>
-        )}
       </div>
 
       <div>
@@ -462,21 +410,6 @@ function ValueInput(props: {
       <input type="date" className="w-full rounded-lg border border-gray-200 px-2 py-1.5"
         value={typeof value === 'string' ? value : ''}
         onChange={(e) => onChange(e.target.value)} />
-    )
-  }
-
-  if (type === 'audience') {
-    return (
-      <select
-        className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5"
-        value={typeof value === 'string' ? value : ''}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="">{t('editor.dynamic.pick_audience', 'Pick an audience…')}</option>
-        {props.lookups.audienceOptions.map((a) => (
-          <option key={a.value} value={a.value}>{a.label}</option>
-        ))}
-      </select>
     )
   }
 

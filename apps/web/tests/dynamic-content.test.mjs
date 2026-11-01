@@ -243,11 +243,9 @@ describe("round three", () => {
     }
   });
 
-  test("audience rules", () => {
-    const rules = parseRules('audience is "audience_1" and not audience is_not "audience_2"');
-    expect(rules.conditions[0]).toEqual({ field: "audience", op: "is", value: "audience_1" });
-    expect(describeRules({ conditions: [{ field: "audience", op: "is", value: "audience_1" }] }, { audiences: { audience_1: "Staff" } })).toBe('"Staff"');
-    expect(describeRules({ conditions: [{ field: "audience", op: "is_not", value: "gone" }] })).toBe('not in "a deleted audience"');
+  test("group rules describe with group names", () => {
+    const rules = parseRules('user.groups contains_any ["usergroup_1"]');
+    expect(describeRules(rules, { usergroups: { usergroup_1: "Team Leads" } })).toBe("User group is any of Team Leads");
   });
 
   test("starter templates are valid editor documents", async () => {

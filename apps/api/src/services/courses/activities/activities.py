@@ -42,7 +42,6 @@ from src.services.courses.activities.dynamic_context import (
     build_render_context,
     course_learner_contexts,
     enrolled_learner_context,
-    load_audiences,
     with_references,
     persona_context,
     search_enrolled_learners,
@@ -359,11 +358,6 @@ async def get_dynamic_reach(
     conditions = sum(max(1, count_conditions(rules)) for rules, _ in blocks)
     if conditions * len(contexts) > MAX_REACH_WORK:
         raise HTTPException(status_code=413, detail="Too many rules to count for this many learners")
-    # Variants of custom variables don't change which blocks show, so only
-    # the audiences the blocks themselves use matter here.
-    audiences = await load_audiences(course.org_id, content, db_session)
-    if audiences:
-        contexts = [replace(ctx, audiences=audiences) for ctx in contexts]
     counts = await run_in_threadpool(conditional_reach, content, contexts)
     return DynamicReachResponse(learners=len(contexts), blocks=counts, truncated=truncated)
 
