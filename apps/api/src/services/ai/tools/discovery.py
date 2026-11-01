@@ -227,7 +227,7 @@ def _score(query: str, name: str) -> float:
 
 
 def _like(query: str) -> str:
-    from src.services.search.search import build_like_pattern
+    from src.services.search.normalization import build_like_pattern
 
     return build_like_pattern(query)
 
