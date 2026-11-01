@@ -8,6 +8,16 @@ from dotenv import load_dotenv
 # every request, and repeating the report drowns out every other startup log.
 _LOGGED_MISSING_INTERNAL_KEYS = False
 
+# Example values from .env.example files and the docs. A deployment that kept
+# one has a secret anyone can read. Keep in sync with apps/collab/src/index.ts.
+PLACEHOLDER_SECRETS = frozenset({
+    "your-jwt-secret-key",
+    "your-internal-key",
+    "CHANGE_ME_generate_with_openssl_rand_hex_32",
+    "replace-with-at-least-32-random-characters",
+    "replace-with-random-shared-secret",
+})
+
 
 class CookieConfig(BaseModel):
     domain: str
@@ -267,6 +277,18 @@ def get_learnhouse_config() -> LearnHouseConfig:
         raise ValueError(
             "SECURITY ERROR: LEARNHOUSE_AUTH_JWT_SECRET_KEY must be set. "
             "Generate a secure key with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+        )
+    if auth_jwt_secret_key in PLACEHOLDER_SECRETS:
+        # Warn rather than refuse: the key also derives the encryption for
+        # stored webhook and MFA secrets and peppers API tokens, so rotating it
+        # is a planned migration, not something to force on an upgrade.
+        import logging as _cfg_log
+        _cfg_log.getLogger(__name__).critical(
+            "SECURITY: LEARNHOUSE_AUTH_JWT_SECRET_KEY is the example value from the docs, "
+            "so anyone can sign valid sessions for this instance. Rotate it to a random value "
+            "(python -c \"import secrets; print(secrets.token_urlsafe(32))\"). Rotating signs "
+            "everyone out and invalidates stored webhook secrets, API tokens and MFA enrolments "
+            "unless LEARNHOUSE_MFA_ENCRYPTION_KEY is set."
         )
     if len(auth_jwt_secret_key) < 32:
         raise ValueError(

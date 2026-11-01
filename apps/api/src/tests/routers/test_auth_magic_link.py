@@ -311,6 +311,57 @@ class TestMagicLinkVerify:
         assert body["tokens"]["access_token"]
         cookies_mock.assert_called_once()
 
+    async def _verify(self, client, email):
+        with patch(
+            "src.services.auth.magic_login.consume_magic_login_token",
+            return_value=(email, None),
+        ):
+            return await client.post("/api/v1/auth/magic-link/verify", json={"token": "good-token"})
+
+    async def test_existing_verified_account_keeps_its_password(self, client, db, verified_user):
+        # Rows from before the inbox marker existed must be left alone
+        response = await self._verify(client, verified_user.email)
+        assert response.status_code == 200
+        await db.refresh(verified_user)
+        assert verified_user.password == "hashed_password"
+
+    async def test_unproven_signup_loses_its_password(self, client, db, verified_user):
+        from src.services.users.users import _mark_inbox_unproven, inbox_unproven
+
+        _mark_inbox_unproven(verified_user)
+        db.add(verified_user)
+        await db.commit()
+
+        response = await self._verify(client, verified_user.email)
+        assert response.status_code == 200
+        await db.refresh(verified_user)
+        assert verified_user.password == ""
+        assert not inbox_unproven(verified_user)
+        assert verified_user.email_verified_at
+
+    async def test_admin_provisioned_password_is_kept(self, client, db, verified_user):
+        # Only Google sign-in drops these; a magic link must not sign such members out
+        verified_user.signup_method = "admin_api"
+        db.add(verified_user)
+        await db.commit()
+
+        response = await self._verify(client, verified_user.email)
+        assert response.status_code == 200
+        await db.refresh(verified_user)
+        assert verified_user.password == "hashed_password"
+
+    async def test_unverified_address_loses_its_password(self, client, db, verified_user):
+        # e.g. an address changed to someone else's and never confirmed
+        verified_user.email_verified = False
+        db.add(verified_user)
+        await db.commit()
+
+        response = await self._verify(client, verified_user.email)
+        assert response.status_code == 200
+        await db.refresh(verified_user)
+        assert verified_user.password == ""
+        assert verified_user.email_verified is True
+
     async def test_mfa_required_branch(self, client, db, verified_user):
         await _enroll_confirmed(db, verified_user.id)
         with patch(

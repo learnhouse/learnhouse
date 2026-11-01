@@ -395,6 +395,78 @@ class TestGooglePreHijack:
         assert user.password and verified.password
         revoke_mock.assert_not_called()
 
+    async def test_self_hosted_signup_password_is_dropped(self, db):
+        from src.services.users.users import _mark_inbox_unproven, inbox_unproven
+
+        # Self-hosted signups are marked verified without proof of the inbox
+        user = await _make_user(db, 84, "presignup@test.com")
+        _mark_inbox_unproven(user)
+        db.add(user)
+        await db.commit()
+
+        revoke_mock = await self._sign_in(db, "presignup@test.com")
+        await db.refresh(user)
+        assert user.password == ""
+        assert not inbox_unproven(user)
+        revoke_mock.assert_called_once_with(user.id)
+
+
+    async def test_trusted_account_only_backfills_its_signup_method(self, db):
+        user = await _make_user(db, 85, "legacy@test.com", signup_method=None)
+        revoke_mock = await self._sign_in(db, "legacy@test.com")
+        await db.refresh(user)
+        assert user.signup_method == "google"
+        assert user.password
+        revoke_mock.assert_not_called()
+
+    async def test_claim_on_an_unsaved_user_stops_before_session_work(self):
+        from src.db.users import User
+        from src.services.auth.utils import claim_account_on_inbox_proof
+
+        user = User(username="u", first_name="", last_name="", email="new@test.com",
+                    password="hash", email_verified=False)
+        session = MagicMock(commit=AsyncMock(), refresh=AsyncMock())
+        with patch("src.security.auth.revoke_user_sessions_before") as revoke_mock, patch(
+            "src.services.auth.utils._drop_unverified_sso_links", new=AsyncMock()
+        ) as drop_mock:
+            await claim_account_on_inbox_proof(user, session)
+        assert user.password == ""
+        session.commit.assert_awaited_once()
+        revoke_mock.assert_not_called()
+        drop_mock.assert_not_awaited()
+
+
+class TestSignupInboxMarker:
+    @pytest.mark.parametrize("mode,marked", [("oss", True), ("saas", False)])
+    async def test_email_signup_marked_only_off_saas(self, db, mock_request, mode, marked):
+        from src.db.users import AnonymousUser, UserCreate
+        from src.services.users.users import create_user_without_org, inbox_unproven
+
+        body = UserCreate(username=f"s{mode}", email=f"{mode}@test.com", password="Passw0rd!x")
+        with patch("src.services.users.users.get_deployment_mode", return_value=mode), patch(
+            "src.services.users.users.rbac_check", new=AsyncMock()
+        ), patch(
+            "src.services.users.email_verification.send_verification_email", new=AsyncMock()
+        ), patch("src.services.users.users.send_account_creation_email"):
+            created = await create_user_without_org(mock_request, db, AnonymousUser(), body)
+        from src.db.users import User
+
+        row = await db.get(User, created.id)
+        assert inbox_unproven(row) is marked
+
+    async def test_google_signup_is_not_marked(self, db, mock_request):
+        from src.db.users import AnonymousUser, User, UserCreate
+        from src.services.users.users import create_user_without_org, inbox_unproven
+
+        body = UserCreate(username="g", email="g@test.com", password="")
+        with patch("src.services.users.users.get_deployment_mode", return_value="oss"), patch(
+            "src.services.users.users.rbac_check", new=AsyncMock()
+        ), patch("src.services.users.users.send_account_creation_email"):
+            created = await create_user_without_org(
+                mock_request, db, AnonymousUser(), body, is_oauth=True, signup_provider="google"
+            )
+        assert not inbox_unproven(await db.get(User, created.id))
+
 
 # ── Password reset ───────────────────────────────────────────────────────────
 

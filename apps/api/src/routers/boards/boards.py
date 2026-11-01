@@ -4,6 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, UploadFile, File
 
 from sqlmodel.ext.asyncio.session import AsyncSession
+from config.config import PLACEHOLDER_SECRETS
 from src.core.events.database import get_db_session
 from src.db.boards import (
     BoardCreate,
@@ -39,6 +40,9 @@ router = APIRouter(dependencies=[Depends(require_boards_feature)])
 async def verify_internal_key(x_internal_key: str = Header(...)):
     """FastAPI dependency that validates the shared collab internal key."""
     expected_key = os.getenv("COLLAB_INTERNAL_KEY", "")
+    # A key left at the documented example value is public, so it opens nothing.
+    if expected_key in PLACEHOLDER_SECRETS:
+        expected_key = ""
     # Bytes: compare_digest raises TypeError on non-ASCII str header values.
     if not expected_key or not hmac.compare_digest(
         x_internal_key.encode(), expected_key.encode()

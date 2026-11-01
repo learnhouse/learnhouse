@@ -348,6 +348,67 @@ class TestPasswordResetService:
         fake_redis.getdel.assert_called_once_with(redis_key)
 
     @pytest.mark.asyncio
+    async def test_reset_clears_the_unproven_inbox_marker(
+        self, mock_request, db, org, regular_user
+    ):
+        user = (await db.execute(
+            select(User).where(User.email == regular_user.email)
+        )).scalars().first()
+        assert user is not None
+        from src.services.users.users import _mark_inbox_unproven, inbox_unproven
+
+        # A reset code arrives through the inbox, so it proves the owner
+        _mark_inbox_unproven(user)
+        db.add(user)
+        await db.commit()
+        old_password = user.password
+        reset_code = "RESET123"
+        redis_key = f"pwd_reset:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
+        fake_redis = Mock()
+        fake_redis.getdel.return_value = json.dumps(
+            {
+                "reset_code": reset_code,
+                "reset_code_expires": int(datetime.now().timestamp()) + 3600,
+                "reset_code_type": "password_reset",
+                "created_at": datetime.now().isoformat(),
+                "created_by": user.user_uuid,
+                "org_uuid": org.org_uuid,
+            }
+        )
+
+        with patch(
+            "src.services.users.password_reset.validate_password_complexity",
+            return_value=SimpleNamespace(is_valid=True, errors=[], requirements={}),
+        ), patch(
+            "src.services.users.password_reset.get_learnhouse_config",
+            return_value=SimpleNamespace(
+                redis_config=SimpleNamespace(
+                    redis_connection_string="redis://test"
+                )
+            ),
+        ), patch(
+            "src.services.users.password_reset.redis.Redis.from_url",
+            return_value=fake_redis,
+        ):
+            result = await change_password_with_reset_code(
+                mock_request,
+                db,
+                AnonymousUser(),
+                "NewPassword123!",
+                org.id,
+                user.email,
+                reset_code,
+            )
+
+        assert result == "Password changed"
+        refreshed = (await db.execute(select(User).where(User.email == user.email))).scalars().first()
+        assert refreshed is not None
+        assert refreshed.password != old_password
+        assert security_verify_password("NewPassword123!", refreshed.password)
+        assert not inbox_unproven(refreshed)
+        fake_redis.getdel.assert_called_once_with(redis_key)
+
+    @pytest.mark.asyncio
     async def test_change_password_with_reset_code_error_paths(
         self, mock_request, db, org, regular_user
     ):
