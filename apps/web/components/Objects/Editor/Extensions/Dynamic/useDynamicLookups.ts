@@ -6,9 +6,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseContext } from '@components/Contexts/CourseContext'
 import { getUserGroups } from '@services/usergroups/usergroups'
 import {
-  EditorAudience,
   EditorVariable,
-  getEditorAudiences,
   getEditorVariables,
 } from '@services/courses/dynamicContent'
 import { VariableDef, customVariableDef } from './dynamicRules'
@@ -35,14 +33,6 @@ export function useDynamicLookups(enabled: boolean = true) {
     staleTime: 60_000,
   })
 
-  const { data: audiencesRaw } = useQuery({
-    queryKey: queryKeys.editorAudiences.list(org?.id),
-    queryFn: () => getEditorAudiences(org.id, accessToken as string),
-    select: (res: any) => asArray<EditorAudience>(res?.data),
-    enabled: enabled && !!(org?.id && accessToken),
-    staleTime: 30_000,
-  })
-
   const { data: variablesRaw } = useQuery({
     queryKey: queryKeys.editorVariables.list(org?.id),
     queryFn: () => getEditorVariables(org.id, accessToken as string),
@@ -62,22 +52,17 @@ export function useDynamicLookups(enabled: boolean = true) {
     )
     const toRecord = (options: LookupOption[]) =>
       Object.fromEntries(options.map((o) => [o.value, o.label]))
-    const audiences: EditorAudience[] = audiencesRaw ?? []
-    const audienceOptions: LookupOption[] = audiences.map((a) => ({ value: a.audience_uuid, label: a.name }))
     const customVariables: EditorVariable[] = variablesRaw ?? []
     const customDefs: VariableDef[] = customVariables.map(customVariableDef)
     return {
       usergroups,
       activities,
-      audiences,
-      audienceOptions,
       customVariables,
       customDefs,
       names: {
         usergroups: toRecord(usergroups),
         activities: toRecord(activities),
-        audiences: toRecord(audienceOptions),
       },
     }
-  }, [usergroupsRaw, audiencesRaw, variablesRaw, course?.courseStructure])
+  }, [usergroupsRaw, variablesRaw, course?.courseStructure])
 }

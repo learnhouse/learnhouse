@@ -3,7 +3,7 @@
 // this file mirrors its tables so the editor only offers what the server
 // understands. Anything the server doesn't know hides the block.
 
-export type FieldType = 'set' | 'string' | 'locale' | 'number' | 'bool' | 'date' | 'audience'
+export type FieldType = 'set' | 'string' | 'locale' | 'number' | 'bool' | 'date'
 
 export type RuleValue = string | number | string[] | number[] | null | undefined
 
@@ -26,11 +26,10 @@ export interface FieldDef {
   type: FieldType
   label: string
   // Fields whose value is picked from org data rather than typed
-  picker?: 'usergroups' | 'roles' | 'activities' | 'audiences'
+  picker?: 'usergroups' | 'roles' | 'activities'
 }
 
 export const FIELDS: FieldDef[] = [
-  { field: 'audience', type: 'audience', label: 'Saved audience', picker: 'audiences' },
   { field: 'user.groups', type: 'set', label: 'User group', picker: 'usergroups' },
   { field: 'user.role', type: 'string', label: 'Role', picker: 'roles' },
   { field: 'user.signed_in', type: 'bool', label: 'Signed in' },
@@ -54,7 +53,6 @@ export const OPS: Record<FieldType, string[]> = {
   number: ['gte', 'lte', 'gt', 'lt', 'eq', 'neq', 'between'],
   bool: ['is_true', 'is_false'],
   date: ['on_or_after', 'on_or_before', 'between'],
-  audience: ['is', 'is_not'],
 }
 
 export const OP_LABELS: Record<string, string> = {
@@ -74,8 +72,6 @@ export const OP_LABELS: Record<string, string> = {
   is_false: 'no',
   on_or_after: 'on or after',
   on_or_before: 'on or before',
-  is: 'includes the learner',
-  is_not: 'excludes the learner',
   before: 'before',
   after: 'after',
 }
@@ -156,7 +152,6 @@ export function defaultCondition(field = 'user.groups'): Condition {
 
 export function defaultValue(type: FieldType, op: string): RuleValue {
   if (type === 'bool') return undefined
-  if (type === 'audience') return ''
   if (op === 'between') return type === 'date' ? [today(), today()] : [0, 100]
   if (type === 'number') return op.startsWith('g') ? 50 : 0
   if (type === 'date') return today()
@@ -367,7 +362,6 @@ export function stringifyRules(rules: RuleGroup | null | undefined): string {
 export interface DescribeLookups {
   usergroups?: Record<string, string>
   activities?: Record<string, string>
-  audiences?: Record<string, string>
 }
 
 function describeValue(field: string, value: RuleValue, lookups: DescribeLookups): string {
@@ -376,7 +370,6 @@ function describeValue(field: string, value: RuleValue, lookups: DescribeLookups
     const key = String(v)
     if (field === 'user.groups') return lookups.usergroups?.[key] ?? key
     if (field === 'progress.completed_activities') return lookups.activities?.[key] ?? key
-    if (field === 'audience') return lookups.audiences?.[key] ?? 'a deleted audience'
     return key
   })
   return names.join(', ') || '…'
@@ -391,10 +384,6 @@ function describeItem(item: Condition | RuleGroup, lookups: DescribeLookups): st
   const label = def?.label ?? item.field
   const op = OP_LABELS[item.op] ?? item.op
   if (def?.type === 'bool') return `${label}: ${op}`
-  if (def?.type === 'audience') {
-    const name = describeValue(item.field, item.value, lookups)
-    return item.op === 'is_not' ? `not in "${name}"` : `"${name}"`
-  }
   if (item.op === 'between' && Array.isArray(item.value)) {
     return `${label} between ${describeValue(item.field, item.value[0] as any, lookups)} and ${describeValue(item.field, item.value[1] as any, lookups)}`
   }

@@ -1,9 +1,8 @@
 """Custom variables: values an organization's authors define once and use in
-any activity as {{ custom.key }}, optionally varying by audience.
+any activity as {{ custom.key }}, optionally different for some user groups.
 
-Same rights as saved audiences: any author may create one; changing or
-deleting one changes text in every course, so that takes the right to update
-every course in the org.
+Any author may create one. Changing or deleting one changes text in every
+course, so that takes the right to update every course in the org.
 """
 
 import json

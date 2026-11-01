@@ -1,7 +1,7 @@
 """Add editorvariable table
 
 Revision ID: 8d2b6f4c1e75
-Revises: 5c1f8e2a9b30
+Revises: 0a7e3c9d1b42
 Create Date: 2026-10-31 13:00:00.000000
 """
 from typing import Sequence, Union
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = '8d2b6f4c1e75'
-down_revision: Union[str, None] = '5c1f8e2a9b30'
+down_revision: Union[str, None] = '0a7e3c9d1b42'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

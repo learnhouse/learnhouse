@@ -21,7 +21,6 @@ from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.chapters import Chapter
 from src.db.courses.course_chapters import CourseChapter
-from src.db.editor_audiences import EditorAudience
 from src.db.editor_variables import EditorVariable
 from src.db.organizations import Organization
 from src.db.trail_runs import TrailRun
@@ -33,7 +32,6 @@ from src.db.users import PublicUser, User
 from src.security.rbac.constants import ADMIN_ROLE_ID, MAINTAINER_ROLE_ID
 from src.services.courses.activities.dynamic_content import (
     RenderContext,
-    referenced_audiences,
     referenced_custom_variables,
     has_dynamic_content,
     render_document,
@@ -84,32 +82,6 @@ async def _course_progress_totals(course_id: int, db_session: AsyncSession) -> i
     )).scalar_one()
 
 
-# Audiences may refer to audiences; follow that far, then stop (anything
-# deeper is unresolved and hides, like any rule the server can't evaluate).
-MAX_AUDIENCE_HOPS = 3
-
-
-async def load_audiences(org_id: int, content: Any, db_session: AsyncSession) -> dict[str, Any]:
-    """The saved audiences ``content`` refers to, within ``org_id`` only:
-    another org's audience uuid resolves to nothing."""
-    wanted = referenced_audiences(content)
-    loaded: dict[str, Any] = {}
-    for _ in range(MAX_AUDIENCE_HOPS):
-        wanted -= loaded.keys()
-        if not wanted:
-            break
-        rows = (await db_session.execute(
-            select(EditorAudience.audience_uuid, EditorAudience.rules).where(
-                EditorAudience.org_id == org_id,
-                EditorAudience.audience_uuid.in_(wanted),  # type: ignore[attr-defined]
-            )
-        )).all()
-        found = {uuid: rules for uuid, rules in rows}
-        loaded.update(found)
-        wanted = set().union(*(referenced_audiences(rules) for rules in found.values())) if found else set()
-    return loaded
-
-
 async def load_custom_variables(org_id: int, content: Any, db_session: AsyncSession) -> dict[str, Any]:
     """The org's custom variables ``content`` uses, by key."""
     keys = referenced_custom_variables(content)
@@ -125,20 +97,9 @@ async def load_custom_variables(org_id: int, content: Any, db_session: AsyncSess
 
 
 async def with_references(ctx: RenderContext, org_id: int, content: Any, db_session: AsyncSession) -> RenderContext:
-    """``ctx`` plus the custom variables and saved audiences ``content``
-    needs, including audiences that only a variable's variants mention."""
+    """``ctx`` plus the custom variables ``content`` needs."""
     custom = await load_custom_variables(org_id, content, db_session)
-    variant_rules = [
-        variant.get("rules")
-        for definition in custom.values()
-        for variant in definition["variants"]
-        if isinstance(variant, dict)
-    ]
-    scope = {"content": [content, *[r for r in variant_rules if isinstance(r, dict)]]}
-    audiences = await load_audiences(org_id, scope, db_session) if referenced_audiences(scope) else {}
-    if not custom and not audiences:
-        return ctx
-    return replace(ctx, custom_variables=custom, audiences=audiences)
+    return replace(ctx, custom_variables=custom) if custom else ctx
 
 
 async def course_navigation(course_id: int, db_session: AsyncSession) -> dict[str, tuple[str, str]]:
