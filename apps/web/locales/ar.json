@@ -909,6 +909,25 @@
       "view_all": "عرض الكل",
       "no_discussions": "لا توجد نقاشات بعد",
       "start_first": "ابدأ أول نقاش"
+    },
+    "tag": {
+      "loading": "جارٍ تحميل المجتمع…",
+      "unavailable": "هذا المجتمع غير متاح لك.",
+      "open": "فتح",
+      "empty": "لا توجد نقاشات بعد. ابدأ أول نقاش.",
+      "sign_in": "سجّل الدخول للانضمام إلى النقاش.",
+      "new_discussion": "ابدأ نقاشًا",
+      "reply_error": "تعذّر نشر ردّك",
+      "no_replies": "لا توجد ردود بعد.",
+      "reply_placeholder": "اكتب ردًا…",
+      "reply": "ردّ",
+      "open_discussion": "فتح النقاش كاملًا",
+      "posted": "تم نشر النقاش",
+      "post_error": "تعذّر نشر النقاش",
+      "title_placeholder": "العنوان",
+      "body_placeholder": "ما الذي تودّ أن تسأله أو تشاركه؟",
+      "post": "نشر",
+      "link_community": "ربط مجتمع"
     }
   },
   "podcasts": {
@@ -5622,7 +5641,9 @@
         "variable": "إدراج متغيّر (أو اكتب {{example}})",
         "variable_label": "متغيّر",
         "conditional": "محتوى يراه بعض المتعلمين فقط",
-        "conditional_label": "محتوى مشروط"
+        "conditional_label": "محتوى مشروط",
+        "community": "ربط مجتمع (أو اكتب {{example}})",
+        "community_label": "مجتمع"
       },
       "your_groups": "مجموعات المستخدمين لديك"
     },

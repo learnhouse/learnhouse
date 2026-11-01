@@ -8,6 +8,8 @@ import Youtube from '@tiptap/extension-youtube'
 import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, List, ListOrdered, Heading2, Quote, MonitorPlay } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { extractYoutubeVideoId, stripRichContent, youtubeWatchUrl } from './richContent'
+import { CommunityTag, CommunityTagSuggestion } from './Tags/CommunityTag'
+import { useTaggableCommunities } from './Tags/communityTags'
 
 interface DiscussionEditorProps {
   content: any
@@ -56,8 +58,11 @@ export function DiscussionEditor({
   allowRichContent = false,
 }: DiscussionEditorProps) {
   const { t } = useTranslation()
+  const communities = useTaggableCommunities()
   const editor = useEditor({
     extensions: [
+      CommunityTag,
+      CommunityTagSuggestion,
       StarterKit.configure({
         // Disable link since we configure it separately below
         link: false,
@@ -120,6 +125,12 @@ export function DiscussionEditor({
       onChange(json)
     },
   }, [allowRichContent])
+
+  // "#" autocomplete lists the org's communities.
+  React.useEffect(() => {
+    const storage = (editor?.storage as any)?.communityTagSuggestion
+    if (storage) storage.communities = communities
+  }, [editor, communities])
 
   if (!editor) {
     return null

@@ -62,6 +62,7 @@ import { CustomHeading } from './CustomHeadingExtenstion'
 import WebPreview from '@components/Objects/Editor/Extensions/WebPreview/WebPreview'
 import ConditionalBlock from '@components/Objects/Editor/Extensions/Dynamic/ConditionalBlock'
 import DynamicVariable from '@components/Objects/Editor/Extensions/Dynamic/DynamicVariable'
+import { CommunityTag } from '@components/Objects/Communities/Tags/CommunityTag'
 import AICanvaToolkit from './AI/AICanvaToolkit'
 
 interface Editor {
@@ -215,6 +216,7 @@ function Canva(props: Editor) {
       // the raw document, so the nodes still need a schema here.
       ConditionalBlock,
       DynamicVariable,
+      CommunityTag,
       TableRow,
       TableHeader,
       TableCell,
