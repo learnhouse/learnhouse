@@ -59,6 +59,9 @@ export const queryKeys = {
   editorTemplates: {
     list: (orgId: number) => ['editor-templates', orgId] as const,
   },
+  dynamicOptions: {
+    detail: (activityUuid: string) => ['dynamic-options', activityUuid] as const,
+  },
   editorVariables: {
     list: (orgId: number) => ['editor-variables', orgId] as const,
   },

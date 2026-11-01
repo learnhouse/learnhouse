@@ -637,3 +637,83 @@ class TestNavigation:
         )
         assert first["content"][0]["content"] == [_text("Test Chapter -> Lesson Two")]
         assert last["content"][0]["content"] == [_text("Test Chapter -> the end")]
+
+
+class TestLearnHouseNativeFields:
+    def test_rules_and_variables(self):
+        ctx = _ctx(
+            certified=True, certified_on=date(2026, 10, 2), assignment_total=4,
+            assignments_submitted=frozenset({"assignment_a", "assignment_b"}), assignment_average=81.5,
+            community_posts=3, communities_active=frozenset({"community_x"}),
+        )
+        rules = {"conditions": [
+            _cond("course.certified", "is_true"),
+            _cond("assignments.submitted", "contains_all", ["assignment_a", "assignment_b"]),
+            _cond("assignments.average_grade", "gte", 80),
+            _cond("community.posts", "gte", 3),
+            _cond("community.active_in", "contains_any", ["community_x"]),
+        ]}
+        assert evaluate_rules(rules, ctx) is True
+        text = "{{certificate.date}}|{{assignments.submitted}}/{{assignments.total}}|{{assignments.average_grade}}|{{community.posts}}"
+        assert interpolate_text(text, ctx) == "2026-10-02|2/4|82|3"
+        # Nothing graded yet: no average, and grade rules don't match.
+        empty = _ctx()
+        assert interpolate_text("{{assignments.average_grade}}", empty) == ""
+        assert evaluate_rules({"conditions": [_cond("assignments.average_grade", "gte", 0)]}, empty) is False
+
+    @pytest.mark.asyncio
+    async def test_loaded_from_learnhouse_data(self, mock_request, db, org, course, chapter, activity, admin_user, regular_user):
+        from src.db.communities.communities import Community
+        from src.db.communities.discussion_comments import DiscussionComment
+        from src.db.communities.discussions import Discussion
+        from src.db.courses.assignments import (
+            Assignment, AssignmentUserSubmission, AssignmentUserSubmissionStatus, GradingTypeEnum,
+        )
+        from src.db.courses.certifications import CertificateUser, Certifications
+        from src.services.courses.activities.activities import get_dynamic_options
+
+        now = str(datetime.now())
+        cert = Certifications(certification_uuid="cert_1", course_id=course.id, config={}, creation_date=now, update_date=now)
+        db.add(cert)
+        a1 = Assignment(
+            title="Essay", description="", grading_type=list(GradingTypeEnum)[0], assignment_uuid="assignment_1",
+            org_id=org.id, course_id=course.id, chapter_id=chapter.id, activity_id=activity.id,
+        )
+        a2 = Assignment(
+            title="Quiz", description="", grading_type=list(GradingTypeEnum)[0], assignment_uuid="assignment_2",
+            org_id=org.id, course_id=course.id, chapter_id=chapter.id, activity_id=activity.id,
+        )
+        community = Community(name="Lounge", org_id=org.id, community_uuid="community_lounge")
+        db.add_all([a1, a2, community])
+        await db.commit()
+        for a in (cert, a1, a2, community):
+            await db.refresh(a)
+        db.add(CertificateUser(user_id=regular_user.id, certification_id=cert.id, user_certification_uuid="uc_1", created_at="2026-10-02T10:00:00"))
+        db.add(AssignmentUserSubmission(
+            creation_date=now, update_date=now, assignmentusersubmission_uuid="s1",
+            submission_status=AssignmentUserSubmissionStatus.GRADED, grade=90, user_id=regular_user.id, assignment_id=a1.id,
+        ))
+        discussion = Discussion(title="Hi", community_id=community.id, org_id=org.id, author_id=regular_user.id, discussion_uuid="discussion_1")
+        db.add(discussion)
+        await db.commit()
+        await db.refresh(discussion)
+        db.add(DiscussionComment(content="Me too", discussion_id=discussion.id, author_id=regular_user.id, comment_uuid="comment_1"))
+        await db.commit()
+
+        ctx = await build_render_context(mock_request, regular_user, course, db)
+        assert (ctx.certified, ctx.certified_on) == (True, date(2026, 10, 2))
+        assert (ctx.assignment_total, ctx.assignments_submitted, ctx.assignment_average) == (2, frozenset({"assignment_1"}), 90)
+        assert (ctx.community_posts, ctx.communities_active) == (2, frozenset({"community_lounge"}))
+
+        with patch("src.services.courses.activities.activities.check_resource_access", new_callable=AsyncMock):
+            options = await get_dynamic_options(mock_request, activity.activity_uuid, admin_user, db)
+            preview = await get_dynamic_preview(
+                mock_request, activity.activity_uuid,
+                DynamicPreviewRequest(
+                    content=_doc(_conditional({"conditions": [_cond("course.certified", "is_true")]}, _p(_text("cert")))),
+                    persona=PreviewPersona(certified=True, community_posts=5),
+                ),
+                admin_user, db,
+            )
+        assert [a.title for a in options.assignments] == ["Essay", "Quiz"]
+        assert preview.content["content"] == [_p(_text("cert"))]

@@ -15,6 +15,9 @@ export interface PreviewPersona {
   days_enrolled?: number | null
   progress_percent: number
   completed_activity_uuids: string[]
+  certified?: boolean
+  assignments_submitted?: string[]
+  community_posts?: number
   today?: string | null
   email?: string | null
   bucket?: number | null
@@ -164,6 +167,19 @@ export async function deleteEditorVariable(variable_uuid: string, access_token: 
   const result = await fetch(
     `${getAPIUrl()}editor-variables/${variable_uuid}`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export interface DynamicOptions {
+  assignments: { assignment_uuid: string; title: string }[]
+}
+
+// The course's assignments, for rules about submissions.
+export async function getDynamicOptions(activity_uuid: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/dynamic-options`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   return getResponseMetadata(result)
 }

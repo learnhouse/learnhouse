@@ -74,7 +74,7 @@ import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
 import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
 import VariableSuggestion from './Extensions/Dynamic/VariableSuggestion'
 import { CommunityTag, CommunityTagSuggestion } from '@components/Objects/Communities/Tags/CommunityTag'
-import { DynamicReachProvider } from './Extensions/Dynamic/DynamicReach'
+import { DynamicActivityContext, DynamicReachProvider } from './Extensions/Dynamic/DynamicReach'
 import { EDITOR_EVENTS } from './Templates/templateContent'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
@@ -495,6 +495,7 @@ function Editor(props: EditorProps) {
       )}
 
       <CourseProvider courseuuid={props.course.course_uuid} initialCourseStructure={props.course}>
+      <DynamicActivityContext.Provider value={props.activity.activity_uuid}>
           {editor && showViewAs && (
             <ViewAsPreview
               activity={props.activity}
@@ -756,6 +757,7 @@ function Editor(props: EditorProps) {
             />
           )}
         </motion.div>
+      </DynamicActivityContext.Provider>
       </CourseProvider>
     </div>
   )

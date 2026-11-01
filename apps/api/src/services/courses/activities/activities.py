@@ -40,6 +40,8 @@ from src.services.courses.activities.dynamic_context import (
     DynamicPreviewResponse,
     DynamicReachResponse,
     build_render_context,
+    DynamicOptions,
+    course_dynamic_options,
     course_learner_contexts,
     enrolled_learner_context,
     with_references,
@@ -378,6 +380,14 @@ async def list_dynamic_learners(
         )
         for u in await search_enrolled_learners(course, query, db_session)
     ]
+
+
+async def get_dynamic_options(
+    request: Request, activity_uuid: str, current_user: PublicUser, db_session: AsyncSession
+) -> DynamicOptions:
+    """The course's assignments, for rules about submissions. Editors only."""
+    _, course = await _load_for_editor(request, activity_uuid, current_user, db_session)
+    return await course_dynamic_options(course, db_session)
 
 
 async def get_activityby_id(

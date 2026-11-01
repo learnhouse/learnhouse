@@ -17,7 +17,12 @@ from pydantic import BaseModel, Field
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.db.communities.communities import Community
+from src.db.communities.discussion_comments import DiscussionComment
+from src.db.communities.discussions import Discussion
 from src.db.courses.activities import Activity
+from src.db.courses.assignments import Assignment, AssignmentUserSubmission, AssignmentUserSubmissionStatus
+from src.db.courses.certifications import CertificateUser, Certifications
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.chapters import Chapter
 from src.db.courses.course_chapters import CourseChapter
@@ -142,7 +147,17 @@ async def _course_context(
         locale=request_locale(request),
         today=_today(),
         progress_total=await _course_progress_totals(course.id, db_session),
+        assignment_total=(await db_session.execute(
+            select(func.count(Assignment.id)).where(Assignment.course_id == course.id)  # type: ignore[arg-type]
+        )).scalar_one(),
     )
+
+
+_SUBMITTED = {
+    AssignmentUserSubmissionStatus.SUBMITTED,
+    AssignmentUserSubmissionStatus.GRADED,
+    AssignmentUserSubmissionStatus.LATE,
+}
 
 
 async def _learner_contexts(
@@ -187,6 +202,46 @@ async def _learner_contexts(
     )).all():
         completed[user_id].add(activity_uuid)
 
+    certified: dict[int, Optional[date]] = {}
+    for user_id, created in (await db_session.execute(
+        select(CertificateUser.user_id, CertificateUser.created_at)
+        .join(Certifications, CertificateUser.certification_id == Certifications.id)  # type: ignore[arg-type]
+        .where(CertificateUser.user_id.in_(user_ids), Certifications.course_id == course.id)  # type: ignore[attr-defined]
+    )).all():
+        certified[user_id] = _parse_date(created)
+    submitted: dict[int, set[str]] = defaultdict(set)
+    grades: dict[int, list[int]] = defaultdict(list)
+    for user_id, assignment_uuid, status, grade in (await db_session.execute(
+        select(
+            AssignmentUserSubmission.user_id, Assignment.assignment_uuid,
+            AssignmentUserSubmission.submission_status, AssignmentUserSubmission.grade,
+        )
+        .join(Assignment, AssignmentUserSubmission.assignment_id == Assignment.id)  # type: ignore[arg-type]
+        .where(AssignmentUserSubmission.user_id.in_(user_ids), Assignment.course_id == course.id)  # type: ignore[attr-defined]
+    )).all():
+        if status in _SUBMITTED:
+            submitted[user_id].add(assignment_uuid)
+        if status == AssignmentUserSubmissionStatus.GRADED and grade is not None:
+            grades[user_id].append(grade)
+    # Posts in the org's communities: discussions started and comments written.
+    posts: dict[int, int] = defaultdict(int)
+    active: dict[int, set[str]] = defaultdict(set)
+    for user_id, community_uuid in (await db_session.execute(
+        select(Discussion.author_id, Community.community_uuid)
+        .join(Community, Discussion.community_id == Community.id)  # type: ignore[arg-type]
+        .where(Discussion.author_id.in_(user_ids), Community.org_id == course.org_id)  # type: ignore[attr-defined]
+    )).all():
+        posts[user_id] += 1
+        active[user_id].add(community_uuid)
+    for user_id, community_uuid in (await db_session.execute(
+        select(DiscussionComment.author_id, Community.community_uuid)
+        .join(Discussion, DiscussionComment.discussion_id == Discussion.id)  # type: ignore[arg-type]
+        .join(Community, Discussion.community_id == Community.id)  # type: ignore[arg-type]
+        .where(DiscussionComment.author_id.in_(user_ids), Community.org_id == course.org_id)  # type: ignore[attr-defined]
+    )).all():
+        posts[user_id] += 1
+        active[user_id].add(community_uuid)
+
     contexts = {}
     for user in users:
         run_created = runs.get(user.id)
@@ -211,6 +266,12 @@ async def _learner_contexts(
             days_enrolled=max(0, (base.today - enrolled_on).days) if enrolled_on else (0 if run_created else None),
             progress_completed=len(completed[user.id]),
             completed_activity_uuids=frozenset(completed[user.id]),
+            certified=user.id in certified,
+            certified_on=certified.get(user.id),
+            assignments_submitted=frozenset(submitted[user.id]),
+            assignment_average=sum(grades[user.id]) / len(grades[user.id]) if grades[user.id] else None,
+            community_posts=posts[user.id],
+            communities_active=frozenset(active[user.id]),
         )
     return contexts
 
@@ -349,6 +410,9 @@ class PreviewPersona(BaseModel):
     email: Optional[str] = Field(default=None, max_length=320)
     account_days: Optional[int] = Field(default=None, ge=0, le=36500)
     bucket: Optional[int] = Field(default=None, ge=0, le=99)
+    certified: bool = False
+    community_posts: int = Field(default=0, ge=0, le=10_000)
+    assignments_submitted: list[str] = Field(default_factory=list, max_length=500)
     # Preview as this enrolled learner instead: their real groups, progress
     # and enrollment. The other persona fields are ignored, except `today`.
     user_uuid: Optional[str] = Field(default=None, max_length=100)
@@ -408,6 +472,10 @@ def persona_context(
         progress_completed=round(persona.progress_percent * total / 100) if signed_in else 0,
         completed_activity_uuids=frozenset(persona.completed_activity_uuids) if signed_in else frozenset(),
         today=persona.today or base.today,
+        certified=persona.certified and signed_in,
+        certified_on=(persona.today or base.today) if persona.certified and signed_in else None,
+        community_posts=persona.community_posts if signed_in else 0,
+        assignments_submitted=frozenset(persona.assignments_submitted) if signed_in else frozenset(),
     )
 
 
@@ -423,3 +491,23 @@ class DynamicLearner(BaseModel):
     username: str
     first_name: str
     last_name: str
+
+
+class DynamicAssignment(BaseModel):
+    assignment_uuid: str
+    title: str
+
+
+class DynamicOptions(BaseModel):
+    """What the rule builder offers to pick from, beyond the org's groups."""
+
+    assignments: list[DynamicAssignment]
+
+
+async def course_dynamic_options(course: Any, db_session: AsyncSession) -> DynamicOptions:
+    rows = (await db_session.execute(
+        select(Assignment.assignment_uuid, Assignment.title)
+        .where(Assignment.course_id == course.id)
+        .order_by(Assignment.id)  # type: ignore[arg-type]
+    )).all()
+    return DynamicOptions(assignments=[DynamicAssignment(assignment_uuid=u, title=t) for u, t in rows])

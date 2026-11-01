@@ -267,7 +267,8 @@ class TestActivityRoutes:
             preview = await routes.api_get_dynamic_preview(mock_request, activity.activity_uuid, DynamicPreviewRequest(content=DOC), admin_user, db)
             reach = await routes.api_get_dynamic_reach(mock_request, activity.activity_uuid, routes.DynamicReachRequest(content=DOC), admin_user, db)
             learners = await routes.api_list_dynamic_learners(mock_request, activity.activity_uuid, "", admin_user, db)
-        assert preview.content == DOC and reach.blocks == [] and learners == []
+            options = await routes.api_get_dynamic_options(mock_request, activity.activity_uuid, admin_user, db)
+        assert preview.content == DOC and reach.blocks == [] and learners == [] and options.assignments == []
 
 
 class TestFailClosed:

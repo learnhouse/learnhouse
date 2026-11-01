@@ -419,7 +419,11 @@ function ValueInput(props: {
       ? props.lookups.usergroups
       : picker === 'activities'
         ? props.lookups.activities
-        : picker === 'roles'
+        : picker === 'assignments'
+          ? props.lookups.assignments
+          : picker === 'communities'
+            ? props.lookups.communities
+            : picker === 'roles'
           ? ROLES.map((r) => ({ value: r, label: t(`editor.dynamic.roles.${r}`, r) }))
           : []
 

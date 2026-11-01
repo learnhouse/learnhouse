@@ -16,11 +16,13 @@ from src.services.courses.activities.activities import (
     get_editor_bootstrap,
     get_dynamic_preview,
     get_dynamic_reach,
+    get_dynamic_options,
     list_dynamic_learners,
     EditorBootstrapResponse,
 )
 from src.services.courses.activities.dynamic_context import (
     DynamicLearner,
+    DynamicOptions,
     DynamicPreviewRequest,
     DynamicPreviewResponse,
     DynamicReachResponse,
@@ -317,6 +319,21 @@ async def api_get_dynamic_reach(
     return await get_dynamic_reach(
         request, activity_uuid, body.content, current_user=current_user, db_session=db_session
     )
+
+
+@router.get(
+    "/{activity_uuid}/dynamic-options",
+    response_model=DynamicOptions,
+    summary="Options for dynamic content rules",
+    description="The course's assignments, for rules about submissions. Requires edit rights.",
+)
+async def api_get_dynamic_options(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> DynamicOptions:
+    return await get_dynamic_options(request, activity_uuid, current_user=current_user, db_session=db_session)
 
 
 @router.get(
