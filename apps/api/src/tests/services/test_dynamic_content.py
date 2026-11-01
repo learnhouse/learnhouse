@@ -700,7 +700,26 @@ class TestLearnHouseNativeFields:
         db.add(DiscussionComment(content="Me too", discussion_id=discussion.id, author_id=regular_user.id, comment_uuid="comment_1"))
         await db.commit()
 
+        from src.db.trail_runs import TrailRun
+        from src.db.trail_steps import TrailStep
+        from src.db.trails import Trail
+
+        trail = Trail(org_id=org.id, user_id=regular_user.id, trail_uuid="trail_native", creation_date=now, update_date=now)
+        db.add(trail)
+        await db.commit()
+        await db.refresh(trail)
+        run = TrailRun(trail_id=trail.id, course_id=course.id, org_id=org.id, user_id=regular_user.id, creation_date=now, update_date=now)
+        db.add(run)
+        await db.commit()
+        await db.refresh(run)
+        db.add(TrailStep(
+            complete=True, teacher_verified=True, grade="", trailrun_id=run.id, trail_id=trail.id, activity_id=activity.id,
+            course_id=course.id, org_id=org.id, user_id=regular_user.id, creation_date=now, update_date=now,
+        ))
+        await db.commit()
+
         ctx = await build_render_context(mock_request, regular_user, course, db)
+        assert activity.activity_uuid in ctx.completed_activity_uuids
         assert (ctx.certified, ctx.certified_on) == (True, date(2026, 10, 2))
         assert (ctx.assignment_total, ctx.assignments_submitted, ctx.assignment_average) == (2, frozenset({"assignment_1"}), 90)
         assert (ctx.community_posts, ctx.communities_active) == (2, frozenset({"community_lounge"}))
