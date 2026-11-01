@@ -14,6 +14,7 @@ import { type FolderSortMode } from '@components/Dashboard/Library/FolderSortDro
 import { getFolderById, removeFolderPrefix } from '@services/folders/folders'
 import { getUriWithOrg } from '@services/config/config'
 import { shareFolderLink } from '@components/Dashboard/Library/shareFolder'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import { FolderSimple, LinkSimple } from '@phosphor-icons/react'
 import { FolderCard, LibraryItemCard } from '../../library-cards'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
@@ -83,6 +84,7 @@ function FolderClient({
     <FeatureGate feature="folders" orgslug={orgslug} context="public">
       <div className="w-full">
         <GeneralWrapperStyled>
+          <ListShortcuts />
           <div className="flex flex-col space-y-4 mb-2">
             <Breadcrumbs
               items={[

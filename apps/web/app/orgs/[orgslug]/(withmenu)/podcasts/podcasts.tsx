@@ -17,6 +17,7 @@ import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
 import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 
 interface PodcastsClientProps {
   orgslug: string
@@ -76,6 +77,12 @@ export default function PodcastsClient({
     <FeatureGate feature="podcasts" orgslug={orgslug} context="public">
     <div className="w-full">
       <GeneralWrapperStyled>
+        <ListShortcuts
+          onNextPage={() => goToPage(currentPage + 1)}
+          onPrevPage={() => goToPage(currentPage - 1)}
+          hasNextPage={currentPage < totalPages}
+          hasPrevPage={currentPage > 1}
+        />
         <div className="flex flex-col space-y-2 mb-2">
           <div className="flex items-center justify-between">
             <TypeOfContentTitle title={t('podcasts.podcasts')} type="pod" />

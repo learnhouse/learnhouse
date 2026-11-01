@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { cli } from './helpers.js'
+import { FAKE_DOCKER } from './platform.js'
 import type { SetupConfig } from '../src/types.js'
 import {
   generateEeDockerCompose,
@@ -21,6 +22,10 @@ import {
 } from '../src/templates/ee.js'
 import { writeConfig } from '../src/services/config-store.js'
 import { quoteEnvValue } from '../src/utils/env-quote.js'
+
+// The CLI subprocess runs against a fake docker (prerequisite probes only;
+// everything here passes --no-start), so these tests need no Docker daemon.
+process.env.LEARNHOUSE_DOCKER_BIN = FAKE_DOCKER
 
 function baseEe(overrides: Partial<SetupConfig> = {}): SetupConfig {
   return {
@@ -281,6 +286,13 @@ describe('setup --ci --edition enterprise (file generation)', () => {
     const r = cli(base('--tenancy sideways'))
     expect(r.exitCode).toBe(1)
     expect(r.stderr + r.stdout).toMatch(/tenancy/i)
+  })
+
+  it('refuses agency without --dns-provider (wildcard cert) unless --local-tls', () => {
+    const r = cli(base('--tenancy agency'))
+    expect(r.exitCode).toBe(1)
+    expect(r.stderr + r.stdout).toMatch(/--dns-provider/)
+    expect(fs.existsSync(path.join(dir, '.env'))).toBe(false)
   })
 
   it('rejects a reserved admin-email domain', () => {

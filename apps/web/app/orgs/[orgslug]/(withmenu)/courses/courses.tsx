@@ -21,6 +21,7 @@ import { getUserGroups, getUserGroupResources } from '@services/usergroups/userg
 import { useCourses } from '@/hooks/queries/useCourses'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
+import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import { asArray } from '@services/utils/ts/requests'
 
 interface CourseProps {
@@ -183,6 +184,12 @@ function Courses(props: CourseProps) {
     <FeatureGate feature="courses" orgslug={orgslug} context="public">
     <div className="w-full">
       <GeneralWrapperStyled>
+        <ListShortcuts
+          onNextPage={() => goToPage(currentPage + 1)}
+          onPrevPage={() => goToPage(currentPage - 1)}
+          hasNextPage={currentPage < totalPages}
+          hasPrevPage={currentPage > 1}
+        />
         <div className="flex flex-col space-y-2 mb-2">
           <div className="flex items-center justify-between">
             <TypeOfContentTitle title={t('courses.courses')} type="cou" />

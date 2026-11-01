@@ -55,6 +55,7 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
 
   return (
     <div
+      data-kbd-item=""
       className={`group flex items-center gap-4 p-4 rounded-lg transition-colors cursor-pointer ${
         isCurrentEpisode ? 'bg-gray-100' : 'hover:bg-gray-50'
       }`}

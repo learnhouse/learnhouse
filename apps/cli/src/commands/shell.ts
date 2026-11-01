@@ -29,7 +29,7 @@ export async function shellCommand() {
     message: 'Select a container',
     options: containers.map((c) => ({
       value: c.name,
-      label: `${c.name.replace(`-${id}`, '')} ${pc.dim(`(${c.name})`)}`,
+      label: `${c.service} ${pc.dim(`(${c.name})`)}`,
     })),
   })
   if (p.isCancel(selected)) {

@@ -21,6 +21,7 @@ from src.services.courses.transfer.export_service import (
     _build_export_zip,
     _export_directory_to_zip,
     _load_course_export_data,
+    _load_library_export_data,
     _stored_zipinfo,
     export_course,
     export_courses_batch,
@@ -281,7 +282,8 @@ class TestExportCoursesBatchValidation:
         mock_to_thread.assert_awaited_once()
         build_args = mock_to_thread.await_args.args
         assert build_args[0] == _build_export_zip
-        assert build_args[1] == [("course_test", "Test Course", {"course_uuid": "course_test"}, [])]
+        # Library files the pages download travel with the course (none here)
+        assert build_args[1] == [("course_test", "Test Course", {"course_uuid": "course_test"}, [], [])]
         assert build_args[2] == "org_test"
 
 
@@ -657,3 +659,87 @@ class TestStoredZipInfo:
             "files/video.mp4",
             "files/assignments/a1/tasks/t1/handout.pdf",
         }
+
+
+class TestLibraryExport:
+    @pytest.mark.asyncio
+    async def test_load_library_export_data_collects_referenced_media(self, db, org, course, chapter):
+        from src.db.media.media import Media, MediaTypeEnum
+
+        def media(uuid, **kw):
+            base = dict(name=uuid, media_type=MediaTypeEnum.UPLOAD, org_id=org.id, media_uuid=uuid, public=True,
+                        creation_date="2024-01-01", update_date="2024-01-01")
+            return Media(**{**base, **kw})
+
+        db.add_all([
+            media("media_h", name="Handout", file_id="x_media.docx",
+                  storage_key=f"orgs/{org.org_uuid}/media/abc/x_media.docx", file_format="docx", file_size=12),
+            # A row from before storage keys were randomized
+            media("media_l", file_id="old.pdf", storage_key="", file_format="pdf", file_size=3),
+            media("media_e", media_type=MediaTypeEnum.EMBED, url="https://example.com/v"),
+        ])
+        await db.commit()
+
+        def block(uuid):
+            return {"type": "blockLibrary", "attrs": {"resourceUuid": uuid, "resourceType": "media",
+                                                       "snapshot": {"name": uuid}, "display": "inline"}}
+
+        await _make_activity(
+            db, org, course, chapter, id=7, activity_uuid="activity_lib", order=3, name="Lib",
+            activity_type=ActivityTypeEnum.TYPE_DYNAMIC, activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            published=True, details=None,
+            content={"type": "doc", "content": [block("media_h"), {"type": "callout", "content": [block("media_l")]},
+                                                 block("media_e"), block("media_missing")]},
+        )
+        _course_data, chapters = await _load_course_export_data(course, db)
+        library = await _load_library_export_data(course, chapters, org.org_uuid, db)
+        keys = {item["media_uuid"]: item["_storage_key"] for item in library}
+        # Embeds have no file; a uuid with no row is left out
+        assert keys == {"media_h": f"orgs/{org.org_uuid}/media/abc/x_media.docx",
+                        "media_l": f"orgs/{org.org_uuid}/media/media_l/old.pdf"}
+        handout = next(item for item in library if item["media_uuid"] == "media_h")
+        assert handout["name"] == "Handout" and handout["file_format"] == "docx" and handout["file_size"] == 12
+        assert handout["public"] is True
+        assert await _load_library_export_data(course, [], org.org_uuid, db) == []
+
+    def test_build_export_zip_writes_library_files(self, tmp_path):
+        zip_path = tmp_path / "export.zip"
+        fd = os.open(os.devnull, os.O_RDONLY)
+        library = [
+            {"media_uuid": "media_h", "name": "Handout", "description": "", "file_format": "docx",
+             "file_mime": "application/x", "file_size": 2, "public": False,
+             "_storage_key": "orgs/o/media/abc/x_media.docx"},
+            {"media_uuid": "media_gone", "name": "Gone", "description": "", "file_format": "pdf",
+             "file_mime": "", "file_size": None, "_storage_key": "orgs/o/media/none/gone.pdf"},
+            {"media_uuid": "media_z", "name": "Bundle", "description": "", "file_format": "zip",
+             "file_mime": "application/zip", "file_size": 4, "_storage_key": "orgs/o/media/zzz/z_media.zip"},
+        ]
+        course_export_data = [("course-1", "Course 1", {"course_uuid": "course-1"}, [], library)]
+        contents = {"content/orgs/o/media/abc/x_media.docx": b"PK", "content/orgs/o/media/zzz/z_media.zip": b"PK56"}
+
+        def _read_file_content(path):
+            return contents.get(path)
+
+        with patch(
+            "src.services.courses.transfer.export_service.tempfile.mkstemp",
+            return_value=(fd, str(zip_path)),
+        ), patch(
+            "src.services.courses.transfer.export_service.list_directory", return_value=[],
+        ), patch(
+            "src.services.courses.transfer.export_service.read_file_content", side_effect=_read_file_content,
+        ):
+            result = _build_export_zip(course_export_data, "org-1")
+
+        with zipfile.ZipFile(result) as zf:
+            names = set(zf.namelist())
+            assert "courses/course-1/library/media_h/media_h.docx" in names
+            assert zf.read("courses/course-1/library/media_h/media_h.docx") == b"PK"
+            meta = json.loads(zf.read("courses/course-1/library/media_h/media.json"))
+            assert meta == {"media_uuid": "media_h", "name": "Handout", "description": "", "file_format": "docx",
+                            "file_mime": "application/x", "file_size": 2, "public": False,
+                            "file_name": "media_h.docx"}
+            # A file missing from storage is left out rather than written empty
+            assert not [n for n in names if "media_gone" in n]
+            # Already-compressed formats are stored as-is
+            bundle = zf.getinfo("courses/course-1/library/media_z/media_z.zip")
+            assert bundle.compress_type == zipfile.ZIP_STORED and zf.read(bundle) == b"PK56"

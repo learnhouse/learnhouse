@@ -1,11 +1,14 @@
-from typing import Any, List, Sequence
+from typing import Any, List, Optional, Sequence
 from fastapi import Request
 from sqlalchemy import ColumnElement, func, true as sa_true
 from sqlmodel import select, or_, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel, ConfigDict
 from src.db.users import PublicUser, AnonymousUser, UserReadPublic, User, APITokenUser
-from src.db.courses.courses import CourseRead
+from src.db.courses.courses import Course, CourseRead
+from src.db.courses.activities import Activity, ActivityLockType
+from src.db.courses.chapters import Chapter, LockType as ChapterLockType
+from src.db.courses.chapter_activities import ChapterActivity
 from src.db.folders.folders import Folder, FolderRead
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
@@ -13,16 +16,17 @@ from src.db.communities.communities import Community, CommunityRead
 from src.db.communities.discussions import Discussion, DiscussionRead
 from src.db.playgrounds import Playground, PlaygroundRead, PlaygroundAccessType
 from src.db.podcasts.podcasts import Podcast, PodcastRead
-from src.services.courses.courses import search_courses
+from src.services.courses.courses import accessible_courses_filter, search_courses
 from src.services.search.normalization import (
     LIKE_ESCAPE_CHAR,
-    build_like_pattern,
+    build_like_patterns,
     escape_like_wildcards,
 )
 from src.security.api_token_utils import require_token_content_read, token_has_right
 from src.security.auth import resolve_acting_user_id
 from src.services.orgs.auth_policy import viewer_for_org
 from src.security.org_auth import is_org_admin, is_org_member
+from src.security.superadmin import is_user_superadmin
 from src.services.communities.communities import (
     accessible_community_ids_select,
     can_read_all_communities,
@@ -39,6 +43,26 @@ class SearchDiscussionRead(DiscussionRead):
     community_uuid: str = ""
 
 
+class SearchActivityRead(BaseModel):
+    """A lesson hit, with enough of its course and chapter for the UI to link
+    to `/course/{uuid}/activity/{uuid}` and label where the lesson lives.
+
+    Deliberately not ``ActivityRead``: that carries the lesson body, and a
+    search row must never leak content the activity read itself would gate
+    (paid, locked). Names only.
+    """
+
+    activity_uuid: str
+    name: str
+    activity_type: str
+    activity_sub_type: str
+    course_uuid: str
+    course_name: str
+    course_thumbnail_image: Optional[str] = None
+    chapter_uuid: str = ""
+    chapter_name: str = ""
+
+
 class SearchResult(BaseModel):
     """Paginated search result grouped by resource type.
 
@@ -49,6 +73,7 @@ class SearchResult(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     courses: List[CourseRead]
+    activities: List[SearchActivityRead] = []
     folders: List[FolderRead]
     # SECURITY: the stripped projection, never ``UserRead``. Search is open to
     # every org member, and ``UserRead`` carries email / signup_method /
@@ -61,6 +86,7 @@ class SearchResult(BaseModel):
     podcasts: List[PodcastRead]
 
     total_courses: int = 0
+    total_activities: int = 0
     total_folders: int = 0
     total_users: int = 0
     total_communities: int = 0
@@ -72,6 +98,7 @@ class SearchResult(BaseModel):
 def _empty_result() -> SearchResult:
     return SearchResult(
         courses=[],
+        activities=[],
         folders=[],
         users=[],
         communities=[],
@@ -102,6 +129,22 @@ def _ilike_any(columns: Sequence[ColumnElement[Any]], pattern: str) -> ColumnEle
     responsible for escaping; no string interpolation on user input.
     """
     return or_(*(column.ilike(pattern, escape=LIKE_ESCAPE_CHAR) for column in columns))
+
+
+def _ilike_terms(
+    columns: Sequence[ColumnElement[Any]], patterns: Sequence[str]
+) -> ColumnElement[bool]:
+    """Every pattern must match at least one of the columns.
+
+    This is the keyword behaviour: each word of the query has to show up
+    somewhere in the row, in any order and in any of the searched fields, so
+    "python intro" finds a course named "Introduction to Python". With a
+    single term it is exactly the old whole-query substring match. With no
+    terms it matches everything, which the router's ``min_length`` rules out.
+    """
+    if not patterns:
+        return sa_true()
+    return and_(*(_ilike_any(columns, pattern) for pattern in patterns))
 
 
 async def _paginate_and_count(
@@ -174,7 +217,7 @@ async def search_across_org(
 
     limit = min(limit, 50)
 
-    pattern = build_like_pattern(search_query)
+    patterns = build_like_patterns(search_query)
 
     org = (await db_session.execute(
         select(Organization).where(Organization.slug == org_slug)
@@ -220,11 +263,69 @@ async def search_across_org(
         )
     total_courses = len(courses)
 
+    # ── Activities (lessons) ─────────────────────────────────────────────────
+    # A lesson is only as visible as its course, so the course filter that
+    # ``search_courses`` applies is reused here; on top of that the lesson
+    # must be published and sit in a chapter (orphans are not reachable in
+    # the reader). Lock tiers follow the playground rule: anonymous callers
+    # see public lessons only, members see public and sign-in-only ones, and
+    # usergroup-restricted lessons (or lessons in restricted chapters) stay
+    # out of search for everyone but org admins, exactly as the TOC hides
+    # them. Only names are matched: the body is a JSON document whose node
+    # names ("paragraph", "heading") would match almost any query.
+    if isinstance(current_user, APITokenUser) and not token_has_right(
+        current_user, "courses", "action_read"
+    ):
+        activities: list = []
+        total_activities = 0
+    else:
+        is_superadmin = (not is_anon) and await is_user_superadmin(acting_user_id, db_session)
+        admin_for_locks = (not is_anon) and await is_org_admin(acting_user_id, org.id, db_session)
+        activities_q = (
+            select(Activity, Course, Chapter)
+            .join(Course, Course.id == Activity.course_id)
+            .join(ChapterActivity, ChapterActivity.activity_id == Activity.id)
+            .join(Chapter, Chapter.id == ChapterActivity.chapter_id)
+            .where(Activity.org_id == org.id)
+            .where(Activity.published == sa_true())
+            .where(_ilike_terms([Activity.name], patterns))
+            .where(
+                accessible_courses_filter(
+                    acting_user_id,
+                    is_anonymous=is_anon,
+                    is_api_token=isinstance(current_user, APITokenUser),
+                    is_superadmin=is_superadmin,
+                )
+            )
+        )
+        if not admin_for_locks:
+            # Both columns are Postgres enums, so compare with enum members,
+            # never strings. A chapter row predating the lock column is NULL
+            # there and counts as public, like the TOC treats it.
+            activity_locks = [ActivityLockType.PUBLIC]
+            chapter_locks = [ChapterLockType.PUBLIC]
+            if not is_anon:
+                activity_locks.append(ActivityLockType.AUTHENTICATED)
+                chapter_locks.append(ChapterLockType.AUTHENTICATED)
+            activities_q = activities_q.where(
+                Activity.lock_type.in_(activity_locks),  # type: ignore[attr-defined]
+                or_(
+                    Chapter.lock_type.is_(None),  # type: ignore[attr-defined]
+                    Chapter.lock_type.in_(chapter_locks),  # type: ignore[attr-defined]
+                ),
+            )
+        activities_q = activities_q.order_by(
+            Course.name, ChapterActivity.order, Activity.name
+        )
+        activities, total_activities = await _paginate_and_count_rows(
+            db_session, activities_q, page, limit
+        )
+
     # ── Folders ──────────────────────────────────────────────────────────────
     folders_q = (
         select(Folder)
         .where(Folder.org_id == org.id)
-        .where(_ilike_any([Folder.name, Folder.description], pattern))
+        .where(_ilike_terms([Folder.name, Folder.description], patterns))
     )
     if only_public or (
         is_token and not token_has_right(current_user, "folders", "action_read")
@@ -254,9 +355,9 @@ async def search_across_org(
                 UserOrganization.org_id == org.id,
             ))
             .where(
-                _ilike_any(
+                _ilike_terms(
                     [User.username, User.first_name, User.last_name, User.bio],
-                    pattern,
+                    patterns,
                 )
             )
         )
@@ -278,7 +379,7 @@ async def search_across_org(
     communities_q = (
         select(Community)
         .where(Community.org_id == org.id)
-        .where(_ilike_any([Community.name, Community.description], pattern))
+        .where(_ilike_terms([Community.name, Community.description], patterns))
     )
     # Members get the same usergroup-aware visibility as the community
     # listing; only community managers / org admins see every community.
@@ -302,7 +403,7 @@ async def search_across_org(
         select(Discussion, Community.community_uuid)
         .join(Community, Community.id == Discussion.community_id)
         .where(Discussion.org_id == org.id)
-        .where(_ilike_any([Discussion.title, Discussion.content], pattern))
+        .where(_ilike_terms([Discussion.title, Discussion.content], patterns))
     )
     if community_filter is not None:
         discussions_q = discussions_q.where(community_filter)
@@ -315,7 +416,7 @@ async def search_across_org(
         select(Playground)
         .where(Playground.org_id == org.id)
         .where(Playground.published == sa_true())
-        .where(_ilike_any([Playground.name, Playground.description], pattern))
+        .where(_ilike_terms([Playground.name, Playground.description], patterns))
     )
     if only_public or (
         is_token and not token_has_right(current_user, "playgrounds", "action_read")
@@ -339,7 +440,7 @@ async def search_across_org(
         select(Podcast)
         .where(Podcast.org_id == org.id)
         .where(Podcast.published == sa_true())
-        .where(_ilike_any([Podcast.name, Podcast.description, Podcast.tags], pattern))
+        .where(_ilike_terms([Podcast.name, Podcast.description, Podcast.tags], patterns))
     )
     if only_public or (is_token and not _token_reads_content(current_user, "podcasts")):
         podcasts_q = podcasts_q.where(Podcast.public == sa_true())
@@ -352,6 +453,23 @@ async def search_across_org(
     podcasts, total_podcasts = await _paginate_and_count(
         db_session, podcasts_q, page, limit
     )
+
+    activity_reads = [
+        SearchActivityRead(
+            activity_uuid=activity.activity_uuid,
+            name=activity.name,
+            activity_type=str(getattr(activity.activity_type, "value", activity.activity_type)),
+            activity_sub_type=str(
+                getattr(activity.activity_sub_type, "value", activity.activity_sub_type)
+            ),
+            course_uuid=course.course_uuid,
+            course_name=course.name,
+            course_thumbnail_image=course.thumbnail_image,
+            chapter_uuid=chapter.chapter_uuid or "",
+            chapter_name=chapter.name or "",
+        )
+        for activity, course, chapter in activities
+    ]
 
     folder_reads = [FolderRead.model_validate(f) for f in folders]
 
@@ -376,6 +494,7 @@ async def search_across_org(
 
     return SearchResult(
         courses=courses,
+        activities=activity_reads,
         folders=folder_reads,
         users=user_reads,
         communities=community_reads,
@@ -383,6 +502,7 @@ async def search_across_org(
         playgrounds=playground_reads,
         podcasts=podcast_reads,
         total_courses=total_courses,
+        total_activities=total_activities,
         total_folders=total_folders,
         total_users=total_users,
         total_communities=total_communities,

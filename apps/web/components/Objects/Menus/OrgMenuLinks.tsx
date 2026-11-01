@@ -6,6 +6,13 @@ import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
+import { ShortcutHint } from '@components/Objects/Shortcuts/ShortcutHint'
+import { sitePages } from '@/lib/site-search/registry'
+
+// Chord per builtin menu entry, read from the same registry the palette uses.
+const CHORD_BY_TYPE: Record<string, string | undefined> = Object.fromEntries(
+  sitePages.filter((p) => p.menuType && p.shortcut).map((p) => [p.menuType as string, p.shortcut]),
+)
 
 type Builtin = { feature: string; link: string; labelKey: string; Icon: any }
 
@@ -61,6 +68,7 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
         Icon: meta.Icon,
         href: getUriWithOrg(props.orgslug, meta.link),
         external: false,
+        shortcut: CHORD_BY_TYPE[item.type],
       }
     })
     .filter(Boolean) as any[]
@@ -74,10 +82,18 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
               <it.Icon size={20} weight="fill" /> <span>{it.label}</span>
             </li>
           )
-          return it.external ? (
-            <a key={it.key} href={it.href} target="_blank" rel="noopener noreferrer">{content}</a>
+          if (it.external) {
+            return (
+              <a key={it.key} href={it.href} target="_blank" rel="noopener noreferrer">{content}</a>
+            )
+          }
+          const link = <Link href={it.href}>{content}</Link>
+          return it.shortcut ? (
+            <ShortcutHint key={it.key} label={t('shortcuts.go_to', { page: it.label })} keys={it.shortcut}>
+              {link}
+            </ShortcutHint>
           ) : (
-            <Link key={it.key} href={it.href}>{content}</Link>
+            <React.Fragment key={it.key}>{link}</React.Fragment>
           )
         })}
       </ul>

@@ -1,7 +1,9 @@
-import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { writeFileAtomic } from '../utils/fs-atomic.js'
+import { ALPINE_IMAGE } from '../constants.js'
+import { dockerExecFileSync } from './docker-bin.js'
 
 export type ContentMigrationStatus =
   | 'already_mounted'
@@ -17,9 +19,15 @@ export interface ContentMigrationResult {
 
 const CONTENT_PATH = '/app/api/content'
 
+/**
+ * Move uploads out of a legacy app container's writable layer into the
+ * `learnhouse_content_<id>` volume, and mount it. `beforeCopy` runs right
+ * before the copy (e.g. to stop the app so nothing is uploaded mid-copy).
+ */
 export function migrateContentVolume(
   installDir: string,
   deploymentId: string,
+  beforeCopy?: () => void,
 ): ContentMigrationResult {
   const composePath = path.join(installDir, 'docker-compose.yml')
   if (!fs.existsSync(composePath)) return { status: 'no_compose' }
@@ -43,11 +51,12 @@ export function migrateContentVolume(
   let copiedBytes = 0
   const hasContainer = dockerContainerExists(containerName)
   if (hasContainer) {
+    beforeCopy?.()
     copiedBytes = copyContainerContentIntoVolume(containerName, volumeFull)
   }
 
   compose = patchComposeAddContentVolume(compose, deploymentId)
-  fs.writeFileSync(composePath, compose)
+  writeFileAtomic(composePath, compose)
 
   return hasContainer
     ? { status: 'migrated', copiedBytes }
@@ -56,7 +65,7 @@ export function migrateContentVolume(
 
 function dockerContainerExists(name: string): boolean {
   try {
-    execFileSync('docker', ['inspect', name], { stdio: 'pipe' })
+    dockerExecFileSync(['inspect', name], { stdio: 'pipe' })
     return true
   } catch {
     return false
@@ -70,32 +79,26 @@ function copyContainerContentIntoVolume(
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lh-content-'))
   const helperName = `lh-content-migrate-${Date.now()}`
   try {
-    execFileSync(
-      'docker',
-      ['cp', `${containerName}:${CONTENT_PATH}/.`, `${tmpDir}/`],
+    dockerExecFileSync(['cp', `${containerName}:${CONTENT_PATH}/.`, `${tmpDir}/`],
       { stdio: 'pipe' },
     )
 
     // `docker run -v <named-vol>` lazily creates the volume, which avoids the
     // "volume not created by Docker Compose" warning on the next compose up.
-    execFileSync(
-      'docker',
-      [
+    dockerExecFileSync([
         'run', '--name', helperName, '-d',
         '-v', `${volumeFull}:/dst`,
-        'alpine', 'sh', '-c', 'sleep 60',
+        ALPINE_IMAGE, 'sh', '-c', 'sleep 60',
       ],
       { stdio: 'pipe' },
     )
     try {
-      execFileSync(
-        'docker',
-        ['cp', `${tmpDir}/.`, `${helperName}:/dst/`],
+      dockerExecFileSync(['cp', `${tmpDir}/.`, `${helperName}:/dst/`],
         { stdio: 'pipe' },
       )
     } finally {
       try {
-        execFileSync('docker', ['rm', '-f', helperName], { stdio: 'pipe' })
+        dockerExecFileSync(['rm', '-f', helperName], { stdio: 'pipe' })
       } catch {}
     }
 

@@ -8,7 +8,8 @@ import path from 'node:path'
 // deterministically, independent of the test machine's actual free ports.
 vi.mock('node:child_process', async () => {
   const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process')
-  return { ...actual, execSync: vi.fn(() => Buffer.from('')) }
+  const { routeExecFile } = await import('./exec-file-mock.js')
+  return routeExecFile({ ...actual, execSync: vi.fn(() => Buffer.from('')) })
 })
 const net = vi.hoisted(() => ({ available: 80 as number | null, portFree: true }))
 vi.mock('../src/utils/network.js', () => ({

@@ -1,0 +1,8 @@
+#!/bin/sh
+# Convert/import courses exported from other LMSes. Runs from anywhere in the
+# container: `learnhouse-lms-import --help`.
+set -e
+here="$(dirname "$(readlink -f "$0")")"
+api_dir="$(dirname "$here")"
+export PYTHONPATH="$api_dir${PYTHONPATH:+:$PYTHONPATH}"
+exec "$api_dir/.venv/bin/python" -m src.services.courses.lms_import "$@"

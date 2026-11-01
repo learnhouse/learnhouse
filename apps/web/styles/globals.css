@@ -2568,3 +2568,10 @@
   min-height: 200px;
   display: block;
 }
+
+
+/* Keyboard list navigation (j / k on catalog pages): the current card. */
+[data-kbd-active] {
+  outline: 2px solid rgb(0 0 0 / 0.65);
+  outline-offset: 3px;
+}

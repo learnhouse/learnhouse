@@ -44,10 +44,10 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
 
   if (config.aiEnabled) {
     p.log.info('Configure AI (Gemini)')
-    const key = await p.text({
+    // password(): API keys and secrets are not echoed to the terminal / scrollback
+    const key = await p.password({
       message: 'Gemini API key?',
-      placeholder: 'AIza...',
-      validate: validateRequired,
+      validate: (v) => validateRequired(v ?? ''),
     })
     if (p.isCancel(key)) { p.cancel(); process.exit(0) }
     config.geminiApiKey = key as string
@@ -66,10 +66,9 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
 
     if (config.emailProvider === 'resend') {
       p.log.info('Configure Email (Resend)')
-      const key = await p.text({
+      const key = await p.password({
         message: 'Resend API key?',
-        placeholder: 're_...',
-        validate: validateRequired,
+        validate: (v) => validateRequired(v ?? ''),
       })
       if (p.isCancel(key)) { p.cancel(); process.exit(0) }
       config.resendApiKey = key as string
@@ -100,7 +99,7 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
 
       const password = await p.password({
         message: 'SMTP password?',
-        validate: validateRequired,
+        validate: (v) => validateRequired(v ?? ''),
       })
       if (p.isCancel(password)) { p.cancel(); process.exit(0) }
       config.smtpPassword = password as string
@@ -148,9 +147,9 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
     if (p.isCancel(clientId)) { p.cancel(); process.exit(0) }
     config.googleClientId = clientId as string
 
-    const clientSecret = await p.text({
+    const clientSecret = await p.password({
       message: 'Google Client Secret?',
-      validate: validateRequired,
+      validate: (v) => validateRequired(v ?? ''),
     })
     if (p.isCancel(clientSecret)) { p.cancel(); process.exit(0) }
     config.googleClientSecret = clientSecret as string

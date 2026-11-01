@@ -7,6 +7,7 @@ Supports both local filesystem and S3/R2 cloud storage
 import json
 import os
 import re
+import secrets
 import shutil
 import stat
 import time
@@ -16,15 +17,24 @@ from typing import Optional
 from uuid import uuid4
 
 from fastapi import HTTPException, Request, UploadFile
-from sqlmodel import select
+from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity, ActivityTypeEnum, ActivitySubTypeEnum
+from src.db.courses.assignments import (
+    Assignment,
+    AssignmentTask,
+    AssignmentTaskTypeEnum,
+    GradingTypeEnum,
+    SolutionRevealEnum,
+)
 from src.db.courses.blocks import Block, BlockTypeEnum
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.chapters import Chapter
 from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.courses import Course, ThumbnailType
+from src.db.folders.folder_content import FolderContent
+from src.db.media.media import Media, MediaTypeEnum
 from src.db.organizations import Organization
 from src.db.resource_authors import (
     ResourceAuthor,
@@ -44,6 +54,13 @@ from .models import (
     ImportOptions,
     ImportResult,
     ImportCourseResult,
+)
+from .library_media import (
+    LIBRARY_EXTENSIONS,
+    SNAPSHOT_FIELDS,
+    library_max_size,
+    package_library_dir,
+    rewrite_library_refs,
 )
 from .storage_utils import (
     upload_directory_to_s3,
@@ -230,6 +247,94 @@ def _safe_manifest_join(extract_dir: str, manifest_path: Optional[str]) -> Optio
     return target
 
 
+def lms_principal(user) -> str:
+    """Who started an LMS conversion: only they can poll and import it."""
+    return f"{type(user).__name__}:{getattr(user, 'user_uuid', '')}:{getattr(user, 'id', '')}"
+
+
+def summarize_extracted_package(extract_dir: str, temp_id: str) -> ImportAnalysisResponse:
+    """Read the manifest of an extracted package and list its courses.
+
+    Raises HTTPException(400) when the folder is not a LearnHouse package.
+    Shared by the ZIP upload and the LMS conversion, which writes its package
+    straight into the temp import folder.
+    """
+    # Find and parse manifest.json
+    manifest_path = os.path.join(extract_dir, "manifest.json")
+    if not os.path.exists(manifest_path):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid package: manifest.json not found"
+        )
+
+    with open(manifest_path, 'r', encoding="utf-8") as f:
+        manifest = json.load(f)
+
+    # Validate manifest format
+    if manifest.get("format") != "learnhouse-course-export":
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid package: Not a LearnHouse course export"
+        )
+
+    version = manifest.get("version", "1.0.0")
+
+    # Analyze courses in the package
+    courses_info = []
+    for course_entry in manifest.get("courses", []):
+        course_path = _safe_manifest_join(extract_dir, course_entry.get("path", ""))
+        if not course_path:
+            continue
+        course_json_path = os.path.join(course_path, "course.json")
+
+        if not os.path.exists(course_json_path):
+            continue
+
+        with open(course_json_path, 'r', encoding="utf-8") as f:
+            course_data = json.load(f)
+
+        # Count chapters and activities
+        chapters_count = 0
+        activities_count = 0
+
+        chapters_dir = os.path.join(course_path, "chapters")
+        if os.path.exists(chapters_dir):
+            for chapter_uuid in os.listdir(chapters_dir):
+                chapter_dir = os.path.join(chapters_dir, chapter_uuid)
+                if os.path.isdir(chapter_dir):
+                    chapters_count += 1
+                    activities_dir = os.path.join(chapter_dir, "activities")
+                    if os.path.exists(activities_dir):
+                        activities_count += len([
+                            d for d in os.listdir(activities_dir)
+                            if os.path.isdir(os.path.join(activities_dir, d))
+                        ])
+
+        # Check for thumbnail
+        has_thumbnail = bool(course_data.get("thumbnail_image") or course_data.get("thumbnail_video"))
+
+        courses_info.append(ImportCourseInfo(
+            course_uuid=course_data.get("course_uuid"),
+            name=course_data.get("name", "Untitled Course"),
+            description=course_data.get("description"),
+            chapters_count=chapters_count,
+            activities_count=activities_count,
+            has_thumbnail=has_thumbnail,
+        ))
+
+    if not courses_info:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid package: No valid courses found"
+        )
+
+    return ImportAnalysisResponse(
+        temp_id=temp_id,
+        version=version,
+        courses=courses_info,
+    )
+
+
 async def analyze_import_package(
     request: Request,
     zip_file: UploadFile,
@@ -375,80 +480,7 @@ async def analyze_import_package(
         # Delete the original ZIP now that extraction is done to free disk space
         os.unlink(zip_path)
 
-        # Find and parse manifest.json
-        manifest_path = os.path.join(extract_dir, "manifest.json")
-        if not os.path.exists(manifest_path):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid package: manifest.json not found"
-            )
-
-        with open(manifest_path, 'r', encoding="utf-8") as f:
-            manifest = json.load(f)
-
-        # Validate manifest format
-        if manifest.get("format") != "learnhouse-course-export":
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid package: Not a LearnHouse course export"
-            )
-
-        version = manifest.get("version", "1.0.0")
-
-        # Analyze courses in the package
-        courses_info = []
-        for course_entry in manifest.get("courses", []):
-            course_path = _safe_manifest_join(extract_dir, course_entry.get("path", ""))
-            if not course_path:
-                continue
-            course_json_path = os.path.join(course_path, "course.json")
-
-            if not os.path.exists(course_json_path):
-                continue
-
-            with open(course_json_path, 'r', encoding="utf-8") as f:
-                course_data = json.load(f)
-
-            # Count chapters and activities
-            chapters_count = 0
-            activities_count = 0
-
-            chapters_dir = os.path.join(course_path, "chapters")
-            if os.path.exists(chapters_dir):
-                for chapter_uuid in os.listdir(chapters_dir):
-                    chapter_dir = os.path.join(chapters_dir, chapter_uuid)
-                    if os.path.isdir(chapter_dir):
-                        chapters_count += 1
-                        activities_dir = os.path.join(chapter_dir, "activities")
-                        if os.path.exists(activities_dir):
-                            activities_count += len([
-                                d for d in os.listdir(activities_dir)
-                                if os.path.isdir(os.path.join(activities_dir, d))
-                            ])
-
-            # Check for thumbnail
-            has_thumbnail = bool(course_data.get("thumbnail_image") or course_data.get("thumbnail_video"))
-
-            courses_info.append(ImportCourseInfo(
-                course_uuid=course_data.get("course_uuid"),
-                name=course_data.get("name", "Untitled Course"),
-                description=course_data.get("description"),
-                chapters_count=chapters_count,
-                activities_count=activities_count,
-                has_thumbnail=has_thumbnail,
-            ))
-
-        if not courses_info:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid package: No valid courses found"
-            )
-
-        return ImportAnalysisResponse(
-            temp_id=temp_id,
-            version=version,
-            courses=courses_info,
-        )
+        return summarize_extracted_package(extract_dir, temp_id)
 
     except HTTPException:
         # Clean up on error
@@ -508,6 +540,19 @@ async def import_courses(
     # two requests try to import the same temp_id simultaneously
     temp_dir = _resolve_within(temp_base_real, temp_id)
     work_dir = _resolve_within(temp_base_real, f"{temp_id}-importing")
+    # Packages converted from another LMS are built in the background
+    # (lms_import_service); refuse to claim one that is not finished
+    lms_status_path = os.path.join(temp_dir, "lms_status.json")
+    if os.path.isfile(lms_status_path):
+        try:
+            with open(lms_status_path, "r", encoding="utf-8") as f:
+                lms_status = json.load(f)
+        except (OSError, ValueError):
+            lms_status = None
+        if not isinstance(lms_status, dict) or lms_status.get("owner") != lms_principal(current_user):
+            raise HTTPException(status_code=404, detail="Package not found. Please upload and analyze again.")
+        if lms_status.get("status") != "ready":
+            raise HTTPException(status_code=409, detail="This package is not ready to be imported.")
     try:
         os.rename(temp_dir, work_dir)
     except FileNotFoundError:
@@ -565,6 +610,7 @@ async def import_courses(
             # Use a savepoint so we can rollback just this course on failure
             # without losing previously imported courses in the batch
             nested = await db_session.begin_nested()
+            library_dirs: list[str] = []  # Library files live outside the course folder
             try:
                 new_course = await _import_single_course(
                     course_path=course_paths[course_uuid],
@@ -573,12 +619,16 @@ async def import_courses(
                     options=options,
                     db_session=db_session,
                     new_course_uuid=new_course_uuid,
+                    library_dirs=library_dirs,
                 )
+                new_course_id = new_course.id
                 await nested.commit()
             except Exception:
                 await nested.rollback()
                 # Clean up any files/S3 objects written for the failed course
                 delete_storage_directory(new_course_content_path)
+                for library_dir in library_dirs:
+                    delete_storage_directory(library_dir)
                 raise
 
             # Commit the outer transaction so the course is persisted
@@ -588,6 +638,11 @@ async def import_courses(
             # Track usage AFTER commit: increase_feature_usage calls commit()
             # internally, so it must not run inside the savepoint
             await increase_feature_usage("courses", organization_id, db_session)
+            imported_assignments = (await db_session.execute(
+                select(func.count(Assignment.id)).where(Assignment.course_id == new_course_id)
+            )).scalar_one()
+            for _ in range(imported_assignments):
+                await increase_feature_usage("assignments", organization_id, db_session)
 
             results.append(ImportCourseResult(
                 original_uuid=course_uuid,
@@ -627,9 +682,13 @@ async def _import_single_course(
     options: ImportOptions,
     db_session: AsyncSession,
     new_course_uuid: str,
+    library_dirs: Optional[list[str]] = None,
 ) -> Course:
     """
     Import a single course from the extracted package.
+
+    ``library_dirs`` collects the storage folders of the Library files written,
+    so a failed import can remove them.
     """
     if not course_path or ".." in str(course_path).replace("\\", "/").split("/"):
         raise HTTPException(status_code=400, detail="Invalid course path in package")
@@ -726,6 +785,11 @@ async def _import_single_course(
     db_session.add(resource_author)
     await db_session.flush()
 
+    # Library files the pages download (Office documents, zips...): new
+    # Library items of this organization, referenced by the pages below
+    media_map = await _import_library_media(course_path, organization, author_user_id, db_session,
+                                            written=library_dirs)
+
     # Import chapters
     chapters_dir = os.path.join(course_path, "chapters")
     if os.path.exists(chapters_dir):
@@ -750,9 +814,117 @@ async def _import_single_course(
                 new_course_path=new_course_path,
                 organization=organization,
                 db_session=db_session,
+                media_map=media_map,
             )
 
     return new_course
+
+
+async def _import_library_media(
+    course_path: str,
+    organization: Organization,
+    author_user_id: Optional[int],
+    db_session: AsyncSession,
+    written: Optional[list[str]] = None,
+) -> dict[str, tuple[str, dict]]:
+    """Create a Library item for each file under the course's ``library/`` folder.
+
+    Returns ``old media uuid -> (new media uuid, block snapshot)``. Files whose
+    name or content is not an accepted Library upload are left out, exactly as
+    the upload endpoint would refuse them.
+    """
+    mapping: dict[str, tuple[str, dict]] = {}
+    library_dir = package_library_dir(course_path)
+    if not os.path.isdir(library_dir):
+        return mapping
+    for entry in sorted(os.listdir(library_dir)):
+        folder = os.path.join(library_dir, entry)
+        meta_path = os.path.join(folder, "media.json")
+        if not os.path.isfile(meta_path):
+            continue
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        old_uuid = data.get("media_uuid")
+        file_name = data.get("file_name")
+        if not (isinstance(old_uuid, str) and old_uuid.startswith("media_") and isinstance(file_name, str)):
+            continue
+        if os.path.basename(file_name) != file_name or not file_name:
+            continue
+        source = os.path.join(folder, file_name)
+        ext = os.path.splitext(file_name)[1].lower().lstrip(".")
+        if ext not in LIBRARY_EXTENSIONS or not os.path.isfile(source):
+            continue
+        if not 0 < os.path.getsize(source) <= library_max_size(ext):
+            continue
+        canonical = EXT_TO_CANONICAL_MIME.get(f".{ext}")
+        stored_ext = MIME_TO_SAFE_EXT.get(canonical, ext) if canonical else ext
+        if not file_content_matches_extension(source):
+            continue
+
+        # Randomized directory and name, as the upload endpoint does: the
+        # storage path is never derivable from the media uuid
+        new_uuid = f"media_{uuid4()}"
+        stored_name = f"{uuid4()}_media.{stored_ext}"
+        rel_dir = f"orgs/{organization.org_uuid}/media/{secrets.token_urlsafe(16)}"
+        dest_dir = f"content/{rel_dir}"
+        os.makedirs(dest_dir, exist_ok=True)
+        if written is not None:
+            written.append(dest_dir)
+        dest = os.path.join(dest_dir, stored_name)
+        shutil.copy2(source, dest)
+        if is_s3_enabled():
+            if not upload_file_to_s3(dest, dest):
+                raise HTTPException(status_code=500, detail="Failed to upload a library file to storage")
+
+        name = str(data.get("name") or os.path.splitext(file_name)[0])[:255]
+        media = Media(
+            name=name,
+            description=str(data.get("description") or "")[:2000],
+            media_type=MediaTypeEnum.UPLOAD,
+            url="",
+            thumbnail_image="",
+            # Files converted from another LMS carry no flag: course material, public
+            public=bool(data.get("public", True)),
+            org_id=organization.id,
+            media_uuid=new_uuid,
+            file_id=stored_name,
+            storage_key=f"{rel_dir}/{stored_name}",
+            file_format=stored_ext,
+            file_size=os.path.getsize(dest),
+            file_mime=EXT_TO_CANONICAL_MIME.get(f".{stored_ext}", ""),
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db_session.add(media)
+        await db_session.flush()
+        if author_user_id:
+            db_session.add(ResourceAuthor(
+                resource_uuid=new_uuid,
+                user_id=author_user_id,
+                authorship=ResourceAuthorshipEnum.CREATOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            ))
+        # At the Library root, where uploads land, so the file is findable
+        db_session.add(FolderContent(
+            folder_id=None,
+            resource_uuid=new_uuid,
+            org_id=organization.id,
+            position=0,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        ))
+        await db_session.flush()
+        snapshot = {field: getattr(media, field) for field in SNAPSHOT_FIELDS}
+        snapshot["media_type"] = media.media_type.value
+        mapping[old_uuid] = (new_uuid, snapshot)
+    return mapping
 
 
 async def _import_chapter(
@@ -762,6 +934,7 @@ async def _import_chapter(
     new_course_path: str,
     organization: Organization,
     db_session: AsyncSession,
+    media_map: Optional[dict[str, tuple[str, dict]]] = None,
 ) -> Chapter:
     """
     Import a chapter and its activities.
@@ -819,6 +992,7 @@ async def _import_chapter(
                 new_course_path=new_course_path,
                 organization=organization,
                 db_session=db_session,
+                media_map=media_map,
             )
 
     return new_chapter
@@ -832,6 +1006,7 @@ async def _import_activity(
     new_course_path: str,
     organization: Organization,
     db_session: AsyncSession,
+    media_map: Optional[dict[str, tuple[str, dict]]] = None,
 ) -> Activity:
     """
     Import an activity and its blocks/files.
@@ -864,6 +1039,11 @@ async def _import_activity(
         os.path.basename(os.path.normpath(activity_path)),
         f"{new_course_path.removeprefix('content/')}/activities/{new_activity_uuid}",
     )
+    # Video and PDF activities carry their own uuid in the content
+    if isinstance(new_content.get("activity_uuid"), str):
+        new_content["activity_uuid"] = new_activity_uuid
+    # Library blocks point at the items created from the package's library/
+    rewrite_library_refs(new_content, media_map or {})
     new_details = dict(activity_data.get("details", {})) if activity_data.get("details") else {}
 
     new_activity = Activity(
@@ -897,6 +1077,10 @@ async def _import_activity(
     db_session.add(new_chapter_activity)
     await db_session.flush()
 
+    assignment_plan = None
+    if activity_type == ActivityTypeEnum.TYPE_ASSIGNMENT:
+        assignment_plan = _load_assignment_plan(activity_path)
+
     # Copy entire activity files directory (videos, documents, SCORM, dynamic blocks, etc.)
     new_activity_path = f"{new_course_path}/activities/{new_activity_uuid}"
     source_files_dir = os.path.join(activity_path, "files")
@@ -911,12 +1095,26 @@ async def _import_activity(
             dirs_exist_ok=True,
             ignore=_ignore_unsafe_package_files,
         )
+        # Assignment task files live under the assignment and task uuids,
+        # which are new as well: move them before anything is uploaded
+        if assignment_plan is not None:
+            _rename_assignment_dirs(new_activity_path, assignment_plan)
         # Upload to S3 if configured
         if is_s3_enabled():
             if not upload_directory_to_s3(new_activity_path, new_activity_path):
                 raise HTTPException(status_code=500, detail="Failed to upload activity files to storage")
     else:
         os.makedirs(new_activity_path, exist_ok=True)
+
+    if assignment_plan is not None:
+        await _import_assignment(
+            assignment_plan,
+            new_activity=new_activity,
+            new_course=new_course,
+            new_chapter=new_chapter,
+            organization=organization,
+            db_session=db_session,
+        )
 
     # Import blocks for dynamic activities
     block_uuid_map = {}
@@ -1090,6 +1288,196 @@ async def _import_block(
     return new_block_uuid, content_updates
 
 
+# ---------------------------------------------------------------------------
+# Assignments
+#
+# A package may ship ``assignment.json`` next to an assignment activity: the
+# assignment settings and its tasks, answer keys included (packages produced by
+# the LMS converter do; plain course exports don't carry assignments). Task
+# reference files sit under files/assignments/<assignment>/tasks/<task>/.
+# ---------------------------------------------------------------------------
+
+# Hard cap so a package cannot create an unbounded number of rows per activity
+MAX_TASKS_PER_ASSIGNMENT = 500
+
+_ASSIGNMENT_BOOL_FIELDS = (
+    "published", "auto_grading", "anti_copy_paste", "show_correct_answers", "allow_retries", "ungraded",
+)
+_PACKAGE_KEY_RE = re.compile(r"^[A-Za-z0-9_-]{1,100}$")
+
+
+class _AssignmentPlan:
+    """assignment.json, validated, with the uuids the import will use."""
+
+    def __init__(self, old_uuid: str, data: dict, tasks: list[tuple[str, str, dict]]):
+        self.old_uuid = old_uuid
+        self.new_uuid = f"assignment_{uuid4()}"
+        self.data = data
+        # (old task key, new task uuid, task dict)
+        self.tasks = tasks
+
+
+def _load_assignment_plan(activity_path: str) -> Optional[_AssignmentPlan]:
+    path = os.path.join(activity_path, "assignment.json")
+    if not os.path.isfile(path):
+        return None
+    with open(path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+    if not isinstance(raw, dict) or not isinstance(raw.get("assignment"), dict):
+        return None
+    old_uuid = raw.get("assignment_uuid")
+    if not isinstance(old_uuid, str) or not _PACKAGE_KEY_RE.match(old_uuid):
+        old_uuid = ""
+    tasks = []
+    for task in (raw.get("tasks") or [])[:MAX_TASKS_PER_ASSIGNMENT]:
+        if not isinstance(task, dict):
+            continue
+        old_key = task.get("assignment_task_uuid")
+        if not isinstance(old_key, str) or not _PACKAGE_KEY_RE.match(old_key):
+            old_key = ""
+        tasks.append((old_key, f"assignmenttask_{uuid4()}", task))
+    return _AssignmentPlan(old_uuid, raw["assignment"], tasks)
+
+
+def _rename_assignment_dirs(new_activity_path: str, plan: _AssignmentPlan) -> None:
+    """Move copied task files from the package keys to the new uuids."""
+    base = os.path.join(new_activity_path, "assignments")
+    if not plan.old_uuid or not os.path.isdir(os.path.join(base, plan.old_uuid)):
+        return
+    old_assignment_dir = os.path.join(base, plan.old_uuid)
+    new_assignment_dir = os.path.join(base, plan.new_uuid)
+    os.rename(old_assignment_dir, new_assignment_dir)
+    tasks_dir = os.path.join(new_assignment_dir, "tasks")
+    for old_key, new_key, _task in plan.tasks:
+        if old_key and os.path.isdir(os.path.join(tasks_dir, old_key)):
+            os.rename(os.path.join(tasks_dir, old_key), os.path.join(tasks_dir, new_key))
+    # Anything else under the assignment (a stray solution/ or subs/ folder,
+    # files of tasks that were not kept) is not referenced by any row
+    for entry in os.listdir(new_assignment_dir):
+        if entry != "tasks":
+            shutil.rmtree(os.path.join(new_assignment_dir, entry), ignore_errors=True)
+    if os.path.isdir(tasks_dir):
+        kept = {new_key for _old, new_key, _t in plan.tasks}
+        for entry in os.listdir(tasks_dir):
+            entry_path = os.path.join(tasks_dir, entry)
+            if entry not in kept:
+                shutil.rmtree(entry_path, ignore_errors=True)
+            else:
+                # Learner submissions never come from a package
+                shutil.rmtree(os.path.join(entry_path, "subs"), ignore_errors=True)
+
+
+def _str_field(value, default: str = "", limit: int = 100_000) -> str:
+    return value[:limit] if isinstance(value, str) else default
+
+
+def _assignment_fields(data: dict) -> dict:
+    fields: dict = {
+        "title": _str_field(data.get("title"), "Assignment", 500) or "Assignment",
+        "description": _str_field(data.get("description")),
+        "due_date": data.get("due_date") if isinstance(data.get("due_date"), str) and data.get("due_date") else None,
+        "solution": _str_field(data.get("solution")) or None,
+    }
+    for key in _ASSIGNMENT_BOOL_FIELDS:
+        fields[key] = bool(data.get(key, False))
+    try:
+        fields["grading_type"] = GradingTypeEnum(data.get("grading_type"))
+    except ValueError:
+        fields["grading_type"] = GradingTypeEnum.PERCENTAGE
+    try:
+        fields["solution_reveal"] = SolutionRevealEnum(data.get("solution_reveal") or "NEVER")
+    except ValueError:
+        fields["solution_reveal"] = SolutionRevealEnum.NEVER
+    retries = data.get("max_retries")
+    fields["max_retries"] = retries if isinstance(retries, int) and 0 <= retries <= 1000 else 0
+    threshold = data.get("pass_threshold_percentage")
+    fields["pass_threshold_percentage"] = (
+        float(threshold) if isinstance(threshold, (int, float)) and 0 <= threshold <= 100 else None
+    )
+    if fields["ungraded"]:
+        fields["auto_grading"] = False
+    return fields
+
+
+async def _import_assignment(
+    plan: _AssignmentPlan,
+    new_activity: Activity,
+    new_course: Course,
+    new_chapter: Chapter,
+    organization: Organization,
+    db_session: AsyncSession,
+) -> Assignment:
+    try:
+        await check_limits_with_usage("assignments", organization.id, db_session)
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=e.status_code,
+            detail=f"Cannot import assignment '{new_activity.name}': {e.detail}",
+        )
+    now = str(datetime.now())
+    assignment = Assignment(
+        **_assignment_fields(plan.data),
+        assignment_uuid=plan.new_uuid,
+        org_id=organization.id,
+        course_id=new_course.id,
+        chapter_id=new_chapter.id,
+        activity_id=new_activity.id,
+        creation_date=now,
+        update_date=now,
+    )
+    db_session.add(assignment)
+    await db_session.flush()
+
+    tasks_dir = os.path.join(
+        f"{new_course.course_uuid}", "activities", new_activity.activity_uuid,
+        "assignments", plan.new_uuid, "tasks",
+    )
+    order = 0
+    for _old_key, new_key, task in plan.tasks:
+        try:
+            task_type = AssignmentTaskTypeEnum(task.get("assignment_type"))
+        except ValueError:
+            continue
+        contents = task.get("contents") if isinstance(task.get("contents"), dict) else {}
+        max_grade = task.get("max_grade_value", 100)
+        if not isinstance(max_grade, int) or max_grade < 0:
+            max_grade = 100
+        reference_file = task.get("reference_file")
+        if not (
+            isinstance(reference_file, str)
+            and reference_file
+            and "/" not in reference_file
+            and "\\" not in reference_file
+            and reference_file not in (".", "..")
+            and safe_stored_extension(reference_file)
+            and os.path.isfile(os.path.join(
+                f"content/orgs/{organization.org_uuid}/courses", tasks_dir, new_key, reference_file,
+            ))
+        ):
+            reference_file = None
+        db_session.add(AssignmentTask(
+            title=_str_field(task.get("title"), "Task", 500) or "Task",
+            description=_str_field(task.get("description")),
+            hint=_str_field(task.get("hint")),
+            reference_file=reference_file,
+            assignment_type=task_type,
+            contents=contents,
+            max_grade_value=max_grade,
+            assignment_task_uuid=new_key,
+            order=order,
+            assignment_id=assignment.id,
+            org_id=organization.id,
+            course_id=new_course.id,
+            chapter_id=new_chapter.id,
+            activity_id=new_activity.id,
+            creation_date=now,
+            update_date=now,
+        ))
+        order += 1
+    await db_session.flush()
+    return assignment
+
+
 # Content keys that may carry a full storage key instead of a bare file name.
 _FILE_REF_KEYS = ("file_id", "uri", "file_path")
 
@@ -1105,6 +1493,9 @@ def _drop_foreign_file_refs(content: dict, new_course_path: str) -> dict:
     own = (f"{new_course_path}/", f"{new_course_path.removeprefix('content/')}/")
     for key in _FILE_REF_KEYS:
         value = content.get(key)
+        # An external video's ``uri`` is the YouTube/Vimeo page, not a storage key
+        if key == "uri" and isinstance(value, str) and value.lower().startswith(("https://", "http://")):
+            continue
         if isinstance(value, str) and ("/" in value or "\\" in value):
             if ".." in value or not value.startswith(own):
                 content.pop(key)
@@ -1119,6 +1510,7 @@ def _get_block_type_folder(block_type: str) -> Optional[str]:
         "BLOCK_VIDEO": "videoBlock",
         "BLOCK_IMAGE": "imageBlock",
         "BLOCK_DOCUMENT_PDF": "pdfBlock",
+        "BLOCK_AUDIO": "audioBlock",
     }
     return block_type_folders.get(block_type)
 

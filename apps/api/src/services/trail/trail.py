@@ -231,14 +231,20 @@ async def add_activity_to_trail(
             detail="Anonymous users cannot access this endpoint",
         )
 
-    # Look for the activity
-    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = (await db_session.execute(statement)).scalars().first()
+    # Activity and course in one round trip; the outer join keeps the distinct
+    # "Course not found" answer for an activity whose course is gone.
+    statement = (
+        select(Activity, Course)
+        .outerjoin(Course, Course.id == Activity.course_id)  # type: ignore[arg-type]
+        .where(Activity.activity_uuid == activity_uuid)
+    )
+    row = (await db_session.execute(statement)).first()
 
-    if not activity:
+    if not row:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found"
         )
+    activity, course = row
 
     # An assignment is completed by its submission/grading flow, never by a
     # learner self-marking it done.
@@ -247,9 +253,6 @@ async def add_activity_to_trail(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Assignments are completed by submitting them",
         )
-
-    statement = select(Course).where(Course.id == activity.course_id)
-    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(

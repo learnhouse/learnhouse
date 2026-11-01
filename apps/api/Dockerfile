@@ -41,6 +41,10 @@ RUN uv sync --frozen --no-dev --no-cache
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
+# LMS course converter CLI (`learnhouse-lms-import --help`)
+RUN chmod +x /app/bin/learnhouse-lms-import \
+    && ln -s /app/bin/learnhouse-lms-import /usr/local/bin/learnhouse-lms-import
+
 # Run as an unprivileged user. Source and venv stay root-owned (read-only);
 # only the dirs the app writes to are handed over: content (uploads, temp
 # imports), logs, and data (EE LEARNHOUSE_DATA_DIR). Fresh named volumes
