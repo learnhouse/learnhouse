@@ -81,9 +81,7 @@ async def drip_schedule(ctx: CalendarContext) -> list[CalendarEvent]:
         )).all())
 
         for chapter in chapters:
-            state = states.get(chapter.id)
-            if state is None:
-                continue
+            state = states[chapter.id]
             name = names.get(chapter.id) or ""
             meta = {"chapter_uuid": chapter.uuid}
             opens = state.unlock_at if state.locked and state.reason == DripLockReason.SCHEDULE else state.opened_at

@@ -91,7 +91,7 @@ def test_datetime_due_dates_are_instants_in_utc():
     assert parse_due_date("2026-11-10T09:30:00Z")[0] == datetime(2026, 11, 10, 9, 30, tzinfo=timezone.utc)
 
 
-@pytest.mark.parametrize("raw", [None, "", "   ", "next friday", "2026-13-45"])
+@pytest.mark.parametrize("raw", [None, "", "   ", "next friday", "2026-13-45", "2026-11-10T25:99"])
 def test_missing_or_garbage_due_date_means_no_deadline(raw):
     assert parse_due_date(raw) == (None, False)
 
@@ -215,13 +215,27 @@ async def test_range_filtering(db, org, course, chapter, regular_user, mock_requ
     assert [e.id for e in week] == ["assignment:assignment_in_month"]
 
 
+async def test_nothing_due_in_the_window(db, org, course, chapter, regular_user, mock_request, only_assignments):
+    act = await _assignment_activity(db, org, course, 12, "b")
+    await _assignment(db, org, course, chapter, act, "last_year", "2025-11-10")
+    await _enroll(db, org.id, course.id, regular_user.id)
+    assert await _events(mock_request, org, regular_user, db) == []
+
+
 async def test_submission_status_is_reported(db, org, course, chapter, regular_user, mock_request, only_assignments):
     act = await _assignment_activity(db, org, course, 11, "a")
     graded = await _assignment(db, org, course, chapter, act, "graded", "2026-11-10")
     submitted = await _assignment(db, org, course, chapter, act, "submitted", "2026-11-11")
     await _assignment(db, org, course, chapter, act, "missed", "2020-01-01T00:00:00Z")
     await _enroll(db, org.id, course.id, regular_user.id)
-    for row, status in ((graded, AssignmentUserSubmissionStatus.GRADED), (submitted, AssignmentUserSubmissionStatus.SUBMITTED)):
+    late = await _assignment(db, org, course, chapter, act, "late", "2026-11-12")
+    # No usable deadline: never on the calendar.
+    await _assignment(db, org, course, chapter, act, "undated", "when it's ready")
+    for row, status in (
+        (graded, AssignmentUserSubmissionStatus.GRADED),
+        (submitted, AssignmentUserSubmissionStatus.SUBMITTED),
+        (late, AssignmentUserSubmissionStatus.LATE),
+    ):
         db.add(AssignmentUserSubmission(
             user_id=regular_user.id, assignment_id=row.id, grade=80, submission_status=status,
             assignmentusersubmission_uuid=f"aus_{row.id}", creation_date=_now(), update_date=_now(),
@@ -232,6 +246,8 @@ async def test_submission_status_is_reported(db, org, course, chapter, regular_u
     status = {e.id: e.status for e in events}
     assert status["assignment:assignment_graded"] == "graded"
     assert status["assignment:assignment_submitted"] == "submitted"
+    assert status["assignment:assignment_late"] == "late"
+    assert "assignment:assignment_undated" not in status
 
     past = await _events(
         mock_request, org, regular_user, db,
@@ -322,6 +338,45 @@ async def test_a_failing_source_does_not_break_the_calendar(db, org, regular_use
         calendar_sources.unregister_source("test.boom")
         calendar_sources.unregister_source("test.ok")
     assert [e.id for e in events] == ["ok:1"]
+
+
+async def test_access_errors_from_a_source_are_not_swallowed(db, org, regular_user, mock_request, only_assignments):
+    async def denied(ctx):
+        raise HTTPException(status_code=403, detail="no")
+
+    calendar_sources.register_source(denied, key="test.denied")
+    try:
+        with pytest.raises(HTTPException) as e:
+            await _events(mock_request, org, regular_user, db)
+    finally:
+        calendar_sources.unregister_source("test.denied")
+    assert e.value.status_code == 403
+
+
+async def test_router_returns_the_service_result(db, org, regular_user, mock_request, only_assignments):
+    from src.routers.calendar import api_get_calendar_events
+
+    assert await api_get_calendar_events(mock_request, org.id, NOV_START, NOV_END, regular_user, db) == []
+
+
+async def test_context_helpers(db, org, regular_user, mock_request):
+    from src.services.calendar.sources.common import parse_stored_timestamp
+    from src.services.calendar.types import CalendarContext, course_ref
+
+    ctx = CalendarContext(
+        request=mock_request, db_session=db, current_user=regular_user, user_id=regular_user.id,
+        org=org, start=NOV_START, end=NOV_END,
+    )
+    # Ranges count when any part of them falls in the window.
+    assert ctx.overlaps(datetime(2026, 10, 31, 22, tzinfo=timezone.utc), datetime(2026, 11, 1, 2, tzinfo=timezone.utc))
+    assert not ctx.overlaps(datetime(2026, 10, 1, tzinfo=timezone.utc), datetime(2026, 10, 2, tzinfo=timezone.utc))
+    elsewhere = Course(name="X", org_id=org.id + 100, course_uuid="course_x", public=True, published=True,
+                       open_to_contributors=False, creation_date="", update_date="")
+    assert await ctx.can_read_course(elsewhere) is False
+    assert await ctx.can_edit_course(elsewhere) is False
+    assert course_ref(None) is None
+    for raw in (None, "", "not a date"):
+        assert parse_stored_timestamp(raw) is None
 
 
 def test_register_source_defaults_to_qualified_name_and_dedupes():
