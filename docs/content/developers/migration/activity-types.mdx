@@ -76,20 +76,20 @@ The root must be `{ "type": "doc", "content": [...] }`. Each child is a block no
 
 #### Valid TipTap block types
 
-The API validates dynamic-page content against this whitelist (unknown types are accepted but logged):
+These are the node types the page editor renders. The activity API stores `content` as given and does not reject unknown types, but a node the editor does not know is not shown to learners.
 
 ```
 paragraph, heading, bulletList, orderedList, listItem,
 codeBlock, table, tableRow, tableHeader, tableCell,
 horizontalRule, hardBreak, text,
 
-calloutInfo, calloutWarning,
-blockImage, blockVideo, blockPDF, blockAudio, blockMathEquation,
-blockEmbed, blockQuiz, blockUser, blockWebPreview,
-flipcard, scenarios, button, badge
+callout, calloutInfo, calloutWarning,
+blockImage, blockVideo, blockPDF, blockAudio, blockLibrary, blockMathEquation,
+blockEmbed, blockH5P, blockQuiz, blockCode, blockMagic, blockUser, blockWebPreview,
+flipcard, flipcardGrid, scenarios, button, badge
 ```
 
-The `block*` types correspond to LearnHouse's custom node extensions. Standard TipTap block types (`paragraph`, `heading`, etc.) behave as in any TipTap editor.
+The `block*` types and the other non-standard names correspond to LearnHouse's custom node extensions. `callout` (with `attrs.type` set to `info`, `warning`, `tip`, `success` or `error`) is the current callout node; `calloutInfo` and `calloutWarning` are older forms that still render. `blockCode` is the Code Playground block. Standard TipTap block types (`paragraph`, `heading`, etc.) behave as in any TipTap editor. See [Blocks](/platform/editor/blocks) for what each block does.
 
 #### Inline marks
 

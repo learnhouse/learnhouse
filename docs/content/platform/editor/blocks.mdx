@@ -1,93 +1,109 @@
-import {
-  Paragraph,
-  TextHOne,
-  TextHTwo,
-  TextHThree,
-  TextHFour,
-  TextHFive,
-  TextHSix,
-  ListBullets,
-  ListNumbers,
-  CodeBlock,
-  Image,
-  Video,
-  SpeakerHigh,
-  FilePdf,
-  Globe,
-  Browser,
-  Question,
-  Terminal,
-  Sparkle,
-  MathOperations,
-  Cards,
-  FlowArrow,
-  PuzzlePiece,
-  Tag,
-  Info,
-  Warning,
-  Table,
-  Minus,
-} from '@phosphor-icons/react/dist/ssr'
-
-export const Block = ({ icon: Icon, name, description }) => (
-  <li style={{ display: 'flex', alignItems: 'center', gap: 8, listStyle: 'none' }}>
-    <Icon size={18} weight="fill" style={{ flexShrink: 0, opacity: 0.6 }} />
-    <span><strong>{name}</strong>: {description}</span>
-  </li>
-)
+import { Callout } from 'nextra/components'
 
 # Blocks
 
-The LearnHouse editor supports many block types for building course content. You can insert any block by typing `/` and selecting from the menu.
+Type `/` anywhere in a page to open the block menu. Start typing to filter it (for example `/quiz` or `/table`), then press Enter. The menu groups blocks into **Text**, **Media**, **Interactive**, **Callouts**, **UI Elements** and **Tables**, in that order.
 
-## Text Blocks
+## Text
 
-<ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-  <Block icon={Paragraph} name="Paragraph" description="Standard body text with full inline formatting support." />
-  <Block icon={TextHOne} name="Heading 1" description="Top-level heading for major sections." />
-  <Block icon={TextHTwo} name="Heading 2" description="Second-level heading for subsections." />
-  <Block icon={TextHThree} name="Heading 3" description="Third-level heading for smaller sections." />
-  <Block icon={TextHFour} name="Heading 4" description="Fourth-level heading." />
-  <Block icon={TextHFive} name="Heading 5" description="Fifth-level heading." />
-  <Block icon={TextHSix} name="Heading 6" description="Sixth-level heading." />
-  <Block icon={ListBullets} name="Bullet List" description="Unordered list for grouping items." />
-  <Block icon={ListNumbers} name="Numbered List" description="Ordered list for sequential items." />
-  <Block icon={CodeBlock} name="Code Block" description="Syntax-highlighted code with language selection." />
-</ul>
+| Block | What it does |
+| --- | --- |
+| **Paragraph** | Plain body text. |
+| **Heading 1** to **Heading 6** | Section headings. |
+| **Bullet List** | Unordered list. |
+| **Ordered List** | Numbered list. |
+| **Code Block** | Code snippet with syntax highlighting. |
 
-## Media Blocks
+Inline formatting (bold, italic, underline, strikethrough, inline code, links) is available from the toolbar and the usual keyboard shortcuts.
 
-<ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-  <Block icon={Image} name="Image" description="Upload images or insert by URL." />
-  <Block icon={Video} name="Video" description="Upload video files or embed from YouTube and other sources." />
-  <Block icon={SpeakerHigh} name="Audio" description="Upload or embed audio content." />
-  <Block icon={FilePdf} name="PDF" description="Embed PDF documents with a built-in viewer." />
-  <Block icon={Globe} name="Embed" description="Embed external content via URL (iframes)." />
-  <Block icon={Browser} name="Web Preview" description="Preview a web page with metadata." />
-</ul>
+## Media
 
-## Interactive Blocks
+| Block | What it does | Options |
+| --- | --- | --- |
+| **Image** | Upload an image (JPG, PNG, WebP or GIF), or generate one with AI. | Drag the edge to resize. Expand and download buttons for learners. |
+| **Video** | Upload a video file (MP4 or WebM). | Size: **Small**, **Medium**, **Large**. Expand and download buttons. |
+| **YouTube** | Embed a YouTube video. This opens the **Embed** block with YouTube preselected. | Same as **Embed**. |
+| **PDF** | Upload a PDF and show it in an inline viewer. | Drag to resize. Expand and download buttons. |
+| **Audio** | Upload audio, generate narration with AI, or embed a podcast. | Size: **Small**, **Medium**, **Large**, **Full Width**. See below. |
+| **Library** | Insert a file or resource from your [Library](/platform/courses/library). | **Choose from Library** or **Upload**, then **Show as card** or **Show inline**. |
 
-<ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-  <Block icon={Question} name="Quiz" description="Interactive quiz with questions to test understanding." />
-  <Block icon={Terminal} name="Code Playground" description="Runnable code with test cases and execution." />
-  <Block icon={Sparkle} name="Magic Block" description="AI-generated interactive content." />
-  <Block icon={MathOperations} name="Math Equation" description="Render mathematical notation using LaTeX syntax." />
-  <Block icon={Cards} name="Flip Card" description="Flashcard for learning and memorization." />
-  <Block icon={FlowArrow} name="Scenarios" description="Interactive branching scenarios with choices." />
-  <Block icon={PuzzlePiece} name="H5P" description="Embed interactive H5P content hosted on your own H5P provider." />
-</ul>
+You can also paste or drop a file straight into the page. Images (JPEG, PNG, WebP, GIF), videos (MP4, WebM) and PDFs are uploaded and turned into the matching block.
 
-## UI Blocks
+### The Audio block
 
-<ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-  <Block icon={Info} name="Callout Info" description="Information callout box for tips and notes." />
-  <Block icon={Warning} name="Callout Warning" description="Warning callout box for important alerts." />
-  <Block icon={Tag} name="Badge" description="Styled badge or label element." />
-  <Block icon={Table} name="Table" description="Resizable tables for structured data." />
-  <Block icon={Minus} name="Divider" description="Horizontal rule to visually separate sections (type `---` to insert)." />
-</ul>
+The Audio block has four tabs:
 
-## Using Blocks
+| Tab | What it does |
+| --- | --- |
+| **Upload** | Upload an MP3, WAV, OGG or M4A file. |
+| **Generate** | Create narrated audio with AI: **Text to speech**, **Podcast (2 voices)** or **Speak**. See [AI for Teachers](/platform/ai/for-teachers#audio-generation). |
+| **Episode** | Embed one episode from one of your organization's [podcasts](/platform/podcasts). |
+| **Playlist** | Embed a whole podcast as a playlist. |
 
-Each block can be individually moved, duplicated, or deleted. Click the handle on the left side of a block to drag it to a new position, or use the block menu for additional options.
+## Interactive
+
+| Block | What it does |
+| --- | --- |
+| **Magic Block** | Describe an interactive element (a simulation, a chart, a small game) and AI generates it as HTML. You can refine it up to 6 times per block. |
+| **Quiz** | Multiple choice questions that learners answer on the page. See [Quiz block](#quiz-block). |
+| **H5P** | Embed H5P content hosted elsewhere. See [H5P](/platform/editor/h5p). |
+| **Math Equation** | A LaTeX equation, with **Templates** and **Symbols** pickers and a quick reference. |
+| **Web Preview** | A card that previews a web page. See [Web Preview](#web-preview). |
+| **Flipcard** | A flashcard: the question on the front, the answer on the back. |
+| **Flashcard Grid** | Several flipcards side by side, in **2 Columns**, **3 Columns** or **4 Columns**. |
+| **Code Playground** | A coding challenge that runs real code against test cases. See [Code Execution](/platform/code-execution). |
+| **Scenarios** | A branching scenario: each step shows text (and optionally an image) and a set of choices that lead to other steps. **Generate with AI** drafts one for you. |
+
+Blocks with an AI option use your organization's [AI credits](/platform/ai#ai-credits).
+
+<Callout>
+On LearnHouse Cloud, **Magic Block** needs the Standard plan or higher. It also uses AI credits. Self-hosted instances do not apply plan restrictions to it.
+</Callout>
+
+### Quiz block
+
+Each question has a list of answers, and you mark one or more of them as correct. A question with one correct answer is shown as **Select one answer**. A question with several correct answers is shown as **Select all that apply**. A question with no correct answer is skipped.
+
+Click **Generate with AI** to have questions written from the page content. You choose between single answer and select-all-that-apply questions, preview the result and regenerate before inserting.
+
+Learners pick their answers and click **Submit** to see whether they got everything right, then **Reset answers** to try again. Quiz block answers are not graded and not stored. For a graded quiz, use an [assignment](/platform/assignments) with a Quiz task.
+
+### Flipcard and Flashcard Grid
+
+A flipcard has a question, an answer, a color (10 to pick from), an alignment (left, center or right) and a size (small, medium or large). Learners click a card to flip it.
+
+To lay cards out in a row, insert a **Flashcard Grid**, or select an existing flipcard and use **Group into Grid**. Inside a grid, use **Add Card** to add more cards and **Ungroup Cards** to turn them back into single cards.
+
+### Web Preview
+
+Enter a **Website URL** and the block shows the page's title, description and image. You can turn on **Show button**, set its **Button label**, and choose **Open in-app popup (might not work on all websites)** to open the link in a popup instead of a new tab. You can also set the card's alignment.
+
+## Callouts
+
+| Block | What it does |
+| --- | --- |
+| **Callout** | A highlighted box. Pick its type: **Info**, **Warning**, **Tip**, **Success** or **Error**. |
+
+## UI Elements
+
+| Block | What it does |
+| --- | --- |
+| **Divider** | A horizontal line between sections. Typing `---` also inserts one. |
+| **Badge** | A colored label with an optional emoji. |
+| **Button** | A clickable button that opens a link. You set the link, color and alignment. |
+| **User** | A card for a user from your organization. Enter their username and click **Load User**. |
+| **Embed** | Embed external content. See [Embed](#embed). |
+
+### Embed
+
+The Embed block takes either a URL or a full embed code (an `<iframe>` or embed script). It has shortcuts, each with a link to that service's embed instructions, for YouTube, GitHub, Replit, Spotify, Loom, Google Maps, CodePen, Canva, Notion, Google Docs, X, Figma and Giphy. You can also paste any embed URL directly.
+
+## Tables
+
+| Block | What it does |
+| --- | --- |
+| **Table** | Inserts a 3 by 3 table with a header row. Use the toolbar to add a row below, add a column to the right, or delete the current row or column. Columns can be resized. |
+
+## Moving blocks
+
+Hover over a block and grab the handle on its left to drag it somewhere else on the page.

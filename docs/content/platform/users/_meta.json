@@ -1,5 +1,10 @@
 {
   "index": "Overview",
+  "members-and-invites": "Members & Invites",
+  "user-groups": "User Groups",
   "roles-and-permissions": "Roles & Permissions",
-  "authentication": "Authentication"
+  "authentication": "Authentication",
+  "two-factor": "Two-Factor Authentication",
+  "learner-analytics": "Learner Analytics",
+  "emails": "Emails"
 }

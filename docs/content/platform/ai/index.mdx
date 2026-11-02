@@ -2,19 +2,67 @@ import { Callout } from 'nextra/components'
 
 # AI
 
-LearnHouse includes a context-aware AI assistant powered by **Google Gemini**. The AI reads the content of your courses and activities, so its help for students and teachers is specific to that material.
+LearnHouse has AI features for both teachers and learners. They work from your own course content, so answers and generated material are specific to what you teach.
 
-## How It Works
+- **For learners**: an **Ask AI** chat on each activity, and the **Copilot**, an assistant that answers questions across your courses with citations. See [AI for Students](/platform/ai/for-students).
+- **For teachers**: the AI Editor, the AI Course Creator, Magic Blocks, quiz, scenario and assignment task generation, images, narrated audio, video captions and chapters. See [AI for Teachers](/platform/ai/for-teachers).
 
-The AI assistant operates at the course and activity level. It reads the content of the current course or activity to provide contextually accurate responses. This means answers are grounded in your actual teaching material rather than generic knowledge.
+## Turning AI on
 
-Beyond chat and content assistance, LearnHouse can also generate **images** and **audio** (text-to-speech, a two-voice podcast, or a single-voice talk) directly in the editor. AI usage is metered by AI credits, and **free organizations start with 20 credits** to try things out.
+AI is controlled per organization in the AI settings of the [Organization Settings](/platform/organizations/settings). Only admins can change them:
+
+| Setting | What it does |
+| --- | --- |
+| **Enable AI Features** | Turns every AI feature on or off for the organization. |
+| **AI Copilot** | Lets learners ask questions about course content. Answers come from your indexed course material, with citations. |
+
+The editor and activity AI features are always on while AI is enabled.
 
 <Callout>
-AI features require a Google Gemini API key to be configured at the instance level via `LEARNHOUSE_GEMINI_API_KEY`. See [AI Setup](/self-hosting/configuration/ai-setup) for details.
+On self-hosted instances AI also has to be configured on the server. LearnHouse supports several AI providers (Google Gemini is the default). Image generation and text to speech always use Google. See [AI Setup](/self-hosting/configuration/ai-setup).
 </Callout>
+
+## AI credits
+
+AI usage is counted in AI credits per organization. Every AI action reserves its credits before it runs and gives them back if it fails.
+
+On LearnHouse Cloud, each plan includes a number of credits per billing cycle:
+
+| Plan | Credits |
+| --- | --- |
+| Free | 20 |
+| Personal | 500 |
+| Standard | 1000 |
+| Pro | 2000 |
+| Enterprise | Unlimited |
+
+You can buy extra credits as a monthly add-on. The dashboard home and the organization's usage page show how many are left. When credits run out, AI actions are refused until the next cycle or until you add more.
+
+Self-hosted instances have no credit limit. Usage is still counted.
+
+### Cost per action
+
+| Action | Credits |
+| --- | --- |
+| **Ask AI** message on an activity | 1 |
+| Copilot message | 2 |
+| AI Editor message | 1 |
+| Magic Block generation or change | 3 |
+| Quiz block generation | 2 |
+| Scenarios generation | 2 |
+| Assignment task generation | 3 |
+| AI Course Creator: plan, change to the plan, or one activity | 1, or 3 with the "pro" model |
+| Image generation | 5 |
+| Audio script | 1 |
+| Audio narration | 3 |
+| Video captions | 1 per started 10 minutes of audio, plus 1 per translated language |
+| Video chapters | 1 |
+| Playground generation | 3 |
+| Board AI Playground generation | 3 |
+| **Organize with AI** when building a course from files | 1 |
 
 ## Learn More
 
-- [AI for Students](/platform/ai/for-students): How students use the AI assistant during learning.
-- [AI for Teachers](/platform/ai/for-teachers): How teachers use AI for content creation and course management.
+- [AI for Students](/platform/ai/for-students)
+- [AI for Teachers](/platform/ai/for-teachers)
+- [AI Video Captions](/platform/courses/video-captions)

@@ -2,7 +2,9 @@ import { Callout } from 'nextra/components'
 
 # AI-Assisted Migration
 
-LearnHouse exposes a three-call API that uploads a folder of media files, asks Gemini to organise them into chapters and activities, and then creates the entire course in a single transaction. This is the right path when you have a directory full of legacy lecture recordings, PDFs, and images but no existing structure.
+LearnHouse exposes a three-call API that uploads a folder of media files, asks the configured AI model (Gemini by default) to organise them into chapters and activities, and then creates the entire course in a single transaction. This is the right path when you have a directory full of legacy lecture recordings, PDFs, and images but no existing structure.
+
+The same flow is available without code in the dashboard: **Create Course** > **From Existing Content** opens the **Migrate Content** wizard. See [Import & Export](/platform/courses/import-export#from-existing-content). The suggest step uses 1 [AI credit](/platform/ai#ai-credits).
 
 All three endpoints live under `/api/v1/courses/migrate/`. They require an **authenticated user session (JWT)** with permission to create courses in the target organization.
 
@@ -209,7 +211,7 @@ Response:
 }
 ```
 
-The created course is **unpublished and private** by default (`public: false`, `published: false`). Visit `/{org_slug}/courses/{course_uuid}/edit` in the dashboard to review and publish it, or use `PUT /api/v1/courses/{course_uuid}` to publish programmatically.
+The created course is **unpublished and private** by default (`public: false`, `published: false`). Open it from **Courses** in the dashboard to review and publish it, or use `PUT /api/v1/courses/{course_uuid}` to publish programmatically.
 
 If anything fails (database error, file copy failure, missing files), the entire transaction is rolled back and `success` is `false` with the error in `error`. The temporary upload directory is cleaned up either way, so start over from step 1 with a fresh upload.
 

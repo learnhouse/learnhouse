@@ -2,23 +2,28 @@ import { Callout } from 'nextra/components'
 
 # Trails
 
-Trails let students track their progress through courses, providing a clear view of what they have completed and what is left.
+A Trail is a learner's record of progress across the courses they have started. Each learner has one per organization.
 
 <br/>
 <img style={{borderRadius:10}} quality={100} src="/img/pages/trails/trails.png" alt="Trails overview" width={800} height={500} />
 
-## How Trails Work
+## How progress is recorded
 
-When a student starts a course, a Trail is automatically created for them. As they work through activities, their progress is recorded, including activity completions and quiz submissions.
+- When a learner starts a course, it is added to their Trail.
+- Each activity they complete is recorded. Learners mark an activity complete with **Mark as complete** (or the `m` key). Assignments are completed when they are submitted with automatic grading, or when a teacher clicks **Finalize & Complete**.
+- A course is finished when every activity is complete. If the course has a [certification](/platform/certifications), the certificate is awarded at that point, provided every graded assignment is passed.
 
-Students can view their Trail at any time to see:
+Learners can undo a completion with **Unmark Activity**, which lowers their progress.
 
-- Which activities they have completed
-- Quiz results and scores
-- Overall course progression
+## The Progress page
 
-This encourages self-directed learning and helps students stay on track.
+Learners open their Trail from the **Progress** page (`g` then `t`). It shows:
 
-<Callout>
-A Trail is created automatically when a student starts a course. All quiz submissions and progression data are recorded in the Trail.
+- Every course in progress, with how far along they are.
+- **My Certificates**: the certificates they have earned.
+
+**Quit Course** on a course card removes that course and its progress from the Trail. **Quit All Courses** on the Progress page does the same for every course.
+
+<Callout type="warning">
+Quitting a course deletes the learner's progress in it. It can't be undone.
 </Callout>
