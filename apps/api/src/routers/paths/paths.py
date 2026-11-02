@@ -25,6 +25,7 @@ from src.services.paths.paths import (
     get_paths_for_course,
     leave_path,
     list_org_paths,
+    reinstate_path_certificate,
     revoke_path_certificate,
     set_path_courses,
     update_path,
@@ -203,6 +204,21 @@ async def api_revoke_path_certificate(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     return await revoke_path_certificate(request, path_uuid, certificate_uuid, current_user, db_session)
+
+
+@router.post(
+    "/{path_uuid}/certificates/{certificate_uuid}/reinstate",
+    summary="Reinstate path certificate",
+    description="Undo a revocation: the certificate verifies again with its original ID and date.",
+)
+async def api_reinstate_path_certificate(
+    request: Request,
+    path_uuid: str,
+    certificate_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    return await reinstate_path_certificate(request, path_uuid, certificate_uuid, current_user, db_session)
 
 
 @certificates_router.get("/certificates/me", summary="My path certificates")

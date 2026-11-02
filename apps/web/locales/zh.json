@@ -6558,8 +6558,11 @@
         },
         "revoke": "撤销",
         "revoke_title": "撤销证书？",
-        "revoke_confirm": "{{name}} 的证书将无法再通过验证。该学员仍在学习路径中，可以再次获得证书。",
-        "revoked": "证书已撤销"
+        "revoke_confirm": "{{name}} 的证书将无法再通过验证。你可以稍后恢复。",
+        "revoked": "证书已撤销",
+        "revoked_badge": "已撤销",
+        "reinstate": "恢复",
+        "reinstated": "证书已恢复"
       }
     },
     "toasts": {

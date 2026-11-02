@@ -6570,8 +6570,11 @@
         },
         "revoke": "Thu hồi",
         "revoke_title": "Thu hồi chứng chỉ?",
-        "revoke_confirm": "Chứng chỉ của {{name}} sẽ không còn được xác minh. Học viên vẫn ở trong lộ trình và có thể nhận lại chứng chỉ.",
-        "revoked": "Đã thu hồi chứng chỉ"
+        "revoke_confirm": "Chứng chỉ của {{name}} sẽ không thể xác minh được nữa. Bạn có thể khôi phục sau.",
+        "revoked": "Đã thu hồi chứng chỉ",
+        "revoked_badge": "Đã thu hồi",
+        "reinstate": "Khôi phục",
+        "reinstated": "Đã khôi phục chứng chỉ"
       }
     },
     "toasts": {

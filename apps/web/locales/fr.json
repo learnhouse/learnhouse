@@ -6596,8 +6596,11 @@
         },
         "revoke": "Révoquer",
         "revoke_title": "Révoquer le certificat ?",
-        "revoke_confirm": "Le certificat de {{name}} ne sera plus vérifiable. Cette personne reste inscrite au parcours et pourra l'obtenir à nouveau.",
-        "revoked": "Certificat révoqué"
+        "revoke_confirm": "Le certificat de {{name}} ne sera plus vérifiable. Vous pourrez le rétablir plus tard.",
+        "revoked": "Certificat révoqué",
+        "revoked_badge": "Révoqué",
+        "reinstate": "Rétablir",
+        "reinstated": "Certificat rétabli"
       }
     },
     "toasts": {

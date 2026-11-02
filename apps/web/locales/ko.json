@@ -6558,8 +6558,11 @@
         },
         "revoke": "철회",
         "revoke_title": "수료증을 철회하시겠습니까?",
-        "revoke_confirm": "{{name}}님의 수료증은 더 이상 검증되지 않습니다. 학습 경로에는 그대로 남아 있으며 다시 취득할 수 있습니다.",
-        "revoked": "수료증이 철회되었습니다"
+        "revoke_confirm": "{{name}}님의 수료증은 더 이상 확인되지 않습니다. 나중에 복원할 수 있습니다.",
+        "revoked": "수료증이 철회되었습니다",
+        "revoked_badge": "철회됨",
+        "reinstate": "복원",
+        "reinstated": "수료증을 복원했습니다"
       }
     },
     "toasts": {

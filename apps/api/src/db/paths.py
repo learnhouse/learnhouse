@@ -30,7 +30,7 @@ class Path(PathBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
         sa_column=Column(
-            BigInteger, ForeignKey("organization.id", ondelete="CASCADE"), index=True
+            BigInteger, ForeignKey("organization.id", ondelete="CASCADE"), nullable=False, index=True
         )
     )
     path_uuid: str = Field(default="", index=True)
@@ -50,10 +50,10 @@ class PathCourse(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     path_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("path.id", ondelete="CASCADE"), index=True)
+        sa_column=Column(Integer, ForeignKey("path.id", ondelete="CASCADE"), nullable=False, index=True)
     )
     course_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE"), index=True)
+        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE"), nullable=False, index=True)
     )
     position: int = 0
     required: bool = True
@@ -67,10 +67,10 @@ class PathEnrollment(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     path_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("path.id", ondelete="CASCADE"), index=True)
+        sa_column=Column(Integer, ForeignKey("path.id", ondelete="CASCADE"), nullable=False, index=True)
     )
     user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     )
     enrolled_at: str = ""
     completed_at: Optional[str] = None
@@ -85,13 +85,16 @@ class PathCertificate(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     path_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("path.id", ondelete="CASCADE"), index=True)
+        sa_column=Column(Integer, ForeignKey("path.id", ondelete="CASCADE"), nullable=False, index=True)
     )
     user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     )
     certificate_uuid: str = Field(unique=True, index=True)
     created_at: str = ""
+    # Revoked certificates are kept, not deleted, so completing the path again
+    # can't silently re-issue one: only an admin reinstating it can.
+    revoked_at: Optional[str] = None
 
 
 # ----------------------------------------------------------------------------
@@ -153,6 +156,7 @@ class PathProgress(SQLModel):
     courses_done: int = 0
     percent: int = 0
     certificate_uuid: Optional[str] = None
+    certificate_revoked: bool = False
 
 
 class PathRead(PathBase):
@@ -178,3 +182,4 @@ class PathLearnerRead(SQLModel):
     courses_done: int = 0
     percent: int = 0
     certificate_uuid: Optional[str] = None
+    certificate_revoked: bool = False

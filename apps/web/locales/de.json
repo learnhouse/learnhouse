@@ -6546,8 +6546,11 @@
         },
         "revoke": "Widerrufen",
         "revoke_title": "Zertifikat widerrufen?",
-        "revoke_confirm": "Das Zertifikat von {{name}} lässt sich danach nicht mehr verifizieren. Die Person bleibt im Lernpfad und kann es erneut erwerben.",
-        "revoked": "Zertifikat widerrufen"
+        "revoke_confirm": "Das Zertifikat von {{name}} ist dann nicht mehr gültig. Sie können es später wiederherstellen.",
+        "revoked": "Zertifikat widerrufen",
+        "revoked_badge": "Widerrufen",
+        "reinstate": "Wiederherstellen",
+        "reinstated": "Zertifikat wiederhergestellt"
       }
     },
     "toasts": {

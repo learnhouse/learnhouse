@@ -9,7 +9,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getUriWithOrg } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
-import { Path, revokePathCertificate } from '@services/paths/paths'
+import { Path, reinstatePathCertificate, revokePathCertificate } from '@services/paths/paths'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { queryKeys } from '@/lib/query/keys'
 import { formatDate } from '@/lib/format'
@@ -33,13 +33,23 @@ function PathLearners({ path, orgslug }: { path: Path; orgslug: string }) {
 
   const total = learners?.length ?? 0
   const completed = learners?.filter((l) => l.completed_at).length ?? 0
-  const certified = learners?.filter((l) => l.certificate_uuid).length ?? 0
+  const certified = learners?.filter((l) => l.certificate_uuid && !l.certificate_revoked).length ?? 0
 
   const revoke = async (certificateUuid: string) => {
     try {
       await revokePathCertificate(path.path_uuid, certificateUuid, accessToken)
       queryClient.invalidateQueries({ queryKey: queryKeys.paths.learners(path.path_uuid) })
       toast.success(t('paths.dashboard.learners.revoked'))
+    } catch (error: any) {
+      toast.error(getErrorMessage(error?.detail, t('paths.toasts.save_error')))
+    }
+  }
+
+  const reinstate = async (certificateUuid: string) => {
+    try {
+      await reinstatePathCertificate(path.path_uuid, certificateUuid, accessToken)
+      queryClient.invalidateQueries({ queryKey: queryKeys.paths.learners(path.path_uuid) })
+      toast.success(t('paths.dashboard.learners.reinstated'))
     } catch (error: any) {
       toast.error(getErrorMessage(error?.detail, t('paths.toasts.save_error')))
     }
@@ -135,7 +145,20 @@ function PathLearners({ path, orgslug }: { path: Path; orgslug: string }) {
                         )}
                       </td>
                       <td className="px-6 py-3 text-end">
-                        {learner.certificate_uuid ? (
+                        {learner.certificate_uuid && learner.certificate_revoked ? (
+                          <div className="inline-flex items-center gap-2">
+                            <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-50 text-red-700 rounded-full">
+                              {t('paths.dashboard.learners.revoked_badge')}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => reinstate(learner.certificate_uuid!)}
+                              className="text-xs font-medium text-gray-700 hover:text-black"
+                            >
+                              {t('paths.dashboard.learners.reinstate')}
+                            </button>
+                          </div>
+                        ) : learner.certificate_uuid ? (
                           <div className="inline-flex items-center gap-2">
                             <Link
                               href={getUriWithOrg(orgslug, `/paths/certificate/${learner.certificate_uuid}`)}

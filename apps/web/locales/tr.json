@@ -6570,8 +6570,11 @@
         },
         "revoke": "İptal et",
         "revoke_title": "Sertifika iptal edilsin mi?",
-        "revoke_confirm": "{{name}} adlı öğrencinin sertifikası artık doğrulanmayacak. Öğrenme yolunda kalmaya devam eder ve sertifikayı yeniden kazanabilir.",
-        "revoked": "Sertifika iptal edildi"
+        "revoke_confirm": "{{name}} adlı kişinin sertifikası artık doğrulanamayacak. Daha sonra geri yükleyebilirsiniz.",
+        "revoked": "Sertifika iptal edildi",
+        "revoked_badge": "İptal edildi",
+        "reinstate": "Geri yükle",
+        "reinstated": "Sertifika geri yüklendi"
       }
     },
     "toasts": {
