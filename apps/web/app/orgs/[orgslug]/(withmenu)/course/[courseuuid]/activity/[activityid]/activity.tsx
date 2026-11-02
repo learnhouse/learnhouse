@@ -2209,10 +2209,7 @@ function AssignmentTools(props: {
                                 <span>{t('assignments.retry_assignment_last')}</span>
                               ) : (
                                 <span>
-                                  {t('assignments.retry_assignment_remaining', {
-                                    remaining: attemptsRemaining,
-                                    plural: attemptsRemaining === 1 ? '' : 's',
-                                  })}
+                                  {t('assignments.retry_assignment_remaining', { count: attemptsRemaining })}
                                 </span>
                               )}
                             </p>

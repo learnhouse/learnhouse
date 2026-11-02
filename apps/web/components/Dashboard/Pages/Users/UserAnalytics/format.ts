@@ -1,26 +1,27 @@
 import { getUserAvatarMediaDirectory } from '@services/media/media'
+import i18n from '@/lib/i18n'
 
 export function fmtDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return 'n/a'
+  if (!dateStr) return i18n.t('dashboard.users.analytics.not_available')
   try {
     const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return 'n/a'
+    if (isNaN(d.getTime())) return i18n.t('dashboard.users.analytics.not_available')
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   } catch {
-    return 'n/a'
+    return i18n.t('dashboard.users.analytics.not_available')
   }
 }
 
 export function fmtDateTime(dateStr: string | null | undefined): string {
-  if (!dateStr) return 'n/a'
+  if (!dateStr) return i18n.t('dashboard.users.analytics.not_available')
   try {
     const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return 'n/a'
+    if (isNaN(d.getTime())) return i18n.t('dashboard.users.analytics.not_available')
     return d.toLocaleString('en-US', {
       month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
     })
   } catch {
-    return 'n/a'
+    return i18n.t('dashboard.users.analytics.not_available')
   }
 }
 
@@ -37,7 +38,7 @@ export function fmtDuration(seconds: number | null | undefined): string {
 
 export function fullName(user: any): string {
   const name = `${user?.first_name || ''} ${user?.last_name || ''}`.trim()
-  return name || user?.username || 'Unknown'
+  return name || user?.username || i18n.t('common.unknown')
 }
 
 export function avatarUrl(user: any): string | undefined {

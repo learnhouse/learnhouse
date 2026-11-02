@@ -101,7 +101,7 @@ export default function LibraryHeader({
             className="w-full ps-9 pe-8 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 placeholder:text-gray-400"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label="Clear search">
+            <button onClick={() => setQuery('')} className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={t('library.clear_search')}>
               <X size={14} />
             </button>
           )}

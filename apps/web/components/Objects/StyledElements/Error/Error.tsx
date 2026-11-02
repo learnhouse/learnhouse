@@ -3,6 +3,7 @@ import { classifyError } from '@lib/errors/classify'
 import type { ResolutionKind } from '@lib/errors/types'
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import ErrorActions from './ErrorActions'
 
 interface ErrorUIProps {
@@ -40,6 +41,7 @@ function ErrorUI({
   loginNext,
   compact,
 }: ErrorUIProps) {
+  const { t } = useTranslation()
   const [showDetails, setShowDetails] = useState(false)
 
   const classified = useMemo(
@@ -49,11 +51,11 @@ function ErrorUI({
 
   // Headline + body: explicit props win, else the classified category, else a
   // meaningful default (never a bare "Something went wrong").
-  const title = message || classified?.category.title || 'Something unexpected happened'
+  const title = message || classified?.category.title || t('errors.default_title')
   const description =
     submessage ||
     classified?.category.description ||
-    "We ran into an error. It's been logged automatically; retrying or heading home usually helps."
+    t('errors.default_description')
 
   const actions: ResolutionKind[] =
     resolutions ||
@@ -101,7 +103,7 @@ function ErrorUI({
             className="flex items-center gap-1 mx-auto text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors"
           >
             {showDetails ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            <span>{showDetails ? 'Hide technical details' : 'Show technical details'}</span>
+            <span>{showDetails ? t('auth.sso_callback.hide_details') : t('auth.sso_callback.show_details')}</span>
           </button>
           {showDetails && (
             <div className="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4 text-start">

@@ -135,7 +135,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             updatedQuestions[qIndex].options.splice(oIndex, 1);
             setQuestions(updatedQuestions);
         } else {
-            toast.error('Cannot delete the last option. At least one option is required.');
+            toast.error(t('dashboard.assignments.editor.task_editor.quiz.last_option'));
         }
     };
 
@@ -571,9 +571,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
             if (res.success) {
                 getAssignmentTaskSubmissionFromIdentifiedUserUI();
-                toast.success(`Task graded successfully with ${finalGrade} points`);
+                toast.success(t('dashboard.assignments.editor.grading.graded_success', { grade: finalGrade }));
             } else {
-                toast.error('Error grading task, please retry later.');
+                toast.error(t('dashboard.assignments.editor.grading.graded_error'));
             }
         }
     }
@@ -658,7 +658,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                     <input
                                         value={question.questionText}
                                         onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
-                                        placeholder="Question"
+                                        placeholder={t('dashboard.assignments.editor.task_editor.quiz.question')}
                                         className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                     />
                                 ) : (
@@ -746,7 +746,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                     type="text"
                                                     value={option.text}
                                                     onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-                                                    placeholder="Option"
+                                                    placeholder={t('dashboard.assignments.editor.task_editor.quiz.option')}
                                                     className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                                 />
                                             ) : (
@@ -763,9 +763,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                     >
                                                         {option.assigned_right_answer ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
                                                         {option.assigned_right_answer ? (
-                                                            <p className="mx-auto font-bold text-xs">True</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.quiz.true')}</p>
                                                         ) : (
-                                                            <p className="mx-auto font-bold text-xs">False</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.quiz.false')}</p>
                                                         )}
                                                     </div>
                                                     <div
@@ -784,9 +784,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                     >
                                                         {option.assigned_right_answer ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
                                                         {option.assigned_right_answer ? (
-                                                            <p className="mx-auto font-bold text-xs">Marked as True</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.quiz.marked_true')}</p>
                                                         ) : (
-                                                            <p className="mx-auto font-bold text-xs">Marked as False</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.quiz.marked_false')}</p>
                                                         )}
                                                     </div>
 
@@ -897,7 +897,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                             onClick={addQuestion}
                         >
                             <PlusCircle size={14} className="inline-block" />
-                            <span>Add Question</span>
+                            <span>{t('dashboard.assignments.editor.task_editor.quiz.add_question')}</span>
                         </div>
                     </div>
                 )}
@@ -907,7 +907,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
     else {
         return <div className='flex flex-row space-x-2 text-sm items-center'>
             <Info size={12} />
-            <p>No questions found</p>
+            <p>{t('dashboard.assignments.editor.task_editor.quiz.no_questions')}</p>
         </div>;
     }
 }

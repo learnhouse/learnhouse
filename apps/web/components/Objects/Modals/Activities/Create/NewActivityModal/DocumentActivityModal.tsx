@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import * as Form from '@radix-ui/react-form'
 import BarLoader from 'react-spinners/BarLoader'
 import { FileText } from '@phosphor-icons/react'
@@ -7,6 +8,7 @@ import { constructAcceptValue } from '@/lib/constants'
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 
 function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
+  const { t } = useTranslation()
   const [documentpdf, setDocumentPdf] = React.useState(null) as any
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [name, setName] = React.useState('')
@@ -42,24 +44,24 @@ function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
       >
         <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
           <FileText size={18} weight="duotone" className="text-emerald-400" />
-          Document
+          {t('activities.document')}
         </span>
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
         <Form.Field name="documentpdf-activity-name" className="space-y-1.5">
           <Form.Label className="text-sm font-medium text-gray-700">
-            Document name
+            {t('activities.modal.document_name')}
           </Form.Label>
           <Form.Message match="valueMissing" className="text-xs text-red-500">
-            Please provide a name
+            {t('activities.modal.provide_name')}
           </Form.Message>
           <Form.Control asChild>
             <input
               onChange={(e) => setName(e.target.value)}
               type="text"
               required
-              placeholder="Enter a name..."
+              placeholder={t('activities.modal.enter_name')}
               className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
             />
           </Form.Control>
@@ -67,10 +69,10 @@ function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
 
         <Form.Field name="documentpdf-activity-file" className="space-y-1.5">
           <Form.Label className="text-sm font-medium text-gray-700">
-            PDF file
+            {t('activities.modal.pdf_file')}
           </Form.Label>
           <Form.Message match="valueMissing" className="text-xs text-red-500">
-            Please provide a PDF file
+            {t('activities.modal.provide_pdf')}
           </Form.Message>
           <Form.Control asChild>
             <input
@@ -98,7 +100,7 @@ function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
                 color="#ffffff"
               />
             ) : (
-              'Create activity'
+              t('activities.modal.create_activity')
             )}
           </button>
         </Form.Submit>

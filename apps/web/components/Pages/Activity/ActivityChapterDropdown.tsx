@@ -105,8 +105,8 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         aria-expanded={isOpen}
         aria-haspopup="true"
         className="bg-white rounded-full px-5 nice-shadow flex items-center space-x-2 p-2.5 text-gray-700 hover:bg-gray-50 transition delay-150 duration-300 ease-in-out"
-        aria-label="View all activities"
-        title="View all activities"
+        aria-label={t('activities.view_all_activities')}
+        title={t('activities.view_all_activities')}
       >
         <ListTree size={17} />
         <span className="text-xs font-bold">{t('courses.chapters')}</span>

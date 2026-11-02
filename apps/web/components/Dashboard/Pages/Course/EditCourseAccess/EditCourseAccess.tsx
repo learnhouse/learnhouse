@@ -30,6 +30,7 @@ type AccessCardProps = {
 
 const AccessCard = React.forwardRef<HTMLDivElement, AccessCardProps>(
     function AccessCard({ icon: Icon, title, description, selected, className, ...rest }, ref) {
+        const { t } = useTranslation()
         return (
             <div
                 ref={ref}
@@ -51,7 +52,7 @@ const AccessCard = React.forwardRef<HTMLDivElement, AccessCardProps>(
                         <span className="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center">
                             <Check size={10} strokeWidth={3.5} className="text-white" />
                         </span>
-                        <span>Active</span>
+                        <span>{t('access.active')}</span>
                     </div>
                 )}
 

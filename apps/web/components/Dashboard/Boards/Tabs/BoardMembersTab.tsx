@@ -233,7 +233,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen }: {
 
   const getUserDisplayName = (u: any) => {
     const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ')
-    return fullName || u.username || 'Unknown'
+    return fullName || u.username || t('common.unknown')
   }
 
   // Filter by search query
@@ -263,7 +263,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen }: {
       groupName: g.name,
       entries: [],
     }))
-    const ungrouped: GroupSection = { groupId: null, groupName: 'Ungrouped', entries: [] }
+    const ungrouped: GroupSection = { groupId: null, groupName: t('boards.members.ungrouped'), entries: [] }
 
     groupFiltered.forEach((entry: any) => {
       const u = entry.user
@@ -465,13 +465,13 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen }: {
             ))}
           </div>
           <span className="text-xs font-semibold text-gray-700">
-            {selectedUserIds.size} {selectedUserIds.size === 1 ? 'user' : 'users'} selected
+            {t('boards.members.users_selected', { count: selectedUserIds.size })}
           </span>
           <button
             onClick={() => setSelectedUserIds(new Set())}
             className="ms-auto text-xs text-gray-400 hover:text-gray-600 transition-colors"
           >
-            Clear all
+            {t('boards.members.clear_all')}
           </button>
         </div>
       )}

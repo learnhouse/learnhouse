@@ -3,6 +3,7 @@ import { Check, Square, ArrowRight, Folder, FileText, Video, Layers, BookOpenChe
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 
 interface CourseProgressProps {
@@ -14,6 +15,7 @@ interface CourseProgressProps {
 }
 
 const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen, onClose, trailData }) => {
+  const { t } = useTranslation()
   const [completedActivities, setCompletedActivities] = useState(0)
   const [totalActivities, setTotalActivities] = useState(0)
 
@@ -119,8 +121,8 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
       isDialogOpen={isOpen}
       onOpenChange={onClose}
       dialogContent={dialogContent}
-      dialogTitle="Course Progress"
-      dialogDescription={`${completedActivities} of ${totalActivities} activities completed`}
+      dialogTitle={t('course.progress_dialog.title')}
+      dialogDescription={t('course.progress_dialog.activities_completed', { completed: completedActivities, total: totalActivities })}
       minWidth="md"
     />
   )

@@ -100,7 +100,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
             {/* Usergroup selector; slides in when usergroup mode is active */}
             {mode === 'usergroup' && usergroups && usergroups.length > 0 && (
                 <div className='bg-blue-50 rounded-lg p-3'>
-                    <label className='text-xs font-medium text-blue-700 mb-1.5 block'>Select User Group</label>
+                    <label className='text-xs font-medium text-blue-700 mb-1.5 block'>{t('access.select_user_group')}</label>
                     <select
                         value={usergroup_id}
                         onChange={(e) => setUsergroup_id(Number(e.target.value))}

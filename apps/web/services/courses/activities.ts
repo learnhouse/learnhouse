@@ -1,4 +1,5 @@
 import { getAPIUrl } from '@services/config/config'
+import i18n from '@/lib/i18n'
 import {
   RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
@@ -126,10 +127,10 @@ export async function createFileActivity(
     // and an HTML error page (not JSON), so surface a clear error instead of
     // letting `result.json()` blow up with "Unexpected token '<'".
     if (result.status === 413) {
-      throw new Error('The file is too large to upload.')
+      throw new Error(i18n.t('dashboard.courses.structure.activity.toasts.file_too_large'))
     }
     const detail = await result.json().catch(() => null)
-    throw new Error(detail?.detail || `Upload failed (HTTP ${result.status})`)
+    throw new Error(detail?.detail || i18n.t('dashboard.courses.structure.activity.toasts.upload_failed_http', { status: result.status }))
   }
   const res = await result.json()
   return res

@@ -34,11 +34,12 @@ const kFormatter = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : Str
 const COLORS = ['#6b8de3', '#818cf8', '#a78bfa', '#c4b5fd']
 
 function ExpandButton({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation()
   return (
     <button
       onClick={onClick}
       className="p-1 rounded-md hover:bg-gray-100 transition-colors text-gray-300 hover:text-gray-500"
-      title="Expand"
+      title={t('analytics.common.expand')}
     >
       <ArrowsOutSimple size={14} />
     </button>
@@ -81,7 +82,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
   return (
     <>
       <div className="bg-white nice-shadow rounded-xl overflow-hidden flex divide-x divide-gray-100">
-        {/* {t('analytics.overview.enrollment_funnel')} */}
+        {/* Enrollment Funnel */}
         <div className="flex-1 p-5 min-w-0">
           <div className="flex items-center gap-2 mb-4">
             <Funnel size={16} weight="duotone" className="text-indigo-400" />
@@ -166,7 +167,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
           )}
         </div>
 
-        {/* {t('analytics.overview.activity_engagement')} */}
+        {/* Activity Engagement */}
         <div className="flex-1 p-5 min-w-0">
           <div className="flex items-center gap-2 mb-4">
             <Lightning size={16} weight="duotone" className="text-green-400" />
@@ -201,7 +202,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
       <AnalyticsDetailModal
         open={funnelOpen}
         onClose={() => setFunnelOpen(false)}
-        title="{t('analytics.overview.enrollment_funnel')}"
+        title={t('analytics.overview.enrollment_funnel')}
         icon={<Funnel size={20} weight="duotone" className="text-indigo-400" />}
       >
         {chartData.length === 0 ? (
@@ -290,7 +291,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
       <AnalyticsDetailModal
         open={coursesOpen}
         onClose={() => setCoursesOpen(false)}
-        title="Top Courses"
+        title={t('analytics.overview.top_courses')}
         icon={<Trophy size={20} weight="duotone" className="text-amber-400" />}
       >
         {courseRows.length === 0 ? (
@@ -349,7 +350,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                       )}
                     </div>
                     <span className="text-sm text-gray-700 truncate group-hover:text-gray-900 font-medium">
-                      {row.course_name || `Course ${row.course_uuid}`}
+                      {row.course_name || t('analytics.overview.course_fallback_name', { uuid: row.course_uuid })}
                     </span>
                   </div>
                   <span className="text-sm text-gray-600 text-right tabular-nums">
@@ -373,11 +374,11 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
         )}
       </AnalyticsDetailModal>
 
-      {/* {t('analytics.overview.activity_engagement')} Detail */}
+      {/* Activity Engagement Detail */}
       <AnalyticsDetailModal
         open={activityOpen}
         onClose={() => setActivityOpen(false)}
-        title="{t('analytics.overview.activity_engagement')}"
+        title={t('analytics.overview.activity_engagement')}
         icon={
           <Lightning size={20} weight="duotone" className="text-green-400" />
         }
@@ -458,6 +459,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
 /* ---- Shared row components ---- */
 
 function CourseRow({ row, org }: { row: any; org: any }) {
+  const { t } = useTranslation()
   const thumbnail =
     row.thumbnail_image && row.course_uuid
       ? getCourseThumbnailMediaDirectory(
@@ -486,7 +488,7 @@ function CourseRow({ row, org }: { row: any; org: any }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-700 truncate group-hover:text-gray-900">
-          {row.course_name || `Course ${row.course_uuid}`}
+          {row.course_name || t('analytics.overview.course_fallback_name', { uuid: row.course_uuid })}
         </p>
         <div className="flex items-center gap-3 text-[11px] text-gray-400">
           <span className="flex items-center gap-0.5">

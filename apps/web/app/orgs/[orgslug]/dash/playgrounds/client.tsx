@@ -103,7 +103,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
 
   const handleCreate = async () => {
     if (!access_token || isCreating) return
-    const name = newName.trim() || 'Untitled Playground'
+    const name = newName.trim() || t('playgrounds.untitled')
     setIsCreating(true)
     setShowNameModal(false)
     try {
@@ -115,7 +115,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       router.push(`/editor/playground/${pg.playground_uuid}/edit`)
     } catch {
-      toast.error('Failed to create playground')
+      toast.error(t('playgrounds.failed_create'))
     } finally {
       setIsCreating(false)
     }
@@ -128,9 +128,9 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
       await Promise.all(uuids.map((uuid) => deletePlayground(uuid, access_token)))
       clearSelection()
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
-      toast.success(`Deleted ${uuids.length} playground${uuids.length > 1 ? 's' : ''}`)
+      toast.success(t('playgrounds.deleted_count', { count: uuids.length }))
     } catch {
-      toast.error('Failed to delete some playgrounds')
+      toast.error(t('playgrounds.failed_delete_some'))
     } finally {
       setShowDeleteConfirm(false)
     }
@@ -139,13 +139,13 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const handleDuplicate = async () => {
     if (!access_token || selectedUuids.size === 0) return
     const uuids = Array.from(selectedUuids)
-    const t = toast.loading(`Duplicating ${uuids.length} playground${uuids.length > 1 ? 's' : ''}…`)
+    const toastId = toast.loading(t('playgrounds.duplicating_count', { count: uuids.length }))
     try {
       await Promise.all(uuids.map((uuid) => duplicatePlayground(uuid, access_token)))
       queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
-      toast.success(`Duplicated ${uuids.length} playground${uuids.length > 1 ? 's' : ''}`, { id: t })
+      toast.success(t('playgrounds.duplicated_count', { count: uuids.length }), { id: toastId })
     } catch {
-      toast.error('Failed to duplicate some playgrounds', { id: t })
+      toast.error(t('playgrounds.failed_duplicate_some'), { id: toastId })
     }
   }
 
@@ -171,10 +171,10 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
           {/* Header */}
           <div className="mb-6 pt-6">
             <Breadcrumbs
-              items={[{ label: 'Playgrounds', href: '/dash/playgrounds', icon: <Cube size={14} /> }]}
+              items={[{ label: t('common.playgrounds'), href: '/dash/playgrounds', icon: <Cube size={14} /> }]}
             />
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4">
-              <h1 className="text-3xl font-bold mb-4 sm:mb-0">Playgrounds</h1>
+              <h1 className="text-3xl font-bold mb-4 sm:mb-0">{t('common.playgrounds')}</h1>
               <AuthenticatedClientElement
                 checkMethod="roles"
                 action="create"
@@ -186,7 +186,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
                   disabled={isCreating}
                   className="rounded-lg bg-black transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center hover:scale-105 disabled:opacity-50"
                 >
-                  <div>New Playground</div>
+                  <div>{t('playgrounds.new_playground')}</div>
                   <div className="text-md bg-neutral-800 px-1 rounded-full">+</div>
                 </button>
               </AuthenticatedClientElement>
@@ -204,7 +204,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search playgrounds..."
+                    placeholder={t('playgrounds.search_placeholder')}
                     className="w-full ps-10 pe-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
                   />
                   {searchQuery && (
@@ -222,28 +222,28 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
               {hasSelection && (
                 <div className="flex items-center gap-2 bg-white nice-shadow rounded-lg px-3 py-2">
                   <span className="text-xs font-semibold text-gray-700 pe-2 border-e border-gray-200">
-                    {selectedUuids.size} selected
+                    {t('playgrounds.selected_count', { count: selectedUuids.size })}
                   </span>
                   <button
                     onClick={handleDuplicate}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
                   >
                     <Copy className="w-3.5 h-3.5" />
-                    Duplicate
+                    {t('playgrounds.duplicate')}
                   </button>
                   <button
                     onClick={handleDownload}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    Download
+                    {t('playgrounds.view.download')}
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    Delete
+                    {t('common.delete')}
                   </button>
                   <button
                     onClick={clearSelection}
@@ -284,8 +284,8 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
                 <div className="col-span-full flex justify-center items-center py-8 text-center">
                   <div>
                     <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold text-gray-600 mb-2">No playgrounds found</h2>
-                    <p className="text-gray-400">Try a different search term</p>
+                    <h2 className="text-xl font-semibold text-gray-600 mb-2">{t('playgrounds.no_playgrounds_found')}</h2>
+                    <p className="text-gray-400">{t('playgrounds.try_different_search')}</p>
                   </div>
                 </div>
               )}
@@ -311,14 +311,14 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
             totalPages={totalPages}
             pageNumbers={pageNumbers}
             onPageChange={goToPage}
-            previousLabel="Previous"
-            nextLabel="Next"
+            previousLabel={t('pagination.previous')}
+            nextLabel={t('pagination.next')}
             className="mt-8 mb-6"
           />
 
           {totalPages > 1 && (
             <div className="mb-6 text-center text-sm text-gray-500">
-              Page {currentPage} of {totalPages}
+              {t('pagination.showing_page', { current: currentPage, total: totalPages })}
             </div>
           )}
         </div>
@@ -333,8 +333,8 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
             className="bg-white rounded-2xl nice-shadow p-6 w-full max-w-sm mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-bold text-gray-900 mb-1">New Playground</h2>
-            <p className="text-xs text-gray-400 mb-4">Give your playground a name to get started.</p>
+            <h2 className="text-base font-bold text-gray-900 mb-1">{t('playgrounds.new_playground_modal_title')}</h2>
+            <p className="text-xs text-gray-400 mb-4">{t('playgrounds.new_playground_modal_desc')}</p>
             <input
               autoFocus
               type="text"
@@ -344,7 +344,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
                 if (e.key === 'Enter') handleCreate()
                 if (e.key === 'Escape') setShowNameModal(false)
               }}
-              placeholder="e.g. Photosynthesis Quiz"
+              placeholder={t('playgrounds.name_placeholder')}
               className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black focus:border-transparent mb-4"
             />
             <div className="flex gap-2 justify-end">
@@ -352,14 +352,14 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
                 onClick={() => setShowNameModal(false)}
                 className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleCreate}
                 disabled={isCreating}
                 className="px-4 py-2 bg-black text-white text-sm font-bold rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
               >
-                {isCreating ? 'Creating…' : 'Create'}
+                {isCreating ? t('playgrounds.creating') : t('playgrounds.create')}
               </button>
             </div>
           </div>
@@ -377,23 +377,23 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-base font-bold text-gray-900 mb-1">
-              Delete {selectedUuids.size} playground{selectedUuids.size > 1 ? 's' : ''}
+              {t('playgrounds.delete_count_title', { count: selectedUuids.size })}
             </h2>
             <p className="text-sm text-gray-500 mb-5">
-              This action is permanent and cannot be undone.
+              {t('playgrounds.delete_permanent')}
             </p>
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors"
               >
-                Delete
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -412,11 +412,12 @@ function PlaygroundCard({
   selected: boolean
   onToggleSelect: () => void
 }) {
+  const { t } = useTranslation()
   const accessBadge = {
-    public: { icon: <Globe size={10} />, label: 'Public', className: 'bg-green-100 text-green-700' },
-    authenticated: { icon: <Users size={10} />, label: 'Members', className: 'bg-blue-100 text-blue-700' },
-    restricted: { icon: <Lock size={10} />, label: 'Restricted', className: 'bg-amber-100 text-amber-700' },
-  }[playground.access_type as string] ?? { icon: <Lock size={10} />, label: 'Private', className: 'bg-gray-100 text-gray-600' }
+    public: { icon: <Globe size={10} />, label: t('playgrounds.access_public'), className: 'bg-green-100 text-green-700' },
+    authenticated: { icon: <Users size={10} />, label: t('playgrounds.access_members'), className: 'bg-blue-100 text-blue-700' },
+    restricted: { icon: <Lock size={10} />, label: t('playgrounds.access_restricted'), className: 'bg-amber-100 text-amber-700' },
+  }[playground.access_type as string] ?? { icon: <Lock size={10} />, label: t('playgrounds.access_private'), className: 'bg-gray-100 text-gray-600' }
 
   const thumbnailUrl =
     playground.thumbnail_image && playground.org_uuid
@@ -469,7 +470,7 @@ function PlaygroundCard({
           </span>
           {!playground.published && (
             <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 rounded-full">
-              Draft
+              {t('playgrounds.view.draft')}
             </span>
           )}
         </div>
@@ -493,7 +494,7 @@ function PlaygroundCard({
           onClick={(e) => e.stopPropagation()}
         >
           <Pencil size={12} />
-          Edit
+          {t('playgrounds.edit')}
         </Link>
       </div>
     </div>

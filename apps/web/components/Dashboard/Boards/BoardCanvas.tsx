@@ -119,6 +119,7 @@ function BoardEditorInner({
   ydoc: Y.Doc
   provider: HocuspocusProvider
 }) {
+  const { t } = useTranslation()
   const { track } = useLHAnalytics('dashboard')
   const [toolMode, setToolMode] = useState<'select' | 'pan' | 'draw' | 'card' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage' | 'sticker' | 'frame' | 'note' | 'todo' | 'podcast'>('select')
   const [zoom, setZoom] = useState(() =>
@@ -148,18 +149,18 @@ function BoardEditorInner({
 
   // Placement tool indicator config
   const placementTools: Partial<Record<typeof toolMode, { icon: React.ComponentType<any>; label: string }>> = {
-    draw: { icon: PencilSimple, label: 'Draw' },
-    card: { icon: Square, label: 'Card' },
-    youtube: { icon: YoutubeLogo, label: 'YouTube' },
-    playground: { icon: Sparkle, label: 'AI Playground' },
-    activity: { icon: BookOpen, label: 'Activity' },
-    embed: { icon: Code, label: 'Embed' },
-    webpage: { icon: Globe, label: 'Webpage' },
-    note: { icon: Note, label: 'Note' },
-    sticker: { icon: Smiley, label: 'Sticker' },
-    frame: { icon: FrameCorners, label: 'Frame' },
-    todo: { icon: CheckSquare, label: 'Todo' },
-    podcast: { icon: Headphones, label: 'Podcast' },
+    draw: { icon: PencilSimple, label: t('boards.toolbar.draw') },
+    card: { icon: Square, label: t('boards.card_block.label') },
+    youtube: { icon: YoutubeLogo, label: t('boards.toolbar.youtube') },
+    playground: { icon: Sparkle, label: t('boards.toolbar.ai_playground') },
+    activity: { icon: BookOpen, label: t('boards.toolbar.activity') },
+    embed: { icon: Code, label: t('boards.toolbar.embed') },
+    webpage: { icon: Globe, label: t('boards.toolbar.webpage') },
+    note: { icon: Note, label: t('boards.toolbar.note') },
+    sticker: { icon: Smiley, label: t('boards.toolbar.sticker') },
+    frame: { icon: FrameCorners, label: t('boards.toolbar.frame') },
+    todo: { icon: CheckSquare, label: t('boards.toolbar.todo') },
+    podcast: { icon: Headphones, label: t('boards.toolbar.podcast') },
   }
   const activePlacement = placementTools[toolMode] ?? null
 
@@ -924,7 +925,7 @@ function BoardEditorInner({
         }}
       >
         <MessageCircle size={14} />
-        Feedback
+        {t('boards.feedback.button')}
       </button>
       <FeedbackModal
         open={feedbackOpen}
@@ -1033,13 +1034,13 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
       <div className="flex h-screen w-screen items-center justify-center bg-neutral-50">
         <div className="flex flex-col items-center gap-3 rounded-2xl bg-white p-8 shadow-lg">
           <div className="text-2xl">🔒</div>
-          <p className="text-sm font-medium text-neutral-700">Unable to connect to this board</p>
-          <p className="text-xs text-neutral-400">You may not have access, or the session has expired.</p>
+          <p className="text-sm font-medium text-neutral-700">{t('boards.connection.unable_to_connect_title')}</p>
+          <p className="text-xs text-neutral-400">{t('boards.connection.unable_to_connect_description')}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-2 rounded-lg bg-neutral-900 px-4 py-2 text-xs font-medium text-white hover:bg-neutral-800 transition-colors"
           >
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       </div>
@@ -1066,7 +1067,7 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
           </span>
-          <span className="text-xs font-medium text-amber-700">Reconnecting...</span>
+          <span className="text-xs font-medium text-amber-700">{t('boards.connection.reconnecting')}</span>
         </div>
       )}
     </>

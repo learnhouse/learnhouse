@@ -96,6 +96,7 @@ export default function MediaViewer({
   mediaUuid,
   maxHeightClass = 'max-h-[70vh]',
 }: MediaViewerProps) {
+  const { t } = useTranslation()
   const [denied, setDenied] = React.useState(false)
   const kind: MediaKind = mediaKind(resource)
   const name = resource?.name || ''
@@ -126,7 +127,7 @@ export default function MediaViewer({
       <div className={`w-full ${maxHeightClass} aspect-video bg-black rounded-xl overflow-hidden`}>
         <iframe
           src={toEmbedUrl(url)}
-          title={name || 'Embedded media'}
+          title={name || t('media.embedded_media')}
           className="w-full h-full border-0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           allowFullScreen

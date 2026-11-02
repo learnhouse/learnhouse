@@ -1,6 +1,7 @@
 'use client'
 import React, { use } from 'react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
 import { Info, Globe, Users, Image as ImageIcon, Eye } from 'lucide-react'
 import { ChalkboardSimple } from '@phosphor-icons/react'
@@ -25,6 +26,7 @@ export type BoardSettingsParams = {
 }
 
 function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
+  const { t } = useTranslation()
   const params = use(props.params)
   const org = useOrg() as any
   const session = useLHSession() as any
@@ -47,28 +49,28 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
   const tabs: DashTabItem[] = [
     {
       key: 'general',
-      label: 'General',
+      label: t('boards.general.title'),
       icon: <Info size={16} />,
       href: getUriWithOrg(params.orgslug, '') + `/dash/boards/${params.boarduuid}/general`,
       active: params.subpage === 'general',
     },
     {
       key: 'thumbnail',
-      label: 'Thumbnail',
+      label: t('boards.thumbnail.title'),
       icon: <ImageIcon size={16} />,
       href: getUriWithOrg(params.orgslug, '') + `/dash/boards/${params.boarduuid}/thumbnail`,
       active: params.subpage === 'thumbnail',
     },
     {
       key: 'access',
-      label: 'Access',
+      label: t('boards.settings_page.access'),
       icon: <Globe size={16} />,
       href: getUriWithOrg(params.orgslug, '') + `/dash/boards/${params.boarduuid}/access`,
       active: params.subpage === 'access',
     },
     {
       key: 'members',
-      label: 'Members',
+      label: t('boards.members.title'),
       icon: <Users size={16} />,
       href: getUriWithOrg(params.orgslug, '') + `/dash/boards/${params.boarduuid}/members`,
       active: params.subpage === 'members',
@@ -115,7 +117,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
       <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative min-w-0 overflow-hidden">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
-            { label: 'Boards', href: '/dash/boards', icon: <ChalkboardSimple size={14} /> },
+            { label: t('common.boards'), href: '/dash/boards', icon: <ChalkboardSimple size={14} /> },
             { label: board.name },
           ]} />
         </div>
@@ -130,7 +132,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
               />
             </Link>
             <div className="flex flex-col justify-center ps-3 sm:ps-5 min-w-0">
-              <div className="text-gray-400 font-semibold text-xs sm:text-sm">Board Settings</div>
+              <div className="text-gray-400 font-semibold text-xs sm:text-sm">{t('boards.settings_page.board_settings')}</div>
               <div className="text-black font-bold text-base sm:text-xl -mt-1 truncate">
                 {board.name}
               </div>
@@ -151,7 +153,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
               className="px-2.5 sm:px-3.5 py-2 text-sm font-semibold text-neutral-600 bg-neutral-50/70 hover:bg-neutral-100/70 transition-colors flex items-center space-x-2"
             >
               <Eye className="w-4 h-4" />
-              <span className="hidden sm:inline">View Board</span>
+              <span className="hidden sm:inline">{t('boards.settings_page.view_board')}</span>
             </Link>
           </div>
         </div>

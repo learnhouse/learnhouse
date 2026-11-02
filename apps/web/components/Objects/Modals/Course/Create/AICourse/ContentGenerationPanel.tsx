@@ -123,11 +123,11 @@ function ContentGenerationPanel({
             }))
             toast.success(t('courses.create.ai.content_generated_success'))
           } else {
-            const errorMsg = result.data?.detail || 'Failed to save content'
+            const errorMsg = result.data?.detail || t('courses.create.ai.save_content_failed')
             throw new Error(errorMsg)
           }
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : 'Failed to save content'
+          const errorMsg = error instanceof Error ? error.message : t('courses.create.ai.save_content_failed')
           console.error('[AI Content] Save error:', errorMsg)
           setActivityStates((prev) => ({
             ...prev,
@@ -150,7 +150,7 @@ function ContentGenerationPanel({
             isGenerated: false,
             streamContent: '',
             content: null,
-            error: 'Failed to parse generated content',
+            error: t('courses.create.ai.content_parse_error'),
           },
         }))
         toast.error(t('courses.create.ai.content_parse_error'))
@@ -186,7 +186,7 @@ function ContentGenerationPanel({
         onError
       )
     } catch (error) {
-      onError(error instanceof Error ? error.message : 'Unknown error')
+      onError(error instanceof Error ? error.message : t('courses.create.ai.unknown_error'))
     }
   }
 

@@ -82,7 +82,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
       const hasMinimalMetadata = !data.title && !data.description && !data.og_image;
       
       if (hasMinimalMetadata) {
-        toast.error("Unable to get metadata from this website. The preview card may appear incomplete.", {
+        toast.error(t('editor.blocks.web_preview_block.metadata_unavailable'), {
           duration: 4000,
         });
       }
@@ -315,7 +315,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                   <div className="-mt-6 -mx-6 mb-0 rounded-t-xl overflow-hidden">
                     <img
                       src={previewImage}
-                      alt="preview"
+                      alt={t('editor.blocks.web_preview_block.preview_alt')}
                       className="w-full h-40 object-cover block"
                     />
                   </div>
@@ -339,7 +339,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                 {favicon && (
                   <img
                     src={favicon}
-                    alt="favicon"
+                    alt={t('editor.blocks.web_preview_block.favicon_alt')}
                     className="w-[18px] h-[18px] me-2 rounded bg-gray-100"
                   />
                 )}
@@ -377,7 +377,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                         key={opt.value}
                         aria-pressed={alignment === opt.value}
                         onClick={() => handleAlignmentChange(opt.value)}
-                        title={`Align ${opt.value}`}
+                        title={t(`editor.blocks.common.align_${opt.value}`)}
                         type="button"
                         className={`flex items-center justify-center border transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-neutral-300 p-1.5 rounded-full text-gray-600
                           ${alignment === opt.value
