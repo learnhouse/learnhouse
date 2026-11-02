@@ -1,7 +1,8 @@
 """One gate for "may this caller consume this activity".
 
 Reading a course is not the same as being allowed every activity in it: an
-activity can be unpublished, behind a paid offer, or locked to a user group.
+activity can be unpublished, behind a paid offer, locked to a user group, or
+in a chapter the course's drip schedule hasn't released yet.
 Every path that hands out activity content or its files (the activity read,
 the chapter tree, media streams, ``/content`` files, trail progress,
 assignments) must go through here, or the files become a way around the
@@ -26,6 +27,7 @@ from src.security.rbac.resource_access import (
     AccessContext,
     check_resource_access,
 )
+from src.services.courses.drip import chapter_drip_state
 from src.services.courses.locks import (
     batch_accessible_restricted_uuids,
     is_locked_for_user,
@@ -52,13 +54,15 @@ async def apply_activity_lock(
     *,
     parent_chapter: Chapter | None = None,
 ) -> None:
-    """Enforce chapter/activity lock_type on a single-activity read.
+    """Enforce chapter/activity lock_type and the drip schedule on a
+    single-activity read.
 
     Admins/maintainers bypass. A usergroup attached at the course level also
     unlocks every restricted chapter/activity inside that course (same
     inheritance rule as the TOC read). For everyone else, if either the
-    activity or its parent chapter is locked, we scrub content/details and set
-    ``is_locked=True`` so the client renders a gate instead of an empty page.
+    activity or its parent chapter is locked, or the chapter isn't released
+    yet, we scrub content/details and set ``is_locked=True`` so the client
+    renders a gate instead of an empty page.
     """
     is_anon = isinstance(current_user, AnonymousUser)
     acting_user_id = resolve_acting_user_id(current_user)
@@ -89,12 +93,12 @@ async def apply_activity_lock(
             acting_user_id, check_uuids, db_session
         )
 
-    # Course-level usergroup membership unlocks everything below it.
-    if course.course_uuid in accessible:
-        return
+    # Course-level usergroup membership unlocks every lock below it (but not
+    # the drip schedule, checked last).
+    course_grants_access = course.course_uuid in accessible
 
     chapter_locked = False
-    if parent_chapter_row:
+    if parent_chapter_row and not course_grants_access:
         chapter_locked = await is_locked_for_user(
             parent_chapter_row.lock_type,
             parent_chapter_row.chapter_uuid,
@@ -105,7 +109,7 @@ async def apply_activity_lock(
             is_admin=admin,
         )
 
-    activity_locked = chapter_locked or await is_locked_for_user(
+    activity_locked = chapter_locked or (not course_grants_access and await is_locked_for_user(
         activity.lock_type,
         activity.activity_uuid,
         course.org_id,
@@ -113,7 +117,14 @@ async def apply_activity_lock(
         db_session,
         accessible_restricted_uuids=accessible,
         is_admin=admin,
-    )
+    ))
+
+    if not activity_locked and parent_chapter_row:
+        drip = await chapter_drip_state(course, parent_chapter_row, current_user, db_session)
+        if drip is not None and drip.locked:
+            activity_locked = True
+            activity_read.drip_unlock_at = drip.unlock_at_iso
+            activity_read.drip_reason = drip.reason.value if drip.reason else None
 
     if activity_locked:
         activity_read.content = {}
@@ -149,6 +160,7 @@ async def _reader_state(
     if await can_edit_course(request, course.course_uuid, current_user, db_session):
         activity_read.content, activity_read.details = content, details
         activity_read.is_locked = False
+        activity_read.drip_unlock_at = activity_read.drip_reason = None
         return "ok"
     if not paid:
         return "unpaid"

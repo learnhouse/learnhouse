@@ -700,6 +700,64 @@ def send_org_join_email(
     )
 
 
+def send_drip_unlocked_email(
+    email: EmailStr,
+    username: str,
+    org_name: str,
+    course_name: str,
+    chapter_names: list[str],
+    cta_url: str,
+    lang: str = "en",
+    logo_url: str | None = None,
+    sender_name: str | None = None,
+    brand_color: str | None = None,
+    powered_by: bool = True,
+):
+    """Tell an enrolled learner that scheduled chapters of a course just opened.
+
+    One email per learner and course per run, naming the first chapter in the
+    subject and any others in the body. White-labeled to the org.
+    """
+    safe_username = html.escape(email_user_name(username))
+    safe_org_name = html.escape(email_org_name(org_name))
+    safe_course = html.escape(email_org_name(course_name))
+    safe_chapters = [html.escape(email_org_name(name)) for name in chapter_names]
+    first = safe_chapters[0]
+
+    heading = t(lang, "drip_unlocked.heading", chapter=first)
+    body_text = t(lang, "drip_unlocked.body", username=safe_username, course=safe_course)
+    more = (
+        f'<p style="{STYLES["p"]}">{t(lang, "drip_unlocked.more", chapters=", ".join(safe_chapters[1:]))}</p>'
+        if len(safe_chapters) > 1
+        else ""
+    )
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">{heading}</h1>
+        <p style="{STYLES['p']}">
+            {body_text}
+        </p>
+        {more}
+        <a href="{html.escape(cta_url)}" style="{_button_style(brand_color)}">
+            {t(lang, "drip_unlocked.cta")}
+        </a>
+        <p style="{STYLES['link_text']}">{html.escape(cta_url)}</p>
+    """
+
+    return _send_notification_email(
+        to=email,
+        subject=t(lang, "drip_unlocked.subject", course=safe_course, chapter=first),
+        body=_email_layout(
+            title=heading,
+            body_content=body_content,
+            footer_note=t(lang, "drip_unlocked.footer", course=safe_course, org_name=safe_org_name),
+            logo_html=_brand_logo_html(logo_url, org_name),
+            powered_by=powered_by,
+            lang=lang,
+        ),
+        sender_name=sender_name,
+    )
+
 def send_role_changed_email(
     email: EmailStr,
     username: str,
