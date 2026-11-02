@@ -4197,6 +4197,8 @@
     "desktop_only_message": "Editor hanya dapat diakses dari perangkat desktop.",
     "switch_to_desktop": "Silakan beralih ke desktop untuk melihat.",
     "ai_editor": "Editor AI",
+    "more_preview_options": "Opsi pratinjau lainnya",
+    "more_save_options": "Opsi simpan lainnya",
     "versioning": {
       "version_history": "Riwayat Versi",
       "current_version": "Versi saat ini:",
@@ -4275,7 +4277,10 @@
       "align_left": "Rata Kiri",
       "align_center": "Rata Tengah",
       "align_right": "Rata Kanan",
-      "clear_formatting": "Hapus Format"
+      "clear_formatting": "Hapus Format",
+      "list": "Daftar",
+      "elements_menu": "Elemen",
+      "code_playground": "Playground Kode"
     },
     "blocks": {
       "info_callout": "Kotak Info",
@@ -4295,6 +4300,8 @@
       "user": "Pengguna",
       "magic_block": "Blok Ajaib (AI)",
       "magic_block_disabled": "Blok Ajaib memerlukan paket Standard",
+      "callout": "Callout",
+      "audio": "Audio",
       "common": {
         "cancel": "Batal",
         "save": "Simpan",

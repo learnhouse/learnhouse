@@ -4187,6 +4187,8 @@
     "desktop_only_message": "编辑器只能从桌面设备访问。",
     "switch_to_desktop": "请切换到桌面端查看。",
     "ai_editor": "AI编辑器",
+    "more_preview_options": "更多预览选项",
+    "more_save_options": "更多保存选项",
     "versioning": {
       "version_history": "版本历史",
       "current_version": "当前版本：",
@@ -4265,7 +4267,10 @@
       "align_left": "左对齐",
       "align_center": "居中",
       "align_right": "右对齐",
-      "clear_formatting": "清除格式"
+      "clear_formatting": "清除格式",
+      "list": "列表",
+      "elements_menu": "元素",
+      "code_playground": "代码练习场"
     },
     "blocks": {
       "info_callout": "信息提示框",
@@ -4285,6 +4290,8 @@
       "user": "用户",
       "magic_block": "魔法块 (AI)",
       "magic_block_disabled": "魔法块需要Standard计划",
+      "callout": "提示框",
+      "audio": "音频",
       "common": {
         "uploading": "上传中...",
         "upload": "上传",
