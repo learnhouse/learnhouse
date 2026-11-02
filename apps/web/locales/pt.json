@@ -1103,7 +1103,7 @@
       "not_found_hint": "Nenhum certificado válido corresponde a este ID. Ele pode ter sido revogado ou o link pode estar incompleto.",
       "go_home": "Ir para o início",
       "earned_for_course": "Obtido ao concluir",
-      "earned_for_path": "Obtido ao concluir a trilha {{name}}",
+      "earned_for_path": "Obtido ao concluir estes cursos",
       "view_and_share": "Ver e compartilhar"
     },
     "designer": {

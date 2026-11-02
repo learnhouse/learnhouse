@@ -1103,7 +1103,7 @@
       "not_found_hint": "Er is geen geldig certificaat met deze ID. Het is mogelijk ingetrokken, of de link is onvolledig.",
       "go_home": "Naar de startpagina",
       "earned_for_course": "Behaald voor het afronden van",
-      "earned_for_path": "Behaald voor het afronden van het leerpad {{name}}",
+      "earned_for_path": "Behaald door deze cursussen af te ronden",
       "view_and_share": "Bekijken en delen"
     },
     "designer": {

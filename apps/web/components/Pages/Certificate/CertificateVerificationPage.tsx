@@ -51,7 +51,7 @@ function CertificateVerificationPage({ certificateUuid }: { certificateUuid: str
 
   const config = record.certification?.config || {}
   const holder = record.user || {}
-  const learnerName = [holder.first_name, holder.last_name].filter(Boolean).join(' ') || holder.username || ''
+  const learnerName = [holder.first_name, holder.last_name].map((part) => part?.trim()).filter(Boolean).join(' ') || holder.username || ''
   const course = record.course
   const courseHref = getUriWithOrg(orgslug, `/course/${course.course_uuid.replace('course_', '')}`)
 
