@@ -23,6 +23,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "analytics": "standard",
     "collaboration": "standard",
     "communities": "standard",
+    "drip": "standard",
     "payments": "standard",
     "podcasts": "standard",
     "seo": "standard",

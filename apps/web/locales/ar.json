@@ -136,6 +136,10 @@
         "api_access": {
           "title": "ميزة Pro",
           "description": "API Access هي ميزة متميزة متاحة فقط للمنظمات على خطتنا Pro أو أعلى. قم بالترقية لفتح الوصول البرمجي إلى بيانات منظمتك."
+        },
+        "drip": {
+          "title": "ميزة الباقة القياسية",
+          "description": "المحتوى المتدرّج متاح للمؤسسات على الباقة القياسية أو أعلى. قم بالترقية لنشر الفصول وفق جدول، لكل متعلّم أو لدفعة كاملة."
         }
       },
       "current_plan": "الخطة الحالية",
@@ -1864,7 +1868,8 @@
           "contributors": "المساهمون",
           "certification": "الشهادات",
           "seo": "تحسين محركات البحث",
-          "analytics": "التحليلات"
+          "analytics": "التحليلات",
+          "schedule": "الجدولة"
         },
         "access_denied": {
           "title": "تم رفض الوصول",
@@ -2436,7 +2441,11 @@
           "unpublish_tooltip": "إلغاء نشر المحدد"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "اسم الفصل"
+          "chapter_name_placeholder": "اسم الفصل",
+          "drip_tooltip": "جدول النشر: عدّله من تبويب الجدولة",
+          "drip_day_one": "اليوم {{count}}",
+          "drip_day_other": "اليوم {{count}}",
+          "drip_now": "اليوم 0"
         },
         "activity": {
           "name_placeholder": "اسم النشاط",
@@ -2588,7 +2597,56 @@
           "twitter_title_max_length": "يجب أن يكون عنوان تويتر 70 حرفاً أو أقل"
         }
       },
-      "limit_reached": "تم الوصول إلى حد الدورات ({{limit}})"
+      "limit_reached": "تم الوصول إلى حد الدورات ({{limit}})",
+      "schedule": {
+        "title": "المحتوى المتدرّج",
+        "description": "انشر الفصول على مراحل بدلًا من نشرها دفعة واحدة. يرى المتعلّمون ما سيأتي لاحقًا وموعد فتحه.",
+        "on": "مفعّل",
+        "off": "معطّل",
+        "anchor": {
+          "title": "متى يبدأ الجدول؟",
+          "enrollment": "عند تسجيل كل متعلّم",
+          "enrollment_description": "لكل متعلّم توقيته الخاص. الأنسب للدورات الذاتية الدائمة.",
+          "fixed_date": "في تاريخ بدء محدّد",
+          "fixed_date_description": "تاريخ واحد للدفعة كلها. الأنسب للإطلاقات المباشرة والمعسكرات.",
+          "start_date": "تبدأ الدفعة في"
+        },
+        "chapters": {
+          "title": "خطة النشر",
+          "preview_enrollment": "التواريخ المعروضة لمن يسجّل اليوم.",
+          "preview_cohort": "التواريخ المعروضة للدفعة.",
+          "empty": "أضف فصولًا إلى هذه الدورة لجدولتها."
+        },
+        "interval": {
+          "label": "فصل واحد كل",
+          "amount": "المدة",
+          "unit": "الوحدة",
+          "days": "أيام",
+          "weeks": "أسابيع",
+          "apply": "تطبيق"
+        },
+        "mode": {
+          "immediate": "فورًا",
+          "delay": "بعد مدة",
+          "date": "في تاريخ",
+          "delay_days": "أيام",
+          "days_after_enrollment": "يومًا بعد التسجيل",
+          "days_after_start": "يومًا بعد تاريخ البدء",
+          "release_at": "تاريخ النشر"
+        },
+        "require_previous": "فقط بعد إكمال الفصل السابق",
+        "errors": {
+          "start_date": "اختر تاريخ بدء الدفعة.",
+          "release_at": "اختر تاريخ نشر لـ «{{name}}»."
+        },
+        "toasts": {
+          "save_success": "تم حفظ الجدول",
+          "save_error": "تعذّر حفظ الجدول"
+        },
+        "unsaved": "تغييرات غير محفوظة",
+        "saved": "تم حفظ كل التغييرات",
+        "save": "حفظ الجدول"
+      }
     },
     "organization": {
       "settings": {
@@ -6605,7 +6663,23 @@
     "signInRequired": "سجّل الدخول لعرض هذه الدورة",
     "signInRequiredDescription": "هذه الدورة مخصصة للأعضاء. سجّل الدخول وسنعيدك إلى هنا مباشرة.",
     "signInToContinue": "سجّل الدخول للمتابعة",
-    "finish_course": "إنهاء الدورة"
+    "finish_course": "إنهاء الدورة",
+    "drip": {
+      "opens_on_enroll": "يُفتح عند بدء الدورة",
+      "opens_after_previous": "يُفتح بعد الفصل السابق",
+      "opens_on": "يُفتح {{date}}",
+      "in_days_one": "خلال يوم واحد",
+      "in_days_other": "خلال {{count}} أيام",
+      "in_hours_one": "خلال ساعة واحدة",
+      "in_hours_other": "خلال {{count}} ساعات",
+      "soon": "خلال أقل من ساعة",
+      "coming_soon": "قريبًا",
+      "banner_title": "تُنشر الفصول الجديدة على مراحل",
+      "banner_next": "التالي: {{name}}. {{when}}",
+      "gate_enrollment": "تنشر هذه الدورة فصولها على مراحل تبدأ عند بدئك الدورة. ابدأها من صفحة الدورة لفتح جدولك.",
+      "gate_previous": "أكمل كل دروس الفصل السابق وسيُفتح هذا الفصل فورًا.",
+      "gate_schedule": "تنشر هذه الدورة فصولها على مراحل. عُد عندما يُفتح هذا الفصل."
+    }
   },
   "pagination": {
     "next": "التالي",
