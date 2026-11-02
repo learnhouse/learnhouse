@@ -1362,7 +1362,7 @@
       "not_found_hint": "Tomuto ID nezodpovedá žiadny platný certifikát. Mohol byť zrušený alebo je odkaz neúplný.",
       "go_home": "Na úvodnú stránku",
       "earned_for_course": "Získaný za dokončenie",
-      "earned_for_path": "Získaný za dokončenie cesty {{name}}",
+      "earned_for_path": "Získaný za dokončenie týchto kurzov",
       "view_and_share": "Zobraziť a zdieľať"
     },
     "designer": {

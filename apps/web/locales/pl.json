@@ -1125,7 +1125,7 @@
       "not_found_hint": "Żaden ważny certyfikat nie pasuje do tego ID. Mógł zostać unieważniony lub link jest niekompletny.",
       "go_home": "Strona główna",
       "earned_for_course": "Zdobyty za ukończenie",
-      "earned_for_path": "Zdobyty za ukończenie ścieżki {{name}}",
+      "earned_for_path": "Zdobyty za ukończenie tych kursów",
       "view_and_share": "Zobacz i udostępnij"
     },
     "designer": {

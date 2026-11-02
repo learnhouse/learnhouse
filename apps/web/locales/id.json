@@ -1125,7 +1125,7 @@
       "not_found_hint": "Tidak ada sertifikat valid yang cocok dengan ID ini. Sertifikat mungkin telah dicabut, atau tautannya tidak lengkap.",
       "go_home": "Ke beranda",
       "earned_for_course": "Diperoleh setelah menyelesaikan",
-      "earned_for_path": "Diperoleh setelah menyelesaikan jalur belajar {{name}}",
+      "earned_for_path": "Diperoleh setelah menyelesaikan kursus-kursus ini",
       "view_and_share": "Lihat dan bagikan"
     },
     "designer": {

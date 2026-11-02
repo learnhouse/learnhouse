@@ -1114,7 +1114,7 @@
       "not_found_hint": "Aucun certificat valide ne correspond à cet ID. Il a peut-être été révoqué, ou le lien est incomplet.",
       "go_home": "Retour à l'accueil",
       "earned_for_course": "Obtenu pour avoir terminé",
-      "earned_for_path": "Obtenu pour avoir terminé le parcours {{name}}",
+      "earned_for_path": "Obtenu en terminant ces cours",
       "view_and_share": "Voir et partager"
     },
     "designer": {

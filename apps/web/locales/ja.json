@@ -1113,7 +1113,7 @@
       "not_found_hint": "この ID に一致する有効な修了証はありません。取り消されたか、リンクが不完全な可能性があります。",
       "go_home": "ホームに戻る",
       "earned_for_course": "次の修了により取得",
-      "earned_for_path": "学習パス「{{name}}」の修了により取得",
+      "earned_for_path": "以下のコースの修了により取得",
       "view_and_share": "表示して共有"
     },
     "designer": {
