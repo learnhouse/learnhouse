@@ -4269,6 +4269,8 @@
     "desktop_only_message": "এডিটর শুধুমাত্র ডেস্কটপ ডিভাইস থেকে অ্যাক্সেসযোগ্য।",
     "switch_to_desktop": "দেখতে অনুগ্রহ করে ডেস্কটপে স্যুইচ করুন।",
     "ai_editor": "AI এডিটর",
+    "more_preview_options": "আরও প্রিভিউ বিকল্প",
+    "more_save_options": "আরও সংরক্ষণ বিকল্প",
     "versioning": {
       "version_history": "সংস্করণ ইতিহাস",
       "current_version": "বর্তমান সংস্করণ:",
@@ -4347,7 +4349,10 @@
       "align_left": "বাম সারিবদ্ধ",
       "align_center": "কেন্দ্রে সারিবদ্ধ",
       "align_right": "ডান সারিবদ্ধ",
-      "clear_formatting": "ফরম্যাটিং মুছুন"
+      "clear_formatting": "ফরম্যাটিং মুছুন",
+      "list": "তালিকা",
+      "elements_menu": "উপাদান",
+      "code_playground": "কোড প্লেগ্রাউন্ড"
     },
     "blocks": {
       "info_callout": "তথ্য কলআউট",
@@ -4367,6 +4372,8 @@
       "user": "ব্যবহারকারী",
       "magic_block": "ম্যাজিক ব্লক (AI)",
       "magic_block_disabled": "ম্যাজিক ব্লকের জন্য Standard প্ল্যান প্রয়োজন",
+      "callout": "কলআউট",
+      "audio": "অডিও",
       "common": {
         "cancel": "বাতিল",
         "save": "সংরক্ষণ করুন",

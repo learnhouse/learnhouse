@@ -4285,6 +4285,8 @@
     "desktop_only_message": "L'éditeur n'est accessible que depuis un ordinateur de bureau.",
     "switch_to_desktop": "Veuillez passer à un ordinateur pour afficher.",
     "ai_editor": "Éditeur IA",
+    "more_preview_options": "Plus d'options d'aperçu",
+    "more_save_options": "Plus d'options d'enregistrement",
     "versioning": {
       "version_history": "Historique des versions",
       "current_version": "Version actuelle :",
@@ -4363,7 +4365,10 @@
       "align_left": "Aligner à gauche",
       "align_center": "Centrer",
       "align_right": "Aligner à droite",
-      "clear_formatting": "Effacer le formatage"
+      "clear_formatting": "Effacer le formatage",
+      "list": "Liste",
+      "elements_menu": "Éléments",
+      "code_playground": "Bac à sable de code"
     },
     "blocks": {
       "info_callout": "Encart d'information",
@@ -4383,6 +4388,8 @@
       "user": "Utilisateur",
       "magic_block": "Bloc magique (IA)",
       "magic_block_disabled": "Bloc magique nécessite le plan Standard",
+      "callout": "Encadré",
+      "audio": "Audio",
       "common": {
         "uploading": "Téléchargement en cours...",
         "upload": "Télécharger",

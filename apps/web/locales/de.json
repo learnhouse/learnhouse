@@ -4247,6 +4247,8 @@
     "desktop_only_message": "Der Editor ist nur von einem Desktop-Gerät aus zugänglich.",
     "switch_to_desktop": "Bitte wechseln Sie zum Desktop, um anzuzeigen.",
     "ai_editor": "KI-Editor",
+    "more_preview_options": "Weitere Vorschauoptionen",
+    "more_save_options": "Weitere Speicheroptionen",
     "versioning": {
       "version_history": "Versionsverlauf",
       "current_version": "Aktuelle Version:",
@@ -4325,7 +4327,10 @@
       "align_left": "Links ausrichten",
       "align_center": "Zentrieren",
       "align_right": "Rechts ausrichten",
-      "clear_formatting": "Formatierung löschen"
+      "clear_formatting": "Formatierung löschen",
+      "list": "Liste",
+      "elements_menu": "Elemente",
+      "code_playground": "Code-Playground"
     },
     "blocks": {
       "info_callout": "Info-Hinweis",
@@ -4377,6 +4382,8 @@
         "suggestion_timeline_prompt": "Erstellen Sie eine interaktive Zeitleiste mit wichtigen historischen Ereignissen und erweiterbaren Details"
       },
       "magic_block_disabled": "Magischer Block erfordert Standard-Plan",
+      "callout": "Hinweisbox",
+      "audio": "Audio",
       "common": {
         "uploading": "Wird hochgeladen...",
         "upload": "Hochladen",

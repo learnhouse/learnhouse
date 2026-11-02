@@ -4289,6 +4289,8 @@
     "desktop_only_message": "Редактор доступен только с настольного компьютера.",
     "switch_to_desktop": "Пожалуйста, перейдите на компьютер для просмотра.",
     "ai_editor": "AI-редактор",
+    "more_preview_options": "Другие параметры просмотра",
+    "more_save_options": "Другие параметры сохранения",
     "versioning": {
       "version_history": "История версий",
       "current_version": "Текущая версия:",
@@ -4367,7 +4369,10 @@
       "align_left": "Выровнять по левому краю",
       "align_center": "По центру",
       "align_right": "Выровнять по правому краю",
-      "clear_formatting": "Очистить форматирование"
+      "clear_formatting": "Очистить форматирование",
+      "list": "Список",
+      "elements_menu": "Элементы",
+      "code_playground": "Песочница кода"
     },
     "blocks": {
       "info_callout": "Информационная врезка",
@@ -4387,6 +4392,8 @@
       "user": "Пользователь",
       "magic_block": "Магический блок (ИИ)",
       "magic_block_disabled": "Магический блок требует план Standard",
+      "callout": "Выноска",
+      "audio": "Аудио",
       "common": {
         "uploading": "Загрузка...",
         "upload": "Загрузить",

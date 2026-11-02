@@ -1,4 +1,3 @@
-import importlib
 from logging.config import fileConfig
 import os
 import alembic_postgresql_enum # noqa: F401
@@ -8,6 +7,7 @@ from sqlmodel import SQLModel
 from alembic import context
 
 from config.config import get_learnhouse_config
+from src.core.migrations import load_models, sync_database_url
 
 # LearnHouse config
 
@@ -18,19 +18,21 @@ lh_config = get_learnhouse_config()
 config = context.config
 
 # Alembic must target the same DB as the running app. The alembic.ini URL is
-# only a dev fallback (hardcoded localhost); inside Docker the real URL is in
-# LEARNHOUSE_SQL_CONNECTION_STRING (e.g. postgresql://...@db:5432/...).
-_runtime_db_url = os.environ.get("LEARNHOUSE_SQL_CONNECTION_STRING")
-if _runtime_db_url:
-    # Alembic uses psycopg2 (sync); strip the async driver suffix if present.
-    _runtime_db_url = _runtime_db_url.replace(
-        "postgresql+asyncpg://", "postgresql://", 1
-    )
-    config.set_main_option("sqlalchemy.url", _runtime_db_url)
+# only a dev fallback (hardcoded localhost). When the app runs migrations
+# itself (src/core/migrations.py) it hands over a connection instead.
+_connection = config.attributes.get("connection")
+if _connection is None:
+    _runtime_db_url = os.environ.get("LEARNHOUSE_SQL_CONNECTION_STRING")
+    if not _runtime_db_url:
+        _configured = lh_config.database_config.sql_connection_string
+        _runtime_db_url = str(_configured) if _configured else None
+    if _runtime_db_url:
+        # Alembic uses psycopg2 (sync); strip the async driver suffix if present.
+        config.set_main_option("sqlalchemy.url", sync_database_url(_runtime_db_url))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-if config.config_file_name is not None:
+if config.config_file_name is not None and config.attributes.get("configure_logger", True):
     fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
@@ -38,30 +40,8 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 
-# IMPORTING ALL SCHEMAS
-base_dir = 'src/db'
-base_module_path = 'src.db'
-
-# Recursively walk through the base directory
-for root, dirs, files in os.walk(base_dir):
-    # Filter out __init__.py and non-Python files
-    module_files = [f for f in files if f.endswith('.py') and f != '__init__.py']
-    # Calculate the module's base path from its directory structure
-    path_diff = os.path.relpath(root, base_dir)
-    if path_diff == '.':
-        # Root of the base_dir, no additional path to add
-        current_module_base = base_module_path
-    else:
-        # Convert directory path to a module path
-        current_module_base = f"{base_module_path}.{path_diff.replace(os.sep, '.')}"
-    
-    # Dynamically import each module
-    for file_name in module_files:
-        module_name = file_name[:-3]  # Remove the '.py' extension
-        full_module_path = f"{current_module_base}.{module_name}"
-        importlib.import_module(full_module_path)
-
-# IMPORTING ALL SCHEMAS
+# Every model, core and EE when present, wherever alembic is run from.
+load_models()
 
 target_metadata = SQLModel.metadata
 
@@ -102,6 +82,12 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    if _connection is not None:
+        context.configure(connection=_connection, target_metadata=target_metadata)
+        with context.begin_transaction():
+            context.run_migrations()
+        return
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

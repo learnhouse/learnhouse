@@ -4271,6 +4271,8 @@
     "desktop_only_message": "เครื่องมือแก้ไขสามารถเข้าถึงได้จากอุปกรณ์เดสก์ท็อปเท่านั้น",
     "switch_to_desktop": "กรุณาเปลี่ยนไปใช้เดสก์ท็อปเพื่อดู",
     "ai_editor": "ตัวแก้ไข AI",
+    "more_preview_options": "ตัวเลือกการแสดงตัวอย่างเพิ่มเติม",
+    "more_save_options": "ตัวเลือกการบันทึกเพิ่มเติม",
     "versioning": {
       "version_history": "ประวัติเวอร์ชัน",
       "current_version": "เวอร์ชันปัจจุบัน:",
@@ -4349,7 +4351,10 @@
       "align_left": "จัดชิดซ้าย",
       "align_center": "จัดกึ่งกลาง",
       "align_right": "จัดชิดขวา",
-      "clear_formatting": "ล้างการจัดรูปแบบ"
+      "clear_formatting": "ล้างการจัดรูปแบบ",
+      "list": "รายการ",
+      "elements_menu": "องค์ประกอบ",
+      "code_playground": "สนามทดลองโค้ด"
     },
     "blocks": {
       "info_callout": "กล่องข้อมูล",
@@ -4369,6 +4374,8 @@
       "user": "ผู้ใช้",
       "magic_block": "บล็อกมายากล (AI)",
       "magic_block_disabled": "บล็อกมายากลต้องการแพ็กเกจ Standard",
+      "callout": "กล่องเน้น",
+      "audio": "เสียง",
       "common": {
         "cancel": "ยกเลิก",
         "save": "บันทึก",

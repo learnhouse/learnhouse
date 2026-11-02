@@ -43,13 +43,14 @@ def startup_app(app: FastAPI) -> Callable:
         learnhouse_config: LearnHouseConfig = get_learnhouse_config()
         app.learnhouse_config = learnhouse_config  # type: ignore
 
-        # Connect to database
-        await connect_to_db(app)
-
         # Send application logs to stdout. Until this runs, the root logger
         # has no handler and Python's fallback drops everything below WARNING,
         # so every logger.info in the codebase is invisible in production.
+        # Before the database: the schema step logs what it migrated.
         init_logging()
+
+        # Connect to database (and bring its schema to this version)
+        await connect_to_db(app)
 
         # Create logs directory
         await create_logs_dir()

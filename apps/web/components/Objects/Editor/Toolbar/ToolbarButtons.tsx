@@ -29,6 +29,7 @@ import {
   RowsPlusBottom,
   SealQuestion,
   Sigma,
+  SquaresFour,
   Table,
   Tag,
   TextB,
@@ -55,12 +56,147 @@ import { useTaggableCommunities } from '@components/Objects/Communities/Tags/com
 const VariablePicker = dynamic(() => import('../Extensions/Dynamic/VariablePicker'), { ssr: false })
 const CustomVariablesModal = dynamic(() => import('../Extensions/Dynamic/CustomVariablesModal'), { ssr: false })
 
+type ToolbarMenuItem = {
+  key: string
+  label: string
+  icon: React.ReactNode
+  color?: string
+  variant?: string
+  active?: boolean
+  onSelect: () => void
+}
+
+type ToolbarMenuProps = {
+  id: string
+  openMenu: string | null
+  setOpenMenu: React.Dispatch<React.SetStateAction<string | null>>
+  label: string
+  icon: React.ReactNode
+  variant?: string
+  active?: boolean
+  items: ToolbarMenuItem[]
+  children?: React.ReactNode
+}
+
+// A toolbar button that opens a dropdown of actions. Only one menu is open at a
+// time (the parent owns `openMenu`), and clicking outside or pressing Escape closes it.
+function ToolbarMenu({ id, openMenu, setOpenMenu, label, icon, variant = '', active, items, children }: ToolbarMenuProps) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const isOpen = openMenu === id
+
+  React.useEffect(() => {
+    if (!isOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpenMenu(null)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenMenu(null)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [isOpen, setOpenMenu])
+
+  return (
+    <div ref={ref} className="relative inline-block shrink-0">
+      <ToolTip content={label}>
+        <div
+          role="button"
+          aria-label={label}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          // Keep the editor selection so inserts land where the cursor was.
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setOpenMenu(isOpen ? null : id)}
+          className={`editor-tool-btn ${variant} ${isOpen || active ? 'is-active' : ''}`}
+        >
+          {icon}
+          <CaretDown size={10} />
+        </div>
+      </ToolTip>
+      {isOpen && (
+        <div className="editor-menu-dropdown" role="menu">
+          {items.map((item) => (
+            <div
+              key={item.key}
+              role="menuitem"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                setOpenMenu(null)
+                item.onSelect()
+              }}
+              className={`editor-menu-item ${item.active ? 'is-active' : ''}`}
+            >
+              <span className="icon">
+                <span className={`flex ${item.color ?? ''}`}>{item.icon}</span>
+              </span>
+              <span className="label">{item.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {children}
+    </div>
+  )
+}
+
+type ToolbarButtonProps = Omit<ToolbarMenuItem, 'key'>
+
+function ToolbarButton({ label, icon, variant = '', active, onSelect }: ToolbarButtonProps) {
+  return (
+    <ToolTip content={label}>
+      <div
+        role="button"
+        aria-label={label}
+        onClick={onSelect}
+        className={`editor-tool-btn ${variant} ${active ? 'is-active' : ''}`}
+      >
+        {icon}
+      </div>
+    </ToolTip>
+  )
+}
+
+const scenarioStarter = {
+  title: 'Interactive Scenario',
+  scenarios: [
+    {
+      id: '1',
+      text: 'Welcome to this interactive scenario. What would you like to do?',
+      imageUrl: '',
+      options: [
+        { id: 'opt1', text: 'Continue exploring', nextScenarioId: '2' },
+        { id: 'opt2', text: 'Learn more about the topic', nextScenarioId: '3' }
+      ]
+    },
+    {
+      id: '2',
+      text: 'Great choice! You are now exploring further. What\'s your next step?',
+      imageUrl: '',
+      options: [
+        { id: 'opt3', text: 'Go back to start', nextScenarioId: '1' },
+        { id: 'opt4', text: 'Finish scenario', nextScenarioId: null }
+      ]
+    },
+    {
+      id: '3',
+      text: 'Here\'s more information about the topic. This helps you understand better.',
+      imageUrl: '',
+      options: [
+        { id: 'opt5', text: 'Go back to start', nextScenarioId: '1' },
+        { id: 'opt6', text: 'Finish scenario', nextScenarioId: null }
+      ]
+    }
+  ],
+  currentScenarioId: '1'
+}
+
 export const ToolbarButtons = React.memo(({ editor }: any) => {
   const { t } = useTranslation()
-  const [showTableMenu, setShowTableMenu] = React.useState(false)
-  const [showListMenu, setShowListMenu] = React.useState(false)
-  const [showCodeMenu, setShowCodeMenu] = React.useState(false)
-  const [showCalloutMenu, setShowCalloutMenu] = React.useState(false)
+  const [openMenu, setOpenMenu] = React.useState<string | null>(null)
   const [showLinkInput, setShowLinkInput] = React.useState(false)
   const [showVariables, setShowVariables] = React.useState(false)
   const [showCustomVariables, setShowCustomVariables] = React.useState(false)
@@ -91,40 +227,15 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
     return null
   }
 
+  const insertBlock = (content: any) => () => editor.chain().focus().insertContent(content).run()
 
-  const tableOptions = [
+  const listItems: ToolbarMenuItem[] = [
     {
-      label: t('editor.toolbar.insert_table'),
-      icon: <Table size={15} />,
-      action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-    },
-    {
-      label: t('editor.toolbar.add_row'),
-      icon: <RowsPlusBottom size={15} />,
-      action: () => editor.chain().focus().addRowAfter().run()
-    },
-    {
-      label: t('editor.toolbar.add_column'),
-      icon: <ColumnsPlusRight size={15} />,
-      action: () => editor.chain().focus().addColumnAfter().run()
-    },
-    {
-      label: t('editor.toolbar.delete_row'),
-      icon: <Rows size={15} />,
-      action: () => editor.chain().focus().deleteRow().run()
-    },
-    {
-      label: t('editor.toolbar.delete_column'),
-      icon: <Columns size={15} />,
-      action: () => editor.chain().focus().deleteColumn().run()
-    }
-  ]
-
-  const listOptions = [
-    {
+      key: 'bullet',
       label: t('editor.toolbar.bullet_list'),
       icon: <ListBullets size={15} />,
-      action: () => {
+      active: editor.isActive('bulletList'),
+      onSelect: () => {
         if (editor.isActive('bulletList')) {
           editor.chain().focus().toggleBulletList().run()
         } else {
@@ -134,9 +245,11 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
       }
     },
     {
+      key: 'ordered',
       label: t('editor.toolbar.ordered_list'),
       icon: <ListNumbers size={15} />,
-      action: () => {
+      active: editor.isActive('orderedList'),
+      onSelect: () => {
         if (editor.isActive('orderedList')) {
           editor.chain().focus().toggleOrderedList().run()
         } else {
@@ -144,6 +257,241 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
           editor.chain().focus().toggleOrderedList().run()
         }
       }
+    }
+  ]
+
+  const tableItems: ToolbarMenuItem[] = [
+    {
+      key: 'insert',
+      label: t('editor.toolbar.insert_table'),
+      icon: <Table size={15} />,
+      onSelect: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+    },
+    {
+      key: 'add_row',
+      label: t('editor.toolbar.add_row'),
+      icon: <RowsPlusBottom size={15} />,
+      onSelect: () => editor.chain().focus().addRowAfter().run()
+    },
+    {
+      key: 'add_column',
+      label: t('editor.toolbar.add_column'),
+      icon: <ColumnsPlusRight size={15} />,
+      onSelect: () => editor.chain().focus().addColumnAfter().run()
+    },
+    {
+      key: 'delete_row',
+      label: t('editor.toolbar.delete_row'),
+      icon: <Rows size={15} />,
+      onSelect: () => editor.chain().focus().deleteRow().run()
+    },
+    {
+      key: 'delete_column',
+      label: t('editor.toolbar.delete_column'),
+      icon: <Columns size={15} />,
+      onSelect: () => editor.chain().focus().deleteColumn().run()
+    }
+  ]
+
+  const calloutItems: ToolbarMenuItem[] = [
+    { type: 'info',    label: 'Info',    icon: <Info size={14} weight="fill" />,        color: 'text-gray-500'   },
+    { type: 'warning', label: 'Warning', icon: <Warning size={14} weight="fill" />,     color: 'text-yellow-500' },
+    { type: 'tip',     label: 'Tip',     icon: <Lightbulb size={14} weight="fill" />,   color: 'text-green-500'  },
+    { type: 'success', label: 'Success', icon: <CheckCircle size={14} weight="fill" />, color: 'text-teal-500'   },
+    { type: 'error',   label: 'Error',   icon: <XCircle size={14} weight="fill" />,     color: 'text-red-500'    },
+  ].map(({ type, ...item }) => ({
+    ...item,
+    key: type,
+    onSelect: insertBlock({ type: 'callout', attrs: { type }, content: [{ type: 'paragraph' }] }),
+  }))
+
+  // Shown as their own buttons so the range of blocks stays visible.
+  const mediaButtons: ToolbarMenuItem[] = [
+    {
+      key: 'image',
+      label: t('editor.blocks.image'),
+      icon: <ImageIcon size={15} weight="fill" />,
+      variant: 'editor-tool-btn-media',
+      onSelect: insertBlock({ type: 'blockImage' })
+    },
+    {
+      key: 'video',
+      label: t('editor.blocks.video'),
+      icon: <VideoCamera size={15} weight="fill" />,
+      variant: 'editor-tool-btn-media',
+      onSelect: insertBlock({ type: 'blockVideo' })
+    },
+    {
+      key: 'audio',
+      label: t('editor.blocks.audio'),
+      icon: <Headphones size={15} weight="fill" />,
+      variant: 'editor-tool-btn-media',
+      onSelect: insertBlock({ type: 'blockAudio' })
+    },
+    {
+      key: 'pdf',
+      label: t('editor.blocks.pdf'),
+      icon: <FileText size={15} weight="fill" />,
+      variant: 'editor-tool-btn-document',
+      onSelect: insertBlock({ type: 'blockPDF' })
+    },
+    {
+      key: 'library',
+      label: t('editor.blocks.library'),
+      icon: <Books size={15} weight="fill" />,
+      variant: 'editor-tool-btn-document',
+      onSelect: insertBlock({ type: 'blockLibrary' })
+    }
+  ]
+
+  const embedItems: ToolbarMenuItem[] = [
+    {
+      key: 'embed',
+      label: t('editor.blocks.embed'),
+      icon: <Cube size={15} weight="fill" />,
+      color: 'text-teal-600',
+      onSelect: insertBlock({ type: 'blockEmbed' })
+    },
+    {
+      // Same block as Embed, listed so YouTube is easy to find.
+      key: 'youtube',
+      label: t('editor.blocks.youtube'),
+      icon: <SiYoutube size={15} />,
+      color: 'text-red-600',
+      onSelect: insertBlock({ type: 'blockEmbed' })
+    },
+    {
+      key: 'web_preview',
+      label: t('editor.blocks.web_preview'),
+      icon: <Globe size={15} weight="fill" />,
+      color: 'text-sky-600',
+      onSelect: insertBlock({ type: 'blockWebPreview' })
+    }
+  ]
+
+  const mathButton: ToolbarButtonProps = {
+    label: t('editor.blocks.math'),
+    icon: <Sigma size={15} weight="fill" />,
+    variant: 'editor-tool-btn-math',
+    onSelect: insertBlock({ type: 'blockMathEquation' })
+  }
+
+  const codeItems: ToolbarMenuItem[] = [
+    {
+      key: 'code',
+      label: t('editor.toolbar.code_block'),
+      icon: <Code size={15} weight="fill" />,
+      active: editor.isActive('codeBlock'),
+      onSelect: () => editor.chain().focus().toggleCodeBlock().run()
+    },
+    {
+      key: 'playground',
+      label: t('editor.toolbar.code_playground'),
+      icon: <BracketsCurly size={15} weight="fill" />,
+      onSelect: insertBlock({
+        type: 'blockCode',
+        attrs: {
+          mode: 'advanced',
+          languageId: 71,
+          languageName: 'Python 3',
+          starterCode: '# Write your code here\n',
+          testCases: [],
+        },
+      })
+    }
+  ]
+
+  const interactiveButtons: ToolbarMenuItem[] = [
+    {
+      key: 'quiz',
+      label: t('editor.blocks.quiz'),
+      icon: <SealQuestion size={15} weight="fill" />,
+      variant: 'editor-tool-btn-interactive',
+      onSelect: insertBlock({ type: 'blockQuiz' })
+    },
+    {
+      key: 'flipcard',
+      label: t('editor.blocks.flipcard'),
+      icon: <ArrowsClockwise size={15} weight="fill" />,
+      variant: 'editor-tool-btn-interactive',
+      onSelect: insertBlock({
+        type: 'flipcard',
+        attrs: {
+          question: 'Click to reveal the answer',
+          answer: 'This is the answer',
+          color: 'blue',
+          alignment: 'center',
+          size: 'medium'
+        }
+      })
+    },
+    {
+      key: 'scenario',
+      label: t('editor.blocks.scenario'),
+      icon: <GitBranch size={15} weight="fill" />,
+      variant: 'editor-tool-btn-interactive',
+      onSelect: insertBlock({ type: 'scenarios', attrs: scenarioStarter })
+    },
+    {
+      key: 'h5p',
+      label: t('editor.blocks.h5p'),
+      icon: <PuzzlePiece size={15} weight="fill" />,
+      variant: 'editor-tool-btn-interactive',
+      onSelect: insertBlock({ type: 'blockH5P' })
+    }
+  ]
+
+  const elementItems: ToolbarMenuItem[] = [
+    {
+      key: 'divider',
+      label: t('editor.blocks.divider'),
+      icon: <Minus size={15} weight="bold" />,
+      color: 'text-slate-600',
+      onSelect: () => editor.chain().focus().setHorizontalRule().run()
+    },
+    {
+      key: 'badge',
+      label: t('editor.blocks.badge'),
+      icon: <Tag size={15} weight="fill" />,
+      color: 'text-pink-600',
+      onSelect: insertBlock({ type: 'badge', content: [{ type: 'text', text: 'Badge' }] })
+    },
+    {
+      key: 'button',
+      label: t('editor.blocks.button'),
+      icon: <CursorClick size={15} weight="fill" />,
+      color: 'text-green-600',
+      onSelect: insertBlock({ type: 'button', content: [{ type: 'text', text: 'Button' }] })
+    },
+    {
+      key: 'user',
+      label: t('editor.blocks.user'),
+      icon: <User size={15} weight="fill" />,
+      color: 'text-indigo-600',
+      onSelect: insertBlock({ type: 'blockUser' })
+    }
+  ]
+  const dynamicItems: ToolbarMenuItem[] = [
+    {
+      key: 'variable',
+      label: t('editor.dynamic.toolbar.variable', { example: '{{', defaultValue: 'Insert a variable (or type {{example}})' }),
+      icon: <BracketsCurly size={15} weight="bold" />,
+      color: 'text-fuchsia-700',
+      onSelect: () => setShowVariables(true)
+    },
+    {
+      key: 'conditional',
+      label: t('editor.dynamic.toolbar.conditional', 'Content only some learners see'),
+      icon: <UsersThree size={15} weight="fill" />,
+      color: 'text-fuchsia-700',
+      onSelect: () => editor.chain().focus().insertConditionalBlock({ openRules: true }).run()
+    },
+    {
+      key: 'community',
+      label: t('editor.dynamic.toolbar.community', { example: '#', defaultValue: 'Link a community (or type {{example}})' }),
+      icon: <Hash size={15} weight="bold" />,
+      color: 'text-fuchsia-700',
+      onSelect: () => editor.chain().focus().insertContent(' #').run()
     }
   ]
 
@@ -212,33 +560,25 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
       >
         <TextStrikethrough size={15} />
       </div>
-      <div className="relative inline-block shrink-0">
-        <div
-          onClick={() => setShowListMenu(!showListMenu)}
-          className={`editor-tool-btn ${showListMenu || editor.isActive('bulletList') || editor.isActive('orderedList') ? 'is-active' : ''}`}
-          aria-label="Insert list"
-        >
-          <ListBullets size={15} />
-          <CaretDown size={10} />
-        </div>
-        {showListMenu && (
-          <div className="editor-menu-dropdown">
-            {listOptions.map((option, index) => (
-              <div
-                key={index}
-                onClick={() => {
-                  option.action()
-                  setShowListMenu(false)
-                }}
-                className={`editor-menu-item ${editor.isActive(index === 0 ? 'bulletList' : 'orderedList') ? 'is-active' : ''}`}
-              >
-                <span className="icon">{option.icon}</span>
-                <span className="label">{option.label}</span>
-              </div>
-            ))}
+      <ToolTip content={t('editor.toolbar.link')}>
+        <div style={{ position: 'relative' }}>
+          <div
+            ref={linkButtonRef}
+            onClick={handleLinkClick}
+            className={`editor-tool-btn editor-tool-btn-link ${editor.isActive('link') ? 'is-active' : ''}`}
+            aria-label={t('editor.toolbar.link')}
+          >
+            <Link size={15} />
           </div>
-        )}
-      </div>
+          {showLinkInput && (
+            <LinkInputTooltip
+              onSave={handleLinkSave}
+              onCancel={handleLinkCancel}
+              currentUrl={getCurrentLinkUrl()}
+            />
+          )}
+        </div>
+      </ToolTip>
       <select
         className="editor-tool-select"
         value={
@@ -266,468 +606,90 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
         <option value="5">{t('editor.toolbar.heading5')}</option>
         <option value="6">{t('editor.toolbar.heading6')}</option>
       </select>
-      <div className="relative inline-block shrink-0">
-        <div
-          onClick={() => setShowTableMenu(!showTableMenu)}
-          className={`editor-tool-btn ${showTableMenu ? 'is-active' : ''}`}
-          aria-label="Insert table"
-        >
-          <Table size={15} />
-          <CaretDown size={10} />
-        </div>
-        {showTableMenu && (
-          <div className="editor-menu-dropdown">
-            {tableOptions.map((option, index) => (
-              <div
-                key={index}
-                onClick={() => {
-                  option.action()
-                  setShowTableMenu(false)
-                }}
-                className="editor-menu-item"
-              >
-                <span className="icon">{option.icon}</span>
-                <span className="label">{option.label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <ToolbarMenu
+        id="list"
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+        label={t('editor.toolbar.list')}
+        icon={<ListBullets size={15} />}
+        active={editor.isActive('bulletList') || editor.isActive('orderedList')}
+        items={listItems}
+      />
+      <ToolbarMenu
+        id="table"
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+        label={t('editor.toolbar.table')}
+        icon={<Table size={15} />}
+        items={tableItems}
+      />
       <DividerVerticalIcon
         style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey' }}
       />
-      <div className="relative inline-block shrink-0">
-        <div
-          onClick={() => setShowCalloutMenu(!showCalloutMenu)}
-          className={`editor-tool-btn editor-tool-btn-info ${
-            showCalloutMenu ||
-            editor.isActive('callout') ||
-            editor.isActive('calloutInfo') ||
-            editor.isActive('calloutWarning')
-              ? 'is-active'
-              : ''
-          }`}
-          aria-label="Callout"
-        >
-          <Info size={15} />
-          <CaretDown size={10} />
-        </div>
-        {showCalloutMenu && (
-          <div className="editor-menu-dropdown">
-            {[
-              { type: 'info',    label: 'Info',    icon: <Info      size={14} weight="fill" />, style: 'text-gray-500'   },
-              { type: 'warning', label: 'Warning', icon: <Warning   size={14} weight="fill" />, style: 'text-yellow-500' },
-              { type: 'tip',     label: 'Tip',     icon: <Lightbulb size={14} weight="fill" />, style: 'text-green-500'  },
-              { type: 'success', label: 'Success', icon: <CheckCircle size={14} weight="fill" />, style: 'text-teal-500' },
-              { type: 'error',   label: 'Error',   icon: <XCircle   size={14} weight="fill" />, style: 'text-red-500'   },
-            ].map(({ type, label, icon, style }) => (
-              <div
-                key={type}
-                onClick={() => {
-                  editor.chain().focus().insertContent({
-                    type: 'callout',
-                    attrs: { type },
-                    content: [{ type: 'paragraph' }],
-                  }).run()
-                  setShowCalloutMenu(false)
-                }}
-                className="editor-menu-item"
-              >
-                <span className={`icon ${style}`}>{icon}</span>
-                <span className="label">{label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <ToolTip content={t('editor.toolbar.link')}>
-        <div style={{ position: 'relative' }}>
-          <div
-            ref={linkButtonRef}
-            onClick={handleLinkClick}
-            className={`editor-tool-btn editor-tool-btn-link ${editor.isActive('link') ? 'is-active' : ''}`}
-            aria-label={t('editor.toolbar.link')}
-          >
-            <Link size={15} />
-          </div>
-          {showLinkInput && (
-            <LinkInputTooltip
-              onSave={handleLinkSave}
-              onCancel={handleLinkCancel}
-              currentUrl={getCurrentLinkUrl()}
-            />
-          )}
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.image')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-media"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: 'blockImage',
-              })
-              .run()
-          }
-          aria-label={t('editor.blocks.image')}
-        >
-          <ImageIcon size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.video')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-media"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: 'blockVideo',
-              })
-              .run()
-          }
-          aria-label={t('editor.blocks.video')}
-        >
-          <VideoCamera size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content="Audio">
-        <div
-          className="editor-tool-btn editor-tool-btn-media"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: 'blockAudio',
-              })
-              .run()
-          }
-          aria-label="Audio"
-        >
-          <Headphones size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.youtube')}>
-        <div className="editor-tool-btn editor-tool-btn-media" onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()} aria-label={t('editor.blocks.youtube')}>
-          <SiYoutube size={15} />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.math')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-math"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: 'blockMathEquation',
-              })
-              .run()
-          }
-          aria-label={t('editor.blocks.math')}
-        >
-          <Sigma size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.pdf')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-document"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: 'blockPDF',
-              })
-              .run()
-          }
-          aria-label={t('editor.blocks.pdf')}
-        >
-          <FileText size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.library')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-document"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: 'blockLibrary',
-              })
-              .run()
-          }
-          aria-label={t('editor.blocks.library')}
-        >
-          <Books size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.quiz')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-interactive"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: 'blockQuiz',
-              })
-              .run()
-          }
-          aria-label={t('editor.blocks.quiz')}
-        >
-          <SealQuestion size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.h5p')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-interactive"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: 'blockH5P',
-              })
-              .run()
-          }
-          aria-label={t('editor.blocks.h5p')}
-        >
-          <PuzzlePiece size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <div className="relative inline-block shrink-0">
-        <div
-          onClick={() => setShowCodeMenu(!showCodeMenu)}
-          className={`editor-tool-btn editor-tool-btn-code ${showCodeMenu || editor.isActive('codeBlock') || editor.isActive('blockCode') ? 'is-active' : ''}`}
-          aria-label={t('editor.toolbar.code_block')}
-        >
-          <Code size={15} weight="fill" />
-          <CaretDown size={10} />
-        </div>
-        {showCodeMenu && (
-          <div className="editor-menu-dropdown">
-            <div
-              onClick={() => {
-                editor.chain().focus().toggleCodeBlock().run()
-                setShowCodeMenu(false)
-              }}
-              className={`editor-menu-item ${editor.isActive('codeBlock') ? 'is-active' : ''}`}
-            >
-              <span className="icon"><Code size={15} weight="fill" /></span>
-              <span className="label">Basic</span>
-            </div>
-            <div
-              onClick={() => {
-                editor.chain().focus().insertContent({
-                  type: 'blockCode',
-                  attrs: {
-                    mode: 'advanced',
-                    languageId: 71,
-                    languageName: 'Python 3',
-                    starterCode: '# Write your code here\n',
-                    testCases: [],
-                  },
-                }).run()
-                setShowCodeMenu(false)
-              }}
-              className="editor-menu-item"
-            >
-              <span className="icon"><BracketsCurly size={15} weight="fill" /></span>
-              <span className="label">Playground</span>
-            </div>
-          </div>
-        )}
-      </div>
-      <ToolTip content={t('editor.blocks.divider')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-divider"
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          aria-label={t('editor.blocks.divider')}
-        >
-          <Minus size={15} weight="bold" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.embed')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-embed"
-          onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}
-          aria-label={t('editor.blocks.embed')}
-        >
-          <Cube size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.badge')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-badge"
-          onClick={() => editor.chain().focus().insertContent({
-            type: 'badge',
-            content: [
-              {
-                type: 'text',
-                text: 'Badge'
-              }
-            ]
-          }).run()}
-          aria-label={t('editor.blocks.badge')}
-        >
-          <Tag size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.button')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-interactive"
-          onClick={() => editor.chain().focus().insertContent({
-            type: 'button',
-            content: [
-              {
-                type: 'text',
-                text: 'Button'
-              }
-            ]
-          }).run()}
-          aria-label={t('editor.blocks.button')}
-        >
-          <CursorClick size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.user')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-user"
-          onClick={() => editor.chain().focus().insertContent({ type: 'blockUser' }).run()}
-          aria-label={t('editor.blocks.user')}
-        >
-          <User size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.web_preview')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-web"
-          onClick={() =>
-            editor.chain().focus().insertContent({
-              type: 'blockWebPreview',
-            }).run()
-          }
-          aria-label={t('editor.blocks.web_preview')}
-        >
-          <Globe size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.flipcard')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-interactive"
-          onClick={() =>
-            editor.chain().focus().insertContent({
-              type: 'flipcard',
-              attrs: {
-                question: 'Click to reveal the answer',
-                answer: 'This is the answer',
-                color: 'blue',
-                alignment: 'center',
-                size: 'medium'
-              }
-            }).run()
-          }
-          aria-label={t('editor.blocks.flipcard')}
-        >
-          <ArrowsClockwise size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.scenario')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-interactive"
-          onClick={() =>
-            editor.chain().focus().insertContent({
-              type: 'scenarios',
-              attrs: {
-                title: 'Interactive Scenario',
-                scenarios: [
-                  {
-                    id: '1',
-                    text: 'Welcome to this interactive scenario. What would you like to do?',
-                    imageUrl: '',
-                    options: [
-                      { id: 'opt1', text: 'Continue exploring', nextScenarioId: '2' },
-                      { id: 'opt2', text: 'Learn more about the topic', nextScenarioId: '3' }
-                    ]
-                  },
-                  {
-                    id: '2',
-                    text: 'Great choice! You are now exploring further. What\'s your next step?',
-                    imageUrl: '',
-                    options: [
-                      { id: 'opt3', text: 'Go back to start', nextScenarioId: '1' },
-                      { id: 'opt4', text: 'Finish scenario', nextScenarioId: null }
-                    ]
-                  },
-                  {
-                    id: '3',
-                    text: 'Here\'s more information about the topic. This helps you understand better.',
-                    imageUrl: '',
-                    options: [
-                      { id: 'opt5', text: 'Go back to start', nextScenarioId: '1' },
-                      { id: 'opt6', text: 'Finish scenario', nextScenarioId: null }
-                    ]
-                  }
-                ],
-                currentScenarioId: '1'
-              }
-            }).run()
-          }
-          aria-label={t('editor.blocks.scenario')}
-        >
-          <GitBranch size={15} weight="fill" />
-        </div>
-      </ToolTip>
+      <ToolbarMenu
+        id="callout"
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+        label={t('editor.blocks.callout')}
+        icon={<Info size={15} />}
+        variant="editor-tool-btn-info"
+        active={editor.isActive('callout') || editor.isActive('calloutInfo') || editor.isActive('calloutWarning')}
+        items={calloutItems}
+      />
+      {mediaButtons.map(({ key, ...item }) => <ToolbarButton key={key} {...item} />)}
+      <ToolbarMenu
+        id="embed"
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+        label={t('editor.blocks.embed')}
+        icon={<Cube size={15} weight="fill" />}
+        variant="editor-tool-btn-embed"
+        items={embedItems}
+      />
+      <ToolbarButton {...mathButton} />
+      <ToolbarMenu
+        id="code"
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+        label={t('editor.toolbar.code_block')}
+        icon={<Code size={15} weight="fill" />}
+        variant="editor-tool-btn-code"
+        active={editor.isActive('codeBlock') || editor.isActive('blockCode')}
+        items={codeItems}
+      />
+      {interactiveButtons.map(({ key, ...item }) => <ToolbarButton key={key} {...item} />)}
+      <ToolbarMenu
+        id="elements"
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+        label={t('editor.toolbar.elements_menu')}
+        icon={<SquaresFour size={15} weight="fill" />}
+        variant="editor-tool-btn-badge"
+        items={elementItems}
+      />
       <DividerVerticalIcon style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey', opacity: 0.5 }} />
-      <ToolTip content={t('editor.dynamic.toolbar.variable', { example: '{{', defaultValue: 'Insert a variable (or type {{example}})' })}>
-        <div style={{ position: 'relative' }}>
-          <div
-            className={`editor-tool-btn editor-tool-btn-dynamic ${showVariables ? 'is-active' : ''}`}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => setShowVariables((v) => !v)}
-            role="button"
-            aria-label={t('editor.dynamic.toolbar.variable_label', 'Variable')}
-          >
-            <BracketsCurly size={15} weight="bold" />
-          </div>
-          {showVariables && (
-            <VariablePicker
-              customDefs={lookups.customDefs}
-              onPick={(def) => insertVariable(def.path)}
-              onManageCustom={() => {
-                setShowVariables(false)
-                setShowCustomVariables(true)
-              }}
-              onClose={() => setShowVariables(false)}
-            />
-          )}
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.dynamic.toolbar.conditional', 'Content only some learners see')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-dynamic"
-          onClick={() => editor.chain().focus().insertConditionalBlock({ openRules: true }).run()}
-          role="button"
-          aria-label={t('editor.dynamic.toolbar.conditional_label', 'Conditional content')}
-        >
-          <UsersThree size={15} weight="fill" />
-        </div>
-      </ToolTip>
-      <ToolTip content={t('editor.dynamic.toolbar.community', { example: '#', defaultValue: 'Link a community (or type {{example}})' })}>
-        <div
-          className="editor-tool-btn editor-tool-btn-dynamic"
-          onClick={() => editor.chain().focus().insertContent(' #').run()}
-          role="button"
-          aria-label={t('editor.dynamic.toolbar.community_label', 'Community')}
-        >
-          <Hash size={15} weight="bold" />
-        </div>
-      </ToolTip>
+      <ToolbarMenu
+        id="dynamic"
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+        label={t('editor.dynamic.toolbar.menu_label', 'Personalize')}
+        icon={<BracketsCurly size={15} weight="bold" />}
+        variant="editor-tool-btn-dynamic"
+        active={showVariables}
+        items={dynamicItems}
+      >
+        {showVariables && (
+          <VariablePicker
+            customDefs={lookups.customDefs}
+            onPick={(def) => insertVariable(def.path)}
+            onManageCustom={() => {
+              setShowVariables(false)
+              setShowCustomVariables(true)
+            }}
+            onClose={() => setShowVariables(false)}
+          />
+        )}
+      </ToolbarMenu>
       {showCustomVariables && (
         <CustomVariablesModal onClose={() => setShowCustomVariables(false)} onInsert={insertVariable} />
       )}

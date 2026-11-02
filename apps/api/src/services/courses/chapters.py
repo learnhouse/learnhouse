@@ -19,7 +19,11 @@ from src.db.courses.chapters import (
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from fastapi import HTTPException, status, Request
-from src.core.ee_hooks import check_ee_activity_paid_access, get_ee_paid_locked_activity_ids
+from src.core.ee_hooks import (
+    check_ee_activity_paid_access,
+    get_ee_paid_locked_activity_ids,
+    notify_ee_course_content_changed,
+)
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.drip import apply_drip_to_chapters
@@ -266,6 +270,7 @@ async def delete_chapter(
     await db_session.delete(chapter)
     await db_session.commit()
     await enqueue_course(course.id, db_session)
+    notify_ee_course_content_changed(course.id)
 
     return {"detail": "chapter deleted"}
 

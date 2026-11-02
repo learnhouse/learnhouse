@@ -4523,6 +4523,8 @@
     "desktop_only_message": "Editor je dostupný len z počítača.",
     "switch_to_desktop": "Prepnite na počítač pre zobrazenie.",
     "ai_editor": "AI editor",
+    "more_preview_options": "Ďalšie možnosti náhľadu",
+    "more_save_options": "Ďalšie možnosti uloženia",
     "ai_panel": {
       "title": "AI editor",
       "input_placeholder": "Požiadajte AI o pomoc s obsahom...",
@@ -4622,7 +4624,10 @@
       "align_left": "Zarovnať vľavo",
       "align_center": "Zarovnať na stred",
       "align_right": "Zarovnať vpravo",
-      "clear_formatting": "Vymazať formátovanie"
+      "clear_formatting": "Vymazať formátovanie",
+      "list": "Zoznam",
+      "elements_menu": "Prvky",
+      "code_playground": "Kódové ihrisko"
     },
     "blocks": {
       "info_callout": "Informačný blok",
@@ -4642,6 +4647,8 @@
       "user": "Používateľ",
       "magic_block": "Magický blok (AI generovaný)",
       "magic_block_disabled": "Magický blok vyžaduje plán Standard",
+      "callout": "Zvýraznenie",
+      "audio": "Zvuk",
       "common": {
         "uploading": "Nahráva sa...",
         "upload": "Nahrať",
