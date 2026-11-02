@@ -53,8 +53,9 @@ See the [LMS setup guides](/enterprise/lti/lms-setup) for step-by-step instructi
 ## Accounts and access
 
 - A learner is matched by the LMS user ID first. On the first launch, an existing LearnHouse account with the same email is linked only if it belongs to your organization alone and was created through LTI; otherwise a new account is created and added to your organization with the platform's default role.
-- If the email belongs to any other LearnHouse account (one with its own password or sign-in, or one that is also in another organization), the person is asked to sign in to that account once to link it, in the browser that opened the activity. LearnHouse never hands over such an account based on an email asserted by an LMS, and an LMS stops signing in as an account once it joins another organization unless its owner linked it.
+- If the email belongs to any other LearnHouse account (one with its own password or sign-in, or one that is also in another organization), the person is asked to sign in to that account once and confirm with its password to link it, in the browser that opened the activity. LearnHouse never hands over such an account based on an email asserted by an LMS, and an LMS stops signing in as an account once it joins another organization unless its owner linked it.
 - Platform administrator accounts can't be used from an LMS.
+- A sign-in that starts from an LMS only works in your organization, never in other organizations the same person belongs to.
 - People with two-factor authentication enrolled are asked for their code after the launch.
 - An email sent by the LMS counts as verified only when it is on a domain your organization has verified as a custom domain, the same rule as SSO.
 - If the LMS doesn't share an email address, LearnHouse creates an account with a placeholder address.

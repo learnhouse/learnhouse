@@ -7306,7 +7306,8 @@
       "description": "{{platform}} says you are {{email}}, and a LearnHouse account with that email already exists. Sign in to it once to link it to your LMS.",
       "signed_in_as": "Signed in as {{email}}",
       "confirm": "Link account and continue",
-      "sign_in": "Sign in to continue"
+      "sign_in": "Sign in to continue",
+      "password_label": "Your LearnHouse password, to confirm it's you"
     },
     "select": {
       "draft": "Draft",
