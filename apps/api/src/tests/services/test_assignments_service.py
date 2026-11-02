@@ -1345,6 +1345,26 @@ class TestPutAssignmentTaskSubmissionFile:
             )
         assert result is None
 
+    async def test_upload_is_tagged_with_the_uploader(
+        self, mock_request, db, regular_user, assignment_task
+    ):
+        upload = AsyncMock(return_value=f"x_submission_u{regular_user.id}.pdf")
+        with patch(
+            "src.services.courses.activities.assignments.verify_activity_reader_access",
+            new_callable=AsyncMock,
+        ), patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, side_effect=[True, False]), patch(
+            "src.services.courses.activities.assignments.upload_submission_file", upload
+        ):
+            result = await put_assignment_task_submission_file(
+                mock_request,
+                db,
+                assignment_task.assignment_task_uuid,
+                regular_user,
+                SimpleNamespace(filename="essay.pdf"),
+            )
+        assert result == {"file_uuid": f"x_submission_u{regular_user.id}.pdf"}
+        assert upload.await_args.args[-1] == regular_user.id
+
 
 # ---------------------------------------------------------------------------
 # handle_assignment_task_submission: UUID fallback branch (line 1342)
