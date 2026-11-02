@@ -140,6 +140,10 @@
         "webhooks": {
           "title": "Pro Feature",
           "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
+        },
+        "drip": {
+          "title": "Standard Feature",
+          "description": "Drip content is available to organizations on our Standard plan or higher. Upgrade to release chapters on a schedule, per learner or for a whole cohort."
         }
       }
     },
@@ -2307,7 +2311,8 @@
           "contributors": "Contributors",
           "seo": "SEO",
           "certification": "Certification",
-          "analytics": "Analytics"
+          "analytics": "Analytics",
+          "schedule": "Schedule"
         },
         "access_denied": {
           "title": "Access Denied",
@@ -2947,7 +2952,11 @@
           "unpublish_tooltip": "Unpublish selected"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Chapter name"
+          "chapter_name_placeholder": "Chapter name",
+          "drip_tooltip": "Release schedule: edit it in the Schedule tab",
+          "drip_day_one": "Day {{count}}",
+          "drip_day": "Day {{count}}",
+          "drip_now": "Day 0"
         },
         "activity": {
           "name_placeholder": "Activity name",
@@ -3029,6 +3038,87 @@
           "descriptions": {
             "scorm": "SCORM-compliant learning package"
           }
+        }
+      },
+      "schedule": {
+        "title": "Drip content",
+        "description": "Release chapters over time instead of all at once. Learners see what is coming next and when it opens.",
+        "on": "On",
+        "off": "Off",
+        "anchor": {
+          "title": "When does the schedule start?",
+          "enrollment": "When each learner enrolls",
+          "enrollment_description": "Everyone gets their own clock. Best for evergreen, self-paced courses.",
+          "fixed_date": "On a fixed start date",
+          "fixed_date_description": "One date for the whole cohort. Best for live launches and bootcamps.",
+          "start_date": "Cohort starts on"
+        },
+        "chapters": {
+          "title": "Release plan",
+          "preview_enrollment": "Dates shown for someone who enrolls today.",
+          "preview_cohort": "Dates shown for the cohort.",
+          "empty": "Add chapters to this course to schedule them."
+        },
+        "interval": {
+          "label": "One chapter every",
+          "amount": "Interval",
+          "unit": "Unit",
+          "days": "days",
+          "weeks": "weeks",
+          "apply": "Apply"
+        },
+        "mode": {
+          "immediate": "Right away",
+          "delay": "After a delay",
+          "date": "On a date",
+          "delay_days": "Days",
+          "days_after_enrollment": "days after enrolling",
+          "days_after_start": "days after the start date",
+          "release_at": "Release date"
+        },
+        "require_previous": "Only after the previous chapter is completed",
+        "errors": {
+          "start_date": "Pick the date the cohort starts.",
+          "release_at": "Pick a release date for “{{name}}”."
+        },
+        "toasts": {
+          "save_success": "Schedule saved",
+          "save_error": "Could not save the schedule"
+        },
+        "unsaved": "Unsaved changes",
+        "saved": "All changes saved",
+        "save": "Save schedule",
+        "early_access": {
+          "title": "Early access",
+          "description": "Members of these user groups get every chapter right away: staff, beta testers, a premium tier.",
+          "empty": "No user groups yet."
+        },
+        "notify": {
+          "title": "Email learners when a chapter opens",
+          "description": "Enrolled learners get a short email with a link back to the course as soon as a scheduled chapter opens for them."
+        },
+        "preview": {
+          "label": "Preview a learner’s view on any day",
+          "day_one": "Day {{count}} after enrolling",
+          "day": "Day {{count}} after enrolling",
+          "slider": "Preview day",
+          "clear": "Clear",
+          "open": "Open",
+          "upcoming_one": "Opens on day {{count}}",
+          "upcoming": "Opens on day {{count}}",
+          "closed": "Closed",
+          "dated": "Fixed date"
+        },
+        "more": {
+          "label": "More conditions",
+          "count_one": "{{count}} more condition",
+          "count": "{{count}} more conditions",
+          "requires": "Requires these chapters to be completed",
+          "no_earlier": "This is the first chapter.",
+          "closes": "Close it again",
+          "closes_days": "Days open",
+          "closes_after": "days after it opens",
+          "closes_hint": "For limited-time content like a replay or a live-week bonus."
         }
       }
     },
@@ -6770,7 +6860,31 @@
     "signInRequired": "Sign in to view this course",
     "signInRequiredDescription": "This course is for members. Sign in and we'll bring you right back here.",
     "signInToContinue": "Sign in to continue",
-    "finish_course": "Finish course"
+    "finish_course": "Finish course",
+    "drip": {
+      "opens_on_enroll": "Opens when you start the course",
+      "opens_after_previous": "Opens after the previous chapter",
+      "opens_on": "Opens {{date}}",
+      "in_days_one": "in {{count}} day",
+      "in_days": "in {{count}} days",
+      "in_hours_one": "in {{count}} hour",
+      "in_hours": "in {{count}} hours",
+      "soon": "in less than an hour",
+      "coming_soon": "Coming soon",
+      "banner_title": "New chapters are released over time",
+      "banner_next": "Next up: {{name}}. {{when}}",
+      "gate_enrollment": "This course releases its chapters over time, starting when you begin the course. Start it from the course page to unlock your schedule.",
+      "gate_previous": "Finish every lesson of the previous chapter and this one opens right away.",
+      "gate_schedule": "This course releases its chapters over time. Come back when this one opens.",
+      "opens_after_required": "Opens after the required chapters",
+      "closed": "No longer available",
+      "closed_on": "closed {{date}}",
+      "open_until": "Open until {{date}}",
+      "gate_prerequisites": "Finish the chapters this one builds on and it opens right away.",
+      "gate_closed": "This chapter was available for a limited time, and that time is over.",
+      "add_to_calendar": "Add to calendar",
+      "calendar_event": "{{chapter}} opens · {{course}}"
+    }
   },
   "pagination": {
     "next": "Next",

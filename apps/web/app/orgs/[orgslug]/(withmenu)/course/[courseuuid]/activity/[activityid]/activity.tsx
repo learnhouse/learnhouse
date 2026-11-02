@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Loader2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
+import DripGate from '@components/Objects/Courses/DripGate'
 import dynamic from 'next/dynamic'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
@@ -592,6 +593,17 @@ function ActivityClient(props: ActivityClientProps) {
   const chapterNameFromCourse = allActivities[currentIndex]?.chapterName ?? ''
   const displayName = activity?.name ?? activityNameFromCourse
   const displayActivityType = allActivities[currentIndex]?.activity_type
+
+  if (activity?.is_locked && activity?.drip_reason) {
+    return (
+      <DripGate
+        activityName={displayName}
+        dripReason={activity.drip_reason}
+        dripUnlockAt={activity.drip_unlock_at}
+        courseHref={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+      />
+    )
+  }
 
   if (activity?.is_locked) {
     const isAuthenticated = session?.status === 'authenticated'
