@@ -2,6 +2,7 @@ import type { SitePageMeta } from './types'
 
 import { sitePage as home } from '@/app/orgs/[orgslug]/(withmenu)/page.search'
 import { sitePage as courses } from '@/app/orgs/[orgslug]/(withmenu)/courses/page.search'
+import { sitePage as paths } from '@/app/orgs/[orgslug]/(withmenu)/paths/page.search'
 import { sitePage as library } from '@/app/orgs/[orgslug]/(withmenu)/library/page.search'
 import { sitePage as podcasts } from '@/app/orgs/[orgslug]/(withmenu)/podcasts/page.search'
 import { sitePage as communities } from '@/app/orgs/[orgslug]/(withmenu)/communities/page.search'
@@ -35,6 +36,7 @@ const account: SitePageMeta[] = accountMetas.map((meta) => {
 export const sitePages: SitePageMeta[] = [
   home,
   courses,
+  paths,
   library,
   podcasts,
   communities,

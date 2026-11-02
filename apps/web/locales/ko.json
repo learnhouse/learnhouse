@@ -138,6 +138,10 @@
         "drip": {
           "title": "Standard 기능",
           "description": "순차 공개는 Standard 플랜 이상의 조직에서만 사용할 수 있습니다. 업그레이드하면 학습자별로 또는 코호트 전체를 대상으로 일정에 따라 장을 공개할 수 있습니다."
+        },
+        "paths": {
+          "title": "프로 기능",
+          "description": "학습 경로는 프로 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 여러 코스를 전용 수료증이 있는 단계별 학습 경로로 구성하세요."
         }
       },
       "current_plan": "현재 플랜",
@@ -1080,7 +1084,45 @@
     "workshop_attendance": "워크숍 참석 증명",
     "specialization": "전문 분야 인증",
     "dedication_message": "당신의 노력과 헌신이 결실을 맺었습니다. 이 코스의 모든 과정을 마스터했습니다.",
-    "download_failed": "PDF를 생성하지 못했습니다. 다시 시도해 주세요."
+    "download_failed": "PDF를 생성하지 못했습니다. 다시 시도해 주세요.",
+    "document": {
+      "title": "수료증",
+      "presented_to": "이 수료증을 다음 분께 수여합니다",
+      "for_completing": "다음 과정을 성공적으로 수료하였음을 증명합니다",
+      "learner_placeholder": "학습자 이름",
+      "name_placeholder": "수료증 명칭",
+      "instructor": "강사",
+      "issued_by": "발급자",
+      "date": "수여일",
+      "credential_id": "수료증 ID"
+    },
+    "page": {
+      "verified": "검증된 수료증",
+      "issued_line": "{{issuer}}에서 {{date}}에 {{name}}님에게 발급",
+      "download": "PDF 다운로드",
+      "add_to_linkedin": "LinkedIn에 추가",
+      "copy_link": "검증 링크 복사",
+      "link_copied": "링크가 복사되었습니다",
+      "recipient": "수령인",
+      "issuer": "발급자",
+      "issued_on": "발급일",
+      "credential_id": "수료증 ID",
+      "id_copied": "수료증 ID가 복사되었습니다",
+      "copy_id": "수료증 ID 복사",
+      "not_found": "수료증을 찾을 수 없습니다",
+      "not_found_hint": "이 ID와 일치하는 유효한 수료증이 없습니다. 철회되었거나 링크가 불완전할 수 있습니다.",
+      "go_home": "홈으로 이동",
+      "earned_for_course": "다음 과정 수료로 취득",
+      "earned_for_path": "다음 강좌 수료로 취득",
+      "view_and_share": "보기 및 공유"
+    },
+    "designer": {
+      "signer": "서명자 (선택 사항)",
+      "signer_placeholder": "예: Dr. Jane Smith",
+      "style": "스타일",
+      "preview_hint": "실시간 미리보기입니다. 학습자에게는 본인의 이름, 날짜, 수료증 ID가 표시됩니다."
+    },
+    "kind_course": "코스"
   },
   "search": {
     "search_placeholder": "코스, 사용자, 컬렉션 검색...",
@@ -1109,6 +1151,14 @@
       "discussions": "토론",
       "playgrounds": "Playgrounds",
       "podcasts": "팟캐스트"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "여러 코스를 차례로 거치는 단계별 학습 경로",
+          "keywords": "학습 경로, 경로, 트랙, 프로그램, 여정, paths, learning paths, tracks, programs, journey"
+        }
+      }
     }
   },
   "ai": {
@@ -4242,6 +4292,10 @@
         "org_api": {
           "description": "API 토큰 및 프로그래밍 방식 접근",
           "keywords": "api, 토큰, 접근, 프로그래밍, 키"
+        },
+        "paths": {
+          "description": "코스를 수료증이 있는 단계별 학습 경로로 구성",
+          "keywords": "학습 경로, 경로, 트랙, 프로그램, 커리큘럼, 순서, 수료증, paths, learning paths, tracks, programs, curriculum, sequence, certificate"
         }
       }
     },
@@ -6356,5 +6410,177 @@
       "resource": "리소스",
       "resource_plural": "리소스"
     }
+  },
+  "paths": {
+    "title": "학습 경로",
+    "new_path": "새 학습 경로",
+    "manage_paths": "학습 경로 관리",
+    "catalog_subtitle": "여러 코스를 차례로 밟아 가는 단계별 학습입니다. 학습 경로를 완료하면 수료증을 받을 수 있습니다.",
+    "published": "게시됨",
+    "draft": "임시저장",
+    "completed": "완료",
+    "in_progress": "진행 중",
+    "required": "필수",
+    "elective": "선택",
+    "actions": "학습 경로 작업",
+    "edit_courses": "코스 편집",
+    "view_path": "학습 경로 보기",
+    "view_certificate": "수료증 보기",
+    "start_path": "학습 경로 시작",
+    "start_hint": "학습 경로를 시작하면 포함된 모든 코스의 진도를 한눈에 확인할 수 있습니다.",
+    "sign_in_to_start": "로그인하고 시작하기",
+    "continue_learning": "이어서 학습하기",
+    "leave_path": "학습 경로 나가기",
+    "your_progress": "나의 진도",
+    "up_next": "다음 단계",
+    "guided_order": "순서대로 학습",
+    "certificate_included": "수료증 포함",
+    "certificate_earned": "이 수료증을 취득했습니다",
+    "certificate_explainer": "이 학습 경로의 필수 코스를 모두 완료하면 자동으로 수여됩니다.",
+    "locked_hint": "이전 코스를 완료하면 잠금 해제됩니다",
+    "restricted_course": "제한된 코스",
+    "no_courses_yet": "이 학습 경로에는 아직 코스가 없습니다.",
+    "electives_rule_one": "선택 코스 {{total}}개 중 {{count}}개 이상 선택",
+    "electives_rule_other": "선택 코스 {{total}}개 중 {{count}}개 이상 선택",
+    "progress_short": "{{done}}/{{total}} 코스",
+    "progress_long": "{{total}}개 코스 중 {{done}}개 완료",
+    "course_count_one": "코스 {{count}}개",
+    "course_count_other": "코스 {{count}}개",
+    "learner_count_one": "학습자 {{count}}명",
+    "learner_count_other": "학습자 {{count}}명",
+    "no_paths": "아직 학습 경로가 없습니다",
+    "no_paths_description": "코스를 묶어 전용 수료증이 있는 단계별 학습 경로를 만들어 보세요.",
+    "no_public_paths": "아직 학습 경로가 없습니다",
+    "no_public_paths_description": "학습 경로가 게시되면 여기에 표시됩니다.",
+    "no_search_results": "검색과 일치하는 학습 경로가 없습니다",
+    "search_placeholder": "학습 경로 검색...",
+    "clear_search": "검색 지우기",
+    "not_found": "이 학습 경로가 존재하지 않거나 이용할 수 없습니다.",
+    "back_to_paths": "학습 경로로 돌아가기",
+    "delete_path": "학습 경로 삭제",
+    "delete_path_title": "\"{{name}}\"을(를) 삭제하시겠습니까?",
+    "delete_path_confirm": "학습 경로와 학습자의 진도가 삭제됩니다. 코스 자체는 변경되지 않습니다.",
+    "levels": {
+      "all": "모든 수준",
+      "beginner": "초급",
+      "intermediate": "중급",
+      "advanced": "고급"
+    },
+    "form": {
+      "name": "이름",
+      "name_placeholder": "예: 데이터 분석가",
+      "name_required": "학습 경로 이름을 입력해 주세요",
+      "name_max_length": "이름은 200자 이하로 입력해 주세요",
+      "description": "간단한 설명",
+      "description_placeholder": "학습 경로 카드에 표시되는 한두 문장",
+      "description_max_length": "설명은 500자 이하로 입력해 주세요",
+      "about": "소개",
+      "about_placeholder": "이 학습 경로의 대상과 완료 후 학습자가 할 수 있게 되는 것",
+      "about_hint": "학습 경로 페이지에 표시됩니다.",
+      "level": "수준",
+      "thumbnail": "커버 이미지",
+      "upload_thumbnail": "이미지 업로드",
+      "thumbnail_hint": "16:9 비율을 권장합니다. PNG 또는 JPG.",
+      "discard_thumbnail": "새 이미지 취소",
+      "visibility": "공개 설정",
+      "published_hint": "학습자가 학습 경로를 찾아 시작할 수 있습니다.",
+      "public": "공개",
+      "public_hint": "조직 구성원이 아닌 방문자에게도 표시됩니다.",
+      "public_label": "구성원뿐 아니라 모든 사람에게 표시",
+      "save": "변경사항 저장"
+    },
+    "modals": {
+      "create": {
+        "title": "새 학습 경로",
+        "description": "코스를 묶어 단계별 학습 경로를 만드세요. 다음 단계에서 코스를 선택하고 순서를 정합니다.",
+        "submit": "학습 경로 만들기"
+      }
+    },
+    "dashboard": {
+      "subtitle": "코스를 순서대로 엮은 학습 경로로, 각각 전용 수료증이 있습니다.",
+      "view_path": "학습 경로 보기",
+      "tabs": {
+        "general": "일반",
+        "courses": "코스",
+        "certificate": "수료증",
+        "learners": "학습자"
+      },
+      "courses": {
+        "title": "코스",
+        "subtitle": "드래그하여 학습자가 따라갈 순서를 정하세요. 선택 코스는 필수가 아닌 코스입니다.",
+        "add": "코스 추가",
+        "drag": "드래그하여 순서 변경",
+        "remove": "학습 경로에서 제거",
+        "requirement": "이수 구분",
+        "unpublished_hint": "게시되지 않음, 학습자에게 숨겨짐",
+        "empty_title": "아직 코스가 없습니다",
+        "empty_description": "이 학습 경로를 구성할 코스를 추가하세요."
+      },
+      "rules": {
+        "title": "완료 조건",
+        "subtitle": "학습자가 학습 경로를 완료하려면 충족해야 하는 조건입니다.",
+        "sequential": "순서대로 학습",
+        "sequential_hint": "학습 경로 화면에서는 이전 필수 코스를 완료해야 다음 코스가 잠금 해제됩니다. 각 코스 페이지에서는 계속 수강할 수 있습니다.",
+        "electives": "완료해야 할 선택 코스 수",
+        "electives_hint_one": "이 학습 경로의 선택 코스 {{count}}개 중",
+        "electives_hint_other": "이 학습 경로의 선택 코스 {{count}}개 중",
+        "electives_none": "코스를 선택 코스로 지정하면 학습자가 고를 수 있습니다.",
+        "summary": "완료하려면 학습자는 필수 코스 {{required}}개와 선택 코스 {{electives}}개를 완료해야 합니다."
+      },
+      "picker": {
+        "title": "코스 추가",
+        "description": "선택한 코스는 고른 순서대로 추가됩니다.",
+        "search": "코스 검색...",
+        "empty": "더 추가할 코스가 없습니다",
+        "add_one": "코스 {{count}}개 추가",
+        "add_other": "코스 {{count}}개 추가"
+      },
+      "certificate": {
+        "title": "학습 경로 수료증",
+        "subtitle": "학습자가 학습 경로를 완료하면 코스 수료증과 별도로 수여됩니다.",
+        "disabled_title": "이 학습 경로에는 수료증이 없습니다",
+        "disabled_message": "켜면 학습 경로를 완료한 모든 학습자에게 수료증이 수여됩니다. 이미 완료한 학습자는 다음에 진도가 확인될 때 받게 됩니다.",
+        "enable": "수료증 수여"
+      },
+      "learners": {
+        "enrolled": "학습자",
+        "completed": "완료",
+        "completion_rate": "완료율",
+        "certificates": "수료증",
+        "empty_title": "아직 이 학습 경로를 시작한 사람이 없습니다",
+        "empty_description": "학습자가 학습 경로를 시작하면 여기에 표시됩니다.",
+        "columns": {
+          "learner": "학습자",
+          "progress": "진도",
+          "started": "시작일",
+          "status": "상태",
+          "certificate": "수료증"
+        },
+        "revoke": "철회",
+        "revoke_title": "수료증을 철회하시겠습니까?",
+        "revoke_confirm": "{{name}}님의 수료증은 더 이상 확인되지 않습니다. 나중에 복원할 수 있습니다.",
+        "revoked": "수료증이 철회되었습니다",
+        "revoked_badge": "철회됨",
+        "reinstate": "복원",
+        "reinstated": "수료증을 복원했습니다"
+      }
+    },
+    "toasts": {
+      "saving": "저장 중...",
+      "saved": "학습 경로가 저장되었습니다",
+      "save_error": "학습 경로를 저장하지 못했습니다",
+      "create_error": "학습 경로를 만들지 못했습니다",
+      "deleting": "학습 경로 삭제 중...",
+      "deleted": "학습 경로가 삭제되었습니다",
+      "delete_error": "학습 경로를 삭제하지 못했습니다",
+      "enroll_error": "학습 경로를 시작하지 못했습니다",
+      "already_completed": "이 학습 경로의 모든 코스를 이미 완료했습니다"
+    },
+    "my_paths": "내 학습 경로",
+    "part_of_paths": "이 코스가 포함된 학습 경로",
+    "path": "학습 경로",
+    "courses_in_path": "이 학습 경로의 코스",
+    "ready_to_begin": "시작할 준비가 되셨나요?",
+    "percent_done": "{{percent}}% 완료"
   }
 }
