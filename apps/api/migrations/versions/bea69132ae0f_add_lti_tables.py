@@ -1,7 +1,7 @@
 """Add LTI 1.3 tables
 
 Revision ID: bea69132ae0f
-Revises: e8f9a0b1c2d3
+Revises: 8d2b6f4c1e75
 Create Date: 2026-10-07 12:00:00.000000
 
 The models live in the enterprise overlay and are also created by
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'bea69132ae0f'
-down_revision: Union[str, None] = 'e8f9a0b1c2d3'
+down_revision: Union[str, None] = '8d2b6f4c1e75'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -80,10 +80,18 @@ def upgrade() -> None:
             sa.Column('sub', sa.String(), nullable=False),
             sa.Column('user_id', sa.Integer(), sa.ForeignKey('user.id', ondelete='CASCADE'), nullable=False),
             sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+            sa.Column('provisioned', sa.Boolean(), nullable=False, server_default=sa.false()),
+            sa.Column('confirmed', sa.Boolean(), nullable=False, server_default=sa.false()),
             sa.UniqueConstraint('platform_id', 'sub', name='uq_ltiuserlink_platform_sub'),
         )
         op.create_index('ix_ltiuserlink_platform_id', 'ltiuserlink', ['platform_id'])
         op.create_index('ix_ltiuserlink_user_id', 'ltiuserlink', ['user_id'])
+    else:
+        # Tables made by create_all before these columns existed.
+        cols = {c['name'] for c in sa.inspect(op.get_bind()).get_columns('ltiuserlink')}
+        for name in ('provisioned', 'confirmed'):
+            if name not in cols:
+                op.add_column('ltiuserlink', sa.Column(name, sa.Boolean(), nullable=False, server_default=sa.false()))
 
     if not _has('ltiresourcelink'):
         op.create_table(
