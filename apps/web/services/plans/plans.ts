@@ -23,7 +23,7 @@ export type PlanLevel = 'free' | 'personal' | 'personal-family' | 'standard' | '
 export const PLAN_HIERARCHY: PlanLevel[] = ['free', 'personal', 'personal-family', 'standard', 'pro', 'enterprise']
 
 // Features blocked in OSS mode; they require EE or SaaS/enterprise plan
-const OSS_BLOCKED_FEATURES = new Set(['sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm', 'lti'])
+const OSS_BLOCKED_FEATURES = new Set(['sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm', 'lti', 'live_sessions'])
 
 /**
  * Check if the current plan meets or exceeds the required plan level.
