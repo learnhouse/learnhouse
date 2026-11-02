@@ -584,15 +584,25 @@ async def _check_board_read(
         decision.via_usergroup is not True
         or await _board_has_linked_usergroup(board, db_session)
     ):
-        return True
+        return await _passes_board_paywall(request, board, current_user, db_session, raise_on_deny)
     if await _is_board_member(board, current_user, db_session):
-        return True
+        return await _passes_board_paywall(request, board, current_user, db_session, raise_on_deny)
     if raise_on_deny:
         raise HTTPException(
             status_code=403,
             detail=decision.reason if not decision.allowed else "This board is private to its members",
         )
     return False
+
+
+async def _passes_board_paywall(request, board: Board, current_user, db_session: AsyncSession, raise_on_deny: bool) -> bool:
+    """A board sold through an offer opens for its buyers (402 otherwise). Lists
+    (``raise_on_deny=False``) still show it, so people can find what to buy."""
+    if raise_on_deny:
+        from src.core.ee_hooks import require_ee_resource_paid_access
+
+        await require_ee_resource_paid_access(request, db_session, current_user, board.board_uuid)
+    return True
 
 
 async def _board_has_linked_usergroup(board: Board, db_session: AsyncSession) -> bool:

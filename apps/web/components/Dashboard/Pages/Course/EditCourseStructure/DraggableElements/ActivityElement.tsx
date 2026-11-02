@@ -466,6 +466,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                 addUserGroup={addActivityUserGroup}
                 removeUserGroup={removeActivityUserGroup}
                 resourceNoun="activity"
+                paid={{ courseUuid: props.course_uuid, resourceUuid: props.activity.activity_uuid, resourceName: props.activity.name }}
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
