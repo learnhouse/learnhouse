@@ -129,6 +129,15 @@ class TestRoutes:
         assert (await client.delete(f"/api/v1/paths/{uuid}")).status_code == 200
         assert (await client.get(f"/api/v1/paths/{uuid}")).status_code == 404
 
+    async def test_upload_thumbnail_route(self, client, db, org):
+        path = await _saved_path(db, org)
+        with patch("src.services.utils.upload_content.upload_file", new_callable=AsyncMock, return_value="cover.png"):
+            res = await client.put(
+                f"/api/v1/paths/{path.path_uuid}/thumbnail",
+                files={"thumbnail": ("cover.png", b"\x89PNG", "image/png")},
+            )
+        assert res.status_code == 200 and res.json()["thumbnail_image"] == "cover.png"
+
     async def test_certificate_routes_are_not_read_as_a_path(self, client, db, org, admin_user):
         path = await _saved_path(db, org)
         db.add(PathCertificate(path_id=path.id, user_id=admin_user.id, certificate_uuid="PATH-1", created_at="x"))

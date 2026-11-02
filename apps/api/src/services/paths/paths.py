@@ -693,7 +693,9 @@ async def enroll_in_path(
             await db_session.commit()
         except IntegrityError:
             # A double click raced us to it; the learner is enrolled either way.
+            # The rollback expires every loaded row, so reload the path.
             await db_session.rollback()
+            await db_session.refresh(path)
         else:
             try:
                 await dispatch_webhooks(
@@ -877,8 +879,11 @@ async def check_path_completion(
             await db_session.commit()
             certificate_uuid = certificate.certificate_uuid
         except IntegrityError:
-            # A concurrent completion check issued it first.
+            # A concurrent completion check issued it first. The rollback
+            # expires every loaded row, so reload the ones used below.
             await db_session.rollback()
+            await db_session.refresh(path)
+            await db_session.refresh(user)
             raced = (
                 await db_session.execute(
                     select(PathCertificate).where(

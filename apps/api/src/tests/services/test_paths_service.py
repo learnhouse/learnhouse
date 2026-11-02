@@ -470,3 +470,124 @@ class TestCompletion:
         ):
             await svc.check_paths_for_completed_course(None, regular_user.id, a.id, db)
         assert not (await db.execute(select(PathCertificate))).scalars().all()
+
+
+# ----------------------------------------------------------------------------
+# Edge cases: validation, API tokens, races and best-effort side effects
+# ----------------------------------------------------------------------------
+
+class TestEdgeCases:
+    async def test_api_tokens_author_only_in_their_org_with_the_right(self, db, org, other_org, admin_user):
+        from src.db.users import APITokenUser
+
+        writer = APITokenUser(org_id=org.id, created_by_user_id=admin_user.id, rights={"courses": {"action_create": True}})
+        assert (await svc.create_path(None, PathCreate(org_id=org.id, name="Via API"), writer, db)).name == "Via API"
+        for token in (
+            APITokenUser(org_id=other_org.id, rights={"courses": {"action_create": True}}),
+            APITokenUser(org_id=org.id, rights={"courses": {"action_read": True}}),
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await svc.create_path(None, PathCreate(org_id=org.id, name="x"), token, db)
+            assert exc.value.status_code == 403
+
+    async def test_validation(self, db, org, admin_user):
+        with pytest.raises(HTTPException) as exc:
+            await svc.create_path(None, PathCreate(org_id=org.id, name="x", electives_required=-1), admin_user, db)
+        assert exc.value.status_code == 400
+        read = await _path(db, org, admin_user, [])
+        with pytest.raises(HTTPException):
+            await svc.update_path(None, read.path_uuid, PathUpdate(name="   "), admin_user, db)
+        updated = await svc.update_path(
+            None, read.path_uuid, PathUpdate(name="  Renamed  ", description=None, certificate_config=None), admin_user, db
+        )
+        assert updated.name == "Renamed" and updated.description == "" and updated.certificate_config == {}
+        too_many = PathCoursesUpdate(courses=[PathCourseInput(course_uuid=f"course_{i}") for i in range(svc.MAX_PATH_COURSES + 1)])
+        with pytest.raises(HTTPException) as exc:
+            await svc.set_path_courses(None, read.path_uuid, too_many, admin_user, db)
+        assert exc.value.status_code == 400
+
+    async def test_upload_thumbnail(self, db, org, admin_user):
+        read = await _path(db, org, admin_user, [])
+        with patch("src.services.utils.upload_content.upload_file", new_callable=AsyncMock, return_value="thumbnail_1.png") as upload:
+            updated = await svc.upload_path_thumbnail(None, read.path_uuid, object(), admin_user, db)
+        assert updated.thumbnail_image == "thumbnail_1.png"
+        assert upload.await_args.kwargs["directory"] == f"paths/{read.path_uuid}/thumbnails"
+
+    async def test_paths_for_course_edge_cases(self, db, org, anonymous_user):
+        with pytest.raises(HTTPException) as exc:
+            await svc.get_paths_for_course(None, "course_missing", anonymous_user, db)
+        assert exc.value.status_code == 404
+        course = await _course(db, org, 1)
+        assert await svc.get_paths_for_course(None, course.course_uuid, anonymous_user, db) == []
+
+    async def test_draft_cannot_be_started(self, db, org, admin_user):
+        read = await _path(db, org, admin_user, [], published=False)
+        with pytest.raises(HTTPException) as exc:
+            await svc.enroll_in_path(None, read.path_uuid, admin_user, db)
+        assert exc.value.status_code == 400
+
+    async def test_double_enroll_race_is_harmless(self, db, org, admin_user, regular_user):
+        from sqlalchemy.exc import IntegrityError
+
+        read = await _path(db, org, admin_user, [])
+        real_commit = db.commit
+        calls = {"n": 0}
+
+        async def commit():
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise IntegrityError("insert", {}, Exception("duplicate"))
+            await real_commit()
+
+        with patch.object(db, "commit", side_effect=commit):
+            view = await svc.enroll_in_path(None, read.path_uuid, regular_user, db)
+        assert view.path_uuid == read.path_uuid
+
+    async def test_certificate_issue_race_is_harmless(self, db, org, admin_user, regular_user):
+        from sqlalchemy.exc import IntegrityError
+
+        a = await _course(db, org, 1)
+        read = await _path(db, org, admin_user, [(a, True)], certificate_enabled=True)
+        await svc.enroll_in_path(None, read.path_uuid, regular_user, db)
+        await _complete(db, org, a, regular_user.id)
+        path = (await db.execute(select(Path))).scalars().one()
+        real_commit = db.commit
+        calls = {"n": 0}
+
+        async def commit():
+            calls["n"] += 1
+            if calls["n"] == 2:  # the certificate insert, after the enrollment is marked done
+                raise IntegrityError("insert", {}, Exception("duplicate"))
+            await real_commit()
+
+        with patch.object(db, "commit", side_effect=commit):
+            assert await svc.check_path_completion(None, path, regular_user.id, db) is True
+
+    async def test_webhook_failures_never_break_learners(self, db, org, admin_user, regular_user, _no_webhooks):
+        _no_webhooks.side_effect = RuntimeError("webhook down")
+        a = await _course(db, org, 1)
+        await _complete(db, org, a, regular_user.id)
+        read = await _path(db, org, admin_user, [(a, True)], certificate_enabled=True)
+        view = await svc.enroll_in_path(None, read.path_uuid, regular_user, db)
+        assert view.progress.completed and view.progress.certificate_uuid
+
+    async def test_completion_check_is_best_effort(self, db, org, admin_user, regular_user):
+        a = await _course(db, org, 1)
+        read = await _path(db, org, admin_user, [(a, True)])
+        await svc.enroll_in_path(None, read.path_uuid, regular_user, db)
+        await _complete(db, org, a, regular_user.id)
+        with patch.object(svc, "check_path_completion", new_callable=AsyncMock, side_effect=RuntimeError("boom")):
+            await svc.check_paths_for_completed_course(None, regular_user.id, a.id, db)
+        path = (await db.execute(select(Path))).scalars().one()
+        assert await svc.check_path_completion(None, path, admin_user.id, db) is False  # not enrolled
+
+    async def test_internal_helpers_handle_empty_and_orphaned_input(self, db, org, admin_user, regular_user):
+        assert await svc._counts(db, []) == ({}, {})
+        read = await _path(db, org, admin_user, [])
+        path = (await db.execute(select(Path))).scalars().one()
+        progress = await svc._viewer_progress(db, path, [], regular_user.id)
+        assert progress.enrolled is False and progress.percent == 0
+        with pytest.raises(HTTPException) as exc:
+            await svc._certificate_payload(db, PathCertificate(path_id=9999, user_id=regular_user.id, certificate_uuid="x"))
+        assert exc.value.status_code == 404
+        assert read.path_uuid
