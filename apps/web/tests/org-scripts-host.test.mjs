@@ -34,6 +34,17 @@ describe("orgScriptsAllowed", () => {
     expect(orgScriptsAllowed(new Headers({ "x-lh-tenancy": "other" }))).toBe(false);
   });
 
+  test("a guessed tenancy never runs scripts", () => {
+    expect(
+      orgScriptsAllowed(new Headers({ "x-lh-tenancy": "single", "x-lh-instance-fallback": "1" })),
+    ).toBe(false);
+    expect(
+      orgScriptsAllowed(
+        new Headers({ "x-lh-tenancy": "multi", "x-lh-custom-domain": "learn.school.test", "x-lh-instance-fallback": "1" }),
+      ),
+    ).toBe(false);
+  });
+
   test("reads the current request's headers", async () => {
     requestHeaders = new Headers({ "x-lh-tenancy": "multi" });
     expect(await orgScriptsAllowedOnRequest()).toBe(false);
