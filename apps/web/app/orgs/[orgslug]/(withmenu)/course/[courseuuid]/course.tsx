@@ -18,6 +18,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
 import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
+import CoursePaths from '@components/Objects/Courses/CoursePaths/CoursePaths'
 import LinkifiedText from '@components/Objects/StyledElements/LinkifiedText/LinkifiedText'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -526,6 +527,8 @@ const CourseClient = (props: any) => {
               <div className='course_metadata_right w-full md:w-1/4 space-y-4'>
                 {/* Actions Box */}
                 <CoursesActions courseuuid={courseuuid} orgslug={orgslug} course={course} trailData={trailData} />
+
+                <CoursePaths courseUuid={course.course_uuid} orgslug={orgslug} />
                 
                 {/* Authors & Updates Box */}
                 <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">

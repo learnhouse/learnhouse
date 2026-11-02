@@ -138,6 +138,10 @@
         "drip": {
           "title": "Standard-functie",
           "description": "Gefaseerde inhoud is beschikbaar voor organisaties met een Standard-plan of hoger. Upgrade om hoofdstukken volgens een planning vrij te geven, per leerling of voor een heel cohort."
+        },
+        "paths": {
+          "title": "Pro Functie",
+          "description": "Leerpaden zijn een premiumfunctie die alleen beschikbaar is voor organisaties met ons Pro-abonnement of hoger. Upgrade om cursussen te bundelen in begeleide leertrajecten met hun eigen certificaat."
         }
       },
       "current_plan": "Huidig plan",
@@ -1070,7 +1074,45 @@
     "workshop_attendance": "Aanwezigheid bij workshop",
     "specialization": "Specialisatie",
     "dedication_message": "Je inzet en harde werk hebben hun vruchten afgeworpen. Je hebt alle inhoud van deze cursus onder de knie.",
-    "download_failed": "PDF genereren mislukt. Probeer het opnieuw."
+    "download_failed": "PDF genereren mislukt. Probeer het opnieuw.",
+    "document": {
+      "title": "Certificaat",
+      "presented_to": "Dit certificaat wordt uitgereikt aan",
+      "for_completing": "voor het succesvol afronden van",
+      "learner_placeholder": "Naam leerling",
+      "name_placeholder": "Naam certificering",
+      "instructor": "Instructeur",
+      "issued_by": "Uitgegeven door",
+      "date": "Datum van toekenning",
+      "credential_id": "Certificaat-ID"
+    },
+    "page": {
+      "verified": "Geverifieerd certificaat",
+      "issued_line": "Uitgegeven aan {{name}} door {{issuer}} op {{date}}",
+      "download": "PDF downloaden",
+      "add_to_linkedin": "Toevoegen aan LinkedIn",
+      "copy_link": "Verificatielink kopiëren",
+      "link_copied": "Link gekopieerd",
+      "recipient": "Ontvanger",
+      "issuer": "Uitgegeven door",
+      "issued_on": "Uitgegeven op",
+      "credential_id": "Certificaat-ID",
+      "id_copied": "Certificaat-ID gekopieerd",
+      "copy_id": "Certificaat-ID kopiëren",
+      "not_found": "Certificaat niet gevonden",
+      "not_found_hint": "Er is geen geldig certificaat met deze ID. Het is mogelijk ingetrokken, of de link is onvolledig.",
+      "go_home": "Naar de startpagina",
+      "earned_for_course": "Behaald voor het afronden van",
+      "earned_for_path": "Behaald voor het afronden van het leerpad {{name}}",
+      "view_and_share": "Bekijken en delen"
+    },
+    "designer": {
+      "signer": "Ondertekend door (optioneel)",
+      "signer_placeholder": "bijv. Dr. Jane Smith",
+      "style": "Stijl",
+      "preview_hint": "Live voorbeeld. Leerlingen zien hun eigen naam, de datum en de certificaat-ID."
+    },
+    "kind_course": "Cursus"
   },
   "search": {
     "search_placeholder": "Zoek cursussen, gebruikers, collecties...",
@@ -1099,6 +1141,14 @@
       "discussions": "Discussies",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcasts"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Begeleide leertrajecten door meerdere cursussen",
+          "keywords": "leerpaden, paden, paths, leertrajecten, programma's, traject"
+        }
+      }
     }
   },
   "ai": {
@@ -4160,6 +4210,10 @@
         "org_api": {
           "description": "API-tokens en programmatische toegang",
           "keywords": "api, tokens, toegang, programmatisch, sleutels"
+        },
+        "paths": {
+          "description": "Bundel cursussen in begeleide leerpaden met certificaten",
+          "keywords": "leerpaden, paden, paths, leertrajecten, programma's, curriculum, volgorde, certificaat"
         }
       }
     },
@@ -5850,5 +5904,174 @@
     "folder_count_one": "{{count}} map",
     "item_count": "{{count}} items",
     "item_count_one": "{{count}} item"
+  },
+  "paths": {
+    "title": "Leerpaden",
+    "new_path": "Nieuw leerpad",
+    "manage_paths": "Leerpaden beheren",
+    "catalog_subtitle": "Begeleide leertrajecten door meerdere cursussen. Rond een leerpad af om het certificaat te behalen.",
+    "published": "Gepubliceerd",
+    "draft": "Concept",
+    "completed": "Voltooid",
+    "in_progress": "Bezig",
+    "required": "Verplicht",
+    "elective": "Keuzecursus",
+    "actions": "Acties voor leerpad",
+    "edit_courses": "Cursussen bewerken",
+    "view_path": "Leerpad bekijken",
+    "view_certificate": "Certificaat bekijken",
+    "start_path": "Leerpad starten",
+    "start_hint": "Start het leerpad om je voortgang in alle cursussen ervan bij te houden.",
+    "sign_in_to_start": "Log in om te starten",
+    "continue_learning": "Verder leren",
+    "leave_path": "Leerpad verlaten",
+    "your_progress": "Je voortgang",
+    "up_next": "Hierna",
+    "guided_order": "Vaste volgorde",
+    "certificate_included": "Inclusief certificaat",
+    "certificate_earned": "Je hebt dit certificaat behaald",
+    "certificate_explainer": "Wordt automatisch toegekend zodra je alle verplichte cursussen van dit leerpad hebt voltooid.",
+    "locked_hint": "Rond de vorige cursus af om deze te ontgrendelen",
+    "restricted_course": "Afgeschermde cursus",
+    "no_courses_yet": "Dit leerpad bevat nog geen cursussen.",
+    "electives_rule_one": "Kies minstens {{count}} van de {{total}} keuzecursussen",
+    "electives_rule_other": "Kies minstens {{count}} van de {{total}} keuzecursussen",
+    "progress_short": "{{done}}/{{total}} cursussen",
+    "progress_long": "{{done}} van {{total}} cursussen voltooid",
+    "course_count_one": "{{count}} cursus",
+    "course_count_other": "{{count}} cursussen",
+    "learner_count_one": "{{count}} leerling",
+    "learner_count_other": "{{count}} leerlingen",
+    "no_paths": "Nog geen leerpaden",
+    "no_paths_description": "Bundel cursussen in een begeleid leertraject met een eigen certificaat.",
+    "no_public_paths": "Nog geen leerpaden",
+    "no_public_paths_description": "Leerpaden verschijnen hier zodra ze gepubliceerd zijn.",
+    "no_search_results": "Geen leerpaden gevonden voor je zoekopdracht",
+    "search_placeholder": "Leerpaden zoeken...",
+    "clear_search": "Zoekopdracht wissen",
+    "not_found": "Dit leerpad bestaat niet of is niet voor jou beschikbaar.",
+    "back_to_paths": "Terug naar leerpaden",
+    "delete_path": "Leerpad verwijderen",
+    "delete_path_title": "\"{{name}}\" verwijderen?",
+    "delete_path_confirm": "Het leerpad en de voortgang van de leerlingen worden verwijderd. De cursussen zelf blijven ongewijzigd.",
+    "levels": {
+      "all": "Alle niveaus",
+      "beginner": "Beginner",
+      "intermediate": "Gemiddeld",
+      "advanced": "Gevorderd"
+    },
+    "form": {
+      "name": "Naam",
+      "name_placeholder": "bijv. Data-analist",
+      "name_required": "Een leerpad heeft een naam nodig",
+      "name_max_length": "Houd de naam korter dan 200 tekens",
+      "description": "Korte beschrijving",
+      "description_placeholder": "Een of twee zinnen die op de kaart van het leerpad verschijnen",
+      "description_max_length": "Houd de beschrijving korter dan 500 tekens",
+      "about": "Over",
+      "about_placeholder": "Voor wie dit leerpad bedoeld is en wat leerlingen aan het eind kunnen",
+      "about_hint": "Wordt getoond op de pagina van het leerpad.",
+      "level": "Niveau",
+      "thumbnail": "Omslagafbeelding",
+      "upload_thumbnail": "Afbeelding uploaden",
+      "thumbnail_hint": "16:9 werkt het best. PNG of JPG.",
+      "discard_thumbnail": "Nieuwe afbeelding verwijderen",
+      "visibility": "Zichtbaarheid",
+      "published_hint": "Leerlingen kunnen het leerpad vinden en starten.",
+      "public": "Openbaar",
+      "public_hint": "Zichtbaar voor bezoekers die geen lid zijn van je organisatie.",
+      "public_label": "Zichtbaar voor iedereen, niet alleen voor leden",
+      "save": "Wijzigingen opslaan"
+    },
+    "modals": {
+      "create": {
+        "title": "Nieuw leerpad",
+        "description": "Bundel cursussen in een begeleid leertraject. Daarna kies je de cursussen en hun volgorde.",
+        "submit": "Leerpad maken"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Begeleide reeksen cursussen, elk met een eigen certificaat.",
+      "view_path": "Leerpad bekijken",
+      "tabs": {
+        "general": "Algemeen",
+        "courses": "Cursussen",
+        "certificate": "Certificaat",
+        "learners": "Leerlingen"
+      },
+      "courses": {
+        "title": "Cursussen",
+        "subtitle": "Sleep om de volgorde te bepalen die leerlingen volgen. Keuzecursussen zijn optioneel.",
+        "add": "Cursussen toevoegen",
+        "drag": "Sleep om de volgorde te wijzigen",
+        "remove": "Uit leerpad verwijderen",
+        "requirement": "Vereiste",
+        "unpublished_hint": "Niet gepubliceerd, verborgen voor leerlingen",
+        "empty_title": "Nog geen cursussen",
+        "empty_description": "Voeg de cursussen toe waaruit dit leerpad bestaat."
+      },
+      "rules": {
+        "title": "Voltooiingsregels",
+        "subtitle": "Wat een leerling moet doen om het leerpad af te ronden.",
+        "sequential": "Vaste volgorde",
+        "sequential_hint": "In de leerpadweergave wordt elke cursus ontgrendeld zodra de vorige verplichte cursus is afgerond. Op hun eigen pagina's blijven de cursussen toegankelijk.",
+        "electives": "Te voltooien keuzecursussen",
+        "electives_hint_one": "Van de {{count}} keuzecursus in dit leerpad.",
+        "electives_hint_other": "Van de {{count}} keuzecursussen in dit leerpad.",
+        "electives_none": "Markeer een cursus als keuzecursus zodat leerlingen kunnen kiezen.",
+        "summary": "Om af te ronden voltooien leerlingen {{required}} verplichte cursussen en {{electives}} keuzecursussen."
+      },
+      "picker": {
+        "title": "Cursussen toevoegen",
+        "description": "Geselecteerde cursussen worden toegevoegd in de volgorde waarin je ze kiest.",
+        "search": "Cursussen zoeken...",
+        "empty": "Geen cursussen meer om toe te voegen",
+        "add_one": "{{count}} cursus toevoegen",
+        "add_other": "{{count}} cursussen toevoegen"
+      },
+      "certificate": {
+        "title": "Certificaat van het leerpad",
+        "subtitle": "Wordt naast de cursuscertificaten toegekend wanneer een leerling het leerpad afrondt.",
+        "disabled_title": "Geen certificaat voor dit leerpad",
+        "disabled_message": "Schakel het in om iedereen die het leerpad afrondt een certificaat toe te kennen. Leerlingen die al klaar zijn, ontvangen het bij de volgende controle van hun voortgang.",
+        "enable": "Certificaat toekennen"
+      },
+      "learners": {
+        "enrolled": "Leerlingen",
+        "completed": "Voltooid",
+        "completion_rate": "Voltooiingspercentage",
+        "certificates": "Certificaten",
+        "empty_title": "Nog niemand is aan dit leerpad begonnen",
+        "empty_description": "Leerlingen verschijnen hier zodra ze het leerpad starten.",
+        "columns": {
+          "learner": "Leerling",
+          "progress": "Voortgang",
+          "started": "Gestart",
+          "status": "Status",
+          "certificate": "Certificaat"
+        },
+        "revoke": "Intrekken",
+        "revoke_title": "Certificaat intrekken?",
+        "revoke_confirm": "Het certificaat van {{name}} kan daarna niet meer worden geverifieerd. De leerling blijft in het leerpad en kan het opnieuw behalen.",
+        "revoked": "Certificaat ingetrokken"
+      }
+    },
+    "toasts": {
+      "saving": "Opslaan...",
+      "saved": "Leerpad opgeslagen",
+      "save_error": "Kan het leerpad niet opslaan",
+      "create_error": "Kan het leerpad niet maken",
+      "deleting": "Leerpad verwijderen...",
+      "deleted": "Leerpad verwijderd",
+      "delete_error": "Kan het leerpad niet verwijderen",
+      "enroll_error": "Kan het leerpad niet starten",
+      "already_completed": "Je hebt alle cursussen van dit leerpad al voltooid"
+    },
+    "my_paths": "Mijn leerpaden",
+    "part_of_paths": "Onderdeel van een leerpad",
+    "path": "Leerpad",
+    "courses_in_path": "Cursussen in dit leerpad",
+    "ready_to_begin": "Klaar om te beginnen?",
+    "percent_done": "{{percent}}% voltooid"
   }
 }

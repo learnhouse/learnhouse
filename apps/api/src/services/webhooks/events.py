@@ -112,6 +112,26 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "reason": "string",
         },
     },
+    "path_enrolled": {
+        "category": "Learning Progress",
+        "description": "Triggered when a user starts a learning path",
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "path": {"path_uuid": "string", "name": "string"},
+        },
+    },
+    "path_completed": {
+        "category": "Learning Progress",
+        "description": (
+            "Triggered when a user finishes every required course of a learning "
+            "path. Carries the path certificate when the path awards one"
+        ),
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "path": {"path_uuid": "string", "name": "string"},
+            "certificate": {"certificate_uuid": "string"},
+        },
+    },
     # ── User & access ────────────────────────────────────────────────
     "user_signed_up": {
         "category": "User & Access",

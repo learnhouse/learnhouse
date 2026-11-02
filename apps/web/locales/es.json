@@ -140,6 +140,10 @@
         "drip": {
           "title": "Función Standard",
           "description": "El contenido progresivo está disponible para organizaciones en nuestro plan Standard o superior. Actualiza para publicar capítulos según un calendario, por estudiante o para toda una cohorte."
+        },
+        "paths": {
+          "title": "Función Pro",
+          "description": "Las rutas de aprendizaje son una función premium disponible solo para organizaciones en nuestro plan Pro o superior. Actualiza para organizar cursos en itinerarios guiados con sus propios certificados."
         }
       },
       "current_plan": "Plan actual",
@@ -1070,7 +1074,45 @@
     "workshop_attendance": "Asistencia a taller",
     "specialization": "Especialización",
     "dedication_message": "Tu dedicación ha dado sus frutos. Has dominado todo el contenido de este curso.",
-    "download_failed": "No se pudo generar el PDF. Inténtalo de nuevo."
+    "download_failed": "No se pudo generar el PDF. Inténtalo de nuevo.",
+    "document": {
+      "title": "Certificado",
+      "presented_to": "Este certificado se otorga a",
+      "for_completing": "por completar con éxito",
+      "learner_placeholder": "Nombre del estudiante",
+      "name_placeholder": "Nombre de la certificación",
+      "instructor": "Instructor",
+      "issued_by": "Emitido por",
+      "date": "Fecha de emisión",
+      "credential_id": "ID del certificado"
+    },
+    "page": {
+      "verified": "Certificado verificado",
+      "issued_line": "Emitido a {{name}} por {{issuer}} el {{date}}",
+      "download": "Descargar PDF",
+      "add_to_linkedin": "Añadir a LinkedIn",
+      "copy_link": "Copiar enlace de verificación",
+      "link_copied": "Enlace copiado",
+      "recipient": "Destinatario",
+      "issuer": "Emitido por",
+      "issued_on": "Fecha de emisión",
+      "credential_id": "ID del certificado",
+      "id_copied": "ID del certificado copiado",
+      "copy_id": "Copiar ID del certificado",
+      "not_found": "Certificado no encontrado",
+      "not_found_hint": "Ningún certificado válido coincide con este ID. Es posible que se haya revocado o que el enlace esté incompleto.",
+      "go_home": "Ir al inicio",
+      "earned_for_course": "Obtenido por completar",
+      "earned_for_path": "Obtenido por completar la ruta {{name}}",
+      "view_and_share": "Ver y compartir"
+    },
+    "designer": {
+      "signer": "Firmado por (opcional)",
+      "signer_placeholder": "ej. Dra. Jane Smith",
+      "style": "Estilo",
+      "preview_hint": "Vista previa en directo. Cada estudiante verá su propio nombre, la fecha y el ID del certificado."
+    },
+    "kind_course": "Curso"
   },
   "search": {
     "search_placeholder": "Buscar cursos, usuarios, colecciones...",
@@ -1099,6 +1141,14 @@
       "discussions": "Discusiones",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcasts"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Itinerarios guiados a través de varios cursos",
+          "keywords": "rutas, rutas de aprendizaje, itinerarios, programas, recorrido, paths"
+        }
+      }
     }
   },
   "ai": {
@@ -4158,6 +4208,10 @@
         "org_api": {
           "description": "Tokens de API y acceso programático",
           "keywords": "api, tokens, acceso, programático, claves"
+        },
+        "paths": {
+          "description": "Organiza cursos en rutas guiadas con certificados",
+          "keywords": "rutas, rutas de aprendizaje, itinerarios, programas, plan de estudios, secuencia, certificado, paths"
         }
       }
     },
@@ -5848,5 +5902,174 @@
     "folder_count_one": "{{count}} carpeta",
     "item_count": "{{count}} elementos",
     "item_count_one": "{{count}} elemento"
+  },
+  "paths": {
+    "title": "Rutas",
+    "new_path": "Nueva ruta",
+    "manage_paths": "Gestionar rutas",
+    "catalog_subtitle": "Itinerarios guiados a través de varios cursos. Completa una ruta para obtener su certificado.",
+    "published": "Publicada",
+    "draft": "Borrador",
+    "completed": "Completada",
+    "in_progress": "En curso",
+    "required": "Obligatorio",
+    "elective": "Optativo",
+    "actions": "Acciones de la ruta",
+    "edit_courses": "Editar cursos",
+    "view_path": "Ver ruta",
+    "view_certificate": "Ver certificado",
+    "start_path": "Empezar ruta",
+    "start_hint": "Empieza la ruta para seguir tu progreso en todos sus cursos.",
+    "sign_in_to_start": "Inicia sesión para empezar",
+    "continue_learning": "Seguir aprendiendo",
+    "leave_path": "Abandonar ruta",
+    "your_progress": "Tu progreso",
+    "up_next": "A continuación",
+    "guided_order": "Orden guiado",
+    "certificate_included": "Incluye certificado",
+    "certificate_earned": "Has obtenido este certificado",
+    "certificate_explainer": "Se otorga automáticamente cuando completas todos los cursos obligatorios de esta ruta.",
+    "locked_hint": "Completa el curso anterior para desbloquearlo",
+    "restricted_course": "Curso restringido",
+    "no_courses_yet": "Esta ruta aún no tiene cursos.",
+    "electives_rule_one": "Elige al menos {{count}} de los {{total}} cursos optativos",
+    "electives_rule_other": "Elige al menos {{count}} de los {{total}} cursos optativos",
+    "progress_short": "{{done}}/{{total}} cursos",
+    "progress_long": "{{done}} de {{total}} cursos completados",
+    "course_count_one": "{{count}} curso",
+    "course_count_other": "{{count}} cursos",
+    "learner_count_one": "{{count}} estudiante",
+    "learner_count_other": "{{count}} estudiantes",
+    "no_paths": "Aún no hay rutas",
+    "no_paths_description": "Organiza cursos en un itinerario guiado con su propio certificado.",
+    "no_public_paths": "Aún no hay rutas",
+    "no_public_paths_description": "Las rutas de aprendizaje aparecerán aquí cuando se publiquen.",
+    "no_search_results": "Ninguna ruta coincide con tu búsqueda",
+    "search_placeholder": "Buscar rutas...",
+    "clear_search": "Borrar búsqueda",
+    "not_found": "Esta ruta no existe o no está disponible para ti.",
+    "back_to_paths": "Volver a las rutas",
+    "delete_path": "Eliminar ruta",
+    "delete_path_title": "¿Eliminar «{{name}}»?",
+    "delete_path_confirm": "Se eliminarán la ruta y el progreso de sus estudiantes. Los cursos no se modifican.",
+    "levels": {
+      "all": "Todos los niveles",
+      "beginner": "Principiante",
+      "intermediate": "Intermedio",
+      "advanced": "Avanzado"
+    },
+    "form": {
+      "name": "Nombre",
+      "name_placeholder": "ej. Analista de datos",
+      "name_required": "La ruta necesita un nombre",
+      "name_max_length": "El nombre debe tener menos de 200 caracteres",
+      "description": "Descripción breve",
+      "description_placeholder": "Una o dos frases que se muestran en la tarjeta de la ruta",
+      "description_max_length": "La descripción debe tener menos de 500 caracteres",
+      "about": "Acerca de",
+      "about_placeholder": "A quién va dirigida esta ruta y qué sabrán hacer los estudiantes al terminarla",
+      "about_hint": "Se muestra en la página de la ruta.",
+      "level": "Nivel",
+      "thumbnail": "Imagen de portada",
+      "upload_thumbnail": "Subir imagen",
+      "thumbnail_hint": "Lo ideal es 16:9. PNG o JPG.",
+      "discard_thumbnail": "Descartar nueva imagen",
+      "visibility": "Visibilidad",
+      "published_hint": "Los estudiantes pueden encontrar y empezar la ruta.",
+      "public": "Pública",
+      "public_hint": "Visible para visitantes que no son miembros de tu organización.",
+      "public_label": "Visible para todos, no solo para miembros",
+      "save": "Guardar cambios"
+    },
+    "modals": {
+      "create": {
+        "title": "Nueva ruta",
+        "description": "Agrupa cursos en un itinerario guiado. A continuación elegirás los cursos y su orden.",
+        "submit": "Crear ruta"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Secuencias guiadas de cursos, cada una con su propio certificado.",
+      "view_path": "Ver ruta",
+      "tabs": {
+        "general": "General",
+        "courses": "Cursos",
+        "certificate": "Certificado",
+        "learners": "Estudiantes"
+      },
+      "courses": {
+        "title": "Cursos",
+        "subtitle": "Arrastra para fijar el orden que siguen los estudiantes. Los cursos optativos no son obligatorios.",
+        "add": "Añadir cursos",
+        "drag": "Arrastra para reordenar",
+        "remove": "Quitar de la ruta",
+        "requirement": "Requisito",
+        "unpublished_hint": "Sin publicar, oculto para los estudiantes",
+        "empty_title": "Aún no hay cursos",
+        "empty_description": "Añade los cursos que forman esta ruta."
+      },
+      "rules": {
+        "title": "Reglas de finalización",
+        "subtitle": "Lo que un estudiante debe hacer para completar la ruta.",
+        "sequential": "Orden guiado",
+        "sequential_hint": "En la vista de la ruta, cada curso se desbloquea al terminar el curso obligatorio anterior. Los cursos siguen abiertos en sus propias páginas.",
+        "electives": "Cursos optativos a completar",
+        "electives_hint_one": "De {{count}} curso optativo en esta ruta.",
+        "electives_hint_other": "De {{count}} cursos optativos en esta ruta.",
+        "electives_none": "Marca un curso como optativo para que los estudiantes puedan elegir.",
+        "summary": "Para terminar, los estudiantes completan {{required}} cursos obligatorios y {{electives}} optativos."
+      },
+      "picker": {
+        "title": "Añadir cursos",
+        "description": "Los cursos seleccionados se añaden en el orden en que los eliges.",
+        "search": "Buscar cursos...",
+        "empty": "No quedan más cursos por añadir",
+        "add_one": "Añadir {{count}} curso",
+        "add_other": "Añadir {{count}} cursos"
+      },
+      "certificate": {
+        "title": "Certificado de la ruta",
+        "subtitle": "Se otorga además de los certificados de los cursos cuando un estudiante completa la ruta.",
+        "disabled_title": "Esta ruta no tiene certificado",
+        "disabled_message": "Actívalo para otorgar un certificado a todos los que completen la ruta. Quienes ya la hayan terminado lo recibirán la próxima vez que se compruebe su progreso.",
+        "enable": "Otorgar un certificado"
+      },
+      "learners": {
+        "enrolled": "Estudiantes",
+        "completed": "Completada",
+        "completion_rate": "Tasa de finalización",
+        "certificates": "Certificados",
+        "empty_title": "Nadie ha empezado esta ruta todavía",
+        "empty_description": "Los estudiantes aparecerán aquí cuando empiecen la ruta.",
+        "columns": {
+          "learner": "Estudiante",
+          "progress": "Progreso",
+          "started": "Inicio",
+          "status": "Estado",
+          "certificate": "Certificado"
+        },
+        "revoke": "Revocar",
+        "revoke_title": "¿Revocar el certificado?",
+        "revoke_confirm": "El certificado de {{name}} dejará de poder verificarse. Seguirá en la ruta y podrá obtenerlo de nuevo.",
+        "revoked": "Certificado revocado"
+      }
+    },
+    "toasts": {
+      "saving": "Guardando...",
+      "saved": "Ruta guardada",
+      "save_error": "No se pudo guardar la ruta",
+      "create_error": "No se pudo crear la ruta",
+      "deleting": "Eliminando ruta...",
+      "deleted": "Ruta eliminada",
+      "delete_error": "No se pudo eliminar la ruta",
+      "enroll_error": "No se pudo empezar la ruta",
+      "already_completed": "Ya has completado todos los cursos de esta ruta"
+    },
+    "my_paths": "Mis rutas",
+    "part_of_paths": "Parte de una ruta",
+    "path": "Ruta",
+    "courses_in_path": "Cursos de esta ruta",
+    "ready_to_begin": "¿Listo para empezar?",
+    "percent_done": "{{percent}} % completado"
   }
 }
