@@ -1049,7 +1049,7 @@ function ActivityClient(props: ActivityClientProps) {
                                   </span>
                                   <span className="mx-1">•</span>
                                   <span>
-                                    {t('courses.last_updated')} {getRelativeTime(new Date(course.updated_at || course.last_updated || course.creation_date))}
+                                    {t('courses.last_updated')} {getRelativeTime(new Date(course.update_date || course.creation_date))}
                                   </span>
                                 </div>
                               </div>
