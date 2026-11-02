@@ -12,6 +12,7 @@ class ActivityTypeEnum(str, Enum):
     TYPE_ASSIGNMENT = "TYPE_ASSIGNMENT"
     TYPE_CUSTOM = "TYPE_CUSTOM"
     TYPE_SCORM = "TYPE_SCORM"
+    TYPE_LIVE_SESSION = "TYPE_LIVE_SESSION"
 
 
 class ActivitySubTypeEnum(str, Enum):
@@ -33,6 +34,8 @@ class ActivitySubTypeEnum(str, Enum):
     # SCORM
     SUBTYPE_SCORM_12 = "SUBTYPE_SCORM_12"
     SUBTYPE_SCORM_2004 = "SUBTYPE_SCORM_2004"
+    # Live session
+    SUBTYPE_LIVE_SESSION = "SUBTYPE_LIVE_SESSION"
 
 
 class ActivityLockType(str, Enum):

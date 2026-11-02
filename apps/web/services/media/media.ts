@@ -376,3 +376,7 @@ export function getPodcastAudioStreamUrl(
 ) {
   return `${getApiUrl()}api/v1/stream/audio/${orgUUID}/${podcastUUID}/${episodeUUID}/${filename}`
 }
+
+export function getLiveRecordingMediaUrl(contentPath: string) {
+  return `${getMediaUrl()}content/${contentPath}`
+}

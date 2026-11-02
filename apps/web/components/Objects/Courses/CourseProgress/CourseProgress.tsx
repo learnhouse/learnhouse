@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Check, Square, ArrowRight, Folder, FileText, Video, Layers, BookOpenCheck, Package, Puzzle, Globe } from 'lucide-react'
+import { Check, Square, ArrowRight, Folder, FileText, Video, Layers, BookOpenCheck, Package, Puzzle, Globe, Radio } from 'lucide-react'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
@@ -62,6 +62,8 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
         return <BookOpenCheck size={16} className="text-gray-400" />
       case 'TYPE_SCORM':
         return <Package size={16} className="text-gray-400" />
+      case 'TYPE_LIVE_SESSION':
+        return <Radio size={16} className="text-gray-400" />
       case 'TYPE_CUSTOM':
         return <Puzzle size={16} className="text-gray-400" />
       default:

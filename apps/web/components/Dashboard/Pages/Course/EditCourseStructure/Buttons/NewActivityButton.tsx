@@ -78,6 +78,14 @@ function NewActivityButton(props: NewActivityButtonProps) {
     router.refresh()
   }
 
+  // Live sessions create their own activity server side; just refresh.
+  const onLiveSessionCreated = async () => {
+    track(AnalyticsEvent.ActivityCreated, { activity_type: 'TYPE_LIVE_SESSION' })
+    setNewActivityModal(false)
+    toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))
+    await refreshStructure()
+  }
+
   // Submit File Upload
   const submitFileActivity = async (
     file: any,
@@ -206,6 +214,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
             submitFileActivity={submitFileActivity}
             submitExternalVideo={submitExternalVideo}
             submitActivity={submitActivity}
+            onLiveSessionCreated={onLiveSessionCreated}
             chapterId={props.chapterId}
             course={course}
             orgslug={props.orgslug}

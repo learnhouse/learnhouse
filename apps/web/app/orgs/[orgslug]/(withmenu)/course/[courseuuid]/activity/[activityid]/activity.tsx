@@ -70,6 +70,7 @@ const ScormActivity = lazy(() => import('@ee/components/Activities/ScormActivity
 const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
 const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
 const ResourceActivity = lazy(() => import('@components/Objects/Activities/Resource/ResourceActivity'))
+const LiveSessionActivity = lazy(() => import('@ee/components/LiveSessions/LiveSessionActivity'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -378,6 +379,12 @@ function ActivityClient(props: ActivityClientProps) {
             <ScormActivity course={course} activity={activity} />
           </Suspense>
         );
+      case 'TYPE_LIVE_SESSION':
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <LiveSessionActivity activity={activity} orgslug={orgslug} />
+          </Suspense>
+        );
       default:
         return null;
     }
@@ -526,8 +533,8 @@ function ActivityClient(props: ActivityClientProps) {
       setBgColor(isFocusMode ? 'bg-white' : 'bg-white nice-shadow');
       getAssignmentUI();
     }
-    else if (activity.activity_type == 'TYPE_VIDEO') {
-      // The player is the whole surface; no dark card around it.
+    else if (activity.activity_type == 'TYPE_VIDEO' || activity.activity_type == 'TYPE_LIVE_SESSION') {
+      // The player (or the session card) is the whole surface; no dark card around it.
       setBgColor('');
     }
     else {
@@ -803,7 +810,7 @@ function ActivityClient(props: ActivityClientProps) {
                               initial={isInitialRender.current ? false : { scale: 0.95, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
                               transition={{ delay: 0.3 }}
-                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? '' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
+                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : (activity.activity_type === 'TYPE_VIDEO' || activity.activity_type === 'TYPE_LIVE_SESSION') ? '' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
                             >
                               {/* Activity Types */}
                               <div className={activity.activity_type === 'TYPE_SCORM' ? 'overflow-hidden' : ''}>
@@ -1117,7 +1124,7 @@ function ActivityClient(props: ActivityClientProps) {
                               </button>
                             )}
                             <div className="flex gap-6">
-                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? '' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
+                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : (activity.activity_type === 'TYPE_VIDEO' || activity.activity_type === 'TYPE_LIVE_SESSION') ? '' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
                                 {activity.activity_type !== 'TYPE_VIDEO' && (
                                 <button
                                   onClick={() => setIsFocusMode(true)}
