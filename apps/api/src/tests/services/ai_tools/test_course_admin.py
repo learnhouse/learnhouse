@@ -41,9 +41,10 @@ def registry():
 @pytest.fixture(autouse=True)
 def quiet_services():
     """Keep analytics, webhooks, audit rows and links local; run the plan gate
-    as on the cloud, with the org on Pro."""
+    as on the cloud (SaaS mode), with the org on Pro."""
     hooks = AsyncMock()
     with patch(f"{PLAN}._check_mode_bypass", return_value=None), \
+            patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"), \
             patch(f"{PLAN}.get_org_plan", new=AsyncMock(return_value="pro")), \
             patch(f"{CERTS}.track", new=AsyncMock()), \
             patch(f"{CERTS}.dispatch_webhooks", new=hooks), \

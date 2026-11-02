@@ -397,7 +397,8 @@ async def test_report_audit_sections_need_admin_and_pro(registry, db, org, admin
                         {"include": ["timeline", "engagement", "code"]}))
     assert set(out["unavailable"]) == {"timeline", "engagement"} and "code_exercises" in out
     with patch("src.routers.audit.get_org_plan", new=AsyncMock(return_value="free")), \
-            patch("src.security.features_utils.plan_check._check_mode_bypass", return_value=None):
+            patch("src.security.features_utils.plan_check._check_mode_bypass", return_value=None), \
+            patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"):
         out = ok(await call(registry, ctx_for(db, org, admin_user), "get_learner_progress",
                             {"user_uuid": "user_regular", "include": ["engagement"]}))
     assert "Pro plan" in out["unavailable"]["engagement"]
