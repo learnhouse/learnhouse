@@ -32,6 +32,9 @@ class Chapter(ChapterBase, table=True):
     creation_date: str = ""
     update_date: str = ""
     extra_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
+    # Release rule when the course has drip content on (see db/courses/drip.py).
+    # Only written through the course drip schedule endpoint.
+    drip_rule: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
 
 
 class ChapterCreate(ChapterBase):
@@ -60,6 +63,13 @@ class ChapterRead(ChapterBase):
     # content (and, by cascade, its activities). Metadata (name, thumbnail) is still
     # returned so TOC navigation still renders a lock placeholder.
     is_locked: bool = False
+    drip_rule: Optional[dict] = None
+    # Computed per-request when the course drips its content: whether the
+    # chapter is still waiting for its release, when it opens (ISO 8601, None
+    # when it depends on something other than time) and why it is held back.
+    drip_locked: bool = False
+    drip_unlock_at: Optional[str] = None
+    drip_reason: Optional[str] = None
     pass
 
 

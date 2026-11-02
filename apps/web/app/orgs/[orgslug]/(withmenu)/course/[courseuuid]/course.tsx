@@ -32,6 +32,7 @@ import { JsonLd } from '@components/SEO/JsonLd'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
+import DripBadge, { DripIcon, useDripLabel } from '@components/Objects/Courses/DripBadge'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -63,6 +64,9 @@ const CourseClient = (props: any) => {
 
   // Keyboard: `e` opens every chapter, or folds them all once they are open.
   const chapters: any[] = course?.chapters ?? []
+  const dripLabel = useDripLabel()
+  // First chapter the drip schedule still holds back, for the "next up" banner.
+  const nextDrip = chapters.find((chapter: any) => chapter.drip_locked)
   const allChaptersExpanded = chapters.length > 0 && chapters.every(
     (chapter: any, idx: number) => expandedChapters[chapter.chapter_uuid] ?? idx === 0,
   )
@@ -571,6 +575,28 @@ const CourseClient = (props: any) => {
                   </button>
                 )}
               </div>
+              {nextDrip && (
+                <div
+                  data-testid="drip-banner"
+                  className="mb-3 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-800"
+                >
+                  <div className="w-8 h-8 rounded-md bg-white border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                    <DripIcon reason={nextDrip.drip_reason} size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-semibold">
+                      {t('course.drip.banner_title', 'New chapters are released over time')}
+                    </div>
+                    <div className="text-amber-700/90 truncate">
+                      {t('course.drip.banner_next', {
+                        defaultValue: 'Next up: {{name}}. {{when}}',
+                        name: nextDrip.name,
+                        when: [dripLabel(nextDrip).label, dripLabel(nextDrip).detail].filter(Boolean).join(' · '),
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
                 {(course.chapters ?? []).map((chapter: any, idx: number) => {
                   const isExpanded = expandedChapters[chapter.chapter_uuid] ?? (idx === 0); // Default to expanded for first chapter
@@ -602,7 +628,9 @@ const CourseClient = (props: any) => {
                               {idx + 1}
                             </span>
                             <h3 className="text-lg font-bold leading-tight truncate min-w-0 sm:text-base md:text-lg" style={{lineHeight: '1.2'}}>{chapter.name}</h3>
-                            {chapter.is_locked && (
+                            {chapter.drip_locked ? (
+                              <DripBadge className="ms-2" drip_reason={chapter.drip_reason} drip_unlock_at={chapter.drip_unlock_at} />
+                            ) : chapter.is_locked && (
                               <span className="ms-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-semibold">
                                 <Lock size={10} />
                                 {t('course.locked', 'Locked')}
@@ -619,10 +647,15 @@ const CourseClient = (props: any) => {
                         <div className="">
                           {chapter.activities.map((activity: any) => {
                             const locked = !!activity.is_locked
+                            const dripped = locked && !!chapter.drip_locked
                             const RowInner = (
                               <div className="flex space-x-3 items-center">
                                 <div className="flex items-center">
-                                  {locked ? (
+                                  {dripped ? (
+                                    <div className="text-amber-500">
+                                      <DripIcon reason={chapter.drip_reason} size={14} />
+                                    </div>
+                                  ) : locked ? (
                                     <div className="text-rose-400">
                                       <Lock size={14} className="stroke-[2]" />
                                     </div>
@@ -640,7 +673,7 @@ const CourseClient = (props: any) => {
                                 <div className="flex flex-col grow">
                                   <div className="flex items-center space-x-2 w-full">
                                     <p className={`font-semibold transition-colors ${locked ? 'text-neutral-400' : 'text-neutral-600 group-hover:text-neutral-800'}`}>{activity.name}</p>
-                                    {locked && (
+                                    {locked && !dripped && (
                                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-semibold">
                                         <Lock size={10} />
                                         {t('course.locked', 'Locked')}
@@ -668,7 +701,9 @@ const CourseClient = (props: any) => {
                                 <div
                                   key={activity.activity_uuid}
                                   className="block activity-container px-4 py-4 cursor-not-allowed select-none"
-                                  title={t('course.activity_locked_hint', 'Sign in or join the right user group to unlock this.')}
+                                  title={dripped
+                                    ? dripLabel(chapter).label
+                                    : t('course.activity_locked_hint', 'Sign in or join the right user group to unlock this.')}
                                 >
                                   {RowInner}
                                 </div>
