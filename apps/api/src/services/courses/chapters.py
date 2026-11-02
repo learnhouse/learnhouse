@@ -19,7 +19,11 @@ from src.db.courses.chapters import (
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from fastapi import HTTPException, status, Request
-from src.core.ee_hooks import check_ee_activity_paid_access, notify_ee_course_content_changed
+from src.core.ee_hooks import (
+    check_ee_activity_paid_access,
+    get_ee_paid_locked_activity_ids,
+    notify_ee_course_content_changed,
+)
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.drip import apply_drip_to_chapters
@@ -460,15 +464,20 @@ async def _apply_locks_to_chapters(
     if admin:
         return
 
-    # Paywall: the tree carries activity content, so a paid course must not
-    # hand it to someone who hasn't bought it. Paid access is per course (the
-    # EE check resolves any activity to its course and lets authors through).
-    first_activity = next((a for c in chapters for a in c.activities), None)
-    if first_activity is not None and not await check_ee_activity_paid_access(
-        request, first_activity.id, current_user, db_session
-    ):
-        for chapter in chapters:
-            for activity in chapter.activities:
+    # Paywall: the tree carries activity content, so sold lessons must not be
+    # handed to someone who hasn't bought them. A course, a chapter or a single
+    # lesson can be sold, and some lessons can be free previews; EE says which
+    # lessons stay locked (and lets authors and admins through).
+    locked_ids = await get_ee_paid_locked_activity_ids(request, course.id, current_user, db_session)
+    if locked_ids is None:
+        first_activity = next((a for c in chapters for a in c.activities), None)
+        locked_all = first_activity is not None and not await check_ee_activity_paid_access(
+            request, first_activity.id, current_user, db_session
+        )
+        locked_ids = {a.id for c in chapters for a in c.activities} if locked_all else set()
+    for chapter in chapters:
+        for activity in chapter.activities:
+            if activity.id in locked_ids:
                 activity.content = {"paid_access": False}
                 activity.details = None
 

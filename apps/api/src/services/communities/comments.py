@@ -5,6 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
+from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserReadAuthor
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
@@ -91,6 +92,7 @@ async def create_comment(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     author_id = await require_community_participant(current_user, community, db_session)
 
@@ -169,6 +171,7 @@ async def get_comments_by_discussion(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     offset = (page - 1) * limit
 
@@ -391,6 +394,7 @@ async def get_comment_count(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     from sqlalchemy import func
     count_statement = select(func.count(DiscussionComment.id)).where(
