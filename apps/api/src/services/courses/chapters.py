@@ -22,6 +22,7 @@ from fastapi import HTTPException, status, Request
 from src.core.ee_hooks import check_ee_activity_paid_access, get_ee_paid_locked_activity_ids
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import enqueue_course, index_course
+from src.services.courses.drip import apply_drip_to_chapters
 from src.services.courses.locks import (
     batch_accessible_restricted_uuids,
     is_locked_for_user,
@@ -528,6 +529,10 @@ async def _apply_locks_to_chapters(
             if activity_locked:
                 activity.content = {}
                 activity.details = None
+
+    # Drip content: chapters not released yet for this reader are held back
+    # the same way, on top of the locks above.
+    await apply_drip_to_chapters(chapters, course, current_user, db_session, request)
 
     await _render_dynamic_chapter_content(chapters, course, current_user, db_session, request)
 

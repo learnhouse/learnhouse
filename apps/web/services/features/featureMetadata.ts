@@ -17,6 +17,7 @@ import {
   ChatsCircle,
   Certificate,
   Cube,
+  CalendarDots,
   CreditCard,
   FolderSimple,
   Globe,
@@ -54,6 +55,7 @@ export type FeatureKey =
   | 'sso'
   | 'scorm'
   | 'seo'
+  | 'drip'
   // Features that are never plan-gated but can be admin-toggled off. Listed
   // here so FeatureGate can render the disabled card with the right icon.
   | 'courses'
@@ -183,6 +185,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.seo.title',
     descriptionKey: 'common.plans.feature_restricted.seo.description',
     Icon: Globe,
+    upsellPlan: 'standard',
+  },
+  drip: {
+    titleKey: 'common.plans.feature_restricted.drip.title',
+    descriptionKey: 'common.plans.feature_restricted.drip.description',
+    Icon: CalendarDots,
     upsellPlan: 'standard',
   },
   // Non-plan-gated; upsellPlan kept at 'free' so the upgrade card never fires.

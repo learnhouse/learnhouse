@@ -107,3 +107,7 @@ class ActivityRead(ActivityBase):
     last_modified_by_username: Optional[str] = None
     # Computed per-request: true if current user cannot access this activity.
     is_locked: bool = False
+    # Set when the lock comes from the course's drip schedule (see
+    # services/courses/drip.py): when the parent chapter opens and why it waits.
+    drip_unlock_at: Optional[str] = None
+    drip_reason: Optional[str] = None

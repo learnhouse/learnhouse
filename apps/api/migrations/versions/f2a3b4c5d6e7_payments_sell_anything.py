@@ -9,7 +9,7 @@ group are linked to the offers directly, since the dashboard now edits an
 offer's content in one place.
 
 Revision ID: f2a3b4c5d6e7
-Revises: 8d2b6f4c1e75
+Revises: dae02f36bef2
 Create Date: 2026-11-02 00:00:00.000000
 """
 from datetime import datetime
@@ -20,7 +20,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = 'f2a3b4c5d6e7'
-down_revision: Union[str, None] = '8d2b6f4c1e75'
+down_revision: Union[str, None] = 'dae02f36bef2'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -136,6 +136,10 @@
         "api_access": {
           "title": "Fonctionnalité Pro",
           "description": "L'accès API est une fonctionnalité premium disponible uniquement pour les organisations du plan Pro ou supérieur. Passez à l'abonnement supérieur pour accéder par programmation aux données de votre organisation."
+        },
+        "drip": {
+          "title": "Fonctionnalité Standard",
+          "description": "Le contenu progressif est disponible pour les organisations avec un plan Standard ou supérieur. Passez à un plan supérieur pour publier les chapitres selon un calendrier, par apprenant ou pour toute une cohorte."
         }
       },
       "current_plan": "Plan actuel",
@@ -1621,7 +1625,8 @@
           "contributors": "Contributeurs",
           "certification": "Certification",
           "analytics": "Analyses",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "Planification"
         },
         "access_denied": {
           "title": "Accès refusé",
@@ -2186,7 +2191,11 @@
           "partial_error": "{{failed}} activités sur {{total}} n'ont pas pu être mises à jour"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Nom du chapitre"
+          "chapter_name_placeholder": "Nom du chapitre",
+          "drip_tooltip": "Calendrier de publication : modifiez-le dans l'onglet Planification",
+          "drip_day_one": "Jour {{count}}",
+          "drip_day": "Jour {{count}}",
+          "drip_now": "Jour 0"
         },
         "activity": {
           "name_placeholder": "Nom de l'activité",
@@ -2337,6 +2346,87 @@
           "title_max_length": "Le titre SEO doit comporter 70 caractères ou moins",
           "twitter_description_max_length": "La description Twitter doit comporter 200 caractères ou moins",
           "twitter_title_max_length": "Le titre Twitter doit comporter 70 caractères ou moins"
+        }
+      },
+      "schedule": {
+        "title": "Contenu progressif",
+        "description": "Publiez les chapitres au fil du temps plutôt que tous en même temps. Les apprenants voient ce qui arrive ensuite et quand cela s'ouvre.",
+        "on": "Activé",
+        "off": "Désactivé",
+        "anchor": {
+          "title": "Quand le calendrier commence-t-il ?",
+          "enrollment": "À l'inscription de chaque apprenant",
+          "enrollment_description": "Chacun suit son propre calendrier. Idéal pour les cours permanents suivis en autonomie.",
+          "fixed_date": "À une date de début fixe",
+          "fixed_date_description": "Une seule date pour toute la cohorte. Idéal pour les lancements en direct et les bootcamps.",
+          "start_date": "La cohorte commence le"
+        },
+        "chapters": {
+          "title": "Plan de publication",
+          "preview_enrollment": "Dates affichées pour une personne qui s'inscrit aujourd'hui.",
+          "preview_cohort": "Dates affichées pour la cohorte.",
+          "empty": "Ajoutez des chapitres à ce cours pour les planifier."
+        },
+        "interval": {
+          "label": "Un chapitre tous les",
+          "amount": "Intervalle",
+          "unit": "Unité",
+          "days": "jours",
+          "weeks": "semaines",
+          "apply": "Appliquer"
+        },
+        "mode": {
+          "immediate": "Immédiatement",
+          "delay": "Après un délai",
+          "date": "À une date",
+          "delay_days": "Jours",
+          "days_after_enrollment": "jours après l'inscription",
+          "days_after_start": "jours après la date de début",
+          "release_at": "Date de publication"
+        },
+        "require_previous": "Uniquement après avoir terminé le chapitre précédent",
+        "errors": {
+          "start_date": "Choisissez la date de début de la cohorte.",
+          "release_at": "Choisissez une date de publication pour « {{name}} »."
+        },
+        "toasts": {
+          "save_success": "Calendrier enregistré",
+          "save_error": "Impossible d'enregistrer le calendrier"
+        },
+        "unsaved": "Modifications non enregistrées",
+        "saved": "Toutes les modifications sont enregistrées",
+        "save": "Enregistrer le calendrier",
+        "early_access": {
+          "title": "Accès anticipé",
+          "description": "Les membres de ces groupes d'utilisateurs accèdent immédiatement à tous les chapitres : équipe, bêta-testeurs, offre premium.",
+          "empty": "Aucun groupe d'utilisateurs pour l'instant."
+        },
+        "notify": {
+          "title": "Prévenir les apprenants par e-mail à l'ouverture d'un chapitre",
+          "description": "Les apprenants inscrits reçoivent un court e-mail avec un lien vers le cours dès qu'un chapitre planifié s'ouvre pour eux."
+        },
+        "preview": {
+          "label": "Prévisualiser la vue d'un apprenant à n'importe quel jour",
+          "day_one": "Jour {{count}} après l'inscription",
+          "day": "Jour {{count}} après l'inscription",
+          "slider": "Jour prévisualisé",
+          "clear": "Effacer",
+          "open": "Ouvert",
+          "upcoming_one": "S'ouvre au jour {{count}}",
+          "upcoming": "S'ouvre au jour {{count}}",
+          "closed": "Fermé",
+          "dated": "Date fixe"
+        },
+        "more": {
+          "label": "Plus de conditions",
+          "count_one": "{{count}} autre condition",
+          "count": "{{count}} autres conditions",
+          "requires": "Nécessite d'avoir terminé ces chapitres",
+          "no_earlier": "C'est le premier chapitre.",
+          "closes": "Le refermer ensuite",
+          "closes_days": "Jours d'ouverture",
+          "closes_after": "jours après son ouverture",
+          "closes_hint": "Pour du contenu à durée limitée, comme un replay ou un bonus de la semaine en direct."
         }
       }
     },
@@ -5364,7 +5454,31 @@
     "backToCourses": "Retour aux cours",
     "loadError": "Ce cours est introuvable ou une erreur est survenue lors de son chargement.",
     "noPermission": "Vous n'avez pas la permission de voir ce cours.",
-    "finish_course": "Terminer le cours"
+    "finish_course": "Terminer le cours",
+    "drip": {
+      "opens_on_enroll": "S'ouvre quand vous commencez le cours",
+      "opens_after_previous": "S'ouvre après le chapitre précédent",
+      "opens_on": "S'ouvre le {{date}}",
+      "in_days_one": "dans {{count}} jour",
+      "in_days": "dans {{count}} jours",
+      "in_hours_one": "dans {{count}} heure",
+      "in_hours": "dans {{count}} heures",
+      "soon": "dans moins d'une heure",
+      "coming_soon": "Bientôt disponible",
+      "banner_title": "Les nouveaux chapitres sont publiés au fil du temps",
+      "banner_next": "À suivre : {{name}}. {{when}}",
+      "gate_enrollment": "Ce cours publie ses chapitres au fil du temps, à partir du moment où vous le commencez. Commencez-le depuis la page du cours pour débloquer votre calendrier.",
+      "gate_previous": "Terminez toutes les activités du chapitre précédent et celui-ci s'ouvrira immédiatement.",
+      "gate_schedule": "Ce cours publie ses chapitres au fil du temps. Revenez quand celui-ci sera ouvert.",
+      "opens_after_required": "S'ouvre après les chapitres requis",
+      "closed": "Plus disponible",
+      "closed_on": "fermé le {{date}}",
+      "open_until": "Ouvert jusqu'au {{date}}",
+      "gate_prerequisites": "Terminez les chapitres sur lesquels celui-ci s'appuie et il s'ouvrira immédiatement.",
+      "gate_closed": "Ce chapitre était disponible pour une durée limitée, et cette période est terminée.",
+      "add_to_calendar": "Ajouter au calendrier",
+      "calendar_event": "Ouverture de {{chapter}} · {{course}}"
+    }
   },
   "pagination": {
     "next": "Suivant",

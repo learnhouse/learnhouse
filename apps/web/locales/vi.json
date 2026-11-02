@@ -134,6 +134,10 @@
         "api_access": {
           "title": "Tính năng Pro",
           "description": "API Access là một tính năng cao cấp chỉ dành cho các tổ chức trên gói Pro hoặc cao hơn. Nâng cấp để mở khóa truy cập theo chương trình vào dữ liệu của tổ chức bạn."
+        },
+        "drip": {
+          "title": "Tính năng Standard",
+          "description": "Phát hành theo lịch chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để mở các chương theo lịch, cho từng học viên hoặc cho cả lớp."
         }
       },
       "current_plan": "Gói hiện tại",
@@ -1627,7 +1631,8 @@
           "contributors": "Người đóng góp",
           "certification": "Chứng nhận",
           "analytics": "Phân tích",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "Lịch"
         },
         "access_denied": {
           "title": "Truy cập bị từ chối",
@@ -2192,7 +2197,11 @@
           "partial_error": "{{failed}} trong {{total}} hoạt động không thể cập nhật"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Tên chương"
+          "chapter_name_placeholder": "Tên chương",
+          "drip_tooltip": "Lịch phát hành: chỉnh sửa trong tab Lịch",
+          "drip_day_one": "Ngày {{count}}",
+          "drip_day": "Ngày {{count}}",
+          "drip_now": "Ngày 0"
         },
         "activity": {
           "name_placeholder": "Tên hoạt động",
@@ -2343,6 +2352,87 @@
           "title_max_length": "Tiêu đề SEO phải có 70 ký tự trở xuống",
           "twitter_description_max_length": "Mô tả Twitter phải có 200 ký tự trở xuống",
           "twitter_title_max_length": "Tiêu đề Twitter phải có 70 ký tự trở xuống"
+        }
+      },
+      "schedule": {
+        "title": "Phát hành theo lịch",
+        "description": "Mở các chương dần theo thời gian thay vì mở tất cả cùng lúc. Học viên biết chương tiếp theo là gì và khi nào mở.",
+        "on": "Bật",
+        "off": "Tắt",
+        "anchor": {
+          "title": "Lịch bắt đầu khi nào?",
+          "enrollment": "Khi từng học viên đăng ký",
+          "enrollment_description": "Mỗi người có lịch riêng. Phù hợp nhất cho khóa học tự học, mở liên tục.",
+          "fixed_date": "Vào một ngày bắt đầu cố định",
+          "fixed_date_description": "Một ngày chung cho cả lớp. Phù hợp nhất cho các đợt khai giảng trực tiếp và bootcamp.",
+          "start_date": "Lớp bắt đầu vào"
+        },
+        "chapters": {
+          "title": "Kế hoạch phát hành",
+          "preview_enrollment": "Ngày hiển thị cho người đăng ký hôm nay.",
+          "preview_cohort": "Ngày hiển thị cho cả lớp.",
+          "empty": "Thêm chương vào khóa học này để lên lịch."
+        },
+        "interval": {
+          "label": "Mỗi chương cách nhau",
+          "amount": "Khoảng cách",
+          "unit": "Đơn vị",
+          "days": "ngày",
+          "weeks": "tuần",
+          "apply": "Áp dụng"
+        },
+        "mode": {
+          "immediate": "Ngay lập tức",
+          "delay": "Sau một khoảng thời gian",
+          "date": "Vào một ngày",
+          "delay_days": "Số ngày",
+          "days_after_enrollment": "ngày sau khi đăng ký",
+          "days_after_start": "ngày sau ngày bắt đầu",
+          "release_at": "Ngày phát hành"
+        },
+        "require_previous": "Chỉ mở sau khi hoàn thành chương trước",
+        "errors": {
+          "start_date": "Chọn ngày bắt đầu của lớp.",
+          "release_at": "Chọn ngày phát hành cho “{{name}}”."
+        },
+        "toasts": {
+          "save_success": "Đã lưu lịch",
+          "save_error": "Không thể lưu lịch"
+        },
+        "unsaved": "Thay đổi chưa được lưu",
+        "saved": "Đã lưu tất cả thay đổi",
+        "save": "Lưu lịch",
+        "early_access": {
+          "title": "Truy cập sớm",
+          "description": "Thành viên của các nhóm người dùng này được truy cập mọi chương ngay lập tức: nhân viên, người thử nghiệm beta, hạng thành viên cao cấp.",
+          "empty": "Chưa có nhóm người dùng nào."
+        },
+        "notify": {
+          "title": "Gửi email cho học viên khi một chương mở",
+          "description": "Học viên đã đăng ký sẽ nhận được một email ngắn kèm liên kết đến khóa học ngay khi một chương đã lên lịch mở cho họ."
+        },
+        "preview": {
+          "label": "Xem trước giao diện của học viên vào bất kỳ ngày nào",
+          "day_one": "Ngày {{count}} sau khi đăng ký",
+          "day": "Ngày {{count}} sau khi đăng ký",
+          "slider": "Ngày xem trước",
+          "clear": "Xóa",
+          "open": "Đã mở",
+          "upcoming_one": "Mở vào ngày {{count}}",
+          "upcoming": "Mở vào ngày {{count}}",
+          "closed": "Đã đóng",
+          "dated": "Ngày cố định"
+        },
+        "more": {
+          "label": "Điều kiện khác",
+          "count_one": "Thêm {{count}} điều kiện",
+          "count": "Thêm {{count}} điều kiện",
+          "requires": "Yêu cầu hoàn thành các chương này",
+          "no_earlier": "Đây là chương đầu tiên.",
+          "closes": "Đóng lại sau đó",
+          "closes_days": "Số ngày mở",
+          "closes_after": "ngày sau khi mở",
+          "closes_hint": "Dành cho nội dung có thời hạn như bản phát lại hoặc phần thưởng tuần học trực tiếp."
         }
       }
     },
@@ -5350,7 +5440,31 @@
     "backToCourses": "Quay lại danh sách khóa học",
     "loadError": "Không tìm thấy khóa học này hoặc đã xảy ra lỗi khi tải.",
     "noPermission": "Bạn không có quyền xem khóa học này.",
-    "finish_course": "Hoàn thành khóa học"
+    "finish_course": "Hoàn thành khóa học",
+    "drip": {
+      "opens_on_enroll": "Mở khi bạn bắt đầu khóa học",
+      "opens_after_previous": "Mở sau chương trước",
+      "opens_on": "Mở vào {{date}}",
+      "in_days_one": "sau {{count}} ngày nữa",
+      "in_days": "sau {{count}} ngày nữa",
+      "in_hours_one": "sau {{count}} giờ nữa",
+      "in_hours": "sau {{count}} giờ nữa",
+      "soon": "trong chưa đầy một giờ",
+      "coming_soon": "Sắp ra mắt",
+      "banner_title": "Các chương mới được mở dần theo thời gian",
+      "banner_next": "Tiếp theo: {{name}}, {{when}}",
+      "gate_enrollment": "Khóa học này mở các chương dần theo thời gian, tính từ khi bạn bắt đầu khóa học. Hãy bắt đầu từ trang khóa học để mở khóa lịch học của bạn.",
+      "gate_previous": "Hoàn thành mọi bài học của chương trước và chương này sẽ mở ngay.",
+      "gate_schedule": "Khóa học này mở các chương dần theo thời gian. Hãy quay lại khi chương này mở.",
+      "opens_after_required": "Mở sau các chương bắt buộc",
+      "closed": "Không còn khả dụng",
+      "closed_on": "đã đóng {{date}}",
+      "open_until": "Mở đến {{date}}",
+      "gate_prerequisites": "Hoàn thành các chương mà chương này dựa vào và nó sẽ mở ngay.",
+      "gate_closed": "Chương này chỉ mở trong thời gian giới hạn và thời gian đó đã kết thúc.",
+      "add_to_calendar": "Thêm vào lịch",
+      "calendar_event": "{{chapter}} mở · {{course}}"
+    }
   },
   "pagination": {
     "next": "Tiếp",
