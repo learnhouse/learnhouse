@@ -1125,7 +1125,7 @@
       "not_found_hint": "Bu kimlikle eşleşen geçerli bir sertifika yok. İptal edilmiş olabilir ya da bağlantı eksik olabilir.",
       "go_home": "Ana sayfaya dön",
       "earned_for_course": "Şu kursu tamamlayarak kazanıldı",
-      "earned_for_path": "{{name}} öğrenme yolunu tamamlayarak kazanıldı",
+      "earned_for_path": "Bu kursları tamamlayarak kazanıldı",
       "view_and_share": "Görüntüle ve paylaş"
     },
     "designer": {

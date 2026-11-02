@@ -1113,7 +1113,7 @@
       "not_found_hint": "没有与此 ID 匹配的有效证书。该证书可能已被撤销，或链接不完整。",
       "go_home": "返回首页",
       "earned_for_course": "完成以下内容后获得",
-      "earned_for_path": "完成“{{name}}”学习路径后获得",
+      "earned_for_path": "完成以下课程后获得",
       "view_and_share": "查看并分享"
     },
     "designer": {

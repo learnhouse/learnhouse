@@ -1113,7 +1113,7 @@
       "not_found_hint": "이 ID와 일치하는 유효한 수료증이 없습니다. 철회되었거나 링크가 불완전할 수 있습니다.",
       "go_home": "홈으로 이동",
       "earned_for_course": "다음 과정 수료로 취득",
-      "earned_for_path": "{{name}} 학습 경로 수료로 취득",
+      "earned_for_path": "다음 강좌 수료로 취득",
       "view_and_share": "보기 및 공유"
     },
     "designer": {

@@ -1103,7 +1103,7 @@
       "not_found_hint": "Zu dieser ID gibt es kein gültiges Zertifikat. Es wurde möglicherweise widerrufen, oder der Link ist unvollständig.",
       "go_home": "Zur Startseite",
       "earned_for_course": "Erworben für den Abschluss von",
-      "earned_for_path": "Erworben für den Abschluss des Lernpfads {{name}}",
+      "earned_for_path": "Erworben für den Abschluss dieser Kurse",
       "view_and_share": "Ansehen und teilen"
     },
     "designer": {
