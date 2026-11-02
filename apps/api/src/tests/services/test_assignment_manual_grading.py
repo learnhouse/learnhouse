@@ -138,6 +138,32 @@ class TestManualGradeOverridePreserved:
         assert submission.overall_feedback == "Credit for reasoning"
 
 
+class TestGradeNotifiesEE:
+    async def test_grading_tells_ee_the_learner_progressed(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        # EE forwards grades to external gradebooks (LTI); it must hear about
+        # every grade, including bulk regrades that skip the webhook.
+        assignment, submission = await _setup(
+            db, org, course, chapter, activity, regular_user,
+            student_answer="5", stored_grade=100, manually_graded=True,
+        )
+        with patch(_PATCH_DISPATCH, new_callable=AsyncMock), patch(
+            "src.services.courses.activities.assignments.notify_ee_learner_progress"
+        ) as notify:
+            await _apply_grade_and_finalize(
+                assignment=assignment,
+                course=course,
+                user_id=regular_user.id,
+                assignment_user_submission=submission,
+                db_session=db,
+                overall_feedback=None,
+                auto_graded=False,
+                dispatch_webhook=False,
+            )
+        notify.assert_called_once_with(regular_user.id, course.id)
+
+
 class TestAutoGradeStillReverifies:
     async def test_auto_grade_overwrites_tampered_grade(
         self, db, org, course, chapter, activity, regular_user

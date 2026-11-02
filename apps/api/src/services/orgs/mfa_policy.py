@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # signup_method values that mean "an external identity provider vouched for
 # this user". Kept conservative: an unrecognised value is treated as a local
 # password account, i.e. subject to the policy.
-EXTERNAL_AUTH_METHODS = {"google", "sso", "saml", "oidc", "workos", "keycloak", "okta", "auth0"}
+EXTERNAL_AUTH_METHODS = {"google", "sso", "saml", "oidc", "workos", "keycloak", "okta", "auth0", "lti"}
 
 
 @dataclass
