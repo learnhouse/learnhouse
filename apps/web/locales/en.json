@@ -1702,7 +1702,7 @@
       "not_found_hint": "No valid certificate matches this ID. It may have been revoked, or the link may be incomplete.",
       "go_home": "Go home",
       "earned_for_course": "Earned for completing",
-      "earned_for_path": "Earned for completing the {{name}} path",
+      "earned_for_path": "Earned by completing these courses",
       "view_and_share": "View and share"
     },
     "designer": {

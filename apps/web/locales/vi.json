@@ -1125,7 +1125,7 @@
       "not_found_hint": "Không có chứng chỉ hợp lệ nào khớp với ID này. Chứng chỉ có thể đã bị thu hồi hoặc liên kết chưa đầy đủ.",
       "go_home": "Về trang chủ",
       "earned_for_course": "Đạt được khi hoàn thành",
-      "earned_for_path": "Đạt được khi hoàn thành lộ trình {{name}}",
+      "earned_for_path": "Đạt được khi hoàn thành các khóa học này",
       "view_and_share": "Xem và chia sẻ"
     },
     "designer": {
