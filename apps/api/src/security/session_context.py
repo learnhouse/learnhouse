@@ -144,3 +144,24 @@ def carry_session_claims(payload: dict) -> dict:
     return session_claims(
         amr, payload.get(SORG_CLAIM), grace, payload.get(CUSTOM_DOMAIN_CLAIM) is True
     )
+
+
+def refuse_lms_session() -> None:
+    """Refuse account-security changes from a session an LMS launch started.
+
+    Such a session is held to the org that registered the LMS, and that org
+    runs the LMS: it may act inside the org, never on the account itself
+    (deleting it, its second factor, its email or password).
+    """
+    from fastapi import HTTPException
+
+    provenance = get_session_provenance()
+    if provenance is not None and provenance.amr == AUTH_METHOD_LTI:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "LMS_SESSION_NOT_ALLOWED",
+                "message": "Sign in to LearnHouse directly to change your account settings.",
+            },
+        )
+
