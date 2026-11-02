@@ -158,6 +158,7 @@ export default function BoardsPublicClient({
 }
 
 function PublicBoardCard({ board, orgUuid, fromSearch }: { board: any; orgUuid: string; fromSearch: boolean }) {
+  const { t } = useTranslation()
   const { track } = useLHAnalytics('learner')
   const thumbnailImage = board.thumbnail_image
     ? getBoardThumbnailMediaDirectory(orgUuid, board.board_uuid, board.thumbnail_image)
@@ -192,10 +193,10 @@ function PublicBoardCard({ board, orgUuid, fromSearch }: { board: any; orgUuid: 
         <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
           <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
             <Users size={12} />
-            <span>{board.member_count} member{board.member_count !== 1 ? 's' : ''}</span>
+            <span>{t('boards.member_count', { count: board.member_count })}</span>
           </div>
           <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-900 transition-colors uppercase tracking-wider">
-            Open
+            {t('boards.card_open')}
           </span>
         </div>
       </div>

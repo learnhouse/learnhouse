@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   CaretDown,
   CheckCircle,
@@ -20,6 +21,7 @@ function StatusIcon({ status }: { status: BgTask['status'] }) {
 }
 
 function TaskRow({ task, onDismiss }: { task: BgTask; onDismiss: (_id: string) => void }) {
+  const { t } = useTranslation()
   const active = task.status === 'uploading' || task.status === 'processing'
   const body = (
     <div className="flex items-start gap-2.5 py-2 px-3">
@@ -66,7 +68,7 @@ function TaskRow({ task, onDismiss }: { task: BgTask; onDismiss: (_id: string) =
             onDismiss(task.id)
           }}
           className="shrink-0 text-gray-300 hover:text-gray-500"
-          aria-label="Dismiss"
+          aria-label={t('common.dismiss')}
         >
           <X size={14} />
         </button>
@@ -88,6 +90,7 @@ function TaskRow({ task, onDismiss }: { task: BgTask; onDismiss: (_id: string) =
  * background tasks are registered via useBackgroundTasks().
  */
 export default function BackgroundTasksPanel() {
+  const { t: tr } = useTranslation()
   const { tasks, removeTask, clearFinished } = useBackgroundTasks()
   const [collapsed, setCollapsed] = useState(false)
 
@@ -112,7 +115,7 @@ export default function BackgroundTasksPanel() {
             ) : (
               <CheckCircle size={16} weight="fill" className="text-green-500" />
             )}
-            {activeCount > 0 ? `${activeCount} in progress` : 'Tasks'}
+            {activeCount > 0 ? tr('background_tasks.in_progress', { count: activeCount }) : tr('background_tasks.tasks')}
           </span>
           <span className="flex items-center gap-1">
             {activeCount === 0 && (
@@ -125,7 +128,7 @@ export default function BackgroundTasksPanel() {
                 }}
                 className="me-1 cursor-pointer text-[11px] font-medium text-gray-400 hover:text-gray-600"
               >
-                Clear
+                {tr('background_tasks.clear')}
               </span>
             )}
             <CaretDown

@@ -81,7 +81,7 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
         if (uuid) {
           const cleanUuid = uuid.replace('activity_', '')
           map[uuid] = {
-            name: activity.name || 'Untitled',
+            name: activity.name || t('library.untitled'),
             type: activity.activity_type || '',
             chapterName: chapter.name || '',
             activityUuid: cleanUuid,

@@ -144,7 +144,7 @@ export const OrgMenu = (props: any) => {
     <>
       <div className="backdrop-blur-lg h-[60px] blur-3xl" style={{ zIndex: 'var(--z-behind)', marginTop: topOffset }}></div>
       <nav
-        aria-label="Top navigation"
+        aria-label={t('dashboard.nav.top_navigation')}
         className={`backdrop-blur-lg fixed start-0 end-0 h-[60px] ${!primaryColor ? 'bg-white/90 nice-shadow' : ''}`}
         style={{
           zIndex: 'var(--z-nav)',
@@ -441,6 +441,7 @@ const CopilotMenuButton = ({
   bubbleOpen: boolean
   onOpenBubble: (_sessionUuid?: string) => void
 }) => {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const [isOpen, setIsOpen] = useState(false)
@@ -496,13 +497,13 @@ const CopilotMenuButton = ({
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <ChatCircleDots size={14} weight="fill" className="shrink-0 text-neutral-400" />
-                  <span className="truncate text-sm">{s.title || 'Untitled'}</span>
+                  <span className="truncate text-sm">{s.title || t('library.untitled')}</span>
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem key={s.aichat_uuid} asChild>
                   <Link href={getUriWithOrg(orgslug, `/copilot?chat=${s.aichat_uuid}`)} className="flex items-center gap-2">
                     <ChatCircleDots size={14} weight="fill" className="shrink-0 text-neutral-400" />
-                    <span className="truncate text-sm">{s.title || 'Untitled'}</span>
+                    <span className="truncate text-sm">{s.title || t('library.untitled')}</span>
                   </Link>
                 </DropdownMenuItem>
               )
@@ -511,7 +512,7 @@ const CopilotMenuButton = ({
           </>
         ) : (
           <div className="px-2 py-3 text-center">
-            <p className="text-xs text-neutral-400">No conversations yet</p>
+            <p className="text-xs text-neutral-400">{t('ai.copilot_menu.no_conversations')}</p>
           </div>
         )}
 
@@ -522,13 +523,13 @@ const CopilotMenuButton = ({
             className="flex items-center gap-2 font-medium cursor-pointer"
           >
             <ChatCircle size={14} weight="fill" className="text-violet-500" />
-            <span>{recentSessions.length > 0 ? 'New conversation' : 'Start a conversation'}</span>
+            <span>{recentSessions.length > 0 ? t('ai.copilot_menu.new_conversation') : t('ai.copilot_menu.start_conversation')}</span>
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem asChild>
             <Link href={getUriWithOrg(orgslug, '/copilot')} className="flex items-center gap-2 font-medium">
               <ChatCircle size={14} weight="fill" className="text-violet-500" />
-              <span>{recentSessions.length > 0 ? 'View all conversations' : 'Start a conversation'}</span>
+              <span>{recentSessions.length > 0 ? t('ai.copilot_menu.view_all') : t('ai.copilot_menu.start_conversation')}</span>
             </Link>
           </DropdownMenuItem>
         )}
@@ -541,7 +542,7 @@ const CopilotMenuButton = ({
           className="w-full flex items-center justify-between px-2 py-2 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors group"
         >
           <span className="text-xs text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-            Open in bubble
+            {t('ai.copilot_menu.open_in_bubble')}
           </span>
           <span
             className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors flex-shrink-0 ${

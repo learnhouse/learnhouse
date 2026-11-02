@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { PodcastEpisode, Podcast } from '@services/podcasts/podcasts'
 import { formatDuration } from '@services/podcasts/episodes'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
@@ -16,6 +17,7 @@ interface EpisodeCardProps {
 }
 
 export default function EpisodeCard({ episode, podcast, showThumbnail = true }: EpisodeCardProps) {
+  const { t } = useTranslation()
   const { state, playEpisode, togglePlay } = usePodcastPlayer()
   const org = useOrg() as any
   const { track } = useLHAnalytics('learner')
@@ -110,7 +112,7 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
           </span>
           {!episode.published && (
             <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-medium">
-              Unpublished
+              {t('podcasts.unpublished')}
             </span>
           )}
         </div>

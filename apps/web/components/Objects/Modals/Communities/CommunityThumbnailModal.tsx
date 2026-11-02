@@ -17,6 +17,7 @@ import {
 } from '@components/ui/dialog'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { SafeImage } from '@components/Objects/SafeImage'
 
 interface CommunityThumbnailModalProps {
@@ -36,6 +37,7 @@ export function CommunityThumbnailModal({
   community,
   orgSlug,
 }: CommunityThumbnailModalProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const router = useRouter()
   const org = useOrg() as any
@@ -55,12 +57,12 @@ export function CommunityThumbnailModal({
 
   const validateFile = (file: File): boolean => {
     if (!VALID_IMAGE_MIME_TYPES.includes(file.type as ValidImageMimeType)) {
-      showError(`Invalid file type: ${file.type}. Please upload only PNG or JPG/JPEG images`)
+      showError(t('communities.thumbnail_modal.invalid_type', { type: file.type }))
       return false
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      showError(`File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 8MB limit`)
+      showError(t('communities.thumbnail_modal.file_too_large', { size: (file.size / 1024 / 1024).toFixed(2) }))
       return false
     }
 
@@ -71,7 +73,7 @@ export function CommunityThumbnailModal({
     const file = event.target.files?.[0]
 
     if (!file) {
-      showError('Please select a file')
+      showError(t('communities.thumbnail_modal.select_file'))
       return
     }
 
@@ -106,7 +108,7 @@ export function CommunityThumbnailModal({
       setLocalThumbnail({ file, url: blobUrl })
       await uploadThumbnail(file)
     } catch (_err) {
-      showError('Failed to load the generated image')
+      showError(t('communities.thumbnail_modal.generated_image_failed'))
       setIsLoading(false)
     }
   }
@@ -138,7 +140,7 @@ export function CommunityThumbnailModal({
         showError(res.HTTPmessage)
       } else {
         setLocalThumbnail(null)
-        toast.success('Thumbnail updated successfully', {
+        toast.success(t('communities.thumbnail_modal.updated'), {
           duration: 3000,
           position: 'top-center',
         })
@@ -146,7 +148,7 @@ export function CommunityThumbnailModal({
         onClose()
       }
     } catch (_err) {
-      showError('Failed to update thumbnail')
+      showError(t('communities.thumbnail_modal.update_failed'))
     } finally {
       setIsLoading(false)
     }
@@ -175,7 +177,7 @@ export function CommunityThumbnailModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ImageIcon size={20} />
-              Community Thumbnail
+              {t('communities.thumbnail_modal.title')}
             </DialogTitle>
           </DialogHeader>
 
@@ -185,13 +187,13 @@ export function CommunityThumbnailModal({
               {thumbnailUrl ? (
                 <SafeImage
                   src={thumbnailUrl}
-                  alt="Community thumbnail"
+                  alt={t('communities.thumbnail_modal.alt')}
                   className={`w-full h-full object-cover ${isLoading ? 'animate-pulse' : ''}`}
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
                   <ImageIcon size={48} strokeWidth={1} />
-                  <p className="text-sm mt-2">No thumbnail set</p>
+                  <p className="text-sm mt-2">{t('communities.thumbnail_modal.none')}</p>
                 </div>
               )}
             </div>
@@ -201,7 +203,7 @@ export function CommunityThumbnailModal({
               <div className="flex justify-center">
                 <div className="font-medium text-sm text-green-800 bg-green-50 rounded-full px-4 py-2 flex items-center">
                   <ArrowBigUpDash size={16} className="me-2 animate-bounce" />
-                  Uploading...
+                  {t('communities.thumbnail_modal.uploading')}
                 </div>
               </div>
             )}
@@ -222,7 +224,7 @@ export function CommunityThumbnailModal({
                   onClick={() => imageInputRef.current?.click()}
                 >
                   <UploadCloud size={16} />
-                  Upload Image
+                  {t('communities.thumbnail_modal.upload_image')}
                 </button>
                 <AIImageButton
                   onSelect={handleRemoteImageSelect}
@@ -233,7 +235,7 @@ export function CommunityThumbnailModal({
             )}
 
             <p className="text-xs text-gray-500 text-center">
-              Supported formats: JPG, JPEG, PNG. Max file size: 8MB
+              {t('communities.thumbnail_modal.supported_formats')}
             </p>
           </div>
 
@@ -245,7 +247,7 @@ export function CommunityThumbnailModal({
               disabled={isLoading}
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
             >
-              Close
+              {t('common.close')}
             </button>
           </div>
         </DialogContent>

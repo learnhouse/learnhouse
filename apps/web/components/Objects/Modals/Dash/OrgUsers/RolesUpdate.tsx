@@ -13,6 +13,7 @@ import { updateUserRole } from '@services/organizations/orgs'
 import { apiFetch } from '@services/utils/ts/requests'
 import { getAPIUrl } from '@services/config/config'
 import React, { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -26,6 +27,7 @@ interface Props {
 }
 
 function RolesUpdate(props: Props) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
@@ -54,11 +56,11 @@ function RolesUpdate(props: Props) {
     e.preventDefault()
     setIsSubmitting(true)
     const res = await updateUserRole(org.id, props.user.user.id, assignedRole,access_token)
-    const toastId = toast.loading("Updating role...")
+    const toastId = toast.loading(t('roles.update_modal.updating'))
     if (res.status === 200) {
       await queryClient.invalidateQueries({ queryKey: queryKeys.org.users(org.id) })
       props.setRolesModal(false)
-      toast.success("Updated role", {id:toastId})
+      toast.success(t('roles.update_modal.updated'), {id:toastId})
     } else {
       setIsSubmitting(false)
       // Promoting a user into an admin role can exceed the plan's admin-seat
@@ -68,7 +70,7 @@ function RolesUpdate(props: Props) {
         props.setRolesModal(false)
       } else {
         setError('Error ' + res.status + ': ' + res.data.detail)
-        toast.error("Error while updating role", {id:toastId})
+        toast.error(t('roles.update_modal.update_failed'), {id:toastId})
       }
     }
   }
@@ -87,9 +89,9 @@ function RolesUpdate(props: Props) {
             ''
           )}
           <Flex className="items-baseline justify-between">
-            <FormLabel>Roles</FormLabel>
+            <FormLabel>{t('roles.update_modal.roles')}</FormLabel>
             <FormMessage match="valueMissing">
-              Please choose a role for the user
+              {t('roles.update_modal.choose_role')}
             </FormMessage>
           </Flex>
           <Form.Control asChild>
@@ -101,10 +103,10 @@ function RolesUpdate(props: Props) {
               disabled={!roles || !!rolesError}
             >
               {!roles || rolesError ? (
-                <option value="">Loading roles...</option>
+                <option value="">{t('roles.update_modal.loading')}</option>
               ) : (
                 <>
-                  <option value="">Select a role</option>
+                  <option value="">{t('roles.update_modal.select')}</option>
                   {roles.map((role: any) => (
                     <option key={role.id} value={role.role_uuid || role.id}>
                       {role.name}
@@ -126,7 +128,7 @@ function RolesUpdate(props: Props) {
                   color="#ffffff"
                 />
               ) : (
-                'Update user role'
+                t('roles.update_modal.submit')
               )}
             </ButtonBlack>
           </Form.Submit>

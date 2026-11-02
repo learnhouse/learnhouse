@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react'
 import { ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { upvoteDiscussion, removeUpvote } from '@services/communities/discussions'
@@ -25,6 +26,7 @@ export function UpvoteButton({
   disabled = false,
   compact = false,
 }: UpvoteButtonProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const { isUserPartOfTheOrg } = useOrgMembership()
   const { track } = useLHAnalytics('learner')
@@ -87,7 +89,7 @@ export function UpvoteButton({
           (!canVote || disabled) && 'opacity-50 cursor-not-allowed',
           isLoading && 'opacity-70'
         )}
-        title={canVote ? (hasVoted ? 'Remove upvote' : 'Upvote') : 'Join organization to vote'}
+        title={canVote ? (hasVoted ? t('communities.remove_upvote') : t('communities.upvote')) : t('communities.join_to_vote')}
       >
         <ChevronUp
           size={14}
@@ -114,7 +116,7 @@ export function UpvoteButton({
         (!canVote || disabled) && 'opacity-50 cursor-not-allowed',
         isLoading && 'opacity-70'
       )}
-      title={canVote ? (hasVoted ? 'Remove upvote' : 'Upvote') : 'Join organization to vote'}
+      title={canVote ? (hasVoted ? t('communities.remove_upvote') : t('communities.upvote')) : t('communities.join_to_vote')}
     >
       <ChevronUp
         size={20}

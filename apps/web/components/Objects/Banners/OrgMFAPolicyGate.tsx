@@ -7,6 +7,7 @@ import { ShieldAlert, ShieldCheck, X, LogOut, ArrowRight, LogIn } from 'lucide-r
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { signOut } from '@components/Contexts/AuthContext'
+import i18n from '@/lib/i18n'
 import { getAPIUrl, getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
 
@@ -92,7 +93,7 @@ async function getOrgMFACompliance(
               message:
                 typeof detail.message === 'string' && detail.message
                   ? detail.message
-                  : 'You need to sign in to this organization to continue.',
+                  : i18n.t('mfa.policy.sign_in_required_default'),
               allowed_methods: Array.isArray(detail.allowed_methods)
                 ? detail.allowed_methods
                 : undefined,

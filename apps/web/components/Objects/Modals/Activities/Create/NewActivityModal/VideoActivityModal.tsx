@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import * as Form from '@radix-ui/react-form'
 import BarLoader from 'react-spinners/BarLoader'
 import { PlayCircle, Upload, YoutubeLogo } from '@phosphor-icons/react'
@@ -31,6 +32,7 @@ function VideoModal({
   chapterId,
   course,
 }: any) {
+  const { t } = useTranslation()
   const [video, setVideo] = React.useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [name, setName] = React.useState('')
@@ -121,27 +123,27 @@ function VideoModal({
       >
         <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
           <PlayCircle size={18} weight="duotone" className="text-violet-400" />
-          Video
+          {t('activities.video')}
         </span>
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">
-            Activity name
+            {t('activities.modal.activity_name')}
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             type="text"
             required
-            placeholder="Enter a name..."
+            placeholder={t('activities.modal.enter_name')}
             className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Source</label>
+          <label className="text-sm font-medium text-gray-700">{t('activities.modal.source')}</label>
           <div className="grid grid-cols-2 gap-0 rounded-lg overflow-hidden border border-gray-200">
             <button
               type="button"
@@ -153,7 +155,7 @@ function VideoModal({
               }`}
             >
               <Upload size={16} weight="duotone" />
-              Upload
+              {t('media.upload')}
             </button>
             <button
               type="button"
@@ -173,7 +175,7 @@ function VideoModal({
         {selectedView === 'file' && (
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">
-              Video file
+              {t('activities.modal.video_file')}
             </label>
             <input
               type="file"
@@ -188,7 +190,7 @@ function VideoModal({
         {selectedView === 'youtube' && (
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">
-              YouTube URL
+              {t('activities.modal.youtube_url')}
             </label>
             <input
               value={youtubeUrl}
@@ -203,11 +205,11 @@ function VideoModal({
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
-        <h3 className="text-sm font-medium text-gray-700">Video Settings</h3>
+        <h3 className="text-sm font-medium text-gray-700">{t('activities.modal.video_settings')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-gray-500">
-              Start Time
+              {t('activities.modal.start_time')}
             </label>
             <div className="flex gap-2">
               <div className="flex-1">
@@ -229,7 +231,7 @@ function VideoModal({
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
                 <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  Min
+                  {t('activities.modal.min')}
                 </span>
               </div>
               <div className="flex-1">
@@ -255,7 +257,7 @@ function VideoModal({
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
                 <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  Sec
+                  {t('activities.modal.sec')}
                 </span>
               </div>
             </div>
@@ -263,7 +265,7 @@ function VideoModal({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-gray-500">
-              End Time (optional)
+              {t('activities.modal.end_time_optional')}
             </label>
             <div className="flex gap-2">
               <div className="flex-1">
@@ -285,7 +287,7 @@ function VideoModal({
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
                 <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  Min
+                  {t('activities.modal.min')}
                 </span>
               </div>
               <div className="flex-1">
@@ -311,7 +313,7 @@ function VideoModal({
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
                 <span className="text-[11px] text-gray-400 mt-0.5 block">
-                  Sec
+                  {t('activities.modal.sec')}
                 </span>
               </div>
             </div>
@@ -328,7 +330,7 @@ function VideoModal({
               }
               className="rounded border-gray-300 text-black focus:ring-black"
             />
-            <span className="text-sm text-gray-600">Autoplay</span>
+            <span className="text-sm text-gray-600">{t('activities.modal.autoplay')}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -339,7 +341,7 @@ function VideoModal({
               }
               className="rounded border-gray-300 text-black focus:ring-black"
             />
-            <span className="text-sm text-gray-600">Start muted</span>
+            <span className="text-sm text-gray-600">{t('activities.modal.start_muted')}</span>
           </label>
         </div>
       </div>
@@ -361,7 +363,7 @@ function VideoModal({
               color="#ffffff"
             />
           ) : (
-            'Create activity'
+            t('activities.modal.create_activity')
           )}
         </button>
       </div>

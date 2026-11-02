@@ -72,7 +72,7 @@ function BoardAccessTab({ board, boardUuid, orgId, boardKey }: BoardAccessTabPro
         toast.success(t('boards.access.user_group_unlinked'))
         queryClient.invalidateQueries({ queryKey: boardResourceUserGroupsKey(boardUuid, org.id) })
       } else {
-        toast.error(`${t('boards.access.unlink_error')}${res.data?.detail || 'Unknown error'}`)
+        toast.error(`${t('boards.access.unlink_error')}${res.data?.detail || t('boards.access.unknown_error')}`)
       }
     } catch {
       toast.error(t('boards.access.unlink_error_generic'))
@@ -249,7 +249,7 @@ function LinkUserGroupToBoard({ boardUuid, orgId, accessToken, setModalOpen }: {
       toast.success(t('boards.access.user_group_linked'))
       queryClient.invalidateQueries({ queryKey: ['usergroups', 'resource', boardUuid, org?.id] })
     } else {
-      toast.error(`${t('boards.access.link_error')}${res.data?.detail || 'Unknown error'}`)
+      toast.error(`${t('boards.access.link_error')}${res.data?.detail || t('boards.access.unknown_error')}`)
     }
   }
 

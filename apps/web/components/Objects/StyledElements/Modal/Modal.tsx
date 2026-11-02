@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@components/ui/dialog"
 import { cn } from "@/lib/utils"
 
@@ -21,6 +22,7 @@ type ModalParams = {
 }
 
 const Modal = (params: ModalParams) => {
+  const { t } = useTranslation()
   const getMinHeight = () => {
     switch (params.minHeight) {
       case 'sm': return 'md:min-h-[300px]'
@@ -79,7 +81,7 @@ const Modal = (params: ModalParams) => {
             )}
           </DialogHeader>
         ) : (
-          <DialogTitle className="sr-only">Dialog</DialogTitle>
+          <DialogTitle className="sr-only">{t('modal.dialog')}</DialogTitle>
         )}
 
         {/* Content */}
@@ -100,7 +102,7 @@ const Modal = (params: ModalParams) => {
                 onClick={() => params.onOpenChange(false)}
                 className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               >
-                Close
+                {t('common.close')}
               </button>
             )}
           </DialogFooter>

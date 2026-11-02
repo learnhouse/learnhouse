@@ -500,9 +500,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                                                 <div className="p-3 bg-gray-100">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-sm text-gray-700">
-                                                            {selectedUsers.length === 1 
-                                                                ? t('dashboard.courses.contributors.actions.selected_users', { count: selectedUsers.length })
-                                                                : t('dashboard.courses.contributors.actions.selected_users_plural', { count: selectedUsers.length })}
+                                                            {t('dashboard.courses.contributors.actions.selected_users', { count: selectedUsers.length })}
                                                         </span>
                                                         <div className="flex gap-2">
                                                             <Button
@@ -593,9 +591,7 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
                                     <div className="p-3 bg-gray-100 rounded-t-xl border-b">
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-700">
-                                                {selectedContributors.length === 1
-                                                    ? t('dashboard.courses.contributors.actions.selected_contributors', { count: selectedContributors.length })
-                                                    : t('dashboard.courses.contributors.actions.selected_contributors_plural', { count: selectedContributors.length })}
+                                                {t('dashboard.courses.contributors.actions.selected_contributors', { count: selectedContributors.length })}
                                             </span>
                                             <div className="flex gap-2">
                                                 <Button
