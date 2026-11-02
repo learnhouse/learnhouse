@@ -118,8 +118,9 @@ const ALLOWED_API_TAGS = [
 ]
 
 const APIDocumentation: React.FC = () => {
-  const _session = useLHSession() as any
+  const session = useLHSession() as any
   const org = useOrg() as any
+  const accessToken = session?.data?.tokens?.access_token
   const [spec, setSpec] = useState<OpenAPISpec | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -146,14 +147,16 @@ const APIDocumentation: React.FC = () => {
   const [showExpectedResponses, setShowExpectedResponses] = useState(false)
 
   useEffect(() => {
-    loadSpec()
-  }, [])
+    if (org?.id && accessToken) {
+      loadSpec()
+    }
+  }, [org?.id, accessToken])
 
   const loadSpec = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchOpenAPISpec()
+      const data = await fetchOpenAPISpec(org.id, accessToken)
       setSpec(data)
       // Expand admin group by default if it exists, otherwise first group
       if (data.paths) {
