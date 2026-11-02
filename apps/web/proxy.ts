@@ -191,6 +191,12 @@ function tenantRequestHeaders(
   instance: InstanceInfo,
 ): Headers {
   const headers = new Headers(req.headers)
+  // Downstream code trusts x-lh-* as the proxy's own resolution, so a client
+  // must not be able to supply any of them (x-lh-custom-domain is only set below
+  // when the host really is one).
+  for (const name of [...headers.keys()]) {
+    if (name.startsWith('x-lh-')) headers.delete(name)
+  }
   headers.set('x-lh-tenancy', instance.tenancy)
   headers.set('x-lh-org', resolved.slug)
   headers.set('x-lh-top-domain', instance.top_domain)
