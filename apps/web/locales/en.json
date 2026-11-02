@@ -3343,6 +3343,7 @@
       "scripts": {
         "title": "Scripts",
         "subtitle": "Add custom JavaScript scripts to your organization",
+        "custom_domain_only": "Scripts only run when your organization is visited on its custom domain.",
         "warning": "For your organization's safety, please ensure you trust and understand any scripts before adding them. Scripts can interact with your organization's pages.",
         "add_script": "Add Script",
         "no_scripts": "No scripts added yet",

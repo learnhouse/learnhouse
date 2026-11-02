@@ -297,6 +297,101 @@ class TestImportExtensionAllowlist:
         # The legitimate media file still lands, under its original name.
         assert (dest / "video" / "clip.mp4").read_bytes() == MP4_BYTES
 
+    @pytest.mark.parametrize("entitled", [True, False])
+    async def test_scorm_activity_keeps_package_only_when_org_is_entitled(
+        self, entitled, db, org, course, chapter, tmp_path, monkeypatch
+    ):
+        monkeypatch.chdir(tmp_path)
+        activity_path = tmp_path / "activity-pkg"
+        scorm_dir = activity_path / "files" / "scorm" / "extracted"
+        scorm_dir.mkdir(parents=True)
+        (scorm_dir / "index.html").write_bytes(b"<script>x</script>")
+        new_course_path = f"content/orgs/{org.org_uuid}/courses/course_pkg_new"
+
+        with patch(
+            "src.services.courses.transfer.import_service.is_s3_enabled",
+            return_value=False,
+        ), patch(
+            "src.services.courses.transfer.import_service._org_may_host_scorm",
+            new_callable=AsyncMock,
+            return_value=entitled,
+        ) as may_host:
+            activity = await _import_activity(
+                activity_path=str(activity_path),
+                activity_data={"name": "A", "activity_type": "TYPE_SCORM"},
+                new_course=SimpleNamespace(id=course.id),
+                new_chapter=SimpleNamespace(id=chapter.id),
+                new_course_path=new_course_path,
+                organization=org,
+                db_session=AsyncMock(),
+            )
+
+        may_host.assert_awaited_once()
+        entry = (
+            tmp_path / new_course_path / "activities" / activity.activity_uuid
+            / "scorm" / "extracted" / "index.html"
+        )
+        assert entry.exists() is entitled
+
+    async def test_non_scorm_activity_never_keeps_a_scorm_folder(
+        self, db, org, course, chapter, tmp_path, monkeypatch
+    ):
+        """A scorm/ folder in a non-SCORM activity is just package files: the
+        allowlist applies and entitlement isn't even consulted."""
+        monkeypatch.chdir(tmp_path)
+        activity_path = tmp_path / "activity-pkg"
+        scorm_dir = activity_path / "files" / "scorm"
+        scorm_dir.mkdir(parents=True)
+        (scorm_dir / "x.html").write_bytes(b"<script>x</script>")
+        new_course_path = f"content/orgs/{org.org_uuid}/courses/course_pkg_new"
+
+        with patch(
+            "src.services.courses.transfer.import_service.is_s3_enabled",
+            return_value=False,
+        ), patch(
+            "src.services.courses.transfer.import_service._org_may_host_scorm",
+            new_callable=AsyncMock,
+            return_value=True,
+        ) as may_host:
+            activity = await _import_activity(
+                activity_path=str(activity_path),
+                activity_data={"name": "A", "activity_type": "TYPE_DYNAMIC"},
+                new_course=SimpleNamespace(id=course.id),
+                new_chapter=SimpleNamespace(id=chapter.id),
+                new_course_path=new_course_path,
+                organization=org,
+                db_session=AsyncMock(),
+            )
+
+        may_host.assert_not_awaited()
+        dest = tmp_path / new_course_path / "activities" / activity.activity_uuid
+        assert not (dest / "scorm" / "x.html").exists()
+
+    @pytest.mark.parametrize(
+        "mode, plan, expected",
+        [
+            ("oss", "enterprise", False),
+            ("ee", "free", True),
+            ("saas", "enterprise", True),
+            ("saas", "pro", False),
+        ],
+    )
+    async def test_org_may_host_scorm_matches_the_scorm_routes(
+        self, mode, plan, expected, db, org
+    ):
+        from src.db.organization_config import OrganizationConfig
+
+        db.add(OrganizationConfig(
+            org_id=org.id, config={"config_version": "2.0", "plan": plan}
+        ))
+        await db.commit()
+        with patch("src.core.deployment_mode.get_deployment_mode", return_value=mode):
+            assert await import_service._org_may_host_scorm(org.id, db) is expected
+
+    async def test_org_without_config_may_not_host_scorm_on_saas(self, db, org):
+        with patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"):
+            assert await import_service._org_may_host_scorm(org.id, db) is False
+
     async def test_block_file_with_unsafe_extension_is_dropped(
         self, db, org, course, chapter, tmp_path, monkeypatch
     ):
@@ -495,18 +590,49 @@ class TestImportTempIdTraversal:
 
         assert ignored == {"evil.html"}
 
-    def test_scorm_subtree_keeps_its_web_assets(self, tmp_path):
+    def test_scorm_subtree_keeps_its_web_assets_when_allowed(self, tmp_path):
         """A SCORM package *is* HTML/JS/CSS plus a manifest. Filtering those out
-        would import a silently broken activity, so scorm/ is exempt."""
-        scorm_dir = tmp_path / "activities" / "activity_x" / "scorm" / "extracted"
+        would import a silently broken activity, so an entitled SCORM activity
+        keeps its scorm/ folder whole."""
+        files_root = tmp_path / "files"
+        scorm_dir = files_root / "scorm" / "extracted"
         scorm_dir.mkdir(parents=True)
         names = ["index.html", "imsmanifest.xml", "scormdriver.js", "style.css", "font.woff2"]
         for name in names:
             (scorm_dir / name).write_bytes(b"x")
+        (files_root / "evil.html").write_bytes(b"x")
 
-        ignored = import_service._ignore_unsafe_package_files(str(scorm_dir), names)
+        ignore = import_service._package_files_filter(str(files_root), keep_scorm=True)
 
-        assert ignored == set()
+        assert ignore(str(scorm_dir), names) == set()
+        assert ignore(str(files_root / "scorm"), ["extracted"]) == set()
+        # Outside scorm/ the allowlist still applies.
+        assert ignore(str(files_root), ["scorm", "evil.html"]) == {"evil.html"}
+
+    def test_scorm_subtree_is_filtered_unless_allowed(self, tmp_path):
+        """Package HTML runs on the org's site, so it is only kept for orgs
+        entitled to SCORM."""
+        files_root = tmp_path / "files"
+        scorm_dir = files_root / "scorm" / "extracted"
+        scorm_dir.mkdir(parents=True)
+        (scorm_dir / "index.html").write_bytes(b"<script>x</script>")
+
+        ignore = import_service._package_files_filter(str(files_root), keep_scorm=False)
+
+        assert ignore is import_service._ignore_unsafe_package_files
+        assert ignore(str(scorm_dir), ["index.html"]) == {"index.html"}
+
+    def test_scorm_subtree_is_matched_from_the_files_root_only(self, tmp_path):
+        """A `scorm` folder deeper in the activity, or in the path above the
+        files root, is not the activity's SCORM package."""
+        files_root = tmp_path / "scorm" / "files"
+        assert not import_service._is_scorm_subtree(str(files_root), str(files_root))
+        assert not import_service._is_scorm_subtree(
+            str(files_root), str(files_root / "video" / "scorm")
+        )
+        assert import_service._is_scorm_subtree(
+            str(files_root), str(files_root / "scorm" / "a" / "b")
+        )
 
     def test_non_scorm_activity_files_are_still_filtered(self, tmp_path):
         files_dir = tmp_path / "activities" / "activity_x" / "files"
