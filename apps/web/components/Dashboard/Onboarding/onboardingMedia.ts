@@ -5,12 +5,12 @@ export type OnboardingVideo = { youtubeId: string; poster: string; duration: num
 
 // YouTube ids, and durations in seconds shown before the player loads.
 const VIDEOS: Record<string, { youtubeId: string; duration: number }> = {
-  ob1: { youtubeId: 'Llo3_b0h5i8', duration: 36 },
-  ob2: { youtubeId: 'aAwGYANdKFw', duration: 32 },
+  ob1: { youtubeId: '5UNjzIuEAl0', duration: 37 },
+  ob2: { youtubeId: 'UUnoT-xfnnY', duration: 34 },
   ob3: { youtubeId: '6mmWspi12wY', duration: 32 },
   ob4: { youtubeId: 'gOnapJb1JJU', duration: 32 },
   ob5: { youtubeId: 'jnrhaySDCt4', duration: 32 },
-  ob6: { youtubeId: 'xznnN6v4Lh4', duration: 30 },
+  ob6: { youtubeId: 'flESwP0B87g', duration: 32 },
   ob7: { youtubeId: '3lGZuUoZRXY', duration: 28 },
 }
 
