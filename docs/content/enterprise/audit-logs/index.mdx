@@ -2,46 +2,68 @@ import { Callout } from 'nextra/components'
 
 # Audit Logs
 
-Audit logs record all actions taken on the platform, so administrators can see who did what and when. They are useful for compliance, security monitoring, and troubleshooting.
+Audit logs record the changes people make in your organization, so administrators can see who did what and when. Use them for compliance, security reviews and troubleshooting.
 
 <Callout>
-Audit logs require an Enterprise plan.
+Audit logs need the Enterprise plan on LearnHouse Cloud, or the [Enterprise Edition](/enterprise) when self-hosted. On a self-hosted EE instance every organization is logged, whatever its plan.
 </Callout>
 
-## What's Captured
+## Where to find them
 
-Every mutation (create, update, delete) on the platform is recorded with the following details:
+Go to **Users** → **Audit Logs** in the dashboard. Only the **Admin** role can open them (Maintainers cannot), and the organization's [two-factor policy](/platform/users/two-factor) applies.
+
+## What gets recorded
+
+LearnHouse records every `POST`, `PUT`, `PATCH` and `DELETE` request made by a signed-in member of the organization, by a superadmin, or by one of the organization's API tokens. Read-only requests are not recorded, and neither are anonymous requests or health checks.
 
 | Field | Description |
-|---|---|
-| User | Who performed the action (username and ID). |
-| Action | The HTTP method (POST, PUT, DELETE, PATCH). |
-| Resource | What was affected (e.g., `/courses`, `/users`). |
-| Resource ID | The specific item that was modified. |
-| Status code | The HTTP response status. |
-| IP address | The origin of the request. |
-| Timestamp | When the action occurred. |
-| Payload | The request body (with sensitive data scrubbed). |
+| --- | --- |
+| User | Who made the change (ID, username and avatar) |
+| Action | The method and path, for example `PUT /api/v1/courses/course_123` |
+| Method | `POST`, `PUT`, `PATCH` or `DELETE` |
+| Path | The request path |
+| Resource | The kind of item affected, taken from the path (for example `courses` or `users`) |
+| Resource ID | The specific item, when the path has one |
+| Status code | The HTTP response status |
+| IP address | Where the request came from |
+| Timestamp | When it happened |
+| Payload | The request body, with sensitive fields removed |
 
-## Sensitive Data Handling
+## Sensitive data
 
-Audit logs automatically scrub sensitive fields from request payloads before storing them. Fields like `password`, `token`, `secret`, and similar keys are redacted to prevent sensitive data from appearing in logs.
+Before a payload is stored, any field whose name contains `password`, `secret`, `token`, `api_key`, `apikey`, `private_key`, `credential`, `code`, `otp`, `reset` or `mfa` is **removed**, at any depth.
 
-## Filtering & Search
+Some payloads are not stored in full:
 
-You can filter audit logs by:
+- Bodies larger than 64 KB, and file uploads (multipart forms), are not read. The log notes that the payload was omitted.
+- Stored payloads larger than 8 KB are replaced by an omission marker.
 
-- User (ID, username, or full name)
-- Action type
-- Resource type and ID
-- HTTP status code
-- IP address
-- Date range
+## Searching and filtering
 
-## CSV Export
+| Control | Options |
+| --- | --- |
+| **Search by** | **Path & Method**, **Resource**, **User** (username, name or ID) or **IP Address** |
+| Resource | **All Resources**, **User**, **Course** or **Organization** |
+| Status | **All**, **200 OK**, **403**, **404** or **500** |
+| Date | **All Time**, **Today**, **Last 7 Days**, **Last 30 Days** or **Custom Range** |
 
-Audit logs can be exported as CSV files for offline analysis, compliance reporting, or integration with external SIEM tools.
+Click a row's payload to open it in **Event Payload**. Use **Refresh logs** to load new entries.
 
-## Performance
+## CSV export
 
-Audit log entries are buffered in Redis and flushed to the database in batches every 60 seconds. Logging therefore does not slow the platform down, even under heavy usage.
+**Export** downloads the logs matching your filters as CSV, newest first, up to 50,000 rows. Columns: ID, Timestamp, User ID, Username, Action, Resource, Resource ID, Method, Path, Status Code and IP Address. Payloads are not included in the export.
+
+## How logging works
+
+Entries are first queued in Redis, then written to the database in batches every 60 seconds, so logging does not slow requests down. New entries can take up to a minute to appear.
+
+<Callout type="warning">
+Audit logging needs Redis. If Redis is not configured, nothing is recorded. LearnHouse does not prune audit logs, so they are kept indefinitely.
+</Callout>
+
+## API
+
+Admins can also read the logs with a signed-in session (API tokens are not accepted):
+
+- `GET /api/v1/ee/audit_logs/?org_id=...` with `offset`, `limit` (up to 100) and the filters `user_id`, `username`, `name`, `action`, `resource`, `status_code`, `ip_address`, `start_date` and `end_date`.
+- `GET /api/v1/ee/audit_logs/export` for the CSV.

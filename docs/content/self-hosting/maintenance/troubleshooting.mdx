@@ -9,21 +9,24 @@ This guide covers common issues with self-hosted LearnHouse instances and how to
 Before diving into specific issues, run the built-in diagnostics:
 
 ```bash
-learnhouse doctor
+npx learnhouse doctor
 ```
 
-This checks Docker availability, container health, port conflicts, DNS resolution, and disk space. It will often identify the root cause of problems automatically.
+This checks Docker availability, container state and restart counts, the HTTP port, DNS resolution, disk space, errors in recent logs, and your `.env` file. It often identifies the root cause of problems on its own.
+
+If you have several installations, add `--dir` to point the CLI at the right one, for example `npx learnhouse --dir ~/.learnhouse/production doctor`.
 
 ## Services Not Starting
 
-**Symptoms:** `learnhouse start` fails, or containers are stopped or restarting.
+**Symptoms:** `npx learnhouse start` fails, or containers are stopped or restarting.
 
 **Common causes:**
 
 - **Docker is not running.** Verify Docker is running with `docker info`. Start the Docker daemon if needed.
 - **Insufficient memory.** LearnHouse requires at least 2 GB of RAM. Check available memory with `free -m` (Linux) or Activity Monitor (macOS).
-- **Port conflicts.** Another service may be using port 80 or 443. Check with `lsof -i :80` and stop the conflicting service. `learnhouse doctor` will also detect port conflicts.
-- **Corrupted configuration.** Re-run `learnhouse setup` to regenerate configuration files.
+- **Port conflicts.** Another service may be using port 80 or 443. Check with `lsof -i :80` and stop the conflicting service. `npx learnhouse doctor` also detects port conflicts.
+- **Damaged configuration.** Re-run `npx learnhouse setup` with the same installation name to regenerate the configuration files. Your deployment ID, database password, secrets and data are kept.
+- **Permission denied on the Docker socket.** On Linux, add your user to the `docker` group and log in again.
 
 ## Database Connection Errors
 
@@ -33,18 +36,22 @@ This checks Docker availability, container health, port conflicts, DNS resolutio
 
 1. Run diagnostics to check container health:
    ```bash
-   learnhouse doctor
+   npx learnhouse doctor
    ```
 
 2. Check database logs:
    ```bash
-   learnhouse logs
+   npx learnhouse logs
    ```
    Look for log lines from the `db` container.
 
 3. Verify the connection string in your `.env` file matches the database container's configuration.
 
-4. If the database container keeps restarting, it may be running out of disk space. Check available disk space on the host.
+4. If you changed `POSTGRES_PASSWORD` in `.env`, change it back or update the password inside PostgreSQL too. PostgreSQL only reads that variable when its data volume is first created.
+
+5. If the database container keeps restarting, it may be running out of disk space. Check available disk space on the host.
+
+6. With an external database, a transient connection error at startup is retried (5 attempts by default, see `LEARNHOUSE_DB_STARTUP_ATTEMPTS`). A wrong password or unknown database fails at once.
 
 ## Port Conflicts
 
@@ -60,7 +67,7 @@ lsof -i :80
 lsof -i :443
 ```
 
-Stop the conflicting service, or reconfigure LearnHouse to use a different port by re-running `learnhouse setup`.
+Stop the conflicting service, or reconfigure LearnHouse to use a different port by re-running `npx learnhouse setup` (or change `HTTP_PORT` with `npx learnhouse env`).
 
 ## Storage Permission Errors
 
@@ -72,7 +79,8 @@ Stop the conflicting service, or reconfigure LearnHouse to use a different port 
 
 **For S3 storage:**
 
-- Verify your S3 credentials have read and write permissions on the configured bucket.
+- Verify your S3 credentials (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) have read and write permissions on the configured bucket.
+- For AWS S3 and MinIO, set `LEARNHOUSE_S3_API_REGION` to the bucket's region. The default, `auto`, is meant for Cloudflare R2.
 - Check that the bucket name (`LEARNHOUSE_S3_API_BUCKET_NAME`) and endpoint URL (`LEARNHOUSE_S3_API_ENDPOINT_URL`) are correct in your `.env` file.
 - Test connectivity to the S3 endpoint from the server.
 
@@ -80,9 +88,10 @@ Stop the conflicting service, or reconfigure LearnHouse to use a different port 
 
 **Symptoms:** Users cannot log in, or sessions expire immediately.
 
-- Verify `NEXTAUTH_SECRET` is set and has not changed since the last restart. Changing the secret invalidates all existing sessions.
-- Verify `LEARNHOUSE_COOKIE_DOMAIN` matches your actual domain. Incorrect cookie domain prevents authentication from working.
-- If using SSL, ensure `NEXTAUTH_URL` uses `https://`.
+- Verify `LEARNHOUSE_AUTH_JWT_SECRET_KEY` is set (at least 32 characters) and has not changed. Changing it signs every user out.
+- Verify `LEARNHOUSE_COOKIE_DOMAIN` matches your actual domain. An incorrect cookie domain prevents authentication from working.
+- If using SSL, make sure the public URLs in `.env` (`NEXT_PUBLIC_LEARNHOUSE_API_URL`, `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL`, `NEXTAUTH_URL`) use `https://`, and that `NEXT_PUBLIC_LEARNHOUSE_HTTPS` is set to lowercase `true`.
+- Users who don't open LearnHouse for 30 days must sign in again. Change this with `LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS`.
 
 ## Performance Issues
 
@@ -90,17 +99,17 @@ Stop the conflicting service, or reconfigure LearnHouse to use a different port 
 
 1. Run diagnostics:
    ```bash
-   learnhouse doctor
+   npx learnhouse doctor
    ```
 
 2. Review application logs for errors or slow operations:
    ```bash
-   learnhouse logs
+   npx learnhouse logs
    ```
 
-3. Check resource limits on your containers:
+3. Check resource usage and memory limits on your containers:
    ```bash
-   learnhouse deployments
+   npx learnhouse scale
    ```
 
 4. Consider increasing server resources (RAM, CPU) if usage is consistently high.
@@ -113,26 +122,25 @@ Stop the conflicting service, or reconfigure LearnHouse to use a different port 
 Resetting your instance deletes all data. Create a backup first if you want to preserve any data.
 </Callout>
 
-If you need to start fresh:
+Re-running `setup` on an existing installation keeps its data, so it does not reset anything. To start fresh, remove the containers and volumes, then run setup again:
 
 ```bash
 # Back up current data (optional)
-learnhouse backup
+npx learnhouse backup
 
-# Stop all services
-learnhouse stop
+# Remove containers, network and volumes (this deletes the database and uploads)
+cd ~/.learnhouse/<name>
+docker compose down -v
 
-# Re-run setup
-learnhouse setup
-
-# Start fresh
-learnhouse start
+# Move the old installation directory out of the way, then run setup again
+cd ~ && mv ~/.learnhouse/<name> ~/learnhouse-<name>-old
+npx learnhouse@latest setup
 ```
 
 ## Getting Help
 
 If you cannot resolve an issue using this guide:
 
-1. Run `learnhouse doctor` and include the output in your report.
+1. Run `npx learnhouse doctor` and include the output in your report.
 2. Check the [LearnHouse GitHub issues](https://github.com/learnhouse/learnhouse/issues) for known problems and solutions.
 3. Open a new issue with details about your problem, including relevant log output and your environment (OS, Docker version, RAM).

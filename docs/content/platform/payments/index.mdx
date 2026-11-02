@@ -1,30 +1,81 @@
-import { Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 
 # Payments
 
-LearnHouse integrates with Stripe to let you sell courses and content directly from your platform. You can create offers, bundle courses into groups, and manage subscriptions and one-time purchases.
+Sell access to your courses with Stripe. You create offers (one-time purchases or subscriptions), learners buy them from your store, and LearnHouse grants access as soon as Stripe confirms the payment.
 
-<Callout>
-Payments is available on the **Standard plan** and above on LearnHouse Cloud. For self-hosted instances, it requires the **Enterprise Edition**. It must also be enabled in your [Organization Settings](/platform/organizations/settings).
+<Callout type="info">
+Payments needs the **Standard** plan or higher on LearnHouse Cloud. On self-hosted instances it needs the [Enterprise Edition](/enterprise); it is not available in the open source edition.
 </Callout>
 
-## How Payments Work
+## Getting started
 
-1. Connect your Stripe account to your organization.
-2. Create offers, either subscriptions or one-time purchases.
-3. Assign courses or course bundles to each offer.
-4. Students purchase access through a checkout flow powered by Stripe.
-5. Enrollment is granted automatically on successful payment.
+<Steps>
 
-## Stripe Connect Modes
+### Connect Stripe
 
-LearnHouse supports two ways to connect with Stripe:
+Go to **Payments** → **Configuration** and click **Connect** on the Stripe card. You sign in to Stripe and authorize LearnHouse to use your account. When you come back, the card shows **Connected**.
 
-- **Standard Mode**: You connect your own existing Stripe account via OAuth.
-- **Express Mode**: LearnHouse creates a Stripe Express account on your behalf, which makes onboarding simpler.
+### Create offers
 
-## Learn More
+On **Offers**, click **Create New Offer**. Set the price and type, and choose the courses it unlocks. See [Offers & Pricing](/platform/payments/offers).
 
-- [Offers & Pricing](/platform/payments/offers): Create and manage products and their pricing.
-- [Groups & Bundles](/platform/payments/groups): Bundle courses together for package deals.
-- [Enrollments & Checkout](/platform/payments/enrollments): How students purchase and gain access.
+### Optionally bundle courses
+
+On **Payment Groups**, group several courses so one offer unlocks them all, and sync buyers into user groups. See [Groups & Bundles](/platform/payments/groups).
+
+### Share your store
+
+Your offers are listed on your public store at `/store`. Click **Preview Shop** to open it. See [Store & Checkout](/platform/payments/enrollments).
+
+</Steps>
+
+## The Payments dashboard
+
+| Tab | Contents |
+| --- | --- |
+| **Overview** | Revenue, transactions, subscriptions and customers, read live from Stripe |
+| **Offers** | Create and manage offers |
+| **Payment Groups** | Bundle courses and sync buyers into user groups |
+| **Configuration** | Connect, reconnect or remove Stripe |
+
+The **Stripe Dashboard** button in the header opens Stripe in a new tab.
+
+### Overview
+
+The **Overview** tab has four sub-tabs:
+
+- **Overview**: **MRR**, **ARR**, **Total revenue**, **Active subscribers**, **Total customers**, **Churned (30d)**, and your 5 most recent transactions. Yearly subscriptions count as one twelfth of their price toward MRR. Total revenue counts paid charges that were not refunded.
+- **Customers**: everyone who bought an offer, with the offer, type (subscription or one-time), amount, payment method, last charge, next billing date and status. Each row links to the customer in Stripe.
+- **Transactions**: your Stripe charges, 25 per page, with refunded amounts and receipt links.
+- **Subscriptions**: your Stripe subscriptions, filterable by status (active, trialing, past due, canceled).
+
+If Stripe cannot be reached, the tab shows "Could not reach Stripe. Check your connection or configuration."
+
+## Removing Stripe
+
+**Remove** on the Configuration tab disconnects your Stripe account. You cannot remove it while learners have active subscriptions: cancel them in Stripe first.
+
+## Refunds
+
+LearnHouse has no refund button. Refund the payment in Stripe. When the full amount is refunded, LearnHouse marks the enrollment as refunded and removes the access it granted. Partial refunds do not change access.
+
+## Setting up Stripe on a self-hosted instance
+
+The Stripe connection uses your platform's own Stripe Connect application. Set these on the API:
+
+| Variable | Purpose |
+| --- | --- |
+| `LEARNHOUSE_STRIPE_SECRET_KEY` | Your platform Stripe secret key |
+| `LEARNHOUSE_STRIPE_PUBLISHABLE_KEY` | Your platform Stripe publishable key |
+| `LEARNHOUSE_STRIPE_CLIENT_ID` | Your Stripe Connect client ID, used for the **Connect** button |
+| `LEARNHOUSE_STRIPE_WEBHOOK_STANDARD_SECRET` | Signing secret for the webhook at `/api/v1/payments/stripe/webhook` |
+| `LEARNHOUSE_STRIPE_WEBHOOK_CONNECT_SECRET` | Signing secret for the Connect webhook at `/api/v1/payments/stripe/webhook/connect` |
+
+Point both Stripe webhooks at your API domain. LearnHouse relies on them to confirm payments, renewals, cancellations, refunds and disputes.
+
+## Learn more
+
+- [Offers & Pricing](/platform/payments/offers)
+- [Groups & Bundles](/platform/payments/groups)
+- [Store & Checkout](/platform/payments/enrollments)

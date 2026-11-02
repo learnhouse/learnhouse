@@ -1,20 +1,48 @@
+import { Callout } from 'nextra/components'
+
 # Certifications
 
-LearnHouse can generate certificates when students complete a course, as formal recognition of their work.
+A course can award a certificate to learners who complete it. Each certificate has a unique ID and a public page anyone can use to check it is genuine.
 
-## How Certifications Work
+<YouTube video="guide-7" />
 
-When a student completes all activities in a course, a certification record is created and linked to their profile. Teachers and administrators can manage certifications at the course level.
+<Callout>
+On LearnHouse Cloud, certifications need the Pro plan or higher. Setting one up also needs permission to create certifications in the organization.
+</Callout>
 
-## Key Features
+## Setting up a certificate
 
-- **Automatic generation**: Certificates are generated when a student's Trail shows full course completion.
-- **Course-level configuration**: Each course can have certifications enabled or disabled.
-- **Certificate retrieval**: Students can view and access their earned certificates from their profile.
-- **Verification**: Each certificate has a unique identifier that can be used for verification.
+Open the course in the dashboard and go to the **Certification** tab. Click **Enable Certification**, then fill in:
 
-## Use Cases
+| Field | Notes |
+| --- | --- |
+| **Certification Name** | Up to 100 characters. |
+| **Certification Description** | Up to 500 characters. |
+| **Certification Type** | Course Completion (default), Achievement Based, Assessment Based, Participation, Skill Mastery, Professional Development, Continuing Education, Workshop Attendance or Specialization. |
+| **Certificate Pattern** | The background design: Royal, Tech, Nature, Geometric, Vintage, Waves, Minimal, Professional (default), Academic or Modern. |
+| **Instructor Name (Optional)** | Printed on the certificate. |
 
-- **Professional development**: Issue certificates for compliance training or continuing education.
-- **Academic programs**: Provide completion certificates for course series or learning paths.
-- **Skill validation**: Give students a shareable credential they can reference externally.
+The **Certificate Preview** updates as you edit. The certificate also shows your organization's logo and a QR code that links to its verification page.
+
+## When a certificate is awarded
+
+A learner earns the certificate when both are true:
+
+- Every activity in the course is complete.
+- Every graded assignment in the course is graded and passed at its passing threshold. [Formative](/platform/assignments/formative) assignments only need to be handed in.
+
+A course without assignments awards the certificate on completion alone. If an assignment is still waiting for a grade, the certificate is issued once it is graded and passed.
+
+## What learners get
+
+At the end of the course, learners see **Your Certificate**, with **Download Certificate PDF** and **Verify Certificate**. All their certificates are listed under **My Certificates** on their [Progress page](/platform/courses/trails).
+
+## Verifying a certificate
+
+Each certificate has an ID like `AB-20261102-1a2b-3c4d5e6f`: two letters, the award date, part of the learner's ID and a random suffix. Its verification page at `/certificates/{id}/verify` shows the certificate ID, course name, certification type, award date and instructor. Share that link, or the QR code on the certificate, with anyone who needs to check it.
+
+## Revocation
+
+A certificate is revoked automatically when the learner no longer meets the conditions: an assignment is re-graded below its passing threshold, rejected, or reset for a retry. It is issued again once they pass. Admins can also revoke a certificate through the admin API with an API token.
+
+Every revocation fires a `certificate_revoked` [webhook](/platform/automations/webhooks) event.

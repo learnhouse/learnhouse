@@ -6,19 +6,19 @@ LearnHouse can be self-hosted on your own infrastructure using the **LearnHouse 
 
 ## Quick Start
 
-Make sure you have **Docker Engine 20.10+**, **Docker Compose 2.0+**, and **Node.js 18+** installed, then run:
+Make sure you have **Docker** with the Compose v2 plugin and **Node.js 22+** installed, then run:
 
 ```bash
 npx learnhouse@latest setup
 ```
 
-The interactive setup wizard will walk you through domain configuration, database settings, admin credentials, and optional features. Once complete, start all services:
+The interactive setup wizard walks you through domain configuration, database settings, admin credentials, and optional features. At the end it offers to start LearnHouse and waits until it is ready. If you skipped that, start it with:
 
 ```bash
 npx learnhouse start
 ```
 
-LearnHouse will be available at **http://localhost** (or your configured domain). Log in with the admin credentials you provided during setup.
+LearnHouse is available at **http://localhost** (or your configured domain). Log in with the admin credentials you provided during setup.
 
 <Callout type="info">
 The CLI generates `docker-compose.yml`, `.env`, and reverse proxy configuration for you. You do not need to write or maintain these files manually.
@@ -37,7 +37,8 @@ npx learnhouse stop       # Stop all services
 npx learnhouse start      # Start all services
 npx learnhouse logs       # Stream container logs
 npx learnhouse config     # View current configuration
-npx learnhouse backup     # Backup or restore the database
+npx learnhouse backup     # Back up the database, .env and uploaded content
+npx learnhouse update     # Update to the latest version
 npx learnhouse doctor     # Diagnose issues
 ```
 

@@ -1,46 +1,65 @@
+import { Callout } from 'nextra/components'
+
 # AI for Teachers
 
-The LearnHouse AI assistant helps teachers create and manage course content more efficiently.
+These are the AI tools available when you build courses. Each one uses [AI credits](/platform/ai#ai-credits); the cost is listed on the AI overview page.
 
-## Content Creation Assistance
+## Creating a course
 
-Teachers can use the AI to accelerate the course-building process:
+The **AI Course Creator** (**Create Course** > **Start with AI**) plans a course with you in a chat, using your description and any photos, documents or YouTube videos you attach, then writes each activity. See [AI Course Creator](/platform/courses/ai-course-creator).
 
-- **Draft generation**: Generate initial drafts for activity content based on a topic or outline.
-- **Content improvement**: Refine existing content for clarity, tone, or completeness.
-- **Quiz creation**: Generate quiz questions based on the course material.
+When you build a course from a folder of files (**From Existing Content**), **Organize with AI** sorts the files into chapters and activities. See [Import & Export](/platform/courses/import-export#from-existing-content).
 
-## Audio & podcast generation
+## AI Editor
 
-From an activity's **Audio** block, the **Generate** tab turns text into narrated audio using
-Google Gemini text-to-speech. Three modes are available:
+In the page editor, click **AI Editor** to open a chat that edits the page with you. Select a block to work on just that block, or ask about the whole page. Quick actions:
 
-- **Text to speech**: narrate text you write, in a voice of your choice.
-- **Podcast (2 voices)**: enter a topic (or paste source material) and the AI writes a two-host
-  discussion, which you can review and edit before generating the audio.
-- **Speak**: enter a subject and the AI writes a detailed single-speaker talk, then narrates it.
+**Improve writing**, **Add examples**, **Simplify**, **Expand**, **Add quiz**, **Translate**, **Add summary**, **Add tip**, **Add definition**.
 
-For the Podcast and Speak modes you can pick a **length** (from 2 minutes), a **language**, and a
-**tone/style**. The generated script is fully editable before you produce the audio, and the audio
-is saved to the activity like any uploaded file.
+The changes are written into the page, where you can keep editing them. See [Editor](/platform/editor#ai-editor).
 
-Audio generation uses [AI credits](#ai-credits): 1 credit to write a script and 3 credits to
-generate the narration.
+## Blocks that generate content
 
-## AI credits
+| Block | What AI does |
+| --- | --- |
+| **Magic Block** | Builds an interactive element (simulation, chart, game, calculator, timeline) from your description. You can refine it up to 6 times. |
+| **Quiz** | **Generate with AI** writes questions from the page content. Choose single-answer or select-all-that-apply questions, preview, regenerate, then insert. |
+| **Scenarios** | **Generate with AI** drafts a branching scenario. |
+| **Image** | **Generate with AI** creates an image from a prompt. You can refine a previous image, and find past images under **History**. |
+| **Audio** | Generates narrated audio. See below. |
 
-AI features are metered by per-organization AI credits. **Free organizations start with 20 credits**
-so you can try the AI features, including audio generation, before upgrading. When credits run
-low, the app prompts you to upgrade for a larger monthly allowance.
+AI image generation is also available for course, podcast, community, board and playground thumbnails.
 
-## Course Management
+## Audio generation
 
-Beyond content creation, the AI can assist with organizing and structuring courses:
+In an **Audio** block, open the **Generate** tab and pick a mode:
 
-- Suggest how to break a topic into chapters and activities.
-- Identify gaps in course coverage.
-- Recommend improvements based on the existing content structure.
+| Mode | What it does |
+| --- | --- |
+| **Text to speech** | Narrates text you write, in the voice you choose. Up to 11,000 characters. |
+| **Podcast (2 voices)** | Enter a topic or paste source material. The AI writes a discussion between two speakers, each with a name and a voice. |
+| **Speak** | Enter a subject. The AI writes a single-speaker talk and narrates it. |
 
-## Getting Started
+For **Podcast (2 voices)** and **Speak** you also choose:
 
-The AI assistant is available from the course editor interface. Make sure your instance has a Google Gemini API key configured via `LEARNHOUSE_GEMINI_API_KEY` (see [AI Setup](/self-hosting/configuration/ai-setup)) and that AI is enabled for your organization.
+- **Length**: 2, 3, 5 or 10 minutes.
+- **Language**: one of 18 languages, or **Auto-detect**.
+- **Tone / style**: for example "warm and upbeat".
+
+Click **Generate discussion script** or **Generate talk script** first. The script is fully editable. Then click **Generate audio**. The audio is saved in the block like an uploaded file. A script costs 1 credit and the narration 3 credits.
+
+## Assignments
+
+In an assignment's **Editor** tab, **Generate tasks with AI** drafts up to 10 tasks grounded in the course content. You preview and edit them before adding them. See [Task Types](/platform/assignments/task-types#generating-tasks-with-ai).
+
+## Videos
+
+For uploaded videos, AI can transcribe and translate captions into the languages you choose, and split the video into chapters from those captions. See [AI Video Captions](/platform/courses/video-captions).
+
+## Playgrounds and boards
+
+[Playgrounds](/platform/playgrounds) are interactive pages written by AI from your description, optionally grounded in one of your courses. On [boards](/platform/boards), the **AI Playground** tool does the same on the canvas.
+
+<Callout>
+AI output can be wrong. Review generated content, especially facts, figures and code, before you publish it.
+</Callout>

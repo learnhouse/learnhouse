@@ -25,7 +25,7 @@ public endpoint group:
 - All endpoints are prefixed with `/api/v1/`.
 - Resources follow standard REST conventions: `GET` to list or retrieve, `POST` to create, `PUT` to update, `DELETE` to remove.
 - Create/update endpoints commonly accept **multipart form data** rather than JSON, since many also accept file uploads (e.g. thumbnails, avatars).
-- Authenticated endpoints require either the `Authorization: Bearer <token>` header or the `access_token_cookie` cookie.
+- Authenticated endpoints require either the `Authorization: Bearer <token>` header or the `LH_access` session cookie.
 - Programmatic access uses API tokens with the `lh_` prefix (Pro plan).
 - Responses are returned as JSON.
 

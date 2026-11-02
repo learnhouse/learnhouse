@@ -1,18 +1,25 @@
 # Groups & Bundles
 
-Groups let you bundle multiple courses together and sell them as a single package. When a student purchases an offer linked to a group, they get access to all courses in that group.
+A payment group bundles several courses so that one offer unlocks them all. It is the way to sell a course bundle or an all-access subscription.
 
-## How Groups Work
+## Creating a group
 
-1. Create a group and give it a name.
-2. Add courses to the group.
-3. Link the group to one or more offers.
-4. When a student purchases the offer, they are enrolled in all courses within the group.
+1. Go to **Payments** → **Payment Groups** and click **New Group**.
+2. Enter a **Group Name** (for example "Full Access Bundle" or "Premium Subscription") and an optional description, then click **Create Group**.
+3. On the group card, under **Courses**, add the courses the group includes.
+4. Link the group to an offer: when you create or edit an offer, pick it under **Payment Group**.
 
-## User Group Sync
+An offer can unlock a payment group and individual courses at the same time.
 
-Groups can be synced with user groups for automatic access provisioning. When a payment group is synced to a user group, students who purchase an offer linked to that group are automatically added to the corresponding user group and get access to all its resources.
+## Syncing buyers into user groups
 
-## Direct Resource Linking
+Under **Access Groups** on a payment group card, use **Link a UserGroup** to connect one or more [user groups](/platform/users/user-groups).
 
-If you don't need a group, you can also link individual courses directly to an offer. This is useful for selling single courses without creating a bundle.
+- When a learner's purchase or subscription becomes active, they are added to every linked user group.
+- When the subscription is cancelled or the payment refunded, they are removed again.
+
+This lets a purchase unlock anything a user group can reach (communities, folders, boards, podcasts), not only courses.
+
+## Deleting a group
+
+Deleting a payment group removes its courses and user group links. Offers that used the group stay, but lose their group.

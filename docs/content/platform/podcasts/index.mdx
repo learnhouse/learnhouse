@@ -2,26 +2,47 @@ import { Callout } from 'nextra/components'
 
 # Podcasts
 
-Podcasts let you create and manage audio content within your organization. You can organize audio material into podcasts with individual episodes, as an alternative content format alongside courses.
+Podcasts let you publish audio shows inside your organization. Each podcast holds a list of episodes that learners can stream, and every podcast has an RSS feed you can submit to podcast directories.
+
+<YouTube video="guide-9" />
 
 <Callout>
-Podcasts must be enabled in your [Organization Settings](/platform/organizations/settings) to be available.
+Podcasts must be enabled in your [Organization Settings](/platform/organizations/settings). On LearnHouse Cloud they need the Standard plan or higher.
 </Callout>
 
-## How Podcasts Work
+## Creating a podcast
 
-Each podcast acts as a container for related episodes. You create a podcast, add metadata like a name, description, and thumbnail, then populate it with episodes. Episodes are streamed to users with optimized audio delivery.
+Go to **Podcasts** in the dashboard and create a podcast. Give it a **Podcast Name** (3 to 100 characters), an optional **Description** (up to 500 characters), and choose **Make this podcast public**.
 
-## Key Features
+Each podcast then has three tabs: **General**, **Episodes** and **Distribution**.
 
-- **Episode management**: Add, edit, reorder, and remove episodes within a podcast.
-- **Audio streaming**: Episodes are streamed with HTTP Range request support for efficient playback and seeking.
-- **RSS feed**: Every podcast exposes a standard RSS feed at `/podcast/{shortUuid}/feed` that you can submit manually to Apple Podcasts Connect, Spotify for Podcasters, and other directories. LearnHouse does not publish to these services on your behalf.
-- **Metadata & discovery**: Each podcast and episode supports names, descriptions, and tags for browsing.
-- **Thumbnails**: Upload custom artwork for podcasts and episodes.
+## General
 
-## Use Cases
+| Setting | Notes |
+| --- | --- |
+| **Thumbnail** | The podcast artwork. JPG or PNG, 1400x1400 pixels recommended. You can also generate one with AI. |
+| **About** | A longer presentation, up to 2000 characters. |
+| **Tags** | Comma-separated keywords. |
+| **Visibility Settings** | Whether the podcast is public and whether it is published. |
 
-- **Lecture recordings**: Provide audio versions of lectures for on-the-go learning.
-- **Supplementary material**: Share interviews, discussions, or expert commentary alongside course content.
-- **Audio courses**: Build entire courses around audio content for topics that suit a listening format.
+## Episodes
+
+Click **New Episode** and give it a **Title**, a **Description** and an **Audio File**: MP3, WAV, OGG or M4A, up to 1 GB.
+
+Drag episodes to reorder them. Each episode can be published or unpublished, edited or deleted. Only published episodes are visible to learners and included in the feed.
+
+Learners play episodes in a player that keeps playing while they move around the site. Press `p` to play or pause it.
+
+## Distribution
+
+Every podcast has an RSS feed at `/podcast/{id}/feed` on your organization's domain, where `{id}` is the podcast UUID without its `podcast_` prefix. The **Distribution** tab shows the feed URL with copy and open buttons, and step-by-step instructions to submit it to Apple Podcasts, Spotify, YouTube Music and Amazon Music / Audible.
+
+LearnHouse does not submit the feed for you. Each directory then reads new episodes from the feed on its own schedule. The feed is cached for up to an hour, so a new episode can take that long to appear in it.
+
+## Podcasts in courses
+
+The [Audio block](/platform/editor/blocks#the-audio-block) in a course page can embed a single episode (**Episode** tab) or a whole podcast as a playlist (**Playlist** tab). Podcast episodes can also be added to [boards](/platform/boards).
+
+<Callout type="info">
+AI audio generation (text to speech, two-voice podcast, single-voice talk) lives in the Audio block of a course page, not in the podcast dashboard. See [AI for Teachers](/platform/ai/for-teachers#audio-generation).
+</Callout>

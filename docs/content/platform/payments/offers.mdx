@@ -1,27 +1,39 @@
+import { Callout } from 'nextra/components'
+
 # Offers & Pricing
 
-Offers are the products you sell to students. Each offer defines what students get, how much they pay, and whether the payment is recurring or one-time.
+An offer is something learners can buy: access to one or more courses, for a one-time price or a subscription.
 
-## Offer Types
+## Creating an offer
 
-- **Subscription**: Recurring payments that grant access as long as the subscription is active.
-- **One-time purchase**: A single payment that grants permanent access.
+Go to **Payments** → **Offers** and click **Create New Offer**.
 
-## Pricing Options
+| Field | Options |
+| --- | --- |
+| **Offer Name** | Required |
+| **Description** | Required |
+| **Offer Type** | **One Time** or **Subscription** |
+| **Price Type** | **Fixed Price** or **Customer Choice**. Customer Choice is only available for one-time offers. |
+| **Billing Period** | **Monthly** or **Yearly**. Subscriptions only. |
+| **Price** | The amount, at least 1. With Customer Choice this field becomes **Minimum Amount**. |
+| **Currency** | Any ISO 4217 currency. USD by default. |
+| **Benefits** | Optional selling points, separated by commas. Shown on the store. |
+| Access | **Courses (direct)** to unlock individual courses, and/or a **Payment Group** to unlock a bundle |
 
-- **Fixed price**: Set a specific amount in your chosen currency.
-- **Customer choice**: Let students pay what they want (pay-what-you-want model).
+LearnHouse creates the matching product and price in your Stripe account.
 
-## Offer Details
+### Customer Choice
 
-Each offer includes:
+With **Customer Choice**, learners pay what they want, starting at your minimum amount. The store labels it "Pay what you want (min.)".
 
-- **Name & description**: What the student is buying.
-- **Benefits**: A list of what's included in the offer.
-- **Amount & currency**: The price (e.g., $49 USD).
-- **Public listing**: Whether the offer appears on your public storefront.
-- **Linked resources**: Courses or groups that the offer grants access to.
+## Managing offers
 
-## Public Storefront
+Each offer card shows its type ("One-time payment" or "Subscription · Monthly/Yearly"), price, benefits and linked payment group.
 
-Offers marked as public are displayed on your organization's storefront page. Each listing shows the offer details, included courses, and a purchase button that launches the Stripe checkout flow.
+- **Manage Resources** shows and changes the courses the offer unlocks.
+- Edit an offer to change its details. You cannot change the billing period of a subscription that has active subscribers; create a new offer for the new period instead.
+- **Archive Offer** removes the offer from LearnHouse and archives its product in Stripe. You cannot archive an offer while it has active or completed enrollments.
+
+<Callout type="info">
+Offers are listed on your public [store](/platform/payments/enrollments) and on the pages of the courses they unlock.
+</Callout>
