@@ -5374,7 +5374,14 @@
         "impact_desc": "Suivez l'engagement et voyez comment les apprenants progressent au fil du temps",
         "team": "Développez votre équipe",
         "team_desc": "Invitez des formateurs, gérez les rôles et organisez les groupes d'apprenants"
-      }
+      },
+      "hello_name": "Bienvenue, {{name}}",
+      "promise": "Mettons votre académie en ligne dès aujourd'hui.",
+      "intent_title": "Que construisez-vous ?",
+      "intent_subtitle": "Nous adapterons votre plan de lancement en conséquence. Vous pourrez le modifier plus tard.",
+      "back": "Retour",
+      "build_plan": "Voir mon plan de lancement",
+      "skip": "Passer"
     },
     "farewell": {
       "title": "Vous êtes prêt à enseigner au monde",
@@ -5388,7 +5395,112 @@
     "video_placeholder": "Vidéo de présentation bientôt disponible",
     "dismiss": "Je terminerai plus tard",
     "steps_done": "étapes terminées",
-    "back_to_dashboard": "Retour au tableau de bord"
+    "back_to_dashboard": "Retour au tableau de bord",
+    "minutes": "{{count}} min",
+    "about_minutes": "Environ {{count}} min",
+    "minutes_left": "~{{count}} min restantes",
+    "step_of": "Étape {{current}} sur {{total}}",
+    "step_done": "Terminé",
+    "next_step": "Étape suivante",
+    "mark_done": "Marquer comme terminé",
+    "skip_for_now": "Passer pour l'instant",
+    "skipped": "Ignorée",
+    "undo_skip": "Rétablir cette étape",
+    "auto_check": "Cette étape se coche toute seule une fois terminée.",
+    "video": {
+      "tap_for_sound": "Regarder avec le son",
+      "replay": "Revoir",
+      "unavailable": "Impossible de charger cette vidéo."
+    },
+    "intent": {
+      "customers": {
+        "label": "Former mes clients",
+        "hint": "Académie produit, onboarding, moins de tickets de support",
+        "headline": "Votre académie clients, en ligne en 15 minutes environ."
+      },
+      "team": {
+        "label": "Former mon équipe",
+        "hint": "Intégration des employés, conformité, montée en compétences",
+        "headline": "Le centre de formation de votre équipe, en ligne en 15 minutes environ."
+      },
+      "sell": {
+        "label": "Vendre mes cours",
+        "hint": "Transformez votre savoir en activité",
+        "headline": "Votre activité de formation, ouverte en 15 minutes environ."
+      },
+      "school": {
+        "label": "Gérer une école ou une communauté",
+        "hint": "Classes, promotions, clubs, associations",
+        "headline": "Votre école, ouverte en 15 minutes environ."
+      }
+    },
+    "finale": {
+      "badge": "Configuration terminée",
+      "title": "{{name}} est en ligne",
+      "subtitle": "Votre académie est prête à accueillir des apprenants. Partagez ce lien pour les faire venir.",
+      "link_label": "Votre lien public",
+      "copy": "Copier le lien",
+      "copied": "Copié",
+      "open": "Ouvrir mon école",
+      "whats_next": "Et ensuite ?",
+      "close": "Fermer le plan de lancement",
+      "next": {
+        "certificates": {
+          "title": "Délivrer des certificats",
+          "desc": "Les apprenants vont plus loin quand il y a quelque chose à obtenir."
+        },
+        "analytics": {
+          "title": "Suivez sa croissance",
+          "desc": "Voyez qui s'inscrit, qui termine et où ça bloque."
+        },
+        "next_course": {
+          "title": "Créez votre prochain cours",
+          "desc": "Partez d'un document que vous avez déjà."
+        }
+      }
+    },
+    "launch_plan": "Plan de lancement",
+    "subtitle": "Six étapes rapides vers une académie en ligne. Chacune a sa vidéo.",
+    "watch_tour": "Voir la visite guidée",
+    "tour_title": "Bienvenue sur LearnHouse",
+    "steps_title": "Étapes",
+    "step_number": "Étape {{n}}",
+    "progress_count": "{{done}} sur {{total}} terminées",
+    "step_completed_toast": "Terminé : {{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "Commencez par la question que vos clients posent le plus. Un cours qui y répond vous évite cet appel chaque semaine.",
+        "add_content": "Un court enregistrement d'écran vaut mieux qu'un long article d'aide. Montrez les clics une fois et laissez-le travailler pour vous.",
+        "brand_school": "Vos clients doivent avoir l'impression de ne jamais avoir quitté votre produit. Votre logo et vos couleurs en font une partie de l'académie.",
+        "share_grow": "Ajoutez le lien dans votre application, votre centre d'aide et votre e-mail de bienvenue. C'est là que vos clients cherchent.",
+        "invite_learners": "Invitez d'abord un client bienveillant. Ses questions vous diront quelle doit être la prochaine leçon.",
+        "build_community": "Quand les clients s'entraident, votre support grandit gratuitement."
+      },
+      "team": {
+        "create_course": "Commencez par ce dont chaque nouvelle recrue a besoin la première semaine. Écrivez-le une fois, arrêtez de le répéter en réunion.",
+        "add_content": "Enregistrez la démo que vous refaites sans cesse en direct. Les nouveaux la regardent dès le premier jour, à leur rythme.",
+        "brand_school": "Faites-en un espace propre à votre entreprise, pas un outil de plus à apprendre.",
+        "share_grow": "Épinglez le lien dans la messagerie de l'équipe et dans votre checklist d'intégration.",
+        "invite_learners": "Invitez votre prochaine recrue, ou un collègue pour tester. Un vrai retour vaut mieux que des suppositions.",
+        "build_community": "Avec un espace pour les questions, les réponses sont écrites une seule fois, pour tout le monde."
+      },
+      "sell": {
+        "create_course": "Commencez petit. Un cours ciblé pour lequel on paierait vaut mieux qu'un gros cours jamais terminé.",
+        "add_content": "Votre première leçon est votre argument de vente. Soignez-la et laissez les gens la découvrir gratuitement.",
+        "brand_school": "On paie les marques en qui on a confiance. Un logo et des couleurs vous donnent un air professionnel.",
+        "share_grow": "C'est le lien pour votre bio, votre newsletter et vos publications. Chaque vente commence ici.",
+        "invite_learners": "Vos premiers apprenants sont vos premiers témoignages. Invitez quelques amis ou abonnés à l'essayer.",
+        "build_community": "Une communauté transforme les acheteurs en habitués, et les habitués achètent le cours suivant."
+      },
+      "school": {
+        "create_course": "Commencez par le cours que vous maîtrisez le mieux. Les apprenants peuvent démarrer avant que le reste soit prêt.",
+        "add_content": "Mélangez une courte vidéo, une page à lire et un quiz. La variété motive les apprenants.",
+        "brand_school": "Le nom et les couleurs de votre école sur chaque page donnent aux apprenants un sentiment d'appartenance.",
+        "share_grow": "Partagez-le avec vos élèves, les parents ou vos membres. Un seul lien, tout au même endroit.",
+        "invite_learners": "Invitez votre première classe. Un vrai apprenant change votre façon de construire.",
+        "build_community": "Les discussions font vivre la classe entre les leçons et font revenir les apprenants."
+      }
+    }
   },
   "migration": {
     "accepted_formats": "Vidéos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
