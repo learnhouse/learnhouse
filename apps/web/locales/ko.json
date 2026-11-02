@@ -134,6 +134,10 @@
         "api_access": {
           "title": "프로 기능",
           "description": "API 접근은 프로 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 조직 데이터에 대한 프로그래밍 방식의 접근을 잠금 해제하세요."
+        },
+        "drip": {
+          "title": "Standard 기능",
+          "description": "순차 공개는 Standard 플랜 이상의 조직에서만 사용할 수 있습니다. 업그레이드하면 학습자별로 또는 코호트 전체를 대상으로 일정에 따라 장을 공개할 수 있습니다."
         }
       },
       "current_plan": "현재 플랜",
@@ -1543,7 +1547,8 @@
           "contributors": "기여자",
           "certification": "인증",
           "analytics": "분석",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "일정"
         },
         "access_denied": {
           "title": "액세스 거부",
@@ -2108,7 +2113,11 @@
           "partial_error": "{{total}}개 중 {{failed}}개의 활동 업데이트에 실패했습니다"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "장 이름"
+          "chapter_name_placeholder": "장 이름",
+          "drip_tooltip": "공개 일정: 일정 탭에서 수정하세요",
+          "drip_day_one": "{{count}}일차",
+          "drip_day": "{{count}}일차",
+          "drip_now": "0일차"
         },
         "activity": {
           "name_placeholder": "활동 이름",
@@ -2259,6 +2268,87 @@
           "title_max_length": "SEO 제목은 70자 이하여야 합니다",
           "twitter_description_max_length": "Twitter 설명은 200자 이하여야 합니다",
           "twitter_title_max_length": "Twitter 제목은 70자 이하여야 합니다"
+        }
+      },
+      "schedule": {
+        "title": "순차 공개",
+        "description": "장을 한꺼번에 공개하지 않고 시간에 따라 순차적으로 공개합니다. 학습자는 다음에 무엇이 언제 열리는지 확인할 수 있습니다.",
+        "on": "켜짐",
+        "off": "꺼짐",
+        "anchor": {
+          "title": "일정은 언제 시작되나요?",
+          "enrollment": "각 학습자가 등록할 때",
+          "enrollment_description": "학습자마다 자신만의 일정이 적용됩니다. 상시 운영되는 자기 주도형 코스에 적합합니다.",
+          "fixed_date": "고정 시작일",
+          "fixed_date_description": "코호트 전체에 하나의 날짜가 적용됩니다. 라이브 런칭과 부트캠프에 적합합니다.",
+          "start_date": "코호트 시작일"
+        },
+        "chapters": {
+          "title": "공개 계획",
+          "preview_enrollment": "오늘 등록하는 학습자 기준의 날짜입니다.",
+          "preview_cohort": "코호트 기준의 날짜입니다.",
+          "empty": "일정을 설정하려면 이 코스에 장을 추가하세요."
+        },
+        "interval": {
+          "label": "장 공개 간격",
+          "amount": "간격",
+          "unit": "단위",
+          "days": "일",
+          "weeks": "주",
+          "apply": "적용"
+        },
+        "mode": {
+          "immediate": "즉시",
+          "delay": "일정 기간 후",
+          "date": "특정 날짜",
+          "delay_days": "일수",
+          "days_after_enrollment": "일 후 (등록 기준)",
+          "days_after_start": "일 후 (시작일 기준)",
+          "release_at": "공개일"
+        },
+        "require_previous": "이전 장을 완료한 후에만 공개",
+        "errors": {
+          "start_date": "코호트 시작일을 선택하세요.",
+          "release_at": "“{{name}}”의 공개일을 선택하세요."
+        },
+        "toasts": {
+          "save_success": "일정이 저장되었습니다",
+          "save_error": "일정을 저장할 수 없습니다"
+        },
+        "unsaved": "저장되지 않은 변경 사항",
+        "saved": "모든 변경 사항이 저장됨",
+        "save": "일정 저장",
+        "early_access": {
+          "title": "얼리 액세스",
+          "description": "이 사용자 그룹의 멤버는 모든 장을 바로 이용할 수 있습니다. 예: 스태프, 베타 테스터, 프리미엄 등급.",
+          "empty": "아직 사용자 그룹이 없습니다."
+        },
+        "notify": {
+          "title": "장이 공개되면 학습자에게 이메일 보내기",
+          "description": "예약된 장이 공개되는 즉시 등록된 학습자에게 코스 링크가 포함된 짧은 이메일이 발송됩니다."
+        },
+        "preview": {
+          "label": "특정 날짜의 학습자 화면 미리보기",
+          "day_one": "등록 후 {{count}}일차",
+          "day": "등록 후 {{count}}일차",
+          "slider": "미리보기 날짜",
+          "clear": "지우기",
+          "open": "공개됨",
+          "upcoming_one": "{{count}}일차에 공개",
+          "upcoming": "{{count}}일차에 공개",
+          "closed": "종료됨",
+          "dated": "고정 날짜"
+        },
+        "more": {
+          "label": "추가 조건",
+          "count_one": "조건 {{count}}개 더",
+          "count": "조건 {{count}}개 더",
+          "requires": "다음 장을 완료해야 함",
+          "no_earlier": "첫 번째 장입니다.",
+          "closes": "다시 비공개로 전환",
+          "closes_days": "공개 일수",
+          "closes_after": "일 후 (공개 기준)",
+          "closes_hint": "다시보기나 라이브 주간 보너스처럼 기간 한정 콘텐츠에 사용하세요."
         }
       }
     },
@@ -5264,7 +5354,31 @@
     "backToCourses": "코스 목록으로 돌아가기",
     "loadError": "이 코스를 찾을 수 없거나 로드하는 중 오류가 발생했습니다.",
     "noPermission": "이 코스를 볼 수 있는 권한이 없습니다.",
-    "finish_course": "강좌 완료"
+    "finish_course": "강좌 완료",
+    "drip": {
+      "opens_on_enroll": "코스를 시작하면 공개",
+      "opens_after_previous": "이전 장 완료 후 공개",
+      "opens_on": "{{date}} 공개",
+      "in_days_one": "{{count}}일 후",
+      "in_days": "{{count}}일 후",
+      "in_hours_one": "{{count}}시간 후",
+      "in_hours": "{{count}}시간 후",
+      "soon": "1시간 이내",
+      "coming_soon": "곧 공개",
+      "banner_title": "새로운 장이 순차적으로 공개됩니다",
+      "banner_next": "다음 장: {{name}} · {{when}}",
+      "gate_enrollment": "이 코스는 코스를 시작한 시점부터 장이 순차적으로 공개됩니다. 코스 페이지에서 코스를 시작하면 일정이 열립니다.",
+      "gate_previous": "이전 장의 모든 레슨을 완료하면 이 장이 바로 공개됩니다.",
+      "gate_schedule": "이 코스는 장이 순차적으로 공개됩니다. 이 장이 공개되면 다시 방문해 주세요.",
+      "opens_after_required": "필수 장 완료 후 공개",
+      "closed": "더 이상 이용할 수 없음",
+      "closed_on": "{{date}} 종료",
+      "open_until": "{{date}}까지 공개",
+      "gate_prerequisites": "이 장의 선행 장을 완료하면 바로 공개됩니다.",
+      "gate_closed": "이 장은 기간 한정으로 공개되었으며, 공개 기간이 종료되었습니다.",
+      "add_to_calendar": "캘린더에 추가",
+      "calendar_event": "{{chapter}} 공개 · {{course}}"
+    }
   },
   "pagination": {
     "next": "다음",

@@ -134,6 +134,10 @@
         "api_access": {
           "title": "Recurso Pro",
           "description": "Acesso à API é um recurso premium disponível apenas para organizações no plano Pro ou superior. Atualize para desbloquear acesso programático aos dados da sua organização."
+        },
+        "drip": {
+          "title": "Recurso Standard",
+          "description": "A liberação programada está disponível para organizações com plano Standard ou superior. Atualize para liberar capítulos em um cronograma, por aluno ou para uma turma inteira."
         }
       },
       "current_plan": "Plano atual",
@@ -1533,7 +1537,8 @@
           "contributors": "Colaboradores",
           "certification": "Certificação",
           "analytics": "Análises",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "Cronograma"
         },
         "access_denied": {
           "title": "Acesso Negado",
@@ -2098,7 +2103,11 @@
           "partial_error": "{{failed}} de {{total}} atividades não puderam ser atualizadas"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Nome do capítulo"
+          "chapter_name_placeholder": "Nome do capítulo",
+          "drip_tooltip": "Cronograma de liberação: edite na aba Cronograma",
+          "drip_day_one": "Dia {{count}}",
+          "drip_day": "Dia {{count}}",
+          "drip_now": "Dia 0"
         },
         "activity": {
           "name_placeholder": "Nome da atividade",
@@ -2249,6 +2258,87 @@
           "title_max_length": "Título SEO deve ter 70 caracteres ou menos",
           "twitter_description_max_length": "Descrição Twitter deve ter 200 caracteres ou menos",
           "twitter_title_max_length": "Título Twitter deve ter 70 caracteres ou menos"
+        }
+      },
+      "schedule": {
+        "title": "Liberação programada",
+        "description": "Libere os capítulos ao longo do tempo em vez de todos de uma vez. Os alunos veem o que vem a seguir e quando será aberto.",
+        "on": "Ativado",
+        "off": "Desativado",
+        "anchor": {
+          "title": "Quando o cronograma começa?",
+          "enrollment": "Quando cada aluno se inscreve",
+          "enrollment_description": "Cada um tem seu próprio cronograma. Ideal para cursos perenes e no próprio ritmo.",
+          "fixed_date": "Em uma data de início fixa",
+          "fixed_date_description": "Uma única data para toda a turma. Ideal para lançamentos ao vivo e bootcamps.",
+          "start_date": "A turma começa em"
+        },
+        "chapters": {
+          "title": "Plano de liberação",
+          "preview_enrollment": "Datas exibidas para quem se inscreve hoje.",
+          "preview_cohort": "Datas exibidas para a turma.",
+          "empty": "Adicione capítulos a este curso para programá-los."
+        },
+        "interval": {
+          "label": "Um capítulo a cada",
+          "amount": "Intervalo",
+          "unit": "Unidade",
+          "days": "dias",
+          "weeks": "semanas",
+          "apply": "Aplicar"
+        },
+        "mode": {
+          "immediate": "Imediatamente",
+          "delay": "Após um prazo",
+          "date": "Em uma data",
+          "delay_days": "Dias",
+          "days_after_enrollment": "dias após a inscrição",
+          "days_after_start": "dias após a data de início",
+          "release_at": "Data de liberação"
+        },
+        "require_previous": "Somente após concluir o capítulo anterior",
+        "errors": {
+          "start_date": "Escolha a data de início da turma.",
+          "release_at": "Escolha uma data de liberação para “{{name}}”."
+        },
+        "toasts": {
+          "save_success": "Cronograma salvo",
+          "save_error": "Não foi possível salvar o cronograma"
+        },
+        "unsaved": "Alterações não salvas",
+        "saved": "Todas as alterações salvas",
+        "save": "Salvar cronograma",
+        "early_access": {
+          "title": "Acesso antecipado",
+          "description": "Membros destes grupos de usuários recebem todos os capítulos imediatamente: equipe, beta testers, um plano premium.",
+          "empty": "Nenhum grupo de usuários ainda."
+        },
+        "notify": {
+          "title": "Avisar os alunos por e-mail quando um capítulo for aberto",
+          "description": "Alunos inscritos recebem um e-mail curto com um link para o curso assim que um capítulo programado for aberto para eles."
+        },
+        "preview": {
+          "label": "Visualize o que um aluno vê em qualquer dia",
+          "day_one": "Dia {{count}} após a inscrição",
+          "day": "Dia {{count}} após a inscrição",
+          "slider": "Dia da visualização",
+          "clear": "Limpar",
+          "open": "Aberto",
+          "upcoming_one": "Abre no dia {{count}}",
+          "upcoming": "Abre no dia {{count}}",
+          "closed": "Fechado",
+          "dated": "Data fixa"
+        },
+        "more": {
+          "label": "Mais condições",
+          "count_one": "Mais {{count}} condição",
+          "count": "Mais {{count}} condições",
+          "requires": "Exige a conclusão destes capítulos",
+          "no_earlier": "Este é o primeiro capítulo.",
+          "closes": "Fechar novamente",
+          "closes_days": "Dias aberto",
+          "closes_after": "dias após abrir",
+          "closes_hint": "Para conteúdo por tempo limitado, como um replay ou um bônus da semana ao vivo."
         }
       }
     },
@@ -5254,7 +5344,31 @@
     "backToCourses": "Voltar aos Cursos",
     "loadError": "Não foi possível encontrar este curso ou ocorreu um erro ao carregá-lo.",
     "noPermission": "Você não tem permissão para visualizar este curso.",
-    "finish_course": "Concluir curso"
+    "finish_course": "Concluir curso",
+    "drip": {
+      "opens_on_enroll": "Abre quando você inicia o curso",
+      "opens_after_previous": "Abre após o capítulo anterior",
+      "opens_on": "Abre em {{date}}",
+      "in_days_one": "em {{count}} dia",
+      "in_days": "em {{count}} dias",
+      "in_hours_one": "em {{count}} hora",
+      "in_hours": "em {{count}} horas",
+      "soon": "em menos de uma hora",
+      "coming_soon": "Em breve",
+      "banner_title": "Novos capítulos são liberados ao longo do tempo",
+      "banner_next": "A seguir: {{name}}. {{when}}",
+      "gate_enrollment": "Este curso libera os capítulos ao longo do tempo, a partir do momento em que você inicia o curso. Inicie-o pela página do curso para desbloquear seu cronograma.",
+      "gate_previous": "Conclua todas as atividades do capítulo anterior e este será aberto imediatamente.",
+      "gate_schedule": "Este curso libera os capítulos ao longo do tempo. Volte quando este for aberto.",
+      "opens_after_required": "Abre após os capítulos obrigatórios",
+      "closed": "Não está mais disponível",
+      "closed_on": "fechado em {{date}}",
+      "open_until": "Aberto até {{date}}",
+      "gate_prerequisites": "Conclua os capítulos que servem de base para este e ele será aberto imediatamente.",
+      "gate_closed": "Este capítulo ficou disponível por tempo limitado, e esse período terminou.",
+      "add_to_calendar": "Adicionar ao calendário",
+      "calendar_event": "{{chapter}} abre · {{course}}"
+    }
   },
   "pagination": {
     "next": "Próxima",

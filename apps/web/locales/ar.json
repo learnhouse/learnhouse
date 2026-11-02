@@ -2444,7 +2444,7 @@
           "chapter_name_placeholder": "اسم الفصل",
           "drip_tooltip": "جدول النشر: عدّله من تبويب الجدولة",
           "drip_day_one": "اليوم {{count}}",
-          "drip_day_other": "اليوم {{count}}",
+          "drip_day": "اليوم {{count}}",
           "drip_now": "اليوم 0"
         },
         "activity": {
@@ -2658,25 +2658,28 @@
         "preview": {
           "label": "عاين ما يراه المتعلّم في أي يوم",
           "day_one": "اليوم {{count}} بعد التسجيل",
-          "day_other": "اليوم {{count}} بعد التسجيل",
+          "day": "اليوم {{count}} بعد التسجيل",
           "slider": "يوم المعاينة",
           "clear": "مسح",
           "open": "مفتوح",
           "upcoming_one": "يُفتح في اليوم {{count}}",
-          "upcoming_other": "يُفتح في اليوم {{count}}",
+          "upcoming": "يُفتح في اليوم {{count}}",
           "closed": "مغلق",
           "dated": "تاريخ محدّد"
         },
         "more": {
           "label": "شروط إضافية",
           "count_one": "شرط إضافي واحد",
-          "count_other": "{{count}} شروط إضافية",
+          "count": "{{count}} شرط إضافي",
           "requires": "يتطلب إكمال هذه الفصول",
           "no_earlier": "هذا هو الفصل الأول.",
           "closes": "أغلقه مجددًا",
           "closes_days": "أيام الإتاحة",
           "closes_after": "يومًا بعد فتحه",
-          "closes_hint": "للمحتوى المؤقت مثل تسجيل جلسة أو مكافأة أسبوع مباشر."
+          "closes_hint": "للمحتوى المؤقت مثل تسجيل جلسة أو مكافأة أسبوع مباشر.",
+          "count_two": "شرطان إضافيان",
+          "count_few": "{{count}} شروط إضافية",
+          "count_many": "{{count}} شرطًا إضافيًا"
         }
       }
     },
@@ -6701,9 +6704,9 @@
       "opens_after_previous": "يُفتح بعد الفصل السابق",
       "opens_on": "يُفتح {{date}}",
       "in_days_one": "خلال يوم واحد",
-      "in_days_other": "خلال {{count}} أيام",
+      "in_days": "خلال {{count}} يوم",
       "in_hours_one": "خلال ساعة واحدة",
-      "in_hours_other": "خلال {{count}} ساعات",
+      "in_hours": "خلال {{count}} ساعة",
       "soon": "خلال أقل من ساعة",
       "coming_soon": "قريبًا",
       "banner_title": "تُنشر الفصول الجديدة على مراحل",
@@ -6718,7 +6721,13 @@
       "gate_prerequisites": "أكمل الفصول التي يعتمد عليها هذا الفصل وسيُفتح فورًا.",
       "gate_closed": "كان هذا الفصل متاحًا لفترة محدودة وقد انتهت.",
       "add_to_calendar": "أضف إلى التقويم",
-      "calendar_event": "يُفتح {{chapter}} · {{course}}"
+      "calendar_event": "يُفتح {{chapter}} · {{course}}",
+      "in_days_two": "خلال يومين",
+      "in_days_few": "خلال {{count}} أيام",
+      "in_days_many": "خلال {{count}} يومًا",
+      "in_hours_two": "خلال ساعتين",
+      "in_hours_few": "خلال {{count}} ساعات",
+      "in_hours_many": "خلال {{count}} ساعة"
     }
   },
   "pagination": {
