@@ -19,6 +19,7 @@ import { enrollInPath, leavePath, Path, PathCourseItem, removePathPrefix } from 
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { queryKeys } from '@/lib/query/keys'
 import { usePath } from '@/hooks/queries/usePaths'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 // Same box the course page uses for its sidebar and lesson list.
 const BOX = 'bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden'
@@ -86,9 +87,10 @@ function PathView({ path, orgslug }: { path: Path; orgslug: string }) {
 
       <div className="flex flex-col md:flex-row gap-8 pt-2">
         <div className="w-full md:w-3/4">
-          <div
-            className="ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px] bg-cover bg-center"
-            style={{ backgroundImage: `url(${cover})` }}
+          <ThumbnailImage
+            src={cover}
+            fetchPriority="high"
+            className="block ring-1 ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px]"
           />
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-5 text-sm font-medium text-neutral-500">
             {meta.map((item, i) => (
