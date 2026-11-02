@@ -139,6 +139,10 @@
         "api_access": {
           "title": "Pro funkcionalita",
           "description": "API Access je prémium funkcionalita dostupná len pre organizácie na pláne Pro alebo vyššie. Upgradujte a odomknite programmatický prístup k údajom vašej organizácie."
+        },
+        "drip": {
+          "title": "Štandardná funkcia",
+          "description": "Postupné sprístupňovanie obsahu je dostupné len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán a sprístupňujte kapitoly podľa harmonogramu, pre každého študenta zvlášť alebo pre celú kohortu."
         }
       }
     },
@@ -1793,7 +1797,8 @@
           "contributors": "Prispievatelia",
           "seo": "SEO",
           "certification": "Certifikácia",
-          "analytics": "Analytika"
+          "analytics": "Analytika",
+          "schedule": "Harmonogram"
         },
         "access_denied": {
           "title": "Prístup zamietnutý",
@@ -2426,7 +2431,13 @@
           "partial_error": "{{failed}} z {{total}} aktivít sa nepodarilo aktualizovať"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Názov kapitoly"
+          "chapter_name_placeholder": "Názov kapitoly",
+          "drip_tooltip": "Harmonogram sprístupnenia: upravte ho na karte Harmonogram",
+          "drip_day_one": "Deň {{count}}",
+          "drip_day_few": "Deň {{count}}",
+          "drip_day_many": "Deň {{count}}",
+          "drip_day": "Deň {{count}}",
+          "drip_now": "Deň 0"
         },
         "activity": {
           "name_placeholder": "Názov aktivity",
@@ -2507,6 +2518,93 @@
           "descriptions": {
             "scorm": "Vzdelávací balík SCORM"
           }
+        }
+      },
+      "schedule": {
+        "title": "Postupné sprístupňovanie obsahu",
+        "description": "Sprístupňujte kapitoly postupne namiesto všetkých naraz. Študenti vidia, čo príde ďalej a kedy sa to otvorí.",
+        "on": "Zap.",
+        "off": "Vyp.",
+        "anchor": {
+          "title": "Kedy sa harmonogram začína?",
+          "enrollment": "Keď sa študent zapíše",
+          "enrollment_description": "Každý má vlastné odpočítavanie. Ideálne pre stále dostupné kurzy vlastným tempom.",
+          "fixed_date": "V pevný dátum začiatku",
+          "fixed_date_description": "Jeden dátum pre celú kohortu. Ideálne pre živé spustenia a bootcampy.",
+          "start_date": "Začiatok kohorty"
+        },
+        "chapters": {
+          "title": "Plán sprístupnenia",
+          "preview_enrollment": "Dátumy pre niekoho, kto sa zapíše dnes.",
+          "preview_cohort": "Dátumy pre kohortu.",
+          "empty": "Pridajte do kurzu kapitoly, aby ste ich mohli naplánovať."
+        },
+        "interval": {
+          "label": "Jedna kapitola raz za",
+          "amount": "Interval",
+          "unit": "Jednotka",
+          "days": "dni",
+          "weeks": "týždne",
+          "apply": "Použiť"
+        },
+        "mode": {
+          "immediate": "Hneď",
+          "delay": "S oneskorením",
+          "date": "V určitý dátum",
+          "delay_days": "Dni",
+          "days_after_enrollment": "dní po zápise",
+          "days_after_start": "dní po dátume začiatku",
+          "release_at": "Dátum sprístupnenia"
+        },
+        "require_previous": "Až po dokončení predchádzajúcej kapitoly",
+        "errors": {
+          "start_date": "Vyberte dátum začiatku kohorty.",
+          "release_at": "Vyberte dátum sprístupnenia pre „{{name}}“."
+        },
+        "toasts": {
+          "save_success": "Harmonogram uložený",
+          "save_error": "Harmonogram sa nepodarilo uložiť"
+        },
+        "unsaved": "Neuložené zmeny",
+        "saved": "Všetky zmeny uložené",
+        "save": "Uložiť harmonogram",
+        "early_access": {
+          "title": "Skorý prístup",
+          "description": "Členovia týchto skupín používateľov dostanú všetky kapitoly hneď: zamestnanci, beta testeri, prémiová úroveň.",
+          "empty": "Zatiaľ žiadne skupiny používateľov."
+        },
+        "notify": {
+          "title": "Poslať študentom e-mail, keď sa kapitola otvorí",
+          "description": "Zapísaní študenti dostanú krátky e-mail s odkazom na kurz hneď, ako sa im naplánovaná kapitola otvorí."
+        },
+        "preview": {
+          "label": "Pozrite si pohľad študenta v ľubovoľný deň",
+          "day_one": "Deň {{count}} po zápise",
+          "day_few": "Deň {{count}} po zápise",
+          "day_many": "Deň {{count}} po zápise",
+          "day": "Deň {{count}} po zápise",
+          "slider": "Deň ukážky",
+          "clear": "Vymazať",
+          "open": "Otvorené",
+          "upcoming_one": "Otvorí sa v deň {{count}}",
+          "upcoming_few": "Otvorí sa v deň {{count}}",
+          "upcoming_many": "Otvorí sa v deň {{count}}",
+          "upcoming": "Otvorí sa v deň {{count}}",
+          "closed": "Zatvorené",
+          "dated": "Pevný dátum"
+        },
+        "more": {
+          "label": "Ďalšie podmienky",
+          "count_one": "Ešte {{count}} podmienka",
+          "count_few": "Ešte {{count}} podmienky",
+          "count_many": "Ešte {{count}} podmienok",
+          "count": "Ešte {{count}} podmienok",
+          "requires": "Vyžaduje dokončenie týchto kapitol",
+          "no_earlier": "Toto je prvá kapitola.",
+          "closes": "Znova zatvoriť",
+          "closes_days": "Dni otvorenia",
+          "closes_after": "dní po otvorení",
+          "closes_hint": "Pre obsah dostupný obmedzený čas, napríklad záznam alebo bonus z live týždňa."
         }
       }
     },
@@ -5248,7 +5346,35 @@
     "backToCourses": "Späť na kurzy",
     "loadError": "Tento kurz sa nenašiel alebo nastala chyba pri jeho načítaní.",
     "noPermission": "Nemáte oprávnenie zobraziť tento kurz.",
-    "finish_course": "Dokončiť kurz"
+    "finish_course": "Dokončiť kurz",
+    "drip": {
+      "opens_on_enroll": "Otvorí sa, keď začnete kurz",
+      "opens_after_previous": "Otvorí sa po predchádzajúcej kapitole",
+      "opens_on": "Otvorí sa {{date}}",
+      "in_days_one": "o {{count}} deň",
+      "in_days_few": "o {{count}} dni",
+      "in_days_many": "o {{count}} dní",
+      "in_days": "o {{count}} dní",
+      "in_hours_one": "o {{count}} hodinu",
+      "in_hours_few": "o {{count}} hodiny",
+      "in_hours_many": "o {{count}} hodín",
+      "in_hours": "o {{count}} hodín",
+      "soon": "o menej ako hodinu",
+      "coming_soon": "Už čoskoro",
+      "banner_title": "Nové kapitoly sa sprístupňujú postupne",
+      "banner_next": "Ďalej: {{name}}. {{when}}",
+      "gate_enrollment": "Tento kurz sprístupňuje kapitoly postupne, od chvíle, keď kurz začnete. Začnite ho na stránke kurzu a odomknete si svoj harmonogram.",
+      "gate_previous": "Dokončite všetky lekcie predchádzajúcej kapitoly a táto sa hneď otvorí.",
+      "gate_schedule": "Tento kurz sprístupňuje kapitoly postupne. Vráťte sa, keď sa táto kapitola otvorí.",
+      "opens_after_required": "Otvorí sa po povinných kapitolách",
+      "closed": "Už nedostupné",
+      "closed_on": "zatvorené {{date}}",
+      "open_until": "Otvorené do {{date}}",
+      "gate_prerequisites": "Dokončite kapitoly, na ktoré táto nadväzuje, a hneď sa otvorí.",
+      "gate_closed": "Táto kapitola bola dostupná obmedzený čas a ten už uplynul.",
+      "add_to_calendar": "Pridať do kalendára",
+      "calendar_event": "{{chapter}} sa otvára · {{course}}"
+    }
   },
   "pagination": {
     "next": "Ďalšie",

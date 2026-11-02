@@ -136,6 +136,10 @@
         "api_access": {
           "title": "Pro-Funktion",
           "description": "Der API-Zugriff ist eine Premium-Funktion, die nur für Organisationen mit unserem Pro-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um programmatischen Zugriff auf die Daten Ihrer Organisation freizuschalten."
+        },
+        "drip": {
+          "title": "Standard-Funktion",
+          "description": "Zeitgesteuerte Freigabe ist für Organisationen mit unserem Standard-Plan oder höher verfügbar. Upgraden Sie, um Kapitel nach Zeitplan freizugeben, pro Lernendem oder für eine ganze Kohorte."
         }
       },
       "current_plan": "Aktueller Plan",
@@ -1533,7 +1537,8 @@
           "contributors": "Mitwirkende",
           "certification": "Zertifizierung",
           "seo": "SEO",
-          "analytics": "Analysen"
+          "analytics": "Analysen",
+          "schedule": "Zeitplan"
         },
         "access_denied": {
           "title": "Zugriff verweigert",
@@ -2098,7 +2103,11 @@
           "partial_error": "{{failed}} von {{total}} Aktivitäten konnten nicht aktualisiert werden"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Kapitelname"
+          "chapter_name_placeholder": "Kapitelname",
+          "drip_tooltip": "Freigabeplan: im Tab Zeitplan bearbeiten",
+          "drip_day_one": "Tag {{count}}",
+          "drip_day": "Tag {{count}}",
+          "drip_now": "Tag 0"
         },
         "activity": {
           "name_placeholder": "Aktivitätsname",
@@ -2250,7 +2259,88 @@
           "twitter_title_max_length": "Twitter-Titel muss 70 Zeichen oder weniger sein"
         }
       },
-      "limit_reached": "Kurslimit erreicht ({{limit}})"
+      "limit_reached": "Kurslimit erreicht ({{limit}})",
+      "schedule": {
+        "title": "Zeitgesteuerte Freigabe",
+        "description": "Geben Sie Kapitel nach und nach frei statt alle auf einmal. Lernende sehen, was als Nächstes kommt und wann es freigeschaltet wird.",
+        "on": "An",
+        "off": "Aus",
+        "anchor": {
+          "title": "Wann beginnt der Zeitplan?",
+          "enrollment": "Bei der Einschreibung der jeweiligen Lernenden",
+          "enrollment_description": "Jede Person hat ihren eigenen Zeitplan. Ideal für dauerhaft verfügbare Kurse im eigenen Tempo.",
+          "fixed_date": "An einem festen Startdatum",
+          "fixed_date_description": "Ein Datum für die ganze Kohorte. Ideal für Live-Starts und Bootcamps.",
+          "start_date": "Kohorte startet am"
+        },
+        "chapters": {
+          "title": "Freigabeplan",
+          "preview_enrollment": "Daten für jemanden, der sich heute einschreibt.",
+          "preview_cohort": "Daten für die Kohorte.",
+          "empty": "Fügen Sie diesem Kurs Kapitel hinzu, um sie zu planen."
+        },
+        "interval": {
+          "label": "Ein Kapitel alle",
+          "amount": "Intervall",
+          "unit": "Einheit",
+          "days": "Tage",
+          "weeks": "Wochen",
+          "apply": "Anwenden"
+        },
+        "mode": {
+          "immediate": "Sofort",
+          "delay": "Nach einer Wartezeit",
+          "date": "An einem Datum",
+          "delay_days": "Tage",
+          "days_after_enrollment": "Tage nach der Einschreibung",
+          "days_after_start": "Tage nach dem Startdatum",
+          "release_at": "Freigabedatum"
+        },
+        "require_previous": "Erst nach Abschluss des vorherigen Kapitels",
+        "errors": {
+          "start_date": "Wählen Sie das Startdatum der Kohorte.",
+          "release_at": "Wählen Sie ein Freigabedatum für „{{name}}“."
+        },
+        "toasts": {
+          "save_success": "Zeitplan gespeichert",
+          "save_error": "Zeitplan konnte nicht gespeichert werden"
+        },
+        "unsaved": "Nicht gespeicherte Änderungen",
+        "saved": "Alle Änderungen gespeichert",
+        "save": "Zeitplan speichern",
+        "early_access": {
+          "title": "Vorabzugriff",
+          "description": "Mitglieder dieser Benutzergruppen erhalten sofort Zugriff auf alle Kapitel: Team, Beta-Tester, ein Premium-Tarif.",
+          "empty": "Noch keine Benutzergruppen."
+        },
+        "notify": {
+          "title": "Lernende per E-Mail benachrichtigen, wenn ein Kapitel freigeschaltet wird",
+          "description": "Eingeschriebene Lernende erhalten eine kurze E-Mail mit einem Link zum Kurs, sobald ein geplantes Kapitel für sie freigeschaltet wird."
+        },
+        "preview": {
+          "label": "Vorschau der Lernendenansicht an einem beliebigen Tag",
+          "day_one": "Tag {{count}} nach der Einschreibung",
+          "day": "Tag {{count}} nach der Einschreibung",
+          "slider": "Vorschautag",
+          "clear": "Zurücksetzen",
+          "open": "Offen",
+          "upcoming_one": "Öffnet an Tag {{count}}",
+          "upcoming": "Öffnet an Tag {{count}}",
+          "closed": "Geschlossen",
+          "dated": "Festes Datum"
+        },
+        "more": {
+          "label": "Weitere Bedingungen",
+          "count_one": "{{count}} weitere Bedingung",
+          "count": "{{count}} weitere Bedingungen",
+          "requires": "Erfordert den Abschluss dieser Kapitel",
+          "no_earlier": "Dies ist das erste Kapitel.",
+          "closes": "Wieder schließen",
+          "closes_days": "Tage geöffnet",
+          "closes_after": "Tage nach der Freischaltung",
+          "closes_hint": "Für zeitlich begrenzte Inhalte wie eine Aufzeichnung oder einen Bonus zur Live-Woche."
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -5252,7 +5342,31 @@
     "backToCourses": "Zurück zu Kursen",
     "loadError": "Dieser Kurs konnte nicht gefunden werden oder beim Laden ist ein Fehler aufgetreten.",
     "noPermission": "Sie haben keine Berechtigung, diesen Kurs anzuzeigen.",
-    "finish_course": "Kurs abschließen"
+    "finish_course": "Kurs abschließen",
+    "drip": {
+      "opens_on_enroll": "Wird freigeschaltet, wenn du den Kurs startest",
+      "opens_after_previous": "Wird nach dem vorherigen Kapitel freigeschaltet",
+      "opens_on": "Verfügbar ab {{date}}",
+      "in_days_one": "in {{count}} Tag",
+      "in_days": "in {{count}} Tagen",
+      "in_hours_one": "in {{count}} Stunde",
+      "in_hours": "in {{count}} Stunden",
+      "soon": "in weniger als einer Stunde",
+      "coming_soon": "Demnächst verfügbar",
+      "banner_title": "Neue Kapitel werden nach und nach freigeschaltet",
+      "banner_next": "Als Nächstes: {{name}}. {{when}}",
+      "gate_enrollment": "Dieser Kurs schaltet seine Kapitel nach und nach frei, beginnend mit deinem Kursstart. Starte den Kurs auf der Kursseite, um deinen Zeitplan freizuschalten.",
+      "gate_previous": "Schließe alle Aktivitäten des vorherigen Kapitels ab, dann wird dieses sofort freigeschaltet.",
+      "gate_schedule": "Dieser Kurs schaltet seine Kapitel nach und nach frei. Schau wieder vorbei, wenn dieses verfügbar ist.",
+      "opens_after_required": "Wird nach den erforderlichen Kapiteln freigeschaltet",
+      "closed": "Nicht mehr verfügbar",
+      "closed_on": "geschlossen am {{date}}",
+      "open_until": "Verfügbar bis {{date}}",
+      "gate_prerequisites": "Schließe die Kapitel ab, auf denen dieses aufbaut, dann wird es sofort freigeschaltet.",
+      "gate_closed": "Dieses Kapitel war nur für begrenzte Zeit verfügbar, und diese Zeit ist vorbei.",
+      "add_to_calendar": "Zum Kalender hinzufügen",
+      "calendar_event": "{{chapter}} wird freigeschaltet · {{course}}"
+    }
   },
   "pagination": {
     "next": "Weiter",

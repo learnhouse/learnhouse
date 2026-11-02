@@ -2955,7 +2955,7 @@
           "chapter_name_placeholder": "Chapter name",
           "drip_tooltip": "Release schedule: edit it in the Schedule tab",
           "drip_day_one": "Day {{count}}",
-          "drip_day_other": "Day {{count}}",
+          "drip_day": "Day {{count}}",
           "drip_now": "Day 0"
         },
         "activity": {
@@ -3100,19 +3100,19 @@
         "preview": {
           "label": "Preview a learner’s view on any day",
           "day_one": "Day {{count}} after enrolling",
-          "day_other": "Day {{count}} after enrolling",
+          "day": "Day {{count}} after enrolling",
           "slider": "Preview day",
           "clear": "Clear",
           "open": "Open",
           "upcoming_one": "Opens on day {{count}}",
-          "upcoming_other": "Opens on day {{count}}",
+          "upcoming": "Opens on day {{count}}",
           "closed": "Closed",
           "dated": "Fixed date"
         },
         "more": {
           "label": "More conditions",
           "count_one": "{{count}} more condition",
-          "count_other": "{{count}} more conditions",
+          "count": "{{count}} more conditions",
           "requires": "Requires these chapters to be completed",
           "no_earlier": "This is the first chapter.",
           "closes": "Close it again",
@@ -6865,9 +6865,9 @@
       "opens_after_previous": "Opens after the previous chapter",
       "opens_on": "Opens {{date}}",
       "in_days_one": "in {{count}} day",
-      "in_days_other": "in {{count}} days",
+      "in_days": "in {{count}} days",
       "in_hours_one": "in {{count}} hour",
-      "in_hours_other": "in {{count}} hours",
+      "in_hours": "in {{count}} hours",
       "soon": "in less than an hour",
       "coming_soon": "Coming soon",
       "banner_title": "New chapters are released over time",
