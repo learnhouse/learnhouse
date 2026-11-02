@@ -148,6 +148,10 @@
         "drip": {
           "title": "Standard Feature",
           "description": "Drip content is available to organizations on our Standard plan or higher. Upgrade to release chapters on a schedule, per learner or for a whole cohort."
+        },
+        "paths": {
+          "title": "Pro Feature",
+          "description": "Paths is a premium feature available only to organizations on our Pro plan or higher. Upgrade to arrange courses into guided journeys with their own certificates."
         }
       }
     },
@@ -1669,7 +1673,45 @@
     "workshop_attendance": "Workshop Attendance",
     "specialization": "Specialization",
     "dedication_message": "Your dedication and hard work have paid off. You've mastered all the content in this course.",
-    "download_failed": "Failed to generate PDF. Please try again."
+    "download_failed": "Failed to generate PDF. Please try again.",
+    "document": {
+      "title": "Certificate",
+      "presented_to": "This certificate is presented to",
+      "for_completing": "for successfully completing",
+      "learner_placeholder": "Learner name",
+      "name_placeholder": "Certification name",
+      "instructor": "Instructor",
+      "issued_by": "Issued by",
+      "date": "Date awarded",
+      "credential_id": "Credential ID"
+    },
+    "page": {
+      "verified": "Verified credential",
+      "issued_line": "Issued to {{name}} by {{issuer}} on {{date}}",
+      "download": "Download PDF",
+      "add_to_linkedin": "Add to LinkedIn",
+      "copy_link": "Copy verification link",
+      "link_copied": "Link copied",
+      "recipient": "Recipient",
+      "issuer": "Issued by",
+      "issued_on": "Issued on",
+      "credential_id": "Credential ID",
+      "id_copied": "Credential ID copied",
+      "copy_id": "Copy credential ID",
+      "not_found": "Certificate not found",
+      "not_found_hint": "No valid certificate matches this ID. It may have been revoked, or the link may be incomplete.",
+      "go_home": "Go home",
+      "earned_for_course": "Earned for completing",
+      "earned_for_path": "Earned for completing the {{name}} path",
+      "view_and_share": "View and share"
+    },
+    "designer": {
+      "signer": "Signed by (optional)",
+      "signer_placeholder": "e.g. Dr. Jane Smith",
+      "style": "Style",
+      "preview_hint": "Live preview. Learners see their own name, date and credential ID."
+    },
+    "kind_course": "Course"
   },
   "search": {
     "search_placeholder": "Search courses, users, folders...",
@@ -1790,6 +1832,10 @@
         "account_purchases": {
           "description": "Purchases and subscriptions",
           "keywords": "purchases, subscriptions, billing, receipts, invoices"
+        },
+        "paths": {
+          "description": "Guided journeys through several courses",
+          "keywords": "paths, learning paths, tracks, programs, journey"
         }
       }
     }
@@ -5721,6 +5767,10 @@
         "account_purchases": {
           "description": "Your purchases and subscriptions",
           "keywords": "purchases, subscriptions, billing, history, receipts"
+        },
+        "paths": {
+          "description": "Arrange courses into guided paths with certificates",
+          "keywords": "paths, learning paths, tracks, programs, curriculum, sequence, certificate"
         }
       }
     },
@@ -7923,5 +7973,177 @@
       "remove_link": "Remove placement",
       "remove_link_confirm": "Forget this placement? If the LMS opens it again it will reappear."
     }
+  },
+  "paths": {
+    "title": "Paths",
+    "new_path": "New path",
+    "manage_paths": "Manage paths",
+    "catalog_subtitle": "Guided journeys through several courses. Finish a path to earn its certificate.",
+    "published": "Published",
+    "draft": "Draft",
+    "completed": "Completed",
+    "in_progress": "In progress",
+    "required": "Required",
+    "elective": "Elective",
+    "actions": "Path actions",
+    "edit_courses": "Edit courses",
+    "view_path": "View path",
+    "view_certificate": "View certificate",
+    "start_path": "Start path",
+    "start_hint": "Start the path to track your progress across every course in it.",
+    "sign_in_to_start": "Sign in to start",
+    "continue_learning": "Continue learning",
+    "leave_path": "Leave path",
+    "your_progress": "Your progress",
+    "up_next": "Up next",
+    "guided_order": "Guided order",
+    "certificate_included": "Certificate included",
+    "certificate_earned": "You earned this certificate",
+    "certificate_explainer": "Awarded automatically once you finish every required course in this path.",
+    "locked_hint": "Finish the previous course to unlock",
+    "restricted_course": "Restricted course",
+    "no_courses_yet": "No courses in this path yet.",
+    "electives_rule_one": "Pick at least {{count}} of the {{total}} electives",
+    "electives_rule_other": "Pick at least {{count}} of the {{total}} electives",
+    "progress_short": "{{done}}/{{total}} courses",
+    "progress_long": "{{done}} of {{total}} courses completed",
+    "course_count_one": "{{count}} course",
+    "course_count_other": "{{count}} courses",
+    "learner_count_one": "{{count}} learner",
+    "learner_count_other": "{{count}} learners",
+    "no_paths": "No paths yet",
+    "no_paths_description": "Arrange courses into a guided journey with its own certificate.",
+    "no_public_paths": "No paths yet",
+    "no_public_paths_description": "Learning paths will show up here once they are published.",
+    "no_search_results": "No paths match your search",
+    "search_placeholder": "Search paths...",
+    "clear_search": "Clear search",
+    "not_found": "This path doesn't exist or isn't available to you.",
+    "back_to_paths": "Back to paths",
+    "delete_path": "Delete path",
+    "delete_path_title": "Delete \"{{name}}\"?",
+    "delete_path_confirm": "The path and its learner progress will be removed. The courses themselves are not touched.",
+    "levels": {
+      "all": "All levels",
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "e.g. Data Analyst",
+      "name_required": "A path needs a name",
+      "name_max_length": "Keep the name under 200 characters",
+      "description": "Short description",
+      "description_placeholder": "One or two sentences shown on the path card",
+      "description_max_length": "Keep the description under 500 characters",
+      "about": "About",
+      "about_placeholder": "Who this path is for and what learners will be able to do by the end",
+      "about_hint": "Shown on the path page.",
+      "level": "Level",
+      "thumbnail": "Cover image",
+      "upload_thumbnail": "Upload image",
+      "thumbnail_hint": "16:9 works best. PNG or JPG.",
+      "discard_thumbnail": "Discard new image",
+      "visibility": "Visibility",
+      "published_hint": "Learners can find and start the path.",
+      "public": "Public",
+      "public_hint": "Visible to visitors who aren't members of your organization.",
+      "public_label": "Visible to everyone, not only members",
+      "save": "Save changes"
+    },
+    "modals": {
+      "create": {
+        "title": "New path",
+        "description": "Group courses into a guided journey. You'll pick and order the courses next.",
+        "submit": "Create path"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Guided sequences of courses, each with its own certificate.",
+      "view_path": "View path",
+      "tabs": {
+        "general": "General",
+        "courses": "Courses",
+        "certificate": "Certificate",
+        "learners": "Learners"
+      },
+      "courses": {
+        "title": "Courses",
+        "subtitle": "Drag to set the order learners follow. Electives are optional courses.",
+        "add": "Add courses",
+        "drag": "Drag to reorder",
+        "remove": "Remove from path",
+        "requirement": "Requirement",
+        "unpublished_hint": "Unpublished, hidden from learners",
+        "empty_title": "No courses yet",
+        "empty_description": "Add the courses that make up this path."
+      },
+      "rules": {
+        "title": "Completion rules",
+        "subtitle": "What a learner has to do to finish the path.",
+        "sequential": "Guided order",
+        "sequential_hint": "Each course in the path view unlocks once the previous required course is finished. Courses stay open on their own pages.",
+        "electives": "Electives to complete",
+        "electives_hint_one": "Out of {{count}} elective in this path.",
+        "electives_hint_other": "Out of {{count}} electives in this path.",
+        "electives_none": "Mark a course as elective to let learners choose.",
+        "summary": "To finish, learners complete {{required}} required and {{electives}} elective courses."
+      },
+      "picker": {
+        "title": "Add courses",
+        "description": "Selected courses are added in the order you pick them.",
+        "search": "Search courses...",
+        "empty": "No more courses to add",
+        "add_one": "Add {{count}} course",
+        "add_other": "Add {{count}} courses"
+      },
+      "certificate": {
+        "title": "Path certificate",
+        "subtitle": "Awarded on top of course certificates when a learner finishes the path.",
+        "disabled_title": "No certificate for this path",
+        "disabled_message": "Turn it on to award a certificate to everyone who completes the path. Learners who already finished get it the next time their progress is checked.",
+        "enable": "Award a certificate"
+      },
+      "learners": {
+        "enrolled": "Learners",
+        "completed": "Completed",
+        "completion_rate": "Completion rate",
+        "certificates": "Certificates",
+        "empty_title": "No one has started this path yet",
+        "empty_description": "Learners appear here once they start the path.",
+        "columns": {
+          "learner": "Learner",
+          "progress": "Progress",
+          "started": "Started",
+          "status": "Status",
+          "certificate": "Certificate"
+        },
+        "revoke": "Revoke",
+        "revoke_title": "Revoke certificate?",
+        "revoke_confirm": "{{name}}'s certificate will stop verifying. You can reinstate it later.",
+        "revoked": "Certificate revoked",
+        "revoked_badge": "Revoked",
+        "reinstate": "Reinstate",
+        "reinstated": "Certificate reinstated"
+      }
+    },
+    "toasts": {
+      "saving": "Saving...",
+      "saved": "Path saved",
+      "save_error": "Couldn't save the path",
+      "create_error": "Couldn't create the path",
+      "deleting": "Deleting path...",
+      "deleted": "Path deleted",
+      "delete_error": "Couldn't delete the path",
+      "enroll_error": "Couldn't start the path",
+      "already_completed": "You've already finished every course in this path"
+    },
+    "my_paths": "My paths",
+    "part_of_paths": "Part of a path",
+    "path": "Path",
+    "courses_in_path": "Courses in this path",
+    "ready_to_begin": "Ready to begin?",
+    "percent_done": "{{percent}}% done"
   }
 }

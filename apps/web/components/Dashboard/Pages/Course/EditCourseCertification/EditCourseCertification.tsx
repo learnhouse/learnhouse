@@ -1,13 +1,7 @@
-import {
-  FormField,
-  FormLabelAndMessage,
-  Input,
-  Textarea,
-} from '@components/Objects/StyledElements/Form/Form';
 import { useFormik } from 'formik';
-import { AlertTriangle, Award, FileText, Settings } from 'lucide-react';
-import CertificatePreview from './CertificatePreview';
-import * as Form from '@radix-ui/react-form';
+import { AlertTriangle, Award, Loader2 } from 'lucide-react';
+import CertificateDesigner from '@components/Objects/Certificates/CertificateDesigner';
+import { Switch } from '@components/ui/switch';
 import React, { useEffect, useState, useRef } from 'react';
 import { useCourseFieldSync, useCourse } from '@components/Contexts/CourseContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
@@ -16,13 +10,6 @@ import {
   createCertification, 
   deleteCertification 
 } from '@services/courses/certifications';
-import {
-  CustomSelect,
-  CustomSelectContent,
-  CustomSelectItem,
-  CustomSelectTrigger,
-  CustomSelectValue,
-} from "../EditCourseGeneral/CustomSelect";
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import { getCourseCertifications } from '@services/courses/certifications';
@@ -264,18 +251,16 @@ function EditCourseCertification(_props: EditCourseCertificationProps) {
 
   if (isLoading || !courseStructure || (courseStructure.course_uuid && access_token && org?.id && isCertificationsPending)) {
     return (
-      <div>
-        <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
-          <div className="animate-pulse space-y-4">
-            <div className="flex items-center justify-between bg-gray-50 px-3 sm:px-5 py-3 rounded-md">
-              <div className="flex flex-col space-y-2">
-                <div className="h-5 bg-gray-200 rounded w-48" />
-                <div className="h-3 bg-gray-100 rounded w-64" />
-              </div>
-              <div className="w-11 h-6 bg-gray-200 rounded-full" />
+      <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
+        <div className="animate-pulse space-y-4">
+          <div className="flex items-center justify-between bg-gray-50 px-3 sm:px-5 py-3 rounded-md">
+            <div className="flex flex-col space-y-2">
+              <div className="h-5 bg-gray-200 rounded w-48" />
+              <div className="h-3 bg-gray-100 rounded w-64" />
             </div>
-            <div className="h-40 bg-gray-100 rounded-lg w-full" />
+            <div className="w-9 h-5 bg-gray-200 rounded-full" />
           </div>
+          <div className="h-64 bg-gray-50 rounded-lg w-full" />
         </div>
       </div>
     );
@@ -286,241 +271,56 @@ function EditCourseCertification(_props: EditCourseCertificationProps) {
   }
 
   return (
-    <div>
-      {courseStructure && (
-        <div>
-          <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
-            {/* Header Section */}
-            <div className="flex items-center justify-between bg-gray-50 px-3 sm:px-5 py-3 rounded-md mb-3">
-              <div className="flex flex-col -space-y-1">
-                <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('dashboard.courses.certification.title')}</h1>
-                <h2 className="text-gray-500 text-xs sm:text-sm">
-                  {t('dashboard.courses.certification.subtitle')}
-                </h2>
-              </div>
-              <div className="flex items-center space-x-3">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={formik.values.enable_certification}
-                    onChange={(e) => handleCertificationToggle(e.target.checked)}
-                    disabled={isCreating}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-                {isCreating && (
-                  <div className="animate-spin">
-                    <Settings size={16} />
-                  </div>
-                )}
-              </div>
-            </div>
+    <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
+      <div className="flex items-center justify-between gap-4 bg-gray-50 px-3 sm:px-5 py-3 rounded-md mb-4">
+        <div className="flex flex-col -space-y-1">
+          <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('dashboard.courses.certification.title')}</h1>
+          <h2 className="text-gray-500 text-xs sm:text-sm">{t('dashboard.courses.certification.subtitle')}</h2>
+        </div>
+        <div className="flex items-center gap-3">
+          {isCreating && <Loader2 size={16} className="animate-spin text-gray-400" />}
+          <Switch
+            checked={formik.values.enable_certification}
+            onCheckedChange={handleCertificationToggle}
+            disabled={isCreating}
+            aria-label={t('dashboard.courses.certification.title')}
+          />
+        </div>
+      </div>
 
-            {error && (
-              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 mb-6 transition-all shadow-xs">
-                <AlertTriangle size={18} />
-                <div className="font-bold text-sm">{error}</div>
-              </div>
-            )}
+      {error && (
+        <div className="flex items-center gap-2 bg-red-50 text-red-800 ring-1 ring-red-600/15 rounded-lg px-4 py-3 mb-4 text-sm">
+          <AlertTriangle size={16} className="shrink-0" />
+          <span className="font-medium">{error}</span>
+        </div>
+      )}
 
-            {/* Certification Configuration - Only show if enabled and has existing certification */}
-            {formik.values.enable_certification && hasExistingCertification && (
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Form Section */}
-                <div className="lg:col-span-3">
-                  <Form.Root className="space-y-6">
-                    {/* Basic Information Section */}
-                    <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                      <h3 className="font-bold text-md text-gray-800 flex items-center gap-2">
-                        <FileText size={16} />
-                        {t('dashboard.courses.certification.sections.basic_info.title')}
-                      </h3>
-                      <p className="text-gray-500 text-xs sm:text-sm">
-                        {t('dashboard.courses.certification.sections.basic_info.subtitle')}
-                      </p>
-                    </div>
+      {formik.values.enable_certification && hasExistingCertification && (
+        <CertificateDesigner
+          values={formik.values}
+          errors={formik.errors}
+          onChange={(field, value) => formik.setFieldValue(field, value)}
+        />
+      )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Certification Name */}
-                      <FormField name="certification_name">
-                        <FormLabelAndMessage 
-                          label={t('dashboard.courses.certification.form.certification_name_label')} 
-                          message={formik.errors.certification_name} 
-                        />
-                        <Form.Control asChild>
-                          <Input
-                            style={{ backgroundColor: 'white' }}
-                            onChange={formik.handleChange}
-                            value={formik.values.certification_name}
-                            type="text"
-                            placeholder={t('dashboard.courses.certification.form.certification_name_placeholder')}
-                            required
-                          />
-                        </Form.Control>
-                      </FormField>
-
-                      {/* Certification Type */}
-                      <FormField name="certification_type">
-                        <FormLabelAndMessage label={t('dashboard.courses.certification.form.certification_type_label')} />
-                        <Form.Control asChild>
-                          <CustomSelect
-                            value={formik.values.certification_type}
-                            onValueChange={(value) => {
-                              if (!value) return;
-                              formik.setFieldValue('certification_type', value);
-                            }}
-                          >
-                            <CustomSelectTrigger className="w-full bg-white">
-                              <CustomSelectValue>
-                                {t(`dashboard.courses.certification.types.${formik.values.certification_type || 'completion'}`)}
-                              </CustomSelectValue>
-                            </CustomSelectTrigger>
-                            <CustomSelectContent>
-                              <CustomSelectItem value="completion">{t('dashboard.courses.certification.types.completion')}</CustomSelectItem>
-                              <CustomSelectItem value="achievement">{t('dashboard.courses.certification.types.achievement')}</CustomSelectItem>
-                              <CustomSelectItem value="assessment">{t('dashboard.courses.certification.types.assessment')}</CustomSelectItem>
-                              <CustomSelectItem value="participation">{t('dashboard.courses.certification.types.participation')}</CustomSelectItem>
-                              <CustomSelectItem value="mastery">{t('dashboard.courses.certification.types.mastery')}</CustomSelectItem>
-                              <CustomSelectItem value="professional">{t('dashboard.courses.certification.types.professional')}</CustomSelectItem>
-                              <CustomSelectItem value="continuing">{t('dashboard.courses.certification.types.continuing')}</CustomSelectItem>
-                              <CustomSelectItem value="workshop">{t('dashboard.courses.certification.types.workshop')}</CustomSelectItem>
-                              <CustomSelectItem value="specialization">{t('dashboard.courses.certification.types.specialization')}</CustomSelectItem>
-                            </CustomSelectContent>
-                          </CustomSelect>
-                        </Form.Control>
-                      </FormField>
-                    </div>
-
-                    {/* Certification Description */}
-                    <FormField name="certification_description">
-                      <FormLabelAndMessage 
-                        label={t('dashboard.courses.certification.form.certification_description_label')} 
-                        message={formik.errors.certification_description} 
-                      />
-                      <Form.Control asChild>
-                        <Textarea
-                          style={{ backgroundColor: 'white', height: '120px', minHeight: '120px' }}
-                          onChange={formik.handleChange}
-                          value={formik.values.certification_description}
-                          placeholder={t('dashboard.courses.certification.form.certification_description_placeholder')}
-                          required
-                        />
-                      </Form.Control>
-                    </FormField>
-
-                    {/* Certificate Design Section */}
-                    <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                      <h3 className="font-bold text-md text-gray-800 flex items-center gap-2">
-                        <Award size={16} />
-                        {t('dashboard.courses.certification.sections.certificate_design.title')}
-                      </h3>
-                      <p className="text-gray-500 text-xs sm:text-sm">
-                        {t('dashboard.courses.certification.sections.certificate_design.subtitle')}
-                      </p>
-                    </div>
-
-                    {/* Pattern Selection */}
-                    <FormField name="certificate_pattern">
-                      <FormLabelAndMessage label={t('dashboard.courses.certification.form.certificate_pattern_label')} />
-                      <Form.Control asChild>
-                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                          {['royal', 'tech', 'nature', 'geometric', 'vintage', 'waves', 'minimal', 'professional', 'academic', 'modern'].map((patternValue) => (
-                            <div
-                              key={patternValue}
-                              className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                                formik.values.certificate_pattern === patternValue
-                                  ? 'border-blue-500 bg-blue-50'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                              onClick={() => formik.setFieldValue('certificate_pattern', patternValue)}
-                            >
-                              <div className="text-center">
-                                <div className="text-sm font-medium text-gray-900">{t(`dashboard.courses.certification.patterns.${patternValue}.name`)}</div>
-                                <div className="text-xs text-gray-500 mt-1">{t(`dashboard.courses.certification.patterns.${patternValue}.description`)}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </Form.Control>
-                    </FormField>
-
-                    {/* Custom Instructor */}
-                    <FormField name="certificate_instructor">
-                      <FormLabelAndMessage label={t('dashboard.courses.certification.form.certificate_instructor_label')} />
-                      <Form.Control asChild>
-                        <Input
-                          style={{ backgroundColor: 'white' }}
-                          onChange={formik.handleChange}
-                          value={formik.values.certificate_instructor}
-                          type="text"
-                          placeholder={t('dashboard.courses.certification.form.certificate_instructor_placeholder')}
-                        />
-                      </Form.Control>
-                    </FormField>
-                  </Form.Root>
-                </div>
-
-                {/* Preview Section */}
-                <div className="lg:col-span-2">
-                  <div className="bg-white rounded-xl shadow-xs border border-gray-200 sticky top-6 min-h-[320px]">
-                    <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-t-xl mb-3">
-                      <h3 className="font-bold text-md text-gray-800 flex items-center gap-2">
-                        <Award size={16} />
-                        {t('dashboard.courses.certification.sections.preview.title')}
-                      </h3>
-                      <p className="text-gray-500 text-xs sm:text-sm">
-                        {t('dashboard.courses.certification.sections.preview.subtitle')}
-                      </p>
-                    </div>
-                    
-                    <div className="p-4">
-                      <CertificatePreview
-                        certificationName={formik.values.certification_name}
-                        certificationDescription={formik.values.certification_description}
-                        certificationType={formik.values.certification_type}
-                        certificatePattern={formik.values.certificate_pattern}
-                        certificateInstructor={formik.values.certificate_instructor}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Disabled State */}
-            {!formik.values.enable_certification && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="font-medium text-gray-700 mb-2">{t('dashboard.courses.certification.states.disabled.title')}</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  {t('dashboard.courses.certification.states.disabled.message')}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => handleCertificationToggle(true)}
-                  disabled={isCreating}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Award size={16} />
-                  {isCreating ? t('dashboard.courses.certification.states.disabled.creating') : t('dashboard.courses.certification.states.disabled.button')}
-                </button>
-              </div>
-            )}
-
-            {/* Creating State - when toggle is on but no certification exists yet */}
-            {formik.values.enable_certification && !hasExistingCertification && isCreating && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
-                <div className="animate-spin mx-auto mb-4">
-                  <Settings className="w-16 h-16 text-blue-500" />
-                </div>
-                <h3 className="font-medium text-blue-700 mb-2">{t('dashboard.courses.certification.states.creating.title')}</h3>
-                <p className="text-sm text-blue-600">
-                  {t('dashboard.courses.certification.states.creating.message')}
-                </p>
-              </div>
-            )}
+      {!formik.values.enable_certification && (
+        <div className="border border-dashed border-gray-200 rounded-lg px-6 py-12 text-center">
+          <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
+            <Award className="w-6 h-6 text-gray-400" />
           </div>
+          <h3 className="font-semibold text-gray-800 mb-1">{t('dashboard.courses.certification.states.disabled.title')}</h3>
+          <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
+            {t('dashboard.courses.certification.states.disabled.message')}
+          </p>
+          <button
+            type="button"
+            onClick={() => handleCertificationToggle(true)}
+            disabled={isCreating}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {isCreating ? <Loader2 size={16} className="animate-spin" /> : <Award size={16} />}
+            {isCreating ? t('dashboard.courses.certification.states.disabled.creating') : t('dashboard.courses.certification.states.disabled.button')}
+          </button>
         </div>
       )}
     </div>

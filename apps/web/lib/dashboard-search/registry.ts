@@ -5,6 +5,7 @@ import { searchMeta as courses } from '@/app/orgs/[orgslug]/dash/courses/page.se
 import { searchMeta as coursesMigrate } from '@/app/orgs/[orgslug]/dash/courses/migrate/page.search'
 import { searchMeta as assignments } from '@/app/orgs/[orgslug]/dash/assignments/page.search'
 import { searchMeta as communities } from '@/app/orgs/[orgslug]/dash/communities/page.search'
+import { searchMeta as paths } from '@/app/orgs/[orgslug]/dash/paths/page.search'
 import { searchMeta as podcasts } from '@/app/orgs/[orgslug]/dash/podcasts/page.search'
 import { searchMeta as boards } from '@/app/orgs/[orgslug]/dash/boards/page.search'
 import { searchMeta as playgrounds } from '@/app/orgs/[orgslug]/dash/playgrounds/page.search'
@@ -20,6 +21,7 @@ export const dashboardPages: SearchMeta[] = [
   coursesMigrate,
   assignments,
   communities,
+  paths,
   podcasts,
   boards,
   playgrounds,

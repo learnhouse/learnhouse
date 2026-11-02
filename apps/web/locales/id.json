@@ -140,6 +140,10 @@
         "drip": {
           "title": "Fitur Standard",
           "description": "Konten bertahap hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk merilis bab sesuai jadwal, per pelajar atau untuk seluruh kohort."
+        },
+        "paths": {
+          "title": "Fitur Pro",
+          "description": "Jalur belajar adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk menyusun kursus menjadi perjalanan belajar terpandu dengan sertifikatnya sendiri."
         }
       },
       "current_plan": "Paket saat ini",
@@ -1092,7 +1096,45 @@
     "workshop_attendance": "Kehadiran Workshop",
     "specialization": "Spesialisasi",
     "dedication_message": "Dedikasi dan kerja keras Anda telah membuahkan hasil. Anda telah menguasai semua konten kursus ini.",
-    "download_failed": "Gagal membuat PDF. Silakan coba lagi."
+    "download_failed": "Gagal membuat PDF. Silakan coba lagi.",
+    "document": {
+      "title": "Sertifikat",
+      "presented_to": "Sertifikat ini diberikan kepada",
+      "for_completing": "atas keberhasilan menyelesaikan",
+      "learner_placeholder": "Nama pelajar",
+      "name_placeholder": "Nama sertifikasi",
+      "instructor": "Instruktur",
+      "issued_by": "Diterbitkan oleh",
+      "date": "Tanggal diberikan",
+      "credential_id": "ID Sertifikat"
+    },
+    "page": {
+      "verified": "Kredensial terverifikasi",
+      "issued_line": "Diberikan kepada {{name}} oleh {{issuer}} pada {{date}}",
+      "download": "Unduh PDF",
+      "add_to_linkedin": "Tambahkan ke LinkedIn",
+      "copy_link": "Salin tautan verifikasi",
+      "link_copied": "Tautan disalin",
+      "recipient": "Penerima",
+      "issuer": "Diterbitkan oleh",
+      "issued_on": "Diterbitkan pada",
+      "credential_id": "ID Sertifikat",
+      "id_copied": "ID sertifikat disalin",
+      "copy_id": "Salin ID sertifikat",
+      "not_found": "Sertifikat tidak ditemukan",
+      "not_found_hint": "Tidak ada sertifikat valid yang cocok dengan ID ini. Sertifikat mungkin telah dicabut, atau tautannya tidak lengkap.",
+      "go_home": "Ke beranda",
+      "earned_for_course": "Diperoleh setelah menyelesaikan",
+      "earned_for_path": "Diperoleh setelah menyelesaikan jalur belajar {{name}}",
+      "view_and_share": "Lihat dan bagikan"
+    },
+    "designer": {
+      "signer": "Ditandatangani oleh (opsional)",
+      "signer_placeholder": "mis., Dr. Jane Smith",
+      "style": "Gaya",
+      "preview_hint": "Pratinjau langsung. Pelajar melihat nama, tanggal, dan ID sertifikat mereka sendiri."
+    },
+    "kind_course": "Kursus"
   },
   "search": {
     "search_placeholder": "Cari kursus, pengguna, koleksi...",
@@ -1121,6 +1163,14 @@
       "discussions": "Diskusi",
       "playgrounds": "Playground",
       "podcasts": "Podcast"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Perjalanan belajar terpandu melalui beberapa kursus",
+          "keywords": "jalur belajar, jalur, trek, program, perjalanan, paths, learning paths"
+        }
+      }
     }
   },
   "ai": {
@@ -4252,6 +4302,10 @@
         "org_api": {
           "description": "Token API dan akses terprogram",
           "keywords": "api, token, akses, programmatic, kunci"
+        },
+        "paths": {
+          "description": "Susun kursus menjadi jalur belajar terpandu dengan sertifikat",
+          "keywords": "jalur belajar, jalur, trek, program, kurikulum, urutan, sertifikat, paths, learning paths"
         }
       }
     },
@@ -6366,5 +6420,177 @@
       "resource": "Sumber daya",
       "resource_plural": "Sumber daya"
     }
+  },
+  "paths": {
+    "title": "Jalur Belajar",
+    "new_path": "Jalur belajar baru",
+    "manage_paths": "Kelola jalur belajar",
+    "catalog_subtitle": "Perjalanan belajar terpandu melalui beberapa kursus. Selesaikan jalur belajar untuk mendapatkan sertifikatnya.",
+    "published": "Diterbitkan",
+    "draft": "Draf",
+    "completed": "Selesai",
+    "in_progress": "Sedang berlangsung",
+    "required": "Wajib",
+    "elective": "Pilihan",
+    "actions": "Tindakan jalur belajar",
+    "edit_courses": "Edit kursus",
+    "view_path": "Lihat jalur belajar",
+    "view_certificate": "Lihat sertifikat",
+    "start_path": "Mulai jalur belajar",
+    "start_hint": "Mulai jalur belajar ini untuk melacak kemajuan Anda di setiap kursus di dalamnya.",
+    "sign_in_to_start": "Masuk untuk memulai",
+    "continue_learning": "Lanjutkan belajar",
+    "leave_path": "Tinggalkan jalur belajar",
+    "your_progress": "Kemajuan Anda",
+    "up_next": "Berikutnya",
+    "guided_order": "Urutan terpandu",
+    "certificate_included": "Termasuk sertifikat",
+    "certificate_earned": "Anda telah mendapatkan sertifikat ini",
+    "certificate_explainer": "Diberikan otomatis setelah Anda menyelesaikan semua kursus wajib di jalur belajar ini.",
+    "locked_hint": "Selesaikan kursus sebelumnya untuk membuka",
+    "restricted_course": "Kursus terbatas",
+    "no_courses_yet": "Belum ada kursus di jalur belajar ini.",
+    "electives_rule_one": "Pilih setidaknya {{count}} dari {{total}} kursus pilihan",
+    "electives_rule_other": "Pilih setidaknya {{count}} dari {{total}} kursus pilihan",
+    "progress_short": "{{done}}/{{total}} kursus",
+    "progress_long": "{{done}} dari {{total}} kursus selesai",
+    "course_count_one": "{{count}} kursus",
+    "course_count_other": "{{count}} kursus",
+    "learner_count_one": "{{count}} pelajar",
+    "learner_count_other": "{{count}} pelajar",
+    "no_paths": "Belum ada jalur belajar",
+    "no_paths_description": "Susun kursus menjadi perjalanan belajar terpandu dengan sertifikatnya sendiri.",
+    "no_public_paths": "Belum ada jalur belajar",
+    "no_public_paths_description": "Jalur belajar akan muncul di sini setelah diterbitkan.",
+    "no_search_results": "Tidak ada jalur belajar yang cocok dengan pencarian Anda",
+    "search_placeholder": "Cari jalur belajar...",
+    "clear_search": "Hapus pencarian",
+    "not_found": "Jalur belajar ini tidak ada atau tidak tersedia untuk Anda.",
+    "back_to_paths": "Kembali ke jalur belajar",
+    "delete_path": "Hapus jalur belajar",
+    "delete_path_title": "Hapus \"{{name}}\"?",
+    "delete_path_confirm": "Jalur belajar beserta kemajuan pelajarnya akan dihapus. Kursusnya sendiri tidak terpengaruh.",
+    "levels": {
+      "all": "Semua tingkat",
+      "beginner": "Pemula",
+      "intermediate": "Menengah",
+      "advanced": "Lanjutan"
+    },
+    "form": {
+      "name": "Nama",
+      "name_placeholder": "mis., Analis Data",
+      "name_required": "Jalur belajar perlu nama",
+      "name_max_length": "Nama harus kurang dari 200 karakter",
+      "description": "Deskripsi singkat",
+      "description_placeholder": "Satu atau dua kalimat yang ditampilkan di kartu jalur belajar",
+      "description_max_length": "Deskripsi harus kurang dari 500 karakter",
+      "about": "Tentang",
+      "about_placeholder": "Untuk siapa jalur belajar ini dan apa yang dapat dilakukan pelajar di akhir",
+      "about_hint": "Ditampilkan di halaman jalur belajar.",
+      "level": "Tingkat",
+      "thumbnail": "Gambar sampul",
+      "upload_thumbnail": "Unggah gambar",
+      "thumbnail_hint": "Rasio 16:9 paling baik. PNG atau JPG.",
+      "discard_thumbnail": "Buang gambar baru",
+      "visibility": "Visibilitas",
+      "published_hint": "Pelajar dapat menemukan dan memulai jalur belajar ini.",
+      "public": "Publik",
+      "public_hint": "Terlihat oleh pengunjung yang bukan anggota organisasi Anda.",
+      "public_label": "Terlihat oleh semua orang, tidak hanya anggota",
+      "save": "Simpan perubahan"
+    },
+    "modals": {
+      "create": {
+        "title": "Jalur belajar baru",
+        "description": "Kelompokkan kursus menjadi perjalanan belajar terpandu. Anda akan memilih dan mengurutkan kursus di langkah berikutnya.",
+        "submit": "Buat jalur belajar"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Rangkaian kursus terpandu, masing-masing dengan sertifikatnya sendiri.",
+      "view_path": "Lihat jalur belajar",
+      "tabs": {
+        "general": "Umum",
+        "courses": "Kursus",
+        "certificate": "Sertifikat",
+        "learners": "Pelajar"
+      },
+      "courses": {
+        "title": "Kursus",
+        "subtitle": "Seret untuk mengatur urutan yang diikuti pelajar. Kursus pilihan bersifat opsional.",
+        "add": "Tambah kursus",
+        "drag": "Seret untuk mengurutkan ulang",
+        "remove": "Hapus dari jalur belajar",
+        "requirement": "Ketentuan",
+        "unpublished_hint": "Belum diterbitkan, tersembunyi dari pelajar",
+        "empty_title": "Belum ada kursus",
+        "empty_description": "Tambahkan kursus yang membentuk jalur belajar ini."
+      },
+      "rules": {
+        "title": "Aturan penyelesaian",
+        "subtitle": "Apa yang harus dilakukan pelajar untuk menyelesaikan jalur belajar.",
+        "sequential": "Urutan terpandu",
+        "sequential_hint": "Di tampilan jalur belajar, setiap kursus terbuka setelah kursus wajib sebelumnya selesai. Kursus tetap terbuka di halamannya sendiri.",
+        "electives": "Kursus pilihan yang harus diselesaikan",
+        "electives_hint_one": "Dari {{count}} kursus pilihan di jalur belajar ini.",
+        "electives_hint_other": "Dari {{count}} kursus pilihan di jalur belajar ini.",
+        "electives_none": "Tandai kursus sebagai pilihan agar pelajar dapat memilih.",
+        "summary": "Untuk menyelesaikan, pelajar menuntaskan {{required}} kursus wajib dan {{electives}} kursus pilihan."
+      },
+      "picker": {
+        "title": "Tambah kursus",
+        "description": "Kursus yang dipilih ditambahkan sesuai urutan Anda memilihnya.",
+        "search": "Cari kursus...",
+        "empty": "Tidak ada lagi kursus untuk ditambahkan",
+        "add_one": "Tambah {{count}} kursus",
+        "add_other": "Tambah {{count}} kursus"
+      },
+      "certificate": {
+        "title": "Sertifikat jalur belajar",
+        "subtitle": "Diberikan sebagai tambahan sertifikat kursus saat pelajar menyelesaikan jalur belajar.",
+        "disabled_title": "Tidak ada sertifikat untuk jalur belajar ini",
+        "disabled_message": "Aktifkan untuk memberikan sertifikat kepada semua yang menyelesaikan jalur belajar ini. Pelajar yang sudah selesai akan mendapatkannya saat kemajuan mereka diperiksa berikutnya.",
+        "enable": "Berikan sertifikat"
+      },
+      "learners": {
+        "enrolled": "Pelajar",
+        "completed": "Selesai",
+        "completion_rate": "Tingkat penyelesaian",
+        "certificates": "Sertifikat",
+        "empty_title": "Belum ada yang memulai jalur belajar ini",
+        "empty_description": "Pelajar akan muncul di sini setelah mereka memulai jalur belajar.",
+        "columns": {
+          "learner": "Pelajar",
+          "progress": "Kemajuan",
+          "started": "Dimulai",
+          "status": "Status",
+          "certificate": "Sertifikat"
+        },
+        "revoke": "Cabut",
+        "revoke_title": "Cabut sertifikat?",
+        "revoke_confirm": "Sertifikat {{name}} tidak akan bisa diverifikasi lagi. Anda dapat memulihkannya nanti.",
+        "revoked": "Sertifikat dicabut",
+        "revoked_badge": "Dicabut",
+        "reinstate": "Pulihkan",
+        "reinstated": "Sertifikat dipulihkan"
+      }
+    },
+    "toasts": {
+      "saving": "Menyimpan...",
+      "saved": "Jalur belajar disimpan",
+      "save_error": "Gagal menyimpan jalur belajar",
+      "create_error": "Gagal membuat jalur belajar",
+      "deleting": "Menghapus jalur belajar...",
+      "deleted": "Jalur belajar dihapus",
+      "delete_error": "Gagal menghapus jalur belajar",
+      "enroll_error": "Gagal memulai jalur belajar",
+      "already_completed": "Anda sudah menyelesaikan semua kursus di jalur belajar ini"
+    },
+    "my_paths": "Jalur belajar saya",
+    "part_of_paths": "Bagian dari jalur belajar",
+    "path": "Jalur belajar",
+    "courses_in_path": "Kursus di jalur belajar ini",
+    "ready_to_begin": "Siap memulai?",
+    "percent_done": "{{percent}}% selesai"
   }
 }

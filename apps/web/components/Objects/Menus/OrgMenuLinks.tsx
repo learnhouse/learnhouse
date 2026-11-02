@@ -1,6 +1,6 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
-import { Books, FolderSimple, ChatsCircle, Headphones, Cube, ShoppingBag } from '@phosphor-icons/react'
+import { Books, FolderSimple, ChatsCircle, Headphones, Cube, ShoppingBag, Steps } from '@phosphor-icons/react'
 import { menuIcon } from '@components/Objects/Menus/menuIcons'
 import Link from 'next/link'
 import React from 'react'
@@ -18,6 +18,7 @@ type Builtin = { feature: string; link: string; labelKey: string; Icon: any }
 
 const BUILTIN: Record<string, Builtin> = {
   courses: { feature: 'courses', link: '/courses', labelKey: 'courses.courses', Icon: Books },
+  paths: { feature: 'paths', link: '/paths', labelKey: 'paths.title', Icon: Steps },
   library: { feature: 'folders', link: '/library', labelKey: 'library.library', Icon: FolderSimple },
   podcasts: { feature: 'podcasts', link: '/podcasts', labelKey: 'podcasts.podcasts', Icon: Headphones },
   communities: { feature: 'communities', link: '/communities', labelKey: 'communities.title', Icon: ChatsCircle },
@@ -26,7 +27,7 @@ const BUILTIN: Record<string, Builtin> = {
 }
 
 // Default order when an org has no custom menu config.
-const DEFAULT_ORDER = ['courses', 'library', 'podcasts', 'communities', 'playgrounds', 'store']
+const DEFAULT_ORDER = ['courses', 'paths', 'library', 'podcasts', 'communities', 'playgrounds', 'store']
 
 function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const { t } = useTranslation()

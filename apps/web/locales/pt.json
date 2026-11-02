@@ -138,6 +138,10 @@
         "drip": {
           "title": "Recurso Standard",
           "description": "A liberação programada está disponível para organizações com plano Standard ou superior. Atualize para liberar capítulos em um cronograma, por aluno ou para uma turma inteira."
+        },
+        "paths": {
+          "title": "Recurso Pro",
+          "description": "Trilhas de aprendizagem é um recurso premium disponível apenas para organizações no nosso plano Pro ou superior. Atualize para organizar cursos em jornadas guiadas com certificados próprios."
         }
       },
       "current_plan": "Plano atual",
@@ -1070,7 +1074,45 @@
     "workshop_attendance": "Presença em Workshop",
     "specialization": "Especialização",
     "dedication_message": "Sua dedicação e esforço valeram a pena. Você dominou todo o conteúdo deste curso.",
-    "download_failed": "Não foi possível gerar o PDF. Tente novamente."
+    "download_failed": "Não foi possível gerar o PDF. Tente novamente.",
+    "document": {
+      "title": "Certificado",
+      "presented_to": "Este certificado é concedido a",
+      "for_completing": "por concluir com sucesso",
+      "learner_placeholder": "Nome do aluno",
+      "name_placeholder": "Nome da certificação",
+      "instructor": "Instrutor",
+      "issued_by": "Emitido por",
+      "date": "Data de emissão",
+      "credential_id": "ID da credencial"
+    },
+    "page": {
+      "verified": "Credencial verificada",
+      "issued_line": "Emitido para {{name}} por {{issuer}} em {{date}}",
+      "download": "Baixar PDF",
+      "add_to_linkedin": "Adicionar ao LinkedIn",
+      "copy_link": "Copiar link de verificação",
+      "link_copied": "Link copiado",
+      "recipient": "Destinatário",
+      "issuer": "Emitido por",
+      "issued_on": "Emitido em",
+      "credential_id": "ID da credencial",
+      "id_copied": "ID da credencial copiado",
+      "copy_id": "Copiar ID da credencial",
+      "not_found": "Certificado não encontrado",
+      "not_found_hint": "Nenhum certificado válido corresponde a este ID. Ele pode ter sido revogado ou o link pode estar incompleto.",
+      "go_home": "Ir para o início",
+      "earned_for_course": "Obtido ao concluir",
+      "earned_for_path": "Obtido ao concluir a trilha {{name}}",
+      "view_and_share": "Ver e compartilhar"
+    },
+    "designer": {
+      "signer": "Assinado por (opcional)",
+      "signer_placeholder": "ex: Dra. Jane Smith",
+      "style": "Estilo",
+      "preview_hint": "Pré-visualização ao vivo. Cada aluno vê o próprio nome, a data e o ID da credencial."
+    },
+    "kind_course": "Curso"
   },
   "search": {
     "search_placeholder": "Buscar cursos, usuários, coleções...",
@@ -1099,6 +1141,14 @@
       "discussions": "Discussões",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcasts"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Jornadas guiadas por vários cursos",
+          "keywords": "trilhas, trilhas de aprendizagem, percursos, programas, jornada"
+        }
+      }
     }
   },
   "ai": {
@@ -4237,6 +4287,10 @@
         "org_api": {
           "description": "Tokens de API e acesso programático",
           "keywords": "api, tokens, acesso, programático, chaves"
+        },
+        "paths": {
+          "description": "Organize cursos em trilhas guiadas com certificados",
+          "keywords": "trilhas, trilhas de aprendizagem, percursos, programas, currículo, sequência, certificado"
         }
       }
     },
@@ -6363,5 +6417,182 @@
       "resource": "Recurso",
       "resource_plural": "Recursos"
     }
+  },
+  "paths": {
+    "title": "Trilhas",
+    "new_path": "Nova trilha",
+    "manage_paths": "Gerenciar trilhas",
+    "catalog_subtitle": "Jornadas guiadas por vários cursos. Conclua uma trilha para obter o certificado dela.",
+    "published": "Publicada",
+    "draft": "Rascunho",
+    "completed": "Concluída",
+    "in_progress": "Em andamento",
+    "required": "Obrigatório",
+    "elective": "Eletivo",
+    "actions": "Ações da trilha",
+    "edit_courses": "Editar cursos",
+    "view_path": "Ver trilha",
+    "view_certificate": "Ver certificado",
+    "start_path": "Iniciar trilha",
+    "start_hint": "Inicie a trilha para acompanhar seu progresso em todos os cursos dela.",
+    "sign_in_to_start": "Entre para começar",
+    "continue_learning": "Continuar aprendendo",
+    "leave_path": "Sair da trilha",
+    "your_progress": "Seu progresso",
+    "up_next": "A seguir",
+    "guided_order": "Ordem guiada",
+    "certificate_included": "Certificado incluído",
+    "certificate_earned": "Você obteve este certificado",
+    "certificate_explainer": "Concedido automaticamente quando você concluir todos os cursos obrigatórios desta trilha.",
+    "locked_hint": "Conclua o curso anterior para desbloquear",
+    "restricted_course": "Curso restrito",
+    "no_courses_yet": "Ainda não há cursos nesta trilha.",
+    "electives_rule_one": "Escolha pelo menos {{count}} dos {{total}} cursos eletivos",
+    "electives_rule_many": "Escolha pelo menos {{count}} dos {{total}} cursos eletivos",
+    "electives_rule_other": "Escolha pelo menos {{count}} dos {{total}} cursos eletivos",
+    "progress_short": "{{done}}/{{total}} cursos",
+    "progress_long": "{{done}} de {{total}} cursos concluídos",
+    "course_count_one": "{{count}} curso",
+    "course_count_many": "{{count}} cursos",
+    "course_count_other": "{{count}} cursos",
+    "learner_count_one": "{{count}} aluno",
+    "learner_count_many": "{{count}} alunos",
+    "learner_count_other": "{{count}} alunos",
+    "no_paths": "Nenhuma trilha ainda",
+    "no_paths_description": "Organize cursos em uma jornada guiada com certificado próprio.",
+    "no_public_paths": "Nenhuma trilha ainda",
+    "no_public_paths_description": "As trilhas de aprendizagem aparecerão aqui assim que forem publicadas.",
+    "no_search_results": "Nenhuma trilha corresponde à sua pesquisa",
+    "search_placeholder": "Pesquisar trilhas...",
+    "clear_search": "Limpar pesquisa",
+    "not_found": "Esta trilha não existe ou não está disponível para você.",
+    "back_to_paths": "Voltar às trilhas",
+    "delete_path": "Excluir trilha",
+    "delete_path_title": "Excluir \"{{name}}\"?",
+    "delete_path_confirm": "A trilha e o progresso dos alunos nela serão removidos. Os cursos em si não serão alterados.",
+    "levels": {
+      "all": "Todos os níveis",
+      "beginner": "Iniciante",
+      "intermediate": "Intermediário",
+      "advanced": "Avançado"
+    },
+    "form": {
+      "name": "Nome",
+      "name_placeholder": "ex: Analista de Dados",
+      "name_required": "A trilha precisa de um nome",
+      "name_max_length": "Use menos de 200 caracteres no nome",
+      "description": "Descrição curta",
+      "description_placeholder": "Uma ou duas frases exibidas no card da trilha",
+      "description_max_length": "Use menos de 500 caracteres na descrição",
+      "about": "Sobre",
+      "about_placeholder": "Para quem é esta trilha e o que os alunos serão capazes de fazer ao final",
+      "about_hint": "Exibido na página da trilha.",
+      "level": "Nível",
+      "thumbnail": "Imagem de capa",
+      "upload_thumbnail": "Enviar imagem",
+      "thumbnail_hint": "Proporção 16:9 funciona melhor. PNG ou JPG.",
+      "discard_thumbnail": "Descartar nova imagem",
+      "visibility": "Visibilidade",
+      "published_hint": "Os alunos podem encontrar e iniciar a trilha.",
+      "public": "Público",
+      "public_hint": "Visível para visitantes que não são membros da sua organização.",
+      "public_label": "Visível para todos, não só para membros",
+      "save": "Salvar alterações"
+    },
+    "modals": {
+      "create": {
+        "title": "Nova trilha",
+        "description": "Agrupe cursos em uma jornada guiada. Em seguida, você escolherá e ordenará os cursos.",
+        "submit": "Criar trilha"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Sequências guiadas de cursos, cada uma com seu próprio certificado.",
+      "view_path": "Ver trilha",
+      "tabs": {
+        "general": "Geral",
+        "courses": "Cursos",
+        "certificate": "Certificado",
+        "learners": "Alunos"
+      },
+      "courses": {
+        "title": "Cursos",
+        "subtitle": "Arraste para definir a ordem que os alunos seguem. Cursos eletivos são opcionais.",
+        "add": "Adicionar cursos",
+        "drag": "Arraste para reordenar",
+        "remove": "Remover da trilha",
+        "requirement": "Exigência",
+        "unpublished_hint": "Não publicado, oculto para os alunos",
+        "empty_title": "Nenhum curso ainda",
+        "empty_description": "Adicione os cursos que compõem esta trilha."
+      },
+      "rules": {
+        "title": "Regras de conclusão",
+        "subtitle": "O que o aluno precisa fazer para concluir a trilha.",
+        "sequential": "Ordem guiada",
+        "sequential_hint": "Na página da trilha, cada curso é desbloqueado quando o curso obrigatório anterior é concluído. Os cursos continuam abertos nas próprias páginas.",
+        "electives": "Eletivos a concluir",
+        "electives_hint_one": "De {{count}} curso eletivo nesta trilha.",
+        "electives_hint_many": "De {{count}} cursos eletivos nesta trilha.",
+        "electives_hint_other": "De {{count}} cursos eletivos nesta trilha.",
+        "electives_none": "Marque um curso como eletivo para que os alunos possam escolher.",
+        "summary": "Para concluir, os alunos fazem {{required}} cursos obrigatórios e {{electives}} eletivos."
+      },
+      "picker": {
+        "title": "Adicionar cursos",
+        "description": "Os cursos selecionados são adicionados na ordem em que você os escolhe.",
+        "search": "Pesquisar cursos...",
+        "empty": "Não há mais cursos para adicionar",
+        "add_one": "Adicionar {{count}} curso",
+        "add_many": "Adicionar {{count}} cursos",
+        "add_other": "Adicionar {{count}} cursos"
+      },
+      "certificate": {
+        "title": "Certificado da trilha",
+        "subtitle": "Concedido além dos certificados dos cursos quando o aluno conclui a trilha.",
+        "disabled_title": "Sem certificado para esta trilha",
+        "disabled_message": "Ative para conceder um certificado a todos que concluírem a trilha. Quem já concluiu recebe o certificado na próxima verificação do progresso.",
+        "enable": "Conceder certificado"
+      },
+      "learners": {
+        "enrolled": "Alunos",
+        "completed": "Concluíram",
+        "completion_rate": "Taxa de conclusão",
+        "certificates": "Certificados",
+        "empty_title": "Ninguém iniciou esta trilha ainda",
+        "empty_description": "Os alunos aparecem aqui quando iniciam a trilha.",
+        "columns": {
+          "learner": "Aluno",
+          "progress": "Progresso",
+          "started": "Início",
+          "status": "Status",
+          "certificate": "Certificado"
+        },
+        "revoke": "Revogar",
+        "revoke_title": "Revogar certificado?",
+        "revoke_confirm": "O certificado de {{name}} deixará de ser verificável. Você pode restabelecê-lo depois.",
+        "revoked": "Certificado revogado",
+        "revoked_badge": "Revogado",
+        "reinstate": "Restabelecer",
+        "reinstated": "Certificado restabelecido"
+      }
+    },
+    "toasts": {
+      "saving": "Salvando...",
+      "saved": "Trilha salva",
+      "save_error": "Não foi possível salvar a trilha",
+      "create_error": "Não foi possível criar a trilha",
+      "deleting": "Excluindo trilha...",
+      "deleted": "Trilha excluída",
+      "delete_error": "Não foi possível excluir a trilha",
+      "enroll_error": "Não foi possível iniciar a trilha",
+      "already_completed": "Você já concluiu todos os cursos desta trilha"
+    },
+    "my_paths": "Minhas trilhas",
+    "part_of_paths": "Parte de uma trilha",
+    "path": "Trilha",
+    "courses_in_path": "Cursos nesta trilha",
+    "ready_to_begin": "Pronto para começar?",
+    "percent_done": "{{percent}}% concluído"
   }
 }

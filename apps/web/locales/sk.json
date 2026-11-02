@@ -143,6 +143,10 @@
         "drip": {
           "title": "Štandardná funkcia",
           "description": "Postupné sprístupňovanie obsahu je dostupné len pre organizácie na pláne Standard alebo vyššom. Navýšte si plán a sprístupňujte kapitoly podľa harmonogramu, pre každého študenta zvlášť alebo pre celú kohortu."
+        },
+        "paths": {
+          "title": "Pro funkcia",
+          "description": "Vzdelávacie cesty sú prémiová funkcia dostupná len pre organizácie na pláne Pro alebo vyššom. Navýšte si plán, aby ste mohli spájať kurzy do vedených ciest s vlastnými certifikátmi."
         }
       }
     },
@@ -1329,7 +1333,45 @@
     "workshop_attendance": "Účasť na workshope",
     "specialization": "Špecializácia",
     "dedication_message": "Vaša oddanosť a tvrdá práca sa vyplatili. Zvládli ste všetok obsah tohto kurzu.",
-    "download_failed": "Nepodarilo sa vytvoriť PDF. Skúste to znova."
+    "download_failed": "Nepodarilo sa vytvoriť PDF. Skúste to znova.",
+    "document": {
+      "title": "Certifikát",
+      "presented_to": "Tento certifikát sa udeľuje",
+      "for_completing": "za úspešné dokončenie",
+      "learner_placeholder": "Meno študenta",
+      "name_placeholder": "Názov certifikácie",
+      "instructor": "Inštruktor",
+      "issued_by": "Vydal",
+      "date": "Dátum udelenia",
+      "credential_id": "ID certifikátu"
+    },
+    "page": {
+      "verified": "Overený certifikát",
+      "issued_line": "Vydané pre {{name}} organizáciou {{issuer}} dňa {{date}}",
+      "download": "Stiahnuť PDF",
+      "add_to_linkedin": "Pridať na LinkedIn",
+      "copy_link": "Kopírovať overovací odkaz",
+      "link_copied": "Odkaz skopírovaný",
+      "recipient": "Príjemca",
+      "issuer": "Vydal",
+      "issued_on": "Dátum vydania",
+      "credential_id": "ID certifikátu",
+      "id_copied": "ID certifikátu skopírované",
+      "copy_id": "Kopírovať ID certifikátu",
+      "not_found": "Certifikát sa nenašiel",
+      "not_found_hint": "Tomuto ID nezodpovedá žiadny platný certifikát. Mohol byť zrušený alebo je odkaz neúplný.",
+      "go_home": "Na úvodnú stránku",
+      "earned_for_course": "Získaný za dokončenie",
+      "earned_for_path": "Získaný za dokončenie cesty {{name}}",
+      "view_and_share": "Zobraziť a zdieľať"
+    },
+    "designer": {
+      "signer": "Podpísal (voliteľné)",
+      "signer_placeholder": "napr. Dr. Ján Novák",
+      "style": "Štýl",
+      "preview_hint": "Živý náhľad. Študenti uvidia svoje meno, dátum a ID certifikátu."
+    },
+    "kind_course": "Kurz"
   },
   "search": {
     "search_placeholder": "Hľadať kurzy, používateľov, kolekcie...",
@@ -1358,7 +1400,15 @@
       "podcasts": "Podcasty"
     },
     "course": "Kurz",
-    "user": "Člen"
+    "user": "Člen",
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Vedené cesty cez viacero kurzov",
+          "keywords": "cesty, vzdelávacie cesty, študijné cesty, programy, trasa"
+        }
+      }
+    }
   },
   "ai": {
     "ask_ai": "Opýtať sa AI",
@@ -4506,6 +4556,10 @@
         "org_api": {
           "description": "API tokeny a programmatický prístup",
           "keywords": "api, tokeny, prístup, programmatický, kľúče"
+        },
+        "paths": {
+          "description": "Spájajte kurzy do vedených ciest s certifikátmi",
+          "keywords": "cesty, vzdelávacie cesty, študijné cesty, programy, učebný plán, poradie, certifikát"
         }
       }
     },
@@ -6386,5 +6440,187 @@
       "resource": "Zdroj",
       "resource_plural": "Zdroje"
     }
+  },
+  "paths": {
+    "title": "Vzdelávacie cesty",
+    "new_path": "Nová cesta",
+    "manage_paths": "Spravovať cesty",
+    "catalog_subtitle": "Vedené cesty cez viacero kurzov. Dokončite cestu a získajte jej certifikát.",
+    "published": "Publikované",
+    "draft": "Koncept",
+    "completed": "Dokončené",
+    "in_progress": "Prebieha",
+    "required": "Povinný",
+    "elective": "Voliteľný",
+    "actions": "Akcie cesty",
+    "edit_courses": "Upraviť kurzy",
+    "view_path": "Zobraziť cestu",
+    "view_certificate": "Zobraziť certifikát",
+    "start_path": "Začať cestu",
+    "start_hint": "Začnite cestu a sledujte svoj priebeh vo všetkých jej kurzoch.",
+    "sign_in_to_start": "Prihláste sa a začnite",
+    "continue_learning": "Pokračovať v učení",
+    "leave_path": "Opustiť cestu",
+    "your_progress": "Váš priebeh",
+    "up_next": "Nasleduje",
+    "guided_order": "Stanovené poradie",
+    "certificate_included": "Certifikát v cene",
+    "certificate_earned": "Získali ste tento certifikát",
+    "certificate_explainer": "Udelí sa automaticky po dokončení všetkých povinných kurzov tejto cesty.",
+    "locked_hint": "Na odomknutie dokončite predchádzajúci kurz",
+    "restricted_course": "Kurz s obmedzeným prístupom",
+    "no_courses_yet": "V tejto ceste zatiaľ nie sú žiadne kurzy.",
+    "electives_rule_one": "Vyberte aspoň {{count}} z {{total}} voliteľných kurzov",
+    "electives_rule_few": "Vyberte aspoň {{count}} z {{total}} voliteľných kurzov",
+    "electives_rule_many": "Vyberte aspoň {{count}} z {{total}} voliteľných kurzov",
+    "electives_rule_other": "Vyberte aspoň {{count}} z {{total}} voliteľných kurzov",
+    "progress_short": "{{done}}/{{total}} kurzov",
+    "progress_long": "Dokončené kurzy: {{done}} z {{total}}",
+    "course_count_one": "{{count}} kurz",
+    "course_count_few": "{{count}} kurzy",
+    "course_count_many": "{{count}} kurzu",
+    "course_count_other": "{{count}} kurzov",
+    "learner_count_one": "{{count}} študent",
+    "learner_count_few": "{{count}} študenti",
+    "learner_count_many": "{{count}} študenta",
+    "learner_count_other": "{{count}} študentov",
+    "no_paths": "Zatiaľ žiadne cesty",
+    "no_paths_description": "Spojte kurzy do vedenej cesty s vlastným certifikátom.",
+    "no_public_paths": "Zatiaľ žiadne cesty",
+    "no_public_paths_description": "Vzdelávacie cesty sa tu zobrazia po zverejnení.",
+    "no_search_results": "Vášmu vyhľadávaniu nezodpovedajú žiadne cesty",
+    "search_placeholder": "Hľadať cesty...",
+    "clear_search": "Vymazať vyhľadávanie",
+    "not_found": "Táto cesta neexistuje alebo pre vás nie je dostupná.",
+    "back_to_paths": "Späť na cesty",
+    "delete_path": "Odstrániť cestu",
+    "delete_path_title": "Odstrániť „{{name}}“?",
+    "delete_path_confirm": "Cesta a priebeh študentov v nej budú odstránené. Samotné kurzy zostanú nedotknuté.",
+    "levels": {
+      "all": "Všetky úrovne",
+      "beginner": "Začiatočník",
+      "intermediate": "Mierne pokročilý",
+      "advanced": "Pokročilý"
+    },
+    "form": {
+      "name": "Názov",
+      "name_placeholder": "napr. Dátový analytik",
+      "name_required": "Cesta musí mať názov",
+      "name_max_length": "Názov môže mať najviac 200 znakov",
+      "description": "Krátky popis",
+      "description_placeholder": "Jedna alebo dve vety zobrazené na karte cesty",
+      "description_max_length": "Popis môže mať najviac 500 znakov",
+      "about": "O ceste",
+      "about_placeholder": "Pre koho je táto cesta a čo študenti na jej konci zvládnu",
+      "about_hint": "Zobrazuje sa na stránke cesty.",
+      "level": "Úroveň",
+      "thumbnail": "Titulný obrázok",
+      "upload_thumbnail": "Nahrať obrázok",
+      "thumbnail_hint": "Najlepšie 16:9. PNG alebo JPG.",
+      "discard_thumbnail": "Zahodiť nový obrázok",
+      "visibility": "Viditeľnosť",
+      "published_hint": "Študenti môžu cestu nájsť a začať.",
+      "public": "Verejná",
+      "public_hint": "Viditeľná pre návštevníkov, ktorí nie sú členmi vašej organizácie.",
+      "public_label": "Viditeľná pre všetkých, nielen pre členov",
+      "save": "Uložiť zmeny"
+    },
+    "modals": {
+      "create": {
+        "title": "Nová cesta",
+        "description": "Spojte kurzy do vedenej cesty. V ďalšom kroku vyberiete kurzy a ich poradie.",
+        "submit": "Vytvoriť cestu"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Vedené postupnosti kurzov, každá s vlastným certifikátom.",
+      "view_path": "Zobraziť cestu",
+      "tabs": {
+        "general": "Všeobecné",
+        "courses": "Kurzy",
+        "certificate": "Certifikát",
+        "learners": "Študenti"
+      },
+      "courses": {
+        "title": "Kurzy",
+        "subtitle": "Presúvaním nastavte poradie, ktorým študenti postupujú. Voliteľné kurzy nie sú povinné.",
+        "add": "Pridať kurzy",
+        "drag": "Presuňte na zmenu poradia",
+        "remove": "Odstrániť z cesty",
+        "requirement": "Požiadavka",
+        "unpublished_hint": "Nepublikované, skryté pred študentmi",
+        "empty_title": "Zatiaľ žiadne kurzy",
+        "empty_description": "Pridajte kurzy, z ktorých sa táto cesta skladá."
+      },
+      "rules": {
+        "title": "Podmienky dokončenia",
+        "subtitle": "Čo musí študent splniť, aby cestu dokončil.",
+        "sequential": "Stanovené poradie",
+        "sequential_hint": "V zobrazení cesty sa každý kurz odomkne po dokončení predchádzajúceho povinného kurzu. Na vlastných stránkach zostávajú kurzy otvorené.",
+        "electives": "Voliteľné kurzy na dokončenie",
+        "electives_hint_one": "Z {{count}} voliteľného kurzu v tejto ceste.",
+        "electives_hint_few": "Z {{count}} voliteľných kurzov v tejto ceste.",
+        "electives_hint_many": "Z {{count}} voliteľného kurzu v tejto ceste.",
+        "electives_hint_other": "Z {{count}} voliteľných kurzov v tejto ceste.",
+        "electives_none": "Označte kurz ako voliteľný, aby si študenti mohli vyberať.",
+        "summary": "Na dokončenie študenti absolvujú povinné kurzy ({{required}}) a voliteľné kurzy ({{electives}})."
+      },
+      "picker": {
+        "title": "Pridať kurzy",
+        "description": "Vybrané kurzy sa pridajú v poradí, v akom ich vyberiete.",
+        "search": "Hľadať kurzy...",
+        "empty": "Žiadne ďalšie kurzy na pridanie",
+        "add_one": "Pridať {{count}} kurz",
+        "add_few": "Pridať {{count}} kurzy",
+        "add_many": "Pridať {{count}} kurzu",
+        "add_other": "Pridať {{count}} kurzov"
+      },
+      "certificate": {
+        "title": "Certifikát cesty",
+        "subtitle": "Udeľuje sa navyše k certifikátom kurzov, keď študent dokončí cestu.",
+        "disabled_title": "Táto cesta nemá certifikát",
+        "disabled_message": "Zapnite ho, aby každý, kto dokončí cestu, dostal certifikát. Študenti, ktorí ju už dokončili, ho dostanú pri ďalšej kontrole priebehu.",
+        "enable": "Udeľovať certifikát"
+      },
+      "learners": {
+        "enrolled": "Študenti",
+        "completed": "Dokončili",
+        "completion_rate": "Miera dokončenia",
+        "certificates": "Certifikáty",
+        "empty_title": "Túto cestu zatiaľ nikto nezačal",
+        "empty_description": "Študenti sa tu zobrazia, keď cestu začnú.",
+        "columns": {
+          "learner": "Študent",
+          "progress": "Priebeh",
+          "started": "Začiatok",
+          "status": "Stav",
+          "certificate": "Certifikát"
+        },
+        "revoke": "Zrušiť",
+        "revoke_title": "Zrušiť certifikát?",
+        "revoke_confirm": "Certifikát používateľa {{name}} prestane byť overiteľný. Neskôr ho môžete obnoviť.",
+        "revoked": "Certifikát zrušený",
+        "revoked_badge": "Zrušený",
+        "reinstate": "Obnoviť",
+        "reinstated": "Certifikát bol obnovený"
+      }
+    },
+    "toasts": {
+      "saving": "Ukladá sa...",
+      "saved": "Cesta uložená",
+      "save_error": "Cestu sa nepodarilo uložiť",
+      "create_error": "Cestu sa nepodarilo vytvoriť",
+      "deleting": "Odstraňuje sa cesta...",
+      "deleted": "Cesta odstránená",
+      "delete_error": "Cestu sa nepodarilo odstrániť",
+      "enroll_error": "Cestu sa nepodarilo začať",
+      "already_completed": "Už ste dokončili všetky kurzy tejto cesty"
+    },
+    "my_paths": "Moje cesty",
+    "part_of_paths": "Súčasť cesty",
+    "path": "Cesta",
+    "courses_in_path": "Kurzy v tejto ceste",
+    "ready_to_begin": "Pripravení začať?",
+    "percent_done": "Hotovo: {{percent}} %"
   }
 }
