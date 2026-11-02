@@ -4441,6 +4441,8 @@
     "desktop_only_message": "Редактор доступний лише з настільного пристрою.",
     "switch_to_desktop": "Для перегляду перейдіть на робочий стіл.",
     "ai_editor": "Редактор ШІ",
+    "more_preview_options": "Інші параметри перегляду",
+    "more_save_options": "Інші параметри збереження",
     "ai_panel": {
       "title": "Редактор ШІ",
       "input_placeholder": "Попросіть ШІ допомогти з вашим контентом...",
@@ -4540,7 +4542,10 @@
       "align_left": "Вирівняти по лівому краю",
       "align_center": "Вирівняти по центру",
       "align_right": "Вирівняти праворуч",
-      "clear_formatting": "Очистити форматування"
+      "clear_formatting": "Очистити форматування",
+      "list": "Список",
+      "elements_menu": "Елементи",
+      "code_playground": "Пісочниця коду"
     },
     "blocks": {
       "info_callout": "Інформаційна виноска",
@@ -4560,6 +4565,8 @@
       "user": "Користувач",
       "magic_block": "Чарівний блок (створено ШІ)",
       "magic_block_disabled": "Для Magic Block потрібен стандартний план",
+      "callout": "Виноска",
+      "audio": "Аудіо",
       "common": {
         "uploading": "Завантаження...",
         "upload": "Завантажити",

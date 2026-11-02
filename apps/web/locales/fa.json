@@ -4472,6 +4472,8 @@
     "desktop_only_message": "ویرایشگر فقط از یک دستگاه دسکتاپ قابل دسترسی است.",
     "switch_to_desktop": "لطفاً برای مشاهده به دسکتاپ بروید.",
     "ai_editor": "ویرایشگر هوش مصنوعی",
+    "more_preview_options": "گزینه‌های بیشتر پیش‌نمایش",
+    "more_save_options": "گزینه‌های بیشتر ذخیره",
     "ai_panel": {
       "title": "ویرایشگر هوش مصنوعی",
       "input_placeholder": "از هوش مصنوعی بخواهید به محتوای شما کمک کند...",
@@ -4571,7 +4573,10 @@
       "align_left": "چپ‌چین",
       "align_center": "وسط‌چین",
       "align_right": "راست‌چین",
-      "clear_formatting": "پاک کردن قالب‌بندی"
+      "clear_formatting": "پاک کردن قالب‌بندی",
+      "list": "فهرست",
+      "elements_menu": "عناصر",
+      "code_playground": "محیط کدنویسی"
     },
     "blocks": {
       "info_callout": "اعلان اطلاعات",
@@ -4591,6 +4596,8 @@
       "user": "کاربر",
       "magic_block": "بلاک جادویی (تولید شده توسط هوش مصنوعی)",
       "magic_block_disabled": "بلاک جادویی نیاز به طرح استاندارد دارد",
+      "callout": "کادر توضیح",
+      "audio": "صدا",
       "common": {
         "uploading": "در حال آپلود...",
         "upload": "آپلود",

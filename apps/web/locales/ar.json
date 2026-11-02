@@ -5227,6 +5227,8 @@
     "desktop_only_message": "المحرر متاح فقط من جهاز سطح المكتب.",
     "switch_to_desktop": "يرجى التبديل إلى سطح المكتب للعرض.",
     "ai_editor": "محرر الذكاء الاصطناعي",
+    "more_preview_options": "خيارات معاينة إضافية",
+    "more_save_options": "خيارات حفظ إضافية",
     "versioning": {
       "version_history": "سجل الإصدارات",
       "current_version": "الإصدار الحالي:",
@@ -5305,7 +5307,10 @@
       "align_left": "محاذاة لليسار",
       "align_center": "توسيط",
       "align_right": "محاذاة لليمين",
-      "clear_formatting": "مسح التنسيق"
+      "clear_formatting": "مسح التنسيق",
+      "list": "قائمة",
+      "elements_menu": "العناصر",
+      "code_playground": "ساحة الأكواد"
     },
     "blocks": {
       "info_callout": "مربع معلومات",
@@ -5358,6 +5363,8 @@
         "suggestion_timeline_prompt": "إنشاء خط زمني تفاعلي يُظهر الأحداث التاريخية الكبرى مع تفاصيل قابلة للتوسيع"
       },
       "magic_block_disabled": "الكتلة السحرية تتطلب خطة Standard",
+      "callout": "تنبيه",
+      "audio": "صوت",
       "common": {
         "uploading": "جاري التحميل...",
         "upload": "تحميل",
@@ -5751,7 +5758,8 @@
         "conditional": "محتوى يراه بعض المتعلمين فقط",
         "conditional_label": "محتوى مشروط",
         "community": "ربط مجتمع (أو اكتب {{example}})",
-        "community_label": "مجتمع"
+        "community_label": "مجتمع",
+        "menu_label": "تخصيص"
       },
       "your_groups": "مجموعات المستخدمين لديك"
     },

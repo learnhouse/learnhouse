@@ -4177,6 +4177,8 @@
     "desktop_only_message": "De editor is alleen toegankelijk vanaf een desktopapparaat.",
     "switch_to_desktop": "Schakel naar een desktop om te bekijken.",
     "ai_editor": "AI-editor",
+    "more_preview_options": "Meer voorbeeldopties",
+    "more_save_options": "Meer opslagopties",
     "versioning": {
       "version_history": "Versiegeschiedenis",
       "current_version": "Huidige versie:",
@@ -4255,7 +4257,10 @@
       "align_left": "Links uitlijnen",
       "align_center": "Centreren",
       "align_right": "Rechts uitlijnen",
-      "clear_formatting": "Opmaak wissen"
+      "clear_formatting": "Opmaak wissen",
+      "list": "Lijst",
+      "elements_menu": "Elementen",
+      "code_playground": "Code-playground"
     },
     "blocks": {
       "info_callout": "Infovak",
@@ -4275,6 +4280,8 @@
       "user": "Gebruiker",
       "magic_block": "Magisch blok (AI)",
       "magic_block_disabled": "Magisch blok vereist Standard-abonnement",
+      "callout": "Kader",
+      "audio": "Audio",
       "common": {
         "cancel": "Annuleren",
         "save": "Opslaan",
