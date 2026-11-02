@@ -2,12 +2,13 @@
 
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { CalendarClock, Link2, PlayCircle } from 'lucide-react'
+import { CalendarClock, Hourglass, Link2, ListChecks, PlayCircle, TimerOff } from 'lucide-react'
 import { DripLockReason, timeUntil } from '@/lib/drip'
 
 type DripInfo = {
   drip_reason?: DripLockReason | string | null
   drip_unlock_at?: string | null
+  drip_closes_at?: string | null
 }
 
 /**
@@ -25,6 +26,21 @@ export function useDripLabel() {
     }
     if (info.drip_reason === 'previous') {
       return { label: t('course.drip.opens_after_previous', 'Opens after the previous chapter'), detail: null }
+    }
+    if (info.drip_reason === 'prerequisites') {
+      return { label: t('course.drip.opens_after_required', 'Opens after the required chapters'), detail: null }
+    }
+    if (info.drip_reason === 'closed') {
+      const closed = info.drip_closes_at ? new Date(info.drip_closes_at) : null
+      return {
+        label: t('course.drip.closed', 'No longer available'),
+        detail: closed
+          ? t('course.drip.closed_on', {
+              defaultValue: 'closed {{date}}',
+              date: closed.toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
+            })
+          : null,
+      }
     }
     if (info.drip_unlock_at) {
       const date = new Date(info.drip_unlock_at)
@@ -45,7 +61,24 @@ export function useDripLabel() {
 export function DripIcon({ reason, size = 12 }: { reason?: string | null; size?: number }) {
   if (reason === 'previous') return <Link2 size={size} />
   if (reason === 'enrollment') return <PlayCircle size={size} />
+  if (reason === 'prerequisites') return <ListChecks size={size} />
+  if (reason === 'closed') return <TimerOff size={size} />
   return <CalendarClock size={size} />
+}
+
+/** "Open until Nov 20": an open chapter that the schedule closes again later. */
+export function DripUntilBadge({ closesAt, className }: { closesAt: string; className?: string }) {
+  const { t, i18n } = useTranslation()
+  const date = new Date(closesAt).toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric' })
+  return (
+    <span
+      data-testid="drip-until-badge"
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-[10px] font-semibold whitespace-nowrap ${className || ''}`}
+    >
+      <Hourglass size={10} />
+      {t('course.drip.open_until', { defaultValue: 'Open until {{date}}', date })}
+    </span>
+  )
 }
 
 export default function DripBadge(props: DripInfo & { className?: string }) {

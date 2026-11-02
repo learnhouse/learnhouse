@@ -26,7 +26,11 @@ export default function DripGate(props: DripGateProps) {
       ? t('course.drip.gate_enrollment', 'This course releases its chapters over time, starting when you begin the course. Start it from the course page to unlock your schedule.')
       : props.dripReason === 'previous'
         ? t('course.drip.gate_previous', 'Finish every lesson of the previous chapter and this one opens right away.')
-        : t('course.drip.gate_schedule', 'This course releases its chapters over time. Come back when this one opens.')
+        : props.dripReason === 'prerequisites'
+          ? t('course.drip.gate_prerequisites', 'Finish the chapters this one builds on and it opens right away.')
+          : props.dripReason === 'closed'
+            ? t('course.drip.gate_closed', 'This chapter was available for a limited time, and that time is over.')
+            : t('course.drip.gate_schedule', 'This course releases its chapters over time. Come back when this one opens.')
 
   return (
     <GeneralWrapperStyled>

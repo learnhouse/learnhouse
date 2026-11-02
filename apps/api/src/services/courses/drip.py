@@ -21,7 +21,7 @@ a chapter late but never early.
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Iterable, Optional, Sequence
+from typing import Iterable, NamedTuple, Optional, Sequence
 
 from fastapi import HTTPException, Request
 from pydantic import ValidationError
@@ -45,6 +45,8 @@ from src.db.courses.drip import (
 )
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
+from src.db.usergroup_user import UserGroupUser
+from src.db.usergroups import UserGroup
 from src.db.users import AnonymousUser
 from src.security.auth import resolve_acting_user_id
 from src.security.features_utils.plan_check import check_org_plan
@@ -57,10 +59,25 @@ class DripState:
     locked: bool = False
     unlock_at: Optional[datetime] = None
     reason: Optional[DripLockReason] = None
+    # Open chapters with a limited window: when they close again.
+    closes_at: Optional[datetime] = None
+    # Open chapters on a time rule: when they opened for this reader.
+    opened_at: Optional[datetime] = None
 
     @property
     def unlock_at_iso(self) -> Optional[str]:
         return self.unlock_at.isoformat() if self.unlock_at else None
+
+    @property
+    def closes_at_iso(self) -> Optional[str]:
+        return self.closes_at.isoformat() if self.closes_at else None
+
+
+class DripChapter(NamedTuple):
+    """One chapter as the schedule sees it, in course order."""
+    id: int
+    rule: Optional[dict]
+    uuid: Optional[str] = None
 
 
 def course_drip_settings(course: Course) -> Optional[CourseDripSettings]:
@@ -120,7 +137,7 @@ async def _completed_activity_ids(user_id: int, course_id: int, db_session: Asyn
 
 def compute_drip_states(
     settings: CourseDripSettings,
-    chapters: Sequence[tuple[int, Optional[dict]]],
+    chapters: Sequence[tuple],
     activity_ids: dict[int, list[int]],
     anchor: Optional[datetime],
     completed: set[int],
@@ -128,15 +145,20 @@ def compute_drip_states(
 ) -> dict[int, DripState]:
     """Release state for each chapter, in course order.
 
-    ``chapters`` is ``(chapter_id, drip_rule)`` in course order;
-    ``activity_ids`` maps a chapter to its published activity ids (used by
-    "require previous chapter"). ``anchor`` is when this reader's schedule
-    started: their enrollment, or the cohort start date.
+    ``chapters`` is ``DripChapter``-shaped tuples ``(id, drip_rule[, uuid])``
+    in course order; ``activity_ids`` maps a chapter to its published
+    activity ids (used by the completion conditions). ``anchor`` is when this
+    reader's schedule started: their enrollment, or the cohort start date.
     """
     states: dict[int, DripState] = {}
+    # Chapters the learner has finished, by uuid, for "require chapters".
+    # Only chapters before the current one are known, so later ones are
+    # ignored as prerequisites.
+    done_uuids: set[str] = set()
     previous_done = True
-    for index, (chapter_id, raw_rule) in enumerate(chapters):
-        rule = chapter_drip_rule(raw_rule)
+    for index, item in enumerate(chapters):
+        chapter = DripChapter(*item)
+        rule = chapter_drip_rule(chapter.rule)
         state = DripState()
 
         release: Optional[datetime] = None
@@ -160,27 +182,68 @@ def compute_drip_states(
         if not state.locked and rule.require_previous and index > 0 and not previous_done:
             state = DripState(locked=True, reason=DripLockReason.PREVIOUS)
 
-        states[chapter_id] = state
-        previous_done = not state.locked and set(activity_ids.get(chapter_id, [])) <= completed
+        if not state.locked:
+            seen_before = {DripChapter(*c).uuid for c in chapters[:index]}
+            missing = [u for u in rule.require_chapters if u in seen_before and u not in done_uuids]
+            if missing:
+                state = DripState(locked=True, reason=DripLockReason.PREREQUISITES)
+
+        if not state.locked and rule.available_days and release is not None:
+            closes = release + timedelta(days=rule.available_days)
+            state = (
+                DripState(locked=True, reason=DripLockReason.CLOSED, closes_at=closes)
+                if now >= closes
+                else DripState(closes_at=closes)
+            )
+
+        if not state.locked:
+            state.opened_at = release
+        states[chapter.id] = state
+        # A closed chapter the learner finished still counts as done.
+        open_once = not state.locked or state.reason == DripLockReason.CLOSED
+        previous_done = open_once and set(activity_ids.get(chapter.id, [])) <= completed
+        if previous_done and chapter.uuid:
+            done_uuids.add(chapter.uuid)
     return states
 
 
-async def drip_states_for_reader(
+def _needs_progress(chapters: Sequence[tuple]) -> bool:
+    return any(
+        (rule := chapter_drip_rule(DripChapter(*c).rule)).require_previous or rule.require_chapters
+        for c in chapters
+    )
+
+
+async def _in_early_access(user_id: int, settings: CourseDripSettings, org_id: int, db_session: AsyncSession) -> bool:
+    if not settings.early_access_usergroups:
+        return False
+    member = (await db_session.execute(
+        select(UserGroupUser.id)
+        .join(UserGroup, UserGroup.id == UserGroupUser.usergroup_id)  # type: ignore[arg-type]
+        .where(
+            UserGroup.usergroup_uuid.in_(settings.early_access_usergroups),  # type: ignore[attr-defined]
+            UserGroup.org_id == org_id,
+            UserGroupUser.user_id == user_id,
+        )
+        .limit(1)
+    )).first()
+    return member is not None
+
+
+async def drip_states_for_user(
     course: Course,
-    chapters: Sequence[tuple[int, Optional[dict]]],
+    settings: CourseDripSettings,
+    chapters: Sequence[tuple],
     activity_ids: dict[int, list[int]],
-    current_user,
+    user_id: Optional[int],
     db_session: AsyncSession,
     now: Optional[datetime] = None,
 ) -> dict[int, DripState]:
-    """``compute_drip_states`` with the reader's anchor and progress loaded.
-    Empty when the course doesn't drip its content."""
-    settings = course_drip_settings(course)
-    if settings is None or not chapters:
+    """``compute_drip_states`` with one learner's anchor and progress loaded
+    (``user_id`` None for an anonymous reader). Empty when they are in one of
+    the course's early-access user groups."""
+    if user_id is not None and await _in_early_access(user_id, settings, course.org_id, db_session):
         return {}
-
-    is_anon = isinstance(current_user, AnonymousUser)
-    user_id = None if is_anon else resolve_acting_user_id(current_user)
 
     if settings.anchor == DripAnchor.FIXED_DATE:
         anchor = settings.start_date
@@ -190,13 +253,29 @@ async def drip_states_for_reader(
         anchor = None
 
     completed: set[int] = set()
-    needs_progress = any(chapter_drip_rule(rule).require_previous for _, rule in chapters)
-    if needs_progress and user_id is not None:
+    if user_id is not None and _needs_progress(chapters):
         completed = await _completed_activity_ids(user_id, course.id, db_session)
 
     return compute_drip_states(
         settings, chapters, activity_ids, anchor, completed, now or datetime.now(timezone.utc)
     )
+
+
+async def drip_states_for_reader(
+    course: Course,
+    chapters: Sequence[tuple],
+    activity_ids: dict[int, list[int]],
+    current_user,
+    db_session: AsyncSession,
+    now: Optional[datetime] = None,
+) -> dict[int, DripState]:
+    """Release states for whoever is reading. Empty when the course doesn't
+    drip its content."""
+    settings = course_drip_settings(course)
+    if settings is None or not chapters:
+        return {}
+    user_id = None if isinstance(current_user, AnonymousUser) else resolve_acting_user_id(current_user)
+    return await drip_states_for_user(course, settings, chapters, activity_ids, user_id, db_session, now)
 
 
 async def apply_drip_to_chapters(
@@ -218,14 +297,17 @@ async def apply_drip_to_chapters(
 
     states = await drip_states_for_reader(
         course,
-        [(chapter.id, chapter.drip_rule) for chapter in chapters],
+        [DripChapter(chapter.id, chapter.drip_rule, chapter.chapter_uuid) for chapter in chapters],
         {chapter.id: [a.id for a in chapter.activities if a.published] for chapter in chapters},
         current_user,
         db_session,
     )
     for chapter in chapters:
         state = states.get(chapter.id)
-        if state is None or not state.locked:
+        if state is None:
+            continue
+        chapter.drip_closes_at = state.closes_at_iso
+        if not state.locked:
             continue
         chapter.is_locked = True
         chapter.drip_locked = True
@@ -239,19 +321,19 @@ async def apply_drip_to_chapters(
             activity.details = None
 
 
-async def _ordered_chapters(course_id: int, db_session: AsyncSession) -> list[tuple[int, Optional[dict]]]:
+async def _ordered_chapters(course_id: int, db_session: AsyncSession) -> list[DripChapter]:
     rows = (await db_session.execute(
-        select(Chapter.id, Chapter.drip_rule)
+        select(Chapter.id, Chapter.drip_rule, Chapter.chapter_uuid)
         .join(CourseChapter, CourseChapter.chapter_id == Chapter.id)  # type: ignore[arg-type]
         .where(CourseChapter.course_id == course_id, Chapter.course_id == course_id)
         .order_by(CourseChapter.order)  # type: ignore[arg-type]
     )).all()
     seen: set[int] = set()
     ordered = []
-    for chapter_id, rule in rows:
+    for chapter_id, rule, uuid in rows:
         if chapter_id not in seen:
             seen.add(chapter_id)
-            ordered.append((chapter_id, rule))
+            ordered.append(DripChapter(chapter_id, rule, uuid))
     return ordered
 
 
@@ -281,11 +363,12 @@ async def chapter_drip_state(
     doesn't drip. Editors and admins are the caller's to let through."""
     if course_drip_settings(course) is None:
         return None
-    if chapter_drip_rule(chapter.drip_rule).require_previous:
+    rule = chapter_drip_rule(chapter.drip_rule)
+    if rule.require_previous or rule.require_chapters:
         chapters = await _ordered_chapters(course.id, db_session)
-        activity_ids = await _published_activity_ids([cid for cid, _ in chapters], db_session)
+        activity_ids = await _published_activity_ids([c.id for c in chapters], db_session)
     else:
-        chapters = [(chapter.id, chapter.drip_rule)]
+        chapters = [DripChapter(chapter.id, chapter.drip_rule, chapter.chapter_uuid)]
         activity_ids = {}
     states = await drip_states_for_reader(course, chapters, activity_ids, current_user, db_session, now)
     return states.get(chapter.id)
@@ -360,6 +443,24 @@ async def update_drip_schedule(
         missing = [u for u in uuids if u not in chapters_by_uuid]
         if missing:
             raise HTTPException(status_code=400, detail="Chapter does not belong to this course")
+
+    required = {u for item in schedule.chapters for u in item.rule.require_chapters}
+    if required:
+        course_chapters = set((await db_session.execute(
+            select(Chapter.chapter_uuid).where(Chapter.course_id == course.id, Chapter.chapter_uuid.in_(required))  # type: ignore[attr-defined]
+        )).scalars().all())
+        if required - course_chapters or any(item.chapter_uuid in item.rule.require_chapters for item in schedule.chapters):
+            raise HTTPException(status_code=400, detail="A required chapter must be another chapter of this course")
+
+    groups = set(schedule.settings.early_access_usergroups)
+    if groups:
+        # Only the course's own org's groups: a foreign group would expose its
+        # name and hand its members the schedule bypass.
+        found = set((await db_session.execute(
+            select(UserGroup.usergroup_uuid).where(UserGroup.org_id == course.org_id, UserGroup.usergroup_uuid.in_(groups))  # type: ignore[attr-defined]
+        )).scalars().all())
+        if groups - found:
+            raise HTTPException(status_code=400, detail="User group not found")
 
     now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     course.drip_settings = schedule.settings.model_dump(mode="json")

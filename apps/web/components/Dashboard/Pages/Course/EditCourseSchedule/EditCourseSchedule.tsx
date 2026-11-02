@@ -5,13 +5,19 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import {
+  BellRing,
   CalendarClock,
   CalendarDays,
   Check,
+  ChevronDown,
+  Eye,
   Hourglass,
   Link2,
+  ListChecks,
   Loader2,
   Repeat,
+  Sparkles,
+  TimerOff,
   UserRoundCheck,
   Users,
   Zap,
@@ -19,6 +25,9 @@ import {
 import { Switch } from '@components/ui/switch'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getUserGroups } from '@services/usergroups/usergroups'
+import { asArray } from '@services/utils/ts/requests'
 import { DripSchedule, getDripSchedule, updateDripSchedule } from '@services/courses/drip'
 import { revalidateTags } from '@services/utils/ts/requests'
 import {
@@ -27,8 +36,11 @@ import {
   DripReleaseMode,
   DripRule,
   DripSettings,
+  DayState,
   MAX_DELAY_DAYS,
   everyInterval,
+  previewHorizon,
+  stateOnDay,
   fromLocalInput,
   normalizeRule,
   releaseDate,
@@ -175,6 +187,38 @@ function ScheduleEditor(props: {
   const [saving, setSaving] = useState(false)
   const [every, setEvery] = useState(1)
   const [unit, setUnit] = useState<'days' | 'weeks'>('weeks')
+  const [previewDay, setPreviewDay] = useState<number | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
+  const org = useOrg() as any
+
+  const { data: groups } = useQuery({
+    queryKey: ['usergroups', org?.id],
+    queryFn: async () => asArray<{ usergroup_uuid: string; name: string }>(await getUserGroups(org.id, access_token)),
+    enabled: !!(org?.id && access_token),
+    staleTime: 60_000,
+  })
+
+  const toggleExpanded = (uuid: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(uuid)) next.delete(uuid)
+      else next.add(uuid)
+      return next
+    })
+
+  const toggleEarlyAccess = (uuid: string) => {
+    const current = settings.early_access_usergroups
+    updateSettings({
+      early_access_usergroups: current.includes(uuid) ? current.filter((u) => u !== uuid) : [...current, uuid],
+    })
+  }
+
+  const toggleRequired = (index: number, uuid: string) => {
+    const current = chapters[index].rule.require_chapters
+    updateRule(index, {
+      require_chapters: current.includes(uuid) ? current.filter((u) => u !== uuid) : [...current, uuid],
+    })
+  }
 
   const updateSettings = (patch: Partial<DripSettings>) => {
     setSettings((s) => ({ ...s, ...patch }))
@@ -322,6 +366,55 @@ function ScheduleEditor(props: {
             )}
           </div>
 
+          {/* Early access and notifications */}
+          <div className="bg-white rounded-xl nice-shadow px-5 py-5 sm:px-6 grid md:grid-cols-2 gap-6">
+            <div data-testid="drip-early-access">
+              <div className="flex items-center gap-2 font-semibold text-gray-900">
+                <Sparkles size={16} className="text-indigo-500" />
+                {t('dashboard.courses.schedule.early_access.title', 'Early access')}
+              </div>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {t('dashboard.courses.schedule.early_access.description', 'Members of these user groups get every chapter right away: staff, beta testers, a premium tier.')}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {asArray<{ usergroup_uuid: string; name: string }>(groups).length === 0 ? (
+                  <span className="text-xs text-gray-400">
+                    {t('dashboard.courses.schedule.early_access.empty', 'No user groups yet.')}
+                  </span>
+                ) : (
+                  asArray<{ usergroup_uuid: string; name: string }>(groups).map((g) => {
+                    const on = settings.early_access_usergroups.includes(g.usergroup_uuid)
+                    return (
+                      <button
+                        key={g.usergroup_uuid}
+                        type="button"
+                        onClick={() => toggleEarlyAccess(g.usergroup_uuid)}
+                        className={`h-7 px-2.5 rounded-full text-xs font-semibold flex items-center gap-1 transition-colors ${
+                          on ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {on ? <Check size={12} strokeWidth={3} /> : <Users size={12} />}
+                        {g.name}
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+            <label className="flex items-start gap-3 cursor-pointer" data-testid="drip-notify">
+              <div className="grow">
+                <div className="flex items-center gap-2 font-semibold text-gray-900">
+                  <BellRing size={16} className="text-indigo-500" />
+                  {t('dashboard.courses.schedule.notify.title', 'Email learners when a chapter opens')}
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {t('dashboard.courses.schedule.notify.description', 'Enrolled learners get a short email with a link back to the course as soon as a scheduled chapter opens for them.')}
+                </p>
+              </div>
+              <Switch checked={settings.notify_email} onCheckedChange={(v) => updateSettings({ notify_email: v })} />
+            </label>
+          </div>
+
           {/* Chapter timeline */}
           <div className="bg-white rounded-xl nice-shadow px-5 py-5 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -373,10 +466,39 @@ function ScheduleEditor(props: {
                 {t('dashboard.courses.schedule.chapters.empty', 'Add chapters to this course to schedule them.')}
               </p>
             ) : (
+              <>
+              {settings.anchor === 'enrollment' && (
+                <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-indigo-50/60 border border-indigo-100 px-3 py-2" data-testid="drip-preview">
+                  <Eye size={15} className="text-indigo-500" />
+                  <span className="text-xs font-semibold text-indigo-900">
+                    {previewDay === null
+                      ? t('dashboard.courses.schedule.preview.label', 'Preview a learner’s view on any day')
+                      : t('dashboard.courses.schedule.preview.day', { defaultValue: 'Day {{count}} after enrolling', count: previewDay })}
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={previewHorizon(chapters.map((c) => c.rule))}
+                    value={previewDay ?? 0}
+                    onChange={(e) => setPreviewDay(Number(e.target.value))}
+                    className="grow min-w-[160px] accent-indigo-600"
+                    aria-label={t('dashboard.courses.schedule.preview.slider', 'Preview day')}
+                  />
+                  {previewDay !== null && (
+                    <button type="button" onClick={() => setPreviewDay(null)} className="text-xs text-indigo-600 hover:underline">
+                      {t('dashboard.courses.schedule.preview.clear', 'Clear')}
+                    </button>
+                  )}
+                </div>
+              )}
               <ol className="mt-5 relative">
                 {chapters.map((row, index) => {
                   const opens = releaseDate(row.rule, previewAnchor)
                   const isLast = index === chapters.length - 1
+                  const isOpen = expanded.has(row.chapter_uuid)
+                  const earlier = chapters.slice(0, index)
+                  const extras = row.rule.require_chapters.length + (row.rule.available_days ? 1 : 0)
+                  const dayState: DayState | null = previewDay === null ? null : stateOnDay(row.rule, previewDay)
                   return (
                     <li key={row.chapter_uuid} className="relative ps-9 pb-5" data-testid="drip-chapter">
                       {!isLast && <span className="absolute start-[13px] top-7 bottom-0 w-px bg-gray-200" />}
@@ -385,6 +507,31 @@ function ScheduleEditor(props: {
                       </span>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                         <span className="font-medium text-gray-800 me-auto">{row.name}</span>
+                        {dayState && (
+                          <span
+                            data-testid="drip-day-state"
+                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                              {
+                                open: 'bg-emerald-50 text-emerald-700',
+                                upcoming: 'bg-amber-50 text-amber-700',
+                                closed: 'bg-gray-100 text-gray-500',
+                                dated: 'bg-sky-50 text-sky-700',
+                              }[dayState]
+                            }`}
+                          >
+                            {
+                              {
+                                open: t('dashboard.courses.schedule.preview.open', 'Open'),
+                                upcoming: t('dashboard.courses.schedule.preview.upcoming', {
+                                  defaultValue: 'Opens on day {{count}}',
+                                  count: row.rule.mode === 'delay' ? row.rule.delay_days : 0,
+                                }),
+                                closed: t('dashboard.courses.schedule.preview.closed', 'Closed'),
+                                dated: t('dashboard.courses.schedule.preview.dated', 'Fixed date'),
+                              }[dayState]
+                            }
+                          </span>
+                        )}
                         <span className="text-xs text-gray-500 flex items-center gap-1" data-testid="drip-opens">
                           <CalendarDays size={13} className="text-gray-400" />
                           {opens
@@ -456,11 +603,91 @@ function ScheduleEditor(props: {
                             {t('dashboard.courses.schedule.require_previous', 'Only after the previous chapter is completed')}
                           </label>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(row.chapter_uuid)}
+                          data-testid="drip-more"
+                          className={`ms-auto flex items-center gap-1 h-7 px-2 rounded-md text-xs font-semibold transition-colors ${
+                            isOpen || extras ? 'text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:bg-gray-100'
+                          }`}
+                        >
+                          {extras
+                            ? t('dashboard.courses.schedule.more.count', { defaultValue: '{{count}} more conditions', count: extras })
+                            : t('dashboard.courses.schedule.more.label', 'More conditions')}
+                          <ChevronDown size={13} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        </button>
                       </div>
+                      {isOpen && (
+                        <div className="mt-3 rounded-lg border border-gray-100 bg-gray-50/70 p-3 space-y-3" data-testid="drip-conditions">
+                          <div>
+                            <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+                              <ListChecks size={13} className="text-gray-400" />
+                              {t('dashboard.courses.schedule.more.requires', 'Requires these chapters to be completed')}
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {earlier.length === 0 ? (
+                                <span className="text-xs text-gray-400">
+                                  {t('dashboard.courses.schedule.more.no_earlier', 'This is the first chapter.')}
+                                </span>
+                              ) : (
+                                earlier.map((c) => {
+                                  const on = row.rule.require_chapters.includes(c.chapter_uuid)
+                                  return (
+                                    <button
+                                      key={c.chapter_uuid}
+                                      type="button"
+                                      onClick={() => toggleRequired(index, c.chapter_uuid)}
+                                      className={`h-7 px-2.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors ${
+                                        on ? 'bg-indigo-600 text-white' : 'bg-white ring-1 ring-gray-200 text-gray-600 hover:bg-gray-100'
+                                      }`}
+                                    >
+                                      {on && <Check size={12} strokeWidth={3} />}
+                                      {c.name}
+                                    </button>
+                                  )
+                                })
+                              )}
+                            </div>
+                          </div>
+                          <label className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
+                            <input
+                              type="checkbox"
+                              checked={!!row.rule.available_days}
+                              onChange={(e) => updateRule(index, { available_days: e.target.checked ? 7 : null })}
+                              className="accent-indigo-600"
+                            />
+                            <TimerOff size={13} className="text-gray-400" />
+                            <span className="font-semibold">{t('dashboard.courses.schedule.more.closes', 'Close it again')}</span>
+                            {row.rule.available_days ? (
+                              <>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={MAX_DELAY_DAYS}
+                                  value={row.rule.available_days}
+                                  onChange={(e) =>
+                                    updateRule(index, {
+                                      available_days: Math.min(MAX_DELAY_DAYS, Math.max(1, Number(e.target.value) || 1)),
+                                    })
+                                  }
+                                  className="w-16 h-7 px-2 rounded-md border border-gray-200 bg-white text-xs text-center"
+                                  aria-label={t('dashboard.courses.schedule.more.closes_days', 'Days open')}
+                                />
+                                {t('dashboard.courses.schedule.more.closes_after', 'days after it opens')}
+                              </>
+                            ) : (
+                              <span className="text-gray-400">
+                                {t('dashboard.courses.schedule.more.closes_hint', 'For limited-time content like a replay or a live-week bonus.')}
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                      )}
                     </li>
                   )
                 })}
               </ol>
+              </>
             )}
           </div>
         </>

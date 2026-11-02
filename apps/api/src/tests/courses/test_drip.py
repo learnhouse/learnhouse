@@ -5,6 +5,7 @@ wrapper (enrollment date, progress), the course tree, the single-activity
 gate, the AI assistant's access filter, and the schedule edit endpoints.
 """
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
@@ -483,7 +484,7 @@ class TestScheduleService:
         await db.commit()
         schedule = await get_drip_schedule(mock_request, course.course_uuid, admin_user, db)
         assert [c.chapter_uuid for c in schedule.chapters] == ["chapter_1"]
-        assert await drip_service._ordered_chapters(course.id, db) == [(1, None)]
+        assert await drip_service._ordered_chapters(course.id, db) == [(1, None, "chapter_1")]
 
     async def test_unknown_course(self, db, admin_user, mock_request, allow_update):
         with pytest.raises(HTTPException) as exc:
@@ -563,3 +564,291 @@ class TestRouter:
             json={"settings": {"enabled": True, "anchor": "fixed_date"}},
         )
         assert res.status_code == 422
+
+
+# ── More conditions: prerequisites, closing window, early access ────────────
+
+
+class TestMoreConditions:
+    def test_required_chapters(self):
+        chapters = [
+            (1, None, "c1"),
+            (2, None, "c2"),
+            (3, {"require_chapters": ["c1", "c2"]}, "c3"),
+            (4, {"require_chapters": ["c5"]}, "c4"),  # later chapter: ignored
+            (5, None, "c5"),
+        ]
+        activities = {1: [10], 2: [20], 3: [], 4: [], 5: [50]}
+        states = compute_drip_states(_settings(), chapters, activities, NOW, {10}, NOW)
+        assert states[3].locked and states[3].reason == DripLockReason.PREREQUISITES
+        assert not states[4].locked
+        states = compute_drip_states(_settings(), chapters, activities, NOW, {10, 20}, NOW)
+        assert not states[3].locked
+
+    def test_closing_window(self):
+        anchor = NOW - timedelta(days=10)
+        chapters = [(1, {"available_days": 7}), (2, _delay(7, available_days=7)), (3, {"available_days": 3})]
+        states = compute_drip_states(_settings(), chapters, {1: [10]}, anchor, {10}, NOW)
+        assert states[1].locked and states[1].reason == DripLockReason.CLOSED
+        assert states[1].closes_at == anchor + timedelta(days=7)
+        assert not states[2].locked and states[2].closes_at == anchor + timedelta(days=14)
+        assert states[2].opened_at == anchor + timedelta(days=7)
+        # Finished before it closed: still counts for "require previous".
+        follow = compute_drip_states(_settings(), [(1, {"available_days": 7}), (2, {"require_previous": True})], {1: [10]}, anchor, {10}, NOW)
+        assert not follow[2].locked
+
+    def test_closing_needs_a_release_time(self):
+        # Not enrolled: day-0 chapters are open as a preview with no clock, so no window either.
+        states = compute_drip_states(_settings(), [(1, {"available_days": 1})], {}, None, set(), NOW)
+        assert not states[1].locked and states[1].closes_at is None
+        assert DripState(closes_at=NOW).closes_at_iso == NOW.isoformat()
+
+    async def test_early_access_group_sees_everything(self, db, org, drip_course, regular_user):
+        db.add(UserGroup(id=7, name="VIP", description="", org_id=org.id, usergroup_uuid="ug_vip", creation_date="", update_date=""))
+        db.add(UserGroupUser(usergroup_id=7, user_id=regular_user.id, org_id=org.id, creation_date="", update_date=""))
+        await db.commit()
+        rules = [(1, None), (2, _delay(7))]
+        assert (await drip_states_for_reader(drip_course, rules, {}, regular_user, db, NOW))[2].locked
+        drip_course.drip_settings = {**ENROLL, "early_access_usergroups": ["ug_vip"]}
+        assert await drip_states_for_reader(drip_course, rules, {}, regular_user, db, NOW) == {}
+
+    async def test_chapter_state_loads_order_for_prerequisites(self, db, org, course, regular_user):
+        course.drip_settings = ENROLL
+        await _add_chapter(db, org, course, 1, 1)
+        ch2 = await _add_chapter(db, org, course, 2, 2, {"require_chapters": ["chapter_1"]})
+        await _add_activity(db, org, course, 1, 1)
+        await _enroll(db, org, course, regular_user.id, NOW - timedelta(days=1))
+        assert (await chapter_drip_state(course, ch2, regular_user, db, NOW)).reason == DripLockReason.PREREQUISITES
+        await _complete(db, org, course, regular_user.id, 1)
+        assert not (await chapter_drip_state(course, ch2, regular_user, db, NOW)).locked
+
+    async def test_tree_leaves_early_access_untouched(self, db, org, course, regular_user):
+        from src.db.courses.chapters import ChapterRead
+
+        db.add(UserGroup(id=6, name="Staff", description="", org_id=org.id, usergroup_uuid="ug_staff", creation_date="", update_date=""))
+        db.add(UserGroupUser(usergroup_id=6, user_id=regular_user.id, org_id=org.id, creation_date="", update_date=""))
+        course.drip_settings = {**ENROLL, "early_access_usergroups": ["ug_staff"]}
+        await db.commit()
+        ch = await _add_chapter(db, org, course, 1, 1, _delay(30))
+        reads = [ChapterRead(**ch.model_dump(), activities=[])]
+        await drip_service.apply_drip_to_chapters(reads, course, regular_user, db, None)
+        assert not reads[0].drip_locked
+
+    async def test_tree_reports_closing_date(self, db, org, course, regular_user):
+        from src.db.courses.chapters import ChapterRead
+
+        course.drip_settings = {"enabled": True, "anchor": "fixed_date", "start_date": (NOW - timedelta(days=1)).isoformat()}
+        ch = await _add_chapter(db, org, course, 1, 1, {"available_days": 30})
+        reads = [ChapterRead(**ch.model_dump(), activities=[])]
+        await drip_service.apply_drip_to_chapters(reads, course, regular_user, db, None)
+        assert reads[0].drip_closes_at is not None and not reads[0].drip_locked
+
+
+class TestScheduleValidation:
+    async def test_required_chapter_must_be_in_course(self, db, org, course, admin_user, mock_request, allow_update):
+        await _add_chapter(db, org, course, 1, 1)
+        for rule in ({"require_chapters": ["chapter_elsewhere"]}, {"require_chapters": ["chapter_1"]}):
+            payload = DripScheduleUpdate.model_validate({"settings": ENROLL, "chapters": [{"chapter_uuid": "chapter_1", "rule": rule}]})
+            with pytest.raises(HTTPException) as exc:
+                await update_drip_schedule(mock_request, course.course_uuid, payload, admin_user, db)
+            assert exc.value.status_code == 400
+
+    async def test_required_chapter_saved(self, db, org, course, admin_user, mock_request, allow_update):
+        await _add_chapter(db, org, course, 1, 1)
+        await _add_chapter(db, org, course, 2, 2)
+        payload = DripScheduleUpdate.model_validate({
+            "settings": ENROLL,
+            "chapters": [{"chapter_uuid": "chapter_2", "rule": {"require_chapters": ["chapter_1"], "available_days": 5}}],
+        })
+        schedule = await update_drip_schedule(mock_request, course.course_uuid, payload, admin_user, db)
+        assert schedule.chapters[1].rule.require_chapters == ["chapter_1"]
+        assert schedule.chapters[1].rule.available_days == 5
+
+    async def test_early_access_group_must_be_in_org(self, db, org, other_org, course, admin_user, mock_request, allow_update):
+        db.add(UserGroup(id=8, name="Mine", description="", org_id=org.id, usergroup_uuid="ug_mine", creation_date="", update_date=""))
+        db.add(UserGroup(id=9, name="Theirs", description="", org_id=other_org.id, usergroup_uuid="ug_theirs", creation_date="", update_date=""))
+        await db.commit()
+        bad = DripScheduleUpdate.model_validate({"settings": {**ENROLL, "early_access_usergroups": ["ug_theirs"]}})
+        with pytest.raises(HTTPException) as exc:
+            await update_drip_schedule(mock_request, course.course_uuid, bad, admin_user, db)
+        assert exc.value.status_code == 400
+        ok = DripScheduleUpdate.model_validate({"settings": {**ENROLL, "early_access_usergroups": ["ug_mine"], "notify_email": True}})
+        saved = await update_drip_schedule(mock_request, course.course_uuid, ok, admin_user, db)
+        assert saved.settings.early_access_usergroups == ["ug_mine"] and saved.settings.notify_email
+
+
+# ── Unlock emails ───────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+async def notify_course(db, org, course, regular_user):
+    course.drip_settings = {**ENROLL, "notify_email": True}
+    db.add(course)
+    await db.commit()
+    await _add_chapter(db, org, course, 1, 1)
+    await _add_chapter(db, org, course, 2, 2, _delay(7))
+    await _add_chapter(db, org, course, 3, 3, _delay(14))
+    await _add_chapter(db, org, course, 4, 4, {"mode": "date", "release_at": (NOW - timedelta(hours=3)).isoformat()})
+    await _enroll(db, org, course, regular_user.id, NOW - timedelta(days=7, hours=2))
+    return course
+
+
+class TestUnlockEmails:
+    async def test_emails_newly_opened_chapters_once(self, db, notify_course, regular_user):
+        from src.services.courses.drip_notify import run_drip_notifications
+
+        with patch("src.services.users.emails.send_drip_unlocked_email") as send, \
+             patch("src.services.nudges.links.org_base_url", new=AsyncMock(return_value="https://academy.test")):
+            stats = await run_drip_notifications(db, NOW)
+            assert stats.emails == 1 and stats.chapters == 2
+            kwargs = send.call_args.kwargs
+            assert kwargs["chapter_names"] == ["Chapter 2", "Chapter 4"]
+            assert kwargs["cta_url"] == "https://academy.test/course/test"
+            assert kwargs["email"] == "regular@test.com"
+
+            again = await run_drip_notifications(db, NOW)
+            assert again.emails == 0 and send.call_count == 1
+
+    async def test_old_releases_are_not_announced(self, db, notify_course):
+        from src.services.courses.drip_notify import run_drip_notifications
+
+        with patch("src.services.users.emails.send_drip_unlocked_email") as send, \
+             patch("src.services.nudges.links.org_base_url", new=AsyncMock(return_value="https://academy.test")):
+            stats = await run_drip_notifications(db, NOW + timedelta(days=3))
+        assert stats.emails == 0 and not send.called
+
+    async def test_failures_are_counted(self, db, notify_course):
+        from src.services.courses.drip_notify import run_drip_notifications
+
+        with patch("src.services.users.emails.send_drip_unlocked_email", side_effect=RuntimeError("smtp down")), \
+             patch("src.services.nudges.links.org_base_url", new=AsyncMock(return_value="https://academy.test")):
+            stats = await run_drip_notifications(db, NOW)
+        assert stats.failed == 1 and stats.emails == 0
+
+    async def test_courses_without_notifications_or_timed_chapters_are_skipped(self, db, org, course, regular_user):
+        from src.services.courses.drip_notify import run_drip_notifications
+
+        course.drip_settings = ENROLL  # notifications off
+        db.add(course)
+        await db.commit()
+        assert (await run_drip_notifications(db, NOW)).courses == 0
+        course.drip_settings = {**ENROLL, "notify_email": True}
+        await _add_chapter(db, org, course, 1, 1)  # nothing on a time rule
+        db.add(course)
+        await db.commit()
+        assert (await run_drip_notifications(db, NOW)).courses == 0
+        await _add_chapter(db, org, course, 2, 2, _delay(3))  # timed, but nobody enrolled
+        stats = await run_drip_notifications(db, NOW)
+        assert stats.courses == 1 and stats.emails == 0
+
+    async def test_claim_conflict_skips(self, db, notify_course, regular_user):
+        from src.services.courses.drip_notify import _claim
+
+        assert await _claim(db, notify_course, regular_user.id, [2], NOW)
+        assert not await _claim(db, notify_course, regular_user.id, [2], NOW)
+
+    def test_email_template(self):
+        from src.services.users.emails import send_drip_unlocked_email
+
+        with patch("src.services.users.emails.send_email") as send:
+            send_drip_unlocked_email(
+                email="l@test.com", username="lena", org_name="Kitebase", course_name="Bootcamp",
+                chapter_names=["Week 2", "Bonus <live>"], cta_url="https://a.test/course/x", lang="fr",
+            )
+        kwargs = send.call_args.kwargs
+        assert kwargs["subject"] == "Nouveau dans Bootcamp : Week 2"
+        assert "Bonus &lt;live&gt;" in kwargs["body"] and "https://a.test/course/x" in kwargs["body"]
+
+    def test_email_template_single_chapter(self):
+        from src.services.users.emails import send_drip_unlocked_email
+
+        with patch("src.services.users.emails.send_email") as send:
+            send_drip_unlocked_email(
+                email="l@test.com", username="lena", org_name="Kitebase", course_name="Bootcamp",
+                chapter_names=["Week 2"], cta_url="https://a.test/course/x",
+            )
+        assert "Also open now" not in send.call_args.kwargs["body"]
+
+
+class TestDripScheduler:
+    async def test_tick_runs_job_with_lock(self):
+        from src.services.courses import drip_scheduler
+        from src.services.courses.drip_notify import DripNotifyStats
+
+        class Session:
+            async def __aenter__(self):
+                return "db"
+
+            async def __aexit__(self, *a):
+                return False
+
+        with patch.object(drip_scheduler, "_claim_hour", new=AsyncMock(return_value=True)), \
+             patch("src.core.events.database._async_session_factory", new=lambda: Session(), create=True), \
+             patch("src.services.courses.drip_notify.run_drip_notifications", new=AsyncMock(return_value=DripNotifyStats(emails=2))) as run:
+            await drip_scheduler._tick()
+        run.assert_awaited_once()
+
+    async def test_tick_skips_when_hour_taken_and_survives_errors(self):
+        from src.services.courses import drip_scheduler
+
+        with patch.object(drip_scheduler, "_claim_hour", new=AsyncMock(return_value=False)), \
+             patch("src.services.courses.drip_notify.run_drip_notifications", new=AsyncMock()) as run:
+            await drip_scheduler._tick()
+        run.assert_not_awaited()
+        with patch.object(drip_scheduler, "_claim_hour", new=AsyncMock(side_effect=RuntimeError("boom"))):
+            await drip_scheduler._tick()  # logged, not raised
+
+    async def test_loop_ticks_then_waits_and_cancellation_propagates(self):
+        from src.services.courses import drip_scheduler
+
+        sleeps = []
+
+        async def fake_sleep(seconds):
+            sleeps.append(seconds)
+            if len(sleeps) > 1:
+                raise asyncio.CancelledError
+
+        with patch.object(drip_scheduler.asyncio, "sleep", new=fake_sleep), \
+             patch.object(drip_scheduler, "_tick", new=AsyncMock()) as tick:
+            with pytest.raises(asyncio.CancelledError):
+                await drip_scheduler._loop()
+        tick.assert_awaited_once()
+        assert sleeps == [drip_scheduler.STARTUP_DELAY_SECONDS, drip_scheduler.INTERVAL_SECONDS]
+
+        with patch.object(drip_scheduler, "_claim_hour", new=AsyncMock(side_effect=asyncio.CancelledError)):
+            with pytest.raises(asyncio.CancelledError):
+                await drip_scheduler._tick()
+
+    async def test_claim_hour_without_redis(self):
+        from src.services.courses import drip_scheduler
+
+        with patch("src.core.redis.get_redis_client", return_value=None):
+            assert await drip_scheduler._claim_hour(NOW)
+        assert drip_scheduler._lock_key(NOW) == "learnhouse:drip:notify:2026-11-02T12"
+
+    async def test_claim_hour_with_redis(self):
+        from src.services.courses import drip_scheduler
+
+        class R:
+            def set(self, *a, **k):
+                return True
+
+        with patch("src.core.redis.get_redis_client", return_value=R()):
+            assert await drip_scheduler._claim_hour(NOW)
+
+    async def test_start_and_stop(self, monkeypatch):
+        from src.services.courses import drip_scheduler
+
+        drip_scheduler.start_scheduler()  # TESTING: idle
+        assert drip_scheduler._task is None
+        await drip_scheduler.stop_scheduler()
+
+        monkeypatch.setenv("TESTING", "false")
+        with patch.object(drip_scheduler, "_loop", new=AsyncMock()):
+            drip_scheduler.start_scheduler()
+            assert drip_scheduler._task is not None
+            await drip_scheduler.stop_scheduler()
+        assert drip_scheduler._task is None
+
+        with patch("asyncio.create_task", side_effect=RuntimeError("no loop")):
+            drip_scheduler.start_scheduler()  # never raises
