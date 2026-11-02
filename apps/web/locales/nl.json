@@ -134,6 +134,10 @@
         "api_access": {
           "title": "Pro-functie",
           "description": "API-toegang is een premiumfunctie die alleen beschikbaar is voor organisaties op ons Pro-plan of hoger. Upgrade om programmatische toegang tot uw organisatiegegevens te ontgrendelen."
+        },
+        "drip": {
+          "title": "Standard-functie",
+          "description": "Gefaseerde inhoud is beschikbaar voor organisaties met een Standard-plan of hoger. Upgrade om hoofdstukken volgens een planning vrij te geven, per leerling of voor een heel cohort."
         }
       },
       "current_plan": "Huidig plan",
@@ -1605,7 +1609,8 @@
           "contributors": "Bijdragers",
           "certification": "Certificering",
           "analytics": "Analyses",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "Planning"
         },
         "access_denied": {
           "title": "Toegang geweigerd",
@@ -2170,7 +2175,11 @@
           "partial_error": "{{failed}} van {{total}} activiteiten konden niet worden bijgewerkt"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Naam van het hoofdstuk"
+          "chapter_name_placeholder": "Naam van het hoofdstuk",
+          "drip_tooltip": "Vrijgaveplanning: bewerk deze op het tabblad Planning",
+          "drip_day_one": "Dag {{count}}",
+          "drip_day": "Dag {{count}}",
+          "drip_now": "Dag 0"
         },
         "activity": {
           "name_placeholder": "Naam van de activiteit",
@@ -2321,6 +2330,87 @@
           "title_max_length": "SEO-titel mag maximaal 70 tekens zijn",
           "twitter_description_max_length": "Twitter-beschrijving mag maximaal 200 tekens zijn",
           "twitter_title_max_length": "Twitter-titel mag maximaal 70 tekens zijn"
+        }
+      },
+      "schedule": {
+        "title": "Gefaseerde inhoud",
+        "description": "Geef hoofdstukken geleidelijk vrij in plaats van allemaal tegelijk. Leerlingen zien wat er nog komt en wanneer het opengaat.",
+        "on": "Aan",
+        "off": "Uit",
+        "anchor": {
+          "title": "Wanneer begint de planning?",
+          "enrollment": "Wanneer elke leerling zich inschrijft",
+          "enrollment_description": "Iedereen krijgt een eigen klok. Ideaal voor doorlopende cursussen in eigen tempo.",
+          "fixed_date": "Op een vaste startdatum",
+          "fixed_date_description": "Eén datum voor het hele cohort. Ideaal voor live lanceringen en bootcamps.",
+          "start_date": "Cohort start op"
+        },
+        "chapters": {
+          "title": "Vrijgaveplan",
+          "preview_enrollment": "Datums gelden voor iemand die zich vandaag inschrijft.",
+          "preview_cohort": "Datums gelden voor het cohort.",
+          "empty": "Voeg hoofdstukken toe aan deze cursus om ze in te plannen."
+        },
+        "interval": {
+          "label": "Eén hoofdstuk om de",
+          "amount": "Interval",
+          "unit": "Eenheid",
+          "days": "dagen",
+          "weeks": "weken",
+          "apply": "Toepassen"
+        },
+        "mode": {
+          "immediate": "Direct",
+          "delay": "Na een wachttijd",
+          "date": "Op een datum",
+          "delay_days": "Dagen",
+          "days_after_enrollment": "dagen na inschrijving",
+          "days_after_start": "dagen na de startdatum",
+          "release_at": "Vrijgavedatum"
+        },
+        "require_previous": "Pas nadat het vorige hoofdstuk is afgerond",
+        "errors": {
+          "start_date": "Kies de startdatum van het cohort.",
+          "release_at": "Kies een vrijgavedatum voor “{{name}}”."
+        },
+        "toasts": {
+          "save_success": "Planning opgeslagen",
+          "save_error": "Kon de planning niet opslaan"
+        },
+        "unsaved": "Niet-opgeslagen wijzigingen",
+        "saved": "Alle wijzigingen opgeslagen",
+        "save": "Planning opslaan",
+        "early_access": {
+          "title": "Vroege toegang",
+          "description": "Leden van deze gebruikersgroepen krijgen meteen toegang tot elk hoofdstuk: medewerkers, bètatesters, een premiumniveau.",
+          "empty": "Nog geen gebruikersgroepen."
+        },
+        "notify": {
+          "title": "Leerlingen e-mailen wanneer een hoofdstuk opengaat",
+          "description": "Ingeschreven leerlingen krijgen een korte e-mail met een link naar de cursus zodra een gepland hoofdstuk voor hen opengaat."
+        },
+        "preview": {
+          "label": "Bekijk wat een leerling op een willekeurige dag ziet",
+          "day_one": "Dag {{count}} na inschrijving",
+          "day": "Dag {{count}} na inschrijving",
+          "slider": "Voorbeelddag",
+          "clear": "Wissen",
+          "open": "Open",
+          "upcoming_one": "Opent op dag {{count}}",
+          "upcoming": "Opent op dag {{count}}",
+          "closed": "Gesloten",
+          "dated": "Vaste datum"
+        },
+        "more": {
+          "label": "Meer voorwaarden",
+          "count_one": "Nog {{count}} voorwaarde",
+          "count": "Nog {{count}} voorwaarden",
+          "requires": "Vereist dat deze hoofdstukken zijn afgerond",
+          "no_earlier": "Dit is het eerste hoofdstuk.",
+          "closes": "Weer sluiten",
+          "closes_days": "Dagen open",
+          "closes_after": "dagen na opening",
+          "closes_hint": "Voor tijdelijke inhoud, zoals een opname of een bonus tijdens een live week."
         }
       }
     },
@@ -5328,7 +5418,31 @@
     "backToCourses": "Terug naar cursussen",
     "loadError": "Deze cursus kon niet worden gevonden of er is een fout opgetreden bij het laden.",
     "noPermission": "Je hebt geen toestemming om deze cursus te bekijken.",
-    "finish_course": "Cursus afronden"
+    "finish_course": "Cursus afronden",
+    "drip": {
+      "opens_on_enroll": "Opent wanneer je de cursus start",
+      "opens_after_previous": "Opent na het vorige hoofdstuk",
+      "opens_on": "Opent {{date}}",
+      "in_days_one": "over {{count}} dag",
+      "in_days": "over {{count}} dagen",
+      "in_hours_one": "over {{count}} uur",
+      "in_hours": "over {{count}} uur",
+      "soon": "over minder dan een uur",
+      "coming_soon": "Binnenkort",
+      "banner_title": "Nieuwe hoofdstukken komen geleidelijk beschikbaar",
+      "banner_next": "Hierna: {{name}}. {{when}}",
+      "gate_enrollment": "Deze cursus geeft hoofdstukken geleidelijk vrij, vanaf het moment dat je de cursus start. Start de cursus via de cursuspagina om je planning te ontgrendelen.",
+      "gate_previous": "Rond elke les van het vorige hoofdstuk af en dit hoofdstuk opent meteen.",
+      "gate_schedule": "Deze cursus geeft hoofdstukken geleidelijk vrij. Kom terug wanneer dit hoofdstuk opengaat.",
+      "opens_after_required": "Opent na de vereiste hoofdstukken",
+      "closed": "Niet meer beschikbaar",
+      "closed_on": "gesloten op {{date}}",
+      "open_until": "Open tot {{date}}",
+      "gate_prerequisites": "Rond de hoofdstukken af waarop dit hoofdstuk voortbouwt en het opent meteen.",
+      "gate_closed": "Dit hoofdstuk was een beperkte tijd beschikbaar en die tijd is voorbij.",
+      "add_to_calendar": "Toevoegen aan agenda",
+      "calendar_event": "{{chapter}} opent · {{course}}"
+    }
   },
   "pagination": {
     "next": "Volgende",

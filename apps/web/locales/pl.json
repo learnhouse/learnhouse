@@ -134,6 +134,10 @@
         "api_access": {
           "title": "Pro Feature",
           "description": "Dostęp API to funkcja premium dostępna tylko dla organizacji na naszym planie Pro lub wyższym. Uaktualnij, aby odblokować dostęp programistyczny do danych Twojej organizacji."
+        },
+        "drip": {
+          "title": "Funkcja Standard",
+          "description": "Stopniowe udostępnianie treści jest dostępne dla organizacji z planem Standard lub wyższym. Uaktualnij, aby udostępniać rozdziały według harmonogramu, osobno dla każdego uczestnika lub dla całej kohorty."
         }
       },
       "current_plan": "Aktualny plan",
@@ -1637,7 +1641,8 @@
           "contributors": "Współtwórcy",
           "certification": "Certyfikacja",
           "analytics": "Analityka",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "Harmonogram"
         },
         "access_denied": {
           "title": "Odmowa dostępu",
@@ -2202,7 +2207,13 @@
           "partial_error": "{{failed}} z {{total}} aktywności nie udało się zaktualizować"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Nazwa rozdziału"
+          "chapter_name_placeholder": "Nazwa rozdziału",
+          "drip_tooltip": "Harmonogram udostępniania: edytuj go w zakładce Harmonogram",
+          "drip_day_one": "Dzień {{count}}",
+          "drip_day_few": "Dzień {{count}}",
+          "drip_day_many": "Dzień {{count}}",
+          "drip_day": "Dzień {{count}}",
+          "drip_now": "Dzień 0"
         },
         "activity": {
           "name_placeholder": "Nazwa aktywności",
@@ -2353,6 +2364,93 @@
           "title_max_length": "Tytuł SEO nie może przekraczać 70 znaków",
           "twitter_description_max_length": "Opis Twitter nie może przekraczać 200 znaków",
           "twitter_title_max_length": "Tytuł Twitter nie może przekraczać 70 znaków"
+        }
+      },
+      "schedule": {
+        "title": "Stopniowe udostępnianie treści",
+        "description": "Udostępniaj rozdziały stopniowo zamiast wszystkich naraz. Uczestnicy widzą, co będzie dalej i kiedy zostanie otwarte.",
+        "on": "Wł.",
+        "off": "Wył.",
+        "anchor": {
+          "title": "Kiedy zaczyna się harmonogram?",
+          "enrollment": "Gdy uczestnik zapisze się na kurs",
+          "enrollment_description": "Każdy ma własny zegar. Najlepsze dla stale dostępnych kursów we własnym tempie.",
+          "fixed_date": "W ustalonym dniu rozpoczęcia",
+          "fixed_date_description": "Jedna data dla całej kohorty. Najlepsze dla startów na żywo i bootcampów.",
+          "start_date": "Start kohorty"
+        },
+        "chapters": {
+          "title": "Plan udostępniania",
+          "preview_enrollment": "Daty dla osoby, która zapisze się dzisiaj.",
+          "preview_cohort": "Daty dla kohorty.",
+          "empty": "Dodaj rozdziały do tego kursu, aby je zaplanować."
+        },
+        "interval": {
+          "label": "Jeden rozdział co",
+          "amount": "Odstęp",
+          "unit": "Jednostka",
+          "days": "dni",
+          "weeks": "tygodnie",
+          "apply": "Zastosuj"
+        },
+        "mode": {
+          "immediate": "Od razu",
+          "delay": "Z opóźnieniem",
+          "date": "W określonym dniu",
+          "delay_days": "Dni",
+          "days_after_enrollment": "dni po zapisie",
+          "days_after_start": "dni po dacie rozpoczęcia",
+          "release_at": "Data udostępnienia"
+        },
+        "require_previous": "Dopiero po ukończeniu poprzedniego rozdziału",
+        "errors": {
+          "start_date": "Wybierz datę rozpoczęcia kohorty.",
+          "release_at": "Wybierz datę udostępnienia dla „{{name}}”."
+        },
+        "toasts": {
+          "save_success": "Harmonogram zapisany",
+          "save_error": "Nie udało się zapisać harmonogramu"
+        },
+        "unsaved": "Niezapisane zmiany",
+        "saved": "Wszystkie zmiany zapisane",
+        "save": "Zapisz harmonogram",
+        "early_access": {
+          "title": "Wczesny dostęp",
+          "description": "Członkowie tych grup użytkowników od razu dostają wszystkie rozdziały: personel, beta testerzy, pakiet premium.",
+          "empty": "Brak grup użytkowników."
+        },
+        "notify": {
+          "title": "Wysyłaj uczestnikom e-mail, gdy rozdział się otworzy",
+          "description": "Zapisani uczestnicy dostaną krótki e-mail z linkiem do kursu, gdy tylko zaplanowany rozdział zostanie dla nich otwarty."
+        },
+        "preview": {
+          "label": "Podejrzyj widok uczestnika w dowolnym dniu",
+          "day_one": "Dzień {{count}} po zapisie",
+          "day_few": "Dzień {{count}} po zapisie",
+          "day_many": "Dzień {{count}} po zapisie",
+          "day": "Dzień {{count}} po zapisie",
+          "slider": "Dzień podglądu",
+          "clear": "Wyczyść",
+          "open": "Otwarte",
+          "upcoming_one": "Otwarcie w dniu {{count}}",
+          "upcoming_few": "Otwarcie w dniu {{count}}",
+          "upcoming_many": "Otwarcie w dniu {{count}}",
+          "upcoming": "Otwarcie w dniu {{count}}",
+          "closed": "Zamknięte",
+          "dated": "Stała data"
+        },
+        "more": {
+          "label": "Więcej warunków",
+          "count_one": "{{count}} dodatkowy warunek",
+          "count_few": "{{count}} dodatkowe warunki",
+          "count_many": "{{count}} dodatkowych warunków",
+          "count": "{{count}} dodatkowych warunków",
+          "requires": "Wymaga ukończenia tych rozdziałów",
+          "no_earlier": "To jest pierwszy rozdział.",
+          "closes": "Zamknij ponownie",
+          "closes_days": "Dni otwarcia",
+          "closes_after": "dni po otwarciu",
+          "closes_hint": "Dla treści dostępnych przez ograniczony czas, np. nagrania lub bonusu z tygodnia na żywo."
         }
       }
     },
@@ -5360,7 +5458,35 @@
     "backToCourses": "Powrót do kursów",
     "loadError": "Nie można znaleźć tego kursu lub wystąpił błąd podczas jego ładowania.",
     "noPermission": "Nie masz uprawnień do wyświetlenia tego kursu.",
-    "finish_course": "Ukończ kurs"
+    "finish_course": "Ukończ kurs",
+    "drip": {
+      "opens_on_enroll": "Otworzy się, gdy rozpoczniesz kurs",
+      "opens_after_previous": "Otworzy się po poprzednim rozdziale",
+      "opens_on": "Otwarcie {{date}}",
+      "in_days_one": "za {{count}} dzień",
+      "in_days_few": "za {{count}} dni",
+      "in_days_many": "za {{count}} dni",
+      "in_days": "za {{count}} dni",
+      "in_hours_one": "za {{count}} godzinę",
+      "in_hours_few": "za {{count}} godziny",
+      "in_hours_many": "za {{count}} godzin",
+      "in_hours": "za {{count}} godzin",
+      "soon": "za mniej niż godzinę",
+      "coming_soon": "Wkrótce",
+      "banner_title": "Nowe rozdziały są udostępniane stopniowo",
+      "banner_next": "Następny: {{name}}. {{when}}",
+      "gate_enrollment": "Ten kurs udostępnia rozdziały stopniowo, począwszy od chwili, gdy go rozpoczniesz. Rozpocznij kurs na jego stronie, aby odblokować swój harmonogram.",
+      "gate_previous": "Ukończ wszystkie lekcje poprzedniego rozdziału, a ten otworzy się od razu.",
+      "gate_schedule": "Ten kurs udostępnia rozdziały stopniowo. Wróć, gdy ten rozdział zostanie otwarty.",
+      "opens_after_required": "Otworzy się po wymaganych rozdziałach",
+      "closed": "Już niedostępne",
+      "closed_on": "zamknięto {{date}}",
+      "open_until": "Otwarte do {{date}}",
+      "gate_prerequisites": "Ukończ rozdziały, na których opiera się ten rozdział, a otworzy się od razu.",
+      "gate_closed": "Ten rozdział był dostępny przez ograniczony czas, który już minął.",
+      "add_to_calendar": "Dodaj do kalendarza",
+      "calendar_event": "{{chapter}}: otwarcie · {{course}}"
+    }
   },
   "pagination": {
     "next": "Następna",

@@ -45,6 +45,8 @@ from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.file_validation import EXT_TO_CANONICAL_MIME, FILE_TYPES, MIME_TO_SAFE_EXT
 from src.security.org_auth import require_org_create_permission
 from src.security.rbac import check_resource_access, AccessAction
+from src.security.features_utils.plan_check import get_org_plan
+from src.security.features_utils.plans import is_feature_enabled_for_plan
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
 from src.services.ai.rag.queue import enqueue_course
 
@@ -171,22 +173,21 @@ def file_content_matches_extension(path: str) -> bool:
 
 
 # A SCORM package *is* a web app: its manifest, entry HTML, JS and CSS are the
-# activity. Those live under `.../<activity>/scorm/`, are served by the EE SCORM
-# route rather than the content router, and dropping them would silently import
-# a broken activity. Everything outside a scorm/ subtree keeps the allowlist.
-_SCORM_SUBTREE = f"{os.sep}scorm{os.sep}"
-
-
-def _is_scorm_subtree(src_dir: str) -> bool:
-    normalized = os.path.normpath(src_dir) + os.sep
-    return _SCORM_SUBTREE in normalized or normalized.endswith(f"{os.sep}scorm{os.sep}")
+# activity. Those live under the activity's `scorm/` folder, are served by the
+# EE SCORM route rather than the content router, and dropping them would
+# silently import a broken activity. That HTML runs on the org's own site, so
+# the folder is only kept whole for a SCORM activity in an org entitled to
+# SCORM; everything else keeps the allowlist.
+def _is_scorm_subtree(files_root: str, src_dir: str) -> bool:
+    """Whether ``src_dir`` is the ``scorm/`` folder at the top of an activity's
+    files, or inside it."""
+    rel = os.path.relpath(src_dir, files_root)
+    return rel.split(os.sep)[0] == "scorm"
 
 
 def _ignore_unsafe_package_files(src_dir: str, names: list[str]) -> set[str]:
     """copytree filter dropping package files with a non-importable extension
     or content that doesn't match it."""
-    if _is_scorm_subtree(src_dir):
-        return set()
     return {
         name for name in names
         if not os.path.isdir(os.path.join(src_dir, name))
@@ -195,6 +196,30 @@ def _ignore_unsafe_package_files(src_dir: str, names: list[str]) -> set[str]:
             or not file_content_matches_extension(os.path.join(src_dir, name))
         )
     }
+
+
+def _package_files_filter(files_root: str, keep_scorm: bool):
+    """copytree filter for an activity's files rooted at ``files_root``.
+    ``keep_scorm`` leaves its ``scorm/`` folder whole."""
+    if not keep_scorm:
+        return _ignore_unsafe_package_files
+
+    def ignore(src_dir: str, names: list[str]) -> set[str]:
+        if _is_scorm_subtree(files_root, src_dir):
+            return set()
+        return _ignore_unsafe_package_files(src_dir, names)
+
+    return ignore
+
+
+async def _org_may_host_scorm(org_id: int, db_session: AsyncSession) -> bool:
+    """Same entitlement as the EE SCORM routes: every org in EE mode, none in
+    OSS, enterprise-plan orgs on SaaS."""
+    try:
+        plan = await get_org_plan(org_id, db_session)
+    except HTTPException:
+        plan = "free"
+    return is_feature_enabled_for_plan(plan, "scorm")
 
 
 def validate_zip(content: bytes) -> bool:
@@ -1089,11 +1114,15 @@ async def _import_activity(
         # Entry names come from the uploaded package: files whose extension is
         # not an importable media type are dropped instead of being written
         # into content/, where they would be served from the API origin.
+        keep_scorm = (
+            activity_type == ActivityTypeEnum.TYPE_SCORM
+            and await _org_may_host_scorm(organization.id, db_session)
+        )
         shutil.copytree(
             source_files_dir,
             new_activity_path,
             dirs_exist_ok=True,
-            ignore=_ignore_unsafe_package_files,
+            ignore=_package_files_filter(source_files_dir, keep_scorm),
         )
         # Assignment task files live under the assignment and task uuids,
         # which are new as well: move them before anything is uploaded

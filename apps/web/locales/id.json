@@ -136,6 +136,10 @@
         "api_access": {
           "title": "Fitur Pro",
           "description": "Akses API adalah fitur premium yang hanya tersedia untuk organisasi di paket Pro kami atau lebih tinggi. Tingkatkan untuk membuka akses terprogram ke data organisasi Anda."
+        },
+        "drip": {
+          "title": "Fitur Standard",
+          "description": "Konten bertahap hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk merilis bab sesuai jadwal, per pelajar atau untuk seluruh kohort."
         }
       },
       "current_plan": "Paket saat ini",
@@ -1627,7 +1631,8 @@
           "contributors": "Kontributor",
           "certification": "Sertifikasi",
           "analytics": "Analitik",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "Jadwal"
         },
         "access_denied": {
           "title": "Akses Ditolak",
@@ -2192,7 +2197,11 @@
           "partial_error": "{{failed}} dari {{total}} aktivitas gagal diperbarui"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Nama bab"
+          "chapter_name_placeholder": "Nama bab",
+          "drip_tooltip": "Jadwal rilis: ubah di tab Jadwal",
+          "drip_day_one": "Hari {{count}}",
+          "drip_day": "Hari {{count}}",
+          "drip_now": "Hari 0"
         },
         "activity": {
           "name_placeholder": "Nama aktivitas",
@@ -2343,6 +2352,87 @@
           "title_max_length": "Judul SEO harus 70 karakter atau kurang",
           "twitter_description_max_length": "Deskripsi Twitter harus 200 karakter atau kurang",
           "twitter_title_max_length": "Judul Twitter harus 70 karakter atau kurang"
+        }
+      },
+      "schedule": {
+        "title": "Konten bertahap",
+        "description": "Rilis bab secara bertahap, bukan sekaligus. Pelajar dapat melihat apa yang akan datang dan kapan dibuka.",
+        "on": "Aktif",
+        "off": "Nonaktif",
+        "anchor": {
+          "title": "Kapan jadwal dimulai?",
+          "enrollment": "Saat setiap pelajar mendaftar",
+          "enrollment_description": "Setiap orang punya jadwalnya sendiri. Cocok untuk kursus mandiri yang selalu tersedia.",
+          "fixed_date": "Pada tanggal mulai tetap",
+          "fixed_date_description": "Satu tanggal untuk seluruh kohort. Cocok untuk peluncuran langsung dan bootcamp.",
+          "start_date": "Kohort dimulai pada"
+        },
+        "chapters": {
+          "title": "Rencana rilis",
+          "preview_enrollment": "Tanggal ditampilkan untuk seseorang yang mendaftar hari ini.",
+          "preview_cohort": "Tanggal ditampilkan untuk kohort.",
+          "empty": "Tambahkan bab ke kursus ini untuk menjadwalkannya."
+        },
+        "interval": {
+          "label": "Satu bab setiap",
+          "amount": "Interval",
+          "unit": "Satuan",
+          "days": "hari",
+          "weeks": "minggu",
+          "apply": "Terapkan"
+        },
+        "mode": {
+          "immediate": "Langsung",
+          "delay": "Setelah jeda",
+          "date": "Pada tanggal tertentu",
+          "delay_days": "Hari",
+          "days_after_enrollment": "hari setelah mendaftar",
+          "days_after_start": "hari setelah tanggal mulai",
+          "release_at": "Tanggal rilis"
+        },
+        "require_previous": "Hanya setelah bab sebelumnya selesai",
+        "errors": {
+          "start_date": "Pilih tanggal mulai kohort.",
+          "release_at": "Pilih tanggal rilis untuk “{{name}}”."
+        },
+        "toasts": {
+          "save_success": "Jadwal disimpan",
+          "save_error": "Tidak dapat menyimpan jadwal"
+        },
+        "unsaved": "Perubahan belum disimpan",
+        "saved": "Semua perubahan tersimpan",
+        "save": "Simpan jadwal",
+        "early_access": {
+          "title": "Akses awal",
+          "description": "Anggota grup pengguna ini langsung mendapatkan semua bab: staf, penguji beta, tingkat premium.",
+          "empty": "Belum ada grup pengguna."
+        },
+        "notify": {
+          "title": "Kirim email ke pelajar saat bab dibuka",
+          "description": "Pelajar yang terdaftar menerima email singkat berisi tautan kembali ke kursus begitu bab terjadwal dibuka untuk mereka."
+        },
+        "preview": {
+          "label": "Pratinjau tampilan pelajar pada hari mana pun",
+          "day_one": "Hari ke-{{count}} setelah mendaftar",
+          "day": "Hari ke-{{count}} setelah mendaftar",
+          "slider": "Hari pratinjau",
+          "clear": "Bersihkan",
+          "open": "Terbuka",
+          "upcoming_one": "Dibuka pada hari ke-{{count}}",
+          "upcoming": "Dibuka pada hari ke-{{count}}",
+          "closed": "Ditutup",
+          "dated": "Tanggal tetap"
+        },
+        "more": {
+          "label": "Kondisi lainnya",
+          "count_one": "{{count}} kondisi lagi",
+          "count": "{{count}} kondisi lagi",
+          "requires": "Memerlukan bab-bab ini diselesaikan",
+          "no_earlier": "Ini adalah bab pertama.",
+          "closes": "Tutup kembali",
+          "closes_days": "Hari terbuka",
+          "closes_after": "hari setelah dibuka",
+          "closes_hint": "Untuk konten terbatas waktu seperti siaran ulang atau bonus minggu live."
         }
       }
     },
@@ -5348,7 +5438,31 @@
     "backToCourses": "Kembali ke Kursus",
     "loadError": "Kursus ini tidak dapat ditemukan atau terjadi kesalahan saat memuatnya.",
     "noPermission": "Anda tidak memiliki izin untuk melihat kursus ini.",
-    "finish_course": "Selesaikan kursus"
+    "finish_course": "Selesaikan kursus",
+    "drip": {
+      "opens_on_enroll": "Dibuka saat Anda memulai kursus",
+      "opens_after_previous": "Dibuka setelah bab sebelumnya",
+      "opens_on": "Dibuka {{date}}",
+      "in_days_one": "dalam {{count}} hari",
+      "in_days": "dalam {{count}} hari",
+      "in_hours_one": "dalam {{count}} jam",
+      "in_hours": "dalam {{count}} jam",
+      "soon": "dalam kurang dari satu jam",
+      "coming_soon": "Segera hadir",
+      "banner_title": "Bab baru dirilis secara bertahap",
+      "banner_next": "Selanjutnya: {{name}}. {{when}}",
+      "gate_enrollment": "Kursus ini merilis babnya secara bertahap, dimulai saat Anda memulai kursus. Mulai dari halaman kursus untuk membuka jadwal Anda.",
+      "gate_previous": "Selesaikan semua pelajaran di bab sebelumnya dan bab ini akan langsung terbuka.",
+      "gate_schedule": "Kursus ini merilis babnya secara bertahap. Kembalilah saat bab ini dibuka.",
+      "opens_after_required": "Dibuka setelah bab yang diwajibkan",
+      "closed": "Tidak lagi tersedia",
+      "closed_on": "ditutup {{date}}",
+      "open_until": "Terbuka hingga {{date}}",
+      "gate_prerequisites": "Selesaikan bab-bab yang menjadi dasar bab ini dan bab ini akan langsung terbuka.",
+      "gate_closed": "Bab ini tersedia untuk waktu terbatas, dan waktunya sudah berakhir.",
+      "add_to_calendar": "Tambahkan ke kalender",
+      "calendar_event": "{{chapter}} dibuka · {{course}}"
+    }
   },
   "pagination": {
     "next": "Berikutnya",

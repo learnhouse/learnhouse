@@ -74,6 +74,11 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.nudges.scheduler import start_scheduler
         start_scheduler()
 
+        # Hourly "chapter is open" emails for courses with drip content and
+        # notifications on. Never raises.
+        from src.services.courses.drip_scheduler import start_scheduler as start_drip_scheduler
+        start_drip_scheduler()
+
         # The shared demo organization refreshes itself on an interval, so the
         # feature needs no external scheduler. No-op unless
         # LEARNHOUSE_DEMO_ENABLED; never raises.
@@ -138,6 +143,8 @@ def shutdown_app(app: FastAPI) -> Callable:
         # Stop the daily nudge tick.
         from src.services.nudges.scheduler import stop_scheduler
         await stop_scheduler()
+        from src.services.courses.drip_scheduler import stop_scheduler as stop_drip_scheduler
+        await stop_drip_scheduler()
         # Stop the demo refresh tick.
         from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
         await stop_demo_scheduler()

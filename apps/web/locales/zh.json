@@ -134,6 +134,10 @@
         "api_access": {
           "title": "专业版功能",
           "description": "API 访问是仅适用于专业版或更高版本组织的高级功能。升级以解锁对组织数据的程序化访问。"
+        },
+        "drip": {
+          "title": "标准功能",
+          "description": "分阶段发布仅适用于标准方案及以上的组织。升级后即可按计划发布章节，可针对每位学员，也可面向整个班级。"
         }
       },
       "current_plan": "当前方案",
@@ -1615,7 +1619,8 @@
           "contributors": "贡献者",
           "certification": "认证",
           "analytics": "分析",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "发布计划"
         },
         "access_denied": {
           "title": "拒绝访问",
@@ -2180,7 +2185,11 @@
           "partial_error": "{{total}} 个活动中有 {{failed}} 个更新失败"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "章节名称"
+          "chapter_name_placeholder": "章节名称",
+          "drip_tooltip": "发布计划：请在「发布计划」标签页中编辑",
+          "drip_day_one": "第 {{count}} 天",
+          "drip_day": "第 {{count}} 天",
+          "drip_now": "第 0 天"
         },
         "activity": {
           "name_placeholder": "活动名称",
@@ -2331,6 +2340,87 @@
           "title_max_length": "SEO 标题不能超过70个字符",
           "twitter_description_max_length": "Twitter 描述不能超过200个字符",
           "twitter_title_max_length": "Twitter 标题不能超过70个字符"
+        }
+      },
+      "schedule": {
+        "title": "分阶段发布",
+        "description": "让章节随时间逐步开放，而不是一次性全部发布。学员可以看到接下来的内容及其开放时间。",
+        "on": "开",
+        "off": "关",
+        "anchor": {
+          "title": "计划从何时开始？",
+          "enrollment": "每位学员报名时",
+          "enrollment_description": "每个人都有自己的时间线。最适合长期开放、自定进度的课程。",
+          "fixed_date": "固定开始日期",
+          "fixed_date_description": "整个班级使用同一个日期。最适合直播开课和训练营。",
+          "start_date": "班级开始日期"
+        },
+        "chapters": {
+          "title": "发布安排",
+          "preview_enrollment": "显示的是今天报名的学员对应的日期。",
+          "preview_cohort": "显示的是班级对应的日期。",
+          "empty": "请先为此课程添加章节，再进行安排。"
+        },
+        "interval": {
+          "label": "每章发布间隔",
+          "amount": "间隔",
+          "unit": "单位",
+          "days": "天",
+          "weeks": "周",
+          "apply": "应用"
+        },
+        "mode": {
+          "immediate": "立即",
+          "delay": "延迟开放",
+          "date": "指定日期",
+          "delay_days": "天数",
+          "days_after_enrollment": "天（报名后）",
+          "days_after_start": "天（开始日期后）",
+          "release_at": "发布日期"
+        },
+        "require_previous": "仅在完成上一章后开放",
+        "errors": {
+          "start_date": "请选择班级的开始日期。",
+          "release_at": "请为“{{name}}”选择发布日期。"
+        },
+        "toasts": {
+          "save_success": "计划已保存",
+          "save_error": "无法保存计划"
+        },
+        "unsaved": "未保存的更改",
+        "saved": "所有更改已保存",
+        "save": "保存计划",
+        "early_access": {
+          "title": "提前访问",
+          "description": "这些用户组的成员可以立即访问所有章节，例如员工、测试人员或高级会员。",
+          "empty": "暂无用户组。"
+        },
+        "notify": {
+          "title": "章节开放时向学员发送邮件",
+          "description": "已安排的章节一旦对学员开放，已报名的学员就会收到一封附有课程链接的简短邮件。"
+        },
+        "preview": {
+          "label": "预览学员在任意一天看到的内容",
+          "day_one": "报名后第 {{count}} 天",
+          "day": "报名后第 {{count}} 天",
+          "slider": "预览日",
+          "clear": "清除",
+          "open": "已开放",
+          "upcoming_one": "第 {{count}} 天开放",
+          "upcoming": "第 {{count}} 天开放",
+          "closed": "已关闭",
+          "dated": "固定日期"
+        },
+        "more": {
+          "label": "更多条件",
+          "count_one": "另有 {{count}} 个条件",
+          "count": "另有 {{count}} 个条件",
+          "requires": "需要先完成这些章节",
+          "no_earlier": "这是第一章。",
+          "closes": "到期后再次关闭",
+          "closes_days": "开放天数",
+          "closes_after": "天（开放后）",
+          "closes_hint": "适用于限时内容，例如回放或直播周福利。"
         }
       }
     },
@@ -5338,7 +5428,31 @@
     "backToCourses": "返回课程列表",
     "loadError": "找不到此课程或加载时出错。",
     "noPermission": "您没有权限查看此课程。",
-    "finish_course": "完成课程"
+    "finish_course": "完成课程",
+    "drip": {
+      "opens_on_enroll": "开始课程后开放",
+      "opens_after_previous": "完成上一章后开放",
+      "opens_on": "{{date}} 开放",
+      "in_days_one": "{{count}} 天后",
+      "in_days": "{{count}} 天后",
+      "in_hours_one": "{{count}} 小时后",
+      "in_hours": "{{count}} 小时后",
+      "soon": "不到一小时后",
+      "coming_soon": "即将开放",
+      "banner_title": "新章节将陆续开放",
+      "banner_next": "下一章：{{name}}，{{when}}",
+      "gate_enrollment": "本课程的章节会从您开始学习时起陆续开放。请在课程页面开始课程，以解锁您的学习计划。",
+      "gate_previous": "完成上一章的所有课时后，本章将立即开放。",
+      "gate_schedule": "本课程的章节会陆续开放。请在本章开放后再来。",
+      "opens_after_required": "完成必修章节后开放",
+      "closed": "已不再开放",
+      "closed_on": "已于 {{date}} 关闭",
+      "open_until": "开放至 {{date}}",
+      "gate_prerequisites": "完成本章的前置章节后，本章将立即开放。",
+      "gate_closed": "本章仅限时开放，开放时间已结束。",
+      "add_to_calendar": "添加到日历",
+      "calendar_event": "{{chapter}} 开放 · {{course}}"
+    }
   },
   "pagination": {
     "next": "下一页",

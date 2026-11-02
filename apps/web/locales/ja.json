@@ -136,6 +136,10 @@
         "api_access": {
           "title": "プロ機能",
           "description": "API AccessはProプラン以上で利用できるプレミアム機能です。アップグレードして、組織データへのプログラマティックアクセスを解放しましょう。"
+        },
+        "drip": {
+          "title": "Standardプラン機能",
+          "description": "ドリップコンテンツはStandardプラン以上の組織のみ利用可能です。アップグレードすると、学習者ごと、またはコホート全体に対して、スケジュールに沿って章を公開できます。"
         }
       },
       "current_plan": "現在のプラン",
@@ -1615,7 +1619,8 @@
           "contributors": "投稿者",
           "certification": "証明書",
           "analytics": "アナリティクス",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "スケジュール"
         },
         "access_denied": {
           "title": "アクセス拒否",
@@ -2180,7 +2185,11 @@
           "partial_error": "{{total}}件中{{failed}}件のアクティビティの更新に失敗しました"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "章の名前"
+          "chapter_name_placeholder": "章の名前",
+          "drip_tooltip": "公開スケジュール：「スケジュール」タブで編集できます",
+          "drip_day_one": "{{count}}日目",
+          "drip_day": "{{count}}日目",
+          "drip_now": "0日目"
         },
         "activity": {
           "name_placeholder": "アクティビティ名",
@@ -2331,6 +2340,87 @@
           "title_max_length": "SEOタイトルは70文字以下にしてください",
           "twitter_description_max_length": "Twitter説明は200文字以下にしてください",
           "twitter_title_max_length": "Twitterタイトルは70文字以下にしてください"
+        }
+      },
+      "schedule": {
+        "title": "ドリップコンテンツ",
+        "description": "章を一度にすべて公開せず、時間をかけて順番に公開します。学習者は次に何がいつ公開されるかを確認できます。",
+        "on": "オン",
+        "off": "オフ",
+        "anchor": {
+          "title": "スケジュールはいつ始まりますか？",
+          "enrollment": "各学習者の登録時",
+          "enrollment_description": "学習者ごとに個別のスケジュールで進みます。常時公開の自分のペースで学ぶコースに最適です。",
+          "fixed_date": "固定の開始日",
+          "fixed_date_description": "コホート全体で同じ日付を使います。ライブ開講やブートキャンプに最適です。",
+          "start_date": "コホートの開始日"
+        },
+        "chapters": {
+          "title": "公開プラン",
+          "preview_enrollment": "今日登録した場合の日付を表示しています。",
+          "preview_cohort": "コホートの日付を表示しています。",
+          "empty": "スケジュールを設定するには、このコースに章を追加してください。"
+        },
+        "interval": {
+          "label": "章を公開する間隔",
+          "amount": "間隔",
+          "unit": "単位",
+          "days": "日",
+          "weeks": "週",
+          "apply": "適用"
+        },
+        "mode": {
+          "immediate": "すぐに",
+          "delay": "一定期間後",
+          "date": "指定日",
+          "delay_days": "日数",
+          "days_after_enrollment": "日後（登録から）",
+          "days_after_start": "日後（開始日から）",
+          "release_at": "公開日"
+        },
+        "require_previous": "前の章を完了した後にのみ公開",
+        "errors": {
+          "start_date": "コホートの開始日を選択してください。",
+          "release_at": "「{{name}}」の公開日を選択してください。"
+        },
+        "toasts": {
+          "save_success": "スケジュールを保存しました",
+          "save_error": "スケジュールを保存できませんでした"
+        },
+        "unsaved": "未保存の変更",
+        "saved": "すべての変更を保存しました",
+        "save": "スケジュールを保存",
+        "early_access": {
+          "title": "先行アクセス",
+          "description": "これらのユーザーグループのメンバーは、すべての章にすぐアクセスできます（スタッフ、ベータテスター、プレミアム会員など）。",
+          "empty": "ユーザーグループはまだありません。"
+        },
+        "notify": {
+          "title": "章の公開時に学習者へメールで通知",
+          "description": "スケジュールされた章が公開されると、登録済みの学習者にコースへのリンク付きの短いメールがすぐに届きます。"
+        },
+        "preview": {
+          "label": "任意の日の学習者の表示をプレビュー",
+          "day_one": "登録から{{count}}日目",
+          "day": "登録から{{count}}日目",
+          "slider": "プレビュー日",
+          "clear": "クリア",
+          "open": "公開中",
+          "upcoming_one": "{{count}}日目に公開",
+          "upcoming": "{{count}}日目に公開",
+          "closed": "終了",
+          "dated": "固定日"
+        },
+        "more": {
+          "label": "その他の条件",
+          "count_one": "他{{count}}件の条件",
+          "count": "他{{count}}件の条件",
+          "requires": "これらの章の完了が必要",
+          "no_earlier": "これは最初の章です。",
+          "closes": "再び非公開にする",
+          "closes_days": "公開日数",
+          "closes_after": "日後（公開から）",
+          "closes_hint": "録画配信やライブ週間の特典など、期間限定のコンテンツ向けです。"
         }
       }
     },
@@ -5336,7 +5426,31 @@
     "backToCourses": "コース一覧に戻る",
     "loadError": "このコースが見つからないか、読み込み中にエラーが発生しました。",
     "noPermission": "このコースを表示する権限がありません。",
-    "finish_course": "コースを完了"
+    "finish_course": "コースを完了",
+    "drip": {
+      "opens_on_enroll": "コースを開始すると公開",
+      "opens_after_previous": "前の章の完了後に公開",
+      "opens_on": "{{date}}に公開",
+      "in_days_one": "{{count}}日後",
+      "in_days": "{{count}}日後",
+      "in_hours_one": "{{count}}時間後",
+      "in_hours": "{{count}}時間後",
+      "soon": "1時間以内",
+      "coming_soon": "近日公開",
+      "banner_title": "新しい章が順次公開されます",
+      "banner_next": "次の章：{{name}}（{{when}}）",
+      "gate_enrollment": "このコースでは、コースを開始した時点から章が順次公開されます。コースページからコースを開始して、スケジュールを有効にしてください。",
+      "gate_previous": "前の章のすべてのレッスンを完了すると、この章がすぐに公開されます。",
+      "gate_schedule": "このコースでは章が順次公開されます。この章が公開されたら、またお越しください。",
+      "opens_after_required": "必要な章の完了後に公開",
+      "closed": "公開終了",
+      "closed_on": "{{date}}に終了",
+      "open_until": "{{date}}まで公開",
+      "gate_prerequisites": "この章の前提となる章を完了すると、すぐに公開されます。",
+      "gate_closed": "この章は期間限定で公開されていましたが、公開期間は終了しました。",
+      "add_to_calendar": "カレンダーに追加",
+      "calendar_event": "{{chapter}} 公開 · {{course}}"
+    }
   },
   "pagination": {
     "next": "次へ",

@@ -134,6 +134,10 @@
         "api_access": {
           "title": "Pro Özellik",
           "description": "API Erişimi, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kuruluşunuzun verilerine programatik erişimi açmak için yükseltin."
+        },
+        "drip": {
+          "title": "Standart Özellik",
+          "description": "Kademeli içerik yalnızca Standart plan ve üzeri organizasyonlar için kullanılabilir. Bölümleri bir takvime göre, öğrenci bazında veya tüm kohort için yayınlamak üzere yükseltin."
         }
       },
       "current_plan": "Mevcut plan",
@@ -1627,7 +1631,8 @@
           "contributors": "Katkıda Bulunanlar",
           "certification": "Sertifikasyon",
           "analytics": "Analitik",
-          "seo": "SEO"
+          "seo": "SEO",
+          "schedule": "Zamanlama"
         },
         "access_denied": {
           "title": "Erişim Reddedildi",
@@ -2192,7 +2197,11 @@
           "partial_error": "{{total}} aktiviteden {{failed}} tanesi güncellenemedi"
         },
         "chapter_element": {
-          "chapter_name_placeholder": "Bölüm Adı"
+          "chapter_name_placeholder": "Bölüm Adı",
+          "drip_tooltip": "Yayın takvimi: Zamanlama sekmesinden düzenleyin",
+          "drip_day_one": "Gün {{count}}",
+          "drip_day": "Gün {{count}}",
+          "drip_now": "Gün 0"
         },
         "activity": {
           "name_placeholder": "Aktivite Adı",
@@ -2343,6 +2352,87 @@
           "title_max_length": "SEO başlığı 70 karakter veya daha az olmalıdır",
           "twitter_description_max_length": "Twitter açıklaması 200 karakter veya daha az olmalıdır",
           "twitter_title_max_length": "Twitter başlığı 70 karakter veya daha az olmalıdır"
+        }
+      },
+      "schedule": {
+        "title": "Kademeli içerik",
+        "description": "Bölümleri tek seferde değil, zamanla yayınlayın. Öğrenciler sırada ne olduğunu ve ne zaman açılacağını görür.",
+        "on": "Açık",
+        "off": "Kapalı",
+        "anchor": {
+          "title": "Zamanlama ne zaman başlasın?",
+          "enrollment": "Her öğrenci kaydolduğunda",
+          "enrollment_description": "Herkesin kendi takvimi olur. Her zaman açık, kendi hızında ilerlenen kurslar için idealdir.",
+          "fixed_date": "Sabit bir başlangıç tarihinde",
+          "fixed_date_description": "Tüm kohort için tek bir tarih. Canlı lansmanlar ve bootcamp'ler için idealdir.",
+          "start_date": "Kohort başlangıcı"
+        },
+        "chapters": {
+          "title": "Yayın planı",
+          "preview_enrollment": "Tarihler bugün kaydolan biri için gösterilir.",
+          "preview_cohort": "Tarihler kohort için gösterilir.",
+          "empty": "Zamanlamak için bu kursa bölüm ekleyin."
+        },
+        "interval": {
+          "label": "Bölümler arası süre",
+          "amount": "Aralık",
+          "unit": "Birim",
+          "days": "gün",
+          "weeks": "hafta",
+          "apply": "Uygula"
+        },
+        "mode": {
+          "immediate": "Hemen",
+          "delay": "Bir süre sonra",
+          "date": "Belirli bir tarihte",
+          "delay_days": "Gün",
+          "days_after_enrollment": "gün sonra (kayıttan itibaren)",
+          "days_after_start": "gün sonra (başlangıç tarihinden itibaren)",
+          "release_at": "Yayın tarihi"
+        },
+        "require_previous": "Yalnızca önceki bölüm tamamlandıktan sonra",
+        "errors": {
+          "start_date": "Kohortun başlayacağı tarihi seçin.",
+          "release_at": "“{{name}}” için bir yayın tarihi seçin."
+        },
+        "toasts": {
+          "save_success": "Zamanlama kaydedildi",
+          "save_error": "Zamanlama kaydedilemedi"
+        },
+        "unsaved": "Kaydedilmemiş değişiklikler",
+        "saved": "Tüm değişiklikler kaydedildi",
+        "save": "Zamanlamayı kaydet",
+        "early_access": {
+          "title": "Erken erişim",
+          "description": "Bu kullanıcı gruplarının üyeleri tüm bölümlere hemen erişir: personel, beta test kullanıcıları, premium üyeler.",
+          "empty": "Henüz kullanıcı grubu yok."
+        },
+        "notify": {
+          "title": "Bir bölüm açıldığında öğrencilere e-posta gönder",
+          "description": "Kayıtlı öğrenciler, zamanlanmış bir bölüm kendileri için açılır açılmaz kursa geri dönüş bağlantısı içeren kısa bir e-posta alır."
+        },
+        "preview": {
+          "label": "Herhangi bir günde öğrenci görünümünü önizleyin",
+          "day_one": "Kayıttan sonra {{count}}. gün",
+          "day": "Kayıttan sonra {{count}}. gün",
+          "slider": "Önizleme günü",
+          "clear": "Temizle",
+          "open": "Açık",
+          "upcoming_one": "{{count}}. günde açılır",
+          "upcoming": "{{count}}. günde açılır",
+          "closed": "Kapalı",
+          "dated": "Sabit tarih"
+        },
+        "more": {
+          "label": "Diğer koşullar",
+          "count_one": "{{count}} koşul daha",
+          "count": "{{count}} koşul daha",
+          "requires": "Bu bölümlerin tamamlanmasını gerektirir",
+          "no_earlier": "Bu ilk bölüm.",
+          "closes": "Tekrar kapat",
+          "closes_days": "Açık kalma süresi",
+          "closes_after": "gün sonra (açıldıktan itibaren)",
+          "closes_hint": "Tekrar yayın veya canlı hafta bonusu gibi sınırlı süreli içerikler için."
         }
       }
     },
@@ -5350,7 +5440,31 @@
     "backToCourses": "Kurslara Dön",
     "loadError": "Bu kurs bulunamadı veya yüklenirken bir hata oluştu.",
     "noPermission": "Bu kursu görüntüleme yetkiniz yok.",
-    "finish_course": "Kursu tamamla"
+    "finish_course": "Kursu tamamla",
+    "drip": {
+      "opens_on_enroll": "Kursa başladığınızda açılır",
+      "opens_after_previous": "Önceki bölümden sonra açılır",
+      "opens_on": "{{date}} tarihinde açılır",
+      "in_days_one": "{{count}} gün içinde",
+      "in_days": "{{count}} gün içinde",
+      "in_hours_one": "{{count}} saat içinde",
+      "in_hours": "{{count}} saat içinde",
+      "soon": "bir saatten kısa sürede",
+      "coming_soon": "Çok yakında",
+      "banner_title": "Yeni bölümler zamanla yayınlanır",
+      "banner_next": "Sıradaki: {{name}}. {{when}}",
+      "gate_enrollment": "Bu kurs, bölümlerini kursa başladığınız andan itibaren zamanla yayınlar. Takviminizin kilidini açmak için kursa kurs sayfasından başlayın.",
+      "gate_previous": "Önceki bölümün tüm derslerini bitirin, bu bölüm hemen açılsın.",
+      "gate_schedule": "Bu kurs bölümlerini zamanla yayınlar. Bu bölüm açıldığında tekrar gelin.",
+      "opens_after_required": "Gerekli bölümlerden sonra açılır",
+      "closed": "Artık mevcut değil",
+      "closed_on": "{{date}} tarihinde kapandı",
+      "open_until": "{{date}} tarihine kadar açık",
+      "gate_prerequisites": "Bu bölümün dayandığı bölümleri bitirin, hemen açılsın.",
+      "gate_closed": "Bu bölüm sınırlı bir süre için erişilebilirdi ve bu süre sona erdi.",
+      "add_to_calendar": "Takvime ekle",
+      "calendar_event": "{{chapter}} açılıyor · {{course}}"
+    }
   },
   "pagination": {
     "next": "Sonraki",
