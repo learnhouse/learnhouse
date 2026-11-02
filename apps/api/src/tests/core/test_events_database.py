@@ -107,15 +107,16 @@ async def test_connect_to_db_get_db_session_and_close_database():
 
 @pytest.mark.asyncio
 async def test_connect_to_db_runs_create_all_when_not_testing(monkeypatch):
-    """The `if not is_testing: await conn.run_sync(SQLModel.metadata.create_all)`
-    branch is unreachable under the normal TESTING=true env.  Patch the module-level
-    flag to False so the branch executes, then restore it."""
+    """With LEARNHOUSE_AUTO_MIGRATE off, startup only creates missing tables
+    (the migration path is covered in test_migrations.py). The branch is
+    unreachable under TESTING=true, so patch the module-level flag."""
     app = SimpleNamespace()
     create_all_calls = []
 
     original_is_testing = database.is_testing
     try:
         monkeypatch.setattr(database, "is_testing", False)
+        monkeypatch.setenv("LEARNHOUSE_AUTO_MIGRATE", "false")
         monkeypatch.setattr(
             "sqlmodel.SQLModel.metadata.create_all",
             lambda bind: create_all_calls.append(bind),
