@@ -2,7 +2,8 @@
 certificates and podcast episodes."""
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -109,8 +110,24 @@ async def test_courses_without_drip_add_nothing(db, org, course, chapter, regula
     assert await _events(mock_request, org, regular_user, db) == []
 
 
+async def test_drip_course_without_chapters_only_shows_its_start(db, org, regular_user, mock_request, only):
+    only("drip")
+    empty = Course(
+        name="Empty", public=True, published=True, open_to_contributors=False, org_id=org.id,
+        course_uuid="course_empty", creation_date="", update_date="",
+        drip_settings={"enabled": True, "anchor": "fixed_date", "start_date": (NOW + timedelta(days=2)).isoformat()},
+    )
+    db.add(empty)
+    await db.commit()
+    await db.refresh(empty)
+    await _enroll(db, org, empty, regular_user)
+    events = await _events(mock_request, org, regular_user, db)
+    assert [(e.id, e.status) for e in events] == [("course_start:course_empty", "upcoming")]
+
+
 async def test_course_updates_from_my_courses_only(db, org, course, regular_user, mock_request, only):
     only("course_updates")
+    assert await _events(mock_request, org, regular_user, db) == []  # in no course yet
     other = Course(name="Other", public=True, published=True, open_to_contributors=False, org_id=org.id, course_uuid="course_other", creation_date="", update_date="")
     db.add(other)
     await db.flush()
@@ -137,6 +154,11 @@ async def test_certificates_are_the_users_own(db, org, course, regular_user, adm
     await db.flush()
     db.add(CertificateUser(user_id=regular_user.id, certification_id=cert.id, user_certification_uuid="usercert_mine", created_at=_stamp(NOW), updated_at=""))
     db.add(CertificateUser(user_id=admin_user.id, certification_id=cert.id, user_certification_uuid="usercert_admin", created_at=_stamp(NOW), updated_at=""))
+    # Earned long before the window, for another course's certificate.
+    old_cert = Certifications(course_id=course.id, config={}, certification_uuid="certification_old", creation_date="", update_date="")
+    db.add(old_cert)
+    await db.flush()
+    db.add(CertificateUser(user_id=regular_user.id, certification_id=old_cert.id, user_certification_uuid="usercert_old", created_at=_stamp(NOW - timedelta(days=400)), updated_at=""))
     await db.commit()
     events = await _events(mock_request, org, regular_user, db)
     assert [e.id for e in events] == ["certificate:usercert_mine"]
@@ -155,9 +177,20 @@ async def test_podcast_episodes_published_and_readable(db, org, regular_user, mo
             title=uuid, podcast_id=pod.id, org_id=org.id, episode_uuid=f"episode_{uuid}", published=published,
             creation_date=_stamp(NOW - timedelta(days=2)), update_date="",
         ))
+    db.add(PodcastEpisode(
+        title="old", podcast_id=podcast.id, org_id=org.id, episode_uuid="episode_old", published=True,
+        creation_date=_stamp(NOW - timedelta(days=400)), update_date="",
+    ))
     await db.commit()
     events = await _events(mock_request, org, regular_user, db)
     assert [e.id for e in events] == ["podcast_episode:episode_ep1"]
+
+    # A podcast the user may not read stays off their calendar.
+    with patch(
+        "src.services.calendar.sources.podcasts.check_resource_access",
+        new=AsyncMock(return_value=SimpleNamespace(allowed=False)),
+    ):
+        assert await _events(mock_request, org, regular_user, db) == []
     assert events[0].url == "/podcast/dns" and events[0].meta == {"podcast": "DNS Weekly"}
 
     with patch("src.services.calendar.types.resolve_feature", return_value={"enabled": False}):

@@ -1,7 +1,7 @@
 """Add live session activity types
 
 Revision ID: a1l2v3s4e5s6
-Revises: f2a3b4c5d6e7
+Revises: 74cc74ce41c7
 Create Date: 2026-11-01 00:00:00.000000
 
 Live sessions are an Enterprise feature: their tables live in the EE package
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = 'a1l2v3s4e5s6'
-down_revision: Union[str, None] = 'f2a3b4c5d6e7'
+down_revision: Union[str, None] = '74cc74ce41c7'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

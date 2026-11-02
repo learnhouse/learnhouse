@@ -295,7 +295,7 @@ class TestFeatureResolve:
         ):
             result = resolve_all_features({"config_version": "2.0"}, org_id=0)
         mock_fetch.assert_not_called()
-        assert len(result) == 21
+        assert len(result) == 22
 
     def test_resolve_all_features_uses_resolve_feature_for_every_entry(self):
         calls = []
@@ -331,5 +331,5 @@ class TestFeatureResolve:
             "usergroups",
             "versioning",
         ]
-        assert len(calls) == 21
+        assert len(calls) == 22
         assert calls[0] == ("ai", {"config_version": "2.0"}, 9)
