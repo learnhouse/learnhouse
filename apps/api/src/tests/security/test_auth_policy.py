@@ -171,6 +171,20 @@ class TestMethodGate:
             await enforce_org_auth_policy(db, regular_user.id, org.id)
         assert exc.value.detail["code"] == METHOD_NOT_ALLOWED_CODE
 
+    async def test_lti_session_never_reaches_another_org_even_with_sharing_on(self, db, org, regular_user):
+        """An LMS one org runs must not sign anyone in to their other orgs,
+        even under the default policy (all methods, sharing on)."""
+        from fastapi import HTTPException
+
+        _prov(amr="lti", org_id=org.id + 999)
+        with pytest.raises(HTTPException) as exc:
+            await enforce_org_auth_policy(db, regular_user.id, org.id)
+        assert exc.value.detail["code"] == SESSION_NOT_BOUND_CODE
+
+    async def test_lti_session_is_admitted_by_its_own_org_under_default_policy(self, db, org, regular_user):
+        _prov(amr="lti", org_id=org.id)
+        await enforce_org_auth_policy(db, regular_user.id, org.id)
+
 
 @pytest.mark.asyncio
 class TestSharingGate:

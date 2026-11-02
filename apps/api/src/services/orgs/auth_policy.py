@@ -140,6 +140,12 @@ async def evaluate_org_auth(
             # leaves session sharing on: sharing lets sessions in, it never lets
             # one org's session out into another org.
             domain_bound = provenance.custom_domain and provenance.org_id is not None
+            # An LTI launch session is held to the org that registered the LMS
+            # the same way: an LMS that org runs must never sign anyone in to
+            # their other organizations.
+            domain_bound = domain_bound or (
+                provenance.amr == AUTH_METHOD_LTI and provenance.org_id is not None
+            )
 
             # Fast path: default config (all methods, sharing on) is a pure no-op,
             # so unmodified orgs (and every existing test that never sets
