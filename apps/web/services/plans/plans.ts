@@ -56,3 +56,15 @@ export function isFeatureAvailable(featureKey: string, _currentPlan?: PlanLevel)
   // Return true here; callers gate on resolved_features separately.
   return true
 }
+
+/**
+ * Pro and above are white-labelled: no LearnHouse marks anywhere the org's
+ * learners or staff can see them. EE is white-label by license; OSS never is.
+ */
+export function isWhiteLabelPlan(
+  plan: PlanLevel,
+  mode: string = getDeploymentMode()
+): boolean {
+  if (mode === 'ee') return true
+  return plan !== 'oss' && planMeetsRequirement(plan, 'pro')
+}
