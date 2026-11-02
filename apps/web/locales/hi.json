@@ -4197,6 +4197,8 @@
     "desktop_only_message": "संपादक केवल डेस्कटॉप डिवाइस से एक्सेस किया जा सकता है।",
     "switch_to_desktop": "देखने के लिए कृपया डेस्कटॉप पर स्विच करें।",
     "ai_editor": "AI संपादक",
+    "more_preview_options": "अधिक पूर्वावलोकन विकल्प",
+    "more_save_options": "अधिक सहेजने के विकल्प",
     "versioning": {
       "version_history": "संस्करण इतिहास",
       "current_version": "वर्तमान संस्करण:",
@@ -4275,7 +4277,10 @@
       "align_left": "बाएं संरेखित करें",
       "align_center": "केंद्र में संरेखित करें",
       "align_right": "दाएं संरेखित करें",
-      "clear_formatting": "फ़ॉर्मेटिंग साफ़ करें"
+      "clear_formatting": "फ़ॉर्मेटिंग साफ़ करें",
+      "list": "सूची",
+      "elements_menu": "तत्व",
+      "code_playground": "कोड प्लेग्राउंड"
     },
     "blocks": {
       "info_callout": "जानकारी कॉलआउट",
@@ -4295,6 +4300,8 @@
       "user": "उपयोगकर्ता",
       "magic_block": "मैजिक ब्लॉक (AI)",
       "magic_block_disabled": "मैजिक ब्लॉक के लिए Standard प्लान आवश्यक है",
+      "callout": "कॉलआउट",
+      "audio": "ऑडियो",
       "common": {
         "cancel": "रद्द करें",
         "save": "सहेजें",

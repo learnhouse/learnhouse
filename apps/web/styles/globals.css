@@ -1870,6 +1870,7 @@
 .editor-menu-item .label {
   font-size: 12px;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 /* ─── Activity Editor Layout (styled-components migration) ─── */

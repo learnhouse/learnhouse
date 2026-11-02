@@ -4207,6 +4207,8 @@
     "desktop_only_message": "Edytor jest dostępny tylko z komputera.",
     "switch_to_desktop": "Przełącz się na komputer, aby wyświetlić.",
     "ai_editor": "Edytor AI",
+    "more_preview_options": "Więcej opcji podglądu",
+    "more_save_options": "Więcej opcji zapisu",
     "versioning": {
       "version_history": "Historia wersji",
       "current_version": "Bieżąca wersja:",
@@ -4285,7 +4287,10 @@
       "align_left": "Wyrównaj do lewej",
       "align_center": "Wyśrodkuj",
       "align_right": "Wyrównaj do prawej",
-      "clear_formatting": "Wyczyść formatowanie"
+      "clear_formatting": "Wyczyść formatowanie",
+      "list": "Lista",
+      "elements_menu": "Elementy",
+      "code_playground": "Piaskownica kodu"
     },
     "blocks": {
       "info_callout": "Ramka informacyjna",
@@ -4305,6 +4310,8 @@
       "user": "Użytkownik",
       "magic_block": "Magiczny blok (AI)",
       "magic_block_disabled": "Magiczny blok wymaga planu Standard",
+      "callout": "Wyróżnienie",
+      "audio": "Audio",
       "common": {
         "cancel": "Anuluj",
         "save": "Zapisz",
