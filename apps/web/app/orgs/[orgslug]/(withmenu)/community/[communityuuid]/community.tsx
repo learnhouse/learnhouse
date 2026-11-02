@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
+import ResourcePaywall, { useResourcePaywall } from '@ee/components/Payments/ResourcePaywall'
 
 interface CommunityClientProps {
   community: Community
@@ -30,9 +31,13 @@ const CommunityClient = ({
   community,
   initialDiscussions,
   orgslug,
+  org_id,
 }: CommunityClientProps) => {
   const [isCreateDiscussionModalOpen, setIsCreateDiscussionModalOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 768px)')
+  // People who have not bought a sold community can't post in it.
+  const { locked } = useResourcePaywall(org_id, community.community_uuid)
+  const openCreateDiscussion = locked ? undefined : () => setIsCreateDiscussionModalOpen(true)
   const { t } = useTranslation()
   const { canCreateDiscussion } = useCommunityRights(community.community_uuid)
   useShortcut(
@@ -67,7 +72,7 @@ const CommunityClient = ({
                 community={community}
                 discussionCount={initialDiscussions.length}
                 orgslug={orgslug}
-                onCreateDiscussion={() => setIsCreateDiscussionModalOpen(true)}
+                onCreateDiscussion={openCreateDiscussion}
               />
             </div>
           </div>
@@ -84,15 +89,17 @@ const CommunityClient = ({
               )}
             </div>
 
-            {/* Discussions List */}
-            <div className="bg-white nice-shadow rounded-lg overflow-hidden">
-              <DiscussionList
-                communityUuid={community.community_uuid}
-                orgslug={orgslug}
-                onCreateClick={() => setIsCreateDiscussionModalOpen(true)}
-                initialDiscussions={initialDiscussions}
-              />
-            </div>
+            {/* Discussions List, or what unlocks it when the community is sold */}
+            <ResourcePaywall orgId={org_id} orgslug={orgslug} resourceUuid={community.community_uuid} resourceName={community.name}>
+              <div className="bg-white nice-shadow rounded-lg overflow-hidden">
+                <DiscussionList
+                  communityUuid={community.community_uuid}
+                  orgslug={orgslug}
+                  onCreateClick={() => setIsCreateDiscussionModalOpen(true)}
+                  initialDiscussions={initialDiscussions}
+                />
+              </div>
+            </ResourcePaywall>
           </div>
         </div>
 
@@ -105,7 +112,7 @@ const CommunityClient = ({
         <CommunityActionsMobile
           community={community}
           orgslug={orgslug}
-          onCreateDiscussion={() => setIsCreateDiscussionModalOpen(true)}
+          onCreateDiscussion={openCreateDiscussion}
         />
       )}
 

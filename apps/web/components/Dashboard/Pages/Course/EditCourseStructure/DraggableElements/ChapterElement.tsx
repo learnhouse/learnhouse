@@ -323,6 +323,7 @@ function ChapterElement(props: ChapterElementProps) {
                 addUserGroup={addChapterUserGroup}
                 removeUserGroup={removeChapterUserGroup}
                 resourceNoun="chapter"
+                paid={{ courseUuid: props.course_uuid, resourceUuid: props.chapter.chapter_uuid, resourceName: props.chapter.name }}
               />
               <MoreVertical size={15} className="text-gray-300" />
               <ConfirmationModal

@@ -28,9 +28,15 @@ async def _get_offer_for_usergroup(usergroup_id: int, db_session: AsyncSession) 
     Returns None if the usergroup is not tied to any offer.
     """
     try:
+        from ee.db.payments.payments_groups import PaymentsGroupSync
         from ee.db.payments.payments_offers import PaymentsOffer
-        stmt = select(PaymentsOffer).where(
-            PaymentsOffer.usergroup_id == usergroup_id,
+        # A usergroup is an offer's access group when the offer's payments
+        # group syncs its buyers into it.
+        stmt = select(PaymentsOffer).join(
+            PaymentsGroupSync,
+            PaymentsGroupSync.payments_group_id == PaymentsOffer.payments_group_id,
+        ).where(
+            PaymentsGroupSync.usergroup_id == usergroup_id,
         )
         offer = (await db_session.execute(stmt)).scalars().first()
         if offer:
