@@ -233,7 +233,6 @@ export const config = {
      * 3. /fonts (inside /public)
      * 4. Umami Analytics
      * 5. /examples (inside /public)
-     * 5b. /onboarding-media (onboarding videos, inside /public)
      * 6. all root files inside /public (e.g. /favicon.ico)
      * 7. /embed (activity embeds)
      * 8. /ingest (PostHog reverse proxy; must reach the next.config rewrite
@@ -242,7 +241,7 @@ export const config = {
      * /ingest and /monitoring are matched again below on their own, only so
      * the credentials can be stripped before the rewrite forwards them.
      */
-    '/((?!api|_next|fonts|umami|ingest|examples|onboarding-media|embed|monitoring|[\\w-]+\\.\\w+).*)',
+    '/((?!api|_next|fonts|umami|ingest|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
     '/ingest/:path*',
     '/monitoring/:path*',
     '/sitemap.xml',

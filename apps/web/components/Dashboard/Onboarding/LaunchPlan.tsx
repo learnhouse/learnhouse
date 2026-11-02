@@ -236,7 +236,7 @@ function StepPanel({
       </div>
 
       <div className="px-5">
-        <OnboardingVideo id={step.video} title={title} endSlot={!step.completed ? cta : undefined} />
+        <OnboardingVideo id={step.video} endSlot={!step.completed ? cta : undefined} />
       </div>
 
       <div className="px-5 pt-5 pb-5">

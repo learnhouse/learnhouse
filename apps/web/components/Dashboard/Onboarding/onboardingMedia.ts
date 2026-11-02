@@ -1,28 +1,22 @@
 // Onboarding walkthrough videos. Made with the LearnHouse video guide pipeline
-// (real app recordings, narrated). Served from /public/onboarding-media by default (kept out of the proxy matcher);
-// NEXT_PUBLIC_LEARNHOUSE_ONBOARDING_MEDIA_URL points them at a CDN instead.
-const BASE = (process.env.NEXT_PUBLIC_LEARNHOUSE_ONBOARDING_MEDIA_URL || '/onboarding-media').replace(/\/$/, '')
+// (real app recordings, narrated) and hosted as unlisted videos on the
+// LearnHouse YouTube channel.
+export type OnboardingVideo = { youtubeId: string; poster: string; duration: number }
 
-export type OnboardingVideo = { src: string; poster: string; captions: string; duration: number }
-
-// Durations in seconds, shown on the poster before the file loads.
-const DURATIONS: Record<string, number> = {
-  ob1: 36,
-  ob2: 32,
-  ob3: 32,
-  ob4: 32,
-  ob5: 32,
-  ob6: 30,
-  ob7: 28,
+// YouTube ids, and durations in seconds shown before the player loads.
+const VIDEOS: Record<string, { youtubeId: string; duration: number }> = {
+  ob1: { youtubeId: 'Llo3_b0h5i8', duration: 36 },
+  ob2: { youtubeId: 'aAwGYANdKFw', duration: 32 },
+  ob3: { youtubeId: '6mmWspi12wY', duration: 32 },
+  ob4: { youtubeId: 'gOnapJb1JJU', duration: 32 },
+  ob5: { youtubeId: 'jnrhaySDCt4', duration: 32 },
+  ob6: { youtubeId: 'xznnN6v4Lh4', duration: 30 },
+  ob7: { youtubeId: '3lGZuUoZRXY', duration: 28 },
 }
 
 export function onboardingVideo(id: string): OnboardingVideo {
-  return {
-    src: `${BASE}/${id}.mp4`,
-    poster: `${BASE}/${id}.jpg`,
-    captions: `${BASE}/${id}.vtt`,
-    duration: DURATIONS[id] ?? 30,
-  }
+  const v = VIDEOS[id] ?? VIDEOS.ob1
+  return { ...v, poster: `https://i.ytimg.com/vi/${v.youtubeId}/hqdefault.jpg` }
 }
 
 export const WELCOME_VIDEO = 'ob1'
