@@ -4257,6 +4257,8 @@
     "desktop_only_message": "エディターはデスクトップデバイスからのみアクセスできます。",
     "switch_to_desktop": "表示するにはデスクトップに切り替えてください。",
     "ai_editor": "AIエディター",
+    "more_preview_options": "その他のプレビューオプション",
+    "more_save_options": "その他の保存オプション",
     "versioning": {
       "version_history": "バージョン履歴",
       "current_version": "現在のバージョン：",
@@ -4335,7 +4337,10 @@
       "align_left": "左揃え",
       "align_center": "中央揃え",
       "align_right": "右揃え",
-      "clear_formatting": "書式をクリア"
+      "clear_formatting": "書式をクリア",
+      "list": "リスト",
+      "elements_menu": "要素",
+      "code_playground": "コードプレイグラウンド"
     },
     "blocks": {
       "info_callout": "情報コールアウト",
@@ -4355,6 +4360,8 @@
       "user": "ユーザー",
       "magic_block": "マジックブロック (AI)",
       "magic_block_disabled": "マジックブロックにはStandardプランが必要です",
+      "callout": "コールアウト",
+      "audio": "音声",
       "common": {
         "uploading": "アップロード中...",
         "upload": "アップロード",

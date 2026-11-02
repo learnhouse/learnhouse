@@ -27,6 +27,7 @@ import {
   LockKey,
   Microphone,
   Path,
+  PlugsConnected,
   Robot,
   ShieldCheck,
   UsersThree,
@@ -53,6 +54,7 @@ export type FeatureKey =
   | 'certifications'
   | 'audit_logs'
   | 'sso'
+  | 'lti'
   | 'scorm'
   | 'seo'
   | 'drip'
@@ -173,6 +175,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.sso.title',
     descriptionKey: 'common.plans.feature_restricted.sso.description',
     Icon: LockKey,
+    upsellPlan: 'enterprise',
+  },
+  lti: {
+    titleKey: 'common.plans.feature_restricted.lti.title',
+    descriptionKey: 'common.plans.feature_restricted.lti.description',
+    Icon: PlugsConnected,
     upsellPlan: 'enterprise',
   },
   scorm: {

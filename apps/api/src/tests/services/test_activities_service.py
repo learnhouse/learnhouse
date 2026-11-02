@@ -64,8 +64,10 @@ class TestCreateActivity:
         with patch(
             "src.services.courses.activities.activities.check_resource_access",
             new_callable=AsyncMock,
-        ):
+        ), patch("src.services.courses.activities.activities.notify_ee_course_content_changed") as notify:
             result = await create_activity(mock_request, activity_obj, admin_user, db)
+        # A new activity changes course progress percentages (LTI).
+        notify.assert_called_once()
 
         assert isinstance(result, ActivityRead)
         assert result.name == "New Activity"

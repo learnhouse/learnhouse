@@ -40,6 +40,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "audit_logs": "enterprise",
     "scorm": "enterprise",
     "sso": "enterprise",
+    "lti": "enterprise",
 }
 
 # ============================================================================
@@ -72,6 +73,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "roles": {"enabled": False},
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
+            "lti": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
@@ -100,6 +102,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "roles": {"enabled": False},
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
+            "lti": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
@@ -128,6 +131,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "roles": {"enabled": False},
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
+            "lti": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
@@ -156,6 +160,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "roles": {"enabled": False},
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
+            "lti": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
             "audit_logs": {"enabled": False},
@@ -184,6 +189,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "roles": {"enabled": True},
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
+            "lti": {"enabled": False},
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
             "audit_logs": {"enabled": False},
@@ -212,6 +218,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "roles": {"enabled": True},
             "scorm": {"enabled": True},
             "sso": {"enabled": True},
+            "lti": {"enabled": True},
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
             "audit_logs": {"enabled": True},
@@ -282,7 +289,7 @@ def is_feature_enabled_for_plan(plan: str, feature: str) -> bool:
         return True
     if mode == 'oss':
         # OSS enables all non-EE features
-        return feature not in ('analytics', 'api', 'sso', 'audit_logs', 'scorm')
+        return feature not in ('analytics', 'api', 'sso', 'audit_logs', 'scorm', 'lti')
     return get_plan_feature_config(plan, feature).get("enabled", False)
 
 

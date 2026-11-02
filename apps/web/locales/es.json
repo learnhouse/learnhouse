@@ -4252,6 +4252,8 @@
     "desktop_only_message": "El editor solo es accesible desde un dispositivo de escritorio.",
     "switch_to_desktop": "Por favor, cambia a un escritorio para ver.",
     "ai_editor": "Editor IA",
+    "more_preview_options": "Más opciones de vista previa",
+    "more_save_options": "Más opciones de guardado",
     "versioning": {
       "version_history": "Historial de versiones",
       "current_version": "Versión actual:",
@@ -4330,7 +4332,10 @@
       "align_left": "Alinear a la izquierda",
       "align_center": "Centrar",
       "align_right": "Alinear a la derecha",
-      "clear_formatting": "Limpiar formato"
+      "clear_formatting": "Limpiar formato",
+      "list": "Lista",
+      "elements_menu": "Elementos",
+      "code_playground": "Entorno de código"
     },
     "blocks": {
       "info_callout": "Aviso informativo",
@@ -4382,6 +4387,8 @@
         "suggestion_timeline_prompt": "Crear una línea de tiempo interactiva que muestre eventos históricos importantes con detalles expandibles"
       },
       "magic_block_disabled": "Bloque mágico requiere plan Standard",
+      "callout": "Destacado",
+      "audio": "Audio",
       "common": {
         "uploading": "Cargando...",
         "upload": "Cargar",

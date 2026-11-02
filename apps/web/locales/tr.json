@@ -4271,6 +4271,8 @@
     "desktop_only_message": "Düzenleyici yalnızca masaüstü cihazdan erişilebilir.",
     "switch_to_desktop": "Görüntülemek için lütfen masaüstüne geçin.",
     "ai_editor": "AI Düzenleyici",
+    "more_preview_options": "Diğer önizleme seçenekleri",
+    "more_save_options": "Diğer kaydetme seçenekleri",
     "versioning": {
       "version_history": "Sürüm Geçmişi",
       "current_version": "Mevcut sürüm:",
@@ -4349,7 +4351,10 @@
       "align_left": "Sola Hizala",
       "align_center": "Ortala",
       "align_right": "Sağa Hizala",
-      "clear_formatting": "Biçimlendirmeyi Temizle"
+      "clear_formatting": "Biçimlendirmeyi Temizle",
+      "list": "Liste",
+      "elements_menu": "Öğeler",
+      "code_playground": "Kod Alanı"
     },
     "blocks": {
       "info_callout": "Bilgi Kutusu",
@@ -4369,6 +4374,8 @@
       "user": "Kullanıcı",
       "magic_block": "Sihirli Blok (Yapay Zeka ile oluşturuldu)",
       "magic_block_disabled": "Sihirli Blok için Standard plan gereklidir",
+      "callout": "Bilgi kutusu",
+      "audio": "Ses",
       "common": {
         "cancel": "İptal",
         "save": "Kaydet",

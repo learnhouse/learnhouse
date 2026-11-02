@@ -87,6 +87,7 @@ from src.services.analytics import events as analytics_events
 from src.services.audit.audit import record_audit_event
 from src.db.user_audit_events import UserAuditEventType
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.core.ee_hooks import notify_ee_course_content_changed, notify_ee_learner_progress
 
 # Hard caps for regex answer-matching (defense-in-depth alongside the timeout).
 _REGEX_MAX_LEN = 1000
@@ -1333,6 +1334,8 @@ async def update_assignment(
     await db_session.commit()
     await db_session.refresh(assignment)
     index_activity(assignment.activity_id)
+    # Title / due date changes follow to LMS gradebook columns (LTI).
+    notify_ee_course_content_changed(course.id)
 
     # return assignment read. The caller passed the UPDATE authorization above,
     # so they are an instructor and the corrige is theirs to see.
@@ -1503,6 +1506,7 @@ async def delete_assignment(
     await db_session.delete(assignment)
     await db_session.commit()
     index_activity(activity_id)
+    notify_ee_course_content_changed(course.id)
 
     return {"message": "Assignment deleted"}
 
@@ -3312,6 +3316,10 @@ async def create_assignment_submission(
                 )
 
     # return assignment user submission read
+    # Last, so the trail step and any auto-grade above are committed before
+    # EE reads them (e.g. LTI reporting the submission to an LMS gradebook).
+    notify_ee_learner_progress(submitter.id, course.id)
+
     return AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
 
 
@@ -3561,6 +3569,7 @@ async def update_assignment_submission(
     db_session.add(assignment_user_submission)
     await db_session.commit()
     await db_session.refresh(assignment_user_submission)
+    notify_ee_learner_progress(assignment_user_submission.user_id, course.id)
 
     # return assignment user submission read
     return AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
@@ -3645,6 +3654,7 @@ async def delete_assignment_submission(
         # The activity is no longer complete; demote the enrollment status so
         # analytics/enrollment stop reporting this learner as "completed".
         await sync_trailrun_status(user_id, course.id, db_session)
+        notify_ee_learner_progress(user_id, course.id)
 
     return {"message": "Assignment User Submission deleted"}
 
@@ -3824,6 +3834,7 @@ async def retry_assignment_submission(
     # enrollment status so a retrying learner isn't still counted as completed.
     if course.id:
         await sync_trailrun_status(int(current_user.id), course.id, db_session)
+        notify_ee_learner_progress(int(current_user.id), course.id)
 
     return {
         "message": "Assignment User Submission reset for retry",
@@ -4011,6 +4022,9 @@ async def _apply_grade_and_finalize(
             "auto_graded": auto_graded,
         },
     )
+
+    # Also on bulk regrades (no webhook): an LMS gradebook must follow.
+    notify_ee_learner_progress(user_id, course.id)
 
     if dispatch_webhook:
         await dispatch_webhooks(
@@ -4311,6 +4325,7 @@ async def mark_activity_as_done_for_user(
         await check_course_completion_and_create_certificate(
             request, user_id, course.id, db_session
         )
+        notify_ee_learner_progress(user_id, course.id)
 
     # return OK
     return {"message": "Activity marked as done for user"}

@@ -268,6 +268,11 @@ async def verify_email_token(
         r.delete(redis_key)
         return user, "Email already verified"
 
+    # Identity-provider links made while the address was unproven go first.
+    from src.services.auth.utils import _drop_unverified_sso_links
+
+    await _drop_unverified_sso_links(user.id, db_session)
+
     # Mark email as verified
     user.email_verified = True
     user.email_verified_at = datetime.now(timezone.utc).isoformat()

@@ -345,7 +345,9 @@ class TestUpdateAssignment:
     async def test_updates_assignment_title(
         self, mock_request, db, assignment, admin_user
     ):
-        with patch(_PATCH_RBAC, new_callable=AsyncMock):
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), patch(
+            "src.services.courses.activities.assignments.notify_ee_course_content_changed"
+        ) as notify:
             result = await update_assignment(
                 mock_request,
                 assignment.assignment_uuid,
@@ -354,6 +356,8 @@ class TestUpdateAssignment:
                 db,
             )
         assert result.title == "Updated Title"
+        # Title and due date follow to LMS gradebook columns (LTI).
+        notify.assert_called_once_with(assignment.course_id)
 
     async def test_explicit_null_due_date_removes_the_deadline(
         self, mock_request, db, assignment, admin_user
@@ -856,7 +860,8 @@ class TestUpdateAssignmentSubmission:
             attempt_number=1,
         )
         with patch(_PATCH_RBAC, new_callable=AsyncMock), \
-             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True), \
+             patch("src.services.courses.activities.assignments.notify_ee_learner_progress") as notify:
             result = await update_assignment_submission(
                 mock_request,
                 regular_user.id,
@@ -866,6 +871,8 @@ class TestUpdateAssignmentSubmission:
                 db,
             )
         assert isinstance(result, AssignmentUserSubmissionRead)
+        # An instructor-set grade/status must reach external gradebooks (LTI).
+        notify.assert_called_once_with(regular_user.id, assignment.course_id)
 
 
 # ---------------------------------------------------------------------------
@@ -902,7 +909,8 @@ class TestDeleteAssignmentSubmission:
         self, mock_request, db, assignment, user_submission, admin_user, regular_user
     ):
         with patch(_PATCH_RBAC, new_callable=AsyncMock), \
-             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True):
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, return_value=True), \
+             patch("src.services.courses.activities.assignments.notify_ee_learner_progress") as notify:
             result = await delete_assignment_submission(
                 mock_request,
                 regular_user.id,
@@ -911,6 +919,7 @@ class TestDeleteAssignmentSubmission:
                 db,
             )
         assert result["message"] == "Assignment User Submission deleted"
+        notify.assert_called_once_with(regular_user.id, assignment.course_id)
 
 
 # ---------------------------------------------------------------------------
@@ -1221,7 +1230,8 @@ class TestMarkActivityAsDoneForUser:
             db, org.id, course.id, activity.id, regular_user.id
         )
         with patch(_PATCH_RBAC, new_callable=AsyncMock), \
-             patch(_PATCH_CERT, new_callable=AsyncMock):
+             patch(_PATCH_CERT, new_callable=AsyncMock), \
+             patch("src.services.courses.activities.assignments.notify_ee_learner_progress") as notify:
             result = await mark_activity_as_done_for_user(
                 mock_request,
                 regular_user.id,
@@ -1232,6 +1242,7 @@ class TestMarkActivityAsDoneForUser:
         assert result["message"] == "Activity marked as done for user"
         await db.refresh(step)
         assert step.complete is True
+        notify.assert_called_once_with(regular_user.id, course.id)
 
 
 # ---------------------------------------------------------------------------

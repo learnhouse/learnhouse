@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { Terminal, KeyIcon, Zap, Globe, Search, Shield, LucideIcon } from 'lucide-react'
+import { Terminal, KeyIcon, Zap, Globe, Search, Shield, Plug, LucideIcon } from 'lucide-react'
 import React, { useEffect, use } from 'react'
 import { motion } from 'motion/react'
 import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/OrgEditAPIAccess'
@@ -9,6 +9,7 @@ import OrgEditAutomations from '@components/Dashboard/Pages/Org/OrgEditAutomatio
 import OrgEditDomains from '@components/Dashboard/Pages/Org/OrgEditDomains/OrgEditDomains'
 import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
 import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
+import OrgEditLTI from '@ee/components/LTI/OrgEditLTI'
 import { useTranslation } from 'react-i18next'
 import { PlanLevel, isFeatureAvailable } from '@services/plans/plans'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
@@ -31,6 +32,7 @@ const getDevTabs = (t: any): TabConfig[] => [
   { id: 'domains', label: t('dashboard.organization.settings.tabs.domains', { defaultValue: 'Domains' }), icon: Globe, requiredPlan: 'pro' },
   { id: 'seo', label: 'SEO', icon: Search, requiredPlan: 'standard' },
   { id: 'sso', label: t('dashboard.organization.settings.tabs.sso', { defaultValue: 'SSO' }), icon: Shield, requiredPlan: 'enterprise' },
+  { id: 'lti', label: t('lti.admin.tab'), icon: Plug, requiredPlan: 'enterprise' },
 ]
 
 function DevelopersPage(props: { params: Promise<DevParams> }) {
@@ -60,6 +62,9 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
     } else if (params.subpage == 'sso') {
       setH1Label(t('dashboard.organization.settings.pages.sso.title', { defaultValue: 'Single Sign-On' }))
       setH2Label(t('dashboard.organization.settings.pages.sso.subtitle', { defaultValue: 'Configure SSO for your organization' }))
+    } else if (params.subpage == 'lti') {
+      setH1Label(t('lti.admin.page_title'))
+      setH2Label(t('lti.admin.page_subtitle'))
     }
   }
 
@@ -110,6 +115,7 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
         {params.subpage == 'domains' ? <OrgEditDomains /> : ''}
         {params.subpage == 'seo' ? <OrgEditSEO /> : ''}
         {params.subpage == 'sso' ? <OrgEditSSO /> : ''}
+        {params.subpage == 'lti' ? <OrgEditLTI /> : ''}
       </motion.div>
     </div>
   )

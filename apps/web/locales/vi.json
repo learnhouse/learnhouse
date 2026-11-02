@@ -4271,6 +4271,8 @@
     "desktop_only_message": "Trình chỉnh sửa chỉ có thể truy cập từ thiết bị máy tính.",
     "switch_to_desktop": "Vui lòng chuyển sang máy tính để xem.",
     "ai_editor": "Trình chỉnh sửa AI",
+    "more_preview_options": "Thêm tùy chọn xem trước",
+    "more_save_options": "Thêm tùy chọn lưu",
     "versioning": {
       "version_history": "Lịch sử phiên bản",
       "current_version": "Phiên bản hiện tại:",
@@ -4349,7 +4351,10 @@
       "align_left": "Căn trái",
       "align_center": "Căn giữa",
       "align_right": "Căn phải",
-      "clear_formatting": "Xóa định dạng"
+      "clear_formatting": "Xóa định dạng",
+      "list": "Danh sách",
+      "elements_menu": "Thành phần",
+      "code_playground": "Sân chơi mã"
     },
     "blocks": {
       "info_callout": "Hộp thông tin",
@@ -4369,6 +4374,8 @@
       "user": "Người dùng",
       "magic_block": "Khối ma thuật (AI)",
       "magic_block_disabled": "Khối ma thuật cần gói Standard",
+      "callout": "Chú thích",
+      "audio": "Âm thanh",
       "common": {
         "cancel": "Hủy",
         "save": "Lưu",

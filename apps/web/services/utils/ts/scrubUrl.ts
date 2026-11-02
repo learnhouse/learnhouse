@@ -18,6 +18,8 @@ export const SENSITIVE_QUERY_PARAMS = new Set(
     'access_token',
     'refresh_token',
     'id_token',
+    // LTI picker / binding context (a short-lived bearer token).
+    'ctx',
   ].map((p) => p.toLowerCase())
 )
 

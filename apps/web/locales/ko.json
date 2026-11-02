@@ -4259,6 +4259,8 @@
     "desktop_only_message": "에디터는 데스크톱 기기에서만 접근할 수 있습니다.",
     "switch_to_desktop": "보려면 데스크톱으로 전환해 주세요.",
     "ai_editor": "AI 에디터",
+    "more_preview_options": "미리보기 옵션 더 보기",
+    "more_save_options": "저장 옵션 더 보기",
     "versioning": {
       "version_history": "버전 기록",
       "current_version": "현재 버전:",
@@ -4337,7 +4339,10 @@
       "align_left": "왼쪽 정렬",
       "align_center": "가운데 정렬",
       "align_right": "오른쪽 정렬",
-      "clear_formatting": "서식 지우기"
+      "clear_formatting": "서식 지우기",
+      "list": "목록",
+      "elements_menu": "요소",
+      "code_playground": "코드 플레이그라운드"
     },
     "blocks": {
       "info_callout": "정보 콜아웃",
@@ -4357,6 +4362,8 @@
       "user": "사용자",
       "magic_block": "매직 블록 (AI)",
       "magic_block_disabled": "매직 블록은 Standard 플랜이 필요합니다",
+      "callout": "콜아웃",
+      "audio": "오디오",
       "common": {
         "cancel": "취소",
         "save": "저장",

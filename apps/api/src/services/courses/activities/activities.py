@@ -1,6 +1,7 @@
 from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.ee_hooks import notify_ee_course_content_changed
 from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
@@ -130,6 +131,7 @@ async def create_activity(
     await db_session.commit()
     await db_session.refresh(activity)
     index_activity(activity.id)
+    notify_ee_course_content_changed(chapter.course_id)
 
     return ActivityRead.model_validate(activity)
 
@@ -519,6 +521,8 @@ async def update_activity(
     db_session.add(activity)
     await db_session.commit()
     await db_session.refresh(activity)
+    if update_data.keys() & {"name", "published"}:
+        notify_ee_course_content_changed(activity.course_id)
 
     index_activity(activity.id)
 
@@ -578,6 +582,7 @@ async def delete_activity(
     await db_session.delete(activity_chapter)
     await db_session.delete(activity)
     await db_session.commit()
+    notify_ee_course_content_changed(course.id)
 
     return {"detail": "Activity deleted"}
 
