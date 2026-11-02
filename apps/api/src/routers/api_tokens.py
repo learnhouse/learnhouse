@@ -20,6 +20,7 @@ from src.services.api_tokens.api_tokens import (
     revoke_api_token,
     update_api_token,
 )
+from src.services.api_tokens.openapi_spec import get_api_token_openapi_spec
 from src.services.security.rate_limiting import check_api_token_rate_limit
 
 router = APIRouter()
@@ -93,6 +94,18 @@ async def api_list_api_tokens(
     Requires the user to have 'roles.action_read' permission in the organization.
     """
     return await list_api_tokens(request, db_session, org_id, current_user)
+
+
+# Declared before /{token_uuid} so "openapi.json" is not read as a token uuid.
+@router.get("/{org_id}/api-tokens/openapi.json", include_in_schema=False)
+async def api_get_api_token_openapi_spec(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    """OpenAPI spec for the API Access playground, scoped to API token routes."""
+    return await get_api_token_openapi_spec(request, db_session, org_id, current_user)
 
 
 @router.get(

@@ -120,6 +120,22 @@ class TestApiTokensRouter:
         assert response.status_code == 200
         assert response.json()["name"] == "Test Token"
 
+    async def test_get_openapi_spec_not_read_as_token_uuid(self, client):
+        with patch(
+            "src.routers.api_tokens.get_api_token_openapi_spec",
+            new_callable=AsyncMock,
+            return_value={"openapi": "3.1.0", "paths": {}},
+        ) as get_spec, patch(
+            "src.routers.api_tokens.get_api_token",
+            new_callable=AsyncMock,
+        ) as get_token:
+            response = await client.get("/api/v1/orgs/1/api-tokens/openapi.json")
+
+        assert response.status_code == 200
+        assert response.json()["openapi"] == "3.1.0"
+        get_spec.assert_awaited_once()
+        get_token.assert_not_awaited()
+
     async def test_update_api_token(self, client):
         with patch(
             "src.routers.api_tokens.update_api_token",
