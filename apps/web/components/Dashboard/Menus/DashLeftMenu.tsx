@@ -42,6 +42,7 @@ import {
   Plus,
   Code,
   Lightning,
+  Steps,
 } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
@@ -229,6 +230,7 @@ function DashLeftMenu() {
   const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
 
   const showLibrary = isEnabled('folders')
+  const showPaths = isEnabled('paths')
   const showCommunities = isEnabled('communities')
   const showPodcasts = isEnabled('podcasts')
   const showBoards = isEnabled('boards')
@@ -481,6 +483,15 @@ function DashLeftMenu() {
               })()}
             </HoverMenu>
             </div>
+            {showPaths && (
+              <MenuLink
+                href="/dash/paths"
+                icon={<Steps size={20} weight="fill" />}
+                label={t('paths.title')}
+                isCollapsed={isCollapsed}
+                active={isActivePath('/dash/paths')}
+              />
+            )}
             {showLibrary && (
               <MenuLink
                 href="/dash/library"
@@ -835,7 +846,7 @@ function DashLeftMenu() {
             </HoverMenu>
 
             {/* Disabled features shown in an "Other" hover menu */}
-            {(!showCommunities || !showPodcasts || !showBoards || !showPlaygrounds || !showPayments) && (
+            {(!showPaths || !showCommunities || !showPodcasts || !showBoards || !showPlaygrounds || !showPayments) && (
               <HoverMenu
                 content={
                   <HoverMenuContent className="w-64">
@@ -846,6 +857,14 @@ function DashLeftMenu() {
                       </span>
                     </HoverMenuLabel>
                     <HoverMenuSeparator />
+                    {!showPaths && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/paths" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <Steps size={16} weight="fill" />
+                          <span className="flex items-center">{t('paths.title')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
                     {!showCommunities && (
                       <HoverMenuItem asChild>
                         <Link href="/dash/communities" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">

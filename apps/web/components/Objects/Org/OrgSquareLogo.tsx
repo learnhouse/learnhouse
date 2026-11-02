@@ -54,6 +54,16 @@ interface OrgSquareLogoProps {
   /** Inset applied when the wide logo has to sit inside a square box. */
   wideInsetClassName?: string
   alt?: string
+  /** Load the image in CORS mode so it can be drawn onto a canvas (PDF export). */
+  crossOrigin?: 'anonymous'
+}
+
+// The media host only sends CORS headers when the request carries an Origin,
+// and the browser cache does not split entries by request mode. A logo first
+// loaded by a plain <img> elsewhere on the page would then be reused for the
+// CORS load and rejected, so CORS loads get their own cache entry.
+function corsSafeUrl(url: string): string {
+  return `${url}${url.includes('?') ? '&' : '?'}cors=1`
 }
 
 /**
@@ -69,19 +79,36 @@ export default function OrgSquareLogo({
   className,
   wideInsetClassName = 'p-[12%]',
   alt,
+  crossOrigin,
 }: OrgSquareLogoProps) {
+  // A media host without CORS rejects the load outright; fall back to a plain
+  // image so the logo still shows on screen, even if the PDF can't include it.
+  const [corsFailed, setCorsFailed] = React.useState(false)
+  const cors = crossOrigin && !corsFailed ? crossOrigin : undefined
+  const onError = cors ? () => setCorsFailed(true) : undefined
+  const toSrc = (url: string) => (cors ? corsSafeUrl(url) : url)
   const square = getOrgSquareLogoUrl(org)
   const wide = getOrgWideLogoUrl(org)
   const label = alt ?? org?.name ?? ''
 
   if (square) {
-    return <img src={square} alt={label} className={cn('w-full h-full object-cover', className)} />
+    return (
+      <img
+        src={toSrc(square)}
+        alt={label}
+        crossOrigin={cors}
+        onError={onError}
+        className={cn('w-full h-full object-cover', className)}
+      />
+    )
   }
   if (wide) {
     return (
       <img
-        src={wide}
+        src={toSrc(wide)}
         alt={label}
+        crossOrigin={cors}
+        onError={onError}
         className={cn('w-full h-full object-contain', wideInsetClassName, className)}
       />
     )

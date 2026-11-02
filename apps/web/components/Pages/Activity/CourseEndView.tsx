@@ -300,7 +300,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
           {showCertificateUI && (
             isLoadingCertificate || isLoadingCertificationStatus ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-gray-900"></div>
               <span className="ms-3 text-gray-600">{t('certificate.loading_certificate')}</span>
             </div>
           ) : certificateError ? (
@@ -310,10 +310,9 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
               </p>
             </div>
           ) : userCertificate && certificatePreviewProps ? (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-gray-900">{t('certificate.your_certificate')}</h2>
-              <div className="max-w-2xl mx-auto" id="certificate-preview">
-                <div id="certificate-content">
+            <div className="space-y-4 text-start">
+              <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+                <div className="max-w-2xl mx-auto rounded-sm overflow-hidden shadow-sm ring-1 ring-black/5">
                   <CertificatePreview {...certificatePreviewProps} />
                 </div>
               </div>
@@ -330,22 +329,20 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
                   <CertificatePreview {...certificatePreviewProps} />
                 </div>
               </div>
-              <div className="flex justify-center space-x-4">
+              <div className="flex flex-wrap justify-center gap-3">
                 <button
                   onClick={downloadCertificate}
-                  className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition duration-200"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-black hover:bg-black/90 rounded-lg transition-colors"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-4 h-4" />
                   <span>{t('certificate.download_certificate')}</span>
                 </button>
                 <Link
                   href={getUriWithOrg(orgslug, `/certificates/${userCertificate.certificate_user.user_certification_uuid}/verify`)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-800 bg-white ring-1 ring-gray-200 hover:bg-gray-50 rounded-lg transition-colors"
                 >
-                  <Shield className="w-5 h-5" />
-                  <span>{t('certificate.verify_certificate')}</span>
+                  <Shield className="w-4 h-4" />
+                  <span>{t('certificate.page.view_and_share')}</span>
                 </Link>
               </div>
             </div>

@@ -140,6 +140,10 @@
         "drip": {
           "title": "Standardプラン機能",
           "description": "ドリップコンテンツはStandardプラン以上の組織のみ利用可能です。アップグレードすると、学習者ごと、またはコホート全体に対して、スケジュールに沿って章を公開できます。"
+        },
+        "paths": {
+          "title": "プロ機能",
+          "description": "学習パスはProプラン以上の組織で利用できるプレミアム機能です。アップグレードすると、複数のコースを順序立てた学習パスにまとめ、専用の修了証を発行できます。"
         }
       },
       "current_plan": "現在のプラン",
@@ -1080,7 +1084,45 @@
     "workshop_attendance": "ワークショップ参加証",
     "specialization": "専門分野認定",
     "dedication_message": "あなたの努力が実を結びました。このコースの全内容を習得しました。",
-    "download_failed": "PDFを生成できませんでした。もう一度お試しください。"
+    "download_failed": "PDFを生成できませんでした。もう一度お試しください。",
+    "document": {
+      "title": "修了証",
+      "presented_to": "この修了証を次の方に授与します",
+      "for_completing": "以下の課程を修了したことを証します",
+      "learner_placeholder": "学習者名",
+      "name_placeholder": "修了証の名称",
+      "instructor": "講師",
+      "issued_by": "発行者",
+      "date": "授与日",
+      "credential_id": "証明書 ID"
+    },
+    "page": {
+      "verified": "認証済みの修了証",
+      "issued_line": "{{issuer}} が {{date}} に {{name}} へ発行",
+      "download": "PDF をダウンロード",
+      "add_to_linkedin": "LinkedIn に追加",
+      "copy_link": "照会リンクをコピー",
+      "link_copied": "リンクをコピーしました",
+      "recipient": "受領者",
+      "issuer": "発行者",
+      "issued_on": "発行日",
+      "credential_id": "証明書 ID",
+      "id_copied": "証明書 ID をコピーしました",
+      "copy_id": "証明書 ID をコピー",
+      "not_found": "修了証が見つかりません",
+      "not_found_hint": "この ID に一致する有効な修了証はありません。取り消されたか、リンクが不完全な可能性があります。",
+      "go_home": "ホームに戻る",
+      "earned_for_course": "次の修了により取得",
+      "earned_for_path": "以下のコースの修了により取得",
+      "view_and_share": "表示して共有"
+    },
+    "designer": {
+      "signer": "署名者（任意）",
+      "signer_placeholder": "例: Dr. Jane Smith",
+      "style": "スタイル",
+      "preview_hint": "ライブプレビューです。学習者には本人の名前、日付、証明書 ID が表示されます。"
+    },
+    "kind_course": "コース"
   },
   "search": {
     "search_placeholder": "コース、ユーザー、コレクションを検索...",
@@ -1109,6 +1151,14 @@
       "discussions": "ディスカッション",
       "playgrounds": "Playgrounds",
       "podcasts": "ポッドキャスト"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "複数のコースを順にたどる学習パス",
+          "keywords": "学習パス, パス, トラック, プログラム, 学習の道筋, paths, learning paths, tracks, programs, journey"
+        }
+      }
     }
   },
   "ai": {
@@ -4240,6 +4290,10 @@
         "org_api": {
           "description": "APIトークンとプログラマティックアクセス",
           "keywords": "api, トークン, アクセス, プログラマティック, キー"
+        },
+        "paths": {
+          "description": "コースを修了証付きの学習パスにまとめる",
+          "keywords": "学習パス, パス, トラック, プログラム, カリキュラム, 順序, 修了証, paths, learning paths, tracks, programs, curriculum, sequence, certificate"
         }
       }
     },
@@ -6354,5 +6408,177 @@
       "resource": "リソース",
       "resource_plural": "リソース"
     }
+  },
+  "paths": {
+    "title": "学習パス",
+    "new_path": "新しい学習パス",
+    "manage_paths": "学習パスを管理",
+    "catalog_subtitle": "複数のコースを順にたどる学習パスです。学習パスを修了すると修了証を獲得できます。",
+    "published": "公開中",
+    "draft": "下書き",
+    "completed": "修了",
+    "in_progress": "受講中",
+    "required": "必修",
+    "elective": "選択",
+    "actions": "学習パスの操作",
+    "edit_courses": "コースを編集",
+    "view_path": "学習パスを表示",
+    "view_certificate": "修了証を表示",
+    "start_path": "学習パスを開始",
+    "start_hint": "学習パスを開始すると、含まれるすべてのコースの進捗を確認できます。",
+    "sign_in_to_start": "サインインして開始",
+    "continue_learning": "学習を続ける",
+    "leave_path": "学習パスを退会",
+    "your_progress": "あなたの進捗",
+    "up_next": "次のステップ",
+    "guided_order": "順番に受講",
+    "certificate_included": "修了証付き",
+    "certificate_earned": "この修了証を獲得しました",
+    "certificate_explainer": "この学習パスの必修コースをすべて修了すると、自動的に授与されます。",
+    "locked_hint": "前のコースを修了するとロックが解除されます",
+    "restricted_course": "アクセス制限のあるコース",
+    "no_courses_yet": "この学習パスにはまだコースがありません。",
+    "electives_rule_one": "{{total}} 件の選択コースから {{count}} 件以上を選択",
+    "electives_rule_other": "{{total}} 件の選択コースから {{count}} 件以上を選択",
+    "progress_short": "{{done}}/{{total}} コース",
+    "progress_long": "{{total}} コース中 {{done}} コース修了",
+    "course_count_one": "{{count}} コース",
+    "course_count_other": "{{count}} コース",
+    "learner_count_one": "{{count}} 人の学習者",
+    "learner_count_other": "{{count}} 人の学習者",
+    "no_paths": "学習パスはまだありません",
+    "no_paths_description": "コースをまとめて、専用の修了証付きの学習パスを作成しましょう。",
+    "no_public_paths": "学習パスはまだありません",
+    "no_public_paths_description": "学習パスが公開されると、ここに表示されます。",
+    "no_search_results": "検索に一致する学習パスはありません",
+    "search_placeholder": "学習パスを検索...",
+    "clear_search": "検索をクリア",
+    "not_found": "この学習パスは存在しないか、利用できません。",
+    "back_to_paths": "学習パス一覧に戻る",
+    "delete_path": "学習パスを削除",
+    "delete_path_title": "「{{name}}」を削除しますか？",
+    "delete_path_confirm": "学習パスと学習者の進捗が削除されます。コース自体は変更されません。",
+    "levels": {
+      "all": "すべてのレベル",
+      "beginner": "初級",
+      "intermediate": "中級",
+      "advanced": "上級"
+    },
+    "form": {
+      "name": "名前",
+      "name_placeholder": "例: データアナリスト",
+      "name_required": "学習パスの名前を入力してください",
+      "name_max_length": "名前は200文字以内で入力してください",
+      "description": "短い説明",
+      "description_placeholder": "学習パスのカードに表示される1〜2文の説明",
+      "description_max_length": "説明は500文字以内で入力してください",
+      "about": "概要",
+      "about_placeholder": "この学習パスの対象者と、修了時に学習者ができるようになること",
+      "about_hint": "学習パスのページに表示されます。",
+      "level": "レベル",
+      "thumbnail": "カバー画像",
+      "upload_thumbnail": "画像をアップロード",
+      "thumbnail_hint": "16:9 推奨。PNG または JPG。",
+      "discard_thumbnail": "新しい画像を破棄",
+      "visibility": "表示設定",
+      "published_hint": "学習者が学習パスを見つけて開始できます。",
+      "public": "公開",
+      "public_hint": "組織のメンバー以外の訪問者にも表示されます。",
+      "public_label": "メンバー以外の全員にも表示",
+      "save": "変更を保存"
+    },
+    "modals": {
+      "create": {
+        "title": "新しい学習パス",
+        "description": "コースをまとめて学習パスを作成します。次のステップでコースを選び、順序を決めます。",
+        "submit": "学習パスを作成"
+      }
+    },
+    "dashboard": {
+      "subtitle": "コースを順序立ててまとめた学習パス。それぞれに専用の修了証があります。",
+      "view_path": "学習パスを表示",
+      "tabs": {
+        "general": "一般",
+        "courses": "コース",
+        "certificate": "修了証",
+        "learners": "学習者"
+      },
+      "courses": {
+        "title": "コース",
+        "subtitle": "ドラッグして学習者が受講する順序を設定します。選択コースは任意で受講するコースです。",
+        "add": "コースを追加",
+        "drag": "ドラッグして並べ替え",
+        "remove": "学習パスから削除",
+        "requirement": "受講区分",
+        "unpublished_hint": "非公開のため学習者には表示されません",
+        "empty_title": "コースはまだありません",
+        "empty_description": "この学習パスを構成するコースを追加してください。"
+      },
+      "rules": {
+        "title": "修了条件",
+        "subtitle": "学習者が学習パスを修了するために必要な条件です。",
+        "sequential": "順番に受講",
+        "sequential_hint": "学習パスの画面では、前の必修コースを修了すると次のコースのロックが解除されます。各コースのページからは引き続き受講できます。",
+        "electives": "修了が必要な選択コース数",
+        "electives_hint_one": "この学習パスの選択コース {{count}} 件中。",
+        "electives_hint_other": "この学習パスの選択コース {{count}} 件中。",
+        "electives_none": "コースを選択コースに設定すると、学習者が選べるようになります。",
+        "summary": "修了するには、必修コース {{required}} 件と選択コース {{electives}} 件を修了する必要があります。"
+      },
+      "picker": {
+        "title": "コースを追加",
+        "description": "選択したコースは、選んだ順に追加されます。",
+        "search": "コースを検索...",
+        "empty": "追加できるコースはもうありません",
+        "add_one": "{{count}} 件のコースを追加",
+        "add_other": "{{count}} 件のコースを追加"
+      },
+      "certificate": {
+        "title": "学習パスの修了証",
+        "subtitle": "学習者が学習パスを修了すると、各コースの修了証に加えて授与されます。",
+        "disabled_title": "この学習パスには修了証がありません",
+        "disabled_message": "オンにすると、学習パスを修了したすべての学習者に修了証を授与します。すでに修了している学習者には、次に進捗が確認されたときに授与されます。",
+        "enable": "修了証を授与する"
+      },
+      "learners": {
+        "enrolled": "学習者",
+        "completed": "修了",
+        "completion_rate": "修了率",
+        "certificates": "修了証",
+        "empty_title": "この学習パスを開始した学習者はまだいません",
+        "empty_description": "学習者が学習パスを開始すると、ここに表示されます。",
+        "columns": {
+          "learner": "学習者",
+          "progress": "進捗",
+          "started": "開始日",
+          "status": "ステータス",
+          "certificate": "修了証"
+        },
+        "revoke": "取り消す",
+        "revoke_title": "修了証を取り消しますか？",
+        "revoke_confirm": "{{name}}さんの修了証は検証できなくなります。後で復元できます。",
+        "revoked": "修了証を取り消しました",
+        "revoked_badge": "取り消し済み",
+        "reinstate": "復元",
+        "reinstated": "修了証を復元しました"
+      }
+    },
+    "toasts": {
+      "saving": "保存中...",
+      "saved": "学習パスを保存しました",
+      "save_error": "学習パスを保存できませんでした",
+      "create_error": "学習パスを作成できませんでした",
+      "deleting": "学習パスを削除中...",
+      "deleted": "学習パスを削除しました",
+      "delete_error": "学習パスを削除できませんでした",
+      "enroll_error": "学習パスを開始できませんでした",
+      "already_completed": "この学習パスのコースはすべて修了済みです"
+    },
+    "my_paths": "マイ学習パス",
+    "part_of_paths": "このコースを含む学習パス",
+    "path": "学習パス",
+    "courses_in_path": "この学習パスのコース",
+    "ready_to_begin": "準備はいいですか？",
+    "percent_done": "{{percent}}% 完了"
   }
 }

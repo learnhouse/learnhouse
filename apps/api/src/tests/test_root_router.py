@@ -62,6 +62,7 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     install_package("src.routers.courses")
     install_package("src.routers.folders")
     install_package("src.routers.media")
+    install_package("src.routers.paths")
     install_package("src.routers.courses.activities")
     install_package("src.routers.communities")
     install_package("src.routers.podcasts")
@@ -178,6 +179,11 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     install_router_module(
         "src.routers.media.media", "src.routers.media.media"
     )
+    install_router_module(
+        "src.routers.paths.paths",
+        "src.routers.paths.paths",
+        certificates_router=_named_router("src.routers.paths.paths.certificates"),
+    )
     install_router_module("src.routers.courses.courses", "src.routers.courses.courses")
     install_router_module(
         "src.routers.courses.assignments", "src.routers.courses.assignments"
@@ -202,6 +208,9 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
     sys.modules["src.routers.media"].media = sys.modules[
         "src.routers.media.media"
+    ]
+    sys.modules["src.routers.paths"].paths = sys.modules[
+        "src.routers.paths.paths"
     ]
     sys.modules["src.routers.courses"].courses = sys.modules["src.routers.courses.courses"]
     sys.modules["src.routers.courses"].assignments = sys.modules[
@@ -290,6 +299,7 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         require_plan_for_community=_plan_factory("require_plan_for_community"),
         require_plan_for_usergroups=_plan_factory("require_plan_for_usergroups"),
         require_plan_for_playgrounds=_plan_factory("require_plan_for_playgrounds"),
+        require_plan_for_paths=_plan_factory("require_plan_for_paths"),
     )
     monkeypatch.setitem(sys.modules, "src.security.features_utils.plan_check", plan_module)
 

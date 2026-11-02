@@ -30,6 +30,7 @@ import {
   PlugsConnected,
   Robot,
   ShieldCheck,
+  Steps,
   UsersThree,
 } from '@phosphor-icons/react'
 import type { IconProps } from '@phosphor-icons/react'
@@ -52,6 +53,7 @@ export type FeatureKey =
   | 'api_access'
   | 'webhooks'
   | 'certifications'
+  | 'paths'
   | 'audit_logs'
   | 'sso'
   | 'lti'
@@ -163,6 +165,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.certifications.title',
     descriptionKey: 'common.plans.feature_restricted.certifications.description',
     Icon: Certificate,
+    upsellPlan: 'pro',
+  },
+  paths: {
+    titleKey: 'common.plans.feature_restricted.paths.title',
+    descriptionKey: 'common.plans.feature_restricted.paths.description',
+    Icon: Steps,
     upsellPlan: 'pro',
   },
   audit_logs: {

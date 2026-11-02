@@ -138,6 +138,10 @@
         "drip": {
           "title": "Tính năng Standard",
           "description": "Phát hành theo lịch chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để mở các chương theo lịch, cho từng học viên hoặc cho cả lớp."
+        },
+        "paths": {
+          "title": "Tính năng Pro",
+          "description": "Lộ trình học tập là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Pro trở lên. Nâng cấp để sắp xếp các khóa học thành lộ trình có hướng dẫn, kèm chứng chỉ riêng."
         }
       },
       "current_plan": "Gói hiện tại",
@@ -1092,7 +1096,45 @@
     "workshop_attendance": "Tham dự hội thảo",
     "specialization": "Chuyên môn hóa",
     "dedication_message": "Sự tận tâm và làm việc chăm chỉ của bạn đã được đền đáp. Bạn đã nắm vững tất cả nội dung của khóa học này.",
-    "download_failed": "Không thể tạo PDF. Vui lòng thử lại."
+    "download_failed": "Không thể tạo PDF. Vui lòng thử lại.",
+    "document": {
+      "title": "Chứng chỉ",
+      "presented_to": "Chứng chỉ này được trao cho",
+      "for_completing": "vì đã hoàn thành xuất sắc",
+      "learner_placeholder": "Tên học viên",
+      "name_placeholder": "Tên chứng chỉ",
+      "instructor": "Giảng viên",
+      "issued_by": "Cấp bởi",
+      "date": "Ngày cấp",
+      "credential_id": "ID chứng chỉ"
+    },
+    "page": {
+      "verified": "Chứng chỉ đã xác minh",
+      "issued_line": "Cấp cho {{name}} bởi {{issuer}} vào {{date}}",
+      "download": "Tải xuống PDF",
+      "add_to_linkedin": "Thêm vào LinkedIn",
+      "copy_link": "Sao chép liên kết xác minh",
+      "link_copied": "Đã sao chép liên kết",
+      "recipient": "Người nhận",
+      "issuer": "Cấp bởi",
+      "issued_on": "Ngày cấp",
+      "credential_id": "ID chứng chỉ",
+      "id_copied": "Đã sao chép ID chứng chỉ",
+      "copy_id": "Sao chép ID chứng chỉ",
+      "not_found": "Không tìm thấy chứng chỉ",
+      "not_found_hint": "Không có chứng chỉ hợp lệ nào khớp với ID này. Chứng chỉ có thể đã bị thu hồi hoặc liên kết chưa đầy đủ.",
+      "go_home": "Về trang chủ",
+      "earned_for_course": "Đạt được khi hoàn thành",
+      "earned_for_path": "Đạt được khi hoàn thành các khóa học này",
+      "view_and_share": "Xem và chia sẻ"
+    },
+    "designer": {
+      "signer": "Người ký (tùy chọn)",
+      "signer_placeholder": "ví dụ: TS. Nguyễn Văn A",
+      "style": "Kiểu",
+      "preview_hint": "Xem trước trực tiếp. Học viên sẽ thấy tên, ngày và ID chứng chỉ của riêng họ."
+    },
+    "kind_course": "Khóa học"
   },
   "search": {
     "search_placeholder": "Tìm khóa học, người dùng, bộ sưu tập...",
@@ -1121,6 +1163,14 @@
       "discussions": "Thảo luận",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcast"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Lộ trình có hướng dẫn qua nhiều khóa học",
+          "keywords": "lộ trình, lộ trình học tập, chương trình, hành trình, paths, learning paths, tracks, programs, journey"
+        }
+      }
     }
   },
   "ai": {
@@ -4254,6 +4304,10 @@
         "org_api": {
           "description": "Token API và truy cập theo chương trình",
           "keywords": "api, tokens, access, programmatic, keys"
+        },
+        "paths": {
+          "description": "Sắp xếp khóa học thành lộ trình có hướng dẫn kèm chứng chỉ",
+          "keywords": "lộ trình, lộ trình học tập, chương trình, giáo trình, trình tự, chứng chỉ, paths, learning paths, tracks, programs, curriculum, sequence, certificate"
         }
       }
     },
@@ -6368,5 +6422,177 @@
       "resource": "Tài nguyên",
       "resource_plural": "Tài nguyên"
     }
+  },
+  "paths": {
+    "title": "Lộ trình học tập",
+    "new_path": "Lộ trình mới",
+    "manage_paths": "Quản lý lộ trình",
+    "catalog_subtitle": "Lộ trình có hướng dẫn qua nhiều khóa học. Hoàn thành một lộ trình để nhận chứng chỉ của lộ trình đó.",
+    "published": "Đã xuất bản",
+    "draft": "Bản nháp",
+    "completed": "Đã hoàn thành",
+    "in_progress": "Đang học",
+    "required": "Bắt buộc",
+    "elective": "Tự chọn",
+    "actions": "Thao tác lộ trình",
+    "edit_courses": "Chỉnh sửa khóa học",
+    "view_path": "Xem lộ trình",
+    "view_certificate": "Xem chứng chỉ",
+    "start_path": "Bắt đầu lộ trình",
+    "start_hint": "Bắt đầu lộ trình để theo dõi tiến độ của bạn trên mọi khóa học trong đó.",
+    "sign_in_to_start": "Đăng nhập để bắt đầu",
+    "continue_learning": "Tiếp tục học",
+    "leave_path": "Rời lộ trình",
+    "your_progress": "Tiến độ của bạn",
+    "up_next": "Tiếp theo",
+    "guided_order": "Học theo thứ tự",
+    "certificate_included": "Kèm chứng chỉ",
+    "certificate_earned": "Bạn đã nhận được chứng chỉ này",
+    "certificate_explainer": "Được cấp tự động khi bạn hoàn thành mọi khóa học bắt buộc trong lộ trình này.",
+    "locked_hint": "Hoàn thành khóa học trước để mở khóa",
+    "restricted_course": "Khóa học bị hạn chế",
+    "no_courses_yet": "Lộ trình này chưa có khóa học nào.",
+    "electives_rule_one": "Chọn ít nhất {{count}} trong {{total}} khóa học tự chọn",
+    "electives_rule_other": "Chọn ít nhất {{count}} trong {{total}} khóa học tự chọn",
+    "progress_short": "{{done}}/{{total}} khóa học",
+    "progress_long": "Đã hoàn thành {{done}}/{{total}} khóa học",
+    "course_count_one": "{{count}} khóa học",
+    "course_count_other": "{{count}} khóa học",
+    "learner_count_one": "{{count}} học viên",
+    "learner_count_other": "{{count}} học viên",
+    "no_paths": "Chưa có lộ trình nào",
+    "no_paths_description": "Sắp xếp các khóa học thành lộ trình có hướng dẫn, kèm chứng chỉ riêng.",
+    "no_public_paths": "Chưa có lộ trình nào",
+    "no_public_paths_description": "Lộ trình học tập sẽ xuất hiện ở đây sau khi được xuất bản.",
+    "no_search_results": "Không có lộ trình nào khớp với tìm kiếm",
+    "search_placeholder": "Tìm kiếm lộ trình...",
+    "clear_search": "Xóa tìm kiếm",
+    "not_found": "Lộ trình này không tồn tại hoặc bạn không có quyền truy cập.",
+    "back_to_paths": "Quay lại danh sách lộ trình",
+    "delete_path": "Xóa lộ trình",
+    "delete_path_title": "Xóa \"{{name}}\"?",
+    "delete_path_confirm": "Lộ trình và tiến độ của học viên sẽ bị xóa. Bản thân các khóa học không bị ảnh hưởng.",
+    "levels": {
+      "all": "Tất cả trình độ",
+      "beginner": "Người mới bắt đầu",
+      "intermediate": "Trung cấp",
+      "advanced": "Nâng cao"
+    },
+    "form": {
+      "name": "Tên",
+      "name_placeholder": "ví dụ: Chuyên viên phân tích dữ liệu",
+      "name_required": "Lộ trình cần có tên",
+      "name_max_length": "Tên không được vượt quá 200 ký tự",
+      "description": "Mô tả ngắn",
+      "description_placeholder": "Một hoặc hai câu hiển thị trên thẻ lộ trình",
+      "description_max_length": "Mô tả không được vượt quá 500 ký tự",
+      "about": "Giới thiệu",
+      "about_placeholder": "Lộ trình này dành cho ai và học viên có thể làm được gì sau khi hoàn thành",
+      "about_hint": "Hiển thị trên trang lộ trình.",
+      "level": "Trình độ",
+      "thumbnail": "Ảnh bìa",
+      "upload_thumbnail": "Tải ảnh lên",
+      "thumbnail_hint": "Tỷ lệ 16:9 là phù hợp nhất. PNG hoặc JPG.",
+      "discard_thumbnail": "Bỏ ảnh mới",
+      "visibility": "Hiển thị",
+      "published_hint": "Học viên có thể tìm và bắt đầu lộ trình.",
+      "public": "Công khai",
+      "public_hint": "Hiển thị với khách truy cập không phải là thành viên tổ chức của bạn.",
+      "public_label": "Hiển thị với mọi người, không chỉ thành viên",
+      "save": "Lưu thay đổi"
+    },
+    "modals": {
+      "create": {
+        "title": "Lộ trình mới",
+        "description": "Nhóm các khóa học thành một lộ trình có hướng dẫn. Bạn sẽ chọn và sắp xếp khóa học ở bước tiếp theo.",
+        "submit": "Tạo lộ trình"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Chuỗi khóa học có hướng dẫn, mỗi lộ trình có chứng chỉ riêng.",
+      "view_path": "Xem lộ trình",
+      "tabs": {
+        "general": "Chung",
+        "courses": "Khóa học",
+        "certificate": "Chứng chỉ",
+        "learners": "Học viên"
+      },
+      "courses": {
+        "title": "Khóa học",
+        "subtitle": "Kéo để sắp xếp thứ tự học viên sẽ học. Khóa học tự chọn là khóa học không bắt buộc.",
+        "add": "Thêm khóa học",
+        "drag": "Kéo để sắp xếp lại",
+        "remove": "Xóa khỏi lộ trình",
+        "requirement": "Yêu cầu",
+        "unpublished_hint": "Chưa xuất bản, ẩn với học viên",
+        "empty_title": "Chưa có khóa học nào",
+        "empty_description": "Thêm các khóa học tạo nên lộ trình này."
+      },
+      "rules": {
+        "title": "Điều kiện hoàn thành",
+        "subtitle": "Những gì học viên cần làm để hoàn thành lộ trình.",
+        "sequential": "Học theo thứ tự",
+        "sequential_hint": "Trong giao diện lộ trình, mỗi khóa học sẽ mở khóa khi khóa học bắt buộc trước đó được hoàn thành. Các khóa học vẫn mở trên trang riêng của chúng.",
+        "electives": "Số khóa học tự chọn cần hoàn thành",
+        "electives_hint_one": "Trên tổng số {{count}} khóa học tự chọn trong lộ trình này.",
+        "electives_hint_other": "Trên tổng số {{count}} khóa học tự chọn trong lộ trình này.",
+        "electives_none": "Đánh dấu một khóa học là tự chọn để học viên có thể lựa chọn.",
+        "summary": "Để hoàn thành, học viên cần học xong {{required}} khóa học bắt buộc và {{electives}} khóa học tự chọn."
+      },
+      "picker": {
+        "title": "Thêm khóa học",
+        "description": "Các khóa học được chọn sẽ được thêm theo thứ tự bạn chọn.",
+        "search": "Tìm kiếm khóa học...",
+        "empty": "Không còn khóa học nào để thêm",
+        "add_one": "Thêm {{count}} khóa học",
+        "add_other": "Thêm {{count}} khóa học"
+      },
+      "certificate": {
+        "title": "Chứng chỉ lộ trình",
+        "subtitle": "Được cấp thêm ngoài chứng chỉ khóa học khi học viên hoàn thành lộ trình.",
+        "disabled_title": "Lộ trình này không có chứng chỉ",
+        "disabled_message": "Bật để cấp chứng chỉ cho tất cả những ai hoàn thành lộ trình. Học viên đã hoàn thành sẽ nhận được chứng chỉ vào lần tiếp theo tiến độ của họ được kiểm tra.",
+        "enable": "Cấp chứng chỉ"
+      },
+      "learners": {
+        "enrolled": "Học viên",
+        "completed": "Đã hoàn thành",
+        "completion_rate": "Tỷ lệ hoàn thành",
+        "certificates": "Chứng chỉ",
+        "empty_title": "Chưa có ai bắt đầu lộ trình này",
+        "empty_description": "Học viên sẽ xuất hiện ở đây khi họ bắt đầu lộ trình.",
+        "columns": {
+          "learner": "Học viên",
+          "progress": "Tiến độ",
+          "started": "Bắt đầu",
+          "status": "Trạng thái",
+          "certificate": "Chứng chỉ"
+        },
+        "revoke": "Thu hồi",
+        "revoke_title": "Thu hồi chứng chỉ?",
+        "revoke_confirm": "Chứng chỉ của {{name}} sẽ không thể xác minh được nữa. Bạn có thể khôi phục sau.",
+        "revoked": "Đã thu hồi chứng chỉ",
+        "revoked_badge": "Đã thu hồi",
+        "reinstate": "Khôi phục",
+        "reinstated": "Đã khôi phục chứng chỉ"
+      }
+    },
+    "toasts": {
+      "saving": "Đang lưu...",
+      "saved": "Đã lưu lộ trình",
+      "save_error": "Không thể lưu lộ trình",
+      "create_error": "Không thể tạo lộ trình",
+      "deleting": "Đang xóa lộ trình...",
+      "deleted": "Đã xóa lộ trình",
+      "delete_error": "Không thể xóa lộ trình",
+      "enroll_error": "Không thể bắt đầu lộ trình",
+      "already_completed": "Bạn đã hoàn thành mọi khóa học trong lộ trình này"
+    },
+    "my_paths": "Lộ trình của tôi",
+    "part_of_paths": "Thuộc lộ trình học tập",
+    "path": "Lộ trình",
+    "courses_in_path": "Các khóa học trong lộ trình này",
+    "ready_to_begin": "Sẵn sàng bắt đầu?",
+    "percent_done": "Đã hoàn thành {{percent}}%"
   }
 }
