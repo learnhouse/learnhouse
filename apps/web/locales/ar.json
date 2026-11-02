@@ -6932,7 +6932,11 @@
       "new_tab_description": "يُفتح LearnHouse في علامة تبويب مستقلة حتى يُحفظ عملك.",
       "open_course": "المتابعة في علامة تبويب جديدة",
       "signing_in": "جارٍ فتح LearnHouse…",
-      "please_wait": "جارٍ تسجيل دخولك إلى LearnHouse."
+      "please_wait": "جارٍ تسجيل دخولك إلى LearnHouse.",
+      "confirm_title": "المتابعة باسم {{name}}؟",
+      "confirm_description": "يسجّل {{platform}} دخولك إلى LearnHouse باسم {{name}}. لا تتابع إلا إذا فتحت هذه الصفحة للتو من دورتك.",
+      "confirm_button": "المتابعة باسم {{name}}",
+      "confirm_platform_fallback": "نظام إدارة التعلم"
     },
     "link": {
       "error_title": "تعذّر ربط حسابك",

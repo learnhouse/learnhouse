@@ -52,10 +52,11 @@ See the [LMS setup guides](/enterprise/lti/lms-setup) for step-by-step instructi
 
 ## Accounts and access
 
-- A learner is matched by the LMS user ID first. On the first launch, an existing LearnHouse account with the same email is linked if it already belongs to your organization; otherwise a new account is created and added to your organization with the platform's default role.
-- If the email belongs to a LearnHouse account **outside** your organization, the person is asked to sign in to that account once to link it. LearnHouse never hands over an existing account based on an email asserted by an LMS.
+- A learner is matched by the LMS user ID first. On the first launch, an existing LearnHouse account with the same email is linked if it belongs to your organization only; otherwise a new account is created and added to your organization with the platform's default role.
+- If the email belongs to a LearnHouse account that is also in **another** organization (or to a platform administrator), the person is asked to sign in to that account once to link it. LearnHouse never hands over such an account based on an email asserted by an LMS.
+- An email sent by the LMS counts as verified only when it is on a domain your organization has verified as a custom domain, the same rule as SSO.
 - If the LMS doesn't share an email address, LearnHouse creates an account with a placeholder address.
-- Learners get access to private content through a user group named after the platform (`LTI · <platform name>`), which you can see and edit under **Users → User groups**. Content that isn't limited to user groups is already open to every member of your organization, so LearnHouse leaves it as it is. Boards add the learner as an editor instead.
+- Learners get access to private content through one user group per platform and content (`LTI · <platform name> · <content>`), which you can see and edit under **Users → User groups**. A learner placed in one course doesn't get into other private content placed from the same LMS. Content that isn't limited to user groups is already open to every member of your organization, so LearnHouse leaves it as it is. Boards add the learner as an editor instead.
 - LMS administrators can't be given the LearnHouse admin or maintainer role through LTI.
 
 ## Grades
@@ -103,6 +104,8 @@ Turn on **Remove access when someone leaves the LMS course** to also take back t
 
 ### Instructors
 
+People count as instructors when the LMS sends the course Instructor role (or one of its sub-roles such as Teaching Assistant), the course Administrator role, or an institution or system Administrator role. Mentors and content developers don't.
+
 Turn on **LMS instructors can grade in LearnHouse** to give people who launch as instructors the LearnHouse *Instructor* role and make them contributors of the courses they place. Opening a submission from the LMS gradebook then lands on the assignment's submissions in LearnHouse: from Moodle's grade report (use **Open in new window**; Moodle's automatic popup loses the request) and from Canvas SpeedGrader.
 
 <Callout type="warning">
@@ -122,3 +125,9 @@ LearnHouse signs deep linking responses and grade requests with a key per organi
 ## Embedded launches
 
 Many LMSs open tools inside a frame. Browsers don't keep a sign-in made inside another site's frame, so LearnHouse shows a **Continue in a new tab** button. Where the LMS allows it, set the tool to open in a new window instead.
+
+A launch signs in straight away only in the browser that started it. If the sign-in link reaches LearnHouse any other way (for example a forwarded link, or a browser that blocks the cookie LearnHouse uses to recognize it), the learner is asked to confirm the account first.
+
+## Self-hosted: LMS on a private network
+
+LearnHouse only calls LMS addresses on the public internet (token, keyset, gradebook and roster URLs), and refuses URLs that point to private or internal addresses. If your LMS runs on a private network, set `LEARNHOUSE_LTI_ALLOW_PRIVATE_HOSTS=true` on the API. LearnHouse Cloud ignores this setting.

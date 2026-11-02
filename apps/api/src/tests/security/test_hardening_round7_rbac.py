@@ -421,7 +421,7 @@ class TestSessionOrgEmail:
 class TestMfaExemptionBySignInMethod:
     def _exempt(self, signup_method, provenance) -> bool:
         with patch.object(mfa_policy, "get_session_provenance", return_value=provenance):
-            return mfa_policy._signed_in_externally(SimpleNamespace(signup_method=signup_method))
+            return mfa_policy._signed_in_externally(SimpleNamespace(signup_method=signup_method), 1)
 
     def test_sso_account_signing_in_with_password_is_not_exempt(self):
         assert not self._exempt("sso", SessionProvenance(amr="password"))
