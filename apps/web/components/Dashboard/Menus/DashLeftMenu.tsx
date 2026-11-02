@@ -70,7 +70,7 @@ import {
 } from "@components/ui/hover-menu"
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
-import OrgSquareLogo, { hasOrgLogo } from '@components/Objects/Org/OrgSquareLogo'
+import OrgSquareLogo, { hasOrgLogo, OrgInitial } from '@components/Objects/Org/OrgSquareLogo'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -84,6 +84,7 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import OnboardingSidebarBox from '@components/Dashboard/Onboarding/OnboardingSidebarBox'
 import { useOnboarding } from '@components/Hooks/useOnboarding'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 // Scattered night-sky starfield for the free-plan upgrade box. Fixed positions
 // (top/left %) so the constellation is stable across renders; `north` is the
@@ -252,9 +253,9 @@ function DashLeftMenu() {
           className={cn("flex items-center transition-opacity hover:opacity-70", isCollapsed ? "" : "space-x-3")}
           href={'/'}
         >
-          {planMeetsRequirement(plan, 'standard') && hasOrgLogo(org) ? (
+          {(planMeetsRequirement(plan, 'standard') && hasOrgLogo(org)) || isWhiteLabelPlan(plan) ? (
             <div className="h-9 w-9 rounded-lg overflow-hidden bg-white shrink-0">
-              <OrgSquareLogo org={org} wideInsetClassName="p-1" fallback={null} />
+              <OrgSquareLogo org={org} wideInsetClassName="p-1" fallback={<OrgInitial org={org} />} />
             </div>
           ) : (
             <img

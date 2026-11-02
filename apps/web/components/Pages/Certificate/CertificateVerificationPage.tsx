@@ -9,6 +9,7 @@ import { getUriWithOrg, getAbsoluteUriWithOrg } from '@services/config/config';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useTrackView, AnalyticsEvent } from '@services/analytics';
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface CertificateVerificationPageProps {
   certificateUuid: string;
@@ -213,7 +214,7 @@ const CertificateVerificationPage: React.FC<CertificateVerificationPageProps> = 
                 <div className="flex-shrink-0">
                   <div className="w-20 h-12 bg-gray-100 rounded-lg overflow-hidden ring-1 ring-inset ring-black/10">
                     {certificateData.course.thumbnail_image ? (
-                      <img
+                      <ThumbnailImage
                         src={getCourseThumbnailMediaDirectory(
                           org?.org_uuid,
                           certificateData.course.course_uuid,

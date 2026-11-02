@@ -19,6 +19,7 @@ import {
 } from '@services/courses/certificateDownload';
 import { useTranslation } from 'react-i18next';
 import { getCourseEndConfig, resolveCourseEndButton } from './courseEndConfig';
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface CourseEndViewProps {
   courseName: string;
@@ -265,7 +266,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
         <div className="bg-white rounded-2xl p-8 nice-shadow max-w-4xl w-full space-y-6 relative z-10">
           <div className="flex flex-col items-center space-y-6">
             {thumbnailImage && (
-              <img
+              <ThumbnailImage
                 className="w-[200px] h-[114px] rounded-lg shadow-md object-cover"
                 src={`${getCourseThumbnailMediaDirectory(
                   org?.org_uuid,
@@ -387,7 +388,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
         <div className="bg-white rounded-2xl p-8 nice-shadow max-w-2xl w-full space-y-6">
           <div className="flex flex-col items-center space-y-6">
             {thumbnailImage && (
-              <img
+              <ThumbnailImage
                 className="w-[200px] h-[114px] rounded-lg shadow-md object-cover"
                 src={`${getCourseThumbnailMediaDirectory(
                   org?.org_uuid,
