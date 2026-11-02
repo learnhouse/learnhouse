@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
-import { Globe, Lock, LockOpen, Shield, Users, Plus, X, Loader2, Check } from 'lucide-react'
+import { Globe, Lock, LockOpen, Shield, Users, Plus, X, Loader2, Check, Gem, Eye } from 'lucide-react'
+import PaidAccessSection, { PaidTarget, usePaidAccess } from '@ee/components/Payments/PaidAccessSection'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUserGroups } from '@services/usergroups/usergroups'
@@ -24,6 +25,8 @@ type LockPopoverProps = {
   // keep correct grammatical gender/agreement per language.
   resourceNoun: 'chapter' | 'activity'
   disabled?: boolean
+  // Where payments are available: whether it is sold, or a free preview.
+  paid?: PaidTarget
 }
 
 type UserGroup = {
@@ -75,7 +78,9 @@ export default function LockPopover({
   removeUserGroup,
   resourceNoun,
   disabled,
+  paid,
 }: LockPopoverProps) {
+  const paidAccess = usePaidAccess(paid, resourceNoun)
   const { t } = useTranslation()
   const session = useLHSession() as any
   const org = useOrg() as any
@@ -147,7 +152,13 @@ export default function LockPopover({
     }
   }
 
-  const trigger = lockTriggerAppearance(lockType)
+  let trigger = lockTriggerAppearance(lockType)
+  // Who can see it comes first; when it is open to them, the button shows purchase instead.
+  if (lockType === 'public' && paidAccess?.state === 'paid') {
+    trigger = { titleKey: 'course.lock.trigger_paid_title', titleFallback: 'Access: buyers only', className: 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200 hover:bg-indigo-100', Icon: Gem }
+  } else if (lockType === 'public' && paidAccess?.state === 'free_preview') {
+    trigger = { titleKey: 'course.lock.trigger_free_preview_title', titleFallback: 'Access: free preview', className: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200 hover:bg-emerald-100', Icon: Eye }
+  }
   const TriggerIcon = trigger.Icon
 
   return (
@@ -157,6 +168,7 @@ export default function LockPopover({
           type="button"
           disabled={disabled}
           title={t(trigger.titleKey, trigger.titleFallback)}
+          aria-label={paid ? `Access for ${paid.resourceName}` : t(trigger.titleKey, trigger.titleFallback)}
           className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${trigger.className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <TriggerIcon size={14} />
@@ -269,6 +281,8 @@ export default function LockPopover({
             </div>
           </div>
         )}
+
+        {paid && paidAccess && <PaidAccessSection target={paid} noun={resourceNoun} paid={paidAccess} />}
       </PopoverContent>
     </Popover>
   )

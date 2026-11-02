@@ -62,6 +62,8 @@ import {
   Storefront,
   ShoppingCart,
   Receipt,
+  Ticket,
+  Plugs,
   IdentificationBadge,
   Package,
   Scroll,
@@ -144,6 +146,8 @@ const iconMap = {
   '/platform/payments/offers': Storefront,
   '/platform/payments/groups': ShoppingCart,
   '/platform/payments/enrollments': Receipt,
+  '/platform/payments/api': Plugs,
+  '/platform/payments/discounts': Ticket,
 
   // Platform > Organizations
   '/platform/organizations/multi-tenancy': TreeStructure,

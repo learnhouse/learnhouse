@@ -10,7 +10,8 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import {
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock, Globe, Package, Puzzle } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock, Globe, Package, Puzzle, Gem, Eye } from 'lucide-react'
+import { getMyCourseAccess } from '@ee/services/payments/access'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
@@ -48,6 +49,15 @@ const CourseClient = (props: any) => {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient()
+  // Which lessons are sold and not bought yet, and which are free previews.
+  const { data: paidAccessRes } = useQuery({
+    queryKey: [...queryKeys.payments.myCourseAccess(org?.id, `course_${courseuuid}`), !!access_token],
+    queryFn: () => getMyCourseAccess(org.id, `course_${courseuuid}`, access_token),
+    enabled: !!(org?.id && courseuuid),
+    staleTime: 30_000,
+    retry: false,
+  })
+  const paidState: Record<string, string> = paidAccessRes?.success && paidAccessRes.data?.sold ? paidAccessRes.data.activities : {}
 
   const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useQuery({
     queryKey: queryKeys.courses.meta(courseuuid),
@@ -644,6 +654,18 @@ const CourseClient = (props: any) => {
                                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-semibold">
                                         <Lock size={10} />
                                         {t('course.locked', 'Locked')}
+                                      </span>
+                                    )}
+                                    {!locked && paidState[activity.activity_uuid] === 'locked' && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-semibold">
+                                        <Gem size={10} />
+                                        {t('payments.paid_lesson', 'Paid')}
+                                      </span>
+                                    )}
+                                    {!locked && paidState[activity.activity_uuid] === 'free_preview' && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold">
+                                        <Eye size={10} />
+                                        {t('payments.free_preview', 'Free preview')}
                                       </span>
                                     )}
                                     {!locked && isActivityCurrent(activity) && (

@@ -6,6 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
+from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserReadAuthor
 from src.security.auth import resolve_acting_user_id
 from src.db.communities.communities import Community
@@ -137,6 +138,7 @@ async def create_discussion(
     await check_resource_access(
         request, db_session, current_user, community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community_uuid)
 
     # Get the community
     community_statement = select(Community).where(
@@ -256,6 +258,7 @@ async def get_discussion(
         raise HTTPException(status_code=404, detail="Community not found")
 
     await check_resource_access(request, db_session, current_user, community.community_uuid, AccessAction.READ)
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
@@ -297,6 +300,7 @@ async def get_discussions_by_community(
     await check_resource_access(
         request, db_session, current_user, community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community_uuid)
 
     # Get the community
     community_statement = select(Community).where(

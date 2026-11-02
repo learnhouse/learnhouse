@@ -421,6 +421,25 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "payments_enabled": "boolean",
         },
     },
+    # ── Payments ─────────────────────────────────────────────────────
+    "payment_access_granted": {
+        "category": "Payments",
+        "description": "Triggered when someone gets access through an offer: a Stripe purchase, a free claim, or a grant from the dashboard or the API",
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "offer": {"offer_uuid": "string", "name": "string"},
+            "access": {"access_uuid": "string", "status": "string", "source": "string"},
+        },
+    },
+    "payment_access_revoked": {
+        "category": "Payments",
+        "description": "Triggered when someone loses access to an offer: a cancelled subscription, a refund, a dispute, or a revoke",
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "offer": {"offer_uuid": "string", "name": "string"},
+            "access": {"access_uuid": "string", "status": "string", "source": "string"},
+        },
+    },
 }
 
 

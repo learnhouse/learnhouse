@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 import { getServerSession } from '@/lib/auth/server'
 import { redirect } from 'next/navigation'
 import BoardCanvasClient from './client'
+import ResourcePaywall from '@ee/components/Payments/ResourcePaywall'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
 
 type MetadataProps = {
   params: Promise<{ boarduuid: string }>
@@ -46,13 +48,27 @@ async function BoardEditorPage(props: any) {
     ? params.boarduuid
     : `board_${params.boarduuid}`
 
-  return (
+  const canvas = (
     <BoardCanvasClient
       boardUuid={boardUuid}
       accessToken={access_token}
       orgslug={orgslug}
       username={session?.user?.username || session?.user?.email || ''}
     />
+  )
+
+  // A board sold through a product opens for its buyers; others see what unlocks it.
+  let orgId = 0
+  try {
+    orgId = orgslug ? (await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] }))?.id ?? 0 : 0
+  } catch {
+    orgId = 0
+  }
+  if (!orgId) return canvas
+  return (
+    <ResourcePaywall orgId={orgId} orgslug={orgslug} resourceUuid={boardUuid}>
+      {canvas}
+    </ResourcePaywall>
   )
 }
 
