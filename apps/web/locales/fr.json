@@ -140,6 +140,10 @@
         "drip": {
           "title": "Fonctionnalité Standard",
           "description": "Le contenu progressif est disponible pour les organisations avec un plan Standard ou supérieur. Passez à un plan supérieur pour publier les chapitres selon un calendrier, par apprenant ou pour toute une cohorte."
+        },
+        "paths": {
+          "title": "Fonctionnalité Pro",
+          "description": "Les parcours sont une fonctionnalité premium disponible uniquement pour les organisations avec un plan Pro ou supérieur. Passez à un plan supérieur pour regrouper vos cours en parcours guidés, chacun avec son propre certificat."
         }
       },
       "current_plan": "Plan actuel",
@@ -1081,7 +1085,45 @@
     "workshop_attendance": "Présence atelier",
     "specialization": "Spécialisation",
     "dedication_message": "Félicitations pour votre travail acharné. Vous maîtrisez désormais ce sujet.",
-    "download_failed": "Impossible de générer le PDF. Veuillez réessayer."
+    "download_failed": "Impossible de générer le PDF. Veuillez réessayer.",
+    "document": {
+      "title": "Certificat",
+      "presented_to": "Ce certificat est décerné à",
+      "for_completing": "pour avoir terminé avec succès",
+      "learner_placeholder": "Nom de l'apprenant",
+      "name_placeholder": "Nom de la certification",
+      "instructor": "Formateur",
+      "issued_by": "Délivré par",
+      "date": "Date d'obtention",
+      "credential_id": "ID du certificat"
+    },
+    "page": {
+      "verified": "Certificat vérifié",
+      "issued_line": "Délivré à {{name}} par {{issuer}} le {{date}}",
+      "download": "Télécharger le PDF",
+      "add_to_linkedin": "Ajouter à LinkedIn",
+      "copy_link": "Copier le lien de vérification",
+      "link_copied": "Lien copié",
+      "recipient": "Titulaire",
+      "issuer": "Délivré par",
+      "issued_on": "Délivré le",
+      "credential_id": "ID du certificat",
+      "id_copied": "ID du certificat copié",
+      "copy_id": "Copier l'ID du certificat",
+      "not_found": "Certificat introuvable",
+      "not_found_hint": "Aucun certificat valide ne correspond à cet ID. Il a peut-être été révoqué, ou le lien est incomplet.",
+      "go_home": "Retour à l'accueil",
+      "earned_for_course": "Obtenu pour avoir terminé",
+      "earned_for_path": "Obtenu pour avoir terminé le parcours {{name}}",
+      "view_and_share": "Voir et partager"
+    },
+    "designer": {
+      "signer": "Signé par (optionnel)",
+      "signer_placeholder": "ex. : Dr Jane Smith",
+      "style": "Style",
+      "preview_hint": "Aperçu en direct. Chaque apprenant voit son propre nom, la date et l'ID du certificat."
+    },
+    "kind_course": "Cours"
   },
   "search": {
     "search_placeholder": "Rechercher cours, membres...",
@@ -1110,6 +1152,14 @@
       "discussions": "Discussions",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcasts"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Des parcours guidés à travers plusieurs cours",
+          "keywords": "parcours, parcours d'apprentissage, cursus, programmes, itinéraire, paths"
+        }
+      }
     }
   },
   "ai": {
@@ -4191,6 +4241,10 @@
         "org_api": {
           "description": "Jetons API et accès par programmation",
           "keywords": "api, jetons, accès, programmation, clés"
+        },
+        "paths": {
+          "description": "Regrouper des cours en parcours guidés avec certificat",
+          "keywords": "parcours, parcours d'apprentissage, cursus, programmes, programme d'études, séquence, certificat, paths"
         }
       }
     },
@@ -5881,5 +5935,174 @@
     "folder_count_one": "{{count}} dossier",
     "item_count": "{{count}} éléments",
     "item_count_one": "{{count}} élément"
+  },
+  "paths": {
+    "title": "Parcours",
+    "new_path": "Nouveau parcours",
+    "manage_paths": "Gérer les parcours",
+    "catalog_subtitle": "Des parcours guidés à travers plusieurs cours. Terminez un parcours pour obtenir son certificat.",
+    "published": "Publié",
+    "draft": "Brouillon",
+    "completed": "Terminé",
+    "in_progress": "En cours",
+    "required": "Obligatoire",
+    "elective": "Optionnel",
+    "actions": "Actions du parcours",
+    "edit_courses": "Modifier les cours",
+    "view_path": "Voir le parcours",
+    "view_certificate": "Voir le certificat",
+    "start_path": "Commencer le parcours",
+    "start_hint": "Commencez le parcours pour suivre votre progression dans chacun de ses cours.",
+    "sign_in_to_start": "Se connecter pour commencer",
+    "continue_learning": "Continuer",
+    "leave_path": "Quitter le parcours",
+    "your_progress": "Votre progression",
+    "up_next": "À suivre",
+    "guided_order": "Ordre guidé",
+    "certificate_included": "Certificat inclus",
+    "certificate_earned": "Vous avez obtenu ce certificat",
+    "certificate_explainer": "Délivré automatiquement dès que vous avez terminé tous les cours obligatoires de ce parcours.",
+    "locked_hint": "Terminez le cours précédent pour débloquer celui-ci",
+    "restricted_course": "Cours restreint",
+    "no_courses_yet": "Ce parcours ne contient encore aucun cours.",
+    "electives_rule_one": "Choisissez au moins {{count}} des {{total}} cours optionnels",
+    "electives_rule_other": "Choisissez au moins {{count}} des {{total}} cours optionnels",
+    "progress_short": "{{done}}/{{total}} cours",
+    "progress_long": "{{done}} cours terminés sur {{total}}",
+    "course_count_one": "{{count}} cours",
+    "course_count_other": "{{count}} cours",
+    "learner_count_one": "{{count}} apprenant",
+    "learner_count_other": "{{count}} apprenants",
+    "no_paths": "Aucun parcours pour l'instant",
+    "no_paths_description": "Regroupez des cours en un parcours guidé avec son propre certificat.",
+    "no_public_paths": "Aucun parcours pour l'instant",
+    "no_public_paths_description": "Les parcours d'apprentissage apparaîtront ici une fois publiés.",
+    "no_search_results": "Aucun parcours ne correspond à votre recherche",
+    "search_placeholder": "Rechercher des parcours...",
+    "clear_search": "Effacer la recherche",
+    "not_found": "Ce parcours n'existe pas ou ne vous est pas accessible.",
+    "back_to_paths": "Retour aux parcours",
+    "delete_path": "Supprimer le parcours",
+    "delete_path_title": "Supprimer « {{name}} » ?",
+    "delete_path_confirm": "Le parcours et la progression de ses apprenants seront supprimés. Les cours eux-mêmes ne sont pas modifiés.",
+    "levels": {
+      "all": "Tous niveaux",
+      "beginner": "Débutant",
+      "intermediate": "Intermédiaire",
+      "advanced": "Avancé"
+    },
+    "form": {
+      "name": "Nom",
+      "name_placeholder": "ex. : Analyste de données",
+      "name_required": "Un parcours doit avoir un nom",
+      "name_max_length": "Le nom doit faire moins de 200 caractères",
+      "description": "Description courte",
+      "description_placeholder": "Une ou deux phrases affichées sur la carte du parcours",
+      "description_max_length": "La description doit faire moins de 500 caractères",
+      "about": "À propos",
+      "about_placeholder": "À qui s'adresse ce parcours et ce que les apprenants sauront faire à la fin",
+      "about_hint": "Affiché sur la page du parcours.",
+      "level": "Niveau",
+      "thumbnail": "Image de couverture",
+      "upload_thumbnail": "Importer une image",
+      "thumbnail_hint": "Format 16:9 recommandé. PNG ou JPG.",
+      "discard_thumbnail": "Annuler la nouvelle image",
+      "visibility": "Visibilité",
+      "published_hint": "Les apprenants peuvent trouver et commencer le parcours.",
+      "public": "Public",
+      "public_hint": "Visible par les visiteurs qui ne sont pas membres de votre organisation.",
+      "public_label": "Visible par tous, pas seulement les membres",
+      "save": "Enregistrer les modifications"
+    },
+    "modals": {
+      "create": {
+        "title": "Nouveau parcours",
+        "description": "Regroupez des cours en un parcours guidé. Vous choisirez ensuite les cours et leur ordre.",
+        "submit": "Créer le parcours"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Des suites de cours guidées, chacune avec son propre certificat.",
+      "view_path": "Voir le parcours",
+      "tabs": {
+        "general": "Général",
+        "courses": "Cours",
+        "certificate": "Certificat",
+        "learners": "Apprenants"
+      },
+      "courses": {
+        "title": "Cours",
+        "subtitle": "Faites glisser les cours pour définir l'ordre suivi par les apprenants. Les cours optionnels ne sont pas obligatoires.",
+        "add": "Ajouter des cours",
+        "drag": "Faire glisser pour réorganiser",
+        "remove": "Retirer du parcours",
+        "requirement": "Exigence",
+        "unpublished_hint": "Non publié, masqué pour les apprenants",
+        "empty_title": "Aucun cours pour l'instant",
+        "empty_description": "Ajoutez les cours qui composent ce parcours."
+      },
+      "rules": {
+        "title": "Règles de validation",
+        "subtitle": "Ce qu'un apprenant doit faire pour terminer le parcours.",
+        "sequential": "Ordre guidé",
+        "sequential_hint": "Dans la vue du parcours, chaque cours se débloque une fois le cours obligatoire précédent terminé. Les cours restent accessibles depuis leurs propres pages.",
+        "electives": "Cours optionnels à terminer",
+        "electives_hint_one": "Sur {{count}} cours optionnel dans ce parcours.",
+        "electives_hint_other": "Sur {{count}} cours optionnels dans ce parcours.",
+        "electives_none": "Marquez un cours comme optionnel pour laisser le choix aux apprenants.",
+        "summary": "Pour terminer, les apprenants valident {{required}} cours obligatoires et {{electives}} cours optionnels."
+      },
+      "picker": {
+        "title": "Ajouter des cours",
+        "description": "Les cours sélectionnés sont ajoutés dans l'ordre où vous les choisissez.",
+        "search": "Rechercher des cours...",
+        "empty": "Plus aucun cours à ajouter",
+        "add_one": "Ajouter {{count}} cours",
+        "add_other": "Ajouter {{count}} cours"
+      },
+      "certificate": {
+        "title": "Certificat du parcours",
+        "subtitle": "Délivré en plus des certificats de cours lorsqu'un apprenant termine le parcours.",
+        "disabled_title": "Pas de certificat pour ce parcours",
+        "disabled_message": "Activez-le pour délivrer un certificat à toutes les personnes qui terminent le parcours. Les apprenants qui l'ont déjà terminé le recevront lors de la prochaine vérification de leur progression.",
+        "enable": "Délivrer un certificat"
+      },
+      "learners": {
+        "enrolled": "Apprenants",
+        "completed": "Terminé",
+        "completion_rate": "Taux de réussite",
+        "certificates": "Certificats",
+        "empty_title": "Personne n'a encore commencé ce parcours",
+        "empty_description": "Les apprenants apparaissent ici dès qu'ils commencent le parcours.",
+        "columns": {
+          "learner": "Apprenant",
+          "progress": "Progression",
+          "started": "Début",
+          "status": "Statut",
+          "certificate": "Certificat"
+        },
+        "revoke": "Révoquer",
+        "revoke_title": "Révoquer le certificat ?",
+        "revoke_confirm": "Le certificat de {{name}} ne sera plus vérifiable. Cette personne reste inscrite au parcours et pourra l'obtenir à nouveau.",
+        "revoked": "Certificat révoqué"
+      }
+    },
+    "toasts": {
+      "saving": "Enregistrement...",
+      "saved": "Parcours enregistré",
+      "save_error": "Impossible d'enregistrer le parcours",
+      "create_error": "Impossible de créer le parcours",
+      "deleting": "Suppression du parcours...",
+      "deleted": "Parcours supprimé",
+      "delete_error": "Impossible de supprimer le parcours",
+      "enroll_error": "Impossible de commencer le parcours",
+      "already_completed": "Vous avez déjà terminé tous les cours de ce parcours"
+    },
+    "my_paths": "Mes parcours",
+    "part_of_paths": "Fait partie d'un parcours",
+    "path": "Parcours",
+    "courses_in_path": "Cours de ce parcours",
+    "ready_to_begin": "Prêt à commencer ?",
+    "percent_done": "{{percent}} % terminé"
   }
 }

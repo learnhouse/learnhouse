@@ -27,6 +27,7 @@ from src.routers.orgs import packs
 from src.routers.orgs import org_plan
 from src.routers.courses import chapters, courses, assignments, certifications
 from src.routers.folders import folders as folders_router_module
+from src.routers.paths import paths as paths_router_module
 from src.routers.media import media as media_router_module
 from src.routers.courses import migration as migration_router_module
 from src.routers.communities import communities as communities_router_module
@@ -47,7 +48,7 @@ from src.security.api_token_utils import (
     require_authenticated_user_or_api_token,
     require_non_api_token_user,
 )
-from src.security.features_utils.plan_check import require_plan, require_plan_for_boards, require_plan_for_certifications, require_plan_for_community, require_plan_for_usergroups, require_plan_for_playgrounds
+from src.security.features_utils.plan_check import require_plan, require_plan_for_boards, require_plan_for_certifications, require_plan_for_community, require_plan_for_usergroups, require_plan_for_playgrounds, require_plan_for_paths
 
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -238,6 +239,17 @@ v1_router.include_router(
 )
 v1_router.include_router(
     media_router_module.router, prefix="/media", tags=["media"]
+)
+# Certificate verification first, so /paths/certificates/... never reads as
+# a path uuid, and outside the plan gate (see the router module).
+v1_router.include_router(
+    paths_router_module.certificates_router, prefix="/paths", tags=["paths"]
+)
+v1_router.include_router(
+    paths_router_module.router,
+    prefix="/paths",
+    tags=["paths"],
+    dependencies=[Depends(require_plan_for_paths("pro", "Paths"))],
 )
 v1_router.include_router(
     communities_router_module.router,

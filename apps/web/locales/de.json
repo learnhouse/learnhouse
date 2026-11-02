@@ -140,6 +140,10 @@
         "drip": {
           "title": "Standard-Funktion",
           "description": "Zeitgesteuerte Freigabe ist für Organisationen mit unserem Standard-Plan oder höher verfügbar. Upgraden Sie, um Kapitel nach Zeitplan freizugeben, pro Lernendem oder für eine ganze Kohorte."
+        },
+        "paths": {
+          "title": "Pro-Funktion",
+          "description": "Lernpfade sind eine Premium-Funktion, die nur für Organisationen mit unserem Pro-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um Kurse zu geführten Lernreisen mit eigenen Zertifikaten zusammenzustellen."
         }
       },
       "current_plan": "Aktueller Plan",
@@ -1070,7 +1074,45 @@
     "workshop_attendance": "Workshop-Teilnahme",
     "specialization": "Spezialisierung",
     "dedication_message": "Ihr Einsatz und Ihre harte Arbeit haben sich ausgezahlt. Sie haben alle Inhalte dieses Kurses gemeistert.",
-    "download_failed": "PDF konnte nicht erstellt werden. Bitte versuche es erneut."
+    "download_failed": "PDF konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "document": {
+      "title": "Zertifikat",
+      "presented_to": "Dieses Zertifikat wird verliehen an",
+      "for_completing": "für den erfolgreichen Abschluss von",
+      "learner_placeholder": "Name des Lernenden",
+      "name_placeholder": "Name der Zertifizierung",
+      "instructor": "Lehrer",
+      "issued_by": "Ausgestellt von",
+      "date": "Verliehen am",
+      "credential_id": "Zertifikats-ID"
+    },
+    "page": {
+      "verified": "Verifiziertes Zertifikat",
+      "issued_line": "Ausgestellt für {{name}} von {{issuer}} am {{date}}",
+      "download": "PDF herunterladen",
+      "add_to_linkedin": "Zu LinkedIn hinzufügen",
+      "copy_link": "Verifizierungslink kopieren",
+      "link_copied": "Link kopiert",
+      "recipient": "Empfänger",
+      "issuer": "Ausgestellt von",
+      "issued_on": "Ausgestellt am",
+      "credential_id": "Zertifikats-ID",
+      "id_copied": "Zertifikats-ID kopiert",
+      "copy_id": "Zertifikats-ID kopieren",
+      "not_found": "Zertifikat nicht gefunden",
+      "not_found_hint": "Zu dieser ID gibt es kein gültiges Zertifikat. Es wurde möglicherweise widerrufen, oder der Link ist unvollständig.",
+      "go_home": "Zur Startseite",
+      "earned_for_course": "Erworben für den Abschluss von",
+      "earned_for_path": "Erworben für den Abschluss des Lernpfads {{name}}",
+      "view_and_share": "Ansehen und teilen"
+    },
+    "designer": {
+      "signer": "Unterzeichnet von (optional)",
+      "signer_placeholder": "z.B. Dr. Jane Smith",
+      "style": "Stil",
+      "preview_hint": "Live-Vorschau. Lernende sehen ihren eigenen Namen, das Datum und die Zertifikats-ID."
+    },
+    "kind_course": "Kurs"
   },
   "search": {
     "search_placeholder": "Suche nach Kursen, Benutzern, Kollektionen...",
@@ -1099,6 +1141,14 @@
       "discussions": "Diskussionen",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcasts"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Geführte Lernreisen durch mehrere Kurse",
+          "keywords": "lernpfade, pfade, paths, lernwege, programme, lernreise"
+        }
+      }
     }
   },
   "ai": {
@@ -4158,6 +4208,10 @@
         "org_api": {
           "description": "API-Tokens und programmatischer Zugriff",
           "keywords": "api, tokens, zugriff, programmatisch, schlüssel"
+        },
+        "paths": {
+          "description": "Kurse zu geführten Lernpfaden mit Zertifikaten zusammenstellen",
+          "keywords": "lernpfade, pfade, paths, lernwege, programme, lehrplan, reihenfolge, zertifikat"
         }
       }
     },
@@ -5848,5 +5902,174 @@
     "subtitle": "Tarife und Abrechnung über deine Organisationen hinweg",
     "opening": "Wird geöffnet…",
     "manage_billing": "Abrechnung verwalten"
+  },
+  "paths": {
+    "title": "Lernpfade",
+    "new_path": "Neuer Lernpfad",
+    "manage_paths": "Lernpfade verwalten",
+    "catalog_subtitle": "Geführte Lernreisen durch mehrere Kurse. Schließen Sie einen Lernpfad ab, um sein Zertifikat zu erhalten.",
+    "published": "Veröffentlicht",
+    "draft": "Entwurf",
+    "completed": "Abgeschlossen",
+    "in_progress": "In Bearbeitung",
+    "required": "Pflichtkurs",
+    "elective": "Wahlkurs",
+    "actions": "Aktionen für Lernpfad",
+    "edit_courses": "Kurse bearbeiten",
+    "view_path": "Lernpfad ansehen",
+    "view_certificate": "Zertifikat ansehen",
+    "start_path": "Lernpfad starten",
+    "start_hint": "Starten Sie den Lernpfad, um Ihren Fortschritt in allen enthaltenen Kursen zu verfolgen.",
+    "sign_in_to_start": "Zum Starten anmelden",
+    "continue_learning": "Weiterlernen",
+    "leave_path": "Lernpfad verlassen",
+    "your_progress": "Ihr Fortschritt",
+    "up_next": "Als Nächstes",
+    "guided_order": "Geführte Reihenfolge",
+    "certificate_included": "Mit Zertifikat",
+    "certificate_earned": "Sie haben dieses Zertifikat erworben",
+    "certificate_explainer": "Wird automatisch verliehen, sobald Sie alle Pflichtkurse dieses Lernpfads abgeschlossen haben.",
+    "locked_hint": "Schließen Sie den vorherigen Kurs ab, um diesen freizuschalten",
+    "restricted_course": "Eingeschränkter Kurs",
+    "no_courses_yet": "Dieser Lernpfad enthält noch keine Kurse.",
+    "electives_rule_one": "Wählen Sie mindestens {{count}} der {{total}} Wahlkurse",
+    "electives_rule_other": "Wählen Sie mindestens {{count}} der {{total}} Wahlkurse",
+    "progress_short": "{{done}}/{{total}} Kurse",
+    "progress_long": "{{done}} von {{total}} Kursen abgeschlossen",
+    "course_count_one": "{{count}} Kurs",
+    "course_count_other": "{{count}} Kurse",
+    "learner_count_one": "{{count}} Lernender",
+    "learner_count_other": "{{count}} Lernende",
+    "no_paths": "Noch keine Lernpfade",
+    "no_paths_description": "Stellen Sie Kurse zu einer geführten Lernreise mit eigenem Zertifikat zusammen.",
+    "no_public_paths": "Noch keine Lernpfade",
+    "no_public_paths_description": "Lernpfade erscheinen hier, sobald sie veröffentlicht sind.",
+    "no_search_results": "Keine Lernpfade entsprechen Ihrer Suche",
+    "search_placeholder": "Lernpfade suchen...",
+    "clear_search": "Suche zurücksetzen",
+    "not_found": "Dieser Lernpfad existiert nicht oder ist für Sie nicht verfügbar.",
+    "back_to_paths": "Zurück zu den Lernpfaden",
+    "delete_path": "Lernpfad löschen",
+    "delete_path_title": "„{{name}}“ löschen?",
+    "delete_path_confirm": "Der Lernpfad und der Fortschritt der Lernenden werden entfernt. Die Kurse selbst bleiben unverändert.",
+    "levels": {
+      "all": "Alle Niveaus",
+      "beginner": "Anfänger",
+      "intermediate": "Mittelstufe",
+      "advanced": "Fortgeschritten"
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "z.B. Datenanalyst",
+      "name_required": "Ein Lernpfad braucht einen Namen",
+      "name_max_length": "Der Name darf maximal 200 Zeichen lang sein",
+      "description": "Kurzbeschreibung",
+      "description_placeholder": "Ein oder zwei Sätze, die auf der Karte des Lernpfads angezeigt werden",
+      "description_max_length": "Die Beschreibung darf maximal 500 Zeichen lang sein",
+      "about": "Über",
+      "about_placeholder": "Für wen dieser Lernpfad gedacht ist und was Lernende am Ende können",
+      "about_hint": "Wird auf der Seite des Lernpfads angezeigt.",
+      "level": "Niveau",
+      "thumbnail": "Titelbild",
+      "upload_thumbnail": "Bild hochladen",
+      "thumbnail_hint": "Am besten im Format 16:9. PNG oder JPG.",
+      "discard_thumbnail": "Neues Bild verwerfen",
+      "visibility": "Sichtbarkeit",
+      "published_hint": "Lernende können den Lernpfad finden und starten.",
+      "public": "Öffentlich",
+      "public_hint": "Sichtbar für Besucher, die nicht Mitglied Ihrer Organisation sind.",
+      "public_label": "Für alle sichtbar, nicht nur für Mitglieder",
+      "save": "Änderungen speichern"
+    },
+    "modals": {
+      "create": {
+        "title": "Neuer Lernpfad",
+        "description": "Fassen Sie Kurse zu einer geführten Lernreise zusammen. Im nächsten Schritt wählen Sie die Kurse aus und legen ihre Reihenfolge fest.",
+        "submit": "Lernpfad erstellen"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Geführte Kursfolgen, jeweils mit eigenem Zertifikat.",
+      "view_path": "Lernpfad ansehen",
+      "tabs": {
+        "general": "Allgemein",
+        "courses": "Kurse",
+        "certificate": "Zertifikat",
+        "learners": "Lernende"
+      },
+      "courses": {
+        "title": "Kurse",
+        "subtitle": "Ziehen Sie die Kurse in die Reihenfolge, der Lernende folgen. Wahlkurse sind optional.",
+        "add": "Kurse hinzufügen",
+        "drag": "Zum Sortieren ziehen",
+        "remove": "Aus Lernpfad entfernen",
+        "requirement": "Anforderung",
+        "unpublished_hint": "Nicht veröffentlicht, für Lernende ausgeblendet",
+        "empty_title": "Noch keine Kurse",
+        "empty_description": "Fügen Sie die Kurse hinzu, aus denen dieser Lernpfad besteht."
+      },
+      "rules": {
+        "title": "Abschlussregeln",
+        "subtitle": "Was Lernende tun müssen, um den Lernpfad abzuschließen.",
+        "sequential": "Geführte Reihenfolge",
+        "sequential_hint": "In der Lernpfad-Ansicht wird jeder Kurs freigeschaltet, sobald der vorherige Pflichtkurs abgeschlossen ist. Auf ihren eigenen Seiten bleiben die Kurse zugänglich.",
+        "electives": "Abzuschließende Wahlkurse",
+        "electives_hint_one": "Von {{count}} Wahlkurs in diesem Lernpfad.",
+        "electives_hint_other": "Von {{count}} Wahlkursen in diesem Lernpfad.",
+        "electives_none": "Markieren Sie einen Kurs als Wahlkurs, damit Lernende wählen können.",
+        "summary": "Zum Abschluss schließen Lernende {{required}} Pflicht- und {{electives}} Wahlkurse ab."
+      },
+      "picker": {
+        "title": "Kurse hinzufügen",
+        "description": "Ausgewählte Kurse werden in der Reihenfolge hinzugefügt, in der Sie sie auswählen.",
+        "search": "Kurse suchen...",
+        "empty": "Keine weiteren Kurse verfügbar",
+        "add_one": "{{count}} Kurs hinzufügen",
+        "add_other": "{{count}} Kurse hinzufügen"
+      },
+      "certificate": {
+        "title": "Lernpfad-Zertifikat",
+        "subtitle": "Wird zusätzlich zu den Kurszertifikaten verliehen, wenn Lernende den Lernpfad abschließen.",
+        "disabled_title": "Kein Zertifikat für diesen Lernpfad",
+        "disabled_message": "Aktivieren Sie es, um allen, die den Lernpfad abschließen, ein Zertifikat zu verleihen. Lernende, die bereits fertig sind, erhalten es bei der nächsten Prüfung ihres Fortschritts.",
+        "enable": "Zertifikat verleihen"
+      },
+      "learners": {
+        "enrolled": "Lernende",
+        "completed": "Abgeschlossen",
+        "completion_rate": "Abschlussquote",
+        "certificates": "Zertifikate",
+        "empty_title": "Noch hat niemand diesen Lernpfad begonnen",
+        "empty_description": "Lernende erscheinen hier, sobald sie den Lernpfad starten.",
+        "columns": {
+          "learner": "Lernender",
+          "progress": "Fortschritt",
+          "started": "Begonnen",
+          "status": "Status",
+          "certificate": "Zertifikat"
+        },
+        "revoke": "Widerrufen",
+        "revoke_title": "Zertifikat widerrufen?",
+        "revoke_confirm": "Das Zertifikat von {{name}} lässt sich danach nicht mehr verifizieren. Die Person bleibt im Lernpfad und kann es erneut erwerben.",
+        "revoked": "Zertifikat widerrufen"
+      }
+    },
+    "toasts": {
+      "saving": "Wird gespeichert...",
+      "saved": "Lernpfad gespeichert",
+      "save_error": "Lernpfad konnte nicht gespeichert werden",
+      "create_error": "Lernpfad konnte nicht erstellt werden",
+      "deleting": "Lernpfad wird gelöscht...",
+      "deleted": "Lernpfad gelöscht",
+      "delete_error": "Lernpfad konnte nicht gelöscht werden",
+      "enroll_error": "Lernpfad konnte nicht gestartet werden",
+      "already_completed": "Sie haben bereits alle Kurse dieses Lernpfads abgeschlossen"
+    },
+    "my_paths": "Meine Lernpfade",
+    "part_of_paths": "Teil eines Lernpfads",
+    "path": "Lernpfad",
+    "courses_in_path": "Kurse in diesem Lernpfad",
+    "ready_to_begin": "Bereit loszulegen?",
+    "percent_done": "{{percent}} % abgeschlossen"
   }
 }

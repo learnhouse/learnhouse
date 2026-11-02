@@ -4,6 +4,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import TrailCourseCard from '@components/Pages/Trail/TrailCourseCard'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import UserCertificates from '@components/Pages/Trail/UserCertificates'
+import UserPaths from '@components/Pages/Trail/UserPaths'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { useTrail } from '@/hooks/queries/useTrail'
@@ -142,6 +143,7 @@ function Trail(params: any) {
         )}
       </div>
 
+      <UserPaths orgslug={orgslug} />
       <UserCertificates orgslug={orgslug} />
     </GeneralWrapperStyled>
     </FeatureGate>

@@ -144,6 +144,10 @@
         "drip": {
           "title": "ميزة الباقة القياسية",
           "description": "المحتوى المتدرّج متاح للمؤسسات على الباقة القياسية أو أعلى. قم بالترقية لنشر الفصول وفق جدول، لكل متعلّم أو لدفعة كاملة."
+        },
+        "paths": {
+          "title": "ميزة Pro",
+          "description": "المسارات ميزة متقدمة متاحة فقط للمؤسسات المشتركة في خطة Pro أو أعلى. قم بالترقية لترتيب الدورات في رحلات موجّهة لها شهاداتها الخاصة."
         }
       },
       "current_plan": "الخطة الحالية",
@@ -1227,7 +1231,45 @@
     "workshop_attendance": "حضور ورشة عمل",
     "specialization": "التخصص",
     "dedication_message": "لقد آتى تفانيك وعملك الجاد ثماره. لقد أتقنت كل المواد في هذه الدورة.",
-    "download_failed": "تعذر إنشاء ملف PDF. يُرجى المحاولة مرة أخرى."
+    "download_failed": "تعذر إنشاء ملف PDF. يُرجى المحاولة مرة أخرى.",
+    "document": {
+      "title": "شهادة",
+      "presented_to": "تُمنح هذه الشهادة إلى",
+      "for_completing": "لإتمامه بنجاح",
+      "learner_placeholder": "اسم المتعلم",
+      "name_placeholder": "اسم الشهادة",
+      "instructor": "المدرّب",
+      "issued_by": "صادرة عن",
+      "date": "تاريخ المنح",
+      "credential_id": "رقم الاعتماد"
+    },
+    "page": {
+      "verified": "اعتماد موثّق",
+      "issued_line": "صادرة إلى {{name}} من {{issuer}} بتاريخ {{date}}",
+      "download": "تنزيل PDF",
+      "add_to_linkedin": "إضافة إلى LinkedIn",
+      "copy_link": "نسخ رابط التحقق",
+      "link_copied": "تم نسخ الرابط",
+      "recipient": "المستلم",
+      "issuer": "صادرة عن",
+      "issued_on": "تاريخ الإصدار",
+      "credential_id": "رقم الاعتماد",
+      "id_copied": "تم نسخ رقم الاعتماد",
+      "copy_id": "نسخ رقم الاعتماد",
+      "not_found": "الشهادة غير موجودة",
+      "not_found_hint": "لا توجد شهادة صالحة بهذا الرقم. ربما أُلغيت أو أن الرابط غير مكتمل.",
+      "go_home": "العودة إلى الرئيسية",
+      "earned_for_course": "مُنحت لإتمام",
+      "earned_for_path": "مُنحت لإتمام مسار {{name}}",
+      "view_and_share": "عرض ومشاركة"
+    },
+    "designer": {
+      "signer": "التوقيع باسم (اختياري)",
+      "signer_placeholder": "مثال: د. سارة أحمد",
+      "style": "النمط",
+      "preview_hint": "معاينة مباشرة. يرى المتعلمون اسمهم وتاريخ المنح ورقم الاعتماد."
+    },
+    "kind_course": "دورة"
   },
   "search": {
     "search_placeholder": "ابحث عن دورات، مستخدمين، مجموعات...",
@@ -1348,6 +1390,10 @@
         "account_purchases": {
           "description": "المشتريات والاشتراكات",
           "keywords": "المشتريات, الاشتراكات, الفوترة, الإيصالات, الفواتير, purchases"
+        },
+        "paths": {
+          "description": "رحلات موجّهة عبر عدة دورات",
+          "keywords": "مسارات, مسارات تعليمية, برامج, رحلة, paths"
         }
       }
     }
@@ -5214,6 +5260,10 @@
         "users_analytics": {
           "description": "نشاط التعلم لكل طالب والسجل التدقيقي",
           "keywords": "تحليلات، تدقيق، طالب، تقدم، نشاط، تصدير، قانوني، امتثال"
+        },
+        "paths": {
+          "description": "رتّب الدورات في مسارات موجّهة مع شهادات",
+          "keywords": "مسارات, مسارات تعليمية, برامج, منهج, تسلسل, شهادة, paths"
         }
       }
     },
@@ -7455,5 +7505,194 @@
       "remove_link": "إزالة الموضع",
       "remove_link_confirm": "نسيان هذا الموضع؟ إذا فتحه نظام إدارة التعلم مرة أخرى فسيظهر من جديد."
     }
+  },
+  "paths": {
+    "title": "المسارات",
+    "new_path": "مسار جديد",
+    "manage_paths": "إدارة المسارات",
+    "catalog_subtitle": "رحلات تعليمية موجّهة عبر عدة دورات. أكمل المسار لتحصل على شهادته.",
+    "published": "منشور",
+    "draft": "مسودة",
+    "completed": "مكتمل",
+    "in_progress": "قيد التقدم",
+    "required": "إلزامي",
+    "elective": "اختياري",
+    "actions": "إجراءات المسار",
+    "edit_courses": "تعديل الدورات",
+    "view_path": "عرض المسار",
+    "view_certificate": "عرض الشهادة",
+    "start_path": "ابدأ المسار",
+    "start_hint": "ابدأ المسار لتتابع تقدمك في كل دوراته.",
+    "sign_in_to_start": "سجّل الدخول للبدء",
+    "continue_learning": "تابع التعلم",
+    "leave_path": "مغادرة المسار",
+    "your_progress": "تقدمك",
+    "up_next": "التالي",
+    "guided_order": "ترتيب موجّه",
+    "certificate_included": "يتضمن شهادة",
+    "certificate_earned": "لقد حصلت على هذه الشهادة",
+    "certificate_explainer": "تُمنح تلقائيًا عند إكمال جميع الدورات الإلزامية في هذا المسار.",
+    "locked_hint": "أكمل الدورة السابقة لفتح هذه الدورة",
+    "restricted_course": "دورة مقيّدة",
+    "no_courses_yet": "لا توجد دورات في هذا المسار بعد.",
+    "electives_rule_zero": "اختر {{count}} من الدورات الاختيارية الـ{{total}} على الأقل",
+    "electives_rule_one": "اختر {{count}} من الدورات الاختيارية الـ{{total}} على الأقل",
+    "electives_rule_two": "اختر {{count}} من الدورات الاختيارية الـ{{total}} على الأقل",
+    "electives_rule_few": "اختر {{count}} من الدورات الاختيارية الـ{{total}} على الأقل",
+    "electives_rule_many": "اختر {{count}} من الدورات الاختيارية الـ{{total}} على الأقل",
+    "electives_rule_other": "اختر {{count}} من الدورات الاختيارية الـ{{total}} على الأقل",
+    "progress_short": "{{done}}/{{total}} دورات",
+    "progress_long": "أكملت {{done}} من {{total}} دورات",
+    "course_count_zero": "لا دورات",
+    "course_count_one": "دورة واحدة",
+    "course_count_two": "دورتان",
+    "course_count_few": "{{count}} دورات",
+    "course_count_many": "{{count}} دورة",
+    "course_count_other": "{{count}} دورة",
+    "learner_count_zero": "لا متعلمين",
+    "learner_count_one": "متعلم واحد",
+    "learner_count_two": "متعلمان",
+    "learner_count_few": "{{count}} متعلمين",
+    "learner_count_many": "{{count}} متعلمًا",
+    "learner_count_other": "{{count}} متعلم",
+    "no_paths": "لا توجد مسارات بعد",
+    "no_paths_description": "رتّب الدورات في رحلة موجّهة لها شهادتها الخاصة.",
+    "no_public_paths": "لا توجد مسارات بعد",
+    "no_public_paths_description": "ستظهر المسارات التعليمية هنا عند نشرها.",
+    "no_search_results": "لا توجد مسارات مطابقة لبحثك",
+    "search_placeholder": "ابحث في المسارات...",
+    "clear_search": "مسح البحث",
+    "not_found": "هذا المسار غير موجود أو غير متاح لك.",
+    "back_to_paths": "العودة إلى المسارات",
+    "delete_path": "حذف المسار",
+    "delete_path_title": "حذف \"{{name}}\"؟",
+    "delete_path_confirm": "سيُحذف المسار وتقدم المتعلمين فيه. لن تتأثر الدورات نفسها.",
+    "levels": {
+      "all": "جميع المستويات",
+      "beginner": "مبتدئ",
+      "intermediate": "متوسط",
+      "advanced": "متقدم"
+    },
+    "form": {
+      "name": "الاسم",
+      "name_placeholder": "مثال: محلل بيانات",
+      "name_required": "يحتاج المسار إلى اسم",
+      "name_max_length": "يجب ألا يتجاوز الاسم 200 حرف",
+      "description": "وصف قصير",
+      "description_placeholder": "جملة أو جملتان تظهران على بطاقة المسار",
+      "description_max_length": "يجب ألا يتجاوز الوصف 500 حرف",
+      "about": "نبذة",
+      "about_placeholder": "لمن هذا المسار وما الذي سيتمكن المتعلمون من فعله في نهايته",
+      "about_hint": "يظهر في صفحة المسار.",
+      "level": "المستوى",
+      "thumbnail": "صورة الغلاف",
+      "upload_thumbnail": "رفع صورة",
+      "thumbnail_hint": "يُفضّل مقاس 16:9. بصيغة PNG أو JPG.",
+      "discard_thumbnail": "تجاهل الصورة الجديدة",
+      "visibility": "الظهور",
+      "published_hint": "يمكن للمتعلمين العثور على المسار والبدء فيه.",
+      "public": "عام",
+      "public_hint": "مرئي للزوار من خارج مؤسستك.",
+      "public_label": "مرئي للجميع وليس للأعضاء فقط",
+      "save": "حفظ التغييرات"
+    },
+    "modals": {
+      "create": {
+        "title": "مسار جديد",
+        "description": "اجمع الدورات في رحلة موجّهة. ستختار الدورات وترتبها في الخطوة التالية.",
+        "submit": "إنشاء المسار"
+      }
+    },
+    "dashboard": {
+      "subtitle": "تسلسلات موجّهة من الدورات، لكل منها شهادتها الخاصة.",
+      "view_path": "عرض المسار",
+      "tabs": {
+        "general": "عام",
+        "courses": "الدورات",
+        "certificate": "الشهادة",
+        "learners": "المتعلمون"
+      },
+      "courses": {
+        "title": "الدورات",
+        "subtitle": "اسحب لتحديد الترتيب الذي يتبعه المتعلمون. الدورات الاختيارية غير إلزامية.",
+        "add": "إضافة دورات",
+        "drag": "اسحب لإعادة الترتيب",
+        "remove": "إزالة من المسار",
+        "requirement": "المتطلب",
+        "unpublished_hint": "غير منشورة، مخفية عن المتعلمين",
+        "empty_title": "لا توجد دورات بعد",
+        "empty_description": "أضف الدورات التي يتكون منها هذا المسار."
+      },
+      "rules": {
+        "title": "شروط الإكمال",
+        "subtitle": "ما يجب على المتعلم فعله لإكمال المسار.",
+        "sequential": "ترتيب موجّه",
+        "sequential_hint": "تُفتح كل دورة في صفحة المسار بعد إكمال الدورة الإلزامية السابقة. تبقى الدورات متاحة في صفحاتها الخاصة.",
+        "electives": "الدورات الاختيارية المطلوبة",
+        "electives_hint_zero": "من أصل {{count}} دورات اختيارية في هذا المسار.",
+        "electives_hint_one": "من أصل دورة اختيارية واحدة في هذا المسار.",
+        "electives_hint_two": "من أصل دورتين اختياريتين في هذا المسار.",
+        "electives_hint_few": "من أصل {{count}} دورات اختيارية في هذا المسار.",
+        "electives_hint_many": "من أصل {{count}} دورة اختيارية في هذا المسار.",
+        "electives_hint_other": "من أصل {{count}} دورة اختيارية في هذا المسار.",
+        "electives_none": "حدّد دورة كاختيارية لتمنح المتعلمين حرية الاختيار.",
+        "summary": "لإكمال المسار، يُنهي المتعلمون {{required}} دورات إلزامية و{{electives}} دورات اختيارية."
+      },
+      "picker": {
+        "title": "إضافة دورات",
+        "description": "تُضاف الدورات المحددة بالترتيب الذي تختاره.",
+        "search": "ابحث في الدورات...",
+        "empty": "لا مزيد من الدورات لإضافتها",
+        "add_zero": "إضافة",
+        "add_one": "إضافة دورة واحدة",
+        "add_two": "إضافة دورتين",
+        "add_few": "إضافة {{count}} دورات",
+        "add_many": "إضافة {{count}} دورة",
+        "add_other": "إضافة {{count}} دورة"
+      },
+      "certificate": {
+        "title": "شهادة المسار",
+        "subtitle": "تُمنح إضافةً إلى شهادات الدورات عندما يكمل المتعلم المسار.",
+        "disabled_title": "لا توجد شهادة لهذا المسار",
+        "disabled_message": "فعّلها لمنح شهادة لكل من يكمل المسار. يحصل عليها من أكملوه سابقًا عند التحقق من تقدمهم في المرة القادمة.",
+        "enable": "منح شهادة"
+      },
+      "learners": {
+        "enrolled": "المتعلمون",
+        "completed": "أكملوا",
+        "completion_rate": "نسبة الإكمال",
+        "certificates": "الشهادات",
+        "empty_title": "لم يبدأ أحد هذا المسار بعد",
+        "empty_description": "يظهر المتعلمون هنا عند بدء المسار.",
+        "columns": {
+          "learner": "المتعلم",
+          "progress": "التقدم",
+          "started": "تاريخ البدء",
+          "status": "الحالة",
+          "certificate": "الشهادة"
+        },
+        "revoke": "إلغاء",
+        "revoke_title": "إلغاء الشهادة؟",
+        "revoke_confirm": "لن يعود بالإمكان التحقق من شهادة {{name}}. يبقى في المسار ويمكنه الحصول عليها مجددًا.",
+        "revoked": "أُلغيت الشهادة"
+      }
+    },
+    "toasts": {
+      "saving": "جارٍ الحفظ...",
+      "saved": "تم حفظ المسار",
+      "save_error": "تعذّر حفظ المسار",
+      "create_error": "تعذّر إنشاء المسار",
+      "deleting": "جارٍ حذف المسار...",
+      "deleted": "تم حذف المسار",
+      "delete_error": "تعذّر حذف المسار",
+      "enroll_error": "تعذّر بدء المسار",
+      "already_completed": "لقد أكملت بالفعل جميع دورات هذا المسار"
+    },
+    "my_paths": "مساراتي",
+    "part_of_paths": "جزء من مسار",
+    "path": "مسار",
+    "courses_in_path": "الدورات في هذا المسار",
+    "ready_to_begin": "هل أنت مستعد للبدء؟",
+    "percent_done": "أُنجز {{percent}}%"
   }
 }

@@ -140,6 +140,10 @@
         "drip": {
           "title": "Funzionalità Standard",
           "description": "I contenuti progressivi sono disponibili per le organizzazioni con piano Standard o superiore. Aggiorna per rilasciare i capitoli secondo un calendario, per singolo studente o per un'intera coorte."
+        },
+        "paths": {
+          "title": "Funzionalità Pro",
+          "description": "I percorsi sono una funzionalità premium disponibile solo per le organizzazioni con piano Pro o superiore. Effettua l'upgrade per organizzare i corsi in percorsi guidati, ciascuno con il proprio certificato."
         }
       },
       "current_plan": "Piano attuale",
@@ -1070,7 +1074,45 @@
     "workshop_attendance": "Partecipazione al workshop",
     "specialization": "Specializzazione",
     "dedication_message": "La tua dedizione e il tuo duro lavoro sono stati ripagati. Hai padroneggiato tutti i contenuti di questo corso.",
-    "download_failed": "Impossibile generare il PDF. Riprova."
+    "download_failed": "Impossibile generare il PDF. Riprova.",
+    "document": {
+      "title": "Certificato",
+      "presented_to": "Questo certificato è conferito a",
+      "for_completing": "per aver completato con successo",
+      "learner_placeholder": "Nome dello studente",
+      "name_placeholder": "Nome della certificazione",
+      "instructor": "Istruttore",
+      "issued_by": "Rilasciato da",
+      "date": "Data di conseguimento",
+      "credential_id": "ID certificato"
+    },
+    "page": {
+      "verified": "Certificato verificato",
+      "issued_line": "Rilasciato a {{name}} da {{issuer}} il {{date}}",
+      "download": "Scarica PDF",
+      "add_to_linkedin": "Aggiungi a LinkedIn",
+      "copy_link": "Copia link di verifica",
+      "link_copied": "Link copiato",
+      "recipient": "Destinatario",
+      "issuer": "Rilasciato da",
+      "issued_on": "Rilasciato il",
+      "credential_id": "ID certificato",
+      "id_copied": "ID certificato copiato",
+      "copy_id": "Copia ID certificato",
+      "not_found": "Certificato non trovato",
+      "not_found_hint": "Nessun certificato valido corrisponde a questo ID. Potrebbe essere stato revocato oppure il link è incompleto.",
+      "go_home": "Torna alla home",
+      "earned_for_course": "Conseguito per aver completato",
+      "earned_for_path": "Conseguito per aver completato il percorso {{name}}",
+      "view_and_share": "Visualizza e condividi"
+    },
+    "designer": {
+      "signer": "Firmato da (opzionale)",
+      "signer_placeholder": "es. Dott.ssa Jane Smith",
+      "style": "Stile",
+      "preview_hint": "Anteprima dal vivo. Ogni studente vede il proprio nome, la data e l'ID del certificato."
+    },
+    "kind_course": "Corso"
   },
   "search": {
     "search_placeholder": "Cerca corsi, utenti, collezioni...",
@@ -1099,6 +1141,14 @@
       "discussions": "Discussioni",
       "playgrounds": "Playground",
       "podcasts": "Podcast"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Percorsi guidati attraverso più corsi",
+          "keywords": "percorsi, percorsi di apprendimento, programmi, itinerari, paths"
+        }
+      }
     }
   },
   "ai": {
@@ -4158,6 +4208,10 @@
         "org_api": {
           "description": "Token API e accesso programmatico",
           "keywords": "api, token, accesso, programmatico, chiavi"
+        },
+        "paths": {
+          "description": "Organizza i corsi in percorsi guidati con certificati",
+          "keywords": "percorsi, percorsi di apprendimento, programmi, itinerari, curriculum, sequenza, certificato, paths"
         }
       }
     },
@@ -5848,5 +5902,174 @@
     "folder_count_one": "{{count}} cartella",
     "item_count": "{{count}} elementi",
     "item_count_one": "{{count}} elemento"
+  },
+  "paths": {
+    "title": "Percorsi",
+    "new_path": "Nuovo percorso",
+    "manage_paths": "Gestisci percorsi",
+    "catalog_subtitle": "Percorsi guidati attraverso più corsi. Completa un percorso per ottenere il suo certificato.",
+    "published": "Pubblicato",
+    "draft": "Bozza",
+    "completed": "Completato",
+    "in_progress": "In corso",
+    "required": "Obbligatorio",
+    "elective": "Facoltativo",
+    "actions": "Azioni del percorso",
+    "edit_courses": "Modifica corsi",
+    "view_path": "Visualizza percorso",
+    "view_certificate": "Visualizza certificato",
+    "start_path": "Inizia il percorso",
+    "start_hint": "Inizia il percorso per monitorare i tuoi progressi in tutti i suoi corsi.",
+    "sign_in_to_start": "Accedi per iniziare",
+    "continue_learning": "Continua a imparare",
+    "leave_path": "Abbandona percorso",
+    "your_progress": "I tuoi progressi",
+    "up_next": "Prossimo passo",
+    "guided_order": "Ordine guidato",
+    "certificate_included": "Certificato incluso",
+    "certificate_earned": "Hai ottenuto questo certificato",
+    "certificate_explainer": "Assegnato automaticamente quando completi tutti i corsi obbligatori di questo percorso.",
+    "locked_hint": "Completa il corso precedente per sbloccarlo",
+    "restricted_course": "Corso con accesso limitato",
+    "no_courses_yet": "Questo percorso non contiene ancora corsi.",
+    "electives_rule_one": "Scegli almeno {{count}} dei {{total}} corsi facoltativi",
+    "electives_rule_other": "Scegli almeno {{count}} dei {{total}} corsi facoltativi",
+    "progress_short": "{{done}}/{{total}} corsi",
+    "progress_long": "{{done}} corsi completati su {{total}}",
+    "course_count_one": "{{count}} corso",
+    "course_count_other": "{{count}} corsi",
+    "learner_count_one": "{{count}} studente",
+    "learner_count_other": "{{count}} studenti",
+    "no_paths": "Ancora nessun percorso",
+    "no_paths_description": "Organizza i corsi in un percorso guidato con il proprio certificato.",
+    "no_public_paths": "Ancora nessun percorso",
+    "no_public_paths_description": "I percorsi di apprendimento appariranno qui una volta pubblicati.",
+    "no_search_results": "Nessun percorso corrisponde alla tua ricerca",
+    "search_placeholder": "Cerca percorsi...",
+    "clear_search": "Cancella ricerca",
+    "not_found": "Questo percorso non esiste o non è disponibile per te.",
+    "back_to_paths": "Torna ai percorsi",
+    "delete_path": "Elimina percorso",
+    "delete_path_title": "Eliminare \"{{name}}\"?",
+    "delete_path_confirm": "Il percorso e i progressi dei suoi studenti verranno rimossi. I corsi non vengono modificati.",
+    "levels": {
+      "all": "Tutti i livelli",
+      "beginner": "Principiante",
+      "intermediate": "Intermedio",
+      "advanced": "Avanzato"
+    },
+    "form": {
+      "name": "Nome",
+      "name_placeholder": "es. Data Analyst",
+      "name_required": "Il percorso deve avere un nome",
+      "name_max_length": "Il nome deve contenere meno di 200 caratteri",
+      "description": "Descrizione breve",
+      "description_placeholder": "Una o due frasi mostrate nella scheda del percorso",
+      "description_max_length": "La descrizione deve contenere meno di 500 caratteri",
+      "about": "Informazioni",
+      "about_placeholder": "A chi è rivolto questo percorso e cosa sapranno fare gli studenti alla fine",
+      "about_hint": "Mostrato nella pagina del percorso.",
+      "level": "Livello",
+      "thumbnail": "Immagine di copertina",
+      "upload_thumbnail": "Carica immagine",
+      "thumbnail_hint": "Ideale in 16:9. PNG o JPG.",
+      "discard_thumbnail": "Scarta nuova immagine",
+      "visibility": "Visibilità",
+      "published_hint": "Gli studenti possono trovare e iniziare il percorso.",
+      "public": "Pubblico",
+      "public_hint": "Visibile ai visitatori che non sono membri della tua organizzazione.",
+      "public_label": "Visibile a tutti, non solo ai membri",
+      "save": "Salva modifiche"
+    },
+    "modals": {
+      "create": {
+        "title": "Nuovo percorso",
+        "description": "Raggruppa i corsi in un percorso guidato. Nel passaggio successivo sceglierai i corsi e il loro ordine.",
+        "submit": "Crea percorso"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Sequenze guidate di corsi, ciascuna con il proprio certificato.",
+      "view_path": "Visualizza percorso",
+      "tabs": {
+        "general": "Generale",
+        "courses": "Corsi",
+        "certificate": "Certificato",
+        "learners": "Studenti"
+      },
+      "courses": {
+        "title": "Corsi",
+        "subtitle": "Trascina per definire l'ordine seguito dagli studenti. I corsi facoltativi non sono obbligatori.",
+        "add": "Aggiungi corsi",
+        "drag": "Trascina per riordinare",
+        "remove": "Rimuovi dal percorso",
+        "requirement": "Requisito",
+        "unpublished_hint": "Non pubblicato, nascosto agli studenti",
+        "empty_title": "Ancora nessun corso",
+        "empty_description": "Aggiungi i corsi che compongono questo percorso."
+      },
+      "rules": {
+        "title": "Regole di completamento",
+        "subtitle": "Cosa deve fare uno studente per completare il percorso.",
+        "sequential": "Ordine guidato",
+        "sequential_hint": "Nella vista del percorso, ogni corso si sblocca quando lo studente completa il corso obbligatorio precedente. I corsi restano accessibili dalle loro pagine.",
+        "electives": "Corsi facoltativi da completare",
+        "electives_hint_one": "Su {{count}} corso facoltativo in questo percorso.",
+        "electives_hint_other": "Su {{count}} corsi facoltativi in questo percorso.",
+        "electives_none": "Contrassegna un corso come facoltativo per lasciare la scelta agli studenti.",
+        "summary": "Per finire, gli studenti completano {{required}} corsi obbligatori e {{electives}} facoltativi."
+      },
+      "picker": {
+        "title": "Aggiungi corsi",
+        "description": "I corsi selezionati vengono aggiunti nell'ordine in cui li scegli.",
+        "search": "Cerca corsi...",
+        "empty": "Nessun altro corso da aggiungere",
+        "add_one": "Aggiungi {{count}} corso",
+        "add_other": "Aggiungi {{count}} corsi"
+      },
+      "certificate": {
+        "title": "Certificato del percorso",
+        "subtitle": "Rilasciato in aggiunta ai certificati dei corsi quando uno studente completa il percorso.",
+        "disabled_title": "Nessun certificato per questo percorso",
+        "disabled_message": "Attivalo per rilasciare un certificato a chiunque completi il percorso. Gli studenti che lo hanno già completato lo riceveranno alla prossima verifica dei loro progressi.",
+        "enable": "Rilascia un certificato"
+      },
+      "learners": {
+        "enrolled": "Studenti",
+        "completed": "Completato",
+        "completion_rate": "Tasso di completamento",
+        "certificates": "Certificati",
+        "empty_title": "Nessuno ha ancora iniziato questo percorso",
+        "empty_description": "Gli studenti appaiono qui quando iniziano il percorso.",
+        "columns": {
+          "learner": "Studente",
+          "progress": "Avanzamento",
+          "started": "Iniziato il",
+          "status": "Stato",
+          "certificate": "Certificato"
+        },
+        "revoke": "Revoca",
+        "revoke_title": "Revocare il certificato?",
+        "revoke_confirm": "Il certificato di {{name}} non risulterà più verificabile. Lo studente resta nel percorso e potrà ottenerlo di nuovo.",
+        "revoked": "Certificato revocato"
+      }
+    },
+    "toasts": {
+      "saving": "Salvataggio...",
+      "saved": "Percorso salvato",
+      "save_error": "Impossibile salvare il percorso",
+      "create_error": "Impossibile creare il percorso",
+      "deleting": "Eliminazione del percorso...",
+      "deleted": "Percorso eliminato",
+      "delete_error": "Impossibile eliminare il percorso",
+      "enroll_error": "Impossibile iniziare il percorso",
+      "already_completed": "Hai già completato tutti i corsi di questo percorso"
+    },
+    "my_paths": "I miei percorsi",
+    "part_of_paths": "Parte di un percorso",
+    "path": "Percorso",
+    "courses_in_path": "Corsi in questo percorso",
+    "ready_to_begin": "Pronto per iniziare?",
+    "percent_done": "{{percent}}% completato"
   }
 }
