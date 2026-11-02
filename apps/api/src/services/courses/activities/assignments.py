@@ -54,6 +54,7 @@ from src.security.features_utils.usage import (
     decrease_feature_usage,
     increase_feature_usage,
 )
+from src.security.submission_file_access import submission_files_belong_to
 from src.security.rbac import (
     authorization_verify_based_on_roles,
     authorization_verify_api_token_permissions,
@@ -1901,6 +1902,7 @@ async def put_assignment_task_submission_file(
             course.course_uuid,
             assignment.assignment_uuid,
             assignment_task_uuid,
+            current_user.id,
         )
 
         return {"file_uuid": name_in_disk}
@@ -2305,6 +2307,14 @@ async def handle_assignment_task_submission(
     # For non-instructors (session students AND token submit-on-behalf), the call
     # writes a learner ANSWER, never a grade.
     if not is_instructor:
+        # A learner can only hand in files they uploaded themselves
+        if not submission_files_belong_to(
+            assignment_task_submission_object.task_submission, submitter.id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="You can only submit files you uploaded",
+            )
         if not is_token_submit:
             # Session students must be enrolled and within the deadline. A token
             # acting for a learner is an authorized external writer; the custom
