@@ -31,6 +31,20 @@ export function hasOrgLogo(org: any): boolean {
   return Boolean(org?.logo_image || getOrgSquareLogoFile(org))
 }
 
+/** First letter of the org name on a neutral tile; the no-logo fallback for white-label plans. */
+export function OrgInitial({ org, className }: { org: any; className?: string }) {
+  return (
+    <span
+      className={cn(
+        'w-full h-full bg-gray-100 text-gray-700 font-bold flex items-center justify-center',
+        className
+      )}
+    >
+      {(org?.name || '?').charAt(0).toUpperCase()}
+    </span>
+  )
+}
+
 interface OrgSquareLogoProps {
   org: any
   /** Rendered when the org has neither a square nor a wide logo. */

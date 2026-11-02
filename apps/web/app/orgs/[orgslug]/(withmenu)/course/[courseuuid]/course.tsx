@@ -35,6 +35,7 @@ import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
 import DripBadge, { DripIcon, DripUntilBadge, useDripLabel } from '@components/Objects/Courses/DripBadge'
 import { buildIcs } from '@/lib/drip'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -447,23 +448,11 @@ const CourseClient = (props: any) => {
                     );
                   } else if (showImage && course.thumbnail_image) {
                     return (
-                      <div className="relative inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px] bg-cover bg-center"
-                        style={{
-                          backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-                            org?.org_uuid,
-                            course?.course_uuid,
-                            course?.thumbnail_image
-                          )})`,
-                        }}
-                      >
-                        {/* Hidden img with fetchpriority="high" so the browser fetches this LCP image immediately */}
-                        { }
-                        <img
+                      <div className="relative overflow-hidden ring-1 ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px] bg-gray-50">
+                        <ThumbnailImage
                           src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_image)}
-                          alt=""
-                          aria-hidden="true"
                           fetchPriority="high"
-                          className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                          className="absolute inset-0 w-full h-full"
                         />
                         {course.thumbnail_type === 'both' && (
                           <div className="absolute top-3 end-3 z-10">

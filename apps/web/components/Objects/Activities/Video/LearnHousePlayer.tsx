@@ -14,6 +14,7 @@ import {
   type CaptionTrack,
   type VideoChapter,
 } from './videoSource'
+import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
 
 interface VideoDetails {
   startTime?: number
@@ -204,7 +205,9 @@ function CenterIndicator() {
 
 /** Icon-only LearnHouse mark, top-right; fades in and out with the controls. */
 function PlayerLogo() {
+  const showBranding = useShowLearnHouseBranding()
   const visible = usePlayer((s) => s.controlsVisible)
+  if (!showBranding) return null
   return (
     <img
       src="/lrn.svg"

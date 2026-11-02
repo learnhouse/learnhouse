@@ -32,6 +32,7 @@ import Link from 'next/link';
 import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import NewAssignmentModal from './_components/NewAssignmentModal';
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 type StatusFilter = 'all' | 'published' | 'drafts';
 
@@ -623,26 +624,18 @@ const MiniThumbnail = (props: { course: any }) => {
         '/course/' + removeCoursePrefix(props.course.course_uuid)
       )}
     >
-      {props.course.thumbnail_image ? (
-        <div
-          className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-[70px] h-[40px] bg-cover flex-none"
-          style={{
-            backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-              org?.org_uuid,
-              props.course.course_uuid,
-              props.course.thumbnail_image
-            )})`,
-          }}
-        />
-      ) : (
-        <div
-          className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-[70px] h-[40px] bg-cover flex-none"
-          style={{
-            backgroundImage: `url('/empty_thumbnail.png')`,
-            backgroundSize: 'contain',
-          }}
-        />
-      )}
+      <ThumbnailImage
+        src={
+          props.course.thumbnail_image
+            ? getCourseThumbnailMediaDirectory(
+                org?.org_uuid,
+                props.course.course_uuid,
+                props.course.thumbnail_image
+              )
+            : null
+        }
+        className="ring-1 ring-black/10 rounded-lg shadow-xl w-[70px] h-[40px] flex-none"
+      />
     </Link>
   )
 }

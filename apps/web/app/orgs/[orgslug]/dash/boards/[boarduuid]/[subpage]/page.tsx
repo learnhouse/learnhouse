@@ -17,6 +17,7 @@ import BoardThumbnailTab from '@components/Dashboard/Boards/Tabs/BoardThumbnailT
 import BoardAccessTab from '@components/Dashboard/Boards/Tabs/BoardAccessTab'
 import BoardMembersTab from '@components/Dashboard/Boards/Tabs/BoardMembersTab'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 export type BoardSettingsParams = {
   orgslug: string
@@ -123,7 +124,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
         <div className="flex flex-wrap gap-2 items-center">
           <div className="flex py-3 grow min-w-0 items-center">
             <Link href={`/board/${boardUuid.replace('board_', '')}`} className="shrink-0">
-              <img
+              <ThumbnailImage
                 className="w-[72px] sm:w-[100px] h-[41px] sm:h-[57px] rounded-md drop-shadow-md object-cover"
                 src={thumbnailUrl}
                 alt=""

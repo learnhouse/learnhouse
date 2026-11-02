@@ -12,6 +12,7 @@ import { getAllUserCertificates } from '@services/courses/certifications'
 import { asArray } from '@services/utils/ts/requests'
 import { useTranslation } from 'react-i18next'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface UserCertificatesProps {
   orgslug: string
@@ -134,7 +135,7 @@ const UserCertificates: React.FC<UserCertificatesProps> = ({ orgslug }) => {
                 className="block relative aspect-video overflow-hidden bg-gradient-to-br from-yellow-50 to-amber-100"
               >
                 {certificate.course?.thumbnail_image && org?.org_uuid ? (
-                  <img
+                  <ThumbnailImage
                     src={getCourseThumbnailMediaDirectory(
                       org.org_uuid,
                       certificate.course.course_uuid,

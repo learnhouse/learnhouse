@@ -25,6 +25,8 @@ import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { isFeatureAvailable } from '@services/plans/plans'
 import { normalizeForSearch } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { usePlan } from '@components/Hooks/usePlan'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 const CONTENT_TYPE_ICON: Record<ContentResultType, SearchMeta['icon']> = {
   course: BookOpen,
@@ -84,6 +86,7 @@ function groupContentResults(results: ContentResult[]): Record<ContentResultType
 export default function CommandPalette() {
   const { t } = useTranslation()
   const { open, setOpen } = useCommandPalette()
+  const isWhiteLabel = isWhiteLabelPlan(usePlan())
   const router = useRouter()
   const { track } = useLHAnalytics('dashboard')
   const [query, setQuery] = useState('')
@@ -250,13 +253,15 @@ export default function CommandPalette() {
                   className="w-full bg-transparent text-[18px] sm:text-[22px] font-medium leading-tight tracking-tight text-white outline-none placeholder:font-medium placeholder:text-white/35"
                 />
               </div>
-              <img
-                src="/lrn-dash.svg"
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 select-none opacity-90"
-              />
+              {!isWhiteLabel && (
+                <img
+                  src="/lrn-dash.svg"
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 select-none opacity-90"
+                />
+              )}
             </div>
 
             {/* Divider */}

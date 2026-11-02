@@ -8,6 +8,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getEpisodeThumbnailMediaDirectory, getPodcastThumbnailMediaDirectory } from '@services/media/media'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { Play, Pause, Clock } from 'lucide-react'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface EpisodeCardProps {
   episode: PodcastEpisode
@@ -72,7 +73,7 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
       {showThumbnail && (
         <div className="flex-shrink-0 relative">
           <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200">
-            <img
+            <ThumbnailImage
               src={thumbnailUrl}
               alt={episode.title}
               className="w-full h-full object-cover"
