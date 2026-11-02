@@ -524,6 +524,45 @@ async def _apply_locks_to_chapters(
                 activity.content = {}
                 activity.details = None
 
+    await _render_dynamic_chapter_content(chapters, course, current_user, db_session, request)
+
+
+async def _render_dynamic_chapter_content(
+    chapters: List[ChapterRead],
+    course: "Course",
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+    request: Request | None,
+) -> None:
+    """The full tree carries activity content, so conditional blocks resolve
+    here too (see dynamic_content). One context serves the whole course."""
+    from src.services.courses.activities.access import can_edit_course
+    from src.services.courses.activities.dynamic_content import has_dynamic_content
+    from src.services.courses.activities.dynamic_context import (
+        build_render_context,
+        render_for_reader,
+    )
+
+    dynamic = [
+        activity
+        for chapter in chapters
+        for activity in chapter.activities
+        if not activity.is_locked and has_dynamic_content(activity.content)
+    ]
+    if not dynamic:
+        return
+    if request is not None and await can_edit_course(
+        request, course.course_uuid, current_user, db_session
+    ):
+        return
+    context = await build_render_context(request, current_user, course, db_session)
+    for activity in dynamic:
+        activity.content = await render_for_reader(
+            request, activity.content, course=course, current_user=current_user,
+            db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+            is_editor=False, context=context,
+        )
+
 
 # Important Note : this is legacy code that has been used because
 # the frontend is still not adapted for the new data structure, this implementation is absolutely not the best one

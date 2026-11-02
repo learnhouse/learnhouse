@@ -8,6 +8,7 @@ from sqlmodel import select
 
 from src.db.courses.activities import Activity, ActivityTypeEnum
 from src.db.courses.blocks import Block, BlockTypeEnum
+from src.services.courses.activities.dynamic_content import strip_dynamic_content
 from src.services.ai.rag.media import Media, status_of, transcript_segments
 from src.services.ai.rag.sources import SourceContext, source
 from src.services.ai.rag.formats import (
@@ -37,7 +38,12 @@ async def extract(activity: Activity, ctx: SourceContext) -> list[Segment]:
     # Markdown and embed pages only store an external URL, so the walk yields
     # nothing for them and they are found by name (activity_summary). Fetching
     # arbitrary URLs server-side is not worth the SSRF exposure.
-    segments = [Segment(text=extract_text_from_prosemirror(activity.content), source_type=SourceType.PAGE)]
+    # The index is shared by every reader, so it only holds what every reader
+    # sees: conditional blocks and variables are left out.
+    segments = [Segment(
+        text=extract_text_from_prosemirror(strip_dynamic_content(activity.content)),
+        source_type=SourceType.PAGE,
+    )]
     blocks = (await ctx.db.execute(
         select(Block).where(Block.activity_id == activity.id)
     )).scalars().all()
