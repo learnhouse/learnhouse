@@ -9,6 +9,7 @@ import Footer from '@components/Footer/Footer'
 import CompleteSignupFields from '@components/Auth/CompleteSignupFields'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgFaviconMediaDirectory } from '@services/media/media'
+import { orgScriptsAllowedOnRequest } from '@/lib/orgScripts'
 
 export async function generateMetadata({
   params,
@@ -38,6 +39,7 @@ export default async function RootLayout(props: {
   params: Promise<{ orgslug: string }>
 }) {
   const params = await props.params
+  const allowOrgScripts = await orgScriptsAllowedOnRequest()
 
   return (
     <div>
@@ -47,7 +49,7 @@ export default async function RootLayout(props: {
         <Toast />
         <CompleteSignupFields />
         {props.children}
-        <Footer />
+        <Footer allowOrgScripts={allowOrgScripts} />
       </OrgProvider>
     </div>
   )
