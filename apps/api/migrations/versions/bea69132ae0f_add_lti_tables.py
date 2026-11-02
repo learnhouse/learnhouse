@@ -1,7 +1,7 @@
 """Add LTI 1.3 tables
 
 Revision ID: bea69132ae0f
-Revises: 8d2b6f4c1e75
+Revises: dae02f36bef2
 Create Date: 2026-10-07 12:00:00.000000
 
 The models live in the enterprise overlay and are also created by
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'bea69132ae0f'
-down_revision: Union[str, None] = '8d2b6f4c1e75'
+down_revision: Union[str, None] = 'dae02f36bef2'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -39,6 +39,8 @@ from src.services.courses.courses import (
     get_course_user_rights,
     clone_course,
 )
+from src.db.courses.drip import DripScheduleRead, DripScheduleUpdate
+from src.services.courses.drip import get_drip_schedule, update_drip_schedule
 from src.services.courses.updates import (
     create_update,
     delete_update,
@@ -554,6 +556,57 @@ async def api_get_course_meta(
     return await get_course_meta(
         request, course_uuid, with_unpublished_activities, current_user=current_user, db_session=db_session, slim=slim
     )
+
+
+@router.get(
+    "/{course_uuid}/drip",
+    response_model=DripScheduleRead,
+    summary="Get the drip content schedule",
+    description=(
+        "Return the course's drip content settings and the release rule of "
+        "every chapter, in course order. Requires permission to edit the course."
+    ),
+    responses={
+        200: {"description": "Drip schedule", "model": DripScheduleRead},
+        403: {"description": "User lacks permission to update the course"},
+        404: {"description": "Course not found"},
+    },
+)
+async def api_get_course_drip_schedule(
+    request: Request,
+    course_uuid: str,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> DripScheduleRead:
+    return await get_drip_schedule(request, course_uuid, current_user, db_session)
+
+
+@router.put(
+    "/{course_uuid}/drip",
+    response_model=DripScheduleRead,
+    summary="Update the drip content schedule",
+    description=(
+        "Turn drip content on or off for a course and set when each chapter is "
+        "released: right away, a number of days after the learner enrolls (or "
+        "after the cohort start date), or on a fixed date, optionally once the "
+        "previous chapter is completed. Chapters left out keep their rule. "
+        "Turning drip content on requires the Standard plan or higher."
+    ),
+    responses={
+        200: {"description": "Drip schedule updated", "model": DripScheduleRead},
+        400: {"description": "A chapter does not belong to this course"},
+        403: {"description": "User lacks permission, or the plan does not include drip content"},
+        404: {"description": "Course not found"},
+    },
+)
+async def api_update_course_drip_schedule(
+    request: Request,
+    course_uuid: str,
+    schedule: DripScheduleUpdate,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> DripScheduleRead:
+    return await update_drip_schedule(request, course_uuid, schedule, current_user, db_session)
 
 
 @router.get(
