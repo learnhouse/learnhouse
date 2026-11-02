@@ -25,6 +25,7 @@ import {
   SquaresFour,
   ChalkboardSimple,
   Signpost,
+  CalendarDots,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import {
@@ -201,6 +202,28 @@ export const OrgMenu = (props: any) => {
                     <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
                       {t('courses.progress')}
                       <Keys keys="g t" />
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </AuthenticatedClientElement>
+            {/* Calendar */}
+            <AuthenticatedClientElement checkMethod="authentication">
+              <div className="hidden md:flex">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={getUriWithOrg(orgslug, '/calendar')}
+                        className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                        aria-label={t('calendar.title')}
+                      >
+                        <CalendarDots size={20} weight="fill" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
+                      {t('calendar.title')}
+                      <Keys keys="g e" />
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

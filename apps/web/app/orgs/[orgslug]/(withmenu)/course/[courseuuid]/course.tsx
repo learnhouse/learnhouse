@@ -10,7 +10,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import {
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock, Globe, Package, Puzzle, Gem, Eye, CalendarPlus } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock, Globe, Package, Puzzle, Gem, Eye, CalendarPlus, Radio } from 'lucide-react'
 import { getMyCourseAccess } from '@ee/services/payments/access'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -267,6 +267,8 @@ const CourseClient = (props: any) => {
         return t('activities.assignment')
       case 'TYPE_SCORM':
         return t('activities.scorm')
+      case 'TYPE_LIVE_SESSION':
+        return t('activities.live_session')
       case 'TYPE_CUSTOM':
         return t('activities.custom')
       default:
@@ -288,6 +290,8 @@ const CourseClient = (props: any) => {
         return <Backpack size={size} />
       case 'TYPE_SCORM':
         return <Package size={size} />
+      case 'TYPE_LIVE_SESSION':
+        return <Radio size={size} />
       case 'TYPE_CUSTOM':
         return <Puzzle size={size} />
       default:
