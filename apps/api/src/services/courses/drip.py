@@ -104,14 +104,17 @@ def chapter_drip_rule(raw: Optional[dict]) -> ChapterDripRule:
 
 
 def _parse_timestamp(value: Optional[str]) -> Optional[datetime]:
-    """Trail rows store ``str(datetime.now())``: naive, server time (UTC)."""
+    """Trail rows store ``str(datetime.now())``: naive, in the API server's
+    local time zone (UTC on most deployments, not all). Read them back in
+    that zone, or a server east of UTC would hold every chapter back for a
+    few hours after enrolling."""
     if not value:
         return None
     try:
         parsed = datetime.fromisoformat(value)
     except ValueError:
         return None
-    return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+    return parsed.astimezone(timezone.utc) if parsed.tzinfo is None else parsed
 
 
 async def enrollment_date(user_id: int, course_id: int, db_session: AsyncSession) -> Optional[datetime]:

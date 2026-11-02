@@ -9,7 +9,7 @@ course keeps showing all of its chapters.
 Also creates ``drip_notification``, one row per (chapter, learner) once the
 "chapter is open" email has gone out.
 
-Revision ID: e7f8a9b0c1d2
+Revision ID: dae02f36bef2
 Revises: 8d2b6f4c1e75
 Create Date: 2026-11-02
 
@@ -23,7 +23,7 @@ import sqlmodel  # noqa: F401
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e7f8a9b0c1d2'
+revision: str = 'dae02f36bef2'
 down_revision: Union[str, None] = '8d2b6f4c1e75'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

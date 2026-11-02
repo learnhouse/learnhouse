@@ -118,9 +118,10 @@ class TestStoredValues:
     def test_parse_timestamp(self):
         assert _parse_timestamp(None) is None
         assert _parse_timestamp("not a date") is None
-        assert _parse_timestamp("2026-11-01 10:00:00.123") == datetime(
-            2026, 11, 1, 10, 0, 0, 123000, tzinfo=timezone.utc
-        )
+        # Naive values are the server's local time, like str(datetime.now()).
+        assert _parse_timestamp("2026-11-01 10:00:00.123") == datetime(2026, 11, 1, 10, 0, 0, 123000).astimezone(timezone.utc)
+        local = datetime.now().replace(microsecond=0)
+        assert abs(_parse_timestamp(str(local)) - datetime.now(timezone.utc)) < timedelta(seconds=5)
         aware = _parse_timestamp("2026-11-01T10:00:00+01:00")
         assert aware.utcoffset() == timedelta(hours=1)
 
@@ -247,7 +248,7 @@ async def _enroll(db, org, course, user_id, when: datetime, run_id=1):
     db.add(Trail(id=run_id, org_id=org.id, user_id=user_id, trail_uuid=f"trail_{run_id}"))
     db.add(TrailRun(
         id=run_id, trail_id=run_id, course_id=course.id, org_id=org.id, user_id=user_id,
-        creation_date=str(when.replace(tzinfo=None)), update_date="",
+        creation_date=str(when.astimezone().replace(tzinfo=None)), update_date="",  # local, like trail.py
     ))
     await db.commit()
 

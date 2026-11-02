@@ -95,9 +95,11 @@ async def run_drip_notifications(db_session: AsyncSession, now: Optional[datetim
         already = set((await db_session.execute(
             select(DripNotification.chapter_id, DripNotification.user_id).where(DripNotification.course_id == course.id)
         )).all())
+        # Not SELECT DISTINCT on user rows: Postgres can't compare their JSON columns.
         learners = (await db_session.execute(
-            select(User).join(TrailRun, TrailRun.user_id == User.id)  # type: ignore[arg-type]
-            .where(TrailRun.course_id == course.id).distinct()
+            select(User).where(User.id.in_(  # type: ignore[union-attr]
+                select(TrailRun.user_id).where(TrailRun.course_id == course.id)
+            ))
         )).scalars().all()
         if not learners:
             continue
