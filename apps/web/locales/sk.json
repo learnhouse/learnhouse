@@ -6598,8 +6598,11 @@
         },
         "revoke": "Zrušiť",
         "revoke_title": "Zrušiť certifikát?",
-        "revoke_confirm": "Certifikát používateľa {{name}} prestane prechádzať overením. Študent zostane v ceste a môže ho získať znova.",
-        "revoked": "Certifikát zrušený"
+        "revoke_confirm": "Certifikát používateľa {{name}} prestane byť overiteľný. Neskôr ho môžete obnoviť.",
+        "revoked": "Certifikát zrušený",
+        "revoked_badge": "Zrušený",
+        "reinstate": "Obnoviť",
+        "reinstated": "Certifikát bol obnovený"
       }
     },
     "toasts": {

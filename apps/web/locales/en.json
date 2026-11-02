@@ -8121,8 +8121,11 @@
         },
         "revoke": "Revoke",
         "revoke_title": "Revoke certificate?",
-        "revoke_confirm": "{{name}}'s certificate will stop verifying. They stay in the path and can earn it again.",
-        "revoked": "Certificate revoked"
+        "revoke_confirm": "{{name}}'s certificate will stop verifying. You can reinstate it later.",
+        "revoked": "Certificate revoked",
+        "revoked_badge": "Revoked",
+        "reinstate": "Reinstate",
+        "reinstated": "Certificate reinstated"
       }
     },
     "toasts": {

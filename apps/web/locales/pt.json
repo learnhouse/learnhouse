@@ -6570,8 +6570,11 @@
         },
         "revoke": "Revogar",
         "revoke_title": "Revogar certificado?",
-        "revoke_confirm": "O certificado de {{name}} deixará de ser verificável. O aluno continua na trilha e pode obtê-lo novamente.",
-        "revoked": "Certificado revogado"
+        "revoke_confirm": "O certificado de {{name}} deixará de ser verificável. Você pode restabelecê-lo depois.",
+        "revoked": "Certificado revogado",
+        "revoked_badge": "Revogado",
+        "reinstate": "Restabelecer",
+        "reinstated": "Certificado restabelecido"
       }
     },
     "toasts": {

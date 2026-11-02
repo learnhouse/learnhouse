@@ -138,6 +138,13 @@ class TestRoutes:
         assert (await client.get("/api/v1/paths/certificates/PATH-1")).json()["path"]["name"] == "Path"
         assert (await client.get("/api/v1/paths/certificates/nope")).status_code == 404
 
+        res = await client.delete(f"/api/v1/paths/{path.path_uuid}/certificates/PATH-1")
+        assert res.status_code == 200
+        assert (await client.get("/api/v1/paths/certificates/PATH-1")).status_code == 404
+        res = await client.post(f"/api/v1/paths/{path.path_uuid}/certificates/PATH-1/reinstate")
+        assert res.status_code == 200
+        assert (await client.get("/api/v1/paths/certificates/PATH-1")).status_code == 200
+
     async def test_verification_survives_a_downgrade(self, client, db, org, admin_user):
         await _plan(db, org, "free")
         path = await _saved_path(db, org)

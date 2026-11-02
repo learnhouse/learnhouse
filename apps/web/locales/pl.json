@@ -6626,8 +6626,11 @@
         },
         "revoke": "Unieważnij",
         "revoke_title": "Unieważnić certyfikat?",
-        "revoke_confirm": "Certyfikat użytkownika {{name}} przestanie przechodzić weryfikację. Uczeń pozostanie na ścieżce i może zdobyć go ponownie.",
-        "revoked": "Certyfikat unieważniony"
+        "revoke_confirm": "Certyfikatu {{name}} nie będzie można zweryfikować. Możesz go później przywrócić.",
+        "revoked": "Certyfikat unieważniony",
+        "revoked_badge": "Unieważniony",
+        "reinstate": "Przywróć",
+        "reinstated": "Certyfikat przywrócony"
       }
     },
     "toasts": {

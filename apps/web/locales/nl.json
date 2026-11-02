@@ -6548,8 +6548,11 @@
         },
         "revoke": "Intrekken",
         "revoke_title": "Certificaat intrekken?",
-        "revoke_confirm": "Het certificaat van {{name}} kan daarna niet meer worden geverifieerd. De leerling blijft in het leerpad en kan het opnieuw behalen.",
-        "revoked": "Certificaat ingetrokken"
+        "revoke_confirm": "Het certificaat van {{name}} is dan niet meer te verifiëren. Je kunt het later herstellen.",
+        "revoked": "Certificaat ingetrokken",
+        "revoked_badge": "Ingetrokken",
+        "reinstate": "Herstellen",
+        "reinstated": "Certificaat hersteld"
       }
     },
     "toasts": {

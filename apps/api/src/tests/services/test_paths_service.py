@@ -247,6 +247,22 @@ class TestVisibility:
         view = await svc.get_path(None, read.path_uuid, anonymous_user, db)
         assert view.courses[0].course == {"course_uuid": "course_p1", "restricted": True}
 
+    async def test_api_token_sees_private_paths_of_its_own_org_only(self, db, org, other_org, admin_user):
+        from src.db.users import APITokenUser
+
+        course = await _course(db, org, 1)
+        read = await _path(db, org, admin_user, [(course, True)], name="Members", public=False)
+        # The token's creator is a member of `org`, but the token belongs to another org.
+        foreign = APITokenUser(org_id=other_org.id, created_by_user_id=admin_user.id)
+        own = APITokenUser(org_id=org.id, created_by_user_id=admin_user.id)
+        with pytest.raises(HTTPException) as exc:
+            await svc.get_path(None, read.path_uuid, foreign, db)
+        assert exc.value.status_code == 404
+        assert await svc.list_org_paths(None, org.id, foreign, db) == []
+        assert await svc.get_paths_for_course(None, course.course_uuid, foreign, db) == []
+        assert (await svc.get_path(None, read.path_uuid, own, db)).name == "Members"
+        assert [p.name for p in await svc.list_org_paths(None, org.id, own, db)] == ["Members"]
+
     async def test_paths_for_course(self, db, org, admin_user, anonymous_user):
         course = await _course(db, org, 1)
         await _path(db, org, admin_user, [(course, True)], name="Open")
@@ -367,10 +383,52 @@ class TestCompletion:
         await svc.revoke_path_certificate(
             None, read.path_uuid, view.progress.certificate_uuid, admin_user, db
         )
-        assert not (await db.execute(select(PathCertificate))).scalars().all()
-        assert (await db.execute(select(PathEnrollment))).scalars().one().completed_at is None
+        # Kept and marked revoked: it stops verifying and leaves the learner's list.
+        assert (await db.execute(select(PathCertificate))).scalars().one().revoked_at
+        with pytest.raises(HTTPException) as exc:
+            await svc.get_path_certificate(None, view.progress.certificate_uuid, db)
+        assert exc.value.status_code == 404
+        assert await svc.get_my_path_certificates(None, regular_user, db) == []
+        learners = await svc.get_path_learners(None, read.path_uuid, admin_user, db)
+        assert learners[0].certificate_revoked is True
+        progress = (await svc.get_path(None, read.path_uuid, regular_user, db)).progress
+        assert progress.certificate_uuid is None and progress.certificate_revoked is True
+        # Revoking twice is harmless, and only active certificates block deletion.
+        await svc.revoke_path_certificate(None, read.path_uuid, view.progress.certificate_uuid, admin_user, db)
         await svc.delete_path(None, read.path_uuid, admin_user, db)
         assert not (await db.execute(select(Path))).scalars().all()
+
+    async def test_revoked_certificate_is_not_reissued(self, db, org, admin_user, regular_user):
+        a = await _course(db, org, 1)
+        await _complete(db, org, a, regular_user.id)
+        read = await _path(db, org, admin_user, [(a, True)], certificate_enabled=True)
+        cert = (await svc.enroll_in_path(None, read.path_uuid, regular_user, db)).progress.certificate_uuid
+        await svc.revoke_path_certificate(None, read.path_uuid, cert, admin_user, db)
+
+        # Leaving and starting again still completes the path, but issues nothing.
+        await svc.leave_path(None, read.path_uuid, regular_user, db)
+        view = await svc.enroll_in_path(None, read.path_uuid, regular_user, db)
+        assert view.progress.completed and view.progress.certificate_uuid is None
+        rows = (await db.execute(select(PathCertificate))).scalars().all()
+        assert len(rows) == 1 and rows[0].revoked_at
+
+        await svc.reinstate_path_certificate(None, read.path_uuid, cert, admin_user, db)
+        await svc.reinstate_path_certificate(None, read.path_uuid, cert, admin_user, db)
+        assert (await svc.get_path_certificate(None, cert, db))["certificate"]["certificate_uuid"] == cert
+        assert (await svc.get_path(None, read.path_uuid, regular_user, db)).progress.certificate_uuid == cert
+
+    async def test_only_admins_revoke_or_reinstate(self, db, org, admin_user, regular_user):
+        a = await _course(db, org, 1)
+        await _complete(db, org, a, regular_user.id)
+        read = await _path(db, org, admin_user, [(a, True)], certificate_enabled=True)
+        cert = (await svc.enroll_in_path(None, read.path_uuid, regular_user, db)).progress.certificate_uuid
+        for action in (svc.revoke_path_certificate, svc.reinstate_path_certificate):
+            with pytest.raises(HTTPException) as exc:
+                await action(None, read.path_uuid, cert, regular_user, db)
+            assert exc.value.status_code == 403
+        with pytest.raises(HTTPException) as exc:
+            await svc.revoke_path_certificate(None, read.path_uuid, "PATH-unknown", admin_user, db)
+        assert exc.value.status_code == 404
 
     async def test_leave_keeps_certificate(self, db, org, admin_user, regular_user):
         a = await _course(db, org, 1)

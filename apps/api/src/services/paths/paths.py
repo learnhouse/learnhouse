@@ -88,6 +88,17 @@ async def _can_manage(current_user, org_id: int, db_session: AsyncSession) -> bo
     return True
 
 
+async def _is_member(current_user, org_id: int, db_session: AsyncSession) -> bool:
+    """Whether the caller may see ``org_id``'s members-only paths. An API
+    token counts only for its own org: its creator being a member of another
+    org must not open that org's private paths to the token."""
+    if isinstance(current_user, APITokenUser):
+        return current_user.org_id == org_id
+    if _is_anonymous(current_user):
+        return False
+    return await is_org_member(current_user.id, org_id, db_session)
+
+
 async def _require_view(path: Path, current_user, db_session: AsyncSession) -> bool:
     """Raise 404 unless the caller may read ``path``. Returns whether the
     caller can manage it, which the readers use to decide what to show."""
@@ -96,10 +107,8 @@ async def _require_view(path: Path, current_user, db_session: AsyncSession) -> b
         return True
     if not path.published:
         raise HTTPException(status_code=404, detail="Path not found")
-    if not path.public:
-        user_id = 0 if _is_anonymous(current_user) else resolve_acting_user_id(current_user)
-        if not user_id or not await is_org_member(user_id, path.org_id, db_session):
-            raise HTTPException(status_code=404, detail="Path not found")
+    if not path.public and not await _is_member(current_user, path.org_id, db_session):
+        raise HTTPException(status_code=404, detail="Path not found")
     return False
 
 
@@ -289,7 +298,8 @@ async def _viewer_progress(
         courses_needed=summary["courses_needed"],
         courses_done=summary["courses_done"],
         percent=summary["percent"],
-        certificate_uuid=certificate.certificate_uuid if certificate else None,
+        certificate_uuid=certificate.certificate_uuid if certificate and not certificate.revoked_at else None,
+        certificate_revoked=bool(certificate and certificate.revoked_at),
     )
 
 
@@ -325,7 +335,7 @@ async def _path_to_read(
     if not can_manage:
         from src.services.folders.folders import _hidden_gated_uuids
 
-        include_private = bool(viewer_id) and await is_org_member(viewer_id, path.org_id, db_session)
+        include_private = await _is_member(current_user, path.org_id, db_session)
         hidden = await _hidden_gated_uuids(
             db_session,
             [(c, c.course_uuid) for _, c in rows],
@@ -512,7 +522,9 @@ async def delete_path(
     # certifications: unpublish instead, or revoke them one by one first.
     awarded = (
         await db_session.execute(
-            select(func.count(PathCertificate.id)).where(PathCertificate.path_id == path.id)
+            select(func.count(PathCertificate.id)).where(
+                PathCertificate.path_id == path.id, PathCertificate.revoked_at.is_(None)
+            )
         )
     ).scalar_one()
     if awarded:
@@ -539,8 +551,7 @@ async def list_org_paths(
     statement = select(Path).where(Path.org_id == org_id)
     if not can_manage:
         statement = statement.where(Path.published == True)  # noqa: E712
-        viewer_id = 0 if _is_anonymous(current_user) else resolve_acting_user_id(current_user)
-        if not viewer_id or not await is_org_member(viewer_id, org_id, db_session):
+        if not await _is_member(current_user, org_id, db_session):
             statement = statement.where(Path.public == True)  # noqa: E712
     paths = (
         await db_session.execute(statement.order_by(Path.creation_date.desc()))
@@ -629,8 +640,7 @@ async def get_paths_for_course(
     ).scalars().all()
     if not paths:
         return []
-    viewer_id = 0 if _is_anonymous(current_user) else resolve_acting_user_id(current_user)
-    member = bool(viewer_id) and await is_org_member(viewer_id, course.org_id, db_session)
+    member = await _is_member(current_user, course.org_id, db_session)
     return [
         await _path_to_read(db_session, path, current_user, can_manage=False, with_courses=False)
         for path in paths
@@ -765,7 +775,7 @@ async def get_path_learners(
         )
     ).all()
     certificates = {
-        cert.user_id: cert.certificate_uuid
+        cert.user_id: cert
         for cert in (
             await db_session.execute(
                 select(PathCertificate).where(PathCertificate.path_id == path.id)
@@ -797,7 +807,8 @@ async def get_path_learners(
                 courses_needed=summary["courses_needed"],
                 courses_done=summary["courses_done"],
                 percent=summary["percent"],
-                certificate_uuid=certificates.get(user.id),
+                certificate_uuid=getattr(certificates.get(user.id), "certificate_uuid", None),
+                certificate_revoked=bool(getattr(certificates.get(user.id), "revoked_at", None)),
             )
         )
     return result
@@ -843,7 +854,18 @@ async def check_path_completion(
 
     user = (await db_session.execute(select(User).where(User.id == user_id))).scalars().first()
     certificate_uuid = ""
-    if path.certificate_enabled and user:
+    existing = (
+        await db_session.execute(
+            select(PathCertificate).where(
+                PathCertificate.path_id == path.id, PathCertificate.user_id == user_id
+            )
+        )
+    ).scalars().first()
+    if existing:
+        # Earned before (and kept when they left the path), or revoked by an
+        # admin. A revoked certificate stays revoked until an admin reinstates it.
+        certificate_uuid = "" if existing.revoked_at else existing.certificate_uuid
+    elif path.certificate_enabled and user:
         certificate = PathCertificate(
             path_id=path.id,
             user_id=user_id,
@@ -855,16 +877,16 @@ async def check_path_completion(
             await db_session.commit()
             certificate_uuid = certificate.certificate_uuid
         except IntegrityError:
-            # Issued concurrently (or kept from an earlier enrollment).
+            # A concurrent completion check issued it first.
             await db_session.rollback()
-            existing = (
+            raced = (
                 await db_session.execute(
                     select(PathCertificate).where(
                         PathCertificate.path_id == path.id, PathCertificate.user_id == user_id
                     )
                 )
             ).scalars().first()
-            certificate_uuid = existing.certificate_uuid if existing else ""
+            certificate_uuid = raced.certificate_uuid if raced and not raced.revoked_at else ""
 
     try:
         await dispatch_webhooks(
@@ -974,7 +996,10 @@ async def get_path_certificate(
     certificates."""
     certificate = (
         await db_session.execute(
-            select(PathCertificate).where(PathCertificate.certificate_uuid == certificate_uuid)
+            select(PathCertificate).where(
+                PathCertificate.certificate_uuid == certificate_uuid,
+                PathCertificate.revoked_at.is_(None),
+            )
         )
     ).scalars().first()
     if not certificate:
@@ -991,22 +1016,14 @@ async def get_my_path_certificates(
     certificates = (
         await db_session.execute(
             select(PathCertificate)
-            .where(PathCertificate.user_id == user_id)
+            .where(PathCertificate.user_id == user_id, PathCertificate.revoked_at.is_(None))
             .order_by(PathCertificate.created_at.desc())
         )
     ).scalars().all()
     return [await _certificate_payload(db_session, c) for c in certificates]
 
 
-async def revoke_path_certificate(
-    request: Request,
-    path_uuid: str,
-    certificate_uuid: str,
-    current_user: PublicUser | APITokenUser,
-    db_session: AsyncSession,
-) -> dict:
-    path = await _get_path(db_session, path_uuid)
-    await _require_manage(current_user, path.org_id, db_session, "action_update")
+async def _get_path_certificate_row(db_session: AsyncSession, path: Path, certificate_uuid: str) -> PathCertificate:
     certificate = (
         await db_session.execute(
             select(PathCertificate).where(
@@ -1017,19 +1034,43 @@ async def revoke_path_certificate(
     ).scalars().first()
     if not certificate:
         raise HTTPException(status_code=404, detail="Certificate not found")
-    enrollment = (
-        await db_session.execute(
-            select(PathEnrollment).where(
-                PathEnrollment.path_id == path.id,
-                PathEnrollment.user_id == certificate.user_id,
-            )
-        )
-    ).scalars().first()
-    if enrollment:
-        # Reopen the path so a learner who still qualifies can be re-certified
-        # deliberately, rather than being marked done with no certificate.
-        enrollment.completed_at = None
-        db_session.add(enrollment)
-    await db_session.delete(certificate)
-    await db_session.commit()
+    return certificate
+
+
+async def revoke_path_certificate(
+    request: Request,
+    path_uuid: str,
+    certificate_uuid: str,
+    current_user: PublicUser | APITokenUser,
+    db_session: AsyncSession,
+) -> dict:
+    """Revoke a path certificate. The row is kept (marked revoked) so the
+    learner can't be re-certified automatically by completing the path again
+    or by leaving and re-joining it; it stops verifying right away."""
+    path = await _get_path(db_session, path_uuid)
+    await _require_manage(current_user, path.org_id, db_session, "action_update")
+    certificate = await _get_path_certificate_row(db_session, path, certificate_uuid)
+    if not certificate.revoked_at:
+        certificate.revoked_at = str(datetime.now())
+        db_session.add(certificate)
+        await db_session.commit()
     return {"detail": "Certificate revoked"}
+
+
+async def reinstate_path_certificate(
+    request: Request,
+    path_uuid: str,
+    certificate_uuid: str,
+    current_user: PublicUser | APITokenUser,
+    db_session: AsyncSession,
+) -> dict:
+    """Undo a revocation: the same certificate, with its original ID and date,
+    verifies again."""
+    path = await _get_path(db_session, path_uuid)
+    await _require_manage(current_user, path.org_id, db_session, "action_update")
+    certificate = await _get_path_certificate_row(db_session, path, certificate_uuid)
+    if certificate.revoked_at:
+        certificate.revoked_at = None
+        db_session.add(certificate)
+        await db_session.commit()
+    return {"detail": "Certificate reinstated"}

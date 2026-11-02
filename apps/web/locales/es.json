@@ -6563,8 +6563,11 @@
         },
         "revoke": "Revocar",
         "revoke_title": "¿Revocar el certificado?",
-        "revoke_confirm": "El certificado de {{name}} dejará de poder verificarse. Seguirá en la ruta y podrá obtenerlo de nuevo.",
-        "revoked": "Certificado revocado"
+        "revoke_confirm": "El certificado de {{name}} dejará de ser verificable. Podrás restablecerlo más tarde.",
+        "revoked": "Certificado revocado",
+        "revoked_badge": "Revocado",
+        "reinstate": "Restablecer",
+        "reinstated": "Certificado restablecido"
       }
     },
     "toasts": {

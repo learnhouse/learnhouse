@@ -6556,8 +6556,11 @@
         },
         "revoke": "取り消す",
         "revoke_title": "修了証を取り消しますか？",
-        "revoke_confirm": "{{name}} さんの修了証は照会できなくなります。学習パスには残り、再度獲得することもできます。",
-        "revoked": "修了証を取り消しました"
+        "revoke_confirm": "{{name}}さんの修了証は検証できなくなります。後で復元できます。",
+        "revoked": "修了証を取り消しました",
+        "revoked_badge": "取り消し済み",
+        "reinstate": "復元",
+        "reinstated": "修了証を復元しました"
       }
     },
     "toasts": {

@@ -6568,8 +6568,11 @@
         },
         "revoke": "Cabut",
         "revoke_title": "Cabut sertifikat?",
-        "revoke_confirm": "Sertifikat {{name}} tidak akan lagi terverifikasi. Mereka tetap berada di jalur belajar dan dapat memperolehnya lagi.",
-        "revoked": "Sertifikat dicabut"
+        "revoke_confirm": "Sertifikat {{name}} tidak akan bisa diverifikasi lagi. Anda dapat memulihkannya nanti.",
+        "revoked": "Sertifikat dicabut",
+        "revoked_badge": "Dicabut",
+        "reinstate": "Pulihkan",
+        "reinstated": "Sertifikat dipulihkan"
       }
     },
     "toasts": {

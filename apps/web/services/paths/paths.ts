@@ -59,6 +59,7 @@ export interface PathProgress {
   courses_done: number
   percent: number
   certificate_uuid: string | null
+  certificate_revoked: boolean
 }
 
 export interface Path {
@@ -102,6 +103,7 @@ export interface PathLearner {
   courses_done: number
   percent: number
   certificate_uuid: string | null
+  certificate_revoked: boolean
 }
 
 export interface PathCertificateRecord {
@@ -238,6 +240,14 @@ export async function revokePathCertificate(pathUuid: string, certificateUuid: s
   const res = await fetch(
     `${getAPIUrl()}paths/${pathUuid}/certificates/${certificateUuid}`,
     RequestBodyWithAuthHeader('DELETE', null, null, accessToken)
+  )
+  return errorHandling(res)
+}
+
+export async function reinstatePathCertificate(pathUuid: string, certificateUuid: string, accessToken: string) {
+  const res = await fetch(
+    `${getAPIUrl()}paths/${pathUuid}/certificates/${certificateUuid}/reinstate`,
+    RequestBodyWithAuthHeader('POST', null, null, accessToken)
   )
   return errorHandling(res)
 }

@@ -85,6 +85,7 @@ def upgrade() -> None:
             sa.Column('user_id', sa.Integer(), sa.ForeignKey('user.id', ondelete='CASCADE'), nullable=False),
             sa.Column('certificate_uuid', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
             sa.Column('created_at', sqlmodel.sql.sqltypes.AutoString(), nullable=False, server_default=''),
+            sa.Column('revoked_at', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
             sa.UniqueConstraint('path_id', 'user_id', name='uq_pathcertificate_path_user'),
         )
         op.create_index('ix_pathcertificate_path_id', 'pathcertificate', ['path_id'])
