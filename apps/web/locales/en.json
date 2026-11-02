@@ -6913,7 +6913,11 @@
       "new_tab_description": "LearnHouse opens in its own tab so your work is saved.",
       "open_course": "Continue in a new tab",
       "signing_in": "Opening LearnHouse…",
-      "please_wait": "Signing you in to LearnHouse."
+      "please_wait": "Signing you in to LearnHouse.",
+      "confirm_title": "Continue as {{name}}?",
+      "confirm_description": "{{platform}} is signing you in to LearnHouse as {{name}}. Only continue if you just opened this from your course.",
+      "confirm_button": "Continue as {{name}}",
+      "confirm_platform_fallback": "Your LMS"
     },
     "link": {
       "error_title": "We couldn't link your account",

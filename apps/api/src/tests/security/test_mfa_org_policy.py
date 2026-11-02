@@ -278,6 +278,56 @@ class TestExternalAuthExemption:
         assert state.satisfied is False
 
 
+    async def test_lti_launch_is_exempt_in_the_org_that_registered_the_lms(self, db, org, regular_user):
+        from src.security.session_context import SessionProvenance, set_session_provenance
+
+        await _set_policy(
+            db,
+            org.id,
+            require_2fa=True,
+            require_2fa_enabled_at=datetime.now().isoformat(),
+        )
+        user = await _get_user(db, regular_user.id)
+        set_session_provenance(SessionProvenance(amr="lti", org_id=org.id))
+        try:
+            state = await evaluate_mfa_compliance(db, user, org.id)
+        finally:
+            set_session_provenance(None)
+        assert state.satisfied is True
+        assert state.exempt_reason == "external_auth"
+
+    async def test_lti_launch_from_another_org_is_not_exempt(self, db, org, regular_user):
+        from src.security.session_context import SessionProvenance, set_session_provenance
+
+        await _set_policy(
+            db,
+            org.id,
+            require_2fa=True,
+            require_2fa_enabled_at=datetime.now().isoformat(),
+        )
+        user = await _get_user(db, regular_user.id)
+        set_session_provenance(SessionProvenance(amr="lti", org_id=org.id + 1000))
+        try:
+            state = await evaluate_mfa_compliance(db, user, org.id)
+        finally:
+            set_session_provenance(None)
+        assert state.satisfied is False
+
+    async def test_account_created_by_lti_is_not_exempt_on_its_own(self, db, org, regular_user):
+        await _set_policy(
+            db,
+            org.id,
+            require_2fa=True,
+            require_2fa_enabled_at=datetime.now().isoformat(),
+        )
+        user = await _get_user(db, regular_user.id)
+        user.signup_method = "lti"
+        db.add(user)
+        await db.commit()
+
+        state = await evaluate_mfa_compliance(db, user, org.id)
+        assert state.satisfied is False
+
 @pytest.mark.asyncio
 class TestPolicyReading:
     async def test_defaults_when_org_has_no_config_row(self, db, org):
