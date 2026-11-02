@@ -85,6 +85,15 @@ export const queryKeys = {
     meta: (uuid: string) => ['podcast', uuid, 'meta'] as const,
     episodes: (uuid: string) => ['podcast', uuid, 'episodes'] as const,
   },
+  paths: {
+    list: (orgId: number) => ['paths', orgId] as const,
+    detail: (uuid: string) => ['path', uuid] as const,
+    learners: (uuid: string) => ['path', uuid, 'learners'] as const,
+    mine: (orgId: number) => ['paths', orgId, 'mine'] as const,
+    forCourse: (courseUuid: string) => ['paths', 'course', courseUuid] as const,
+    certificate: (uuid: string) => ['pathCertificate', uuid] as const,
+    myCertificates: () => ['pathCertificates', 'mine'] as const,
+  },
   ai: {
     ragSessions: (orgSlug: string) => ['ai', 'rag', 'sessions', orgSlug] as const,
   },

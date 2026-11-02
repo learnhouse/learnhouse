@@ -16,7 +16,7 @@ import { usePlan } from '@components/Hooks/usePlan'
 import { Switch } from '@components/ui/switch'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import {
-  Books, FolderSimple, Headphones, ChatsCircle, Cube, ShoppingBag,
+  Books, FolderSimple, Headphones, ChatsCircle, Cube, ShoppingBag, Steps,
   DotsSixVertical, Lock, Trash, Plus, FloppyDisk, CaretDown,
 } from '@phosphor-icons/react'
 import { MENU_ICONS, MENU_ICON_NAMES, menuIcon, DEFAULT_MENU_ICON } from '@components/Objects/Menus/menuIcons'
@@ -25,13 +25,14 @@ type BuiltinMeta = { feature: string; link: string; labelKey: string; Icon: any 
 
 const BUILTIN_META: Record<string, BuiltinMeta> = {
   courses: { feature: 'courses', link: '/courses', labelKey: 'courses.courses', Icon: Books },
+  paths: { feature: 'paths', link: '/paths', labelKey: 'paths.title', Icon: Steps },
   library: { feature: 'folders', link: '/library', labelKey: 'library.library', Icon: FolderSimple },
   podcasts: { feature: 'podcasts', link: '/podcasts', labelKey: 'podcasts.podcasts', Icon: Headphones },
   communities: { feature: 'communities', link: '/communities', labelKey: 'communities.title', Icon: ChatsCircle },
   playgrounds: { feature: 'playgrounds', link: '/playgrounds', labelKey: 'common.playgrounds', Icon: Cube },
   store: { feature: 'payments', link: '/store', labelKey: 'common.store', Icon: ShoppingBag },
 }
-const BUILTIN_ORDER = ['courses', 'library', 'podcasts', 'communities', 'playgrounds', 'store']
+const BUILTIN_ORDER = ['courses', 'paths', 'library', 'podcasts', 'communities', 'playgrounds', 'store']
 
 function defaultLabel(type: string, t: any): string {
   return BUILTIN_META[type] ? t(BUILTIN_META[type].labelKey) : ''

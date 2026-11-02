@@ -138,6 +138,10 @@
         "drip": {
           "title": "Standart Özellik",
           "description": "Kademeli içerik yalnızca Standart plan ve üzeri organizasyonlar için kullanılabilir. Bölümleri bir takvime göre, öğrenci bazında veya tüm kohort için yayınlamak üzere yükseltin."
+        },
+        "paths": {
+          "title": "Pro Özellik",
+          "description": "Öğrenme yolları, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kursları kendi sertifikası olan rehberli yolculuklar hâlinde düzenlemek için yükseltin."
         }
       },
       "current_plan": "Mevcut plan",
@@ -1092,7 +1096,45 @@
     "workshop_attendance": "Atölye Katılımı",
     "specialization": "Uzmanlık",
     "dedication_message": "Özveriniz ve sıkı çalışmanız karşılığını verdi. Bu kursun tüm içeriğine hakim oldunuz.",
-    "download_failed": "PDF oluşturulamadı. Lütfen tekrar deneyin."
+    "download_failed": "PDF oluşturulamadı. Lütfen tekrar deneyin.",
+    "document": {
+      "title": "Sertifika",
+      "presented_to": "Bu sertifika aşağıdaki kişiye verilmiştir",
+      "for_completing": "aşağıdaki eğitimi başarıyla tamamladığı için",
+      "learner_placeholder": "Öğrenci adı",
+      "name_placeholder": "Sertifika adı",
+      "instructor": "Eğitmen",
+      "issued_by": "Veren",
+      "date": "Verilme tarihi",
+      "credential_id": "Sertifika Kimliği"
+    },
+    "page": {
+      "verified": "Doğrulanmış sertifika",
+      "issued_line": "{{issuer}} tarafından {{date}} tarihinde {{name}} adına verildi",
+      "download": "PDF indir",
+      "add_to_linkedin": "LinkedIn'e ekle",
+      "copy_link": "Doğrulama bağlantısını kopyala",
+      "link_copied": "Bağlantı kopyalandı",
+      "recipient": "Alıcı",
+      "issuer": "Veren",
+      "issued_on": "Verilme tarihi",
+      "credential_id": "Sertifika Kimliği",
+      "id_copied": "Sertifika kimliği kopyalandı",
+      "copy_id": "Sertifika kimliğini kopyala",
+      "not_found": "Sertifika bulunamadı",
+      "not_found_hint": "Bu kimlikle eşleşen geçerli bir sertifika yok. İptal edilmiş olabilir ya da bağlantı eksik olabilir.",
+      "go_home": "Ana sayfaya dön",
+      "earned_for_course": "Şu kursu tamamlayarak kazanıldı",
+      "earned_for_path": "{{name}} öğrenme yolunu tamamlayarak kazanıldı",
+      "view_and_share": "Görüntüle ve paylaş"
+    },
+    "designer": {
+      "signer": "İmzalayan (isteğe bağlı)",
+      "signer_placeholder": "ör. Dr. Jane Smith",
+      "style": "Stil",
+      "preview_hint": "Canlı önizleme. Öğrenciler kendi adlarını, tarihi ve sertifika kimliğini görür."
+    },
+    "kind_course": "Kurs"
   },
   "search": {
     "search_placeholder": "Kursları, kullanıcıları, koleksiyonları ara...",
@@ -1121,6 +1163,14 @@
       "discussions": "Tartışmalar",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcastler"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Birden fazla kurstan oluşan rehberli yolculuklar",
+          "keywords": "öğrenme yolları, yollar, programlar, yolculuk, paths, learning paths"
+        }
+      }
     }
   },
   "ai": {
@@ -4254,6 +4304,10 @@
         "org_api": {
           "description": "API belirteçleri ve programatik erişim",
           "keywords": "api, belirteç, erişim, programatik, anahtar"
+        },
+        "paths": {
+          "description": "Kursları sertifikalı rehberli öğrenme yollarında düzenleyin",
+          "keywords": "öğrenme yolları, yollar, programlar, müfredat, sıralama, sertifika, paths, learning paths"
         }
       }
     },
@@ -6368,5 +6422,177 @@
       "resource": "Kaynak",
       "resource_plural": "Kaynaklar"
     }
+  },
+  "paths": {
+    "title": "Öğrenme Yolları",
+    "new_path": "Yeni öğrenme yolu",
+    "manage_paths": "Öğrenme yollarını yönet",
+    "catalog_subtitle": "Birden fazla kurstan oluşan rehberli yolculuklar. Sertifikasını kazanmak için bir öğrenme yolunu tamamlayın.",
+    "published": "Yayınlandı",
+    "draft": "Taslak",
+    "completed": "Tamamlandı",
+    "in_progress": "Devam ediyor",
+    "required": "Zorunlu",
+    "elective": "Seçmeli",
+    "actions": "Öğrenme yolu işlemleri",
+    "edit_courses": "Kursları düzenle",
+    "view_path": "Öğrenme yolunu görüntüle",
+    "view_certificate": "Sertifikayı görüntüle",
+    "start_path": "Öğrenme yoluna başla",
+    "start_hint": "İçindeki her kurstaki ilerlemenizi takip etmek için öğrenme yoluna başlayın.",
+    "sign_in_to_start": "Başlamak için giriş yapın",
+    "continue_learning": "Öğrenmeye devam et",
+    "leave_path": "Öğrenme yolundan ayrıl",
+    "your_progress": "İlerlemeniz",
+    "up_next": "Sırada",
+    "guided_order": "Rehberli sıra",
+    "certificate_included": "Sertifika dahil",
+    "certificate_earned": "Bu sertifikayı kazandınız",
+    "certificate_explainer": "Bu öğrenme yolundaki tüm zorunlu kursları tamamladığınızda otomatik olarak verilir.",
+    "locked_hint": "Kilidi açmak için önceki kursu tamamlayın",
+    "restricted_course": "Kısıtlı kurs",
+    "no_courses_yet": "Bu öğrenme yolunda henüz kurs yok.",
+    "electives_rule_one": "{{total}} seçmeli kurstan en az {{count}} tanesini seçin",
+    "electives_rule_other": "{{total}} seçmeli kurstan en az {{count}} tanesini seçin",
+    "progress_short": "{{done}}/{{total}} kurs",
+    "progress_long": "{{total}} kurstan {{done}} tanesi tamamlandı",
+    "course_count_one": "{{count}} kurs",
+    "course_count_other": "{{count}} kurs",
+    "learner_count_one": "{{count}} öğrenci",
+    "learner_count_other": "{{count}} öğrenci",
+    "no_paths": "Henüz öğrenme yolu yok",
+    "no_paths_description": "Kursları kendi sertifikası olan rehberli bir yolculuk hâlinde düzenleyin.",
+    "no_public_paths": "Henüz öğrenme yolu yok",
+    "no_public_paths_description": "Öğrenme yolları yayınlandığında burada görünecek.",
+    "no_search_results": "Aramanızla eşleşen öğrenme yolu yok",
+    "search_placeholder": "Öğrenme yolu ara...",
+    "clear_search": "Aramayı temizle",
+    "not_found": "Bu öğrenme yolu mevcut değil veya erişiminize açık değil.",
+    "back_to_paths": "Öğrenme yollarına dön",
+    "delete_path": "Öğrenme yolunu sil",
+    "delete_path_title": "\"{{name}}\" silinsin mi?",
+    "delete_path_confirm": "Öğrenme yolu ve öğrencilerin bu yoldaki ilerlemesi kaldırılacak. Kursların kendisi etkilenmez.",
+    "levels": {
+      "all": "Tüm seviyeler",
+      "beginner": "Başlangıç",
+      "intermediate": "Orta",
+      "advanced": "İleri"
+    },
+    "form": {
+      "name": "Ad",
+      "name_placeholder": "ör. Veri Analisti",
+      "name_required": "Öğrenme yolunun bir adı olmalı",
+      "name_max_length": "Ad 200 karakteri geçmemeli",
+      "description": "Kısa açıklama",
+      "description_placeholder": "Öğrenme yolu kartında gösterilen bir veya iki cümle",
+      "description_max_length": "Açıklama 500 karakteri geçmemeli",
+      "about": "Hakkında",
+      "about_placeholder": "Bu öğrenme yolu kimler için ve öğrenciler sonunda neler yapabilecek",
+      "about_hint": "Öğrenme yolu sayfasında gösterilir.",
+      "level": "Seviye",
+      "thumbnail": "Kapak görseli",
+      "upload_thumbnail": "Görsel yükle",
+      "thumbnail_hint": "En iyi sonuç için 16:9. PNG veya JPG.",
+      "discard_thumbnail": "Yeni görseli at",
+      "visibility": "Görünürlük",
+      "published_hint": "Öğrenciler öğrenme yolunu bulup başlayabilir.",
+      "public": "Herkese açık",
+      "public_hint": "Kuruluşunuzun üyesi olmayan ziyaretçiler de görebilir.",
+      "public_label": "Yalnızca üyeler değil, herkes görebilir",
+      "save": "Değişiklikleri kaydet"
+    },
+    "modals": {
+      "create": {
+        "title": "Yeni öğrenme yolu",
+        "description": "Kursları rehberli bir yolculukta bir araya getirin. Sonraki adımda kursları seçip sıralayacaksınız.",
+        "submit": "Öğrenme yolu oluştur"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Her biri kendi sertifikasına sahip rehberli kurs dizileri.",
+      "view_path": "Öğrenme yolunu görüntüle",
+      "tabs": {
+        "general": "Genel",
+        "courses": "Kurslar",
+        "certificate": "Sertifika",
+        "learners": "Öğrenciler"
+      },
+      "courses": {
+        "title": "Kurslar",
+        "subtitle": "Öğrencilerin izleyeceği sırayı belirlemek için sürükleyin. Seçmeli kurslar isteğe bağlıdır.",
+        "add": "Kurs ekle",
+        "drag": "Sıralamak için sürükleyin",
+        "remove": "Öğrenme yolundan kaldır",
+        "requirement": "Gereklilik",
+        "unpublished_hint": "Yayınlanmadı, öğrencilerden gizli",
+        "empty_title": "Henüz kurs yok",
+        "empty_description": "Bu öğrenme yolunu oluşturan kursları ekleyin."
+      },
+      "rules": {
+        "title": "Tamamlama kuralları",
+        "subtitle": "Bir öğrencinin öğrenme yolunu bitirmek için yapması gerekenler.",
+        "sequential": "Rehberli sıra",
+        "sequential_hint": "Öğrenme yolu görünümünde her kurs, önceki zorunlu kurs tamamlanınca açılır. Kurslar kendi sayfalarında açık kalır.",
+        "electives": "Tamamlanacak seçmeli kurslar",
+        "electives_hint_one": "Bu öğrenme yolundaki {{count}} seçmeli kurstan.",
+        "electives_hint_other": "Bu öğrenme yolundaki {{count}} seçmeli kurstan.",
+        "electives_none": "Öğrencilerin seçim yapabilmesi için bir kursu seçmeli olarak işaretleyin.",
+        "summary": "Bitirmek için öğrenciler {{required}} zorunlu ve {{electives}} seçmeli kursu tamamlar."
+      },
+      "picker": {
+        "title": "Kurs ekle",
+        "description": "Seçilen kurslar, seçtiğiniz sırayla eklenir.",
+        "search": "Kurs ara...",
+        "empty": "Eklenecek başka kurs yok",
+        "add_one": "{{count}} kurs ekle",
+        "add_other": "{{count}} kurs ekle"
+      },
+      "certificate": {
+        "title": "Öğrenme yolu sertifikası",
+        "subtitle": "Öğrenci öğrenme yolunu bitirdiğinde kurs sertifikalarına ek olarak verilir.",
+        "disabled_title": "Bu öğrenme yolu için sertifika yok",
+        "disabled_message": "Öğrenme yolunu tamamlayan herkese sertifika vermek için etkinleştirin. Zaten bitirmiş olan öğrenciler, ilerlemeleri bir sonraki kontrol edildiğinde sertifikayı alır.",
+        "enable": "Sertifika ver"
+      },
+      "learners": {
+        "enrolled": "Öğrenciler",
+        "completed": "Tamamlayan",
+        "completion_rate": "Tamamlama oranı",
+        "certificates": "Sertifikalar",
+        "empty_title": "Bu öğrenme yoluna henüz kimse başlamadı",
+        "empty_description": "Öğrenciler öğrenme yoluna başladığında burada görünür.",
+        "columns": {
+          "learner": "Öğrenci",
+          "progress": "İlerleme",
+          "started": "Başlangıç",
+          "status": "Durum",
+          "certificate": "Sertifika"
+        },
+        "revoke": "İptal et",
+        "revoke_title": "Sertifika iptal edilsin mi?",
+        "revoke_confirm": "{{name}} adlı kişinin sertifikası artık doğrulanamayacak. Daha sonra geri yükleyebilirsiniz.",
+        "revoked": "Sertifika iptal edildi",
+        "revoked_badge": "İptal edildi",
+        "reinstate": "Geri yükle",
+        "reinstated": "Sertifika geri yüklendi"
+      }
+    },
+    "toasts": {
+      "saving": "Kaydediliyor...",
+      "saved": "Öğrenme yolu kaydedildi",
+      "save_error": "Öğrenme yolu kaydedilemedi",
+      "create_error": "Öğrenme yolu oluşturulamadı",
+      "deleting": "Öğrenme yolu siliniyor...",
+      "deleted": "Öğrenme yolu silindi",
+      "delete_error": "Öğrenme yolu silinemedi",
+      "enroll_error": "Öğrenme yoluna başlanamadı",
+      "already_completed": "Bu öğrenme yolundaki tüm kursları zaten tamamladınız"
+    },
+    "my_paths": "Öğrenme yollarım",
+    "part_of_paths": "Bir öğrenme yolunun parçası",
+    "path": "Öğrenme yolu",
+    "courses_in_path": "Bu öğrenme yolundaki kurslar",
+    "ready_to_begin": "Başlamaya hazır mısınız?",
+    "percent_done": "%{{percent}} tamamlandı"
   }
 }

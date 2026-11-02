@@ -138,6 +138,10 @@
         "drip": {
           "title": "Funkcja Standard",
           "description": "Stopniowe udostępnianie treści jest dostępne dla organizacji z planem Standard lub wyższym. Uaktualnij, aby udostępniać rozdziały według harmonogramu, osobno dla każdego uczestnika lub dla całej kohorty."
+        },
+        "paths": {
+          "title": "Funkcja Pro",
+          "description": "Ścieżki nauki to funkcja premium dostępna tylko dla organizacji z planem Pro lub wyższym. Uaktualnij, aby łączyć kursy w prowadzone ścieżki z własnymi certyfikatami."
         }
       },
       "current_plan": "Aktualny plan",
@@ -1092,7 +1096,45 @@
     "workshop_attendance": "Uczestnictwo w warsztatach",
     "specialization": "Specjalizacja",
     "dedication_message": "Twoje zaangażowanie i ciężka praca przyniosły efekty. Opanowałeś całą zawartość tego kursu.",
-    "download_failed": "Nie udało się wygenerować pliku PDF. Spróbuj ponownie."
+    "download_failed": "Nie udało się wygenerować pliku PDF. Spróbuj ponownie.",
+    "document": {
+      "title": "Certyfikat",
+      "presented_to": "Niniejszy certyfikat otrzymuje",
+      "for_completing": "za pomyślne ukończenie",
+      "learner_placeholder": "Imię i nazwisko ucznia",
+      "name_placeholder": "Nazwa certyfikacji",
+      "instructor": "Instruktor",
+      "issued_by": "Wystawca",
+      "date": "Data przyznania",
+      "credential_id": "ID poświadczenia"
+    },
+    "page": {
+      "verified": "Zweryfikowane poświadczenie",
+      "issued_line": "Wystawiono dla {{name}} przez {{issuer}} dnia {{date}}",
+      "download": "Pobierz PDF",
+      "add_to_linkedin": "Dodaj do LinkedIn",
+      "copy_link": "Kopiuj link weryfikacyjny",
+      "link_copied": "Skopiowano link",
+      "recipient": "Odbiorca",
+      "issuer": "Wystawca",
+      "issued_on": "Data wystawienia",
+      "credential_id": "ID poświadczenia",
+      "id_copied": "Skopiowano ID poświadczenia",
+      "copy_id": "Kopiuj ID poświadczenia",
+      "not_found": "Nie znaleziono certyfikatu",
+      "not_found_hint": "Żaden ważny certyfikat nie pasuje do tego ID. Mógł zostać unieważniony lub link jest niekompletny.",
+      "go_home": "Strona główna",
+      "earned_for_course": "Zdobyty za ukończenie",
+      "earned_for_path": "Zdobyty za ukończenie ścieżki {{name}}",
+      "view_and_share": "Zobacz i udostępnij"
+    },
+    "designer": {
+      "signer": "Podpisał(a) (opcjonalnie)",
+      "signer_placeholder": "np. dr Jan Kowalski",
+      "style": "Styl",
+      "preview_hint": "Podgląd na żywo. Każdy uczeń zobaczy swoje imię i nazwisko, datę i ID poświadczenia."
+    },
+    "kind_course": "Kurs"
   },
   "search": {
     "search_placeholder": "Szukaj kursów, użytkowników, kolekcji...",
@@ -1121,6 +1163,14 @@
       "discussions": "Dyskusje",
       "playgrounds": "Playgrounds",
       "podcasts": "Podcasty"
+    },
+    "palette": {
+      "entries": {
+        "paths": {
+          "description": "Prowadzone ścieżki przez kilka kursów",
+          "keywords": "ścieżki, ścieżki nauki, ścieżki edukacyjne, programy, tracki"
+        }
+      }
     }
   },
   "ai": {
@@ -4272,6 +4322,10 @@
         "org_api": {
           "description": "Tokeny API i dostęp programistyczny",
           "keywords": "api, tokeny, dostęp, programistyczny, klucze"
+        },
+        "paths": {
+          "description": "Łącz kursy w prowadzone ścieżki z certyfikatami",
+          "keywords": "ścieżki, ścieżki nauki, ścieżki edukacyjne, programy, program nauczania, kolejność, certyfikat"
         }
       }
     },
@@ -6414,5 +6468,187 @@
       "resource": "Zasób",
       "resource_plural": "Zasoby"
     }
+  },
+  "paths": {
+    "title": "Ścieżki nauki",
+    "new_path": "Nowa ścieżka",
+    "manage_paths": "Zarządzaj ścieżkami",
+    "catalog_subtitle": "Prowadzone ścieżki przez kilka kursów. Ukończ ścieżkę, aby zdobyć jej certyfikat.",
+    "published": "Opublikowana",
+    "draft": "Szkic",
+    "completed": "Ukończona",
+    "in_progress": "W toku",
+    "required": "Obowiązkowy",
+    "elective": "Do wyboru",
+    "actions": "Akcje ścieżki",
+    "edit_courses": "Edytuj kursy",
+    "view_path": "Zobacz ścieżkę",
+    "view_certificate": "Zobacz certyfikat",
+    "start_path": "Rozpocznij ścieżkę",
+    "start_hint": "Rozpocznij ścieżkę, aby śledzić postęp we wszystkich jej kursach.",
+    "sign_in_to_start": "Zaloguj się, aby zacząć",
+    "continue_learning": "Kontynuuj naukę",
+    "leave_path": "Opuść ścieżkę",
+    "your_progress": "Twój postęp",
+    "up_next": "Następny",
+    "guided_order": "Ustalona kolejność",
+    "certificate_included": "Certyfikat w zestawie",
+    "certificate_earned": "Zdobyłeś ten certyfikat",
+    "certificate_explainer": "Przyznawany automatycznie po ukończeniu wszystkich obowiązkowych kursów tej ścieżki.",
+    "locked_hint": "Ukończ poprzedni kurs, aby odblokować",
+    "restricted_course": "Kurs z ograniczonym dostępem",
+    "no_courses_yet": "Ta ścieżka nie ma jeszcze kursów.",
+    "electives_rule_one": "Wybierz co najmniej {{count}} z {{total}} kursów do wyboru",
+    "electives_rule_few": "Wybierz co najmniej {{count}} z {{total}} kursów do wyboru",
+    "electives_rule_many": "Wybierz co najmniej {{count}} z {{total}} kursów do wyboru",
+    "electives_rule_other": "Wybierz co najmniej {{count}} z {{total}} kursów do wyboru",
+    "progress_short": "{{done}}/{{total}} kursów",
+    "progress_long": "Ukończono {{done}} z {{total}} kursów",
+    "course_count_one": "{{count}} kurs",
+    "course_count_few": "{{count}} kursy",
+    "course_count_many": "{{count}} kursów",
+    "course_count_other": "{{count}} kursu",
+    "learner_count_one": "{{count}} uczeń",
+    "learner_count_few": "{{count}} uczniów",
+    "learner_count_many": "{{count}} uczniów",
+    "learner_count_other": "{{count}} ucznia",
+    "no_paths": "Brak ścieżek",
+    "no_paths_description": "Połącz kursy w prowadzoną ścieżkę z własnym certyfikatem.",
+    "no_public_paths": "Brak ścieżek",
+    "no_public_paths_description": "Ścieżki nauki pojawią się tutaj po ich opublikowaniu.",
+    "no_search_results": "Żadna ścieżka nie pasuje do wyszukiwania",
+    "search_placeholder": "Szukaj ścieżek...",
+    "clear_search": "Wyczyść wyszukiwanie",
+    "not_found": "Ta ścieżka nie istnieje lub nie jest dla Ciebie dostępna.",
+    "back_to_paths": "Wróć do ścieżek",
+    "delete_path": "Usuń ścieżkę",
+    "delete_path_title": "Usunąć „{{name}}”?",
+    "delete_path_confirm": "Ścieżka i postępy uczniów zostaną usunięte. Same kursy pozostaną bez zmian.",
+    "levels": {
+      "all": "Wszystkie poziomy",
+      "beginner": "Początkujący",
+      "intermediate": "Średnio zaawansowany",
+      "advanced": "Zaawansowany"
+    },
+    "form": {
+      "name": "Nazwa",
+      "name_placeholder": "np. Analityk danych",
+      "name_required": "Ścieżka musi mieć nazwę",
+      "name_max_length": "Nazwa może mieć maksymalnie 200 znaków",
+      "description": "Krótki opis",
+      "description_placeholder": "Jedno lub dwa zdania wyświetlane na karcie ścieżki",
+      "description_max_length": "Opis może mieć maksymalnie 500 znaków",
+      "about": "O ścieżce",
+      "about_placeholder": "Dla kogo jest ta ścieżka i co uczniowie będą potrafić na jej końcu",
+      "about_hint": "Wyświetlane na stronie ścieżki.",
+      "level": "Poziom",
+      "thumbnail": "Obraz okładki",
+      "upload_thumbnail": "Prześlij obraz",
+      "thumbnail_hint": "Najlepiej 16:9. PNG lub JPG.",
+      "discard_thumbnail": "Odrzuć nowy obraz",
+      "visibility": "Widoczność",
+      "published_hint": "Uczniowie mogą znaleźć i rozpocząć ścieżkę.",
+      "public": "Publiczna",
+      "public_hint": "Widoczna dla odwiedzających, którzy nie są członkami Twojej organizacji.",
+      "public_label": "Widoczna dla wszystkich, nie tylko dla członków",
+      "save": "Zapisz zmiany"
+    },
+    "modals": {
+      "create": {
+        "title": "Nowa ścieżka",
+        "description": "Połącz kursy w prowadzoną ścieżkę. W następnym kroku wybierzesz kursy i ustalisz ich kolejność.",
+        "submit": "Utwórz ścieżkę"
+      }
+    },
+    "dashboard": {
+      "subtitle": "Prowadzone sekwencje kursów, każda z własnym certyfikatem.",
+      "view_path": "Zobacz ścieżkę",
+      "tabs": {
+        "general": "Ogólne",
+        "courses": "Kursy",
+        "certificate": "Certyfikat",
+        "learners": "Uczniowie"
+      },
+      "courses": {
+        "title": "Kursy",
+        "subtitle": "Przeciągnij, aby ustalić kolejność dla uczniów. Kursy do wyboru są opcjonalne.",
+        "add": "Dodaj kursy",
+        "drag": "Przeciągnij, aby zmienić kolejność",
+        "remove": "Usuń ze ścieżki",
+        "requirement": "Wymóg",
+        "unpublished_hint": "Nieopublikowany, ukryty przed uczniami",
+        "empty_title": "Brak kursów",
+        "empty_description": "Dodaj kursy, z których składa się ta ścieżka."
+      },
+      "rules": {
+        "title": "Zasady ukończenia",
+        "subtitle": "Co uczeń musi zrobić, aby ukończyć ścieżkę.",
+        "sequential": "Ustalona kolejność",
+        "sequential_hint": "W widoku ścieżki każdy kurs odblokowuje się po ukończeniu poprzedniego kursu obowiązkowego. Na własnych stronach kursy pozostają otwarte.",
+        "electives": "Kursy do wyboru do ukończenia",
+        "electives_hint_one": "W tej ścieżce jest {{count}} kurs do wyboru.",
+        "electives_hint_few": "W tej ścieżce są {{count}} kursy do wyboru.",
+        "electives_hint_many": "W tej ścieżce jest {{count}} kursów do wyboru.",
+        "electives_hint_other": "W tej ścieżce jest {{count}} kursu do wyboru.",
+        "electives_none": "Oznacz kurs jako „do wyboru”, aby uczniowie mogli wybierać.",
+        "summary": "Aby ukończyć ścieżkę, uczniowie kończą kursy obowiązkowe ({{required}}) i kursy do wyboru ({{electives}})."
+      },
+      "picker": {
+        "title": "Dodaj kursy",
+        "description": "Wybrane kursy zostaną dodane w kolejności zaznaczania.",
+        "search": "Szukaj kursów...",
+        "empty": "Brak kolejnych kursów do dodania",
+        "add_one": "Dodaj {{count}} kurs",
+        "add_few": "Dodaj {{count}} kursy",
+        "add_many": "Dodaj {{count}} kursów",
+        "add_other": "Dodaj {{count}} kursu"
+      },
+      "certificate": {
+        "title": "Certyfikat ścieżki",
+        "subtitle": "Przyznawany oprócz certyfikatów kursów, gdy uczeń ukończy ścieżkę.",
+        "disabled_title": "Ta ścieżka nie ma certyfikatu",
+        "disabled_message": "Włącz, aby przyznawać certyfikat każdemu, kto ukończy ścieżkę. Uczniowie, którzy już ją ukończyli, otrzymają go przy następnym sprawdzeniu postępu.",
+        "enable": "Przyznawaj certyfikat"
+      },
+      "learners": {
+        "enrolled": "Uczniowie",
+        "completed": "Ukończyli",
+        "completion_rate": "Wskaźnik ukończenia",
+        "certificates": "Certyfikaty",
+        "empty_title": "Nikt jeszcze nie rozpoczął tej ścieżki",
+        "empty_description": "Uczniowie pojawią się tutaj po rozpoczęciu ścieżki.",
+        "columns": {
+          "learner": "Uczeń",
+          "progress": "Postęp",
+          "started": "Rozpoczęto",
+          "status": "Status",
+          "certificate": "Certyfikat"
+        },
+        "revoke": "Unieważnij",
+        "revoke_title": "Unieważnić certyfikat?",
+        "revoke_confirm": "Certyfikatu {{name}} nie będzie można zweryfikować. Możesz go później przywrócić.",
+        "revoked": "Certyfikat unieważniony",
+        "revoked_badge": "Unieważniony",
+        "reinstate": "Przywróć",
+        "reinstated": "Certyfikat przywrócony"
+      }
+    },
+    "toasts": {
+      "saving": "Zapisywanie...",
+      "saved": "Ścieżka zapisana",
+      "save_error": "Nie udało się zapisać ścieżki",
+      "create_error": "Nie udało się utworzyć ścieżki",
+      "deleting": "Usuwanie ścieżki...",
+      "deleted": "Ścieżka usunięta",
+      "delete_error": "Nie udało się usunąć ścieżki",
+      "enroll_error": "Nie udało się rozpocząć ścieżki",
+      "already_completed": "Ukończyłeś już wszystkie kursy tej ścieżki"
+    },
+    "my_paths": "Moje ścieżki",
+    "part_of_paths": "Część ścieżki",
+    "path": "Ścieżka",
+    "courses_in_path": "Kursy w tej ścieżce",
+    "ready_to_begin": "Gotowy do startu?",
+    "percent_done": "Ukończono {{percent}}%"
   }
 }

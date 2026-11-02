@@ -149,6 +149,14 @@ export function getFolderThumbnailMediaDirectory(
   return uri
 }
 
+export function getPathThumbnailMediaDirectory(
+  orgUUID: string,
+  pathUUID: string,
+  fileId: string
+) {
+  return `${getMediaUrl()}content/orgs/${orgUUID}/paths/${pathUUID}/thumbnails/${fileId}`
+}
+
 export function getBoardThumbnailMediaDirectory(
   orgUUID: string,
   boardUUID: string,

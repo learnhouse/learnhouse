@@ -12,6 +12,7 @@ import {
   Headphones,
   ChartBar,
   Code,
+  Steps,
 } from '@phosphor-icons/react'
 
 export interface DashboardMenuItem {
@@ -43,6 +44,13 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     href: '/dash/assignments',
     icon: Files,
     labelKey: 'common.assignments',
+  },
+  {
+    id: 'paths',
+    href: '/dash/paths',
+    icon: Steps,
+    labelKey: 'paths.title',
+    featureKey: 'paths',
   },
   {
     id: 'library',

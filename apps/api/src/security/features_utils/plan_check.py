@@ -479,3 +479,49 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
         return True
 
     return plan_dependency
+
+
+def require_plan_for_paths(required_plan: PlanLevel, feature_name: str):
+    """Plan gate for learning path routes. Resolves the org from the path or
+    course in the URL, else the client org_id. Routes whose org is only in the
+    body (create) call ``check_org_plan`` themselves."""
+
+    async def plan_dependency(
+        request: Request,
+        db_session: AsyncSession = Depends(get_db_session),
+    ):
+        bypass = _check_mode_bypass(feature_name)
+        if bypass is not None:
+            return bypass
+
+        path_params = request.path_params
+        resource_org_id = None
+        if "path_uuid" in path_params:
+            from src.db.paths import Path
+            path = (await db_session.execute(
+                select(Path).where(Path.path_uuid == path_params["path_uuid"])
+            )).scalars().first()
+            if path:
+                resource_org_id = path.org_id
+        if resource_org_id is None and "course_uuid" in path_params:
+            from src.db.courses.courses import Course
+            course = (await db_session.execute(
+                select(Course).where(Course.course_uuid == path_params["course_uuid"])
+            )).scalars().first()
+            if course:
+                resource_org_id = course.org_id
+
+        org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
+        if org_id is None:
+            return True
+
+        current_plan = await get_org_plan(org_id, db_session)
+        if not plan_meets_requirement(current_plan, required_plan):
+            raise HTTPException(
+                status_code=403,
+                detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+                f"Your organization is currently on the {current_plan.capitalize()} plan.",
+            )
+        return True
+
+    return plan_dependency
