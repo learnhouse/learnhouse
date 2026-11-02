@@ -318,6 +318,7 @@ class TestFeatureResolve:
             "folders",
             "communities",
             "courses",
+            "live_sessions",
             "lti",
             "members",
             "paths",
