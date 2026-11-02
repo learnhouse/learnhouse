@@ -21,6 +21,7 @@ from src.services.analytics import events as analytics_events
 from src.services.audit.audit import record_audit_event
 from src.db.user_audit_events import UserAuditEventType
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.core.ee_hooks import notify_ee_learner_progress
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.org_auth import require_org_membership
 from src.services.courses.activities.access import verify_activity_reader_access
@@ -377,6 +378,9 @@ async def add_activity_to_trail(
         # cert failure never leaves a completed course stuck "in progress".
         await sync_trailrun_status(user.id, course.id, db_session)
 
+    if is_new_completion and course.id:
+        notify_ee_learner_progress(user.id, course.id)
+
     if course_was_completed:
         await track(
             event_name=analytics_events.COURSE_COMPLETED,
@@ -460,6 +464,7 @@ async def remove_activity_from_trail(
         # in-progress so counts stay accurate.
         if course.id:
             await sync_trailrun_status(user.id, course.id, db_session)
+            notify_ee_learner_progress(user.id, course.id)
 
     # Get updated trail data
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
@@ -609,6 +614,7 @@ async def remove_course_from_trail(
         )
     )
     await db_session.commit()
+    notify_ee_learner_progress(user.id, course.id)
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
     trail_runs_raw = (await db_session.execute(statement)).scalars().all()

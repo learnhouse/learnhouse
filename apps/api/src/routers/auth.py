@@ -1219,6 +1219,13 @@ async def magic_link_verify(
         request, db_session, user.id, org_id, AUTH_METHOD_MAGIC_LOGIN
     )
 
+    # The link proved the inbox: identity-provider links made while the
+    # address was unproven must not keep signing in as its owner.
+    if not user.email_verified:
+        from src.services.auth.utils import _drop_unverified_sso_links
+
+        await _drop_unverified_sso_links(user.id, db_session)
+
     # Issue first, then the bookkeeping: its rollback on failure expires
     # ``user``, which issuing reads.
     user_read = UserRead.model_validate(user)

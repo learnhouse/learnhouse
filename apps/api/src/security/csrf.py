@@ -36,6 +36,12 @@ logger = logging.getLogger(__name__)
 # Methods that require CSRF protection
 STATE_CHANGING_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
+# The LTI 1.3 OIDC login and launch are cross-site form posts from the LMS by
+# design. They are authorized by the platform-signed id_token, state and nonce
+# and never read the session cookie, so a cookie the browser happens to carry
+# (an LMS on the same site as LearnHouse) is not what lets them through.
+_LTI_LAUNCH_PATH = re.compile(r"^/api/v1/lti/[A-Za-z0-9_-]+/(login|launch)$")
+
 # Short-TTL cache for the verified-custom-domain origin check, so we don't hit the
 # DB on every mutation. Only consulted when the static allowlist/regex fails, so
 # platform/subdomain traffic never touches it; bounds attacker random-origin
@@ -214,6 +220,8 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         - API tokens (Bearer lh_*): validated independently, rejected if invalid
           (auth.py never falls back to cookies for lh_ tokens)
         - Stripe webhooks: use HMAC signature verification, no cookies involved
+        - LTI login/launch posts from an LMS: authorized by the signed launch,
+          never by cookies
 
         Regular Bearer JWT tokens are NOT exempt because get_current_user()
         falls back to cookie auth when the JWT is invalid, so an attacker could
@@ -227,6 +235,10 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
 
         # Stripe webhooks use signature-based verification, not cookies
         if request.headers.get("stripe-signature"):
+            return True
+
+        path = getattr(getattr(request, "url", None), "path", None)
+        if isinstance(path, str) and _LTI_LAUNCH_PATH.match(path):
             return True
 
         # Service-to-service calls use a shared key, not cookies; only a valid

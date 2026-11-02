@@ -25,7 +25,7 @@ from src.services.orgs.org_config_lookup import get_session_org_config
 from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.services.auth.mfa import is_mfa_active
-from src.security.session_context import POLICY_AUTH_METHODS, get_session_provenance
+from src.security.session_context import AUTH_METHOD_LTI, POLICY_AUTH_METHODS, get_session_provenance
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ async def get_org_mfa_policy(db_session: AsyncSession, org_id: int) -> OrgMFAPol
         return OrgMFAPolicy()
 
 
-def _signed_in_externally(user: User) -> bool:
+def _signed_in_externally(user: User, org_id: int) -> bool:
     """Did an external identity provider vouch for *this* session?
 
     The exemption is about how the user signed in now, not how the account was
@@ -116,6 +116,12 @@ def _signed_in_externally(user: User) -> bool:
     """
     provenance = get_session_provenance()
     method = provenance.amr if provenance is not None else None
+    if method == AUTH_METHOD_LTI:
+        # An LMS launch only vouches for the user inside the org that
+        # registered that LMS. Anywhere else it is a session like any other,
+        # and an account created by a launch never earns the exemption on its
+        # own.
+        return provenance.org_id == org_id
     if method not in POLICY_AUTH_METHODS:
         method = user.signup_method
     return (method or "").lower() in EXTERNAL_AUTH_METHODS
@@ -135,7 +141,7 @@ async def evaluate_mfa_compliance(
     if await is_mfa_active(db_session, user.id):
         return MFAComplianceState(required=True, satisfied=True)
 
-    if policy.exempt_external_auth and _signed_in_externally(user):
+    if policy.exempt_external_auth and _signed_in_externally(user, org_id):
         return MFAComplianceState(
             required=True,
             satisfied=True,

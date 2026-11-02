@@ -88,3 +88,27 @@ async def check_ee_activity_paid_access(request, activity_id, user, db_session) 
     # If EE is not available, grant access (free tier behavior)
     return True
 
+
+
+def notify_ee_course_content_changed(course_id: int) -> None:
+    """Tell EE a course's content changed (title, activities, publication,
+    assignment due dates) so LTI can update the LMS gradebook columns placed
+    from it. Fire-and-forget, like notify_ee_learner_progress."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "on_course_content_changed"):
+        try:
+            hooks.on_course_content_changed(course_id)
+        except Exception:
+            logger.exception("EE course-content hook failed")
+
+
+def notify_ee_learner_progress(user_id: int, course_id: int) -> None:
+    """Tell EE a learner's progress in a course changed (e.g. so LTI can push
+    the new score to the LMS gradebook). Fire-and-forget: EE schedules its own
+    background work and failures never reach the caller."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "on_learner_progress"):
+        try:
+            hooks.on_learner_progress(user_id, course_id)
+        except Exception:
+            logger.exception("EE learner-progress hook failed")

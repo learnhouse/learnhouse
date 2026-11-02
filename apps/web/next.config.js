@@ -98,6 +98,17 @@ const nextConfig = {
         ],
       },
       {
+        // LTI: an LMS shows the course picker (deep linking) and the launch
+        // landing page inside its own iframe, from whatever LMS host the org
+        // registered. /lti/link stays unframeable — it asks a signed-in user to
+        // confirm an account link, the one LTI page worth clickjacking.
+        source: '/lti/:page(select|launch)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
+        ],
+      },
+      {
         // SCORM packages are served same-origin through /api/scorm and rendered
         // inside an iframe by the player. The global frame-ancestors 'none' /
         // X-Frame-Options: DENY above blocks even same-origin framing, so the
