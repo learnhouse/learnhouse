@@ -18,6 +18,7 @@ from src.services.security.rate_limiting import (
 )
 from src.services.orgs.orgs import get_org_join_mechanism
 from src.security.auth import get_current_user, get_authenticated_user
+from src.security.session_context import refuse_lms_session
 from src.core.events.database import get_db_session
 from src.db.courses.courses import CourseRead
 
@@ -418,6 +419,7 @@ async def api_update_user(
     """
     Update User
     """
+    refuse_lms_session()
     result = await update_user(request, db_session, user_id, current_user, user_object)
     _invalidate_session_cache(user_id)
     return result
@@ -448,6 +450,7 @@ async def api_update_avatar_user(
     SECURITY: Users can only update their own avatar.
     The user_id in the URL must match the authenticated user's ID.
     """
+    refuse_lms_session()
     # SECURITY: IDOR protection - verify user can only update their own avatar
     if current_user.id != user_id:
         raise HTTPException(
@@ -485,6 +488,7 @@ async def api_update_user_password(
     """
     Update User Password
     """
+    refuse_lms_session()
     return await update_user_password(request, db_session, current_user, user_id, form)
 
 
@@ -789,6 +793,7 @@ async def api_delete_user(
     """
     Delete User
     """
+    refuse_lms_session()
     result = await delete_user_by_id(request, db_session, current_user, user_id)
     _invalidate_session_cache(user_id)
     return result
