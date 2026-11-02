@@ -80,6 +80,9 @@ class Course(CourseBase, table=True):
     update_date: str = ""
     seo: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
     extra_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
+    # Drip content schedule (see db/courses/drip.py). Only written through the
+    # course drip schedule endpoint, which checks the plan.
+    drip_settings: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
 
 
 class CourseCreate(CourseBase):
@@ -119,6 +122,7 @@ class CourseRead(CourseBase):
     thumbnail_video: Optional[str] = Field(default="")
     seo: Optional[dict] = None
     extra_metadata: Optional[dict] = None
+    drip_settings: Optional[dict] = None
 
 
 class FullCourseRead(CourseBase):
@@ -133,6 +137,7 @@ class FullCourseRead(CourseBase):
     thumbnail_video: Optional[str] = Field(default="")
     seo: Optional[dict] = None
     extra_metadata: Optional[dict] = None
+    drip_settings: Optional[dict] = None
     # Chapters, Activities
     chapters: List[ChapterRead]
     authors: List[AuthorWithRole]
@@ -147,6 +152,7 @@ class FullCourseReadWithTrail(CourseBase):
     org_id: int = Field(default=None, foreign_key="organization.id")
     seo: Optional[dict] = None
     extra_metadata: Optional[dict] = None
+    drip_settings: Optional[dict] = None
     authors: List[AuthorWithRole]
     # Chapters, Activities
     chapters: List[ChapterRead]

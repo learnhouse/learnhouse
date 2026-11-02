@@ -26,6 +26,7 @@ from src.db.users import AnonymousUser, APITokenUser, PublicUser
 from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import is_org_admin
 from src.security.rbac import AccessAction, AccessContext, check_resource_access
+from src.services.courses.drip import chapter_drip_state
 from src.services.courses.locks import batch_accessible_restricted_uuids, is_locked_for_user
 
 Principal = Union[PublicUser, AnonymousUser, APITokenUser]
@@ -237,6 +238,15 @@ async def _activity_readable(
                 accessible_restricted_uuids=accessible,
                 is_admin=False,
             ):
+                return False
+
+    # Chapters the course's drip schedule hasn't released yet stay out of the
+    # assistant's answers, like they stay out of the course page.
+    if chapter is not None and not (grant.is_admin or grant.is_author):
+        course = await db_session.get(Course, activity.course_id)
+        if course is not None:
+            drip = await chapter_drip_state(course, chapter, scope.current_user, db_session)
+            if drip is not None and drip.locked:
                 return False
 
     return await check_ee_activity_paid_access(

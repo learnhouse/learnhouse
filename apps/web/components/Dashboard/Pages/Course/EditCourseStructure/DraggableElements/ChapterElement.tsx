@@ -1,6 +1,7 @@
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
+  CalendarClock,
   Check,
   Globe,
   Hexagon,
@@ -34,6 +35,9 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import Link from 'next/link'
+import { getUriWithOrg } from '@services/config/config'
+import { normalizeRule } from '@/lib/drip'
 
 type ChapterElementProps = {
   chapter: any
@@ -51,7 +55,7 @@ interface ModifiedChapterInterface {
 }
 
 function ChapterElement(props: ChapterElementProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const activities = props.chapter.activities || []
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -188,6 +192,16 @@ function ChapterElement(props: ChapterElementProps) {
     setSelectedChapter(undefined)
   }
 
+  // Short label for this chapter's drip rule when the course drips content.
+  const dripRule = normalizeRule(props.chapter.drip_rule)
+  const dripSummary = course?.courseStructure?.drip_settings?.enabled
+    ? dripRule.mode === 'date' && dripRule.release_at
+      ? new Date(dripRule.release_at).toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric' })
+      : dripRule.mode === 'delay' && dripRule.delay_days > 0
+        ? t('dashboard.courses.structure.chapter_element.drip_day', { defaultValue: 'Day {{count}}', count: dripRule.delay_days })
+        : t('dashboard.courses.structure.chapter_element.drip_now', 'Day 0')
+    : null
+
   async function changeChapterLockType(next: LockType) {
     try {
       await updateChapter(props.chapter.id, { lock_type: next }, access_token)
@@ -290,6 +304,18 @@ function ChapterElement(props: ChapterElementProps) {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              {dripSummary && (
+                <ToolTip content={t('dashboard.courses.structure.chapter_element.drip_tooltip', 'Release schedule: edit it in the Schedule tab')} side="top">
+                  <Link
+                    href={getUriWithOrg(props.orgslug, '') + `/dash/courses/course/${cleanCourseUuid(props.course_uuid)}/schedule`}
+                    data-testid="chapter-drip-chip"
+                    className="flex items-center gap-1 h-7 px-2 rounded-md bg-amber-50 text-amber-700 ring-1 ring-amber-200 text-xs font-semibold hover:bg-amber-100"
+                  >
+                    <CalendarClock size={13} />
+                    {dripSummary}
+                  </Link>
+                </ToolTip>
+              )}
               <LockPopover
                 lockType={(props.chapter.lock_type as LockType) || 'public'}
                 onChangeLockType={changeChapterLockType}
