@@ -1,268 +1,160 @@
 'use client'
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { useOnboarding } from '@components/Hooks/useOnboarding'
-import {
-  ArrowRight,
-  BookOpen,
-  Lightning,
-  Users,
-  Microphone,
-  ChalkboardSimple,
-  ChatsCircle,
-  Files,
-  Certificate,
-  ChartBar,
-} from '@phosphor-icons/react'
-import WelcomeGlobe from './WelcomeGlobe'
+import { useRouter } from 'next/navigation'
+import { ArrowRight, Check } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
+import { useOnboarding, OnboardingIntent } from '@components/Hooks/useOnboarding'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import OnboardingVideo from './OnboardingVideo'
+import WelcomeGlobe from './WelcomeGlobe'
+import { WELCOME_VIDEO } from './onboardingMedia'
+import { INTENTS } from './onboardingCopy'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
-const FEATURES = [
-  {
-    icon: BookOpen,
-    labelKey: 'onboarding.welcome.features.teach',
-    descKey: 'onboarding.welcome.features.teach_desc',
-    gradient: 'from-blue-50/40 to-blue-50/10',
-    iconColor: 'text-blue-500',
-    pattern: `radial-gradient(circle, rgba(59,130,246,0.08) 1px, transparent 1px)`,
-    patternSize: '10px 10px',
-  },
-  {
-    icon: Lightning,
-    labelKey: 'onboarding.welcome.features.interactive',
-    descKey: 'onboarding.welcome.features.interactive_desc',
-    gradient: 'from-amber-50/40 to-amber-50/10',
-    iconColor: 'text-amber-500',
-    pattern: `repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(245,158,11,0.06) 6px, rgba(245,158,11,0.06) 7px)`,
-  },
-  {
-    icon: ChatsCircle,
-    labelKey: 'onboarding.welcome.features.community',
-    descKey: 'onboarding.welcome.features.community_desc',
-    gradient: 'from-emerald-50/40 to-emerald-50/10',
-    iconColor: 'text-emerald-500',
-    pattern: `radial-gradient(circle, rgba(16,185,129,0.08) 1px, transparent 1px)`,
-    patternSize: '10px 10px',
-  },
-  {
-    icon: Files,
-    labelKey: 'onboarding.welcome.features.assess',
-    descKey: 'onboarding.welcome.features.assess_desc',
-    gradient: 'from-violet-50/40 to-violet-50/10',
-    iconColor: 'text-violet-500',
-    pattern: `repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(139,92,246,0.06) 6px, rgba(139,92,246,0.06) 7px)`,
-  },
-  {
-    icon: ChalkboardSimple,
-    labelKey: 'onboarding.welcome.features.collaborate',
-    descKey: 'onboarding.welcome.features.collaborate_desc',
-    gradient: 'from-rose-50/40 to-rose-50/10',
-    iconColor: 'text-rose-500',
-    pattern: `repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(244,63,94,0.05) 8px, rgba(244,63,94,0.05) 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(244,63,94,0.05) 8px, rgba(244,63,94,0.05) 9px)`,
-  },
-  {
-    icon: Microphone,
-    labelKey: 'onboarding.welcome.features.voice',
-    descKey: 'onboarding.welcome.features.voice_desc',
-    gradient: 'from-purple-50/40 to-purple-50/10',
-    iconColor: 'text-purple-500',
-    pattern: `radial-gradient(circle, rgba(168,85,247,0.06) 1.5px, transparent 1.5px)`,
-    patternSize: '12px 12px',
-  },
-  {
-    icon: Certificate,
-    labelKey: 'onboarding.welcome.features.certify',
-    descKey: 'onboarding.welcome.features.certify_desc',
-    gradient: 'from-sky-50/40 to-sky-50/10',
-    iconColor: 'text-sky-500',
-    pattern: `repeating-linear-gradient(135deg, transparent, transparent 6px, rgba(14,165,233,0.06) 6px, rgba(14,165,233,0.06) 7px)`,
-  },
-  {
-    icon: ChartBar,
-    labelKey: 'onboarding.welcome.features.impact',
-    descKey: 'onboarding.welcome.features.impact_desc',
-    gradient: 'from-indigo-50/40 to-indigo-50/10',
-    iconColor: 'text-indigo-500',
-    pattern: `radial-gradient(circle, rgba(99,102,241,0.06) 1px, transparent 1px), radial-gradient(circle, rgba(99,102,241,0.04) 1.5px, transparent 1.5px)`,
-    patternSize: '10px 10px',
-  },
-  {
-    icon: Users,
-    labelKey: 'onboarding.welcome.features.team',
-    descKey: 'onboarding.welcome.features.team_desc',
-    gradient: 'from-teal-50/40 to-teal-50/10',
-    iconColor: 'text-teal-500',
-    pattern: `repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(20,184,166,0.05) 8px, rgba(20,184,166,0.05) 9px)`,
-  },
-]
-
+/**
+ * First visit to the dashboard: a one-minute tour (plays muted straight away,
+ * one tap for sound), then one question, what are you building, which shapes
+ * the launch plan it hands over to.
+ */
 export default function WelcomeModal() {
-  const { welcomeSeen, markWelcomeSeen, dismissed } = useOnboarding()
+  const { welcomeSeen, markWelcomeSeen, dismissed, setIntent, intent } = useOnboarding()
   const { t } = useTranslation()
   const { track } = useLHAnalytics('dashboard')
-  const [step, setStep] = useState<'welcome' | 'features'>('welcome')
-  const [isMobile, setIsMobile] = useState(false)
+  const router = useRouter()
+  const session = useLHSession() as any
+  const firstName = session?.data?.user?.first_name || ''
+  const [screen, setScreen] = useState<'tour' | 'intent'>('tour')
+  const [choice, setChoice] = useState<OnboardingIntent | null>(intent)
 
-  React.useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+  if (welcomeSeen || dismissed) return null
 
-  if (isMobile || welcomeSeen || dismissed) return null
+  const finish = (goToPlan: boolean) => {
+    if (choice) {
+      setIntent(choice)
+      track(AnalyticsEvent.OnboardingIntentSelected, { intent: choice })
+    }
+    track(AnalyticsEvent.OnboardingWelcomeCompleted, { intent: choice ?? 'none' })
+    markWelcomeSeen()
+    // Relative on purpose: the dashboard is already on the org's host.
+    if (goToPlan) router.push('/dash/onboarding')
+  }
 
-  const showFeatures = step === 'features'
+  const primary =
+    'w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-black rounded-lg hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 transition-colors'
 
   return (
-    <AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
+    >
+      <div className="absolute inset-0 bg-black/15 backdrop-blur-[2px]" />
+
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center"
+        initial={{ y: 30, opacity: 0, scale: 0.97 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease }}
+        className="relative w-full sm:max-w-2xl sm:mx-4 max-h-[100dvh] overflow-y-auto"
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/15 backdrop-blur-[2px]" />
+        <div className="bg-white rounded-t-2xl sm:rounded-2xl nice-shadow relative overflow-hidden">
+          {/* Secondary action, kept clear of the globe */}
+          <button
+            type="button"
+            onClick={() => (screen === 'tour' ? finish(false) : setScreen('tour'))}
+            className={`absolute top-4 z-10 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors ${screen === 'tour' ? 'end-5' : 'start-5'}`}
+          >
+            {screen === 'tour' ? t('onboarding.welcome.skip') : t('onboarding.welcome.back')}
+          </button>
+          <AnimatePresence mode="wait" initial={false}>
+            {screen === 'tour' ? (
+              <motion.div
+                key="tour"
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease }}
+                className="px-6 sm:px-10 pt-8 sm:pt-10"
+              >
+                <div className="text-center">
+                  <img src="/lrn-dash.svg" alt="LearnHouse" className="h-10 w-10 mx-auto mb-4" style={{ filter: 'brightness(0)' }} />
+                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                    {firstName ? t('onboarding.welcome.hello_name', { name: firstName }) : t('onboarding.welcome.title')}
+                  </h1>
+                  <p className="text-sm text-gray-400 mt-2">{t('onboarding.welcome.promise')}</p>
+                </div>
+                <div className="mt-6">
+                  <OnboardingVideo id={WELCOME_VIDEO} autoPlayMuted />
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="intent"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease }}
+                className="px-6 sm:px-10 pt-8 sm:pt-10"
+              >
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{t('onboarding.welcome.intent_title')}</h2>
+                  <p className="text-sm text-gray-400 mt-2">{t('onboarding.welcome.intent_subtitle')}</p>
+                </div>
+                <div className="mt-6 grid gap-2 sm:grid-cols-2" role="radiogroup">
+                  {INTENTS.map((it) => {
+                    const on = choice === it.id
+                    return (
+                      <button
+                        key={it.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        onClick={() => setChoice(it.id)}
+                        className={[
+                          'relative flex items-start gap-3 rounded-xl p-4 text-start transition-all',
+                          on ? 'bg-white ring-2 ring-black' : 'bg-white nice-shadow hover:bg-gray-50',
+                        ].join(' ')}
+                      >
+                        <it.icon size={22} weight="duotone" className="shrink-0 text-gray-700" />
+                        <span className="min-w-0 pe-5">
+                          <span className="block text-sm font-semibold text-gray-900">{t(`onboarding.intent.${it.id}.label`)}</span>
+                          <span className="mt-0.5 block text-xs leading-snug text-gray-500">{t(`onboarding.intent.${it.id}.hint`)}</span>
+                        </span>
+                        {on && (
+                          <span className="absolute top-3 end-3 flex h-4 w-4 items-center justify-center rounded-full bg-black text-white">
+                            <Check size={10} weight="bold" />
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Modal */}
-        <motion.div
-          initial={{ y: 30, opacity: 0, scale: 0.97 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, ease }}
-          className="relative w-full max-w-3xl mx-4"
-        >
-          <div className="bg-white rounded-2xl nice-shadow relative overflow-hidden">
-            {/* Top content */}
-            <AnimatePresence mode="wait">
-              {!showFeatures ? (
-                <motion.div
-                  key="welcome-top"
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease }}
-                >
-                  <div className="px-10 pt-10 pb-2 text-center">
-                    <motion.img
-                      src="/lrn-dash.svg"
-                      alt="LearnHouse"
-                      className="h-12 w-12 mx-auto mb-5"
-                      style={{ filter: 'brightness(0)' }}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2, duration: 0.5, ease }}
-                    />
-                    <motion.h1
-                      className="text-2xl font-bold text-gray-900 tracking-tight"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3, duration: 0.5, ease }}
-                    >
-                      {t('onboarding.welcome.title')}
-                    </motion.h1>
-                    <motion.p
-                      className="text-sm text-gray-400 mt-2"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.45, duration: 0.5 }}
-                    >
-                      {t('onboarding.welcome.subtitle')}
-                    </motion.p>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="features-top"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease }}
-                >
-                  <div className="px-10 pt-8 pb-4 text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-                      {t('onboarding.welcome.features_title')}
-                    </h2>
-                    <p className="text-sm text-gray-400 mt-2">
-                      {t('onboarding.welcome.features_subtitle')}
-                    </p>
-                  </div>
-
-                  {/* Feature grid */}
-                  <div className="px-6 pb-4">
-                    <div className="grid grid-cols-3 gap-2">
-                      {FEATURES.map((f, i) => (
-                        <motion.div
-                          key={f.labelKey}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 + i * 0.04, duration: 0.4, ease }}
-                          className={`relative flex flex-col items-center gap-2.5 p-5 rounded-xl overflow-hidden nice-shadow bg-gradient-to-br ${f.gradient}`}
-                        >
-                          {/* Pattern overlay */}
-                          <div
-                            className="absolute inset-0"
-                            style={{
-                              backgroundImage: f.pattern,
-                              backgroundSize: f.patternSize || 'auto',
-                            }}
-                          />
-                          <div className="relative">
-                            <f.icon size={28} weight="duotone" className={f.iconColor} />
-                          </div>
-                          <div className="relative text-center">
-                            <p className="text-sm font-semibold text-gray-700">{t(f.labelKey)}</p>
-                            <p className="text-xs text-gray-500 mt-0.5 leading-snug">{t(f.descKey)}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Globe */}
-            <motion.div
-              className="flex justify-center -mb-[140px]"
-              animate={{ marginTop: showFeatures ? -20 : 0 }}
-              transition={{ duration: 0.6, ease }}
-            >
-              <div className="w-[280px]">
-                <WelcomeGlobe />
-              </div>
-            </motion.div>
-
-            {/* Button */}
-            <div className="relative z-10 px-6 pb-6">
-              {!showFeatures ? (
-                <motion.button
-                  onClick={() => setStep('features')}
-                  className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.4, ease }}
-                >
-                  {t('onboarding.welcome.get_started')}
-                  <ArrowRight size={16} weight="bold" data-dir-flip />
-                </motion.button>
-              ) : (
-                <button
-                  onClick={() => {
-                    track(AnalyticsEvent.OnboardingWelcomeCompleted)
-                    markWelcomeSeen()
-                  }}
-                  className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors"
-                >
-                  {t('onboarding.welcome.lets_go')}
-                  <ArrowRight size={16} weight="bold" data-dir-flip />
-                </button>
-              )}
+          {/* Globe, rising behind the button */}
+          <div className="pointer-events-none flex justify-center -mb-[140px] mt-2" aria-hidden>
+            <div className="w-[280px]">
+              <WelcomeGlobe />
             </div>
           </div>
-        </motion.div>
+
+          <div className="relative z-10 px-6 pb-6">
+            {screen === 'tour' ? (
+              <button type="button" onClick={() => setScreen('intent')} className={primary}>
+                {t('onboarding.welcome.get_started')}
+                <ArrowRight size={16} weight="bold" data-dir-flip />
+              </button>
+            ) : (
+              <button type="button" disabled={!choice} onClick={() => finish(true)} className={primary}>
+                {t('onboarding.welcome.build_plan')}
+                <ArrowRight size={16} weight="bold" data-dir-flip />
+              </button>
+            )}
+          </div>
+        </div>
       </motion.div>
-    </AnimatePresence>
+    </motion.div>
   )
 }

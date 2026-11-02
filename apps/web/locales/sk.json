@@ -5392,7 +5392,14 @@
         "impact_desc": "Sledujte zapojenie a vidzte, ako študenti napredujú v čase",
         "team": "Rozrastajte tím",
         "team_desc": "Pozývajte inštruktorov, spravujte roly a organizujte skupiny študentov"
-      }
+      },
+      "hello_name": "Vitajte, {{name}}",
+      "promise": "Spustime vašu akadémiu ešte dnes.",
+      "intent_title": "Čo vytvárate?",
+      "intent_subtitle": "Podľa toho prispôsobíme váš plán spustenia. Neskôr to môžete zmeniť.",
+      "back": "Späť",
+      "build_plan": "Zobraziť môj plán spustenia",
+      "skip": "Preskočiť"
     },
     "farewell": {
       "title": "Ste pripravení učiť svet",
@@ -5406,7 +5413,112 @@
     "video_placeholder": "Inštruktážne video čoskoro pribudne",
     "dismiss": "Dokončím neskôr",
     "steps_done": "krokov hotových",
-    "back_to_dashboard": "Späť na nástenku"
+    "back_to_dashboard": "Späť na nástenku",
+    "minutes": "{{count}} min",
+    "about_minutes": "Približne {{count}} min",
+    "minutes_left": "Zostáva ~{{count}} min",
+    "step_of": "Krok {{current}} z {{total}}",
+    "step_done": "Hotovo",
+    "next_step": "Ďalší krok",
+    "mark_done": "Označiť ako hotové",
+    "skip_for_now": "Zatiaľ preskočiť",
+    "skipped": "Preskočené",
+    "undo_skip": "Vrátiť tento krok",
+    "auto_check": "Tento krok sa po dokončení odškrtne sám.",
+    "video": {
+      "tap_for_sound": "Pozerať so zvukom",
+      "replay": "Prehrať znova",
+      "unavailable": "Toto video sa nepodarilo načítať."
+    },
+    "intent": {
+      "customers": {
+        "label": "Školiť zákazníkov",
+        "hint": "Produktová akadémia, onboarding, menej tiketov na podporu",
+        "headline": "Vaša zákaznícka akadémia, spustená približne za 15 minút."
+      },
+      "team": {
+        "label": "Školiť tím",
+        "hint": "Zaškolenie zamestnancov, compliance, zvyšovanie kvalifikácie",
+        "headline": "Školiace centrum vášho tímu, spustené približne za 15 minút."
+      },
+      "sell": {
+        "label": "Predávať kurzy",
+        "hint": "Premeňte svoje znalosti na podnikanie",
+        "headline": "Vaše podnikanie s kurzami, otvorené približne za 15 minút."
+      },
+      "school": {
+        "label": "Viesť školu alebo komunitu",
+        "hint": "Triedy, skupiny, kluby, neziskovky",
+        "headline": "Vaša škola, otvorená približne za 15 minút."
+      }
+    },
+    "finale": {
+      "badge": "Nastavenie dokončené",
+      "title": "{{name}} je online",
+      "subtitle": "Vaša akadémia je pripravená na študentov. Zdieľajte tento odkaz a pozvite ich.",
+      "link_label": "Váš verejný odkaz",
+      "copy": "Kopírovať odkaz",
+      "copied": "Skopírované",
+      "open": "Otvoriť moju školu",
+      "whats_next": "Čo ďalej",
+      "close": "Zavrieť plán spustenia",
+      "next": {
+        "certificates": {
+          "title": "Udeľujte certifikáty",
+          "desc": "Študenti častejšie dokončia kurz, keď môžu niečo získať."
+        },
+        "analytics": {
+          "title": "Sledujte rast",
+          "desc": "Pozrite sa, kto sa zapisuje, kto dokončuje a kde sa zasekáva."
+        },
+        "next_course": {
+          "title": "Vytvorte ďalší kurz",
+          "desc": "Začnite z dokumentu, ktorý už máte."
+        }
+      }
+    },
+    "launch_plan": "Plán spustenia",
+    "subtitle": "Šesť krátkych krokov k spustenej akadémii. Ku každému je video.",
+    "watch_tour": "Pozrieť prehliadku",
+    "tour_title": "Vitajte v LearnHouse",
+    "steps_title": "Kroky",
+    "step_number": "Krok {{n}}",
+    "progress_count": "Hotovo {{done}} z {{total}}",
+    "step_completed_toast": "Hotovo: {{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "Začnite otázkou, ktorú zákazníci kladú najčastejšie. Jeden kurz, ktorý na ňu odpovie, vám ušetrí ten telefonát každý týždeň.",
+        "add_content": "Krátky záznam obrazovky je lepší než dlhý článok pomoci. Ukážte kliknutia raz a nechajte ho pracovať za vás.",
+        "brand_school": "Zákazníci by mali mať pocit, že váš produkt nikdy neopustili. Vaše logo a farby z akadémie robia jeho súčasť.",
+        "share_grow": "Dajte odkaz do aplikácie, centra pomoci a uvítacieho e-mailu. Práve tam zákazníci hľadajú.",
+        "invite_learners": "Najprv pozvite ústretového zákazníka. Jeho otázky vám povedia, aká má byť ďalšia lekcia.",
+        "build_community": "Keď zákazníci pomáhajú zákazníkom, vaša podpora rastie zadarmo."
+      },
+      "team": {
+        "create_course": "Začnite tým, čo potrebuje každý nový kolega v prvom týždni. Napíšte to raz a prestaňte to opakovať na poradách.",
+        "add_content": "Nahrajte zaškolenie, ktoré stále robíte naživo. Noví ľudia si ho pozrú hneď prvý deň vlastným tempom.",
+        "brand_school": "Nech to pôsobí ako vlastný priestor vašej firmy, nie ako ďalší nástroj, ktorý sa treba naučiť.",
+        "share_grow": "Pripnite odkaz v tímovom chate a v kontrolnom zozname zaškolenia.",
+        "invite_learners": "Pozvite ďalšieho nového kolegu alebo jedného člena tímu na otestovanie. Skutočná spätná väzba je lepšia než hádanie.",
+        "build_community": "Priestor na otázky znamená, že odpovede sa napíšu raz, pre všetkých."
+      },
+      "sell": {
+        "create_course": "Začnite v malom. Jeden zameraný kurz, za ktorý by ľudia zaplatili, je lepší než veľký, ktorý nikdy nedokončíte.",
+        "add_content": "Vaša prvá lekcia je vaša predajná prezentácia. Urobte ju dobre a nechajte ľudí pozrieť si ju zadarmo.",
+        "brand_school": "Ľudia platia značkám, ktorým dôverujú. Logo a farby vám dodajú profesionálny vzhľad.",
+        "share_grow": "Toto je odkaz do vášho bio, newslettera a príspevkov. Každý predaj začína tu.",
+        "invite_learners": "Vaši prví študenti sú vaše prvé referencie. Pozvite pár priateľov alebo sledovateľov, nech to vyskúšajú.",
+        "build_community": "Komunita mení kupujúcich na stálych zákazníkov a stáli zákazníci si kúpia ďalší kurz."
+      },
+      "school": {
+        "create_course": "Začnite predmetom, ktorý poznáte najlepšie. Študenti môžu začať skôr, než bude zvyšok hotový.",
+        "add_content": "Skombinujte krátke video, stránku na čítanie a kvíz. Rozmanitosť udrží študentov motivovaných.",
+        "brand_school": "Názov a farby vašej školy na každej stránke dávajú študentom pocit, že sem patria.",
+        "share_grow": "Zdieľajte ho so žiakmi, rodičmi alebo členmi. Jeden odkaz, všetko na jednom mieste.",
+        "invite_learners": "Pozvite svoju prvú triedu. Skutočný študent zmení spôsob, akým tvoríte.",
+        "build_community": "Diskusie udržiavajú triedu aktívnu medzi lekciami a privádzajú študentov späť."
+      }
+    }
   },
   "upgrade_modal": {
     "title": "Odomknite svoj plný potenciál",

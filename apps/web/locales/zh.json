@@ -5092,7 +5092,14 @@
         "impact_desc": "跟踪参与度，查看学习者随时间的进步情况",
         "team": "壮大你的团队",
         "team_desc": "邀请讲师、管理角色并组织学习者小组"
-      }
+      },
+      "hello_name": "欢迎，{{name}}",
+      "promise": "今天就让您的学院上线吧。",
+      "intent_title": "您想打造什么？",
+      "intent_subtitle": "我们会据此定制您的上线计划，之后也可以更改。",
+      "back": "返回",
+      "build_plan": "查看我的上线计划",
+      "skip": "跳过"
     },
     "farewell": {
       "title": "您已准备好教导世界",
@@ -5106,7 +5113,112 @@
     "video_placeholder": "演示视频即将上线",
     "dismiss": "稍后再完成",
     "steps_done": "步已完成",
-    "back_to_dashboard": "返回仪表盘"
+    "back_to_dashboard": "返回仪表盘",
+    "minutes": "{{count}} 分钟",
+    "about_minutes": "约 {{count}} 分钟",
+    "minutes_left": "剩余 ~{{count}} 分钟",
+    "step_of": "第 {{current}} 步，共 {{total}} 步",
+    "step_done": "已完成",
+    "next_step": "下一步",
+    "mark_done": "标记为完成",
+    "skip_for_now": "暂时跳过",
+    "skipped": "已跳过",
+    "undo_skip": "恢复此步骤",
+    "auto_check": "完成后，此步骤会自动勾选。",
+    "video": {
+      "tap_for_sound": "开启声音观看",
+      "replay": "重播",
+      "unavailable": "此视频无法加载。"
+    },
+    "intent": {
+      "customers": {
+        "label": "培训我的客户",
+        "hint": "产品学院、客户引导、减少支持工单",
+        "headline": "您的客户学院，约 15 分钟即可上线。"
+      },
+      "team": {
+        "label": "培训我的团队",
+        "hint": "员工入职、合规培训、技能提升",
+        "headline": "您团队的培训中心，约 15 分钟即可上线。"
+      },
+      "sell": {
+        "label": "销售我的课程",
+        "hint": "把您的知识变成生意",
+        "headline": "您的课程生意，约 15 分钟即可开张。"
+      },
+      "school": {
+        "label": "运营学校或社群",
+        "hint": "班级、学员群组、俱乐部、非营利组织",
+        "headline": "您的学校，约 15 分钟即可开学。"
+      }
+    },
+    "finale": {
+      "badge": "设置完成",
+      "title": "{{name}} 已上线",
+      "subtitle": "您的学院已准备好迎接学员。分享此链接，邀请他们加入。",
+      "link_label": "您的公开链接",
+      "copy": "复制链接",
+      "copied": "已复制",
+      "open": "打开我的学校",
+      "whats_next": "接下来",
+      "close": "关闭上线计划",
+      "next": {
+        "certificates": {
+          "title": "颁发证书",
+          "desc": "有东西可以获得时，学员更愿意学完。"
+        },
+        "analytics": {
+          "title": "见证成长",
+          "desc": "了解谁在报名、谁已完成，以及他们卡在哪里。"
+        },
+        "next_course": {
+          "title": "创建下一门课程",
+          "desc": "从您已有的文档开始。"
+        }
+      }
+    },
+    "launch_plan": "上线计划",
+    "subtitle": "六个简短步骤，让学院上线。每一步都配有视频。",
+    "watch_tour": "观看导览",
+    "tour_title": "欢迎来到 LearnHouse",
+    "steps_title": "步骤",
+    "step_number": "第 {{n}} 步",
+    "progress_count": "已完成 {{done}}/{{total}}",
+    "step_completed_toast": "已完成：{{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "从客户最常问的问题开始。一门回答它的课程，能让您每周少接一次那样的电话。",
+        "add_content": "简短的录屏胜过冗长的帮助文章。把操作演示一次，让它替您工作。",
+        "brand_school": "让客户感觉从未离开您的产品。您的标志和配色让学院成为产品的一部分。",
+        "share_grow": "在您的应用、帮助中心和欢迎邮件中放上链接。客户就在那里寻找答案。",
+        "invite_learners": "先邀请一位友好的客户。他们的问题会告诉您下一课该讲什么。",
+        "build_community": "让客户帮助客户，免费扩充您的支持团队。"
+      },
+      "team": {
+        "create_course": "从每位新员工第一周需要了解的内容开始。写一次，就不必在会议上反复讲。",
+        "add_content": "把您反复现场讲解的内容录下来。新同事第一天就能按自己的节奏观看。",
+        "brand_school": "让它像是公司自己的空间，而不是又一个需要学习的工具。",
+        "share_grow": "把链接置顶在团队聊天和入职清单中。",
+        "invite_learners": "邀请下一位新员工，或请一位同事来试用。真实反馈胜过猜测。",
+        "build_community": "有了提问的地方，答案只需写一次，所有人都能看到。"
+      },
+      "sell": {
+        "create_course": "从小处开始。一门人们愿意付费的聚焦课程，胜过一门永远做不完的大课。",
+        "add_content": "第一课就是您的销售宣传。把它做好，并让人们免费试看。",
+        "brand_school": "人们愿意为信任的品牌付费。标志和配色让您看起来更专业。",
+        "share_grow": "这是放在个人简介、邮件通讯和帖子里的链接。每一笔销售都从这里开始。",
+        "invite_learners": "第一批学员就是您的第一批口碑。邀请几位朋友或粉丝来试试。",
+        "build_community": "社群把买家变成常客，而常客会购买下一门课程。"
+      },
+      "school": {
+        "create_course": "从您最拿手的课开始。其余内容准备好之前，学员就可以开始学习。",
+        "add_content": "搭配一段短视频、一页阅读材料和一个测验。多样性让学员保持投入。",
+        "brand_school": "每个页面都有学校的名称和配色，让学员更有归属感。",
+        "share_grow": "分享给您的学生、家长或成员。一个链接，一切尽在其中。",
+        "invite_learners": "邀请您的第一批学生。真实的学员会改变您的创作方式。",
+        "build_community": "讨论让班级在课与课之间保持活跃，并吸引学员回来。"
+      }
+    }
   },
   "boards": {
     "access": {

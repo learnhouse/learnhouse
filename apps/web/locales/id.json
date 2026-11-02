@@ -5358,7 +5358,14 @@
         "impact_desc": "Lacak keterlibatan dan lihat bagaimana pelajar berkembang dari waktu ke waktu",
         "team": "Kembangkan tim Anda",
         "team_desc": "Undang instruktur, kelola peran, dan atur kelompok pelajar"
-      }
+      },
+      "hello_name": "Selamat datang, {{name}}",
+      "promise": "Ayo luncurkan akademi Anda hari ini.",
+      "intent_title": "Apa yang sedang Anda bangun?",
+      "intent_subtitle": "Kami akan menyesuaikan rencana peluncuran Anda. Anda bisa mengubahnya nanti.",
+      "back": "Kembali",
+      "build_plan": "Tampilkan rencana peluncuran saya",
+      "skip": "Lewati"
     },
     "farewell": {
       "title": "Anda siap mengajarkan dunia",
@@ -5372,7 +5379,112 @@
     "video_placeholder": "Video panduan segera hadir",
     "dismiss": "Saya akan selesaikan nanti",
     "steps_done": "langkah selesai",
-    "back_to_dashboard": "Kembali ke dasbor"
+    "back_to_dashboard": "Kembali ke dasbor",
+    "minutes": "{{count}} mnt",
+    "about_minutes": "Sekitar {{count}} mnt",
+    "minutes_left": "~{{count}} mnt lagi",
+    "step_of": "Langkah {{current}} dari {{total}}",
+    "step_done": "Selesai",
+    "next_step": "Langkah berikutnya",
+    "mark_done": "Tandai selesai",
+    "skip_for_now": "Lewati dulu",
+    "skipped": "Dilewati",
+    "undo_skip": "Kembalikan langkah ini",
+    "auto_check": "Langkah ini akan tercentang otomatis setelah selesai.",
+    "video": {
+      "tap_for_sound": "Tonton dengan suara",
+      "replay": "Putar ulang",
+      "unavailable": "Video ini tidak dapat dimuat."
+    },
+    "intent": {
+      "customers": {
+        "label": "Melatih pelanggan saya",
+        "hint": "Akademi produk, onboarding, lebih sedikit tiket dukungan",
+        "headline": "Akademi pelanggan Anda, siap dalam sekitar 15 menit."
+      },
+      "team": {
+        "label": "Melatih tim saya",
+        "hint": "Onboarding karyawan, kepatuhan, peningkatan keterampilan",
+        "headline": "Pusat pelatihan tim Anda, siap dalam sekitar 15 menit."
+      },
+      "sell": {
+        "label": "Menjual kursus saya",
+        "hint": "Ubah pengetahuan Anda menjadi bisnis",
+        "headline": "Bisnis kursus Anda, buka dalam sekitar 15 menit."
+      },
+      "school": {
+        "label": "Mengelola sekolah atau komunitas",
+        "hint": "Kelas, angkatan, klub, organisasi nirlaba",
+        "headline": "Sekolah Anda, buka dalam sekitar 15 menit."
+      }
+    },
+    "finale": {
+      "badge": "Penyiapan selesai",
+      "title": "{{name}} sudah aktif",
+      "subtitle": "Akademi Anda siap menyambut pelajar. Bagikan tautan ini untuk mengajak mereka bergabung.",
+      "link_label": "Tautan publik Anda",
+      "copy": "Salin tautan",
+      "copied": "Disalin",
+      "open": "Buka sekolah saya",
+      "whats_next": "Selanjutnya",
+      "close": "Tutup rencana peluncuran",
+      "next": {
+        "certificates": {
+          "title": "Berikan sertifikat",
+          "desc": "Pelajar lebih sering menyelesaikan kursus jika ada yang bisa diraih."
+        },
+        "analytics": {
+          "title": "Pantau pertumbuhannya",
+          "desc": "Lihat siapa yang mendaftar, siapa yang selesai, dan di mana mereka tersendat."
+        },
+        "next_course": {
+          "title": "Buat kursus berikutnya",
+          "desc": "Mulai dari dokumen yang sudah Anda miliki."
+        }
+      }
+    },
+    "launch_plan": "Rencana peluncuran",
+    "subtitle": "Enam langkah singkat menuju akademi yang aktif. Setiap langkah dilengkapi video.",
+    "watch_tour": "Tonton tur",
+    "tour_title": "Selamat datang di LearnHouse",
+    "steps_title": "Langkah",
+    "step_number": "Langkah {{n}}",
+    "progress_count": "{{done}} dari {{total}} selesai",
+    "step_completed_toast": "Selesai: {{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "Mulailah dengan pertanyaan yang paling sering diajukan pelanggan. Satu kursus yang menjawabnya menghemat telepon itu setiap minggu.",
+        "add_content": "Rekaman layar singkat lebih efektif daripada artikel bantuan yang panjang. Tunjukkan klik-kliknya sekali dan biarkan rekaman itu bekerja untuk Anda.",
+        "brand_school": "Pelanggan harus merasa tidak pernah meninggalkan produk Anda. Logo dan warna Anda menjadikan akademi bagian darinya.",
+        "share_grow": "Tautkan dari aplikasi, pusat bantuan, dan email sambutan Anda. Di sanalah pelanggan mencari.",
+        "invite_learners": "Undang dulu pelanggan yang ramah. Pertanyaan mereka akan memberi tahu Anda pelajaran apa berikutnya.",
+        "build_community": "Pelanggan yang menjawab pelanggan lain memperbesar tim dukungan Anda secara gratis."
+      },
+      "team": {
+        "create_course": "Mulailah dengan apa yang dibutuhkan setiap karyawan baru di minggu pertama. Tulis sekali, berhenti mengulanginya di rapat.",
+        "add_content": "Rekam penjelasan yang terus Anda berikan secara langsung. Karyawan baru menontonnya di hari pertama, sesuai kecepatan mereka.",
+        "brand_school": "Buat terasa seperti ruang milik perusahaan Anda sendiri, bukan sekadar alat baru yang harus dipelajari.",
+        "share_grow": "Sematkan tautannya di obrolan tim dan daftar periksa onboarding Anda.",
+        "invite_learners": "Undang karyawan baru berikutnya, atau satu rekan kerja untuk mengujinya. Masukan nyata lebih baik daripada menebak.",
+        "build_community": "Ruang untuk bertanya berarti jawaban cukup ditulis sekali, untuk semua orang."
+      },
+      "sell": {
+        "create_course": "Mulailah dari yang kecil. Satu kursus terfokus yang mau dibayar orang lebih baik daripada kursus besar yang tak pernah selesai.",
+        "add_content": "Pelajaran pertama Anda adalah promosi penjualan Anda. Buat sebaik mungkin, dan biarkan orang melihatnya secara gratis.",
+        "brand_school": "Orang membayar merek yang mereka percayai. Logo dan warna membuat Anda tampil profesional.",
+        "share_grow": "Ini tautan untuk bio, newsletter, dan postingan Anda. Setiap penjualan dimulai di sini.",
+        "invite_learners": "Pelajar pertama Anda adalah testimoni pertama Anda. Undang beberapa teman atau pengikut untuk mencobanya.",
+        "build_community": "Komunitas mengubah pembeli menjadi pelanggan setia, dan pelanggan setia membeli kursus berikutnya."
+      },
+      "school": {
+        "create_course": "Mulailah dengan kelas yang paling Anda kuasai. Pelajar bisa mulai sebelum sisanya siap.",
+        "add_content": "Padukan video singkat, halaman bacaan, dan kuis. Variasi membuat pelajar tetap semangat.",
+        "brand_school": "Nama dan warna sekolah Anda di setiap halaman membuat pelajar merasa menjadi bagian darinya.",
+        "share_grow": "Bagikan kepada siswa, orang tua, atau anggota Anda. Satu tautan, semuanya di satu tempat.",
+        "invite_learners": "Undang kelas pertama Anda. Pelajar sungguhan mengubah cara Anda membangun.",
+        "build_community": "Diskusi membuat kelas tetap hidup di antara pelajaran dan membuat pelajar kembali."
+      }
+    }
   },
   "embed": {
     "not_supported_description": "Tipe aktivitas ini memerlukan autentikasi dan tidak dapat disematkan.",
