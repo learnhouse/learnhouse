@@ -475,12 +475,24 @@ async def search_across_org(
 
     user_reads = [UserReadPublic.model_validate(u) for u in users]
     community_reads = [community_read(c) for c in communities]
+    # Content sold through a product stays out of search for people who have
+    # not bought it: discussions of a sold community, a sold playground's HTML.
+    from src.core.ee_hooks import is_ee_resource_locked
+
+    locked: dict[str, bool] = {}
+
+    async def _locked(resource_uuid: str) -> bool:
+        if resource_uuid not in locked:
+            locked[resource_uuid] = await is_ee_resource_locked(request, db_session, current_user, resource_uuid)
+        return locked[resource_uuid]
+
     discussion_reads = [
         SearchDiscussionRead(
             **discussion.model_dump(),
             community_uuid=community_uuid or "",
         )
         for discussion, community_uuid in discussions
+        if not (community_uuid and await _locked(community_uuid))
     ]
 
     playground_reads: list[PlaygroundRead] = []
@@ -488,6 +500,9 @@ async def search_across_org(
         read = PlaygroundRead.model_validate(pg)
         read.org_uuid = org.org_uuid
         read.org_slug = org.slug
+        sold_as = pg.playground_uuid if pg.playground_uuid.startswith("playground_") else f"playground_{pg.playground_uuid}"
+        if await _locked(sold_as):
+            read.html_content = None
         playground_reads.append(read)
 
     podcast_reads = [PodcastRead(**p.model_dump(), authors=[]) for p in podcasts]

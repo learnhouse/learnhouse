@@ -4,9 +4,10 @@ import { revalidateTags, asArray } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg } from '@services/config/config'
-import { getOffersByResource } from '@services/payments/offers'
+import { getOffersByResource } from '@ee/services/payments/offers'
+import { getResourcePaywall } from '@ee/services/payments/access'
 import { UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus } from 'lucide-react'
-import { OfferCard } from './OfferCard'
+import { OfferCard } from '@ee/components/Payments/OfferCard'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
 import { applyForContributor } from '@services/courses/courses'
@@ -115,6 +116,17 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     staleTime: 60_000,
   });
   const linkedOffers: any[] = asArray(offersResult);
+
+  // Whether this viewer already has paid access (bought it, was granted it, or
+  // manages it). Starting the course is a separate step from buying it.
+  const accessToken = session.data?.tokens?.access_token
+  const { data: paywallResult } = useQuery({
+    queryKey: ['payments', org?.id, 'paywall', resourceUuid, !!accessToken],
+    queryFn: () => getResourcePaywall(org.id, resourceUuid!, accessToken),
+    enabled: !!org && !!resourceUuid && !!accessToken && linkedOffers.length > 0,
+    staleTime: 30_000,
+  });
+  const hasPaidAccess = !!paywallResult?.success && paywallResult.data?.locked === false;
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {
@@ -442,7 +454,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     )
   }
 
-  if (linkedOffers.length > 0) {
+  if (linkedOffers.length > 0 && !(hasPaidAccess && !isStarted)) {
     // User already enrolled / started: show "you own this" notice + leave button
     if (isStarted) {
       return (

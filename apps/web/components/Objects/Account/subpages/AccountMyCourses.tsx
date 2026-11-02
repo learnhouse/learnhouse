@@ -3,7 +3,7 @@
 import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useQuery } from '@tanstack/react-query'
-import { getUserEnrollments } from '@services/payments/offers'
+import { getUserEnrollments } from '@ee/services/payments/offers'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import { BookOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'

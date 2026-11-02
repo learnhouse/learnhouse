@@ -1,27 +1,68 @@
-# Offers & Pricing
+# Products & Pricing
 
-Offers are the products you sell to students. Each offer defines what students get, how much they pay, and whether the payment is recurring or one-time.
+A product is what your learners buy: a price, and the content it unlocks. In the API and webhooks, products are called **offers**.
 
-## Offer Types
+## What a product can unlock
 
-- **Subscription**: Recurring payments that grant access as long as the subscription is active.
-- **One-time purchase**: A single payment that grants permanent access.
+Pick any mix of your content:
 
-## Pricing Options
+- Courses
+- Communities
+- Podcasts
+- Boards
+- Playgrounds
 
-- **Fixed price**: Set a specific amount in your chosen currency.
-- **Customer choice**: Let students pay what they want (pay-what-you-want model).
+Buyers get access to everything you pick. If someone hasn't bought it yet, the content's page stays visible (its name, description and course outline), and the content itself is locked:
 
-## Offer Details
+| Content | What stays locked |
+|---|---|
+| Course | Activities |
+| Community | Discussions, comments and reactions |
+| Podcast | Episode audio. The episode list stays visible as a preview. |
+| Board | The board itself |
+| Playground | The playground itself |
 
-Each offer includes:
+Instead of the locked content, people see the products that unlock it. Authors and organization admins always have full access.
 
-- **Name & description**: What the student is buying.
-- **Benefits**: A list of what's included in the offer.
-- **Amount & currency**: The price (e.g., $49 USD).
-- **Public listing**: Whether the offer appears on your public storefront.
-- **Linked resources**: Courses or groups that the offer grants access to.
+## Chapters, lessons and free previews
 
-## Public Storefront
+Inside a course, open a chapter's or lesson's lock menu in the Content tab. Below who can see it (Public, Signed-in only, User groups only), the **Purchase** section sets how it is sold:
 
-Offers marked as public are displayed on your organization's storefront page. Each listing shows the offer details, included courses, and a purchase button that launches the Stripe checkout flow.
+- **Included with the course** (default): buyers of the course get it.
+- **Free preview**: anyone who can see the course can open it, even when the course is sold. Use it for the first lesson or a sample chapter.
+- **Sell on its own**: creates a product that unlocks just that chapter or lesson. This also works inside a free course, to sell one premium chapter.
+
+Buying the course always opens every chapter and lesson. In the course outline, learners see which lessons are **Paid** and which are **Free previews**, and opening a paid lesson shows the products that unlock it.
+
+## User groups
+
+A product can also add its buyers to one or more user groups (Users → User groups) while their access lasts. Buyers then get everything those groups already unlock, including "Users only" content, and the store page lists that content as included.
+
+When access ends, buyers only leave the groups the purchase put them in. People who were in a group before they bought, or who still have another purchase that adds them to it, keep their place. Linking a group to a product adds everyone who already has the product to it.
+
+## How people get it
+
+| Checkout | What happens |
+|---|---|
+| Stripe Checkout | The buyer pays on a Stripe page. Access unlocks once the payment succeeds. Supports subscriptions, free trials, pay what you want and promotion codes. |
+| Your own checkout | The buyer is sent to your link, with `email`, `checkout[email]`, `lh_offer`, `lh_user` and `lh_return` added to it. When the payment clears, your tool calls the [grant API](/platform/payments/api). |
+| Free | The learner signs in and claims it. No card needed. |
+| Invite only | No buy button. You grant access from Customers or through the API. |
+
+## Pricing
+
+- **One-time** or **subscription** (monthly or yearly).
+- **Was price**: an optional higher price, shown struck through next to the real one.
+- **Pay what you want** (Stripe, one-time): the price you set is the minimum.
+- **Free trial** (Stripe subscriptions): the number of days before the first charge.
+- **Promotion codes** (Stripe): turn this on to let buyers enter a [promotion code](/platform/payments/discounts) at checkout.
+
+Once a subscription product has active subscribers, its billing period can't be changed. Create a new product for the new period instead.
+
+## Visibility
+
+Products are listed in your store and on the content they unlock. Turn **Show in your store** off to make a product private: it disappears from the store, but anyone with its link can still open it.
+
+## Deleting a product
+
+You can't delete a product while customers still have access to it. Revoke their access first, or make the product private.

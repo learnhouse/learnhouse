@@ -90,6 +90,46 @@ async def check_ee_activity_paid_access(request, activity_id, user, db_session) 
 
 
 
+async def require_ee_resource_paid_access(request, db_session, current_user, resource_uuid: str) -> None:
+    """Raise 402 when a resource's content is sold through an offer and the
+    caller has not bought it. A no-op without EE (nothing can be sold).
+
+    Call it where content is read (posts, episodes, a board, a playground), not
+    where a resource's name and description are, so its page can still show
+    what is for sale. API tokens act for the org itself and are never paywalled.
+    """
+    from src.db.users import AnonymousUser, PublicUser
+
+    if not isinstance(current_user, (PublicUser, AnonymousUser)):
+        return
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "require_resource_paid_access"):
+        await hooks.require_resource_paid_access(request, resource_uuid, current_user, db_session)
+
+
+async def is_ee_resource_locked(request, db_session, current_user, resource_uuid: str) -> bool:
+    """Whether the caller would get a 402 reading this resource's content."""
+    from fastapi import HTTPException
+
+    try:
+        await require_ee_resource_paid_access(request, db_session, current_user, resource_uuid)
+    except HTTPException as e:
+        if e.status_code == 402:
+            return True
+        raise
+    return False
+
+
+async def get_ee_paid_locked_activity_ids(request, course_id: int, user, db_session) -> set | None:
+    """Ids of a course's lessons the caller has not bought. None without EE, or
+    on an EE without per-lesson selling (callers then fall back to the
+    course-wide check)."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "paid_locked_activity_ids"):
+        return await hooks.paid_locked_activity_ids(request, course_id, user, db_session)
+    return None
+
+
 def notify_ee_course_content_changed(course_id: int) -> None:
     """Tell EE a course's content changed (title, activities, publication,
     assignment due dates) so LTI can update the LMS gradebook columns placed

@@ -6,6 +6,8 @@ import { getCommunity } from '@services/communities/communities'
 import { getDiscussion } from '@services/communities/discussions'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 import DiscussionPageClient from './discussion'
+import ResourcePaywall from '@ee/components/Payments/ResourcePaywall'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 
 /**
  * Extract plain text from discussion content for SEO metadata
@@ -102,6 +104,7 @@ const DiscussionPage = async (params: any) => {
   let community = null
   let discussion = null
   let fetchErrored = false
+  let discussionStatus: number | undefined
 
   try {
     community = await getCommunity(
@@ -120,9 +123,23 @@ const DiscussionPage = async (params: any) => {
       { revalidate: 120, tags: ['discussions'] },
       access_token ? access_token : undefined
     )
-  } catch (error) {
+  } catch (error: any) {
     fetchErrored = true
+    discussionStatus = error?.status
     console.error('Failed to fetch discussion:', error)
+  }
+
+  // A sold community: show what unlocks it instead of a dead end.
+  if (community && !discussion && discussionStatus === 402) {
+    return (
+      <GeneralWrapperStyled>
+        <div className="max-w-2xl mx-auto pt-6">
+          <ResourcePaywall orgId={org.id} orgslug={orgslug} resourceUuid={community.community_uuid} resourceName={community.name}>
+            {null}
+          </ResourcePaywall>
+        </div>
+      </GeneralWrapperStyled>
+    )
   }
 
   // Missing or denied-to-anon: 404 so non-public discussions aren't enumerable.

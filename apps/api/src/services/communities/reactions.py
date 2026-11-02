@@ -5,6 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
+from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
@@ -51,6 +52,7 @@ async def get_reactions(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     # Get all reactions for this discussion
     reactions_statement = select(DiscussionReaction).where(
@@ -146,6 +148,7 @@ async def toggle_reaction(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     reactor_id = await require_community_participant(current_user, community, db_session)
 
