@@ -3087,7 +3087,39 @@
         },
         "unsaved": "Unsaved changes",
         "saved": "All changes saved",
-        "save": "Save schedule"
+        "save": "Save schedule",
+        "early_access": {
+          "title": "Early access",
+          "description": "Members of these user groups get every chapter right away: staff, beta testers, a premium tier.",
+          "empty": "No user groups yet."
+        },
+        "notify": {
+          "title": "Email learners when a chapter opens",
+          "description": "Enrolled learners get a short email with a link back to the course as soon as a scheduled chapter opens for them."
+        },
+        "preview": {
+          "label": "Preview a learner’s view on any day",
+          "day_one": "Day {{count}} after enrolling",
+          "day_other": "Day {{count}} after enrolling",
+          "slider": "Preview day",
+          "clear": "Clear",
+          "open": "Open",
+          "upcoming_one": "Opens on day {{count}}",
+          "upcoming_other": "Opens on day {{count}}",
+          "closed": "Closed",
+          "dated": "Fixed date"
+        },
+        "more": {
+          "label": "More conditions",
+          "count_one": "{{count}} more condition",
+          "count_other": "{{count}} more conditions",
+          "requires": "Requires these chapters to be completed",
+          "no_earlier": "This is the first chapter.",
+          "closes": "Close it again",
+          "closes_days": "Days open",
+          "closes_after": "days after it opens",
+          "closes_hint": "For limited-time content like a replay or a live-week bonus."
+        }
       }
     },
     "organization": {
@@ -6842,7 +6874,15 @@
       "banner_next": "Next up: {{name}}. {{when}}",
       "gate_enrollment": "This course releases its chapters over time, starting when you begin the course. Start it from the course page to unlock your schedule.",
       "gate_previous": "Finish every lesson of the previous chapter and this one opens right away.",
-      "gate_schedule": "This course releases its chapters over time. Come back when this one opens."
+      "gate_schedule": "This course releases its chapters over time. Come back when this one opens.",
+      "opens_after_required": "Opens after the required chapters",
+      "closed": "No longer available",
+      "closed_on": "closed {{date}}",
+      "open_until": "Open until {{date}}",
+      "gate_prerequisites": "Finish the chapters this one builds on and it opens right away.",
+      "gate_closed": "This chapter was available for a limited time, and that time is over.",
+      "add_to_calendar": "Add to calendar",
+      "calendar_event": "{{chapter}} opens · {{course}}"
     }
   },
   "pagination": {

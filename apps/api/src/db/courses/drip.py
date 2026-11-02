@@ -36,6 +36,8 @@ class DripLockReason(str, Enum):
     SCHEDULE = "schedule"      # release time not reached yet
     ENROLLMENT = "enrollment"  # learner has not started the course, so no clock yet
     PREVIOUS = "previous"      # previous chapter not completed yet
+    PREREQUISITES = "prerequisites"  # other required chapters not completed yet
+    CLOSED = "closed"          # was open for a limited time, and that time is over
 
 
 def _as_utc(value: Optional[datetime]) -> Optional[datetime]:
@@ -51,6 +53,11 @@ class CourseDripSettings(BaseModel):
     anchor: DripAnchor = DripAnchor.ENROLLMENT
     # Required when anchor is fixed_date.
     start_date: Optional[datetime] = None
+    # Members of these user groups get every chapter right away (early access,
+    # staff, a premium tier). Usergroup uuids from the course's organization.
+    early_access_usergroups: List[str] = Field(default_factory=list, max_length=50)
+    # Email enrolled learners when a scheduled chapter opens for them.
+    notify_email: bool = False
 
     @field_validator("start_date")
     @classmethod
@@ -70,6 +77,12 @@ class ChapterDripRule(BaseModel):
     release_at: Optional[datetime] = None
     # Also wait until every published activity of the previous chapter is done.
     require_previous: bool = False
+    # Also wait until these earlier chapters (uuids) are done. Chapters that
+    # are not before this one in the course are ignored.
+    require_chapters: List[str] = Field(default_factory=list, max_length=50)
+    # Close the chapter again this many days after it opens (limited-time
+    # content: a replay, a live-week bonus). None keeps it open.
+    available_days: Optional[int] = Field(default=None, ge=1, le=MAX_DELAY_DAYS)
 
     @field_validator("release_at")
     @classmethod

@@ -22,7 +22,7 @@ from src.services.nudges.tokens import make_unsubscribe_token
 # The `[subpage]` segment of the course editor route is a closed set; anything
 # else renders a broken tab rather than 404ing, which is harder to notice.
 COURSE_SUBPAGES = frozenset(
-    {"general", "content", "access", "contributors", "seo", "certification", "analytics"}
+    {"general", "content", "schedule", "access", "contributors", "seo", "certification", "analytics"}
 )
 
 

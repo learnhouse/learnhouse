@@ -10,7 +10,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import {
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock, Globe, Package, Puzzle } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock, Globe, Package, Puzzle, CalendarPlus } from 'lucide-react'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
@@ -32,7 +32,8 @@ import { JsonLd } from '@components/SEO/JsonLd'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
-import DripBadge, { DripIcon, useDripLabel } from '@components/Objects/Courses/DripBadge'
+import DripBadge, { DripIcon, DripUntilBadge, useDripLabel } from '@components/Objects/Courses/DripBadge'
+import { buildIcs } from '@/lib/drip'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -66,7 +67,27 @@ const CourseClient = (props: any) => {
   const chapters: any[] = course?.chapters ?? []
   const dripLabel = useDripLabel()
   // First chapter the drip schedule still holds back, for the "next up" banner.
-  const nextDrip = chapters.find((chapter: any) => chapter.drip_locked)
+  const nextDrip = chapters.find((chapter: any) => chapter.drip_locked && chapter.drip_reason !== 'closed')
+  // Releases with a known date, for the "Add to calendar" download.
+  const datedReleases = chapters.filter((chapter: any) => chapter.drip_locked && chapter.drip_unlock_at)
+  const downloadReleaseCalendar = () => {
+    const courseUrl = typeof window !== 'undefined' ? window.location.href.split('#')[0] : undefined
+    const ics = buildIcs(
+      course?.name ?? '',
+      datedReleases.map((chapter: any) => ({
+        uid: chapter.chapter_uuid,
+        title: t('course.drip.calendar_event', { defaultValue: '{{chapter}} opens · {{course}}', chapter: chapter.name, course: course?.name }),
+        start: new Date(chapter.drip_unlock_at),
+        url: courseUrl,
+      }))
+    )
+    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${(course?.name ?? 'course').replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}-schedule.ics`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
   const allChaptersExpanded = chapters.length > 0 && chapters.every(
     (chapter: any, idx: number) => expandedChapters[chapter.chapter_uuid] ?? idx === 0,
   )
@@ -583,7 +604,7 @@ const CourseClient = (props: any) => {
                   <div className="w-8 h-8 rounded-md bg-white border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
                     <DripIcon reason={nextDrip.drip_reason} size={16} />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 grow">
                     <div className="font-semibold">
                       {t('course.drip.banner_title', 'New chapters are released over time')}
                     </div>
@@ -595,6 +616,17 @@ const CourseClient = (props: any) => {
                       })}
                     </div>
                   </div>
+                  {datedReleases.length > 0 && (
+                    <button
+                      type="button"
+                      data-testid="drip-calendar"
+                      onClick={downloadReleaseCalendar}
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-white border border-amber-200 px-2.5 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors"
+                    >
+                      <CalendarPlus size={14} />
+                      <span className="hidden sm:inline">{t('course.drip.add_to_calendar', 'Add to calendar')}</span>
+                    </button>
+                  )}
                 </div>
               )}
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
@@ -629,7 +661,9 @@ const CourseClient = (props: any) => {
                             </span>
                             <h3 className="text-lg font-bold leading-tight truncate min-w-0 sm:text-base md:text-lg" style={{lineHeight: '1.2'}}>{chapter.name}</h3>
                             {chapter.drip_locked ? (
-                              <DripBadge className="ms-2" drip_reason={chapter.drip_reason} drip_unlock_at={chapter.drip_unlock_at} />
+                              <DripBadge className="ms-2" drip_reason={chapter.drip_reason} drip_unlock_at={chapter.drip_unlock_at} drip_closes_at={chapter.drip_closes_at} />
+                            ) : chapter.drip_closes_at && !chapter.is_locked ? (
+                              <DripUntilBadge className="ms-2" closesAt={chapter.drip_closes_at} />
                             ) : chapter.is_locked && (
                               <span className="ms-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-semibold">
                                 <Lock size={10} />

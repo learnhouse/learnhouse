@@ -3,18 +3,21 @@
  *
  * Mirrors the API's rules (apps/api/src/services/courses/drip.py): a chapter
  * opens right away, a number of days after the learner's schedule starts
- * (their enrollment, or the cohort start date), or at a fixed date, and can
- * also wait for the previous chapter to be completed.
+ * (their enrollment, or the cohort start date), or at a fixed date. It can
+ * also wait for the previous chapter or other chosen chapters to be
+ * completed, and close again a number of days after it opens.
  */
 
 export type DripAnchor = 'enrollment' | 'fixed_date'
 export type DripReleaseMode = 'immediate' | 'delay' | 'date'
-export type DripLockReason = 'schedule' | 'enrollment' | 'previous'
+export type DripLockReason = 'schedule' | 'enrollment' | 'previous' | 'prerequisites' | 'closed'
 
 export interface DripSettings {
   enabled: boolean
   anchor: DripAnchor
   start_date: string | null
+  early_access_usergroups: string[]
+  notify_email: boolean
 }
 
 export interface DripRule {
@@ -22,12 +25,16 @@ export interface DripRule {
   delay_days: number
   release_at: string | null
   require_previous: boolean
+  require_chapters: string[]
+  available_days: number | null
 }
 
 export const DEFAULT_DRIP_SETTINGS: DripSettings = {
   enabled: false,
   anchor: 'enrollment',
   start_date: null,
+  early_access_usergroups: [],
+  notify_email: false,
 }
 
 export const DEFAULT_DRIP_RULE: DripRule = {
@@ -35,6 +42,8 @@ export const DEFAULT_DRIP_RULE: DripRule = {
   delay_days: 0,
   release_at: null,
   require_previous: false,
+  require_chapters: [],
+  available_days: null,
 }
 
 export const MAX_DELAY_DAYS = 3650
@@ -98,4 +107,68 @@ export function fromLocalInput(value: string): string | null {
   if (!value) return null
   const d = new Date(value)
   return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
+
+export type DayState = 'open' | 'upcoming' | 'closed' | 'dated'
+
+/**
+ * What a learner sees on day `day` of their schedule (day 0 = enrollment),
+ * assuming they keep up with the lessons. Chapters on a fixed date can't be
+ * placed on a learner's day line, so they come back as 'dated'.
+ */
+export function stateOnDay(rule: DripRule, day: number): DayState {
+  if (rule.mode === 'date') return 'dated'
+  const opens = rule.mode === 'delay' ? rule.delay_days : 0
+  if (day < opens) return 'upcoming'
+  if (rule.available_days && day >= opens + rule.available_days) return 'closed'
+  return 'open'
+}
+
+/** Last day worth previewing: the latest opening or closing, plus a week. */
+export function previewHorizon(rules: DripRule[]): number {
+  const ends = rules.map((r) => {
+    const opens = r.mode === 'delay' ? r.delay_days : 0
+    return opens + (r.available_days ?? 0)
+  })
+  return Math.min(MAX_DELAY_DAYS, Math.max(14, ...ends) + 7)
+}
+
+export interface CalendarEvent {
+  uid: string
+  title: string
+  start: Date
+  url?: string
+}
+
+function icsDate(d: Date): string {
+  return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+}
+
+function icsText(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1')
+}
+
+/** An .ics calendar with one 30-minute event per upcoming chapter release. */
+export function buildIcs(calendarName: string, events: CalendarEvent[], now: Date = new Date()): string {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//LearnHouse//Drip content//EN',
+    'CALSCALE:GREGORIAN',
+    `X-WR-CALNAME:${icsText(calendarName)}`,
+  ]
+  for (const e of events) {
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:${e.uid}@learnhouse`,
+      `DTSTAMP:${icsDate(now)}`,
+      `DTSTART:${icsDate(e.start)}`,
+      `DTEND:${icsDate(new Date(e.start.getTime() + 30 * 60 * 1000))}`,
+      `SUMMARY:${icsText(e.title)}`,
+      ...(e.url ? [`URL:${e.url}`] : []),
+      'END:VEVENT'
+    )
+  }
+  lines.push('END:VCALENDAR')
+  return lines.join('\r\n') + '\r\n'
 }

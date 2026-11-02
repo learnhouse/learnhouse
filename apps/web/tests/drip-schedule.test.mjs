@@ -3,10 +3,13 @@ import { describe, expect, test } from 'bun:test'
 import {
   DEFAULT_DRIP_RULE,
   MAX_DELAY_DAYS,
+  buildIcs,
   everyInterval,
   fromLocalInput,
   normalizeRule,
+  previewHorizon,
   releaseDate,
+  stateOnDay,
   timeUntil,
   toLocalInput,
 } from '../lib/drip.ts'
@@ -90,5 +93,51 @@ describe('datetime-local round trip', () => {
     expect(toLocalInput('nope')).toBe('')
     expect(fromLocalInput('')).toBeNull()
     expect(fromLocalInput('nope')).toBeNull()
+  })
+})
+
+describe('stateOnDay', () => {
+  const rule = (extra) => ({ ...DEFAULT_DRIP_RULE, ...extra })
+
+  test('opens on its day and closes after its window', () => {
+    const r = rule({ mode: 'delay', delay_days: 7, available_days: 3 })
+    expect(stateOnDay(r, 6)).toBe('upcoming')
+    expect(stateOnDay(r, 7)).toBe('open')
+    expect(stateOnDay(r, 9)).toBe('open')
+    expect(stateOnDay(r, 10)).toBe('closed')
+  })
+
+  test('immediate is open from day 0, fixed dates are off the day line', () => {
+    expect(stateOnDay(rule({}), 0)).toBe('open')
+    expect(stateOnDay(rule({ mode: 'date', release_at: '2026-12-01T00:00:00Z' }), 3)).toBe('dated')
+  })
+})
+
+describe('previewHorizon', () => {
+  test('covers the last opening or closing plus a week, at least three weeks', () => {
+    expect(previewHorizon([{ ...DEFAULT_DRIP_RULE }])).toBe(21)
+    expect(previewHorizon([{ ...DEFAULT_DRIP_RULE, mode: 'delay', delay_days: 28, available_days: 7 }])).toBe(42)
+    expect(previewHorizon([{ ...DEFAULT_DRIP_RULE, mode: 'delay', delay_days: MAX_DELAY_DAYS }])).toBe(MAX_DELAY_DAYS)
+  })
+})
+
+describe('buildIcs', () => {
+  const now = new Date('2026-11-02T10:00:00Z')
+
+  test('one event per release, escaped and CRLF-terminated', () => {
+    const ics = buildIcs('Seller; Bootcamp', [
+      { uid: 'chapter_3', title: 'Week 3, payments', start: new Date('2026-11-07T09:30:00Z'), url: 'https://a.test/course/x' },
+      { uid: 'chapter_4', title: 'Week 4', start: new Date('2026-11-14T09:30:00Z') },
+    ], now)
+    expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true)
+    expect(ics.endsWith('END:VCALENDAR\r\n')).toBe(true)
+    expect(ics).toContain('X-WR-CALNAME:Seller\\; Bootcamp')
+    expect(ics).toContain('SUMMARY:Week 3\\, payments')
+    expect(ics).toContain('DTSTART:20261107T093000Z')
+    expect(ics).toContain('DTEND:20261107T100000Z')
+    expect(ics).toContain('DTSTAMP:20261102T100000Z')
+    expect(ics).toContain('UID:chapter_3@learnhouse')
+    expect(ics).toContain('URL:https://a.test/course/x')
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(2)
   })
 })

@@ -70,6 +70,8 @@ class ChapterRead(ChapterBase):
     drip_locked: bool = False
     drip_unlock_at: Optional[str] = None
     drip_reason: Optional[str] = None
+    # Open chapters that close again after a while: when (ISO 8601).
+    drip_closes_at: Optional[str] = None
     pass
 
 
