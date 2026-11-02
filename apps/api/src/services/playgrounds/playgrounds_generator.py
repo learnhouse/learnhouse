@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 LH_CONFIG = get_learnhouse_config()
 
 PLAYGROUND_SESSION_KEY = "playground_session:{session_uuid}"
+PLAYGROUND_OWNER_KEY = "playground_session_owner:{session_uuid}"
 SESSION_TTL = 2160000  # 25 days
 MAX_ITERATIONS = 10
 
@@ -49,9 +50,27 @@ def get_playground_session(session_uuid: str) -> Optional[PlaygroundSessionData]
     return None
 
 
+def get_playground_session_owner(session_uuid: str) -> Optional[int]:
+    """Return the user id that created the session, or None if unknown."""
+    r = get_redis_connection()
+    if not r:
+        return None
+    try:
+        owner = r.get(PLAYGROUND_OWNER_KEY.format(session_uuid=session_uuid))
+        if owner is None:
+            return None
+        if isinstance(owner, bytes):
+            owner = owner.decode("utf-8")
+        return int(owner)
+    except Exception as e:
+        logger.error("Failed to get Playground session owner: %s", e, exc_info=True)
+    return None
+
+
 def create_playground_session(
     playground_uuid: str,
     context: PlaygroundContext,
+    user_id: Optional[int] = None,
 ) -> PlaygroundSessionData:
     session_uuid = f"pg_{uuid4()}"
     session = PlaygroundSessionData(
@@ -63,6 +82,19 @@ def create_playground_session(
         current_html=None,
         context=context,
     )
+    # The session holds the prompts and generated HTML, so only its creator
+    # may continue or read it (same rule as Boards Playground sessions).
+    if user_id is not None:
+        r = get_redis_connection()
+        if r:
+            try:
+                r.setex(
+                    PLAYGROUND_OWNER_KEY.format(session_uuid=session_uuid),
+                    SESSION_TTL,
+                    str(user_id),
+                )
+            except Exception as e:
+                logger.error("Failed to save Playground session owner: %s", e, exc_info=True)
     save_playground_session(session)
     return session
 
