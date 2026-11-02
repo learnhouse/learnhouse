@@ -24,7 +24,7 @@ Not sure whether Cloud or self-hosting is right for you? See the [Cloud vs Self 
 
 ## Option B: Self-Hosted
 
-Run LearnHouse on your own infrastructure using the LearnHouse CLI. You'll need [Docker](https://docs.docker.com/get-docker/) and [Node.js](https://nodejs.org/) (v18+) installed.
+Run LearnHouse on your own infrastructure using the LearnHouse CLI. You'll need [Docker](https://docs.docker.com/get-docker/) with the Compose v2 plugin and [Node.js](https://nodejs.org/) 22 or newer installed.
 
 ### 1. Run the setup wizard
 
@@ -35,6 +35,8 @@ npx learnhouse@latest setup
 The interactive wizard walks you through domain configuration, database setup, admin account creation, and optional features (AI, email, storage, OAuth).
 
 ### 2. Start LearnHouse
+
+At the end of the wizard, accept **Start LearnHouse now?** and the CLI starts everything and waits until it is ready. If you skipped that step, run:
 
 ```bash
 npx learnhouse start
@@ -47,7 +49,8 @@ Your instance will be available at `http://localhost` (or the domain you configu
 ```bash
 npx learnhouse stop     # Stop all services
 npx learnhouse logs     # Stream logs
-npx learnhouse backup   # Backup database
+npx learnhouse backup   # Back up the database, .env and uploads
+npx learnhouse update   # Update to the latest version
 npx learnhouse doctor   # Run diagnostics
 ```
 

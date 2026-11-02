@@ -2,44 +2,59 @@ import { Callout } from 'nextra/components'
 
 # Chapters and Activities
 
-Courses in LearnHouse follow a clear hierarchy: **Course → Chapters → Activities**. This structure keeps content organized and gives students a logical path through the material.
+Courses follow a simple hierarchy: **Course → Chapters → Activities**. You build it in the **Content** tab of a course in the dashboard.
 
 ## Chapters
 
-Chapters are the top-level groupings within a course. Use them to break your course into modules, units, or topics. You can reorder chapters at any time from the course editor.
+Chapters group activities into modules, units or topics. Click **Add Chapter**, give it a name and a description, and drag chapters to reorder them. Use **Rename** to change a chapter's name.
 
 ## Activities
 
-Activities are the individual pieces of content within a chapter. Each activity has a specific type that determines how content is presented to students.
+Click **Add Activity** inside a chapter and pick a type:
 
-### Dynamic Pages
+| Type | What it is |
+| --- | --- |
+| **Dynamic Page** | A page built with the block [editor](/platform/editor): text, media, quizzes, code challenges, embeds and more. Open it with **Edit Page**. |
+| **Video** | An uploaded video file (MP4 or WebM) or a YouTube URL. See [Video settings](#video-settings). |
+| **Document** | A PDF shown in a built-in viewer. |
+| **Assignments** | A graded (or formative) set of tasks. See [Assignments](/platform/assignments). Open it with **Edit Assignment**. |
+| **Markdown** | A page rendered from a Markdown file at a URL, for example a GitHub README. |
+| **Embed** | A page that embeds another site by URL, for example a Google Doc. |
+| **Resource** | A file or resource picked from your [Library](/platform/courses/library). |
+| **Scorm** | A SCORM 1.2 or SCORM 2004 package. Only shown when SCORM is enabled for your organization (Enterprise). |
 
-Dynamic Pages use the built-in block-based editor to create rich, interactive content. You can combine text, images, code blocks, callouts, embeds, and more in a single page. This is the most flexible activity type.
-
-### Videos
-
-Video activities let you upload video files directly to LearnHouse or embed videos from YouTube and other external platforms. Uploaded videos are served through LearnHouse's media pipeline.
-
-### Documents
-
-Document activities display PDF files using a built-in viewer. Upload a PDF and students can read it directly within the platform without downloading.
-
-### Assignments
-
-Assignment activities are gradable tasks. Currently these are file uploads and quiz-style submissions. Teachers can grade submissions from the dashboard, and results are recorded in the student's [Trail](/platform/courses/trails). See [Assignments](/platform/assignments) for details on task types and grading.
-
-### SCORM
-
-SCORM activities embed SCORM 1.2 or SCORM 2004 learning packages. This activity type is part of the Enterprise Edition.
-
-### Custom
-
-An escape hatch for custom activity implementations maintained outside of the built-in types.
+You can mix types freely within a chapter. Drag activities to reorder them.
 
 <Callout>
-Quizzes are available two ways: as an inline **Quiz** editor block inside a Dynamic Page (ungraded, lightweight knowledge checks) and as an **Assignment task** (gradable, stored submissions).
+Quizzes come in two forms: the **Quiz** block inside a Dynamic Page (ungraded self-checks) and the **Quiz** task inside an assignment (graded, with stored submissions).
 </Callout>
 
-<Callout>
-You can mix and match activity types within a single chapter to create a varied learning experience.
-</Callout>
+### Video settings
+
+When you add a Video activity you can also set:
+
+- A start time and an end time, so the video plays only part of the file.
+- **Autoplay** and **Start muted**.
+- **AI Closed Captions** for uploaded videos. See [AI Video Captions](/platform/courses/video-captions).
+
+## Publishing
+
+New activities start as **Draft**. Learners only see **Published** activities.
+
+- Click **Publish** or **Unpublish** on a single activity.
+- Use **Publish All** or **Unpublish All** on a chapter.
+- Select several activities to publish, unpublish or delete them together.
+
+Use **Preview Activity** to see an activity as a learner would. The course itself also has a published state, set from the course list.
+
+## Locking chapters and activities
+
+Each chapter and activity has an access lock. Click it to choose who can open it:
+
+| Option | Who can open it |
+| --- | --- |
+| **Public** | Anyone, even without signing in. |
+| **Signed-in only** | Only signed-in users. |
+| **User groups only** | Only members of the user groups you add. With no group added, only admins can open it. |
+
+Learners who can't open a locked item see **This activity is locked**, with a hint to sign in or ask to join the right user group. This works on top of the course-wide setting in the [Access](/platform/courses/settings#access) tab.

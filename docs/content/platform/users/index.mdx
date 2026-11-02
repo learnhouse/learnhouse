@@ -1,14 +1,49 @@
+import { Callout } from 'nextra/components'
+
 # Users and Access
 
-LearnHouse provides a user management system with role-based access control. Each user belongs to an organization and is assigned a role that determines what they can see and do.
+Every person in LearnHouse has one account and can belong to several organizations. Inside each organization they hold one role, which decides what they can see and do there.
 
-## Key Concepts
+You manage people from **Users** in the dashboard sidebar. The page has these tabs:
 
-- **Users**: Individual accounts that can log in and interact with the platform.
-- **Roles**: LearnHouse seeds four default roles, **Admin**, **Maintainer**, **Instructor**, and **User**. Organizations can also define custom roles with their own permission matrix.
-- **Authentication**: Users authenticate via email/password or Google OAuth.
+| Tab | What you do there | Cloud plan |
+| --- | --- | --- |
+| **Users** | Search, filter and export members, change roles, remove people, open learner analytics | All plans |
+| **UserGroups** | Group members and give the group access to courses and other content | Standard and above |
+| **Roles** | Create custom roles with their own permissions | Pro and above |
+| **Signups & Invite Codes** | Choose open or invite-only signup, create invite codes, add custom signup fields | All plans |
+| **Invite Members** | Invite people by email | All plans |
+| **Sign-in** | Choose which sign-in methods members may use | All plans |
+| **Two-factor** | Require two-factor authentication for members | All plans |
+| **Audit Logs** | See who did what in the organization | Enterprise |
 
-## Learn More
+Self-hosted instances have no plan limits. Audit logs need the [Enterprise Edition](/enterprise).
 
-- [Roles and Permissions](/platform/users/roles-and-permissions): Understand what each role can access.
-- [Authentication](/platform/users/authentication): Configure how users sign in and sign up.
+## Member limits on LearnHouse Cloud
+
+Each plan includes a number of members and admin seats. An admin seat is a member whose role can open the dashboard (Admin, Maintainer and Instructor by default, or a custom role with dashboard access).
+
+| Plan | Members | Admin seats |
+| --- | --- | --- |
+| Free | 10 | 1 |
+| Personal | 1 | 1 |
+| Personal Family | 4 | 4 |
+| Standard | 200 | 2 |
+| Pro | 500 | 10 |
+| Enterprise | Unlimited | 100 |
+
+Pending invitations count toward the member limit. When an organization has more members than its plan includes, the **Users** tab shows a badge such as "3 beyond your plan". Only members active in the current month are counted.
+
+## In this section
+
+- [Members & Invites](/platform/users/members-and-invites): the Users list, inviting people, invite codes and signup settings.
+- [User Groups](/platform/users/user-groups): grant access to content by group.
+- [Roles & Permissions](/platform/users/roles-and-permissions): the default roles and custom roles.
+- [Authentication](/platform/users/authentication): sign-in methods, magic links, sessions and security limits.
+- [Two-Factor Authentication](/platform/users/two-factor): set up 2FA on your account and require it for your organization.
+- [Learner Analytics](/platform/users/learner-analytics): one learner's full record.
+- [Emails](/platform/users/emails): the emails LearnHouse sends and how unsubscribing works.
+
+<Callout type="info">
+Enterprise customers can also sign members in through their identity provider. See [Single Sign-On](/enterprise/sso).
+</Callout>

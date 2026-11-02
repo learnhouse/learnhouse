@@ -2,32 +2,67 @@ import { Callout } from 'nextra/components'
 
 # Authentication
 
-LearnHouse supports multiple authentication methods to fit different deployment scenarios.
+LearnHouse supports several ways to sign in. As an admin you choose which ones your organization accepts, and you can add a second factor on top.
 
-## Login Methods
+## Sign-in methods
 
-- **Email and password**: the default authentication method for every LearnHouse instance.
-- **Google OAuth**: the only third-party login provider currently supported outside of Enterprise SSO.
+| Method | How it works |
+| --- | --- |
+| **Email + password** | The default. Passwords need at least 8 characters with an uppercase letter, a lowercase letter, a number and a special character. |
+| **Magic login link** | The user enters their email and receives a one-time sign-in link. The link is valid for 15 minutes. |
+| **Google** | Sign in with a Google account. Google is the only built-in social login. |
+| **SSO** | Sign in through your identity provider (WorkOS or any OpenID Connect provider). Enterprise only. See [Single Sign-On](/enterprise/sso). |
 
-For enterprise deployments, SAML (via WorkOS) and Custom OIDC are available. See [Enterprise SSO](/enterprise/sso).
+Members who sign up with Google or SSO do not need a LearnHouse password.
 
-## Security
+## Choosing allowed methods
 
-Logins are rate-limited per IP, and accounts are temporarily locked after repeated failed attempts. SaaS-mode deployments additionally require users to verify their email address before they can sign in.
+Go to **Users** → **Sign-in**. Under **Allowed sign-in methods**, tick the methods your members may use. Leave every method checked to keep sign-in unrestricted.
 
-## Signup Mechanisms
+- Unchecked methods disappear from your organization's login page.
+- Members already signed in with a method you turned off are asked to sign in again with an allowed one.
+- You must keep at least one method. You also cannot turn off the method you are signed in with, so you do not lock yourself out.
 
-Organizations can control how new users join the platform:
+### Sharing sessions with learnhouse.io
 
-- **Open signup**: Anyone can create an account and join the organization.
-- **Invite-only**: Only users who receive an invitation can create an account.
+**Allow sharing sessions with learnhouse.io** is on by default: someone signed in at the central learnhouse.io sign-in can open your organization without signing in again. This matters on LearnHouse Cloud, where one account spans many organizations. Turn it off to make members sign in from your organization's own login page with an allowed method. You can only turn it off from a session that started on your organization's login page.
 
-The signup mechanism is configured per-organization in the [organization settings](/platform/organizations/settings).
+Sessions started on your [custom domain](/platform/organizations/custom-domains) are always tied to your organization.
 
-<Callout>
-Choose invite-only signup for private or internal deployments where you want to control exactly who has access.
+<Callout type="info">
+Only the **Admin** role can change sign-in methods. Other roles with dashboard access can view the page.
 </Callout>
 
-## Session Management
+## Email verification
 
-Once authenticated, users maintain a session via JWT tokens. The backend issues an access token (8-hour expiry) and a refresh token (30-day expiry) that keep users signed in across page loads.
+On LearnHouse Cloud, new accounts must verify their email address before they can sign in with a password or a magic link. Verification links are valid for 1 hour, and the user can ask for a new one from the login page.
+
+## Password reset
+
+**Forgot password?** on the login page sends an 8-character code by email. The code is valid for 1 hour. Changing a password signs the account out of its existing sessions.
+
+## Sessions
+
+| Token | Lifetime |
+| --- | --- |
+| Access token | 8 hours |
+| Refresh token | 30 days of inactivity. Each refresh issues a new one, so active users stay signed in. |
+
+Self-hosted operators can change the refresh window with `LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS`. Values below 14 days are raised to 14. Signing out revokes the session.
+
+## Protection against abuse
+
+| Limit | Value |
+| --- | --- |
+| Login attempts | 30 per 5 minutes per IP address |
+| Account lockout | 5 minutes after 10 failed attempts, when the failures come from at least 2 different IP addresses |
+| Signups | 10 per hour per IP address |
+| Magic link requests | 5 per email per 15 minutes |
+| Password reset emails | 5 per email per 5 minutes, and 10 per IP per 30 minutes |
+| Verification emails | 5 per email per 5 minutes |
+
+A locked account answers like a wrong password, so attackers cannot tell it apart. Magic link and reset requests always return the same message, whether or not the account exists.
+
+## Two-factor authentication
+
+Members can protect their account with an authenticator app, and admins can make it mandatory. See [Two-Factor Authentication](/platform/users/two-factor).

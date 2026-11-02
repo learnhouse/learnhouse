@@ -1,7 +1,11 @@
 {
   "index": "Overview",
   "chapters-and-activities": "Chapters & Activities",
+  "settings": "Course Settings",
+  "ai-course-creator": "AI Course Creator",
+  "import-export": "Import & Export",
   "video-captions": "AI Video Captions",
-  "collections": "Collections",
-  "trails": "Trails"
+  "taking-a-course": "Taking a Course",
+  "trails": "Trails",
+  "library": "Library"
 }

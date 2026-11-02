@@ -29,7 +29,7 @@ curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/page/1/limit/10" 
 ```
 
 <Callout type="warning">
-API tokens work on resource routes (courses, chapters, activities, collections…) but **not** on routes that require a real user session: `/users/*`, `/orgs/*`, `/roles/*`, and **webhook management** all reject `lh_` tokens with `403`. Use a courses read to smoke-test a token.
+API tokens work on resource routes (courses, chapters, activities, folders, and so on) but **not** on routes that require a real user session: `/users/*`, `/orgs/*`, `/roles/*`, and **webhook management** all reject `lh_` tokens with `403`. Use a courses read to smoke-test a token.
 </Callout>
 
 ### Creating an API token

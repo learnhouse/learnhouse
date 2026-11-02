@@ -2,46 +2,71 @@ import { Callout } from 'nextra/components'
 
 # Single Sign-On (SSO)
 
-LearnHouse supports enterprise Single Sign-On, so organizations can authenticate users through their existing identity provider. Users log in with their company credentials and don't need a separate LearnHouse account.
+SSO lets members sign in to your organization through your company's identity provider. They use their work credentials and do not need a LearnHouse password.
 
 <Callout>
-SSO requires an Enterprise plan.
+SSO needs the Enterprise plan on LearnHouse Cloud, or the [Enterprise Edition](/enterprise) when self-hosted.
 </Callout>
 
-## Supported Providers
+## Supported providers
 
-| Provider | Status | Description |
-|---|---|---|
-| [WorkOS](/enterprise/sso/workos) | Available | Enterprise SSO with SAML and OIDC support, includes admin portal |
-| [Custom OIDC](/enterprise/sso/custom-oidc) | Available | Connect any OpenID Connect provider (Azure AD, Okta, Google Workspace, Keycloak, etc.) |
+| Provider | Description |
+| --- | --- |
+| [WorkOS](/enterprise/sso/workos) | SAML and OIDC through WorkOS, with a hosted setup portal for your IT team. Available when the instance has WorkOS credentials. |
+| [Custom OIDC](/enterprise/sso/custom-oidc) | Connect any OpenID Connect provider directly: Microsoft Entra ID, Okta, Google Workspace, Keycloak, Auth0 and others |
 
-<Callout type="info">
-The Custom OIDC provider lets you connect to virtually any modern identity provider that supports OpenID Connect, including Okta, Azure AD / Microsoft Entra ID, Google Workspace, and Keycloak.
-</Callout>
+## Setting up SSO
 
-## How SSO Works
+Go to **Developers** → **SSO**. Only the **Admin** role can change SSO, and the organization's [two-factor policy](/platform/users/two-factor) applies.
 
-1. An admin configures SSO in the organization settings, selecting a provider and entering the required credentials.
-2. When a user visits the login page, they see an SSO login option if SSO is enabled for that organization.
-3. Clicking the SSO button redirects the user to the identity provider's login page.
-4. After authenticating with the IdP, the user is redirected back to LearnHouse with an active session.
+1. Pick the **SSO Provider** and fill in its settings (see the provider pages).
+2. Set the options below.
+3. Turn on **Enable SSO** and click **Save Configuration**.
 
-## User Provisioning
-
-When a user logs in via SSO for the first time, LearnHouse automatically creates their account using profile data from the identity provider:
-
-- **First name, last name, and email** are mapped from the IdP.
-- **Avatar** is imported if available.
-- **Default role** is assigned based on the SSO configuration (e.g., all new SSO users get the `User` role).
-
-Existing users whose email matches are linked automatically, so no duplicate accounts are created.
-
-## Configuration Options
+The provider cannot be changed once the configuration is saved. To switch providers, use **Delete SSO Configuration** and start again.
 
 | Option | Description |
-|---|---|
-| Provider | Which identity provider to use (WorkOS or Custom OIDC). |
-| Email domain | Restrict SSO to specific email domains. |
-| Auto-provisioning | Automatically create accounts for new SSO users. |
-| Default role | Role assigned to newly provisioned users. |
-| Admin portal | WorkOS offers an admin portal for managing the IdP connection directly. |
+| --- | --- |
+| **Enable SSO** | Allow users to authenticate using your organization's identity provider. |
+| **Allowed Email Domains** | Comma-separated list of email domains allowed to sign in through SSO, for example `example.com, company.org`. Leave empty to allow all domains. Domains must match exactly: `example.com` does not cover `mail.example.com`. |
+| **Auto-provision Users** | On by default. Automatically create accounts for first-time SSO sign-ins. When off, only people who already have an account can sign in. |
+
+To make SSO the only way in, also restrict the [allowed sign-in methods](/platform/users/authentication#choosing-allowed-methods) to **SSO**.
+
+## How members sign in
+
+1. On your login page, the member clicks **Sign in with SSO**.
+2. They are sent to your identity provider and sign in there.
+3. The provider sends them back to LearnHouse, signed in.
+
+## New accounts
+
+With **Auto-provision Users** on, a member's first SSO sign-in creates their LearnHouse account:
+
+- First name, last name, email and avatar come from the identity provider.
+- They get the **User** role. A different default role can only be set through the API.
+- The organization's member limit still applies.
+- Their email counts as verified only if your organization has a verified [custom domain](/platform/organizations/custom-domains) for that email domain.
+
+## Existing accounts
+
+LearnHouse does **not** link an SSO identity to an existing account just because the email matches. An existing account is accepted only when:
+
+- it was linked to this SSO identity before, or
+- it has never signed in any other way and belongs only to this organization.
+
+Otherwise the sign-in is refused, and the member is asked to sign in with their usual method. Superadmin accounts can never sign in through SSO.
+
+<Callout type="info">
+Members who sign in through SSO can be exempted from your two-factor requirement, since the identity provider handles it. See [Two-Factor Authentication](/platform/users/two-factor#requiring-2fa-in-your-organization).
+</Callout>
+
+## Callback URL
+
+Your identity provider needs LearnHouse's callback URL:
+
+```
+<base URL>/api/v1/auth/sso/callback
+```
+
+LearnHouse builds it from `SSO_REDIRECT_URI_BASE`, or from `LEARNHOUSE_DOMAIN` when that is not set. On a self-hosted instance, set `SSO_REDIRECT_URI_BASE` to the public URL of your instance, including `https://`. To use a completely different URL, set `SSO_REDIRECT_URI` to the full callback URL instead.
