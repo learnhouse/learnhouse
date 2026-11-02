@@ -11,8 +11,10 @@ import { headers } from 'next/headers'
 //
 // The x-lh-* headers are set by the proxy from its own tenant resolution, and
 // incoming copies are stripped, so they can't be supplied by the client.
-// Without them the answer is no.
+// Without them the answer is no, and so is it when the proxy couldn't reach the
+// backend and only guessed the tenancy.
 export function orgScriptsAllowed(h: Headers): boolean {
+  if (h.get('x-lh-instance-fallback')) return false
   const tenancy = h.get('x-lh-tenancy')
   if (tenancy === 'single') return true
   if (tenancy === 'multi') return Boolean(h.get('x-lh-custom-domain'))

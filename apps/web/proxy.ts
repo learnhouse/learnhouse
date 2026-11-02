@@ -29,6 +29,8 @@ interface InstanceInfo {
   tenancy: 'multi' | 'single'
   frontend_domain: string
   top_domain: string
+  // Set when the backend couldn't be reached and the defaults below stand in.
+  fallback?: true
 }
 
 // Cached instance info from backend (30-second TTL)
@@ -61,6 +63,7 @@ async function getInstanceInfo(): Promise<InstanceInfo> {
     tenancy: 'single',
     frontend_domain: 'localhost:3000',
     top_domain: 'localhost',
+    fallback: true,
   }
 }
 
@@ -204,6 +207,11 @@ function tenantRequestHeaders(
   headers.set('x-lh-mode', instance.mode)
   if (resolved.customDomain) {
     headers.set('x-lh-custom-domain', resolved.customDomain)
+  }
+  // The fallback's 'single' is a guess, not the deployment's tenancy, so
+  // anything that relaxes on single tenancy (org scripts) must not trust it.
+  if (instance.fallback) {
+    headers.set('x-lh-instance-fallback', '1')
   }
   return headers
 }
