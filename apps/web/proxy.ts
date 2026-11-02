@@ -29,6 +29,8 @@ interface InstanceInfo {
   tenancy: 'multi' | 'single'
   frontend_domain: string
   top_domain: string
+  // Set when the backend couldn't be reached and the defaults below stand in.
+  fallback?: true
 }
 
 // Cached instance info from backend (30-second TTL)
@@ -61,6 +63,7 @@ async function getInstanceInfo(): Promise<InstanceInfo> {
     tenancy: 'single',
     frontend_domain: 'localhost:3000',
     top_domain: 'localhost',
+    fallback: true,
   }
 }
 
@@ -191,6 +194,12 @@ function tenantRequestHeaders(
   instance: InstanceInfo,
 ): Headers {
   const headers = new Headers(req.headers)
+  // Downstream code trusts x-lh-* as the proxy's own resolution, so a client
+  // must not be able to supply any of them (x-lh-custom-domain is only set below
+  // when the host really is one).
+  for (const name of [...headers.keys()]) {
+    if (name.startsWith('x-lh-')) headers.delete(name)
+  }
   headers.set('x-lh-tenancy', instance.tenancy)
   headers.set('x-lh-org', resolved.slug)
   headers.set('x-lh-top-domain', instance.top_domain)
@@ -198,6 +207,11 @@ function tenantRequestHeaders(
   headers.set('x-lh-mode', instance.mode)
   if (resolved.customDomain) {
     headers.set('x-lh-custom-domain', resolved.customDomain)
+  }
+  // The fallback's 'single' is a guess, not the deployment's tenancy, so
+  // anything that relaxes on single tenancy (org scripts) must not trust it.
+  if (instance.fallback) {
+    headers.set('x-lh-instance-fallback', '1')
   }
   return headers
 }
