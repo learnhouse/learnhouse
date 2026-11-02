@@ -23,6 +23,7 @@ import {
 } from "@components/ui/dropdown-menu"
 import { useTranslation } from 'react-i18next'
 import { formatDate } from '@/lib/format'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 type Course = {
   course_uuid: string
@@ -146,9 +147,9 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
         deleteCourse={deleteCourse}
       />
       <Link prefetch={false} href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}>
-        <div
-          className="inset-0 ring-1 ring-inset ring-black/10 rounded-t-xl w-full aspect-video bg-cover bg-center"
-          style={{ backgroundImage: `url(${thumbnailImage})` }}
+        <ThumbnailImage
+          src={thumbnailImage}
+          className="block rounded-t-xl w-full aspect-video"
         />
       </Link>
       <div className='flex flex-col w-full p-4 space-y-3'>

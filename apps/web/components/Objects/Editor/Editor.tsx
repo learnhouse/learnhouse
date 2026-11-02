@@ -92,6 +92,9 @@ import {
   hasEditorContentChanged,
   shouldGuardNavigationClick,
 } from './unsavedChangesGuard'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
+import OrgSquareLogo, { OrgInitial } from '@components/Objects/Org/OrgSquareLogo'
 
 interface ConflictInfo {
   hasConflict: boolean
@@ -522,10 +525,16 @@ function Editor(props: EditorProps) {
             <div className="activity-editor-doc-section">
               <div className="activity-editor-info-wrapper">
                 <Link href="/">
-                  <EditorLearnHouseLogo />
+                  {isWhiteLabelPlan(currentPlan) ? (
+                    <div className="rounded-md w-[25px] h-[25px] overflow-hidden bg-white ring-1 ring-black/10">
+                      <OrgSquareLogo org={orgContext} wideInsetClassName="p-0.5" fallback={<OrgInitial org={orgContext} className="text-[11px]" />} />
+                    </div>
+                  ) : (
+                    <EditorLearnHouseLogo />
+                  )}
                 </Link>
                 <Link target="_blank" href={`/course/${course_uuid}`}>
-                  <img
+                  <ThumbnailImage
                     className="activity-editor-info-thumbnail"
                     src={`${props.course.thumbnail_image ? getCourseThumbnailMediaDirectory(
                       props.org?.org_uuid,

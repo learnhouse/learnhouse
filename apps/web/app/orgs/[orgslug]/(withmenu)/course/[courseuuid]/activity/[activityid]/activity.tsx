@@ -726,7 +726,7 @@ function ActivityClient(props: ActivityClientProps) {
                               href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
                             >
                               <img
-                                className="w-[60px] h-[34px] rounded-md drop-shadow-md"
+                                className="w-[60px] h-[34px] shrink-0 rounded-md drop-shadow-md object-cover"
                                 src={course.thumbnail_image
                                   ? getCourseThumbnailMediaDirectory(
                                       org?.org_uuid,
@@ -924,7 +924,7 @@ function ActivityClient(props: ActivityClientProps) {
                                 href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
                               >
                                 <img
-                                  className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] rounded-md drop-shadow-md"
+                                  className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] shrink-0 rounded-md drop-shadow-md object-cover"
                                   src={course.thumbnail_image
                                     ? getCourseThumbnailMediaDirectory(
                                         org?.org_uuid,
