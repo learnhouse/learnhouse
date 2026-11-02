@@ -4177,6 +4177,8 @@
     "desktop_only_message": "O editor só está acessível a partir de um dispositivo desktop.",
     "switch_to_desktop": "Por favor, mude para um desktop para visualizar.",
     "ai_editor": "Editor IA",
+    "more_preview_options": "Mais opções de visualização",
+    "more_save_options": "Mais opções de salvamento",
     "versioning": {
       "version_history": "Histórico de versões",
       "current_version": "Versão atual:",
@@ -4255,7 +4257,10 @@
       "align_left": "Alinhar à esquerda",
       "align_center": "Centralizar",
       "align_right": "Alinhar à direita",
-      "clear_formatting": "Limpar formatação"
+      "clear_formatting": "Limpar formatação",
+      "list": "Lista",
+      "elements_menu": "Elementos",
+      "code_playground": "Playground de código"
     },
     "blocks": {
       "info_callout": "Caixa de informação",
@@ -4275,6 +4280,8 @@
       "user": "Usuário",
       "magic_block": "Bloco mágico (IA)",
       "magic_block_disabled": "Bloco mágico requer plano Standard",
+      "callout": "Destaque",
+      "audio": "Áudio",
       "common": {
         "uploading": "Enviando...",
         "upload": "Enviar",

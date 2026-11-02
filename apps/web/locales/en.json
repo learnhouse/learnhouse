@@ -5662,6 +5662,8 @@
     "desktop_only_message": "The editor is only accessible from a desktop device.",
     "switch_to_desktop": "Please switch to a desktop to view.",
     "ai_editor": "AI Editor",
+    "more_preview_options": "More preview options",
+    "more_save_options": "More save options",
     "ai_panel": {
       "title": "AI Editor",
       "input_placeholder": "Ask AI to help with your content...",
@@ -5761,7 +5763,10 @@
       "align_left": "Align Left",
       "align_center": "Align Center",
       "align_right": "Align Right",
-      "clear_formatting": "Clear Formatting"
+      "clear_formatting": "Clear Formatting",
+      "list": "List",
+      "elements_menu": "Elements",
+      "code_playground": "Code Playground"
     },
     "blocks": {
       "info_callout": "Info Callout",
@@ -5782,6 +5787,8 @@
       "user": "User",
       "magic_block": "Magic Block (AI Generated)",
       "magic_block_disabled": "Magic Block requires Standard plan",
+      "callout": "Callout",
+      "audio": "Audio",
       "common": {
         "uploading": "Uploading...",
         "upload": "Upload",
@@ -6181,7 +6188,8 @@
         "conditional": "Content only some learners see",
         "conditional_label": "Conditional content",
         "community": "Link a community (or type {{example}})",
-        "community_label": "Community"
+        "community_label": "Community",
+        "menu_label": "Personalize"
       },
       "your_groups": "Your user groups"
     },
