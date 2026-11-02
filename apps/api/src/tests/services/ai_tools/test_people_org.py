@@ -105,6 +105,8 @@ def environment(fake_redis):
     ), patch("src.services.orgs.orgs.dispatch_webhooks", AsyncMock()), patch(
         "src.routers.users._invalidate_session_cache", Mock()
     ), patch("src.services.orgs.cache.get_redis_client", return_value=None), patch(
+        "src.services.users.usergroups.increase_feature_usage", AsyncMock()
+    ), patch("src.services.users.usergroups.decrease_feature_usage", AsyncMock()), patch(
         "src.services.ai.tools.refs.web_base", AsyncMock(return_value=BASE)
     ):
         yield SimpleNamespace(send=send)
