@@ -4,8 +4,8 @@ import type {
   onRequestPayload,
   onUpgradePayload,
   onAuthenticatePayload,
-  onConnectPayload,
   beforeHandleMessagePayload,
+  beforeHandleAwarenessPayload,
   onChangePayload,
   afterLoadDocumentPayload,
   afterUnloadDocumentPayload,
@@ -20,6 +20,7 @@ import {
   createRateLimiter,
 } from './connectionGuard.js'
 import { createDocSizeGuard } from './docLimits.js'
+import { sanitizeAwareness, seatRefusal } from './boardPresence.js'
 import {
   type ConnectionAuth,
   type TokenState,
@@ -240,8 +241,8 @@ function scheduleDbFlush(boardUuid: string, state: Uint8Array) {
 
 // ── Server ──────────────────────────────────────────────────────────────────
 
-// Max concurrent users per board
-const MAX_BOARD_USERS = 10
+// Awareness client id -> owning connection, per loaded document
+const awarenessClaims = new WeakMap<object, Map<number, any>>()
 
 const server = new Server({
   port: PORT,
@@ -268,6 +269,22 @@ const server = new Server({
       dropConnection(connection, DOC_TOO_LARGE)
       throw new Error('Board is too large')
     }
+  },
+
+  async beforeHandleAwareness({
+    connection,
+    document,
+    states,
+    removedClients,
+  }: beforeHandleAwarenessPayload) {
+    // Server-internal writes have no connection and are trusted
+    if (!connection) return
+    let claims = awarenessClaims.get(document)
+    if (!claims) {
+      claims = new Map()
+      awarenessClaims.set(document, claims)
+    }
+    sanitizeAwareness(connection, states, removedClients, claims, document.getConnections())
   },
 
   async afterLoadDocument({ documentName, document }: afterLoadDocumentPayload) {
@@ -323,6 +340,8 @@ const server = new Server({
     documentName,
     connectionConfig,
     requestHeaders,
+    instance,
+    socketId,
   }: onAuthenticatePayload) {
     if (!token) {
       throw new Error('Authentication required')
@@ -362,6 +381,15 @@ const server = new Server({
     // The API answers "viewer" for anyone who may only read the board (public
     // boards, org admins without membership). Their socket must not write.
     connectionConfig.readOnly = membership.role === 'viewer'
+
+    // Seats are checked here, once the role is known: viewers and editors
+    // have separate seats so viewers can't crowd editors out.
+    const existing = instance.documents.get(documentName)?.getConnections() ?? []
+    const refusal = seatRefusal(existing, { readOnly: connectionConfig.readOnly, socketId })
+    if (refusal) {
+      throw new Error(refusal)
+    }
+
     connectionGuard.markAuthenticated(requestHeaders.get(CONNECTION_ID_HEADER))
 
     return {
@@ -372,17 +400,6 @@ const server = new Server({
       },
       // Kept for the periodic access re-check
       auth: { token, boardUuid, verifiedAt: Date.now() } satisfies ConnectionAuth,
-    }
-  },
-
-  async onConnect({ documentName, instance }: onConnectPayload) {
-    const boardUuid = extractBoardUuid(documentName)
-    if (!boardUuid) return
-
-    // Count existing connections for this document
-    const doc = instance.documents.get(documentName)
-    if (doc && doc.getConnectionsCount() >= MAX_BOARD_USERS) {
-      throw new Error(`Board is full (max ${MAX_BOARD_USERS} concurrent users)`)
     }
   },
 
