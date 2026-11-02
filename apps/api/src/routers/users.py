@@ -450,6 +450,7 @@ async def api_update_avatar_user(
     SECURITY: Users can only update their own avatar.
     The user_id in the URL must match the authenticated user's ID.
     """
+    refuse_lms_session()
     # SECURITY: IDOR protection - verify user can only update their own avatar
     if current_user.id != user_id:
         raise HTTPException(

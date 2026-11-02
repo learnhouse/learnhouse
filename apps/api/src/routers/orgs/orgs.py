@@ -72,6 +72,7 @@ from src.services.orgs.orgs import (
     update_org_square_logo,
 )
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
+from src.security.session_context import refuse_lms_session
 
 
 router = APIRouter()
@@ -102,6 +103,7 @@ async def api_create_org(
     """
     Create new organization
     """
+    refuse_lms_session()
     return await create_org(request, org_object, current_user, db_session)
 
 
@@ -260,6 +262,7 @@ async def api_join_an_org(
     """
     Get single Org by ID
     """
+    refuse_lms_session()
     # SECURITY: the downstream join_org() trusts the body-supplied user_id and
     # joins THAT user into the org without verifying it is the caller. Without
     # this guard any authenticated user could force-add (or, on an "open" org,
@@ -429,6 +432,7 @@ async def api_leave_org(
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
+    refuse_lms_session()
     return await leave_org(request, org_id, db_session, current_user)
 
 
