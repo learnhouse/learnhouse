@@ -49,7 +49,7 @@ def _legacy_session_grace() -> timedelta:
 LEGACY_SESSION_GRACE = _legacy_session_grace()
 
 # JWT claim names carried on session tokens.
-AMR_CLAIM = "amr"       # authentication method: password | magic_login | google | sso | api_token
+AMR_CLAIM = "amr"       # authentication method: password | magic_login | google | sso | lti | api_token
 SORG_CLAIM = "sorg"     # id of the org the session was established for (int), or absent
 LEGACY_GRACE_CLAIM = "lgc"  # unix seconds after which a method-less session stops being admitted
 # Present (true) on a session signed in on an org's own custom domain. The org
@@ -65,6 +65,10 @@ AUTH_METHOD_MAGIC_LOGIN = "magic_login"
 AUTH_METHOD_GOOGLE = "google"
 AUTH_METHOD_SSO = "sso"
 AUTH_METHOD_API_TOKEN = "api_token"
+# A launch from an LMS the org registered as an LTI platform. Not an
+# admin-selectable method: the org opts in by registering the platform, and
+# the session is only exempt from the method policy inside that org.
+AUTH_METHOD_LTI = "lti"
 
 # The methods an org admin can allow/disallow (api_token is never in this set).
 POLICY_AUTH_METHODS = (

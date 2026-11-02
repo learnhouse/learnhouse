@@ -245,6 +245,26 @@ class TestTrailService:
         assert (await db.execute(TrailStep.__table__.select())).all()
 
     @pytest.mark.asyncio
+    async def test_progress_changes_notify_ee_once(
+        self, db, org, admin_user, mock_request, activity, course
+    ):
+        with patch("src.services.trail.trail.track", new_callable=AsyncMock), patch(
+            "src.services.trail.trail.dispatch_webhooks", new_callable=AsyncMock
+        ), patch(
+            "src.services.trail.trail.check_course_completion_and_create_certificate",
+            new_callable=AsyncMock,
+        ), patch("src.services.trail.trail.notify_ee_learner_progress") as notify:
+            await add_activity_to_trail(mock_request, admin_user, activity.activity_uuid, db)
+            # A re-visit is not a progress change.
+            await add_activity_to_trail(mock_request, admin_user, activity.activity_uuid, db)
+            assert notify.call_args_list == [((admin_user.id, course.id),)]
+            await remove_activity_from_trail(mock_request, admin_user, activity.activity_uuid, db)
+            assert notify.call_count == 2
+            # Leaving the course drops its progress too.
+            await remove_course_from_trail(mock_request, admin_user, course.course_uuid, db)
+            assert notify.call_count == 3
+
+    @pytest.mark.asyncio
     async def test_add_activity_to_trail_rejects_missing_activity_and_course(
         self, db, org, admin_user, mock_request
     ):

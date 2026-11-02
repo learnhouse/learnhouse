@@ -1,0 +1,124 @@
+import { Callout } from 'nextra/components'
+
+# LTI 1.3
+
+LearnHouse is an LTI 1.3 tool. Any LMS that supports LTI 1.3 (Moodle, Canvas, Open edX, Sakai, ILIAS, Chamilo, OpenOLAT and others) can add LearnHouse content to its own courses: courses, single activities, assignments, communities, podcasts, boards, playgrounds and library folders. Learners open them from the LMS and are signed in to LearnHouse automatically. Course progress and assignment grades show up in the LMS gradebook.
+
+<Callout>
+LTI requires an Enterprise plan.
+</Callout>
+
+## What is supported
+
+| Capability | Specification | What it does |
+|---|---|---|
+| Launch and sign-in | LTI 1.3 Core (OIDC third-party login, signed `id_token`) | The learner clicks the activity in the LMS and lands in the LearnHouse course, signed in. |
+| Picking content | Deep Linking 2.0 | Teachers browse your LearnHouse content from inside the LMS and add it to their course. Cancelling closes the picker without changes. |
+| Grades | Assignment and Grade Services (AGS) | Course progress, activity completion and assignment grades are sent to the LMS gradebook as they change. |
+| Class lists | Names and Role Provisioning Services (NRPS) | Pull the LMS class list to create accounts and enrol everyone before they first launch. |
+| Setup | Dynamic Registration 1.0 | Paste one URL in the LMS and both sides configure themselves. |
+| Grades changed in the LMS | AGS Results | LearnHouse reads the LMS gradebook back and keeps grades a teacher changed there. |
+| LMS groups | Course Groups Service 1.0 | Groups inside an LMS course (sections, teams) become LearnHouse user groups. |
+| LMS notifications | Platform Notification Service 1.0 | The LMS tells LearnHouse when a course is copied, so copied placements keep their content. |
+| Gradebook review | `LtiSubmissionReviewRequest` | Opening a learner's submission from the LMS gradebook lands on the LearnHouse content. |
+
+## What teachers can add
+
+| Content | Opens | Gradebook column |
+|---|---|---|
+| Course | The course page | Percentage of published activities completed |
+| Activity | The activity | 100 once completed |
+| Assignment | The assignment | The assignment grade, with the teacher's feedback |
+| Community | The community | None |
+| Podcast | The podcast | None |
+| Board | The board, with editing rights | None |
+| Playground | The playground | None |
+| Library folder | The folder | None |
+
+Assignments are listed under their course in the picker, marked with their due date. When the LMS creates the gradebook column from the picked item, it also gets the due date where the LMS supports it (Canvas does).
+
+Learners need to be able to see what is placed. Drafts (unpublished courses, podcasts and playgrounds) are marked in the picker. Private content is opened to the platform's learners as described in [Accounts and access](#accounts-and-access).
+
+If placed content is later unpublished, learners who open it are told it isn't published yet. If it is deleted, learners are told to ask their instructor, and the next instructor who opens the link picks new content. In both cases the LMS also receives the message.
+
+## Connecting an LMS
+
+Go to **Developers → LTI** in your dashboard.
+
+- **Connect with a registration URL** (Moodle, Canvas, Sakai, ILIAS 11): generate a one-time URL and paste it into the LMS. It expires after 24 hours and can only be used once.
+- **Add manually** (any LMS): LearnHouse shows the URLs to enter in the LMS (initiate login URL, launch / redirect URL, deep linking URL, public keyset URL, and the public key itself for LMSs that can't fetch a keyset). Then copy back the values the LMS gives you: issuer, client ID, deployment ID, authentication request URL, access token URL and platform keyset URL.
+
+See the [LMS setup guides](/enterprise/lti/lms-setup) for step-by-step instructions per LMS.
+
+## Accounts and access
+
+- A learner is matched by the LMS user ID first. On the first launch, an existing LearnHouse account with the same email is linked if it already belongs to your organization; otherwise a new account is created and added to your organization with the platform's default role.
+- If the email belongs to a LearnHouse account **outside** your organization, the person is asked to sign in to that account once to link it. LearnHouse never hands over an existing account based on an email asserted by an LMS.
+- If the LMS doesn't share an email address, LearnHouse creates an account with a placeholder address.
+- Learners get access to private content through a user group named after the platform (`LTI · <platform name>`), which you can see and edit under **Users → User groups**. Content that isn't limited to user groups is already open to every member of your organization, so LearnHouse leaves it as it is. Boards add the learner as an editor instead.
+- LMS administrators can't be given the LearnHouse admin or maintainer role through LTI.
+
+## Grades
+
+- A course placement reports the percentage of published activities completed, out of 100. Once the learner earns the course certificate, the gradebook comment links to its verification page. A single-activity placement reports 100 once the activity is complete.
+- An assignment placement follows the submission:
+  - not handed in yet: no score;
+  - submitted: no score, marked as waiting for grading (LMSs that support it show "needs grading");
+  - graded: the percentage, with a comment such as *Grade: B — passed. Feedback: …*;
+  - for ungraded assignments, 100 once submitted.
+- Communities, podcasts, boards, playgrounds and folders don't send grades. Their placements show *Not graded* and still list the learners who opened them.
+- Scores follow every change, wherever it happens: completing or un-completing an activity, a teacher grading or rejecting a submission or marking it done, a learner retrying, and progress changes made through the admin API.
+- If the LMS created a gradebook column when content was added, LearnHouse uses it. Otherwise LearnHouse creates one (when the LMS allows it).
+- **Sync grades** on a placement re-sends every learner's current score, for example after reconnecting an LMS. Each placement shows how many learners are synced and whether any sync failed.
+- Turn off **Send progress to the gradebook** on a platform to stop sending scores.
+
+## Keeping the LMS in sync
+
+Besides scores, LearnHouse keeps these up to date in the LMS:
+
+- **Column titles and due dates.** Renaming a course, activity or assignment renames its gradebook column. Changing an assignment's due date changes the column's end date; Canvas shows it as the assignment's due date. Edits made in the LMS are only overwritten when the content changes in LearnHouse again, or when you click **Sync grades** on the placement. If the LMS is down, the change is sent once it is back.
+- **Course progress.** Adding, publishing, unpublishing or deleting activities changes every learner's course percentage, so course columns are re-scored.
+- **Profiles.** Accounts the LMS created get the LMS name and picture on each launch. If the LMS starts sharing an email address, it replaces the placeholder. Accounts that people linked themselves are left alone.
+- **Class lists.** Turn on **Sync class lists daily** to pull every placement's class list once a day, so learners have accounts and access before their first launch.
+- **SCORM results.** A SCORM activity reports the package's own score and pass/fail, not just completion, as soon as the package saves it.
+- **Grades changed in the LMS.** Before **Sync grades**, and once a day, LearnHouse reads the LMS gradebook back. When a teacher has changed a grade there, the placement shows *N changed in the LMS* and LearnHouse keeps the teacher's grade. Click it to replace those grades with the LearnHouse ones. Some LMSs keep showing a teacher's override even after that (a Moodle gradebook override); LearnHouse checks and tells you, and the override has to be removed in the LMS.
+- **LMS groups.** LMSs that support the Course Groups Service share the groups of a course; with **A user group for each LMS course** on, each group becomes a LearnHouse user group (`<platform> · <LMS course> · <group>`) with the same members, updated with the class list.
+- **Course copies.** LMSs that support the Platform Notification Service (Canvas does) tell LearnHouse when a course is copied. Placements in the copy that don't carry their content themselves take the content of the placement with the same title in the original course, so teachers don't pick everything again.
+- **Submission times.** Scores for assignments carry when the work was handed in, and later attempts are named in the comment. Canvas uses the time to mark late submissions.
+- **A column per assignment.** With **A gradebook column for each assignment**, a course placed as a whole also gets one gradebook column per published assignment and SCORM activity, named `<course>: <item>`, with its due date, grade and feedback. Columns of deleted assignments are removed. Some LMSs don't accept scores in columns a tool created (ILIAS) or don't let tools create them (OpenOLAT); **Sync grades** says so.
+- **LMS course groups.** With **A user group for each LMS course** (on by default), everyone who comes from an LMS course is placed in a user group named after it (`<platform> · <LMS course>`). The group isn't linked to any content, so it doesn't change access; use it to filter, follow up or message a class.
+- **Leaving the LMS course.** When the class list shows someone is no longer in the LMS course (inactive, or gone from the list), their scores stop syncing and they leave the course's user group. If they come back, syncing resumes.
+
+LMSs that can't create gradebook columns from picked content (`accept_lineitem: false`) get items without one.
+
+Some LMSs put several picked items in one placement (an OpenOLAT LTI page element). LearnHouse keeps each item separate, and since the LMS has a single gradebook column for the placement, the graded item opened last reports into it.
+
+### Deployments
+
+Each installation of LearnHouse in the LMS (Canvas: the account and every course where it was added) has its own deployment ID. LearnHouse records new ones automatically, since they come signed by the registered LMS. Turn on **Only accept the deployments listed above** to refuse unknown ones instead.
+
+### Removing access
+
+Turn on **Remove access when someone leaves the LMS course** to also take back the access LTI gave them: membership of the platform's user group, of boards, and contributor rights from the instructor option. Access is only removed once no LMS course still needs it, and access given in LearnHouse by other means is never touched. Progress and grades are kept.
+
+### Instructors
+
+Turn on **LMS instructors can grade in LearnHouse** to give people who launch as instructors the LearnHouse *Instructor* role and make them contributors of the courses they place. Opening a submission from the LMS gradebook then lands on the assignment's submissions in LearnHouse: from Moodle's grade report (use **Open in new window**; Moodle's automatic popup loses the request) and from Canvas SpeedGrader.
+
+<Callout type="warning">
+Contributors can edit the course and see every learner's submissions, including learners from other LMSs. Only the role LearnHouse gave through LTI is ever changed. Admins and maintainers keep theirs, and the admin and maintainer roles can't be given through LTI.
+</Callout>
+
+## Placements
+
+Each LMS course link that has launched LearnHouse appears under its platform with the LMS course, the LearnHouse content and its type, the number of learners and the gradebook status. **Remove placement** forgets a link. If an instructor opens a link that isn't connected to content yet, LearnHouse asks them to choose; learners see a message asking them to contact their instructor.
+
+**Sync roster** works for every content type: it creates accounts for the LMS class list and gives them access to the placed content.
+
+## Signing keys
+
+LearnHouse signs deep linking responses and grade requests with a key per organization. **Rotate signing key** creates a new key; the previous keys stay published for a while, so LMSs that use the keyset URL keep working. LMSs where you pasted the public key need the new one.
+
+## Embedded launches
+
+Many LMSs open tools inside a frame. Browsers don't keep a sign-in made inside another site's frame, so LearnHouse shows a **Continue in a new tab** button. Where the LMS allows it, set the tool to open in a new window instead.
