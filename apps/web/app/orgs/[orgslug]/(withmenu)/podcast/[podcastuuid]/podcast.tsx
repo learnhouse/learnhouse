@@ -16,6 +16,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
+import ResourcePaywall from '@ee/components/Payments/ResourcePaywall'
 
 interface PodcastClientProps {
   orgslug: string
@@ -30,6 +31,7 @@ export default function PodcastClient({
   podcastUuid,
   initialPodcast,
   initialEpisodes,
+  org_id,
 }: PodcastClientProps) {
   const { t } = useTranslation()
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -121,40 +123,42 @@ export default function PodcastClient({
               </div>
             </div>
 
-            {/* Episodes List */}
-            <div className="bg-white nice-shadow rounded-lg overflow-hidden">
-              {/* Header */}
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ListMusic size={18} className="text-gray-500" />
-                  <h2 className="font-semibold text-gray-900">{t('podcasts.episodes')}</h2>
-                  <span className="text-sm text-gray-400">
-                    ({episodes.length})
-                  </span>
+            {/* Episodes List, or what unlocks it when the podcast is sold */}
+            <ResourcePaywall orgId={org_id} orgslug={orgslug} resourceUuid={podcast.podcast_uuid} resourceName={podcast.name}>
+              <div className="bg-white nice-shadow rounded-lg overflow-hidden">
+                {/* Header */}
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ListMusic size={18} className="text-gray-500" />
+                    <h2 className="font-semibold text-gray-900">{t('podcasts.episodes')}</h2>
+                    <span className="text-sm text-gray-400">
+                      ({episodes.length})
+                    </span>
+                  </div>
+                  {isLoading && (
+                    <Loader2 size={16} className="animate-spin text-gray-400" />
+                  )}
                 </div>
-                {isLoading && (
-                  <Loader2 size={16} className="animate-spin text-gray-400" />
+
+                {/* Episode list */}
+                {episodes.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {episodes.map((episode) => (
+                      <EpisodeCard
+                        key={episode.episode_uuid}
+                        episode={episode}
+                        podcast={podcast}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Headphones size={40} className="mx-auto text-gray-300 mb-3" />
+                    <p className="text-gray-500">{t('podcasts.no_episodes')}</p>
+                  </div>
                 )}
               </div>
-
-              {/* Episode list */}
-              {episodes.length > 0 ? (
-                <div className="divide-y divide-gray-100">
-                  {episodes.map((episode) => (
-                    <EpisodeCard
-                      key={episode.episode_uuid}
-                      episode={episode}
-                      podcast={podcast}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Headphones size={40} className="mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-500">{t('podcasts.no_episodes')}</p>
-                </div>
-              )}
-            </div>
+            </ResourcePaywall>
           </div>
         </div>
 

@@ -31,7 +31,7 @@ import CourseAccessError from '@components/Objects/Courses/CourseAccessError/Cou
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useMediaQuery, useWindowSize } from 'usehooks-ts'
-import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
+import PaidCourseActivityDisclaimer from '@ee/components/Payments/PaidCourseActivityDisclaimer'
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterDropdown'
@@ -797,7 +797,7 @@ function ActivityClient(props: ActivityClientProps) {
                       {activity && activity.published == true && (
                         <>
                           {activity.content.paid_access == false ? (
-                            <PaidCourseActivityDisclaimer course={course} />
+                            <PaidCourseActivityDisclaimer course={course} activity={activity} />
                           ) : (
                             <motion.div
                               initial={isInitialRender.current ? false : { scale: 0.95, opacity: 0 }}
@@ -1097,7 +1097,7 @@ function ActivityClient(props: ActivityClientProps) {
                       ) : activity.published == true ? (
                         <>
                           {activity.content.paid_access == false ? (
-                            <PaidCourseActivityDisclaimer course={course} />
+                            <PaidCourseActivityDisclaimer course={course} activity={activity} />
                           ) : (
                             // Video activities sit on a dark theater band (theater.css).
                             <div className={activity.activity_type === 'TYPE_VIDEO' ? 'lh-theater-band py-8 sm:py-12' : ''}>
