@@ -8,9 +8,16 @@ from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
 from src.security.features_utils.plans import (
     FEATURE_PLAN_REQUIREMENTS,
     get_plan_feature_config,
+    get_upgrade_plan,
     is_paying_plan,
 )
 
+
+# Features an org admin can turn on/off from its Features settings.
+ORG_TOGGLEABLE_FEATURES = {
+    "boards", "communities", "folders", "live_sessions", "paths", "payments",
+    "playgrounds", "podcasts",
+}
 
 # Features that are always on (no admin toggle, cannot be disabled)
 ALWAYS_ON_FEATURES = {"courses", "usergroups", "assignments"}
@@ -23,7 +30,7 @@ ALWAYS_ON_WITH_LIMITS = {"courses", "assignments"}
 ALL_FEATURES = [
     "ai", "analytics", "api", "assignments", "audit_logs", "boards", "collaboration",
     "folders", "communities", "courses", "live_sessions",
-    "lti", "members", "paths", "payments", "playgrounds", "podcasts", "roles", "scorm",
+    "lti", "members", "messaging", "paths", "payments", "playgrounds", "podcasts", "roles", "scorm",
     "sso", "usergroups", "versioning",
 ]
 
@@ -101,31 +108,66 @@ def _get_purchased_extra(org_id: int, feature: str, _extras: dict | None = None)
     return 0
 
 
+def _state(
+    enabled: bool,
+    available: bool,
+    limit: int,
+    required_plan: str | None,
+    disabled_by: str | None = None,
+    upgrade_plan: str | None = None,
+) -> dict:
+    return {
+        "enabled": enabled,
+        "available": available,
+        "limit": limit,
+        "required_plan": required_plan,
+        "disabled_by": disabled_by,
+        "upgrade_plan": upgrade_plan,
+    }
+
+
+def _toggle_off_reason(admin_toggle: dict, platform_applies: bool = True) -> str | None:
+    """Who turned an available feature off: the org itself, the platform, or nobody."""
+    if admin_toggle.get("org_disabled", False):
+        return "org"
+    if platform_applies and admin_toggle.get("disabled", False):
+        return "platform"
+    return None
+
+
 def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict | None = None) -> dict:
     """
     Resolve a single feature's state through all layers.
 
     Returns:
-        {"enabled": bool, "available": bool, "limit": int, "required_plan": str|None}
+        {"enabled", "available", "limit", "required_plan", "disabled_by", "upgrade_plan"}
 
     - "available" = the feature is part of the org's PLAN entitlement (what the
-      plan makes usable), independent of any admin toggle.
-    - "enabled" = whether it is actually ON, after the per-org admin toggle, but
-      a feature included in a PAID plan is always kept enabled (paying users can
-      never have their plan features toggled off).
+      plan makes usable), independent of any toggle.
+    - "enabled" = whether it is actually ON after the toggles.
+    - "disabled_by" = why an available feature is off: "org" (the org turned it
+      off in its Features settings) or "platform" (superadmin kill switch). None
+      when enabled or when it is simply not in the plan.
+    - "upgrade_plan" = the cheapest plan that includes the feature when it is not
+      available, so the UI can label it with the plan that actually unlocks it.
     - limit=0 means unlimited.
+
+    Two toggles live under admin_toggles[feature]:
+    - "org_disabled": the org's own choice. Always honored.
+    - "disabled": the superadmin kill switch. It can never take away a feature a
+      PAID plan includes; it still governs free orgs and comp-granted extras.
     """
     mode = get_deployment_mode()
     required_plan = FEATURE_PLAN_REQUIREMENTS.get(feature)
 
     # Always-on features without limits: enabled in all modes, unlimited, no admin toggle
     if feature in ALWAYS_ON_FEATURES and feature not in ALWAYS_ON_WITH_LIMITS:
-        return {"enabled": True, "available": True, "limit": 0, "required_plan": required_plan}
+        return _state(True, True, 0, required_plan)
 
     # Always-on features WITH plan limits: enabled in all modes, but limit comes from plan
     if feature in ALWAYS_ON_WITH_LIMITS:
         if mode in ("ee", "oss"):
-            return {"enabled": True, "available": True, "limit": 0, "required_plan": required_plan}
+            return _state(True, True, 0, required_plan)
         # SaaS: always enabled, but respect the plan limit + overrides + packs
         plan = _get_plan_from_config(config)
         plan_config = get_plan_feature_config(plan, feature)
@@ -137,20 +179,21 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
             effective_limit = 0
         else:
             effective_limit = plan_limit + extra_limit + purchased_extra
-        return {"enabled": True, "available": True, "limit": effective_limit, "required_plan": required_plan}
+        return _state(True, True, effective_limit, required_plan)
 
     admin_toggle = _get_admin_toggle(config, feature)
-    admin_disabled = admin_toggle.get("disabled", False)
 
-    # EE mode: everything available & unlimited (admin toggle may still turn off)
+    # EE mode: everything available & unlimited (toggles may still turn off)
     if mode == "ee":
-        return {"enabled": not admin_disabled, "available": True, "limit": 0, "required_plan": required_plan}
+        off_by = _toggle_off_reason(admin_toggle)
+        return _state(off_by is None, True, 0, required_plan, off_by)
 
     # OSS mode: EE features unavailable, rest available & unlimited
     if mode == "oss":
         if feature in EE_ONLY_FEATURES:
-            return {"enabled": False, "available": False, "limit": 0, "required_plan": required_plan}
-        return {"enabled": not admin_disabled, "available": True, "limit": 0, "required_plan": required_plan}
+            return _state(False, False, 0, required_plan, upgrade_plan="enterprise")
+        off_by = _toggle_off_reason(admin_toggle)
+        return _state(off_by is None, True, 0, required_plan, off_by)
 
     # SaaS mode: full resolution
     plan = _get_plan_from_config(config)
@@ -167,7 +210,7 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
 
     # "available" = the org is entitled to this feature: the plan includes it,
     # or it was comp-granted via an override. This is kept SEPARATE from whether
-    # an admin has toggled it on/off for the org.
+    # it has been toggled off.
     available = plan_enabled or force_enabled
 
     # Layer 3: Purchased packs
@@ -179,22 +222,18 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0, _extras: dict |
     else:
         effective_limit = plan_limit + extra_limit + purchased_extra
 
-    # Layer 5: Admin toggle. The superadmin can turn a feature off for an org,
-    # EXCEPT it can never take away a feature the org is PAYING for: anything
-    # included in a paid plan stays enabled regardless of the toggle. The toggle
-    # still governs free orgs and comp-granted extras.
-    plan_guaranteed = plan_enabled and is_paying_plan(plan)
-    if admin_disabled and not plan_guaranteed:
-        effective_enabled = False
-    else:
-        effective_enabled = available
+    if not available:
+        return _state(
+            False, False, effective_limit, required_plan,
+            upgrade_plan=get_upgrade_plan(plan, feature),
+        )
 
-    return {
-        "enabled": effective_enabled,
-        "available": available,
-        "limit": effective_limit,
-        "required_plan": required_plan,
-    }
+    # Layer 5: Toggles. The superadmin kill switch never takes away a feature
+    # the org is PAYING for; the org's own choice always applies.
+    plan_guaranteed = plan_enabled and is_paying_plan(plan)
+    off_by = _toggle_off_reason(admin_toggle, platform_applies=not plan_guaranteed)
+
+    return _state(off_by is None, True, effective_limit, required_plan, off_by)
 
 
 def resolve_all_features(config: dict, org_id: int = 0) -> dict:

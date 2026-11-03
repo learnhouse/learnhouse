@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}}は無効です",
           "description": "この機能は組織で無効になっています。ユーザーが利用できるようにするには、設定で有効にしてください。"
+        },
+        "platform": {
+          "description": "この機能は、プラットフォーム管理者によって組織で無効にされています。必要な場合はサポートにお問い合わせください。"
         }
       }
     },
@@ -3057,7 +3060,12 @@
       "other": "その他",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "メニューを閉じる",
-      "open_menu": "メニューを開く"
+      "open_menu": "メニューを開く",
+      "more_features": "その他",
+      "features_off": "オフにした機能",
+      "feature_off_badge": "オフ",
+      "features_locked": "アップグレードで利用可能",
+      "manage_features": "機能を管理"
     },
     "home": {
       "cards": {
@@ -4098,7 +4106,7 @@
           },
           "features": {
             "title": "機能",
-            "subtitle": "組織の機能を有効または無効にする"
+            "subtitle": "組織で使う機能を選択します"
           },
           "sso": {
             "title": "シングルサインオン",
@@ -4473,6 +4481,18 @@
           "playgrounds": {
             "title": "Playgrounds",
             "description": "AIが生成するインタラクティブな学習体験を学習者に提供します"
+          },
+          "folders": {
+            "title": "ライブラリ",
+            "description": "コースとメディアをフォルダーで整理します"
+          },
+          "paths": {
+            "title": "学習パス",
+            "description": "専用の修了証付きで、コースを順番に受講できます"
+          },
+          "live_sessions": {
+            "title": "ライブセッション",
+            "description": "チャット、Q&A、投票、出席管理付きのライブ授業"
           }
         },
         "toasts": {
@@ -4482,6 +4502,11 @@
           "disabled": "{{feature}}が無効になりました",
           "error": "{{feature}}の設定の更新に失敗しました",
           "admin_only": "機能の有効化・無効化は組織管理者のみ可能です"
+        },
+        "platform_disabled": "プラットフォーム管理者によってオフにされています。再びオンにするにはサポートにお問い合わせください。",
+        "upgrade": "アップグレード",
+        "sections": {
+          "locked": "現在のプランに含まれていません"
         }
       },
       "audit_logs": {

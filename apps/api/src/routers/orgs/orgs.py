@@ -52,6 +52,7 @@ from src.services.orgs.orgs import (
     update_org_podcasts_config,
     update_org_boards_config,
     update_org_playgrounds_config,
+    update_org_feature_toggle,
     update_org_color_config,
     update_org_font_config,
     update_org_footer_text_config,
@@ -701,6 +702,38 @@ async def api_update_org_playgrounds_config(
     """
     return await update_org_playgrounds_config(
         request, playgrounds_enabled, org_id, current_user, db_session
+    )
+
+
+@feature_config_router.put(
+    "/{org_id}/config/features/{feature}",
+    summary="Turn an organization feature on or off",
+    description=(
+        "Turn one optional feature (boards, communities, folders, live_sessions, "
+        "paths, payments, playgrounds, podcasts) on or off for the organization. "
+        "A feature the plan does not include stays unavailable. Admin only."
+    ),
+    responses={
+        200: {"description": "Feature configuration updated."},
+        400: {"description": "Feature cannot be toggled"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_feature_toggle(
+    request: Request,
+    org_id: int,
+    feature: str,
+    enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Turn an optional organization feature on or off (admin-only)
+    """
+    return await update_org_feature_toggle(
+        request, feature, enabled, org_id, current_user, db_session
     )
 
 

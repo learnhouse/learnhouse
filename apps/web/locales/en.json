@@ -156,6 +156,10 @@
         "live_sessions": {
           "description": "Run live classes, office hours and events with chat, Q&A, polls and attendance.",
           "title": "Standard feature"
+        },
+        "messaging": {
+          "title": "Pro Feature",
+          "description": "Messages, course announcements and custom AI agents are available on the Pro plan and with the Enterprise Edition."
         }
       }
     },
@@ -182,6 +186,9 @@
         "dashboard": {
           "title": "{{feature}} Disabled",
           "description": "This feature is disabled for your organization. Enable it in settings to make it available to users."
+        },
+        "platform": {
+          "description": "This feature was turned off for your organization by the platform administrator. Contact support if you need it."
         }
       }
     },
@@ -3079,7 +3086,12 @@
       "other": "Other",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "Close menu",
-      "open_menu": "Open menu"
+      "open_menu": "Open menu",
+      "more_features": "More",
+      "features_off": "Turned off",
+      "feature_off_badge": "Off",
+      "features_locked": "Upgrade to unlock",
+      "manage_features": "Manage features"
     },
     "home": {
       "cards": {
@@ -4121,7 +4133,7 @@
           },
           "features": {
             "title": "Features",
-            "subtitle": "Enable or disable features for your organization"
+            "subtitle": "Choose which features your organization uses"
           },
           "sso": {
             "title": "Single Sign-On",
@@ -4500,6 +4512,18 @@
           "playgrounds": {
             "title": "Playgrounds",
             "description": "Create interactive AI-generated experiences for your learners"
+          },
+          "folders": {
+            "title": "Library",
+            "description": "Organize courses and media into folders"
+          },
+          "paths": {
+            "title": "Paths",
+            "description": "Ordered course sequences with their own certificate"
+          },
+          "live_sessions": {
+            "title": "Live sessions",
+            "description": "Live classes with chat, Q&A, polls and attendance"
           }
         },
         "toasts": {
@@ -4509,6 +4533,11 @@
           "disabled": "{{feature}} disabled",
           "error": "Failed to update {{feature}} configuration",
           "admin_only": "Only organization admins can enable or disable features"
+        },
+        "platform_disabled": "Turned off by the platform administrator. Contact support to turn it back on.",
+        "upgrade": "Upgrade",
+        "sections": {
+          "locked": "Not in your plan"
         }
       },
       "audit_logs": {

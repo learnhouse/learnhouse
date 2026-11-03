@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} devre dışı",
           "description": "Bu özellik kuruluşunuz için devre dışı bırakılmış. Kullanıcılara sunmak için ayarlardan etkinleştirin."
+        },
+        "platform": {
+          "description": "Bu özellik, platform yöneticisi tarafından organizasyonunuz için kapatıldı. İhtiyacınız varsa destekle iletişime geçin."
         }
       }
     },
@@ -3084,7 +3087,12 @@
       "other": "Diğer",
       "enterprise_edition": "Enterprise Sürümü",
       "close_menu": "Menüyü kapat",
-      "open_menu": "Menüyü aç"
+      "open_menu": "Menüyü aç",
+      "more_features": "Daha fazla",
+      "features_off": "Kapalı",
+      "feature_off_badge": "Kapalı",
+      "features_locked": "Kilidi açmak için yükseltin",
+      "manage_features": "Özellikleri yönet"
     },
     "home": {
       "cards": {
@@ -4127,7 +4135,7 @@
           },
           "features": {
             "title": "Özellikler",
-            "subtitle": "Organizasyonunuz için özellikleri etkinleştirin veya devre dışı bırakın"
+            "subtitle": "Organizasyonunuzun hangi özellikleri kullanacağını seçin"
           },
           "sso": {
             "title": "Tek Oturum Açma",
@@ -4502,6 +4510,18 @@
           "playgrounds": {
             "title": "Oyun Alanları",
             "description": "Öğrencileriniz için yapay zekayla oluşturulan etkileşimli deneyimler oluşturun"
+          },
+          "folders": {
+            "title": "Kütüphane",
+            "description": "Kursları ve medyayı klasörlerde düzenleyin"
+          },
+          "paths": {
+            "title": "Öğrenme Yolları",
+            "description": "Kendi sertifikası olan sıralı kurs dizileri"
+          },
+          "live_sessions": {
+            "title": "Canlı oturumlar",
+            "description": "Sohbet, soru-cevap, anket ve yoklama içeren canlı dersler"
           }
         },
         "toasts": {
@@ -4511,6 +4531,11 @@
           "disabled": "{{feature}} devre dışı bırakıldı",
           "error": "{{feature}} yapılandırması güncellenemedi",
           "admin_only": "Yalnızca organizasyon yöneticileri özellikleri etkinleştirebilir veya devre dışı bırakabilir"
+        },
+        "platform_disabled": "Platform yöneticisi tarafından kapatıldı. Yeniden açmak için destekle iletişime geçin.",
+        "upgrade": "Yükselt",
+        "sections": {
+          "locked": "Planınızda yok"
         }
       },
       "audit_logs": {

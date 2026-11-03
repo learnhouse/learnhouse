@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} wyłączona",
           "description": "Ta funkcja jest wyłączona dla Twojej organizacji. Włącz ją w ustawieniach, aby udostępnić ją użytkownikom."
+        },
+        "platform": {
+          "description": "Ta funkcja została wyłączona dla Twojej organizacji przez administratora platformy. Skontaktuj się z pomocą techniczną, jeśli jej potrzebujesz."
         }
       }
     },
@@ -3162,7 +3165,12 @@
       "other": "Inne",
       "enterprise_edition": "Wersja Enterprise",
       "close_menu": "Zamknij menu",
-      "open_menu": "Otwórz menu"
+      "open_menu": "Otwórz menu",
+      "more_features": "Więcej",
+      "features_off": "Wyłączone",
+      "feature_off_badge": "Wył.",
+      "features_locked": "Przejdź na wyższy plan, aby odblokować",
+      "manage_features": "Zarządzaj funkcjami"
     },
     "home": {
       "cards": {
@@ -4221,7 +4229,7 @@
           },
           "features": {
             "title": "Funkcje",
-            "subtitle": "Włącz lub wyłącz funkcje dla swojej organizacji"
+            "subtitle": "Wybierz funkcje używane w Twojej organizacji"
           },
           "sso": {
             "title": "Logowanie jednokrotne",
@@ -4602,6 +4610,18 @@
           "playgrounds": {
             "title": "Playgrounds",
             "description": "Twórz interaktywne doświadczenia generowane przez AI dla swoich uczniów"
+          },
+          "folders": {
+            "title": "Biblioteka",
+            "description": "Porządkuj kursy i multimedia w folderach"
+          },
+          "paths": {
+            "title": "Ścieżki nauki",
+            "description": "Uporządkowane sekwencje kursów z własnym certyfikatem"
+          },
+          "live_sessions": {
+            "title": "Sesje na żywo",
+            "description": "Zajęcia na żywo z czatem, pytaniami i odpowiedziami, ankietami i frekwencją"
           }
         },
         "toasts": {
@@ -4611,6 +4631,11 @@
           "disabled": "{{feature}} wyłączone",
           "error": "Nie udało się zaktualizować konfiguracji {{feature}}",
           "admin_only": "Tylko administratorzy mogą włączać lub wyłączać funkcje"
+        },
+        "platform_disabled": "Wyłączone przez administratora platformy. Skontaktuj się z pomocą techniczną, aby je włączyć.",
+        "upgrade": "Zmień plan",
+        "sections": {
+          "locked": "Poza Twoim planem"
         }
       },
       "audit_logs": {

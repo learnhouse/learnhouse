@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} disabilitato",
           "description": "Questa funzionalità è disabilitata per la tua organizzazione. Abilitala nelle impostazioni per renderla disponibile agli utenti."
+        },
+        "platform": {
+          "description": "Questa funzionalità è stata disattivata per la tua organizzazione dall'amministratore della piattaforma. Contatta il supporto se ti serve."
         }
       }
     },
@@ -3123,7 +3126,12 @@
       "other": "Altro",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "Chiudi menu",
-      "open_menu": "Apri menu"
+      "open_menu": "Apri menu",
+      "more_features": "Altro",
+      "features_off": "Disattivate",
+      "feature_off_badge": "Disattivato",
+      "features_locked": "Passa a un piano superiore per sbloccare",
+      "manage_features": "Gestisci funzionalità"
     },
     "home": {
       "cards": {
@@ -4174,7 +4182,7 @@
           },
           "features": {
             "title": "Funzionalità",
-            "subtitle": "Attiva o disattiva funzionalità per la tua organizzazione"
+            "subtitle": "Scegli quali funzionalità usa la tua organizzazione"
           },
           "sso": {
             "title": "Single Sign-On",
@@ -4552,6 +4560,18 @@
           "playgrounds": {
             "title": "Playground",
             "description": "Crea esperienze interattive generate dall'IA per i tuoi studenti"
+          },
+          "folders": {
+            "title": "Libreria",
+            "description": "Organizza corsi e contenuti multimediali in cartelle"
+          },
+          "paths": {
+            "title": "Percorsi",
+            "description": "Sequenze ordinate di corsi con un proprio certificato"
+          },
+          "live_sessions": {
+            "title": "Sessioni live",
+            "description": "Lezioni live con chat, domande e risposte, sondaggi e presenze"
           }
         },
         "toasts": {
@@ -4561,6 +4581,11 @@
           "disabled": "{{feature}} disattivato",
           "error": "Impossibile aggiornare la configurazione di {{feature}}",
           "admin_only": "Solo gli amministratori dell'organizzazione possono abilitare o disabilitare le funzionalità"
+        },
+        "platform_disabled": "Disattivata dall'amministratore della piattaforma. Contatta il supporto per riattivarla.",
+        "upgrade": "Passa a un piano superiore",
+        "sections": {
+          "locked": "Non incluse nel tuo piano"
         }
       },
       "audit_logs": {

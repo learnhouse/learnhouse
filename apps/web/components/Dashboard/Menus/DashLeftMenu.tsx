@@ -44,6 +44,7 @@ import {
   Code,
   Lightning,
   Steps,
+  SlidersHorizontal,
 } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { useAtlasMini } from '@ee/components/Atlas/AtlasMiniContext'
@@ -82,6 +83,12 @@ import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
 import { getDeploymentMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import {
+  FEATURES_SETTINGS_HREF,
+  OPTIONAL_FEATURES,
+  OptionalFeatureKey,
+  getOptionalFeatureState,
+} from '@services/features/optionalFeatures'
 import { usePlan } from '@components/Hooks/usePlan'
 import { planMeetsRequirement } from '@services/plans/plans'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
@@ -229,18 +236,27 @@ function DashLeftMenu() {
     plan === 'standard' ? 'bg-blue-400/15 text-blue-300' :
     'bg-white/[0.08] text-white/50'
 
-  // Feature visibility from API resolved_features
+  // Optional features: 'on' ones get a nav item, the rest are listed in the
+  // "More" menu, split into turned off (a settings change away) and locked
+  // (an upgrade away).
   const rf = org?.config?.config?.resolved_features
-  const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
+  const featureStates = OPTIONAL_FEATURES.map((feature) => ({
+    feature,
+    ...getOptionalFeatureState(rf?.[feature.key]),
+  }))
+  const isOn = (key: OptionalFeatureKey) =>
+    featureStates.find((f) => f.feature.key === key)?.status === 'on'
+  const offFeatures = featureStates.filter((f) => f.status === 'off')
+  const lockedFeatures = featureStates.filter((f) => f.status === 'locked')
 
-  const showLibrary = isEnabled('folders')
-  const showPaths = isEnabled('paths')
-  const showCommunities = isEnabled('communities')
-  const showPodcasts = isEnabled('podcasts')
-  const showLiveSessions = isEnabled('live_sessions')
-  const showBoards = isEnabled('boards')
-  const showPlaygrounds = isEnabled('playgrounds')
-  const showPayments = isEnabled('payments')
+  const showLibrary = isOn('folders')
+  const showPaths = isOn('paths')
+  const showCommunities = isOn('communities')
+  const showPodcasts = isOn('podcasts')
+  const showLiveSessions = isOn('live_sessions')
+  const showBoards = isOn('boards')
+  const showPlaygrounds = isOn('playgrounds')
+  const showPayments = isOn('payments')
 
   // When the user is on the Atlas page, the left nav drops into a slightly
   // darker flat dark color than the Atlas content (same family), with the
@@ -661,6 +677,12 @@ function DashLeftMenu() {
                     </Link>
                   </HoverMenuItem>
                   <HoverMenuItem asChild>
+                    <Link href={FEATURES_SETTINGS_HREF} className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <SlidersHorizontal size={16} weight="fill" />
+                      <span>{t('dashboard.organization.settings.tabs.features')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
                     <Link href="/dash/org/settings/branding" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
                       <Palette size={16} weight="fill" />
                       <span>{t('dashboard.organization.settings.tabs.branding')}</span>
@@ -869,79 +891,64 @@ function DashLeftMenu() {
               })()}
             </HoverMenu>
 
-            {/* Disabled features shown in an "Other" hover menu */}
-            {(!showPaths || !showCommunities || !showPodcasts || !showLiveSessions || !showBoards || !showPlaygrounds || !showPayments) && (
+            {/* Optional features that are not in the nav: turned off, or not in the plan */}
+            {(offFeatures.length > 0 || lockedFeatures.length > 0) && (
               <HoverMenu
                 content={
                   <HoverMenuContent className="w-64">
-                    <HoverMenuLabel className="flex items-center justify-between text-white/70 font-medium">
-                      <span>{t('common.other')}</span>
-                      <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/[0.06] text-white/25">
-                        {t('common.disabled')}
-                      </span>
-                    </HoverMenuLabel>
-                    <HoverMenuSeparator />
-                    {!showPaths && (
-                      <HoverMenuItem asChild>
-                        <Link href="/dash/paths" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
-                          <Steps size={16} weight="fill" />
-                          <span className="flex items-center">{t('paths.title')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
-                        </Link>
-                      </HoverMenuItem>
+                    {offFeatures.length > 0 && (
+                      <>
+                        <HoverMenuLabel className="text-white/50 text-xs font-medium">
+                          {t('dashboard.nav.features_off')}
+                        </HoverMenuLabel>
+                        {offFeatures.map(({ feature }) => (
+                          <HoverMenuItem key={feature.key} asChild>
+                            <Link href={feature.href} className="flex items-center gap-2 px-3 py-2 text-sm text-white/40 hover:text-white/70 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                              <feature.Icon size={16} weight="fill" />
+                              <span className="flex-1">{t(feature.labelKey)}</span>
+                              <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/[0.06] text-white/35">
+                                {t('dashboard.nav.feature_off_badge')}
+                              </span>
+                            </Link>
+                          </HoverMenuItem>
+                        ))}
+                      </>
                     )}
-                    {!showCommunities && (
-                      <HoverMenuItem asChild>
-                        <Link href="/dash/communities" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
-                          <ChatsCircle size={16} weight="fill" />
-                          <span>{t('communities.title')}</span>
-                        </Link>
-                      </HoverMenuItem>
+                    {offFeatures.length > 0 && lockedFeatures.length > 0 && <HoverMenuSeparator />}
+                    {lockedFeatures.length > 0 && (
+                      <>
+                        <HoverMenuLabel className="text-white/50 text-xs font-medium">
+                          {t('dashboard.nav.features_locked')}
+                        </HoverMenuLabel>
+                        {lockedFeatures.map(({ feature, upgradePlan }) => (
+                          <HoverMenuItem key={feature.key} asChild>
+                            <Link href={feature.href} className="flex items-center gap-2 px-3 py-2 text-sm text-white/40 hover:text-white/70 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                              <feature.Icon size={16} weight="fill" />
+                              <span className="flex-1">{t(feature.labelKey)}</span>
+                              {upgradePlan && (
+                                <PlanBadge currentPlan={plan} requiredPlan={upgradePlan} variant="dark" alwaysShow noMargin />
+                              )}
+                            </Link>
+                          </HoverMenuItem>
+                        ))}
+                      </>
                     )}
-                    {!showPodcasts && (
-                      <HoverMenuItem asChild>
-                        <Link href="/dash/podcasts" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
-                          <Headphones size={16} weight="fill" />
-                          <span>{t('podcasts.podcasts')}</span>
-                        </Link>
-                      </HoverMenuItem>
-                    )}
-                    {!showLiveSessions && (
-                      <HoverMenuItem asChild>
-                        <Link href="/dash/live-sessions" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
-                          <VideoCamera size={16} weight="fill" />
-                          <span>{t('live_sessions.title')}</span>
-                        </Link>
-                      </HoverMenuItem>
-                    )}
-                    {!showBoards && (
-                      <HoverMenuItem asChild>
-                        <Link href="/dash/boards" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
-                          <ChalkboardSimple size={16} weight="fill" />
-                          <span>{t('common.boards')}</span>
-                        </Link>
-                      </HoverMenuItem>
-                    )}
-                    {!showPlaygrounds && (
-                      <HoverMenuItem asChild>
-                        <Link href="/dash/playgrounds" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
-                          <Cube size={16} weight="fill" />
-                          <span>{t('common.playgrounds')}</span>
-                        </Link>
-                      </HoverMenuItem>
-                    )}
-                    {!showPayments && (
-                      <HoverMenuItem asChild>
-                        <Link href="/dash/payments/overview" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
-                          <CurrencyCircleDollar size={16} weight="fill" />
-                          <span>{t('common.payments')}</span>
-                        </Link>
-                      </HoverMenuItem>
+                    {canManageOrg && (
+                      <>
+                        <HoverMenuSeparator />
+                        <HoverMenuItem asChild>
+                          <Link href={FEATURES_SETTINGS_HREF} className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/[0.05] cursor-pointer transition-colors">
+                            <SlidersHorizontal size={16} weight="bold" />
+                            <span>{t('dashboard.nav.manage_features')}</span>
+                          </Link>
+                        </HoverMenuItem>
+                      </>
                     )}
                   </HoverMenuContent>
                 }
               >
                 <button
-                  aria-label={t('dashboard.nav.other')}
+                  aria-label={t('dashboard.nav.more_features')}
                   className={cn(
                     "flex items-center w-full rounded-lg text-white/30 hover:text-white/50 hover:bg-white/[0.05] transition-all",
                     isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
@@ -955,7 +962,7 @@ function DashLeftMenu() {
                   </span>
                   {!isCollapsed && (
                     <>
-                      <span className="text-sm font-medium flex-1 text-start">{t('common.other')}</span>
+                      <span className="text-sm font-medium flex-1 text-start">{t('dashboard.nav.more_features')}</span>
                       <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/20" />
                     </>
                   )}

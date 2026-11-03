@@ -369,6 +369,7 @@ class TestOrgConfigEndpoints:
             ("/api/v1/orgs/1/config/podcasts", "update_org_podcasts_config", {"podcasts_enabled": "true"}),
             ("/api/v1/orgs/1/config/boards", "update_org_boards_config", {"boards_enabled": "true"}),
             ("/api/v1/orgs/1/config/playgrounds", "update_org_playgrounds_config", {"playgrounds_enabled": "true"}),
+            ("/api/v1/orgs/1/config/features/boards", "update_org_feature_toggle", {"enabled": "false"}),
             ("/api/v1/orgs/1/config/color", "update_org_color_config", {"color": "#fff"}),
             ("/api/v1/orgs/1/config/font", "update_org_font_config", {"font": "Geist"}),
             ("/api/v1/orgs/1/config/footer_text", "update_org_footer_text_config", {"footer_text": "Footer"}),

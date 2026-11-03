@@ -147,15 +147,15 @@ class TestInEmail:
     def test_illustration_reaches_the_email(self):
         body = self._render("content")
         assert TRACK_COLORS["content"] in body
-        assert 'role="presentation"' in body
+        assert 'aria-hidden="true"' in body
 
     def test_illustration_sits_above_the_heading(self):
         body = self._render("content")
-        assert body.index('role="presentation"') < body.index("<h1")
+        assert body.index('aria-hidden="true"') < body.index("<h1")
 
     def test_no_track_still_produces_a_valid_email(self):
         """Illustrations are decoration; their absence must not break the
         message."""
         body = self._render("")
         assert "<h1" in body
-        assert 'role="presentation"' not in body
+        assert 'aria-hidden="true"' not in body

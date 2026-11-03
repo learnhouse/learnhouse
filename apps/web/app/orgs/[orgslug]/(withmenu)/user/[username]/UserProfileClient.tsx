@@ -24,6 +24,7 @@ import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbna
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { asArray } from '@services/utils/ts/requests'
+import { MessageUserButton } from '@components/Messaging/EntryButtons'
 
 interface UserProfileClientProps {
   userData: any;
@@ -144,9 +145,12 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
             {/* Left column with details - aligned with avatar */}
             <div className="w-full md:w-1/6 ps-2">
               {/* Name */}
-              <h1 className="text-[32px] font-bold mb-8">
+              <h1 className="text-[32px] font-bold mb-4">
                 {userData.first_name} {userData.last_name}
               </h1>
+              <div className="mb-8">
+                <MessageUserButton userUuid={userData.user_uuid} userId={userData.id} />
+              </div>
 
               {/* Details */}
               <div className="flex flex-col space-y-3">

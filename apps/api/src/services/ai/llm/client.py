@@ -13,6 +13,7 @@ from typing import Any, AsyncGenerator, Optional, Sequence, Type, Union
 
 from pydantic_ai import Agent
 from pydantic_ai.messages import (
+    SystemPromptPart,
     BinaryContent,
     DocumentUrl,
     ImageUrl,
@@ -99,6 +100,22 @@ def attachments_to_parts(attachments: Any) -> list:
     return parts
 
 
+def _history_with_system(history: Any, system_prompt: Optional[str]) -> Optional[list[ModelMessage]]:
+    """Stored history as model messages, led by the system prompt.
+
+    Pydantic AI only injects ``system_prompt`` when ``message_history`` is
+    empty. Every follow-up turn of a chat therefore used to run without its
+    instructions or retrieved course context. Putting the prompt at the head
+    of the history keeps it on every turn.
+    """
+    messages = to_message_history(history)
+    if not messages:
+        return None
+    if system_prompt:
+        messages.insert(0, ModelRequest(parts=[SystemPromptPart(content=system_prompt)]))
+    return messages
+
+
 def _settings(
     max_tokens: Optional[int], temperature: Optional[float], timeout: float
 ) -> ModelSettings:
@@ -137,7 +154,7 @@ async def generate(
     agent = _agent(model_name, system_prompt, output_type)
     result = await agent.run(
         user_prompt,
-        message_history=to_message_history(history) or None,
+        message_history=_history_with_system(history, system_prompt),
         model_settings=_settings(max_tokens, temperature, timeout),
     )
     return result.output
@@ -157,7 +174,7 @@ async def generate_stream(
     agent = _agent(model_name, system_prompt, str)
     async with agent.run_stream(
         user_prompt,
-        message_history=to_message_history(history) or None,
+        message_history=_history_with_system(history, system_prompt),
         model_settings=_settings(max_tokens, temperature, timeout),
     ) as result:
         async for chunk in result.stream_text(delta=True):
