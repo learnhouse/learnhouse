@@ -56,12 +56,15 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
 import { ActivityPreviewHoverCard } from '@components/Objects/Activities/ActivityPreview/ActivityPreview'
+import AtlasAttachButton from '@ee/components/Atlas/AtlasAttachButton'
 
 type ActivitiyElementProps = {
   orgslug: string
   activity: any
   activityIndex: any
   course_uuid: string
+  chapter_id?: number
+  chapter_name?: string
   isSelected?: boolean
   onToggleSelect?: () => void
   selectionMode?: boolean
@@ -325,6 +328,19 @@ function ActivityElement(props: ActivitiyElementProps) {
                   {props.activity.name}
                 </p>
               </ActivityPreviewHoverCard>
+            )}
+            {!props.selectionMode && (
+              <AtlasAttachButton
+                reference={{
+                  type: 'activity',
+                  uuid: props.activity.activity_uuid,
+                  name: props.activity.name,
+                  parent_course_uuid: props.course_uuid,
+                  parent_chapter_id: props.chapter_id,
+                  parent_chapter_name: props.chapter_name,
+                  activity_type: props.activity.activity_type,
+                }}
+              />
             )}
           </div>
 

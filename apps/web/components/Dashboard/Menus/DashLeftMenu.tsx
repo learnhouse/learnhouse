@@ -46,6 +46,8 @@ import {
   Steps,
 } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
+import { useAtlasMini } from '@ee/components/Atlas/AtlasMiniContext'
+import AtlasNavItem from '@ee/components/Atlas/AtlasNavItem'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import CommandPaletteTrigger from '@components/Dashboard/CommandPalette/CommandPaletteTrigger'
 import Link from 'next/link'
@@ -120,6 +122,7 @@ function DashLeftMenu() {
   const onboarding = useOnboarding()
   const showOnboarding =
     !isCollapsed && onboarding.welcomeSeen && !onboarding.dismissed && !onboarding.allCompleted
+  const { available: atlasAvailable } = useAtlasMini()
 
   const isActivePath = (path: string) => {
     if (path === '/dash') {
@@ -239,13 +242,21 @@ function DashLeftMenu() {
   const showPlaygrounds = isEnabled('playgrounds')
   const showPayments = isEnabled('payments')
 
+  // When the user is on the Atlas page, the left nav drops into a slightly
+  // darker flat dark color than the Atlas content (same family), with the
+  // nav reading as a deeper "shelf" the brighter content sits beside.
+  const isOnAtlas = atlasAvailable && pathname.startsWith('/dash/atlas')
+
   return (
     <TooltipProvider delayDuration={0}>
     <nav
       aria-label={t('dashboard.nav.sidebar_navigation')}
       className={cn(
-        "flex flex-col text-white h-screen sticky top-0 z-overlay border-e border-white/[0.08] bg-[#0f0f10] transition-all duration-300",
-        isCollapsed ? "w-[72px]" : "w-64"
+        "flex flex-col text-white h-screen sticky top-0 z-overlay border-e transition-all duration-300",
+        isCollapsed ? "w-[72px]" : "w-64",
+        isOnAtlas
+          ? "bg-[#05040c] border-white/5"
+          : "bg-[#0f0f10] border-white/[0.08]"
       )}
     >
       {/* Header with Logo and Toggle */}
@@ -340,6 +351,8 @@ function DashLeftMenu() {
               active={isActivePath('/dash')}
               onClick={() => track(AnalyticsEvent.DashboardNavClicked, { section: 'home' })}
             />
+
+            <AtlasNavItem isCollapsed={isCollapsed} isActive={isActivePath('/dash/atlas')} />
 
             {/* Courses with hover menu */}
             <HoverMenu

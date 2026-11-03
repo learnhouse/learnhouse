@@ -68,6 +68,16 @@ async def create_community(
     # resolves to no org, which would accept a role held in any org.
     await require_org_create_permission(current_user, org.id, db_session, "communities")
 
+    # Linking a course changes who can reach the community from that course,
+    # so it takes the right to edit the course, not only to create communities.
+    if community_object.course_id is not None:
+        course = await db_session.get(Course, community_object.course_id)
+        if not course or course.org_id != org.id:
+            raise HTTPException(status_code=404, detail="Course not found")
+        await check_resource_access(
+            request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+        )
+
     # Create community
     community = Community(
         name=community_object.name,
@@ -397,6 +407,9 @@ async def link_community_to_course(
             status_code=400,
             detail="Course must belong to the same organization as the community",
         )
+
+    # Editing the community is not enough: the link also changes the course.
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Check if another community is already linked to this course
     existing_statement = select(Community).where(
