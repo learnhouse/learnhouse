@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Headphones,
   Pause,
@@ -28,6 +29,7 @@ export function formatTime(seconds: number): string {
 }
 
 function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
+  const { t } = useTranslation()
   const audioRef = React.useRef<HTMLAudioElement>(null)
   const progressRef = React.useRef<HTMLDivElement>(null)
   const [isPlaying, setIsPlaying] = React.useState(false)
@@ -119,7 +121,7 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
           type="button"
           onClick={() => skip(-15)}
           className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
-          title="Skip back 15s"
+          title={t('media.audio.skip_back')}
         >
           <SkipBack size={16} className="text-gray-600" />
         </button>
@@ -142,7 +144,7 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
           type="button"
           onClick={() => skip(15)}
           className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
-          title="Skip forward 15s"
+          title={t('media.audio.skip_forward')}
         >
           <SkipForward size={16} className="text-gray-600" />
         </button>

@@ -100,8 +100,8 @@ function NewActivityButton(props: NewActivityButtonProps) {
       setNewActivityModal(false)
       const taskId = addTask({
         kind: 'video-upload',
-        title: activity?.name || 'Video',
-        subtitle: 'Uploading…',
+        title: activity?.name || t('dashboard.courses.structure.activity.upload_task.video_title'),
+        subtitle: t('dashboard.courses.structure.activity.upload_task.uploading'),
       })
       try {
         const created = await createVideoActivityWithProgress(
@@ -111,7 +111,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
           access_token,
           (pct) => updateTask(taskId, { progress: pct })
         )
-        updateTask(taskId, { status: 'processing', subtitle: 'Finishing up…', progress: 100 })
+        updateTask(taskId, { status: 'processing', subtitle: t('dashboard.courses.structure.activity.upload_task.finishing'), progress: 100 })
         if (captions && created?.activity_uuid) {
           try {
             await updateVideoCaptions(created.activity_uuid, captions, access_token)
@@ -121,7 +121,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
         }
         track(AnalyticsEvent.ActivityFileUploaded, { file_type: type, upload_succeeded: true })
         await refreshStructure()
-        updateTask(taskId, { status: 'done', subtitle: 'Uploaded' })
+        updateTask(taskId, { status: 'done', subtitle: t('dashboard.courses.structure.activity.upload_task.uploaded') })
       } catch (error: any) {
         track(AnalyticsEvent.ActivityFileUploaded, { file_type: type, upload_succeeded: false })
         updateTask(taskId, {

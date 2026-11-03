@@ -98,10 +98,10 @@ function AICoursePreview({
               [activityUuid]: { isGenerating: false, isGenerated: true, streamContent: '', error: null },
             }))
           } else {
-            throw new Error(result.data?.detail || 'Failed to save content')
+            throw new Error(result.data?.detail || t('courses.create.ai.save_content_failed'))
           }
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : 'Failed to save'
+          const errorMsg = error instanceof Error ? error.message : t('courses.create.ai.save_failed')
           setActivityStates((prev) => ({
             ...prev,
             [activityUuid]: { isGenerating: false, isGenerated: false, streamContent: '', error: errorMsg },
@@ -111,7 +111,7 @@ function AICoursePreview({
       } else {
         setActivityStates((prev) => ({
           ...prev,
-          [activityUuid]: { isGenerating: false, isGenerated: false, streamContent: '', error: 'Failed to parse content' },
+          [activityUuid]: { isGenerating: false, isGenerated: false, streamContent: '', error: t('courses.create.ai.content_parse_error') },
         }))
         toast.error(t('courses.create.ai.content_parse_error'))
       }
@@ -132,7 +132,7 @@ function AICoursePreview({
         onChunk, onComplete, onError
       )
     } catch (error) {
-      onError(error instanceof Error ? error.message : 'Unknown error')
+      onError(error instanceof Error ? error.message : t('courses.create.ai.unknown_error'))
     }
   }
 

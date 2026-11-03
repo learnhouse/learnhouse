@@ -77,14 +77,14 @@ export function CreateCommunityModal({
       } else if (handlePlanLimit(result, { source: 'community_create', feature: 'communities', requiredPlan: 'standard' })) {
         onClose()
       } else {
-        toast.error(getErrorMessage(result?.data?.detail, 'Failed to create community.'))
+        toast.error(getErrorMessage(result?.data?.detail, t('communities.create_failed')))
       }
     } catch (err: any) {
       const message =
         (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
         (typeof err?.detail === 'string' && err.detail) ||
         err?.message ||
-        'Failed to create community.'
+        t('communities.create_failed')
       toast.error(message)
     } finally {
       setIsSubmitting(false)

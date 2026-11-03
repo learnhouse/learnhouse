@@ -115,17 +115,13 @@ export default function PreviewsTab() {
     const remaining = MAX_PREVIEWS - previews.length
     if (files.length > remaining) {
       toast.error(
-        remaining === 1
-          ? t('dashboard.organization.images.toasts.max_previews', { count: remaining })
-          : t('dashboard.organization.images.toasts.max_previews_plural', { count: remaining })
+        t('dashboard.organization.images.toasts.max_previews', { count: remaining })
       )
       return
     }
     setIsPreviewUploading(true)
     const toastId = toast.loading(
-      files.length === 1
-        ? t('dashboard.organization.images.uploading_previews', { count: files.length })
-        : t('dashboard.organization.images.uploading_previews_plural', { count: files.length })
+      t('dashboard.organization.images.uploading_previews', { count: files.length })
     )
     try {
       const uploaded = await Promise.all(
@@ -143,9 +139,7 @@ export default function PreviewsTab() {
       await persist([...previews, ...uploaded])
       setDialogOpen(false)
       toast.success(
-        files.length === 1
-          ? t('dashboard.organization.images.toasts.preview_added', { count: files.length })
-          : t('dashboard.organization.images.toasts.preview_added_plural', { count: files.length }),
+        t('dashboard.organization.images.toasts.preview_added', { count: files.length }),
         { id: toastId }
       )
     } catch (_err) {

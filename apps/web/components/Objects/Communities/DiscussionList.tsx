@@ -275,9 +275,9 @@ export function DiscussionList({
           </div>
 
           <ConfirmationModal
-            confirmationMessage={t('communities.discussion_list.delete_discussions_confirm', { count: selectedIds.size, type: selectedIds.size === 1 ? t('communities.discussion') : t('communities.discussions') })}
+            confirmationMessage={t('communities.discussion_list.delete_discussions_confirm', { count: selectedIds.size })}
             confirmationButtonText={t('communities.discussion_list.delete')}
-            dialogTitle={selectedIds.size === 1 ? t('communities.discussion_list.delete_discussions_title', { count: selectedIds.size }) : t('communities.discussion_list.delete_discussions_title_plural', { count: selectedIds.size })}
+            dialogTitle={t('communities.discussion_list.delete_discussions_title', { count: selectedIds.size })}
             dialogTrigger={
               <button
                 disabled={isDeleting}

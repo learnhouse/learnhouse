@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Formik, Form, Field, ErrorMessage } from 'formik'
 import * as Yup from 'yup'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { updateCommunity, Community } from '@services/communities/communities'
@@ -20,13 +21,13 @@ interface EditCommunityModalProps {
   orgSlug: string
 }
 
-const validationSchema = Yup.object({
+const buildValidationSchema = (t: (_key: string) => string) => Yup.object({
   name: Yup.string()
-    .required('Community name is required')
-    .min(3, 'Name must be at least 3 characters')
-    .max(100, 'Name must be less than 100 characters'),
+    .required(t('dashboard.courses.communities.general.form.name_required'))
+    .min(3, t('dashboard.courses.communities.general.form.name_min_length'))
+    .max(100, t('dashboard.courses.communities.general.form.name_max_length')),
   description: Yup.string()
-    .max(500, 'Description must be less than 500 characters'),
+    .max(500, t('dashboard.courses.communities.general.form.description_max_length')),
   public: Yup.boolean(),
 })
 
@@ -36,6 +37,8 @@ export function EditCommunityModal({
   community,
   orgSlug,
 }: EditCommunityModalProps) {
+  const { t } = useTranslation()
+  const validationSchema = React.useMemo(() => buildValidationSchema(t), [t])
   const session = useLHSession() as any
   const org = useOrg() as any
   const router = useRouter()
@@ -69,7 +72,7 @@ export function EditCommunityModal({
         (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
         (typeof err?.detail === 'string' && err.detail) ||
         err?.message ||
-        'Failed to update community.'
+        t('communities.edit_modal.update_failed')
       toast.error(message)
     } finally {
       setIsSubmitting(false)
@@ -80,8 +83,8 @@ export function EditCommunityModal({
     <Modal
       isDialogOpen={isOpen}
       onOpenChange={(open) => !open && onClose()}
-      dialogTitle="Edit Community"
-      dialogDescription="Update community settings"
+      dialogTitle={t('communities.edit_modal.title')}
+      dialogDescription={t('communities.edit_modal.description')}
       minWidth="sm"
       dialogContent={
         <Formik
@@ -102,13 +105,13 @@ export function EditCommunityModal({
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Community Name *
+                  {t('communities.edit_modal.name_label')}
                 </label>
                 <Field
                   type="text"
                   name="name"
                   id="name"
-                  placeholder="Enter community name"
+                  placeholder={t('dashboard.courses.communities.general.form.name_placeholder')}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none transition-all"
                 />
                 <ErrorMessage
@@ -124,14 +127,14 @@ export function EditCommunityModal({
                   htmlFor="description"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Description
+                  {t('dashboard.courses.communities.general.form.description_label')}
                 </label>
                 <Field
                   as="textarea"
                   name="description"
                   id="description"
                   rows={3}
-                  placeholder="Describe what this community is about"
+                  placeholder={t('dashboard.courses.communities.general.form.description_placeholder')}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none transition-all resize-none"
                 />
                 <ErrorMessage
@@ -153,7 +156,7 @@ export function EditCommunityModal({
                   htmlFor="public"
                   className="text-sm text-gray-700"
                 >
-                  Make this community public (visible to everyone)
+                  {t('communities.edit_modal.public_label')}
                 </label>
               </div>
 
@@ -164,7 +167,7 @@ export function EditCommunityModal({
                   onClick={onClose}
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -172,7 +175,7 @@ export function EditCommunityModal({
                   className="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-                  Save Changes
+                  {t('communities.edit_modal.save_changes')}
                 </button>
               </div>
             </Form>

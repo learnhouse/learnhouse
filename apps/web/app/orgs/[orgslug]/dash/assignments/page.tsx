@@ -237,7 +237,7 @@ function AssignmentsHome() {
               <button
                 onClick={() => setSearchQuery('')}
                 className='absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
-                aria-label='Clear search'
+                aria-label={t('dashboard.assignments.home.clear_search')}
               >
                 <X size={14} />
               </button>

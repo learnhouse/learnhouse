@@ -984,7 +984,7 @@ export default function CreateNewOrgPage() {
               {isAuthenticated && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button aria-label="User menu" className="rounded-full">
+                    <button aria-label={t('hub_new.user_menu', { defaultValue: 'User menu' })} className="rounded-full">
                       <UserAvatar border="border-2" rounded="rounded-full" width={34} />
                     </button>
                   </DropdownMenuTrigger>

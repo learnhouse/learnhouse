@@ -303,14 +303,14 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                       dispatchAIChatBot({ type: 'switchToSideMode' })
                     }}
                     className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
-                    title="Switch to side mode"
+                    title={t('ai.switch_to_side_mode')}
                   >
                     <PanelRightOpen size={18} />
                   </button>
                   <button
                     onClick={toggleFullscreen}
                     className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
-                    title={aiChatBotState.isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                    title={aiChatBotState.isFullscreen ? t('ai.exit_fullscreen') : t('ai.fullscreen')}
                   >
                     {aiChatBotState.isFullscreen ? (
                       <Minimize2 size={18} />
@@ -916,7 +916,7 @@ function AISidePanelInline(props: AISidePanelProps) {
                   dispatchAIChatBot({ type: 'switchToHoverMode' })
                 }}
                 className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
-                title="Switch to hover mode"
+                title={t('ai.switch_to_hover_mode')}
               >
                 <PanelTop size={18} />
               </button>

@@ -273,7 +273,7 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
           onClick={() => setEditing(false)}
           className="text-[11px] text-neutral-400 hover:text-neutral-500 transition-colors"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
       )}
     </div>

@@ -137,7 +137,7 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-4" style={{ fontFamily: `'${value || DEFAULT_FONT}', sans-serif` }}>
-        <p className="mb-1 text-2xl font-bold text-gray-900">The quick brown fox jumps over the lazy dog</p>
+        <p className="mb-1 text-2xl font-bold text-gray-900">{t('dashboard.organization.branding.font_sample')}</p>
         <p className="text-sm text-gray-600">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789</p>
       </div>
     </div>
