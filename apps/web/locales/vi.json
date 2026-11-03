@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} bị vô hiệu hóa",
           "description": "Tính năng này bị vô hiệu hóa cho tổ chức của bạn. Kích hoạt trong cài đặt để cung cấp cho người dùng."
+        },
+        "platform": {
+          "description": "Quản trị viên nền tảng đã tắt tính năng này cho tổ chức của bạn. Hãy liên hệ bộ phận hỗ trợ nếu bạn cần."
         }
       }
     },
@@ -3057,7 +3060,12 @@
       "other": "Khác",
       "enterprise_edition": "Phiên bản Enterprise",
       "close_menu": "Đóng menu",
-      "open_menu": "Mở menu"
+      "open_menu": "Mở menu",
+      "more_features": "Thêm",
+      "features_off": "Đã tắt",
+      "feature_off_badge": "Tắt",
+      "features_locked": "Nâng cấp để mở khóa",
+      "manage_features": "Quản lý tính năng"
     },
     "home": {
       "cards": {
@@ -4098,7 +4106,7 @@
           },
           "features": {
             "title": "Tính năng",
-            "subtitle": "Bật hoặc tắt tính năng cho tổ chức của bạn"
+            "subtitle": "Chọn các tính năng tổ chức của bạn sử dụng"
           },
           "sso": {
             "title": "Đăng nhập một lần",
@@ -4473,6 +4481,18 @@
           "playgrounds": {
             "title": "Playground",
             "description": "Tạo các trải nghiệm tương tác do AI tạo ra cho học viên của bạn"
+          },
+          "folders": {
+            "title": "Thư viện",
+            "description": "Sắp xếp khóa học và tệp đa phương tiện vào thư mục"
+          },
+          "paths": {
+            "title": "Lộ trình học tập",
+            "description": "Chuỗi khóa học theo thứ tự với chứng chỉ riêng"
+          },
+          "live_sessions": {
+            "title": "Buổi học trực tiếp",
+            "description": "Lớp học trực tiếp có trò chuyện, hỏi đáp, bình chọn và điểm danh"
           }
         },
         "toasts": {
@@ -4482,6 +4502,11 @@
           "disabled": "Đã tắt {{feature}}",
           "error": "Cập nhật cấu hình {{feature}} thất bại",
           "admin_only": "Chỉ quản trị viên tổ chức mới có thể bật hoặc tắt tính năng"
+        },
+        "platform_disabled": "Đã bị quản trị viên nền tảng tắt. Hãy liên hệ bộ phận hỗ trợ để bật lại.",
+        "upgrade": "Nâng cấp",
+        "sections": {
+          "locked": "Không có trong gói của bạn"
         }
       },
       "audit_logs": {

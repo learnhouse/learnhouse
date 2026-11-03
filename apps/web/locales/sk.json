@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} vypnuté",
           "description": "Táto funkcia je pre vašu organizáciu vypnutá. Zapnite ju v nastaveniach, aby bola dostupná pre používateľov."
+        },
+        "platform": {
+          "description": "Túto funkciu pre vašu organizáciu vypol správca platformy. Ak ju potrebujete, kontaktujte podporu."
         }
       }
     },
@@ -3162,7 +3165,12 @@
       "other": "Ostatné",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "Zavrieť ponuku",
-      "open_menu": "Otvoriť ponuku"
+      "open_menu": "Otvoriť ponuku",
+      "more_features": "Viac",
+      "features_off": "Vypnuté",
+      "feature_off_badge": "Vyp.",
+      "features_locked": "Upgradujte na odomknutie",
+      "manage_features": "Spravovať funkcie"
     },
     "home": {
       "cards": {
@@ -4221,7 +4229,7 @@
           },
           "features": {
             "title": "Funkcie",
-            "subtitle": "Zapnite alebo vypnite funkcie pre vašu organizáciu"
+            "subtitle": "Vyberte, ktoré funkcie vaša organizácia používa"
           },
           "sso": {
             "title": "Jednotné prihlásenie",
@@ -4602,6 +4610,18 @@
           "playgrounds": {
             "title": "Playgroundy",
             "description": "Vytvárajte interaktívne AI zážitky pre vašich študentov"
+          },
+          "folders": {
+            "title": "Knižnica",
+            "description": "Usporiadajte kurzy a médiá do priečinkov"
+          },
+          "paths": {
+            "title": "Vzdelávacie cesty",
+            "description": "Usporiadané postupnosti kurzov s vlastným certifikátom"
+          },
+          "live_sessions": {
+            "title": "Živé relácie",
+            "description": "Živé hodiny s četom, otázkami a odpoveďami, anketami a dochádzkou"
           }
         },
         "toasts": {
@@ -4611,6 +4631,11 @@
           "disabled": "{{feature}} vypnuté",
           "error": "Nepodarilo sa aktualizovať konfiguráciu {{feature}}",
           "admin_only": "Iba administrátori organizácie môžu zapínať alebo vypínať funkcie"
+        },
+        "platform_disabled": "Vypol to správca platformy. Ak ju chcete znova zapnúť, kontaktujte podporu.",
+        "upgrade": "Upgradovať",
+        "sections": {
+          "locked": "Nie je vo vašom pláne"
         }
       },
       "audit_logs": {

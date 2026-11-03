@@ -294,12 +294,41 @@ def is_paying_plan(plan: str) -> bool:
     """
     Whether `plan` is a paid plan (anything above free).
 
-    Features INCLUDED in a paid plan are guaranteed to the organization: an
-    admin/superadmin per-org toggle can never disable them (paying users always
-    keep the features their plan makes available). The toggle still governs free
-    orgs and comp-granted extras. See resolve_feature().
+    Features INCLUDED in a paid plan are guaranteed to the organization: the
+    superadmin kill switch can never disable them. It still governs free orgs and
+    comp-granted extras. The org's own toggle is separate and always applies.
+    See resolve_feature().
     """
     return plan not in ("free",)
+
+
+# Plans an organization can move up to, in order. The personal line is a
+# separate product for individual creators, so organizations on the business
+# line (free/standard/pro) are never pointed at it.
+_BUSINESS_UPGRADES: list[str] = ["standard", "pro", "enterprise"]
+
+
+def get_upgrade_plan(plan: str, feature: str) -> str | None:
+    """
+    Cheapest plan above `plan` whose config includes `feature`.
+
+    Used to label a locked feature with the plan that actually unlocks it, which
+    can differ from FEATURE_PLAN_REQUIREMENTS (e.g. boards are in Personal but not
+    in Standard, so a Standard org needs Pro). Returns None when the feature is
+    already included or no plan includes it.
+    """
+    if get_plan_feature_config(plan, feature).get("enabled", False):
+        return None
+    if plan in ("personal", "personal-family"):
+        start = PLAN_HIERARCHY.index(plan) + 1
+        candidates = PLAN_HIERARCHY[start:]
+    else:
+        current = PLAN_HIERARCHY.index(plan) if plan in PLAN_HIERARCHY else 0
+        candidates = [p for p in _BUSINESS_UPGRADES if PLAN_HIERARCHY.index(p) > current]
+    for candidate in candidates:
+        if get_plan_feature_config(candidate, feature).get("enabled", False):
+            return candidate
+    return None
 
 
 def is_feature_enabled_for_plan(plan: str, feature: str) -> bool:

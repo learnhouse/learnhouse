@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} 비활성화됨",
           "description": "이 기능은 귀하의 조직에서 비활성화되어 있습니다. 사용자가 사용할 수 있도록 설정에서 활성화하세요."
+        },
+        "platform": {
+          "description": "플랫폼 관리자가 조직에서 이 기능을 꺼 두었습니다. 필요하면 지원팀에 문의하세요."
         }
       }
     },
@@ -3057,7 +3060,12 @@
       "other": "기타",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "메뉴 닫기",
-      "open_menu": "메뉴 열기"
+      "open_menu": "메뉴 열기",
+      "more_features": "더보기",
+      "features_off": "꺼진 기능",
+      "feature_off_badge": "꺼짐",
+      "features_locked": "업그레이드하여 잠금 해제",
+      "manage_features": "기능 관리"
     },
     "home": {
       "cards": {
@@ -4098,7 +4106,7 @@
           },
           "features": {
             "title": "기능",
-            "subtitle": "조직의 기능을 활성화 또는 비활성화"
+            "subtitle": "조직에서 사용할 기능을 선택하세요"
           },
           "sso": {
             "title": "싱글 사인온",
@@ -4473,6 +4481,18 @@
           "playgrounds": {
             "title": "Playground",
             "description": "학습자를 위한 AI 기반 인터랙티브 경험을 만드세요"
+          },
+          "folders": {
+            "title": "라이브러리",
+            "description": "코스와 미디어를 폴더로 정리하세요"
+          },
+          "paths": {
+            "title": "학습 경로",
+            "description": "전용 수료증이 있는 순서형 코스 과정"
+          },
+          "live_sessions": {
+            "title": "라이브 세션",
+            "description": "채팅, Q&A, 투표, 출석 기능이 있는 라이브 수업"
           }
         },
         "toasts": {
@@ -4482,6 +4502,11 @@
           "disabled": "{{feature}} 비활성화됨",
           "error": "{{feature}} 구성 업데이트 실패",
           "admin_only": "조직 관리자만 기능을 활성화하거나 비활성화할 수 있습니다"
+        },
+        "platform_disabled": "플랫폼 관리자가 꺼 두었습니다. 다시 켜려면 지원팀에 문의하세요.",
+        "upgrade": "업그레이드",
+        "sections": {
+          "locked": "현재 요금제에 없음"
         }
       },
       "audit_logs": {
