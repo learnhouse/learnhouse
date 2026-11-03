@@ -1,6 +1,8 @@
 import asyncio
 import logging
+from contextlib import asynccontextmanager
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -385,6 +387,49 @@ async def test_startup_and_shutdown_app(monkeypatch):
     assert "cancel" in calls
     assert "webhook-close" in calls
     assert ("db-close", app) in calls
+
+
+@pytest.mark.asyncio
+async def test_startup_runs_and_shutdown_closes_the_mcp_session_manager(monkeypatch):
+    calls = []
+
+    class _Manager:
+        @asynccontextmanager
+        async def run(self):
+            calls.append("mcp-start")
+            yield
+            calls.append("mcp-stop")
+
+    app = SimpleNamespace(state=SimpleNamespace(mcp_session_manager=_Manager()))
+    monkeypatch.setattr(events, "get_learnhouse_config", lambda: SimpleNamespace(name="cfg"))
+    for name in ("connect_to_db", "close_database"):
+        monkeypatch.setattr(events, name, AsyncMock())
+    for name in ("create_logs_dir", "check_content_directory", "auto_install", "_reconcile_packs"):
+        monkeypatch.setattr(events, name, AsyncMock())
+    monkeypatch.setattr(events, "run_ee_startup", lambda app_: None)
+    monkeypatch.setattr(
+        "src.services.courses.migration.migration_service.cleanup_old_temp_migrations", lambda: None
+    )
+    monkeypatch.setattr("src.services.webhooks.dispatch.close_webhook_client", AsyncMock())
+
+    class _Task:
+        def cancel(self):
+            pass
+
+        def __await__(self):
+            raise asyncio.CancelledError
+            yield  # pragma: no cover - unreachable, makes this a generator
+
+    def create_task(coro):
+        coro.close()
+        return _Task()
+
+    monkeypatch.setattr(events.asyncio, "create_task", create_task)
+
+    await events.startup_app(app)()
+    assert calls == ["mcp-start"] and events._mcp_lifespan_stack is not None
+    await events.shutdown_app(app)()
+    assert calls == ["mcp-start", "mcp-stop"] and events._mcp_lifespan_stack is None
 
 
 @pytest.mark.asyncio

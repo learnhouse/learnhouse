@@ -1,5 +1,5 @@
 'use client'
-import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight, ChevronDown, Trophy, Package, Puzzle, Globe } from 'lucide-react'
+import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight, ChevronDown, Trophy, Package, Puzzle, Globe, Radio } from 'lucide-react'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import React, { useMemo, memo, useState, useRef, useEffect, useCallback } from 'react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
@@ -33,6 +33,8 @@ function getActivityTypeLabel(activityType: string, t: any, activitySubType?: st
       return t('activities.assignment')
     case 'TYPE_SCORM':
       return t('activities.scorm')
+    case 'TYPE_LIVE_SESSION':
+      return t('activities.live_session')
     case 'TYPE_CUSTOM':
       return t('activities.custom')
     default:
@@ -52,6 +54,8 @@ function getActivityTypeBadgeColor(activityType: string): string {
       return 'bg-orange-100 text-orange-700'
     case 'TYPE_SCORM':
       return 'bg-indigo-100 text-indigo-700'
+    case 'TYPE_LIVE_SESSION':
+      return 'bg-red-100 text-red-700'
     case 'TYPE_CUSTOM':
       return 'bg-pink-100 text-pink-700'
     default:
@@ -74,6 +78,8 @@ const ActivityTypeIcon = memo(({ activityType, activitySubType }: { activityType
       return <BookOpenCheck size={16} className="text-gray-400" />
     case 'TYPE_SCORM':
       return <Package size={16} className="text-gray-400" />
+    case 'TYPE_LIVE_SESSION':
+      return <Radio size={16} className="text-gray-400" />
     case 'TYPE_CUSTOM':
       return <Puzzle size={16} className="text-gray-400" />
     default:

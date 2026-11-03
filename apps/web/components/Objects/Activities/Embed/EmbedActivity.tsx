@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { toEmbedUrl } from '@/lib/media/embedUrl'
 import { useUrlEmbedSandbox } from '@/lib/media/useUrlEmbedSandbox'
 import { safeExternalUrl } from '@services/security/url'
+import { useTranslation } from 'react-i18next'
 
 interface EmbedActivityProps {
   activity: any
@@ -15,6 +16,7 @@ interface EmbedActivityProps {
 }
 
 function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const embedUrl = activity.content?.embed_url || ''
@@ -26,7 +28,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
   const handleSaveUrl = async () => {
     const validatedUrl = safeExternalUrl(editUrl)
     if (!validatedUrl) {
-      toast.error('Enter a valid http:// or https:// URL')
+      toast.error(t('activities.embed_activity.invalid_url'))
       return
     }
     setSaving(true)
@@ -36,10 +38,10 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
         activity.activity_uuid,
         access_token
       )
-      toast.success('Embed URL updated')
+      toast.success(t('activities.embed_activity.updated'))
       setError(false)
     } catch {
-      toast.error('Failed to update URL')
+      toast.error(t('activities.embed_activity.update_failed'))
     } finally {
       setSaving(false)
     }
@@ -53,7 +55,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <WarningCircle size={40} className="text-red-400" />
-        <p className="text-sm text-gray-600">No embed URL configured</p>
+        <p className="text-sm text-gray-600">{t('activities.embed_activity.no_url')}</p>
       </div>
     )
   }
@@ -80,7 +82,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
             ) : (
               <FloppyDisk size={16} />
             )}
-            Save
+            {t('common.save')}
           </button>
         </div>
       )}
@@ -98,7 +100,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
       ) : (
         <div className="flex flex-col items-center justify-center py-20 gap-3 rounded-xl border-2 border-dashed border-gray-200">
           <Globe size={32} weight="duotone" className="text-gray-300" />
-          <p className="text-sm text-gray-400">Enter an embed URL above to preview</p>
+          <p className="text-sm text-gray-400">{t('activities.embed_activity.enter_url_hint')}</p>
         </div>
       )}
     </div>

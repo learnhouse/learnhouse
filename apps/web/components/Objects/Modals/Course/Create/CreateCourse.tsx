@@ -183,7 +183,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
       const file = new File([blob], 'ai_image.jpg', { type: 'image/jpeg' })
       formik.setFieldValue('thumbnail', file)
     } catch (_error) {
-      toast.error('Failed to load the generated image')
+      toast.error(t('courses.create.generated_image_failed'))
     }
     setIsUploading(false)
   }
@@ -262,12 +262,12 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
               {formik.values.thumbnail ? (
                 <img
                   src={URL.createObjectURL(formik.values.thumbnail)}
-                  className={`${isUploading ? 'animate-pulse' : ''} shadow-sm w-[200px] h-[100px] rounded-md`}
+                  className={`${isUploading ? 'animate-pulse' : ''} shadow-sm w-[200px] h-[100px] rounded-md object-cover`}
                 />
               ) : (
                 <img
                   src="/empty_thumbnail.png"
-                  className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200"
+                  className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200 object-cover"
                 />
               )}
               <div className="flex justify-center items-center space-x-2">

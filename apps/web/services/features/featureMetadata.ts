@@ -24,6 +24,7 @@ import {
   Key,
   Lightning,
   ListChecks,
+  VideoCamera,
   LockKey,
   Microphone,
   Path,
@@ -43,6 +44,7 @@ export type FeatureKey =
   | 'playgrounds'
   | 'communities'
   | 'podcasts'
+  | 'live_sessions'
   | 'ai'
   | 'analytics'
   | 'course_analytics'
@@ -107,6 +109,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     descriptionKey: 'common.plans.feature_restricted.podcasts.description',
     Icon: Microphone,
     upsellPlan: 'standard',
+  },
+  live_sessions: {
+    titleKey: 'common.plans.feature_restricted.live_sessions.title',
+    descriptionKey: 'common.plans.feature_restricted.live_sessions.description',
+    Icon: VideoCamera,
+    upsellPlan: 'pro',
   },
   ai: {
     titleKey: 'common.plans.feature_restricted.ai.title',

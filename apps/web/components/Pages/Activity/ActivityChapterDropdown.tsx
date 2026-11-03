@@ -1,6 +1,6 @@
 'use client'
 import { useMediaQuery } from 'usehooks-ts'
-import { Check, FileText, ListTree, Video, X, StickyNote, Backpack, ArrowRight, Package, Puzzle, Globe } from 'lucide-react'
+import { Check, FileText, ListTree, Video, X, StickyNote, Backpack, ArrowRight, Package, Puzzle, Globe, Radio } from 'lucide-react'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
@@ -70,6 +70,8 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         return <Backpack size={10} />;
       case 'TYPE_SCORM':
         return <Package size={10} />;
+      case 'TYPE_LIVE_SESSION':
+        return <Radio size={10} />;
       case 'TYPE_CUSTOM':
         return <Puzzle size={10} />;
       default:
@@ -91,6 +93,8 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         return t('activities.assignment');
       case 'TYPE_SCORM':
         return t('activities.scorm');
+      case 'TYPE_LIVE_SESSION':
+        return t('activities.live_session');
       case 'TYPE_CUSTOM':
         return t('activities.custom');
       default:
@@ -105,8 +109,8 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         aria-expanded={isOpen}
         aria-haspopup="true"
         className="bg-white rounded-full px-5 nice-shadow flex items-center space-x-2 p-2.5 text-gray-700 hover:bg-gray-50 transition delay-150 duration-300 ease-in-out"
-        aria-label="View all activities"
-        title="View all activities"
+        aria-label={t('activities.view_all_activities')}
+        title={t('activities.view_all_activities')}
       >
         <ListTree size={17} />
         <span className="text-xs font-bold">{t('courses.chapters')}</span>

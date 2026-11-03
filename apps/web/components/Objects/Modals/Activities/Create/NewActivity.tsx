@@ -1,5 +1,5 @@
 import React from 'react'
-import { Browsers, PlayCircle, FileText, Backpack, MarkdownLogo, Globe, Package, Cube } from '@phosphor-icons/react'
+import { Browsers, PlayCircle, FileText, Backpack, MarkdownLogo, Globe, Package, Cube, VideoCamera } from '@phosphor-icons/react'
 import { SiGoogledocs, SiGooglesheets, SiGoogleslides, SiGoogleforms, SiFigma, SiNotion, SiCanvas, SiLoom, SiMiro, SiYoutube, SiSpotify, SiAirtable, SiTypeform, SiDropbox, SiTrello } from '@icons-pack/react-simple-icons'
 import dynamic from 'next/dynamic'
 import DynamicCanvaModal from './NewActivityModal/DynamicActivityModal'
@@ -12,9 +12,10 @@ import ResourceModal from './NewActivityModal/ResourceActivityModal'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
 
-// SCORM authoring lives in the Enterprise (ee) package (`@ee` resolves to a
+// Live sessions and SCORM authoring live in the Enterprise (ee) package (`@ee` resolves to a
 // no-op stub in open-source builds); load it lazily (the card is also
-// feature-gated, so it only appears when SCORM is enabled).
+// feature-gated, so it only appears when the feature is enabled).
+const LiveSessionActivityModal = dynamic(() => import('@ee/components/LiveSessions/LiveSessionActivityModal'), { ssr: false })
 const ScormActivityModal = dynamic(
   () => import('@ee/components/Modals/ScormActivityModal'),
   { ssr: false }
@@ -152,6 +153,17 @@ const scormActivityType: ActivityTypeCard = {
   pattern: `repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(186,230,253,0.3) 6px, rgba(186,230,253,0.3) 7px)`,
 }
 
+// Live session card, only shown when the org has live sessions enabled.
+const liveSessionActivityType: ActivityTypeCard = {
+  key: 'livesession',
+  icon: VideoCamera,
+  labelKey: 'dashboard.courses.structure.activity.types.livesession',
+  color: {
+    icon: 'text-red-400',
+  },
+  pattern: `repeating-linear-gradient(45deg, transparent, transparent 7px, rgba(254,202,202,0.3) 7px, rgba(254,202,202,0.3) 8px)`,
+}
+
 function NewActivityModal({
   closeModal,
   submitActivity,
@@ -162,14 +174,19 @@ function NewActivityModal({
   orgslug,
   selectedView,
   setSelectedView,
+  onLiveSessionCreated,
 }: any) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const scormEnabled = org?.config?.config?.resolved_features?.scorm?.enabled === true
 
-  const visibleActivityTypes = scormEnabled
-    ? [...activityTypes, scormActivityType]
-    : activityTypes
+  const liveSessionsEnabled = org?.config?.config?.resolved_features?.live_sessions?.enabled === true
+
+  const visibleActivityTypes = [
+    ...activityTypes,
+    ...(liveSessionsEnabled ? [liveSessionActivityType] : []),
+    ...(scormEnabled ? [scormActivityType] : []),
+  ]
 
   return (
     <>
@@ -269,6 +286,14 @@ function NewActivityModal({
               chapterId={chapterId}
               course={course}
               orgslug={orgslug}
+            />
+          )}
+
+          {selectedView === 'livesession' && (
+            <LiveSessionActivityModal
+              chapterId={chapterId}
+              course={course}
+              onCreated={onLiveSessionCreated ?? closeModal}
             />
           )}
 

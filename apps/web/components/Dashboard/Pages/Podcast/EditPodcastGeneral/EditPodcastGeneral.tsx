@@ -180,7 +180,7 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
                       <>
                         <img
                           src={currentThumbnail}
-                          alt="Podcast thumbnail"
+                          alt={t('podcasts.podcast_thumbnail')}
                           className="w-full h-full object-cover"
                         />
                         <button

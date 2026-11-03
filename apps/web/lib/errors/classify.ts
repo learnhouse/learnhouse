@@ -1,5 +1,6 @@
 import { ERROR_CATALOG, UNKNOWN_CATEGORY } from './catalog'
-import type { ClassifiedError } from './types'
+import type { ClassifiedError, ErrorCategory } from './types'
+import i18n from '@/lib/i18n'
 
 // Turn whatever we were handed (an Error, a thrown backend payload, a fetch
 // Response, a plain string) into a meaningful ClassifiedError by matching it
@@ -43,6 +44,17 @@ function extractDigest(error: any): string | undefined {
   return undefined
 }
 
+// The catalog keeps English fallbacks; titles/descriptions resolve through i18n.
+function localize(category: ErrorCategory): ErrorCategory {
+  return {
+    ...category,
+    title: i18n.t(`error_catalog.${category.kind}.title`, { defaultValue: category.title }),
+    description: i18n.t(`error_catalog.${category.kind}.description`, {
+      defaultValue: category.description,
+    }),
+  }
+}
+
 export function classifyError(error: unknown): ClassifiedError {
   const status = extractStatus(error)
   const rawMessage = extractMessage(error)
@@ -56,11 +68,11 @@ export function classifyError(error: unknown): ClassifiedError {
     const nameHit = name !== '' && m.names.some((n) => name === n || name.includes(n))
     const messageHit = message !== '' && m.messageIncludes.some((s) => message.includes(s))
     if (statusHit || nameHit || messageHit) {
-      return { category, detail: rawMessage || undefined, status, digest }
+      return { category: localize(category), detail: rawMessage || undefined, status, digest }
     }
   }
 
-  return { category: UNKNOWN_CATEGORY, detail: rawMessage || undefined, status, digest }
+  return { category: localize(UNKNOWN_CATEGORY), detail: rawMessage || undefined, status, digest }
 }
 
 /** Convenience: just the human title for a quick inline message. */

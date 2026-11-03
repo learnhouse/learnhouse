@@ -99,7 +99,7 @@ function PathLearners({ path, orgslug }: { path: Path; orgslug: string }) {
               </thead>
               <tbody>
                 {learners!.map((learner) => {
-                  const name = [learner.user.first_name, learner.user.last_name].filter(Boolean).join(' ') || learner.user.username
+                  const name = [learner.user.first_name, learner.user.last_name].map((part) => part?.trim()).filter(Boolean).join(' ') || learner.user.username
                   return (
                     <tr key={learner.user.user_uuid} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
                       <td className="px-6 py-3">

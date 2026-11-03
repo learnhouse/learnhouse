@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 type PropsType = {
   path: Path
@@ -63,9 +64,9 @@ function PathThumbnail({ path, orgslug, isDashboard = false }: PropsType) {
       )}
 
       <Link prefetch href={pathLink} className="block relative aspect-video overflow-hidden bg-gray-50">
-        <div
-          className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-          style={{ backgroundImage: `url(${thumbnailImage})` }}
+        <ThumbnailImage
+          src={thumbnailImage}
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
         {isDashboard && (
           <div className="absolute bottom-2 start-2">

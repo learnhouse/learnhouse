@@ -7,6 +7,7 @@ import json
 
 from config.config import get_learnhouse_config
 from src.services.ai.llm import generate, generate_stream, model_for_tier
+from src.services.ai.llm.errors import log_ai_failure
 
 logger = logging.getLogger(__name__)
 
@@ -360,7 +361,7 @@ async def ask_ai_stream(
         ):
             yield chunk
     except Exception as e:
-        logger.error("ask_ai_stream failed: %s", e, exc_info=True)
+        log_ai_failure(logger, e, "ask_ai_stream failed")
         raise
 
 

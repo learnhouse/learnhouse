@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { Download, CheckCircle2, AlertCircle, Loader2, Package, FileArchive, FolderOpen, Layers, FileCheck } from 'lucide-react'
 
@@ -24,60 +25,61 @@ export interface ExportToastProps {
   error?: string
 }
 
-const statusConfig: Record<ExportStatus, { icon: React.ReactNode; label: string; color: string }> = {
+const statusConfig: Record<ExportStatus, { icon: React.ReactNode; labelKey: string; color: string }> = {
   preparing: {
     icon: <Loader2 className="w-5 h-5 animate-spin" />,
-    label: 'Preparing export...',
+    labelKey: 'courses.export_toast.status_preparing',
     color: 'text-blue-500',
   },
   collecting_metadata: {
     icon: <FolderOpen className="w-5 h-5 animate-pulse" />,
-    label: 'Collecting course metadata...',
+    labelKey: 'courses.export_toast.status_collecting_metadata',
     color: 'text-blue-500',
   },
   packaging_chapters: {
     icon: <Layers className="w-5 h-5 animate-pulse" />,
-    label: 'Packaging chapters...',
+    labelKey: 'courses.export_toast.status_packaging_chapters',
     color: 'text-blue-500',
   },
   packaging_activities: {
     icon: <FileCheck className="w-5 h-5 animate-pulse" />,
-    label: 'Packaging activities...',
+    labelKey: 'courses.export_toast.status_packaging_activities',
     color: 'text-blue-500',
   },
   packaging_files: {
     icon: <Package className="w-5 h-5 animate-pulse" />,
-    label: 'Packaging media files...',
+    labelKey: 'courses.export_toast.status_packaging_files',
     color: 'text-blue-500',
   },
   compressing: {
     icon: <FileArchive className="w-5 h-5 animate-pulse" />,
-    label: 'Compressing archive...',
+    labelKey: 'courses.export_toast.status_compressing',
     color: 'text-indigo-500',
   },
   downloading: {
     icon: <Download className="w-5 h-5 animate-bounce" />,
-    label: 'Downloading...',
+    labelKey: 'courses.export_toast.status_downloading',
     color: 'text-blue-500',
   },
   finalizing: {
     icon: <Loader2 className="w-5 h-5 animate-spin" />,
-    label: 'Finalizing...',
+    labelKey: 'courses.export_toast.status_finalizing',
     color: 'text-blue-500',
   },
   complete: {
     icon: <CheckCircle2 className="w-5 h-5" />,
-    label: 'Export complete!',
+    labelKey: 'courses.export_toast.status_complete',
     color: 'text-green-500',
   },
   error: {
     icon: <AlertCircle className="w-5 h-5" />,
-    label: 'Export failed',
+    labelKey: 'courses.export_toast.status_error',
     color: 'text-red-500',
   },
 }
 
 function ExportToastContent({ status, progress, courseName, courseCount, type, error }: ExportToastProps) {
+  const { t } = useTranslation()
   const config = statusConfig[status]
   const isComplete = status === 'complete'
   const isError = status === 'error'
@@ -85,13 +87,13 @@ function ExportToastContent({ status, progress, courseName, courseCount, type, e
 
   const getTitle = () => {
     if (type === 'batch') {
-      if (isComplete) return `${courseCount} courses exported`
-      if (isError) return 'Batch export failed'
-      return `Exporting ${courseCount} courses`
+      if (isComplete) return t('courses.export_toast.batch_complete', { count: courseCount })
+      if (isError) return t('courses.export_toast.batch_failed')
+      return t('courses.export_toast.batch_exporting', { count: courseCount })
     }
-    if (isComplete) return `"${courseName}" exported`
-    if (isError) return `Export failed`
-    return `Exporting "${courseName}"`
+    if (isComplete) return t('courses.export_toast.single_complete', { name: courseName })
+    if (isError) return t('courses.export_toast.single_failed')
+    return t('courses.export_toast.single_exporting', { name: courseName })
   }
 
   const getProgressColor = () => {
@@ -129,7 +131,7 @@ function ExportToastContent({ status, progress, courseName, courseCount, type, e
               {getTitle()}
             </p>
             <p className={`text-xs mt-0.5 ${isError ? 'text-red-600' : 'text-gray-500'}`}>
-              {isError ? (error || 'An error occurred during export') : config.label}
+              {isError ? (error || t('courses.export_toast.generic_error')) : t(config.labelKey)}
             </p>
           </div>
           {showProgress && (

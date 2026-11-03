@@ -49,6 +49,8 @@ dependencies = [
     "pgvector==0.5.1",
     "pypdf==6.21.4",
     "regex==2026.9.29",
+    "mcp==2.3.0",
+    "fakeredis==2.39.0",
 ]
 
 [tool.ruff]

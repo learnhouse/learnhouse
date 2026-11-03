@@ -15,6 +15,7 @@ import {
 import { getCertificateByUuid } from '@services/courses/certifications'
 import { getAbsoluteUriWithOrg, getUriWithOrg } from '@services/config/config'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
 import { formatDate } from '@/lib/format'
 
@@ -51,7 +52,7 @@ function CertificateVerificationPage({ certificateUuid }: { certificateUuid: str
 
   const config = record.certification?.config || {}
   const holder = record.user || {}
-  const learnerName = [holder.first_name, holder.last_name].filter(Boolean).join(' ') || holder.username || ''
+  const learnerName = [holder.first_name, holder.last_name].map((part) => part?.trim()).filter(Boolean).join(' ') || holder.username || ''
   const course = record.course
   const courseHref = getUriWithOrg(orgslug, `/course/${course.course_uuid.replace('course_', '')}`)
 
@@ -74,15 +75,13 @@ function CertificateVerificationPage({ certificateUuid }: { certificateUuid: str
       subject={
         <CertificateSubject title={t('certificate.page.earned_for_course')}>
           <Link href={courseHref} className="group flex items-center gap-4 -m-2 p-2 rounded-lg hover:bg-gray-50">
-            <div
-              className="w-28 aspect-video rounded-md bg-gray-100 bg-cover bg-center ring-1 ring-black/5 shrink-0"
-              style={{
-                backgroundImage: `url(${
-                  course.thumbnail_image
-                    ? getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image)
-                    : '/empty_thumbnail.png'
-                })`,
-              }}
+            <ThumbnailImage
+              src={
+                course.thumbnail_image
+                  ? getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image)
+                  : null
+              }
+              className="w-28 aspect-video rounded-md bg-gray-100 ring-1 ring-black/5 shrink-0"
             />
             <div className="min-w-0 flex-1">
               <div className="font-semibold text-gray-900 truncate" dir="auto">{course.name}</div>

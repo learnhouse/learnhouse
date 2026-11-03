@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { PodcastEpisode, Podcast } from '@services/podcasts/podcasts'
 import { formatDuration } from '@services/podcasts/episodes'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
@@ -8,6 +9,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getEpisodeThumbnailMediaDirectory, getPodcastThumbnailMediaDirectory } from '@services/media/media'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { Play, Pause, Clock } from 'lucide-react'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface EpisodeCardProps {
   episode: PodcastEpisode
@@ -16,6 +18,7 @@ interface EpisodeCardProps {
 }
 
 export default function EpisodeCard({ episode, podcast, showThumbnail = true }: EpisodeCardProps) {
+  const { t } = useTranslation()
   const { state, playEpisode, togglePlay } = usePodcastPlayer()
   const org = useOrg() as any
   const { track } = useLHAnalytics('learner')
@@ -72,7 +75,7 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
       {showThumbnail && (
         <div className="flex-shrink-0 relative">
           <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200">
-            <img
+            <ThumbnailImage
               src={thumbnailUrl}
               alt={episode.title}
               className="w-full h-full object-cover"
@@ -110,7 +113,7 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
           </span>
           {!episode.published && (
             <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-medium">
-              Unpublished
+              {t('podcasts.unpublished')}
             </span>
           )}
         </div>

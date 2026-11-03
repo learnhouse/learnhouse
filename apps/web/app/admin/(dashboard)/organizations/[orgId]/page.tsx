@@ -12,6 +12,7 @@ import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
 import {
   ArrowLeft,
@@ -51,13 +52,13 @@ function getCourseThumbnailUrl(orgUuid: string, courseUuid: string, file: string
 }
 
 const ALL_TABS = [
-  { id: 'overview', label: 'Overview', icon: Buildings },
-  { id: 'courses', label: 'Courses', icon: BookOpen },
-  { id: 'users', label: 'Users', icon: Users },
-  { id: 'analytics', label: 'Analytics', icon: ChartBar },
-  { id: 'plan', label: 'Plan', icon: CreditCard },
-  { id: 'features', label: 'Features', icon: SlidersHorizontal },
-  { id: 'settings', label: 'Settings', icon: GearSix },
+  { id: 'overview', labelKey: 'admin.org_detail.tabs.overview', icon: Buildings },
+  { id: 'courses', labelKey: 'admin.org_detail.tabs.courses', icon: BookOpen },
+  { id: 'users', labelKey: 'admin.org_detail.tabs.users', icon: Users },
+  { id: 'analytics', labelKey: 'common.analytics', icon: ChartBar },
+  { id: 'plan', labelKey: 'admin.org_detail.tabs.plan', icon: CreditCard },
+  { id: 'features', labelKey: 'admin.org_detail.tabs.features', icon: SlidersHorizontal },
+  { id: 'settings', labelKey: 'common.settings', icon: GearSix },
 ] as const
 
 type TabId = (typeof ALL_TABS)[number]['id']
@@ -112,6 +113,7 @@ function getFrontendDomain(): string {
 }
 
 export default function OrgDetailPage() {
+  const { t } = useTranslation()
   const params = useParams()
   const orgId = params.orgId as string
   const session = useLHSession() as any
@@ -140,7 +142,7 @@ export default function OrgDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-white/40">
         <Buildings size={48} weight="fill" />
-        <p className="mt-4 text-lg">Organization not found</p>
+        <p className="mt-4 text-lg">{t('admin.org_detail.not_found')}</p>
       </div>
     )
   }
@@ -154,7 +156,7 @@ export default function OrgDetailPage() {
           className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/60 transition-colors mb-3"
         >
           <ArrowLeft size={14} weight="bold" data-dir-flip />
-          Back to Organizations
+          {t('admin.org_detail.back_to_organizations')}
         </Link>
         <div className="flex items-center gap-4">
           {org.logo_image ? (
@@ -210,7 +212,7 @@ export default function OrgDetailPage() {
               }`}
             >
               <Icon size={16} weight={activeTab === tab.id ? 'fill' : 'regular'} />
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           )
         })}
@@ -240,6 +242,7 @@ function UsageBar({
   usage: number
   limit: number | string
 }) {
+  const { t } = useTranslation()
   const isUnlimited = limit === 'unlimited' || limit === 0
   const numLimit = typeof limit === 'number' ? limit : 0
   const pct = isUnlimited ? 0 : numLimit > 0 ? Math.min(100, (usage / numLimit) * 100) : 0
@@ -256,7 +259,7 @@ function UsageBar({
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs text-white/40 uppercase tracking-wider">{label}</p>
         <p className="text-xs text-white/50">
-          {usage.toLocaleString()} / {isUnlimited ? 'Unlimited' : numLimit.toLocaleString()}
+          {usage.toLocaleString()} / {isUnlimited ? t('admin.org_detail.unlimited') : numLimit.toLocaleString()}
         </p>
       </div>
       <p className="text-2xl font-bold text-white mb-2">{usage.toLocaleString()}</p>
@@ -267,13 +270,14 @@ function UsageBar({
         />
       </div>
       {!isUnlimited && pct >= 90 && (
-        <p className="text-[10px] text-red-400/80 mt-1.5">Limit almost reached</p>
+        <p className="text-[10px] text-red-400/80 mt-1.5">{t('admin.org_detail.limit_almost_reached')}</p>
       )}
     </div>
   )
 }
 
 function OverviewTab({ org, orgId, accessToken }: { org: any; orgId: string; accessToken: string }) {
+  const { t } = useTranslation()
   const { data: usageData } = useQuery({
     queryKey: queryKeys.org.usage(Number(orgId)),
     queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations/${orgId}/usage`, accessToken),
@@ -288,17 +292,17 @@ function OverviewTab({ org, orgId, accessToken }: { org: any; orgId: string; acc
       {/* Usage bars */}
       {features ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <UsageBar label="Courses" usage={features.courses.usage} limit={features.courses.limit} />
-          <UsageBar label="Members" usage={features.members.usage} limit={features.members.limit} />
-          <UsageBar label="Admin Seats" usage={features.admin_seats.usage} limit={features.admin_seats.limit} />
+          <UsageBar label={t('admin.org_detail.tabs.courses')} usage={features.courses.usage} limit={features.courses.limit} />
+          <UsageBar label={t('admin.org_detail.members')} usage={features.members.usage} limit={features.members.limit} />
+          <UsageBar label={t('admin.org_detail.admin_seats')} usage={features.admin_seats.usage} limit={features.admin_seats.limit} />
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Users', value: org.user_count },
-            { label: 'Courses', value: org.course_count },
-            { label: 'Admins', value: org.admin_users?.length || 0 },
-            { label: 'Custom Domains', value: org.custom_domains?.length || 0 },
+            { label: t('admin.org_detail.tabs.users'), value: org.user_count },
+            { label: t('admin.org_detail.tabs.courses'), value: org.course_count },
+            { label: t('admin.org_detail.admins'), value: org.admin_users?.length || 0 },
+            { label: t('admin.org_detail.custom_domains'), value: org.custom_domains?.length || 0 },
           ].map((s) => (
             <div key={s.label} className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
               <p className="text-xs text-white/40 uppercase tracking-wider">{s.label}</p>
@@ -311,19 +315,19 @@ function OverviewTab({ org, orgId, accessToken }: { org: any; orgId: string; acc
       {/* Info grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 space-y-3">
-          <h3 className="text-sm font-medium text-white/60">Details</h3>
-          <InfoRow label="Email" value={org.email} />
-          <InfoRow label="Slug" value={org.slug} mono />
+          <h3 className="text-sm font-medium text-white/60">{t('admin.org_detail.details')}</h3>
+          <InfoRow label={t('admin.org_detail.email')} value={org.email} />
+          <InfoRow label={t('admin.org_detail.slug')} value={org.slug} mono />
           <InfoRow label="UUID" value={org.org_uuid} mono />
-          <InfoRow label="Created" value={new Date(org.creation_date).toLocaleDateString()} />
-          <InfoRow label="Updated" value={new Date(org.update_date).toLocaleDateString()} />
-          {org.description && <InfoRow label="Description" value={org.description} />}
+          <InfoRow label={t('admin.org_detail.created')} value={new Date(org.creation_date).toLocaleDateString()} />
+          <InfoRow label={t('common.updated')} value={new Date(org.update_date).toLocaleDateString()} />
+          {org.description && <InfoRow label={t('admin.org_detail.description')} value={org.description} />}
         </div>
 
         <div className="space-y-4">
           {/* Custom domains */}
           <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
-            <h3 className="text-sm font-medium text-white/60 mb-3">Custom Domains</h3>
+            <h3 className="text-sm font-medium text-white/60 mb-3">{t('admin.org_detail.custom_domains')}</h3>
             {org.custom_domains?.length > 0 ? (
               <div className="space-y-2">
                 {org.custom_domains.map((d: string) => (
@@ -334,13 +338,13 @@ function OverviewTab({ org, orgId, accessToken }: { org: any; orgId: string; acc
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-white/25">No custom domains configured</p>
+              <p className="text-sm text-white/25">{t('admin.org_detail.no_custom_domains')}</p>
             )}
           </div>
 
           {/* Admin users */}
           <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
-            <h3 className="text-sm font-medium text-white/60 mb-3">Admin Users</h3>
+            <h3 className="text-sm font-medium text-white/60 mb-3">{t('admin.org_detail.admin_users')}</h3>
             {org.admin_users?.length > 0 ? (
               <div className="space-y-2">
                 {org.admin_users.map((u: any) => (
@@ -367,7 +371,7 @@ function OverviewTab({ org, orgId, accessToken }: { org: any; orgId: string; acc
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-white/25">No admin users</p>
+              <p className="text-sm text-white/25">{t('admin.org_detail.no_admin_users')}</p>
             )}
           </div>
         </div>
@@ -399,6 +403,7 @@ function CoursesTab({
   orgUuid: string
   orgSlug: string
 }) {
+  const { t } = useTranslation()
   const { searchParams, updateParams } = useUrlParams()
   const page = Number(searchParams.get('page')) || 1
   const setPage = (p: number) => updateParams({ tab: 'courses', page: p })
@@ -422,7 +427,7 @@ function CoursesTab({
     return (
       <div className="flex flex-col items-center justify-center py-20 text-white/40">
         <BookOpen size={48} weight="fill" />
-        <p className="mt-4">No courses in this organization</p>
+        <p className="mt-4">{t('admin.org_detail.no_courses')}</p>
       </div>
     )
   }
@@ -432,15 +437,15 @@ function CoursesTab({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-white/40">{total} course{total !== 1 ? 's' : ''}</span>
+        <span className="text-sm text-white/40">{t('admin.org_detail.courses_count', { count: total })}</span>
       </div>
       <table className="w-full text-start">
         <thead>
           <tr className="border-b border-white/[0.08]">
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Course</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Status</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Visibility</th>
-            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Created</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_detail.course')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('common.status')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_detail.visibility')}</th>
+            <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_detail.created')}</th>
           </tr>
         </thead>
         <tbody>
@@ -486,18 +491,18 @@ function CoursesTab({
                         : 'bg-yellow-400/10 text-yellow-400'
                     }`}
                   >
-                    {course.published ? 'Published' : 'Draft'}
+                    {course.published ? t('admin.org_detail.published') : t('admin.org_detail.draft')}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 text-xs text-white/50">
                     {course.public ? (
                       <>
-                        <Eye size={14} /> Public
+                        <Eye size={14} /> {t('admin.org_detail.public')}
                       </>
                     ) : (
                       <>
-                        <EyeSlash size={14} /> Private
+                        <EyeSlash size={14} /> {t('admin.org_detail.private')}
                       </>
                     )}
                   </div>
@@ -521,6 +526,7 @@ function CoursesTab({
 // Users Tab
 // ---------------------------------------------------------------------------
 function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }) {
+  const { t } = useTranslation()
   const { searchParams, updateParams } = useUrlParams()
   const page = Number(searchParams.get('page')) || 1
   const search = searchParams.get('search') || ''
@@ -549,7 +555,7 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-white/40">{total} user{total !== 1 ? 's' : ''}</span>
+        <span className="text-sm text-white/40">{t('admin.org_detail.users_count', { count: total })}</span>
         <form onSubmit={handleSearch} className="flex items-center gap-2">
           <div className="relative">
             <MagnifyingGlass
@@ -560,7 +566,7 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search users..."
+              placeholder={t('admin.org_detail.search_users')}
               className="bg-white/[0.05] border border-white/[0.08] rounded-lg ps-8 pe-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-48"
             />
           </div>
@@ -570,17 +576,17 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
       {items.length === 0 && page === 1 ? (
         <div className="flex flex-col items-center justify-center py-20 text-white/40">
           <Users size={48} weight="fill" />
-          <p className="mt-4">{search ? 'No users match your search' : 'No users in this organization'}</p>
+          <p className="mt-4">{search ? t('admin.org_detail.no_users_match') : t('admin.org_detail.no_users')}</p>
         </div>
       ) : (
         <>
           <table className="w-full text-start">
             <thead>
               <tr className="border-b border-white/[0.08]">
-                <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">User</th>
-                <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Role</th>
-                <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Joined</th>
+                <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_detail.user')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_detail.email')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_detail.role')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{t('admin.org_detail.joined')}</th>
               </tr>
             </thead>
             <tbody>
@@ -620,7 +626,7 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-white/40">
-                      {user.creation_date ? new Date(user.creation_date).toLocaleDateString() : 'n/a'}
+                      {user.creation_date ? new Date(user.creation_date).toLocaleDateString() : t('admin.org_detail.na')}
                     </span>
                   </td>
                 </tr>
@@ -638,6 +644,7 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
 // Analytics Tab
 // ---------------------------------------------------------------------------
 function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: string }) {
+  const { t } = useTranslation()
   const { searchParams, updateParams } = useUrlParams()
   const days = Number(searchParams.get('days')) || 30
   const setDays = (d: number) => updateParams({ tab: 'analytics', days: d })
@@ -655,8 +662,8 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
     return (
       <div className="flex flex-col items-center justify-center py-20 text-white/40">
         <ChartBar size={48} weight="fill" />
-        <p className="mt-4 text-lg">No analytics available</p>
-        <p className="text-sm text-white/25 mt-1">Ensure Tinybird analytics is configured</p>
+        <p className="mt-4 text-lg">{t('admin.org_detail.no_analytics')}</p>
+        <p className="text-sm text-white/25 mt-1">{t('admin.org_detail.ensure_tinybird')}</p>
       </div>
     )
   }
@@ -675,7 +682,7 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
     <div className="space-y-6">
       {/* Time range selector */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-white/40">Period:</span>
+        <span className="text-xs text-white/40">{t('admin.org_detail.period')}</span>
         {[7, 30, 90].map((d) => (
           <button
             key={d}
@@ -686,24 +693,24 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
                 : 'text-white/40 hover:text-white/60 hover:bg-white/[0.05]'
             }`}
           >
-            {d}d
+            {t('admin.org_detail.days_short', { count: d })}
           </button>
         ))}
       </div>
 
       {/* Key metrics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <MetricCard label="Live Users" value={liveUsers} />
-        <MetricCard label="Page Views" value={funnel.page_views || 0} />
-        <MetricCard label="Course Views" value={funnel.course_views || 0} />
-        <MetricCard label="Enrollments" value={funnel.enrollments || 0} />
-        <MetricCard label="Completions" value={funnel.completions || 0} />
+        <MetricCard label={t('admin.org_detail.live_users')} value={liveUsers} />
+        <MetricCard label={t('admin.org_detail.page_views')} value={funnel.page_views || 0} />
+        <MetricCard label={t('admin.org_detail.course_views')} value={funnel.course_views || 0} />
+        <MetricCard label={t('admin.org_detail.enrollments')} value={funnel.enrollments || 0} />
+        <MetricCard label={t('admin.org_detail.completions')} value={funnel.completions || 0} />
       </div>
 
       {/* DAU Chart (simple bar representation) */}
       {dauData.length > 0 && (
         <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
-          <h3 className="text-sm font-medium text-white/60 mb-4">Daily Active Users</h3>
+          <h3 className="text-sm font-medium text-white/60 mb-4">{t('admin.org_detail.daily_active_users')}</h3>
           <div className="flex items-end gap-1 h-24">
             {dauData.map((d: any, i: number) => {
               const max = Math.max(...dauData.map((x: any) => x.dau || 0), 1)
@@ -713,7 +720,7 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
                   <div
                     className="w-full bg-blue-400/40 rounded-sm min-h-[2px]"
                     style={{ height: `${height}%` }}
-                    title={`${d.date}: ${d.dau} users`}
+                    title={t('admin.org_detail.dau_tooltip', { date: d.date, count: d.dau })}
                   />
                 </div>
               )
@@ -730,7 +737,7 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
         {/* Top Courses */}
         {topCourses.length > 0 && (
           <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Top Courses</h3>
+            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">{t('admin.org_detail.top_courses')}</h3>
             <div className="space-y-2">
               {topCourses.slice(0, 5).map((c: any, i: number) => (
                 <div key={i} className="flex justify-between items-center">
@@ -738,8 +745,8 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
                     {c.course_uuid?.slice(0, 12)}...
                   </span>
                   <div className="flex gap-3 text-xs">
-                    <span className="text-white/60">{c.views} views</span>
-                    <span className="text-emerald-400/80">{c.enrollments} enrolled</span>
+                    <span className="text-white/60">{t('admin.org_detail.views_count', { count: c.views })}</span>
+                    <span className="text-emerald-400/80">{t('admin.org_detail.enrolled_count', { count: c.enrollments })}</span>
                   </div>
                 </div>
               ))}
@@ -750,7 +757,7 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
         {/* Event Counts */}
         {eventCounts.length > 0 && (
           <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Events</h3>
+            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">{t('admin.org_detail.events')}</h3>
             <div className="space-y-2">
               {eventCounts.slice(0, 8).map((e: any, i: number) => (
                 <div key={i} className="flex justify-between items-center">
@@ -767,11 +774,11 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
         {/* Countries */}
         {countryData.length > 0 && (
           <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Top Countries</h3>
+            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">{t('admin.org_detail.top_countries')}</h3>
             <div className="space-y-2">
               {countryData.slice(0, 8).map((c: any, i: number) => (
                 <div key={i} className="flex justify-between items-center">
-                  <span className="text-xs text-white/50">{c.country_code || 'Unknown'}</span>
+                  <span className="text-xs text-white/50">{c.country_code || t('common.unknown')}</span>
                   <span className="text-xs text-white/70 tabular-nums">
                     {(c.visits || 0).toLocaleString()}
                   </span>
@@ -784,11 +791,11 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
         {/* Devices */}
         {deviceData.length > 0 && (
           <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Devices</h3>
+            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">{t('admin.org_detail.devices')}</h3>
             <div className="space-y-2">
               {deviceData.map((d: any, i: number) => (
                 <div key={i} className="flex justify-between items-center">
-                  <span className="text-xs text-white/50 capitalize">{d.device_type || 'Unknown'}</span>
+                  <span className="text-xs text-white/50 capitalize">{d.device_type || t('common.unknown')}</span>
                   <span className="text-xs text-white/70 tabular-nums">
                     {(d.visits || 0).toLocaleString()}
                   </span>
@@ -801,12 +808,12 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
         {/* Referrers */}
         {referrerData.length > 0 && (
           <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Top Referrers</h3>
+            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">{t('admin.org_detail.top_referrers')}</h3>
             <div className="space-y-2">
               {referrerData.slice(0, 8).map((r: any, i: number) => (
                 <div key={i} className="flex justify-between items-center">
                   <span className="text-xs text-white/50 truncate max-w-[140px]">
-                    {r.referrer_domain || 'Direct'}
+                    {r.referrer_domain || t('admin.org_detail.direct')}
                   </span>
                   <span className="text-xs text-white/70 tabular-nums">
                     {(r.visits || 0).toLocaleString()}
@@ -888,6 +895,7 @@ function PlanTab({
   currentPlan: string
   config: any
 }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [selectedPlan, setSelectedPlan] = useState(currentPlan)
   const [saving, setSaving] = useState(false)
@@ -897,25 +905,25 @@ function PlanTab({
     {
       id: 'free',
       name: 'Free',
-      description: 'Basic features for small teams',
+      description: t('admin.org_detail.plan_free_desc'),
       color: 'text-white/40 bg-white/[0.06]',
     },
     {
       id: 'standard',
       name: 'Standard',
-      description: 'Custom domains, more storage',
+      description: t('admin.org_detail.plan_standard_desc'),
       color: 'text-blue-400 bg-blue-400/10',
     },
     {
       id: 'pro',
       name: 'Pro',
-      description: 'Advanced analytics, API access',
+      description: t('admin.org_detail.plan_pro_desc'),
       color: 'text-purple-400 bg-purple-400/10',
     },
     {
       id: 'enterprise',
       name: 'Enterprise',
-      description: 'Multi-org, unlimited everything',
+      description: t('admin.org_detail.plan_enterprise_desc'),
       color: 'text-amber-400 bg-amber-400/10',
     },
   ]
@@ -937,7 +945,7 @@ function PlanTab({
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        setError(data.detail || `Failed to update plan (${res.status})`)
+        setError(data.detail || t('admin.org_detail.failed_update_plan', { status: res.status }))
         return
       }
       setSaved(true)
@@ -945,7 +953,7 @@ function PlanTab({
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
       setTimeout(() => setSaved(false), 2000)
     } catch (_err) {
-      setError('Network error')
+      setError(t('admin.org_detail.network_error'))
     } finally {
       setSaving(false)
     }
@@ -958,7 +966,7 @@ function PlanTab({
     <div className="space-y-6">
       {/* Plan selector */}
       <div>
-        <h3 className="text-sm font-medium text-white/60 mb-4">Plan</h3>
+        <h3 className="text-sm font-medium text-white/60 mb-4">{t('admin.org_detail.tabs.plan')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {plans.map((plan) => (
             <button
@@ -989,18 +997,18 @@ function PlanTab({
               disabled={saving}
               className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Save Plan'}
+              {saving ? t('common.saving') : t('admin.org_detail.save_plan')}
             </button>
             <button
               onClick={() => setSelectedPlan(currentPlan)}
               className="px-4 py-2 text-white/40 hover:text-white/60 text-sm transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         )}
         {saved && (
-          <p className="text-sm text-emerald-400 mt-2">Plan updated successfully</p>
+          <p className="text-sm text-emerald-400 mt-2">{t('admin.org_detail.plan_updated')}</p>
         )}
         {error && (
           <p className="text-sm text-red-400 mt-2">{error}</p>
@@ -1012,7 +1020,7 @@ function PlanTab({
 
       {/* Feature limits overview */}
       <div>
-        <h3 className="text-sm font-medium text-white/60 mb-4">Feature Limits</h3>
+        <h3 className="text-sm font-medium text-white/60 mb-4">{t('admin.org_detail.feature_limits')}</h3>
         <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl divide-y divide-white/[0.06]">
           {Object.entries(features).map(([key, val]: [string, any]) => (
             <div key={key} className="flex items-center justify-between px-5 py-3">
@@ -1023,11 +1031,11 @@ function PlanTab({
                 <span className="text-sm text-white/70 capitalize">{key.replace(/_/g, ' ')}</span>
               </div>
               <div className="flex items-center gap-4 text-xs text-white/40">
-                {val?.limit !== undefined && <span>Limit: {val.limit}</span>}
-                {val?.signup_mode && <span>Signup: {val.signup_mode}</span>}
-                {val?.admin_limit !== undefined && <span>Admin limit: {val.admin_limit}</span>}
+                {val?.limit !== undefined && <span>{t('admin.org_detail.limit_value', { value: val.limit })}</span>}
+                {val?.signup_mode && <span>{t('admin.org_detail.signup_value', { value: val.signup_mode })}</span>}
+                {val?.admin_limit !== undefined && <span>{t('admin.org_detail.admin_limit_value', { value: val.admin_limit })}</span>}
                 <span className={val?.enabled !== false ? 'text-emerald-400/60' : 'text-white/20'}>
-                  {val?.enabled !== false ? 'Enabled' : 'Disabled'}
+                  {val?.enabled !== false ? t('admin.org_detail.enabled') : t('common.disabled')}
                 </span>
               </div>
             </div>
@@ -1039,6 +1047,7 @@ function PlanTab({
 }
 
 function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: string }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const aiCreditsKey = ['superadmin', 'org', orgId, 'ai-credits'] as const
   const { data: summary, isLoading } = useQuery({
@@ -1065,7 +1074,7 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
 
   const setPurchased = async () => {
     if (!isValid) {
-      setError('Enter a non-negative integer')
+      setError(t('admin.org_detail.enter_non_negative'))
       return
     }
     setSaving(true)
@@ -1082,21 +1091,21 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        setError(data.detail || `Failed to set credits (${res.status})`)
+        setError(data.detail || t('admin.org_detail.failed_set_credits', { status: res.status }))
         return
       }
-      setSaved(`Purchased credits set to ${parsed.toLocaleString()}`)
+      setSaved(t('admin.org_detail.purchased_set', { amount: parsed.toLocaleString() }))
       queryClient.invalidateQueries({ queryKey: aiCreditsKey })
       setTimeout(() => setSaved(''), 2500)
     } catch {
-      setError('Network error')
+      setError(t('admin.org_detail.network_error'))
     } finally {
       setSaving(false)
     }
   }
 
   const resetUsage = async () => {
-    if (!confirm('Reset used AI credits to 0 for this org?')) return
+    if (!confirm(t('admin.org_detail.confirm_reset_credits'))) return
     setResetting(true)
     setError('')
     setSaved('')
@@ -1107,42 +1116,42 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        setError(data.detail || `Failed to reset usage (${res.status})`)
+        setError(data.detail || t('admin.org_detail.failed_reset_usage', { status: res.status }))
         return
       }
-      setSaved('Used credits reset to 0')
+      setSaved(t('admin.org_detail.used_reset'))
       queryClient.invalidateQueries({ queryKey: aiCreditsKey })
       setTimeout(() => setSaved(''), 2500)
     } catch {
-      setError('Network error')
+      setError(t('admin.org_detail.network_error'))
     } finally {
       setResetting(false)
     }
   }
 
   const fmt = (v: number | string | undefined) =>
-    v === undefined ? 'n/a' : typeof v === 'number' ? v.toLocaleString() : v
+    v === undefined ? t('admin.org_detail.na') : typeof v === 'number' ? v.toLocaleString() : v
 
   return (
     <div>
       <h3 className="text-sm font-medium text-white/60 mb-4 flex items-center gap-2">
         <Robot size={14} weight="fill" className="text-violet-400" />
-        AI Credits
+        {t('admin.org_detail.ai_credits')}
       </h3>
       <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 space-y-5">
         {isLoading ? (
-          <p className="text-sm text-white/40">Loading…</p>
+          <p className="text-sm text-white/40">{t('common.loading')}</p>
         ) : !summary ? (
-          <p className="text-sm text-red-400">Failed to load credits summary</p>
+          <p className="text-sm text-red-400">{t('admin.org_detail.failed_load_credits')}</p>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {[
-                { label: 'Plan base', value: fmt(summary.base_credits) },
-                { label: 'Purchased', value: fmt(summary.purchased_credits) },
-                { label: 'Total', value: fmt(summary.total_credits) },
-                { label: 'Used', value: fmt(summary.used_credits) },
-                { label: 'Remaining', value: fmt(summary.remaining_credits) },
+                { label: t('admin.org_detail.plan_base'), value: fmt(summary.base_credits) },
+                { label: t('admin.org_detail.purchased'), value: fmt(summary.purchased_credits) },
+                { label: t('admin.org_detail.total'), value: fmt(summary.total_credits) },
+                { label: t('admin.org_detail.used'), value: fmt(summary.used_credits) },
+                { label: t('admin.org_detail.remaining'), value: fmt(summary.remaining_credits) },
               ].map((s) => (
                 <div key={s.label} className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5">
                   <p className="text-[10px] text-white/40 uppercase tracking-wider">{s.label}</p>
@@ -1154,7 +1163,7 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex-1 min-w-[200px]">
                 <label className="text-xs text-white/40 uppercase tracking-wider block mb-1.5">
-                  Purchased credits
+                  {t('admin.org_detail.purchased_credits')}
                 </label>
                 <input
                   type="number"
@@ -1163,7 +1172,7 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
-                  placeholder="e.g. 5000"
+                  placeholder={t('admin.org_detail.credits_placeholder')}
                 />
               </div>
               <button
@@ -1171,21 +1180,21 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
                 disabled={saving || !isDirty}
                 className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saving ? 'Saving…' : 'Set purchased'}
+                {saving ? t('common.saving') : t('admin.org_detail.set_purchased')}
               </button>
               <button
                 onClick={resetUsage}
                 disabled={resetting}
                 className="px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-white/70 text-sm rounded-lg transition-colors disabled:opacity-40 flex items-center gap-1.5"
-                title="Reset the org's used AI credits to 0"
+                title={t('admin.org_detail.reset_credits_title')}
               >
                 <ArrowClockwise size={14} weight="bold" />
-                {resetting ? 'Resetting…' : 'Reset usage'}
+                {resetting ? t('admin.org_detail.resetting') : t('admin.org_detail.reset_usage')}
               </button>
             </div>
 
             <p className="text-[11px] text-white/30 leading-snug">
-              Overwrites the org's purchased credit balance. Total available = plan base + purchased. Resetting usage zeroes out consumed credits for the period.
+              {t('admin.org_detail.credits_hint')}
             </p>
 
             {saved && <p className="text-sm text-emerald-400">{saved}</p>}
@@ -1218,6 +1227,7 @@ type AdminToggles = {
   payments: FeatureToggle
   playgrounds: FeatureToggle
   podcasts: FeatureToggle
+  live_sessions: FeatureToggle
 }
 
 const DEFAULT_ADMIN_TOGGLES: AdminToggles = {
@@ -1233,21 +1243,23 @@ const DEFAULT_ADMIN_TOGGLES: AdminToggles = {
   payments: { disabled: false },
   playgrounds: { disabled: false },
   podcasts: { disabled: false },
+  live_sessions: { disabled: false },
 }
 
-const FEATURE_ORDER: { key: keyof AdminToggles; label: string; description: string }[] = [
-  { key: 'ai', label: 'AI', description: 'AI assistant, copilot, generation tools' },
-  { key: 'analytics', label: 'Analytics', description: 'Dashboards and engagement metrics' },
-  { key: 'api', label: 'API', description: 'API tokens and programmatic access' },
-  { key: 'boards', label: 'Boards', description: 'Kanban-style learning boards' },
-  { key: 'collaboration', label: 'Collaboration', description: 'Real-time co-editing' },
-  { key: 'folders', label: 'Folders', description: 'Organize courses and media into folders' },
-  { key: 'communities', label: 'Communities', description: 'Public/private community spaces' },
-  { key: 'members', label: 'Members', description: 'Member directory and roles' },
-  { key: 'paths', label: 'Paths', description: 'Ordered course sequences with their own certificate' },
-  { key: 'payments', label: 'Payments', description: 'Paid courses and checkout' },
-  { key: 'playgrounds', label: 'Playgrounds', description: 'Interactive code/exec environments' },
-  { key: 'podcasts', label: 'Podcasts', description: 'Audio episodes inside courses' },
+const FEATURE_ORDER: { key: keyof AdminToggles; labelKey: string; descriptionKey: string }[] = [
+  { key: 'ai', labelKey: 'admin.org_detail.features.ai.label', descriptionKey: 'admin.org_detail.features.ai.description' },
+  { key: 'analytics', labelKey: 'admin.org_detail.features.analytics.label', descriptionKey: 'admin.org_detail.features.analytics.description' },
+  { key: 'api', labelKey: 'admin.org_detail.features.api.label', descriptionKey: 'admin.org_detail.features.api.description' },
+  { key: 'boards', labelKey: 'admin.org_detail.features.boards.label', descriptionKey: 'admin.org_detail.features.boards.description' },
+  { key: 'collaboration', labelKey: 'admin.org_detail.features.collaboration.label', descriptionKey: 'admin.org_detail.features.collaboration.description' },
+  { key: 'folders', labelKey: 'admin.org_detail.features.folders.label', descriptionKey: 'admin.org_detail.features.folders.description' },
+  { key: 'communities', labelKey: 'admin.org_detail.features.communities.label', descriptionKey: 'admin.org_detail.features.communities.description' },
+  { key: 'members', labelKey: 'admin.org_detail.features.members.label', descriptionKey: 'admin.org_detail.features.members.description' },
+  { key: 'paths', labelKey: 'admin.org_detail.features.paths.label', descriptionKey: 'admin.org_detail.features.paths.description' },
+  { key: 'payments', labelKey: 'admin.org_detail.features.payments.label', descriptionKey: 'admin.org_detail.features.payments.description' },
+  { key: 'playgrounds', labelKey: 'admin.org_detail.features.playgrounds.label', descriptionKey: 'admin.org_detail.features.playgrounds.description' },
+  { key: 'podcasts', labelKey: 'admin.org_detail.features.podcasts.label', descriptionKey: 'admin.org_detail.features.podcasts.description' },
+  { key: 'live_sessions', labelKey: 'admin.org_detail.features.live_sessions.label', descriptionKey: 'admin.org_detail.features.live_sessions.description' },
 ]
 
 function ToggleSwitch({
@@ -1290,6 +1302,7 @@ function FeaturesTab({
   config: any
   mode: string
 }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const version: string = config?.config_version || '1.0'
   const isV2 = version.startsWith('2')
@@ -1340,14 +1353,14 @@ function FeaturesTab({
       )
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data?.detail || `Failed to save (${res.status})`)
+        setError(data?.detail || t('admin.org_detail.failed_save_status', { status: res.status }))
         return
       }
       setSaved(true)
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
       setTimeout(() => setSaved(false), 2000)
     } catch {
-      setError('Network error')
+      setError(t('admin.org_detail.network_error'))
     } finally {
       setSaving(false)
     }
@@ -1358,12 +1371,10 @@ function FeaturesTab({
       <div className="space-y-6">
         <div className="bg-amber-400/[0.06] border border-amber-400/20 rounded-xl p-5">
           <h3 className="text-sm font-medium text-amber-300">
-            Per-feature toggles unavailable
+            {t('admin.org_detail.toggles_unavailable')}
           </h3>
           <p className="text-xs text-white/50 mt-1.5 leading-relaxed">
-            This organization uses a legacy v1 config. Newly-created organizations use
-            v2 and support these toggles automatically. Migrate this org to v2 to manage
-            features here.
+            {t('admin.org_detail.legacy_config')}
           </p>
         </div>
       </div>
@@ -1373,37 +1384,37 @@ function FeaturesTab({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-sm font-medium text-white/60 mb-1">Feature toggles</h3>
+        <h3 className="text-sm font-medium text-white/60 mb-1">{t('admin.org_detail.feature_toggles')}</h3>
         <p className="text-xs text-white/40 mb-4">
           {mode === 'saas'
-            ? 'Override the plan defaults for this organization. Disabled features are hidden from the org dashboard. Features marked “In plan” are part of a paid plan and stay available to the org regardless of this toggle.'
-            : 'Enable or disable features for this organization.'}
+            ? t('admin.org_detail.toggles_hint_saas')
+            : t('admin.org_detail.toggles_hint')}
         </p>
         <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl divide-y divide-white/[0.06]">
-          {FEATURE_ORDER.map(({ key, label, description }) => {
-            const t = draft[key]
-            const enabled = !t.disabled
+          {FEATURE_ORDER.map(({ key, labelKey, descriptionKey }) => {
+            const toggle = draft[key]
+            const enabled = !toggle.disabled
             const limitInfo = resolvedFeatures[key]?.limit
             return (
               <div key={key} className="px-5 py-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-white/90 font-medium">{label}</p>
+                      <p className="text-sm text-white/90 font-medium">{t(labelKey)}</p>
                       {/* "Available in the org's plan" is separate from the on/off
                           toggle. On a paid plan these stay enabled regardless. */}
                       {mode === 'saas' && resolvedFeatures[key]?.available && (
                         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-violet-400/10 text-violet-300 border border-violet-400/20">
-                          In plan
+                          {t('admin.org_detail.in_plan')}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-white/40 mt-0.5">{description}</p>
+                    <p className="text-xs text-white/40 mt-0.5">{t(descriptionKey)}</p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     {mode === 'saas' && limitInfo !== undefined && limitInfo !== null && (
                       <span className="text-[11px] text-white/40">
-                        Limit: {limitInfo === 0 ? '∞' : limitInfo}
+                        {t('admin.org_detail.limit_value', { value: limitInfo === 0 ? '∞' : limitInfo })}
                       </span>
                     )}
                     <ToggleSwitch
@@ -1417,8 +1428,8 @@ function FeaturesTab({
                 {key === 'ai' && enabled && (
                   <div className="mt-3 ps-3 border-s-2 border-white/[0.06] flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-white/70">AI Copilot</p>
-                      <p className="text-[11px] text-white/40">Inline writing/coding suggestions</p>
+                      <p className="text-xs text-white/70">{t('admin.org_detail.ai_copilot')}</p>
+                      <p className="text-[11px] text-white/40">{t('admin.org_detail.copilot_desc')}</p>
                     </div>
                     <ToggleSwitch
                       enabled={(draft.ai as AIToggle).copilot_enabled}
@@ -1434,9 +1445,9 @@ function FeaturesTab({
                 {key === 'members' && enabled && (
                   <div className="mt-3 ps-3 border-s-2 border-white/[0.06] flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs text-white/70">Signup mode</p>
+                      <p className="text-xs text-white/70">{t('admin.org_detail.signup_mode')}</p>
                       <p className="text-[11px] text-white/40">
-                        How new users can join the organization
+                        {t('admin.org_detail.signup_mode_desc')}
                       </p>
                     </div>
                     <select
@@ -1452,8 +1463,8 @@ function FeaturesTab({
                       }
                       className="bg-white/[0.05] border border-white/[0.1] rounded-md px-2.5 py-1 text-xs text-white focus:outline-none focus:border-white/30"
                     >
-                      <option value="open">Open</option>
-                      <option value="inviteOnly">Invite only</option>
+                      <option value="open">{t('admin.org_detail.signup_open')}</option>
+                      <option value="inviteOnly">{t('admin.org_detail.signup_invite_only')}</option>
                     </select>
                   </div>
                 )}
@@ -1469,7 +1480,7 @@ function FeaturesTab({
               disabled={saving || !isDirty}
               className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {saving ? 'Saving…' : 'Save changes'}
+              {saving ? t('common.saving') : t('common.save_changes')}
             </button>
             {isDirty && (
               <button
@@ -1477,10 +1488,10 @@ function FeaturesTab({
                 disabled={saving}
                 className="px-4 py-2 text-white/40 hover:text-white/60 text-sm transition-colors"
               >
-                Discard
+                {t('admin.org_detail.discard')}
               </button>
             )}
-            {saved && <p className="text-sm text-emerald-400">Saved</p>}
+            {saved && <p className="text-sm text-emerald-400">{t('admin.org_detail.saved')}</p>}
             {error && <p className="text-sm text-red-400">{error}</p>}
           </div>
         )}
@@ -1506,6 +1517,7 @@ function SettingsTab({
   accessToken: string
   org: any
 }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [form, setForm] = useState({
     name: org.name || '',
@@ -1541,14 +1553,14 @@ function SettingsTab({
       )
       if (!res.ok) {
         const data = await res.json()
-        setError(data.detail || 'Failed to save')
+        setError(data.detail || t('admin.org_detail.failed_save'))
         return
       }
       setSaved(true)
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
       setTimeout(() => setSaved(false), 2000)
     } catch (_err) {
-      setError('Network error')
+      setError(t('admin.org_detail.network_error'))
     } finally {
       setSaving(false)
     }
@@ -1557,19 +1569,19 @@ function SettingsTab({
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h3 className="text-sm font-medium text-white/60 mb-4">Organization Settings</h3>
+        <h3 className="text-sm font-medium text-white/60 mb-4">{t('admin.org_detail.org_settings')}</h3>
         <div className="space-y-4">
-          <Field label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+          <Field label={t('admin.org_detail.name')} value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
           <Field
-            label="Slug"
+            label={t('admin.org_detail.slug')}
             value={form.slug}
             onChange={(v) => setForm({ ...form, slug: v })}
             mono
-            hint="Used in URLs. Changing this will break existing links."
+            hint={t('admin.org_detail.slug_hint')}
           />
-          <Field label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+          <Field label={t('admin.org_detail.email')} value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
           <div>
-            <label className="text-xs text-white/40 block mb-1.5">Description</label>
+            <label className="text-xs text-white/40 block mb-1.5">{t('admin.org_detail.description')}</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -1581,7 +1593,7 @@ function SettingsTab({
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
-      {saved && <p className="text-sm text-emerald-400">Settings saved successfully</p>}
+      {saved && <p className="text-sm text-emerald-400">{t('admin.org_detail.settings_saved')}</p>}
 
       {hasChanges && (
         <div className="flex items-center gap-3">
@@ -1590,7 +1602,7 @@ function SettingsTab({
             disabled={saving}
             className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
           >
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('common.saving') : t('common.save_changes')}
           </button>
           <button
             onClick={() =>
@@ -1603,7 +1615,7 @@ function SettingsTab({
             }
             className="px-4 py-2 text-white/40 hover:text-white/60 text-sm transition-colors"
           >
-            Reset
+            {t('admin.org_detail.reset')}
           </button>
         </div>
       )}
@@ -1650,10 +1662,11 @@ function Pagination({
   totalPages: number
   onPageChange: (_p: number) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center justify-between mt-4 px-4">
       <span className="text-xs text-white/30">
-        Page {page} of {totalPages}
+        {t('admin.org_detail.page_of', { page, totalPages })}
       </span>
       <div className="flex items-center gap-1">
         <button

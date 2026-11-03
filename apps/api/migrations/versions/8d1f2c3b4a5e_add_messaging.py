@@ -4,7 +4,7 @@ Direct messages, group chats, course broadcast channels, reactions, presence
 preferences, reminders and the custom agents that replace the copilot.
 
 Revision ID: 8d1f2c3b4a5e
-Revises: 74cc74ce41c7
+Revises: 5bd3b62a4ef8
 Create Date: 2026-11-02 18:00:00.000000
 
 The models are also created by ``SQLModel.metadata.create_all`` on fresh
@@ -18,7 +18,7 @@ import sqlmodel  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision: str = '8d1f2c3b4a5e'
-down_revision: Union[str, None] = '74cc74ce41c7'
+down_revision: Union[str, None] = '5bd3b62a4ef8'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

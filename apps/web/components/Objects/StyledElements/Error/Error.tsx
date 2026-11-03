@@ -1,9 +1,10 @@
 'use client'
 import { classifyError } from '@lib/errors/classify'
 import type { ResolutionKind } from '@lib/errors/types'
-import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react'
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import ErrorActions from './ErrorActions'
+import ErrorShell, { ErrorDetails } from './ErrorShell'
 
 interface ErrorUIProps {
   /** The actual error; when given we classify it for a meaningful message. */
@@ -40,7 +41,7 @@ function ErrorUI({
   loginNext,
   compact,
 }: ErrorUIProps) {
-  const [showDetails, setShowDetails] = useState(false)
+  const { t } = useTranslation()
 
   const classified = useMemo(
     () => (error !== undefined ? classifyError(error) : undefined),
@@ -49,93 +50,35 @@ function ErrorUI({
 
   // Headline + body: explicit props win, else the classified category, else a
   // meaningful default (never a bare "Something went wrong").
-  const title = message || classified?.category.title || 'Something unexpected happened'
+  const title = message || classified?.category.title || t('errors.default_title')
   const description =
     submessage ||
     classified?.category.description ||
-    "We ran into an error. It's been logged automatically; retrying or heading home usually helps."
+    t('errors.default_description')
 
   const actions: ResolutionKind[] =
     resolutions ||
     classified?.category.resolutions ||
     (['retry', 'home', 'report'] as ResolutionKind[])
 
-  // The raw cause we can safely show under "details".
-  const detail = classified?.detail
-  const status = classified?.status
-  const digest = classified?.digest
-  const hasDetails = Boolean(detail || status || digest || eventId)
-
   return (
-    <div
-      className={`flex flex-col items-center text-center mx-auto antialiased ${
-        compact ? 'py-6 px-4 space-y-4 max-w-lg' : 'py-12 px-6 space-y-6 max-w-xl'
-      }`}
-    >
-      <div className="flex items-center gap-4">
-        <div className="bg-rose-100 p-3 rounded-2xl shrink-0">
-          <AlertTriangle className="text-rose-700" size={compact ? 28 : 38} />
-        </div>
-        <div className="flex flex-col text-start">
-          <p className={`font-bold text-rose-700 ${compact ? 'text-xl' : 'text-2xl md:text-3xl'}`}>
-            {title}
-          </p>
-          {classified?.category.kind && (
-            <span className="text-[11px] uppercase tracking-wide font-semibold text-rose-400">
-              {classified.category.kind.replace(/_/g, ' ')}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <p className={`text-gray-600 ${compact ? 'text-sm' : 'text-base'} max-w-prose`}>
-        {description}
-      </p>
-
-      <ErrorActions resolutions={actions} reset={reset} eventId={eventId} loginNext={loginNext} />
-
-      {hasDetails && (
-        <div className="w-full max-w-lg">
-          <button
-            onClick={() => setShowDetails((s) => !s)}
-            className="flex items-center gap-1 mx-auto text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            {showDetails ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            <span>{showDetails ? 'Hide technical details' : 'Show technical details'}</span>
-          </button>
-          {showDetails && (
-            <div className="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4 text-start">
-              <dl className="space-y-1.5 text-xs font-mono text-gray-600 break-words">
-                {detail && (
-                  <div className="flex gap-2">
-                    <dt className="text-gray-400 shrink-0">cause</dt>
-                    <dd className="break-all">{detail}</dd>
-                  </div>
-                )}
-                {status !== undefined && (
-                  <div className="flex gap-2">
-                    <dt className="text-gray-400 shrink-0">status</dt>
-                    <dd>{status}</dd>
-                  </div>
-                )}
-                {digest && (
-                  <div className="flex gap-2">
-                    <dt className="text-gray-400 shrink-0">digest</dt>
-                    <dd className="break-all">{digest}</dd>
-                  </div>
-                )}
-                {eventId && (
-                  <div className="flex gap-2">
-                    <dt className="text-gray-400 shrink-0">ref</dt>
-                    <dd className="break-all">{eventId}</dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    <ErrorShell
+      kind={classified?.category.kind}
+      title={title}
+      description={description}
+      compact={compact}
+      actions={<ErrorActions resolutions={actions} reset={reset} eventId={eventId} loginNext={loginNext} />}
+      details={
+        <ErrorDetails
+          rows={[
+            ['cause', classified?.detail],
+            ['status', classified?.status],
+            ['digest', classified?.digest],
+            ['ref', eventId],
+          ]}
+        />
+      }
+    />
   )
 }
 

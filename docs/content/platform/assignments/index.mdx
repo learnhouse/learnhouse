@@ -2,34 +2,77 @@ import { Callout } from 'nextra/components'
 
 # Assignments
 
-Assignments let teachers create assessable tasks within courses. Students submit their work, and teachers can review and grade submissions individually or in bulk.
+An assignment is an activity inside a course chapter that learners hand work in for. It is made of one or more tasks (quizzes, file uploads, fill-in-the-blank forms, code challenges, short and number answers). You can grade it by hand, let LearnHouse grade it automatically, or not grade it at all.
 
-## How Assignments Work
-
-Each assignment is linked to a course activity and can contain one or more tasks. Supported task types are **file uploads** and **quizzes**, plus a **`CUSTOM`** type whose data object you fully control, for building your own assessment formats.
+<YouTube video="guide-2" />
 
 <Callout>
-Assignments must be enabled in your [Organization Settings](/platform/organizations/settings) to be available.
+Assignments must be enabled in your [Organization Settings](/platform/organizations/settings). On the Free plan of LearnHouse Cloud an organization can have up to 5 assignments.
 </Callout>
+
+## Creating an assignment
+
+You can create one in two ways:
+
+- From **Assignments** in the dashboard: click **New Assignment**, choose the course, then the chapter.
+- From the course editor: add an activity of type **Assignments** to a chapter.
+
+<img src="/img/pages/assignments/assignments-list.webp" alt="The Assignments page in the dashboard, with assignments grouped by course and badges for grading type and auto-grading" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+Then fill in the form:
+
+| Field | What it does |
+| --- | --- |
+| **Assignment Title** and **Assignment Description** | Shown to learners at the top of the assignment. |
+| **Due Date** | Optional. See [Deadlines](#deadlines). |
+| **Grading Type** | How grades are shown: **Alphabet**, **Numeric**, **Percentage**, **Pass / Fail** or **GPA Scale**. See [Grading](/platform/assignments/grading#grading-types). |
+| **Automatic grading** | Grade and complete the activity as soon as the learner submits. |
+| **Block copy & paste** | Block paste events in code editors and text inputs. |
+| **Reveal correct answers after grading** | Show learners the right answers next to their own once graded. |
+
+<img src="/img/pages/assignments/assignment-create-form.webp" alt="The Create Activity form for an assignment, with title, description, due date and the five grading types" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+The assignment page in the dashboard has three tabs: **Editor** (the tasks), **Submissions** and **Analytics**. Use **Edit** to change the settings above and the extra ones described below, **Preview** to see it as a learner, and **Publish** / **Unpublish** to control whether learners can see it.
+
+<Callout type="warning">
+Unpublish an assignment before changing its tasks, then publish it again when you are done. Otherwise learners may be working on tasks while you edit them.
+</Callout>
+
+## Settings
+
+These options are in the **Edit** dialog:
+
+<img src="/img/pages/assignments/assignment-grading-options.webp" alt="The Grading options of an assignment: Formative, Automatic grading, Block copy & paste, Reveal correct answers, Allow retries and Maximum attempts" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+| Setting | What it does |
+| --- | --- |
+| **Automatic grading** | Grades the submission and marks the activity complete on submit. Only available when every task can be graded without a human, so not when the assignment has a File submission task. |
+| **Block copy & paste** | A deterrent against pasting AI-generated answers. It blocks paste in the code editor and text inputs, but it can be bypassed. |
+| **Reveal correct answers after grading** | After grading, learners see which quiz options were correct, the expected short or number answer, and the correct form blanks. |
+| **Allow retries** | After grading, learners can reset their work and try again. The new grade replaces the old one. |
+| **Maximum attempts** | Total attempts including the first. `0` means unlimited. |
+| **Passing threshold** | The minimum score to pass, as a percentage. Leave it empty for the default: 50%, or 60% for Alphabet and GPA Scale. |
+| **Formative (no grading)** | The work is handed in but never marked. See [Formative Assessment](/platform/assignments/formative). |
+| **Model answer** | A worked solution, with an optional attached document, that unlocks for learners **Never**, **On hand-in** or **After grading**. |
 
 ## Deadlines
 
-A due date is optional. Set one and the assignment closes when it passes: submissions, edits and retries are all refused after that, and the learner is told before their work stops saving.
+A due date is optional. Set one and the assignment closes when it passes: submissions, edits and retries are all refused after that, and learners see **Deadline passed**.
 
-Leave it empty and the assignment stays open. That is what a self-paced course wants: learners enrol on different days, so a single shared date means nothing to most of them. Existing assignments keep the deadline they already have, and a deadline can be removed later from the assignment's settings.
+Leave it empty (**No deadline**) and the assignment stays open. That suits self-paced courses where learners enrol on different days. You can remove a deadline later from the assignment's settings.
 
-## Key Features
+## What learners see
 
-- **Multi-task assignments**: Break assignments into individual tasks, each with its own submission and grade.
-- **Optional deadlines**: Set a due date, or leave it off for self-paced courses.
-- **File uploads**: Students can attach files as part of their submission.
-- **Submission tracking**: Teachers see submission status for each student and task.
-- **Grading**: Grade individual tasks or entire assignments. Scores are recorded in the student's [Trail](/platform/courses/trails).
-- **Formative mode**: Skip grading entirely. The learner hands work in and immediately gets the model answer to self-assess against.
+Learners work through the tasks in order. Their answers are saved as they go. When they are done they click **Submit for grading** (or **Hand in my work** on a formative assignment). After submitting they can no longer change their answers.
+
+Once graded, they see their grade, a **Task breakdown** with each task marked **Passed** or **Not passed**, and any feedback you wrote. If retries are allowed, a **Try again** button shows how many attempts are left.
+
+Passing every graded assignment is required for a [course certificate](/platform/certifications), and for the course to count as finished in a [learning path](/platform/paths).
 
 ## Learn More
 
-- [Grading & Submissions](/platform/assignments/grading): How the grading workflow works.
-- [Formative Assessment](/platform/assignments/formative): Ungraded hand-ins that unlock a model answer.
-- [Headless Assignments](/developers/api/headless-assignments): Drive assignments, custom tasks, submissions, and grading from your own frontend with an API token.
-- [Code Execution](/platform/code-execution): Auto-graded code exercises are built into course content via the **Code Playground** editor block, not assignment tasks.
+- [Task Types](/platform/assignments/task-types): every task type and its options, plus AI task generation.
+- [Grading & Submissions](/platform/assignments/grading): reviewing and grading submissions.
+- [Analytics](/platform/assignments/analytics): class results for one assignment.
+- [Formative Assessment](/platform/assignments/formative): ungraded hand-ins that unlock a model answer.
+- [Headless Assignments](/developers/api/headless-assignments): drive assignments from your own frontend with an API token.

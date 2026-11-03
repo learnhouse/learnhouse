@@ -19,12 +19,12 @@ interface AICourseChatProps {
 }
 
 const SUGGESTION_CHIPS = [
-  { label: 'Web Development', prompt: 'Create a comprehensive web development course covering HTML, CSS, and JavaScript from basics to advanced topics' },
-  { label: 'Data Science', prompt: 'Create a data science course covering Python, statistics, machine learning, and data visualization' },
-  { label: 'Marketing', prompt: 'Create a digital marketing course covering SEO, social media marketing, content strategy, and analytics' },
-  { label: 'Language', prompt: 'Create a language learning course with vocabulary, grammar, conversation practice, and cultural insights' },
-  { label: 'Business', prompt: 'Create a business fundamentals course covering entrepreneurship, finance, marketing, and management' },
-  { label: 'Design', prompt: 'Create a UI/UX design course covering design principles, Figma, user research, and prototyping' },
+  { labelKey: 'courses.create.ai.chip_web_development', prompt: 'Create a comprehensive web development course covering HTML, CSS, and JavaScript from basics to advanced topics' },
+  { labelKey: 'courses.create.ai.chip_data_science', prompt: 'Create a data science course covering Python, statistics, machine learning, and data visualization' },
+  { labelKey: 'courses.create.ai.chip_marketing', prompt: 'Create a digital marketing course covering SEO, social media marketing, content strategy, and analytics' },
+  { labelKey: 'courses.create.ai.chip_language', prompt: 'Create a language learning course with vocabulary, grammar, conversation practice, and cultural insights' },
+  { labelKey: 'courses.create.ai.chip_business', prompt: 'Create a business fundamentals course covering entrepreneurship, finance, marketing, and management' },
+  { labelKey: 'courses.create.ai.chip_design', prompt: 'Create a UI/UX design course covering design principles, Figma, user research, and prototyping' },
 ]
 
 function AICourseChat({
@@ -181,11 +181,11 @@ function AICourseChat({
             <div className="flex flex-wrap gap-2 justify-center">
               {SUGGESTION_CHIPS.map((chip) => (
                 <button
-                  key={chip.label}
+                  key={chip.labelKey}
                   onClick={() => handleSuggestionClick(chip.prompt)}
                   className="px-4 py-1.5 text-xs font-semibold bg-white/5 text-white/40 rounded-xl hover:text-white/60 hover:bg-white/10 transition-all outline outline-1 outline-neutral-100/10 hover:outline-neutral-200/40 delay-75 ease-linear"
                 >
-                  {chip.label}
+                  {t(chip.labelKey)}
                 </button>
               ))}
             </div>
@@ -373,7 +373,7 @@ function AICourseChat({
                             type="text"
                             value={youtubeUrl}
                             onChange={(e) => setYoutubeUrl(e.target.value)}
-                            placeholder="Paste YouTube URL..."
+                            placeholder={t('courses.create.ai.paste_youtube_url')}
                             className="w-full px-3 py-2.5 text-sm bg-white/5 rounded-lg text-white placeholder:text-white/30 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-purple-500/30"
                             autoFocus
                             onKeyDown={(e) => {
@@ -427,7 +427,7 @@ function AICourseChat({
                             </div>
                             <div className="text-start">
                               <span className="block font-medium">{t('courses.create.ai.attach_youtube') || 'YouTube Video'}</span>
-                              <span className="block text-xs text-white/40">AI will analyze the video</span>
+                              <span className="block text-xs text-white/40">{t('courses.create.ai.analyze_video_hint')}</span>
                             </div>
                           </button>
                           <button

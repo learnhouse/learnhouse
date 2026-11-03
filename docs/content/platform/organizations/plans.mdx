@@ -1,0 +1,59 @@
+import { Callout } from 'nextra/components'
+
+# Plans & Limits
+
+On LearnHouse Cloud, each organization is on a plan that decides which features it can use and how much. Self-hosted instances have no plans and no usage limits.
+
+## Plans on LearnHouse Cloud
+
+Plans go from lowest to highest: **Free**, **Personal**, **Personal Family**, **Standard**, **Pro** and **Enterprise**. A higher plan includes everything below it, with one exception: Personal and Personal Family include boards and playgrounds, which Standard does not.
+
+### Limits
+
+| Plan | Courses | Members | Admin seats | Assignments | AI credits |
+| --- | --- | --- | --- | --- | --- |
+| Free | 1 | 10 | 1 | 5 | 20 |
+| Personal | Unlimited | 1 | 1 | Unlimited | 500 |
+| Personal Family | Unlimited | 4 | 4 | Unlimited | 3,000 |
+| Standard | Unlimited | 200 | 2 | Unlimited | 1,000 |
+| Pro | Unlimited | 500 | 10 | Unlimited | 2,000 |
+| Enterprise | Unlimited | Unlimited | 100 | Unlimited | Unlimited |
+
+An admin seat is a member whose role has dashboard access. See [Users and Access](/platform/users#member-limits-on-learnhouse-cloud).
+
+### Features by plan
+
+| Feature | Lowest plan |
+| --- | --- |
+| Courses, assignments, folders, AI (with credits) | Free |
+| Boards, playgrounds | Personal |
+| Analytics, payments, [drip content](/platform/courses/drip-content), communities, podcasts, user groups, real-time collaboration, SEO | Standard |
+| API tokens, webhooks and automations, custom domains, custom roles, certifications, [learning paths](/platform/paths), content versioning, course and learner analytics, live sessions | Pro |
+| Advanced analytics, audit logs, SCORM, SSO, LTI | Enterprise |
+
+The free plan always shows the "Made with LearnHouse" watermark.
+
+## Where you see plan limits
+
+- **Organization** → **Usage** shows your plan, your courses, members and admin seats against their limits, and your AI credits.
+
+<img src="/img/pages/organizations/org-usage.webp" alt="The Usage tab with Plan & Resource Usage for courses, members and admin seats, and AI credits" width={1600} height={900} style={{ borderRadius: 10 }} />
+- Features your plan does not include show a card with the plan they need (for example "Upgrade to Pro") and a link to upgrade.
+- The public menu hides links to features your plan does not include. See [Menu](/platform/organizations/settings#menu).
+
+## AI credit packs
+
+When you run low on AI credits, you can buy extra credits as an add-on pack. Use **Buy More** on the **Usage** tab. Active packs are listed there, and purchased credits add to your plan's base credits.
+
+## Self-hosted instances
+
+| Edition | What is available |
+| --- | --- |
+| Open source | Every feature except the Enterprise ones: payments, advanced analytics, learner analytics, audit logs, SCORM, SSO, LTI and live sessions. No usage limits. One organization. |
+| Enterprise Edition | Every feature, no usage limits, and [multiple organizations](/platform/organizations/multi-tenancy). Needs a license key. |
+
+See [Enterprise Edition](/enterprise).
+
+<Callout type="info">
+A platform superadmin can turn individual features off for an organization from the [admin dashboard](/platform/organizations/admin-dashboard) (Enterprise Edition and LearnHouse Cloud). On LearnHouse Cloud, features included in a paid plan always stay on.
+</Callout>

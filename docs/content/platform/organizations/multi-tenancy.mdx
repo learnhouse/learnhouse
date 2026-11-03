@@ -2,28 +2,32 @@ import { Callout } from 'nextra/components'
 
 # Multi-Tenancy
 
-<Callout type="warning">
-Multi-tenancy is an **Enterprise** feature. It is not available on the open-source or standard plans.
+A LearnHouse instance can host one organization or many. Each organization works like its own platform, with its own courses, members, settings and branding, while sharing one deployment and one database.
+
+## Who gets what
+
+| Deployment | Organizations |
+| --- | --- |
+| LearnHouse Cloud | The platform is multi-tenant. Anyone can create organizations, on any plan. |
+| Self-hosted, open source | One organization. Creating a second one is refused with "Multi-organization mode requires Enterprise Edition". |
+| Self-hosted, Enterprise Edition | As many organizations as you need. |
+
+<Callout type="info">
+Running several organizations on a self-hosted instance needs a valid [Enterprise Edition](/enterprise) license.
 </Callout>
 
-LearnHouse supports running one or more organizations on a single instance. This multi-tenant architecture lets you serve different groups from the same deployment.
+## Enabling multi-organization mode
 
-## Single Organization (Default)
+On an Enterprise Edition instance, set `LEARNHOUSE_TENANCY=multi` on the API. Each organization is then served on its own subdomain of your `LEARNHOUSE_DOMAIN` (for example `myschool.example.com`), or on its own [custom domain](/platform/organizations/custom-domains). With `LEARNHOUSE_TENANCY=single`, the instance serves one organization at the root of your domain.
 
-By default, LearnHouse runs with a single organization. This is the simplest setup and is suitable for most deployments where one team, school, or company uses the platform.
+Create new organizations from the [admin dashboard](/platform/organizations/admin-dashboard) with **New organization**.
 
-## Multi-Organization
+See [Environment Variables](/self-hosting/configuration/environment-variables) for the related settings.
 
-In multi-org mode, a single LearnHouse instance hosts multiple independent organizations. Each organization operates as if it were its own separate platform:
+## Accounts across organizations
 
-- Courses, users, and settings are fully scoped to each organization.
-- Data is stored in a shared database but isolated by organization ID.
-- Each organization can have its own branding and configuration.
+One account can belong to several organizations, with a different role in each. Members can switch between their organizations from the organization switcher. Removing someone from one organization does not affect their account or their other memberships.
 
-<Callout>
-Multi-org mode is useful for platforms that serve multiple schools, departments, or clients from a centralized deployment.
-</Callout>
+## Data isolation
 
-## Data Isolation
-
-All database queries are scoped by `org_id`, so one organization cannot access another's data. Users, courses, collections, trails, and settings are all partitioned at the organization level.
+Every record is tied to an organization, and every query is scoped to it. One organization cannot read another's courses, members or settings.

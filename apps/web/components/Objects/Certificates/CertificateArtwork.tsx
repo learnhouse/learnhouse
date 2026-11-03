@@ -168,7 +168,7 @@ function CertificateArtwork({
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           {hasOrgLogo(org) && (
             <div style={{ width: 44, height: 44, borderRadius: 10, overflow: 'hidden' }}>
-              <OrgSquareLogo org={org} fallback={null} wideInsetClassName="" />
+              <OrgSquareLogo org={org} fallback={null} wideInsetClassName="" crossOrigin="anonymous" />
             </div>
           )}
           <span dir="auto" style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em' }}>

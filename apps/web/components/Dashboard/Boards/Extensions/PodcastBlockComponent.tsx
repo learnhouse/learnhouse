@@ -12,8 +12,11 @@ import type { Podcast, PodcastEpisode, PodcastMeta } from '@services/podcasts/po
 import { formatDuration } from '@services/podcasts/episodes'
 import { getPodcastThumbnailMediaDirectory, getPodcastAudioStreamUrl } from '@services/media/media'
 import { safePlay } from '@/lib/media/safePlay'
+import { useTranslation } from 'react-i18next'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 export default function PodcastBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { podcastUuid, episodeUuid, x, y, width, height } = node.attrs
   const boardCtx = editor?.storage?.boardContext
   const orgslug: string = boardCtx?.orgslug || ''
@@ -154,14 +157,14 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
           <div className="flex items-center gap-1">
             <Headphones size={11} className="text-neutral-500" />
             <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-500">
-              Podcast
+              {t('boards.toolbar.podcast')}
             </span>
           </div>
         </div>
         <div className="px-4 pt-2 pb-4 flex flex-col gap-1.5 overflow-y-auto" style={{ maxHeight: height - 60 }}>
-          {loading && <p className="text-xs text-neutral-500">Loading...</p>}
+          {loading && <p className="text-xs text-neutral-500">{t('common.loading')}</p>}
           {!loading && podcasts.length === 0 && (
-            <p className="text-xs text-neutral-500">No podcasts found</p>
+            <p className="text-xs text-neutral-500">{t('boards.podcast_block.no_podcasts')}</p>
           )}
           {podcasts.map((p) => (
             <button
@@ -170,7 +173,7 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
               className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors text-start"
             >
               {p.thumbnail_image && orgUUID ? (
-                <img
+                <ThumbnailImage
                   src={getPodcastThumbnailMediaDirectory(orgUUID, p.podcast_uuid, p.thumbnail_image)}
                   alt={p.name}
                   className="w-8 h-8 rounded object-cover shrink-0"
@@ -210,14 +213,14 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
           <div className="flex items-center gap-1">
             <Headphones size={11} className="text-neutral-500" />
             <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-500">
-              {podcastMeta?.podcast?.name || 'Episodes'}
+              {podcastMeta?.podcast?.name || t('boards.podcast_block.episodes')}
             </span>
           </div>
         </div>
         <div className="px-4 pt-2 pb-4 flex flex-col gap-1.5 overflow-y-auto" style={{ maxHeight: height - 60 }}>
-          {loading && <p className="text-xs text-neutral-500">Loading...</p>}
+          {loading && <p className="text-xs text-neutral-500">{t('common.loading')}</p>}
           {!loading && episodes.length === 0 && (
-            <p className="text-xs text-neutral-500">No episodes found</p>
+            <p className="text-xs text-neutral-500">{t('boards.podcast_block.no_episodes')}</p>
           )}
           {episodes.map((ep) => (
             <button
@@ -256,14 +259,14 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
         <div className="flex items-center gap-1 mb-1">
           <Headphones size={11} className="text-neutral-500" />
           <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-500">
-            Podcast
+            {t('boards.toolbar.podcast')}
           </span>
         </div>
 
         {/* Episode info */}
         <div className="mb-3">
           <p className="text-sm font-medium text-neutral-100 truncate">
-            {episode?.title || 'Loading...'}
+            {episode?.title || t('common.loading')}
           </p>
           <p className="text-[10px] text-neutral-500 truncate">{podcastName}</p>
         </div>

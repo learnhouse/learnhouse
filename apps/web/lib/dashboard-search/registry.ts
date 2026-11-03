@@ -7,6 +7,7 @@ import { searchMeta as assignments } from '@/app/orgs/[orgslug]/dash/assignments
 import { searchMeta as communities } from '@/app/orgs/[orgslug]/dash/communities/page.search'
 import { searchMeta as paths } from '@/app/orgs/[orgslug]/dash/paths/page.search'
 import { searchMeta as podcasts } from '@/app/orgs/[orgslug]/dash/podcasts/page.search'
+import { searchMeta as liveSessions } from '@/app/orgs/[orgslug]/dash/live-sessions/page.search'
 import { searchMeta as boards } from '@/app/orgs/[orgslug]/dash/boards/page.search'
 import { searchMeta as playgrounds } from '@/app/orgs/[orgslug]/dash/playgrounds/page.search'
 import { searchMeta as analytics } from '@/app/orgs/[orgslug]/dash/analytics/page.search'
@@ -23,6 +24,7 @@ export const dashboardPages: SearchMeta[] = [
   communities,
   paths,
   podcasts,
+  liveSessions,
   boards,
   playgrounds,
   analytics,

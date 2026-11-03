@@ -169,13 +169,14 @@ async def reset_failed_attempts(user: User, db_session: AsyncSession) -> None:
         user: User who logged in successfully
         db_session: Database session
     """
-    from sqlmodel import select
-
-    # Fetch fresh user from session to avoid detached object issues
-    statement = select(User).where(User.id == user.id)
-    db_user = (await db_session.execute(statement)).scalars().first()
+    # The session's own instance of the user (no query when the login already
+    # loaded it), so it is never a detached object.
+    db_user = await db_session.get(User, user.id)
 
     if not db_user:
+        return
+    # Nearly every login has nothing to reset; skip the write and its commit.
+    if not db_user.failed_login_attempts and db_user.locked_until is None:
         return
 
     db_user.failed_login_attempts = 0
@@ -192,11 +193,8 @@ async def update_login_info(user: User, ip_address: str, db_session: AsyncSessio
         ip_address: Client IP address
         db_session: Database session
     """
-    from sqlmodel import select
-
-    # Fetch fresh user from session to avoid detached object issues
-    statement = select(User).where(User.id == user.id)
-    db_user = (await db_session.execute(statement)).scalars().first()
+    # The session's own instance of the user (no query when already loaded).
+    db_user = await db_session.get(User, user.id)
 
     if not db_user:
         return

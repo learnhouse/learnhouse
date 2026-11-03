@@ -22,7 +22,7 @@ ALWAYS_ON_WITH_LIMITS = {"courses", "assignments"}
 # All known features
 ALL_FEATURES = [
     "ai", "analytics", "api", "assignments", "audit_logs", "boards", "collaboration",
-    "folders", "communities", "courses",
+    "folders", "communities", "courses", "live_sessions",
     "lti", "members", "messaging", "paths", "payments", "playgrounds", "podcasts", "roles", "scorm",
     "sso", "usergroups", "versioning",
 ]

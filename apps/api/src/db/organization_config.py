@@ -181,6 +181,8 @@ class AdminToggles(BaseModel):
     payments: FeatureAdminToggle = FeatureAdminToggle()
     playgrounds: FeatureAdminToggle = FeatureAdminToggle()
     podcasts: FeatureAdminToggle = FeatureAdminToggle()
+    # AI app connections over MCP; see src/services/mcp/access.py.
+    mcp: FeatureAdminToggle = FeatureAdminToggle()
 
 
 # ============================================================================

@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { Award, ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface TrailCourseElementProps {
   course: any
@@ -96,17 +97,19 @@ function TrailCourseElement(props: TrailCourseElementProps) {
       onMouseEnter={handleMouseEnter}
     >
       <Link href={getUriWithOrg(props.orgslug, '/course/' + courseid)}>
-        <div
-          className="course_tumbnail inset-0 ring-1 ring-inset ring-black/10 rounded-lg relative h-[50px] w-[72px] bg-cover bg-center"
-          style={{
-            backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-              org.org_uuid,
-              props.course.course_uuid,
-              props.course.thumbnail_image
-            )})`,
-            boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)',
-          }}
-        ></div>
+        <ThumbnailImage
+          src={
+            props.course.thumbnail_image
+              ? getCourseThumbnailMediaDirectory(
+                  org.org_uuid,
+                  props.course.course_uuid,
+                  props.course.thumbnail_image
+                )
+              : null
+          }
+          className="course_tumbnail ring-1 ring-black/10 rounded-lg h-[50px] w-[72px] shrink-0"
+          style={{ boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)' }}
+        />
       </Link>
       <div className="course_meta ps-5 grow space-y-1">
         <div className="course_top">

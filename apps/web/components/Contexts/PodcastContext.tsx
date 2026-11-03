@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { Podcast, PodcastEpisode, PodcastMeta, getPodcastMeta } from '@services/podcasts/podcasts'
 import { useLHSession } from './LHSessionContext'
+import i18n from '@/lib/i18n'
 
 interface PodcastContextType {
   podcast: Podcast | null
@@ -68,7 +69,7 @@ export function PodcastProvider({
         podcast,
         episodes,
         isLoading,
-        error: error ? 'Failed to load podcast' : null,
+        error: error ? i18n.t('podcasts.load_failed') : null,
         refreshPodcast,
         setPodcast,
         setEpisodes,

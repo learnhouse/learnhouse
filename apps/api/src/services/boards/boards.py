@@ -21,6 +21,7 @@ from src.security.auth import resolve_acting_user_id
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.usergroup_resources import UserGroupResource
 from src.security.rbac import AccessAction, check_resource_access
+from src.core.ee_hooks import check_ee_live_board_access
 from src.security.org_auth import is_org_admin, is_org_member, require_org_create_permission, require_org_membership
 from src.services.utils.upload_content import upload_file
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -406,17 +407,28 @@ async def check_board_membership(
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
+    # In the room of a live session drawing on this board: org members edit
+    # for as long as they stay in the class, guests of a public session watch.
+    live_role = None
+    if isinstance(current_user, PublicUser) and await check_ee_live_board_access(board.id, current_user.id, db_session):
+        in_org = await is_org_member(current_user.id, board.org_id, db_session)
+        live_role = BoardMemberRole.EDITOR if in_org else BoardMemberRole.VIEWER
+
     # Not a direct member: fall back to the read rule so public boards, linked
     # usergroups, resource authors, and org admins can still join the collab
     # session as viewers.
-    await _check_board_read(request, board, current_user, db_session)
+    if live_role is None:
+        await _check_board_read(request, board, current_user, db_session)
+    else:
+        # The class doesn't buy anyone a board that is sold on its own.
+        await _passes_board_paywall(request, board, current_user, db_session, True)
 
     user = (await db_session.execute(select(User).where(User.id == current_user.id))).scalars().first()
     return BoardMemberRead(
         id=0,
         board_id=board.id,
         user_id=current_user.id,
-        role=BoardMemberRole.VIEWER,
+        role=live_role or BoardMemberRole.VIEWER,
         creation_date="",
         username=user.username if user else None,
         email=user.email if user else None,
@@ -586,6 +598,8 @@ async def _check_board_read(
     ):
         return await _passes_board_paywall(request, board, current_user, db_session, raise_on_deny)
     if await _is_board_member(board, current_user, db_session):
+        return await _passes_board_paywall(request, board, current_user, db_session, raise_on_deny)
+    if isinstance(current_user, PublicUser) and await check_ee_live_board_access(board.id, current_user.id, db_session):
         return await _passes_board_paywall(request, board, current_user, db_session, raise_on_deny)
     if raise_on_deny:
         raise HTTPException(

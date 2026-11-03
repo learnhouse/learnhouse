@@ -1,26 +1,29 @@
+'use client'
 import { CreditCard, Settings, ShoppingBag, Users } from 'lucide-react'
 import React from 'react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 
 const STEPS = [
   {
     icon: CreditCard,
-    title: 'Connect a payment provider',
-    description: 'Link Stripe or another provider to start accepting payments.',
+    titleKey: 'payments.unconfigured.step_connect_title',
+    descriptionKey: 'payments.unconfigured.step_connect_desc',
   },
   {
     icon: ShoppingBag,
-    title: 'Create offers',
-    description: 'Bundle courses into offers with one-time or subscription pricing.',
+    titleKey: 'payments.unconfigured.step_offers_title',
+    descriptionKey: 'payments.unconfigured.step_offers_desc',
   },
   {
     icon: Users,
-    title: 'Sell to your learners',
-    description: 'Learners can purchase access directly from your course pages.',
+    titleKey: 'payments.unconfigured.step_sell_title',
+    descriptionKey: 'payments.unconfigured.step_sell_desc',
   },
 ]
 
 function UnconfiguredPaymentsDisclaimer() {
+  const { t } = useTranslation()
   return (
     <div className="ms-10 me-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
       {/* Empty state */}
@@ -31,15 +34,15 @@ function UnconfiguredPaymentsDisclaimer() {
         </div>
 
         <h3 className="font-semibold text-gray-800 text-base mb-1">
-          Payments not configured yet
+          {t('payments.unconfigured.title')}
         </h3>
         <p className="text-sm text-gray-500 max-w-xs mb-8">
-          Connect a payment provider to unlock offers, subscriptions, and customer management.
+          {t('payments.unconfigured.description')}
         </p>
 
         {/* Steps */}
         <div className="w-full max-w-md space-y-2 mb-8 text-start">
-          {STEPS.map(({ icon: Icon, title, description }, i) => (
+          {STEPS.map(({ icon: Icon, titleKey, descriptionKey }, i) => (
             <div
               key={i}
               className="flex items-start space-x-3 border border-gray-100 rounded-xl px-4 py-3 bg-gray-50"
@@ -48,8 +51,8 @@ function UnconfiguredPaymentsDisclaimer() {
                 <Icon size={14} className="text-gray-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">{title}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+                <p className="text-sm font-medium text-gray-700">{t(titleKey)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t(descriptionKey)}</p>
               </div>
             </div>
           ))}
@@ -61,7 +64,7 @@ function UnconfiguredPaymentsDisclaimer() {
           className="inline-flex items-center space-x-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors duration-150"
         >
           <Settings size={13} />
-          <span>Go to Payment Configuration</span>
+          <span>{t('payments.unconfigured.cta')}</span>
         </Link>
       </div>
     </div>

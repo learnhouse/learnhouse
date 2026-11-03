@@ -50,22 +50,22 @@ function UserAvatar({ user }: { user?: any }) {
   )
 }
 
-function userName(user?: any): string {
-  if (!user) return 'Unknown'
+function userName(t: (k: string) => string, user?: any): string {
+  if (!user) return t('common.unknown')
   if (user.first_name || user.last_name) return `${user.first_name || ''} ${user.last_name || ''}`.trim()
-  return user.username || 'Unknown'
+  return user.username || t('common.unknown')
 }
 
-function relativeTime(ts: string): string {
+function relativeTime(t: (k: string, o?: any) => string, ts: string): string {
   const diff = Date.now() - new Date(ts).getTime()
   const secs = Math.floor(diff / 1000)
-  if (secs < 60) return `${secs}s ago`
+  if (secs < 60) return t('analytics.modals.relative_time.seconds_ago', { count: secs })
   const mins = Math.floor(secs / 60)
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 60) return t('analytics.modals.relative_time.minutes_ago', { count: mins })
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return t('analytics.modals.relative_time.hours_ago', { count: hours })
   const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return t('analytics.modals.relative_time.days_ago', { count: days })
 }
 
 function formatDate(ts: string): string {
@@ -171,7 +171,7 @@ export function LiveUsersDetail({ days }: { days: string }) {
                 >
                   <UserAvatar user={user} />
                   <span className="text-gray-700 font-medium truncate max-w-[140px]">
-                    {userName(user)}
+                    {userName(t, user)}
                   </span>
                 </a>
               </td>
@@ -186,21 +186,21 @@ export function LiveUsersDetail({ days }: { days: string }) {
                     {row.path}
                   </a>
                 ) : (
-                  <span className="text-gray-300">n/a</span>
+                  <span className="text-gray-300">{t('analytics.common.not_available')}</span>
                 )}
               </td>
-              <td className="py-2.5 text-gray-500 capitalize">{row.device_type || 'n/a'}</td>
+              <td className="py-2.5 text-gray-500 capitalize">{row.device_type || t('analytics.common.not_available')}</td>
               <td className="py-2.5">
                 {row.country_code ? (
                   <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
                     {row.country_code}
                   </span>
                 ) : (
-                  <span className="text-gray-300">n/a</span>
+                  <span className="text-gray-300">{t('analytics.common.not_available')}</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">
-                {relativeTime(row.last_seen)}
+                {relativeTime(t, row.last_seen)}
               </td>
             </tr>
           )
@@ -245,12 +245,12 @@ export function SignupsDetail({ days }: { days: string }) {
                 >
                   <UserAvatar user={user} />
                   <span className="text-gray-700 font-medium truncate max-w-[140px]">
-                    {userName(user)}
+                    {userName(t, user)}
                   </span>
                 </a>
               </td>
               <td className="py-2.5 text-gray-500 truncate max-w-[180px]">
-                {user?.email || 'n/a'}
+                {user?.email || t('analytics.common.not_available')}
               </td>
               <td className="py-2.5">
                 {row.signup_method ? (
@@ -258,7 +258,7 @@ export function SignupsDetail({ days }: { days: string }) {
                     {row.signup_method}
                   </span>
                 ) : (
-                  <span className="text-gray-300">n/a</span>
+                  <span className="text-gray-300">{t('analytics.common.not_available')}</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">
@@ -309,7 +309,7 @@ export function EnrollmentsDetail({ days }: { days: string }) {
                 >
                   <UserAvatar user={user} />
                   <span className="text-gray-700 font-medium truncate max-w-[140px]">
-                    {userName(user)}
+                    {userName(t, user)}
                   </span>
                 </a>
               </td>
@@ -319,7 +319,7 @@ export function EnrollmentsDetail({ days }: { days: string }) {
                     {row.course_name || row.course_uuid}
                   </a>
                 ) : (
-                  <span className="text-gray-500">{row.course_name || row.course_uuid || 'n/a'}</span>
+                  <span className="text-gray-500">{row.course_name || row.course_uuid || t('analytics.common.not_available')}</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">
@@ -370,7 +370,7 @@ export function CompletionsDetail({ days }: { days: string }) {
                 >
                   <UserAvatar user={user} />
                   <span className="text-gray-700 font-medium truncate max-w-[140px]">
-                    {userName(user)}
+                    {userName(t, user)}
                   </span>
                 </a>
               </td>
@@ -380,7 +380,7 @@ export function CompletionsDetail({ days }: { days: string }) {
                     {row.course_name || row.course_uuid}
                   </a>
                 ) : (
-                  <span className="text-gray-500">{row.course_name || row.course_uuid || 'n/a'}</span>
+                  <span className="text-gray-500">{row.course_name || row.course_uuid || t('analytics.common.not_available')}</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">

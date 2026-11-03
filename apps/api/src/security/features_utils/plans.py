@@ -26,6 +26,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "drip": "standard",
     "payments": "standard",
     "podcasts": "standard",
+    "live_sessions": "pro",
     "seo": "standard",
     "usergroups": "standard",
     "api_tokens": "pro",
@@ -68,6 +69,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "usergroups": {"enabled": False, "limit": 0},
             "podcasts": {"enabled": False, "limit": 0},
+            "live_sessions": {"enabled": False, "limit": 0},
             "boards": {"enabled": False, "limit": 0},
             "folders": {"enabled": True},
             "paths": {"enabled": False},
@@ -99,6 +101,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "usergroups": {"enabled": False, "limit": 0},
             "podcasts": {"enabled": False, "limit": 0},
+            "live_sessions": {"enabled": False, "limit": 0},
             "boards": {"enabled": True, "limit": 0},
             "folders": {"enabled": True},
             "paths": {"enabled": False},
@@ -130,6 +133,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "usergroups": {"enabled": False, "limit": 0},
             "podcasts": {"enabled": False, "limit": 0},
+            "live_sessions": {"enabled": False, "limit": 0},
             "boards": {"enabled": True, "limit": 0},
             "folders": {"enabled": True},
             "paths": {"enabled": False},
@@ -161,6 +165,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "usergroups": {"enabled": True, "limit": 0},
             "podcasts": {"enabled": True, "limit": 0},
+            "live_sessions": {"enabled": False, "limit": 0},
             "boards": {"enabled": False, "limit": 0},
             "folders": {"enabled": True},
             "paths": {"enabled": False},
@@ -192,6 +197,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "usergroups": {"enabled": True, "limit": 0},
             "podcasts": {"enabled": True, "limit": 0},
+            "live_sessions": {"enabled": True, "limit": 0},
             "boards": {"enabled": True, "limit": 0},
             "folders": {"enabled": True},
             "paths": {"enabled": True},
@@ -223,6 +229,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "usergroups": {"enabled": True, "limit": 0},
             "podcasts": {"enabled": True, "limit": 0},
+            "live_sessions": {"enabled": True, "limit": 0},
             "boards": {"enabled": True, "limit": 0},
             "folders": {"enabled": True},
             "paths": {"enabled": True},

@@ -37,7 +37,7 @@ function PathCertificatePage({ orgslug, certificateUuid }: { orgslug: string; ce
   }
 
   const config = data.path.certificate_config || {}
-  const learnerName = [data.user.first_name, data.user.last_name].filter(Boolean).join(' ') || data.user.username
+  const learnerName = [data.user.first_name, data.user.last_name].map((part) => part?.trim()).filter(Boolean).join(' ') || data.user.username
 
   return (
     <CertificateShowcase
@@ -56,7 +56,7 @@ function PathCertificatePage({ orgslug, certificateUuid }: { orgslug: string; ce
       verifyLink={getAbsoluteUriWithOrg(orgslug, `/paths/certificate/${data.certificate.certificate_uuid}`)}
       isOwner={session?.data?.user?.user_uuid === data.user.user_uuid}
       subject={
-        <CertificateSubject title={t('certificate.page.earned_for_path', { name: data.path.name })}>
+        <CertificateSubject title={t('certificate.page.earned_for_path')}>
           <div className="divide-y divide-gray-50">
             {data.path.courses.map((course) => (
               <CertificateCourseRow

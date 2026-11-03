@@ -6,10 +6,10 @@ Update LearnHouse regularly to get the latest features, bug fixes, and security 
 
 ## Updating LearnHouse
 
-Use the built-in `update` command. It backs up your database, pulls the new image, migrates uploaded content to a persistent volume, restarts the stack, and applies database migrations.
+Use the built-in `update` command. It backs up your database, pulls the new image, runs database migrations with the new image before it starts, and restarts the stack.
 
 ```bash
-# Update to the latest version
+# Update to the latest version on your release channel
 npx learnhouse update
 
 # Update to a specific version
@@ -20,27 +20,32 @@ npx learnhouse update -v 1.4.2
 
 | Flag | Description |
 |---|---|
-| `-v, --to <version>` | Pull a specific image tag (e.g. `1.4.2`, `v1.4.2`). Defaults to `latest`. |
-| `--migrate` | Run database migrations without prompting |
-| `--no-migrate` | Skip database migrations without prompting |
+| `-v, --to <version>` | Target version (e.g. `1.4.2`, `v1.4.2`). Without it, stable installations move to the newest release (falling back to `:latest`) and dev installations stay on `:dev`. |
+| `--migrate` | Run database migrations (the default) |
+| `--no-migrate` | Skip database migrations |
 | `--no-backup` | Skip the pre-upgrade database backup (not recommended for production) |
 
+`update` runs without prompts, so you can use it in scripts and CI.
+
 <Callout type="info">
-The update command creates a database backup automatically before making any changes. The backup is saved to `{installDir}/backups/db-pre-upgrade-{timestamp}.sql.gz`.
+The update command backs up the database before making any change. The dump is saved to `<installDir>/backups/db-pre-upgrade-<timestamp>.sql.gz`, for in-container and external databases alike. If the backup fails, the update stops and nothing changes.
 </Callout>
 
 ## What `update` Does
 
-The command runs these steps in order:
+On a Community installation, the command runs these steps in order:
 
-1. **Database backup**: `pg_dump` to `./backups/` (skipped with `--no-backup`)
-2. **Alembic baseline**: stamps the current schema for installs that pre-date Alembic tracking (one-time, idempotent)
-3. **Image tag update**: rewrites the tag in `docker-compose.yml`
-4. **Content volume migration**: moves uploaded media into a named Docker volume so it survives future container recreations (one-time, idempotent)
-5. **Image pull**: `docker compose pull` fetches the new image
-6. **Stack restart**: `docker compose down && docker compose up -d --pull always`
-7. **Health wait**: polls `/api/v1/health` until the app responds
-8. **Database migrations**: `alembic upgrade head` (prompted unless `--migrate`/`--no-migrate` passed). The API also migrates on startup, so this finds nothing left to do in most cases.
+1. **Database backup**: `pg_dump` to `backups/` (skipped with `--no-backup`)
+2. **Alembic baseline**: stamps the current schema for installations whose database was never migrated (one-time)
+3. **Target image**: checks that the requested version exists on `ghcr.io/learnhouse/app`, or looks up the newest release for your channel
+4. **Content volume migration**: if uploaded files still live inside the app container (installations from before the content volume existed), stops the app and moves them into a named Docker volume. If this fails, the update stops before the container is recreated, so no uploads are lost.
+5. **Image pull**: points `docker-compose.yml` at the new image and runs `docker compose pull`
+6. **Migrations before start**: stops only the app container (the database, Redis and the proxy keep running) and runs `alembic upgrade heads` in a one-off container of the new image. The new version can't start against an old schema, so this happens before it boots.
+7. **Restart**: `docker compose up -d`, which recreates only what changed
+8. **Health wait**: polls `/api/v1/health` until the app responds (up to 3 minutes)
+9. **Migration check**: confirms the database is at head
+
+On an Enterprise installation, `update` also logs in to the Enterprise registry with your license key, uses `EE_IMAGE_TAG` (default target: `prod`), and waits for the API to report Enterprise mode.
 
 ## Recommended Update Procedure
 
@@ -48,14 +53,14 @@ The command runs these steps in order:
 # 1. Review the release notes
 # https://github.com/learnhouse/learnhouse/releases
 
-# 2. Run the update (backup is created automatically)
+# 2. Optional: take a full backup (database, .env and uploaded content)
+npx learnhouse backup
+
+# 3. Run the update (a database backup is created automatically)
 npx learnhouse update
 
-# 3. Verify all services are healthy
+# 4. Verify all services are healthy
 npx learnhouse doctor
-
-# 4. Check logs for any errors
-npx learnhouse logs
 ```
 
 ## Database Migrations
@@ -85,41 +90,44 @@ docker compose exec learnhouse-app sh -c "cd /app/api && uv run python cli.py mi
 
 Set `LEARNHOUSE_AUTO_MIGRATE=false` in your `.env` if you prefer to run migrations yourself. The API then only creates missing tables on startup.
 
-### Installs Created Before v1.3
+### Installations without Alembic history
 
 Early LearnHouse installs created their schema with SQLAlchemy's `create_all`, without Alembic tracking. `learnhouse update` stamps them at the version they were running before applying any migration, so only the new changes run. An install updated another way gets its missing tables and columns added by the API on its first start, as described above.
+## When an Update Fails
+
+`update` never leaves the site down on purpose:
+
+- If the image pull or the migrations fail, it restores the previous image in `docker-compose.yml` and starts the previous version again.
+- If any later step fails after it stopped the app, it starts the services again.
+- If LearnHouse doesn't become healthy, the command exits with code `1` and points you to `npx learnhouse logs`.
 
 ## Rolling Back
 
-If an update causes issues, restore from the pre-upgrade backup:
+Once migrations have run, going back to the old image is not safe on its own: the schema already matches the new version. To roll back, restore the pre-upgrade dump and pin the previous image:
 
 ```bash
 # List available backups
-ls {installDir}/backups/
+ls ~/.learnhouse/<name>/backups/
 
 # Restore the database
 npx learnhouse restore backups/db-pre-upgrade-<timestamp>.sql.gz
 
 # Revert the image tag in docker-compose.yml to the previous version
-# (edit the file: change image: ghcr.io/learnhouse/app:<new> back to <old>)
+# (change image: ghcr.io/learnhouse/app:<new> back to <old>)
 
-# Restart on the old image
+# Start on the old image
 npx learnhouse start
 ```
 
-Backups are named `db-pre-upgrade-{timestamp}.sql.gz` when created by `update`, and `learnhouse-backup-{timestamp}.tar.gz` when created by the `backup` command. The pre-upgrade backup created by `update` includes only the database dump; to also preserve your `.env`, run `npx learnhouse backup` manually before updating.
-
-<Callout type="warning">
-Uploaded files stored on the filesystem (in the `learnhouse_content_*` Docker volume) are **not** included in the database backup. To back up uploaded files, use `docker volume export` or a volume-level snapshot provided by your hosting platform.
-</Callout>
+Backups are named `db-pre-upgrade-<timestamp>.sql.gz` when created by `update`, and `learnhouse-backup-<timestamp>.tar.gz` when created by the `backup` command. The pre-upgrade dump contains only the database. To also keep your `.env` and uploaded files, run `npx learnhouse backup` before updating.
 
 ## Checking for Updates
 
-The CLI automatically checks for a new version each time you run a command and prints a notice if one is available.
+After each command, the CLI checks npm for a newer version of itself and prints a notice if one is available. Run `npx learnhouse@latest <command>` to use the newest CLI. The check is skipped in CI and when the output is not a terminal; set `LEARNHOUSE_NO_UPDATE_CHECK=1` to turn it off.
 
 Review the [LearnHouse release notes](https://github.com/learnhouse/learnhouse/releases) before updating to understand what has changed. Some updates may include:
 
 - New features or UI changes
-- Database migrations (applied automatically when you accept the prompt or pass `--migrate`)
+- Database migrations (applied automatically by `update`)
 - Configuration changes that may require updating your `.env` file
 - Breaking changes (rare, documented in release notes with a migration guide)

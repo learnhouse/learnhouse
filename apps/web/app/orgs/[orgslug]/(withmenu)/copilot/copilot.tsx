@@ -6,6 +6,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { useMessagingEnabled } from '@components/Messaging/MessagingProvider'
+import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import {
   startRAGChatStream,
@@ -96,11 +97,11 @@ export function groupSessionsByDate(sessions: RAGChatSession[]) {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const weekAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-  const groups: { label: string; sessions: RAGChatSession[] }[] = [
-    { label: 'Favorites', sessions: [] },
-    { label: 'Today', sessions: [] },
-    { label: 'Previous 7 days', sessions: [] },
-    { label: 'Older', sessions: [] },
+  const groups: { label: string; labelKey: string; sessions: RAGChatSession[] }[] = [
+    { label: 'Favorites', labelKey: 'ai.copilot.group_favorites', sessions: [] },
+    { label: 'Today', labelKey: 'ai.copilot.group_today', sessions: [] },
+    { label: 'Previous 7 days', labelKey: 'ai.copilot.group_previous_7_days', sessions: [] },
+    { label: 'Older', labelKey: 'ai.copilot.group_older', sessions: [] },
   ]
 
   for (const s of sessions) {
@@ -118,6 +119,7 @@ export function groupSessionsByDate(sessions: RAGChatSession[]) {
 }
 
 export function CopilotChat({ orgslug }: CopilotProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const org = useOrg() as any
   const accessToken = session?.data?.tokens?.access_token
@@ -175,8 +177,8 @@ export function CopilotChat({ orgslug }: CopilotProps) {
   const courses = coursesData?.data || coursesData || []
 
   const selectedCourseName = selectedCourse
-    ? courses.find?.((c: any) => c.course_uuid === selectedCourse)?.name || 'Selected Course'
-    : 'All courses'
+    ? courses.find?.((c: any) => c.course_uuid === selectedCourse)?.name || t('ai.copilot.selected_course')
+    : t('ai.copilot.all_courses')
 
   // Track viewport size for mobile behavior
   useEffect(() => {
@@ -251,7 +253,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
       setChatMode(sessionMeta.mode || 'course_only')
       isNewChatRef.current = false
     } catch {
-      setError('Failed to load session')
+      setError(t('ai.copilot.failed_load_session'))
     } finally {
       setIsLoadingSession(false)
     }
@@ -424,7 +426,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
                 className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition-colors"
               >
                 <Plus size={14} weight="bold" />
-                <span>New Chat</span>
+                <span>{t('ai.copilot.new_chat')}</span>
               </button>
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -439,13 +441,13 @@ export function CopilotChat({ orgslug }: CopilotProps) {
               {sessions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                   <ChatCircleDots size={24} className="text-neutral-300 dark:text-neutral-600 mb-2" />
-                  <p className="text-xs text-neutral-400 dark:text-neutral-500">No conversations yet</p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('ai.copilot.no_conversations')}</p>
                 </div>
               ) : (
                 groupSessionsByDate(sessions).map((group) => (
                   <div key={group.label} className="mb-3">
                     <p className="text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider px-2 py-1.5">
-                      {group.label}
+                      {t(group.labelKey)}
                     </p>
                     {group.sessions.map((s) => (
                       <SessionItem
@@ -504,7 +506,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
           {isLoadingSession && (
             <div className="flex flex-col items-center justify-center h-full">
               <SpinnerGap size={20} className="animate-spin text-violet-400 mb-2" />
-              <span className="text-sm text-neutral-400 dark:text-neutral-500">Loading conversation...</span>
+              <span className="text-sm text-neutral-400 dark:text-neutral-500">{t('ai.copilot.loading_conversation')}</span>
             </div>
           )}
 
@@ -524,9 +526,9 @@ export function CopilotChat({ orgslug }: CopilotProps) {
               </svg>
               </div>
               <div className="space-y-2">
-                <h2 className="text-xl font-bold text-neutral-900 dark:text-white">Course Copilot</h2>
+                <h2 className="text-xl font-bold text-neutral-900 dark:text-white">{t('ai.copilot.title')}</h2>
                 <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-md leading-relaxed">
-                  Ask questions about your courses and get answers grounded in course content, with references to the source material.
+                  {t('ai.copilot.subtitle')}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -541,7 +543,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
                     }`}
                   >
                     <BookOpen size={15} weight="duotone" />
-                    <span>Course Only</span>
+                    <span>{t('ai.copilot.mode_course_only')}</span>
                   </button>
                   <button
                     onClick={() => setChatMode('general')}
@@ -552,7 +554,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
                     }`}
                   >
                     <GlobeSimple size={15} weight="duotone" />
-                    <span>General</span>
+                    <span>{t('ai.copilot.mode_general')}</span>
                   </button>
                 </div>
                 {/* Course picker */}
@@ -647,10 +649,10 @@ export function CopilotChat({ orgslug }: CopilotProps) {
                 ? 'bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400'
                 : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
             }`}
-            title={chatMode === 'general' ? 'General Knowledge mode' : 'Course Only mode'}
+            title={chatMode === 'general' ? t('ai.copilot.mode_general_title') : t('ai.copilot.mode_course_only_title')}
           >
             {chatMode === 'general' ? <GlobeSimple size={13} weight="duotone" /> : <BookOpen size={13} weight="duotone" />}
-            <span className="hidden sm:inline">{chatMode === 'general' ? 'General' : 'Course'}</span>
+            <span className="hidden sm:inline">{chatMode === 'general' ? t('ai.copilot.mode_general') : t('ai.copilot.mode_course')}</span>
           </button>
           {messages.length > 0 && (
             <div className="relative" ref={dropdownRef}>
@@ -669,8 +671,8 @@ export function CopilotChat({ orgslug }: CopilotProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            aria-label="Ask about your courses"
-            placeholder={isLoadingSession ? 'Loading conversation...' : isWaiting ? 'Thinking...' : chatMode === 'general' ? 'Ask anything...' : 'Ask about your courses...'}
+            aria-label={t('ai.copilot.input_label')}
+            placeholder={isLoadingSession ? t('ai.copilot.loading_conversation') : isWaiting ? t('ai.copilot.thinking') : chatMode === 'general' ? t('ai.copilot.placeholder_general') : t('ai.copilot.placeholder_course')}
             disabled={isInputDisabled}
             className="flex-1 bg-transparent outline-none text-sm text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 disabled:opacity-40"
           />
@@ -695,6 +697,7 @@ export function ChatTopBar({ title, isFavorite, onRename, onToggleFavorite, onTo
   onToggleSidebar?: () => void
   showMenuButton?: boolean
 }) {
+  const { t } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(title)
   const editInputRef = useRef<HTMLInputElement>(null)
@@ -768,7 +771,7 @@ export function ChatTopBar({ title, isFavorite, onRename, onToggleFavorite, onTo
             ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10'
             : 'text-neutral-300 dark:text-neutral-600 hover:text-amber-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
         }`}
-        title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        title={isFavorite ? t('ai.copilot.remove_favorite') : t('ai.copilot.add_favorite')}
       >
         <Star size={16} weight={isFavorite ? 'fill' : 'regular'} />
       </button>
@@ -830,6 +833,7 @@ export const AssistantMessage = React.memo(function AssistantMessage({ content, 
   isStreaming?: boolean
   isWaiting?: boolean
 }) {
+  const { t } = useTranslation()
   const courseNames = [...new Set(sources.map((s) => s.course_name).filter(Boolean))]
 
   return (
@@ -838,7 +842,7 @@ export const AssistantMessage = React.memo(function AssistantMessage({ content, 
       {courseNames.length > 0 && !isWaiting && (
         <div className="flex items-center gap-1.5 text-[11px] text-neutral-400 dark:text-neutral-500 font-medium">
           <BookOpen size={11} weight="bold" className="text-violet-400" />
-          <span>Answering from {courseNames.join(', ')}</span>
+          <span>{t('ai.copilot.answering_from', { courses: courseNames.join(', ') })}</span>
         </div>
       )}
 
@@ -1020,6 +1024,7 @@ export function CourseDropdown({ courses, selectedCourse, onSelect, position = '
   onSelect: (_uuid: string | null) => void
   position?: 'top' | 'bottom'
 }) {
+  const { t } = useTranslation()
   const positionClass = position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
   return (
     <div className={`absolute start-0 ${positionClass} w-72 max-h-72 overflow-y-auto rounded-xl bg-white dark:bg-neutral-900 nice-shadow z-50 py-1`}>
@@ -1030,7 +1035,7 @@ export function CourseDropdown({ courses, selectedCourse, onSelect, position = '
         }`}
       >
         <Sparkle size={15} weight="duotone" className="text-violet-500 flex-shrink-0" />
-        <span>All courses</span>
+        <span>{t('ai.copilot.all_courses')}</span>
       </button>
       <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-2 my-1" />
       {Array.isArray(courses) && courses.map((course: any) => (

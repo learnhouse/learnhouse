@@ -74,7 +74,7 @@ const OrgEditSEO: React.FC = () => {
   }
 
   const saveSeoConfig = async (values: SeoOrgConfig) => {
-    const loadingToast = toast.loading('Saving SEO settings...')
+    const loadingToast = toast.loading(t('dashboard.organization.seo.saving'))
     try {
       // Upload OG image if a new one was selected
       if (ogImageFile) {
@@ -90,7 +90,7 @@ const OrgEditSEO: React.FC = () => {
       await revalidateTags(['organizations'], org.slug)
       queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       setOgImageFile(null)
-      toast.success('SEO settings saved successfully', { id: loadingToast })
+      toast.success(t('dashboard.organization.seo.saved'), { id: loadingToast })
     } catch {
       toast.error(t('dashboard.organization.seo.save_failed'), { id: loadingToast })
     }
@@ -127,7 +127,7 @@ const OrgEditSEO: React.FC = () => {
               <div className="mx-5 my-3 space-y-3">
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-2 min-w-0 flex-1">
-                    <span className="text-sm font-medium text-gray-700 shrink-0">Sitemap:</span>
+                    <span className="text-sm font-medium text-gray-700 shrink-0">{t('dashboard.organization.seo.org_seo.sitemap')}</span>
                     <a
                       href={sitemapUrl}
                       target="_blank"
@@ -155,7 +155,7 @@ const OrgEditSEO: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-2 min-w-0 flex-1">
-                    <span className="text-sm font-medium text-gray-700 shrink-0">Robots.txt:</span>
+                    <span className="text-sm font-medium text-gray-700 shrink-0">{t('dashboard.organization.seo.org_seo.robots_txt')}</span>
                     <a
                       href={robotsUrl}
                       target="_blank"
@@ -214,7 +214,7 @@ const OrgEditSEO: React.FC = () => {
                   <Label htmlFor="default_meta_description">
                     {t('dashboard.organization.seo.org_seo.default_description')}
                     <span className="text-gray-500 text-sm ms-2">
-                      ({160 - (values.default_meta_description?.length || 0)} characters left)
+                      ({t('dashboard.organization.seo.characters_left', { count: 160 - (values.default_meta_description?.length || 0) })})
                     </span>
                   </Label>
                   <Textarea
@@ -222,7 +222,7 @@ const OrgEditSEO: React.FC = () => {
                     name="default_meta_description"
                     value={values.default_meta_description}
                     onChange={handleChange}
-                    placeholder="A brief description of your organization for search engines"
+                    placeholder={t('dashboard.organization.seo.description_placeholder')}
                     maxLength={160}
                     className="min-h-[80px]"
                   />
@@ -250,7 +250,7 @@ const OrgEditSEO: React.FC = () => {
                       <div className="relative">
                         <img
                           src={ogImagePreview || existingOgImageUrl || ''}
-                          alt="OG Image Preview"
+                          alt={t('dashboard.organization.seo.og_image_preview')}
                           className="w-48 h-24 object-cover rounded-lg border"
                         />
                         {ogImagePreview && (
@@ -278,7 +278,7 @@ const OrgEditSEO: React.FC = () => {
                         onClick={() => ogImageInputRef.current?.click()}
                       >
                         <Upload size={14} className="me-2" />
-                        {existingOgImageUrl || ogImagePreview ? 'Change Image' : 'Upload Image'}
+                        {existingOgImageUrl || ogImagePreview ? t('dashboard.organization.seo.change_image') : t('dashboard.organization.seo.upload_image')}
                       </Button>
                     </div>
                   </div>
@@ -313,7 +313,7 @@ const OrgEditSEO: React.FC = () => {
                     name="google_site_verification"
                     value={values.google_site_verification}
                     onChange={handleChange}
-                    placeholder="Google verification code"
+                    placeholder={t('dashboard.organization.seo.google_verification_placeholder')}
                   />
                   <p className="text-gray-500 text-sm mt-1">
                     {t('dashboard.organization.seo.org_seo.google_search_console_hint')}
@@ -352,7 +352,7 @@ const OrgEditSEO: React.FC = () => {
                   disabled={isSubmitting}
                   className="bg-black text-white hover:bg-black/90"
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  {isSubmitting ? t('common.saving') : t('common.save_changes')}
                 </Button>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { getUriWithOrg } from '@services/config/config'
 import { useParams } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserProfilePopup from './UserProfilePopup'
@@ -22,6 +23,7 @@ type UserAvatarProps = {
 }
 
 function UserAvatar(props: UserAvatarProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const params = useParams() as any
@@ -128,11 +130,15 @@ function UserAvatar(props: UserAvatarProps) {
   // the resolved source changes, avoiding a setState-in-effect.
   const hasError = erroredUrl === resolvedAvatarUrl
 
+  const size = props.width ?? 50
+
   const avatarImage = (
     <img
-      alt="User Avatar"
-      width={props.width ?? 50}
-      height={props.width ?? 50}
+      alt={t('user.avatar_alt')}
+      width={size}
+      height={size}
+      // Inline size: Tailwind can't compile w-[${size}px] built at runtime
+      style={{ width: size, height: size }}
       src={hasError ? emptyAvatarUrl : resolvedAvatarUrl}
       onError={() => {
         // Fall back to the empty avatar placeholder when the image fails to load
@@ -147,8 +153,8 @@ function UserAvatar(props: UserAvatarProps) {
         ${props.backgroundColor ?? 'bg-gray-100'}
         ${props.shadow ?? 'shadow-md shadow-gray-300/45'}
         aspect-square
-        w-[${props.width ?? 50}px]
-        h-[${props.width ?? 50}px]
+        shrink-0
+        object-cover
         ${props.rounded ?? 'rounded-xl'}
       `}
     />
