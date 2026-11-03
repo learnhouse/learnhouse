@@ -1,15 +1,17 @@
 # System Requirements
 
-Before installing LearnHouse, ensure your server meets the following requirements.
+Before installing LearnHouse, make sure your server meets the following requirements.
 
 ## Software Requirements
 
 | Software | Minimum Version | Notes |
 |---|---|---|
-| Docker Engine | 20.10+ | Required for running containers |
-| Docker Compose | 2.0+ | Included with Docker Desktop; install separately on Linux |
-| Node.js | 18+ | Required to run the LearnHouse CLI |
-| npm | 8+ | Comes with Node.js |
+| Docker Engine | A current release | The daemon must be running and your user must be able to reach it |
+| Docker Compose | v2 (`docker compose` plugin) | Included with Docker Desktop; install `docker-compose-plugin` separately on Linux |
+| Node.js | 22+ | Required to run the LearnHouse CLI. The one-line installers install Node.js 24 when it is missing or too old. |
+| npm / npx | Comes with Node.js | Used to run `npx learnhouse` |
+
+The setup wizard checks for Docker, a running Docker daemon and the Compose v2 plugin before it does anything else.
 
 ## Hardware Requirements
 
@@ -19,23 +21,23 @@ Before installing LearnHouse, ensure your server meets the following requirement
 | Disk Space | 10 GB | 20 GB+ |
 | CPU | 1 core | 2+ cores |
 
-Disk usage will grow over time depending on the amount of uploaded content (videos, documents, images). Plan storage capacity accordingly if you expect heavy usage.
+Disk usage grows over time with the amount of uploaded content (videos, documents, images) and backups. Plan storage capacity accordingly if you expect heavy usage. You can cap the memory each container uses with `npx learnhouse scale`.
 
 ## Operating System
 
-LearnHouse is supported on:
+The CLI runs on:
 
-- **Linux** (Ubuntu 20.04+, Debian 11+, CentOS 8+, or any distribution with Docker support)
+- **Linux** (any distribution with Docker support). The one-line installer supports Debian/Ubuntu, Fedora/RHEL and Alpine package managers.
 - **macOS** (with Docker Desktop)
-- **Windows** (via WSL2 with Docker Desktop)
+- **Windows** (with Docker Desktop). A PowerShell installer is available.
 
 Linux is recommended for production deployments.
 
 ## Network Requirements
 
-- Port **80** (HTTP) and/or port **443** (HTTPS) must be available
-- Outbound internet access is required during installation to pull Docker images
-- A domain name is recommended for production use but not required for local testing
+- Port **80** (HTTP) must be free, or another port you pick during setup. With automatic SSL, ports **80** and **443** must both be free and reachable from the internet, and your domain's DNS must point at the server.
+- Outbound internet access is required during installation and updates to pull Docker images from `ghcr.io` and Docker Hub.
+- A domain name is recommended for production use but not required for local testing.
 
 ## Verifying Prerequisites
 
@@ -50,9 +52,6 @@ docker compose version
 
 # Check Node.js
 node --version
-
-# Check npm
-npm --version
 ```
 
-All commands should return version numbers that meet or exceed the minimums listed above.
+`node --version` should print `v22` or newer.

@@ -115,12 +115,12 @@ const DETAIL_TEMPLATES = {
   ]
 } as const;
 
-const validationSchema = Yup.object().shape({
-  email: Yup.string().email('Invalid email').required('Email is required'),
-  username: Yup.string().required('Username is required'),
-  first_name: Yup.string().required('First name is required'),
-  last_name: Yup.string().required('Last name is required'),
-  bio: Yup.string().max(400, 'Bio must be 400 characters or less'),
+const buildValidationSchema = (t: (_key: string) => string) => Yup.object().shape({
+  email: Yup.string().email(t('user.settings.general.validation.invalid_email')).required(t('user.settings.general.validation.email_required')),
+  username: Yup.string().required(t('user.settings.general.validation.username_required')),
+  first_name: Yup.string().required(t('user.settings.general.validation.first_name_required')),
+  last_name: Yup.string().required(t('user.settings.general.validation.last_name_required')),
+  bio: Yup.string().max(400, t('user.settings.general.validation.bio_max_length')),
   details: Yup.object().shape({})
 });
 
@@ -595,7 +595,7 @@ function AccountGeneral() {
           setUserData(data);
         } catch (error) {
           console.error('Error fetching user data:', error);
-          setError('Failed to load user data');
+          setError(t('user.settings.general.load_failed'));
         }
       }
     };
@@ -647,7 +647,7 @@ function AccountGeneral() {
         setSuccess(t('user.settings.general.avatar_updated'))
       }
     } catch (_error) {
-      setError('Failed to process AI image')
+      setError(t('user.settings.general.ai_image_failed'))
       setIsLoading(false)
     }
   }
@@ -672,7 +672,7 @@ function AccountGeneral() {
         setSuccess(t('user.settings.general.avatar_updated'))
       }
     } catch {
-      setError('Failed to process AI image')
+      setError(t('user.settings.general.ai_image_failed'))
       setIsLoading(false)
     }
   }
@@ -717,7 +717,7 @@ function AccountGeneral() {
           current_password: '',
           mfa_code: '',
         }}
-        validationSchema={validationSchema}
+        validationSchema={buildValidationSchema(t)}
         onSubmit={async (values, { setSubmitting }) => {
           const isEmailChanged = values.email !== userData.email
           const loadingToast = toast.loading(t('user.settings.general.saving'))

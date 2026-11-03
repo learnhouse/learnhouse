@@ -3,57 +3,11 @@ import { getPlatformUrl, getUriWithoutOrg } from '@services/config/config'
 import { signOut } from '@components/Contexts/AuthContext'
 import { openFeedbackDialog, isReportingAvailable } from '@lib/errors/report'
 import type { ResolutionKind } from '@lib/errors/types'
-import {
-  HomeIcon,
-  LifeBuoy,
-  LogIn,
-  LogOut,
-  MessageSquareWarning,
-  RefreshCcw,
-} from 'lucide-react'
+import { ArrowLeft, HomeIcon, LifeBuoy, LogIn, LogOut, MessageSquareWarning, RefreshCcw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
-
-type Variant = 'primary' | 'neutral' | 'danger' | 'ghost'
-
-const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: 'text-white bg-rose-700 hover:bg-rose-800',
-  neutral: 'text-gray-100 bg-gray-700 hover:bg-gray-800',
-  danger: 'text-rose-700 bg-rose-100 hover:bg-rose-200',
-  ghost: 'text-gray-600 bg-gray-100 hover:bg-gray-200',
-}
-
-function ActionButton({
-  onClick,
-  href,
-  icon,
-  label,
-  variant = 'neutral',
-  disabled,
-}: {
-  onClick?: () => void
-  href?: string
-  icon: React.ReactNode
-  label: string
-  variant?: Variant
-  disabled?: boolean
-}) {
-  const cls = `flex space-x-2 items-center rounded-full px-4 py-1.5 transition-all ease-linear shadow-sm disabled:opacity-50 ${VARIANT_CLASSES[variant]}`
-  if (href) {
-    return (
-      <a href={href} className={cls}>
-        {icon}
-        <span className="text-sm font-bold">{label}</span>
-      </a>
-    )
-  }
-  return (
-    <button onClick={onClick} disabled={disabled} className={cls}>
-      {icon}
-      <span className="text-sm font-bold">{label}</span>
-    </button>
-  )
-}
+import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ErrorActionRows, ErrorButton } from './ErrorShell'
 
 export interface ErrorActionsProps {
   /** Ordered resolution actions to render. */
@@ -66,18 +20,31 @@ export interface ErrorActionsProps {
   loginNext?: string
 }
 
+// Actions that move the user forward get real buttons; the rest are escape
+// hatches and sit in the quiet row.
+const QUIET: ResolutionKind[] = ['signout', 'report', 'contact_support']
+
 /**
- * The row of recovery actions shown under an error. Each `ResolutionKind` maps
- * to a concrete button. Lives inside the app providers (router + AuthContext),
- * so it can sign the user out and navigate. The standalone `app/global-error`
- * boundary (which renders outside providers) has its own inlined buttons.
+ * The recovery actions shown under an error. Each `ResolutionKind` maps to a
+ * concrete button. Lives inside the app providers (router + AuthContext), so it
+ * can sign the user out and navigate. The standalone `app/global-error`
+ * boundary (which renders outside providers) builds its own from ErrorShell.
  */
 export default function ErrorActions({ resolutions, reset, eventId, loginNext }: ErrorActionsProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const [signingOut, setSigningOut] = useState(false)
+  // The org-less home URL depends on window.location, so resolving it during
+  // render made the server and client hrefs disagree (hydration mismatch).
+  const [homeHref, setHomeHref] = useState('/home')
+  useEffect(() => setHomeHref(getUriWithoutOrg('/home')), [])
 
   // Dedupe while preserving order.
   const kinds = Array.from(new Set(resolutions))
+  // 'wait' has no button; drop it here so the first real action gets the
+  // primary style.
+  const mainKinds = kinds.filter((k) => !QUIET.includes(k) && k !== 'wait')
+  const quietKinds = kinds.filter((k) => QUIET.includes(k))
 
   const retry = () => {
     if (reset) {
@@ -97,56 +64,60 @@ export default function ErrorActions({ resolutions, reset, eventId, loginNext }:
     }
   }
 
-  const loginHref = loginNext
-    ? `/login?next=${encodeURIComponent(loginNext)}`
-    : '/login'
+  const loginHref = loginNext ? `/login?next=${encodeURIComponent(loginNext)}` : '/login'
   const supportHref = getPlatformUrl('/contact') || 'mailto:support@learnhouse.io'
 
-  return (
-    <div className="flex flex-wrap justify-center gap-3">
-      {kinds.map((kind) => {
-        switch (kind) {
-          case 'retry':
-            return (
-              <ActionButton key={kind} onClick={retry} variant="primary" label="Retry"
-                icon={<RefreshCcw size={16} />} />
-            )
-          case 'reload':
-            return (
-              <ActionButton key={kind} onClick={() => window.location.reload()} variant="primary" label="Reload"
-                icon={<RefreshCcw size={16} />} />
-            )
-          case 'login':
-            return (
-              <ActionButton key={kind} href={loginHref} variant="primary" label="Log back in"
-                icon={<LogIn size={16} />} />
-            )
-          case 'home':
-            return (
-              <ActionButton key={kind} href={getUriWithoutOrg('/home')} variant="neutral" label="Home"
-                icon={<HomeIcon size={16} />} />
-            )
-          case 'signout':
-            return (
-              <ActionButton key={kind} onClick={doSignOut} disabled={signingOut} variant="ghost"
-                label={signingOut ? 'Signing out…' : 'Sign out'} icon={<LogOut size={16} />} />
-            )
-          case 'report':
-            if (!isReportingAvailable()) return null
-            return (
-              <ActionButton key={kind} onClick={() => openFeedbackDialog({ eventId })} variant="danger"
-                label="Report this problem" icon={<MessageSquareWarning size={16} />} />
-            )
-          case 'contact_support':
-            return (
-              <ActionButton key={kind} href={supportHref} variant="ghost" label="Contact support"
-                icon={<LifeBuoy size={16} />} />
-            )
-          case 'wait':
-          default:
-            return null
-        }
-      })}
-    </div>
-  )
+  const renderMain = (kind: ResolutionKind, index: number) => {
+    const variant = index === 0 ? 'primary' : 'secondary'
+    switch (kind) {
+      case 'retry':
+        return <ErrorButton key={kind} onClick={retry} variant={variant} label={t('common.retry')} icon={<RefreshCcw size={15} />} />
+      case 'reload':
+        return (
+          <ErrorButton key={kind} onClick={() => window.location.reload()} variant={variant} label={t('errors.actions.reload')}
+            icon={<RefreshCcw size={15} />} />
+        )
+      case 'login':
+        return <ErrorButton key={kind} href={loginHref} variant={variant} label={t('errors.actions.log_back_in')} icon={<LogIn size={15} />} />
+      case 'home':
+        return (
+          <ErrorButton key={kind} href={homeHref} variant={variant} label={t('common.home')}
+            icon={<HomeIcon size={15} />} />
+        )
+      default:
+        return null
+    }
+  }
+
+  const renderQuiet = (kind: ResolutionKind) => {
+    switch (kind) {
+      case 'signout':
+        return (
+          <ErrorButton key={kind} onClick={doSignOut} disabled={signingOut} variant="subtle"
+            label={signingOut ? t('errors.actions.signing_out') : t('common.sign_out')} icon={<LogOut size={14} />} />
+        )
+      case 'report':
+        if (!isReportingAvailable()) return null
+        return (
+          <ErrorButton key={kind} onClick={() => openFeedbackDialog({ eventId })} variant="subtle"
+            label={t('errors.actions.report')} icon={<MessageSquareWarning size={14} />} />
+        )
+      case 'contact_support':
+        return <ErrorButton key={kind} href={supportHref} variant="subtle" label={t('errors.actions.contact_support')} icon={<LifeBuoy size={14} />} />
+      default:
+        return null
+    }
+  }
+
+  const main = mainKinds.map(renderMain).filter(Boolean)
+  // A category with only escape hatches (or only "wait") still needs a way
+  // out of the dead end.
+  if (main.length === 0) {
+    main.push(
+      <ErrorButton key="back" onClick={() => window.history.back()} variant="secondary" label={t('common.back')}
+        icon={<ArrowLeft size={15} className="rtl:rotate-180" />} />
+    )
+  }
+
+  return <ErrorActionRows main={main} quiet={quietKinds.map(renderQuiet)} />
 }

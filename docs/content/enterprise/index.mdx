@@ -2,22 +2,58 @@ import { Callout } from 'nextra/components'
 
 # Enterprise Edition
 
-The LearnHouse Enterprise Edition (EE) is a commercially licensed extension of the open-source platform. It adds features for organizations that need single sign-on, audit logs, or support for SCORM learning content.
+The LearnHouse Enterprise Edition (EE) is a commercially licensed extension of the open source platform. It adds single sign-on, audit logs, SCORM, payments, advanced analytics, multiple organizations and the admin dashboard.
 
 ## Licensing
 
-The Enterprise Edition is available under a separate **EE license**. It is not covered by the open-source license that governs the core platform.
+The Enterprise Edition is covered by a separate **EE license**, not by the open source license of the core platform.
 
-- **Self-hosted**: the EE features ship in the Enterprise images and are locked behind an Enterprise license. You need a valid license key to activate them.
-- **LearnHouse Cloud**: some EE features (like Payments) are available on lower-tier plans. Others (SSO, LTI, SCORM, Audit Logs) require an Enterprise plan.
+- **Self-hosted**: EE features ship in the Enterprise images and only turn on with a valid license key.
+- **LearnHouse Cloud**: EE features are part of the plans. Payments starts on the Standard plan, advanced analytics and live sessions on the Pro plan; SSO, LTI, audit logs and SCORM need the Enterprise plan. See [Plans & Limits](/platform/organizations/plans).
 
-<Callout>
+<Callout type="info">
 Interested in the Enterprise Edition? Visit [learnhouse.app](https://www.learnhouse.app) to learn more about pricing and licensing.
 </Callout>
 
-## Enterprise Features
+## Enterprise features
 
-- **[Single Sign-On (SSO)](/enterprise/sso)**: authenticate users through WorkOS (which brokers SAML, Okta, Azure AD, and more) or any OIDC-compatible provider via the Custom OIDC integration.
-- **[LTI 1.3](/enterprise/lti)**: launch LearnHouse courses from Moodle, Canvas, Open edX, Sakai, ILIAS, Chamilo, OpenOLAT and any other LTI 1.3 platform, with single sign-on, deep linking, gradebook sync and roster sync.
-- **[Audit Logs](/enterprise/audit-logs)**: a full audit trail of all platform activity for compliance and security monitoring, with filtering and CSV export.
-- **[SCORM](/enterprise/scorm)**: import and run SCORM 1.2 and 2004 learning packages from authoring tools like Articulate Storyline and Adobe Captivate.
+| Feature | What it adds |
+| --- | --- |
+| **[Single Sign-On](/enterprise/sso)** | Sign members in through WorkOS (SAML and OIDC) or any OpenID Connect provider |
+| **[LTI 1.3](/enterprise/lti)** | Launch courses from Moodle, Canvas, Open edX, Sakai, ILIAS, Chamilo, OpenOLAT and other LTI 1.3 platforms, with deep linking, grade sync and roster sync |
+| **[Live Sessions](/enterprise/live-sessions)** | Schedule classes in LearnHouse Meet, Google Meet, Zoom or any meeting link, with chat, Q&A, polls, breakout rooms, recordings and attendance |
+| **[Audit Logs](/enterprise/audit-logs)** | A record of every change made in an organization, with filters and CSV export |
+| **[SCORM](/enterprise/scorm)** | Import and run SCORM 1.2 and 2004 packages |
+| **[Payments](/platform/payments)** | Sell courses, communities, podcasts, boards and playgrounds, with Stripe, your own checkout or the API |
+| **[Advanced analytics](/platform/analytics/dashboard#advanced)** | The Advanced analytics tab and [learner analytics](/platform/users/learner-analytics) |
+| **[Multiple organizations](/platform/organizations/multi-tenancy)** | Host several organizations on one instance |
+| **[Admin dashboard](/platform/organizations/admin-dashboard)** | Manage every organization and user from `/admin`, with cross-organization API tokens |
+
+Without a license, the instance runs as the open source edition and hides these features.
+
+## Activating a license (self-hosted)
+
+Set your license key on the API container:
+
+| Variable | Purpose |
+| --- | --- |
+| `LEARNHOUSE_LICENSE_KEY` | Your license key. Required. |
+| `LEARNHOUSE_LICENSE_SERVER_URL` | The license server. Defaults to `https://partners.learnhouse.app`. |
+| `LEARNHOUSE_LICENSE_GRACE_HOURS` | How long the instance keeps working when it cannot reach the license server. Defaults to 25 hours (1 to 168). |
+| `LEARNHOUSE_DATA_DIR` | Where the validated license is cached. Defaults to `/app/data`. |
+
+At startup, the API checks the integrity of the EE code, loads its cached license or contacts the license server, then checks in again about every hour. Each check-in reports user totals and monthly active users.
+
+### When the license is not active
+
+If the key is missing, invalid, revoked or expired, or the grace period runs out:
+
+- The instance runs as the open source edition and the web app hides EE features.
+- EE API routes answer `503` with `ee_license_inactive` and a reason.
+- Audit logging stops.
+
+A later successful check-in turns EE back on without a restart.
+
+To see why EE is off, open `GET /api/v1/ee/license/status`. It returns whether the license is active, the reason if not, the tier, the expiry, the last check-in, the deployment mode and a hint.
+
+See [Environment Variables](/self-hosting/configuration/environment-variables) for the full list.

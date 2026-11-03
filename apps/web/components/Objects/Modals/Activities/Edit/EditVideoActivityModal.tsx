@@ -17,6 +17,7 @@ import {
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
@@ -35,6 +36,7 @@ interface EditVideoActivityModalProps {
 }
 
 function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const isYouTube = activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE'
@@ -94,7 +96,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
 
   const saveCaptions = async () => {
     setIsSavingCaptions(true)
-    const toastId = toast.loading('Saving caption settings...')
+    const toastId = toast.loading(t('activities.edit_modal.saving_captions'))
     try {
       const res = await updateVideoCaptions(
         activity.activity_uuid,
@@ -106,16 +108,16 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
         access_token
       )
       if (res?.success === false) {
-        toast.error(res?.data?.detail || 'Failed to save captions', { id: toastId })
+        toast.error(res?.data?.detail || t('activities.edit_modal.save_captions_failed'), { id: toastId })
       } else {
         toast.success(
-          captions.enabled ? 'Captions queued, generating in the background' : 'Captions disabled',
+          captions.enabled ? t('activities.edit_modal.captions_queued') : t('activities.edit_modal.captions_disabled'),
           { id: toastId }
         )
         setCapStatus(res?.data?.status || (captions.enabled ? 'queued' : 'idle'))
       }
     } catch {
-      toast.error('Failed to save captions', { id: toastId })
+      toast.error(t('activities.edit_modal.save_captions_failed'), { id: toastId })
     } finally {
       setIsSavingCaptions(false)
     }
@@ -134,7 +136,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
     e.preventDefault()
     setIsSubmitting(true)
 
-    const toastId = toast.loading('Updating video activity...')
+    const toastId = toast.loading(t('activities.edit_modal.updating_video'))
     try {
       let res: any
       if (isYouTube) {
@@ -156,14 +158,14 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
       }
 
       if (res?.success === false) {
-        toast.error('Failed to update video activity', { id: toastId })
+        toast.error(t('activities.edit_modal.update_video_failed'), { id: toastId })
       } else {
-        toast.success('Video activity updated', { id: toastId })
+        toast.success(t('activities.edit_modal.video_updated'), { id: toastId })
         mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
         onClose()
       }
     } catch {
-      toast.error('Failed to update video activity', { id: toastId })
+      toast.error(t('activities.edit_modal.update_video_failed'), { id: toastId })
     } finally {
       setIsSubmitting(false)
     }
@@ -188,29 +190,29 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
       >
         <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
           <PlayCircle size={18} weight="duotone" className="text-violet-400" />
-          {isYouTube ? 'YouTube Video' : 'Hosted Video'}
+          {isYouTube ? t('activities.edit_modal.youtube_video') : t('activities.edit_modal.hosted_video')}
         </span>
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Activity name</label>
+          <label className="text-sm font-medium text-gray-700">{t('activities.modal.activity_name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             type="text"
             required
-            placeholder="Enter a name..."
+            placeholder={t('activities.modal.enter_name')}
             className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
           />
         </div>
 
         {isYouTube ? (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">YouTube URL</label>
+            <label className="text-sm font-medium text-gray-700">{t('activities.modal.youtube_url')}</label>
             <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
               <YoutubeLogo size={14} weight="duotone" />
-              <span>Update the YouTube link below</span>
+              <span>{t('activities.edit_modal.update_youtube_hint')}</span>
             </div>
             <input
               value={youtubeUrl}
@@ -223,10 +225,10 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
           </div>
         ) : (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Replace video file</label>
+            <label className="text-sm font-medium text-gray-700">{t('activities.edit_modal.replace_video')}</label>
             <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
               <Upload size={14} weight="duotone" />
-              <span>Leave empty to keep the current video</span>
+              <span>{t('activities.edit_modal.keep_current_video')}</span>
             </div>
             <input
               type="file"
@@ -239,10 +241,10 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
-        <h3 className="text-sm font-medium text-gray-700">Video Settings</h3>
+        <h3 className="text-sm font-medium text-gray-700">{t('activities.modal.video_settings')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">Start Time</label>
+            <label className="text-xs font-medium text-gray-500">{t('activities.modal.start_time')}</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <input
@@ -256,7 +258,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                   placeholder="0"
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">Min</span>
+                <span className="text-[11px] text-gray-400 mt-0.5 block">{t('activities.modal.min')}</span>
               </div>
               <div className="flex-1">
                 <input
@@ -271,13 +273,13 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                   placeholder="0"
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">Sec</span>
+                <span className="text-[11px] text-gray-400 mt-0.5 block">{t('activities.modal.sec')}</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">End Time (optional)</label>
+            <label className="text-xs font-medium text-gray-500">{t('activities.modal.end_time_optional')}</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <input
@@ -294,7 +296,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                   placeholder="0"
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">Min</span>
+                <span className="text-[11px] text-gray-400 mt-0.5 block">{t('activities.modal.min')}</span>
               </div>
               <div className="flex-1">
                 <input
@@ -312,7 +314,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                   placeholder="0"
                   className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
                 />
-                <span className="text-[11px] text-gray-400 mt-0.5 block">Sec</span>
+                <span className="text-[11px] text-gray-400 mt-0.5 block">{t('activities.modal.sec')}</span>
               </div>
             </div>
           </div>
@@ -326,7 +328,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
               onChange={(e) => setVideoDetails({ ...videoDetails, autoplay: e.target.checked })}
               className="rounded border-gray-300 text-black focus:ring-black"
             />
-            <span className="text-sm text-gray-600">Autoplay</span>
+            <span className="text-sm text-gray-600">{t('activities.modal.autoplay')}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -335,7 +337,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
               onChange={(e) => setVideoDetails({ ...videoDetails, muted: e.target.checked })}
               className="rounded border-gray-300 text-black focus:ring-black"
             />
-            <span className="text-sm text-gray-600">Start muted</span>
+            <span className="text-sm text-gray-600">{t('activities.modal.start_muted')}</span>
           </label>
         </div>
       </div>
@@ -354,7 +356,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
                 <BarLoader cssOverride={{ borderRadius: 60 }} width={40} color="#ffffff" />
               ) : (
                 <>
-                  <Sparkle size={14} weight="duotone" /> {captions.enabled ? 'Generate captions' : 'Save'}
+                  <Sparkle size={14} weight="duotone" /> {captions.enabled ? t('activities.edit_modal.generate_captions') : t('common.save')}
                 </>
               )}
             </button>
@@ -377,7 +379,7 @@ function EditVideoActivityModal({ activity, onClose }: EditVideoActivityModalPro
           {isSubmitting ? (
             <BarLoader cssOverride={{ borderRadius: 60 }} width={60} color="#ffffff" />
           ) : (
-            'Save changes'
+            t('common.save_changes')
           )}
         </button>
       </div>

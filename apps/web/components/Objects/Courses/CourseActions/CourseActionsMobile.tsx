@@ -320,7 +320,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
                       className="w-full py-2 px-4 rounded-lg bg-neutral-900 text-white font-semibold text-sm hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {formattedPrice ? `Get Access for ${formattedPrice}` : 'Purchase Course'}
+                      {formattedPrice ? t('courses.get_access_for', { price: formattedPrice }) : t('courses.purchase_course')}
                     </button>
                   </Link>
                 </>

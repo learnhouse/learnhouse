@@ -1,4 +1,5 @@
 import React from 'react'
+import AdminPageHeader from '@components/Admin/AdminPageHeader'
 import type { Metadata } from 'next'
 import DevelopersTabs from '@components/Admin/Developers/DevelopersTabs'
 
@@ -9,12 +10,7 @@ export const metadata: Metadata = {
 export default function AdminDevelopersPage() {
   return (
     <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Developers</h1>
-        <p className="text-white/40 mt-1">
-          API tokens, endpoint reference, and a live playground for cross-org automation.
-        </p>
-      </div>
+      <AdminPageHeader titleKey="admin.pages.developers" descriptionKey="admin.pages.developers_desc" className="mb-6" />
       <DevelopersTabs />
     </div>
   )

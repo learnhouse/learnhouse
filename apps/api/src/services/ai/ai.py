@@ -22,6 +22,7 @@ from src.services.ai.base import (
     save_message_to_history,
 )
 from src.services.ai.llm import model_for_tier
+from src.services.ai.llm.errors import ai_error_message, is_quota_error
 from src.services.ai.rag.access import can_read_activity
 from src.services.courses.activities.dynamic_context import render_for_reader
 
@@ -228,8 +229,10 @@ async def ai_start_activity_chat_session(
     except Exception as e:
         # Refund the credit we reserved up-front since the AI call failed.
         refund_ai_credit(org.id)
-        logger.error("AI service error in ai_start_activity_chat_session: %s", e)
-        raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
+        (logger.warning if is_quota_error(e) else logger.error)(
+            "AI service error in ai_start_activity_chat_session: %s", e
+        )
+        raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": ai_error_message(e, "AI service is temporarily unavailable")})
 
     # Save the message exchange to history (and record who owns the session)
     save_message_to_history(

@@ -66,7 +66,7 @@ function DashMobileMenu() {
 
   const mode = getDeploymentMode()
   const planLabel =
-    mode === 'ee' ? 'Enterprise Edition' :
+    mode === 'ee' ? t('dashboard.nav.enterprise_edition') :
     mode === 'oss' ? 'OSS' :
     plan
 
@@ -153,7 +153,7 @@ function DashMobileMenu() {
           {/* Menu toggle */}
           <button
             onClick={() => setMenuOpen(v => !v)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-label={menuOpen ? t('dashboard.nav.close_menu') : t('dashboard.nav.open_menu')}
             aria-expanded={menuOpen}
             className={cn(
               'p-2.5 rounded-full transition-all duration-200 overflow-hidden',
@@ -235,10 +235,10 @@ function DashMobileMenu() {
                 {isEnabled('communities') && <PanelItem href="/dash/communities" icon={<ChatsCircle size={15} weight="fill" />} label={t('communities.title')} active={isActive('/dash/communities')} onClick={close} />}
                 {isEnabled('podcasts') && <PanelItem href="/dash/podcasts" icon={<Headphones size={15} weight="fill" />} label={t('podcasts.podcasts')} active={isActive('/dash/podcasts')} onClick={close} />}
                 {isEnabled('live_sessions') && <PanelItem href="/dash/live-sessions" icon={<VideoCamera size={15} weight="fill" />} label={t('live_sessions.title')} active={isActive('/dash/live-sessions')} onClick={close} />}
-                {isEnabled('boards') && <PanelItem href="/dash/boards" icon={<ChalkboardSimple size={15} weight="fill" />} label="Boards" active={isActive('/dash/boards')} onClick={close} />}
-                {isEnabled('playgrounds') && <PanelItem href="/dash/playgrounds" icon={<Cube size={15} weight="fill" />} label="Playgrounds" active={isActive('/dash/playgrounds')} onClick={close} />}
+                {isEnabled('boards') && <PanelItem href="/dash/boards" icon={<ChalkboardSimple size={15} weight="fill" />} label={t('common.boards')} active={isActive('/dash/boards')} onClick={close} />}
+                {isEnabled('playgrounds') && <PanelItem href="/dash/playgrounds" icon={<Cube size={15} weight="fill" />} label={t('common.playgrounds')} active={isActive('/dash/playgrounds')} onClick={close} />}
                 {isEnabled('payments') && <PanelItem href="/dash/payments/overview" icon={<CurrencyCircleDollar size={15} weight="fill" />} label={t('common.payments')} active={isActive('/dash/payments')} onClick={close} />}
-                <PanelItem href="/dash/analytics" icon={<ChartBar size={15} weight="fill" />} label="Analytics" active={isActive('/dash/analytics')} onClick={close} />
+                <PanelItem href="/dash/analytics" icon={<ChartBar size={15} weight="fill" />} label={t('common.analytics')} active={isActive('/dash/analytics')} onClick={close} />
                 <PanelItem href="/dash/org/settings/general" icon={<Buildings size={15} weight="fill" />} label={t('common.organization')} active={isActive('/dash/org')} onClick={close} />
                 <PanelItem href="/dash/developers/api" icon={<Code size={15} weight="fill" />} label={t('dashboard.developers.breadcrumb', { defaultValue: 'Developers' })} active={isActive('/dash/developers')} onClick={close} />
 

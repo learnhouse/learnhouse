@@ -140,7 +140,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
       const file = new File([blob], 'ai_image.jpg', { type: 'image/jpeg' })
       formik.setFieldValue('thumbnail', file)
     } catch (_error) {
-      toast.error('Failed to load the generated image')
+      toast.error(t('podcasts.modals.create.generated_image_failed'))
     }
     setIsUploading(false)
   }

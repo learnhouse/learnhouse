@@ -1,5 +1,10 @@
 {
   "index": "Overview",
+  "settings": "Settings",
+  "landing-page": "Landing Page",
+  "custom-domains": "Custom Domains",
+  "seo": "SEO",
+  "plans": "Plans & Limits",
   "multi-tenancy": "Multi-Tenancy",
-  "settings": "Settings"
+  "admin-dashboard": "Admin Dashboard"
 }

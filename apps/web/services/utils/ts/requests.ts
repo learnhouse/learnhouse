@@ -200,6 +200,43 @@ export const apiFetch = async (url: string, token?: string) => {
   return errorHandling(request)
 }
 
+/**
+ * The human message inside a FastAPI `detail`, which can be a string, a
+ * `{code, message}` object or a validation-error list. Passing the object on
+ * to a toast or an error banner crashes React ("Objects are not valid as a
+ * React child") and swaps a clear message for the error screen.
+ */
+export function detailMessage(detail: any, fallback: string): string {
+  if (typeof detail === 'string' && detail) return detail
+  if (detail && typeof detail.message === 'string' && detail.message) return detail.message
+  if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg
+  return fallback
+}
+
+const TRANSIENT_STATUSES = new Set([502, 503, 504])
+
+/**
+ * fetch() for idempotent reads that rides out a backend restart. During a
+ * rollout the API answers 502/503 or refuses connections for a few seconds,
+ * and every page rendered in that window used to fail its org lookup and land
+ * on the error screen. Retries those, then hands back whatever came last.
+ */
+export async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  { retries = 2, delayMs = 400 }: { retries?: number; delayMs?: number } = {}
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(url, options)
+      if (!TRANSIENT_STATUSES.has(res.status) || attempt >= retries) return res
+    } catch (e) {
+      if (attempt >= retries) throw e
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs * (attempt + 1)))
+  }
+}
+
 export const errorHandling = async (res: any) => {
   if (!res.ok) {
     let detail: any = res.statusText

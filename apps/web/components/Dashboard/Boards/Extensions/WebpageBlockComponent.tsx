@@ -173,7 +173,7 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
               onClick={() => setEditing(false)}
               className="text-[11px] text-neutral-400 hover:text-neutral-500 transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
           )}
         </div>
@@ -229,14 +229,14 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
           <button
             onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startEditing() }}
             className="text-neutral-400 hover:text-neutral-600 transition-colors shrink-0 p-0.5 rounded hover:bg-neutral-100"
-            title="Edit URL"
+            title={t('boards.webpage_block.edit_url')}
           >
             <Pencil size={11} />
           </button>
           <button
             onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); handleRemove() }}
             className="text-neutral-400 hover:text-red-500 transition-colors shrink-0 p-0.5 rounded hover:bg-neutral-100"
-            title="Remove"
+            title={t('boards.webpage_block.remove')}
           >
             <X size={11} />
           </button>
@@ -268,7 +268,7 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
             iframeRef.current?.blur()
           }}
           tabIndex={-1}
-          title={title || 'Webpage'}
+          title={title || t('boards.toolbar.webpage')}
         />}
       </div>
 

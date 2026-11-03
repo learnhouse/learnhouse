@@ -70,6 +70,26 @@ import {
   Robot,
   WebhooksLogo,
   PlugsConnected,
+  Keyboard,
+  Sparkle,
+  UploadSimple,
+  Student,
+  ListBullets,
+  ChartLine,
+  ChartPieSlice,
+  UserPlus,
+  Fingerprint,
+  UserCircle,
+  Globe,
+  GlobeHemisphereWest,
+  Layout,
+  Tag,
+  Crown,
+  Books,
+  CalendarDots,
+  Steps,
+  BracketsCurly,
+  Drop,
 } from '@phosphor-icons/react/dist/ssr'
 
 const ICON_SIZE = 15
@@ -98,11 +118,17 @@ const iconMap = {
 
   // Platform > Courses
   '/platform/courses/chapters-and-activities': Stack,
-  '/platform/courses/collections': Folder,
+  '/platform/courses/settings': SlidersHorizontal,
+  '/platform/courses/library': Books,
+  '/platform/courses/ai-course-creator': Sparkle,
+  '/platform/courses/import-export': UploadSimple,
+  '/platform/courses/taking-a-course': Student,
   '/platform/courses/trails': Path,
+  '/platform/courses/drip-content': Drop,
 
   // Platform > Editor
   '/platform/editor/blocks': Cube,
+  '/platform/editor/dynamic-content': BracketsCurly,
 
   // Platform > AI
   '/platform/ai/for-students': GraduationCap,
@@ -111,10 +137,17 @@ const iconMap = {
   // Platform > Users
   '/platform/users/roles-and-permissions': ShieldCheck,
   '/platform/users/authentication': Key,
+  '/platform/users/members-and-invites': UserPlus,
+  '/platform/users/user-groups': UsersThree,
+  '/platform/users/two-factor': Fingerprint,
+  '/platform/users/learner-analytics': UserCircle,
+  '/platform/users/emails': Envelope,
 
   // Platform > Assignments
   '/platform/assignments': ClipboardText,
   '/platform/assignments/grading': CheckCircle,
+  '/platform/assignments/task-types': ListBullets,
+  '/platform/assignments/analytics': ChartLine,
 
   // Platform > Code Execution
   '/platform/code-execution': Terminal,
@@ -125,21 +158,27 @@ const iconMap = {
   // Platform > Discussions
   '/platform/discussions': ChatCircle,
   '/platform/discussions/comments': ChatDots,
+  '/platform/discussions/managing': ShieldCheck,
 
   // Platform > Boards
   '/platform/boards': ChalkboardSimple,
 
   // Platform > Podcasts
   '/platform/podcasts': Microphone,
+  '/platform/calendar': CalendarDots,
+  '/platform/paths': Steps,
 
   // Platform > Certifications
   '/platform/certifications': Certificate,
 
   // Platform > Analytics
   '/platform/analytics': ChartBar,
+  '/platform/analytics/dashboard': ChartPieSlice,
+  '/platform/analytics/course-analytics': ChartLine,
 
   // Platform > Search
   '/platform/search': MagnifyingGlass,
+  '/platform/search/keyboard-shortcuts': Keyboard,
 
   // Platform > Payments
   '/platform/payments': CreditCard,
@@ -152,6 +191,11 @@ const iconMap = {
   // Platform > Organizations
   '/platform/organizations/multi-tenancy': TreeStructure,
   '/platform/organizations/settings': SlidersHorizontal,
+  '/platform/organizations/landing-page': Layout,
+  '/platform/organizations/custom-domains': GlobeHemisphereWest,
+  '/platform/organizations/seo': Globe,
+  '/platform/organizations/plans': Tag,
+  '/platform/organizations/admin-dashboard': Crown,
 
   // Platform > Automations
   '/platform/automations': Lightning,

@@ -4,6 +4,7 @@ import { uploadNewImageFile } from '@services/blocks/Image/images'
 import { uploadNewVideoFile } from '@services/blocks/Video/video'
 import { uploadNewPDFFile } from '@services/blocks/Pdf/pdf'
 import toast from 'react-hot-toast'
+import i18n from '@/lib/i18n'
 
 interface PasteFileHandlerOptions {
   activity: any
@@ -16,6 +17,12 @@ interface FileTypeMapping {
   blockType: BlockType
   label: string
   upload: (file: File, activityUuid: string, accessToken: string) => Promise<any>
+}
+
+const PASTE_TOAST_KEYS: Record<string, { uploading: string; uploaded: string }> = {
+  image: { uploading: 'editor.paste_upload.uploading_image', uploaded: 'editor.paste_upload.image_uploaded' },
+  video: { uploading: 'editor.paste_upload.uploading_video', uploaded: 'editor.paste_upload.video_uploaded' },
+  PDF: { uploading: 'editor.paste_upload.uploading_pdf', uploaded: 'editor.paste_upload.pdf_uploaded' },
 }
 
 const MIME_TYPE_MAP: Record<string, FileTypeMapping> = {
@@ -56,7 +63,7 @@ const PasteFileHandler = Extension.create<PasteFileHandlerOptions>({
         const { blockType, label, upload } = mapping
         const activityUuid = activity.activity_uuid
 
-        const toastId = toast.loading(`Uploading ${label}...`)
+        const toastId = toast.loading(i18n.t(PASTE_TOAST_KEYS[label].uploading))
 
         // Upload first, then insert the block with the completed data.
         // This avoids the problem where block components initialize
@@ -66,7 +73,7 @@ const PasteFileHandler = Extension.create<PasteFileHandlerOptions>({
         upload(file, activityUuid, accessToken)
           .then((data) => {
             toast.dismiss(toastId)
-            toast.success(`${label.charAt(0).toUpperCase() + label.slice(1)} uploaded`)
+            toast.success(i18n.t(PASTE_TOAST_KEYS[label].uploaded))
 
             const insertPos =
               pos !== undefined ? pos : editor.state.selection.anchor

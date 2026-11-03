@@ -56,9 +56,9 @@ function getBarPercent(usage: number, limit: number | 'unlimited'): number {
 }
 
 const METER_ICONS: Record<string, React.ComponentType<any>> = {
-  Courses: BookOpen,
-  Members: Users,
-  'Admin Seats': ShieldCheck,
+  courses: BookOpen,
+  members: Users,
+  admin_seats: ShieldCheck,
 }
 
 export default function OrgEditUsage() {
@@ -100,9 +100,9 @@ export default function OrgEditUsage() {
 
   const meters = features
     ? [
-        { label: t('dashboard.organization.usage.courses'), ...features.courses },
-        { label: t('dashboard.organization.usage.members_label'), ...features.members },
-        { label: t('dashboard.organization.usage.admin_seats'), ...features.admin_seats },
+        { id: 'courses', label: t('dashboard.organization.usage.courses'), ...features.courses },
+        { id: 'members', label: t('dashboard.organization.usage.members_label'), ...features.members },
+        { id: 'admin_seats', label: t('dashboard.organization.usage.admin_seats'), ...features.admin_seats },
       ]
     : []
 
@@ -144,7 +144,7 @@ export default function OrgEditUsage() {
                 const barPercent = isUnlimited
                   ? 30
                   : getBarPercent(meter.usage, meter.limit)
-                const Icon = METER_ICONS[meter.label] || BookOpen
+                const Icon = METER_ICONS[meter.id] || BookOpen
                 const pct = isUnlimited
                   ? null
                   : Math.round(
@@ -152,7 +152,7 @@ export default function OrgEditUsage() {
                     )
 
                 return (
-                  <div key={meter.label}>
+                  <div key={meter.id}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2.5">
                         <Icon
@@ -181,19 +181,19 @@ export default function OrgEditUsage() {
                         style={{ width: `${barPercent}%` }}
                       />
                     </div>
-                    {!isUnlimited && meter.label === 'Members' && (features?.members?.purchased ?? 0) > 0 && (
+                    {!isUnlimited && meter.id === 'members' && (features?.members?.purchased ?? 0) > 0 && (
                       <p className="text-xs text-gray-400 mt-1.5">
-                        Plan: {features?.members?.plan_limit ?? 0} + Purchased: {features?.members?.purchased} = {meter.limit}
+                        {t('dashboard.organization.usage.plan_purchased', { plan: features?.members?.plan_limit ?? 0, purchased: features?.members?.purchased, total: meter.limit })}
                       </p>
                     )}
                     {!isUnlimited && meter.limit_reached && (
                       <p className="text-xs text-red-500 mt-1.5">
-                        Limit reached
+                        {t('dashboard.organization.usage.limit_reached')}
                       </p>
                     )}
-                    {!isUnlimited && !meter.limit_reached && !(meter.label === 'Members' && (features?.members?.purchased ?? 0) > 0) && (
+                    {!isUnlimited && !meter.limit_reached && !(meter.id === 'members' && (features?.members?.purchased ?? 0) > 0) && (
                       <p className="text-xs text-gray-400 mt-1.5">
-                        {meter.remaining} remaining
+                        {t('dashboard.organization.usage.remaining_count', { count: meter.remaining })}
                       </p>
                     )}
                     {isUnlimited && (
@@ -207,7 +207,7 @@ export default function OrgEditUsage() {
 
               {meters.length === 0 && (
                 <p className="text-sm text-gray-400 text-center py-6">
-                  Usage data unavailable
+                  {t('dashboard.organization.usage.unavailable')}
                 </p>
               )}
             </div>
@@ -231,7 +231,7 @@ export default function OrgEditUsage() {
       {packsData && packsData.active_packs.length > 0 && (
         <div className="bg-white rounded-xl nice-shadow">
           <div className="border-b px-6 py-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-800">Active Packs</h3>
+            <h3 className="text-lg font-semibold text-gray-800">{t('dashboard.organization.usage.active_packs')}</h3>
             <Package size={20} weight="duotone" className="text-gray-400" />
           </div>
           <div className="p-6">
@@ -250,12 +250,12 @@ export default function OrgEditUsage() {
                         {catalogItem?.label ?? pack.pack_id}
                       </p>
                       <p className="text-xs text-gray-400">
-                        AI Credits{' '}
+                        {t('dashboard.organization.usage.ai_credits')}{' '}
                         &middot; {pack.quantity}
                       </p>
                     </div>
                     <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-                      Active
+                      {t('dashboard.organization.usage.active')}
                     </span>
                   </div>
                 )
@@ -271,10 +271,10 @@ export default function OrgEditUsage() {
           <div className="p-6 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold text-gray-800">
-                Need more capacity?
+                {t('dashboard.organization.usage.need_capacity')}
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                Purchase additional AI credits.
+                {t('dashboard.organization.usage.purchase_credits')}
               </p>
             </div>
             <a
@@ -283,7 +283,7 @@ export default function OrgEditUsage() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-              Buy More
+              {t('dashboard.organization.usage.buy_more')}
               <ArrowSquareOut size={14} weight="bold" />
             </a>
           </div>
@@ -347,10 +347,10 @@ function AICreditsDetail({ credits }: { credits: AICreditsSummary }) {
           <p className="text-xs text-gray-400 mt-1.5">{used} {t('dashboard.organization.usage.used').toLowerCase()}</p>
         ) : remaining !== null && remaining > 0 ? (
           <p className="text-xs text-gray-400 mt-1.5">
-            {remaining} remaining
+            {t('dashboard.organization.usage.remaining_count', { count: remaining })}
           </p>
         ) : remaining !== null && remaining <= 0 ? (
-          <p className="text-xs text-red-500 mt-1.5">No credits remaining</p>
+          <p className="text-xs text-red-500 mt-1.5">{t('dashboard.organization.usage.no_credits')}</p>
         ) : null}
       </div>
 
@@ -437,7 +437,7 @@ function PlanUpsell({ orgSlug, currentPlan }: { orgSlug: string; currentPlan: st
               <p className="text-xs text-gray-500 mb-3">{plan.tagline}</p>
               <p className="mb-4">
                 <span className="text-2xl font-black text-gray-900">${plan.monthlyPrice}</span>
-                <span className="text-sm text-gray-400 font-medium">/mo</span>
+                <span className="text-sm text-gray-400 font-medium">{t('dashboard.organization.usage.upsell.per_month')}</span>
               </p>
               <ul className="space-y-1.5 mb-5 flex-1">
                 {plan.features.slice(0, 6).map((f) => (

@@ -8,6 +8,7 @@
 import { getAPIUrl } from '@services/config/config'
 import { safeExternalUrl } from '@services/security/url'
 import { getErrorMessage as getDetailMessage } from '@services/utils/ts/errorMessage'
+import i18n from '@/lib/i18n'
 
 // ============================================================================
 // Types
@@ -467,7 +468,9 @@ export function getErrorMessage(errorCode: string, errorDescription?: string): s
     callback_failed: 'Failed to complete SSO authentication. Please try again.',
   }
 
-  return errorMessages[errorCode] || errorDescription || `Authentication error: ${errorCode}`
+  const english = errorMessages[errorCode]
+  if (english) return i18n.t(`auth.sso_errors.${errorCode}`, { defaultValue: english })
+  return errorDescription || i18n.t('auth.sso_errors.generic', { code: errorCode })
 }
 
 /**

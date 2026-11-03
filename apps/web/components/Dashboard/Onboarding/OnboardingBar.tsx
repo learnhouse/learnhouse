@@ -46,12 +46,12 @@ import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ACTIVITY_TYPES = [
-  { icon: Browsers, color: 'text-blue-400', label: 'Page' },
-  { icon: PlayCircle, color: 'text-violet-400', label: 'Video' },
-  { icon: FileText, color: 'text-emerald-400', label: 'Document' },
-  { icon: Backpack, color: 'text-amber-400', label: 'Assignment' },
-  { icon: MarkdownLogo, color: 'text-rose-400', label: 'Markdown' },
-  { icon: Globe, color: 'text-cyan-400', label: 'Embed' },
+  { icon: Browsers, color: 'text-blue-400', labelKey: 'activities.page' },
+  { icon: PlayCircle, color: 'text-violet-400', labelKey: 'activities.video' },
+  { icon: FileText, color: 'text-emerald-400', labelKey: 'activities.document' },
+  { icon: Backpack, color: 'text-amber-400', labelKey: 'activities.assignment' },
+  { icon: MarkdownLogo, color: 'text-rose-400', labelKey: 'activities.markdown' },
+  { icon: Globe, color: 'text-cyan-400', labelKey: 'activities.embed' },
 ]
 
 const STEP_CONFIG: Record<
@@ -532,7 +532,7 @@ export default function OnboardingBar() {
                                         <div className="flex gap-2">
                                           {ACTIVITY_TYPES.map((activity) => (
                                             <div
-                                              key={activity.label}
+                                              key={activity.labelKey}
                                               className="flex flex-col items-center gap-1.5 flex-1 py-2 rounded-lg bg-white nice-shadow"
                                             >
                                               <activity.icon
@@ -541,7 +541,7 @@ export default function OnboardingBar() {
                                                 className={activity.color}
                                               />
                                               <span className="text-[10px] font-medium text-gray-500">
-                                                {activity.label}
+                                                {t(activity.labelKey)}
                                               </span>
                                             </div>
                                           ))}

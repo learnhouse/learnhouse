@@ -18,13 +18,13 @@ import { reorderAssignmentTasks } from '@services/courses/assignments'
 
 dayjs.extend(relativeTime)
 
-const TASK_TYPE_META: Record<string, { label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }> = {
-    QUIZ: { label: 'Quiz', Icon: ListTodo },
-    FILE_SUBMISSION: { label: 'File upload', Icon: FileUp },
-    FORM: { label: 'Form', Icon: Type },
-    CODE: { label: 'Code', Icon: Code2 },
-    SHORT_ANSWER: { label: 'Short answer', Icon: Pencil },
-    NUMBER_ANSWER: { label: 'Number', Icon: Hash },
+const TASK_TYPE_META: Record<string, { label: string; labelKey?: string; Icon: React.ComponentType<{ size?: number; className?: string }> }> = {
+    QUIZ: { label: 'Quiz', labelKey: 'dashboard.assignments.editor.task_type_labels.quiz', Icon: ListTodo },
+    FILE_SUBMISSION: { label: 'File upload', labelKey: 'dashboard.assignments.editor.task_type_labels.file_submission', Icon: FileUp },
+    FORM: { label: 'Form', labelKey: 'dashboard.assignments.editor.task_type_labels.form', Icon: Type },
+    CODE: { label: 'Code', labelKey: 'dashboard.assignments.editor.task_type_labels.code', Icon: Code2 },
+    SHORT_ANSWER: { label: 'Short answer', labelKey: 'dashboard.assignments.editor.task_type_labels.short_answer', Icon: Pencil },
+    NUMBER_ANSWER: { label: 'Number', labelKey: 'dashboard.assignments.editor.task_type_labels.number_answer', Icon: Hash },
 }
 
 function stripMarkup(text: string): string {
@@ -192,7 +192,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
                                         <span className='inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-100 text-gray-500 font-bold'>
                                             {position}
                                         </span>
-                                        <span>{meta.label}</span>
+                                        <span>{meta.labelKey ? t(meta.labelKey) : meta.label}</span>
                                     </div>
                                     <div className='flex items-center gap-1 text-gray-300'>
                                         <GripVertical
@@ -206,7 +206,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
 
                                 {/* Title */}
                                 <div className='text-sm font-semibold text-gray-800 leading-snug break-words'>
-                                    {task.title || <span className='text-gray-300 italic font-normal'>Untitled task</span>}
+                                    {task.title || <span className='text-gray-300 italic font-normal'>{t('dashboard.assignments.editor.untitled_task')}</span>}
                                 </div>
 
                                 {/* Description */}
@@ -220,10 +220,10 @@ function AssignmentTasks({ assignment_uuid }: any) {
                                 <div className='mt-2.5 pt-2 border-t border-gray-50 flex items-center justify-between text-[11px] text-gray-400'>
                                     <div className='flex items-center gap-1'>
                                         <Clock size={10} />
-                                        <span>{createdLabel ?? 'n/a'}</span>
+                                        <span>{createdLabel ?? t('dashboard.assignments.editor.not_available')}</span>
                                     </div>
                                     {typeof task.max_grade_value === 'number' && task.max_grade_value !== 100 && (
-                                        <span className='font-medium text-gray-500'>out of {task.max_grade_value}</span>
+                                        <span className='font-medium text-gray-500'>{t('dashboard.assignments.editor.out_of', { max: task.max_grade_value })}</span>
                                     )}
                                 </div>
                             </div>
@@ -240,7 +240,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
 
                 {tasks.length === 0 && assignments && (
                     <div className='rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-8 text-center'>
-                        <div className='text-xs text-gray-400'>No tasks yet. Add one to get started.</div>
+                        <div className='text-xs text-gray-400'>{t('dashboard.assignments.editor.no_tasks')}</div>
                     </div>
                 )}
             </div>
