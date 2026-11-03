@@ -4,8 +4,10 @@ const Picker = lazy(() => import('@emoji-mart/react'))
 import { CaretDown, CaretRight, Palette } from '@phosphor-icons/react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useTranslation } from 'react-i18next'
 
 const BadgesExtension: React.FC = (props: any) => {
+  const { t } = useTranslation()
   const [color, setColor] = useState(props.node.attrs.color)
   const [emoji, setEmoji] = useState(props.node.attrs.emoji)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -202,7 +204,7 @@ const BadgesExtension: React.FC = (props: any) => {
 
       {isEditable && showEmojiPicker && (
         <div ref={pickerRef}>
-          <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
+          <Suspense fallback={<div className="p-4 text-gray-400 text-sm">{t('common.loading')}</div>}>
             <Picker
               searchPosition="top"
               theme="light"

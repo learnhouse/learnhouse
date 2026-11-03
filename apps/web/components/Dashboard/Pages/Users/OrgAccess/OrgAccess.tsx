@@ -23,6 +23,7 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import OrgSignupFields from './OrgSignupFields'
 
 function CopyButton({ text }: { text: string }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = React.useState(false)
 
   const handleCopy = async () => {
@@ -35,7 +36,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       onClick={handleCopy}
       className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-      title="Copy to clipboard"
+      title={t('auth.sso_callback.copy_details')}
     >
       {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
     </button>

@@ -1,5 +1,6 @@
 'use client'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useTranslation } from 'react-i18next'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import {
   Info,
@@ -16,7 +17,7 @@ export type CalloutType = 'info' | 'warning' | 'tip' | 'success' | 'error'
 const CALLOUT_TYPES: Record<
   CalloutType,
   {
-    label: string
+    labelKey: string
     Icon: React.ElementType
     bg: string
     text: string
@@ -25,7 +26,7 @@ const CALLOUT_TYPES: Record<
   }
 > = {
   info: {
-    label: 'Info',
+    labelKey: 'editor.blocks.callout_block.type_info',
     Icon: Info,
     bg: 'bg-gray-100',
     text: 'text-gray-700',
@@ -33,7 +34,7 @@ const CALLOUT_TYPES: Record<
     ring: 'ring-gray-200',
   },
   warning: {
-    label: 'Warning',
+    labelKey: 'editor.blocks.callout_block.type_warning',
     Icon: Warning,
     bg: 'bg-yellow-100',
     text: 'text-yellow-900',
@@ -41,7 +42,7 @@ const CALLOUT_TYPES: Record<
     ring: 'ring-yellow-300',
   },
   tip: {
-    label: 'Tip',
+    labelKey: 'editor.blocks.callout_block.type_tip',
     Icon: Lightbulb,
     bg: 'bg-green-50',
     text: 'text-green-900',
@@ -49,7 +50,7 @@ const CALLOUT_TYPES: Record<
     ring: 'ring-green-200',
   },
   success: {
-    label: 'Success',
+    labelKey: 'editor.blocks.callout_block.type_success',
     Icon: CheckCircle,
     bg: 'bg-teal-50',
     text: 'text-teal-900',
@@ -57,7 +58,7 @@ const CALLOUT_TYPES: Record<
     ring: 'ring-teal-200',
   },
   error: {
-    label: 'Error',
+    labelKey: 'editor.blocks.callout_block.type_error',
     Icon: XCircle,
     bg: 'bg-red-50',
     text: 'text-red-900',
@@ -73,6 +74,7 @@ function resolveType(node: any): CalloutType {
 }
 
 function CalloutComponent(props: any) {
+  const { t } = useTranslation()
   const editorState = useEditorProvider() as any
   const isEditable = editorState?.isEditable ?? false
   const [dismissed, setDismissed] = useState(false)
@@ -148,7 +150,7 @@ function CalloutComponent(props: any) {
                 setShowPicker((v) => !v)
               }}
               className={`${config.iconColor} mt-[3px] hover:opacity-70 transition-opacity cursor-pointer`}
-              title="Change callout type"
+              title={t('editor.blocks.callout_block.change_type')}
             >
               <Icon size={18} weight="fill" />
             </button>
@@ -185,7 +187,7 @@ function CalloutComponent(props: any) {
                       }`}
                     >
                       <PickerIcon size={15} weight="fill" className={isActive ? cfg.iconColor : 'text-gray-400'} />
-                      {cfg.label}
+                      {t(cfg.labelKey)}
                     </button>
                   )
                 }

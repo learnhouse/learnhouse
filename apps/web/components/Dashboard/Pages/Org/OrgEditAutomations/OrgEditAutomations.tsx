@@ -171,15 +171,15 @@ const OrgEditAutomations: React.FC = () => {
 
   const handleCreate = async () => {
     if (!createUrl.trim()) {
-      toast.error('URL is required')
+      toast.error(t('dashboard.organization.automations.toasts.url_required'))
       return
     }
     if (createEvents.length === 0) {
-      toast.error('Select at least one event')
+      toast.error(t('dashboard.organization.automations.toasts.select_event'))
       return
     }
 
-    const loadingToast = toast.loading('Creating webhook...')
+    const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.creating'))
     try {
       const data: WebhookCreateRequest = {
         url: createUrl.trim(),
@@ -193,18 +193,18 @@ const OrgEditAutomations: React.FC = () => {
         setShowSecret(true)
         track(AnalyticsEvent.WebhookCreated, { events_count: createEvents.length })
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
-        toast.success('Webhook created', { id: loadingToast })
+        toast.success(t('dashboard.organization.automations.toasts.created'), { id: loadingToast })
         resetCreateForm()
       } else {
-        toast.error(response.data?.detail || 'Failed to create webhook', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.create_failed'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create webhook', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.automations.toasts.create_failed'), { id: loadingToast })
     }
   }
 
   const handleToggleActive = async (webhook: WebhookEndpoint) => {
-    const loadingToast = toast.loading(webhook.is_active ? 'Disabling...' : 'Enabling...')
+    const loadingToast = toast.loading(webhook.is_active ? t('dashboard.organization.automations.toasts.disabling') : t('dashboard.organization.automations.toasts.enabling'))
     try {
       const response = await updateWebhookEndpoint(
         org.id,
@@ -214,62 +214,62 @@ const OrgEditAutomations: React.FC = () => {
       )
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
-        toast.success(webhook.is_active ? 'Webhook disabled' : 'Webhook enabled', { id: loadingToast })
+        toast.success(webhook.is_active ? t('dashboard.organization.automations.toasts.disabled') : t('dashboard.organization.automations.toasts.enabled'), { id: loadingToast })
       } else {
-        toast.error(response.data?.detail || 'Failed to update', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.update_failed'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.automations.toasts.update_failed'), { id: loadingToast })
     }
   }
 
   const handleDelete = async () => {
     if (!selectedWebhook) return
-    const loadingToast = toast.loading('Deleting webhook...')
+    const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.deleting'))
     try {
       const response = await deleteWebhookEndpoint(org.id, selectedWebhook.webhook_uuid, access_token)
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
-        toast.success('Webhook deleted', { id: loadingToast })
+        toast.success(t('dashboard.organization.automations.toasts.deleted'), { id: loadingToast })
         setIsDeleteDialogOpen(false)
         setSelectedWebhook(null)
       } else {
-        toast.error(response.data?.detail || 'Failed to delete', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.delete_failed'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.automations.toasts.delete_failed'), { id: loadingToast })
     }
   }
 
   const handleRegenerate = async () => {
     if (!selectedWebhook) return
-    const loadingToast = toast.loading('Regenerating secret...')
+    const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.regenerating'))
     try {
       const response = await regenerateWebhookSecret(org.id, selectedWebhook.webhook_uuid, access_token)
       if (response.success) {
         setNewSecret(response.data.secret)
         setShowSecret(true)
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
-        toast.success('Secret regenerated', { id: loadingToast })
+        toast.success(t('dashboard.organization.automations.toasts.regenerated'), { id: loadingToast })
       } else {
-        toast.error(response.data?.detail || 'Failed to regenerate', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.regenerate_failed'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to regenerate', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.automations.toasts.regenerate_failed'), { id: loadingToast })
     }
   }
 
   const handleTest = async (webhook: WebhookEndpoint) => {
-    const loadingToast = toast.loading('Sending test event...')
+    const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.sending_test'))
     try {
       const response = await sendTestEvent(org.id, webhook.webhook_uuid, access_token)
       if (response.success) {
-        toast.success('Test event sent', { id: loadingToast })
+        toast.success(t('dashboard.organization.automations.toasts.test_sent'), { id: loadingToast })
       } else {
-        toast.error(response.data?.detail || 'Failed to send test', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.test_failed'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send test', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.automations.toasts.test_failed'), { id: loadingToast })
     }
   }
 
@@ -283,7 +283,7 @@ const OrgEditAutomations: React.FC = () => {
         setDeliveryLogs(response.data)
       }
     } catch {
-      toast.error('Failed to load delivery logs')
+      toast.error(t('dashboard.organization.automations.toasts.logs_failed'))
     } finally {
       setLogsLoading(false)
     }
@@ -297,7 +297,7 @@ const OrgEditAutomations: React.FC = () => {
   }
 
   const handleSaveEdit = async (webhook: WebhookEndpoint) => {
-    const loadingToast = toast.loading('Saving...')
+    const loadingToast = toast.loading(t('dashboard.organization.automations.toasts.saving'))
     try {
       const response = await updateWebhookEndpoint(
         org.id,
@@ -311,20 +311,20 @@ const OrgEditAutomations: React.FC = () => {
       )
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.org.automations(org.id) })
-        toast.success('Webhook updated', { id: loadingToast })
+        toast.success(t('dashboard.organization.automations.toasts.updated'), { id: loadingToast })
         setEditingWebhook(null)
       } else {
-        toast.error(response.data?.detail || 'Failed to update', { id: loadingToast })
+        toast.error(response.data?.detail || t('dashboard.organization.automations.toasts.update_failed'), { id: loadingToast })
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update', { id: loadingToast })
+      toast.error(error.message || t('dashboard.organization.automations.toasts.update_failed'), { id: loadingToast })
     }
   }
 
   const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text)
     setCopiedSecret(true)
-    toast.success('Copied to clipboard')
+    toast.success(t('dashboard.organization.automations.toasts.copied'))
     setTimeout(() => setCopiedSecret(false), 2000)
   }
 
@@ -359,16 +359,16 @@ const OrgEditAutomations: React.FC = () => {
               <div className="flex items-center gap-2">
                 <h2 className="font-semibold text-gray-800 text-[15px]">Zapier</h2>
                 <Badge className="bg-violet-50 text-violet-700 border border-violet-200 text-[10px] font-semibold uppercase tracking-wider hover:bg-violet-50">
-                  Beta
+                  {t('dashboard.organization.automations.beta')}
                 </Badge>
                 {zapierWebhooks.length > 0 && (
                   <Badge className="bg-[#FFF5F0] text-[#FF4A00] border border-[#FFE5D6] text-[10px] font-semibold uppercase tracking-wider hover:bg-[#FFF5F0]">
-                    {zapierWebhooks.length} active {zapierWebhooks.length === 1 ? 'Zap' : 'Zaps'}
+                    {t('dashboard.organization.automations.active_zaps', { count: zapierWebhooks.length })}
                   </Badge>
                 )}
               </div>
               <p className="text-gray-500 text-xs mt-0.5">
-                Connect LearnHouse to thousands of apps without writing code.
+                {t('dashboard.organization.automations.zapier_description')}
               </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
@@ -378,7 +378,7 @@ const OrgEditAutomations: React.FC = () => {
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-gray-700 text-xs"
               >
-                Manage Zaps
+                {t('dashboard.organization.automations.manage_zaps')}
               </a>
               <a
                 href="https://zapier.com/apps/learnhouse/integrations"
@@ -390,7 +390,7 @@ const OrgEditAutomations: React.FC = () => {
                   size="sm"
                   className="border-gray-200 text-gray-700 hover:bg-gray-50"
                 >
-                  Connect
+                  {t('dashboard.organization.automations.connect')}
                   <ExternalLink size={12} className="ms-1.5" />
                 </Button>
               </a>
@@ -442,7 +442,7 @@ const OrgEditAutomations: React.FC = () => {
                   className="bg-black text-white hover:bg-black/90"
                 >
                   <Plus size={16} className="me-2" />
-                  Add Endpoint
+                  {t('dashboard.organization.automations.add_endpoint')}
                 </Button>
               </div>
 
@@ -497,8 +497,8 @@ const OrgEditAutomations: React.FC = () => {
               ) : (
                 <div className="text-center py-12 text-gray-500">
                   <Zap size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No webhook endpoints yet</p>
-                  <p className="text-sm">Create your first endpoint to start receiving events</p>
+                  <p>{t('dashboard.organization.automations.no_endpoints')}</p>
+                  <p className="text-sm">{t('dashboard.organization.automations.no_endpoints_hint')}</p>
                 </div>
               )}
             </div>
@@ -509,9 +509,9 @@ const OrgEditAutomations: React.FC = () => {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="px-6 pt-6">
-              <DialogTitle>Add Webhook Endpoint</DialogTitle>
+              <DialogTitle>{t('dashboard.organization.automations.add_dialog_title')}</DialogTitle>
               <DialogDescription>
-                Events will be sent as HTTP POST requests with a signed payload.
+                {t('dashboard.organization.automations.add_dialog_desc')}
               </DialogDescription>
             </DialogHeader>
 
@@ -521,16 +521,16 @@ const OrgEditAutomations: React.FC = () => {
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
                     <div>
-                      <p className="font-medium text-yellow-800">Save your signing secret now!</p>
+                      <p className="font-medium text-yellow-800">{t('dashboard.organization.automations.save_secret_title')}</p>
                       <p className="text-sm text-yellow-700">
-                        This is the only time you&apos;ll see this secret. Use it to verify webhook signatures.
+                        {t('dashboard.organization.automations.save_secret_hint')}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Signing Secret</Label>
+                  <Label>{t('dashboard.organization.automations.signing_secret')}</Label>
                   <div className="flex gap-2">
                     <Input
                       type={showSecret ? 'text' : 'password'}
@@ -549,14 +549,14 @@ const OrgEditAutomations: React.FC = () => {
 
                 <DialogFooter>
                   <Button onClick={() => { setIsCreateDialogOpen(false); setNewSecret(null); setShowSecret(false) }}>
-                    Done
+                    {t('dashboard.organization.automations.done')}
                   </Button>
                 </DialogFooter>
               </div>
             ) : (
               <div className="px-6 pb-6 space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="webhookUrl">Endpoint URL *</Label>
+                  <Label htmlFor="webhookUrl">{t('dashboard.organization.automations.endpoint_url_required')}</Label>
                   <Input
                     id="webhookUrl"
                     value={createUrl}
@@ -567,19 +567,19 @@ const OrgEditAutomations: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="webhookDescription">Description</Label>
+                  <Label htmlFor="webhookDescription">{t('dashboard.organization.automations.description')}</Label>
                   <Textarea
                     id="webhookDescription"
                     value={createDescription}
                     onChange={(e) => setCreateDescription(e.target.value)}
-                    placeholder="What is this webhook for?"
+                    placeholder={t('dashboard.organization.automations.description_placeholder')}
                     maxLength={500}
                   />
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label>Events *</Label>
+                    <Label>{t('dashboard.organization.automations.events_required')}</Label>
                     <div className="flex gap-2">
                       <Button
                         type="button"
@@ -588,7 +588,7 @@ const OrgEditAutomations: React.FC = () => {
                         className="text-xs"
                         onClick={() => setCreateEvents([...allEventIds])}
                       >
-                        Select all
+                        {t('dashboard.organization.automations.select_all')}
                       </Button>
                       <Button
                         type="button"
@@ -597,7 +597,7 @@ const OrgEditAutomations: React.FC = () => {
                         className="text-xs"
                         onClick={() => setCreateEvents([])}
                       >
-                        Clear
+                        {t('dashboard.organization.automations.clear')}
                       </Button>
                     </div>
                   </div>
@@ -609,8 +609,8 @@ const OrgEditAutomations: React.FC = () => {
                 </div>
 
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={handleCreate}>Create Endpoint</Button>
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>{t('common.cancel')}</Button>
+                  <Button onClick={handleCreate}>{t('dashboard.organization.automations.create_endpoint')}</Button>
                 </DialogFooter>
               </div>
             )}
@@ -623,22 +623,22 @@ const OrgEditAutomations: React.FC = () => {
             <DialogHeader className="px-6 pt-6">
               <DialogTitle className="flex items-center gap-2 text-red-600">
                 <AlertTriangle size={20} />
-                Delete Webhook
+                {t('dashboard.organization.automations.delete_title')}
               </DialogTitle>
               <DialogDescription>
-                This will permanently delete this endpoint and all its delivery logs.
+                {t('dashboard.organization.automations.delete_desc')}
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 pb-6">
               {selectedWebhook && (
                 <div className="bg-gray-50 rounded-lg p-3 mb-4">
                   <p className="font-medium truncate">{selectedWebhook.url}</p>
-                  <p className="text-sm text-gray-500">{selectedWebhook.events.length} events subscribed</p>
+                  <p className="text-sm text-gray-500">{t('dashboard.organization.automations.events_subscribed', { count: selectedWebhook.events.length })}</p>
                 </div>
               )}
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-                <Button variant="destructive" onClick={handleDelete}>Delete Endpoint</Button>
+                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
+                <Button variant="destructive" onClick={handleDelete}>{t('dashboard.organization.automations.delete_endpoint')}</Button>
               </DialogFooter>
             </div>
           </DialogContent>
@@ -650,10 +650,10 @@ const OrgEditAutomations: React.FC = () => {
             <DialogHeader className="px-6 pt-6">
               <DialogTitle className="flex items-center gap-2">
                 <RefreshCw size={20} />
-                Regenerate Signing Secret
+                {t('dashboard.organization.automations.regenerate_title')}
               </DialogTitle>
               <DialogDescription>
-                The old secret will immediately stop working. Update your integration with the new secret.
+                {t('dashboard.organization.automations.regenerate_desc')}
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 pb-6">
@@ -663,8 +663,8 @@ const OrgEditAutomations: React.FC = () => {
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
                       <div>
-                        <p className="font-medium text-yellow-800">Save your new secret!</p>
-                        <p className="text-sm text-yellow-700">This is the only time you&apos;ll see it.</p>
+                        <p className="font-medium text-yellow-800">{t('dashboard.organization.automations.save_new_secret_title')}</p>
+                        <p className="text-sm text-yellow-700">{t('dashboard.organization.automations.save_new_secret_hint')}</p>
                       </div>
                     </div>
                   </div>
@@ -684,7 +684,7 @@ const OrgEditAutomations: React.FC = () => {
                   </div>
                   <DialogFooter>
                     <Button onClick={() => { setIsRegenerateDialogOpen(false); setNewSecret(null); setShowSecret(false); setSelectedWebhook(null) }}>
-                      Done
+                      {t('dashboard.organization.automations.done')}
                     </Button>
                   </DialogFooter>
                 </div>
@@ -696,8 +696,8 @@ const OrgEditAutomations: React.FC = () => {
                     </div>
                   )}
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsRegenerateDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleRegenerate}>Regenerate</Button>
+                    <Button variant="outline" onClick={() => setIsRegenerateDialogOpen(false)}>{t('common.cancel')}</Button>
+                    <Button onClick={handleRegenerate}>{t('dashboard.organization.automations.regenerate')}</Button>
                   </DialogFooter>
                 </>
               )}
@@ -709,9 +709,9 @@ const OrgEditAutomations: React.FC = () => {
         <Dialog open={isDeliveryLogOpen} onOpenChange={setIsDeliveryLogOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="px-6 pt-6">
-              <DialogTitle>Delivery Logs</DialogTitle>
+              <DialogTitle>{t('dashboard.organization.automations.delivery_logs')}</DialogTitle>
               <DialogDescription>
-                Recent delivery attempts for this endpoint (last 30)
+                {t('dashboard.organization.automations.delivery_logs_desc')}
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 pb-6">
@@ -723,11 +723,11 @@ const OrgEditAutomations: React.FC = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Event</TableHead>
-                      <TableHead>Response</TableHead>
-                      <TableHead>Attempt</TableHead>
-                      <TableHead>Time</TableHead>
+                      <TableHead>{t('common.status')}</TableHead>
+                      <TableHead>{t('dashboard.organization.automations.log_event')}</TableHead>
+                      <TableHead>{t('dashboard.organization.automations.log_response')}</TableHead>
+                      <TableHead>{t('dashboard.organization.automations.log_attempt')}</TableHead>
+                      <TableHead>{t('dashboard.organization.automations.log_time')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -752,7 +752,7 @@ const OrgEditAutomations: React.FC = () => {
                               {log.response_status}
                             </Badge>
                           ) : (
-                            <span className="text-sm text-gray-400">{log.error_message ? 'Error' : '-'}</span>
+                            <span className="text-sm text-gray-400">{log.error_message ? t('dashboard.organization.automations.log_error') : '-'}</span>
                           )}
                         </TableCell>
                         <TableCell className="text-sm text-gray-600">#{log.attempt}</TableCell>
@@ -764,7 +764,7 @@ const OrgEditAutomations: React.FC = () => {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Clock size={32} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No delivery logs yet</p>
+                  <p className="text-sm">{t('dashboard.organization.automations.no_logs')}</p>
                 </div>
               )}
             </div>
@@ -817,6 +817,7 @@ const WebhookCard: React.FC<{
   eventCategories,
   eventRegistry,
 }) => {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -835,7 +836,7 @@ const WebhookCard: React.FC<{
                 variant={webhook.is_active ? 'default' : 'secondary'}
                 className={webhook.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}
               >
-                {webhook.is_active ? 'Active' : 'Inactive'}
+                {webhook.is_active ? t('dashboard.organization.automations.active') : t('dashboard.organization.automations.inactive')}
               </Badge>
             </div>
             {webhook.description && (
@@ -844,10 +845,10 @@ const WebhookCard: React.FC<{
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <Button variant="ghost" size="sm" onClick={onTest} title="Send test event">
+          <Button variant="ghost" size="sm" onClick={onTest} title={t('dashboard.organization.automations.send_test_event')}>
             <Send size={14} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onViewLogs} title="View delivery logs">
+          <Button variant="ghost" size="sm" onClick={onViewLogs} title={t('dashboard.organization.automations.view_delivery_logs')}>
             <Clock size={14} />
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
@@ -862,11 +863,11 @@ const WebhookCard: React.FC<{
           {isEditing ? (
             <>
               <div className="space-y-2">
-                <Label>Endpoint URL</Label>
+                <Label>{t('dashboard.organization.automations.endpoint_url')}</Label>
                 <Input value={editUrl} onChange={(e) => onEditUrl(e.target.value)} type="url" />
               </div>
               <div className="space-y-2">
-                <Label>Description</Label>
+                <Label>{t('dashboard.organization.automations.description')}</Label>
                 <Textarea
                   value={editDescription}
                   onChange={(e) => onEditDescription(e.target.value)}
@@ -874,18 +875,18 @@ const WebhookCard: React.FC<{
                 />
               </div>
               <div className="space-y-2">
-                <Label>Events</Label>
+                <Label>{t('dashboard.organization.automations.events')}</Label>
                 <EventSelector categories={eventCategories} selectedEvents={editEvents} onChangeEvents={onEditEvents} />
               </div>
               <div className="flex gap-2 pt-2">
-                <Button size="sm" onClick={onSaveEdit}>Save</Button>
-                <Button size="sm" variant="outline" onClick={onCancelEdit}>Cancel</Button>
+                <Button size="sm" onClick={onSaveEdit}>{t('common.save')}</Button>
+                <Button size="sm" variant="outline" onClick={onCancelEdit}>{t('common.cancel')}</Button>
               </div>
             </>
           ) : (
             <>
               <div>
-                <Label className="text-gray-500 text-xs">Events ({webhook.events.length})</Label>
+                <Label className="text-gray-500 text-xs">{t('dashboard.organization.automations.events_count', { count: webhook.events.length })}</Label>
                 <div className="mt-1 space-y-1">
                   {webhook.events.map((event) => {
                     const info = eventRegistry[event]
@@ -896,18 +897,18 @@ const WebhookCard: React.FC<{
                 </div>
               </div>
               <div className="flex items-center gap-4 text-xs text-gray-500">
-                <span>Created {formatDate(webhook.creation_date)}</span>
-                <span>Updated {formatDate(webhook.update_date)}</span>
+                <span>{t('dashboard.organization.automations.created_on', { date: formatDate(webhook.creation_date) })}</span>
+                <span>{t('dashboard.organization.automations.updated_on', { date: formatDate(webhook.update_date) })}</span>
               </div>
               <div className="flex gap-2 pt-1">
-                <Button size="sm" variant="outline" onClick={onStartEdit}>Edit</Button>
+                <Button size="sm" variant="outline" onClick={onStartEdit}>{t('dashboard.organization.automations.edit')}</Button>
                 <Button size="sm" variant="outline" onClick={onRegenerate}>
                   <RefreshCw size={12} className="me-1" />
-                  Rotate Secret
+                  {t('dashboard.organization.automations.rotate_secret')}
                 </Button>
                 <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700" onClick={onDelete}>
                   <Trash2 size={12} className="me-1" />
-                  Delete
+                  {t('common.delete')}
                 </Button>
               </div>
             </>
@@ -951,6 +952,7 @@ const EventSelector: React.FC<{
   selectedEvents: string[]
   onChangeEvents: (_events: string[]) => void
 }> = ({ categories, selectedEvents, onChangeEvents }) => {
+  const { t } = useTranslation()
   const [previewEvent, setPreviewEvent] = useState<string | null>(null)
 
   const toggleEvent = (eventId: string) => {
@@ -1009,7 +1011,7 @@ const EventSelector: React.FC<{
                       type="button"
                       className="text-gray-400 hover:text-gray-600 p-0.5 flex-shrink-0"
                       onClick={() => setPreviewEvent(previewEvent === event.id ? null : event.id)}
-                      title="View example payload"
+                      title={t('dashboard.organization.automations.view_example_payload')}
                     >
                       <code className="text-[10px]">{event.id}</code>
                       {previewEvent === event.id ? <ChevronUp size={10} className="inline ms-1" /> : <ChevronDown size={10} className="inline ms-1" />}
@@ -1040,7 +1042,8 @@ const ZapierRow: React.FC<{
   onDelete: () => void
   onViewLogs: () => void
 }> = ({ zap, onToggleActive, onDelete, onViewLogs }) => {
-  const title = zap.zap_name || zap.description || 'Zapier integration'
+  const { t } = useTranslation()
+  const title = zap.zap_name || zap.description || t('dashboard.organization.automations.zapier_integration')
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white border border-gray-100 hover:border-gray-200 transition-colors">
       <Switch checked={zap.is_active} onCheckedChange={onToggleActive} />
@@ -1060,7 +1063,7 @@ const ZapierRow: React.FC<{
           size="sm"
           onClick={onViewLogs}
           className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 h-8 w-8 p-0"
-          title="View delivery logs"
+          title={t('dashboard.organization.automations.view_delivery_logs')}
         >
           <Clock size={14} />
         </Button>
@@ -1069,7 +1072,7 @@ const ZapierRow: React.FC<{
           size="sm"
           onClick={onDelete}
           className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
-          title="Disconnect this Zap"
+          title={t('dashboard.organization.automations.disconnect_zap')}
         >
           <Trash2 size={14} />
         </Button>

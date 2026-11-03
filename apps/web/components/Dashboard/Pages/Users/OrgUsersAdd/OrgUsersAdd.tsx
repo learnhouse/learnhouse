@@ -141,7 +141,7 @@ function OrgUsersAdd() {
         }
       }
     } catch (err) {
-      toast.error(getErrorMessage((err as any)?.data?.detail, 'Failed to send invites'), {
+      toast.error(getErrorMessage((err as any)?.data?.detail, t('dashboard.users.invite_members.send_failed')), {
         id: toastId,
       })
     } finally {

@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   Popover,
   PopoverContent,
@@ -25,6 +26,7 @@ interface EmojiPickerProps {
 }
 
 export function EmojiPicker({ value, onChange, triggerClassName, disabled = false }: EmojiPickerProps) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState<string>('Smileys')
 
@@ -109,7 +111,7 @@ export function EmojiPicker({ value, onChange, triggerClassName, disabled = fals
               }}
               className="w-full py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
             >
-              Remove emoji
+              {t('communities.emoji_picker.remove')}
             </button>
           </div>
         )}
