@@ -5,21 +5,24 @@ import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'motion/react'
 import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search, CalendarClock } from 'lucide-react'
 import { ChartBar } from '@phosphor-icons/react'
-import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
-import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
-import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
-import EditCourseContributors from '@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'
-import EditCourseCertification from '@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'
-import EditCourseSEO from '@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'
-import EditCourseSchedule from '@components/Dashboard/Pages/Course/EditCourseSchedule/EditCourseSchedule'
 import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
 import { getUriWithOrg } from '@services/config/config';
 import { useTranslation } from 'react-i18next';
 import { PlanLevel } from '@services/plans/plans';
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate';
-import CourseAnalyticsTab from '@components/Dashboard/Analytics/Course/CourseAnalyticsTab';
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar';
+import dynamic from 'next/dynamic'
+
+// One chunk per tab: only the open tab's code (charts, editors) is loaded.
+const EditCourseStructure = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'))
+const EditCourseGeneral = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'))
+const EditCourseAccess = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'))
+const EditCourseContributors = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'))
+const EditCourseCertification = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'))
+const EditCourseSEO = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'))
+const EditCourseSchedule = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSchedule/EditCourseSchedule'))
+const CourseAnalyticsTab = dynamic(() => import('@components/Dashboard/Analytics/Course/CourseAnalyticsTab'))
 
 export type CourseOverviewParams = {
   orgslug: string

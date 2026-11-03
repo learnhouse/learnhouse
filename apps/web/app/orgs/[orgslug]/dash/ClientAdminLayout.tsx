@@ -2,7 +2,7 @@
 import DashLeftMenu from '@components/Dashboard/Menus/DashLeftMenu';
 import DashMobileMenu from '@components/Dashboard/Menus/DashMobileMenu';
 import OnboardingTracker from '@components/Dashboard/Onboarding/OnboardingTracker';
-import WelcomeModal from '@components/Dashboard/Onboarding/WelcomeModal';
+import { useOnboarding } from '@components/Hooks/useOnboarding';
 import DemoBanner from '@components/Objects/Demo/DemoBanner';
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { SessionGate } from '@components/Contexts/LHSessionContext'
@@ -11,6 +11,17 @@ import CommandPalette from '@components/Dashboard/CommandPalette/CommandPalette'
 import { UpgradeModalProvider } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
 import React from 'react'
 import { useMediaQuery } from 'usehooks-ts';
+import dynamic from 'next/dynamic'
+
+const WelcomeModal = dynamic(() => import('@components/Dashboard/Onboarding/WelcomeModal'), { ssr: false })
+
+// Most admins have already seen the welcome modal; don't load its globe and
+// animation code for them.
+function WelcomeModalGate() {
+    const { welcomeSeen, dismissed } = useOnboarding()
+    if (welcomeSeen || dismissed) return null
+    return <WelcomeModal />
+}
 
 function ClientAdminLayout({
     children,
@@ -42,7 +53,7 @@ function ClientAdminLayout({
                                 {children}
                                 <OnboardingTracker />
                             </div>
-                            <WelcomeModal />
+                            <WelcomeModalGate />
                             <CommandPalette />
                         </div>
                     </UpgradeModalProvider>

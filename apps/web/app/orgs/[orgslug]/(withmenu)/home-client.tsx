@@ -1,14 +1,18 @@
 'use client'
 import React from 'react'
+import dynamic from 'next/dynamic'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourses } from '@/hooks/queries/useCourses'
 import LandingClassic from '@components/Landings/LandingClassic'
-import LandingCustom from '@components/Landings/LandingCustom'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { getUriWithOrg } from '@services/config/config'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
+
+// Only orgs with a custom landing need it (and its markdown/payments code).
+// Still server-rendered, so the HTML is unchanged.
+const LandingCustom = dynamic(() => import('@components/Landings/LandingCustom'))
 
 export default function HomeClient({ orgslug }: { orgslug: string }) {
   const org = useOrg() as any
