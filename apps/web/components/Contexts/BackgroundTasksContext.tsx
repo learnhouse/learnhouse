@@ -1,4 +1,5 @@
 'use client'
+import i18n from '@/lib/i18n'
 import React, { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react'
 
 /**
@@ -66,7 +67,7 @@ function loadPersisted(): BgTask[] {
     if (!Array.isArray(tasks)) return []
     return tasks.map((t) =>
       t.status === 'uploading'
-        ? { ...t, status: 'interrupted' as const, error: 'Interrupted by a page reload' }
+        ? { ...t, status: 'interrupted' as const, error: i18n.t('background_tasks.interrupted') }
         : t
     )
   } catch {

@@ -2,6 +2,7 @@
 import { getCourseMetadata } from '@services/courses/courses'
 import React, { createContext, useContext, useEffect, useReducer, useMemo, useCallback, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
@@ -100,6 +101,7 @@ export function CourseProvider({
   withUnpublishedActivities = false,
   initialCourseStructure,
 }: any) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const lastServerDataRef = useRef<any>(null)
@@ -203,7 +205,7 @@ export function CourseProvider({
         </CourseContext.Provider>
       )
     }
-    return <div className="p-4 text-center text-gray-500 text-sm">Failed to load course. Please refresh the page.</div>
+    return <div className="p-4 text-center text-gray-500 text-sm">{t('course.load_failed_refresh')}</div>
   }
 
   // Always render the provider; consumers use state.isLoading to show skeletons.

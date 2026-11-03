@@ -139,7 +139,7 @@ function AICourseCreationModal({
         )
       }
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Unknown error')
+      onError(err instanceof Error ? err.message : t('courses.create.ai.unknown_error'))
     }
   }
 
@@ -164,11 +164,11 @@ function AICourseCreationModal({
         })
         toast.success(t('courses.create.ai.course_created_success'))
       } else {
-        setError(result.error || 'Failed to create course')
+        setError(result.error || t('courses.create.ai.failed_to_create'))
         toast.error(result.error || t('courses.create.ai.failed_to_create'))
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Unknown error'
+      const errorMsg = err instanceof Error ? err.message : t('courses.create.ai.unknown_error')
       setError(errorMsg)
       toast.error(errorMsg)
     } finally {
@@ -225,7 +225,7 @@ function AICourseCreationModal({
                   className="outline outline-1 outline-neutral-200/20 rounded-lg"
                   width={24}
                   src={lrnaiIcon}
-                  alt="AI Course"
+                  alt={t('courses.create.ai.title')}
                 />
                 <span className="text-sm font-semibold text-white/70">
                   {t('courses.create.ai.title')}

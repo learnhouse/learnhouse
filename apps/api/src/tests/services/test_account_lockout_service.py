@@ -115,13 +115,8 @@ class TestAccountLockoutService:
             last_login_ip=None,
         )
 
-        reset_result = MagicMock()
-        reset_result.scalars.return_value.first.return_value = db_user
-        update_result = MagicMock()
-        update_result.scalars.return_value.first.return_value = db_user
-
         db_session = AsyncMock()
-        db_session.execute.side_effect = [reset_result, update_result]
+        db_session.get.return_value = db_user
 
         await reset_failed_attempts(user, db_session)
         await update_login_info(user, "127.0.0.1", db_session)
@@ -131,17 +126,25 @@ class TestAccountLockoutService:
         assert db_user.last_login_ip == "127.0.0.1"
         assert db_user.last_login_at is not None
         assert db_session.commit.call_count == 2
+        # The session's identity map serves the user; no SELECT is issued.
+        db_session.execute.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_reset_failed_attempts_skips_commit_when_nothing_to_reset(self):
+        user = SimpleNamespace(id=1)
+        db_user = SimpleNamespace(failed_login_attempts=0, locked_until=None)
+        db_session = AsyncMock()
+        db_session.get.return_value = db_user
+
+        await reset_failed_attempts(user, db_session)
+
+        db_session.commit.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_reset_failed_attempts_and_update_login_info_missing_user(self):
         user = SimpleNamespace(id=1)
-        reset_result = MagicMock()
-        reset_result.scalars.return_value.first.return_value = None
-        update_result = MagicMock()
-        update_result.scalars.return_value.first.return_value = None
-
         db_session = AsyncMock()
-        db_session.execute.side_effect = [reset_result, update_result]
+        db_session.get.return_value = None
 
         await reset_failed_attempts(user, db_session)
         await update_login_info(user, "127.0.0.1", db_session)

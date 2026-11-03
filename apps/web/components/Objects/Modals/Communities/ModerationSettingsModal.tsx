@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Plus, Trash2, Shield, AlertTriangle, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Community, updateCommunity } from '@services/communities/communities'
 import { revalidateTags } from '@services/utils/ts/requests'
@@ -26,6 +27,7 @@ export function ModerationSettingsModal({
   community,
   orgSlug,
 }: ModerationSettingsModalProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const router = useRouter()
   const accessToken = session?.data?.tokens?.access_token
@@ -62,7 +64,7 @@ export function ModerationSettingsModal({
     if (!trimmedWord) return
 
     if (words.includes(trimmedWord)) {
-      setError('This word is already in the list')
+      setError(t('communities.moderation.duplicate'))
       return
     }
 
@@ -101,7 +103,7 @@ export function ModerationSettingsModal({
         (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
         (typeof err?.detail === 'string' && err.detail) ||
         err?.message ||
-        'Failed to save moderation settings.'
+        t('communities.moderation.save_failed')
       setError(message)
       toast.error(message)
     } finally {
@@ -115,7 +117,7 @@ export function ModerationSettingsModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield size={20} className="text-orange-500" />
-            Content Moderation
+            {t('communities.moderation.title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -124,10 +126,9 @@ export function ModerationSettingsModal({
           <div className="flex gap-3 p-3 bg-amber-50 border border-amber-100 rounded-lg">
             <AlertTriangle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-amber-800">
-              <p className="font-medium">Blocked words</p>
+              <p className="font-medium">{t('communities.moderation.info_title')}</p>
               <p className="text-amber-700 mt-0.5">
-                Discussions and replies containing these words will be blocked.
-                Users will see an error message and their content will not be posted.
+                {t('communities.moderation.info')}
               </p>
             </div>
           </div>
@@ -135,7 +136,7 @@ export function ModerationSettingsModal({
           {/* Add word input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Add blocked word
+              {t('communities.moderation.add_word')}
             </label>
             <div className="flex gap-2">
               <input
@@ -147,7 +148,7 @@ export function ModerationSettingsModal({
                   setError(null)
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Enter a word or phrase..."
+                placeholder={t('communities.moderation.word_placeholder')}
                 className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none text-sm"
               />
               <button
@@ -157,7 +158,7 @@ export function ModerationSettingsModal({
                 className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium"
               >
                 <Plus size={16} />
-                Add
+                {t('common.add')}
               </button>
             </div>
             {error && (
@@ -168,14 +169,14 @@ export function ModerationSettingsModal({
           {/* Words list */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Blocked words ({words.length})
+              {t('communities.moderation.blocked_words', { count: words.length })}
             </label>
             {words.length === 0 ? (
               <div className="py-8 text-center border border-dashed border-gray-200 rounded-lg">
                 <Shield size={24} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-sm text-gray-500">No blocked words yet</p>
+                <p className="text-sm text-gray-500">{t('communities.moderation.no_words')}</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Add words above to enable content moderation
+                  {t('communities.moderation.no_words_hint')}
                 </p>
               </div>
             ) : (
@@ -207,7 +208,7 @@ export function ModerationSettingsModal({
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -217,10 +218,10 @@ export function ModerationSettingsModal({
             {isSubmitting ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Saving...
+                {t('common.saving')}
               </>
             ) : (
-              'Save Changes'
+              t('communities.edit_modal.save_changes')
             )}
           </button>
         </div>

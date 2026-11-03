@@ -382,3 +382,26 @@ async def test_cancelling_during_a_steady_state_tick_propagates(monkeypatch):
 
     with pytest.raises(asyncio.CancelledError):
         await task
+
+
+def test_a_slug_taken_by_a_real_org_warns_instead_of_erroring(caplog):
+    """Only an operator can fix the slug, so reporting it as an error on every
+    tick floods error tracking with the same event until they do."""
+    import logging
+
+    from src.services.demo.sync import DemoSlugTakenError
+
+    with caplog.at_level(logging.WARNING, logger=scheduler.logger.name):
+        try:
+            raise DemoSlugTakenError("organization 'demo' already exists and is not a demo org")
+        except DemoSlugTakenError as exc:
+            scheduler._log_failure("Demo refresh failed: %s", exc)
+        try:
+            raise RuntimeError("sync blew up")
+        except RuntimeError as exc:
+            scheduler._log_failure("Demo refresh failed: %s", exc)
+
+    taken, other = caplog.records
+    assert taken.levelno == logging.WARNING and taken.exc_info is None
+    assert "Demo sync skipped" in taken.getMessage()
+    assert other.levelno == logging.ERROR and other.exc_info is not None

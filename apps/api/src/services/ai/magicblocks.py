@@ -7,6 +7,7 @@ import time
 
 from config.config import get_learnhouse_config
 from src.services.ai.llm import generate_stream, model_for_tier
+from src.services.ai.llm.errors import log_ai_failure
 from src.services.ai.schemas.magicblocks import (
     MagicBlockContext,
     MagicBlockSessionData,
@@ -331,13 +332,13 @@ Output ONLY the complete updated HTML code, starting with <!DOCTYPE html> and en
 
         save_magicblock_session(session)
 
-    except Exception:
+    except Exception as e:
         # Re-raise instead of yielding the error as a content chunk. Yielding
         # "Error: {e}" both leaked exception detail to the client and defeated
         # the caller's credit-refund logic (a non-empty chunk read as success).
         # event_generator's handler emits a sanitized SSE error event and
         # refunds the reserved credits.
-        logger.exception("MagicBlock generation failed")
+        log_ai_failure(logger, e, "MagicBlock generation failed")
         raise
 
 

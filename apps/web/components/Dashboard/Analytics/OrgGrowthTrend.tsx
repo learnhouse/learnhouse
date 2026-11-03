@@ -11,8 +11,10 @@ import {
   Tooltip,
   Legend,
 } from 'recharts'
+import { useTranslation } from 'react-i18next'
 
 export default function OrgGrowthTrend({ days = '90' }: { days?: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('org_growth_trend', { days })
   const rows = data?.data ?? []
 
@@ -25,12 +27,12 @@ export default function OrgGrowthTrend({ days = '90' }: { days?: string }) {
 
   return (
     <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Org Growth Trend</h3>
-      <p className="text-xs text-gray-400 mb-4">Weekly signups, enrollments, completions</p>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('analytics.advanced_widgets.org_growth_trend.title')}</h3>
+      <p className="text-xs text-gray-400 mb-4">{t('analytics.advanced_widgets.org_growth_trend.description')}</p>
       {isLoading ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('analytics.common.loading')}</div>
       ) : rows.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">No data yet</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('analytics.common.no_data')}</div>
       ) : (
         <div style={{ height: 200 }}>
           <ResponsiveContainer width="100%" height={200}>
@@ -61,6 +63,7 @@ export default function OrgGrowthTrend({ days = '90' }: { days?: string }) {
               <Line
                 type="monotone"
                 dataKey="signups"
+                name={t('analytics.overview.signups')}
                 stroke="#60a5fa"
                 strokeWidth={2}
                 dot={false}
@@ -68,6 +71,7 @@ export default function OrgGrowthTrend({ days = '90' }: { days?: string }) {
               <Line
                 type="monotone"
                 dataKey="enrollments"
+                name={t('analytics.overview.enrollments')}
                 stroke="#8b5cf6"
                 strokeWidth={2}
                 dot={false}
@@ -75,6 +79,7 @@ export default function OrgGrowthTrend({ days = '90' }: { days?: string }) {
               <Line
                 type="monotone"
                 dataKey="completions"
+                name={t('analytics.overview.completions')}
                 stroke="#10b981"
                 strokeWidth={2}
                 dot={false}

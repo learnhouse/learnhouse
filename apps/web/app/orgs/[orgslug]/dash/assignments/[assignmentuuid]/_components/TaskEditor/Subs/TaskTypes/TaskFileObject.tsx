@@ -297,7 +297,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
             {view === 'teacher' && (
                 <div className='flex flex-col sm:flex-row py-5 sm:py-6 text-xs sm:text-sm justify-center mx-auto space-y-2 sm:space-y-0 sm:space-x-3 text-slate-600 px-4 sm:px-2 text-center sm:text-start bg-slate-50 rounded-lg border border-slate-100'>
                     <Info size={18} className="mx-auto sm:mx-0 text-slate-500" />
-                    <p>User will be able to submit a file for this task, you'll be able to review it in the Submissions Tab</p>
+                    <p>{t('dashboard.assignments.editor.task_editor.file.teacher_hint')}</p>
                 </div>
             )}
             {view === 'custom-grading' && (
@@ -394,7 +394,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                                         />
                                         <div className="font-medium animate-pulse antialiased items-center bg-slate-100 text-slate-600 text-xs sm:text-sm rounded-md px-4 sm:px-5 py-2.5 flex">
                                             <Loader size={15} className="me-2" />
-                                            <span>Loading</span>
+                                            <span>{t('dashboard.assignments.editor.task_editor.general.loading')}</span>
                                         </div>
                                     </div>
                                 ) : !canStudentSave ? (
@@ -429,7 +429,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                                             onClick={() => document.getElementById("fileInput_" + assignmentTaskUUID)?.click()}
                                         >
                                             <UploadCloud size={15} className="me-2" />
-                                            <span>Submit File</span>
+                                            <span>{t('dashboard.assignments.editor.task_editor.file.submit_file')}</span>
                                         </button>
                                     </div>
                                 )}

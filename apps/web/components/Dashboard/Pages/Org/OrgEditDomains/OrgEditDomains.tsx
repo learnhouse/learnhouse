@@ -192,13 +192,13 @@ const OrgEditDomains: React.FC = () => {
         [domain.domain_uuid]: {
           has_ssl: false,
           status: 'unknown',
-          message: 'Could not check SSL status.',
+          message: t('dashboard.organization.domains.ssl_check_failed'),
         },
       }))
     } finally {
       setSslLoading((prev) => ({ ...prev, [domain.domain_uuid]: false }))
     }
-  }, [org?.id, access_token])
+  }, [org?.id, access_token, t])
 
   // Auto-check SSL for all verified domains on load and every 30s
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -229,7 +229,7 @@ const OrgEditDomains: React.FC = () => {
       return (
         <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-500">
           <Shield size={12} className="me-1" />
-          N/A
+          {t('dashboard.organization.domains.not_available')}
         </Badge>
       )
     }
@@ -241,7 +241,7 @@ const OrgEditDomains: React.FC = () => {
       return (
         <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-600">
           <Loader2 size={12} className="me-1 animate-spin" />
-          Checking...
+          {t('dashboard.organization.domains.checking')}
         </Badge>
       )
     }
@@ -250,7 +250,7 @@ const OrgEditDomains: React.FC = () => {
       return (
         <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-500">
           <Shield size={12} className="me-1" />
-          Checking...
+          {t('dashboard.organization.domains.checking')}
         </Badge>
       )
     }
@@ -258,7 +258,7 @@ const OrgEditDomains: React.FC = () => {
     switch (sslStatus.status) {
       case 'active':
         return (
-          <Badge variant="outline" className="border-transparent bg-green-100 text-green-800" title={`Issuer: ${sslStatus.issuer || 'Unknown'}\nExpires: ${sslStatus.expires || 'Unknown'}`}>
+          <Badge variant="outline" className="border-transparent bg-green-100 text-green-800" title={`${t('dashboard.organization.domains.issuer')}: ${sslStatus.issuer || t('common.unknown')}\n${t('dashboard.organization.domains.expires')}: ${sslStatus.expires || t('common.unknown')}`}>
             <ShieldCheck size={12} className="me-1" />
             {t('dashboard.organization.domains.ssl_active')}
           </Badge>
@@ -267,21 +267,21 @@ const OrgEditDomains: React.FC = () => {
         return (
           <Badge variant="outline" className="border-transparent bg-yellow-100 text-yellow-800" title={sslStatus.message}>
             <Loader2 size={12} className="me-1 animate-spin" />
-            Provisioning
+            {t('dashboard.organization.domains.provisioning')}
           </Badge>
         )
       case 'invalid':
         return (
           <Badge variant="outline" className="border-transparent bg-red-100 text-red-800" title={sslStatus.message}>
             <ShieldAlert size={12} className="me-1" />
-            Invalid
+            {t('dashboard.organization.domains.invalid')}
           </Badge>
         )
       default:
         return (
           <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-600" title={sslStatus.message}>
             <ShieldAlert size={12} className="me-1" />
-            Unknown
+            {t('common.unknown')}
           </Badge>
         )
     }
@@ -293,21 +293,21 @@ const OrgEditDomains: React.FC = () => {
         return (
           <Badge variant="outline" className="border-transparent bg-green-100 text-green-800">
             <CheckCircle2 size={12} className="me-1" />
-            Verified
+            {t('dashboard.organization.domains.verified')}
           </Badge>
         )
       case 'pending':
         return (
           <Badge variant="outline" className="border-transparent bg-yellow-100 text-yellow-800">
             <Clock size={12} className="me-1" />
-            Pending
+            {t('dashboard.organization.domains.pending')}
           </Badge>
         )
       case 'failed':
         return (
           <Badge variant="outline" className="border-transparent bg-red-100 text-red-800">
             <XCircle size={12} className="me-1" />
-            Failed
+            {t('dashboard.organization.domains.failed')}
           </Badge>
         )
       default:
@@ -320,7 +320,7 @@ const OrgEditDomains: React.FC = () => {
   }
 
   const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return 'Never'
+    if (!dateStr) return t('dashboard.organization.domains.never')
     try {
       return new Date(dateStr).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -426,7 +426,7 @@ const OrgEditDomains: React.FC = () => {
                                 }}
                               >
                                 <RefreshCw size={14} className="me-1" />
-                                Verify
+                                {t('dashboard.organization.domains.verify')}
                               </Button>
                             )}
                             <Button
@@ -473,7 +473,7 @@ const OrgEditDomains: React.FC = () => {
                   id="domain"
                   value={newDomain}
                   onChange={(e) => setNewDomain(e.target.value)}
-                  placeholder="learn.mycompany.com"
+                  placeholder={t('dashboard.organization.domains.domain_placeholder')}
                 />
                 <p className="text-xs text-gray-500">
                   {t('dashboard.organization.domains.domain_hint')}
@@ -613,7 +613,7 @@ const OrgEditDomains: React.FC = () => {
                           ) : (
                             <RefreshCw size={14} className="me-1" />
                           )}
-                          Check
+                          {t('dashboard.organization.domains.check')}
                         </Button>
                       </div>
                       {sslStatuses[selectedDomain.domain_uuid] ? (
@@ -675,7 +675,7 @@ const OrgEditDomains: React.FC = () => {
                     setVerificationInfo(null)
                   }}
                 >
-                  Close
+                  {t('common.close')}
                 </Button>
                 <Button onClick={handleVerifyDomain} disabled={isVerifying}>
                   {isVerifying ? (
@@ -718,7 +718,7 @@ const OrgEditDomains: React.FC = () => {
               )}
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button variant="destructive" onClick={handleDeleteDomain}>
                   {t('dashboard.organization.domains.delete_domain')}

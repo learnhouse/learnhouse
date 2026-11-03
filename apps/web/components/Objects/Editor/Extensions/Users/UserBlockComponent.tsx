@@ -301,7 +301,7 @@ function UserBlockComponent(props: any) {
         <div className="flex items-center gap-2 mb-3">
           <User weight="duotone" className="text-neutral-400" size={16} />
           <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-            User Profile
+            {t('editor.blocks.user_block.user_profile')}
           </span>
         </div>
 

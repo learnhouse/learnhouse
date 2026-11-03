@@ -5,6 +5,7 @@ import React, {
   InputHTMLAttributes,
 } from 'react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 const FileUploadBlockInput: React.FC<InputHTMLAttributes<HTMLInputElement>> = ({
   onChange,
@@ -28,6 +29,7 @@ const FileUploadBlockInput: React.FC<InputHTMLAttributes<HTMLInputElement>> = ({
 const FileUploadBlockButton: React.FC<
   ButtonHTMLAttributes<HTMLButtonElement>
 > = ({ onClick, className, ...props }) => {
+  const { t } = useTranslation()
   return (
     <button
       className={cn(
@@ -38,7 +40,7 @@ const FileUploadBlockButton: React.FC<
       {...props}
     >
       <Upload size={16} />
-      <span>Upload</span>
+      <span>{t('editor.blocks.common.upload')}</span>
     </button>
   )
 }
@@ -58,6 +60,7 @@ function FileUploadBlock({
   Icon,
   children,
 }: UploadBlockComponentProps) {
+  const { t } = useTranslation()
   if (isLoading)
     return (
       <div className="flex items-center justify-center py-8">
@@ -69,7 +72,7 @@ function FileUploadBlock({
     return (
       <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
         {<Icon className="text-slate-300" size={32} />}
-        <p className="text-slate-500">No file available for preview.</p>
+        <p className="text-slate-500">{t('editor.file_upload.no_preview')}</p>
       </div>
     )
 

@@ -2,26 +2,60 @@ import { Callout } from 'nextra/components'
 
 # Courses
 
-Courses are the core content unit in LearnHouse. Each course is made up of chapters, and each chapter contains activities that students work through.
+Courses are the core content unit in LearnHouse. A course is made of chapters, and each chapter holds activities that learners work through in order.
 
-<br/>
-<img style={{borderRadius:10}} quality={100} src="/img/pages/courses/courses.png" alt="Courses overview" width={800} height={1300} />
+<YouTube video="guide-1" />
+<YouTube video="growth-1" />
 
-## Activity Types
+## Creating a course
 
-LearnHouse supports several activity types to accommodate different teaching styles:
+Go to **Courses** in the dashboard and click **New Course**. The **Create New Course** window gives you three choices:
 
-- **Dynamic Pages**: Rich WYSIWYG content built with the block-based editor (quizzes and code blocks can be embedded inline).
-- **Videos**: Upload video files directly or embed from YouTube and other external sources.
-- **Documents**: PDF documents displayed with a built-in viewer.
-- **Assignments**: Gradable tasks such as file uploads and quizzes. See [Assignments](/platform/assignments).
-- **SCORM**: SCORM 1.2 and SCORM 2004 learning packages (Enterprise Edition).
-- **Custom**: Escape hatch for custom activity implementations.
+<img src="/img/pages/getting-started/create-new-course.webp" alt="The Create New Course window with Start from Scratch, Start with AI and From Existing Content, over the dashboard course list" width={1600} height={900} style={{ borderRadius: 10 }} />
 
-## Getting Started
+| Option | What it does |
+| --- | --- |
+| **Start from Scratch** | Fill in a short form and start with an empty course. |
+| **Start with AI** | Describe the course and let AI plan the chapters and write the activities. See [AI Course Creator](/platform/courses/ai-course-creator). |
+| **From Existing Content** | Upload your videos, PDFs, images and audio and organize them into a course. See [Import & Export](/platform/courses/import-export#from-existing-content). |
 
-To create a course, navigate to your organization dashboard and select **Create Course**. From there you can add chapters, populate them with activities, and publish when ready.
+The **Start from Scratch** form asks for:
+
+| Field | Notes |
+| --- | --- |
+| **Course Name** | Required, up to 100 characters. |
+| **Description** | Required, up to 1000 characters. |
+| **Course Thumbnail** | **Upload Image** or **Paste from Clipboard**. |
+| **Course Learnings** | What learners will get out of the course. Press Enter to add each one. |
+| **Course Tags** | Keywords for the course. |
+| **Course Visibility** | **Public** (visible on the internet) or **Private** (signed-in users only). |
+
+A first chapter is created for you. To bring in a course from another platform, use **Import Course** instead. See [Import & Export](/platform/courses/import-export).
 
 <Callout>
-Courses can be grouped into [Collections](/platform/courses/collections) for better organization, and student progress is tracked via [Trails](/platform/courses/trails).
+On the Free plan of LearnHouse Cloud an organization can have one course. Other plans and self-hosted instances have no course limit.
 </Callout>
+
+## Managing courses
+
+The course list in the dashboard lets you:
+
+- Search courses and filter them by user group.
+- Click **Published** / **Unpublished** on a course to toggle whether learners can see it.
+- **Clone Course**: make a full copy, created as private.
+- **Export Course**: download the course as a `.zip` package.
+- **Delete Course**.
+
+Click **Select** to act on several courses at once: **Clone Selected**, **Export Selected** (up to 20 courses per export) or **Delete Selected**.
+
+## Course settings
+
+Open a course from the dashboard to edit it. The settings are split into tabs: **General**, **Content**, **Schedule**, **Access**, **Contributors**, **SEO**, **Certification** and **Analytics**. See [Course Settings](/platform/courses/settings) and [Chapters & Activities](/platform/courses/chapters-and-activities).
+
+## Learn More
+
+- [Chapters & Activities](/platform/courses/chapters-and-activities): course structure and activity types.
+- [Course Settings](/platform/courses/settings): general info, access, contributors and SEO.
+- [Drip Content](/platform/courses/drip-content): release chapters over time, per learner or for a cohort.
+- [Taking a Course](/platform/courses/taking-a-course): what learners see, keyboard shortcuts and progress.
+- [Library](/platform/courses/library): organize courses and other content into folders.

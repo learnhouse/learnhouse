@@ -12,27 +12,54 @@ npx learnhouse dev
 
 The command splits infrastructure and application services:
 
-- **Infrastructure** (Docker): PostgreSQL with pgvector + Redis run in containers via `.learnhouse/docker-compose.dev.yml`
-- **Application** (local): API, Web, and Collab servers run directly on your machine with hot reload
+- **Infrastructure** (Docker): PostgreSQL with pgvector and Redis run in containers, defined in `.learnhouse/docker-compose.dev.yml` (the CLI writes this file on each run)
+- **Application** (local): the API, web, and collab servers run directly on your machine with hot reload
 
 ## Requirements
 
-- Docker (for database and Redis)
+- Docker with Docker Compose v2
 - [bun](https://bun.sh/) (for web and collab dependencies)
 - [uv](https://docs.astral.sh/uv/) (for Python API dependencies)
 
 <Callout type="warning">
-`bun` and `uv` must be installed beforehand. The CLI runs `bun install` and `uv sync` to install project dependencies, but it does not install the package managers themselves.
+`bun` and `uv` must be installed beforehand. The CLI checks for both and stops with an install link if either is missing. It runs `bun install` and `uv sync` for the project, but does not install the tools themselves.
 </Callout>
 
 ## Startup Flow
 
-1. **Detect project root**: Looks for the monorepo structure (`apps/api`, `apps/web`, `apps/collab`)
-2. **Start infrastructure**: Launches PostgreSQL and Redis containers (reuses existing ones if running)
-3. **Health checks**: Waits for database and Redis to be ready
-4. **Admin setup**: When the database and Redis containers are created for the first time, prompts for an admin email and password. On subsequent runs with existing containers, the prompt is skipped and the existing credentials remain valid. You can also pass `--admin-email` and `--admin-password` to skip the prompt.
-5. **Install dependencies**: Runs `bun install` and `uv sync` if needed
-6. **Start services**: Launches API, Web, and Collab with color-coded output
+1. **Detect project root**: walks up from the current directory until it finds `apps/api` and `apps/web`
+2. **Check env files**: looks for the variables each app needs (see below). If any are missing, it lists them and offers to write development defaults or stop.
+3. **Link Enterprise code** (only with `--ee`)
+4. **Check tools**: `bun`, `uv`, Docker, and a running Docker daemon
+5. **Admin setup and infrastructure**: when the `learnhouse-db-dev` and `learnhouse-redis-dev` containers are not already running, prompts for an admin email (default `admin@school.dev`) and password, then starts them. When they are running, they are reused and the prompt is skipped. Pass `--admin-email` and `--admin-password` to skip the prompt.
+6. **Health checks**: waits for PostgreSQL and Redis to be ready
+7. **Install dependencies**: runs `bun install` in `apps/web` and `apps/collab` when `node_modules` is missing, and `uv sync` in `apps/api` when `.venv` is missing
+8. **Start services**: launches the API, web, and collab servers with color-coded output
+
+## Env files
+
+The CLI checks these variables and, if you accept, appends development defaults for the missing ones only:
+
+| File | Variable | Default written |
+| --- | --- | --- |
+| `apps/api/.env` | `LEARNHOUSE_AUTH_JWT_SECRET_KEY` | Random secret |
+| `apps/api/.env` | `COLLAB_INTERNAL_KEY` | Random secret |
+| `apps/web/.env.local` | `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL` | `http://localhost:1338/` |
+| `apps/collab/.env` | `COLLAB_PORT` | `4000` |
+| `apps/collab/.env` | `LEARNHOUSE_API_URL` | `http://localhost:1338` |
+| `apps/collab/.env` | `LEARNHOUSE_AUTH_JWT_SECRET_KEY` | Same value as the API |
+| `apps/collab/.env` | `COLLAB_INTERNAL_KEY` | Same value as the API |
+
+Other API settings fall back to `apps/api/config/config.yaml`, which ships localhost defaults (database `postgresql://learnhouse:learnhouse@localhost:5432/learnhouse`, Redis `redis://localhost:6379/learnhouse`).
+
+The CLI also sets these for the processes it starts:
+
+| Variable | Value |
+| --- | --- |
+| `LEARNHOUSE_DEVELOPMENT_MODE` | `true` |
+| `LEARNHOUSE_INITIAL_ADMIN_EMAIL` / `LEARNHOUSE_INITIAL_ADMIN_PASSWORD` | The admin credentials, when given |
+| `LEARNHOUSE_DISABLE_EE` | `1`, unless `--ee` is passed |
+| `LEARNHOUSE_FORCE_EE` | `1`, only with `--ee` |
 
 ## Services
 
@@ -41,10 +68,14 @@ The command splits infrastructure and application services:
 | API | `uv run python app.py` | 1338 |
 | Web | `next dev --turbopack` | 3000 |
 | Collab | `tsx watch src/index.ts` | 4000 |
+| PostgreSQL | Docker (`pgvector/pgvector:pg16`) | 5432, bound to `127.0.0.1` |
+| Redis | Docker (`redis:8.6.1-alpine`) | 6379, bound to `127.0.0.1` |
+
+The development database uses user, password and database name `learnhouse`.
 
 ## Interactive Controls
 
-While running, you can type commands to manage services:
+While running, you can type these keys to manage services:
 
 | Key | Action |
 | --- | --- |
@@ -62,7 +93,7 @@ Use the `--ee` flag to enable Enterprise Edition features:
 npx learnhouse dev --ee
 ```
 
-With the flag, the CLI links a sibling EE checkout into `apps/api/ee/` and `apps/web/ee/`. Without it, the app runs as the community edition.
+With the flag, the CLI links `apps/api/ee` and `apps/web/ee` to a sibling EE checkout at `../ee/apps/<app>/ee` (on Windows it uses directory junctions). If no EE checkout is found, that app runs as the community edition. Without the flag, `LEARNHOUSE_DISABLE_EE=1` keeps the app on the community edition even if an `ee/` folder exists.
 
 ## Shutdown
 
@@ -77,5 +108,5 @@ docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down
 ```
 
 <Callout type="info">
-Database data persists across dev sessions via Docker volumes. Your data is safe between restarts.
+Database and Redis data persist across dev sessions in Docker volumes. Running `down` keeps them; add `-v` to delete them.
 </Callout>
