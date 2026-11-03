@@ -13,6 +13,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { Path, PathCourseCard, setPathCourses, updatePath } from '@services/paths/paths'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { usePathCache } from './usePathSave'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 type Row = { course_uuid: string; required: boolean; course: PathCourseCard }
 
@@ -29,9 +30,9 @@ function CourseThumb({ course, orgUuid }: { course: PathCourseCard; orgUuid: str
     ? getCourseThumbnailMediaDirectory(orgUuid, course.course_uuid, course.thumbnail_image)
     : '/empty_thumbnail.png'
   return (
-    <div
-      className="w-20 aspect-video rounded-md bg-gray-100 bg-cover bg-center shrink-0 ring-1 ring-black/5"
-      style={{ backgroundImage: `url(${src})` }}
+    <ThumbnailImage
+      src={src}
+      className="w-20 aspect-video rounded-md bg-gray-100 shrink-0 ring-1 ring-black/5"
     />
   )
 }

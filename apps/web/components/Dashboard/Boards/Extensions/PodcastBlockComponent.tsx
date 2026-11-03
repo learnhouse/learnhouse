@@ -13,6 +13,7 @@ import { formatDuration } from '@services/podcasts/episodes'
 import { getPodcastThumbnailMediaDirectory, getPodcastAudioStreamUrl } from '@services/media/media'
 import { safePlay } from '@/lib/media/safePlay'
 import { useTranslation } from 'react-i18next'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 export default function PodcastBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
   const { t } = useTranslation()
@@ -172,7 +173,7 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
               className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors text-start"
             >
               {p.thumbnail_image && orgUUID ? (
-                <img
+                <ThumbnailImage
                   src={getPodcastThumbnailMediaDirectory(orgUUID, p.podcast_uuid, p.thumbnail_image)}
                   alt={p.name}
                   className="w-8 h-8 rounded object-cover shrink-0"

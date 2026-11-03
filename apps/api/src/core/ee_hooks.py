@@ -70,11 +70,33 @@ def register_ee_rag_sources():
         except Exception as e:
             logger.error(f"Failed to register EE AI search sources: {e}")
 
+def register_ee_calendar_sources():
+    """Let EE add its own dated things (e.g. live sessions) to the user
+    calendar's source registry."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "register_calendar_sources"):
+        try:
+            hooks.register_calendar_sources()
+        except Exception as e:
+            logger.error(f"Failed to register EE calendar sources: {e}")
+
 def is_multi_org_allowed() -> bool:
     """Check if multi-org mode is allowed (requires EE or SaaS)."""
     from src.core.deployment_mode import get_deployment_mode
     mode = get_deployment_mode()
     return mode in ('ee', 'saas')
+
+
+async def check_ee_live_board_access(board_id, user_id, db_session) -> bool:
+    """True when EE lets the user edit a board because they are in the room of
+    a live session that uses it. Always False without EE."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "has_live_board_access"):
+        try:
+            return await hooks.has_live_board_access(board_id, user_id, db_session)
+        except Exception as e:
+            logger.error(f"EE live board access check failed: {e}")
+    return False
 
 
 async def check_ee_activity_paid_access(request, activity_id, user, db_session) -> bool:

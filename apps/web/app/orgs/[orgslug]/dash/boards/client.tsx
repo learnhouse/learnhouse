@@ -27,6 +27,7 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface BoardListClientProps {
   org_id: number
@@ -461,9 +462,9 @@ function BoardCard({ board, orgslug, orgUuid, orgId, isSelected, onToggleSelect,
         href={settingsLink}
         className="block relative aspect-video overflow-hidden bg-gray-50"
       >
-        <div
-          className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-          style={{ backgroundImage: `url(${thumbnailImage})` }}
+        <ThumbnailImage
+          src={thumbnailImage}
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
         <div className="absolute bottom-2 start-2">

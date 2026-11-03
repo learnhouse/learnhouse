@@ -8,6 +8,7 @@ import { Cube } from '@phosphor-icons/react'
 import { Playground } from '@services/playgrounds/playgrounds'
 import { getPlaygroundThumbnailMediaDirectory } from '@services/media/media'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface PlaygroundCardProps {
   playground: Playground
@@ -64,9 +65,9 @@ export default function PlaygroundCard({ playground, orgslug: _orgslug, canEdit 
       {/* Thumbnail */}
       <Link href={playgroundLink} onClick={handleOpen} className="block relative aspect-video overflow-hidden bg-gray-50">
         {thumbnailUrl ? (
-          <div
-            className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-            style={{ backgroundImage: `url(${thumbnailUrl})` }}
+          <ThumbnailImage
+            src={thumbnailUrl}
+            className="w-full h-full transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 transition-transform duration-500 group-hover:scale-105">

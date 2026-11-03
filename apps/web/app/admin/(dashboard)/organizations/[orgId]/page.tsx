@@ -1227,6 +1227,7 @@ type AdminToggles = {
   payments: FeatureToggle
   playgrounds: FeatureToggle
   podcasts: FeatureToggle
+  live_sessions: FeatureToggle
 }
 
 const DEFAULT_ADMIN_TOGGLES: AdminToggles = {
@@ -1242,6 +1243,7 @@ const DEFAULT_ADMIN_TOGGLES: AdminToggles = {
   payments: { disabled: false },
   playgrounds: { disabled: false },
   podcasts: { disabled: false },
+  live_sessions: { disabled: false },
 }
 
 const FEATURE_ORDER: { key: keyof AdminToggles; labelKey: string; descriptionKey: string }[] = [
@@ -1257,6 +1259,7 @@ const FEATURE_ORDER: { key: keyof AdminToggles; labelKey: string; descriptionKey
   { key: 'payments', labelKey: 'admin.org_detail.features.payments.label', descriptionKey: 'admin.org_detail.features.payments.description' },
   { key: 'playgrounds', labelKey: 'admin.org_detail.features.playgrounds.label', descriptionKey: 'admin.org_detail.features.playgrounds.description' },
   { key: 'podcasts', labelKey: 'admin.org_detail.features.podcasts.label', descriptionKey: 'admin.org_detail.features.podcasts.description' },
+  { key: 'live_sessions', labelKey: 'admin.org_detail.features.live_sessions.label', descriptionKey: 'admin.org_detail.features.live_sessions.description' },
 ]
 
 function ToggleSwitch({

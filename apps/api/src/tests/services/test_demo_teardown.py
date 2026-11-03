@@ -75,6 +75,14 @@ _SET_NULL_ALLOWED = {
     # The demo state row deliberately outlives its organization so the next
     # provision can read last_error and bundle_version off it.
     ("demo_state", "org_id"),
+    # Live sessions (EE) keep the session, its chat, Q&A and polls when the
+    # person who hosted or wrote them is deleted.
+    ("live_session", "host_user_id"),
+    ("live_session_message", "user_id"),
+    ("live_session_question", "user_id"),
+    ("live_session_poll", "created_by"),
+    ("live_session_provider_connection", "connected_by"),
+    ("live_session_oauth_app", "created_by"),
 }
 
 

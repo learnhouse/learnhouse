@@ -11,6 +11,7 @@ from sqlmodel import select
 
 from src.db.course_embeddings import CourseEmbedding
 from src.db.courses.chapters import Chapter
+from src.db.courses.courses import Course
 from src.db.organization_config import OrganizationConfig
 from src.services.ai.rag import pipeline, scheduler
 from src.services.ai.rag.types import ContentRef
@@ -140,6 +141,10 @@ class TestSweep:
         # Same moment written as isoformat(): not newer, so not stale.
         activity.update_date = indexed.replace(" ", "T")
         session.add(activity)
+        await session.commit()
+        # Stamping the activity also moves its course's date; put that back so
+        # only the activity's comparison is under test.
+        await session.execute(update(Course).where(Course.id == course.id).values(update_date=indexed))
         await session.commit()
         assert (await scheduler.sweep(session)).queued == 0
 

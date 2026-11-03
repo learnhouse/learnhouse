@@ -15,12 +15,13 @@ import dynamic from 'next/dynamic'
 const PodcastPlayer = dynamic(() => import('@components/Objects/Podcasts/PodcastPlayer'), { ssr: false })
 const SiteCommandPalette = dynamic(() => import('@components/Objects/Search/SiteCommandPalette'), { ssr: false })
 const ShortcutHelp = dynamic(() => import('@components/Objects/Shortcuts/ShortcutHelp'), { ssr: false })
+const LiveNowBanner = dynamic(() => import('@ee/components/LiveSessions/LiveNowBanner'), { ssr: false })
 import Image from 'next/image'
 import Link from 'next/link'
 import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { usePlan } from '@components/Hooks/usePlan'
 import { getGoogleFontUrl, DEFAULT_FONT } from '@/lib/fonts'
+import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -34,10 +35,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
 function OrgFooter() {
   const org = useOrg() as any
   const footerText = org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || ''
-  const plan = usePlan()
-  const watermarkConfig = org?.config?.config?.customization?.general?.watermark ?? org?.config?.config?.general?.watermark
-  const isFree = plan === 'free'
-  const showWatermark = isFree || watermarkConfig !== false
+  const showWatermark = useShowLearnHouseBranding()
 
   return (
     <footer className="w-full py-8 mt-12">
@@ -135,6 +133,7 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       {!chromeless && <SiteCommandPalette />}
       {!chromeless && <GlobalShortcuts />}
       {!chromeless && <ShortcutHelp />}
+      {!chromeless && <LiveNowBanner orgslug={orgslug} />}
     </div>
   )
 }

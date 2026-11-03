@@ -21,6 +21,7 @@ import {
 } from "@components/ui/dropdown-menu"
 import { useTranslation } from 'react-i18next'
 import { formatDate } from '@/lib/format'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 type Podcast = {
   podcast_uuid: string
@@ -106,9 +107,9 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
       />
 
       <Link prefetch href={podcastLink} onClick={handleCardOpen} className="block relative aspect-video overflow-hidden bg-gray-50">
-        <div
-          className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-          style={{ backgroundImage: `url(${thumbnailImage})` }}
+        <ThumbnailImage
+          src={thumbnailImage}
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-3 shadow-lg">

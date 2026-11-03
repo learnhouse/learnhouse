@@ -94,6 +94,21 @@ export const queryKeys = {
     certificate: (uuid: string) => ['pathCertificate', uuid] as const,
     myCertificates: () => ['pathCertificates', 'mine'] as const,
   },
+  calendar: {
+    all: ['calendar'] as const,
+    events: (orgId: number, start: string, end: string) => ['calendar', orgId, start, end] as const,
+  },
+  liveSessions: {
+    list: (orgId: number, scope: string, extra?: string) => ['liveSessions', orgId, scope, extra ?? ''] as const,
+    all: ['liveSessions'] as const,
+    detail: (uuid: string) => ['liveSession', uuid] as const,
+    now: (orgId: number) => ['liveSessions', orgId, 'now'] as const,
+    recordings: (uuid: string) => ['liveSession', uuid, 'recordings'] as const,
+    attendance: (uuid: string) => ['liveSession', uuid, 'attendance'] as const,
+    polls: (uuid: string) => ['liveSession', uuid, 'polls'] as const,
+    settings: (orgId: number) => ['liveSessions', orgId, 'settings'] as const,
+    activity: (activityUuid: string) => ['liveSession', 'activity', activityUuid] as const,
+  },
   ai: {
     ragSessions: (orgSlug: string) => ['ai', 'rag', 'sessions', orgSlug] as const,
   },

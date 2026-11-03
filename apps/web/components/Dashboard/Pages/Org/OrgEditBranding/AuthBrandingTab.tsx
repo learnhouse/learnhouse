@@ -18,6 +18,7 @@ import { usePlan } from '@components/Hooks/usePlan'
 import { getOrgSquareLogoUrl, getOrgWideLogoUrl } from '@components/Objects/Org/OrgSquareLogo'
 import { AuthBrandingState, BrandingSection, SaveBar, authBackgroundStyle, readAuthBranding } from './BrandingShared'
 import { LoginPanelVignette } from './BrandingVignettes'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 const ACCEPT = constructAcceptValue(['png', 'jpg', 'webp'])
 
@@ -31,7 +32,7 @@ export default function AuthBrandingTab() {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   // Enterprise orgs do not show the LearnHouse mark on the sign-in panel.
-  const isEnterprise = usePlan() === 'enterprise'
+  const isWhiteLabel = isWhiteLabelPlan(usePlan())
 
   const [state, setState] = useState<AuthBrandingState>(() => readAuthBranding(org))
   const [saving, setSaving] = useState(false)
@@ -212,7 +213,7 @@ export default function AuthBrandingTab() {
           backgroundStyle={backgroundStyle}
           textColor={state.text_color}
           scrim={scrim}
-          showLearnHouseMark={!isEnterprise}
+          showLearnHouseMark={!isWhiteLabel}
           label={t('dashboard.organization.branding.vignettes.sign_in')}
         />
         <p className="mt-3 text-xs text-gray-400">{t('dashboard.organization.branding.auth.preview_note')}</p>

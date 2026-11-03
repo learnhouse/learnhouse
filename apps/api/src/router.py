@@ -17,6 +17,7 @@ from src.routers import monitoring
 from src.routers import nudges as nudges_router_module
 from src.routers import stream
 from src.routers import api_tokens
+from src.routers import calendar as calendar_router_module
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
 from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario, audio
@@ -288,6 +289,14 @@ v1_router.include_router(
     boards_router_module.internal_router,
     prefix="/boards",
     tags=["boards-internal"],
+)
+v1_router.include_router(
+    calendar_router_module.router,
+    prefix="/calendar",
+    tags=["calendar"],
+    # Personal data only: a real session is required (no anonymous callers,
+    # no API tokens). Every source applies its own per-item access checks.
+    dependencies=[Depends(require_authenticated_user)],
 )
 v1_router.include_router(
     trail.router,

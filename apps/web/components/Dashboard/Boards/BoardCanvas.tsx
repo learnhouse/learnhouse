@@ -74,6 +74,8 @@ interface BoardCanvasProps {
   orgslug: string
   username: string
   orgUuid?: string
+  /** Shown inside a live session room: the room owns navigation and chat. */
+  embedded?: boolean
 }
 
 const COLORS = [
@@ -110,6 +112,7 @@ function BoardEditorInner({
   orgUuid,
   ydoc,
   provider,
+  embedded = false,
 }: {
   board: any
   orgslug: string
@@ -118,6 +121,7 @@ function BoardEditorInner({
   orgUuid?: string
   ydoc: Y.Doc
   provider: HocuspocusProvider
+  embedded?: boolean
 }) {
   const { t } = useTranslation()
   const { track } = useLHAnalytics('dashboard')
@@ -872,12 +876,14 @@ function BoardEditorInner({
       </div>
 
       {/* Top bar: back + logo + title */}
-      <div className="board-enter-top">
-        <BoardTopBar
-          boardName={board.name}
-          orgslug={orgslug}
-        />
-      </div>
+      {!embedded && (
+        <div className="board-enter-top">
+          <BoardTopBar
+            boardName={board.name}
+            orgslug={orgslug}
+          />
+        </div>
+      )}
 
       {/* Top right: avatars + clock + timer + share */}
       <div className="board-enter-top">
@@ -901,7 +907,7 @@ function BoardEditorInner({
       {/* Bottom right stack: effects → chat → zoom */}
       <div className="absolute bottom-5 end-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none board-enter-delayed board-social">
         {/* Ephemeral Chat */}
-        <EphemeralChat ydoc={ydoc} provider={provider} />
+        {!embedded && <EphemeralChat ydoc={ydoc} provider={provider} />}
 
         {/* Live Effects */}
         <BoardEffects ydoc={ydoc} provider={provider} />
@@ -940,7 +946,7 @@ function BoardEditorInner({
 }
 
 /** Outer component: handles Yjs lifecycle, only renders editor once ready */
-export default function BoardCanvas({ board, accessToken, orgslug, username, orgUuid }: BoardCanvasProps) {
+export default function BoardCanvas({ board, accessToken, orgslug, username, orgUuid, embedded = false }: BoardCanvasProps) {
   const { t } = useTranslation()
   const { getAccessToken } = useAuth()
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
@@ -1059,6 +1065,7 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
         orgUuid={orgUuid}
         ydoc={ydoc}
         provider={provider}
+        embedded={embedded}
       />
       {/* Connection status indicator */}
       {connStatus === 'disconnected' && (
