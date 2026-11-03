@@ -7,6 +7,7 @@ import { getAPIUrl } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
 import { getOrgCourses } from '@services/courses/courses'
 import { getCommunities } from '@services/communities/communities'
+import { stepsDoneFromData } from '@/lib/onboarding'
 
 // Short stale time: the onboarding page refetches on focus, so a step done in
 // another tab ticks off when the admin comes back.
@@ -75,14 +76,14 @@ export function useOnboardingSignals(enabled = true) {
     staleTime: STALE,
   })
 
-  const inviteCount = Array.isArray(invites.data) ? invites.data.length : 0
-  const done = {
-    create_course: courseList.length > 0,
-    add_content: content.data === true,
-    brand_school: !!org?.logo_image,
-    invite_learners: (members.data?.total ?? 0) > 1 || inviteCount > 0,
-    build_community: Array.isArray(communities.data) && communities.data.length > 0,
-  }
+  const done = stepsDoneFromData({
+    courseCount: courseList.length,
+    hasLesson: content.data === true,
+    hasLogo: !!org?.logo_image,
+    memberCount: members.data?.total ?? 0,
+    inviteCount: Array.isArray(invites.data) ? invites.data.length : 0,
+    communityCount: Array.isArray(communities.data) ? communities.data.length : 0,
+  })
   const ready =
     courses.isFetched &&
     (content.isFetched || courseList.length === 0) &&
@@ -92,9 +93,7 @@ export function useOnboardingSignals(enabled = true) {
 
   return {
     ready,
-    done: Object.entries(done)
-      .filter(([, v]) => v)
-      .map(([k]) => k),
+    done,
     // Something the admin can link to straight away on the add-content step.
     latestCourseUuid: recent[0] ?? null,
   }

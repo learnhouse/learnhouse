@@ -1,5 +1,6 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react'
+import { applySignals, pendingCelebrations, summarize, type OnboardingProgress } from '@/lib/onboarding'
 
 export type OnboardingStep = {
   id: string
@@ -23,19 +24,13 @@ export type OnboardingStep = {
 // What the admin told us they are building. Tailors the copy, never the steps.
 export type OnboardingIntent = 'customers' | 'team' | 'sell' | 'school'
 
-type OnboardingState = {
-  completedSteps: string[]
-  skippedSteps: string[]
+type OnboardingState = OnboardingProgress & {
   minimized: boolean
   expanded: boolean
   showAllSteps: boolean
   dismissed: boolean
   welcomeSeen: boolean
   intent: OnboardingIntent | null
-  // Steps whose completion has been celebrated, so a reload never replays it.
-  celebrated: string[]
-  // True once the org's existing data has been read the first time.
-  seeded: boolean
 }
 
 const STORAGE_KEY = 'lh_onboarding'
@@ -190,15 +185,9 @@ export function useOnboarding() {
     skipped: state.skippedSteps.includes(s.id),
   }))
 
-  const currentStepIndex = steps.findIndex((s) => !s.completed)
+  const { currentStepIndex, allCompleted, progress, minutesLeft } = summarize(steps)
   const currentStep = currentStepIndex >= 0 ? steps[currentStepIndex] : null
-  const allCompleted = steps.every((s) => s.completed)
-  const progress = steps.length > 0 ? steps.filter((s) => s.completed).length / steps.length : 0
-  const minutesLeft = steps.filter((s) => !s.completed).reduce((n, s) => n + s.minutes, 0)
-  // Done by the user (not skipped) but not celebrated yet.
-  const uncelebrated = state.completedSteps.filter(
-    (id) => !state.celebrated.includes(id) && !state.skippedSteps.includes(id)
-  )
+  const uncelebrated = pendingCelebrations(state)
 
   const completeStep = useCallback((stepId: string) => {
     applyLocalChange((prev) => {
@@ -211,16 +200,7 @@ export function useOnboarding() {
   // already had (courses made before onboarding existed) completes silently,
   // and only later completions get a celebration.
   const completeSteps = useCallback((stepIds: string[]) => {
-    applyLocalChange((prev) => {
-      const fresh = stepIds.filter((id) => !prev.completedSteps.includes(id))
-      if (!fresh.length && prev.seeded) return prev
-      return {
-        ...prev,
-        seeded: true,
-        completedSteps: [...prev.completedSteps, ...fresh],
-        celebrated: prev.seeded ? prev.celebrated : [...prev.celebrated, ...fresh],
-      }
-    })
+    applyLocalChange((prev) => applySignals(prev, stepIds))
   }, [applyLocalChange])
 
   const markCelebrated = useCallback((stepIds: string[]) => {
