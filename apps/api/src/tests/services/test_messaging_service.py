@@ -5,6 +5,7 @@ realtime fan-out is a no-op; it is patched where a test asserts on it.
 """
 
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -697,3 +698,172 @@ async def test_group_agent_answers_only_from_shared_courses(db, org, admin_user,
     assert list(scope.courses) == [1]
     assert [r.current_user.id for r in scope.co_readers] == [regular_user.id]
     assert list(scope.co_readers[0].courses) == [1]
+
+
+# ---------------------------------------------------------------------------
+# Edges
+# ---------------------------------------------------------------------------
+
+
+async def test_send_rate_limit(db, org, admin_user, regular_user):
+    conv = await _dm(db, org, admin_user, regular_user)
+    with patch("src.services.security.rate_limiting.check_rate_limit", return_value=(False, 31, 20)):
+        with pytest.raises(HTTPException) as exc:
+            await _send(db, conv["conversation_uuid"], admin_user, "spam")
+    assert exc.value.status_code == 429
+
+
+async def test_empty_inputs_short_circuit(db, org, regular_user):
+    assert await svc._reactions_for([], db) == {}
+    assert await svc.serialize_messages([], "conversation_x", regular_user.id, db) == []
+    assert await svc._members_of([], db) == {}
+    assert await svc._require_accepting([], regular_user, org.id, db) is None
+    assert await svc.search_messages(org.id, "a", regular_user, db) == []
+    assert await svc.presence_for(org.id, [0], regular_user, db) == []
+    assert await svc.unread_total(org.id, regular_user, db) == {"unread": 0, "conversations": 0}
+    assert svc._status_expired(MessagingProfile(user_id=1, status_expires_at="not a date")) is False
+
+
+async def test_outsiders_and_unknowns_are_404(db, org, admin_user, regular_user, user_role):
+    conv = await _dm(db, org, admin_user, regular_user)
+    third = await _user(db, org, 3, "third")
+    with pytest.raises(HTTPException) as exc:
+        await svc.get_conversation(conv["conversation_uuid"], third, db)
+    assert exc.value.status_code == 404
+    with pytest.raises(HTTPException) as exc:
+        await svc.get_conversation("conversation_missing", admin_user, db)
+    assert exc.value.status_code == 404
+    rows = (await db.execute(select(Conversation).where(
+        Conversation.conversation_uuid == conv["conversation_uuid"]))).scalars().all()
+    # Serializing for a non-member skips the unread count instead of failing.
+    assert len(await svc.serialize_conversations(list(rows), third.id, db)) == 1
+    with pytest.raises(HTTPException) as exc:
+        await svc.toggle_reaction("message_missing", svc.ReactionToggle(emoji="👍"), admin_user, db)
+    assert exc.value.status_code == 404
+    with pytest.raises(HTTPException) as exc:
+        await _send(db, conv["conversation_uuid"], admin_user, "re", reply_to_uuid="message_missing")
+    assert exc.value.status_code == 404
+    with pytest.raises(HTTPException) as exc:
+        await svc.send_broadcast(svc.BroadcastCreate(org_id=org.id, course_uuid="course_missing", content="x"), admin_user, db)
+    assert exc.value.status_code == 404
+
+
+async def test_archived_dm_comes_back(db, org, admin_user, regular_user):
+    conv = await _dm(db, org, admin_user, regular_user)
+    await svc.leave_conversation(conv["conversation_uuid"], regular_user, db)
+    # A new message un-archives it for the other person...
+    await _send(db, conv["conversation_uuid"], admin_user, "you there?")
+    me = (await db.execute(select(ConversationMember).where(
+        ConversationMember.user_id == regular_user.id))).scalars().first()
+    assert me.archived is False
+    # ...and so does opening it again.
+    await svc.leave_conversation(conv["conversation_uuid"], regular_user, db)
+    await _dm(db, org, regular_user, admin_user)
+    await db.refresh(me)
+    assert me.archived is False
+
+
+async def test_group_rename_and_limits(db, org, admin_user, regular_user):
+    with pytest.raises(HTTPException):
+        await svc.create_conversation(svc.ConversationCreate(org_id=org.id, kind="group", user_uuids=[]), admin_user, db)
+    group = await svc.create_conversation(svc.ConversationCreate(
+        org_id=org.id, kind="group", user_uuids=[regular_user.user_uuid], title="Old"), admin_user, db)
+    with patch("src.services.messaging.realtime.publish_to_users") as publish:
+        renamed = await svc.update_conversation(group["conversation_uuid"], svc.ConversationUpdate(title=" New ", emoji="📚"), admin_user, db)
+    assert renamed["title"] == "New" and renamed["emoji"] == "📚"
+    assert publish.call_args.args[2]["type"] == "conversation.updated"
+
+    seven = await _user(db, org, 7, "seven")
+    with patch.object(svc, "GROUP_MAX_MEMBERS", 2):
+        with pytest.raises(HTTPException) as exc:
+            await svc.add_members(group["conversation_uuid"], svc.MembersAdd(user_uuids=[seven.user_uuid]), admin_user, db)
+    assert "limited" in exc.value.detail
+
+    dm = await _dm(db, org, admin_user, regular_user)
+    with pytest.raises(HTTPException) as exc:
+        await svc.add_members(dm["conversation_uuid"], svc.MembersAdd(user_uuids=[regular_user.user_uuid]), admin_user, db)
+    assert exc.value.status_code == 400
+
+
+async def test_paging_reactions_typing_and_read(db, org, admin_user, regular_user):
+    conv = await _dm(db, org, admin_user, regular_user)
+    first, _ = await _send(db, conv["conversation_uuid"], admin_user, "one")
+    second, _ = await _send(db, conv["conversation_uuid"], admin_user, "two")
+    page = await svc.list_messages(conv["conversation_uuid"], admin_user, db, before_id=second.id)
+    assert [m["content"] for m in page["messages"]] == ["one"]
+
+    read = await svc.mark_read(conv["conversation_uuid"], svc.ReadUpdate(message_uuid=first.message_uuid), regular_user, db)
+    assert read["last_read_message_id"] == first.id
+
+    for emoji in "😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙🥲😚🙂":
+        await svc.toggle_reaction(first.message_uuid, svc.ReactionToggle(emoji=emoji), admin_user, db)
+    with pytest.raises(HTTPException) as exc:
+        await svc.toggle_reaction(first.message_uuid, svc.ReactionToggle(emoji="🤩"), admin_user, db)
+    assert "Too many" in exc.value.detail
+
+    await svc.delete_message(second.message_uuid, admin_user, db)
+    with pytest.raises(HTTPException) as exc:
+        await svc.toggle_reaction(second.message_uuid, svc.ReactionToggle(emoji="👍"), regular_user, db)
+    assert exc.value.status_code == 400
+
+    db.add(MessagingProfile(user_id=admin_user.id, typing_indicators=False))
+    await db.commit()
+    with patch("src.services.messaging.realtime.publish_to_users") as publish:
+        assert await svc.set_typing(conv["conversation_uuid"], svc.TypingUpdate(is_typing=True), admin_user, db) == {"ok": True}
+    publish.assert_not_called()
+
+
+async def test_channel_rules(db, org, course, admin_user, regular_user):
+    assert await svc._can_share_course(SimpleNamespace(org_id=org.id + 1, published=True), admin_user.id, org.id, db) is False
+    org_channel = Conversation(org_id=org.id, kind="broadcast", course_id=None)
+    assert await svc._runs_channel(org_channel, admin_user.id, db) is True
+    assert await svc._runs_channel(org_channel, regular_user.id, db) is False
+
+    # A learner who joins the course team is promoted in the channel.
+    await _enroll(db, org, course, regular_user.id)
+    out = await svc.send_broadcast(svc.BroadcastCreate(org_id=org.id, course_uuid=course.course_uuid, content="hi"), admin_user, db)
+    conv = (await db.execute(select(Conversation).where(
+        Conversation.conversation_uuid == out["conversation"]["conversation_uuid"]))).scalars().one()
+    await svc._sync_channel_members(conv, {admin_user.id, regular_user.id}, set(), db)
+    await db.commit()
+    member = (await db.execute(select(ConversationMember).where(
+        ConversationMember.conversation_id == conv.id, ConversationMember.user_id == regular_user.id))).scalars().one()
+    assert member.role == "owner"
+
+
+async def test_unread_email_group_edges(db, org, admin_user, regular_user):
+    assert notify._parse("not a date") is None
+    silent = await _user(db, org, 3, "silent")
+    silent_row = await db.get(User, silent.id)
+    silent_row.email = ""
+    db.add(silent_row)
+    await db.commit()
+    group = await svc.create_conversation(svc.ConversationCreate(
+        org_id=org.id, kind="group", user_uuids=[regular_user.user_uuid, silent.user_uuid], title="Study group"), admin_user, db)
+    old, _ = await _send(db, group["conversation_uuid"], admin_user, "notes are up")
+    await _age(db, old, 90)
+    await _send(db, group["conversation_uuid"], admin_user, "just now")
+    db.add(MessagingProfile(user_id=regular_user.id, email_mode="all"))
+    await db.commit()
+
+    sender = MagicMock(side_effect=RuntimeError("provider down"))
+    with patch("src.services.users.emails.send_unread_messages_email", sender), \
+         patch("src.services.nudges.links.org_base_url", new=AsyncMock(return_value="https://x.test")):
+        stats = await notify.run_unread_emails(db)
+    # Only the learner with an email address is tried; the failure is counted, not raised.
+    assert sender.call_count == 1
+    assert sender.call_args.kwargs["conversations"][0]["title"] == "Study group"
+    assert stats.failed == 1 and stats.emails == 0
+
+
+async def test_unread_email_waits_for_personal_delay(db, org, admin_user, regular_user):
+    conv = await _dm(db, org, admin_user, regular_user)
+    msg, _ = await _send(db, conv["conversation_uuid"], admin_user, "later is fine")
+    await _age(db, msg, 90)
+    db.add(MessagingProfile(user_id=regular_user.id, email_delay_minutes=240))
+    await db.commit()
+    sender = MagicMock()
+    with patch("src.services.users.emails.send_unread_messages_email", sender):
+        stats = await notify.run_unread_emails(db)
+    assert stats.considered == 0
+    sender.assert_not_called()

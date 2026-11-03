@@ -152,3 +152,24 @@ async def test_reminder_routes(client, org):
     assert (await client.delete(f"{B}/reminders/{uuid}")).json()["status"] == "cancelled"
     bad = await client.post(f"{B}/reminders", json={"org_id": org.id, "text": "x", "due_at": "2020-01-01T00:00:00Z"})
     assert bad.status_code == 400
+
+
+async def test_stream_presence_hooks_use_short_sessions(app, db, org, admin_user):
+    from contextlib import asynccontextmanager
+
+    @asynccontextmanager
+    async def factory():
+        yield db
+
+    seen = []
+
+    async def fake_stream(org_id, user_id, hello, presence_payload, on_offline, is_disconnected):
+        seen.append(await presence_payload(True))
+        await on_offline()
+        yield "data: ok\n\n"
+
+    with patch("src.routers.messaging.messaging.realtime.event_stream", fake_stream), \
+         patch("src.routers.messaging.messaging._async_session_factory", factory):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+            await c.get(f"{B}/stream", params={"org_id": org.id})
+    assert seen[0]["type"] == "presence" and seen[0]["user_id"] == admin_user.id

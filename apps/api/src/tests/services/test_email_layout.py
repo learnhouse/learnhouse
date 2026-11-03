@@ -93,6 +93,10 @@ class TestUnreadMessagesEmail:
         assert '<img src="https://x.test/learnhouse_ai_simple_colored.png"' in body
         assert "✨" not in body
 
+    def test_long_snippets_are_shortened(self):
+        body = _render_unread([{"title": "Grace", "count": 1, "snippet": "word " * 60}])["body"]
+        assert "word word…" in body
+
     def test_values_are_escaped(self):
         body = _render_unread([
             {"title": "<b>x</b>", "count": 1, "author": "<i>y</i>", "snippet": "<script>alert(1)</script>"},
