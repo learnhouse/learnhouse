@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react'
 import { ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { upvoteComment, removeCommentUpvote } from '@services/communities/discussions'
@@ -21,6 +22,7 @@ export function CommentUpvoteButton({
   initialHasVoted,
   onVoteChange,
 }: CommentUpvoteButtonProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const { isUserPartOfTheOrg } = useOrgMembership()
   const { track } = useLHAnalytics('learner')
@@ -82,7 +84,7 @@ export function CommentUpvoteButton({
         !canVote && 'opacity-50 cursor-not-allowed',
         isLoading && 'opacity-70'
       )}
-      title={canVote ? (hasVoted ? 'Remove upvote' : 'Upvote this reply') : 'Join organization to vote'}
+      title={canVote ? (hasVoted ? t('communities.remove_upvote') : t('communities.upvote_reply')) : t('communities.join_to_vote')}
     >
       <ChevronUp
         size={14}

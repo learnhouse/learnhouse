@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { planName, planNameByLabel, featureLabel, featureBadge, packLabel } from '../../_billing/planText'
 import {
   Dialog,
   DialogContent,
@@ -237,7 +238,7 @@ export default function PlanUsage({
             <div className="flex items-center gap-4">
               {plan && (
                 <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-md border ${plan.badge}`}>
-                  {plan.name}
+                  {planName(t, plan)}
                 </span>
               )}
               <div>
@@ -267,7 +268,7 @@ export default function PlanUsage({
             <div className="flex items-center gap-4">
               {plan && (
                 <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-md border ${plan.badge}`}>
-                  {plan.name}
+                  {planName(t, plan)}
                 </span>
               )}
               <div>
@@ -322,7 +323,7 @@ export default function PlanUsage({
             <div className="px-5 py-5 space-y-4">
               {plan && (
                 <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-md border ${plan.badge}`}>
-                  {plan.name}
+                  {planName(t, plan)}
                 </span>
               )}
               <div className="flex items-baseline gap-1">
@@ -330,7 +331,7 @@ export default function PlanUsage({
                   {getCurrencySymbol(currentPlanId, priceOverrides)}
                   {price}
                 </span>
-                <span className="text-sm font-medium text-black/30">/mo</span>
+                <span className="text-sm font-medium text-black/30">{t('billing.pricing.per_month')}</span>
               </div>
               <p className="text-[11px] text-black/30 font-medium">
                 {subscription.billing === 'annual'
@@ -400,10 +401,10 @@ export default function PlanUsage({
               <div className="px-5 py-4 border-b border-black/[0.05]">
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-semibold text-black/35 uppercase tracking-wider">
-                    {t('billing.included_in', { defaultValue: `Included in ${plan.name}`, plan: plan.name })}
+                    {t('billing.included_in', { defaultValue: `Included in ${plan.name}`, plan: planName(t, plan) })}
                   </p>
                   {plan.inheritsFrom && (
-                    <span className="text-[10px] font-medium text-black/25">+ {plan.inheritsFrom}</span>
+                    <span className="text-[10px] font-medium text-black/25">+ {planNameByLabel(t, plan.inheritsFrom)}</span>
                   )}
                 </div>
               </div>
@@ -414,8 +415,8 @@ export default function PlanUsage({
                       key={f.label}
                       className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-black/45 bg-black/[0.03] rounded-md"
                     >
-                      {f.label}
-                      {f.badge ? ` · ${f.badge}` : ''}
+                      {featureLabel(t, f)}
+                      {f.badge ? ` · ${featureBadge(t, f)}` : ''}
                     </span>
                   ))}
                 </div>
@@ -689,7 +690,7 @@ export default function PlanUsage({
                         )}
                       </div>
                       <div>
-                        <p className="text-[13px] font-semibold text-black">{pack.label}</p>
+                        <p className="text-[13px] font-semibold text-black">{packLabel(t, pack)}</p>
                         <p className="text-[11px] text-black/30 font-medium">
                           {getPackCurrencySymbol(pack.id, packPrices, priceOverrides)}
                           {getPackPrice(pack.id, packPrices)}/mo {t('billing.per_pack', { defaultValue: 'per pack' })}
@@ -736,7 +737,7 @@ export default function PlanUsage({
                     </div>
                     <div>
                       <p className="text-[15px] font-bold text-black">
-                        {t('billing.add_pack', { defaultValue: `Add ${disclaimerPack.label}`, pack: disclaimerPack.label })}
+                        {t('billing.add_pack', { defaultValue: `Add ${disclaimerPack.label}`, pack: packLabel(t, disclaimerPack) })}
                       </p>
                       <p className="text-[13px] text-black/40 mt-0.5 font-normal">
                         {getPackCurrencySymbol(disclaimerPack.id, packPrices, priceOverrides)}

@@ -342,7 +342,7 @@ export default function PlaygroundBlockComponent({
             style={{ border: 'none' }}
             // srcDoc content runs on an opaque origin (no allow-same-origin)
             sandbox="allow-scripts allow-forms allow-modals allow-popups"
-            title="Playground"
+            title={t('boards.playground_block.iframe_title')}
           />
         )}
       </div>
@@ -497,7 +497,7 @@ function PlaygroundModal({
                     className="w-full h-full bg-white block"
                     style={{ border: 'none' }}
                     sandbox="allow-scripts allow-forms allow-modals allow-popups"
-                    title="Playground Preview"
+                    title={t('boards.playground_block.preview_iframe_title')}
                   />
                 </div>
               )}
