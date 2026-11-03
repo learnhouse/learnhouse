@@ -1268,3 +1268,28 @@ a, button, input, [role='tab'] {
   .lh-home-cards { grid-template-columns: 1fr; }
 }
 
+
+/* Video guides (components/YouTube) */
+.lh-video {
+  margin: 1.5rem 0;
+}
+.lh-video-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--lh-border);
+  border-radius: var(--lh-radius);
+  background: var(--lh-bg-muted);
+}
+.lh-video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.lh-video figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--lh-fg-muted);
+}

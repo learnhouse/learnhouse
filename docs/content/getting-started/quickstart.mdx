@@ -1,8 +1,10 @@
-import { Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 
 # Quickstart
 
-There are two ways to start using LearnHouse: the managed **LearnHouse Cloud** or a **self-hosted** deployment. Pick the path that suits your needs.
+There are two ways to start using LearnHouse: the managed **LearnHouse Cloud** or a **self-hosted** deployment. Pick the path that suits your needs, then follow [Set up your academy](#set-up-your-academy) to go from an empty organization to your first learners.
+
+<YouTube video="start-tour" />
 
 ---
 
@@ -12,9 +14,9 @@ The fastest way to get started. No infrastructure to manage.
 
 1. **Sign up**: create an account at [learnhouse.app](https://learnhouse.app).
 2. **Create an organization**: after signing in, create your first organization. This is the top-level container for all of your courses, users, and settings.
-3. **Create your first course**: inside the organization dashboard, click **New Course**, give it a title, and start adding chapters and activities.
+3. **Set up your academy**: follow the steps [below](#set-up-your-academy).
 
-You are ready to go. LearnHouse Cloud handles hosting, updates, backups, and SSL for you.
+LearnHouse Cloud handles hosting, updates, backups, and SSL for you.
 
 <Callout>
 Not sure whether Cloud or self-hosting is right for you? See the [Cloud vs Self Hosting](/getting-started/cloud-vs-self-hosting) comparison.
@@ -24,7 +26,7 @@ Not sure whether Cloud or self-hosting is right for you? See the [Cloud vs Self 
 
 ## Option B: Self-Hosted
 
-Run LearnHouse on your own infrastructure using the LearnHouse CLI. You'll need [Docker](https://docs.docker.com/get-docker/) and [Node.js](https://nodejs.org/) (v18+) installed.
+Run LearnHouse on your own infrastructure using the LearnHouse CLI. You'll need [Docker](https://docs.docker.com/get-docker/) with the Compose v2 plugin and [Node.js](https://nodejs.org/) 22 or newer installed.
 
 ### 1. Run the setup wizard
 
@@ -35,6 +37,8 @@ npx learnhouse@latest setup
 The interactive wizard walks you through domain configuration, database setup, admin account creation, and optional features (AI, email, storage, OAuth).
 
 ### 2. Start LearnHouse
+
+At the end of the wizard, accept **Start LearnHouse now?** and the CLI starts everything and waits until it is ready. If you skipped that step, run:
 
 ```bash
 npx learnhouse start
@@ -47,7 +51,8 @@ Your instance will be available at `http://localhost` (or the domain you configu
 ```bash
 npx learnhouse stop     # Stop all services
 npx learnhouse logs     # Stream logs
-npx learnhouse backup   # Backup database
+npx learnhouse backup   # Back up the database, .env and uploads
+npx learnhouse update   # Update to the latest version
 npx learnhouse doctor   # Run diagnostics
 ```
 
@@ -57,8 +62,94 @@ For detailed installation options, see the [Quick Install](/self-hosting/install
 
 ---
 
+## Set up your academy
+
+Once you are signed in as an admin, the dashboard opens on **Home**: your courses, members, communities and AI credits at a glance. Until setup is done, the sidebar shows an **Onboarding** box with the next step. Click **Continue setup** to open the full checklist.
+
+<img src="/img/pages/getting-started/dashboard-home.webp" alt="The dashboard home with counts for courses, members, communities, podcasts and boards, the recent courses list and the Plan & Usage panel" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+<Steps>
+
+### Create your first course
+
+<YouTube video="start-first-course" />
+
+1. Click **Courses** in the sidebar, then **New Course**.
+2. Choose **Start from Scratch**. You can also choose **Start with AI** to have the [AI Course Creator](/platform/courses/ai-course-creator) plan it with you, or **From Existing Content** to build it from your files.
+3. Give the course a name and a short description, then click **Create Course**.
+
+<img src="/img/pages/getting-started/create-new-course.webp" alt="The Create New Course window with Start from Scratch, Start with AI and From Existing Content" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+Open the course's **Content** tab. A first chapter is already there. Click **Add Chapter** for each step of the course.
+
+<img src="/img/pages/getting-started/first-chapters.webp" alt="A new course on the Content tab with two chapters, each with an Add Activity button, and Add Chapter at the bottom" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+### Add your first lesson
+
+<YouTube video="start-first-lesson" />
+
+1. In a chapter, click **Add Activity**.
+2. Choose **Dynamic Page**, give it a name and click **Create activity**.
+3. Open it in the editor and write your lesson. Use the toolbar or type `/` to add videos, images, callouts, quizzes and more. See [Editor](/platform/editor).
+4. Click **Save**, then click the preview button to see the lesson as learners do.
+
+<img src="/img/pages/getting-started/create-activity-types.webp" alt="The Create Activity window with Dynamic Page, Video, Document, Assignments, Markdown, Embed, Resource and Scorm" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+<img src="/img/pages/getting-started/first-lesson-preview.webp" alt="The finished lesson as learners see it, with a tip callout, an interactive quiz and the Mark as complete button" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+New activities start as drafts. Click **Publish** on the activity, and publish the course from its header, when you are ready for learners to see it. See [Publishing](/platform/courses/chapters-and-activities#publishing).
+
+### Make it look like your brand
+
+<YouTube video="start-branding" />
+
+1. Click **Organization** in the sidebar.
+2. On the **General** tab, give your academy a name and a short description.
+3. On the **Branding** tab, open **Logos** and click **Replace wide logo** and **Replace square logo**. The wide logo sits in the public header and on certificates. The square logo is used on the sign-in page, in the organization switcher and in the dashboard sidebar.
+4. Open **Theme** to pick a **Primary color** and a **Font**.
+
+<img src="/img/pages/getting-started/branding-logos.webp" alt="The Branding tab on Logos, with the wide and square logos and previews of where each one appears" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+### Open your school
+
+<YouTube video="start-open-school" />
+
+Click your academy's name at the top of the dashboard sidebar to open its public home. This is what learners see: your courses, the [Library](/platform/courses/library), and a search that finds any course or lesson.
+
+Open a course and click **Share Course** to copy its link or share it on LinkedIn, X, Facebook, WhatsApp or Reddit.
+
+<img src="/img/pages/getting-started/share-course.webp" alt="A public course page with the Share Course menu open: LinkedIn, X, Facebook, WhatsApp, Reddit and Copy Link" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+### Invite your first learners
+
+<YouTube video="start-invite" />
+
+1. Click **Users** in the sidebar, then the **Invite Members** tab.
+2. Enter email addresses, separated by commas, and click **Send invites via email**.
+
+<img src="/img/pages/getting-started/invite-members.webp" alt="The Invite Members tab with the email field, the Invite Code selector and the Send invites via email button" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+To let people join on their own, open **Signups & Invite Codes**. With the **Open** join method, anyone can sign up from the sign-up page. With **Closed**, people can only join with an invitation or an invite code link. See [Members & Invites](/platform/users/members-and-invites).
+
+### Start a community
+
+<YouTube video="start-community" />
+
+1. Click **Communities** in the sidebar, then **New Community**.
+2. Enter a **Community Name** and a **Description**, choose whether it is public, and click **Create Community**.
+3. Optionally, link it to a course, so its latest threads show on the course page.
+
+<img src="/img/pages/getting-started/create-community.webp" alt="The Create Community window with a name, a description and the option to make the community public" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+See [Communities](/platform/discussions). On LearnHouse Cloud, communities need the Standard plan or higher.
+
+</Steps>
+
+---
+
 ## What to do next
 
 - Read the [Key Concepts](/getting-started/key-concepts) page on organizations, courses, activities, and more.
 - Explore the [Editor](/platform/editor) to see how content authoring works.
-- Set up [AI features](/self-hosting/configuration/ai-setup) if you want built-in AI assistance for students and teachers.
+- Release a course over time with [Drip Content](/platform/courses/drip-content).
+- Set up [AI features](/self-hosting/configuration/ai-setup) if you self-host and want built-in AI assistance for students and teachers.
