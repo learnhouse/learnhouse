@@ -7,8 +7,10 @@ layer is **provider-agnostic**: point it at any major LLM provider by setting a 
 and an API key. These features are optional and disabled by default.
 
 Under the hood LearnHouse uses [Pydantic AI](https://ai.pydantic.dev/) for generation, and
-**llama-index** with **pgvector** for RAG (Retrieval-Augmented Generation), enabling AI
-assistants to answer questions using your course content as context.
+stores embeddings in PostgreSQL with **pgvector** for RAG (Retrieval-Augmented Generation), so
+AI assistants can answer questions using your course content as context. Course content is
+indexed in the background inside the API process (see the background job variables in the
+[environment variable reference](/self-hosting/configuration/environment-variables#background-jobs-and-media-processing)).
 
 ## Supported providers
 
@@ -45,12 +47,13 @@ LEARNHOUSE_AI_PROVIDER=google           # google | openai | anthropic | deepseek
 LEARNHOUSE_AI_API_KEY=your-api-key      # the single key, whatever the provider
 ```
 
-After updating your `.env` file, restart your instance:
+After updating your `.env` file, apply it (this recreates the containers whose configuration changed):
 
 ```bash
-learnhouse stop
-learnhouse start
+npx learnhouse start
 ```
+
+The setup wizard only asks for a Gemini key. For any other provider, add these variables to `.env` yourself.
 
 <Callout type="info">
 **Upgrading from a Gemini-only setup.** No config changes are required: if you only set

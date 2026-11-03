@@ -416,7 +416,9 @@ class TestUsergroupsService:
             new_callable=AsyncMock,
         ), patch(
             "src.services.users.usergroups.logging.error"
-        ) as log_error:
+        ) as log_error, patch(
+            "src.services.users.usergroups.logging.info"
+        ) as log_info:
             add_users_result = await add_users_to_usergroup(
                 mock_request,
                 db,
@@ -450,7 +452,10 @@ class TestUsergroupsService:
         assert add_resources_result == "Resources added to UserGroup successfully"
         assert remove_users_result == "Users removed from UserGroup successfully"
         assert remove_resources_result == "Resources removed from UserGroup successfully"
-        assert log_error.call_count >= 4
+        # Links that already exist are skipped quietly; missing ones are errors.
+        already = [c.args[0] for c in log_info.call_args_list if "already exists" in c.args[0]]
+        assert len(already) == 2
+        assert log_error.call_count >= 3
 
     @pytest.mark.asyncio
     async def test_add_remove_users_reject_non_integer_ids(

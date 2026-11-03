@@ -63,7 +63,7 @@ export function CourseOverviewTop({
     setIsIndexing(true)
     setIsIndexed(false)
 
-    const toastId = toast.loading('Indexing course for AI...')
+    const toastId = toast.loading(t('dashboard.courses.ai_index.indexing_toast'))
 
     try {
       const response = await fetch(`${getAPIUrl()}ai/rag/index`, {
@@ -82,11 +82,11 @@ export function CourseOverviewTop({
 
       const data = await response.json()
       toast.dismiss(toastId)
-      toast.success(`Indexed ${data.chunks_indexed} chunks for AI`)
+      toast.success(t('dashboard.courses.ai_index.indexed_toast', { count: data.chunks_indexed }))
       setIsIndexed(true)
     } catch (error: any) {
       toast.dismiss(toastId)
-      toast.error(error.message || 'Failed to index course')
+      toast.error(error.message || t('dashboard.courses.ai_index.index_failed'))
     } finally {
       setIsIndexing(false)
     }
@@ -205,8 +205,8 @@ export function CourseOverviewTop({
           <button
             onClick={togglePublishStatus}
             disabled={isPublishing}
-            aria-label={isPublished ? 'Unpublish course' : 'Publish course'}
-            title={isPublished ? 'Click to unpublish' : 'Click to publish'}
+            aria-label={isPublished ? t('dashboard.courses.ai_index.unpublish_course') : t('dashboard.courses.ai_index.publish_course')}
+            title={isPublished ? t('dashboard.courses.click_to_unpublish') : t('dashboard.courses.click_to_publish')}
             className={`group px-2.5 sm:px-3.5 py-2 text-sm font-semibold flex items-center space-x-1.5 transition-colors ${
               isPublished
                 ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70'
@@ -249,7 +249,7 @@ export function CourseOverviewTop({
                     <button
                       onClick={indexCourseForAI}
                       disabled={isIndexing}
-                      aria-label={isIndexing ? 'Indexing course' : isIndexed ? 'Course indexed' : 'Index course for AI'}
+                      aria-label={isIndexing ? t('dashboard.courses.ai_index.aria_indexing') : isIndexed ? t('dashboard.courses.ai_index.aria_indexed') : t('dashboard.courses.ai_index.aria_index')}
                       className={`group px-2.5 sm:px-3.5 py-2 text-sm font-semibold flex items-center space-x-1.5 transition-colors ${
                         isIndexed
                           ? 'bg-blue-50/70 text-blue-700'
@@ -264,12 +264,12 @@ export function CourseOverviewTop({
                         <BrainCircuit className="w-4 h-4 flex-none" />
                       )}
                       <span className="hidden sm:inline">
-                        {isIndexing ? 'Indexing...' : isIndexed ? 'Indexed' : 'Index for AI'}
+                        {isIndexing ? t('dashboard.courses.ai_index.indexing') : isIndexed ? t('dashboard.courses.ai_index.indexed') : t('dashboard.courses.ai_index.index_for_ai')}
                       </span>
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="max-w-xs text-xs">
-                    <p>Indexes this course's content so the AI Copilot can search and reference it when answering questions. Content is automatically re-indexed when activities are updated.</p>
+                    <p>{t('dashboard.courses.ai_index.tooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

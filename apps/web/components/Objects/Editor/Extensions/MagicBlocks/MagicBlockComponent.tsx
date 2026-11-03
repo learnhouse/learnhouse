@@ -249,7 +249,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   className="outline outline-1 outline-neutral-200/20 rounded-lg"
                   width={20}
                   src={lrnaiIcon}
-                  alt="Magic Block"
+                  alt={t('editor.blocks.magic_block_content.title')}
                 />
                 <span className="text-sm font-semibold text-white/70">
                   {t('editor.blocks.magic_block_content.title')}
@@ -278,7 +278,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                     }}
                     className="p-4 rounded-full drop-shadow-md"
                   >
-                    <Image src={lrnaiIcon} alt="Magic Block" width={32} height={32} />
+                    <Image src={lrnaiIcon} alt={t('editor.blocks.magic_block_content.title')} width={32} height={32} />
                   </div>
                   <div className="space-y-1">
                     <p className="font-semibold text-white/80">

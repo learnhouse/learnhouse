@@ -6,28 +6,30 @@ LearnHouse uses environment variables as its primary configuration method. When 
 
 ## Configuration Methods
 
-LearnHouse supports two configuration methods:
+The API reads its settings from two places:
 
-1. **Environment variables** (via `.env` file): the primary and recommended method
-2. **Configuration file** (`config.yaml`): an alternative for advanced users
+1. **Environment variables** (the `.env` file the CLI generates): the primary and recommended method
+2. **`apps/api/config/config.yaml`** inside the image: defaults for local development
 
 <Callout type="info">
-If both are present, environment variables always take precedence over values defined in `config.yaml`.
+When a variable is set, it takes precedence over the value in `config.yaml`. The web app and the collaboration server read only environment variables.
 </Callout>
 
 ## Editing Configuration
 
-You can modify your configuration at any time using the CLI:
+Edit variables interactively with the CLI. It offers to restart services when you are done:
 
 ```bash
-learnhouse config --edit
+npx learnhouse env
 ```
 
-Alternatively, edit the `.env` file directly and restart services:
+Alternatively, edit the `.env` file in your installation directory (`~/.learnhouse/<name>/.env` by default) and apply the change. `start` runs `docker compose up -d`, which recreates the containers whose configuration changed:
 
 ```bash
-learnhouse restart
+npx learnhouse start
 ```
+
+To change the domain, re-run `npx learnhouse setup` on the same installation: the URLs, cookie domain and proxy configuration are all generated from it. Your data and secrets are kept.
 
 ## Configuration Sections
 

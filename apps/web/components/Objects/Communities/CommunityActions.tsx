@@ -4,6 +4,7 @@ import { Users, MessageCircle, Plus, Globe, Lock, Settings } from 'lucide-react'
 import { Community } from '@services/communities/communities'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useTranslation } from 'react-i18next'
 
 interface CommunityActionsProps {
   community: Community
@@ -18,6 +19,7 @@ export function CommunityActions({
   onEdit,
   onCreateDiscussion,
 }: CommunityActionsProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const { canManageCommunity, canCreateDiscussion } = useCommunityRights(community.community_uuid)
 
@@ -63,9 +65,9 @@ export function CommunityActions({
                   </div>
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">Community Activity</div>
+                  <div className="text-sm font-medium text-gray-900">{t('communities.actions.activity')}</div>
                   <div className="text-sm text-gray-500">
-                    {discussionCount} {discussionCount === 1 ? 'discussion' : 'discussions'}
+                    {t('communities.actions.discussion_count', { count: discussionCount })}
                   </div>
                 </div>
               </div>
@@ -93,7 +95,7 @@ export function CommunityActions({
               <div className="w-2 h-2 bg-green-500 rounded-full" />
               <div className="flex items-center gap-2">
                 <Globe size={16} className="text-green-600" />
-                <span className="text-green-800 font-medium text-sm">Public Community</span>
+                <span className="text-green-800 font-medium text-sm">{t('communities.actions.public_community')}</span>
               </div>
             </>
           ) : (
@@ -101,7 +103,7 @@ export function CommunityActions({
               <div className="w-2 h-2 bg-gray-400 rounded-full" />
               <div className="flex items-center gap-2">
                 <Lock size={16} className="text-gray-600" />
-                <span className="text-gray-700 font-medium text-sm">Private Community</span>
+                <span className="text-gray-700 font-medium text-sm">{t('communities.actions.private_community')}</span>
               </div>
             </>
           )}
@@ -114,7 +116,7 @@ export function CommunityActions({
             className="w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer bg-neutral-900 text-white hover:bg-neutral-800"
           >
             <Plus className="w-5 h-5" />
-            <span>New Discussion</span>
+            <span>{t('communities.actions.new_discussion')}</span>
           </button>
         )}
 
@@ -125,7 +127,7 @@ export function CommunityActions({
             className="w-full bg-white text-neutral-700 border border-neutral-200 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <Settings className="w-5 h-5" />
-            Manage Community
+            {t('communities.actions.manage_community')}
           </button>
         )}
       </div>

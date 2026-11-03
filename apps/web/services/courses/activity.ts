@@ -1,4 +1,4 @@
-import { RequestBodyWithAuthHeader, errorHandling } from '@services/utils/ts/requests'
+import { RequestBodyWithAuthHeader, errorHandling, detailMessage } from '@services/utils/ts/requests'
 import { getAPIUrl } from '@services/config/config'
 
 /*
@@ -66,7 +66,7 @@ export async function updateActivityContent(
       const errorData = await result.json().catch(() => ({}))
       return {
         success: false,
-        error: errorData.detail || `HTTP error ${result.status}`,
+        error: detailMessage(errorData.detail, `HTTP error ${result.status}`),
       }
     }
 

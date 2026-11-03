@@ -334,7 +334,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                   className="flex items-center space-x-2 text-red-600 focus:text-red-600"
                 >
                   <SignOut size={16} weight="fill" data-dir-flip />
-                  <span>Sign Out</span>
+                  <span>{t('common.sign_out')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

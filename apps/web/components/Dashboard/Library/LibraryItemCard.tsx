@@ -143,7 +143,7 @@ export default function LibraryItemCard({ item, orgslug, onRemove }: Props) {
       <div className={`absolute top-2 end-2 z-20 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <DropdownMenuTrigger asChild>
-            <button aria-label="Item actions" className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
+            <button aria-label={t('library.item_actions')} className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
               <DotsThreeVertical size={18} weight="bold" className="text-gray-700" />
             </button>
           </DropdownMenuTrigger>

@@ -481,7 +481,7 @@ function EditRole(props: EditRoleProps) {
                         </FormField>
 
                         <div className="mt-6">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Predefined Rights</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('dashboard.users.roles.modals.create.presets.title')}</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Object.keys(predefinedRoles).map((roleKey) => (
                                     <button
@@ -490,8 +490,8 @@ function EditRole(props: EditRoleProps) {
                                         onClick={() => handlePredefinedRole(roleKey)}
                                         className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-start bg-white shadow-sm hover:shadow-md"
                                     >
-                                        <div className="font-medium text-gray-900 text-sm sm:text-base">{predefinedRoles[roleKey as keyof typeof predefinedRoles].name}</div>
-                                        <div className="text-xs sm:text-sm text-gray-500 mt-1">{predefinedRoles[roleKey as keyof typeof predefinedRoles].description}</div>
+                                        <div className="font-medium text-gray-900 text-sm sm:text-base">{t(`dashboard.users.roles.modals.create.presets.${roleKey === 'Course Manager' ? 'maintainer' : roleKey === 'Content Creator' ? 'content_creator' : roleKey === 'User Manager' ? 'user_manager' : roleKey.toLowerCase()}.name`)}</div>
+                                        <div className="text-xs sm:text-sm text-gray-500 mt-1">{t(`dashboard.users.roles.modals.create.presets.${roleKey === 'Course Manager' ? 'maintainer' : roleKey === 'Content Creator' ? 'content_creator' : roleKey === 'User Manager' ? 'user_manager' : roleKey.toLowerCase()}.description`)}</div>
                                     </button>
                                 ))}
                             </div>

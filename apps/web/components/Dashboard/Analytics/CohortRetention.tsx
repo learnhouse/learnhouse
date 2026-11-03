@@ -1,13 +1,15 @@
 'use client'
 import React from 'react'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
+import { useTranslation } from 'react-i18next'
 
 export default function CohortRetention({ days = '90' }: { days?: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('cohort_retention', { days })
   const rows = data?.data ?? []
 
   const pct = (val: number, total: number) =>
-    total > 0 ? `${Math.round((val / total) * 100)}%` : 'n/a'
+    total > 0 ? `${Math.round((val / total) * 100)}%` : t('analytics.common.not_available')
 
   const cellColor = (val: number, total: number) => {
     if (total === 0) return ''
@@ -19,23 +21,23 @@ export default function CohortRetention({ days = '90' }: { days?: string }) {
 
   return (
     <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Cohort Retention</h3>
-      <p className="text-xs text-gray-400 mb-4">% users active after signup week</p>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('analytics.advanced_widgets.cohort_retention.title')}</h3>
+      <p className="text-xs text-gray-400 mb-4">{t('analytics.advanced_widgets.cohort_retention.description')}</p>
       {isLoading ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('analytics.common.loading')}</div>
       ) : rows.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">No data yet</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('analytics.common.no_data')}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                <th className="pb-2 text-left">Cohort</th>
-                <th className="pb-2">Size</th>
-                <th className="pb-2">W1</th>
-                <th className="pb-2">W2</th>
-                <th className="pb-2">W4</th>
-                <th className="pb-2">W8</th>
+                <th className="pb-2 text-left">{t('analytics.advanced_widgets.cohort_retention.cohort')}</th>
+                <th className="pb-2">{t('analytics.advanced_widgets.cohort_retention.size')}</th>
+                <th className="pb-2">{t('analytics.advanced_widgets.cohort_retention.week_1')}</th>
+                <th className="pb-2">{t('analytics.advanced_widgets.cohort_retention.week_2')}</th>
+                <th className="pb-2">{t('analytics.advanced_widgets.cohort_retention.week_4')}</th>
+                <th className="pb-2">{t('analytics.advanced_widgets.cohort_retention.week_8')}</th>
               </tr>
             </thead>
             <tbody>

@@ -2,26 +2,48 @@ import { Callout } from 'nextra/components'
 
 # Analytics
 
-LearnHouse provides analytics to help administrators and teachers understand how learners engage with content. Analytics track user activity, course engagement, and platform usage.
+LearnHouse records what learners do (page views, enrollments, completions, submissions and more) and turns it into dashboards for admins. There are three views:
 
-<Callout>
-Analytics must be enabled in your [Organization Settings](/platform/organizations/settings) to be available.
+- **[Analytics dashboard](/platform/analytics/dashboard)**: organization-wide numbers under **Analytics** in the dashboard, with an **Overview** tab and an **Advanced** tab.
+- **[Course analytics](/platform/analytics/course-analytics)**: the **Analytics** tab of a single course.
+- **[Learner analytics](/platform/users/learner-analytics)**: one learner's full record, opened from the **Users** list.
+
+## Availability
+
+| Deployment | Overview tab | Course analytics | Learner analytics | Advanced tab |
+| --- | --- | --- | --- | --- |
+| LearnHouse Cloud | Standard plan and above | Pro plan and above | Pro plan and above | Enterprise plan |
+| Self-hosted, open source | Yes | Yes | No | No |
+| Self-hosted, Enterprise Edition | Yes | Yes | Yes | Yes |
+
+The dashboards read from Tinybird, so they need a Tinybird connection (see below). Analytics data is only visible to organization admins: users whose role can update the organization (the Admin role by default, or a custom role with that permission).
+
+## How it works
+
+Analytics is built on [Tinybird](https://www.tinybird.co/), a hosted ClickHouse service.
+
+1. The web app sends view events (`page_view`, `course_view`, `activity_view`, `search_query`, `time_on_activity`) through the LearnHouse API. Only signed-in members of the organization are tracked, and only these event names are accepted.
+2. The API sends server-side events itself when something happens: `course_enrolled`, `course_completed`, `activity_completed`, `assignment_submitted`, `user_signed_up`, `user_removed_from_org`, `certificate_claimed`, `certificate_revoked`, `discussion_posted` and `nudge_sent`.
+3. Events land in a single `events` data source in Tinybird. The dashboards query it on demand.
+
+Each event carries the organization, the user and a session ID. The country is taken from the `cf-ipcountry` (Cloudflare) or `x-country-code` proxy header when one is present. Time spent on a lesson is capped at 4 hours per event.
+
+Query results are cached in Redis to keep the dashboards fast: 1 minute for overview and course widgets, 5 minutes for advanced widgets, 30 seconds for detail views. The **Live Now** counter is never cached. If Redis is down, queries go straight to Tinybird.
+
+## Setting up analytics on a self-hosted instance
+
+Analytics turns on when the API has a Tinybird URL and tokens. Set these on the API service:
+
+| Variable | Purpose |
+| --- | --- |
+| `LEARNHOUSE_TINYBIRD_API_URL` | Your Tinybird workspace's regional API URL, for example `https://api.europe-west2.gcp.tinybird.co`. Setting it enables analytics. |
+| `LEARNHOUSE_TINYBIRD_INGEST_TOKEN` | A token that can append to the `events` data source. |
+| `LEARNHOUSE_TINYBIRD_READ_TOKEN` | A token that can run SQL queries. |
+
+Then deploy the `events` data source from `apps/api/src/db/tinybird/` with the Tinybird CLI. The README in that folder walks through it. The data source keeps events for 365 days.
+
+<Callout type="info">
+Without these variables the API skips tracking and the dashboard shows **Analytics not configured**. Nothing else in LearnHouse depends on analytics.
 </Callout>
 
-## What's Tracked
-
-- **User engagement**: Activity views, time spent, and interaction patterns.
-- **Course analytics**: Which courses and activities are most popular and how students progress through them.
-- **Organization-level metrics**: Overall platform usage and growth trends.
-
-## How Analytics Work
-
-Events are tracked as users interact with the platform: viewing activities, completing courses, submitting assignments, and more. These events are aggregated into dashboards accessible from the admin panel.
-
-## Accessing Analytics
-
-Administrators can access the global analytics dashboard from the organization admin panel. Analytics data is scoped to the current organization, so each organization sees only its own data.
-
-<Callout>
-Analytics uses event caching for performance. Data may take a short time to reflect the most recent activity.
-</Callout>
+See [Environment Variables](/self-hosting/configuration/environment-variables) for the full list.

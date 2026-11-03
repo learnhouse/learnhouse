@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
@@ -28,6 +29,7 @@ interface EditorLoaderProps {
  * `session.data` only populates after the subsequent `/users/session` call.
  */
 export default function EditorLoader({ courseid: _courseid, activityuuid }: EditorLoaderProps) {
+  const { t } = useTranslation()
   const { accessToken: access_token } = useAuth()
   const [editorReady, setEditorReady] = React.useState(false)
 
@@ -62,12 +64,12 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
   if (bootstrapError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500">
-        <p className="text-sm">Failed to load editor. Please refresh the page.</p>
+        <p className="text-sm">{t('editor.loader.failed')}</p>
         <button
           onClick={() => window.location.reload()}
           className="text-sm text-indigo-600 hover:underline"
         >
-          Refresh
+          {t('editor.loader.refresh')}
         </button>
       </div>
     )

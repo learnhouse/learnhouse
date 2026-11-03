@@ -7,6 +7,7 @@ import { updateDocumentActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 
@@ -18,6 +19,7 @@ interface EditDocumentActivityModalProps {
 }
 
 function EditDocumentActivityModal({ activity, courseUuid, orgSlug, onClose }: EditDocumentActivityModalProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -29,7 +31,7 @@ function EditDocumentActivityModal({ activity, courseUuid, orgSlug, onClose }: E
     e.preventDefault()
     setIsSubmitting(true)
 
-    const toastId = toast.loading('Updating document activity...')
+    const toastId = toast.loading(t('activities.edit_modal.updating_document'))
     try {
       const res = await updateDocumentActivity(
         activity.activity_uuid,
@@ -39,14 +41,14 @@ function EditDocumentActivityModal({ activity, courseUuid, orgSlug, onClose }: E
       )
 
       if (res?.success === false) {
-        toast.error('Failed to update document activity', { id: toastId })
+        toast.error(t('activities.edit_modal.update_document_failed'), { id: toastId })
       } else {
-        toast.success('Document activity updated', { id: toastId })
+        toast.success(t('activities.edit_modal.document_updated'), { id: toastId })
         mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
         onClose()
       }
     } catch {
-      toast.error('Failed to update document activity', { id: toastId })
+      toast.error(t('activities.edit_modal.update_document_failed'), { id: toastId })
     } finally {
       setIsSubmitting(false)
     }
@@ -63,28 +65,28 @@ function EditDocumentActivityModal({ activity, courseUuid, orgSlug, onClose }: E
       >
         <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
           <FileText size={18} weight="duotone" className="text-emerald-400" />
-          PDF Document
+          {t('activities.edit_modal.pdf_document')}
         </span>
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Activity name</label>
+          <label className="text-sm font-medium text-gray-700">{t('activities.modal.activity_name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             type="text"
             required
-            placeholder="Enter a name..."
+            placeholder={t('activities.modal.enter_name')}
             className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Replace PDF file</label>
+          <label className="text-sm font-medium text-gray-700">{t('activities.edit_modal.replace_pdf')}</label>
           <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
             <FileText size={14} weight="duotone" />
-            <span>Leave empty to keep the current file</span>
+            <span>{t('activities.edit_modal.keep_current_file')}</span>
           </div>
           <input
             type="file"
@@ -104,7 +106,7 @@ function EditDocumentActivityModal({ activity, courseUuid, orgSlug, onClose }: E
           {isSubmitting ? (
             <LearnHouseSpinner size={18} className="[&>div]:border-t-white" />
           ) : (
-            'Save changes'
+            t('common.save_changes')
           )}
         </button>
       </div>

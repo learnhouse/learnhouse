@@ -190,7 +190,7 @@ function MagicBlockModal({
         )
       }
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Unknown error')
+      onError(err instanceof Error ? err.message : t('editor.blocks.magic_block_content.unknown_error'))
     }
   }
 
@@ -309,7 +309,7 @@ function MagicBlockModal({
                     className="outline outline-1 outline-neutral-200/20 rounded-lg"
                     width={24}
                     src={lrnaiIcon}
-                    alt="Magic Block"
+                    alt={t('editor.blocks.magic_block_content.title')}
                   />
                   <span className="text-sm font-semibold text-white/70">{t('editor.blocks.magic_block_content.title')}</span>
                 </div>

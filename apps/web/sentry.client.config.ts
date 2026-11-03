@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { scrubSentryBreadcrumb, scrubSentryEvent } from "./services/utils/ts/scrubUrl";
+import { isClientNoise } from "./lib/errors/sentryNoise";
 
 const rc = typeof window !== 'undefined' ? (window as any).__RUNTIME_CONFIG__ || {} : {};
 const SENTRY_DSN = rc.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN || process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN;
@@ -50,8 +51,10 @@ if (SENTRY_DSN) {
       if (msg.includes("Organization not found")) return null;
       if (msg.includes("Organization has no config")) return null;
 
-      // Only frame is an injected extension script; nothing of ours ran.
       const frames = event?.exception?.values?.[0]?.stacktrace?.frames ?? [];
+      if (isClientNoise(msg, frames)) return null;
+
+      // Only frame is an injected extension script; nothing of ours ran.
       if (
         frames.length > 0 &&
         frames.every((frame) => /(^|\/)(inpage|contentscript|content_script)\.js/i.test(frame.filename ?? ""))
