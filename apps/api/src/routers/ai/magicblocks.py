@@ -180,7 +180,8 @@ async def start_magicblock_session(
     stream = generate_magicblock_stream(
         prompt=session_request.prompt,
         session=session,
-        model_name=ai_model
+        model_name=ai_model,
+        style_reference=session_request.style_reference,
     )
 
     return StreamingResponse(
@@ -291,7 +292,8 @@ async def iterate_magicblock_session(
         prompt=message_request.message,
         session=session,
         model_name=ai_model,
-        current_html=html_to_iterate
+        current_html=html_to_iterate,
+        style_reference=message_request.style_reference,
     )
 
     return StreamingResponse(
@@ -340,5 +342,6 @@ async def get_session_state(
         message_history=[
             MagicBlockMessage(role=msg.role, content=msg.content)
             for msg in session.message_history
-        ]
+        ],
+        revisions=session.revisions,
     )

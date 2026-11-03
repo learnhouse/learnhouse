@@ -13,6 +13,7 @@ import {
   Save,
   Trash2,
 } from 'lucide-react'
+import AtlasAttachButton from '@ee/components/Atlas/AtlasAttachButton'
 import React from 'react'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import ActivityElement from './ActivityElement'
@@ -301,6 +302,16 @@ function ChapterElement(props: ChapterElementProps) {
                     <Pencil size={15} />
                   </button>
                 </ToolTip>
+                <AtlasAttachButton
+                  reference={{
+                    type: 'chapter',
+                    uuid: props.chapter.chapter_uuid,
+                    name: props.chapter.name,
+                    parent_course_uuid: props.course_uuid,
+                    parent_chapter_id: props.chapter.id,
+                    parent_chapter_name: props.chapter.name,
+                  }}
+                />
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -426,6 +437,8 @@ function ChapterElement(props: ChapterElementProps) {
                     key={activity.activity_uuid}
                     orgslug={props.orgslug}
                     course_uuid={props.course_uuid}
+                    chapter_id={props.chapter.id}
+                    chapter_name={props.chapter.name}
                     activityIndex={index}
                     activity={activity}
                     isSelected={selectedActivities.has(activity.activity_uuid)}

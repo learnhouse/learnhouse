@@ -1,5 +1,5 @@
 import React from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { PaperPlaneTilt, CircleNotch, Sparkle, X } from '@phosphor-icons/react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import type { MagicBlockMessage } from './types'
@@ -8,18 +8,23 @@ import { useTranslation } from 'react-i18next'
 
 interface MagicBlockChatProps {
   messages: MagicBlockMessage[]
-  iterationCount: number
-  maxIterations: number
   isLoading: boolean
   onSendMessage: (_message: string) => void
+  styleReferenceActive?: boolean
+  onClearStyleReference?: () => void
+  // Generations used in this session and the session's cap (enforced by the API).
+  iterationCount?: number
+  maxIterations?: number
 }
 
 function MagicBlockChat({
   messages,
-  iterationCount,
-  maxIterations,
   isLoading,
   onSendMessage,
+  styleReferenceActive = false,
+  onClearStyleReference,
+  iterationCount = 0,
+  maxIterations,
 }: MagicBlockChatProps) {
   const { t } = useTranslation()
   const [inputValue, setInputValue] = React.useState('')
@@ -35,8 +40,8 @@ function MagicBlockChat({
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
-  const canSendMessage = !isLoading && iterationCount < maxIterations && inputValue.trim()
-  const isExhausted = iterationCount >= maxIterations
+  const isExhausted = maxIterations !== undefined && iterationCount >= maxIterations
+  const canSendMessage = !isLoading && !isExhausted && inputValue.trim()
 
   // Auto-scroll to bottom when new messages arrive
   React.useEffect(() => {
@@ -57,7 +62,7 @@ function MagicBlockChat({
   }
 
   const handleSuggestionClick = (prompt: string) => {
-    if (!isLoading && iterationCount < maxIterations) {
+    if (!isLoading && !isExhausted) {
       onSendMessage(prompt)
     }
   }
@@ -71,7 +76,7 @@ function MagicBlockChat({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header with iteration counter */}
+      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
         <div className="flex items-center gap-2">
           <Image
@@ -82,14 +87,16 @@ function MagicBlockChat({
           />
           <span className="font-semibold text-sm text-white/70">{t('editor.blocks.magic_block_content.magic_chat')}</span>
         </div>
-        <div className={cn(
-          "text-xs font-semibold px-3 py-1 rounded-full",
-          isExhausted
-            ? "bg-red-500/20 text-red-300 outline outline-1 outline-red-500/30"
-            : "bg-white/5 text-white/40 outline outline-1 outline-neutral-100/10"
-        )}>
-          {t('editor.blocks.magic_block_content.iterations', { count: iterationCount, max: maxIterations })}
-        </div>
+        {maxIterations !== undefined && (
+          <div className={cn(
+            "text-xs font-semibold px-3 py-1 rounded-full",
+            isExhausted
+              ? "bg-red-500/20 text-red-300 outline outline-1 outline-red-500/30"
+              : "bg-white/5 text-white/40 outline outline-1 outline-neutral-100/10"
+          )}>
+            {t('editor.blocks.magic_block_content.iterations', { count: iterationCount, max: maxIterations })}
+          </div>
+        )}
       </div>
 
       {/* Messages area */}
@@ -150,7 +157,7 @@ function MagicBlockChat({
           <div className="flex justify-start">
             <div className="bg-white/5 rounded-2xl rounded-es-md px-4 py-3 ring-1 ring-inset ring-white/10">
               <div className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                <CircleNotch weight="duotone" className="w-4 h-4 animate-spin text-purple-400" />
                 <span className="text-sm text-white/50">{t('editor.blocks.magic_block_content.creating_magic')}</span>
               </div>
             </div>
@@ -162,48 +169,64 @@ function MagicBlockChat({
 
       {/* Input area */}
       <div className="border-t border-white/5 p-4">
+        {styleReferenceActive && (
+          <div className="mb-2 flex items-center gap-2 bg-purple-500/10 ring-1 ring-inset ring-purple-400/30 rounded-lg px-3 py-1.5">
+            <Sparkle weight="duotone" className="w-3.5 h-3.5 text-purple-300" />
+            <span className="text-xs text-purple-100 flex-1">
+              {t('editor.blocks.magic_block_content.using_copied_style')}
+            </span>
+            <button
+              type="button"
+              onClick={onClearStyleReference}
+              className="text-purple-200/70 hover:text-white p-0.5 rounded transition-colors"
+              title={t('editor.blocks.magic_block_content.clear_style')}
+            >
+              <X weight="duotone" className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
         {isExhausted ? (
           <div className="text-center text-sm text-white/50 py-2">
             {t('editor.blocks.magic_block_content.max_iterations_reached')}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="relative">
-            <textarea
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                messages.length === 0
-                  ? t('editor.blocks.magic_block_content.placeholder_new')
-                  : t('editor.blocks.magic_block_content.placeholder_edit')
-              }
-              disabled={isLoading}
-              rows={2}
-              className={cn(
-                "w-full resize-none rounded-lg ring-1 ring-inset ring-white/10 bg-gray-950/40 px-4 py-3 pe-12",
-                "text-sm text-white placeholder:text-white/30",
-                "focus:outline-none focus:ring-white/20",
-                isLoading ? "opacity-30" : ""
-              )}
-            />
-            <button
-              type="submit"
-              disabled={!canSendMessage}
-              className={cn(
-                "absolute end-3 bottom-3 p-2 rounded-lg transition-all delay-75 ease-linear",
-                canSendMessage
-                  ? "bg-white/10 text-white/70 hover:text-white hover:bg-white/20 outline outline-1 outline-neutral-100/10 hover:outline-neutral-200/40"
-                  : "bg-white/5 text-white/30 cursor-not-allowed"
-              )}
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </button>
-          </form>
+        <form onSubmit={handleSubmit} className="relative">
+          <textarea
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              messages.length === 0
+                ? t('editor.blocks.magic_block_content.placeholder_new')
+                : t('editor.blocks.magic_block_content.placeholder_edit')
+            }
+            disabled={isLoading}
+            rows={2}
+            className={cn(
+              "w-full resize-none rounded-lg ring-1 ring-inset ring-white/10 bg-gray-950/40 px-4 py-3 pe-12",
+              "text-sm text-white placeholder:text-white/30",
+              "focus:outline-none focus:ring-white/20",
+              isLoading ? "opacity-30" : ""
+            )}
+          />
+          <button
+            type="submit"
+            disabled={!canSendMessage}
+            className={cn(
+              "absolute end-3 bottom-3 p-2 rounded-lg transition-all delay-75 ease-linear",
+              canSendMessage
+                ? "bg-white/10 text-white/70 hover:text-white hover:bg-white/20 outline outline-1 outline-neutral-100/10 hover:outline-neutral-200/40"
+                : "bg-white/5 text-white/30 cursor-not-allowed"
+            )}
+          >
+            {isLoading ? (
+              <CircleNotch weight="duotone" className="w-4 h-4 animate-spin" />
+            ) : (
+              <PaperPlaneTilt weight="duotone" className="w-4 h-4" />
+            )}
+          </button>
+        </form>
         )}
       </div>
     </div>
