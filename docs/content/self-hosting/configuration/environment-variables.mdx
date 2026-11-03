@@ -163,6 +163,14 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `WORKOS_CLIENT_ID` | WorkOS client ID for Enterprise SSO. | string | unset; required for SSO | EE backend |
 | `SSO_REDIRECT_URI` | Full SSO callback URL override. When set, it is used as-is. | URL | unset; derived from `SSO_REDIRECT_URI_BASE` / the configured domain | EE backend |
 | `SSO_REDIRECT_URI_BASE` | Base URL used to build the SSO callback when `SSO_REDIRECT_URI` is not set. | URL | unset; falls back to `LEARNHOUSE_DOMAIN`, then to `http://localhost:4000` | EE backend |
+| `LEARNHOUSE_MEET_URL` | Public websocket URL of the LearnHouse Meet media server (`apps/meet`). See [Live Sessions](/enterprise/live-sessions). | URL | unset | EE backend |
+| `LEARNHOUSE_MEET_API_KEY` | API key of that server. | string | unset | EE backend |
+| `LEARNHOUSE_MEET_API_SECRET` | Matching secret; signs room tokens and checks webhooks. | secret string | unset | EE backend |
+| `LEARNHOUSE_MEET_INTERNAL_URL` | How the API reaches the media server, when different from the public URL. | URL | `LEARNHOUSE_MEET_URL` | EE backend |
+| `LEARNHOUSE_MEET_RECORDING` | `true` when the recorder runs; shows hosts the record button. | boolean | `false` | EE backend |
+| `LEARNHOUSE_LIVE_GOOGLE_CLIENT_ID` / `_SECRET` | Platform Google OAuth app for live sessions. Unset: org admins can use their own app. | string / secret | unset | EE backend |
+| `LEARNHOUSE_LIVE_ZOOM_CLIENT_ID` / `_SECRET` | Platform Zoom OAuth app for live sessions. | string / secret | unset | EE backend |
+| `LEARNHOUSE_LIVE_OAUTH_REDIRECT_URI` | Exact OAuth callback URL for live session providers. | URL | `<API>/api/v1/live_sessions/oauth/callback` | EE backend |
 
 ## Related generated variables
 

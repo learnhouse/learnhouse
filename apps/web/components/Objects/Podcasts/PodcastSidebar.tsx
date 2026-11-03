@@ -11,6 +11,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { Globe, Lock, Headphones, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface PodcastSidebarProps {
   podcast: Podcast
@@ -32,7 +33,7 @@ export function PodcastSidebar({ podcast, episodeCount, orgslug }: PodcastSideba
     <div className="bg-white rounded-lg nice-shadow overflow-hidden">
       {/* Thumbnail */}
       <div className="aspect-square w-full overflow-hidden bg-gray-100">
-        <img
+        <ThumbnailImage
           src={thumbnailUrl}
           alt={podcast.name}
           className="w-full h-full object-cover"

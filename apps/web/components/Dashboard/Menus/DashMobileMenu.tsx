@@ -14,6 +14,7 @@ import {
   SignOut,
   ChatsCircle,
   Headphones,
+  VideoCamera,
   ChartBar,
   ChalkboardSimple,
   Cube,
@@ -39,12 +40,13 @@ import { getUriWithOrg, getDeploymentMode } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage } from '@/lib/i18n'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
-import OrgSquareLogo, { hasOrgLogo } from '@components/Objects/Org/OrgSquareLogo'
+import OrgSquareLogo, { hasOrgLogo, OrgInitial } from '@components/Objects/Org/OrgSquareLogo'
 import { cn } from '@/lib/utils'
 import { usePlan } from '@components/Hooks/usePlan'
 import { planMeetsRequirement } from '@services/plans/plans'
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { useCommandPalette } from '@components/Dashboard/CommandPalette/CommandPaletteContext'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 function DashMobileMenu() {
   const org = useOrg() as any
@@ -100,12 +102,16 @@ function DashMobileMenu() {
             className="flex items-center justify-center px-2.5 py-2.5 rounded-full transition-all duration-200"
             aria-label={t('common.home')}
           >
-            <img
-              src="/lrn-dash.svg"
-              alt="LearnHouse"
-              className="h-[18px] w-[18px] opacity-60 hover:opacity-90 transition-opacity"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
+            {isWhiteLabelPlan(plan) ? (
+              <House size={18} weight="fill" className="text-white opacity-60 hover:opacity-90 transition-opacity" />
+            ) : (
+              <img
+                src="/lrn-dash.svg"
+                alt="LearnHouse"
+                className="h-[18px] w-[18px] opacity-60 hover:opacity-90 transition-opacity"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            )}
           </Link>
           {/* Progressive reveal: more icons as viewport widens */}
           <PillLink href="/dash/courses" icon={<BookOpen size={18} weight="fill" />} active={isActive('/dash/courses')} className="hidden min-[340px]:flex" />
@@ -116,6 +122,9 @@ function DashMobileMenu() {
           )}
           {isEnabled('podcasts') && (
             <PillLink href="/dash/podcasts" icon={<Headphones size={18} weight="fill" />} active={isActive('/dash/podcasts')} className="hidden min-[510px]:flex" />
+          )}
+          {isEnabled('live_sessions') && (
+            <PillLink href="/dash/live-sessions" icon={<VideoCamera size={18} weight="fill" />} active={isActive('/dash/live-sessions')} className="hidden min-[510px]:flex" />
           )}
           {isEnabled('boards') && (
             <PillLink href="/dash/boards" icon={<ChalkboardSimple size={18} weight="fill" />} active={isActive('/dash/boards')} className="hidden min-[550px]:flex" />
@@ -190,9 +199,9 @@ function DashMobileMenu() {
             >
               {/* Org header */}
               <div className="flex items-center gap-3 px-4 py-3.5">
-                {planMeetsRequirement(plan, 'standard') && hasOrgLogo(org) ? (
+                {(planMeetsRequirement(plan, 'standard') && hasOrgLogo(org)) || isWhiteLabelPlan(plan) ? (
                   <div className="h-7 w-7 rounded-lg overflow-hidden bg-white shrink-0">
-                    <OrgSquareLogo org={org} wideInsetClassName="p-0.5" fallback={null} />
+                    <OrgSquareLogo org={org} wideInsetClassName="p-0.5" fallback={<OrgInitial org={org} className="text-xs" />} />
                   </div>
                 ) : (
                   <div className="h-7 w-7 flex items-center justify-center bg-white/[0.06] rounded-lg">
@@ -225,6 +234,7 @@ function DashMobileMenu() {
                 <PanelItem href="/dash/users/settings/users" icon={<Users size={15} weight="fill" />} label={t('common.users')} active={isActive('/dash/users')} onClick={close} />
                 {isEnabled('communities') && <PanelItem href="/dash/communities" icon={<ChatsCircle size={15} weight="fill" />} label={t('communities.title')} active={isActive('/dash/communities')} onClick={close} />}
                 {isEnabled('podcasts') && <PanelItem href="/dash/podcasts" icon={<Headphones size={15} weight="fill" />} label={t('podcasts.podcasts')} active={isActive('/dash/podcasts')} onClick={close} />}
+                {isEnabled('live_sessions') && <PanelItem href="/dash/live-sessions" icon={<VideoCamera size={15} weight="fill" />} label={t('live_sessions.title')} active={isActive('/dash/live-sessions')} onClick={close} />}
                 {isEnabled('boards') && <PanelItem href="/dash/boards" icon={<ChalkboardSimple size={15} weight="fill" />} label={t('common.boards')} active={isActive('/dash/boards')} onClick={close} />}
                 {isEnabled('playgrounds') && <PanelItem href="/dash/playgrounds" icon={<Cube size={15} weight="fill" />} label={t('common.playgrounds')} active={isActive('/dash/playgrounds')} onClick={close} />}
                 {isEnabled('payments') && <PanelItem href="/dash/payments/overview" icon={<CurrencyCircleDollar size={15} weight="fill" />} label={t('common.payments')} active={isActive('/dash/payments')} onClick={close} />}

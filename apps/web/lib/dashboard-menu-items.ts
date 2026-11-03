@@ -10,6 +10,7 @@ import {
   Cube,
   FolderSimple,
   Headphones,
+  VideoCamera,
   ChartBar,
   Code,
   Steps,
@@ -72,6 +73,13 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     icon: Headphones,
     labelKey: 'podcasts.podcasts',
     featureKey: 'podcasts',
+  },
+  {
+    id: 'live_sessions',
+    href: '/dash/live-sessions',
+    icon: VideoCamera,
+    labelKey: 'live_sessions.title',
+    featureKey: 'live_sessions',
   },
   {
     id: 'boards',

@@ -10,6 +10,7 @@ import { getCourse } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getUriWithOrg } from '@services/config/config'
 import { ArrowLeft, BookOpen, Layers, FolderPlus, ChevronRight, PlusCircle, Backpack } from 'lucide-react'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 const cleanCourseUuid = (u: string) => u?.replace(/^course_/, '') ?? u
 
@@ -88,11 +89,9 @@ export default function NewAssignmentModal({
                   className={rowBtn}
                 >
                   {c.thumbnail_image ? (
-                    <div
-                      className="w-[52px] h-[30px] rounded-md ring-1 ring-inset ring-black/10 bg-cover flex-none"
-                      style={{
-                        backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, c.course_uuid, c.thumbnail_image)})`,
-                      }}
+                    <ThumbnailImage
+                      src={getCourseThumbnailMediaDirectory(org?.org_uuid, c.course_uuid, c.thumbnail_image)}
+                      className="w-[52px] h-[30px] rounded-md ring-1 ring-black/10 flex-none"
                     />
                   ) : (
                     <div className="w-[52px] h-[30px] rounded-md ring-1 ring-inset ring-black/10 bg-gray-100 flex-none" />

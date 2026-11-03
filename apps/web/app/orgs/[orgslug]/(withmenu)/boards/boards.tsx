@@ -14,6 +14,7 @@ import { searchMatchesAny } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface BoardsPublicClientProps {
   orgslug: string
@@ -172,9 +173,9 @@ function PublicBoardCard({ board, orgUuid, fromSearch }: { board: any; orgUuid: 
       className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]"
     >
       <div className="block relative aspect-video overflow-hidden bg-gray-50">
-        <div
-          className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-          style={{ backgroundImage: `url(${thumbnailImage})` }}
+        <ThumbnailImage
+          src={thumbnailImage}
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
       </div>

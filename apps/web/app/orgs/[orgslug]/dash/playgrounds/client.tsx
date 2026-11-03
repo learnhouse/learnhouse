@@ -34,6 +34,7 @@ import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface PlaygroundsListClientProps {
   org_id: number
@@ -452,7 +453,7 @@ function PlaygroundCard({
 
       <div className="relative aspect-video overflow-hidden bg-gray-50 flex items-center justify-center">
         {thumbnailUrl ? (
-          <img
+          <ThumbnailImage
             src={thumbnailUrl}
             alt={playground.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

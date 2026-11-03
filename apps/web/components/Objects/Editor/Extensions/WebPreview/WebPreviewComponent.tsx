@@ -340,7 +340,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                   <img
                     src={favicon}
                     alt={t('editor.blocks.web_preview_block.favicon_alt')}
-                    className="w-[18px] h-[18px] me-2 rounded bg-gray-100"
+                    className="w-[18px] h-[18px] me-2 shrink-0 rounded bg-gray-100 object-contain"
                   />
                 )}
                 <span className="text-gray-500 text-xs truncate">{previewData.url}</span>

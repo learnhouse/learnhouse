@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, ChevronRight, Folder } from 'lucide-react'
 import {
   Backpack,
+  VideoCamera,
   FileText,
   Note,
   Video,
@@ -38,6 +39,8 @@ function ActivityTypeIcon({ type, subType, size = 12 }: { type?: string; subType
       return <Backpack size={size} weight="fill" />
     case 'TYPE_SCORM':
       return <Package size={size} weight="fill" />
+    case 'TYPE_LIVE_SESSION':
+      return <VideoCamera size={size} weight="fill" />
     case 'TYPE_CUSTOM':
       return <PuzzlePiece size={size} weight="fill" />
     case 'TYPE_DYNAMIC':

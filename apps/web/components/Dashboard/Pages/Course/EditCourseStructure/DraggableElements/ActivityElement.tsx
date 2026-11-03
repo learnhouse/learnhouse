@@ -28,6 +28,7 @@ import {
   Package,
   Pencil,
   Puzzle,
+  Radio,
   Save,
   Sparkles,
   Trash2,
@@ -232,6 +233,9 @@ function ActivityElement(props: ActivitiyElementProps) {
       `/course/${course?.courseStructure.course_uuid.replace('course_', '')}/activity/${props.activity.activity_uuid.replace('activity_', '')}/edit`
     : props.activity.activity_type === 'TYPE_ASSIGNMENT'
     ? getUriWithOrg(org?.slug || props.orgslug, '') + `/dash/assignments/${assignmentUUID}`
+    : props.activity.activity_type === 'TYPE_LIVE_SESSION' && props.activity.content?.live_session_uuid
+    ? getUriWithOrg(org?.slug || props.orgslug, '') +
+      `/dash/live-sessions/session/${String(props.activity.content.live_session_uuid).replace(/^livesession_/, '')}/general`
     : null
 
   const previewHref = getUriWithOrg(props.orgslug, '') +
@@ -437,6 +441,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                 <ToolTip
                   content={props.activity.activity_type === 'TYPE_ASSIGNMENT'
                     ? t('dashboard.courses.structure.actions.edit_assignment')
+                    : props.activity.activity_type === 'TYPE_LIVE_SESSION'
+                    ? t('dashboard.courses.structure.actions.manage_live_session')
                     : t('dashboard.courses.structure.actions.edit_page')}
                   side="top"
                 >
@@ -542,6 +548,10 @@ const ACTIVITIES = {
   'TYPE_SCORM': {
     displayNameKey: 'scorm',
     Icon: Package
+  },
+  'TYPE_LIVE_SESSION': {
+    displayNameKey: 'livesession',
+    Icon: Radio
   },
   'TYPE_CUSTOM': {
     displayNameKey: 'custom',
