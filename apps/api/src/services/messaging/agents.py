@@ -564,6 +564,8 @@ async def trigger_agent_reply(
     if agent.course_uuids and not agent.is_default:
         allowed = set(agent.course_uuids)
         scope.courses = {cid: g for cid, g in scope.courses.items() if g.course_uuid in allowed}
+    if conv.kind != "agent":
+        await _share_scope(request, scope, conv, user.id, db)
 
     await reserve_ai_credit(conv.org_id, db, amount=2)
 
@@ -587,7 +589,7 @@ async def trigger_agent_reply(
 
     payload = await serialize_message(placeholder, conv.conversation_uuid, None, db)
     recipients = await member_ids(conv.id, db)
-    realtime.publish_to_users(recipients, {"type": "message.new", "conversation_uuid": conv.conversation_uuid, "message": payload})
+    realtime.publish_to_users(conv.org_id, recipients, {"type": "message.new", "conversation_uuid": conv.conversation_uuid, "message": payload})
 
     question = _clean_mention(trigger.content, agent.name)
     if trigger.attachment and trigger.attachment.get("course"):
@@ -610,8 +612,31 @@ async def trigger_agent_reply(
     return payload
 
 
-def _status(recipients: list[int], conversation_uuid: str, message_id: int, phase: str, **extra) -> None:
-    realtime.publish_to_users(recipients, {
+async def _share_scope(request: Request, scope, conv: Conversation, asker_id: int, db: AsyncSession) -> None:
+    """Everyone in a group chat or DM sees the agent's answer, so it may only
+    draw on what every member can read: courses all of them can open, and
+    within those, lessons each of them can open."""
+    from src.db.users import PublicUser
+    from src.services.ai.rag.access import RagAccessScope, _grant_for_course
+
+    for uid in await member_ids(conv.id, db):
+        if uid == asker_id or not scope.courses:
+            continue
+        row = await db.get(User, uid)
+        if row is None:
+            continue
+        member = PublicUser(**row.model_dump())
+        theirs = RagAccessScope(request=request, current_user=member, org_id=conv.org_id)
+        for course_id, grant in scope.courses.items():
+            g = await _grant_for_course(request, member, grant.course_uuid, db, raise_on_deny=False)
+            if g is not None:
+                theirs.courses[course_id] = g
+        scope.courses = {cid: g for cid, g in scope.courses.items() if cid in theirs.courses}
+        scope.co_readers.append(theirs)
+
+
+def _status(org_id: int, recipients: list[int], conversation_uuid: str, message_id: int, phase: str, **extra) -> None:
+    realtime.publish_to_users(org_id, recipients, {
         "type": "agent.status",
         "conversation_uuid": conversation_uuid,
         "message_id": message_id,
@@ -663,13 +688,13 @@ async def _stream_reply(
             context = ""
             catalog = await _catalog(scope, db)
             if scope.course_ids:
-                _status(recipients, conversation_uuid, placeholder_id, "searching", courses=len(scope.course_ids))
+                _status(org_id, recipients, conversation_uuid, placeholder_id, "searching", courses=len(scope.course_ids))
                 search_query = await _standalone_question(question, history)
                 rag = await query_course_rag(question=search_query, org_id=org_id, db_session=db, scope=scope)
                 context, sources = rag["context"], rag["sources"]
-            _status(recipients, conversation_uuid, placeholder_id, "found", sources=sources, query=search_query)
+            _status(org_id, recipients, conversation_uuid, placeholder_id, "found", sources=sources, query=search_query)
 
-            _status(recipients, conversation_uuid, placeholder_id, "writing")
+            _status(org_id, recipients, conversation_uuid, placeholder_id, "writing")
             pending = ""
             last_flush = loop.time()
             async for chunk in ask_ai_stream(
@@ -682,7 +707,7 @@ async def _stream_reply(
                 full += chunk
                 pending += chunk
                 if loop.time() - last_flush >= DELTA_FLUSH_SECONDS:
-                    realtime.publish_to_users(recipients, {
+                    realtime.publish_to_users(org_id, recipients, {
                         "type": "message.delta",
                         "conversation_uuid": conversation_uuid,
                         "message_id": placeholder_id,
@@ -691,7 +716,7 @@ async def _stream_reply(
                     pending = ""
                     last_flush = loop.time()
             if pending:
-                realtime.publish_to_users(recipients, {
+                realtime.publish_to_users(org_id, recipients, {
                     "type": "message.delta",
                     "conversation_uuid": conversation_uuid,
                     "message_id": placeholder_id,
@@ -743,7 +768,7 @@ async def _stream_reply(
             await db.commit()
             await db.refresh(msg)
             payload = await serialize_message(msg, conversation_uuid, None, db)
-            realtime.publish_to_users(recipients, {"type": "message.updated", "conversation_uuid": conversation_uuid, "message": payload})
+            realtime.publish_to_users(org_id, recipients, {"type": "message.updated", "conversation_uuid": conversation_uuid, "message": payload})
     finally:
         if failed or not full:
             try:
