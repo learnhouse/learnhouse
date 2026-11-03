@@ -14,10 +14,20 @@ from src.core.events.database import _async_session_factory
 from src.security.mcp_auth import MCPPrincipal, principal_from_request
 from src.services.ai.tools.base import ActionTier, ToolOutcome, ToolSpec
 from src.security.org_scope import org_scope
+from src.services.ai.tools import known_toolsets
 from src.services.ai.tools.registry import ToolRegistry, resolve_names, run_tool
 from src.services.mcp import approvals, audit
 from src.services.mcp import server as srv
-from src.services.mcp.prompts import prompt_allowed, prompt_listing, render_prompt
+from src.security.features_utils.resolve import resolve_feature
+from src.services.mcp.prompts import PROMPTS, prompt_allowed, prompt_listing, render_prompt
+from src.services.mcp.resources import (
+    FIRST_PAGE,
+    MAX_COMPLETIONS,
+    RESOURCES,
+    TEMPLATE_ARGS,
+    completion_values,
+    parse_uri,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +164,7 @@ class Handlers:
         principal = _principal(ctx)
         if principal is None or _rate_limited(principal):
             return types.ListToolsResult(tools=[])
-        toolsets = srv.requested_toolsets(getattr(ctx, "request", None))
+        toolsets = srv.requested_toolsets(getattr(ctx, "request", None), known_toolsets(self.registry))
         async with _async_session_factory() as db_session:
             org, config = await srv.load_org_and_config(db_session, principal.org_id)
             if org is None or not srv.mcp_allowed(config):
@@ -364,36 +374,54 @@ class Handlers:
             raise MCPError(_RESOURCE_NOT_FOUND, outcome.reason or "Resource not available")
         return outcome.result
 
+    async def _open_org(self, principal: MCPPrincipal) -> tuple[Any, dict, Any] | None:
+        """(org id, config, role rights) while the connected org exists and
+        allows AI app connections; None otherwise."""
+        async with _async_session_factory() as db_session:
+            org, config = await srv.load_org_and_config(db_session, principal.org_id)
+            if org is None or not srv.mcp_allowed(config):
+                return None
+            org_id = org.id
+            rights = await srv.member_role_rights(principal, org_id, db_session)
+        return org_id, config, rights
+
     async def list_resources(self, ctx: Any, params: Any) -> types.ListResourcesResult:
         principal = _principal(ctx)
-        if principal is None:
+        if principal is None or await self._open_org(principal) is None:
             return types.ListResourcesResult(resources=[])
-        resources = [
-            types.Resource(
-                uri="learnhouse://org",
-                name="organization",
-                title="Organization overview",
-                description="The organization, your role, its plan features and link formats.",
-                mime_type="application/json",
-            )
-        ]
-        try:
-            listing = await self._read_tool(principal, "list_courses", {"limit": 50})
-        except MCPError:
-            listing = {}
-        for course in (listing or {}).get("items") or []:
-            uuid = course.get("uuid")
-            if uuid:
-                resources.append(
+        listed: list[types.Resource] = []
+        for resource in RESOURCES.values():
+            if resource.arg is None:
+                listed.append(
                     types.Resource(
-                        uri=f"learnhouse://course/{uuid}",
-                        name=uuid,
-                        title=course.get("name") or uuid,
-                        description="Course outline: chapters and activities.",
+                        uri=resource.uri(),
+                        name=resource.kind,
+                        title=resource.title,
+                        description=resource.description,
                         mime_type="application/json",
                     )
                 )
-        return types.ListResourcesResult(resources=resources)
+                continue
+            if resource.listed_by is None:
+                continue
+            tool, args = resource.listed_by
+            try:
+                found = await self._read_tool(principal, tool, dict(args))
+            except MCPError:
+                continue
+            for item in (found or {}).get("items") or []:
+                uuid = item.get("uuid") if isinstance(item, dict) else None
+                if uuid:
+                    listed.append(
+                        types.Resource(
+                            uri=resource.uri(uuid),
+                            name=uuid,
+                            title=item.get("name") or uuid,
+                            description=resource.description,
+                            mime_type="application/json",
+                        )
+                    )
+        return types.ListResourcesResult(resources=listed)
 
     async def list_resource_templates(
         self, ctx: Any, params: Any
@@ -401,19 +429,14 @@ class Handlers:
         return types.ListResourceTemplatesResult(
             resource_templates=[
                 types.ResourceTemplate(
-                    uri_template="learnhouse://course/{course_uuid}",
-                    name="course",
-                    title="Course structure",
-                    description="A course's chapters and activities, in order.",
+                    uri_template=resource.template,
+                    name=resource.kind,
+                    title=resource.title,
+                    description=resource.description,
                     mime_type="application/json",
-                ),
-                types.ResourceTemplate(
-                    uri_template="learnhouse://activity/{activity_uuid}",
-                    name="activity",
-                    title="Activity content",
-                    description="A page's content as Markdown.",
-                    mime_type="application/json",
-                ),
+                )
+                for resource in RESOURCES.values()
+                if resource.template
             ]
         )
 
@@ -424,18 +447,11 @@ class Handlers:
         if principal is None:
             raise MCPError(_RESOURCE_NOT_FOUND, "Sign in first")
         uri = str(params.uri)
-        parsed = srv.parse_resource_uri(uri)
+        parsed = parse_uri(uri)
         if parsed is None:
             raise MCPError(_INVALID_PARAMS, f"Unknown resource: {uri}")
-        kind, ident = parsed
-        if kind == "org":
-            data = await self._read_tool(principal, "get_context", {})
-        elif kind == "course" and ident:
-            data = await self._read_tool(principal, "get_course", {"course_uuid": ident})
-        elif kind == "activity" and ident:
-            data = await self._read_tool(principal, "get_activity_content", {"activity_uuid": ident, "format": "markdown"})
-        else:
-            raise MCPError(_INVALID_PARAMS, f"Unknown resource: {uri}")
+        resource, ident = parsed
+        data = await self._read_tool(principal, resource.tool, resource.tool_args(ident))
         return types.ReadResourceResult(
             contents=[
                 types.TextResourceContents(
@@ -446,22 +462,70 @@ class Handlers:
 
     # ─── prompts ──────────────────────────────────────────────────────────
 
-    async def list_prompts(self, ctx: Any, params: Any) -> types.ListPromptsResult:
-        principal = _principal(ctx)
+    async def _prompt_filter(self, principal: MCPPrincipal | None):
+        """Which prompts this caller is offered: their role's rights, write
+        access and the plan features the prompt depends on."""
         if principal is None:
-            return types.ListPromptsResult(prompts=prompt_listing())
-        async with _async_session_factory() as db_session:
-            rights = await srv.member_role_rights(principal, principal.org_id, db_session)
-        return types.ListPromptsResult(
-            prompts=prompt_listing(lambda p: prompt_allowed(p, principal.can_write, rights))
-        )
+            return lambda p: True
+        opened = await self._open_org(principal)
+        if opened is None:
+            return lambda p: False
+        org_id, config, rights = opened
+        features = {
+            p.feature: bool(resolve_feature(p.feature, config, org_id)["enabled"])
+            for p in PROMPTS.values()
+            if p.feature
+        }
+        return lambda p: prompt_allowed(p, principal.can_write, rights, features)
+
+    async def list_prompts(self, ctx: Any, params: Any) -> types.ListPromptsResult:
+        allowed = await self._prompt_filter(_principal(ctx))
+        return types.ListPromptsResult(prompts=prompt_listing(allowed))
 
     async def get_prompt(self, ctx: Any, params: types.GetPromptRequestParams) -> types.GetPromptResult:
+        prompt = PROMPTS.get(params.name)
+        if prompt is None or not (await self._prompt_filter(_principal(ctx)))(prompt):
+            raise MCPError(_INVALID_PARAMS, f"Unknown prompt: {params.name}")
         try:
             result = render_prompt(params.name, params.arguments)
         except ValueError as e:
             raise MCPError(_INVALID_PARAMS, str(e))
-        if result is None:
-            raise MCPError(_INVALID_PARAMS, f"Unknown prompt: {params.name}")
         return result
 
+    # ─── completion ───────────────────────────────────────────────────────
+
+    async def complete(self, ctx: Any, params: types.CompleteRequestParams) -> types.CompleteResult:
+        """Suggest values for a prompt argument (names) or a resource
+        template argument (ids), from what the member can see."""
+        empty = types.CompleteResult(completion=types.Completion(values=[], has_more=False))
+        principal = _principal(ctx)
+        if principal is None:
+            return empty
+        ref, argument = params.ref, params.argument
+        kind, by = None, "name"
+        if isinstance(ref, types.PromptReference):
+            prompt = PROMPTS.get(ref.name)
+            arg = next((a for a in (prompt.args if prompt else ()) if a.name == argument.name), None)
+            kind = arg.kind if arg else None
+        elif isinstance(ref, types.ResourceTemplateReference):
+            kind, by = TEMPLATE_ARGS.get(argument.name), "uuid"
+        if kind is None:
+            return empty
+        typed = (argument.value or "").strip()
+        if len(typed) >= 2:
+            tool, args = "search", {"query": typed[:200], "kinds": [kind], "limit": MAX_COMPLETIONS}
+        elif kind in FIRST_PAGE:
+            tool, args = FIRST_PAGE[kind], {"limit": MAX_COMPLETIONS}
+        else:
+            return empty
+        try:
+            found = await self._read_tool(principal, tool, args)
+        except MCPError:
+            return empty
+        values = completion_values(found, by=by)
+        return types.CompleteResult(
+            completion=types.Completion(
+                values=values,
+                has_more=bool(isinstance(found, dict) and found.get("has_more")),
+            )
+        )

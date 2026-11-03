@@ -229,3 +229,27 @@ async def test_approval_store_down(app, client, admin_user):
     as_user(app, admin_user)
     with patch.object(approvals, "get_redis_client", return_value=None):
         assert (await client.get("/api/v1/mcp/approvals/apr_x")).status_code == 503
+
+
+async def test_authorize_errors_go_back_to_a_trusted_redirect(client):
+    client_id = await register(client)
+    err = mcp_oauth.oauth.OAuthError("access_denied", "no", redirect_uri=REDIRECT, state="s")
+    with patch.object(mcp_oauth.oauth, "start_authorization", new_callable=AsyncMock, side_effect=err):
+        resp = await start(client, client_id)
+    assert resp.status_code == 302
+    location = urlparse(resp.headers["location"])
+    assert f"{location.scheme}://{location.netloc}{location.path}" == REDIRECT
+    assert parse_qs(location.query)["error"] == ["access_denied"]
+
+
+async def test_approval_decided_elsewhere_or_store_down(app, client, org, admin_user, fake_redis):
+    approvals = fake_redis
+    made = approvals.create(grant="g", user_id=admin_user.id, org_id=org.id, tool="t", arguments={}, summary="s")
+    path = f"/api/v1/mcp/approvals/{made.id}"
+    as_user(app, admin_user)
+    # Gone between reading it and answering it.
+    with patch.object(approvals, "decide", side_effect=LookupError("That approval expired")):
+        resp = await client.post(path, json={"approve": True})
+    assert resp.status_code == 404 and "expired" in resp.json()["detail"]
+    with patch.object(approvals, "decide", side_effect=approvals.ApprovalUnavailable()):
+        assert (await client.post(path, json={"approve": True})).status_code == 503

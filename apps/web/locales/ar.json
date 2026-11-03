@@ -5620,7 +5620,7 @@
       "org_disabled": "أوقف أحد المشرفين اتصالات تطبيقات الذكاء الاصطناعي لهذه المؤسسة.",
       "connections_description_member": "التطبيقات التي ربطتها بهذه المؤسسة. يؤدي الفصل إلى تسجيل خروج التطبيق فورًا.",
       "plans_note_member": "متاح في جميع الخطط. تبقى أدوات الميزات غير المضمّنة في خطتك أو دورك مخفية.",
-      "toolsets_hint": "إذا كان التطبيق يحدّ من عدد الأدوات التي يحمّلها، أضف ?toolsets=courses,content إلى العنوان لتحميل هذه المجموعات فقط (وأيضًا: teaching وlibrary وcommunities وplaygrounds وboards وpeople وorg). أدوات البحث والقراءة مضمّنة دائمًا.",
+      "toolsets_hint": "إذا كان التطبيق يحدّ من عدد الأدوات التي يحمّلها، أضف ?toolsets=essentials (أو authoring أو admin) إلى العنوان، أو اختر مجموعات مثل ?toolsets=courses,content (وأيضًا: teaching وadvanced وpaths وlibrary وcommunities وplaygrounds وboards وpeople وorg). أدوات البحث والقراءة مضمّنة دائمًا.",
       "access_admin": "مسؤول"
     }
   },

@@ -28,6 +28,7 @@ from src.db.media.media import Media
 from src.db.organization_config import OrganizationConfig
 from src.db.playgrounds import Playground
 from src.db.roles import Role, RoleTypeEnum
+from src.db.paths import Path
 from src.db.user_organizations import UserOrganization
 from src.db.usergroups import UserGroup
 from src.db.users import APITokenUser, User
@@ -456,6 +457,7 @@ async def foreign_rows(db, other_org):
     await add(db, Media(name="Theirs", org_id=o, media_uuid="media_f", creation_date=NOW, update_date=NOW))
     await add(db, Board(name="Theirs", public=True, org_id=o, board_uuid="board_f", creation_date=NOW, update_date=NOW))
     await add(db, Playground(name="Theirs", published=True, org_id=o, playground_uuid="playground_f", creation_date=NOW, update_date=NOW))
+    await add(db, Path(name="Theirs", published=True, org_id=o, path_uuid="path_f", creation_date=NOW, update_date=NOW))
     return {kind: f"{refs.KINDS[kind].prefix}f" for kind in refs.KINDS}
 
 

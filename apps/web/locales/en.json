@@ -6035,7 +6035,7 @@
       "org_disabled": "An admin turned off AI app connections for this organization.",
       "connections_description_member": "Apps you connected to this organization. Disconnecting signs the app out right away.",
       "plans_note_member": "Available on every plan. Tools for features your plan or role doesn't include stay hidden.",
-      "toolsets_hint": "If an app limits how many tools it loads, add ?toolsets=courses,content to the URL to load only those groups (also: teaching, library, communities, playgrounds, boards, people, org). Search and reading tools are always included.",
+      "toolsets_hint": "If an app limits how many tools it loads, add ?toolsets=essentials (or authoring, admin) to the URL, or pick groups such as ?toolsets=courses,content (also: teaching, advanced, paths, library, communities, playgrounds, boards, people, org). Search and reading tools are always included.",
       "access_admin": "Admin"
     }
   },

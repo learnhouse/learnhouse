@@ -123,4 +123,5 @@ async def test_list_prompts_per_member(db, org, admin_user, regular_user):
         admin = await handlers.list_prompts(ctx(admin_user), None)
         learner = await handlers.list_prompts(ctx(regular_user), None)
         anonymous = await handlers.list_prompts(SimpleNamespace(request=SimpleNamespace(scope={"state": {}})), None)
-    assert len(admin.prompts) == 4 and learner.prompts == [] and len(anonymous.prompts) == 4
+    assert len(admin.prompts) == len(prompts.PROMPTS) and learner.prompts == []
+    assert len(anonymous.prompts) == len(prompts.PROMPTS)

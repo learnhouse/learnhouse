@@ -70,6 +70,7 @@ KINDS: dict[str, Kind] = {
         Kind("media", "media_", "src.db.media.media.Media", "media_uuid", "name"),
         Kind("board", "board_", "src.db.boards.Board", "board_uuid", "name"),
         Kind("playground", "playground_", "src.db.playgrounds.Playground", "playground_uuid", "name"),
+        Kind("path", "path_", "src.db.paths.Path", "path_uuid", "name"),
         Kind("user", "user_", "src.db.users.User", "user_uuid", "username", org_scoped=False),
     )
 }
@@ -264,6 +265,8 @@ _PATHS = {
     "folder": "/library/folder/{folder}",
     "playground": "/playground/{playground}",
     "board": "/dash/boards/{board}/general",
+    "path": "/path/{path}",
+    "path_editor": "/dash/paths/path/{path}/general",
     "assignment": "/dash/assignments/{assignment}",
     "course_editor": "/dash/courses/course/{course}/content",
     "activity_editor": "/course/{course}/activity/{activity}/edit",

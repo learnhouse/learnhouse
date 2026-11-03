@@ -384,7 +384,7 @@ async def test_resources(db, org, admin_user, sessions):
     listed = await handlers.list_resources(ctx_for(member(admin_user, org)), None)
     assert [str(r.uri) for r in listed.resources] == ["learnhouse://org", "learnhouse://course/course_1"]
     templates = await handlers.list_resource_templates(ctx_for(None), None)
-    assert {t.name for t in templates.resource_templates} == {"course", "activity"}
+    assert {t.name for t in templates.resource_templates} == {"course", "activity", "assignment", "path", "community"}
 
     for uri in ("learnhouse://org", "learnhouse://course/course_1", "learnhouse://activity/activity_1"):
         res = await handlers.read_resource(ctx_for(member(admin_user, org)), types.ReadResourceRequestParams(uri=uri))

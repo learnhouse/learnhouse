@@ -170,6 +170,7 @@ SearchKind = Literal[
     "member",
     "usergroup",
     "role",
+    "path",
 ]
 _ALL_KINDS = SearchKind.__args__  # type: ignore[attr-defined]
 
@@ -188,7 +189,7 @@ class SearchParams(BaseModel):
     )
     kinds: list[SearchKind] | None = Field(
         None,
-        max_length=11,
+        max_length=12,
         description=(
             "Only look for these kinds. Omit to look everywhere. Chapters and "
             "activities are matched inside course_uuid when given, across the "
@@ -422,6 +423,36 @@ async def _people_admin(ctx: ToolContext, p: SearchParams, wanted: set[str]) -> 
     return out
 
 
+async def _path_items(ctx: ToolContext, p: SearchParams, wanted: set[str]) -> list[dict]:
+    """Learning paths by name, while the plan has them, and only those the
+    caller may see: drafts for authors, members-only paths for members."""
+    if "path" not in wanted:
+        return []
+    if isinstance(ctx.user, APITokenUser) and not _token_bucket_allows(
+        ctx.user.rights, "courses", AccessAction.READ
+    ):
+        return []
+    if not resolve_feature("paths", await _org_config(ctx), ctx.org.id)["enabled"]:
+        return []
+    from src.db.paths import Path
+    from src.services.paths.paths import _can_manage, _is_member
+
+    stmt = select(Path).where(Path.org_id == ctx.org.id, Path.name.ilike(_like(p.query)))
+    if not await _can_manage(ctx.user, ctx.org.id, ctx.db_session):
+        stmt = stmt.where(Path.published == True)  # noqa: E712
+        if not await _is_member(ctx.user, ctx.org.id, ctx.db_session):
+            stmt = stmt.where(Path.public == True)  # noqa: E712
+    rows = (await ctx.db_session.execute(stmt.limit(p.limit))).scalars().all()
+    return [
+        refs.ref(
+            "path", row.path_uuid, row.name,
+            await refs.web_url(ctx, "path", path=row.path_uuid),
+            published=row.published,
+        )
+        for row in rows
+    ]
+
+
 async def _passages(ctx: ToolContext, p: SearchParams) -> tuple[list[dict] | None, str | None]:
     """Ranked content passages, or (None, why) when there is no usable index."""
     from src.routers.ai.rag import _open_rag  # noqa: PLC0415 (heavy import, lazy)
@@ -482,6 +513,7 @@ async def _search(ctx: ToolContext, p: SearchParams):
     matches += await _from_org_search(ctx, p, wanted)
     matches += await _course_items(ctx, p, wanted)
     matches += await _people_admin(ctx, p, wanted)
+    matches += await _path_items(ctx, p, wanted)
 
     result = _verdict(p.query, matches)
     result["matches"] = result["matches"][: p.limit]
@@ -521,6 +553,7 @@ NAMEABLE: tuple[tuple[str, str], ...] = (
     ("playground_uuid", "playground"),
     ("usergroup_uuid", "usergroup"),
     ("role_uuid", "role"),
+    ("path_uuid", "path"),
     ("base_role_uuid", "role"),
     ("user_uuid", "member"),
     ("author_uuid", "member"),
@@ -565,6 +598,7 @@ async def resolve_names(ctx: ToolContext, fields: set[str], args: dict[str, Any]
         matches = await _from_org_search(ctx, query, {kind})
         matches += await _course_items(ctx, query, {kind})
         matches += await _people_admin(ctx, query, {kind})
+        matches += await _path_items(ctx, query, {kind})
         verdict = _verdict(value, matches)
         label = "member" if kind == "member" else kind.replace("_", " ")
         if verdict["status"] == "resolved":
@@ -618,7 +652,7 @@ SPECS: list[ToolSpec] = [
         title="Search",
         description=(
             "Find anything by name: courses, chapters, activities, assignments, communities, "
-            "discussions, folders, playgrounds, members, groups and roles. Returns ranked "
+            "discussions, folders, playgrounds, learning paths, members, groups and roles. Returns ranked "
             "matches with ids and links, and a verdict: resolved (use match), ambiguous (ask "
             "the user to pick) or not_found. Set in_content to also find passages inside "
             "lessons, documents and transcripts. Open any result with fetch."
