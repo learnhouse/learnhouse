@@ -1,5 +1,6 @@
 'use client'
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -34,6 +35,7 @@ export function CommunityProvider({ children, communityuuid }: CommunityProvider
     ? communityuuid
     : `community_${communityuuid}`
 
+  const { t } = useTranslation()
   const { data: communityData, error } = useQuery({
     queryKey: queryKeys.community.detail(fullCommunityUuid),
     queryFn: () => getCommunity(fullCommunityUuid, null, access_token),
@@ -56,7 +58,7 @@ export function CommunityProvider({ children, communityuuid }: CommunityProvider
     }
   }, [communityData])
 
-  if (error) return <div>Failed to load community</div>
+  if (error) return <div>{t('communities.load_failed')}</div>
   if (!communityData) return null
 
   return (

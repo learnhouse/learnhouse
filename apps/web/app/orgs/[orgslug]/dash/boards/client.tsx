@@ -328,9 +328,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
         {/* Search Results Info */}
         {searchQuery && (
           <div className="mb-4 text-sm text-gray-500">
-            {filteredBoards.length !== 1
-              ? t('boards.pagination.results_plural', { count: filteredBoards.length, query: searchQuery })
-              : t('boards.pagination.results', { count: filteredBoards.length, query: searchQuery })}
+            {t('boards.pagination.results', { count: filteredBoards.length, query: searchQuery })}
           </div>
         )}
 
@@ -439,7 +437,7 @@ function BoardCard({ board, orgslug, orgUuid, orgId, isSelected, onToggleSelect,
       {/* Selection checkbox */}
       <button
         onClick={handleSelectClick}
-        aria-label={isSelected ? 'Deselect board' : 'Select board'}
+        aria-label={isSelected ? t('boards.deselect_board') : t('boards.select_board')}
         className={`absolute top-2 start-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
           isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         }`}
@@ -500,9 +498,7 @@ function BoardCard({ board, orgslug, orgUuid, orgId, isSelected, onToggleSelect,
         <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
           <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
             <Users size={12} />
-            <span>{board.member_count !== 1
-              ? t('boards.member_count_plural', { count: board.member_count })
-              : t('boards.member_count', { count: board.member_count })}</span>
+            <span>{t('boards.member_count', { count: board.member_count })}</span>
           </div>
           <Link
             href={settingsLink}
@@ -538,7 +534,7 @@ function BoardCardOptions({ board, orgslug, orgId, onDuplicate, onDelete }: {
       }`}>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
-            <button aria-label="Board actions" className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
+            <button aria-label={t('boards.board_actions')} className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
               <MoreVertical size={18} className="text-gray-700" />
             </button>
           </DropdownMenuTrigger>

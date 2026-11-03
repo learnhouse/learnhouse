@@ -302,7 +302,7 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
         className="bg-gray-50/90 border-b border-gray-100 rounded-t-xl"
       >
         <span className="text-[11px] font-medium text-neutral-600 truncate flex-1">
-          {activity?.name || 'Activity'}
+          {activity?.name || t('boards.toolbar.activity')}
         </span>
         {activityUrl && (
           <a

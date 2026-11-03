@@ -67,7 +67,7 @@ export default function PodcastClient({
     return (
       <GeneralWrapperStyled>
         <div className="flex items-center justify-center min-h-[50vh]">
-          <p className="text-gray-500">Failed to load podcast</p>
+          <p className="text-gray-500">{t('podcasts.failed_to_load')}</p>
         </div>
       </GeneralWrapperStyled>
     )

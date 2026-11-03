@@ -55,6 +55,7 @@ function IconPicker({
   onChange: (_name: string) => void
   disabled?: boolean
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [coords, setCoords] = useState<{ left: number; top: number }>({ left: 0, top: 0 })
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -110,8 +111,8 @@ function IconPicker({
         type="button"
         disabled={disabled}
         onClick={toggle}
-        aria-label="Change icon"
-        title="Change icon"
+        aria-label={t('dashboard.organization.menu.change_icon')}
+        title={t('dashboard.organization.menu.change_icon')}
         className={`relative p-2 bg-white rounded-lg nice-shadow hover:bg-gray-50 transition-colors disabled:opacity-50 ${open ? 'ring-2 ring-black/10' : ''}`}
       >
         {/* eslint-disable-next-line react-hooks/static-components */}
@@ -321,7 +322,7 @@ const OrgEditMenu: React.FC = () => {
                           {...prov.draggableProps}
                           className={`flex items-center gap-3 bg-gray-50/60 rounded-lg p-3 nice-shadow ${snap.isDragging ? 'bg-white shadow-lg' : ''} ${grayed ? 'opacity-60 grayscale' : ''}`}
                         >
-                          <button {...prov.dragHandleProps} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing" aria-label="Reorder">
+                          <button {...prov.dragHandleProps} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing" aria-label={t('dashboard.organization.menu.reorder')}>
                             <DotsSixVertical size={18} weight="bold" />
                           </button>
                           {isCustom ? (
@@ -369,7 +370,7 @@ const OrgEditMenu: React.FC = () => {
                             )}
                           </div>
                           {isCustom && (
-                            <button onClick={() => removeItem(index)} className="text-gray-400 hover:text-rose-600 p-1" aria-label="Remove">
+                            <button onClick={() => removeItem(index)} className="text-gray-400 hover:text-rose-600 p-1" aria-label={t('dashboard.organization.menu.remove')}>
                               <Trash size={16} />
                             </button>
                           )}

@@ -22,6 +22,7 @@ import {
   validatePromo,
 } from '../_lib/billingClient'
 import PricingGrid from './PricingGrid'
+import { planName, featureLabel } from '../../_billing/planText'
 
 type SwitchView = 'choose-plan' | 'confirm' | 'success'
 
@@ -262,7 +263,7 @@ export default function SwitchWizard({
                   <p className="text-[10px] font-semibold text-black/30 uppercase tracking-wider">
                     {t('billing.current', { defaultValue: 'Current' })}
                   </p>
-                  <p className="mt-1 text-sm font-bold text-black/50 capitalize">{currentPlanData?.name ?? currentPlanId}</p>
+                  <p className="mt-1 text-sm font-bold text-black/50 capitalize">{currentPlanData ? planName(t, currentPlanData) : currentPlanId}</p>
                   <p className="text-xs text-black/30 font-medium">
                     {getCurrencySymbol(currentPlanId, priceOverrides)}
                     {currentPrice}/mo
@@ -273,7 +274,7 @@ export default function SwitchWizard({
                   <p className="text-[10px] font-semibold text-black/30 uppercase tracking-wider">
                     {t('billing.new', { defaultValue: 'New' })}
                   </p>
-                  <p className="mt-1 text-sm font-bold text-black">{selectedPlanData.name}</p>
+                  <p className="mt-1 text-sm font-bold text-black">{planName(t, selectedPlanData)}</p>
                   <p className="text-xs text-black/50 font-medium">
                     {getCurrencySymbol(selectedPlan!, priceOverrides)}
                     {newPrice}/mo
@@ -352,7 +353,7 @@ export default function SwitchWizard({
                     {selectedPlanData.features.map((f) => (
                       <li key={f.label} className="flex items-center gap-2">
                         <Check size={13} className={`flex-shrink-0 ${selectedPlanData.accentColor} opacity-60`} />
-                        <span className="text-xs font-medium text-black/50">{f.label}</span>
+                        <span className="text-xs font-medium text-black/50">{featureLabel(t, f)}</span>
                       </li>
                     ))}
                   </ul>
@@ -477,7 +478,7 @@ export default function SwitchWizard({
               {isUpgrade
                 ? t('billing.updated_desc', {
                     defaultValue: `You've been switched to the ${selectedPlanData.name} plan. Any billing adjustments will appear on your next invoice.`,
-                    plan: selectedPlanData.name,
+                    plan: planName(t, selectedPlanData),
                   })
                 : selectedPlan === 'free'
                   ? t('billing.canceled_desc', {
@@ -486,7 +487,7 @@ export default function SwitchWizard({
                     })
                   : t('billing.scheduled_desc', {
                       defaultValue: `Your plan will switch to ${selectedPlanData.name} at the end of your current billing cycle. You'll keep full access to your current plan until then.`,
-                      plan: selectedPlanData.name,
+                      plan: planName(t, selectedPlanData),
                     })}
             </p>
             <button

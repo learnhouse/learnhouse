@@ -11,12 +11,14 @@ import { queryKeys } from '@/lib/query/keys'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useCourse } from '@components/Contexts/CourseContext'
+import { useTranslation } from 'react-i18next'
 interface ModifiedChapterInterface {
   chapterId: string
   chapterName: string
 }
 
 function Chapter(props: any) {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any;
   const queryClient = useQueryClient()
@@ -73,7 +75,7 @@ function Chapter(props: any) {
                     <input
                       type="text"
                       className="bg-transparent outline-hidden text-sm text-neutral-700"
-                      placeholder="Chapter name"
+                      placeholder={t('course.draggables.chapter_name')}
                       value={
                         modifiedChapter
                           ? modifiedChapter?.chapterName
@@ -114,16 +116,16 @@ function Chapter(props: any) {
             </div>
             <MoreVertical size={15} className="text-gray-300" />
             <ConfirmationModal
-              confirmationButtonText="Delete Chapter"
-              confirmationMessage="Are you sure you want to delete this chapter?"
-              dialogTitle={'Delete ' + props.info.list.chapter.name + ' ?'}
+              confirmationButtonText={t('course.draggables.delete_chapter')}
+              confirmationMessage={t('course.draggables.delete_chapter_confirm')}
+              dialogTitle={t('course.draggables.delete_title', { name: props.info.list.chapter.name })}
               dialogTrigger={
                 <div
                   className=" hover:cursor-pointer p-1 px-4 bg-red-600 rounded-md shadow-sm flex space-x-1 items-center text-rose-100 text-sm"
                   rel="noopener noreferrer"
                 >
                   <X size={15} className="text-rose-200 font-bold" />
-                  <p>Delete Chapter</p>
+                  <p>{t('course.draggables.delete_chapter')}</p>
                 </div>
               }
               functionToExecute={() =>

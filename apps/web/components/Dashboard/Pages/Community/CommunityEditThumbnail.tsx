@@ -171,7 +171,7 @@ const CommunityEditThumbnail: React.FC = () => {
               {thumbnailUrl ? (
                 <SafeImage
                   src={thumbnailUrl}
-                  alt="Community thumbnail"
+                  alt={t('dashboard.courses.communities.thumbnail.title')}
                   className={`w-full h-full object-cover ${isLoading ? 'animate-pulse' : ''}`}
                 />
               ) : (
