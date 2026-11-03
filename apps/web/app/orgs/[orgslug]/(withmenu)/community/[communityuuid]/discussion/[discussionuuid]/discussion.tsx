@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { DiscussionDetail } from '@components/Objects/Communities/DiscussionDetail'
 import { DiscussionSidebar } from '@components/Objects/Communities/DiscussionSidebar'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { EditDiscussionModal } from '@components/Objects/Modals/Communities/EditDiscussionModal'
 import { Community } from '@services/communities/communities'
 import { isRichContentAllowed } from '@components/Objects/Communities/richContent'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
@@ -14,6 +14,12 @@ import { MessageCircle } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
+
+// The editor (tiptap) behind it only matters once the author hits edit.
+const EditDiscussionModal = dynamic(
+  () => import('@components/Objects/Modals/Communities/EditDiscussionModal').then((m) => m.EditDiscussionModal),
+  { ssr: false }
+)
 
 interface DiscussionPageClientProps {
   discussion: DiscussionWithAuthor
@@ -30,6 +36,9 @@ const DiscussionPageClient = ({
   const session = useLHSession() as any
   const [discussion, setDiscussion] = useState(initialDiscussion)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  // Mounted on first open and kept, so closing still animates out.
+  const [editModalMounted, setEditModalMounted] = useState(false)
+  if (isEditModalOpen && !editModalMounted) setEditModalMounted(true)
   const allowRichContent = isRichContentAllowed(community)
 
   useTrackView(AnalyticsEvent.DiscussionViewed, {
@@ -80,13 +89,15 @@ const DiscussionPageClient = ({
       </div>
 
       {/* Edit Modal */}
-      <EditDiscussionModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        discussion={discussion}
-        onUpdated={handleDiscussionUpdated}
-        allowRichContent={allowRichContent}
-      />
+      {editModalMounted && (
+        <EditDiscussionModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          discussion={discussion}
+          onUpdated={handleDiscussionUpdated}
+          allowRichContent={allowRichContent}
+        />
+      )}
     </GeneralWrapperStyled>
   )
 }

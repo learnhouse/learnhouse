@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { CommunitySidebar } from '@components/Objects/Communities/CommunitySidebar'
@@ -8,7 +9,6 @@ import { MessageCircle } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import { CommunityActionsMobile } from '@components/Objects/Communities/CommunityActionsMobile'
 import { DiscussionList } from '@components/Objects/Communities/DiscussionList'
-import { CreateDiscussionModal } from '@components/Objects/Modals/Communities/CreateDiscussionModal'
 import { Community } from '@services/communities/communities'
 import { isRichContentAllowed } from '@components/Objects/Communities/richContent'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
@@ -19,6 +19,12 @@ import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import ResourcePaywall, { useResourcePaywall } from '@ee/components/Payments/ResourcePaywall'
+
+// The editor (tiptap) behind it only matters once someone starts a discussion.
+const CreateDiscussionModal = dynamic(
+  () => import('@components/Objects/Modals/Communities/CreateDiscussionModal').then((m) => m.CreateDiscussionModal),
+  { ssr: false }
+)
 
 interface CommunityClientProps {
   community: Community
@@ -34,6 +40,9 @@ const CommunityClient = ({
   org_id,
 }: CommunityClientProps) => {
   const [isCreateDiscussionModalOpen, setIsCreateDiscussionModalOpen] = useState(false)
+  // Mounted on first open and kept, so closing still animates out.
+  const [createModalMounted, setCreateModalMounted] = useState(false)
+  if (isCreateDiscussionModalOpen && !createModalMounted) setCreateModalMounted(true)
   const isMobile = useMediaQuery('(max-width: 768px)')
   // People who have not bought a sold community can't post in it.
   const { locked } = useResourcePaywall(org_id, community.community_uuid)
@@ -117,13 +126,15 @@ const CommunityClient = ({
       )}
 
       {/* Modals */}
-      <CreateDiscussionModal
-        isOpen={isCreateDiscussionModalOpen}
-        onClose={() => setIsCreateDiscussionModalOpen(false)}
-        allowRichContent={isRichContentAllowed(community)}
-        communityUuid={community.community_uuid}
-        orgSlug={orgslug}
-      />
+      {createModalMounted && (
+        <CreateDiscussionModal
+          isOpen={isCreateDiscussionModalOpen}
+          onClose={() => setIsCreateDiscussionModalOpen(false)}
+          allowRichContent={isRichContentAllowed(community)}
+          communityUuid={community.community_uuid}
+          orgSlug={orgslug}
+        />
+      )}
     </>
   )
 }
