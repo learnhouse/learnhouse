@@ -152,6 +152,10 @@
         "paths": {
           "title": "Pro Feature",
           "description": "Paths is a premium feature available only to organizations on our Pro plan or higher. Upgrade to arrange courses into guided journeys with their own certificates."
+        },
+        "messaging": {
+          "title": "Pro Feature",
+          "description": "Messages, course announcements and custom AI agents are available on the Pro plan and with the Enterprise Edition."
         }
       }
     },
