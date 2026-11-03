@@ -19,7 +19,7 @@ handed to it and built with CREATE INDEX CONCURRENTLY after the migration
 transaction commits, so writes to these tables aren't blocked while they build.
 
 Revision ID: e4f7a2c9b1d3
-Revises: a1l2v3s4e5s6
+Revises: 5bd3b62a4ef8
 Create Date: 2026-11-03 00:00:00.000000
 
 """
@@ -31,7 +31,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'e4f7a2c9b1d3'
-down_revision: Union[str, None] = 'a1l2v3s4e5s6'
+down_revision: Union[str, None] = '5bd3b62a4ef8'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
