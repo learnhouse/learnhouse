@@ -29,6 +29,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.redis import get_redis_client
 from src.db.courses.activities import Activity
+from src.services.ai.llm.errors import log_ai_failure
 from src.services.ai.rag.types import ContentRef
 
 logger = logging.getLogger(__name__)
@@ -137,8 +138,8 @@ async def _run(ref: ContentRef, sem: Optional[asyncio.Semaphore] = None, *, tran
         await asyncio.wait_for(run(ref, transcribe=transcribe), timeout=JOB_TIMEOUT_SECONDS)
     except asyncio.CancelledError:
         raise
-    except Exception:
-        logger.exception("RAG: indexing failed for %s", ref.key)
+    except Exception as e:
+        log_ai_failure(logger, e, "RAG: indexing failed for %s", ref.key)
     finally:
         _inflight.pop(ref.key, None)
         if sem is not None:
