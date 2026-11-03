@@ -12,6 +12,14 @@ import {
   getFeatureMeta,
 } from '@services/features/featureMetadata'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
+import {
+  FEATURES_SETTINGS_HREF,
+  OPTIONAL_FEATURES,
+} from '@services/features/optionalFeatures'
+import type { DisabledBy } from '@lib/features/gateReason'
+import type { PlanLevel } from '@services/plans/plans'
+import Link from 'next/link'
 import { useLHAnalytics, useTrackView, AnalyticsEvent } from '@services/analytics'
 
 export interface FeatureGateProps {
@@ -23,10 +31,9 @@ export interface FeatureGateProps {
    */
   orgslug?: string
   /**
-   * Picks the wording of the admin-disabled card. Both variants are static,
-   * neither links anywhere.
+   * Picks the wording of the admin-disabled card.
    * - 'dashboard': admin context, copy addressed to someone who can flip the
-   *   toggle back on.
+   *   toggle back on; org admins get a link to the Features settings.
    * - 'public': learner-facing context, plain "not available" message.
    */
   context?: 'dashboard' | 'public'
@@ -52,9 +59,9 @@ const PLAN_GRADIENT: Record<string, string> = {
 /**
  * Unified feature gate. Reads resolved_features for the given feature, then:
  *   - renders children when granted
- *   - shows the upgrade card when plan is below the requirement
- *   - shows the admin-disabled card (a dead end, by design) when plan is OK but
- *     the feature is toggled off
+ *   - shows the upgrade card when the plan does not include the feature
+ *   - shows the disabled card when the plan includes it but it is turned off;
+ *     in the dashboard it links org admins to the Features settings
  *
  * Replaces the previous PlanRestrictedFeature + FeatureDisabledView nesting.
  */
@@ -79,6 +86,7 @@ export default function FeatureGate({
       <DisabledCard
         feature={feature}
         context={context}
+        disabledBy={state.disabledBy}
         t={t}
       />
     )
@@ -88,6 +96,7 @@ export default function FeatureGate({
     <UpgradeCard
       feature={feature}
       currentPlan={state.currentPlan}
+      upsellPlan={state.requiredPlan}
       orgSlug={resolvedSlug}
       t={t}
     />
@@ -97,26 +106,32 @@ export default function FeatureGate({
 function UpgradeCard({
   feature,
   currentPlan,
+  upsellPlan: resolvedUpsellPlan,
   orgSlug,
   t,
 }: {
   feature: FeatureKey
   currentPlan: ReturnType<typeof useResolvedFeature>['currentPlan']
+  /** Plan that actually includes the feature, from the backend. */
+  upsellPlan: PlanLevel | null
   orgSlug: string
   t: ReturnType<typeof useTranslation>['t']
 }) {
   const meta = getFeatureMeta(feature)
   const Icon = meta.Icon
+  // The backend knows which plan includes the feature; the catalog tier is
+  // only a fallback (it can name a plan that does not include it).
+  const upsellPlan = resolvedUpsellPlan ?? meta.upsellPlan
   // Deep-link straight to the Confirm step for the plan this feature needs.
-  const upgradeUrl = getUpgradeUrl(orgSlug, meta.upsellPlan)
-  const gradient = PLAN_GRADIENT[meta.upsellPlan] ?? 'from-gray-50/80'
+  const upgradeUrl = getUpgradeUrl(orgSlug, upsellPlan)
+  const gradient = PLAN_GRADIENT[upsellPlan] ?? 'from-gray-50/80'
 
   // Impression: fires once per mount everywhere a feature is gated by plan, which
   // distinguishes "feature locked behind upgrade" across the whole app.
   const { track } = useLHAnalytics('dashboard')
   useTrackView(
     AnalyticsEvent.FeatureGateUpgradeShown,
-    { feature, required_plan: meta.upsellPlan, current_plan: currentPlan },
+    { feature, required_plan: upsellPlan, current_plan: currentPlan },
     true,
     'dashboard',
   )
@@ -124,7 +139,7 @@ function UpgradeCard({
   const badge = (
     <PlanBadge
       currentPlan={currentPlan}
-      requiredPlan={meta.upsellPlan}
+      requiredPlan={upsellPlan}
       size="md"
       alwaysShow
       noMargin
@@ -150,7 +165,7 @@ function UpgradeCard({
             onClick={() =>
               track(AnalyticsEvent.FeatureGateUpgradeClicked, {
                 feature,
-                upsell_plan: meta.upsellPlan,
+                upsell_plan: upsellPlan,
               })
             }
             className="bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors nice-shadow flex items-center gap-2"
@@ -174,15 +189,25 @@ function UpgradeCard({
   )
 }
 
+const isOptionalFeature = (feature: FeatureKey) =>
+  OPTIONAL_FEATURES.some((f) => f.key === feature)
+
 function DisabledCard({
   feature,
   context,
+  disabledBy,
   t,
 }: {
   feature: FeatureKey
   context: 'dashboard' | 'public'
+  disabledBy?: DisabledBy
   t: ReturnType<typeof useTranslation>['t']
 }) {
+  const { canManageOrg } = useAdminStatus()
+  // The platform kill switch is not the org's to undo, so no settings link.
+  const byPlatform = disabledBy === 'platform'
+  const showSettingsLink =
+    context === 'dashboard' && canManageOrg && !byPlatform && isOptionalFeature(feature)
   const meta = getFeatureMeta(feature)
   const Icon = meta.Icon
   const featureDisplayName = t(
@@ -206,12 +231,23 @@ function DisabledCard({
         <p className="text-gray-500 text-sm mb-6 max-w-sm leading-relaxed">
           {context === 'public'
             ? t('common.features.disabled.public.description')
-            : t('common.features.disabled.dashboard.description')}
+            : byPlatform
+              ? t('common.features.disabled.platform.description')
+              : t('common.features.disabled.dashboard.description')}
         </p>
 
-        <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium">
-          {t('common.features.disabled.status')}
-        </div>
+        {showSettingsLink ? (
+          <Link
+            href={FEATURES_SETTINGS_HREF}
+            className="bg-white text-gray-700 px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors nice-shadow"
+          >
+            {t('common.features.disabled.enable_feature')}
+          </Link>
+        ) : (
+          <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium">
+            {t('common.features.disabled.status')}
+          </div>
+        )}
       </GateCard>
     </GateShell>
   )

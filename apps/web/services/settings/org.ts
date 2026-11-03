@@ -82,6 +82,21 @@ export const uploadOrganizationPreview = async (orgId: string, file: File, acces
   return res
 };
 
+/** Turn an optional feature on or off (see services/features/optionalFeatures). */
+export async function updateOrgFeatureToggle(
+  org_id: string | number,
+  feature: string,
+  enabled: boolean,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/features/${encodeURIComponent(feature)}?enabled=${enabled}`,
+    RequestBodyWithAuthHeader('PUT', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function updateOrgCommunitiesConfig(
   org_id: string,
   communities_enabled: boolean,
