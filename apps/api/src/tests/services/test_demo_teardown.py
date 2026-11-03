@@ -83,6 +83,10 @@ _SET_NULL_ALLOWED = {
     ("live_session_poll", "created_by"),
     ("live_session_provider_connection", "connected_by"),
     ("live_session_oauth_app", "created_by"),
+    # Messages: a deleted person's messages stay in the conversation for
+    # everyone else, shown as from a removed user.
+    ("conversation", "created_by"),
+    ("message", "sender_user_id"),
 }
 
 

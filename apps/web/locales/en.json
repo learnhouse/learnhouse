@@ -156,6 +156,10 @@
         "live_sessions": {
           "description": "Run live classes, office hours and events with chat, Q&A, polls and attendance.",
           "title": "Standard feature"
+        },
+        "messaging": {
+          "title": "Pro Feature",
+          "description": "Messages, course announcements and custom AI agents are available on the Pro plan and with the Enterprise Edition."
         }
       }
     },
