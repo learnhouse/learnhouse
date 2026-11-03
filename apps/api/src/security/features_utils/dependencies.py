@@ -8,7 +8,6 @@ from fastapi import Depends, HTTPException, Path, Request
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
-from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
 from src.db.user_organizations import UserOrganization
@@ -107,8 +106,10 @@ async def _check_feature_enabled(
     """
     from src.security.features_utils.resolve import resolve_feature
 
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = (await db_session.execute(statement)).scalars().first()
+    from src.services.orgs.org_config_lookup import get_session_org_config
+
+    # Shared with the MFA and auth-method gates later in the request.
+    org_config = await get_session_org_config(db_session, org_id)
 
     if org_config is None:
         raise HTTPException(
@@ -232,35 +233,40 @@ async def require_courses_feature(
 
     # Try course_uuid first
     if "course_uuid" in path_params:
+        # Only the org is needed here; the endpoint loads the course itself.
         course_uuid = path_params["course_uuid"]
-        statement = select(Course).where(Course.course_uuid == course_uuid)
-        course = (await db_session.execute(statement)).scalars().first()
-        if not course:
+        statement = select(Course.org_id).where(Course.course_uuid == course_uuid)
+        course_org_id = (await db_session.execute(statement)).scalars().first()
+        if course_org_id is None:
             raise HTTPException(status_code=404, detail="Course not found")
-        return await _check_feature_enabled("courses", course.org_id, db_session)
+        return await _check_feature_enabled("courses", course_org_id, db_session)
 
     # Try activity_uuid
     if "activity_uuid" in path_params:
         from src.db.courses.activities import Activity
+        # One query for both lookups; the outer join tells a missing course
+        # apart from a missing activity.
         activity_uuid = path_params["activity_uuid"]
-        statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-        activity = (await db_session.execute(statement)).scalars().first()
-        if not activity:
+        statement = (
+            select(Activity.id, Course.org_id)
+            .outerjoin(Course, Course.id == Activity.course_id)
+            .where(Activity.activity_uuid == activity_uuid)
+        )
+        row = (await db_session.execute(statement)).first()
+        if row is None:
             raise HTTPException(status_code=404, detail="Activity not found")
-        statement = select(Course).where(Course.id == activity.course_id)
-        course = (await db_session.execute(statement)).scalars().first()
-        if not course:
+        if row[1] is None:
             raise HTTPException(status_code=404, detail="Course not found")
-        return await _check_feature_enabled("courses", course.org_id, db_session)
+        return await _check_feature_enabled("courses", row[1], db_session)
 
     # Try org_slug
     if "org_slug" in path_params:
         org_slug = path_params["org_slug"]
-        statement = select(Organization).where(Organization.slug == org_slug)
-        org = (await db_session.execute(statement)).scalars().first()
-        if not org:
+        statement = select(Organization.id).where(Organization.slug == org_slug)
+        slug_org_id = (await db_session.execute(statement)).scalars().first()
+        if slug_org_id is None:
             raise HTTPException(status_code=404, detail="Organization not found")
-        return await _check_feature_enabled("courses", org.id, db_session)
+        return await _check_feature_enabled("courses", slug_org_id, db_session)
 
     # Try org_id
     if "org_id" in path_params:
@@ -295,11 +301,11 @@ async def require_boards_feature(
     if "board_uuid" in path_params:
         from src.db.boards import Board
         board_uuid = path_params["board_uuid"]
-        statement = select(Board).where(Board.board_uuid == board_uuid)
-        board = (await db_session.execute(statement)).scalars().first()
-        if not board:
+        # Just the org: a full Board row carries the whole Yjs document.
+        statement = select(Board.org_id).where(Board.board_uuid == board_uuid)
+        org_id = (await db_session.execute(statement)).scalars().first()
+        if org_id is None:
             raise HTTPException(status_code=404, detail="Board not found")
-        org_id = board.org_id
 
     if org_id is None and "org_id" in path_params:
         try:

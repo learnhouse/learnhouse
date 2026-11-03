@@ -1,6 +1,13 @@
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 
-const BACKEND_URL = (process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL || 'http://localhost:1338').replace(/\/+$/, '')
+// LEARNHOUSE_INTERNAL_API_URL (server-only) keeps this lookup on the internal
+// network; see getInternalBackendUrl in services/config/config.ts.
+const BACKEND_URL = (
+  process.env.LEARNHOUSE_INTERNAL_API_URL ||
+  process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL ||
+  'http://localhost:1338'
+).replace(/\/+$/, '')
 
 // Cookie names (must match the API routes)
 const ACCESS_TOKEN_COOKIE = 'LH_access'
@@ -41,7 +48,7 @@ export interface Session {
  * unresolved and let the client restore it through `/api/auth/refresh`, which
  * is a Route Handler and *can* persist the rotation.
  */
-export async function getServerSession(): Promise<Session | null> {
+async function readServerSession(): Promise<Session | null> {
   try {
     const cookieStore = await cookies()
 
@@ -85,6 +92,10 @@ export async function getServerSession(): Promise<Session | null> {
   }
 }
 
+// Layouts, pages and generateMetadata each ask for the session; cache() makes
+// that one backend round trip per request instead of one per caller.
+export const getServerSession = cache(readServerSession)
+
 /**
  * Get access token from cookies for server-side API calls.
  * This is a lightweight alternative when you only need the token.
@@ -94,7 +105,7 @@ export async function getServerSession(): Promise<Session | null> {
  * Callers should treat null as "render without personalised data" and let the
  * client fill it in.
  */
-export async function getServerAccessToken(): Promise<string | null> {
+export const getServerAccessToken = cache(async (): Promise<string | null> => {
   try {
     const cookieStore = await cookies()
     return cookieStore.get(ACCESS_TOKEN_COOKIE)?.value || null
@@ -102,4 +113,4 @@ export async function getServerAccessToken(): Promise<string | null> {
     console.error('[SERVER_SESSION] Error getting access token:', error)
     return null
   }
-}
+})

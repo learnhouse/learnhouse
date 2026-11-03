@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import CopilotBubble from '@components/Copilot/CopilotBubble'
+import dynamic from 'next/dynamic'
 import { useMessaging, useMessagingEnabled } from '@components/Messaging/MessagingProvider'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -38,7 +38,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
-import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { DASHBOARD_MENU_ITEMS, DashboardMenuItem } from '@/lib/dashboard-menu-items'
 import { isFeatureAvailable } from '@services/plans/plans'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
@@ -54,6 +53,14 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
 import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
 
+// Both only show on demand (bubble mode, feedback button), so keep their
+// markdown/chat code out of every page's initial bundle.
+const CopilotBubble = dynamic(() => import('@components/Copilot/CopilotBubble'), { ssr: false })
+const FeedbackModal = dynamic(
+  () => import('@components/Objects/Modals/FeedbackModal').then((m) => m.FeedbackModal),
+  { ssr: false }
+)
+
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
   const session = useLHSession() as any;
@@ -65,6 +72,8 @@ export const OrgMenu = (props: any) => {
   const { t } = useTranslation()
   const { rights } = useAdminStatus()
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
+  // Mounted on first open and kept, so the close animation and draft survive.
+  const [feedbackModalMounted, setFeedbackModalMounted] = useState(false)
   const { isVisible: isJoinBannerVisible } = useJoinBannerVisible()
   const { track } = useLHAnalytics()
 
@@ -411,7 +420,10 @@ export const OrgMenu = (props: any) => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => setFeedbackModalOpen(true)}
+                      onClick={() => {
+                        setFeedbackModalMounted(true)
+                        setFeedbackModalOpen(true)
+                      }}
                       className="flex items-center gap-2"
                     >
                       <ChatCircleDots size={16} weight="fill" />
@@ -481,13 +493,15 @@ export const OrgMenu = (props: any) => {
       </div>
 
       {/* Feedback Modal */}
-      <FeedbackModal
-        open={feedbackModalOpen}
-        onOpenChange={setFeedbackModalOpen}
-        theme="light"
-        userName={session?.data?.user?.username}
-        userEmail={session?.data?.user?.email}
-      />
+      {feedbackModalMounted && (
+        <FeedbackModal
+          open={feedbackModalOpen}
+          onOpenChange={setFeedbackModalOpen}
+          theme="light"
+          userName={session?.data?.user?.username}
+          userEmail={session?.data?.user?.email}
+        />
+      )}
 
       {/* Legacy copilot bubble; with Messages on, agents live in Messages */}
       {isBubbleMode && !messagingEnabled && (

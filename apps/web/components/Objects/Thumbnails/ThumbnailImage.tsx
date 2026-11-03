@@ -20,6 +20,10 @@ export default function ThumbnailImage({
   fallbackSrc = EMPTY_THUMBNAIL,
   className,
   alt = '',
+  // Thumbnails mostly sit in grids below the fold; above-the-fold heroes pass
+  // loading="eager".
+  loading = 'lazy',
+  decoding = 'async',
   onError,
   ...props
 }: ThumbnailImageProps) {
@@ -32,6 +36,8 @@ export default function ThumbnailImage({
       {...props}
       src={resolved}
       alt={alt}
+      loading={loading}
+      decoding={decoding}
       className={cn('object-cover', className)}
       onError={(e) => {
         if (resolved !== fallbackSrc) setErroredSrc(resolved)

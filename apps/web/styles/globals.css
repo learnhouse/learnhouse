@@ -21,6 +21,23 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Full-page loader entrance (replaces motion in PageLoading, which sits in the
+   root bundle): opacity 0 -> 0.5 -> 1 over 0.6s, then a soft scale-in. */
+@keyframes page-loading-opacity {
+  0% { opacity: 0; }
+  60% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+@keyframes page-loading-scale {
+  from { transform: scale(0.95); }
+  to { transform: scale(1); }
+}
+.animate-page-loading-in {
+  animation:
+    page-loading-opacity 0.6s linear both,
+    page-loading-scale 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
 /* Board load animations */
 @keyframes board-fade-in {
   from { opacity: 0; }

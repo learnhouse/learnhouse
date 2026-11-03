@@ -46,7 +46,7 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
   const getBackgroundStyle = (): React.CSSProperties => {
     if (noOrg) {
       return {
-        backgroundImage: 'url(/auth-default.png)',
+        backgroundImage: 'url(/auth-default.webp)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }

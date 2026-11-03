@@ -461,6 +461,7 @@ const CourseClient = (props: any) => {
                         <ThumbnailImage
                           src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_image)}
                           fetchPriority="high"
+                          loading="eager"
                           className="absolute inset-0 w-full h-full"
                         />
                         {course.thumbnail_type === 'both' && (

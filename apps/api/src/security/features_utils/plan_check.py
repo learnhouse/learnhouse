@@ -344,10 +344,9 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
         board_uuid = request.path_params.get("board_uuid")
         if board_uuid:
             from src.db.boards import Board
-            statement = select(Board).where(Board.board_uuid == board_uuid)
-            board = (await db_session.execute(statement)).scalars().first()
-            if board:
-                resource_org_id = board.org_id
+            # Just the org: a full Board row carries the whole Yjs document.
+            statement = select(Board.org_id).where(Board.board_uuid == board_uuid)
+            resource_org_id = (await db_session.execute(statement)).scalars().first()
         org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
 
         if org_id is None:
@@ -506,11 +505,9 @@ def require_plan_for_paths(required_plan: PlanLevel, feature_name: str):
                 resource_org_id = path.org_id
         if resource_org_id is None and "course_uuid" in path_params:
             from src.db.courses.courses import Course
-            course = (await db_session.execute(
-                select(Course).where(Course.course_uuid == path_params["course_uuid"])
+            resource_org_id = (await db_session.execute(
+                select(Course.org_id).where(Course.course_uuid == path_params["course_uuid"])
             )).scalars().first()
-            if course:
-                resource_org_id = course.org_id
 
         org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
         if org_id is None:

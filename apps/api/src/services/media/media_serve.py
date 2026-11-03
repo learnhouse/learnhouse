@@ -6,6 +6,7 @@ through the API after an access check (see the /media/{uuid}/file endpoint).
 Handles both filesystem and s3/R2 delivery, with HTTP Range support.
 """
 
+import asyncio
 from pathlib import Path
 from urllib.parse import quote
 
@@ -159,7 +160,8 @@ async def serve_media_file(
     range_header = request.headers.get("range")
 
     if get_content_delivery_type() == "s3api":
-        return _serve_s3(rel_key, mime, headers, range_header, head)
+        # _serve_s3 makes a blocking boto3 call; keep it off the event loop.
+        return await asyncio.to_thread(_serve_s3, rel_key, mime, headers, range_header, head)
     return _serve_fs(rel_key, mime, headers, range_header, head)
 
 

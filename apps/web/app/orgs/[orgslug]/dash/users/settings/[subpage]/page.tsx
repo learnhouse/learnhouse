@@ -4,17 +4,20 @@ import { motion } from 'motion/react'
 import { getUriWithOrg } from '@services/config/config'
 import { KeyRound, ScanEye, ShieldCheck, SquareUserRound, UserPlus, Users, Shield } from 'lucide-react'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import OrgUsers from '@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'
-import OrgAccess from '@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'
-import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'
-import OrgUserGroups from '@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'
-import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
-import OrgAuditLogs from '@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'
-import OrgTwoFactorPolicy from '@components/Dashboard/Pages/Users/Security/OrgTwoFactorPolicy'
-import OrgSignInMethods from '@components/Dashboard/Pages/Users/Security/OrgSignInMethods'
 import { ShieldAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
+import dynamic from 'next/dynamic'
+
+// One chunk per tab: only the open tab's code is loaded.
+const OrgUsers = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'))
+const OrgAccess = dynamic(() => import('@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'))
+const OrgUsersAdd = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'))
+const OrgUserGroups = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'))
+const OrgRoles = dynamic(() => import('@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'))
+const OrgAuditLogs = dynamic(() => import('@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'))
+const OrgTwoFactorPolicy = dynamic(() => import('@components/Dashboard/Pages/Users/Security/OrgTwoFactorPolicy'))
+const OrgSignInMethods = dynamic(() => import('@components/Dashboard/Pages/Users/Security/OrgSignInMethods'))
 
 export type SettingsParams = {
   subpage: string

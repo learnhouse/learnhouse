@@ -90,6 +90,7 @@ function PathView({ path, orgslug }: { path: Path; orgslug: string }) {
           <ThumbnailImage
             src={cover}
             fetchPriority="high"
+            loading="eager"
             className="block ring-1 ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px]"
           />
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-5 text-sm font-medium text-neutral-500">

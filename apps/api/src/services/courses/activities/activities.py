@@ -142,11 +142,14 @@ async def get_activity(
     current_user: PublicUser,
     db_session: AsyncSession,
 ):
-    # Optimize by joining Activity with Course and last modified user in a single query
+    # Activity, course, last modified user and parent chapter (the lock check
+    # needs it) in a single query
     statement = (
-        select(Activity, Course, User)
-        .join(Course)
+        select(Activity, Course, User, Chapter)
+        .join(Course, Course.id == Activity.course_id)
         .outerjoin(User, Activity.last_modified_by_id == User.id)
+        .outerjoin(ChapterActivity, ChapterActivity.activity_id == Activity.id)
+        .outerjoin(Chapter, Chapter.id == ChapterActivity.chapter_id)
         .where(Activity.activity_uuid == activity_uuid)
     )
     result = (await db_session.execute(statement)).first()
@@ -157,7 +160,7 @@ async def get_activity(
             detail="Activity not found",
         )
 
-    activity, course, last_modified_user = result
+    activity, course, last_modified_user, parent_chapter = result
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
@@ -166,7 +169,10 @@ async def get_activity(
     # Include last modified user info
     activity_read.last_modified_by_username = last_modified_user.username if last_modified_user else None
 
-    return await redact_activity_for_reader(request, activity_read, activity, course, current_user, db_session)
+    return await redact_activity_for_reader(
+        request, activity_read, activity, course, current_user, db_session,
+        parent_chapter=parent_chapter,
+    )
 
 
 class EditorBootstrapCourse(BaseModel):

@@ -19,6 +19,7 @@ Access Rules:
 import logging
 from typing import Union, Optional
 from fastapi import HTTPException, Request, status
+from sqlalchemy import inspect as sa_inspect
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -359,7 +360,7 @@ class ResourceAccessChecker:
         user_id = self._get_user_id()
         is_public, is_published = await self._is_public_and_published(resource_uuid, config)
 
-        logger.info(f"[ACCESS_CHECK] resource_uuid={resource_uuid}, user_id={user_id}, is_public={is_public}, is_published={is_published}")
+        logger.debug("[ACCESS_CHECK] resource_uuid=%s, user_id=%s, is_public=%s, is_published=%s", resource_uuid, user_id, is_public, is_published)
 
         # Rule 1: Public + published = OK for everyone
         if config.has_published_field:
@@ -387,7 +388,7 @@ class ResourceAccessChecker:
         # Rule 2: Check authorship (if supported)
         if config.supports_authorship:
             is_author = await self._is_resource_author(resource_uuid)
-            logger.info(f"[ACCESS_CHECK] Rule 2 - is_author={is_author}")
+            logger.debug("[ACCESS_CHECK] Rule 2 - is_author=%s", is_author)
             if is_author:
                 return AccessDecision(
                     allowed=True,
@@ -435,7 +436,7 @@ class ResourceAccessChecker:
             has_usergroup_access = await self._check_usergroup_membership(resource_uuid, is_public)
             if has_usergroup_access and await self._blocked_by_enclosing_folder(resource_uuid, config):
                 has_usergroup_access = False
-            logger.info(f"[ACCESS_CHECK] Rule 5 - has_usergroup_access={has_usergroup_access}, is_published={is_published}")
+            logger.debug("[ACCESS_CHECK] Rule 5 - has_usergroup_access=%s, is_published=%s", has_usergroup_access, is_published)
 
             # For resources with published field, UserGroup access requires published=True
             if config.has_published_field:
@@ -1059,66 +1060,91 @@ class ResourceAccessChecker:
             return self._resource_cache[resource_uuid]
 
         resource = None
-
-        # Primary resources
-        if config.resource_type == "courses":
-            from src.db.courses.courses import Course
-            statement = select(Course).where(Course.course_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "podcasts":
-            from src.db.podcasts.podcasts import Podcast
-            statement = select(Podcast).where(Podcast.podcast_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "communities":
-            from src.db.communities.communities import Community
-            statement = select(Community).where(Community.community_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "folders":
-            from src.db.folders.folders import Folder
-            statement = select(Folder).where(Folder.folder_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "media":
-            from src.db.media.media import Media
-            statement = select(Media).where(Media.media_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "boards":
-            from src.db.boards import Board
-            statement = select(Board).where(Board.board_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "playgrounds":
-            from src.db.playgrounds import Playground
-            statement = select(Playground).where(Playground.playground_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        # Child resources
-        elif config.resource_type == "coursechapters":
-            from src.db.courses.chapters import Chapter
-            statement = select(Chapter).where(Chapter.chapter_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "activities":
-            from src.db.courses.activities import Activity
-            statement = select(Activity).where(Activity.activity_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "episodes":
-            from src.db.podcasts.episodes import PodcastEpisode
-            statement = select(PodcastEpisode).where(PodcastEpisode.episode_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "discussions":
-            from src.db.communities.discussions import Discussion
-            statement = select(Discussion).where(Discussion.discussion_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
+        located = _resource_model(config.resource_type)
+        if located is not None:
+            model, uuid_field = located
+            # Endpoints usually load the row before checking access to it.
+            # Selecting it again would return that same instance anyway, so
+            # take it from the session and save the round trip.
+            resource = _loaded_in_session(self.db_session, model, uuid_field, resource_uuid)
+            if resource is None:
+                statement = select(model).where(getattr(model, uuid_field) == resource_uuid)
+                resource = (await self.db_session.execute(statement)).scalars().first()
 
         self._resource_cache[resource_uuid] = resource
         return resource
+
+
+def _resource_model(resource_type: str):
+    """The model and uuid column for an RBAC resource type, or None."""
+    if resource_type == "courses":
+        from src.db.courses.courses import Course
+        return Course, "course_uuid"
+    if resource_type == "podcasts":
+        from src.db.podcasts.podcasts import Podcast
+        return Podcast, "podcast_uuid"
+    if resource_type == "communities":
+        from src.db.communities.communities import Community
+        return Community, "community_uuid"
+    if resource_type == "folders":
+        from src.db.folders.folders import Folder
+        return Folder, "folder_uuid"
+    if resource_type == "media":
+        from src.db.media.media import Media
+        return Media, "media_uuid"
+    if resource_type == "boards":
+        from src.db.boards import Board
+        return Board, "board_uuid"
+    if resource_type == "playgrounds":
+        from src.db.playgrounds import Playground
+        return Playground, "playground_uuid"
+    # Child resources
+    if resource_type == "coursechapters":
+        from src.db.courses.chapters import Chapter
+        return Chapter, "chapter_uuid"
+    if resource_type == "activities":
+        from src.db.courses.activities import Activity
+        return Activity, "activity_uuid"
+    if resource_type == "episodes":
+        from src.db.podcasts.episodes import PodcastEpisode
+        return PodcastEpisode, "episode_uuid"
+    if resource_type == "discussions":
+        from src.db.communities.discussions import Discussion
+        return Discussion, "discussion_uuid"
+    return None
+
+
+def _loaded_in_session(db_session, model, uuid_field: str, resource_uuid: str):
+    """A live, fully loaded ``model`` row with that uuid already in the session.
+
+    Only rows whose attributes are all loaded qualify: touching an expired
+    attribute would lazy-load it, which async sessions can't do.
+    """
+    try:
+        candidates = list(db_session.sync_session.identity_map.values())
+        # Deleted in this session but not flushed yet: a SELECT would flush
+        # the delete first and find nothing.
+        pending_deletes = db_session.sync_session.deleted
+    except Exception:
+        # Not a real AsyncSession (e.g. a test double); just query.
+        return None
+    columns = None
+    for obj in candidates:
+        if type(obj) is not model:
+            continue
+        if columns is None:
+            columns = {attr.key for attr in sa_inspect(model).column_attrs}
+        state = sa_inspect(obj)
+        if (
+            state.deleted
+            or state.was_deleted
+            or obj in pending_deletes
+            or columns & (state.unloaded | state.expired_attributes)
+        ):
+            continue
+        if state.dict.get(uuid_field) == resource_uuid:
+            return obj
+    return None
 
 
 # Convenience functions for quick access checks

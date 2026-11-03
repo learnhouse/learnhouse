@@ -6,6 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.chapter_activities import ChapterActivity
 from fastapi import HTTPException, Request, status
 from src.db.courses.activities import Activity, ActivityTypeEnum
+from src.db.courses.chapters import Chapter
 from src.db.courses.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
@@ -234,9 +235,12 @@ async def add_activity_to_trail(
 
     # Activity and course in one round trip; the outer join keeps the distinct
     # "Course not found" answer for an activity whose course is gone.
+    # The parent chapter rides along for the reader gate's lock check.
     statement = (
-        select(Activity, Course)
+        select(Activity, Course, Chapter)
         .outerjoin(Course, Course.id == Activity.course_id)  # type: ignore[arg-type]
+        .outerjoin(ChapterActivity, ChapterActivity.activity_id == Activity.id)  # type: ignore[arg-type]
+        .outerjoin(Chapter, Chapter.id == ChapterActivity.chapter_id)  # type: ignore[arg-type]
         .where(Activity.activity_uuid == activity_uuid)
     )
     row = (await db_session.execute(statement)).first()
@@ -245,7 +249,7 @@ async def add_activity_to_trail(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found"
         )
-    activity, course = row
+    activity, course, parent_chapter = row
 
     # An assignment is completed by its submission/grading flow, never by a
     # learner self-marking it done.
@@ -262,7 +266,9 @@ async def add_activity_to_trail(
 
     # Completing an activity leads to the certificate: only an activity the
     # learner may actually consume (published, paid for, unlocked) counts.
-    await verify_activity_reader_access(request, activity, course, user, db_session)
+    await verify_activity_reader_access(
+        request, activity, course, user, db_session, parent_chapter=parent_chapter
+    )
 
     trail = await check_trail_presence(
         org_id=course.org_id,
@@ -287,8 +293,9 @@ async def add_activity_to_trail(
             update_date=str(datetime.now()),
         )
         db_session.add(trailrun)
+        # No refresh: the insert returns the id and the session keeps the rest
+        # loaded across the commit (expire_on_commit=False).
         await db_session.commit()
-        await db_session.refresh(trailrun)
 
     statement = select(TrailStep).where(
         TrailStep.trailrun_id == trailrun.id, TrailStep.activity_id == activity.id, TrailStep.user_id == user.id
@@ -312,7 +319,6 @@ async def add_activity_to_trail(
         )
         db_session.add(trailstep)
         await db_session.commit()
-        await db_session.refresh(trailstep)
 
     # Only track on first completion to avoid duplicates on re-visits
     if is_new_completion:

@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   useRef,
 } from 'react'
 import {
@@ -1130,17 +1131,32 @@ export function SessionProvider({
     }
   }, [applySessionFromToken, handleSignOut, hasSessionMarker])
 
-  const contextValue: AuthContextValue = {
-    session,
-    status,
-    accessToken,
-    refreshSession,
-    signIn: handleSignIn,
-    signOut: handleSignOut,
-    completeMfaLogin,
-    requestMagicLink,
-    completeMagicLink,
-  }
+  // Memoized so consumers only re-render when auth state actually changes,
+  // not on every render of the provider.
+  const contextValue: AuthContextValue = useMemo(
+    () => ({
+      session,
+      status,
+      accessToken,
+      refreshSession,
+      signIn: handleSignIn,
+      signOut: handleSignOut,
+      completeMfaLogin,
+      requestMagicLink,
+      completeMagicLink,
+    }),
+    [
+      session,
+      status,
+      accessToken,
+      refreshSession,
+      handleSignIn,
+      handleSignOut,
+      completeMfaLogin,
+      requestMagicLink,
+      completeMagicLink,
+    ]
+  )
 
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
@@ -1150,23 +1166,29 @@ export function SessionProvider({
 // useSession hook - matches NextAuth's API exactly
 export function useSession(): UseSessionReturn {
   const context = useContext(AuthContext)
+  const refreshSession = context?.refreshSession
 
-  if (!context) {
-    // Return unauthenticated state if used outside provider
-    return {
-      data: null,
-      status: 'unauthenticated',
-      update: async () => {},
-    }
-  }
-
-  return {
-    data: context.session,
-    status: context.status,
-    update: async (force?: boolean) => {
-      await context.refreshSession(force)
+  // Stable across renders so callers can put it in effect deps.
+  const update = useCallback(
+    async (force?: boolean) => {
+      await refreshSession?.(force)
     },
-  }
+    [refreshSession]
+  )
+
+  const session = context?.session ?? null
+  const status: SessionStatus = context ? context.status : 'unauthenticated'
+
+  // Same object until the session or status changes, so context consumers
+  // downstream (LHSessionProvider) don't re-render on every parent render.
+  return useMemo(
+    () => ({
+      data: session,
+      status,
+      update,
+    }),
+    [session, status, update]
+  )
 }
 
 // Decode the payload half of a server-signed OAuth state (`payload.sig`,
