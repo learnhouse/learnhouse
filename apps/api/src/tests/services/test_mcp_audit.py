@@ -123,5 +123,7 @@ async def test_list_prompts_per_member(db, org, admin_user, regular_user):
         admin = await handlers.list_prompts(ctx(admin_user), None)
         learner = await handlers.list_prompts(ctx(regular_user), None)
         anonymous = await handlers.list_prompts(SimpleNamespace(request=SimpleNamespace(scope={"state": {}})), None)
-    assert len(admin.prompts) == len(prompts.PROMPTS) and learner.prompts == []
+    assert len(admin.prompts) == len(prompts.PROMPTS)
+    # Learners read communities, so the read-only digest is all they get.
+    assert [p.name for p in learner.prompts] == ["community_digest"]
     assert len(anonymous.prompts) == len(prompts.PROMPTS)
