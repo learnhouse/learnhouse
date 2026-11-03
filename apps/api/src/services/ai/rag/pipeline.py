@@ -82,7 +82,8 @@ def _chunks(extraction: Extraction) -> list[tuple[str, int, object]]:
     return [
         (chunk, index, segment)
         for segment in extraction.segments
-        for index, chunk in enumerate(chunk_text(segment.text))
+        # Postgres text cannot hold NUL bytes, and PDF extraction can produce them.
+        for index, chunk in enumerate(chunk_text(segment.text.replace("\x00", "")))
     ]
 
 

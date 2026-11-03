@@ -16,6 +16,7 @@ from src.services.ai.editor import (
     editor_ai_send_message_stream,
 )
 from src.services.ai.base import ask_ai_stream, save_message_to_history, generate_follow_up_suggestions
+from src.services.ai.llm.errors import ai_error_message, log_ai_failure
 from src.services.ai.schemas.ai import (
     ActivityAIChatSessionResponse,
     SendActivityAIChatMessage,
@@ -144,10 +145,11 @@ async def activity_chat_event_generator(
         # (full_response empty), so a disconnect *after* a full response can't
         # be abused to get free AI. Re-raise so Starlette observes the cancel.
         raise
-    except Exception:
+    except Exception as e:
         stream_failed = True
-        logger.exception("Error in activity_chat_event_generator")
-        yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI chat request.'})}\n\n"
+        log_ai_failure(logger, e, "Error in activity_chat_event_generator")
+        message = ai_error_message(e, "An internal error occurred while processing the AI chat request.")
+        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
     finally:
         # Refund credit if the model produced nothing useful.
         if org_id is not None and (stream_failed or not full_response):
@@ -428,10 +430,11 @@ async def editor_chat_event_generator(
         # empty), so a disconnect *after* a full response can't be abused to
         # get free AI. Re-raise so Starlette observes the cancel.
         raise
-    except Exception:
+    except Exception as e:
         stream_failed = True
-        logger.exception("Error in editor_chat_event_generator")
-        yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI request.'})}\n\n"
+        log_ai_failure(logger, e, "Error in editor_chat_event_generator")
+        message = ai_error_message(e, "An internal error occurred while processing the AI request.")
+        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
     finally:
         if org_id is not None and (stream_failed or not full_response):
             try:

@@ -1013,7 +1013,9 @@ async def test_refusing_to_take_over_a_real_organization(db, no_uploads):
     )
     await db.commit()
 
-    with pytest.raises(RuntimeError, match="not a demo org"):
+    from src.services.demo.sync import DemoSlugTakenError
+
+    with pytest.raises(DemoSlugTakenError, match="not a demo org"):
         await sync_demo(db, today=EPOCH_DAY)
 
 

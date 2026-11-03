@@ -10,7 +10,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
 from src.core.events.database import get_db_session
-from src.db.organization_config import OrganizationConfig
 from src.db.communities.communities import Community
 from src.security.features_utils.plans import PlanLevel, plan_meets_requirement
 
@@ -81,8 +80,10 @@ async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     Raises:
         HTTPException: 404 if organization config not found
     """
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = (await db_session.execute(statement)).scalars().first()
+    from src.services.orgs.org_config_lookup import get_session_org_config
+
+    # The MFA and auth-method gates already loaded this row for the request.
+    org_config = await get_session_org_config(db_session, org_id)
 
     if org_config is None:
         raise HTTPException(
