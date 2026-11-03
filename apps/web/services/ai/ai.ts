@@ -1,5 +1,5 @@
 import { getAPIUrl } from '@services/config/config'
-import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
+import { RequestBodyWithAuthHeader, detailMessage } from '@services/utils/ts/requests'
 import type { CopilotSource } from '@/lib/copilot/sources'
 
 export async function startActivityAIChatSession(
@@ -243,7 +243,7 @@ export async function startActivityAIChatSessionStream(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
-      callbacks.onError(errorData.detail || `HTTP error ${response.status}`)
+      callbacks.onError(detailMessage(errorData.detail, `HTTP error ${response.status}`))
       return
     }
 
@@ -284,7 +284,7 @@ export async function sendActivityAIChatMessageStream(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
-      callbacks.onError(errorData.detail || `HTTP error ${response.status}`)
+      callbacks.onError(detailMessage(errorData.detail, `HTTP error ${response.status}`))
       return
     }
 
@@ -426,7 +426,7 @@ export async function startEditorAIChatSessionStream(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
-      callbacks.onError(errorData.detail || `HTTP error ${response.status}`)
+      callbacks.onError(detailMessage(errorData.detail, `HTTP error ${response.status}`))
       return
     }
 
@@ -467,7 +467,7 @@ export async function sendEditorAIChatMessageStream(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
-      callbacks.onError(errorData.detail || `HTTP error ${response.status}`)
+      callbacks.onError(detailMessage(errorData.detail, `HTTP error ${response.status}`))
       return
     }
 
@@ -582,7 +582,7 @@ export async function startRAGChatStream(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
-      callbacks.onError(errorData.detail || `HTTP error ${response.status}`)
+      callbacks.onError(detailMessage(errorData.detail, `HTTP error ${response.status}`))
       return
     }
 
@@ -627,7 +627,7 @@ export async function sendRAGChatStream(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
-      callbacks.onError(errorData.detail || `HTTP error ${response.status}`)
+      callbacks.onError(detailMessage(errorData.detail, `HTTP error ${response.status}`))
       return
     }
 
