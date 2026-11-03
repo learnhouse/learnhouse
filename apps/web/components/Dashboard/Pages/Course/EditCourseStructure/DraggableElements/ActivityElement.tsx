@@ -368,8 +368,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   onOpenChange={() => setEditVideoModalOpen(!editVideoModalOpen)}
                   minHeight="no-min"
                   minWidth="md"
-                  dialogTitle="Edit Video Activity"
-                  dialogDescription="Update the video source, URL, or playback settings."
+                  dialogTitle={t('dashboard.courses.structure.activity.edit_modals.video_title')}
+                  dialogDescription={t('dashboard.courses.structure.activity.edit_modals.video_description')}
                   dialogContent={
                     <EditVideoActivityModal
                       activity={props.activity}
@@ -381,7 +381,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   dialogTrigger={
                     <button
                       className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                      title="Edit video"
+                      title={t('dashboard.courses.structure.activity.edit_modals.video_button')}
                     >
                       <FilePenLine size={15} />
                     </button>
@@ -393,8 +393,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   onOpenChange={() => setEditDocumentModalOpen(!editDocumentModalOpen)}
                   minHeight="no-min"
                   minWidth="md"
-                  dialogTitle="Edit Document Activity"
-                  dialogDescription="Update the document name or replace the PDF file."
+                  dialogTitle={t('dashboard.courses.structure.activity.edit_modals.document_title')}
+                  dialogDescription={t('dashboard.courses.structure.activity.edit_modals.document_description')}
                   dialogContent={
                     <EditDocumentActivityModal
                       activity={props.activity}
@@ -406,7 +406,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   dialogTrigger={
                     <button
                       className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                      title="Edit document"
+                      title={t('dashboard.courses.structure.activity.edit_modals.document_button')}
                     >
                       <FilePenLine size={15} />
                     </button>
@@ -418,8 +418,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   onOpenChange={() => setEditScormModalOpen(!editScormModalOpen)}
                   minHeight="no-min"
                   minWidth="md"
-                  dialogTitle="Edit SCORM Activity"
-                  dialogDescription="Update the SCORM activity name."
+                  dialogTitle={t('dashboard.courses.structure.activity.edit_modals.scorm_title')}
+                  dialogDescription={t('dashboard.courses.structure.activity.edit_modals.scorm_description')}
                   dialogContent={
                     <EditScormActivityModal
                       activity={props.activity}
@@ -431,7 +431,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   dialogTrigger={
                     <button
                       className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                      title="Edit SCORM activity"
+                      title={t('dashboard.courses.structure.activity.edit_modals.scorm_button')}
                     >
                       <FilePenLine size={15} />
                     </button>

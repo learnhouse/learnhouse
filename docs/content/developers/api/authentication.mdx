@@ -2,11 +2,14 @@ import { Callout } from 'nextra/components'
 
 # API Authentication
 
-The LearnHouse API supports **JWT cookies** for browser sessions and **API tokens** for programmatic access.
+The LearnHouse API accepts two kinds of credentials:
 
-## JWT Authentication
+- **User sessions** (JWT), for browsers and for scripts acting as a specific user.
+- **API tokens** (prefixed `lh_`), for server-to-server integrations scoped to one organization.
 
-The login endpoint accepts `application/x-www-form-urlencoded` data with `username` (the user's email) and `password` fields, and returns a JWT access token (HS256, expires in 8 hours):
+## User sessions (JWT)
+
+The login endpoint takes form data with `username` (the user's email) and `password`:
 
 ```bash
 curl -X POST http://localhost:1338/api/v1/auth/login \
@@ -14,39 +17,97 @@ curl -X POST http://localhost:1338/api/v1/auth/login \
   -F 'password=your-password'
 ```
 
-Then authenticate requests via the `Authorization` header:
+It returns an access token valid for 8 hours. Send it in the `Authorization` header:
 
 ```bash
 curl http://localhost:1338/api/v1/users/profile \
   -H "Authorization: Bearer <access_token>"
 ```
 
-The token is also set as an `access_token_cookie` for browser-based sessions. Use `GET /api/v1/auth/refresh` to renew expired tokens within the 30-day refresh window.
+Browsers get the same tokens as `HttpOnly` cookies: `LH_access` (8 hours) and `LH_refresh` (30 days of inactivity). `GET /api/v1/auth/refresh` issues a new access token from the refresh cookie.
+
+If the account has two-factor authentication, `/auth/login` answers `{ "mfa_required": true, "mfa_token": "..." }` instead. Send that `mfa_token` with a 6-digit `code` from the authenticator app (or a backup code with `is_backup_code: true`) to `POST /api/v1/auth/login/mfa` within 5 minutes to get the session.
 
 <Callout type="info">
-Logins are rate-limited by IP, and repeated failed attempts temporarily lock the account. SaaS deployments also require `email_verified=true` before login succeeds.
+Logins are rate-limited by IP, and repeated failed attempts can temporarily lock the account. On LearnHouse Cloud the email address must be verified before login succeeds. See [Authentication](/platform/users/authentication#protection-against-abuse).
 </Callout>
 
-## API Tokens
-
-<Callout type="info">
-API tokens are available on the **Pro plan**. Create and manage them in organization settings.
-</Callout>
-
-For programmatic access, use API tokens (prefixed with `lh_`):
-
-```bash
-curl http://localhost:1338/api/v1/users/profile \
-  -H "Authorization: Bearer lh_your_api_token_here"
-```
-
-## Auth Endpoints
+### Auth endpoints
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| `POST` | `/api/v1/auth/login` | Login with form-encoded `username` + `password` |
-| `GET` | `/api/v1/auth/refresh` | Refresh an expired token |
-| `DELETE` | `/api/v1/auth/logout` | Invalidate the session |
-| `POST` | `/api/v1/auth/oauth` | Google OAuth login |
-| `POST` | `/api/v1/auth/verify-email` | Verify email address |
-| `POST` | `/api/v1/auth/resend-verification` | Resend a verification email |
+| `POST` | `/api/v1/auth/login` | Sign in with form-encoded `username` and `password` |
+| `POST` | `/api/v1/auth/login/mfa` | Complete a sign-in that needs a two-factor code |
+| `GET` | `/api/v1/auth/refresh` | Get a new access token |
+| `DELETE` | `/api/v1/auth/logout` | Revoke the session |
+| `POST` | `/api/v1/auth/oauth` | Sign in with Google |
+| `POST` | `/api/v1/auth/magic-link/request` | Email a magic sign-in link |
+| `POST` | `/api/v1/auth/magic-link/verify` | Exchange a magic link token for a session |
+| `POST` | `/api/v1/auth/verify-email` | Verify an email address |
+| `POST` | `/api/v1/auth/resend-verification` | Resend the verification email |
+
+The two-factor management endpoints (`/api/v1/auth/mfa/...`) are listed in the [API Reference](/reference/auth).
+
+## API tokens
+
+<Callout type="info">
+API tokens need the **Pro** plan or higher on LearnHouse Cloud. They are available on every self-hosted instance.
+</Callout>
+
+API tokens let your own servers call LearnHouse without a user session. Each token belongs to one organization and carries its own permissions.
+
+```bash
+curl http://localhost:1338/api/v1/courses/... \
+  -H "Authorization: Bearer lh_your_api_token_here"
+```
+
+### Creating a token
+
+1. In the dashboard go to **Developers** → **API Access** and click **Create Token**.
+2. Fill in the **Token Name** (required, up to 100 characters, unique among the organization's active tokens) and an optional **Description**.
+3. Optionally set an **Expiration Date**. Leave it empty for a token that never expires.
+4. Under **Permissions**, choose **Read Only**, **Full Access** or **Custom**.
+5. Click **Create Token** and copy the token. **This is the only time you'll see it.** LearnHouse only keeps a hash and the first 12 characters, shown as the **Token Prefix**.
+
+Managing tokens needs a role that can manage roles (the Admin role by default) and a signed-in session; a token cannot create or manage other tokens.
+
+### Permissions
+
+With **Custom**, you choose **Create**, **Read**, **Update** and **Delete** for each resource:
+
+| Resource | Covers |
+| --- | --- |
+| **Courses** | Courses, and course results in search |
+| **Activities** | Lessons |
+| **Assignments** | Assignments, tasks, submissions and grades. See [Headless Assignments](/developers/api/headless-assignments). |
+| **Chapters** | Course chapters |
+| **Folders** | Library folders |
+| **Media** | Uploaded files |
+| **Certifications** | Certificates |
+| **User Groups** | User groups and their members |
+| **Payments** | Payment data |
+| **Users (Admin API)** | Users, through the headless Admin API |
+| **Roles (Admin API)** | Roles, through the headless Admin API |
+| **Search** | Read only. Lets the token call [search](/platform/search). |
+
+A token can never do more than the user who created it. Its rights are capped by its creator's current role on every request.
+
+### Managing tokens
+
+The **API Access** tab lists each token with its **Token Prefix**, **Status** (Active or Revoked), **Last Used** and **Expires** dates.
+
+- **Regenerate** issues a new secret for the same token. The old value stops working immediately.
+- **Revoke** disables the token immediately. This cannot be undone.
+
+Creating and regenerating tokens is limited to 10 per hour per IP address.
+
+### When a token stops working
+
+- Its expiration date has passed.
+- It was revoked.
+- The organization dropped below the Pro plan (LearnHouse Cloud).
+- Its creator is no longer a member of the organization.
+
+### What tokens cannot do
+
+Tokens only work on the content and admin endpoints listed above, plus the [Zapier endpoints](/platform/automations/zapier). They are refused by organization settings, user accounts, roles, API token management, webhooks, analytics, AI, boards, playgrounds, audit logs, SCORM and code execution endpoints. Use a user session for those.

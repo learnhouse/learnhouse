@@ -72,7 +72,7 @@ function FolderThumbnail({ folder, orgslug, org_id, isDashboard = false, onChang
           <div className={`absolute top-2 end-2 z-20 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <button aria-label="Folder actions" className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                <button aria-label={t('library.folder_actions')} className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
                   <DotsThreeVertical size={18} weight="bold" />
                 </button>
               </DropdownMenuTrigger>

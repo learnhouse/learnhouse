@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUserCertificates } from '@services/courses/certifications';
@@ -23,6 +24,7 @@ interface CertificatePageProps {
 }
 
 const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qrCodeLink }) => {
+  const { t } = useTranslation();
   const session = useLHSession() as any;
   const org = useOrg() as any;
   const [userCertificate, setUserCertificate] = useState<any>(null);
@@ -52,7 +54,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
   useEffect(() => {
     const fetchCertificate = async () => {
       if (!session?.data?.tokens?.access_token) {
-        setError('Authentication required to view certificate');
+        setError(t('certificate.user_page.auth_required'));
         setIsLoading(false);
         return;
       }
@@ -72,11 +74,11 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
         if (result.success && result.data && result.data.length > 0) {
           setUserCertificate(result.data[0]);
         } else {
-          setError('No certificate found for this course');
+          setError(t('certificate.user_page.not_found'));
         }
       } catch (error) {
         console.error('Error fetching certificate:', error);
-        setError('Failed to load certificate. Please try again later.');
+        setError(t('certificate.user_page.load_failed'));
       } finally {
         setIsLoading(false);
       }
@@ -134,7 +136,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF. Please try again.');
+      toast.error(t('certificate.download_failed'));
     }
   };
 
@@ -173,11 +175,11 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
     try {
       await navigator.clipboard.writeText(qrCodeLink);
       setLinkCopied(true);
-      toast.success('Verification link copied to clipboard');
+      toast.success(t('certificate.user_page.link_copied_toast'));
       setTimeout(() => setLinkCopied(false), 2000);
     } catch (error) {
       console.error('Error copying verification link:', error);
-      toast.error('Failed to copy link. Please try again.');
+      toast.error(t('certificate.user_page.copy_failed'));
     }
   };
 
@@ -186,7 +188,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading certificate...</p>
+          <p className="text-gray-600">{t('certificate.loading_certificate')}</p>
         </div>
       </div>
     );
@@ -197,14 +199,14 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-red-800 mb-2">Certificate Not Available</h2>
+            <h2 className="text-xl font-semibold text-red-800 mb-2">{t('certificate.user_page.not_available')}</h2>
             <p className="text-red-600 mb-4">{error}</p>
             <Link
               href={getUriWithOrg(orgslug, '') + `/course/${courseid}`}
               className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Back to Course</span>
+              <span>{t('courses.back_to_course')}</span>
             </Link>
           </div>
         </div>
@@ -217,16 +219,16 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-yellow-800 mb-2">No Certificate Found</h2>
+            <h2 className="text-xl font-semibold text-yellow-800 mb-2">{t('certificate.user_page.no_certificate_found')}</h2>
             <p className="text-yellow-600 mb-4">
-              No certificate is available for this course. Please contact your instructor for more information.
+              {t('certificate.no_certificate_available')}
             </p>
             <Link
               href={getUriWithOrg(orgslug, '') + `/course/${courseid}`}
               className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Back to Course</span>
+              <span>{t('courses.back_to_course')}</span>
             </Link>
           </div>
         </div>
@@ -244,33 +246,33 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
             className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition duration-200"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Back to Course</span>
+            <span>{t('courses.back_to_course')}</span>
           </Link>
           
           <div className="flex items-center space-x-3">
             <button
               onClick={copyVerificationLink}
-              aria-label="Copy certificate verification link"
+              aria-label={t('certificate.user_page.copy_link_aria')}
               className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-5 py-3 rounded-full hover:bg-gray-200 transition duration-200"
             >
               {linkCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              <span>{linkCopied ? 'Copied' : 'Copy link'}</span>
+              <span>{linkCopied ? t('certificate.user_page.copied') : t('certificate.user_page.copy_link')}</span>
             </button>
             <button
               onClick={shareToLinkedIn}
-              aria-label="Add this certificate to your LinkedIn profile"
+              aria-label={t('certificate.user_page.linkedin_aria')}
               className="inline-flex items-center space-x-2 bg-[#0a66c2] text-white px-6 py-3 rounded-full hover:bg-[#004182] transition duration-200"
             >
               <Share2 className="w-5 h-5" />
-              <span>Share on LinkedIn</span>
+              <span>{t('certificate.user_page.share_linkedin')}</span>
             </button>
             <button
               onClick={downloadCertificate}
-              aria-label="Download certificate as PDF"
+              aria-label={t('certificate.user_page.download_aria')}
               className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition duration-200"
             >
               <Download className="w-5 h-5" />
-              <span>Download PDF</span>
+              <span>{t('certificate.page.download')}</span>
             </button>
           </div>
         </div>
@@ -301,10 +303,10 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
         {/* Instructions */}
         <div className="mt-8 text-center text-gray-600">
           <p className="mb-2">
-            Click "Download PDF" to generate and download a high-quality certificate PDF.
+            {t('certificate.user_page.instructions')}
           </p>
           <p className="text-sm">
-            The PDF includes a scannable QR code for certificate verification.
+            {t('certificate.user_page.qr_note')}
           </p>
         </div>
       </div>

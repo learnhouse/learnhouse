@@ -14,6 +14,7 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { getActivity } from '@services/courses/activities'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // Shared, lightweight activity preview. Two surfaces:
 //
@@ -104,14 +105,15 @@ function renderChildren(nodes: any[] | undefined, ctx: RendererCtx): React.React
 
 // Blocks with no renderable children, previewed as a labelled chip.
 const ATOM_BLOCK_LABELS: Record<string, string> = {
-  blockH5P: 'Interactive content',
-  blockVideo: 'Video',
-  blockAudio: 'Audio',
-  blockPDF: 'PDF',
-  blockQuiz: 'Quiz',
+  blockH5P: 'activities.preview.interactive_content',
+  blockVideo: 'activities.preview.video',
+  blockAudio: 'activities.preview.audio',
+  blockPDF: 'activities.preview.pdf',
+  blockQuiz: 'activities.preview.quiz',
 }
 
 function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElement | null {
+  const { t } = useTranslation()
   if (!node) return null
   switch (node.type) {
     case 'doc':
@@ -220,7 +222,7 @@ function PMNode({ node, ctx }: { node: any; ctx: RendererCtx }): React.ReactElem
       // would otherwise be rendered as a React child and throw.
       const atomLabel =
         typeof node.type === 'string' && Object.hasOwn(ATOM_BLOCK_LABELS, node.type)
-          ? ATOM_BLOCK_LABELS[node.type]
+          ? t(ATOM_BLOCK_LABELS[node.type])
           : undefined
       // An H5P block whose URL was removed shows nothing to a learner and is
       // skipped by the content indexer; the preview should agree.
@@ -330,6 +332,7 @@ const markdownComponents: MarkdownComponents = {
 }
 
 function MarkdownPreview({ url }: { url: string }) {
+  const { t } = useTranslation()
   const [state, setState] = useState<
     | { kind: 'idle' }
     | { kind: 'loading' }
@@ -339,7 +342,7 @@ function MarkdownPreview({ url }: { url: string }) {
 
   useEffect(() => {
     if (!url) {
-      setState({ kind: 'error', message: 'No markdown URL configured' })
+      setState({ kind: 'error', message: t('activities.preview.no_markdown_url') })
       return
     }
     let cancelled = false
@@ -354,7 +357,7 @@ function MarkdownPreview({ url }: { url: string }) {
       })
       .catch((err) => {
         if (!cancelled)
-          setState({ kind: 'error', message: err?.message || 'Failed to load' })
+          setState({ kind: 'error', message: err?.message || t('activities.preview.failed_to_load') })
       })
     return () => {
       cancelled = true
@@ -365,7 +368,7 @@ function MarkdownPreview({ url }: { url: string }) {
     return (
       <div className="flex items-center gap-2 text-xs text-gray-400 py-4">
         <Loader2 size={12} className="animate-spin" />
-        Loading markdown…
+        {t('activities.preview.loading_markdown')}
       </div>
     )
   }
@@ -393,6 +396,7 @@ function EmptyState({ text }: { text: string }) {
 // ──────────────────────────────────────────────────────────────────────────
 
 function PreviewBody({ activity }: { activity: any }) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const course = useCourse() as any
   const type = activity.activity_type
@@ -414,7 +418,7 @@ function PreviewBody({ activity }: { activity: any }) {
 
   if (type === 'TYPE_DYNAMIC' && sub === 'SUBTYPE_DYNAMIC_EMBED') {
     const url: string = content.embed_url || ''
-    if (!url) return <EmptyState text="No embed URL configured" />
+    if (!url) return <EmptyState text={t('activities.preview.no_embed_url')} />
     return (
       <a
         href={url}
@@ -430,7 +434,7 @@ function PreviewBody({ activity }: { activity: any }) {
 
   if (type === 'TYPE_DYNAMIC') {
     if (!hasAnyRenderableContent(content)) {
-      return <EmptyState text="This page is empty" />
+      return <EmptyState text={t('activities.preview.page_empty')} />
     }
     return <PMNode node={content} ctx={rendererCtx} />
   }
@@ -452,19 +456,19 @@ function PreviewBody({ activity }: { activity: any }) {
     if (content.filename) {
       return <p className="text-xs text-gray-600 break-all">{content.filename}</p>
     }
-    return <EmptyState text="No video source set" />
+    return <EmptyState text={t('activities.preview.no_video_source')} />
   }
 
   if (type === 'TYPE_DOCUMENT') {
     if (content.filename) {
       return <p className="text-xs text-gray-600 break-all">{content.filename}</p>
     }
-    return <EmptyState text="No document attached" />
+    return <EmptyState text={t('activities.preview.no_document')} />
   }
 
   if (type === 'TYPE_ASSIGNMENT') {
     const description: string = content.description || activity.description || ''
-    if (!description) return <EmptyState text="Assignment (open to view details)" />
+    if (!description) return <EmptyState text={t('activities.preview.assignment_open')} />
     return (
       <div className="text-xs text-gray-700 leading-relaxed">
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
@@ -475,7 +479,7 @@ function PreviewBody({ activity }: { activity: any }) {
   }
 
   if (type === 'TYPE_SCORM') {
-    return <EmptyState text="SCORM package (preview unavailable)" />
+    return <EmptyState text={t('activities.preview.scorm_unavailable')} />
   }
 
   if (type === 'TYPE_LIVE_SESSION') {
@@ -487,10 +491,10 @@ function PreviewBody({ activity }: { activity: any }) {
   }
 
   if (type === 'TYPE_CUSTOM') {
-    return <EmptyState text="Custom activity (preview unavailable)" />
+    return <EmptyState text={t('activities.preview.custom_unavailable')} />
   }
 
-  return <EmptyState text="Preview unavailable for this activity type" />
+  return <EmptyState text={t('activities.preview.unavailable')} />
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -502,6 +506,7 @@ export default function ActivityPreview({
   autoFetch = true,
   className,
 }: ActivityPreviewProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken: string | undefined = session?.data?.tokens?.access_token
 
@@ -522,11 +527,11 @@ export default function ActivityPreview({
         if (res && !res.detail) {
           setFetched(res)
         } else {
-          setError(res?.detail || 'Could not load activity')
+          setError(res?.detail || t('activities.preview.could_not_load'))
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err?.message || 'Could not load activity')
+        if (!cancelled) setError(err?.message || t('activities.preview.could_not_load'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -544,14 +549,14 @@ export default function ActivityPreview({
       {loading && !display ? (
         <div className="flex items-center gap-2 text-xs text-gray-400 py-4">
           <Loader2 size={12} className="animate-spin" />
-          Loading preview…
+          {t('activities.preview.loading_preview')}
         </div>
       ) : error && !display ? (
         <EmptyState text={error} />
       ) : display ? (
         <PreviewBody activity={display} />
       ) : (
-        <EmptyState text="No preview available" />
+        <EmptyState text={t('activities.preview.none')} />
       )}
     </div>
   )

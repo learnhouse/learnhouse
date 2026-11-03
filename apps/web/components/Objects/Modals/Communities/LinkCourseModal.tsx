@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { linkCommunityToCourse, unlinkCommunityFromCourse, Community } from '@services/communities/communities'
@@ -31,6 +32,7 @@ export function LinkCourseModal({
   community,
   orgSlug,
 }: LinkCourseModalProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const org = useOrg() as any
   const router = useRouter()
@@ -82,7 +84,7 @@ export function LinkCourseModal({
         (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
         (typeof err?.detail === 'string' && err.detail) ||
         err?.message ||
-        'Failed to link course.'
+        t('communities.link_course.link_failed')
       toast.error(message)
     } finally {
       setIsSubmitting(false)
@@ -104,7 +106,7 @@ export function LinkCourseModal({
         (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
         (typeof err?.detail === 'string' && err.detail) ||
         err?.message ||
-        'Failed to unlink course.'
+        t('communities.link_course.unlink_failed')
       toast.error(message)
     } finally {
       setIsSubmitting(false)
@@ -115,8 +117,8 @@ export function LinkCourseModal({
     <Modal
       isDialogOpen={isOpen}
       onOpenChange={(open) => !open && onClose()}
-      dialogTitle="Link Community to Course"
-      dialogDescription="Connect this community to a course for course-specific discussions"
+      dialogTitle={t('communities.link_course.title')}
+      dialogDescription={t('communities.link_course.description')}
       minWidth="sm"
       dialogContent={
         <div className="space-y-6">
@@ -125,10 +127,10 @@ export function LinkCourseModal({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    Currently linked to a course
+                    {t('communities.link_course.currently_linked')}
                   </p>
                   <p className="text-xs text-gray-600 mt-1">
-                    Unlink to connect to a different course
+                    {t('communities.link_course.unlink_hint')}
                   </p>
                 </div>
                 <button
@@ -141,7 +143,7 @@ export function LinkCourseModal({
                   ) : (
                     <Unlink size={14} />
                   )}
-                  Unlink
+                  {t('communities.link_course.unlink')}
                 </button>
               </div>
             </div>
@@ -156,7 +158,7 @@ export function LinkCourseModal({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search courses..."
+                  placeholder={t('communities.link_course.search_placeholder')}
                   className="w-full ps-10 pe-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none transition-all"
                 />
               </div>
@@ -169,7 +171,7 @@ export function LinkCourseModal({
                   </div>
                 ) : filteredCourses.length === 0 ? (
                   <div className="text-center py-8 text-gray-500 text-sm">
-                    No courses found
+                    {t('communities.link_course.no_courses')}
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
@@ -204,7 +206,7 @@ export function LinkCourseModal({
                   onClick={onClose}
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleLink}
@@ -216,7 +218,7 @@ export function LinkCourseModal({
                   ) : (
                     <Link2 size={16} />
                   )}
-                  Link Course
+                  {t('communities.link_course.link')}
                 </button>
               </div>
             </>

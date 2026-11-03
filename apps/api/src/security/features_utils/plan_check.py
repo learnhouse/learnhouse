@@ -82,6 +82,7 @@ async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     """
     from src.services.orgs.org_config_lookup import get_session_org_config
 
+    # The MFA and auth-method gates already loaded this row for the request.
     org_config = await get_session_org_config(db_session, org_id)
 
     if org_config is None:

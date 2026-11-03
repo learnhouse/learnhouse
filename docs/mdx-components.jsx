@@ -2,6 +2,7 @@ import { useMDXComponents as getDocsMDXComponents } from 'nextra-theme-docs'
 import Wrapper from './components/Wrapper/Wrapper'
 import CodeBlock from './components/CodeBlock/CodeBlock'
 import { Table, Thead, Tbody, Tr, Th, Td } from './components/Table/Table'
+import YouTube from './components/YouTube/YouTube'
 
 const docsComponents = getDocsMDXComponents()
 
@@ -17,5 +18,6 @@ export function useMDXComponents(components) {
     tr: Tr,
     th: Th,
     td: Td,
+    YouTube,
   }
 }

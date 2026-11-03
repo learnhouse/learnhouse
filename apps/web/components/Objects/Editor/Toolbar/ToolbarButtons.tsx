@@ -294,11 +294,11 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
   ]
 
   const calloutItems: ToolbarMenuItem[] = [
-    { type: 'info',    label: 'Info',    icon: <Info size={14} weight="fill" />,        color: 'text-gray-500'   },
-    { type: 'warning', label: 'Warning', icon: <Warning size={14} weight="fill" />,     color: 'text-yellow-500' },
-    { type: 'tip',     label: 'Tip',     icon: <Lightbulb size={14} weight="fill" />,   color: 'text-green-500'  },
-    { type: 'success', label: 'Success', icon: <CheckCircle size={14} weight="fill" />, color: 'text-teal-500'   },
-    { type: 'error',   label: 'Error',   icon: <XCircle size={14} weight="fill" />,     color: 'text-red-500'    },
+    { type: 'info',    label: t('editor.blocks.callout_block.type_info'),    icon: <Info size={14} weight="fill" />,        color: 'text-gray-500'   },
+    { type: 'warning', label: t('editor.blocks.callout_block.type_warning'), icon: <Warning size={14} weight="fill" />,     color: 'text-yellow-500' },
+    { type: 'tip',     label: t('editor.blocks.callout_block.type_tip'),     icon: <Lightbulb size={14} weight="fill" />,   color: 'text-green-500'  },
+    { type: 'success', label: t('editor.blocks.callout_block.type_success'), icon: <CheckCircle size={14} weight="fill" />, color: 'text-teal-500'   },
+    { type: 'error',   label: t('editor.blocks.callout_block.type_error'),   icon: <XCircle size={14} weight="fill" />,     color: 'text-red-500'    },
   ].map(({ type, ...item }) => ({
     ...item,
     key: type,
@@ -533,30 +533,30 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
 
   return (
     <div className="flex flex-row items-center justify-start flex-wrap gap-[7px] max-[1200px]:gap-[5px]">
-      <div className="editor-tool-btn" onClick={() => editor.chain().focus().undo().run()} aria-label="Undo last action">
+      <div className="editor-tool-btn" onClick={() => editor.chain().focus().undo().run()} aria-label={t('editor.toolbar.undo')}>
         <ArrowCounterClockwise size={15} />
       </div>
-      <div className="editor-tool-btn" onClick={() => editor.chain().focus().redo().run()} aria-label="Redo last action">
+      <div className="editor-tool-btn" onClick={() => editor.chain().focus().redo().run()} aria-label={t('editor.toolbar.redo')}>
         <ArrowClockwise size={15} />
       </div>
       <div
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`editor-tool-btn ${editor.isActive('bold') ? 'is-active' : ''}`}
-        aria-label="Toggle bold formatting"
+        aria-label={t('editor.toolbar.bold')}
       >
         <TextB size={15} />
       </div>
       <div
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={`editor-tool-btn ${editor.isActive('italic') ? 'is-active' : ''}`}
-        aria-label="Toggle italic formatting"
+        aria-label={t('editor.toolbar.italic')}
       >
         <TextItalic size={15} />
       </div>
       <div
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={`editor-tool-btn ${editor.isActive('strike') ? 'is-active' : ''}`}
-        aria-label="Toggle strikethrough formatting"
+        aria-label={t('editor.toolbar.strikethrough')}
       >
         <TextStrikethrough size={15} />
       </div>
@@ -704,11 +704,11 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
             }
             aria-label={t('editor.blocks.magic_block')}
           >
-            <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />
+            <Image src={lrnaiIcon} alt={t('editor.blocks.magic_block_content.title')} width={15} height={15} />
           </div>
         ) : (
           <div className="editor-tool-btn editor-tool-btn-magic editor-tool-btn-magic-disabled" aria-label={t('editor.blocks.magic_block_disabled')}>
-            <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />
+            <Image src={lrnaiIcon} alt={t('editor.blocks.magic_block_content.title')} width={15} height={15} />
           </div>
         )}
       </ToolTip>

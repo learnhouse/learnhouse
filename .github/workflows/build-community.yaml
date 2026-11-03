@@ -84,6 +84,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           build-args: |
             LEARNHOUSE_PUBLIC=true
+            BUILD_ID=${{ github.sha }}
           cache-from: type=gha,scope=${{ steps.prep.outputs.platform_pair }}
           cache-to: type=gha,mode=max,scope=${{ steps.prep.outputs.platform_pair }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=${{ github.event_name == 'push' }}

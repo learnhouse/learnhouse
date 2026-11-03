@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import * as Form from '@radix-ui/react-form'
 import BarLoader from 'react-spinners/BarLoader'
 import { Globe } from '@phosphor-icons/react'
 
 function EmbedActivityModal({ submitActivity, chapterId, course }: any) {
+  const { t } = useTranslation()
   const [activityName, setActivityName] = useState('')
   const [embedUrl, setEmbedUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -36,24 +38,24 @@ function EmbedActivityModal({ submitActivity, chapterId, course }: any) {
       >
         <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
           <Globe size={18} weight="duotone" className="text-cyan-400" />
-          Embed
+          {t('activities.embed')}
         </span>
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
         <Form.Field name="embed-activity-name" className="space-y-1.5">
           <Form.Label className="text-sm font-medium text-gray-700">
-            Activity name
+            {t('activities.modal.activity_name')}
           </Form.Label>
           <Form.Message match="valueMissing" className="text-xs text-red-500">
-            Please provide a name
+            {t('activities.modal.provide_name')}
           </Form.Message>
           <Form.Control asChild>
             <input
               onChange={(e) => setActivityName(e.target.value)}
               type="text"
               required
-              placeholder="Enter a name..."
+              placeholder={t('activities.modal.enter_name')}
               className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
             />
           </Form.Control>
@@ -61,13 +63,13 @@ function EmbedActivityModal({ submitActivity, chapterId, course }: any) {
 
         <Form.Field name="embed-activity-url" className="space-y-1.5">
           <Form.Label className="text-sm font-medium text-gray-700">
-            Embed URL
+            {t('activities.modal.embed_url')}
           </Form.Label>
           <Form.Message match="valueMissing" className="text-xs text-red-500">
-            Please provide an embed URL
+            {t('activities.modal.provide_embed_url')}
           </Form.Message>
           <Form.Message match="typeMismatch" className="text-xs text-red-500">
-            Please provide a valid URL
+            {t('activities.modal.provide_valid_url')}
           </Form.Message>
           <Form.Control asChild>
             <input
@@ -95,7 +97,7 @@ function EmbedActivityModal({ submitActivity, chapterId, course }: any) {
                 color="#ffffff"
               />
             ) : (
-              'Create activity'
+              t('activities.modal.create_activity')
             )}
           </button>
         </Form.Submit>

@@ -6,26 +6,29 @@ The LearnHouse backend is a **FastAPI** application written in Python, located a
 
 ## Technology Stack
 
-- **FastAPI** 0.135.3: High-performance Python web framework
+- **FastAPI**: Python web framework
 - **Python 3.14**
-- **SQLModel** 0.0.38: ORM for database interactions (built on SQLAlchemy and Pydantic)
+- **SQLModel**: ORM for database interactions (built on SQLAlchemy and Pydantic)
 - **Alembic**: Database migration management
 - **PostgreSQL 16** with **pgvector** extension: Primary relational database
-- **redis-py** 7.4.0: Python Redis client
-- **Uvicorn** 0.44.0: ASGI server
+- **redis-py**: Python Redis client
+- **Uvicorn**: ASGI server
 - **uv**: Python package manager
+
+Exact versions are pinned in `apps/api/pyproject.toml` and `uv.lock`.
 
 ## Key Dependencies
 
-- **psycopg2-binary**: PostgreSQL adapter
+- **asyncpg** and **psycopg2-binary**: PostgreSQL drivers (async for the app, sync for Alembic)
 - **pyjwt[crypto]**: JWT token handling
 - **pwdlib[argon2]**: Password hashing with Argon2
-- **google-genai** 1.71.0: Gemini AI integration (the only AI provider)
-- **llama-index-core + pgvector**: RAG and vector embeddings
+- **pydantic-ai-slim**: Provider-agnostic AI generation (Google, OpenAI, Anthropic, Mistral, and others)
+- **google-genai**: Gemini SDK, also used for image and text-to-speech generation
+- **pgvector**: Vector embeddings for RAG
 - **stripe**: Payment processing
 - **workos**: Enterprise SSO
 - **boto3**: S3-compatible storage
-- **resend**: Transactional email
+- **resend**: Transactional email (SMTP is also supported)
 - **sentry-sdk**: Error tracking and monitoring
 
 ## Configuration
@@ -35,7 +38,11 @@ The backend uses a dual configuration system:
 - **YAML config** at `config/config.yaml` for structured settings
 - **Environment variables** which override YAML values when set
 
-The API prefix for all endpoints is `/api/v1/`.
+The API prefix for all endpoints is `/api/v1/`. See the [environment variable reference](/self-hosting/configuration/environment-variables) for every setting.
+
+## Command-line tasks
+
+`apps/api/cli.py` holds maintenance commands that run against the configured database, for example `install` (create the first organization and admin), `backfill`, `index-backfill`, `transcode-backfill`, `chapters-backfill` and `demo-sync`. Run them with `uv run python cli.py <command>` from `apps/api`, or inside the app container from `/app/api`.
 
 ## Responsibilities
 
@@ -45,10 +52,11 @@ The backend handles all core platform operations:
 - **Course management**: CRUD operations for organizations, courses, chapters, and activities
 - **User management**: Registration, profiles, and permissions
 - **File storage and uploads**: Handling media uploads with support for local filesystem and S3-compatible storage (via boto3)
-- **AI features**: Integration with Google Gemini and LlamaIndex for learning assistance and RAG
+- **AI features**: Provider-agnostic generation through Pydantic AI, and RAG over course content with pgvector
 - **Search**: Content indexing and search across courses and activities
 - **Payments**: Stripe integration for course monetization
-- **Email**: Transactional email via Resend
+- **Email**: Transactional email via Resend or SMTP
+- **Background jobs**: AI search indexing, HLS video transcoding, AI captions and scheduled backfills, run inside the API process with Redis as the queue
 
 ## Database Layer
 
@@ -66,7 +74,7 @@ Redis is used for:
 FastAPI automatically generates interactive API documentation, but it is only available when running in development mode.
 
 <Callout type="info">
-Swagger UI (`/docs/`) and ReDoc (`/redoc/`) are only accessible when `LEARNHOUSE_DEVELOPMENT_MODE=True` is set. They are disabled in production.
+Swagger UI (`/docs`), ReDoc (`/redoc`) and the OpenAPI schema (`/openapi.json`) are only served when `LEARNHOUSE_DEVELOPMENT_MODE=true` is set. They are disabled in production.
 </Callout>
 
 ## Directory Structure
@@ -80,8 +88,10 @@ apps/api/
 │   ├── security/     # Authentication and authorization
 │   └── core/         # Configuration and dependencies
 ├── migrations/       # Alembic database migrations
-├── ee/               # Enterprise Edition features
-└── config/           # YAML configuration files
+├── scripts/          # Standalone helper scripts
+├── cli.py            # Maintenance commands
+├── ee/               # Enterprise Edition features (not in community builds)
+└── config/           # config.yaml defaults and the config loader
 ```
 
 ## Development

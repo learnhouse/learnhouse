@@ -5,7 +5,15 @@ import { Callout } from 'nextra/components'
 This section explains how to bring existing course content into LearnHouse using the public API. There are two supported approaches:
 
 1. **Programmatic Migration**: you script every step (create the course, then chapters, then activities, then upload files). Use this when you need full control of the resulting structure. This is typical when migrating from another LMS where you already know the chapter/activity layout.
-2. **AI-Assisted Migration**: you upload a folder of media (videos, PDFs, images, audio) and LearnHouse asks Gemini to propose a chapter/activity tree. You review and confirm, and a single endpoint creates the entire course in one transaction. Use this when you have a pile of files but no predefined structure.
+2. **AI-Assisted Migration**: you upload a folder of media (videos, PDFs, images, audio) and LearnHouse asks the configured AI model to propose a chapter/activity tree. You review and confirm, and a single endpoint creates the entire course in one transaction. Use this when you have a pile of files but no predefined structure.
+
+<Callout>
+Moving from Moodle, Canvas, Blackboard, Brightspace, Open edX or another Common Cartridge platform? You don't need to script anything: upload the course export from the dashboard and LearnHouse converts it. See [Import from Another LMS](/developers/migration/from-another-lms).
+</Callout>
+
+<YouTube video="migrate-1" />
+<YouTube video="migrate-2" />
+<YouTube video="migrate-3" />
 
 Both approaches share the same underlying data model: a Course contains Chapters, and each Chapter contains an ordered list of Activities.
 
@@ -134,6 +142,7 @@ A copy-pasteable bash script for the full flow lives in [Programmatic Migration]
 
 ## Where to next
 
+- [Import from Another LMS](/developers/migration/from-another-lms): convert a Moodle, Canvas, Blackboard, Brightspace, Open edX or Common Cartridge export.
 - [Programmatic Migration](/developers/migration/programmatic): step-by-step guide with curl examples for each call.
 - [Activity Types Reference](/developers/migration/activity-types): the exact `content` JSON shape for every activity sub-type, including TipTap blocks for dynamic pages.
 - [AI-Assisted Migration](/developers/migration/assisted): the three-call upload / suggest / create flow for bulk file imports.

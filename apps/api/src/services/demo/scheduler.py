@@ -106,7 +106,7 @@ async def _loop() -> None:
     except asyncio.CancelledError:
         raise
     except Exception as exc:
-        logger.exception("Initial demo sync failed, will retry: %s", exc)
+        _log_failure("Initial demo sync failed, will retry: %s", exc)
 
     while True:
         await asyncio.sleep(interval_minutes * 60)
@@ -118,7 +118,19 @@ async def _loop() -> None:
         except Exception as exc:
             # A failed refresh must not kill the loop, or the demo silently
             # stops being refreshed until the next deploy.
-            logger.exception("Demo refresh failed, will retry next tick: %s", exc)
+            _log_failure("Demo refresh failed, will retry next tick: %s", exc)
+
+
+def _log_failure(message: str, exc: Exception) -> None:
+    """Log a failed sync. A slug held by a real organization is a setting only
+    an operator can change, so it warns rather than reporting an error on every
+    tick until they do."""
+    from src.services.demo.sync import DemoSlugTakenError
+
+    if isinstance(exc, DemoSlugTakenError):
+        logger.warning("Demo sync skipped: %s", exc)
+    else:
+        logger.exception(message, exc)
 
 
 def start_scheduler() -> None:

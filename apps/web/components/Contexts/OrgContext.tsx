@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useTranslation } from 'react-i18next'
 import ErrorUI from '@components/Objects/StyledElements/Error/Error'
 
 interface OrgContextValue {
@@ -19,7 +20,7 @@ export function OrgProvider({
   orgslug,
   errorMessage,
   errorSubmessage,
-  inactiveMessage = 'This organization is no longer active',
+  inactiveMessage,
 }: {
   children: React.ReactNode
   orgslug: string
@@ -29,6 +30,7 @@ export function OrgProvider({
   errorSubmessage?: string
   inactiveMessage?: string
 }) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
 
@@ -71,7 +73,7 @@ export function OrgProvider({
   if (orgError) return <ErrorUI error={orgError} message={errorMessage} submessage={errorSubmessage} />
   if (!isLoading && org && !isOrgActive) return (
     <ErrorUI
-      message={inactiveMessage}
+      message={inactiveMessage ?? t('org.inactive')}
       submessage="The workspace has been deactivated. If you believe this is a mistake, contact the organization's owner or our support team."
       resolutions={['home', 'signout', 'contact_support']}
     />

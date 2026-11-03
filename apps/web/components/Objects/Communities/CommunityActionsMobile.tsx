@@ -2,6 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Plus, Settings, MessageCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Community } from '@services/communities/communities'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { getUriWithOrg } from '@services/config/config'
@@ -17,10 +18,11 @@ export function CommunityActionsMobile({
   orgslug,
   onCreateDiscussion,
 }: CommunityActionsMobileProps) {
+  const { t } = useTranslation()
   const { canManageCommunity, canCreateDiscussion } = useCommunityRights(community.community_uuid)
 
   return (
-    <nav aria-label="Community mobile actions" className="fixed bottom-0 start-0 end-0 z-50 md:hidden">
+    <nav aria-label={t('communities.actions.mobile_actions')} className="fixed bottom-0 start-0 end-0 z-50 md:hidden">
       <div className="mx-3 mb-4 bg-white/95 backdrop-blur-sm rounded-xl nice-shadow p-3">
         <div className="flex items-center gap-3">
           {/* Community Icon */}
@@ -32,7 +34,7 @@ export function CommunityActionsMobile({
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-900 truncate text-sm">{community.name}</p>
             <p className="text-xs text-gray-400">
-              {community.public ? 'Public' : 'Private'}
+              {community.public ? t('communities.public') : t('communities.private')}
             </p>
           </div>
 
@@ -42,7 +44,7 @@ export function CommunityActionsMobile({
               <Link
                 href={getUriWithOrg(orgslug, '/dash/communities')}
                 className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                aria-label="Manage community"
+                aria-label={t('communities.actions.manage_community_label')}
               >
                 <Settings size={16} className="text-gray-600" />
               </Link>
@@ -53,7 +55,7 @@ export function CommunityActionsMobile({
                 className="flex items-center gap-1.5 px-3 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition-colors text-sm font-medium"
               >
                 <Plus size={14} />
-                New
+                {t('communities.actions.new')}
               </button>
             )}
           </div>

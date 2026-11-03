@@ -747,6 +747,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
 }
 
 const SectionTypeEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   switch (section.type) {
     case 'hero':
       return (
@@ -796,7 +797,7 @@ const SectionTypeEditor: React.FC<SectionEditorProps> = ({ section, onChange }) 
     case 'countdown':
       return <CountdownEditor section={section} onChange={onChange} />
     default:
-      return <div>Unknown section type</div>
+      return <div>{t('dashboard.organization.landing.unknown_section_type')}</div>
   }
 }
 
@@ -1202,7 +1203,7 @@ const HeroSectionEditor: React.FC<{
                     <div className="mt-4">
                       <img
                         src={section.background.image}
-                        alt="Background preview"
+                        alt={t('dashboard.organization.landing.hero_editor.background_preview')}
                         className="max-h-40 rounded-lg object-cover"
                       />
                     </div>
