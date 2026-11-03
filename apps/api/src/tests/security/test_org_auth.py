@@ -16,7 +16,8 @@ from src.security.org_auth import (
 
 
 def _session_with_firsts(*results: object) -> AsyncMock:
-    """Build an AsyncMock session whose execute().scalars().first() returns results in order."""
+    """Build an AsyncMock session whose execute().scalars().first() returns results
+    in order (and .all() the same result as a list)."""
     session = AsyncMock()
     calls = []
 
@@ -24,7 +25,9 @@ def _session_with_firsts(*results: object) -> AsyncMock:
         idx = len(calls)
         calls.append(_statement)
         result_mock = MagicMock()
-        result_mock.scalars.return_value.first.return_value = results[idx] if idx < len(results) else None
+        result = results[idx] if idx < len(results) else None
+        result_mock.scalars.return_value.first.return_value = result
+        result_mock.scalars.return_value.all.return_value = [] if result is None else [result]
         return result_mock
 
     session.execute.side_effect = _execute

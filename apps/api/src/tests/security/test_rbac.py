@@ -356,6 +356,7 @@ class TestRBAC:
 
             # Mock database query - implementation uses .first()
             mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_user_org
+            mock_db_session.execute.return_value.scalars.return_value.all.return_value = [mock_user_org]
 
             result = await authorization_verify_based_on_org_admin_status(
                 request=mock_request,
