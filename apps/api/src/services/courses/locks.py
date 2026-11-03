@@ -16,7 +16,6 @@ from typing import Iterable
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.db.user_organizations import UserOrganization
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
@@ -26,12 +25,9 @@ from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
 async def is_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """True if user is admin/maintainer on this org (bypasses all locks)."""
-    uo = (await db_session.execute(
-        select(UserOrganization).where(
-            UserOrganization.user_id == user_id,
-            UserOrganization.org_id == org_id,
-        )
-    )).scalars().first()
+    from src.security.org_auth import get_user_org
+
+    uo = await get_user_org(user_id, org_id, db_session)
     return bool(uo and uo.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS)
 
 
@@ -40,19 +36,42 @@ async def batch_accessible_restricted_uuids(
     resource_uuids: Iterable[str],
     db_session: AsyncSession,
 ) -> set[str]:
-    """Return the subset of resource_uuids the user can access via usergroup."""
-    uuids = [u for u in resource_uuids if u]
+    """Return the subset of resource_uuids the user can access via usergroup.
+
+    Reading a chapter's activities asks this once per activity, mostly about
+    the same course and chapter. Answers are memoized per session, but only
+    the stable ones: "accessible", and "no usergroup is linked to it". A
+    resource that is linked but not (yet) granted is always asked again, so a
+    membership added during the request still counts.
+    """
+    uuids = list(dict.fromkeys(u for u in resource_uuids if u))
     if not uuids:
         return set()
+
+    memo = getattr(db_session, "_usergroup_access_cache", None)
+    if not isinstance(memo, dict):
+        memo = {}
+        try:
+            db_session._usergroup_access_cache = memo
+        except Exception:
+            pass
+    accessible = {u for u in uuids if memo.get((user_id, u)) is True}
+    pending = [u for u in uuids if (user_id, u) not in memo]
+    if not pending:
+        return accessible
 
     ugrs = (await db_session.execute(
         select(
             UserGroupResource.resource_uuid,
             UserGroupResource.usergroup_id,
-        ).where(UserGroupResource.resource_uuid.in_(uuids))
+        ).where(UserGroupResource.resource_uuid.in_(pending))
     )).all()
+    linked = {row[0] for row in ugrs}
+    for resource_uuid in pending:
+        if resource_uuid not in linked:
+            memo[(user_id, resource_uuid)] = False
     if not ugrs:
-        return set()
+        return accessible
 
     ug_ids = list({row[1] for row in ugrs})
     member_ug_ids = set(
@@ -63,7 +82,10 @@ async def batch_accessible_restricted_uuids(
             )
         )).scalars().all()
     )
-    return {resource_uuid for resource_uuid, ug_id in ugrs if ug_id in member_ug_ids}
+    granted = {resource_uuid for resource_uuid, ug_id in ugrs if ug_id in member_ug_ids}
+    for resource_uuid in granted:
+        memo[(user_id, resource_uuid)] = True
+    return accessible | granted
 
 
 async def is_locked_for_user(

@@ -20,8 +20,13 @@ from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 logger = logging.getLogger(__name__)
 
 
-async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> Optional[UserOrganization]:
-    """Return the UserOrganization row, or None. Does NOT check superadmin."""
+async def get_user_org_rows(user_id: int, org_id: int, db_session: AsyncSession) -> list[UserOrganization]:
+    """Every membership row the user has in the org (normally exactly one).
+
+    Membership, admin status and role lookups all start from these rows, and a
+    single request asks several of those questions about the same user and org.
+    Memoized per session so they share one query. Does NOT check superadmin.
+    """
     _cache = getattr(db_session, '_user_org_cache', None)
     if _cache is None:
         db_session._user_org_cache = {}
@@ -33,15 +38,28 @@ async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> O
         UserOrganization.user_id == user_id,
         UserOrganization.org_id == org_id,
     )
-    result = (await db_session.execute(statement)).scalars().first()
-    # Only cache positive memberships. Caching a None ("not a member") result
-    # is unsafe: a membership granted later within the same request/session
+    rows = list((await db_session.execute(statement)).scalars().all())
+    # Only cache positive memberships. Caching a "not a member" result is
+    # unsafe: a membership granted later within the same request/session
     # (e.g. add-to-org immediately followed by an authz check) would otherwise
     # keep returning the stale "not a member" answer and incorrectly deny
     # access. Positive rows are safe to memoize for the request's lifetime.
-    if result is not None:
-        _cache[key] = result
-    return result
+    if rows:
+        _cache[key] = rows
+    return rows
+
+
+async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> Optional[UserOrganization]:
+    """Return the UserOrganization row, or None. Does NOT check superadmin."""
+    rows = await get_user_org_rows(user_id, org_id, db_session)
+    return rows[0] if rows else None
+
+
+async def holds_admin_or_maintainer_role(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """True if any of the user's membership rows in the org is admin/maintainer.
+    Does NOT check superadmin."""
+    rows = await get_user_org_rows(user_id, org_id, db_session)
+    return any(row.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS for row in rows)
 
 
 async def is_org_member(user_id: int, org_id: int, db_session: AsyncSession) -> bool:

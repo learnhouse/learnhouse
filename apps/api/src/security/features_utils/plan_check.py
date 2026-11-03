@@ -10,7 +10,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
 from src.core.events.database import get_db_session
-from src.db.organization_config import OrganizationConfig
 from src.db.communities.communities import Community
 from src.security.features_utils.plans import PlanLevel, plan_meets_requirement
 
@@ -81,8 +80,9 @@ async def get_org_plan(org_id: int, db_session: AsyncSession) -> PlanLevel:
     Raises:
         HTTPException: 404 if organization config not found
     """
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = (await db_session.execute(statement)).scalars().first()
+    from src.services.orgs.org_config_lookup import get_session_org_config
+
+    org_config = await get_session_org_config(db_session, org_id)
 
     if org_config is None:
         raise HTTPException(
@@ -343,10 +343,9 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
         board_uuid = request.path_params.get("board_uuid")
         if board_uuid:
             from src.db.boards import Board
-            statement = select(Board).where(Board.board_uuid == board_uuid)
-            board = (await db_session.execute(statement)).scalars().first()
-            if board:
-                resource_org_id = board.org_id
+            # Just the org: a full Board row carries the whole Yjs document.
+            statement = select(Board.org_id).where(Board.board_uuid == board_uuid)
+            resource_org_id = (await db_session.execute(statement)).scalars().first()
         org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
 
         if org_id is None:
@@ -505,11 +504,9 @@ def require_plan_for_paths(required_plan: PlanLevel, feature_name: str):
                 resource_org_id = path.org_id
         if resource_org_id is None and "course_uuid" in path_params:
             from src.db.courses.courses import Course
-            course = (await db_session.execute(
-                select(Course).where(Course.course_uuid == path_params["course_uuid"])
+            resource_org_id = (await db_session.execute(
+                select(Course.org_id).where(Course.course_uuid == path_params["course_uuid"])
             )).scalars().first()
-            if course:
-                resource_org_id = course.org_id
 
         org_id = _reconcile_org_id(_client_org_id(request), resource_org_id)
         if org_id is None:
