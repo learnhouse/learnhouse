@@ -29,6 +29,7 @@ import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
 import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
+import { ShareCourseInMessagesButton } from '@components/Messaging/EntryButtons'
 import CourseAccessError from '@components/Objects/Courses/CourseAccessError/CourseAccessError'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
@@ -391,10 +392,13 @@ const CourseClient = (props: any) => {
             </div>
             <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <h1 className="text-3xl md:text-3xl font-bold" dir="auto">{course.name}</h1>
-              <CourseShare
-                courseName={course.name}
-                courseUrl={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
-              />
+              <div className="flex items-center gap-2">
+                <ShareCourseInMessagesButton orgslug={orgslug} courseUuid={`course_${courseuuid}`} />
+                <CourseShare
+                  courseName={course.name}
+                  courseUrl={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
+                />
+              </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-8 pt-2">

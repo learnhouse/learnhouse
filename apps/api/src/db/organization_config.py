@@ -177,6 +177,7 @@ class AdminToggles(BaseModel):
     communities: FeatureAdminToggle = FeatureAdminToggle()
     members: MembersAdminToggle = MembersAdminToggle()
     paths: FeatureAdminToggle = FeatureAdminToggle()
+    messaging: FeatureAdminToggle = FeatureAdminToggle()
     payments: FeatureAdminToggle = FeatureAdminToggle()
     playgrounds: FeatureAdminToggle = FeatureAdminToggle()
     podcasts: FeatureAdminToggle = FeatureAdminToggle()

@@ -5,6 +5,8 @@ The regression guard matters most: twelve transactional emails share this
 layout, and none of their output may shift.
 """
 
+import re
+
 from src.services.users.emails import _email_layout
 
 
@@ -18,9 +20,9 @@ class TestLayoutRegression:
         """
         html = _email_layout("Title", "<p>body</p>", footer_note="A note")
         assert (
-            '<hr style="margin: 28px 0; border: none; border-top: 1px solid #f0f0f0;" />\n'
-            '            <p style="margin: 0; font-size: 12px; color: rgba(0,0,0,0.2); '
-            'font-weight: 500; line-height: 1.6;">A note</p>'
+            '<hr style="margin: 0 0 16px 0; border: none; border-top: 1px solid #f0f0f0;" />\n'
+            '            <p style="margin: 0; font-size: 12px; color: #a3a3a3; '
+            'font-weight: 400; line-height: 1.6;">A note</p>'
         ) in html
         assert "unsubscribe" not in html.lower()
 
@@ -279,5 +281,7 @@ class TestNudgeRendering:
     def test_no_unrendered_placeholders(self):
         for lang in ("en", "fr", "ja", "ar"):
             captured = self._send(lang=lang)
-            assert "{" not in captured["body"], lang
+            # The <style> block (dark mode) legitimately holds braces.
+            body = re.sub(r"<style>.*?</style>", "", captured["body"], flags=re.S)
+            assert "{" not in body, lang
             assert "{" not in captured["subject"], lang

@@ -189,6 +189,29 @@ class TestActivityFilter:
         )
         assert len(kept) == 2
 
+    async def test_co_readers_limit_to_what_everyone_can_read(
+        self, db, org, admin_user, regular_user, course, chapter, mock_request
+    ):
+        # An admin asking in a group with a learner: drafts and locked lessons
+        # stay out, since the learner sees the answer too.
+        visible = await _activity(db, org, course, chapter, 46, "act_shared")
+        draft = await _activity(db, org, course, chapter, 47, "act_shared_draft", published=False)
+        locked = await _activity(
+            db, org, course, chapter, 48, "act_shared_locked", lock_type=ActivityLockType.RESTRICTED
+        )
+        scope = await build_rag_access_scope(mock_request, admin_user, org.id, db, course=course)
+        scope.co_readers.append(
+            await build_rag_access_scope(mock_request, regular_user, org.id, db, course=course)
+        )
+        kept = await filter_readable_chunks([_row(course, a) for a in (visible, draft, locked)], scope, db)
+        assert [r.activity_uuid for r in kept] == ["act_shared"]
+
+        # Once one reader can't see anything, the rest aren't asked.
+        blind = RagAccessScope(request=mock_request, current_user=regular_user, org_id=org.id)
+        never = MagicMock(courses={1: None})
+        scope.co_readers = [blind, never]
+        assert await filter_readable_chunks([_row(course, visible)], scope, db) == []
+
     async def test_paid_activity_is_dropped_without_access(
         self, db, org, regular_user, course, chapter, mock_request
     ):

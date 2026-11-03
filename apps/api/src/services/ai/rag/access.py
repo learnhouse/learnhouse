@@ -47,6 +47,9 @@ class RagAccessScope:
     current_user: Principal
     org_id: int
     courses: dict[int, CourseGrant] = field(default_factory=dict)
+    # Others who will see the answer (a group chat). Content must be readable
+    # by each of them too, not just by the caller.
+    co_readers: list["RagAccessScope"] = field(default_factory=list)
 
     @property
     def course_ids(self) -> list[int]:
@@ -170,6 +173,10 @@ async def readable_activity_ids(
         grant = scope.courses[activity.course_id]
         if await _activity_readable(activity, chapter, grant, scope, accessible, db_session):
             readable.add(activity_id)
+    for other in scope.co_readers:
+        if not readable:
+            break
+        readable &= await readable_activity_ids(readable, other, db_session)
     return readable
 
 
