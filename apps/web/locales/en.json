@@ -9067,7 +9067,14 @@
         "impact_desc": "Track engagement and see how learners progress over time",
         "team": "Grow your team",
         "team_desc": "Invite instructors, manage roles and organize learner groups"
-      }
+      },
+      "hello_name": "Welcome, {{name}}",
+      "promise": "Let's get your academy live today.",
+      "intent_title": "What are you building?",
+      "intent_subtitle": "We'll tailor your launch plan to it. You can change this later.",
+      "back": "Back",
+      "build_plan": "Show my launch plan",
+      "skip": "Skip"
     },
     "farewell": {
       "title": "You're ready to teach the world",
@@ -9081,7 +9088,112 @@
     "video_placeholder": "Walkthrough video coming soon",
     "dismiss": "I'll finish later",
     "steps_done": "steps done",
-    "back_to_dashboard": "Back to dashboard"
+    "back_to_dashboard": "Back to dashboard",
+    "minutes": "{{count}} min",
+    "about_minutes": "About {{count}} min",
+    "minutes_left": "~{{count}} min left",
+    "step_of": "Step {{current}} of {{total}}",
+    "step_done": "Done",
+    "next_step": "Next step",
+    "mark_done": "Mark as done",
+    "skip_for_now": "Skip for now",
+    "skipped": "Skipped",
+    "undo_skip": "Bring this step back",
+    "auto_check": "This step checks itself off once it's done.",
+    "video": {
+      "tap_for_sound": "Watch with sound",
+      "replay": "Replay",
+      "unavailable": "This video could not load."
+    },
+    "intent": {
+      "customers": {
+        "label": "Train my customers",
+        "hint": "Product academy, onboarding, fewer support tickets",
+        "headline": "Your customer academy, live in about 15 minutes."
+      },
+      "team": {
+        "label": "Train my team",
+        "hint": "Employee onboarding, compliance, upskilling",
+        "headline": "Your team's training hub, live in about 15 minutes."
+      },
+      "sell": {
+        "label": "Sell my courses",
+        "hint": "Turn what you know into a business",
+        "headline": "Your course business, open in about 15 minutes."
+      },
+      "school": {
+        "label": "Run a school or community",
+        "hint": "Classes, cohorts, clubs, nonprofits",
+        "headline": "Your school, open in about 15 minutes."
+      }
+    },
+    "finale": {
+      "badge": "Setup complete",
+      "title": "{{name}} is live",
+      "subtitle": "Your academy is ready for learners. Share this link to bring them in.",
+      "link_label": "Your public link",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "open": "Open my school",
+      "whats_next": "What's next",
+      "close": "Close the launch plan",
+      "next": {
+        "certificates": {
+          "title": "Give certificates",
+          "desc": "Learners finish more when there's something to earn."
+        },
+        "analytics": {
+          "title": "Watch it grow",
+          "desc": "See who enrolls, finishes, and where they get stuck."
+        },
+        "next_course": {
+          "title": "Build your next course",
+          "desc": "Start from a doc you already have."
+        }
+      }
+    },
+    "launch_plan": "Launch plan",
+    "subtitle": "Six short steps to a live academy. Each one has a video.",
+    "watch_tour": "Watch the tour",
+    "tour_title": "Welcome to LearnHouse",
+    "steps_title": "Steps",
+    "step_number": "Step {{n}}",
+    "progress_count": "{{done}} of {{total}} done",
+    "step_completed_toast": "Done: {{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "Start with the question customers ask most. One course that answers it saves you that call every week.",
+        "add_content": "A short screen recording beats a long help article. Show the clicks once and let it work for you.",
+        "brand_school": "Customers should feel they never left your product. Your logo and colors make the academy part of it.",
+        "share_grow": "Link it from your app, your help center and your welcome email. That's where customers look.",
+        "invite_learners": "Invite a friendly customer first. Their questions will tell you what the next lesson should be.",
+        "build_community": "Customers answering customers scales your support team for free."
+      },
+      "team": {
+        "create_course": "Begin with what every new hire needs in week one. Write it once, stop repeating it in meetings.",
+        "add_content": "Record the walkthrough you keep giving live. New people watch it on day one, at their own pace.",
+        "brand_school": "Make it feel like your company's own space, not another tool people have to learn.",
+        "share_grow": "Pin the link in your team chat and your onboarding checklist.",
+        "invite_learners": "Invite your next new hire, or one teammate to test it. Real feedback beats guessing.",
+        "build_community": "A space for questions means answers get written down once, for everyone."
+      },
+      "sell": {
+        "create_course": "Start small. One focused course people would pay for beats a big one you never finish.",
+        "add_content": "Your first lesson is your sales pitch. Make it good, and let people preview it for free.",
+        "brand_school": "People pay for brands they trust. A logo and colors make you look like the real thing.",
+        "share_grow": "This is the link for your bio, your newsletter and your posts. Every sale starts here.",
+        "invite_learners": "Your first learners are your first testimonials. Invite a few friends or followers to try it.",
+        "build_community": "A community turns buyers into regulars, and regulars buy the next course."
+      },
+      "school": {
+        "create_course": "Start with the class you know best. Learners can begin before the rest is ready.",
+        "add_content": "Mix a short video, a page to read and a quiz. Variety keeps learners going.",
+        "brand_school": "Your school's name and colors on every page make learners feel they belong.",
+        "share_grow": "Share it with your students, parents or members. One link, everything in one place.",
+        "invite_learners": "Invite your first class. A real learner changes how you build.",
+        "build_community": "Discussions keep the class going between lessons and bring learners back."
+      }
+    }
   },
   "upgrade_modal": {
     "title": "Unlock your full potential",

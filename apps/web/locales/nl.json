@@ -8805,7 +8805,14 @@
         "impact_desc": "Volg betrokkenheid en zie hoe leerlingen in de loop der tijd vorderen",
         "team": "Laat je team groeien",
         "team_desc": "Nodig docenten uit, beheer rollen en organiseer leerlinggroepen"
-      }
+      },
+      "hello_name": "Welkom, {{name}}",
+      "promise": "Laten we je academy vandaag nog live zetten.",
+      "intent_title": "Wat ga je bouwen?",
+      "intent_subtitle": "We stemmen je lanceerplan daarop af. Je kunt dit later nog wijzigen.",
+      "back": "Terug",
+      "build_plan": "Toon mijn lanceerplan",
+      "skip": "Overslaan"
     },
     "farewell": {
       "title": "Je bent klaar om de wereld te onderwijzen",
@@ -8819,7 +8826,112 @@
     "video_placeholder": "Instructievideo komt binnenkort",
     "dismiss": "Ik maak het later af",
     "steps_done": "stappen voltooid",
-    "back_to_dashboard": "Terug naar dashboard"
+    "back_to_dashboard": "Terug naar dashboard",
+    "minutes": "{{count}} min",
+    "about_minutes": "Ongeveer {{count}} min",
+    "minutes_left": "~{{count}} min over",
+    "step_of": "Stap {{current}} van {{total}}",
+    "step_done": "Klaar",
+    "next_step": "Volgende stap",
+    "mark_done": "Markeren als klaar",
+    "skip_for_now": "Nu overslaan",
+    "skipped": "Overgeslagen",
+    "undo_skip": "Deze stap terugzetten",
+    "auto_check": "Deze stap vinkt zichzelf af zodra hij klaar is.",
+    "video": {
+      "tap_for_sound": "Bekijk met geluid",
+      "replay": "Opnieuw afspelen",
+      "unavailable": "Deze video kon niet worden geladen."
+    },
+    "intent": {
+      "customers": {
+        "label": "Mijn klanten trainen",
+        "hint": "Productacademy, onboarding, minder supporttickets",
+        "headline": "Je klantenacademy, live in ongeveer 15 minuten."
+      },
+      "team": {
+        "label": "Mijn team trainen",
+        "hint": "Onboarding van medewerkers, compliance, bijscholing",
+        "headline": "De trainingsomgeving van je team, live in ongeveer 15 minuten."
+      },
+      "sell": {
+        "label": "Mijn cursussen verkopen",
+        "hint": "Maak van je kennis een bedrijf",
+        "headline": "Je cursusbedrijf, open in ongeveer 15 minuten."
+      },
+      "school": {
+        "label": "Een school of community runnen",
+        "hint": "Lessen, cohorten, clubs, non-profits",
+        "headline": "Je school, open in ongeveer 15 minuten."
+      }
+    },
+    "finale": {
+      "badge": "Installatie voltooid",
+      "title": "{{name}} is live",
+      "subtitle": "Je academy is klaar voor cursisten. Deel deze link om ze binnen te halen.",
+      "link_label": "Je openbare link",
+      "copy": "Link kopiëren",
+      "copied": "Gekopieerd",
+      "open": "Mijn school openen",
+      "whats_next": "Wat nu?",
+      "close": "Lanceerplan sluiten",
+      "next": {
+        "certificates": {
+          "title": "Geef certificaten",
+          "desc": "Cursisten maken vaker af wat ze beginnen als er iets te verdienen valt."
+        },
+        "analytics": {
+          "title": "Zie het groeien",
+          "desc": "Zie wie zich inschrijft, wie afrondt en waar ze vastlopen."
+        },
+        "next_course": {
+          "title": "Bouw je volgende cursus",
+          "desc": "Begin met een document dat je al hebt."
+        }
+      }
+    },
+    "launch_plan": "Lanceerplan",
+    "subtitle": "Zes korte stappen naar een live academy. Bij elke stap hoort een video.",
+    "watch_tour": "Bekijk de rondleiding",
+    "tour_title": "Welkom bij LearnHouse",
+    "steps_title": "Stappen",
+    "step_number": "Stap {{n}}",
+    "progress_count": "{{done}} van {{total}} klaar",
+    "step_completed_toast": "Klaar: {{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "Begin met de vraag die klanten het vaakst stellen. Eén cursus die hem beantwoordt, scheelt je elke week dat telefoontje.",
+        "add_content": "Een korte schermopname werkt beter dan een lang helpartikel. Laat de klikken één keer zien en laat het voor je werken.",
+        "brand_school": "Klanten moeten het gevoel hebben dat ze je product nooit hebben verlaten. Je logo en kleuren maken de academy er onderdeel van.",
+        "share_grow": "Link ernaar vanuit je app, je helpcentrum en je welkomstmail. Daar zoeken klanten.",
+        "invite_learners": "Nodig eerst een welwillende klant uit. Hun vragen vertellen je wat de volgende les moet zijn.",
+        "build_community": "Klanten die klanten helpen, schalen je supportteam gratis op."
+      },
+      "team": {
+        "create_course": "Begin met wat elke nieuwe collega in week één nodig heeft. Schrijf het één keer op en stop met herhalen in meetings.",
+        "add_content": "Neem de uitleg op die je steeds live geeft. Nieuwe mensen bekijken hem op dag één, in hun eigen tempo.",
+        "brand_school": "Laat het voelen als een eigen plek van je bedrijf, niet als nog een tool die mensen moeten leren.",
+        "share_grow": "Pin de link in je teamchat en je onboardingchecklist.",
+        "invite_learners": "Nodig je volgende nieuwe collega uit, of één teamgenoot om het te testen. Echte feedback is beter dan gissen.",
+        "build_community": "Met een plek voor vragen worden antwoorden één keer opgeschreven, voor iedereen."
+      },
+      "sell": {
+        "create_course": "Begin klein. Eén gerichte cursus waarvoor mensen willen betalen is beter dan een grote die je nooit afmaakt.",
+        "add_content": "Je eerste les is je verkooppraatje. Maak hem goed en laat mensen hem gratis bekijken.",
+        "brand_school": "Mensen betalen voor merken die ze vertrouwen. Een logo en kleuren laten je er professioneel uitzien.",
+        "share_grow": "Dit is de link voor je bio, je nieuwsbrief en je posts. Elke verkoop begint hier.",
+        "invite_learners": "Je eerste cursisten zijn je eerste reviews. Nodig een paar vrienden of volgers uit om het te proberen.",
+        "build_community": "Een community maakt van kopers vaste klanten, en vaste klanten kopen de volgende cursus."
+      },
+      "school": {
+        "create_course": "Begin met het vak dat je het beste kent. Cursisten kunnen al starten voordat de rest klaar is.",
+        "add_content": "Combineer een korte video, een pagina om te lezen en een quiz. Afwisseling houdt cursisten gemotiveerd.",
+        "brand_school": "De naam en kleuren van je school op elke pagina geven cursisten het gevoel dat ze erbij horen.",
+        "share_grow": "Deel hem met je leerlingen, ouders of leden. Eén link, alles op één plek.",
+        "invite_learners": "Nodig je eerste klas uit. Een echte cursist verandert hoe je bouwt.",
+        "build_community": "Discussies houden de klas tussen de lessen door levendig en brengen cursisten terug."
+      }
+    }
   },
   "upgrade_modal": {
     "title": "Ontgrendel uw volledige potentieel",

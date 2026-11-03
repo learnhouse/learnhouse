@@ -8877,7 +8877,14 @@
         "impact_desc": "Monitora il coinvolgimento e osserva come gli studenti progrediscono nel tempo",
         "team": "Fai crescere il tuo team",
         "team_desc": "Invita docenti, gestisci i ruoli e organizza i gruppi di studenti"
-      }
+      },
+      "hello_name": "Ti diamo il benvenuto, {{name}}",
+      "promise": "Mettiamo online la tua accademia già oggi.",
+      "intent_title": "Cosa stai creando?",
+      "intent_subtitle": "Adatteremo il tuo piano di lancio di conseguenza. Puoi cambiarlo in seguito.",
+      "back": "Indietro",
+      "build_plan": "Mostra il mio piano di lancio",
+      "skip": "Salta"
     },
     "farewell": {
       "title": "Sei pronto per insegnare al mondo",
@@ -8891,7 +8898,112 @@
     "video_placeholder": "Video guida in arrivo",
     "dismiss": "Finirò più tardi",
     "steps_done": "passaggi completati",
-    "back_to_dashboard": "Torna alla dashboard"
+    "back_to_dashboard": "Torna alla dashboard",
+    "minutes": "{{count}} min",
+    "about_minutes": "Circa {{count}} min",
+    "minutes_left": "~{{count}} min rimanenti",
+    "step_of": "Passaggio {{current}} di {{total}}",
+    "step_done": "Fatto",
+    "next_step": "Passaggio successivo",
+    "mark_done": "Segna come fatto",
+    "skip_for_now": "Salta per ora",
+    "skipped": "Saltato",
+    "undo_skip": "Ripristina questo passaggio",
+    "auto_check": "Questo passaggio si spunta da solo una volta completato.",
+    "video": {
+      "tap_for_sound": "Guarda con l'audio",
+      "replay": "Rivedi",
+      "unavailable": "Impossibile caricare questo video."
+    },
+    "intent": {
+      "customers": {
+        "label": "Formare i miei clienti",
+        "hint": "Accademia di prodotto, onboarding, meno ticket di assistenza",
+        "headline": "La tua accademia per i clienti, online in circa 15 minuti."
+      },
+      "team": {
+        "label": "Formare il mio team",
+        "hint": "Onboarding dei dipendenti, compliance, aggiornamento delle competenze",
+        "headline": "Il centro di formazione del tuo team, online in circa 15 minuti."
+      },
+      "sell": {
+        "label": "Vendere i miei corsi",
+        "hint": "Trasforma ciò che sai in un business",
+        "headline": "Il tuo business di corsi, aperto in circa 15 minuti."
+      },
+      "school": {
+        "label": "Gestire una scuola o una community",
+        "hint": "Classi, gruppi, club, organizzazioni non profit",
+        "headline": "La tua scuola, aperta in circa 15 minuti."
+      }
+    },
+    "finale": {
+      "badge": "Configurazione completata",
+      "title": "{{name}} è online",
+      "subtitle": "La tua accademia è pronta per gli studenti. Condividi questo link per farli entrare.",
+      "link_label": "Il tuo link pubblico",
+      "copy": "Copia link",
+      "copied": "Copiato",
+      "open": "Apri la mia scuola",
+      "whats_next": "Cosa fare ora",
+      "close": "Chiudi il piano di lancio",
+      "next": {
+        "certificates": {
+          "title": "Rilascia certificati",
+          "desc": "Gli studenti arrivano più spesso alla fine quando c'è qualcosa da ottenere."
+        },
+        "analytics": {
+          "title": "Guardala crescere",
+          "desc": "Scopri chi si iscrive, chi completa e dove si blocca."
+        },
+        "next_course": {
+          "title": "Crea il tuo prossimo corso",
+          "desc": "Parti da un documento che hai già."
+        }
+      }
+    },
+    "launch_plan": "Piano di lancio",
+    "subtitle": "Sei brevi passaggi per un'accademia online. Ognuno ha il suo video.",
+    "watch_tour": "Guarda il tour",
+    "tour_title": "Ti diamo il benvenuto in LearnHouse",
+    "steps_title": "Passaggi",
+    "step_number": "Passaggio {{n}}",
+    "progress_count": "{{done}} di {{total}} completati",
+    "step_completed_toast": "Fatto: {{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "Parti dalla domanda che i clienti fanno più spesso. Un corso che risponde ti risparmia quella chiamata ogni settimana.",
+        "add_content": "Una breve registrazione dello schermo batte un lungo articolo di supporto. Mostra i clic una volta e lascia che lavori per te.",
+        "brand_school": "I clienti devono sentirsi come se non avessero mai lasciato il tuo prodotto. Logo e colori rendono l'accademia parte di esso.",
+        "share_grow": "Inserisci il link nella tua app, nel centro assistenza e nell'email di benvenuto. È lì che i clienti cercano.",
+        "invite_learners": "Invita prima un cliente amico. Le sue domande ti diranno quale dovrebbe essere la prossima lezione.",
+        "build_community": "Clienti che aiutano altri clienti fanno crescere il tuo supporto a costo zero."
+      },
+      "team": {
+        "create_course": "Inizia da ciò che serve a ogni nuovo assunto nella prima settimana. Scrivilo una volta e smetti di ripeterlo nelle riunioni.",
+        "add_content": "Registra la spiegazione che continui a fare dal vivo. I nuovi arrivati la guardano il primo giorno, con i loro tempi.",
+        "brand_school": "Fai in modo che sembri uno spazio della tua azienda, non l'ennesimo strumento da imparare.",
+        "share_grow": "Fissa il link nella chat del team e nella checklist di onboarding.",
+        "invite_learners": "Invita il prossimo nuovo assunto, o un collega per provarlo. Un feedback reale vale più delle supposizioni.",
+        "build_community": "Uno spazio per le domande significa che le risposte vengono scritte una volta sola, per tutti."
+      },
+      "sell": {
+        "create_course": "Inizia in piccolo. Un corso mirato per cui le persone pagherebbero batte un corso enorme che non finisci mai.",
+        "add_content": "La tua prima lezione è il tuo biglietto da visita. Curala bene e lascia che le persone la vedano gratis in anteprima.",
+        "brand_school": "Le persone pagano i brand di cui si fidano. Logo e colori ti danno un aspetto professionale.",
+        "share_grow": "Questo è il link per la tua bio, la tua newsletter e i tuoi post. Ogni vendita parte da qui.",
+        "invite_learners": "I tuoi primi studenti sono le tue prime testimonianze. Invita qualche amico o follower a provarlo.",
+        "build_community": "Una community trasforma gli acquirenti in clienti abituali, e i clienti abituali comprano il corso successivo."
+      },
+      "school": {
+        "create_course": "Inizia dal corso che conosci meglio. Gli studenti possono cominciare prima che il resto sia pronto.",
+        "add_content": "Alterna un breve video, una pagina da leggere e un quiz. La varietà mantiene alta la motivazione.",
+        "brand_school": "Il nome e i colori della tua scuola su ogni pagina fanno sentire gli studenti parte di qualcosa.",
+        "share_grow": "Condividilo con studenti, genitori o membri. Un solo link, tutto in un unico posto.",
+        "invite_learners": "Invita la tua prima classe. Uno studente vero cambia il modo in cui costruisci.",
+        "build_community": "Le discussioni tengono viva la classe tra una lezione e l'altra e riportano indietro gli studenti."
+      }
+    }
   },
   "upgrade_modal": {
     "title": "Sblocca il tuo pieno potenziale",

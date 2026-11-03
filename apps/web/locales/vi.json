@@ -8755,7 +8755,14 @@
         "impact_desc": "Theo dõi mức độ tương tác và xem học viên tiến bộ như thế nào theo thời gian",
         "team": "Phát triển đội ngũ",
         "team_desc": "Mời giảng viên, quản lý vai trò và tổ chức nhóm học viên"
-      }
+      },
+      "hello_name": "Chào mừng, {{name}}",
+      "promise": "Hãy đưa học viện của bạn đi vào hoạt động ngay hôm nay.",
+      "intent_title": "Bạn đang xây dựng gì?",
+      "intent_subtitle": "Chúng tôi sẽ điều chỉnh kế hoạch ra mắt theo lựa chọn này. Bạn có thể thay đổi sau.",
+      "back": "Quay lại",
+      "build_plan": "Xem kế hoạch ra mắt của tôi",
+      "skip": "Bỏ qua"
     },
     "farewell": {
       "title": "Bạn đã sẵn sàng dạy cả thế giới",
@@ -8769,7 +8776,112 @@
     "video_placeholder": "Video hướng dẫn sắp ra mắt",
     "dismiss": "Để sau",
     "steps_done": "bước đã hoàn tất",
-    "back_to_dashboard": "Quay lại bảng điều khiển"
+    "back_to_dashboard": "Quay lại bảng điều khiển",
+    "minutes": "{{count}} phút",
+    "about_minutes": "Khoảng {{count}} phút",
+    "minutes_left": "Còn ~{{count}} phút",
+    "step_of": "Bước {{current}}/{{total}}",
+    "step_done": "Xong",
+    "next_step": "Bước tiếp theo",
+    "mark_done": "Đánh dấu đã xong",
+    "skip_for_now": "Tạm bỏ qua",
+    "skipped": "Đã bỏ qua",
+    "undo_skip": "Khôi phục bước này",
+    "auto_check": "Bước này sẽ tự đánh dấu khi bạn hoàn thành.",
+    "video": {
+      "tap_for_sound": "Xem có âm thanh",
+      "replay": "Xem lại",
+      "unavailable": "Không thể tải video này."
+    },
+    "intent": {
+      "customers": {
+        "label": "Đào tạo khách hàng",
+        "hint": "Học viện sản phẩm, onboarding, ít yêu cầu hỗ trợ hơn",
+        "headline": "Học viện khách hàng của bạn, sẵn sàng sau khoảng 15 phút."
+      },
+      "team": {
+        "label": "Đào tạo đội ngũ",
+        "hint": "Hội nhập nhân viên, tuân thủ, nâng cao kỹ năng",
+        "headline": "Trung tâm đào tạo của đội ngũ bạn, sẵn sàng sau khoảng 15 phút."
+      },
+      "sell": {
+        "label": "Bán khóa học",
+        "hint": "Biến kiến thức của bạn thành công việc kinh doanh",
+        "headline": "Việc kinh doanh khóa học của bạn, mở cửa sau khoảng 15 phút."
+      },
+      "school": {
+        "label": "Điều hành trường học hoặc cộng đồng",
+        "hint": "Lớp học, khóa, câu lạc bộ, tổ chức phi lợi nhuận",
+        "headline": "Trường của bạn, mở cửa sau khoảng 15 phút."
+      }
+    },
+    "finale": {
+      "badge": "Thiết lập hoàn tất",
+      "title": "{{name}} đã hoạt động",
+      "subtitle": "Học viện của bạn đã sẵn sàng đón học viên. Chia sẻ liên kết này để mời họ vào.",
+      "link_label": "Liên kết công khai của bạn",
+      "copy": "Sao chép liên kết",
+      "copied": "Đã sao chép",
+      "open": "Mở trường của tôi",
+      "whats_next": "Tiếp theo",
+      "close": "Đóng kế hoạch ra mắt",
+      "next": {
+        "certificates": {
+          "title": "Cấp chứng chỉ",
+          "desc": "Học viên hoàn thành nhiều hơn khi có thứ để đạt được."
+        },
+        "analytics": {
+          "title": "Theo dõi sự phát triển",
+          "desc": "Xem ai đăng ký, ai hoàn thành và họ gặp khó ở đâu."
+        },
+        "next_course": {
+          "title": "Tạo khóa học tiếp theo",
+          "desc": "Bắt đầu từ một tài liệu bạn đã có."
+        }
+      }
+    },
+    "launch_plan": "Kế hoạch ra mắt",
+    "subtitle": "Sáu bước ngắn để học viện đi vào hoạt động. Mỗi bước đều có video.",
+    "watch_tour": "Xem giới thiệu",
+    "tour_title": "Chào mừng đến với LearnHouse",
+    "steps_title": "Các bước",
+    "step_number": "Bước {{n}}",
+    "progress_count": "Đã xong {{done}}/{{total}}",
+    "step_completed_toast": "Đã xong: {{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "Hãy bắt đầu với câu hỏi khách hàng hỏi nhiều nhất. Một khóa học trả lời nó giúp bạn khỏi phải nghe cuộc gọi đó mỗi tuần.",
+        "add_content": "Một đoạn quay màn hình ngắn hiệu quả hơn bài viết hướng dẫn dài. Hãy chỉ các thao tác một lần và để nó làm việc thay bạn.",
+        "brand_school": "Khách hàng nên cảm thấy như chưa từng rời khỏi sản phẩm của bạn. Logo và màu sắc giúp học viện trở thành một phần của sản phẩm.",
+        "share_grow": "Gắn liên kết trong ứng dụng, trung tâm trợ giúp và email chào mừng. Đó là nơi khách hàng tìm đến.",
+        "invite_learners": "Hãy mời một khách hàng thân thiết trước. Câu hỏi của họ sẽ cho bạn biết bài học tiếp theo nên là gì.",
+        "build_community": "Khách hàng giúp đỡ khách hàng là cách mở rộng đội hỗ trợ miễn phí."
+      },
+      "team": {
+        "create_course": "Bắt đầu với những gì mỗi nhân viên mới cần trong tuần đầu. Viết một lần, thôi lặp lại trong các cuộc họp.",
+        "add_content": "Hãy ghi lại phần hướng dẫn bạn vẫn trình bày trực tiếp. Người mới xem ngay ngày đầu, theo tốc độ của riêng họ.",
+        "brand_school": "Hãy khiến nó giống không gian riêng của công ty bạn, chứ không phải thêm một công cụ nữa phải học.",
+        "share_grow": "Ghim liên kết trong kênh chat của nhóm và danh sách việc cần làm khi nhận việc.",
+        "invite_learners": "Mời nhân viên mới tiếp theo, hoặc một đồng nghiệp để thử. Phản hồi thật tốt hơn phỏng đoán.",
+        "build_community": "Một nơi để đặt câu hỏi giúp câu trả lời chỉ cần viết một lần, cho tất cả mọi người."
+      },
+      "sell": {
+        "create_course": "Hãy bắt đầu nhỏ. Một khóa học tập trung mà mọi người sẵn sàng trả tiền tốt hơn một khóa lớn bạn không bao giờ hoàn thành.",
+        "add_content": "Bài học đầu tiên chính là lời chào hàng của bạn. Hãy làm thật tốt và cho mọi người xem thử miễn phí.",
+        "brand_school": "Mọi người trả tiền cho thương hiệu họ tin tưởng. Logo và màu sắc giúp bạn trông chuyên nghiệp.",
+        "share_grow": "Đây là liên kết cho bio, bản tin và bài đăng của bạn. Mọi đơn hàng đều bắt đầu từ đây.",
+        "invite_learners": "Những học viên đầu tiên là những lời chứng thực đầu tiên của bạn. Hãy mời vài người bạn hoặc người theo dõi dùng thử.",
+        "build_community": "Cộng đồng biến người mua thành khách quen, và khách quen sẽ mua khóa học tiếp theo."
+      },
+      "school": {
+        "create_course": "Hãy bắt đầu với môn học bạn nắm vững nhất. Học viên có thể bắt đầu trước khi phần còn lại sẵn sàng.",
+        "add_content": "Kết hợp một video ngắn, một trang đọc và một bài kiểm tra. Sự đa dạng giúp học viên duy trì hứng thú.",
+        "brand_school": "Tên và màu sắc của trường trên mọi trang giúp học viên cảm thấy mình thuộc về nơi đây.",
+        "share_grow": "Chia sẻ với học sinh, phụ huynh hoặc thành viên. Một liên kết, mọi thứ ở một nơi.",
+        "invite_learners": "Hãy mời lớp học đầu tiên. Một học viên thật sẽ thay đổi cách bạn xây dựng.",
+        "build_community": "Thảo luận giúp lớp học sôi nổi giữa các bài học và kéo học viên quay lại."
+      }
+    }
   },
   "upgrade_modal": {
     "title": "Khai phá toàn bộ tiềm năng của bạn",
