@@ -77,7 +77,7 @@ export default function OnboardingSidebarBox() {
             {/* The step definitions in useOnboarding carry English titles as
                 their source text; the translations live under
                 onboarding.steps.*. Rendering currentStep.title directly showed
-                English here in every language. Matches OnboardingSteps.tsx. */}
+                English here in every language. Matches LaunchPlan.tsx. */}
             {t(`onboarding.steps.${currentStep.id}.title`, { defaultValue: currentStep.title })}
           </p>
         </div>

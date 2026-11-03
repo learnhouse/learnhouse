@@ -8805,7 +8805,14 @@
         "impact_desc": "Etkileşimi takip edin ve öğrencilerin zaman içinde nasıl ilerlediğini görün",
         "team": "Ekibinizi büyütün",
         "team_desc": "Eğitmenleri davet edin, rolleri yönetin ve öğrenci gruplarını düzenleyin"
-      }
+      },
+      "hello_name": "Hoş geldiniz, {{name}}",
+      "promise": "Akademinizi bugün yayına alalım.",
+      "intent_title": "Ne oluşturuyorsunuz?",
+      "intent_subtitle": "Lansman planınızı buna göre şekillendireceğiz. Bunu daha sonra değiştirebilirsiniz.",
+      "back": "Geri",
+      "build_plan": "Lansman planımı göster",
+      "skip": "Atla"
     },
     "farewell": {
       "title": "Dünyaya öğretmeye hazırsınız",
@@ -8819,7 +8826,112 @@
     "video_placeholder": "Tanıtım videosu yakında",
     "dismiss": "Daha sonra tamamlayacağım",
     "steps_done": "adım tamamlandı",
-    "back_to_dashboard": "Panoya dön"
+    "back_to_dashboard": "Panoya dön",
+    "minutes": "{{count}} dk",
+    "about_minutes": "Yaklaşık {{count}} dk",
+    "minutes_left": "~{{count}} dk kaldı",
+    "step_of": "Adım {{current}}/{{total}}",
+    "step_done": "Tamamlandı",
+    "next_step": "Sonraki adım",
+    "mark_done": "Tamamlandı olarak işaretle",
+    "skip_for_now": "Şimdilik atla",
+    "skipped": "Atlandı",
+    "undo_skip": "Bu adımı geri getir",
+    "auto_check": "Bu adım tamamlandığında kendiliğinden işaretlenir.",
+    "video": {
+      "tap_for_sound": "Sesli izle",
+      "replay": "Tekrar oynat",
+      "unavailable": "Bu video yüklenemedi."
+    },
+    "intent": {
+      "customers": {
+        "label": "Müşterilerimi eğit",
+        "hint": "Ürün akademisi, onboarding, daha az destek talebi",
+        "headline": "Müşteri akademiniz yaklaşık 15 dakikada yayında."
+      },
+      "team": {
+        "label": "Ekibimi eğit",
+        "hint": "Çalışan oryantasyonu, uyum eğitimleri, beceri geliştirme",
+        "headline": "Ekibinizin eğitim merkezi yaklaşık 15 dakikada yayında."
+      },
+      "sell": {
+        "label": "Kurslarımı sat",
+        "hint": "Bildiklerinizi bir işe dönüştürün",
+        "headline": "Kurs işiniz yaklaşık 15 dakikada açılıyor."
+      },
+      "school": {
+        "label": "Bir okul veya topluluk yönet",
+        "hint": "Sınıflar, gruplar, kulüpler, kâr amacı gütmeyen kuruluşlar",
+        "headline": "Okulunuz yaklaşık 15 dakikada açılıyor."
+      }
+    },
+    "finale": {
+      "badge": "Kurulum tamamlandı",
+      "title": "{{name}} yayında",
+      "subtitle": "Akademiniz öğrencilere hazır. Onları davet etmek için bu bağlantıyı paylaşın.",
+      "link_label": "Herkese açık bağlantınız",
+      "copy": "Bağlantıyı kopyala",
+      "copied": "Kopyalandı",
+      "open": "Okulumu aç",
+      "whats_next": "Sırada ne var",
+      "close": "Lansman planını kapat",
+      "next": {
+        "certificates": {
+          "title": "Sertifika verin",
+          "desc": "Kazanacak bir şey olduğunda öğrenciler daha çok tamamlar."
+        },
+        "analytics": {
+          "title": "Büyümeyi izleyin",
+          "desc": "Kimin kaydolduğunu, kimin bitirdiğini ve nerede takıldıklarını görün."
+        },
+        "next_course": {
+          "title": "Sonraki kursunuzu oluşturun",
+          "desc": "Elinizdeki bir belgeyle başlayın."
+        }
+      }
+    },
+    "launch_plan": "Lansman planı",
+    "subtitle": "Yayındaki bir akademiye altı kısa adım. Her birinin bir videosu var.",
+    "watch_tour": "Turu izle",
+    "tour_title": "LearnHouse'a hoş geldiniz",
+    "steps_title": "Adımlar",
+    "step_number": "Adım {{n}}",
+    "progress_count": "{{done}}/{{total}} tamamlandı",
+    "step_completed_toast": "Tamamlandı: {{steps}}",
+    "why": {
+      "customers": {
+        "create_course": "Müşterilerin en sık sorduğu soruyla başlayın. Bunu yanıtlayan tek bir kurs, sizi her hafta o telefondan kurtarır.",
+        "add_content": "Kısa bir ekran kaydı, uzun bir yardım makalesinden iyidir. Tıklamaları bir kez gösterin, gerisini ona bırakın.",
+        "brand_school": "Müşteriler ürününüzden hiç ayrılmamış gibi hissetmeli. Logonuz ve renkleriniz akademiyi ürününüzün bir parçası yapar.",
+        "share_grow": "Bağlantıyı uygulamanıza, yardım merkezinize ve hoş geldin e-postanıza ekleyin. Müşteriler oraya bakar.",
+        "invite_learners": "Önce size yakın bir müşteriyi davet edin. Soruları, bir sonraki dersin ne olması gerektiğini size söyleyecek.",
+        "build_community": "Müşterilerin birbirine yardım etmesi, destek ekibinizi ücretsiz büyütür."
+      },
+      "team": {
+        "create_course": "Her yeni çalışanın ilk hafta ihtiyaç duyduğu şeyle başlayın. Bir kez yazın, toplantılarda tekrarlamayı bırakın.",
+        "add_content": "Sürekli canlı yaptığınız anlatımı kaydedin. Yeni gelenler ilk gün kendi hızlarında izlesin.",
+        "brand_school": "Burayı öğrenilmesi gereken bir araç daha değil, şirketinizin kendi alanı gibi hissettirin.",
+        "share_grow": "Bağlantıyı ekip sohbetinize ve oryantasyon kontrol listenize sabitleyin.",
+        "invite_learners": "Bir sonraki yeni çalışanınızı ya da test etmesi için bir ekip arkadaşınızı davet edin. Gerçek geri bildirim tahminden iyidir.",
+        "build_community": "Sorular için bir alan, yanıtların herkes için bir kez yazılması demektir."
+      },
+      "sell": {
+        "create_course": "Küçük başlayın. İnsanların para vereceği odaklı tek bir kurs, hiç bitiremeyeceğiniz büyük bir kurstan iyidir.",
+        "add_content": "İlk dersiniz satış konuşmanızdır. İyi hazırlayın ve insanların ücretsiz önizlemesine izin verin.",
+        "brand_school": "İnsanlar güvendikleri markalara para öder. Logo ve renkler sizi profesyonel gösterir.",
+        "share_grow": "Bu, biyografiniz, bülteniniz ve paylaşımlarınız için bağlantınız. Her satış burada başlar.",
+        "invite_learners": "İlk öğrencileriniz ilk referanslarınızdır. Denemeleri için birkaç arkadaşınızı veya takipçinizi davet edin.",
+        "build_community": "Topluluk, alıcıları müdavime dönüştürür; müdavimler de bir sonraki kursu satın alır."
+      },
+      "school": {
+        "create_course": "En iyi bildiğiniz dersle başlayın. Öğrenciler, gerisi hazır olmadan başlayabilir.",
+        "add_content": "Kısa bir video, okunacak bir sayfa ve bir test ekleyin. Çeşitlilik öğrencileri motive tutar.",
+        "brand_school": "Okulunuzun adı ve renkleri her sayfada olunca öğrenciler kendilerini ait hisseder.",
+        "share_grow": "Öğrencileriniz, veliler veya üyelerinizle paylaşın. Tek bağlantı, her şey tek yerde.",
+        "invite_learners": "İlk sınıfınızı davet edin. Gerçek bir öğrenci, nasıl oluşturduğunuzu değiştirir.",
+        "build_community": "Tartışmalar, dersler arasında sınıfı canlı tutar ve öğrencileri geri getirir."
+      }
+    }
   },
   "upgrade_modal": {
     "title": "Tam potansiyelinizi açığa çıkarın",

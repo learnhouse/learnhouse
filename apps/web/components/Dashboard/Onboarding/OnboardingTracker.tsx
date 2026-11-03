@@ -1,26 +1,30 @@
 'use client'
 import { useEffect } from 'react'
-import { usePathname } from 'next/navigation'
-import { useOnboarding, ONBOARDING_STEP_DEFS } from '@components/Hooks/useOnboarding'
+import { useOnboarding } from '@components/Hooks/useOnboarding'
+import { useOnboardingSignals } from '@components/Hooks/useOnboardingSignals'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 /**
- * Headless tracker that auto-completes onboarding steps as the user navigates
- * the dashboard. Mounted app-wide (in place of the old floating OnboardingBar)
- * so step progress keeps advancing while the bar itself is gone. Completion
- * rules are sourced from the step defs' `completePath` regexes.
+ * Headless tracker, mounted across the dashboard. Ticks onboarding steps off
+ * from the org's real data (see useOnboardingSignals) while setup is running.
  */
 export default function OnboardingTracker() {
-  const { completeStep } = useOnboarding()
-  const pathname = usePathname()
+  const { completeSteps, steps, dismissed, allCompleted } = useOnboarding()
+  const { ready, done } = useOnboardingSignals(!dismissed && !allCompleted)
+  const { track } = useLHAnalytics('dashboard')
+  const key = done.join(',')
 
   useEffect(() => {
-    if (!pathname) return
-    for (const def of ONBOARDING_STEP_DEFS) {
-      if (def.completePath && new RegExp(def.completePath).test(pathname)) {
-        completeStep(def.id)
+    if (!ready) return
+    for (const id of done) {
+      if (!steps.find((s) => s.id === id)?.completed) {
+        track(AnalyticsEvent.OnboardingStepCompleted, { step_id: id })
       }
     }
-  }, [pathname, completeStep])
+    completeSteps(done)
+    // `key` stands in for `done`, a new array every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, key, completeSteps])
 
   return null
 }

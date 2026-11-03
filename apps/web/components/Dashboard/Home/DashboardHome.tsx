@@ -22,6 +22,7 @@ import RecentCourses from './RecentCourses'
 import RecentMembers from './RecentMembers'
 import ContentOverview from './ContentOverview'
 import UsageOverview from './UsageOverview'
+import OnboardingHomeCard from '@components/Dashboard/Onboarding/OnboardingHomeCard'
 
 const PLAN_COLORS: Record<string, { bg: string; text: string }> = {
   free: { bg: 'bg-gray-100', text: 'text-gray-600' },
@@ -106,6 +107,9 @@ export default function DashboardHome() {
 
           <AdminAuthorization authorizationMode="component">
             <div className="space-y-6">
+              {/* Launch plan, until setup is done */}
+              <OnboardingHomeCard />
+
               {/* Content counts row */}
               <ContentOverview />
 
