@@ -17,18 +17,15 @@ type MetadataProps = {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
-
   const communityUuid = `community_${params.communityuuid}`
-  let community = null
-  try {
-    community = await getCommunity(communityUuid, { revalidate: 120, tags: ['communities'] })
-  } catch (error) {
+  const [org, community] = await Promise.all([
+    getOrganizationContextInfo(params.orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
     // Community might not exist or user doesn't have access
-  }
+    getCommunity(communityUuid, { revalidate: 120, tags: ['communities'] }).catch(() => null),
+  ])
 
   const seoConfig = getOrgSeoConfig(org)
 
@@ -81,46 +78,53 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const CommunityPage = async (params: any) => {
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
   const { orgslug, communityuuid } = await params.params
   const communityUuid = `community_${communityuuid}`
 
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
+  const [session, org] = await Promise.all([
+    getServerSession(),
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+  ])
+  const access_token = session?.tokens?.access_token
   const org_id = org.id
 
-  let community = null
   let communityError: { status?: number } | null = null
-  let discussions: DiscussionWithAuthor[] = []
+  let discussionsError: unknown = null
 
-  try {
-    community = await getCommunity(
+  // The discussions only need the uuid and token, so fetch them alongside the
+  // community instead of after it; they're only used if the community loads.
+  const [community, fetchedDiscussions] = await Promise.all([
+    getCommunity(
       communityUuid,
       { revalidate: 120, tags: ['communities'] },
       access_token ? access_token : undefined
-    )
-  } catch (error: any) {
-    communityError = { status: error?.status }
-    console.error('Failed to fetch community:', error)
-  }
+    ).catch((error: any) => {
+      communityError = { status: error?.status }
+      console.error('Failed to fetch community:', error)
+      return null
+    }),
+    getDiscussions(
+      communityUuid,
+      'recent',
+      1,
+      10,
+      { revalidate: 120, tags: ['discussions'] },
+      access_token ? access_token : undefined
+    ).catch((error) => {
+      discussionsError = error
+      return [] as DiscussionWithAuthor[]
+    }),
+  ])
 
+  let discussions: DiscussionWithAuthor[] = []
   if (community) {
-    try {
-      discussions = await getDiscussions(
-        communityUuid,
-        'recent',
-        1,
-        10,
-        { revalidate: 120, tags: ['discussions'] },
-        access_token ? access_token : undefined
-      )
-    } catch (error) {
-      console.error('Failed to fetch discussions:', error)
-      discussions = []
+    if (discussionsError) {
+      console.error('Failed to fetch discussions:', discussionsError)
     }
+    discussions = fetchedDiscussions
   }
 
   // Missing, or denied-to-anon: 404 so non-public communities aren't enumerable.

@@ -33,38 +33,68 @@ interface InstanceInfo {
   fallback?: true
 }
 
-// Cached instance info from backend (30-second TTL)
+// Cached instance info from backend (30-second TTL). Once the cache holds a
+// real answer, a stale entry is served immediately while one shared background
+// fetch refreshes it, so no request waits on /instance/info after the first.
 let _instanceCache: { data: InstanceInfo; ts: number } | null = null
+let _instanceFetch: Promise<InstanceInfo> | null = null
 const INSTANCE_CACHE_TTL = 30 * 1000
+// How long a failed lookup is remembered, so an API outage doesn't make every
+// request sit out the 3 s timeout.
+const INSTANCE_RETRY_AFTER = 5 * 1000
+
+const FALLBACK_INSTANCE_INFO: InstanceInfo = {
+  multi_org_enabled: false,
+  default_org_slug: 'default',
+  mode: 'oss',
+  tenancy: 'single',
+  frontend_domain: 'localhost:3000',
+  top_domain: 'localhost',
+  fallback: true,
+}
+
+function fetchInstanceInfo(): Promise<InstanceInfo> {
+  if (_instanceFetch) return _instanceFetch
+  _instanceFetch = (async () => {
+    try {
+      const apiUrl = getAPIUrl()
+      const res = await fetch(`${apiUrl}instance/info`, { signal: AbortSignal.timeout(3000) })
+      if (res.ok) {
+        const raw = await res.json()
+        // Older backends only return `multi_org_enabled`; derive `tenancy`.
+        const tenancy: 'multi' | 'single' =
+          raw.tenancy === 'multi' || raw.multi_org_enabled ? 'multi' : 'single'
+        _instanceCache = { data: { ...raw, tenancy }, ts: Date.now() }
+        return _instanceCache.data
+      }
+    } catch {
+      // Backend unavailable; use safe defaults
+    }
+    // Keep serving the last real answer if there is one (the defaults would
+    // misroute a multi-tenant deployment); otherwise the defaults. Either way,
+    // try again shortly.
+    const data =
+      _instanceCache && !_instanceCache.data.fallback ? _instanceCache.data : FALLBACK_INSTANCE_INFO
+    _instanceCache = { data, ts: Date.now() - INSTANCE_CACHE_TTL + INSTANCE_RETRY_AFTER }
+    return data
+  })().finally(() => {
+    _instanceFetch = null
+  })
+  return _instanceFetch
+}
 
 async function getInstanceInfo(): Promise<InstanceInfo> {
-  if (_instanceCache && Date.now() - _instanceCache.ts < INSTANCE_CACHE_TTL) {
-    return _instanceCache.data
+  const cached = _instanceCache
+  if (cached && Date.now() - cached.ts < INSTANCE_CACHE_TTL) {
+    return cached.data
   }
-
-  try {
-    const apiUrl = getAPIUrl()
-    const res = await fetch(`${apiUrl}instance/info`, { signal: AbortSignal.timeout(3000) })
-    if (res.ok) {
-      const raw = await res.json()
-      // Older backends only return `multi_org_enabled`; derive `tenancy`.
-      const tenancy: 'multi' | 'single' =
-        raw.tenancy === 'multi' || raw.multi_org_enabled ? 'multi' : 'single'
-      _instanceCache = { data: { ...raw, tenancy }, ts: Date.now() }
-      return _instanceCache.data
-    }
-  } catch {
-    // Backend unavailable; use safe defaults
+  if (cached && !cached.data.fallback) {
+    // Stale but real: answer now, refresh in the background.
+    void fetchInstanceInfo()
+    return cached.data
   }
-  return {
-    multi_org_enabled: false,
-    default_org_slug: 'default',
-    mode: 'oss' as const,
-    tenancy: 'single',
-    frontend_domain: 'localhost:3000',
-    top_domain: 'localhost',
-    fallback: true,
-  }
+  // Nothing real yet (first request, or the backend was down): wait for it.
+  return fetchInstanceInfo()
 }
 
 // =============================================================================
@@ -149,34 +179,49 @@ function cookieDomainFor(instance: InstanceInfo, customDomain?: string): string 
   return `.${instance.top_domain}`
 }
 
+// Host-only cookies are only (re)sent when the browser doesn't already hold
+// the value, which keeps a row of Set-Cookie headers off nearly every response.
+// Domain-scoped ones are always sent: a matching value in the request could
+// come from a cookie with a different scope.
+function setHostCookie(
+  req: NextRequest,
+  response: NextResponse,
+  name: string,
+  value: string,
+) {
+  if (req.cookies.get(name)?.value === value) return
+  response.cookies.set({ name, value, path: '/' })
+}
+
 function setOrgCookies(
+  req: NextRequest,
   response: NextResponse,
   resolved: ResolvedTenant,
   instance: InstanceInfo,
 ) {
   const domain = cookieDomainFor(instance, resolved.customDomain)
-  response.cookies.set({
-    name: 'LH_org',
-    value: resolved.slug,
-    domain,
-    path: '/',
-  })
-  if (resolved.customDomain) {
+  if (domain) {
     response.cookies.set({
-      name: 'LH_custom_domain',
-      value: resolved.customDomain,
+      name: 'LH_org',
+      value: resolved.slug,
+      domain,
       path: '/',
     })
+  } else {
+    setHostCookie(req, response, 'LH_org', resolved.slug)
+  }
+  if (resolved.customDomain) {
+    setHostCookie(req, response, 'LH_custom_domain', resolved.customDomain)
     response.headers.set('x-custom-domain', resolved.customDomain)
   }
 }
 
-function setInstanceCookies(response: NextResponse, info: InstanceInfo) {
-  response.cookies.set({ name: 'LH_tenancy', value: info.tenancy, path: '/' })
-  response.cookies.set({ name: 'LH_default_org', value: info.default_org_slug, path: '/' })
-  response.cookies.set({ name: 'LH_frontend_domain', value: info.frontend_domain, path: '/' })
-  response.cookies.set({ name: 'LH_top_domain', value: info.top_domain, path: '/' })
-  response.cookies.set({ name: 'LH_mode', value: info.mode, path: '/' })
+function setInstanceCookies(req: NextRequest, response: NextResponse, info: InstanceInfo) {
+  setHostCookie(req, response, 'LH_tenancy', info.tenancy)
+  setHostCookie(req, response, 'LH_default_org', info.default_org_slug)
+  setHostCookie(req, response, 'LH_frontend_domain', info.frontend_domain)
+  setHostCookie(req, response, 'LH_top_domain', info.top_domain)
+  setHostCookie(req, response, 'LH_mode', info.mode)
   return response
 }
 
@@ -286,7 +331,7 @@ export default async function proxy(req: NextRequest) {
       ? pathname
       : `/admin${pathname}`
     const response = NextResponse.rewrite(new URL(`${target}${search}`, req.url))
-    setInstanceCookies(response, instance)
+    setInstanceCookies(req, response, instance)
     return response
   }
 
@@ -297,7 +342,7 @@ export default async function proxy(req: NextRequest) {
   // -------------------------------------------------------------------------
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
-    setInstanceCookies(response, instance)
+    setInstanceCookies(req, response, instance)
     return response
   }
 
@@ -362,7 +407,7 @@ export default async function proxy(req: NextRequest) {
     }
     if (!onOrgHost) {
       const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
-      setInstanceCookies(response, instance)
+      setInstanceCookies(req, response, instance)
       return response
     }
     // account on an org host → fall through to the tenant-scoped rewrite below.
@@ -380,7 +425,8 @@ export default async function proxy(req: NextRequest) {
     // they arrive with a pending second factor: a sign-in link for another
     // account hands its 2FA step over here, and bouncing would drop it.
     if (pathname === '/login' && hasSession && !req.nextUrl.searchParams.has('mfa_token')) {
-      return NextResponse.redirect(new URL('/home', req.url))
+      // Single tenancy redirects /home on to / anyway; skip the extra hop.
+      return NextResponse.redirect(new URL(instance.tenancy === 'single' ? '/' : '/home', req.url))
     }
 
     const resolved = await resolveTenant(req, instance)
@@ -407,8 +453,8 @@ export default async function proxy(req: NextRequest) {
       new URL(`/auth${pathname}${search}`, req.url),
       { request: { headers: requestHeaders } },
     )
-    setOrgCookies(response, resolved, instance)
-    setInstanceCookies(response, instance)
+    setOrgCookies(req, response, resolved, instance)
+    setInstanceCookies(req, response, instance)
     return response
   }
 
@@ -421,7 +467,7 @@ export default async function proxy(req: NextRequest) {
     || pathname.startsWith('/auth/token-exchange')
   ) {
     const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
-    setInstanceCookies(response, instance)
+    setInstanceCookies(req, response, instance)
     return response
   }
 
@@ -438,8 +484,8 @@ export default async function proxy(req: NextRequest) {
       new URL(`${pathname}${search}`, req.url),
       { request: { headers: requestHeaders } },
     )
-    setOrgCookies(response, resolved, instance)
-    setInstanceCookies(response, instance)
+    setOrgCookies(req, response, resolved, instance)
+    setInstanceCookies(req, response, instance)
     return response
   }
 
@@ -451,12 +497,12 @@ export default async function proxy(req: NextRequest) {
   }
   if (pathname.startsWith('/board/')) {
     const response = NextResponse.rewrite(new URL(pathname + search, req.url))
-    setInstanceCookies(response, instance)
+    setInstanceCookies(req, response, instance)
     return response
   }
   if (pathname.startsWith('/editor/playground/')) {
     const response = NextResponse.rewrite(new URL(pathname + search, req.url))
-    setInstanceCookies(response, instance)
+    setInstanceCookies(req, response, instance)
     return response
   }
 
@@ -579,8 +625,8 @@ export default async function proxy(req: NextRequest) {
       const response = NextResponse.rewrite(new URL(target, req.url), {
         request: { headers: requestHeaders },
       })
-      setOrgCookies(response, resolved, instance)
-      setInstanceCookies(response, instance)
+      setOrgCookies(req, response, resolved, instance)
+      setInstanceCookies(req, response, instance)
       return response
     }
   }
@@ -598,7 +644,7 @@ export default async function proxy(req: NextRequest) {
     new URL(`/orgs/${resolved.slug}${pathname}${search}`, req.url),
     { request: { headers: requestHeaders } },
   )
-  setOrgCookies(response, resolved, instance)
-  setInstanceCookies(response, instance)
+  setOrgCookies(req, response, resolved, instance)
+  setInstanceCookies(req, response, instance)
   return response
 }
