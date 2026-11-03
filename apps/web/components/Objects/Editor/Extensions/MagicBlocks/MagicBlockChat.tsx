@@ -78,7 +78,7 @@ function MagicBlockChat({
             className="outline outline-1 outline-neutral-200/20 rounded-lg"
             width={20}
             src={lrnaiIcon}
-            alt="Magic Chat"
+            alt={t('editor.blocks.magic_block_content.magic_chat')}
           />
           <span className="font-semibold text-sm text-white/70">{t('editor.blocks.magic_block_content.magic_chat')}</span>
         </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { getUriWithOrg } from '@services/config/config'
 import { useParams } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserProfilePopup from './UserProfilePopup'
@@ -22,6 +23,7 @@ type UserAvatarProps = {
 }
 
 function UserAvatar(props: UserAvatarProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const params = useParams() as any
@@ -132,7 +134,7 @@ function UserAvatar(props: UserAvatarProps) {
 
   const avatarImage = (
     <img
-      alt="User Avatar"
+      alt={t('user.avatar_alt')}
       width={size}
       height={size}
       // Inline size: Tailwind can't compile w-[${size}px] built at runtime

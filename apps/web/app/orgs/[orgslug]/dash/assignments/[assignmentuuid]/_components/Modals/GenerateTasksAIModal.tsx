@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, CircleNotch, Clock, ClockCounterClockwise, FileArrowUp, Hash, ListChecks, PencilSimple, Plus, Sparkle, TextT, Trash, X, type Icon as PhosphorIcon } from '@phosphor-icons/react'
@@ -23,10 +24,7 @@ import { QUIZ_RESPONSE_SINGLE, resolveQuizResponseType } from '@/lib/quiz/modes'
 // the teacher preview + edit them, then saves each one to the current
 // assignment via the existing `createAssignmentTask` client.
 //
-// NOTE: strings are hardcoded English here rather than routed through i18n,
-// because the shared locale files live outside the assignments dashboard area
-// (which this task is scoped to). Everything else mirrors the surrounding
-// LearnHouse design language (neutral palette, nice-shadow, rounded-lg,
+// Everything mirrors the surrounding LearnHouse design language (neutral palette, nice-shadow, rounded-lg,
 // lucide icons, no AI-gradient styling).
 // ---------------------------------------------------------------------------
 
@@ -63,13 +61,13 @@ interface HistoryItem {
 
 const TYPE_META: Record<
   string,
-  { label: string; Icon: PhosphorIcon }
+  { label: string; labelKey?: string; Icon: PhosphorIcon }
 > = {
-  QUIZ: { label: 'Quiz', Icon: ListChecks },
-  FORM: { label: 'Form', Icon: TextT },
-  SHORT_ANSWER: { label: 'Short answer', Icon: PencilSimple },
-  NUMBER_ANSWER: { label: 'Number', Icon: Hash },
-  FILE_SUBMISSION: { label: 'File upload', Icon: FileArrowUp },
+  QUIZ: { label: 'Quiz', labelKey: 'dashboard.assignments.editor.task_type_labels.quiz', Icon: ListChecks },
+  FORM: { label: 'Form', labelKey: 'dashboard.assignments.editor.task_type_labels.form', Icon: TextT },
+  SHORT_ANSWER: { label: 'Short answer', labelKey: 'dashboard.assignments.editor.task_type_labels.short_answer', Icon: PencilSimple },
+  NUMBER_ANSWER: { label: 'Number', labelKey: 'dashboard.assignments.editor.task_type_labels.number_answer', Icon: Hash },
+  FILE_SUBMISSION: { label: 'File upload', labelKey: 'dashboard.assignments.editor.task_type_labels.file_submission', Icon: FileArrowUp },
 }
 
 const ALL_TYPES: AssignmentTypeValue[] = [
@@ -91,6 +89,7 @@ function GenerateTasksAIModal({
   assignment_uuid: string
   closeModal: (_open: boolean) => void
 }) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
@@ -143,15 +142,15 @@ function GenerateTasksAIModal({
 
   async function runGenerate(refine = false) {
     if (!org?.id) {
-      toast.error('Organization not ready yet, please retry.')
+      toast.error(t('dashboard.assignments.editor.generate_ai_modal.org_not_ready'))
       return
     }
     if (!course_uuid) {
-      toast.error('This assignment is not linked to a course yet.')
+      toast.error(t('dashboard.assignments.editor.generate_ai_modal.not_linked'))
       return
     }
     if (!prompt.trim()) {
-      toast.error('Please describe what you want to generate.')
+      toast.error(t('dashboard.assignments.editor.generate_ai_modal.describe_prompt'))
       return
     }
     setIsGenerating(true)
@@ -175,13 +174,13 @@ function GenerateTasksAIModal({
         setPlan(res.data.plan)
         setTasks(clone(res.data.plan.tasks ?? []))
         toast.success(
-          refine ? 'Tasks refined.' : `Generated ${res.data.plan.tasks?.length ?? 0} task(s).`
+          refine ? t('dashboard.assignments.editor.generate_ai_modal.refined') : t('dashboard.assignments.editor.generate_ai_modal.generated', { count: res.data.plan.tasks?.length ?? 0 })
         )
       } else {
-        toast.error('Generation failed, please try again.')
+        toast.error(t('dashboard.assignments.editor.generate_ai_modal.generation_failed'))
       }
     } catch {
-      toast.error('Generation failed, please try again.')
+      toast.error(t('dashboard.assignments.editor.generate_ai_modal.generation_failed'))
     } finally {
       setIsGenerating(false)
     }
@@ -210,7 +209,7 @@ function GenerateTasksAIModal({
     setPlan(item.plan)
     setTasks(clone(item.plan?.tasks ?? []))
     setTab('generate')
-    toast.success('Loaded a previous generation.')
+    toast.success(t('dashboard.assignments.editor.generate_ai_modal.loaded_previous'))
   }
 
   async function removeHistory(uuid: string, e: React.MouseEvent) {
@@ -219,7 +218,7 @@ function GenerateTasksAIModal({
       await deleteAIAssignmentHistory(uuid, access_token)
       setHistory((prev) => prev.filter((h) => h.ai_generation_uuid !== uuid))
     } catch (_e) {
-      toast.error('Could not delete history entry.')
+      toast.error(t('dashboard.assignments.editor.generate_ai_modal.delete_history_failed'))
     }
   }
 
@@ -283,10 +282,10 @@ function GenerateTasksAIModal({
       queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(assignment_uuid) })
       queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignment_uuid) })
       if (saved > 0) {
-        toast.success(`Added ${saved} task${saved === 1 ? '' : 's'} to the assignment.`)
+        toast.success(t('dashboard.assignments.editor.generate_ai_modal.added_count', { count: saved }))
       }
       if (failed > 0) {
-        toast.error(`${failed} task${failed === 1 ? '' : 's'} could not be saved.`)
+        toast.error(t('dashboard.assignments.editor.generate_ai_modal.save_failed_count', { count: failed }))
       }
       // Only close when everything saved; otherwise keep ONLY the failed tasks
       // in the preview so a retry re-posts just those, never the saved ones.
@@ -296,7 +295,7 @@ function GenerateTasksAIModal({
         setTasks(remaining)
       }
     } catch {
-      toast.error('Some tasks could not be saved.')
+      toast.error(t('dashboard.assignments.editor.generate_ai_modal.save_failed_some'))
     } finally {
       setIsSaving(false)
     }
@@ -317,7 +316,7 @@ function GenerateTasksAIModal({
           }`}
         >
           <Sparkle weight="duotone" size={13} />
-          Generate
+          {t('dashboard.assignments.editor.generate_ai_modal.generate')}
         </button>
         <button
           type="button"
@@ -327,7 +326,7 @@ function GenerateTasksAIModal({
           }`}
         >
           <ClockCounterClockwise weight="duotone" size={13} />
-          History
+          {t('dashboard.assignments.editor.generate_ai_modal.history')}
         </button>
       </div>
 
@@ -344,24 +343,24 @@ function GenerateTasksAIModal({
           <div className="flex flex-col gap-3 p-4 rounded-lg border border-gray-100 nice-shadow bg-white">
             <div>
               <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                What should these tasks cover?
+                {t('dashboard.assignments.editor.generate_ai_modal.what_cover')}
               </label>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={3}
-                placeholder="e.g. Create tasks that test understanding of the key concepts in this course's second chapter."
+                placeholder={t('dashboard.assignments.editor.generate_ai_modal.prompt_placeholder')}
                 className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300"
               />
               <p className="mt-1 text-[11px] text-gray-400">
-                Tasks are grounded on this assignment&apos;s course content.
+                {t('dashboard.assignments.editor.generate_ai_modal.grounded_hint')}
               </p>
             </div>
 
             <div className="flex flex-wrap items-end gap-4">
               <div>
                 <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Number of tasks
+                  {t('dashboard.assignments.editor.generate_ai_modal.num_tasks')}
                 </label>
                 <input
                   type="number"
@@ -376,7 +375,7 @@ function GenerateTasksAIModal({
               </div>
               <div className="flex-1 min-w-[240px]">
                 <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Allowed task types
+                  {t('dashboard.assignments.editor.generate_ai_modal.allowed_types')}
                 </label>
                 <div className="flex flex-wrap gap-1.5">
                   {ALL_TYPES.map((type) => {
@@ -395,7 +394,7 @@ function GenerateTasksAIModal({
                         }`}
                       >
                         <Icon weight="duotone" size={12} />
-                        {meta.label}
+                        {meta.labelKey ? t(meta.labelKey) : meta.label}
                       </button>
                     )
                   })}
@@ -411,7 +410,7 @@ function GenerateTasksAIModal({
                 className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-black transition-colors disabled:opacity-50"
               >
                 {isGenerating ? <CircleNotch weight="duotone" size={14} className="animate-spin" /> : <Sparkle weight="duotone" size={14} />}
-                {plan ? 'Regenerate' : 'Generate'}
+                {plan ? t('dashboard.assignments.editor.generate_ai_modal.regenerate') : t('dashboard.assignments.editor.generate_ai_modal.generate')}
               </button>
               {plan && (
                 <button
@@ -419,9 +418,9 @@ function GenerateTasksAIModal({
                   onClick={() => runGenerate(true)}
                   disabled={isGenerating}
                   className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-700 text-xs font-semibold rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
-                  title="Refine the current tasks using your latest prompt"
+                  title={t('dashboard.assignments.editor.generate_ai_modal.refine_title')}
                 >
-                  Refine with prompt
+                  {t('dashboard.assignments.editor.generate_ai_modal.refine')}
                 </button>
               )}
             </div>
@@ -431,7 +430,7 @@ function GenerateTasksAIModal({
           {isGenerating && !plan && (
             <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-400">
               <CircleNotch weight="duotone" size={16} className="animate-spin" />
-              Generating tasks…
+              {t('dashboard.assignments.editor.generate_ai_modal.generating')}
             </div>
           )}
 
@@ -440,14 +439,14 @@ function GenerateTasksAIModal({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    {plan.title || 'Preview'}
+                    {plan.title || t('dashboard.assignments.editor.generate_ai_modal.preview')}
                   </p>
                   {plan.description && (
                     <p className="text-xs text-gray-500">{plan.description}</p>
                   )}
                 </div>
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
-                  {tasks.length} task{tasks.length === 1 ? '' : 's'}
+                  {t('dashboard.assignments.editor.generate_ai_modal.task_count', { count: tasks.length })}
                 </span>
               </div>
 
@@ -464,7 +463,7 @@ function GenerateTasksAIModal({
 
               {tasks.length === 0 && (
                 <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-4 py-8 text-center text-xs text-gray-400">
-                  No tasks left; regenerate to start over.
+                  {t('dashboard.assignments.editor.generate_ai_modal.no_tasks_left')}
                 </div>
               )}
 
@@ -474,7 +473,7 @@ function GenerateTasksAIModal({
                   onClick={() => closeModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="button"
@@ -483,7 +482,7 @@ function GenerateTasksAIModal({
                   className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-black transition-colors disabled:opacity-50"
                 >
                   {isSaving ? <CircleNotch weight="duotone" size={14} className="animate-spin" /> : <Plus weight="duotone" size={14} />}
-                  Add to assignment
+                  {t('dashboard.assignments.editor.generate_ai_modal.add_to_assignment')}
                 </button>
               </div>
             </div>
@@ -508,18 +507,19 @@ function HistoryList({
   onLoad: (_item: HistoryItem) => void
   onRemove: (_uuid: string, _e: React.MouseEvent) => void
 }) {
+  const { t } = useTranslation()
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-400">
         <CircleNotch weight="duotone" size={16} className="animate-spin" />
-        Loading history…
+        {t('dashboard.assignments.editor.generate_ai_modal.loading_history')}
       </div>
     )
   }
   if (history.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-4 py-10 text-center text-xs text-gray-400">
-        No previous generations yet.
+        {t('dashboard.assignments.editor.generate_ai_modal.no_history')}
       </div>
     )
   }
@@ -535,14 +535,13 @@ function HistoryList({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-800 truncate">
-                {item.plan?.title || item.prompt || 'Untitled generation'}
+                {item.plan?.title || item.prompt || t('dashboard.assignments.editor.generate_ai_modal.untitled_generation')}
               </p>
               <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{item.prompt}</p>
               <div className="mt-1.5 flex items-center gap-2 text-[11px] text-gray-400">
                 <span className="inline-flex items-center gap-1">
                   <ListChecks weight="duotone" size={11} />
-                  {item.plan?.tasks?.length ?? 0} task
-                  {(item.plan?.tasks?.length ?? 0) === 1 ? '' : 's'}
+                  {t('dashboard.assignments.editor.generate_ai_modal.task_count', { count: item.plan?.tasks?.length ?? 0 })}
                 </span>
                 {item.creation_date && (
                   <span className="inline-flex items-center gap-1">
@@ -557,7 +556,7 @@ function HistoryList({
               tabIndex={0}
               onClick={(e) => onRemove(item.ai_generation_uuid, e)}
               className="flex-none p-1.5 rounded-md text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"
-              title="Delete"
+              title={t('common.delete')}
             >
               <Trash weight="duotone" size={14} />
             </span>
@@ -584,6 +583,7 @@ function TaskPreviewCard({
   onUpdateContents: (_index: number, _mutate: (_contents: any) => void) => void
   onRemove: (_index: number) => void
 }) {
+  const { t } = useTranslation()
   const meta = TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: TextT }
   const Icon = meta.Icon
 
@@ -596,13 +596,13 @@ function TaskPreviewCard({
             {index + 1}
           </span>
           <Icon weight="duotone" size={13} className="text-gray-400" />
-          <span>{meta.label}</span>
+          <span>{meta.labelKey ? t(meta.labelKey) : meta.label}</span>
         </div>
         <button
           type="button"
           onClick={() => onRemove(index)}
           className="p-1 rounded-md text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"
-          title="Remove from preview"
+          title={t('dashboard.assignments.editor.generate_ai_modal.remove_from_preview')}
         >
           <X weight="duotone" size={14} />
         </button>
@@ -611,7 +611,7 @@ function TaskPreviewCard({
       {/* Common fields */}
       <div className="p-4 flex flex-col gap-3">
         <div>
-          <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Title</label>
+          <label className="text-[11px] font-semibold text-gray-500 mb-1 block">{t('dashboard.assignments.editor.task_editor.general.title')}</label>
           <input
             value={task.title}
             onChange={(e) => onUpdateTask(index, { title: e.target.value })}
@@ -619,7 +619,7 @@ function TaskPreviewCard({
           />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Description</label>
+          <label className="text-[11px] font-semibold text-gray-500 mb-1 block">{t('dashboard.assignments.editor.task_editor.general.description')}</label>
           <textarea
             value={task.description}
             onChange={(e) => onUpdateTask(index, { description: e.target.value })}
@@ -629,7 +629,7 @@ function TaskPreviewCard({
         </div>
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Hint</label>
+            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">{t('dashboard.assignments.editor.task_editor.general.hint')}</label>
             <input
               value={task.hint}
               onChange={(e) => onUpdateTask(index, { hint: e.target.value })}
@@ -637,7 +637,7 @@ function TaskPreviewCard({
             />
           </div>
           <div className="w-28">
-            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Max grade</label>
+            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">{t('dashboard.assignments.editor.generate_ai_modal.max_grade')}</label>
             <input
               type="number"
               min={1}
@@ -669,6 +669,7 @@ function TaskContentEditor({
   task: GeneratedTask
   onUpdateContents: (_index: number, _mutate: (_contents: any) => void) => void
 }) {
+  const { t } = useTranslation()
   const c = task.contents ?? {}
   const inputCls =
     'w-full px-2.5 py-1.5 text-sm text-gray-700 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900/10'
@@ -686,7 +687,7 @@ function TaskContentEditor({
                   contents.questions[qi].questionText = e.target.value
                 })
               }
-              placeholder="Question"
+              placeholder={t('dashboard.assignments.editor.generate_ai_modal.question')}
               className={inputCls + ' font-semibold'}
             />
             <span className="w-fit px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[11px] font-bold">
@@ -694,8 +695,8 @@ function TaskContentEditor({
                 q.response_type,
                 (q.options ?? []).filter((o: any) => !!o.assigned_right_answer).length
               ) === QUIZ_RESPONSE_SINGLE
-                ? 'Single answer'
-                : 'Multiple answers'}
+                ? t('dashboard.assignments.editor.generate_ai_modal.single_answer')
+                : t('dashboard.assignments.editor.generate_ai_modal.multiple_answers')}
             </span>
             <div className="flex flex-col gap-1.5">
               {(q.options ?? []).map((o: any, oi: number) => (
@@ -710,7 +711,7 @@ function TaskContentEditor({
                         contents.questions[qi].options[oi].text = e.target.value
                       })
                     }
-                    placeholder="Option"
+                    placeholder={t('dashboard.assignments.editor.generate_ai_modal.option')}
                     className={inputCls}
                   />
                   <button
@@ -743,10 +744,10 @@ function TaskContentEditor({
                         ? 'bg-lime-100 text-lime-700'
                         : 'bg-rose-50 text-rose-500'
                     }`}
-                    title="Toggle correct answer"
+                    title={t('dashboard.assignments.editor.generate_ai_modal.toggle_correct')}
                   >
                     {o.assigned_right_answer ? <Check weight="duotone" size={12} /> : <X weight="duotone" size={12} />}
-                    {o.assigned_right_answer ? 'Correct' : 'Wrong'}
+                    {o.assigned_right_answer ? t('dashboard.assignments.editor.generate_ai_modal.correct') : t('dashboard.assignments.editor.generate_ai_modal.wrong')}
                   </button>
                 </div>
               ))}
@@ -770,7 +771,7 @@ function TaskContentEditor({
                   contents.questions[qi].questionText = e.target.value
                 })
               }
-              placeholder="Prompt (use ___ for a blank)"
+              placeholder={t('dashboard.assignments.editor.generate_ai_modal.form_prompt_placeholder')}
               className={inputCls + ' font-semibold'}
             />
             {(q.blanks ?? []).map((b: any, bi: number) => (
@@ -782,7 +783,7 @@ function TaskContentEditor({
                       contents.questions[qi].blanks[bi].placeholder = e.target.value
                     })
                   }
-                  placeholder="Placeholder"
+                  placeholder={t('dashboard.assignments.editor.generate_ai_modal.blank_placeholder')}
                   className={inputCls}
                 />
                 <input
@@ -792,7 +793,7 @@ function TaskContentEditor({
                       contents.questions[qi].blanks[bi].correctAnswer = e.target.value
                     })
                   }
-                  placeholder="Correct answer"
+                  placeholder={t('dashboard.assignments.editor.generate_ai_modal.correct_answer')}
                   className={inputCls + ' font-semibold text-emerald-700'}
                 />
               </div>
@@ -814,11 +815,11 @@ function TaskContentEditor({
               contents.prompt = e.target.value
             })
           }
-          placeholder="Prompt"
+          placeholder={t('dashboard.assignments.editor.generate_ai_modal.prompt')}
           className={inputCls + ' font-semibold'}
         />
         <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold text-gray-500">Accepted answers</span>
+          <span className="text-[11px] font-semibold text-gray-500">{t('dashboard.assignments.editor.task_editor.short_answer.answers_label')}</span>
           {answers.map((a, ai) => (
             <input
               key={ai}
@@ -833,7 +834,7 @@ function TaskContentEditor({
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-gray-500">Match mode</span>
+          <span className="text-[11px] font-semibold text-gray-500">{t('dashboard.assignments.editor.generate_ai_modal.match_mode')}</span>
           <select
             value={c.match_mode ?? 'case_insensitive'}
             onChange={(e) =>
@@ -843,10 +844,10 @@ function TaskContentEditor({
             }
             className="px-2.5 py-1.5 text-sm text-gray-700 border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
           >
-            <option value="case_insensitive">Case insensitive</option>
-            <option value="exact">Exact</option>
-            <option value="contains">Contains</option>
-            <option value="regex">Regex</option>
+            <option value="case_insensitive">{t('dashboard.assignments.editor.generate_ai_modal.match_case_insensitive')}</option>
+            <option value="exact">{t('dashboard.assignments.editor.generate_ai_modal.match_exact')}</option>
+            <option value="contains">{t('dashboard.assignments.editor.generate_ai_modal.match_contains')}</option>
+            <option value="regex">{t('dashboard.assignments.editor.generate_ai_modal.match_regex')}</option>
           </select>
         </div>
       </div>
@@ -863,12 +864,12 @@ function TaskContentEditor({
               contents.prompt = e.target.value
             })
           }
-          placeholder="Prompt"
+          placeholder={t('dashboard.assignments.editor.generate_ai_modal.prompt')}
           className={inputCls + ' font-semibold'}
         />
         <div className="flex items-center gap-2">
           <div className="flex-1">
-            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Correct value</label>
+            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">{t('dashboard.assignments.editor.task_editor.number_answer.correct_value_label')}</label>
             <input
               type="number"
               value={c.correct_value ?? 0}
@@ -881,7 +882,7 @@ function TaskContentEditor({
             />
           </div>
           <div className="flex-1">
-            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Tolerance (±)</label>
+            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">{t('dashboard.assignments.editor.task_editor.number_answer.tolerance_label')}</label>
             <input
               type="number"
               value={c.tolerance ?? 0}
@@ -894,7 +895,7 @@ function TaskContentEditor({
             />
           </div>
           <div className="w-24">
-            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Unit</label>
+            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">{t('dashboard.assignments.editor.generate_ai_modal.unit')}</label>
             <input
               value={c.unit ?? ''}
               onChange={(e) =>
@@ -913,7 +914,7 @@ function TaskContentEditor({
   // FILE_SUBMISSION: no content to edit.
   return (
     <p className="text-xs text-gray-400 italic pt-1">
-      Students submit a file for this task. No answer key to configure.
+      {t('dashboard.assignments.editor.generate_ai_modal.file_hint')}
     </p>
   )
 }

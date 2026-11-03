@@ -1,4 +1,5 @@
 import { getAPIUrl } from '@services/config/config'
+import i18n from '@/lib/i18n'
 
 export interface UploadedFileInfo {
   file_id: string
@@ -113,7 +114,7 @@ export async function uploadMigrationFiles(
     )
 
     if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`)
+      throw new Error(i18n.t('migration.errors.upload_failed_status', { status: response.statusText }))
     }
 
     const result: MigrationUploadResponse = await response.json()
@@ -154,7 +155,7 @@ export async function suggestStructure(
   )
 
   if (!response.ok) {
-    throw new Error(`Suggestion failed: ${response.statusText}`)
+    throw new Error(i18n.t('migration.errors.suggestion_failed_status', { status: response.statusText }))
   }
 
   return response.json()
@@ -179,7 +180,7 @@ export async function createFromMigration(
   )
 
   if (!response.ok) {
-    throw new Error(`Creation failed: ${response.statusText}`)
+    throw new Error(i18n.t('migration.errors.creation_failed_status', { status: response.statusText }))
   }
 
   return response.json()

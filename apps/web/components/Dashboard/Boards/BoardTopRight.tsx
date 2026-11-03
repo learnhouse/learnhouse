@@ -32,9 +32,9 @@ const POMODORO_DURATIONS: Record<PomodoroPhase, number> = {
 }
 
 const POMODORO_COLORS: Record<PomodoroPhase, { bg: string; on: string; off: string; btnBg: string; text: string; label: string }> = {
-  work: { bg: '#2a0808', on: '#ef4444', off: '#3d1818', btnBg: 'rgba(239,68,68,0.15)', text: 'text-red-400', label: 'Focus' },
-  shortBreak: { bg: '#082a0e', on: '#22c55e', off: '#183d1e', btnBg: 'rgba(34,197,94,0.15)', text: 'text-green-400', label: 'Short Break' },
-  longBreak: { bg: '#08102a', on: '#3b82f6', off: '#18253d', btnBg: 'rgba(59,130,246,0.15)', text: 'text-blue-400', label: 'Long Break' },
+  work: { bg: '#2a0808', on: '#ef4444', off: '#3d1818', btnBg: 'rgba(239,68,68,0.15)', text: 'text-red-400', label: 'boards.timer.phase_focus' },
+  shortBreak: { bg: '#082a0e', on: '#22c55e', off: '#183d1e', btnBg: 'rgba(34,197,94,0.15)', text: 'text-green-400', label: 'boards.timer.phase_short_break' },
+  longBreak: { bg: '#08102a', on: '#3b82f6', off: '#18253d', btnBg: 'rgba(59,130,246,0.15)', text: 'text-blue-400', label: 'boards.timer.phase_long_break' },
 }
 
 const TIMER_PRESETS = [
@@ -473,7 +473,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
             {/* Pomodoro phase label */}
             {pomColors && (
               <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: pomColors.on }}>
-                {pomColors.label}
+                {t(pomColors.label)}
               </span>
             )}
 
@@ -535,7 +535,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
                 onClick={advancePomodoro}
                 className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
                 style={{ background: pomColors?.btnBg ?? 'rgba(239,68,68,0.15)' }}
-                title="Skip to next phase"
+                title={t('boards.timer.skip_to_next_phase')}
               >
                 <SkipForward size={13} className={pomColors?.text ?? 'text-red-400'} />
               </button>
@@ -560,8 +560,8 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
         const dramaticOn = pc ? pc.on : '#ff4444'
         const dramaticOff = pc ? pc.off : '#3d1515'
         const dramaticLabel = pc ? (timerState.pomodoroPhase === 'work'
-          ? (timerState.pomodoroSessions % 4 === 3 ? 'Long break next' : 'Short break next')
-          : 'Back to focus') : null
+          ? (timerState.pomodoroSessions % 4 === 3 ? t('boards.timer.long_break_next') : t('boards.timer.short_break_next'))
+          : t('boards.timer.back_to_focus')) : null
         return (
           <div
             className="absolute inset-x-0 top-0 z-40 pointer-events-auto flex items-center justify-center"

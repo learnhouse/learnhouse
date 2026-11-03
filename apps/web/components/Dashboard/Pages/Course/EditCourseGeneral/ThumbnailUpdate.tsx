@@ -67,22 +67,22 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
   const validateFile = (file: File, type: 'image' | 'video'): boolean => {
     if (type === 'image') {
       if (!VALID_IMAGE_MIME_TYPES.includes(file.type as ValidImageMimeType)) {
-        showError(`Invalid file type: ${file.type}. Please upload only PNG or JPG/JPEG images`);
+        showError(t('dashboard.courses.general.thumbnail.invalid_image_type', { type: file.type }));
         return false;
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        showError(`File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 8MB limit`);
+        showError(t('dashboard.courses.general.thumbnail.image_too_large', { size: (file.size / 1024 / 1024).toFixed(2) }));
         return false;
       }
     } else {
       if (!VALID_VIDEO_MIME_TYPES.includes(file.type as ValidVideoMimeType)) {
-        showError(`Invalid file type: ${file.type}. Please upload only MP4 or WebM videos`);
+        showError(t('dashboard.courses.general.thumbnail.invalid_video_type', { type: file.type }));
         return false;
       }
 
       if (file.size > MAX_VIDEO_FILE_SIZE) {
-        showError(`File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 100MB limit`);
+        showError(t('dashboard.courses.general.thumbnail.video_too_large', { size: (file.size / 1024 / 1024).toFixed(2) }));
         return false;
       }
     }
@@ -94,7 +94,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
     const file = event.target.files?.[0];
     
     if (!file) {
-      showError('Please select a file');
+      showError(t('dashboard.courses.general.thumbnail.select_file'));
       return;
     }
     
@@ -128,7 +128,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
       setLocalThumbnail({ file, url: blobUrl, type: 'image' });
       await updateThumbnail(file, 'image');
     } catch (_err) {
-      showError('Failed to load the generated image');
+      showError(t('dashboard.courses.general.thumbnail.load_generated_failed'));
       setIsLoading(false);
     }
   }
@@ -163,13 +163,13 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
         showError(res.HTTPmessage);
       } else {
         setLocalThumbnail(null);
-        toast.success('Thumbnail updated successfully', {
+        toast.success(t('dashboard.courses.communities.thumbnail.toasts.update_success'), {
           duration: 3000,
           position: 'top-center',
         });
       }
     } catch (_err) {
-      showError('Failed to update thumbnail');
+      showError(t('dashboard.courses.communities.thumbnail.toasts.update_error'));
     } finally {
       setIsLoading(false);
     }
@@ -212,7 +212,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
           <div className="max-w-[480px] mx-auto">
             <SafeImage
               src={localThumbnail.url}
-              alt="Course thumbnail preview"
+              alt={t('dashboard.courses.general.thumbnail.preview_alt')}
               className={`${isLoading ? 'animate-pulse' : ''} w-full aspect-video object-cover rounded-lg border border-gray-200`}
             />
           </div>
@@ -236,7 +236,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
         <div className="max-w-[480px] mx-auto">
           <SafeImage
             src={currentThumbnailUrl}
-            alt="Current course thumbnail"
+            alt={t('dashboard.courses.general.thumbnail.current_alt')}
             className="w-full aspect-video object-cover rounded-lg border border-gray-200"
           />
         </div>
@@ -252,7 +252,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
         <div className="flex justify-center items-center mt-4">
           <div className="font-medium text-sm text-green-800 bg-green-50 rounded-full px-4 py-2 flex items-center">
             <ArrowBigUpDash size={16} className="me-2 animate-bounce" />
-            Uploading...
+            {t('dashboard.courses.communities.thumbnail.uploading')}
           </div>
         </div>
       );

@@ -3,6 +3,7 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { Cross2Icon } from "@radix-ui/react-icons"
+import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
@@ -26,6 +27,19 @@ const DialogOverlay = React.forwardRef<
   />
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+const DialogCloseButton = () => {
+  const { t } = useTranslation()
+  return (
+    <DialogPrimitive.Close
+      className="absolute end-4 top-4 p-1.5 rounded-lg bg-gray-100/80 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none"
+      aria-label={t('modal.close_dialog')}
+    >
+      <Cross2Icon className="h-4 w-4" />
+      <span className="sr-only">{t('common.close')}</span>
+    </DialogPrimitive.Close>
+  )
+}
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
@@ -66,13 +80,7 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close
-        className="absolute end-4 top-4 p-1.5 rounded-lg bg-gray-100/80 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none"
-        aria-label="Close dialog"
-      >
-        <Cross2Icon className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
+      <DialogCloseButton />
     </DialogPrimitive.Content>
   </DialogPortal>
 ))

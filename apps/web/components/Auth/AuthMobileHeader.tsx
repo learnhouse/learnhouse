@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { Trans } from 'react-i18next'
 import Image from 'next/image'
 import Link from 'next/link'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
@@ -94,24 +95,28 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
       {/* Unsplash attribution (required by Unsplash API guidelines) */}
       {background_type === 'unsplash' && background_image && unsplash_photographer_name && (
         <span className="relative z-10 ms-auto text-[10px] leading-tight text-white/70 truncate max-w-[45%] text-end">
-          Photo by{' '}
-          <a
-            href={withUtm(unsplash_photographer_url) || withUtm(unsplash_photo_url)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            {unsplash_photographer_name}
-          </a>
-          {' '}on{' '}
-          <a
-            href={`https://unsplash.com/${UNSPLASH_UTM}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            Unsplash
-          </a>
+          <Trans
+            i18nKey="auth.photo_credit"
+            values={{ name: unsplash_photographer_name }}
+            components={{
+              photographer: (
+                <a
+                  href={withUtm(unsplash_photographer_url) || withUtm(unsplash_photo_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                />
+              ),
+              unsplash: (
+                <a
+                  href={`https://unsplash.com/${UNSPLASH_UTM}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                />
+              ),
+            }}
+          />
         </span>
       )}
     </div>

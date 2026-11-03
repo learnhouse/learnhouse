@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { Editor } from '@tiptap/core'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import Image from 'next/image'
@@ -197,6 +198,7 @@ function AIActionButton(props: {
   label: string
   activity: any
 }) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
   const dispatchAIChatBot = useAIChatBotDispatch() as any
@@ -299,12 +301,12 @@ function AIActionButton(props: {
 
   const tooltipLabel =
     props.label === 'Explain'
-      ? 'Explain a word or a sentence with AI'
+      ? t('ai.toolkit.explain_tooltip')
       : props.label === 'Summarize'
-        ? 'Summarize a long paragraph or text with AI'
+        ? t('ai.toolkit.summarize_tooltip')
         : props.label === 'Translate'
-          ? 'Translate to different languages with AI'
-          : 'Give examples to understand better with AI'
+          ? t('ai.toolkit.translate_tooltip')
+          : t('ai.toolkit.examples_tooltip')
   return (
     <div className="flex space-x-2">
       <ToolTip sideOffset={10} slateBlack content={tooltipLabel}>
@@ -316,9 +318,9 @@ function AIActionButton(props: {
           {props.label === 'Summarize' && <FormInput size={16} />}
           {props.label === 'Translate' && <Languages size={16} />}
           {props.label === 'Examples' && (
-            <div className="text-white/50">Ex</div>
+            <div className="text-white/50">{t('ai.toolkit.examples_short')}</div>
           )}
-          <div>{props.label}</div>
+          <div>{t(`ai.toolkit.${props.label.toLowerCase()}`)}</div>
         </button>
       </ToolTip>
     </div>

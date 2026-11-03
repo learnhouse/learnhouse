@@ -295,11 +295,11 @@ export default function CommandPalette() {
 
             {/* Footer */}
             <div className="flex items-center gap-3 sm:gap-5 border-t border-white/[0.06] bg-black/20 px-4 sm:px-7 py-3 text-[12px] text-white/40">
-              <FooterHint label="Navigate" keys={['↑', '↓']} />
-              <FooterHint label="Open" keys={['↵']} />
+              <FooterHint label={t('search.palette.keys.navigate')} keys={['↑', '↓']} />
+              <FooterHint label={t('search.palette.keys.open')} keys={['↵']} />
               <span className="hidden sm:contents">
-                <FooterHint label="New tab" keys={['⌘', '↵']} />
-                <FooterHint label="Close" keys={['esc']} />
+                <FooterHint label={t('search.palette.keys.new_tab')} keys={['⌘', '↵']} />
+                <FooterHint label={t('search.palette.keys.close')} keys={['esc']} />
               </span>
             </div>
           </Command>

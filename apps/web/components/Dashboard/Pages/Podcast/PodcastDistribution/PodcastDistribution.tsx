@@ -7,6 +7,7 @@ import { SiApplepodcasts, SiSpotify, SiYoutubemusic, SiAudible } from '@icons-pa
 import { Button } from '@components/ui/button'
 import { Input } from '@components/ui/input'
 import toast from 'react-hot-toast'
+import { Trans, useTranslation } from 'react-i18next'
 
 interface PodcastDistributionProps {
   orgslug: string
@@ -14,6 +15,7 @@ interface PodcastDistributionProps {
 }
 
 function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps) {
+  const { t } = useTranslation()
   const { podcast } = usePodcast()
 
   const shortUuid = podcastuuid.replace('podcast_', '')
@@ -22,7 +24,7 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    toast.success('Copied to clipboard')
+    toast.success(t('podcasts.distribution.copied'))
   }
 
   return (
@@ -31,10 +33,10 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
       <div className="bg-white rounded-xl nice-shadow p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Rss size={20} className="text-orange-500" />
-          <h2 className="font-bold text-xl text-gray-800">RSS Feed</h2>
+          <h2 className="font-bold text-xl text-gray-800">{t('podcasts.distribution.rss_title')}</h2>
         </div>
         <p className="text-gray-500 text-sm mb-4">
-          Your podcast RSS feed is automatically generated. Use this URL to submit your podcast to directories.
+          {t('podcasts.distribution.rss_description')}
         </p>
         <div className="flex items-center space-x-2">
           <Input
@@ -48,19 +50,19 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
             onClick={() => copyToClipboard(feedUrl)}
           >
             <Copy size={14} className="me-1" />
-            Copy
+            {t('podcasts.distribution.copy')}
           </Button>
           <a href={feedUrl} target="_blank" rel="noopener noreferrer">
             <Button variant="outline" size="sm">
               <ExternalLink size={14} className="me-1" />
-              Preview
+              {t('podcasts.distribution.preview')}
             </Button>
           </a>
         </div>
         {!podcast?.published && (
           <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              Your podcast is currently unpublished. Publish it first before submitting to directories.
+              {t('podcasts.distribution.unpublished_warning')}
             </p>
           </div>
         )}
@@ -68,9 +70,9 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
 
       {/* Distribution Guide */}
       <div className="bg-white rounded-xl nice-shadow p-6">
-        <h2 className="font-bold text-xl text-gray-800 mb-4">Submit to Podcast Directories</h2>
+        <h2 className="font-bold text-xl text-gray-800 mb-4">{t('podcasts.distribution.directories_title')}</h2>
         <p className="text-gray-500 text-sm mb-6">
-          Follow these steps to get your podcast listed on major platforms. Each platform requires you to submit your RSS feed URL.
+          {t('podcasts.distribution.directories_description')}
         </p>
 
         <div className="space-y-6">
@@ -82,25 +84,25 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Apple Podcasts</h3>
-                <p className="text-xs text-gray-400">Also distributes to Apple Music</p>
+                <p className="text-xs text-gray-400">{t('podcasts.distribution.apple.subtitle')}</p>
               </div>
             </div>
             <ol className="text-sm text-gray-600 space-y-2 ms-1">
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">1.</span>
-                <span>Go to <a href="https://podcastsconnect.apple.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">podcastsconnect.apple.com</a> and sign in with your Apple ID</span>
+                <span><Trans i18nKey="podcasts.distribution.apple.step1" components={{ link: <a href="https://podcastsconnect.apple.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" /> }} /></span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">2.</span>
-                <span>Click the <strong>+</strong> button and select &quot;New Show&quot;</span>
+                <span><Trans i18nKey="podcasts.distribution.apple.step2" components={{ strong: <strong /> }} /></span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">3.</span>
-                <span>Select &quot;Add a show with an RSS feed&quot; and paste your RSS feed URL</span>
+                <span>{t('podcasts.distribution.apple.step3')}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">4.</span>
-                <span>Apple will validate your feed; review typically takes 1-5 business days</span>
+                <span>{t('podcasts.distribution.apple.step4')}</span>
               </li>
             </ol>
           </div>
@@ -113,25 +115,25 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Spotify</h3>
-                <p className="text-xs text-gray-400">Largest podcast listening platform</p>
+                <p className="text-xs text-gray-400">{t('podcasts.distribution.spotify.subtitle')}</p>
               </div>
             </div>
             <ol className="text-sm text-gray-600 space-y-2 ms-1">
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">1.</span>
-                <span>Go to <a href="https://podcasters.spotify.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">podcasters.spotify.com</a> and sign in or create an account</span>
+                <span><Trans i18nKey="podcasts.distribution.spotify.step1" components={{ link: <a href="https://podcasters.spotify.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" /> }} /></span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">2.</span>
-                <span>Click &quot;Get started&quot; then select &quot;I have a podcast with a hosting provider&quot;</span>
+                <span>{t('podcasts.distribution.spotify.step2')}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">3.</span>
-                <span>Paste your RSS feed URL and click &quot;Next&quot;</span>
+                <span>{t('podcasts.distribution.spotify.step3')}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">4.</span>
-                <span>Verify ownership, fill in details, and submit (usually live within hours)</span>
+                <span>{t('podcasts.distribution.spotify.step4')}</span>
               </li>
             </ol>
           </div>
@@ -144,25 +146,25 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">YouTube Music</h3>
-                <p className="text-xs text-gray-400">Google Podcasts migrated to YouTube Music</p>
+                <p className="text-xs text-gray-400">{t('podcasts.distribution.youtube_music.subtitle')}</p>
               </div>
             </div>
             <ol className="text-sm text-gray-600 space-y-2 ms-1">
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">1.</span>
-                <span>Go to <a href="https://podcasts.google.com/publish" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">podcasts.google.com/publish</a></span>
+                <span><Trans i18nKey="podcasts.distribution.youtube_music.step1" components={{ link: <a href="https://podcasts.google.com/publish" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" /> }} /></span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">2.</span>
-                <span>Sign in with your Google account and click &quot;Add a podcast&quot;</span>
+                <span>{t('podcasts.distribution.youtube_music.step2')}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">3.</span>
-                <span>Paste your RSS feed URL and verify ownership via email</span>
+                <span>{t('podcasts.distribution.youtube_music.step3')}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">4.</span>
-                <span>Your podcast will appear on YouTube Music and Google search results</span>
+                <span>{t('podcasts.distribution.youtube_music.step4')}</span>
               </li>
             </ol>
           </div>
@@ -175,21 +177,21 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Amazon Music / Audible</h3>
-                <p className="text-xs text-gray-400">Also available on Alexa devices</p>
+                <p className="text-xs text-gray-400">{t('podcasts.distribution.amazon.subtitle')}</p>
               </div>
             </div>
             <ol className="text-sm text-gray-600 space-y-2 ms-1">
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">1.</span>
-                <span>Go to <a href="https://podcasters.amazon.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">podcasters.amazon.com</a> and sign in with your Amazon account</span>
+                <span><Trans i18nKey="podcasts.distribution.amazon.step1" components={{ link: <a href="https://podcasters.amazon.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" /> }} /></span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">2.</span>
-                <span>Click &quot;Add your podcast&quot; and paste your RSS feed URL</span>
+                <span>{t('podcasts.distribution.amazon.step2')}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">3.</span>
-                <span>Review your podcast details and submit for review</span>
+                <span>{t('podcasts.distribution.amazon.step3')}</span>
               </li>
             </ol>
           </div>
@@ -198,27 +200,27 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
 
       {/* Tips */}
       <div className="bg-white rounded-xl nice-shadow p-6">
-        <h2 className="font-bold text-xl text-gray-800 mb-3">Tips for Successful Distribution</h2>
+        <h2 className="font-bold text-xl text-gray-800 mb-3">{t('podcasts.distribution.tips_title')}</h2>
         <ul className="text-sm text-gray-600 space-y-2">
           <li className="flex items-start space-x-2">
             <span className="text-green-500 shrink-0 mt-0.5">&#10003;</span>
-            <span>Make sure your podcast has a <strong>thumbnail image</strong> (1400x1400 minimum for Apple Podcasts)</span>
+            <span><Trans i18nKey="podcasts.distribution.tip_thumbnail" components={{ strong: <strong /> }} /></span>
           </li>
           <li className="flex items-start space-x-2">
             <span className="text-green-500 shrink-0 mt-0.5">&#10003;</span>
-            <span>Have at least <strong>one published episode</strong> before submitting</span>
+            <span><Trans i18nKey="podcasts.distribution.tip_episode" components={{ strong: <strong /> }} /></span>
           </li>
           <li className="flex items-start space-x-2">
             <span className="text-green-500 shrink-0 mt-0.5">&#10003;</span>
-            <span>Fill in a descriptive <strong>podcast description</strong>; this helps with discoverability</span>
+            <span><Trans i18nKey="podcasts.distribution.tip_description" components={{ strong: <strong /> }} /></span>
           </li>
           <li className="flex items-start space-x-2">
             <span className="text-green-500 shrink-0 mt-0.5">&#10003;</span>
-            <span>New episodes will appear automatically on all platforms once your feed is submitted</span>
+            <span>{t('podcasts.distribution.tip_auto')}</span>
           </li>
           <li className="flex items-start space-x-2">
             <span className="text-green-500 shrink-0 mt-0.5">&#10003;</span>
-            <span>Updates may take a few hours to propagate across platforms</span>
+            <span>{t('podcasts.distribution.tip_propagate')}</span>
           </li>
         </ul>
       </div>

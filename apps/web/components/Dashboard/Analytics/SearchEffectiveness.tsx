@@ -1,27 +1,29 @@
 'use client'
 import React from 'react'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
+import { useTranslation } from 'react-i18next'
 
 export default function SearchEffectiveness({ days = '30' }: { days?: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('search_effectiveness', { days })
   const rows = data?.data ?? []
 
   return (
     <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Search Effectiveness</h3>
-      <p className="text-xs text-gray-400 mb-4">Top queries and zero-result rate</p>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('analytics.advanced_widgets.search_effectiveness.title')}</h3>
+      <p className="text-xs text-gray-400 mb-4">{t('analytics.advanced_widgets.search_effectiveness.description')}</p>
       {isLoading ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('analytics.common.loading')}</div>
       ) : rows.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-gray-300">No data yet</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">{t('analytics.common.no_data')}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
-                <th className="pb-2">Query</th>
-                <th className="pb-2 text-right">Searches</th>
-                <th className="pb-2 text-right">Zero Results %</th>
+                <th className="pb-2">{t('analytics.advanced_widgets.search_effectiveness.query')}</th>
+                <th className="pb-2 text-right">{t('analytics.advanced_widgets.search_effectiveness.searches')}</th>
+                <th className="pb-2 text-right">{t('analytics.advanced_widgets.search_effectiveness.zero_results')}</th>
               </tr>
             </thead>
             <tbody>
