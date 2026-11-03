@@ -113,7 +113,7 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.live_sessions.title',
     descriptionKey: 'common.plans.feature_restricted.live_sessions.description',
     Icon: VideoCamera,
-    upsellPlan: 'standard',
+    upsellPlan: 'pro',
   },
   ai: {
     titleKey: 'common.plans.feature_restricted.ai.title',
