@@ -7,11 +7,11 @@ export type OnboardingVideo = { youtubeId: string; poster: string; duration: num
 const VIDEOS: Record<string, { youtubeId: string; duration: number }> = {
   ob1: { youtubeId: '5UNjzIuEAl0', duration: 37 },
   ob2: { youtubeId: 'UUnoT-xfnnY', duration: 34 },
-  ob3: { youtubeId: '6mmWspi12wY', duration: 32 },
-  ob4: { youtubeId: 'gOnapJb1JJU', duration: 32 },
-  ob5: { youtubeId: 'jnrhaySDCt4', duration: 32 },
+  ob3: { youtubeId: 'K8Rn03wgVKg', duration: 32 },
+  ob4: { youtubeId: 't6SZqQHhRn4', duration: 33 },
+  ob5: { youtubeId: 'MEFjCVKR6LY', duration: 33 },
   ob6: { youtubeId: 'flESwP0B87g', duration: 32 },
-  ob7: { youtubeId: '3lGZuUoZRXY', duration: 28 },
+  ob7: { youtubeId: 'sItYPH__RDI', duration: 28 },
 }
 
 export function onboardingVideo(id: string): OnboardingVideo {
