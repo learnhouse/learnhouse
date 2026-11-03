@@ -35,7 +35,7 @@ export function useDynamicLookups(enabled: boolean = true) {
   const { data: usergroupsRaw } = useQuery({
     queryKey: queryKeys.usergroups.list(org?.id),
     queryFn: () => getUserGroups(org.id, accessToken as string),
-    select: (res: any) => res?.data ?? res,
+    select: (res: any) => asArray<any>(res),
     enabled: enabled && !!(org?.id && accessToken),
     staleTime: 60_000,
   })

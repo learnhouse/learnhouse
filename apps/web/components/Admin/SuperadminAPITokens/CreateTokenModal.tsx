@@ -5,6 +5,7 @@ import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Key, X } from '@phosphor-icons/react'
+import { Trans, useTranslation } from 'react-i18next'
 import type { CreatedToken } from '@components/Admin/SuperadminAPITokens/TokenCreatedDialog'
 
 export default function CreateTokenModal({
@@ -16,6 +17,7 @@ export default function CreateTokenModal({
   onClose: () => void
   onCreated: (_token: CreatedToken) => void
 }) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
@@ -63,13 +65,13 @@ export default function CreateTokenModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data?.detail || `Failed to create token (${res.status})`)
+        setError(data?.detail || t('admin.tokens.failed_create', { status: res.status }))
         return
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.superadmin.apiTokens() })
       onCreated(data as CreatedToken)
     } catch {
-      setError('Network error')
+      setError(t('admin.tokens.network_error'))
     } finally {
       setSubmitting(false)
     }
@@ -87,19 +89,19 @@ export default function CreateTokenModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
             <Key size={18} weight="fill" className="text-white/70" />
-            <h2 className="text-base font-semibold text-white">New API token</h2>
+            <h2 className="text-base font-semibold text-white">{t('admin.tokens.new_token')}</h2>
           </div>
           <button
             onClick={onClose}
             className="text-white/40 hover:text-white/80 transition-colors"
-            aria-label="Close"
+            aria-label={t('common.close')}
           >
             <X size={18} weight="bold" />
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          <Field label="Name" required hint="Identifier shown in the token list. Required.">
+          <Field label={t('admin.tokens.name')} required hint={t('admin.tokens.name_hint')}>
             <input
               autoFocus
               type="text"
@@ -110,17 +112,17 @@ export default function CreateTokenModal({
             />
           </Field>
 
-          <Field label="Description">
+          <Field label={t('admin.tokens.description')}>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What this token is for"
+              placeholder={t('admin.tokens.description_placeholder')}
               rows={2}
               className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 resize-none"
             />
           </Field>
 
-          <Field label="Expiration">
+          <Field label={t('admin.tokens.expiration')}>
             <label className="flex items-center gap-2 text-sm text-white/80 mb-2">
               <input
                 type="checkbox"
@@ -128,7 +130,7 @@ export default function CreateTokenModal({
                 onChange={(e) => setNeverExpires(e.target.checked)}
                 className="accent-white/80"
               />
-              Never expires
+              {t('admin.tokens.never_expires')}
             </label>
             {!neverExpires && (
               <input
@@ -141,8 +143,10 @@ export default function CreateTokenModal({
           </Field>
 
           <div className="rounded-lg bg-amber-400/[0.06] border border-amber-400/20 px-3 py-2.5 text-xs text-amber-200/90">
-            A superadmin token can call <em>every</em> <code className="font-mono">/ee/superadmin/*</code> endpoint:
-            create orgs, toggle features, update plans across the platform. Treat it like a master key.
+            <Trans
+              i18nKey="admin.tokens.warning"
+              components={{ em: <em />, code: <code className="font-mono" /> }}
+            />
           </div>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
@@ -154,14 +158,14 @@ export default function CreateTokenModal({
             disabled={submitting}
             className="px-3.5 py-2 text-sm text-white/60 hover:text-white/90 transition-colors disabled:opacity-40"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
             className="px-3.5 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Creating…' : 'Create token'}
+            {submitting ? t('common.creating') : t('admin.tokens.create_token')}
           </button>
         </div>
       </div>

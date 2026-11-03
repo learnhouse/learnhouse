@@ -125,7 +125,7 @@ export default function PlaygroundsClient({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    aria-label="Search playgrounds"
+                    aria-label={t('playgrounds.search_placeholder')}
                     placeholder={t('playgrounds.search_placeholder')}
                     className="w-full ps-10 pe-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
                   />
@@ -222,7 +222,7 @@ export default function PlaygroundsClient({
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setShowNameModal(false) }}
-            placeholder="e.g. Photosynthesis Quiz"
+            placeholder={t('playgrounds.name_placeholder')}
             className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black focus:border-transparent mb-4"
           />
           <div className="flex gap-2 justify-end">

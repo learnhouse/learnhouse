@@ -21,6 +21,7 @@ from typing import Optional
 
 from config.config import get_learnhouse_config
 from src.services.ai.llm import AINotConfiguredError
+from src.services.ai.llm.errors import is_quota_error, is_spend_cap_error
 from src.services.ai.llm.provider import _GOOGLE_ALIASES
 
 logger = logging.getLogger(__name__)
@@ -165,14 +166,17 @@ async def generate_image(
         except Exception as e:  # noqa: BLE001 (surface a clean error to the router)
             # Log only the exception type: the underlying SDK error can embed the
             # API key (request URL/headers), so never log the message or traceback.
-            if _is_retryable(e) and attempt < _MAX_ATTEMPTS:
+            # A spent budget is a 429 too, but it fails the same way until topped up.
+            if _is_retryable(e) and not is_spend_cap_error(e) and attempt < _MAX_ATTEMPTS:
                 logger.warning(
                     "Image generation transient error (%s), retry %d/%d",
                     type(e).__name__, attempt, _MAX_ATTEMPTS,
                 )
                 await asyncio.sleep(_RETRY_BACKOFF_SECONDS * attempt)
                 continue
-            logger.error("Image generation call failed: %s", type(e).__name__)
+            (logger.warning if is_quota_error(e) else logger.error)(
+                "Image generation call failed: %s", type(e).__name__
+            )
             raise RuntimeError("Image generation failed") from e
 
     image_bytes = _extract_image_bytes(response)

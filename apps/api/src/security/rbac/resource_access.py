@@ -28,6 +28,7 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.security.rbac.types import AccessAction, AccessContext, AccessDecision, ResourceConfig
 from src.security.rbac.config import get_resource_config, RESOURCE_CONFIGS
+from src.security.org_scope import get_org_scope
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles,
     authorization_verify_based_on_org_admin_status,
@@ -72,6 +73,55 @@ class ResourceAccessChecker:
         self._parent_uuid_cache: dict[str, Optional[str]] = {}
         self._folder_trees: dict = {}
         self._viewer_folder_grants: Optional[tuple] = None
+        # Admin status depends on the org alone, so a listing of one org's
+        # items needs it once rather than once per item.
+        self._org_admin_cache: dict[int, bool] = {}
+
+    async def prime(self, resources: list, uuid_field: str) -> None:
+        """Seed the caches for rows a listing already loaded in bulk.
+
+        A listing checks every item it shows; without this each check refetched
+        its row and the caller's authorship of it one item at a time.
+        """
+        uuids = []
+        for resource in resources:
+            resource_uuid = getattr(resource, uuid_field)
+            self._resource_cache.setdefault(resource_uuid, resource)
+            uuids.append(resource_uuid)
+
+        user_id = self._get_user_id()
+        pending = [u for u in uuids if u not in self._author_cache]
+        if user_id == 0 or not pending:
+            return
+
+        authored = set(
+            (await self.db_session.execute(
+                select(ResourceAuthor.resource_uuid).where(
+                    ResourceAuthor.resource_uuid.in_(pending),
+                    ResourceAuthor.user_id == user_id,
+                    ResourceAuthor.authorship.in_([
+                        ResourceAuthorshipEnum.CREATOR,
+                        ResourceAuthorshipEnum.MAINTAINER,
+                        ResourceAuthorshipEnum.CONTRIBUTOR,
+                    ]),
+                    ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
+                )
+            )).scalars().all()
+        )
+        from src.security.org_auth import is_org_member
+
+        # Same rule as _is_resource_author, membership resolved once per org.
+        member_by_org: dict[int, bool] = {}
+        for resource_uuid in pending:
+            if resource_uuid not in authored:
+                self._author_cache[resource_uuid] = False
+                continue
+            org_id = getattr(self._resource_cache.get(resource_uuid), "org_id", None)
+            if org_id is None:
+                continue
+            if org_id not in member_by_org:
+                member_by_org[org_id] = await is_org_member(user_id, org_id, self.db_session)
+            self._author_cache[resource_uuid] = member_by_org[org_id]
 
     async def check_access(
         self,
@@ -111,6 +161,22 @@ class ResourceAccessChecker:
                 action=action.value,
                 context=context.value,
             )
+
+        # A caller bound to one organization (an app connected over MCP, the
+        # in-app agent) never reaches another organization's resources, even
+        # when the member behind it belongs there too. Checked before every
+        # bypass below: the boundary is the caller's, not the member's.
+        scope = get_org_scope()
+        if scope is not None:
+            owner = await self._resource_org_id(resource_uuid, config)
+            if owner is not None and owner != scope:
+                return AccessDecision(
+                    allowed=False,
+                    reason="This resource belongs to another organization",
+                    resource_uuid=resource_uuid,
+                    action=action.value,
+                    context=context.value,
+                )
 
         # Superadmin bypass: platform admins act on any tenant without an org
         # membership row. The flag is loaded onto PublicUser by get_current_user
@@ -892,9 +958,15 @@ class ResourceAccessChecker:
         if cached is not None:
             return cached
 
-        result = await authorization_verify_based_on_org_admin_status(
-            self.request, user_id, "read", resource_uuid, self.db_session
-        )
+        org_id = getattr(self._resource_cache.get(resource_uuid), "org_id", None)
+        if org_id is not None and org_id in self._org_admin_cache:
+            result = self._org_admin_cache[org_id]
+        else:
+            result = await authorization_verify_based_on_org_admin_status(
+                self.request, user_id, "read", resource_uuid, self.db_session
+            )
+            if org_id is not None:
+                self._org_admin_cache[org_id] = result
         self._admin_cache[resource_uuid] = result
         return result
 
@@ -957,6 +1029,16 @@ class ResourceAccessChecker:
         if not config:
             return True
 
+        org_id = await self._resource_org_id(resource_uuid, config)
+        if org_id is None:
+            return True
+
+        from src.security.org_auth import is_org_member
+
+        return await is_org_member(user_id, org_id, self.db_session)
+
+    async def _resource_org_id(self, resource_uuid: str, config: ResourceConfig) -> Optional[int]:
+        """The organization that owns a resource, or None when unknown."""
         resource = await self._get_resource(resource_uuid, config)
         org_id = getattr(resource, "org_id", None) if resource else None
 
@@ -969,13 +1051,7 @@ class ResourceAccessChecker:
                 if parent_config:
                     parent = await self._get_resource(parent_uuid, parent_config)
                     org_id = getattr(parent, "org_id", None) if parent else None
-
-        if org_id is None:
-            return True
-
-        from src.security.org_auth import is_org_member
-
-        return await is_org_member(user_id, org_id, self.db_session)
+        return org_id
 
     async def _get_resource(self, resource_uuid: str, config: ResourceConfig):
         """Get the resource from the database with caching."""
@@ -1075,6 +1151,17 @@ def _get_request_checker(
         # request.state may be unavailable in non-HTTP contexts (tests, tasks)
         pass
     return checker
+
+
+async def prime_resource_access(
+    request: Request,
+    db_session: AsyncSession,
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    resources: list,
+    uuid_field: str,
+) -> None:
+    """Seed this request's access checks with rows a listing loaded in bulk."""
+    await _get_request_checker(request, db_session, current_user).prime(resources, uuid_field)
 
 
 async def check_resource_access(

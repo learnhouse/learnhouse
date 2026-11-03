@@ -25,13 +25,13 @@ type PropsType = {
   onChanged?: () => void
 }
 
-function iconForMedia(media: any) {
-  if (media.media_type === 'EMBED') return LinkIcon
+function MediaTypeIcon({ media, className }: { media: any; className?: string }) {
+  if (media.media_type === 'EMBED') return <LinkIcon className={className} />
   const fmt = (media.file_format || media.file_mime || '').toLowerCase()
-  if (fmt.includes('video') || /mp4|mov|webm|avi|mkv/.test(fmt)) return Video
-  if (fmt.includes('image') || /png|jpg|jpeg|gif|webp|svg/.test(fmt)) return ImageIcon
-  if (fmt.includes('audio') || /mp3|wav|ogg|m4a|flac/.test(fmt)) return Music
-  return FileText
+  if (fmt.includes('video') || /mp4|mov|webm|avi|mkv/.test(fmt)) return <Video className={className} />
+  if (fmt.includes('image') || /png|jpg|jpeg|gif|webp|svg/.test(fmt)) return <ImageIcon className={className} />
+  if (fmt.includes('audio') || /mp3|wav|ogg|m4a|flac/.test(fmt)) return <Music className={className} />
+  return <FileText className={className} />
 }
 
 function MediaThumbnail({ media, orgslug, org_id, isDashboard = false, onChanged }: PropsType) {
@@ -42,8 +42,6 @@ function MediaThumbnail({ media, orgslug, org_id, isDashboard = false, onChanged
 
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [accessOpen, setAccessOpen] = React.useState(false)
-
-  const Icon = iconForMedia(media)
 
   const fileLink =
     media.media_type === 'EMBED'
@@ -77,7 +75,7 @@ function MediaThumbnail({ media, orgslug, org_id, isDashboard = false, onChanged
           <div className={`absolute top-2 end-2 z-20 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <button aria-label="Media actions" className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
+                <button aria-label={t('media.actions')} className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
                   <MoreVertical size={18} className="text-gray-700" />
                 </button>
               </DropdownMenuTrigger>
@@ -118,7 +116,7 @@ function MediaThumbnail({ media, orgslug, org_id, isDashboard = false, onChanged
       >
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center flex-shrink-0">
-            <Icon className="w-5 h-5" />
+            <MediaTypeIcon media={media} className="w-5 h-5" />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-bold text-gray-900 leading-tight truncate">{media.name}</h3>

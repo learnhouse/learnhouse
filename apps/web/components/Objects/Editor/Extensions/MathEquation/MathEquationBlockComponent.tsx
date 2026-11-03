@@ -13,54 +13,54 @@ import { useTranslation } from 'react-i18next'
 // Predefined LaTeX templates
 const mathTemplates = [
   {
-    name: 'Fraction',
+    nameKey: 'editor.blocks.math_block.tpl_fraction',
     latex: '\\frac{a}{b}',
-    description: 'Simple fraction'
+    descKey: 'editor.blocks.math_block.tpl_fraction_desc'
   },
   {
-    name: 'Square Root',
+    nameKey: 'editor.blocks.math_block.tpl_square_root',
     latex: '\\sqrt{x}',
-    description: 'Square root'
+    descKey: 'editor.blocks.math_block.tpl_square_root_desc'
   },
   {
-    name: 'Summation',
+    nameKey: 'editor.blocks.math_block.tpl_summation',
     latex: '\\sum_{i=1}^{n} x_i',
-    description: 'Sum with limits'
+    descKey: 'editor.blocks.math_block.tpl_summation_desc'
   },
   {
-    name: 'Integral',
+    nameKey: 'editor.blocks.math_block.tpl_integral',
     latex: '\\int_{a}^{b} f(x) \\, dx',
-    description: 'Definite integral'
+    descKey: 'editor.blocks.math_block.tpl_integral_desc'
   },
   {
-    name: 'Limit',
+    nameKey: 'editor.blocks.math_block.tpl_limit',
     latex: '\\lim_{x \\to \\infty} f(x)',
-    description: 'Limit expression'
+    descKey: 'editor.blocks.math_block.tpl_limit_desc'
   },
   {
-    name: 'Matrix 2×2',
+    nameKey: 'editor.blocks.math_block.tpl_matrix',
     latex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}',
-    description: '2×2 matrix with parentheses'
+    descKey: 'editor.blocks.math_block.tpl_matrix_desc'
   },
   {
-    name: 'Binomial',
+    nameKey: 'editor.blocks.math_block.tpl_binomial',
     latex: '\\binom{n}{k}',
-    description: 'Binomial coefficient'
+    descKey: 'editor.blocks.math_block.tpl_binomial_desc'
   },
   {
-    name: 'Quadratic Formula',
+    nameKey: 'editor.blocks.math_block.tpl_quadratic',
     latex: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}',
-    description: 'Solution to quadratic equation'
+    descKey: 'editor.blocks.math_block.tpl_quadratic_desc'
   },
   {
-    name: 'Vector',
+    nameKey: 'editor.blocks.math_block.tpl_vector',
     latex: '\\vec{v} = \\begin{pmatrix} x \\\\ y \\\\ z \\end{pmatrix}',
-    description: '3D vector'
+    descKey: 'editor.blocks.math_block.tpl_vector_desc'
   },
   {
-    name: 'System of Equations',
+    nameKey: 'editor.blocks.math_block.tpl_system',
     latex: '\\begin{cases} a_1x + b_1y = c_1 \\\\ a_2x + b_2y = c_2 \\end{cases}',
-    description: 'System of linear equations'
+    descKey: 'editor.blocks.math_block.tpl_system_desc'
   }
 ];
 
@@ -166,7 +166,7 @@ function MathEquationBlockComponent(props: any) {
     return (
       <NodeViewWrapper className="block-math-equation" dir="ltr">
         <div className="bg-neutral-50 rounded-xl p-5 nice-shadow">
-          <Suspense fallback={<div className="text-gray-400 text-sm p-2">Loading math...</div>}><BlockMath>{equation}</BlockMath></Suspense>
+          <Suspense fallback={<div className="text-gray-400 text-sm p-2">{t('editor.blocks.math_block.loading')}</div>}><BlockMath>{equation}</BlockMath></Suspense>
         </div>
       </NodeViewWrapper>
     )
@@ -187,7 +187,7 @@ function MathEquationBlockComponent(props: any) {
 
         {/* Equation Display */}
         <div className="bg-white p-4 rounded-lg nice-shadow">
-          <Suspense fallback={<div className="text-gray-400 text-sm p-2">Loading math...</div>}><BlockMath>{equation}</BlockMath></Suspense>
+          <Suspense fallback={<div className="text-gray-400 text-sm p-2">{t('editor.blocks.math_block.loading')}</div>}><BlockMath>{equation}</BlockMath></Suspense>
         </div>
 
         {/* Editor Controls */}
@@ -218,8 +218,8 @@ function MathEquationBlockComponent(props: any) {
                         className="px-3 py-2 cursor-pointer hover:bg-neutral-50 transition-colors"
                       >
                         <div className="flex flex-col">
-                          <span className="font-medium text-neutral-700">{template.name}</span>
-                          <span className="text-xs text-neutral-500">{template.description}</span>
+                          <span className="font-medium text-neutral-700">{t(template.nameKey)}</span>
+                          <span className="text-xs text-neutral-500">{t(template.descKey)}</span>
                         </div>
                       </div>
                     ))}
@@ -277,22 +277,22 @@ function MathEquationBlockComponent(props: any) {
                     </div>
                     <div className="p-3 text-xs space-y-2 text-neutral-600">
                       <div>
-                        <span className="font-medium">Fractions:</span> \frac{'{'}numerator{'}'}{'{'}denominator{'}'}
+                        <span className="font-medium">{t('editor.blocks.math_block.ref_fractions')}:</span> \frac{'{'}numerator{'}'}{'{'}denominator{'}'}
                       </div>
                       <div>
-                        <span className="font-medium">Exponents:</span> x^{'{'}power{'}'}
+                        <span className="font-medium">{t('editor.blocks.math_block.ref_exponents')}:</span> x^{'{'}power{'}'}
                       </div>
                       <div>
-                        <span className="font-medium">Subscripts:</span> x_{'{'}subscript{'}'}
+                        <span className="font-medium">{t('editor.blocks.math_block.ref_subscripts')}:</span> x_{'{'}subscript{'}'}
                       </div>
                       <div>
-                        <span className="font-medium">Square root:</span> \sqrt{'{'}x{'}'}
+                        <span className="font-medium">{t('editor.blocks.math_block.ref_square_root')}:</span> \sqrt{'{'}x{'}'}
                       </div>
                       <div>
-                        <span className="font-medium">Summation:</span> \sum_{'{'}lower{'}'}^{'{'}upper{'}'}
+                        <span className="font-medium">{t('editor.blocks.math_block.ref_summation')}:</span> \sum_{'{'}lower{'}'}^{'{'}upper{'}'}
                       </div>
                       <div>
-                        <span className="font-medium">Integral:</span> \int_{'{'}lower{'}'}^{'{'}upper{'}'}
+                        <span className="font-medium">{t('editor.blocks.math_block.ref_integral')}:</span> \int_{'{'}lower{'}'}^{'{'}upper{'}'}
                       </div>
                       <div className="pt-2 border-t border-neutral-100">
                         <Link

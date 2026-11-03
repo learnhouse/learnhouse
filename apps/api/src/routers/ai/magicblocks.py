@@ -18,6 +18,7 @@ from src.security.features_utils.usage import (
     refund_ai_credit,
 )
 from src.services.ai.llm import model_for_tier
+from src.services.ai.llm.errors import ai_error_message, log_ai_failure
 from src.services.ai.magicblocks import (
     get_magicblock_session,
     create_magicblock_session,
@@ -70,12 +71,13 @@ async def event_generator(
         # (produced_content False), so a disconnect *after* output can't be
         # abused to get free generations. Re-raise so Starlette observes it.
         raise
-    except Exception:
+    except Exception as e:
         stream_failed = True
         # Log the full exception server-side; never leak exception/stack-trace
         # detail to the external client (CodeQL py/stack-trace-exposure).
-        logger.exception("MagicBlock stream failed for session %s", session_uuid)
-        yield f"data: {json.dumps({'type': 'error', 'message': 'Generation failed. Please try again.'})}\n\n"
+        log_ai_failure(logger, e, "MagicBlock stream failed for session %s", session_uuid)
+        message = ai_error_message(e, "Generation failed. Please try again.")
+        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
     finally:
         if org_id is not None and reserved_credits > 0 and (stream_failed or not produced_content):
             try:
@@ -178,7 +180,8 @@ async def start_magicblock_session(
     stream = generate_magicblock_stream(
         prompt=session_request.prompt,
         session=session,
-        model_name=ai_model
+        model_name=ai_model,
+        style_reference=session_request.style_reference,
     )
 
     return StreamingResponse(
@@ -289,7 +292,8 @@ async def iterate_magicblock_session(
         prompt=message_request.message,
         session=session,
         model_name=ai_model,
-        current_html=html_to_iterate
+        current_html=html_to_iterate,
+        style_reference=message_request.style_reference,
     )
 
     return StreamingResponse(
@@ -338,5 +342,6 @@ async def get_session_state(
         message_history=[
             MagicBlockMessage(role=msg.role, content=msg.content)
             for msg in session.message_history
-        ]
+        ],
+        revisions=session.revisions,
     )

@@ -10,19 +10,26 @@ export interface MagicBlockMessage {
   content: string
 }
 
+export interface MagicBlockRevision {
+  revision_uuid: string
+  prompt: string
+  html: string
+  created_at: number
+}
+
 export interface MagicBlockSession {
   session_uuid: string
   iteration_count: number
   max_iterations: number
   html_content: string | null
   message_history: MagicBlockMessage[]
+  revisions: MagicBlockRevision[]
 }
 
 export interface MagicBlockAttrs {
   blockUuid: string
   sessionUuid: string | null
   htmlContent: string | null
-  iterationCount: number
   title: string
 }
 
@@ -32,3 +39,6 @@ export interface StreamChunk {
   session_uuid?: string
   message?: string
 }
+
+// Generations allowed per Magic Block session; mirrors MAX_ITERATIONS in the API.
+export const MAGIC_BLOCK_MAX_ITERATIONS = 6

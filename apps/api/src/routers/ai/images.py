@@ -34,6 +34,7 @@ from src.services.ai.generations import (
 )
 from src.services.ai.image.generator import OUTPUT_EXT, generate_image
 from src.services.ai.llm import AINotConfiguredError
+from src.services.ai.llm.errors import AI_QUOTA_MESSAGE, is_quota_error
 from src.services.ai.schemas.image import (
     AIImageHistoryItem,
     GenerateImageRequest,
@@ -147,10 +148,13 @@ async def api_generate_image(
     except AINotConfiguredError as e:
         refund_ai_credit(org.id, IMAGE_CREDIT_COST)
         raise HTTPException(status_code=403, detail=str(e))
-    except Exception:
+    except Exception as e:
         refund_ai_credit(org.id, IMAGE_CREDIT_COST)
         # Do not log the traceback: the chained SDK error can embed the API key.
         # generate_image already logs the sanitized exception type.
+        if is_quota_error(e):
+            logger.warning("Image generation failed: AI provider quota reached")
+            raise HTTPException(status_code=503, detail=AI_QUOTA_MESSAGE)
         logger.error("Image generation failed")
         raise HTTPException(
             status_code=502,

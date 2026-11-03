@@ -785,6 +785,12 @@ class TestStatStripReachesTheEmail:
                 )
             )
         await db.commit()
+        # Adding lessons moves the course's date to now; put it back to the
+        # last edit this draft is meant to have.
+        from sqlalchemy import update
+
+        await db.execute(update(Course).where(Course.id == 60).values(update_date=_stored(4)))
+        await db.commit()
 
         await run_nudges(db, now=NOW, only="content.course_draft_d3")
 

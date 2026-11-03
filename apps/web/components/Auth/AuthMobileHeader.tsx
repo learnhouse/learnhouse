@@ -1,17 +1,21 @@
 'use client'
 import React from 'react'
+import { Trans } from 'react-i18next'
 import Image from 'next/image'
 import Link from 'next/link'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import { getOrgAuthBackgroundMediaDirectory } from '@services/media/media'
 import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { getUriWithOrg } from '@services/config/config'
+import { usePlan } from '@components/Hooks/usePlan'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 interface AuthMobileHeaderProps {
   org: any
 }
 
 export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
+  const isWhiteLabel = isWhiteLabelPlan(usePlan())
   const authBranding = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding || {}
   const {
     background_type = 'gradient',
@@ -65,14 +69,20 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
             org={org}
             wideInsetClassName="p-1.5"
             fallback={
-              <Image
-                quality={100}
-                width={40}
-                height={40}
-                src={learnhouseIcon}
-                alt="LearnHouse"
-                className="object-contain"
-              />
+              isWhiteLabel ? (
+                <span className="text-lg font-black text-gray-800">
+                  {(org?.name || '?').charAt(0).toUpperCase()}
+                </span>
+              ) : (
+                <Image
+                  quality={100}
+                  width={40}
+                  height={40}
+                  src={learnhouseIcon}
+                  alt="LearnHouse"
+                  className="object-contain"
+                />
+              )
             }
           />
         </div>
@@ -85,24 +95,28 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
       {/* Unsplash attribution (required by Unsplash API guidelines) */}
       {background_type === 'unsplash' && background_image && unsplash_photographer_name && (
         <span className="relative z-10 ms-auto text-[10px] leading-tight text-white/70 truncate max-w-[45%] text-end">
-          Photo by{' '}
-          <a
-            href={withUtm(unsplash_photographer_url) || withUtm(unsplash_photo_url)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            {unsplash_photographer_name}
-          </a>
-          {' '}on{' '}
-          <a
-            href={`https://unsplash.com/${UNSPLASH_UTM}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            Unsplash
-          </a>
+          <Trans
+            i18nKey="auth.photo_credit"
+            values={{ name: unsplash_photographer_name }}
+            components={{
+              photographer: (
+                <a
+                  href={withUtm(unsplash_photographer_url) || withUtm(unsplash_photo_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                />
+              ),
+              unsplash: (
+                <a
+                  href={`https://unsplash.com/${UNSPLASH_UTM}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                />
+              ),
+            }}
+          />
         </span>
       )}
     </div>

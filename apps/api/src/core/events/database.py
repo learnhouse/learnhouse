@@ -357,6 +357,12 @@ if not is_testing:
     except Exception:
         logging.warning("Failed to register cache invalidation hooks", exc_info=True)
 
+# Not a cache hook, so it runs under tests too: editing a course's content
+# moves the course's update_date.
+from src.core.events.content_dates import register_content_date_hooks  # noqa: E402
+
+register_content_date_hooks()
+
 
 # A saturated connection pooler ("max clients reached in session mode"), a
 # rolling database restart or a brief network blip are all transient: the pod

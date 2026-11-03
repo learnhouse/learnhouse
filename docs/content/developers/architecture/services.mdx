@@ -12,31 +12,43 @@ LearnHouse relies on several supporting services that run alongside the main app
 - Organizations and their configurations
 - User accounts and authentication records
 - Courses, chapters, and activities
-- Collections, trails, and progress tracking
+- Library folders, trails, and progress tracking
 - AI vector embeddings (via the pgvector extension)
 
-The backend connects to PostgreSQL through SQLModel.
+The backend connects to PostgreSQL through SQLModel (asyncpg for the application, psycopg2 for Alembic migrations). PgBouncer and Supavisor poolers are detected from the connection string, or forced with `LEARNHOUSE_PGBOUNCER=true`.
 
 **Default port:** `5432`
 
 ## Redis
 
-Redis is the caching, session management, and collaboration persistence layer:
+Redis is the caching, session, queue and collaboration persistence layer:
 
 - **Caching**: Reduces database load by storing frequently accessed data in memory.
 - **Session storage**: Manages user session data for fast access.
+- **Rate limiting**: Counters for login, signup and other throttled endpoints.
+- **Job queues**: Background work run by the API (AI search indexing, HLS transcoding, AI captions).
 - **Collaboration state**: Stores Yjs document state from the Collab server with a 1-hour TTL before it is persisted to PostgreSQL.
-- **Pub/Sub**: Enables communication between services when needed.
 
-The dev compose uses `redis:8.6.1-alpine`; the CLI-generated self-host production compose uses `redis:7.2.3-alpine`.
+The API reads its connection from `LEARNHOUSE_REDIS_CONNECTION_STRING` and the collaboration server from `LEARNHOUSE_REDIS_URL`. The dev compose uses `redis:8.6.1-alpine`; the CLI-generated self-host production compose uses `redis:7.4-alpine`.
 
 **Default port:** `6379`
 
 ## Hocuspocus (Collaboration Server)
 
-The Hocuspocus server, located at `apps/collab`, provides real-time collaborative editing capabilities. It is a Node.js + TypeScript application (run via `tsx` in dev) built on [Hocuspocus](https://hocuspocus.dev/) `^3.0.0`, which uses the Yjs CRDT library under the hood. It connects to Redis via `ioredis ^5.9.3`.
+The Hocuspocus server, located at `apps/collab`, provides real-time collaborative editing capabilities. It is a Node.js + TypeScript application (run via `tsx` in dev) built on [Hocuspocus](https://hocuspocus.dev/) 4, which uses the Yjs CRDT library under the hood. It connects to Redis via `ioredis`.
 
 **Default port:** `4000` (configurable via `COLLAB_PORT` env var)
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `COLLAB_PORT` | Listening port | `4000` |
+| `LEARNHOUSE_API_URL` | API base URL | `http://localhost:8000` |
+| `LEARNHOUSE_AUTH_JWT_SECRET_KEY` | Must match the API | none (required) |
+| `COLLAB_INTERNAL_KEY` | Shared key for calls to the API's internal endpoints; must match the API | none (required) |
+| `LEARNHOUSE_REDIS_URL` | Redis connection | `redis://localhost:6379` |
+| `COLLAB_TRUST_PROXY` | Set to `true` behind a reverse proxy so client IPs come from `X-Forwarded-For` | `false` |
+
+The server refuses to start when `LEARNHOUSE_AUTH_JWT_SECRET_KEY` or `COLLAB_INTERNAL_KEY` is missing or still an example placeholder, and warns when one is short.
 
 ### Authentication
 
@@ -52,7 +64,9 @@ Document state follows a two-tier persistence strategy:
 ### Rate Limiting and Capacity
 
 - **Max 10 concurrent users** per board (`MAX_BOARD_USERS`)
-- **Rate limiting** of 30 connections per IP per minute (`RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS`)
+- **HTTP rate limiting** of 30 plain HTTP requests per IP per minute (`RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS`)
+- **WebSocket limits**: 300 new sockets per IP per minute, 200 open sockets per IP, and 2,000 unauthenticated sockets in total. A socket must authenticate within 10 seconds.
+- **Size limits**: 2 MB per message and 5 MB per document (`MAX_MESSAGE_BYTES`, `MAX_YDOC_BYTES`)
 
 ### Key Features
 
@@ -66,10 +80,10 @@ The frontend connects to Hocuspocus directly over WebSocket using the `@hocuspoc
 
 The CLI-generated self-host stack uses one of two reverse proxies depending on the SSL choice made during setup:
 
-- **Caddy** (`caddy:2-alpine`): selected when "Automatic SSL" is enabled; handles Let's Encrypt certificate issuance and renewal automatically.
-- **nginx** (`nginx:alpine`): selected for manual SSL or HTTP-only setups.
+- **Caddy** (`caddy:2.11-alpine`): selected when "Automatic SSL" is enabled; handles Let's Encrypt certificate issuance and renewal automatically.
+- **nginx** (`nginx:1.30-alpine`): selected for manual SSL or HTTP-only setups.
 
-Both route traffic to the single `learnhouse-app` container, which internally serves the Next.js frontend, the FastAPI backend, and the Hocuspocus collaboration server.
+Both route traffic to port 80 of the single `learnhouse-app` container, where an internal nginx sends each path to the Next.js frontend, the FastAPI backend, or the Hocuspocus collaboration server.
 
 ## Service Communication
 
@@ -78,12 +92,12 @@ Logically, a request flows like this:
 ```
 Client
   └── nginx / caddy (reverse proxy)
-        └── learnhouse-app (single container)
-              ├── Next.js (web)
-              ├── FastAPI (api)
+        └── learnhouse-app (single container, internal nginx on port 80)
+              ├── Next.js (web, port 8000)
+              ├── FastAPI (api, port 9000)
               │     ├── PostgreSQL (port 5432)
               │     └── Redis (port 6379)
-              └── Hocuspocus (collab)
+              └── Hocuspocus (collab, port 4000)
                     ├── Redis (port 6379)
                     └── FastAPI (for persistence & JWT-based auth)
 ```

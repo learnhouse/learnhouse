@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { asArray } from '@services/utils/ts/requests'
 
 type LinkToUserGroupProps = {
     // React function, todo: fix types
@@ -26,10 +27,10 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
     const queryClient = useQueryClient()
     const courseStructure = course.courseStructure
 
-    const { data: usergroups } = useQuery({
+    const { data: usergroups = [] } = useQuery({
         queryKey: queryKeys.usergroups.list(org?.id),
         queryFn: () => getUserGroups(org.id, access_token),
-        select: (res) => res?.data ?? res,
+        select: (res: any) => asArray<any>(res),
         enabled: !!(courseStructure && org?.id && access_token),
         staleTime: 60_000,
     })

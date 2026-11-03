@@ -27,6 +27,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { formatDate } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 type Course = {
   course_uuid: string
@@ -160,7 +161,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       {isDashboard && onToggleSelect && (
         <button
           onClick={handleSelectClick}
-          aria-label={isSelected ? 'Deselect course' : 'Select course'}
+          aria-label={isSelected ? t('courses.deselect_course') : t('courses.select_course')}
           className={`absolute top-2 start-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
             isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
@@ -184,20 +185,11 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       />
 
       <Link prefetch={false} href={courseLink} onClick={handleCardOpen} className="block relative aspect-video overflow-hidden bg-gray-50">
-        {/* Hidden img gives the browser a real resource hint so it can fetch the background-image early as an LCP candidate */}
-        {isPriority && (
-           
-          <img
-            src={thumbnailImage}
-            alt=""
-            aria-hidden="true"
-            fetchPriority="high"
-            className="absolute w-0 h-0 opacity-0 pointer-events-none"
-          />
-        )}
-        <div
-          className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-          style={{ backgroundImage: `url(${thumbnailImage})` }}
+        <ThumbnailImage
+          src={thumbnailImage}
+          fetchPriority={isPriority ? 'high' : undefined}
+          loading={isPriority ? 'eager' : 'lazy'}
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
         {isDashboard && (
@@ -309,7 +301,7 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
       }`}>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
-            <button aria-label="Course actions"className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
+            <button aria-label={t('courses.actions')} className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
               <MoreVertical size={18} className="text-gray-700" />
             </button>
           </DropdownMenuTrigger>

@@ -1,0 +1,55 @@
+import { Callout } from 'nextra/components'
+
+# Admin Dashboard
+
+The admin dashboard at `/admin` is for whoever runs the LearnHouse instance. It looks across every organization on the instance, unlike the organization dashboard at `/dash`, which manages one organization.
+
+<Callout type="info">
+The admin dashboard needs the [Enterprise Edition](/enterprise) when self-hosted. Open source instances show an "Enterprise Edition required" screen instead.
+</Callout>
+
+## Who can use it
+
+Only **superadmins** can open it. The first account created when you install LearnHouse is a superadmin (set with `LEARNHOUSE_INITIAL_ADMIN_EMAIL` and `LEARNHOUSE_INITIAL_ADMIN_PASSWORD` on an unattended install). There is no screen to make other users superadmins.
+
+Sign in at `/admin/login` with your email and password. On multi-organization instances, the dashboard is also available at the `admin.` subdomain of your domain. Anyone else who signs in sees "Access Denied".
+
+The top menu has **Organizations**, **Users**, **Analytics** and **Developers**.
+
+## Organizations
+
+The list shows every organization with its URL, number of users, courses and admins, plan and dates. You can search by name and sort by newest, oldest, most or least users, most courses, most visits, most engaged, most admins, payments or last update. On LearnHouse Cloud you can also filter by plan.
+
+Click **New organization** to create one with a name, slug, email and description. On the Enterprise Edition, new organizations get every feature.
+
+### Organization detail
+
+Open an organization to see these tabs:
+
+| Tab | What you can do |
+| --- | --- |
+| **Overview** | Counts of users, courses, admins and custom domains, the organization's details, admin users and usage against limits |
+| **Courses** | Every course with its status and visibility |
+| **Users** | Every member with their email, role and join date |
+| **Analytics** | The organization's analytics over a period you pick. Needs [Tinybird](/platform/analytics). |
+| **Plan** | LearnHouse Cloud only. Change the plan, see feature limits and manage AI credits. |
+| **Features** | Turn features on or off for this organization: AI (and AI Copilot), Analytics, API, Boards, Collaboration, Folders, Communities, Members (and the signup mode), Payments, Playgrounds and Podcasts. On the Enterprise Edition, AI credits are managed here. |
+| **Settings** | Edit the organization's name, slug, email and description |
+
+There is also a link to open the organization's own dashboard.
+
+## Users
+
+A read-only list of every account on the instance, with email, organizations, role (superadmin or regular) and dates. Filter by role or minimum number of organizations, and sort by newest, oldest or most organizations.
+
+## Analytics
+
+**Global Analytics** shows usage across all organizations over the last 30 days. It needs the same Tinybird setup as [organization analytics](/platform/analytics#setting-up-analytics-on-a-self-hosted-instance).
+
+## Developers
+
+Superadmins can create cross-organization API tokens here, for automation that spans several organizations. Each token has a name, an optional description and an expiration date (or **Never expires**). These tokens start with `lh_sa_` and stop working if their creator loses superadmin rights. The **Documentation & Playground** tab documents the endpoints and lets you try them.
+
+<Callout type="warning">
+The admin dashboard cannot delete organizations or users. Delete an organization from its own dashboard under **Organization** → **Danger Zone**.
+</Callout>

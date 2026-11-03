@@ -7,6 +7,7 @@ import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 
 // EE component (`@ee` resolves to a no-op stub in OSS builds), dynamically imported,
 // mirroring how the activity page lazy-loads ScormActivity.
@@ -23,6 +24,7 @@ interface EditScormActivityModalProps {
 }
 
 function EditScormActivityModal({ activity, onClose }: EditScormActivityModalProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -33,7 +35,7 @@ function EditScormActivityModal({ activity, onClose }: EditScormActivityModalPro
     e.preventDefault()
     setIsSubmitting(true)
 
-    const toastId = toast.loading('Updating SCORM activity...')
+    const toastId = toast.loading(t('activities.edit_modal.updating_scorm'))
     try {
       const res = await updateActivity(
         { name },
@@ -42,14 +44,14 @@ function EditScormActivityModal({ activity, onClose }: EditScormActivityModalPro
       )
 
       if (res?.success === false) {
-        toast.error('Failed to update SCORM activity', { id: toastId })
+        toast.error(t('activities.edit_modal.update_scorm_failed'), { id: toastId })
       } else {
-        toast.success('SCORM activity updated', { id: toastId })
+        toast.success(t('activities.edit_modal.scorm_updated'), { id: toastId })
         mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
         onClose()
       }
     } catch {
-      toast.error('Failed to update SCORM activity', { id: toastId })
+      toast.error(t('activities.edit_modal.update_scorm_failed'), { id: toastId })
     } finally {
       setIsSubmitting(false)
     }
@@ -66,19 +68,19 @@ function EditScormActivityModal({ activity, onClose }: EditScormActivityModalPro
       >
         <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
           <Package size={18} className="text-sky-500" />
-          SCORM Activity
+          {t('activities.edit_modal.scorm_activity')}
         </span>
       </div>
 
       <div className="rounded-xl nice-shadow p-4 space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">Activity name</label>
+          <label className="text-sm font-medium text-gray-700">{t('activities.modal.activity_name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             type="text"
             required
-            placeholder="Enter a name..."
+            placeholder={t('activities.modal.enter_name')}
             className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
           />
         </div>
@@ -98,7 +100,7 @@ function EditScormActivityModal({ activity, onClose }: EditScormActivityModalPro
           {isSubmitting ? (
             <LearnHouseSpinner size={18} className="[&>div]:border-t-white" />
           ) : (
-            'Save changes'
+            t('common.save_changes')
           )}
         </button>
       </div>

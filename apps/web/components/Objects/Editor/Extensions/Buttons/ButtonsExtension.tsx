@@ -138,7 +138,7 @@ const ButtonsExtension: React.FC = (props: any) => {
       </div>
       {isEditable && showEmojiPicker && (
         <div ref={pickerRef}>
-          <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
+          <Suspense fallback={<div className="p-4 text-gray-400 text-sm">{t('common.loading')}</div>}>
             <Picker onEmojiSelect={handleEmojiSelect} />
           </Suspense>
         </div>

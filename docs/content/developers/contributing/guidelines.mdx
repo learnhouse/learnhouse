@@ -36,10 +36,11 @@ When adding or updating dependencies:
 
 - **Frontend**: Use `bun` to manage JavaScript/TypeScript dependencies (e.g., `bun add <package>`).
 - **Backend**: Use `uv` to manage Python dependencies (e.g., `uv add <package>`).
+- **Lockfiles**: CI installs with frozen lockfiles, so commit the updated lockfiles. Run `scripts/lockfiles.sh` to regenerate them all.
 
 ### 4. Submit a Pull Request
 
-Push your branch to your fork and open a pull request against the `main` branch of the LearnHouse repository:
+Push your branch to your fork and open a pull request against the `dev` branch (the repository's default branch):
 
 ```bash
 git push origin feature/your-feature-name
@@ -73,6 +74,14 @@ In your pull request description:
 - Verify that existing functionality is not broken by your changes.
 - For new features, include tests where applicable.
 
+CI runs these checks on pull requests that touch each app. You can run the same commands locally:
+
+| App | Directory | Commands |
+| --- | --- | --- |
+| API | `apps/api` | `uv run pytest src/tests/` and `uvx ruff check .` |
+| Web | `apps/web` | `bun run test` and `bunx tsc --noEmit` (after `bunx next typegen`) |
+| CLI | `apps/cli` | `bun run typecheck`, `bun run test`, and `bun run test:integration` (needs Docker) |
+
 ## Review Process
 
 After submitting a pull request:
@@ -83,4 +92,6 @@ After submitting a pull request:
 
 ## Reporting Issues
 
-If you find a bug or have a feature request, please [open an issue](https://github.com/learnhouse/learnhouse/issues/new) on GitHub. Include as much detail as possible: steps to reproduce, expected behavior, actual behavior, and any relevant logs or screenshots.
+If you find a bug, please [open an issue](https://github.com/learnhouse/learnhouse/issues/new) on GitHub. Include as much detail as possible: steps to reproduce, expected behavior, actual behavior, and any relevant logs or screenshots.
+
+For a feature idea, start a [Discussion in the Ideas category](https://github.com/learnhouse/learnhouse/discussions/categories/ideas) first. Once the team gives the go-ahead, open an issue linked to the discussion.

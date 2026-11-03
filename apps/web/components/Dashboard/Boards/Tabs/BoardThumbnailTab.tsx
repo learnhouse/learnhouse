@@ -66,12 +66,12 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
     if (!file) return
 
     if (!VALID_IMAGE_MIME_TYPES.includes(file.type as any)) {
-      toast.error('Please upload a PNG or JPG/JPEG image')
+      toast.error(t('boards.thumbnail.errors.invalid_file_type'))
       event.target.value = ''
       return
     }
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 8MB limit`)
+      toast.error(t('boards.thumbnail.errors.file_too_large', { size: (file.size / 1024 / 1024).toFixed(2) }))
       event.target.value = ''
       return
     }
@@ -91,14 +91,14 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
     try {
       const url = new URL(imageUrl)
       if (!['https:', 'http:'].includes(url.protocol)) {
-        toast.error('Invalid image URL')
+        toast.error(t('boards.thumbnail.errors.invalid_url'))
         return
       }
       setIsUploading(true)
       const response = await fetch(imageUrl)
       const blob = await response.blob()
       if (!blob.type.startsWith('image/')) {
-        toast.error('URL did not return a valid image')
+        toast.error(t('boards.thumbnail.errors.not_an_image'))
         setIsUploading(false)
         return
       }
@@ -108,7 +108,7 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey: _boardKey }: B
       setLocalThumbnail({ url: blobUrl })
       await uploadFile(file)
     } catch {
-      toast.error('Failed to load the generated image')
+      toast.error(t('boards.thumbnail.errors.load_failed'))
       setIsUploading(false)
     }
   }

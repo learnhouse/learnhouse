@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
-import { User, Lock, ShoppingBag, Settings } from 'lucide-react'
+import { User, Lock, ShoppingBag, Plug, Settings } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 
@@ -15,13 +15,14 @@ const NAV_ITEMS = [
   { id: 'profile', icon: User, labelKey: 'account.profile' },
   { id: 'security', icon: Lock, labelKey: 'account.security' },
   { id: 'purchases', icon: ShoppingBag, labelKey: 'account.purchases' },
+  { id: 'ai-apps', icon: Plug, labelKey: 'account.ai_apps' },
 ]
 
 export function AccountActionsMobile({ orgslug, currentSubpage }: AccountActionsMobileProps) {
   const { t } = useTranslation()
 
   return (
-    <nav aria-label="Account mobile actions" className="fixed bottom-0 start-0 end-0 z-50 md:hidden">
+    <nav aria-label={t('account.mobile_actions')} className="fixed bottom-0 start-0 end-0 z-50 md:hidden">
       <div className="mx-3 mb-4 bg-white/95 backdrop-blur-sm rounded-xl nice-shadow p-2">
         <div className="flex items-center justify-around">
           {NAV_ITEMS.map((item) => {

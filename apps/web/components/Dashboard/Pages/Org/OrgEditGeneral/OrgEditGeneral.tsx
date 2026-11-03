@@ -25,52 +25,52 @@ import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 const ORG_LABELS = [
-  { value: 'languages', label: '🌐 Languages' },
-  { value: 'business', label: '💰 Business' },
-  { value: 'ecommerce', label: '🛍 E-commerce' },
-  { value: 'gaming', label: '🎮 Gaming' },
-  { value: 'music', label: '🎸 Music' },
-  { value: 'sports', label: '⚽ Sports' },
-  { value: 'cars', label: '🚗 Cars' },
-  { value: 'sales_marketing', label: '🚀 Sales & Marketing' },
-  { value: 'tech', label: '💻 Tech' },
-  { value: 'photo_video', label: '📸 Photo & Video' },
-  { value: 'pets', label: '🐕 Pets' },
-  { value: 'personal_development', label: '📚 Personal Development' },
-  { value: 'real_estate', label: '🏠 Real Estate' },
-  { value: 'beauty_fashion', label: '👠 Beauty & Fashion' },
-  { value: 'travel', label: '✈️ Travel' },
-  { value: 'productivity', label: '⏳ Productivity' },
-  { value: 'health_fitness', label: '🍎 Health & Fitness' },
-  { value: 'finance', label: '📈 Finance' },
-  { value: 'arts_crafts', label: '🎨 Arts & Crafts' },
-  { value: 'education', label: '📚 Education' },
-  { value: 'stem', label: '🔬 STEM' },
-  { value: 'humanities', label: '📖 Humanities' },
-  { value: 'professional_skills', label: '💼 Professional Skills' },
-  { value: 'digital_skills', label: '💻 Digital Skills' },
-  { value: 'creative_arts', label: '🎨 Creative Arts' },
-  { value: 'social_sciences', label: '🌍 Social Sciences' },
-  { value: 'test_prep', label: '✍️ Test Preparation' },
-  { value: 'vocational', label: '🔧 Vocational Training' },
-  { value: 'early_education', label: '🎯 Early Education' },
+  { value: 'languages', emoji: '🌐', label: 'Languages' },
+  { value: 'business', emoji: '💰', label: 'Business' },
+  { value: 'ecommerce', emoji: '🛍', label: 'E-commerce' },
+  { value: 'gaming', emoji: '🎮', label: 'Gaming' },
+  { value: 'music', emoji: '🎸', label: 'Music' },
+  { value: 'sports', emoji: '⚽', label: 'Sports' },
+  { value: 'cars', emoji: '🚗', label: 'Cars' },
+  { value: 'sales_marketing', emoji: '🚀', label: 'Sales & Marketing' },
+  { value: 'tech', emoji: '💻', label: 'Tech' },
+  { value: 'photo_video', emoji: '📸', label: 'Photo & Video' },
+  { value: 'pets', emoji: '🐕', label: 'Pets' },
+  { value: 'personal_development', emoji: '📚', label: 'Personal Development' },
+  { value: 'real_estate', emoji: '🏠', label: 'Real Estate' },
+  { value: 'beauty_fashion', emoji: '👠', label: 'Beauty & Fashion' },
+  { value: 'travel', emoji: '✈️', label: 'Travel' },
+  { value: 'productivity', emoji: '⏳', label: 'Productivity' },
+  { value: 'health_fitness', emoji: '🍎', label: 'Health & Fitness' },
+  { value: 'finance', emoji: '📈', label: 'Finance' },
+  { value: 'arts_crafts', emoji: '🎨', label: 'Arts & Crafts' },
+  { value: 'education', emoji: '📚', label: 'Education' },
+  { value: 'stem', emoji: '🔬', label: 'STEM' },
+  { value: 'humanities', emoji: '📖', label: 'Humanities' },
+  { value: 'professional_skills', emoji: '💼', label: 'Professional Skills' },
+  { value: 'digital_skills', emoji: '💻', label: 'Digital Skills' },
+  { value: 'creative_arts', emoji: '🎨', label: 'Creative Arts' },
+  { value: 'social_sciences', emoji: '🌍', label: 'Social Sciences' },
+  { value: 'test_prep', emoji: '✍️', label: 'Test Preparation' },
+  { value: 'vocational', emoji: '🔧', label: 'Vocational Training' },
+  { value: 'early_education', emoji: '🎯', label: 'Early Education' },
 ] as const
 
 // Mirrors MAX_SENDER_NAME_LENGTH in apps/api/src/services/email/sender.py, which
 // re-validates (and sanitizes) every submitted value server-side.
 const MAX_EMAIL_SENDER_NAME_LENGTH = 64
 
-const validationSchema = Yup.object().shape({
+const buildValidationSchema = (t: (_key: string) => string) => Yup.object().shape({
   name: Yup.string()
-    .required('Name is required')
-    .max(60, 'Organization name must be 60 characters or less'),
+    .required(t('dashboard.organization.general.validation.name_required'))
+    .max(60, t('dashboard.organization.general.validation.name_max')),
   description: Yup.string()
-    .required('Short description is required')
-    .max(100, 'Short description must be 100 characters or less'),
+    .required(t('dashboard.organization.general.validation.short_description_required'))
+    .max(100, t('dashboard.organization.general.validation.short_description_max')),
   about: Yup.string()
     .optional()
-    .max(400, 'About text must be 400 characters or less'),
-  label: Yup.string().required('Organization label is required'),
+    .max(400, t('dashboard.organization.general.validation.about_max')),
+  label: Yup.string().required(t('dashboard.organization.general.validation.label_required')),
 })
 
 interface OrganizationValues {
@@ -82,6 +82,7 @@ interface OrganizationValues {
 
 const OrgEditGeneral: React.FC = () => {
   const { t } = useTranslation()
+  const validationSchema = React.useMemo(() => buildValidationSchema(t), [t])
   const _router = useRouter()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -214,7 +215,7 @@ const OrgEditGeneral: React.FC = () => {
                         <SelectContent>
                           {ORG_LABELS.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
-                              {type.label}
+                              {type.emoji} {t(`dashboard.organization.general.org_labels.${type.value}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>

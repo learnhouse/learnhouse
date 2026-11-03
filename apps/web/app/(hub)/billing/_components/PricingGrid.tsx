@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, GraduationCap, Presentation } from 'lucide-react'
 import {
   GENERAL_PLANS,
@@ -12,6 +13,7 @@ import {
   type PriceOverrides,
   type PlanLimits,
 } from '../_lib/plans'
+import { planName, planNameByLabel, planTagline, featureLabel, featureBadge } from '../../_billing/planText'
 
 interface PricingGridProps {
   planType: 'general' | 'personal'
@@ -39,6 +41,7 @@ export default function PricingGrid({
   hideFreePlan = false,
   renderCta,
 }: PricingGridProps) {
+  const { t } = useTranslation()
   const detectedCurrency = Object.values(priceOverrides ?? {})[0]?.currency
 
   function getCurrencySymbol(planId: string) {
@@ -93,14 +96,14 @@ export default function PricingGrid({
               isPersonal ? 'bg-amber-500' : plan.id === 'pro' ? 'bg-purple-600' : 'bg-blue-600'
             }`}
           >
-            {isPersonal ? 'Best value' : 'Popular'}
+            {isPersonal ? t('billing.pricing.best_value') : t('billing.pricing.popular')}
           </span>
         )}
 
         <span
           className={`inline-flex w-fit px-2 py-1 text-xs font-semibold rounded-md border ${plan.badge} relative z-10`}
         >
-          {plan.name}
+          {planName(t, plan)}
         </span>
 
         <div className="mt-4 relative z-10">
@@ -113,24 +116,24 @@ export default function PricingGrid({
                   {getCurrencySymbol(plan.id)}
                   {price}
                 </span>
-                {!isFree && <span className="text-sm font-medium text-black/35">/mo</span>}
+                {!isFree && <span className="text-sm font-medium text-black/35">{t('billing.pricing.per_month')}</span>}
               </>
             )}
           </div>
         </div>
 
-        <p className="mt-2 text-sm font-medium leading-snug text-black/45 relative z-10">{plan.tagline}</p>
+        <p className="mt-2 text-sm font-medium leading-snug text-black/45 relative z-10">{planTagline(t, plan)}</p>
 
         <div className="my-6 h-px bg-black/[0.06] relative z-10" />
 
         <div className="flex-1 relative z-10">
           {plan.inheritsFrom && (
             <p className="text-xs font-semibold mb-3 text-black/25 flex items-center gap-1.5">
-              Everything in{' '}
+              {t('billing.pricing.everything_in')}{' '}
               <span className={`inline-flex px-1 py-px text-[9px] font-semibold rounded border ${plan.inheritsBadge}`}>
-                {plan.inheritsFrom}
+                {planNameByLabel(t, plan.inheritsFrom)}
               </span>{' '}
-              plus:
+              {t('billing.pricing.plus')}
             </p>
           )}
           <ul className="space-y-2.5">
@@ -138,10 +141,10 @@ export default function PricingGrid({
               <li key={f.label} className="flex items-start gap-2.5">
                 <Check size={15} className={`mt-0.5 flex-shrink-0 ${plan.accentColor} opacity-60`} />
                 <span className="text-[13.5px] font-medium leading-snug text-black/60">
-                  {f.label}
+                  {featureLabel(t, f)}
                   {f.badge && (
                     <span className="ms-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-black/35 border border-black/[0.06] rounded-md">
-                      {f.badge}
+                      {featureBadge(t, f)}
                     </span>
                   )}
                 </span>
@@ -176,7 +179,7 @@ export default function PricingGrid({
             }`}
           >
             <Presentation size={16} />
-            General
+            {t('billing.pricing.general')}
           </button>
           <button
             onClick={() => onPlanTypeChange('personal')}
@@ -185,7 +188,7 @@ export default function PricingGrid({
             }`}
           >
             <GraduationCap size={16} />
-            Personal
+            {t('billing.pricing.personal')}
           </button>
         </div>
         <div className="inline-flex items-center gap-1 bg-neutral-100 rounded-full p-1">
@@ -195,7 +198,7 @@ export default function PricingGrid({
               !annual ? 'bg-white text-black shadow-sm' : 'text-black/40 hover:text-black/60'
             }`}
           >
-            Monthly
+            {t('billing.pricing.monthly')}
           </button>
           <button
             onClick={() => onAnnualChange(true)}
@@ -203,10 +206,10 @@ export default function PricingGrid({
               annual ? 'bg-white text-black shadow-sm' : 'text-black/40 hover:text-black/60'
             }`}
           >
-            Annual
+            {t('billing.pricing.annual')}
             {annualSavePct > 0 && (
               <span className="ms-1.5 text-[10px] font-bold text-white bg-emerald-500 px-1.5 py-0.5 rounded-full">
-                Save {annualSavePct}%
+                {t('billing.pricing.save_pct', { pct: annualSavePct })}
               </span>
             )}
           </button>
@@ -245,13 +248,13 @@ export default function PricingGrid({
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 lg:gap-16">
                     <div className="lg:max-w-sm">
                       <span className="inline-flex w-fit px-2 py-1 text-xs font-semibold rounded-md border bg-gradient-to-br from-amber-900/40 to-amber-800/30 text-amber-300 border-amber-700/30">
-                        Enterprise
+                        {t('billing.pricing.enterprise')}
                       </span>
                       <h2 className="mt-3 text-white font-black text-[28px] md:text-[36px] leading-[1.08] tracking-tight">
-                        Built for scale.
+                        {t('billing.pricing.built_for_scale')}
                       </h2>
                       <p className="mt-3 text-white/40 text-base leading-relaxed font-medium">
-                        {ENTERPRISE_PLAN.tagline}
+                        {planTagline(t, ENTERPRISE_PLAN)}
                       </p>
                       <a
                         href="https://learnhouse.app/contact?subject=business"
@@ -259,7 +262,7 @@ export default function PricingGrid({
                         rel="noopener noreferrer"
                         className="inline-block mt-6 px-5 py-2.5 text-[14px] font-bold bg-white text-black rounded-lg hover:bg-white/90 transition-colors"
                       >
-                        Talk to us
+                        {t('billing.pricing.talk_to_us')}
                       </a>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 lg:pt-1">
@@ -268,7 +271,7 @@ export default function PricingGrid({
                           <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/[0.07] flex items-center justify-center">
                             <Check size={16} className="text-white/60" />
                           </div>
-                          <span className="text-white/70 text-[14px] font-medium">{f.label}</span>
+                          <span className="text-white/70 text-[14px] font-medium">{featureLabel(t, f)}</span>
                         </div>
                       ))}
                     </div>

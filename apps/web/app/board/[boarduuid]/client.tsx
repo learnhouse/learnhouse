@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getBoard } from '@services/boards/boards'
@@ -8,6 +9,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import BoardCanvas from '@components/Dashboard/Boards/BoardCanvas'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useSearchParams } from 'next/navigation'
 
 interface BoardCanvasClientProps {
   boardUuid: string
@@ -24,10 +26,13 @@ interface BoardCanvasClientProps {
 }
 
 export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, username }: BoardCanvasClientProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
+  // ?embedded=1 when a live session room shows this board next to the call.
+  const embedded = useSearchParams()?.get('embedded') === '1'
   const token: string | undefined = accessToken || session?.data?.tokens?.access_token
   const displayName =
-    username || session?.data?.user?.username || session?.data?.user?.email || 'Anonymous'
+    username || session?.data?.user?.username || session?.data?.user?.email || t('boards.anonymous')
 
   const { data: board, isLoading, error } = useQuery({
     queryKey: queryKeys.boards.detail(boardUuid),
@@ -66,7 +71,7 @@ export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, use
   if (error || !board) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#f8f8f8]">
-        <p className="text-gray-500">Board not found or access denied.</p>
+        <p className="text-gray-500">{t('boards.not_found_or_denied')}</p>
       </div>
     )
   }
@@ -78,6 +83,7 @@ export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, use
       orgslug={orgslug}
       username={displayName}
       orgUuid={orgData?.org_uuid || ''}
+      embedded={embedded}
     />
   )
 }

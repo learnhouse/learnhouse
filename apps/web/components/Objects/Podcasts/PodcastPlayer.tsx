@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { formatDuration } from '@services/podcasts/episodes'
 import WaveSurfer from 'wavesurfer.js'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 export default function PodcastPlayer() {
   const { state, togglePlay, seekTo, setVolume, closePlayer, toggleMinimize, audioRef } = usePodcastPlayer()
@@ -210,7 +211,7 @@ export default function PodcastPlayer() {
                 isMinimized ? 'w-10 h-10' : 'w-16 h-16'
               }`}
             >
-              <img
+              <ThumbnailImage
                 src={thumbnailUrl}
                 alt={currentEpisode.title}
                 className="w-full h-full object-cover"
@@ -234,7 +235,7 @@ export default function PodcastPlayer() {
               <button
                 onClick={skipBackward}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title="Skip back 15s"
+                title={t('media.audio.skip_back')}
               >
                 <SkipBack size={18} className="text-gray-600" />
               </button>
@@ -257,7 +258,7 @@ export default function PodcastPlayer() {
               <button
                 onClick={skipForward}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title="Skip forward 15s"
+                title={t('media.audio.skip_forward')}
               >
                 <SkipForward size={18} className="text-gray-600" />
               </button>
@@ -318,7 +319,7 @@ export default function PodcastPlayer() {
             <button
               onClick={toggleMinimize}
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title={isMinimized ? 'Expand' : 'Minimize'}
+              title={isMinimized ? t('common.expand') : t('podcasts.player.minimize')}
             >
               {isMinimized ? (
                 <Maximize2 size={16} className="text-gray-600" />
@@ -329,7 +330,7 @@ export default function PodcastPlayer() {
             <button
               onClick={closePlayer}
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title="Close"
+              title={t('common.close')}
             >
               <X size={isMinimized ? 16 : 18} className="text-gray-600" />
             </button>

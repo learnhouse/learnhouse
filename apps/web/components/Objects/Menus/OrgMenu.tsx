@@ -27,6 +27,7 @@ import {
   ChalkboardSimple,
   Signpost,
   ChatsCircle,
+  CalendarDots,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import {
@@ -51,6 +52,7 @@ import {
 } from '@components/ui/tooltip'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
+import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
@@ -95,6 +97,7 @@ export const OrgMenu = (props: any) => {
   const config = org?.config?.config
   const primaryColor = config?.customization?.general?.color || config?.general?.color || ''
   const colors = getMenuColorClasses(primaryColor)
+  const showBranding = useShowLearnHouseBranding()
 
   // Filter dashboard menu items by resolved_features from API
   const rf = config?.resolved_features
@@ -150,7 +153,7 @@ export const OrgMenu = (props: any) => {
     <>
       <div className="backdrop-blur-lg h-[60px] blur-3xl" style={{ zIndex: 'var(--z-behind)', marginTop: topOffset }}></div>
       <nav
-        aria-label="Top navigation"
+        aria-label={t('dashboard.nav.top_navigation')}
         className={`backdrop-blur-lg fixed start-0 end-0 h-[60px] ${!primaryColor ? 'bg-white/90 nice-shadow' : ''}`}
         style={{
           zIndex: 'var(--z-nav)',
@@ -160,18 +163,19 @@ export const OrgMenu = (props: any) => {
       >
         <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center space-x-5 md:w-auto w-full">
-            <div className="logo flex md:w-auto w-full justify-center">
-              <Link href={getUriWithOrg(orgslug, '/')}>
+            <div className="logo flex shrink-0 md:w-auto w-full justify-center">
+              <Link href={getUriWithOrg(orgslug, '/')} className="shrink-0">
                 <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center">
                   {org?.logo_image ? (
                     <img
                       src={`${getOrgLogoMediaDirectory(org.org_uuid, org?.logo_image)}`}
-                      alt="Learnhouse"
-                      style={{ width: 'auto', height: '100%' }}
-                      className="rounded-md"
+                      alt={org?.name || 'Logo'}
+                      className="h-full w-auto max-w-[180px] shrink-0 object-contain rounded-md"
                     />
-                  ) : (
+                  ) : showBranding ? (
                     <LearnHouseLogo logoFilter={colors.logoFilter} />
+                  ) : (
+                    <span className={`text-lg font-bold truncate max-w-[200px] ${colors.text}`}>{org?.name}</span>
                   )}
                 </div>
               </Link>
@@ -209,6 +213,28 @@ export const OrgMenu = (props: any) => {
                 </TooltipProvider>
               </div>
             </AuthenticatedClientElement>
+            {/* Calendar */}
+            <AuthenticatedClientElement checkMethod="authentication">
+              <div className="hidden md:flex">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={getUriWithOrg(orgslug, '/calendar')}
+                        className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                        aria-label={t('calendar.title')}
+                      >
+                        <CalendarDots size={20} weight="fill" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
+                      {t('calendar.title')}
+                      <Keys keys="g e" />
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </AuthenticatedClientElement>
             {/* Boards */}
             {rf?.boards?.enabled && (
               <AuthenticatedClientElement checkMethod="authentication">
@@ -219,7 +245,7 @@ export const OrgMenu = (props: any) => {
                         <Link
                           href={getUriWithOrg(orgslug, '/boards')}
                           className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
-                          aria-label="Boards"
+                          aria-label={t('common.boards')}
                         >
                           <ChalkboardSimple size={20} weight="fill" />
                         </Link>
@@ -490,6 +516,7 @@ const CopilotMenuButton = ({
   bubbleOpen: boolean
   onOpenBubble: (_sessionUuid?: string) => void
 }) => {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const [isOpen, setIsOpen] = useState(false)
@@ -545,13 +572,13 @@ const CopilotMenuButton = ({
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <ChatCircleDots size={14} weight="fill" className="shrink-0 text-neutral-400" />
-                  <span className="truncate text-sm">{s.title || 'Untitled'}</span>
+                  <span className="truncate text-sm">{s.title || t('library.untitled')}</span>
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem key={s.aichat_uuid} asChild>
                   <Link href={getUriWithOrg(orgslug, `/copilot?chat=${s.aichat_uuid}`)} className="flex items-center gap-2">
                     <ChatCircleDots size={14} weight="fill" className="shrink-0 text-neutral-400" />
-                    <span className="truncate text-sm">{s.title || 'Untitled'}</span>
+                    <span className="truncate text-sm">{s.title || t('library.untitled')}</span>
                   </Link>
                 </DropdownMenuItem>
               )
@@ -560,7 +587,7 @@ const CopilotMenuButton = ({
           </>
         ) : (
           <div className="px-2 py-3 text-center">
-            <p className="text-xs text-neutral-400">No conversations yet</p>
+            <p className="text-xs text-neutral-400">{t('ai.copilot_menu.no_conversations')}</p>
           </div>
         )}
 
@@ -571,13 +598,13 @@ const CopilotMenuButton = ({
             className="flex items-center gap-2 font-medium cursor-pointer"
           >
             <ChatCircle size={14} weight="fill" className="text-violet-500" />
-            <span>{recentSessions.length > 0 ? 'New conversation' : 'Start a conversation'}</span>
+            <span>{recentSessions.length > 0 ? t('ai.copilot_menu.new_conversation') : t('ai.copilot_menu.start_conversation')}</span>
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem asChild>
             <Link href={getUriWithOrg(orgslug, '/copilot')} className="flex items-center gap-2 font-medium">
               <ChatCircle size={14} weight="fill" className="text-violet-500" />
-              <span>{recentSessions.length > 0 ? 'View all conversations' : 'Start a conversation'}</span>
+              <span>{recentSessions.length > 0 ? t('ai.copilot_menu.view_all') : t('ai.copilot_menu.start_conversation')}</span>
             </Link>
           </DropdownMenuItem>
         )}
@@ -590,7 +617,7 @@ const CopilotMenuButton = ({
           className="w-full flex items-center justify-between px-2 py-2 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors group"
         >
           <span className="text-xs text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-            Open in bubble
+            {t('ai.copilot_menu.open_in_bubble')}
           </span>
           <span
             className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors flex-shrink-0 ${
