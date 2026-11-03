@@ -26,6 +26,8 @@ const tajawal = Tajawal({
   weight: ['300', '400', '500', '700', '800'],
   display: 'swap',
   variable: '--font-arabic',
+  // Only RTL/Arabic screens use it, so don't make every visitor download it.
+  preload: false,
 })
 
 export default function RootLayout({
