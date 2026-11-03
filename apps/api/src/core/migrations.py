@@ -53,6 +53,9 @@ ADVISORY_LOCK_KEY = 0x4C484D494752
 
 _MODEL_PACKAGES = (("src/db", "src.db"), ("ee/db", "ee.db"))
 
+# Key in the Alembic config attributes under which migrations defer index builds.
+DEFERRED_INDEXES = "deferred_indexes"
+
 
 class SchemaMigrationError(RuntimeError):
     """The schema could not be brought to the code's version. Not retryable."""
@@ -110,13 +113,20 @@ def sync_database_url(url: Optional[str] = None) -> str:
     return url
 
 
-def alembic_config(connection: Optional[Connection] = None) -> Config:
+def alembic_config(
+    connection: Optional[Connection] = None,
+    deferred_indexes: Optional[list[tuple[str, str, list[str]]]] = None,
+) -> Config:
     config = Config(str(API_DIR / "alembic.ini"))
     config.set_main_option("script_location", str(API_DIR / "migrations"))
     # migrations/env.py runs on this connection (inside our transaction and
     # lock) and leaves the app's logging alone.
     config.attributes["connection"] = connection
     config.attributes["configure_logger"] = False
+    # A migration can hand an index over here instead of building it, and it
+    # is built concurrently once the migration transaction has committed.
+    if deferred_indexes is not None:
+        config.attributes[DEFERRED_INDEXES] = deferred_indexes
     return config
 
 
@@ -202,6 +212,37 @@ def reconcile(connection: Connection, metadata: MetaData, *, indexes: bool = Tru
     return applied, skipped
 
 
+def build_indexes_concurrently(engine, indexes: list[tuple[str, str, list[str]]]) -> list[str]:
+    """Build indexes that migrations deferred, outside any transaction.
+
+    ``CREATE INDEX CONCURRENTLY`` can't run inside the migration transaction
+    (it would also wait on that transaction forever), but unlike a plain build
+    it doesn't block writes to a live table while it runs. A failure is logged,
+    not raised: these indexes only speed reads up. Returns the names built.
+    """
+    built: list[str] = []
+    if not indexes:
+        return built
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+        quote = connection.dialect.identifier_preparer.quote
+        for name, table, columns in indexes:
+            column_list = ", ".join(quote(column) for column in columns)
+            try:
+                connection.execute(
+                    text(f"CREATE INDEX CONCURRENTLY IF NOT EXISTS {quote(name)} ON {quote(table)} ({column_list})")
+                )
+                built.append(name)
+            except Exception as exc:
+                logger.warning("Could not build index %s on %s, reads stay slower without it: %s", name, table, exc)
+                # A failed concurrent build leaves an invalid index behind that
+                # writes still have to maintain.
+                try:
+                    connection.execute(text(f"DROP INDEX CONCURRENTLY IF EXISTS {quote(name)}"))
+                except Exception:
+                    logger.warning("Could not drop the invalid index %s", name, exc_info=True)
+    return built
+
+
 def ensure_schema(url: Optional[str] = None, *, metadata: Optional[MetaData] = None) -> SchemaReport:
     """Bring the database at ``url`` (default: the configured one) to the
     code's schema. Raises SchemaMigrationError when it can't."""
@@ -210,6 +251,7 @@ def ensure_schema(url: Optional[str] = None, *, metadata: Optional[MetaData] = N
     try:
         _ensure_extensions(engine)
         heads = head_revisions()
+        deferred: list[tuple[str, str, list[str]]] = []
         with engine.connect() as lock_connection, _migration_lock(lock_connection):
             with engine.begin() as connection:
                 report = SchemaReport(state="stamped", before=current_revisions(connection))
@@ -223,7 +265,7 @@ def ensure_schema(url: Optional[str] = None, *, metadata: Optional[MetaData] = N
                     report.reconciled, report.skipped = reconcile(connection, metadata)
                     command.stamp(alembic_config(connection), "heads")
                 else:
-                    command.upgrade(alembic_config(connection), "heads")
+                    command.upgrade(alembic_config(connection, deferred), "heads")
                     # Safety net for a migration someone forgot. Indexes are
                     # left to migrations here: building one can lock a large
                     # table for a while on a live database.
@@ -231,6 +273,9 @@ def ensure_schema(url: Optional[str] = None, *, metadata: Optional[MetaData] = N
                 report.after = current_revisions(connection)
                 if report.after != heads:
                     raise SchemaMigrationError(f"database at {report.after} after migrating, expected {heads}")
+            # Still under the lock, so another replica doesn't start the same
+            # builds.
+            built = build_indexes_concurrently(engine, deferred)
     except SchemaMigrationError:
         raise
     except Exception as exc:
@@ -242,6 +287,8 @@ def ensure_schema(url: Optional[str] = None, *, metadata: Optional[MetaData] = N
         logger.warning("Added schema the migrations did not cover (add a migration): %s", ", ".join(report.reconciled))
     elif report.reconciled:
         logger.info("Brought the schema up to the models: %s", ", ".join(report.reconciled))
+    if built:
+        logger.info("Built indexes concurrently: %s", ", ".join(built))
     if report.skipped:
         logger.info("Schema differences left alone (could lose data): %s", "; ".join(report.skipped))
     logger.info("Database %s", report.summary())

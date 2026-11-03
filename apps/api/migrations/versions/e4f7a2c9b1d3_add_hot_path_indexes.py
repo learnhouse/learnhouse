@@ -14,7 +14,9 @@ every lesson read:
 
 An index is only created when no existing index already starts with the same
 columns, whatever its name, so databases that were indexed by hand don't get
-a duplicate.
+a duplicate. On Postgres, when the app runs the migration, the indexes are
+handed to it and built with CREATE INDEX CONCURRENTLY after the migration
+transaction commits, so writes to these tables aren't blocked while they build.
 
 Revision ID: e4f7a2c9b1d3
 Revises: a1l2v3s4e5s6
@@ -58,10 +60,19 @@ def upgrade() -> None:
     inspector = sa.inspect(bind)
     tables = set(inspector.get_table_names())
 
+    # Set by the app's migration runner (src/core/migrations.py); absent when
+    # alembic is run by hand.
+    deferred = op.get_context().config.attributes.get("deferred_indexes")
+    if bind.dialect.name != "postgresql":
+        deferred = None
+
     for name, table, columns in HOT_PATH_INDEXES:
         if table not in tables or _covered(inspector, table, columns):
             continue
-        op.create_index(name, table, columns)
+        if deferred is not None:
+            deferred.append((name, table, columns))
+        else:
+            op.create_index(name, table, columns)
 
 
 def downgrade() -> None:
