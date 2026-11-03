@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import CopilotBubble from '@components/Copilot/CopilotBubble'
+import { useMessaging, useMessagingEnabled } from '@components/Messaging/MessagingProvider'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
@@ -25,6 +26,7 @@ import {
   SquaresFour,
   ChalkboardSimple,
   Signpost,
+  ChatsCircle,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import {
@@ -78,6 +80,10 @@ export const OrgMenu = (props: any) => {
     localStorage.setItem('copilot-bubble-mode', String(value))
     if (!value) setBubbleOpen(false)
   }
+
+  // With Messages on, the copilot lives in Messages as the default agent.
+  const messagingEnabled = useMessagingEnabled()
+  const { unreadTotal } = useMessaging()
 
   const openBubbleWithSession = (sessionUuid?: string) => {
     if (sessionUuid) setBubbleSessionToLoad(sessionUuid)
@@ -227,8 +233,36 @@ export const OrgMenu = (props: any) => {
                 </div>
               </AuthenticatedClientElement>
             )}
+            {/* Messages */}
+            {messagingEnabled && (
+              <AuthenticatedClientElement checkMethod="authentication">
+                <div className="hidden md:flex">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={getUriWithOrg(orgslug, '/messages')}
+                          className={`relative p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                          aria-label={unreadTotal ? `Messages, ${unreadTotal} unread` : 'Messages'}
+                        >
+                          <ChatsCircle size={20} weight="fill" />
+                          {unreadTotal > 0 && (
+                            <span className="absolute top-0.5 end-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-4 text-center ring-2 ring-white tabular-nums">
+                              {unreadTotal > 99 ? '99+' : unreadTotal}
+                            </span>
+                          )}
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">
+                        Messages
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </AuthenticatedClientElement>
+            )}
             {/* AI Copilot */}
-            {rf?.ai?.enabled && config?.admin_toggles?.ai?.copilot_enabled !== false && (
+            {!messagingEnabled && rf?.ai?.enabled && config?.admin_toggles?.ai?.copilot_enabled !== false && (
               <AuthenticatedClientElement checkMethod="authentication">
                 <div className="hidden md:flex">
                   <CopilotMenuButton
@@ -399,6 +433,21 @@ export const OrgMenu = (props: any) => {
           <div className='py-4'>
             <MenuLinks orgslug={orgslug} />
           </div>
+          {messagingEnabled && session?.status === 'authenticated' && (
+            <Link
+              href={getUriWithOrg(orgslug, '/messages')}
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-neutral-800 bg-neutral-100"
+            >
+              <ChatsCircle size={18} weight="fill" />
+              Messages
+              {unreadTotal > 0 && (
+                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-[18px] text-center tabular-nums">
+                  {unreadTotal > 99 ? '99+' : unreadTotal}
+                </span>
+              )}
+            </Link>
+          )}
           <div className="border-t border-gray-200">
             <HeaderProfileBox />
           </div>
@@ -414,8 +463,8 @@ export const OrgMenu = (props: any) => {
         userEmail={session?.data?.user?.email}
       />
 
-      {/* Copilot floating bubble */}
-      {isBubbleMode && (
+      {/* Legacy copilot bubble; with Messages on, agents live in Messages */}
+      {isBubbleMode && !messagingEnabled && (
         <CopilotBubble
           orgslug={orgslug}
           open={bubbleOpen}

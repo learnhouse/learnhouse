@@ -10,6 +10,8 @@ import { OrgMFAPolicyGate } from '@components/Objects/Banners/OrgMFAPolicyGate'
 import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext'
 import { SiteCommandPaletteProvider } from '@components/Objects/Search/SiteCommandPaletteContext'
 import { ShortcutsProvider } from '@/lib/shortcuts/ShortcutsContext'
+import { MessagingProvider } from '@components/Messaging/MessagingProvider'
+import ChatDock from '@components/Messaging/Dock/ChatDock'
 import GlobalShortcuts from '@components/Objects/Shortcuts/GlobalShortcuts'
 import dynamic from 'next/dynamic'
 const PodcastPlayer = dynamic(() => import('@components/Objects/Podcasts/PodcastPlayer'), { ssr: false })
@@ -107,7 +109,7 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
   const pathParts = pathname?.split('/').filter(Boolean) || []
 
   // Pages that use a full-bleed layout (no footer/watermark)
-  const noFooterPaths = ['copilot']
+  const noFooterPaths = ['copilot', 'messages']
   const isFullBleedPage = noFooterPaths.some((p) => pathParts.includes(p))
 
   return (
@@ -135,6 +137,7 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       {!chromeless && <SiteCommandPalette />}
       {!chromeless && <GlobalShortcuts />}
       {!chromeless && <ShortcutHelp />}
+      {!chromeless && <ChatDock orgslug={orgslug} />}
     </div>
   )
 }
@@ -158,9 +161,11 @@ export default function RootLayout(
         <PodcastPlayerProvider>
           <SiteCommandPaletteProvider>
             <ShortcutsProvider>
-              <LayoutContent orgslug={params?.orgslug}>
-                {children}
-              </LayoutContent>
+              <MessagingProvider orgslug={params?.orgslug}>
+                <LayoutContent orgslug={params?.orgslug}>
+                  {children}
+                </LayoutContent>
+              </MessagingProvider>
             </ShortcutsProvider>
           </SiteCommandPaletteProvider>
           <PodcastPlayer />

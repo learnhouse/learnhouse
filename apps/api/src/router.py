@@ -28,6 +28,7 @@ from src.routers.orgs import org_plan
 from src.routers.courses import chapters, courses, assignments, certifications
 from src.routers.folders import folders as folders_router_module
 from src.routers.paths import paths as paths_router_module
+from src.routers.messaging import messaging as messaging_router_module
 from src.routers.media import media as media_router_module
 from src.routers.courses import migration as migration_router_module
 from src.routers.communities import communities as communities_router_module
@@ -250,6 +251,11 @@ v1_router.include_router(
     prefix="/paths",
     tags=["paths"],
     dependencies=[Depends(require_plan_for_paths("pro", "Paths"))],
+)
+# Messaging gates itself per org (feature + membership) inside the service,
+# since most routes only name a conversation, message or agent.
+v1_router.include_router(
+    messaging_router_module.router, prefix="/messaging", tags=["messaging"]
 )
 v1_router.include_router(
     communities_router_module.router,

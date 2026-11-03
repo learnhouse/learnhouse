@@ -80,6 +80,11 @@ def startup_app(app: FastAPI) -> Callable:
         from src.services.courses.drip_scheduler import start_scheduler as start_drip_scheduler
         start_drip_scheduler()
 
+        # Emails about messages that stayed unread (default: after an hour).
+        # Never raises.
+        from src.services.messaging.scheduler import start_scheduler as start_messaging_emails
+        start_messaging_emails()
+
         # The shared demo organization refreshes itself on an interval, so the
         # feature needs no external scheduler. No-op unless
         # LEARNHOUSE_DEMO_ENABLED; never raises.
@@ -146,6 +151,8 @@ def shutdown_app(app: FastAPI) -> Callable:
         await stop_scheduler()
         from src.services.courses.drip_scheduler import stop_scheduler as stop_drip_scheduler
         await stop_drip_scheduler()
+        from src.services.messaging.scheduler import stop_scheduler as stop_messaging_emails
+        await stop_messaging_emails()
         # Stop the demo refresh tick.
         from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
         await stop_demo_scheduler()
