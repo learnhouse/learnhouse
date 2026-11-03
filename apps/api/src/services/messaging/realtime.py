@@ -32,8 +32,10 @@ PRESENCE_TTL_SECONDS = 50
 _async_client: Optional[aioredis.Redis] = None
 
 
-def _user_channel(user_id: int) -> str:
-    return f"msg:user:{user_id}"
+def _user_channel(org_id: int, user_id: int) -> str:
+    # Per org, so someone removed from an org stops hearing its conversations
+    # on a stream they hold open in another org.
+    return f"msg:user:{org_id}:{user_id}"
 
 
 def _org_channel(org_id: int) -> str:
@@ -70,8 +72,8 @@ def _now_iso() -> str:
 # Publishing
 # ----------------------------------------------------------------------------
 
-def publish_to_users(user_ids: Iterable[int], event: dict) -> None:
-    """Fire-and-forget fan-out to each user's channel."""
+def publish_to_users(org_id: int, user_ids: Iterable[int], event: dict) -> None:
+    """Fire-and-forget fan-out to each user's channel in one org."""
     r = get_redis_client()
     if r is None:
         return
@@ -79,7 +81,7 @@ def publish_to_users(user_ids: Iterable[int], event: dict) -> None:
     try:
         pipe = r.pipeline(transaction=False)
         for uid in set(user_ids):
-            pipe.publish(_user_channel(uid), payload)
+            pipe.publish(_user_channel(org_id, uid), payload)
         pipe.execute()
     except Exception:
         logger.debug("messaging publish failed", exc_info=True)
@@ -184,7 +186,7 @@ async def event_stream(
         return
 
     pubsub = r.pubsub()
-    await pubsub.subscribe(_user_channel(user_id), _org_channel(org_id))
+    await pubsub.subscribe(_user_channel(org_id, user_id), _org_channel(org_id))
     came_online = False
     try:
         came_online = await _connect(r, org_id, user_id)
@@ -193,7 +195,8 @@ async def event_stream(
             if event:
                 await r.publish(_org_channel(org_id), json.dumps(event, default=str))
 
-        hello["online_user_ids"] = sorted(online_user_ids(org_id))
+        # The caller may pass a list with invisible people already left out.
+        hello.setdefault("online_user_ids", sorted(online_user_ids(org_id)))
         yield _sse(hello)
 
         loop = asyncio.get_event_loop()

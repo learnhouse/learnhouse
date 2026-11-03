@@ -132,7 +132,7 @@ async def test_deliver_due_sends_once(db, org, regular_user):
     later = datetime.now(timezone.utc) + timedelta(minutes=10)
     with patch("src.services.messaging.realtime.publish_to_users") as publish:
         assert await rem.deliver_due(db, later) == 1
-    event = publish.call_args.args[1]
+    event = publish.call_args.args[2]
     assert event["type"] == "message.new"
     assert event["message"]["kind"] == "reminder"
     assert event["message"]["content"] == "Stand up and stretch"

@@ -150,6 +150,34 @@ async def test_dm_respects_allow_dms(db, org, regular_user, user_role):
     assert exc.value.status_code == 403
 
 
+async def test_groups_respect_allow_dms(db, org, admin_user, regular_user, user_role):
+    third = await _user(db, org, 3, "third")
+    db.add(MessagingProfile(user_id=regular_user.id, allow_dms=False))
+    await db.commit()
+    with pytest.raises(HTTPException) as exc:
+        await svc.create_conversation(svc.ConversationCreate(
+            org_id=org.id, kind="group", user_uuids=[regular_user.user_uuid]), third, db)
+    assert exc.value.status_code == 403
+
+    group = await svc.create_conversation(svc.ConversationCreate(
+        org_id=org.id, kind="group", user_uuids=[admin_user.user_uuid]), third, db)
+    with pytest.raises(HTTPException) as exc:
+        await svc.add_members(group["conversation_uuid"], svc.MembersAdd(user_uuids=[regular_user.user_uuid]), third, db)
+    assert "isn't accepting" in exc.value.detail
+    # Admins can still bring them in.
+    added = await svc.add_members(group["conversation_uuid"], svc.MembersAdd(user_uuids=[regular_user.user_uuid]), admin_user, db)
+    assert added["member_count"] == 3
+
+
+async def test_invisible_people_are_not_listed_online(db, org, admin_user, regular_user):
+    db.add(MessagingProfile(user_id=regular_user.id, availability="invisible"))
+    await db.commit()
+    with patch.object(svc.realtime, "online_user_ids", return_value={admin_user.id, regular_user.id}):
+        assert await svc.visible_online_ids(org.id, db) == {admin_user.id}
+    with patch.object(svc.realtime, "online_user_ids", return_value=set()):
+        assert await svc.visible_online_ids(org.id, db) == set()
+
+
 async def test_messages_unread_and_read(db, org, admin_user, regular_user):
     conv = await _dm(db, org, admin_user, regular_user)
     await _send(db, conv["conversation_uuid"], admin_user, "one")
@@ -237,8 +265,8 @@ async def test_realtime_fanout_on_send(db, org, admin_user, regular_user):
     conv = await _dm(db, org, admin_user, regular_user)
     with patch("src.services.messaging.realtime.publish_to_users") as publish:
         await _send(db, conv["conversation_uuid"], admin_user, "hi")
-    users, event = publish.call_args.args
-    assert set(users) == {admin_user.id, regular_user.id}
+    org_id, users, event = publish.call_args.args
+    assert org_id == org.id and set(users) == {admin_user.id, regular_user.id}
     assert event["type"] == "message.new" and event["message"]["content"] == "hi"
 
 
@@ -249,7 +277,7 @@ async def test_read_receipts_off_only_tells_reader(db, org, admin_user, regular_
     await db.commit()
     with patch("src.services.messaging.realtime.publish_to_users") as publish:
         await svc.mark_read(conv["conversation_uuid"], svc.ReadUpdate(), regular_user, db)
-    assert publish.call_args.args[0] == [regular_user.id]
+    assert publish.call_args.args[1] == [regular_user.id]
     seen = (await svc.list_conversations(org.id, admin_user.id, db))[0]["members"]
     assert next(m for m in seen if m["id"] == regular_user.id)["last_read_message_id"] is None
 
@@ -329,6 +357,33 @@ async def test_broadcast_reaches_learners_and_only_team_posts(db, org, course, a
     # A second broadcast reuses the channel.
     again = await svc.send_broadcast(svc.BroadcastCreate(org_id=org.id, course_uuid=course.course_uuid, content="2"), teacher, db)
     assert again["conversation"]["conversation_uuid"] == channel
+
+
+async def test_leaving_the_course_team_ends_posting_rights(db, org, course):
+    teacher = await _user(db, org, 3, "teacher")
+    colleague = await _user(db, org, 5, "colleague")
+    author = ResourceAuthor(resource_uuid=course.course_uuid, user_id=teacher.id,
+                            authorship=ResourceAuthorshipEnum.CREATOR,
+                            authorship_status=ResourceAuthorshipStatusEnum.ACTIVE)
+    db.add(author)
+    db.add(ResourceAuthor(resource_uuid=course.course_uuid, user_id=colleague.id,
+                          authorship=ResourceAuthorshipEnum.MAINTAINER,
+                          authorship_status=ResourceAuthorshipStatusEnum.ACTIVE))
+    await db.commit()
+    out = await svc.send_broadcast(svc.BroadcastCreate(org_id=org.id, course_uuid=course.course_uuid, content="hi"), teacher, db)
+    channel = out["conversation"]["conversation_uuid"]
+    await _send(db, channel, teacher, "still on the team")
+
+    await db.delete(author)
+    await db.commit()
+    with pytest.raises(HTTPException) as exc:
+        await _send(db, channel, teacher, "not anymore")
+    assert exc.value.status_code == 403
+    # Nor can they moderate the channel any more.
+    note, _ = await _send(db, channel, colleague, "colleague note")
+    with pytest.raises(HTTPException) as exc:
+        await svc.delete_message(note.message_uuid, teacher, db)
+    assert exc.value.status_code == 403
 
 
 async def test_org_wide_broadcast_admin_only(db, org, admin_user, regular_user):
@@ -618,3 +673,25 @@ async def test_unread_email_shows_copilot_logo(db, org, regular_user):
     row = sender.call_args.kwargs["conversations"][0]
     assert row["image"] == "https://x.test/learnhouse_ai_simple_colored.png"
     assert "copilot" not in row
+
+
+async def test_group_agent_answers_only_from_shared_courses(db, org, admin_user, regular_user):
+    from src.services.ai.rag.access import CourseGrant, RagAccessScope
+
+    group = await svc.create_conversation(svc.ConversationCreate(
+        org_id=org.id, kind="group", user_uuids=[regular_user.user_uuid]), admin_user, db)
+    conv = (await db.execute(select(Conversation).where(
+        Conversation.conversation_uuid == group["conversation_uuid"]))).scalars().one()
+    scope = RagAccessScope(request=MagicMock(), current_user=admin_user, org_id=org.id, courses={
+        1: CourseGrant(course_uuid="course_open", is_admin=True),
+        2: CourseGrant(course_uuid="course_private", is_admin=True),
+    })
+
+    async def grant(request, user, course_uuid, db_session, raise_on_deny):
+        return CourseGrant(course_uuid=course_uuid) if course_uuid == "course_open" else None
+
+    with patch("src.services.ai.rag.access._grant_for_course", new=grant):
+        await agents_svc._share_scope(MagicMock(), scope, conv, admin_user.id, db)
+    assert list(scope.courses) == [1]
+    assert [r.current_user.id for r in scope.co_readers] == [regular_user.id]
+    assert list(scope.co_readers[0].courses) == [1]

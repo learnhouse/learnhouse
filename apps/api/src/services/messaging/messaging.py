@@ -529,6 +529,20 @@ def _dm_key(a: int, b: int) -> str:
     return f"{lo}:{hi}"
 
 
+async def _require_accepting(people: list[User], actor: User, org_id: int, db: AsyncSession) -> None:
+    """People who turned off new messages can't be pulled into a chat, except by an admin."""
+    if not people:
+        return
+    closed = set((await db.execute(select(MessagingProfile.user_id).where(
+        MessagingProfile.user_id.in_([u.id for u in people]),  # type: ignore[attr-defined]
+        MessagingProfile.allow_dms == False,  # noqa: E712
+    ))).scalars().all())
+    if closed and not await is_org_admin(actor.id, org_id, db):
+        names = ", ".join(f"{u.first_name} {u.last_name}".strip() or u.username for u in people if u.id in closed)
+        verb = "isn't" if len(closed) == 1 else "aren't"
+        raise HTTPException(status_code=403, detail=f"{names} {verb} accepting new messages")
+
+
 async def create_conversation(body: ConversationCreate, user: User, db: AsyncSession) -> dict:
     await require_messaging(body.org_id, user.id, db)
     others = [u for u in await _org_users_by_uuid(body.org_id, body.user_uuids, db) if u.id != user.id]
@@ -576,6 +590,7 @@ async def create_conversation(body: ConversationCreate, user: User, db: AsyncSes
     else:
         if not others:
             raise HTTPException(status_code=400, detail="Add at least one person to the group")
+        await _require_accepting(others, user, body.org_id, db)
         conv = Conversation(
             conversation_uuid=f"conversation_{uuid4()}",
             org_id=body.org_id,
@@ -605,7 +620,7 @@ async def create_conversation(body: ConversationCreate, user: User, db: AsyncSes
     await db.refresh(conv)
     data = await serialize_conversation(conv, user.id, db)
     ids = await member_ids(conv.id, db)
-    realtime.publish_to_users([i for i in ids if i != user.id], {"type": "conversation.new", "conversation_uuid": conv.conversation_uuid})
+    realtime.publish_to_users(conv.org_id, [i for i in ids if i != user.id], {"type": "conversation.new", "conversation_uuid": conv.conversation_uuid})
     return data
 
 
@@ -635,7 +650,7 @@ async def update_conversation(conversation_uuid: str, body: ConversationUpdate, 
     await db.commit()
     await db.refresh(conv)
     if changed_shared:
-        realtime.publish_to_users(await member_ids(conv.id, db), {"type": "conversation.updated", "conversation_uuid": conv.conversation_uuid})
+        realtime.publish_to_users(conv.org_id, await member_ids(conv.id, db), {"type": "conversation.updated", "conversation_uuid": conv.conversation_uuid})
     return await serialize_conversation(conv, user.id, db)
 
 
@@ -647,6 +662,7 @@ async def add_members(conversation_uuid: str, body: MembersAdd, user: User, db: 
     new_users = [u for u in await _org_users_by_uuid(conv.org_id, body.user_uuids, db) if u.id not in current]
     if len(current) + len(new_users) > GROUP_MAX_MEMBERS:
         raise HTTPException(status_code=400, detail=f"Groups are limited to {GROUP_MAX_MEMBERS} people")
+    await _require_accepting(new_users, user, conv.org_id, db)
     now = now_iso()
     for u in new_users:
         db.add(ConversationMember(conversation_id=conv.id, user_id=u.id, role="member", joined_at=now))
@@ -666,8 +682,8 @@ async def add_members(conversation_uuid: str, body: MembersAdd, user: User, db: 
     await db.commit()
     await db.refresh(conv)
     ids = await member_ids(conv.id, db)
-    realtime.publish_to_users(ids, {"type": "conversation.updated", "conversation_uuid": conv.conversation_uuid})
-    realtime.publish_to_users([u.id for u in new_users], {"type": "conversation.new", "conversation_uuid": conv.conversation_uuid})
+    realtime.publish_to_users(conv.org_id, ids, {"type": "conversation.updated", "conversation_uuid": conv.conversation_uuid})
+    realtime.publish_to_users(conv.org_id, [u.id for u in new_users], {"type": "conversation.new", "conversation_uuid": conv.conversation_uuid})
     return await serialize_conversation(conv, user.id, db)
 
 
@@ -691,7 +707,7 @@ async def leave_conversation(conversation_uuid: str, user: User, db: AsyncSessio
         creation_date=now,
     ))
     await db.commit()
-    realtime.publish_to_users(await member_ids(conv.id, db), {"type": "conversation.updated", "conversation_uuid": conv.conversation_uuid})
+    realtime.publish_to_users(conv.org_id, await member_ids(conv.id, db), {"type": "conversation.updated", "conversation_uuid": conv.conversation_uuid})
     return {"left": True}
 
 
@@ -736,9 +752,21 @@ async def _can_share_course(course: Course, user_id: int, org_id: int, db: Async
     return author is not None
 
 
-async def _can_post(conv: Conversation, me: ConversationMember) -> bool:
+async def _runs_channel(conv: Conversation, user_id: int, db: AsyncSession) -> bool:
+    """Whether someone runs a broadcast channel right now: an org admin, or on
+    the course team for a course channel. Checked live, so leaving the team or
+    losing the admin role takes posting rights away."""
+    if await is_org_admin(user_id, conv.org_id, db):
+        return True
+    if conv.course_id is None:
+        return False
+    course = await db.get(Course, conv.course_id)
+    return course is not None and user_id in await _course_team_ids(course, db)
+
+
+async def _can_post(conv: Conversation, me: ConversationMember, db: AsyncSession) -> bool:
     if conv.kind == "broadcast":
-        return me.role in ("owner", "admin")
+        return await _runs_channel(conv, me.user_id, db)
     return True
 
 
@@ -809,7 +837,7 @@ async def post_message(
     await db.refresh(msg)
 
     payload = await serialize_message(msg, conv.conversation_uuid, None, db)
-    realtime.publish_to_users(
+    realtime.publish_to_users(conv.org_id, 
         [m.user_id for m in members],
         {"type": "message.new", "conversation_uuid": conv.conversation_uuid, "message": payload},
     )
@@ -818,7 +846,7 @@ async def post_message(
 
 async def send_message(conversation_uuid: str, body: MessageCreate, user: User, db: AsyncSession) -> tuple[Conversation, Message, dict]:
     conv, me = await get_conversation_for_member(conversation_uuid, user.id, db)
-    if not await _can_post(conv, me):
+    if not await _can_post(conv, me, db):
         raise HTTPException(status_code=403, detail="Only the course team can post in this channel")
     enforce_send_rate(user.id)
     msg = await post_message(conv, user, body, db)
@@ -844,7 +872,7 @@ async def edit_message(message_uuid: str, body: MessageEdit, user: User, db: Asy
     await db.commit()
     await db.refresh(msg)
     payload = await serialize_message(msg, conv.conversation_uuid, None, db)
-    realtime.publish_to_users(await member_ids(conv.id, db), {"type": "message.updated", "conversation_uuid": conv.conversation_uuid, "message": payload})
+    realtime.publish_to_users(conv.org_id, await member_ids(conv.id, db), {"type": "message.updated", "conversation_uuid": conv.conversation_uuid, "message": payload})
     return await serialize_message(msg, conv.conversation_uuid, user.id, db)
 
 
@@ -854,13 +882,16 @@ async def delete_message(message_uuid: str, user: User, db: AsyncSession) -> dic
         ConversationMember.conversation_id == conv.id, ConversationMember.user_id == user.id
     ))).scalars().first()
     is_own = msg.sender_user_id == user.id
-    is_moderator = me is not None and me.role in ("owner", "admin")
+    if conv.kind == "broadcast":
+        is_moderator = me is not None and await _runs_channel(conv, user.id, db)
+    else:
+        is_moderator = me is not None and me.role in ("owner", "admin")
     if not (is_own or is_moderator):
         raise HTTPException(status_code=403, detail="You can only delete your own messages")
     msg.deleted_at = now_iso()
     db.add(msg)
     await db.commit()
-    realtime.publish_to_users(await member_ids(conv.id, db), {
+    realtime.publish_to_users(conv.org_id, await member_ids(conv.id, db), {
         "type": "message.deleted", "conversation_uuid": conv.conversation_uuid, "message_uuid": msg.message_uuid,
     })
     return {"deleted": True}
@@ -886,7 +917,7 @@ async def toggle_reaction(message_uuid: str, body: ReactionToggle, user: User, d
         db.add(MessageReaction(message_id=msg.id, user_id=user.id, emoji=body.emoji, creation_date=now_iso()))
     await db.commit()
     rows = (await _reactions_for([msg.id], db)).get(msg.id, [])
-    realtime.publish_to_users(await member_ids(conv.id, db), {
+    realtime.publish_to_users(conv.org_id, await member_ids(conv.id, db), {
         "type": "reaction",
         "conversation_uuid": conv.conversation_uuid,
         "message_uuid": msg.message_uuid,
@@ -904,7 +935,7 @@ async def set_typing(conversation_uuid: str, body: TypingUpdate, user: User, db:
     if profile is not None and not profile.typing_indicators:
         return {"ok": True}
     ids = [i for i in await member_ids(conv.id, db) if i != user.id]
-    realtime.publish_to_users(ids, {
+    realtime.publish_to_users(conv.org_id, ids, {
         "type": "typing",
         "conversation_uuid": conv.conversation_uuid,
         "user": user_summary(user),
@@ -928,7 +959,7 @@ async def mark_read(conversation_uuid: str, body: ReadUpdate, user: User, db: As
         profile = await _profile(user.id, db)
         # Without read receipts only the reader's own tabs learn about it.
         audience = [user.id] if (profile is not None and not profile.read_receipts) else await member_ids(conv.id, db)
-        realtime.publish_to_users(audience, {
+        realtime.publish_to_users(conv.org_id, audience, {
             "type": "read",
             "conversation_uuid": conv.conversation_uuid,
             "user_id": user.id,
@@ -1021,6 +1052,18 @@ def presence_view(user_id: int, profile: Optional[MessagingProfile], connected: 
     }
 
 
+async def visible_online_ids(org_id: int, db: AsyncSession) -> set[int]:
+    """Who's online in the org, minus anyone set to invisible."""
+    online = realtime.online_user_ids(org_id)
+    if not online:
+        return set()
+    hidden = set((await db.execute(select(MessagingProfile.user_id).where(
+        MessagingProfile.user_id.in_(online),  # type: ignore[attr-defined]
+        MessagingProfile.availability == "invisible",
+    ))).scalars().all())
+    return online - hidden
+
+
 async def presence_event(org_id: int, user_id: int, connected: bool, db_factory) -> dict:
     async with db_factory() as db:
         profile = await _profile(user_id, db)
@@ -1043,7 +1086,7 @@ async def directory(org_id: int, q: str, user: User, db: AsyncSession, limit: in
             User.last_name.ilike(like),  # type: ignore[attr-defined]
             func.concat(User.first_name, " ", User.last_name).ilike(like),
         ))
-    online = realtime.online_user_ids(org_id)
+    online = await visible_online_ids(org_id, db)
     # Online people first, then alphabetical.
     users = list((await db.execute(stmt.order_by(User.first_name, User.last_name).limit(400))).scalars().unique().all())
     users.sort(key=lambda u: (u.id not in online, (u.first_name or u.username).lower()))
@@ -1243,7 +1286,7 @@ async def send_broadcast(body: BroadcastCreate, user: User, db: AsyncSession) ->
         kind="announcement",
     )
     if added:
-        realtime.publish_to_users(added, {"type": "conversation.new", "conversation_uuid": conv.conversation_uuid})
+        realtime.publish_to_users(conv.org_id, added, {"type": "conversation.new", "conversation_uuid": conv.conversation_uuid})
     return {
         "conversation": await serialize_conversation(conv, user.id, db, member_preview_limit=12),
         "message": await serialize_message(msg, conv.conversation_uuid, user.id, db),

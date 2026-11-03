@@ -37,7 +37,13 @@ async def api_stream(
 ):
     await service.require_messaging(org_id, current_user.id, db_session)
     me = await service.get_my_status(org_id, current_user, db_session)
-    hello = {"type": "hello", "user_id": current_user.id, "me": me}
+    hello = {
+        "type": "hello",
+        "user_id": current_user.id,
+        "me": me,
+        # Invisible people never show as online, not even in this first list.
+        "online_user_ids": sorted(await service.visible_online_ids(org_id, db_session) | {current_user.id}),
+    }
     user_id = current_user.id
     # FastAPI keeps yield dependencies open until the response finishes, which
     # for a stream is as long as the tab stays open. Hand the connection back

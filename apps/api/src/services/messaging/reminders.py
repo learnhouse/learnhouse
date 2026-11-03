@@ -312,7 +312,7 @@ async def deliver_due(db: AsyncSession, now: Optional[datetime] = None) -> int:
         await db.commit()
         await db.refresh(msg)
         payload = await serialize_message(msg, conv.conversation_uuid, None, db)
-        realtime.publish_to_users(await member_ids(conv.id, db), {
+        realtime.publish_to_users(conv.org_id, await member_ids(conv.id, db), {
             "type": "message.new", "conversation_uuid": conv.conversation_uuid, "message": payload,
         })
         delivered += 1

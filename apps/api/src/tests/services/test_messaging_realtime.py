@@ -110,15 +110,15 @@ class FakeAsyncRedis:
 def test_publish_to_users_dedupes_and_targets_user_channels():
     r = FakeSyncRedis()
     with patch("src.services.messaging.realtime.get_redis_client", return_value=r):
-        realtime.publish_to_users([1, 2, 2], {"type": "x"})
+        realtime.publish_to_users(7, [1, 2, 2], {"type": "x"})
         realtime.publish_to_org(7, {"type": "presence"})
     channels = sorted(ch for ch, _ in r.published)
-    assert channels == ["msg:org:7", "msg:user:1", "msg:user:2"]
+    assert channels == ["msg:org:7", "msg:user:7:1", "msg:user:7:2"]
 
 
 def test_publish_without_redis_is_a_noop():
     with patch("src.services.messaging.realtime.get_redis_client", return_value=None):
-        realtime.publish_to_users([1], {"type": "x"})
+        realtime.publish_to_users(1, [1], {"type": "x"})
         realtime.publish_to_org(1, {"type": "x"})
         assert realtime.online_user_ids(1) == set()
         assert realtime.is_online(1, 1) is False
@@ -173,7 +173,7 @@ async def test_event_stream_presence_and_forwarding():
     # Came online, then went offline: both announced on the org channel.
     assert [p[1]["online"] for p in fake.published] == [True, False]
     offline.assert_called_once()
-    assert fake._pubsub.subscribed == ["msg:user:5", "msg:org:2"]
+    assert fake._pubsub.subscribed == ["msg:user:2:5", "msg:org:2"]
 
 
 async def test_event_stream_second_tab_does_not_flap_presence():
