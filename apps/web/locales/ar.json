@@ -2878,6 +2878,7 @@
       "zone_subtitle": "احذف حسابك نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
       "zone_body": "سيؤدي هذا إلى إزالة حسابك وصلاحيات وصولك. وسيتم أيضًا حذف أي منظمة تكون المسؤول الوحيد فيها، مع جميع دوراتها ومحتواها. أما المنظمات التي لها مسؤولون آخرون فتبقى؛ وتتم إزالتك منها فقط."
     },
+    "ai_apps": "تطبيقات الذكاء الاصطناعي",
     "mobile_actions": "إجراءات الحساب على الجوال"
   },
   "user": {
@@ -4019,6 +4020,7 @@
           "back": "رجوع",
           "save_name": "حفظ الاسم",
           "rename_chapter": "إعادة تسمية الفصل",
+          "send_to_atlas": "إرسال العنوان إلى Atlas",
           "manage_live_session": "إدارة الجلسة المباشرة"
         },
         "bulk_actions": {
@@ -4082,6 +4084,7 @@
             "uploading": "جاري رفع الملف وإنشاء النشاط...",
             "upload_success": "تم رفع الملف بنجاح",
             "upload_error": "فشل تحميل الملف",
+            "added_to_atlas": "تمت الإضافة إلى محادثة Atlas",
             "creating_uploading": "جاري إنشاء النشاط ورفع الملف...",
             "update_error": "فشل تحديث النشاط",
             "file_too_large": "حجم الملف كبير جدًا للرفع.",
@@ -4282,7 +4285,8 @@
           "automations": "الأتمتة",
           "menu": "القائمة",
           "danger": "منطقة الخطر",
-          "course_end": "إتمام الدورة"
+          "course_end": "إتمام الدورة",
+          "mcp": "تطبيقات الذكاء الاصطناعي"
         },
         "pages": {
           "general": {
@@ -4339,6 +4343,10 @@
           "course_end": {
             "title": "إتمام الدورة",
             "subtitle": "خصّص الشاشة التي يراها المتعلمون عند إنهاء الدورة"
+          },
+          "mcp": {
+            "title": "تطبيقات الذكاء الاصطناعي (MCP)",
+            "subtitle": "اربط Claude وChatGPT وCursor وتطبيقات الذكاء الاصطناعي الأخرى بمؤسستك"
           }
         },
         "name": "اسم المنظمة",
@@ -7403,6 +7411,243 @@
     "developers": {
       "breadcrumb": "المطورون"
     },
+    "atlas": {
+      "title": "Atlas",
+      "pro_title": "Atlas ميزة ضمن خطة Pro",
+      "pro_description": "Atlas وكيل ذكاء اصطناعي يبني دوراتك ويعدّلها من خلال محادثة. ارقَ إلى خطة Pro لاستخدامه.",
+      "open": "فتح Atlas",
+      "open_side_panel": "فتح Atlas في اللوحة الجانبية",
+      "toggle_quick_assist": "تبديل المساعدة السريعة من Atlas",
+      "close": "إغلاق Atlas",
+      "retry": "إعادة المحاولة",
+      "loading_chat": "جارٍ تحميل المحادثة...",
+      "placeholder": "اطلب من Atlas البناء أو التعديل أو الاستكشاف...",
+      "placeholder_short": "اسأل Atlas...",
+      "starting": "جارٍ تشغيل Atlas...",
+      "stop": "إيقاف",
+      "send": "إرسال",
+      "chats": "المحادثات",
+      "new_chat": "محادثة جديدة",
+      "no_chats": "لا توجد محادثات سابقة بعد. أرسل رسالة لبدء محادثة.",
+      "untitled": "بدون عنوان",
+      "favorite": "إضافة إلى المفضلة",
+      "unfavorite": "إزالة من المفضلة",
+      "rename": "إعادة تسمية",
+      "delete": "حذف",
+      "delete_confirm": "حذف \"{{title}}\"؟",
+      "remove_reference": "إزالة المرجع",
+      "groups": {
+        "favorites": "المفضلة",
+        "today": "اليوم",
+        "previous_7_days": "آخر 7 أيام",
+        "older": "أقدم"
+      },
+      "reference_types": {
+        "activity": "نشاط",
+        "chapter": "فصل"
+      },
+      "errors": {
+        "start_session": "تعذّر بدء جلسة Atlas.",
+        "load_chat": "تعذّر تحميل هذه المحادثة.",
+        "stream_failed": "فشل البث."
+      },
+      "empty": {
+        "title": "اطلب مني بناء دورة أو تعديلها.",
+        "description": "أركّز على دورة واحدة في كل مرة وأعمل بالأسماء، فلا حاجة لنسخ أي معرّفات. الإنشاء وإعادة التسمية والنشر وإعادة الترتيب وكتابة المحتوى وإضافة الاختبارات: فقط اطلب ذلك.",
+        "prompt_create_course": "أنشئ دورة عن أساسيات Python تتكون من 4 فصول.",
+        "prompt_publish_all": "انشر كل الأنشطة في دورة DNS الخاصة بي.",
+        "prompt_add_quiz": "أضف اختبارًا عن سجلات DNS إلى نشاط \"ما هو DNS؟\".",
+        "prompt_recent_courses": "اعرض آخر 5 دورات قمت بتحديثها."
+      },
+      "focus": {
+        "label": "التركيز",
+        "none": "لا يوجد تركيز",
+        "clear": "مسح التركيز",
+        "course": "الدورة",
+        "chapter": "الفصل",
+        "activity": "النشاط"
+      },
+      "quick_actions": {
+        "activity_shorter": "اجعل هذا أقصر",
+        "activity_friendlier": "أعد الكتابة بنبرة أكثر ودًّا",
+        "activity_translate": "ترجم إلى الفرنسية",
+        "activity_quiz": "أضف اختبارًا من 3 أسئلة",
+        "course_summarize": "لخّص هذه الدورة",
+        "course_add_chapter": "أضف فصلًا جديدًا في النهاية",
+        "course_publish_all": "انشر كل الأنشطة",
+        "course_reorder": "أعد ترتيب الفصول حسب الموضوع",
+        "home_recent": "اعرض آخر 5 دورات لي",
+        "home_plan": "خطّط لدورة عن الأنظمة الموزعة",
+        "home_drafts": "اعرض كل دوراتي المسودة"
+      },
+      "picker": {
+        "attach": "إرفاق مرجع",
+        "search_placeholder": "ابحث عن نشاط أو فصل...",
+        "no_course_focused": "لا توجد دورة محددة",
+        "open_course_hint": "افتح دورة لاختيار مراجع منها.",
+        "loading": "جارٍ التحميل...",
+        "no_matches": "لا توجد نتائج مطابقة.",
+        "untitled_chapter": "فصل بدون عنوان",
+        "attached": "مُرفق",
+        "load_failed": "فشل التحميل.",
+        "load_course_failed": "فشل تحميل الدورة ({{status}})"
+      },
+      "thinking": "جارٍ التفكير...",
+      "stopped": "تم الإيقاف",
+      "no_reply": "لم يرد Atlas. جرّب إعادة صياغة طلبك.",
+      "tool_status": {
+        "running": "قيد التشغيل",
+        "ok": "تم",
+        "error": "فشل",
+        "awaiting": "بانتظار الموافقة",
+        "skipped": "تم التخطي"
+      },
+      "entity": {
+        "found": "تم العثور على",
+        "ambiguous": "عدة نتائج تطابق \"{{selector}}\"",
+        "not_found": "لا يوجد {{kind}} يطابق \"{{selector}}\""
+      },
+      "entity_kinds": {
+        "course": "دورة",
+        "chapter": "فصل",
+        "activity": "نشاط",
+        "assignment": "واجب",
+        "assignment_task": "مهمة واجب",
+        "board": "لوحة",
+        "community": "مجتمع",
+        "discussion": "نقاش",
+        "folder": "مجلد",
+        "media": "وسائط",
+        "organization": "مؤسسة",
+        "playground": "مساحة تجريب",
+        "role": "دور",
+        "user": "مستخدم",
+        "usergroup": "مجموعة مستخدمين",
+        "resource": "عنصر"
+      },
+      "results": {
+        "count": "تم العثور على {{count}}",
+        "empty": "لم يتم العثور على شيء.",
+        "show_more": "عرض {{count}} إضافية",
+        "show_less": "عرض أقل",
+        "published": "منشور",
+        "draft": "مسودة",
+        "activities": "الأنشطة: {{count}}"
+      },
+      "tier": {
+        "create": "إنشاء",
+        "edit": "تعديل",
+        "destructive": "إجراء حذف"
+      },
+      "action": {
+        "awaiting": "بحاجة إلى موافقتك",
+        "apply": "تطبيق",
+        "applying": "جارٍ التطبيق...",
+        "applied": "تم التطبيق",
+        "retry": "أعد المحاولة",
+        "cancel": "إلغاء",
+        "cancelled": "تم الإلغاء",
+        "open_course": "فتح الدورة",
+        "type_to_confirm": "للتأكيد، اكتب",
+        "confirm_input": "عبارة التأكيد",
+        "apply_failed": "تعذّر تطبيق هذا الإجراء.",
+        "cancel_failed": "تعذّر إلغاء هذا الإجراء.",
+        "no_result": "لم يُرجع الخادم أي نتيجة.",
+        "dropped": {
+          "superseded": "استُبدل باقتراح أحدث",
+          "cancelled": "تم الإلغاء",
+          "expired": "انتهت صلاحية هذا الاقتراح",
+          "subject_change": "لم يعد قابلاً للتطبيق"
+        },
+        "in_parent": "داخل {{kind}}: {{name}}"
+      },
+      "tool_names": {
+        "resolve_entity": "البحث بالاسم",
+        "list_courses": "الدورات",
+        "search_courses": "البحث في الدورات",
+        "search": "بحث",
+        "get_course": "قراءة الدورة",
+        "get_course_structure": "قراءة مخطط الدورة",
+        "list_course_chapters": "الفصول",
+        "get_activity": "قراءة النشاط",
+        "read_activity_content": "قراءة محتوى النشاط",
+        "create_course": "إنشاء دورة",
+        "update_course": "تحديث الدورة",
+        "delete_course": "حذف الدورة",
+        "create_chapter": "إنشاء فصل",
+        "update_chapter": "تحديث الفصل",
+        "delete_chapter": "حذف الفصل",
+        "create_activity": "إنشاء نشاط",
+        "update_activity": "تحديث النشاط",
+        "delete_activity": "حذف النشاط",
+        "write_activity_content": "كتابة محتوى النشاط",
+        "reorder_course_structure": "إعادة ترتيب الدورة",
+        "list_org_users": "الأعضاء",
+        "list_usergroups": "مجموعات المستخدمين",
+        "list_communities": "المجتمعات"
+      }
+    },
+    "mcp": {
+      "title": "ربط تطبيقات الذكاء الاصطناعي",
+      "description": "اسمح للأعضاء باستخدام LearnHouse من Claude وChatGPT وCursor وغيرها من تطبيقات الذكاء الاصطناعي التي تدعم MCP. يسجّل كل عضو الدخول بحسابه ويختار هذه المؤسسة ويحدد صلاحية القراءة فقط أو القراءة والتعديل. لا يمكن للتطبيقات أبدًا تجاوز ما يسمح به دور العضو.",
+      "toggle": "السماح باتصالات تطبيقات الذكاء الاصطناعي",
+      "on": "مفعّل",
+      "off": "متوقف",
+      "server_disabled": "خدمة MCP متوقفة على هذا الخادم (LEARNHOUSE_MCP_ENABLED=false).",
+      "server_url": "عنوان الخادم",
+      "copy": "نسخ",
+      "copied": "تم النسخ",
+      "how_to": "طريقة الربط",
+      "plans_note": "متاح في جميع الخطط. تبقى أدوات الميزات غير المضمّنة في خطتك مخفية. للبرامج النصية، يمكن أيضًا استخدام رمز API (المطورون > الوصول إلى API) كرمز حامل.",
+      "clients": {
+        "claude": [
+          "افتح Claude وانتقل إلى الإعدادات > الموصلات.",
+          "اختر إضافة موصل مخصص والصق {{url}}.",
+          "انقر على اتصال، وسجّل الدخول إلى LearnHouse واختر هذه المؤسسة."
+        ],
+        "chatgpt": [
+          "افتح ChatGPT وانتقل إلى الإعدادات > التطبيقات والموصلات.",
+          "أضف موصلًا مخصصًا (قد يلزم تفعيل وضع المطور) والصق {{url}}.",
+          "سجّل الدخول إلى LearnHouse عند الطلب واختر هذه المؤسسة."
+        ],
+        "cursor": [
+          "افتح إعدادات Cursor > MCP وأضف خادمًا جديدًا.",
+          "استخدم العنوان {{url}} كخادم HTTP قابل للبث.",
+          "يفتح Cursor صفحة LearnHouse لتسجيل دخولك."
+        ],
+        "vscode": [
+          "شغّل الأمر MCP: Add Server واختر HTTP.",
+          "الصق {{url}} وامنحه اسمًا.",
+          "شغّل الخادم وسجّل الدخول إلى LearnHouse عند الطلب."
+        ],
+        "claude_code": [
+          "شغّل: claude mcp add --transport http learnhouse {{url}}",
+          "داخل Claude Code شغّل /mcp واختر learnhouse لتسجيل الدخول."
+        ]
+      },
+      "connections_title": "التطبيقات المتصلة",
+      "connections_description": "كل تطبيقات الذكاء الاصطناعي التي ربطها الأعضاء بهذه المؤسسة. يؤدي الفصل إلى تسجيل خروج التطبيق فورًا.",
+      "no_connections": "لا توجد تطبيقات متصلة بعد.",
+      "connected_by": "ربطه {{name}}",
+      "connected_on": "في {{date}}",
+      "last_used": "آخر استخدام {{date}}",
+      "access_write": "القراءة والتعديل",
+      "access_read": "قراءة فقط",
+      "disconnect": "فصل",
+      "toasts": {
+        "enabled": "تم تفعيل اتصالات تطبيقات الذكاء الاصطناعي",
+        "disabled": "تم إيقاف اتصالات تطبيقات الذكاء الاصطناعي",
+        "disconnected": "تم فصل {{app}}",
+        "error": "حدث خطأ ما",
+        "copy_failed": "تعذّر نسخ العنوان"
+      },
+      "description_member": "استخدم LearnHouse من Claude وChatGPT وCursor وغيرها من تطبيقات الذكاء الاصطناعي التي تدعم MCP. تسجّل الدخول بهذا الحساب وتختار المؤسسة وتحدد صلاحية القراءة فقط أو القراءة والتعديل. لا يمكن للتطبيق أبدًا تجاوز ما يسمح به دورك.",
+      "org_disabled": "أوقف أحد المشرفين اتصالات تطبيقات الذكاء الاصطناعي لهذه المؤسسة.",
+      "connections_description_member": "التطبيقات التي ربطتها بهذه المؤسسة. يؤدي الفصل إلى تسجيل خروج التطبيق فورًا.",
+      "plans_note_member": "متاح في جميع الخطط. تبقى أدوات الميزات غير المضمّنة في خطتك أو دورك مخفية.",
+      "toolsets_hint": "إذا كان التطبيق يحدّ من عدد الأدوات التي يحمّلها، أضف ?toolsets=essentials (أو authoring أو admin) إلى العنوان، أو اختر مجموعات مثل ?toolsets=courses,content (وأيضًا: teaching وadvanced وpaths وlibrary وcommunities وplaygrounds وboards وpeople وorg). أدوات البحث والقراءة مضمّنة دائمًا.",
+      "access_admin": "مسؤول"
+    },
     "tab_bar": {
       "scroll_left": "تمرير التبويبات لليسار",
       "scroll_right": "تمرير التبويبات لليمين"
@@ -7796,6 +8041,30 @@
         "suggestion_calculator_prompt": "إنشاء آلة حاسبة تُظهر الحلول خطوة بخطوة للمعادلات الأساسية",
         "suggestion_timeline": "خط زمني",
         "suggestion_timeline_prompt": "إنشاء خط زمني تفاعلي يُظهر الأحداث التاريخية الكبرى مع تفاصيل قابلة للتوسيع",
+        "edit": "تعديل",
+        "history": "السجل",
+        "history_empty": "لا توجد مراجعات بعد. سيظهر هنا كل ما يُنشئه الذكاء الاصطناعي.",
+        "revision_n": "المراجعة {{n}}",
+        "preview": "معاينة",
+        "stop_preview": "إيقاف المعاينة",
+        "restore": "استعادة",
+        "previewing_revision": "معاينة مراجعة سابقة (للقراءة فقط)",
+        "time_just_now": "الآن",
+        "time_minutes_ago": "منذ {{count}} د",
+        "time_hours_ago": "منذ {{count}} س",
+        "time_days_ago": "منذ {{count}} ي",
+        "chat_tab": "المحادثة",
+        "history_tab": "السجل",
+        "copy_style": "نسخ النمط",
+        "copy_style_done": "تم النسخ إلى الحافظة!",
+        "copy_style_tooltip": "انسخ تصميم هذه الكتلة إلى الحافظة، ثم الصقه في كتلة سحرية في أي نشاط لمطابقة لغة التصميم الخاصة بها",
+        "paste_style": "لصق النمط",
+        "paste_style_tooltip": "الصق تصميمًا منسوخًا من كتلة سحرية أخرى لمطابقة نمطها",
+        "paste_style_invalid": "لا تحتوي الحافظة على تصميم كتلة سحرية. انسخ نمط كتلة أولًا.",
+        "clipboard_unavailable": "تعذّر الوصول إلى الحافظة. تحقق من أذونات المتصفح.",
+        "using_copied_style": "مرجع التصميم نشط: ستطابق عمليات الإنشاء نمطه",
+        "style_ref_banner": "مرجع تصميم نشط. ستطابق عمليات الإنشاء الجديدة نمطه المرئي.",
+        "clear_style": "مسح مرجع التصميم",
         "generating_interactive": "جارٍ إنشاء محتوى تفاعلي...",
         "empty_hint": "صف ما تريد إنشاءه وشاهد السحر يحدث!",
         "generating": "جارٍ الإنشاء...",
@@ -9820,6 +10089,53 @@
       "subscription": "اشتراك",
       "per_month": "/ شهر",
       "per_year": "/ سنة"
+    }
+  },
+  "oauth_consent": {
+    "title": "يريد {{client}} الاتصال بـ LearnHouse",
+    "signed_in_as": "تم تسجيل الدخول باسم {{user}}",
+    "redirects_to": "ستتم إعادتك إلى {{host}}",
+    "unverified": "لم تتحقق LearnHouse من هذا التطبيق. تابع فقط إذا كنت أنت من بدأ هذا الاتصال.",
+    "pick_org": "المؤسسة",
+    "no_orgs": "لست عضوًا في أي مؤسسة بعد.",
+    "org_disabled": "أوقف أحد المشرفين اتصالات تطبيقات الذكاء الاصطناعي هنا",
+    "the_org": "المؤسسة",
+    "access_title": "الصلاحيات",
+    "access_write": "القراءة والتعديل",
+    "access_write_body": "عرض المحتوى وإجراء تغييرات، مثل إنشاء الدورات أو تعديل الصفحات.",
+    "access_read": "قراءة فقط",
+    "access_read_body": "عرض الدورات والمحتوى والتقدم. لا يمكن تغيير أي شيء.",
+    "limits": "يعمل التطبيق باسمك في {{org}} ولا يمكنه أبدًا تجاوز ما يسمح به دورك. يُطلب منك التأكيد دائمًا قبل حذف أي شيء.",
+    "allow": "السماح",
+    "deny": "الرفض",
+    "revoke_hint": "يمكنك فصل التطبيق في أي وقت من الحساب > تطبيقات الذكاء الاصطناعي.",
+    "errors": {
+      "title": "لا يمكن استخدام هذا الرابط",
+      "missing_request": "طلب الاتصال مفقود.",
+      "start_again": "ارجع إلى التطبيق الذي كنت تربطه وابدأ من جديد.",
+      "generic": "حدث خطأ ما. يُرجى المحاولة مرة أخرى."
+    },
+    "access_admin": "قراءة وتعديل وإدارة",
+    "access_admin_body": "إدارة الأعضاء والمجموعات والأدوار وإعدادات المؤسسة أيضًا. التغييرات الحساسة تطلب موافقتك أولًا."
+  },
+  "oauth_approve": {
+    "title": "{{client}} يحتاج إلى موافقتك",
+    "an_app": "تطبيق ذكاء اصطناعي",
+    "in_org": "في {{org}}",
+    "action": "ما يريد القيام به",
+    "target": "يؤثر على {{kind}} \"{{name}}\"",
+    "why": "لا يمكن لتطبيقات الذكاء الاصطناعي الموافقة على هذه التغييرات بنفسها. وافق فقط إذا طلبت ذلك.",
+    "approve": "موافقة",
+    "decline": "رفض",
+    "expires": "تنتهي صلاحية هذا الطلب بعد 10 دقائق من إنشائه.",
+    "approved_title": "تمت الموافقة",
+    "approved_body": "عد إلى {{client}}؛ يمكنه الآن إجراء هذا التغيير مرة واحدة.",
+    "declined_title": "تم الرفض",
+    "declined_body": "لم يتغير شيء. تم إبلاغ {{client}} برفضك.",
+    "errors": {
+      "title": "لا يمكن عرض هذا الطلب",
+      "missing": "الرابط غير مكتمل. اطلب من التطبيق رابط موافقة جديدًا.",
+      "generic": "تعذر حفظ إجابتك. حاول مرة أخرى."
     }
   },
   "shortcuts": {

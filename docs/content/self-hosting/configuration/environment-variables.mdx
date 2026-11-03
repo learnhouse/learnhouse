@@ -99,6 +99,13 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | `LEARNHOUSE_AI_EMBEDDING_MODEL` | Optional embedding model override. | model id | provider default, such as `gemini-embedding-001`, `text-embedding-3-small`, or `nomic-embed-text` | API |
 | `LEARNHOUSE_AI_EMBEDDING_DIMENSIONS` | Embedding vector size. Changing this requires a matching database migration and re-index. | integer | `768` | API |
 
+## MCP
+
+| Variable | Description | Type | Default / required | Used by |
+| --- | --- | --- | --- | --- |
+| `LEARNHOUSE_MCP_ENABLED` | Serves the MCP endpoint at `/mcp` so members can connect AI apps such as Claude, ChatGPT or Cursor. | boolean | `true` | API |
+| `LEARNHOUSE_MCP_PUBLIC_URL` | Public URL of the MCP endpoint. Set it when a proxy changes the host or scheme, since sign-in tokens are bound to this URL. | URL | unset; derived from each request | API |
+
 ## Email
 
 | Variable | Description | Type | Default / required | Used by |
