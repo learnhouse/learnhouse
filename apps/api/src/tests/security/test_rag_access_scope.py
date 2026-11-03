@@ -206,6 +206,12 @@ class TestActivityFilter:
         kept = await filter_readable_chunks([_row(course, a) for a in (visible, draft, locked)], scope, db)
         assert [r.activity_uuid for r in kept] == ["act_shared"]
 
+        # Once one reader can't see anything, the rest aren't asked.
+        blind = RagAccessScope(request=mock_request, current_user=regular_user, org_id=org.id)
+        never = MagicMock(courses={1: None})
+        scope.co_readers = [blind, never]
+        assert await filter_readable_chunks([_row(course, visible)], scope, db) == []
+
     async def test_paid_activity_is_dropped_without_access(
         self, db, org, regular_user, course, chapter, mock_request
     ):

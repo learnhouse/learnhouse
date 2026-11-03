@@ -65,7 +65,8 @@ async def test_agent_reply_creates_reminders(db, org, regular_user):
     text = (
         f'Done.\n```reminder\n{{"text": "Review chapter 2", "due_at": "{future}"}}\n```\n'
         '```reminder\n{"text": "Too late", "due_at": "2020-01-01T00:00:00Z"}\n```\n'
-        '```reminder\nnot json\n```'
+        '```reminder\nnot json\n```\n'
+        '```reminder\n{not: json}\n```'
     )
     out = await rem.create_from_agent_reply(
         db, reply_text=text, conversation=conv, agent_id=default["id"], user_id=regular_user.id,
@@ -181,3 +182,81 @@ async def test_send_passes_timezone_to_agents(db, org, regular_user):
         await agents_svc.send_and_reply(MagicMock(), conv["conversation_uuid"],
                                         svc.MessageCreate(content="remind me at 5", tz="Europe/Paris"), regular_user, db)
     assert trigger.call_args.kwargs["tz"] == "Europe/Paris"
+
+
+def test_zone_falls_back_to_utc():
+    assert rem.zone("Not/AZone") == timezone.utc
+    assert rem.zone("") == timezone.utc
+
+
+async def test_agent_reply_respects_budget(db, org, regular_user):
+    default, conv_data = await _agent_chat(db, org, regular_user)
+    from src.db.messaging import Conversation
+
+    conv = (await db.execute(select(Conversation).where(Conversation.conversation_uuid == conv_data["conversation_uuid"]))).scalars().one()
+    future = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    text = f'```reminder\n{{"text": "One", "due_at": "{future}"}}\n```'
+    with patch.object(rem, "MAX_PENDING_PER_USER", 0):
+        out = await rem.create_from_agent_reply(
+            db, reply_text=text, conversation=conv, agent_id=default["id"], user_id=regular_user.id,
+            source_message_id=None, tz=None,
+        )
+    assert out == []
+
+
+async def test_personal_reminder_on_unknown_message_is_404(db, org, regular_user):
+    due = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+    with pytest.raises(HTTPException) as exc:
+        await rem.create_personal(rem.ReminderCreate(org_id=org.id, text="t", due_at=due, message_uuid="message_nope"), regular_user, db)
+    assert exc.value.status_code == 404
+
+
+async def test_delivery_links_source_and_unarchives(db, org, admin_user, regular_user):
+    await _agent_chat(db, org, regular_user)
+    dm = await svc.create_conversation(svc.ConversationCreate(org_id=org.id, user_uuids=[admin_user.user_uuid]), regular_user, db)
+    _, msg, _ = await svc.send_message(dm["conversation_uuid"], svc.MessageCreate(content="Exam is Friday"), regular_user, db)
+    due = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+    r = await rem.create_personal(rem.ReminderCreate(org_id=org.id, text="Revise", due_at=due, message_uuid=msg.message_uuid), regular_user, db)
+    # The Copilot chat it lands in was archived meanwhile.
+    from src.db.messaging import ConversationMember, Conversation
+
+    conv = (await db.execute(select(Conversation).where(Conversation.conversation_uuid == r["conversation_uuid"]))).scalars().one()
+    member = (await db.execute(select(ConversationMember).where(
+        ConversationMember.conversation_id == conv.id, ConversationMember.user_id == regular_user.id))).scalars().one()
+    member.archived = True
+    db.add(member)
+    await db.commit()
+
+    later = datetime.now(timezone.utc) + timedelta(minutes=10)
+    with patch("src.services.messaging.realtime.publish_to_users") as publish:
+        assert await rem.deliver_due(db, later) == 1
+    sent = publish.call_args.args[2]["message"]
+    assert sent["attachment"]["source"]["conversation_uuid"] == dm["conversation_uuid"]
+    await db.refresh(member)
+    assert member.archived is False
+
+
+async def test_delivery_skips_claimed_and_orphaned(db, org, regular_user):
+    await _agent_chat(db, org, regular_user)
+    due = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+    r = await rem.create_personal(rem.ReminderCreate(org_id=org.id, text="Orphan", due_at=due), regular_user, db)
+    row = (await db.execute(select(MessageReminder).where(MessageReminder.reminder_uuid == r["reminder_uuid"]))).scalars().one()
+    row.conversation_id = 999_999
+    db.add(row)
+    await db.commit()
+    later = datetime.now(timezone.utc) + timedelta(minutes=10)
+    assert await rem.deliver_due(db, later) == 0
+
+    # Another worker claimed it between the select and the update.
+    r2 = await rem.create_personal(rem.ReminderCreate(org_id=org.id, text="Raced", due_at=due), regular_user, db)
+    real_execute = db.execute
+
+    async def racing_execute(stmt, *a, **kw):
+        result = await real_execute(stmt, *a, **kw)
+        if stmt.__class__.__name__ == "Update":
+            return MagicMock(rowcount=0)
+        return result
+
+    with patch.object(db, "execute", new=racing_execute):
+        assert await rem.deliver_due(db, later) == 0
+    assert r2["status"] == "pending"
