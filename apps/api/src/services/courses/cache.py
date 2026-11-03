@@ -54,8 +54,10 @@ def invalidate_courses_cache(org_slug: str) -> None:
         return
     try:
         # Delete all list keys for this org
+        # SCAN, not KEYS: KEYS walks the whole keyspace in one blocking call
+        # and stalls every other Redis client while it runs.
         pattern = f"{_KEY_PREFIX}:list:{org_slug}:*"
-        keys = r.keys(pattern)
+        keys = list(r.scan_iter(match=pattern, count=500))
         if keys:
             r.delete(*keys)
     except Exception:
