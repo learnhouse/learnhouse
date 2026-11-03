@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowsOutSimple, ArrowsInSimple, CircleNotch } from '@phosphor-icons/react'
 
 interface PlaygroundPreviewProps {
@@ -16,6 +17,7 @@ export default function PlaygroundPreview({
   isFullscreen,
   onToggleFullscreen,
 }: PlaygroundPreviewProps) {
+  const { t } = useTranslation()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const lastRenderedRef = useRef<string | null>(null)
   const writeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -70,8 +72,8 @@ export default function PlaygroundPreview({
                   d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-sm font-semibold text-gray-500">Live Preview</p>
-            <p className="text-xs text-gray-400 mt-1">Your generated content will appear here</p>
+            <p className="text-sm font-semibold text-gray-500">{t('playgrounds.preview.live_preview')}</p>
+            <p className="text-xs text-gray-400 mt-1">{t('playgrounds.preview.empty_hint')}</p>
           </div>
         </div>
       )}
@@ -80,7 +82,7 @@ export default function PlaygroundPreview({
       {isStreaming && (
         <div className="absolute top-3 start-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/75 backdrop-blur-sm rounded-full nice-shadow">
           <CircleNotch size={11} weight="bold" className="animate-spin text-sky-400" />
-          <span className="text-[11px] text-white font-bold">Generating…</span>
+          <span className="text-[11px] text-white font-bold">{t('playgrounds.preview.generating')}</span>
         </div>
       )}
 
@@ -88,7 +90,7 @@ export default function PlaygroundPreview({
       {onToggleFullscreen && (
         <button
           onClick={onToggleFullscreen}
-          title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen preview'}
+          title={isFullscreen ? t('playgrounds.preview.exit_fullscreen') : t('playgrounds.preview.fullscreen')}
           className="absolute top-3 end-3 z-10 flex items-center justify-center w-8 h-8 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-lg nice-shadow transition-all"
         >
           {isFullscreen
@@ -103,7 +105,7 @@ export default function PlaygroundPreview({
         ref={iframeRef}
         className="w-full h-full border-0"
         sandbox="allow-scripts allow-forms allow-popups"
-        title="Playground Preview"
+        title={t('playgrounds.preview.iframe_title')}
       />
     </div>
   )

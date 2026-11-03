@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowElbowDownLeft, Check, CircleNotch, ClockCounterClockwise, MagicWand, Sparkle, Trash } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -65,6 +66,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
   onInsert,
   activityUuid,
 }) => {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -110,13 +112,13 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
         access_token
       )
       if (!res.success) {
-        setError(res.data?.detail || 'Quiz generation failed. Please try again.')
+        setError(res.data?.detail || t('ai.quiz_generator.generation_failed'))
         return
       }
       setQuiz(res.data.quiz)
       setSessionUuid(res.data.session_uuid)
     } catch {
-      setError('Quiz generation failed. Please try again.')
+      setError(t('ai.quiz_generator.generation_failed'))
     } finally {
       setGenerating(false)
     }
@@ -192,7 +194,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
             tab === 'generate' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <MagicWand weight="duotone" size={15} /> Generate
+          <MagicWand weight="duotone" size={15} /> {t('ai.quiz_generator.generate')}
         </button>
         <button
           onClick={() => setTab('history')}
@@ -200,7 +202,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
             tab === 'history' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
           }`}
         >
-          <ClockCounterClockwise weight="duotone" size={15} /> History
+          <ClockCounterClockwise weight="duotone" size={15} /> {t('ai.quiz_generator.history')}
         </button>
       </div>
 
@@ -214,14 +216,14 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
               rows={2}
               placeholder={
                 activityUuid
-                  ? 'What should the quiz cover? (grounded on this activity)'
-                  : 'What should the quiz cover?'
+                  ? t('ai.quiz_generator.placeholder_grounded')
+                  : t('ai.quiz_generator.placeholder')
               }
               className="w-full p-3 border border-neutral-200 rounded-xl resize-none focus:outline-hidden focus:ring-2 focus:ring-neutral-900/10 text-sm"
             />
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-1.5 text-xs text-neutral-500">
-                Questions
+                {t('ai.quiz_generator.questions')}
                 <input
                   type="number"
                   min={1}
@@ -240,7 +242,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                       difficulty === d ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                     }`}
                   >
-                    {d}
+                    {t(`editor.blocks.code_playground.difficulty_${d}`)}
                   </button>
                 ))}
               </div>
@@ -251,18 +253,18 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                 className="px-3 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow disabled:opacity-40 transition-opacity"
               >
                 {generating ? <CircleNotch weight="duotone" size={15} className="animate-spin" /> : <Sparkle weight="duotone" size={15} />}
-                {quiz ? 'Regenerate' : generating ? 'Generating' : 'Generate'}
+                {quiz ? t('ai.quiz_generator.regenerate') : generating ? t('ai.quiz_generator.generating') : t('ai.quiz_generator.generate')}
               </button>
             </div>
             {error && <p className="text-xs text-rose-500">{error}</p>}
-            <p className="text-[11px] text-neutral-400">Generating a quiz uses AI credits.</p>
+            <p className="text-[11px] text-neutral-400">{t('ai.quiz_generator.credits_note')}</p>
           </div>
 
           {/* Editable preview */}
           <div className="flex-1 overflow-y-auto p-4 bg-neutral-50/50">
             {!quiz && !generating && (
               <p className="text-center text-sm text-neutral-400 mt-6">
-                Your generated quiz will appear here to review before inserting.
+                {t('ai.quiz_generator.empty_preview')}
               </p>
             )}
             {generating && <div className="w-full h-24 rounded-xl bg-neutral-100 animate-pulse" />}
@@ -274,8 +276,8 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                       <span className="text-xs font-bold text-neutral-400">Q{qi + 1}</span>
                       <span className="px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-500 text-[11px] font-bold">
                         {questionResponseType(q) === QUIZ_RESPONSE_SINGLE
-                          ? 'Single answer'
-                          : 'Select all that apply'}
+                          ? t('ai.quiz_generator.single_answer')
+                          : t('ai.quiz_generator.multiple_answers')}
                       </span>
                     </div>
                     <input
@@ -296,7 +298,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                             className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${
                               a.correct ? 'bg-emerald-400 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
                             }`}
-                            title={a.correct ? 'Marked correct' : 'Mark correct'}
+                            title={a.correct ? t('ai.quiz_generator.marked_correct') : t('ai.quiz_generator.mark_correct')}
                           >
                             <Check weight="duotone" size={14} />
                           </button>
@@ -321,7 +323,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                 onClick={handleInsert}
                 className="px-4 py-2 rounded-lg bg-neutral-900 text-white text-sm flex items-center gap-1.5 nice-shadow"
               >
-                <ArrowElbowDownLeft weight="duotone" size={15} data-dir-flip /> Insert into editor
+                <ArrowElbowDownLeft weight="duotone" size={15} data-dir-flip /> {t('ai.quiz_generator.insert')}
               </button>
             </div>
           )}
@@ -329,9 +331,9 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
       ) : (
         <div className="flex-1 overflow-y-auto p-4">
           {historyLoading ? (
-            <p className="text-center text-sm text-neutral-400 mt-6">Loading…</p>
+            <p className="text-center text-sm text-neutral-400 mt-6">{t('common.loading')}</p>
           ) : history.length === 0 ? (
-            <p className="text-center text-sm text-neutral-400 mt-6">No generated quizzes yet.</p>
+            <p className="text-center text-sm text-neutral-400 mt-6">{t('ai.quiz_generator.no_history')}</p>
           ) : (
             <div className="space-y-2">
               {history.map((h) => (
@@ -342,7 +344,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-neutral-700 truncate">{h.prompt}</p>
                     <p className="text-[11px] text-neutral-400">
-                      {h.quiz?.questions?.length || 0} question(s)
+                      {t('ai.quiz_generator.question_count', { count: h.quiz?.questions?.length || 0 })}
                     </p>
                   </div>
                   <button
@@ -353,12 +355,12 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
                     }}
                     className="px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-sm text-neutral-700"
                   >
-                    Load
+                    {t('ai.quiz_generator.load')}
                   </button>
                   <button
                     onClick={() => handleDeleteHistory(h.ai_generation_uuid)}
                     className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400"
-                    title="Delete"
+                    title={t('common.delete')}
                   >
                     <Trash weight="duotone" size={15} />
                   </button>
@@ -373,7 +375,7 @@ const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
 
   return (
     <Modal
-      dialogTitle="Generate a quiz with AI"
+      dialogTitle={t('ai.quiz_generator.dialog_title')}
       dialogContent={modalContent}
       onOpenChange={onClose}
       isDialogOpen={isOpen}

@@ -28,6 +28,7 @@ import {
   UploadSimple,
   ClockCounterClockwise,
 } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -299,7 +300,7 @@ type Difficulty = 'easy' | 'medium' | 'hard'
 
 const DIFFICULTY_CONFIG: Record<
   Difficulty,
-  { bg: string; text: string; dot: string; darkBg: string; darkText: string; label: string }
+  { bg: string; text: string; dot: string; darkBg: string; darkText: string; labelKey: string }
 > = {
   easy: {
     bg: 'bg-emerald-50',
@@ -307,7 +308,7 @@ const DIFFICULTY_CONFIG: Record<
     dot: 'bg-emerald-400',
     darkBg: 'bg-emerald-500/15',
     darkText: 'text-emerald-400',
-    label: 'Easy',
+    labelKey: 'editor.blocks.code_playground.difficulty_easy',
   },
   medium: {
     bg: 'bg-amber-50',
@@ -315,7 +316,7 @@ const DIFFICULTY_CONFIG: Record<
     dot: 'bg-amber-400',
     darkBg: 'bg-amber-500/15',
     darkText: 'text-amber-400',
-    label: 'Medium',
+    labelKey: 'editor.blocks.code_playground.difficulty_medium',
   },
   hard: {
     bg: 'bg-red-50',
@@ -323,23 +324,23 @@ const DIFFICULTY_CONFIG: Record<
     dot: 'bg-red-400',
     darkBg: 'bg-red-500/15',
     darkText: 'text-red-400',
-    label: 'Hard',
+    labelKey: 'editor.blocks.code_playground.difficulty_hard',
   },
 }
 
 const COMPLEXITY_OPTIONS = [
-  { value: '', label: 'Not set' },
-  { value: 'O(1)', label: 'Minimal' },
-  { value: 'O(log n)', label: 'Very efficient' },
-  { value: 'O(n)', label: 'Efficient' },
-  { value: 'O(n log n)', label: 'Moderate' },
-  { value: 'O(n²)', label: 'Intensive' },
-  { value: 'O(2ⁿ)', label: 'Very intensive' },
+  { value: '', labelKey: 'editor.blocks.code_playground.complexity_not_set' },
+  { value: 'O(1)', labelKey: 'editor.blocks.code_playground.complexity_minimal' },
+  { value: 'O(log n)', labelKey: 'editor.blocks.code_playground.complexity_very_efficient' },
+  { value: 'O(n)', labelKey: 'editor.blocks.code_playground.complexity_efficient' },
+  { value: 'O(n log n)', labelKey: 'editor.blocks.code_playground.complexity_moderate' },
+  { value: 'O(n²)', labelKey: 'editor.blocks.code_playground.complexity_intensive' },
+  { value: 'O(2ⁿ)', labelKey: 'editor.blocks.code_playground.complexity_very_intensive' },
 ]
 
-function getComplexityLabel(value: string): string {
+function getComplexityLabel(value: string, t: (key: string) => string): string {
   const opt = COMPLEXITY_OPTIONS.find((o) => o.value === value)
-  return opt?.label || value
+  return opt ? t(opt.labelKey) : value
 }
 
 // ── Clipboard copy hook ───────────────────────────────────────────
@@ -425,6 +426,7 @@ const markdownComponents = {
 
 const CodePlaygroundComponent: React.FC = (props: any) => {
   const { node, updateAttributes } = props
+  const { t } = useTranslation()
   const editorState = useEditorProvider() as any
   const session = useLHSession() as any
   const org = useOrg() as any
@@ -818,7 +820,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         const newResults: TestResult[] = [
           {
             id: 'single',
-            label: 'Output',
+            label: t('editor.blocks.code_playground.tab_output'),
             passed: data.status?.id === 3,
             actual_stdout: data.stdout,
             expected_stdout: '',
@@ -902,7 +904,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     } finally {
       setIsRunning(false)
     }
-  }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath, activityUuid, blockId, timedMode, challengeExpired])
+  }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath, activityUuid, blockId, timedMode, challengeExpired, t])
 
   const runCodeRef = useRef(runCode)
   const resetCodeRef = useRef(resetCode)
@@ -960,10 +962,10 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const diff = DIFFICULTY_CONFIG[difficulty]
 
   const tabs: { id: RightTab; label: string; icon: React.ReactNode; badge?: React.ReactNode }[] = [
-    { id: 'description', label: 'Description', icon: <FileText weight="duotone" size={13} /> },
+    { id: 'description', label: t('editor.blocks.code_playground.tab_description'), icon: <FileText weight="duotone" size={13} /> },
     {
       id: 'tests',
-      label: 'Test Cases',
+      label: t('editor.blocks.code_playground.tab_test_cases'),
       icon: <Flask weight="duotone" size={13} />,
       badge:
         results && testCases.length > 0 ? (
@@ -980,13 +982,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     },
     {
       id: 'output',
-      label: 'Output',
+      label: t('editor.blocks.code_playground.tab_output'),
       icon: <Terminal weight="duotone" size={13} />,
       badge: results ? (
         <span className="w-2 h-2 rounded-full bg-neutral-400 animate-pulse" />
       ) : null,
     },
-    { id: 'history' as RightTab, icon: <ClockCounterClockwise weight="duotone" size={13} />, label: 'History' },
+    { id: 'history' as RightTab, icon: <ClockCounterClockwise weight="duotone" size={13} />, label: t('editor.blocks.code_playground.tab_history') },
   ]
 
   const visibleTabs = isEditable ? tabs.filter(t => t.id !== 'history') : tabs
@@ -998,7 +1000,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
       <button
         onClick={() => copy(text)}
         className={`p-1 rounded-md transition-colors ${copied ? 'text-emerald-400' : 'text-neutral-500 hover:text-neutral-300'} ${className}`}
-        title="Copy to clipboard"
+        title={t('editor.blocks.code_playground.copy_to_clipboard')}
       >
         {copied ? <ClipboardText weight="duotone" size={12} /> : <Copy weight="duotone" size={12} />}
       </button>
@@ -1012,19 +1014,19 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         <>
           <div>
             <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1.5 block">
-              Description
+              {t('editor.blocks.code_playground.description_label')}
             </label>
             <textarea
               value={description}
               onChange={(e) => updateAttributes({ description: e.target.value })}
               className="w-full text-[13px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg p-3 outline-none focus:border-neutral-300 resize-none transition-all leading-relaxed font-mono nice-shadow"
               rows={5}
-              placeholder="Describe the challenge... (supports Markdown)"
+              placeholder={t('editor.blocks.code_playground.description_placeholder')}
             />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1.5 block">
-              Difficulty
+              {t('editor.blocks.code_playground.difficulty')}
             </label>
             <div className="flex gap-2">
               {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => {
@@ -1040,7 +1042,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     }`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full ${difficulty === d ? c.dot : 'bg-neutral-300'}`} />
-                    {c.label}
+                    {t(c.labelKey)}
                   </button>
                 )
               })}
@@ -1048,9 +1050,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Hints</label>
+              <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{t('editor.blocks.code_playground.hints')}</label>
               <button onClick={addHint} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
-                <Plus weight="duotone" size={11} /> Add
+                <Plus weight="duotone" size={11} /> {t('editor.blocks.code_playground.add')}
               </button>
             </div>
             {hints.map((hint, i) => (
@@ -1059,7 +1061,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   value={hint}
                   onChange={(e) => updateHint(i, e.target.value)}
                   className="flex-1 text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 outline-none focus:border-neutral-300 transition-colors nice-shadow"
-                  placeholder={`Hint ${i + 1}...`}
+                  placeholder={t('editor.blocks.code_playground.hint_placeholder', { number: i + 1 })}
                 />
                 <button onClick={() => removeHint(i)} className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
                   <Trash weight="duotone" size={12} className="text-red-400" />
@@ -1072,7 +1074,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           {isSqlLanguage && (
             <div>
               <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1.5 block">
-                SQLite Database
+                {t('editor.blocks.code_playground.sqlite_database')}
               </label>
               {sqliteDbPath ? (
                 <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2.5 nice-shadow">
@@ -1096,7 +1098,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     <UploadSimple weight="duotone" size={16} className="text-neutral-400" />
                   )}
                   <span className="text-[11px] text-neutral-400">
-                    {isUploadingSqlite ? 'Uploading...' : 'Upload .sqlite / .db file'}
+                    {isUploadingSqlite ? t('editor.blocks.code_playground.uploading') : t('editor.blocks.code_playground.upload_sqlite')}
                   </span>
                 </div>
               )}
@@ -1108,7 +1110,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 className="hidden"
               />
               <p className="text-[10px] text-neutral-400 mt-1">
-                Students' SQL queries will run against this database.
+                {t('editor.blocks.code_playground.sqlite_hint')}
               </p>
             </div>
           )}
@@ -1120,29 +1122,29 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               className="flex items-center gap-2 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider hover:text-neutral-600 transition-colors w-full"
             >
               <GearSix weight="duotone" size={12} />
-              Advanced
+              {t('editor.blocks.code_playground.advanced')}
               <CaretRight weight="duotone" size={12} className={`ml-auto transition-transform ${showAdvanced ? 'rotate-90' : ''}`} data-dir-flip />
             </button>
             {showAdvanced && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Solution Code</label>
-                  <p className="text-[11px] text-neutral-400 mb-1.5">Revealed to learners after enough attempts.</p>
+                  <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.solution_code')}</label>
+                  <p className="text-[11px] text-neutral-400 mb-1.5">{t('editor.blocks.code_playground.solution_hint')}</p>
                   <textarea
                     value={solutionCode}
                     onChange={(e) => updateAttributes({ solutionCode: e.target.value })}
                     className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg p-3 outline-none focus:border-neutral-300 resize-none transition-all font-mono nice-shadow"
                     rows={4}
-                    placeholder="Paste model solution..."
+                    placeholder={t('editor.blocks.code_playground.solution_placeholder')}
                   />
                 </div>
                 <div className="flex gap-3">
                   <div className="flex-1">
-                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Attempts to unlock</label>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.attempts_to_unlock')}</label>
                     <input type="number" min={1} value={maxAttemptsBeforeReveal} onChange={(e) => updateAttributes({ maxAttemptsBeforeReveal: parseInt(e.target.value) || 3 })} className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 outline-none focus:border-neutral-300 transition-colors nice-shadow" />
                   </div>
                   <div className="flex-1">
-                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Time Limit</label>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.time_limit')}</label>
                     <div className="relative">
                       <input type="number" min={1000} step={1000} value={timeLimitMs} onChange={(e) => updateAttributes({ timeLimitMs: parseInt(e.target.value) || 10000 })} className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 pr-10 outline-none focus:border-neutral-300 transition-colors nice-shadow" />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-400">ms</span>
@@ -1151,22 +1153,22 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 </div>
                 <div className="flex gap-3">
                   <div className="flex-1">
-                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Expected Speed</label>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.expected_speed')}</label>
                     <select value={timeComplexity} onChange={(e) => updateAttributes({ timeComplexity: e.target.value })} className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 outline-none focus:border-neutral-300 transition-colors appearance-none cursor-pointer nice-shadow">
-                      {COMPLEXITY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                      {COMPLEXITY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>))}
                     </select>
                   </div>
                   <div className="flex-1">
-                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Expected Memory</label>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.expected_memory')}</label>
                     <select value={spaceComplexity} onChange={(e) => updateAttributes({ spaceComplexity: e.target.value })} className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 outline-none focus:border-neutral-300 transition-colors appearance-none cursor-pointer nice-shadow">
-                      {COMPLEXITY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                      {COMPLEXITY_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>))}
                     </select>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Timed Challenge</label>
-                    <p className="text-[10px] text-neutral-400">Add a countdown timer to the challenge.</p>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.timed_challenge')}</label>
+                    <p className="text-[10px] text-neutral-400">{t('editor.blocks.code_playground.timed_challenge_hint')}</p>
                   </div>
                   <button
                     onClick={() => updateAttributes({ timedMode: !timedMode })}
@@ -1177,7 +1179,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 </div>
                 {timedMode && (
                   <div>
-                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Duration (minutes)</label>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.duration_minutes')}</label>
                     <input
                       type="number"
                       min={1}
@@ -1190,12 +1192,12 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 )}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Additional Files</label>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{t('editor.blocks.code_playground.additional_files')}</label>
                     <button onClick={addAdditionalFile} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
-                      <Plus weight="duotone" size={11} /> Add File
+                      <Plus weight="duotone" size={11} /> {t('editor.blocks.code_playground.add_file')}
                     </button>
                   </div>
-                  <p className="text-[10px] text-neutral-400 mb-2">Files available to the student's code (e.g., data.txt, utils.py).</p>
+                  <p className="text-[10px] text-neutral-400 mb-2">{t('editor.blocks.code_playground.additional_files_hint')}</p>
                   {additionalFiles.map((file, i) => (
                     <div key={i} className="mb-2 rounded-lg border border-neutral-200 p-2.5 bg-neutral-50/50">
                       <div className="flex items-center gap-2 mb-1.5">
@@ -1214,7 +1216,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                         onChange={(e) => updateAdditionalFile(i, 'content', e.target.value)}
                         className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-neutral-300 resize-none"
                         rows={4}
-                        placeholder="File contents..."
+                        placeholder={t('editor.blocks.code_playground.file_contents_placeholder')}
                       />
                     </div>
                   ))}
@@ -1232,13 +1234,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               </ReactMarkdown>
             </div>
           ) : (
-            <div className="text-[13px] text-neutral-400 italic text-center py-8">No description provided.</div>
+            <div className="text-[13px] text-neutral-400 italic text-center py-8">{t('editor.blocks.code_playground.no_description')}</div>
           )}
 
           {isSqlLanguage && sqliteDbPath && (
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg text-neutral-500 bg-neutral-50 border border-neutral-100 nice-shadow w-fit">
               <Database weight="duotone" size={10} className="text-neutral-400" />
-              Runs against: {sqliteDbName || 'database.sqlite'}
+              {t('editor.blocks.code_playground.runs_against', { name: sqliteDbName || 'database.sqlite' })}
             </div>
           )}
 
@@ -1247,13 +1249,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               {timeComplexity && (
                 <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg text-neutral-500 border border-neutral-100 nice-shadow">
                   <Clock weight="duotone" size={10} className="text-neutral-400" />
-                  Speed: {getComplexityLabel(timeComplexity)}
+                  {t('editor.blocks.code_playground.speed_label', { value: getComplexityLabel(timeComplexity, t) })}
                 </span>
               )}
               {spaceComplexity && (
                 <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg text-neutral-500 border border-neutral-100 nice-shadow">
                   <Memory weight="duotone" size={10} className="text-neutral-400" />
-                  Memory: {getComplexityLabel(spaceComplexity)}
+                  {t('editor.blocks.code_playground.memory_label', { value: getComplexityLabel(spaceComplexity, t) })}
                 </span>
               )}
             </div>
@@ -1261,7 +1263,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
 
           {additionalFiles.length > 0 && (
             <div className="space-y-1">
-              <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Available Files</span>
+              <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">{t('editor.blocks.code_playground.available_files')}</span>
               {additionalFiles.map((f, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg text-neutral-500 bg-neutral-50 border border-neutral-100 nice-shadow w-fit">
                   <FileText weight="duotone" size={10} className="text-neutral-400" />
@@ -1279,12 +1281,12 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-semibold text-neutral-700 bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 transition-colors nice-shadow"
                 >
                   <Eye weight="duotone" size={13} />
-                  {showSolution ? 'Hide Solution' : 'View Solution'}
+                  {showSolution ? t('editor.blocks.code_playground.hide_solution') : t('editor.blocks.code_playground.view_solution')}
                 </button>
               ) : (
                 <div className="flex items-center gap-2 text-[11px] text-neutral-400">
                   <Lock weight="duotone" size={11} />
-                  <span>Solution available after {maxAttemptsBeforeReveal - attemptCount} more {maxAttemptsBeforeReveal - attemptCount === 1 ? 'attempt' : 'attempts'}</span>
+                  <span>{t('editor.blocks.code_playground.solution_available_after', { count: maxAttemptsBeforeReveal - attemptCount })}</span>
                 </div>
               )}
               {showSolution && canRevealSolution && (
@@ -1294,13 +1296,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                       onClick={() => setSolutionView('diff')}
                       className={`text-[10px] font-semibold px-2 py-1 rounded transition-colors ${solutionView === 'diff' ? 'bg-neutral-200 text-neutral-700' : 'text-neutral-400 hover:text-neutral-600'}`}
                     >
-                      Diff
+                      {t('editor.blocks.code_playground.diff')}
                     </button>
                     <button
                       onClick={() => setSolutionView('solution')}
                       className={`text-[10px] font-semibold px-2 py-1 rounded transition-colors ${solutionView === 'solution' ? 'bg-neutral-200 text-neutral-700' : 'text-neutral-400 hover:text-neutral-600'}`}
                     >
-                      Solution
+                      {t('editor.blocks.code_playground.solution')}
                     </button>
                   </div>
                   {solutionView === 'diff' ? (
@@ -1320,13 +1322,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           {hints.length > 0 && (
             <div className="space-y-2">
               <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Lightbulb weight="duotone" size={12} className="text-amber-400" /> Hints
+                <Lightbulb weight="duotone" size={12} className="text-amber-400" /> {t('editor.blocks.code_playground.hints')}
               </span>
               {hints.map((hint, i) => (
                 <button key={i} onClick={() => toggleHint(i)} className="w-full text-left">
                   <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-50/60 border border-amber-100 hover:bg-amber-50 transition-colors nice-shadow">
                     <Lightbulb weight="duotone" size={12} className="text-amber-400 flex-shrink-0" />
-                    <span className="text-[12px] font-medium text-amber-700 flex-1">Hint {i + 1}</span>
+                    <span className="text-[12px] font-medium text-amber-700 flex-1">{t('editor.blocks.code_playground.hint_number', { number: i + 1 })}</span>
                     <CaretRight weight="duotone" size={12} className={`text-amber-300 transition-transform ${expandedHints.has(i) ? 'rotate-90' : ''}`} data-dir-flip />
                   </div>
                   {expandedHints.has(i) && (
@@ -1347,13 +1349,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
       {isEditable && (
         <div className="flex justify-end mb-1">
           <button onClick={addTestCase} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
-            <Plus weight="duotone" size={12} /> Add Test Case
+            <Plus weight="duotone" size={12} /> {t('editor.blocks.code_playground.add_test_case')}
           </button>
         </div>
       )}
       {testCases.length === 0 ? (
         <div className="text-[13px] text-neutral-400 text-center py-10">
-          {isEditable ? 'Add test cases to validate solutions.' : 'No test cases available.'}
+          {isEditable ? t('editor.blocks.code_playground.add_tests_hint') : t('editor.blocks.code_playground.no_tests')}
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -1374,7 +1376,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   )}
                   <div className="flex-1 min-w-0">
                     {isEditable ? (
-                      <input value={tc.label} onChange={(e) => updateTestCase(tc.id, 'label', e.target.value)} className="text-[13px] font-semibold text-neutral-700 bg-transparent outline-none w-full" placeholder="Test label" />
+                      <input value={tc.label} onChange={(e) => updateTestCase(tc.id, 'label', e.target.value)} className="text-[13px] font-semibold text-neutral-700 bg-transparent outline-none w-full" placeholder={t('editor.blocks.code_playground.test_label_placeholder')} />
                     ) : (
                       <span className="text-[13px] font-semibold text-neutral-700">{tc.label}</span>
                     )}
@@ -1390,25 +1392,25 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 </div>
                 <div className="px-3.5 pb-3 space-y-2 border-t border-neutral-100">
                   <div className="pt-2.5">
-                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Input</label>
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.input')}</label>
                     {isEditable ? (
-                      <textarea value={tc.stdin} onChange={(e) => updateTestCase(tc.id, 'stdin', e.target.value)} className="w-full text-[12px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg p-2.5 outline-none focus:border-neutral-300 resize-none transition-colors" rows={2} placeholder="stdin..." />
+                      <textarea value={tc.stdin} onChange={(e) => updateTestCase(tc.id, 'stdin', e.target.value)} className="w-full text-[12px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg p-2.5 outline-none focus:border-neutral-300 resize-none transition-colors" rows={2} placeholder={t('editor.blocks.code_playground.stdin_placeholder')} />
                     ) : (
-                      <pre className="text-[12px] font-mono text-neutral-600 bg-neutral-50 rounded-lg p-2.5 whitespace-pre-wrap">{tc.stdin || '(empty)'}</pre>
+                      <pre className="text-[12px] font-mono text-neutral-600 bg-neutral-50 rounded-lg p-2.5 whitespace-pre-wrap">{tc.stdin || t('editor.blocks.code_playground.empty')}</pre>
                     )}
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Expected Output</label>
+                    <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.expected_output')}</label>
                     {isEditable ? (
-                      <textarea value={tc.expectedStdout} onChange={(e) => updateTestCase(tc.id, 'expectedStdout', e.target.value)} className="w-full text-[12px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg p-2.5 outline-none focus:border-neutral-300 resize-none transition-colors" rows={2} placeholder="expected stdout..." />
+                      <textarea value={tc.expectedStdout} onChange={(e) => updateTestCase(tc.id, 'expectedStdout', e.target.value)} className="w-full text-[12px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg p-2.5 outline-none focus:border-neutral-300 resize-none transition-colors" rows={2} placeholder={t('editor.blocks.code_playground.expected_stdout_placeholder')} />
                     ) : (
-                      <pre className="text-[12px] font-mono text-neutral-600 bg-neutral-50 rounded-lg p-2.5 whitespace-pre-wrap">{tc.expectedStdout || '(empty)'}</pre>
+                      <pre className="text-[12px] font-mono text-neutral-600 bg-neutral-50 rounded-lg p-2.5 whitespace-pre-wrap">{tc.expectedStdout || t('editor.blocks.code_playground.empty')}</pre>
                     )}
                   </div>
                   {r && !r.passed && r.actual_stdout != null && (
                     <div>
-                      <label className="text-[10px] font-semibold text-red-400 uppercase tracking-wider mb-1 block">Your Output</label>
-                      <pre className="text-[12px] font-mono text-red-600 bg-red-50 border border-red-100 rounded-lg p-2.5 whitespace-pre-wrap">{r.actual_stdout || '(no output)'}</pre>
+                      <label className="text-[10px] font-semibold text-red-400 uppercase tracking-wider mb-1 block">{t('editor.blocks.code_playground.your_output')}</label>
+                      <pre className="text-[12px] font-mono text-red-600 bg-red-50 border border-red-100 rounded-lg p-2.5 whitespace-pre-wrap">{r.actual_stdout || t('editor.blocks.code_playground.no_output')}</pre>
                     </div>
                   )}
                 </div>
@@ -1421,17 +1423,17 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         <div className="mt-4 pt-3 border-t border-neutral-100">
           <div className="flex items-center justify-between mb-2">
             <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
-              Your Test Cases
+              {t('editor.blocks.code_playground.your_test_cases')}
             </label>
             <button
               onClick={addStudentTestCase}
               className="flex items-center gap-1 text-[11px] font-medium text-blue-500 hover:text-blue-600 transition-colors"
             >
-              <Plus weight="duotone" size={11} /> Add
+              <Plus weight="duotone" size={11} /> {t('editor.blocks.code_playground.add')}
             </button>
           </div>
           {studentTestCases.length === 0 && (
-            <p className="text-[11px] text-neutral-400 italic">Add your own test cases to verify edge cases.</p>
+            <p className="text-[11px] text-neutral-400 italic">{t('editor.blocks.code_playground.your_tests_hint')}</p>
           )}
           {studentTestCases.map((tc) => (
             <div key={tc.id} className="mb-3 rounded-lg border border-blue-100 bg-blue-50/20 p-2.5">
@@ -1447,23 +1449,23 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               </div>
               <div className="space-y-1.5">
                 <div>
-                  <label className="text-[9px] font-semibold text-neutral-400 uppercase">Input (stdin)</label>
+                  <label className="text-[9px] font-semibold text-neutral-400 uppercase">{t('editor.blocks.code_playground.input_stdin')}</label>
                   <textarea
                     value={tc.stdin}
                     onChange={(e) => updateStudentTestCase(tc.id, 'stdin', e.target.value)}
                     className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-blue-300 resize-none"
                     rows={2}
-                    placeholder="Input..."
+                    placeholder={t('editor.blocks.code_playground.input_placeholder')}
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] font-semibold text-neutral-400 uppercase">Expected Output</label>
+                  <label className="text-[9px] font-semibold text-neutral-400 uppercase">{t('editor.blocks.code_playground.expected_output')}</label>
                   <textarea
                     value={tc.expectedStdout}
                     onChange={(e) => updateStudentTestCase(tc.id, 'expectedStdout', e.target.value)}
                     className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-blue-300 resize-none"
                     rows={2}
-                    placeholder="Expected output..."
+                    placeholder={t('editor.blocks.code_playground.expected_output_placeholder')}
                   />
                 </div>
               </div>
@@ -1528,7 +1530,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           ) : null}
           {stderr && <pre className="text-[12px] font-mono text-red-400 whitespace-pre-wrap mt-2">{stderr}</pre>}
           {compileOut && <pre className="text-[12px] font-mono text-amber-400 whitespace-pre-wrap mt-2">{compileOut}</pre>}
-          {!stdout && !stderr && !compileOut && <pre className="text-[12px] font-mono text-neutral-500 italic">(no output)</pre>}
+          {!stdout && !stderr && !compileOut && <pre className="text-[12px] font-mono text-neutral-500 italic">{t('editor.blocks.code_playground.no_output')}</pre>}
           {time && (
             <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-white/5">
               <Clock weight="duotone" size={10} className="text-neutral-500" />
@@ -1544,17 +1546,17 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         {!results ? (
           <div className="flex flex-col items-center justify-center py-14 text-neutral-300">
             <Terminal weight="duotone" size={24} className="mb-2" />
-            <span className="text-[13px] text-neutral-400">Run your code to see output</span>
+            <span className="text-[13px] text-neutral-400">{t('editor.blocks.code_playground.run_to_see_output')}</span>
           </div>
         ) : (
           <>
-            {renderTerminal(consoleStdout, consoleStderr, consoleCompile, executionTime, 'output', consoleStdout)}
+            {renderTerminal(consoleStdout, consoleStderr, consoleCompile, executionTime, t('editor.blocks.code_playground.terminal_label'), consoleStdout)}
 
             {/* Score */}
             {testCases.length > 0 && !isEditable && results && (
               <div className="rounded-lg p-3.5 border border-neutral-100 nice-shadow">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Score</span>
+                  <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{t('editor.blocks.code_playground.score')}</span>
                   <span className="text-[15px] font-bold text-neutral-800">{Math.round((passedCount / totalCount) * 100)}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden">
@@ -1563,7 +1565,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 <div className="flex items-center gap-1.5 mt-2">
                   <CheckCircle weight="duotone" size={11} className={allPassed ? 'text-emerald-500' : 'text-amber-500'} />
                   <span className={`text-[11px] font-medium ${allPassed ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {allPassed ? 'All test cases passed' : `${passedCount} of ${totalCount} passed`}
+                    {allPassed ? t('editor.blocks.code_playground.all_tests_passed') : t('editor.blocks.code_playground.tests_passed_count', { passed: passedCount, total: totalCount })}
                   </span>
                 </div>
               </div>
@@ -1576,7 +1578,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   {r.passed ? <CheckCircle weight="duotone" size={13} className="text-emerald-500" /> : <XCircle weight="duotone" size={13} className="text-red-500" />}
                   <span className="text-[12px] font-semibold text-neutral-700">{r.label}</span>
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${r.passed ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                    {r.status?.description || (r.passed ? 'Accepted' : 'Failed')}
+                    {r.status?.description || (r.passed ? t('editor.blocks.code_playground.accepted') : t('editor.blocks.code_playground.failed'))}
                   </span>
                   <div className="ml-auto flex items-center gap-2">
                     {r.time && <span className="text-[10px] text-neutral-400 font-mono">{r.time}s</span>}
@@ -1586,7 +1588,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 {r.actual_stdout != null && (
                   <div className="px-3.5 pb-2.5">
                     <div className="flex items-center justify-between mb-0.5">
-                      <label className="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider">Output</label>
+                      <label className="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider">{t('editor.blocks.code_playground.output')}</label>
                       <CopyButton text={r.actual_stdout || ''} />
                     </div>
                     {isSqlLanguage && r.actual_stdout && r.actual_stdout.includes('|') ? (
@@ -1615,13 +1617,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                         </table>
                       </div>
                     ) : (
-                      <pre className="text-[11px] font-mono text-neutral-700 bg-white border border-neutral-100 rounded-lg p-2 whitespace-pre-wrap nice-shadow">{r.actual_stdout || '(no output)'}</pre>
+                      <pre className="text-[11px] font-mono text-neutral-700 bg-white border border-neutral-100 rounded-lg p-2 whitespace-pre-wrap nice-shadow">{r.actual_stdout || t('editor.blocks.code_playground.no_output')}</pre>
                     )}
                   </div>
                 )}
                 {!r.passed && r.expected_stdout && (
                   <div className="px-3.5 pb-2.5">
-                    <label className="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider mb-0.5 block">Expected</label>
+                    <label className="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider mb-0.5 block">{t('editor.blocks.code_playground.expected')}</label>
                     <pre className="text-[11px] font-mono text-emerald-700 bg-emerald-50/50 border border-emerald-100 rounded-lg p-2 whitespace-pre-wrap nice-shadow">{r.expected_stdout}</pre>
                   </div>
                 )}
@@ -1666,15 +1668,15 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           {timedMode && !isEditable && !challengeStarted && (
             <div className="absolute inset-0 z-20 bg-[#1a1b26]/95 flex flex-col items-center justify-center gap-4">
               <Clock weight="duotone" size={32} className="text-neutral-400" />
-              <span className="text-[14px] font-semibold text-neutral-200">Timed Challenge</span>
+              <span className="text-[14px] font-semibold text-neutral-200">{t('editor.blocks.code_playground.timed_challenge')}</span>
               <span className="text-[12px] text-neutral-400">
-                You have {Math.floor(timedDurationMs / 60000)} minutes to complete this challenge.
+                {t('editor.blocks.code_playground.timed_intro', { count: Math.floor(timedDurationMs / 60000) })}
               </span>
               <button
                 onClick={() => { setChallengeStarted(true); setChallengeTimeLeft(timedDurationMs) }}
                 className="px-5 py-2.5 bg-white/10 hover:bg-white/15 text-neutral-200 rounded-lg text-[13px] font-semibold transition-all"
               >
-                Start Challenge
+                {t('editor.blocks.code_playground.start_challenge')}
               </button>
             </div>
           )}
@@ -1702,11 +1704,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               <div className="flex items-center gap-2.5 py-3">
                 <Code weight="duotone" size={14} className="text-neutral-500" />
                 <span className="text-[12px] font-semibold text-neutral-300 tracking-tight">
-                  Code Playground
+                  {t('editor.toolbar.code_playground')}
                 </span>
                 <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md ${diff.darkBg} ${diff.darkText}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${diff.dot}`} />
-                  {diff.label}
+                  {t(diff.labelKey)}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -1746,7 +1748,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   <button
                     onClick={resetCode}
                     className="flex items-center text-neutral-500 hover:text-neutral-300 py-1.5 px-1 text-[12px] transition-colors outline-none"
-                    title="Reset code"
+                    title={t('editor.blocks.code_playground.reset_code')}
                   >
                     <ArrowCounterClockwise weight="duotone" size={13} />
                   </button>
@@ -1847,7 +1849,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   ) : (
                     <Play weight="duotone" size={14} />
                   )}
-                  {isEditable ? 'Test Run' : 'Run Code'}
+                  {isEditable ? t('editor.blocks.code_playground.test_run') : t('editor.blocks.code_playground.run_code')}
                 </button>
                 <span className="text-[10px] text-neutral-500 hidden sm:inline">
                   {typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter
@@ -1860,7 +1862,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 {allPassed && !isEditable && !isRunning && (
                   <div className="flex items-center gap-1.5">
                     <CheckCircle weight="duotone" size={13} className="text-emerald-400" />
-                    <span className="text-[12px] font-semibold text-emerald-400">All passed</span>
+                    <span className="text-[12px] font-semibold text-emerald-400">{t('editor.blocks.code_playground.all_passed')}</span>
                   </div>
                 )}
                 {timedMode && challengeStarted && !isEditable && (

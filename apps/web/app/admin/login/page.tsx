@@ -3,8 +3,10 @@ import React, { useState } from 'react'
 import { useAuth } from '@components/Contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Shield } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function AdminLoginPage() {
+  const { t } = useTranslation()
   const { signIn } = useAuth()
   const _router = useRouter()
   const [email, setEmail] = useState('')
@@ -25,12 +27,12 @@ export default function AdminLoginPage() {
       })
 
       if (result?.error) {
-        setError('Invalid email or password')
+        setError(t('admin.login.invalid_credentials'))
       } else {
         window.location.href = '/admin'
       }
     } catch {
-      setError('An error occurred. Please try again.')
+      setError(t('admin.login.generic_error'))
     } finally {
       setIsLoading(false)
     }
@@ -42,7 +44,7 @@ export default function AdminLoginPage() {
         <div className="flex flex-col items-center mb-8">
           <Shield className="w-10 h-10 text-white/70 mb-3" />
           <h1 className="text-2xl font-bold text-white">LearnHouse Admin</h1>
-          <p className="text-white/40 text-sm mt-1">Sign in to continue</p>
+          <p className="text-white/40 text-sm mt-1">{t('admin.login.sign_in_to_continue')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -54,7 +56,7 @@ export default function AdminLoginPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-white/60 mb-1.5">
-              Email
+              {t('admin.login.email')}
             </label>
             <input
               id="email"
@@ -70,7 +72,7 @@ export default function AdminLoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-white/60 mb-1.5">
-              Password
+              {t('admin.login.password')}
             </label>
             <input
               id="password"
@@ -80,7 +82,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
-              placeholder="Enter your password"
+              placeholder={t('admin.login.password_placeholder')}
             />
           </div>
 
@@ -89,7 +91,7 @@ export default function AdminLoginPage() {
             disabled={isLoading}
             className="w-full py-2.5 bg-white text-black font-medium rounded-lg hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Signing in...' : 'Sign in'}
+            {isLoading ? t('admin.login.signing_in') : t('admin.login.sign_in')}
           </button>
         </form>
       </div>

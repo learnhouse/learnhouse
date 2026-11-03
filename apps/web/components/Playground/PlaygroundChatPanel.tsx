@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PaperPlaneTilt, Sparkle, CircleNotch, BookOpen, Brain } from '@phosphor-icons/react'
 
 interface Message {
@@ -27,14 +28,14 @@ interface PlaygroundChatPanelProps {
 }
 
 const SUGGESTION_CHIPS = [
-  'Interactive quiz with 5 questions',
-  'Animated bar chart',
-  'Physics simulation',
-  'Flashcard deck',
-  'Math explorer',
-  'Mini memory game',
-  'Timeline visualization',
-  'Drag and drop sorting',
+  'playgrounds.chat.chip_quiz',
+  'playgrounds.chat.chip_bar_chart',
+  'playgrounds.chat.chip_physics',
+  'playgrounds.chat.chip_flashcards',
+  'playgrounds.chat.chip_math',
+  'playgrounds.chat.chip_memory_game',
+  'playgrounds.chat.chip_timeline',
+  'playgrounds.chat.chip_sorting',
 ]
 
 export default function PlaygroundChatPanel({
@@ -49,6 +50,7 @@ export default function PlaygroundChatPanel({
   onCourseChange,
   sessionStarted = false,
 }: PlaygroundChatPanelProps) {
+  const { t } = useTranslation()
   const [input, setInput] = React.useState('')
   const [sourceMode, setSourceMode] = React.useState<'ai' | 'course'>('ai')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -104,7 +106,7 @@ export default function PlaygroundChatPanel({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkle size={15} weight="fill" className="text-neutral-400" />
-            <span className="text-sm font-bold text-neutral-700">AI Generator</span>
+            <span className="text-sm font-bold text-neutral-700">{t('playgrounds.chat.title')}</span>
           </div>
           <span className="text-[11px] font-medium text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">
             {remaining}/{maxIterations}
@@ -114,7 +116,7 @@ export default function PlaygroundChatPanel({
         {/* Source toggle, only shown before session starts and when courses exist */}
         {orgCourses.length > 0 && !sessionStarted && (
           <div className="mt-3 space-y-2">
-            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Source</p>
+            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">{t('playgrounds.chat.source')}</p>
             <div className="flex gap-1.5">
               <button
                 onClick={() => handleSourceMode('ai')}
@@ -125,7 +127,7 @@ export default function PlaygroundChatPanel({
                 }`}
               >
                 <Brain size={12} weight="bold" />
-                AI Knowledge
+                {t('playgrounds.chat.ai_knowledge')}
               </button>
               <button
                 onClick={() => handleSourceMode('course')}
@@ -136,7 +138,7 @@ export default function PlaygroundChatPanel({
                 }`}
               >
                 <BookOpen size={12} weight="bold" />
-                Course
+                {t('playgrounds.chat.course')}
               </button>
             </div>
 
@@ -181,11 +183,11 @@ export default function PlaygroundChatPanel({
                 : <Sparkle size={20} weight="fill" className="text-neutral-400" />
               }
             </div>
-            <p className="text-sm font-semibold text-neutral-600">Describe what to create</p>
+            <p className="text-sm font-semibold text-neutral-600">{t('playgrounds.chat.describe_prompt')}</p>
             <p className="text-xs text-neutral-400">
               {sourceMode === 'course'
-                ? 'Content will be grounded in your course material'
-                : 'Type a prompt or pick a suggestion below'
+                ? t('playgrounds.chat.grounded_hint')
+                : t('playgrounds.chat.prompt_hint')
               }
             </p>
           </div>
@@ -202,7 +204,7 @@ export default function PlaygroundChatPanel({
                 {msg.role === 'model' ? (
                   <span className="text-xs italic flex items-center gap-1.5">
                     <Sparkle size={11} weight="fill" />
-                    Generated ({msg.content.length.toLocaleString()} chars)
+                    {t('playgrounds.chat.generated_chars', { count: msg.content.length.toLocaleString() })}
                   </span>
                 ) : (
                   msg.content
@@ -216,7 +218,7 @@ export default function PlaygroundChatPanel({
           <div className="flex justify-start">
             <div className="bg-neutral-100 nice-shadow px-3 py-2 rounded-xl flex items-center gap-2">
               <CircleNotch size={13} weight="bold" className="animate-spin text-sky-500" />
-              <span className="text-xs text-neutral-500 font-medium">Generating…</span>
+              <span className="text-xs text-neutral-500 font-medium">{t('playgrounds.chat.generating_ellipsis')}</span>
             </div>
           </div>
         )}
@@ -229,10 +231,10 @@ export default function PlaygroundChatPanel({
           {SUGGESTION_CHIPS.map((chip) => (
             <button
               key={chip}
-              onClick={() => handleChipClick(chip)}
+              onClick={() => handleChipClick(t(chip))}
               className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-neutral-100 nice-shadow text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 transition-all"
             >
-              {chip}
+              {t(chip)}
             </button>
           ))}
         </div>
@@ -251,10 +253,10 @@ export default function PlaygroundChatPanel({
             onKeyDown={handleKeyDown}
             placeholder={
               remaining === 0
-                ? 'Max iterations reached'
+                ? t('playgrounds.chat.max_iterations')
                 : iterationCount === 0
-                ? 'Describe your interactive experience…'
-                : 'Request a change…'
+                ? t('playgrounds.chat.placeholder_first')
+                : t('playgrounds.chat.placeholder_refine')
             }
             disabled={isGenerating || disabled || remaining === 0}
             rows={2}
@@ -264,9 +266,9 @@ export default function PlaygroundChatPanel({
           <div className="flex items-center justify-between px-3 pb-2">
             <span className="text-[10px] text-neutral-400 font-medium">
               {remaining === 0 ? (
-                <span className="text-red-400">No generations left</span>
+                <span className="text-red-400">{t('playgrounds.chat.no_generations_left')}</span>
               ) : (
-                'Enter to send · Shift+Enter for newline'
+                t('playgrounds.chat.send_hint')
               )}
             </span>
             <button
@@ -283,7 +285,7 @@ export default function PlaygroundChatPanel({
               ) : (
                 <PaperPlaneTilt size={12} weight="bold" />
               )}
-              {isGenerating ? 'Generating' : 'Send'}
+              {isGenerating ? t('playgrounds.chat.generating') : t('playgrounds.chat.send')}
             </button>
           </div>
         </div>

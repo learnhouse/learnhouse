@@ -6,6 +6,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 
 type UserProfilePopupProps = {
   children: React.ReactNode
@@ -41,6 +42,7 @@ const ICON_MAP = {
 } as const
 
 const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const isAuthenticated = Boolean(access_token)
@@ -66,7 +68,7 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
         const data = await getUser(userId, access_token)
         setUserData(data)
       } catch (err) {
-        setError('Failed to load user data')
+        setError(t('user.profile_load_failed'))
         console.error('Error fetching user data:', err)
       } finally {
         setIsLoading(false)
@@ -95,7 +97,7 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
       <HoverCardContent className="w-96 bg-white/95 backdrop-blur-md p-0 nice-shadow">
         {!isAuthenticated ? (
           <div className="px-5 py-4 text-sm text-gray-600">
-            Sign in to view this profile.
+            {t('user.sign_in_to_view_profile')}
           </div>
         ) : isLoading && !userData ? (
           <div className="flex items-center justify-center py-8">

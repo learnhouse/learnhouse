@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { Copy, Check } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import type { SnippetBundle } from '@components/Admin/Developers/snippets'
 
 type Lang = 'curl' | 'js' | 'python'
@@ -18,6 +19,7 @@ export default function CodeSnippetTabs({
   snippets: SnippetBundle
   initial?: Lang
 }) {
+  const { t } = useTranslation()
   const [active, setActive] = useState<Lang>(initial)
   const [copied, setCopied] = useState(false)
 
@@ -63,12 +65,12 @@ export default function CodeSnippetTabs({
           {copied ? (
             <>
               <Check size={12} weight="bold" className="text-emerald-300" />
-              Copied
+              {t('admin.developers.snippets.copied')}
             </>
           ) : (
             <>
               <Copy size={12} weight="fill" />
-              Copy
+              {t('admin.developers.snippets.copy')}
             </>
           )}
         </button>
