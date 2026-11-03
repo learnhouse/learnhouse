@@ -23,7 +23,7 @@ DeploymentMode = Literal['saas', 'oss', 'ee']
 
 # Features blocked in OSS mode but available in EE and plan-gated in SaaS
 EE_ONLY_FEATURES: frozenset[str] = frozenset({
-    'sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm'
+    'sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm', 'lti', 'live_sessions'
 })
 
 

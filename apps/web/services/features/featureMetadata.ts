@@ -17,17 +17,21 @@ import {
   ChatsCircle,
   Certificate,
   Cube,
+  CalendarDots,
   CreditCard,
   FolderSimple,
   Globe,
   Key,
   Lightning,
   ListChecks,
+  VideoCamera,
   LockKey,
   Microphone,
   Path,
+  PlugsConnected,
   Robot,
   ShieldCheck,
+  Steps,
   UsersThree,
 } from '@phosphor-icons/react'
 import type { IconProps } from '@phosphor-icons/react'
@@ -40,6 +44,7 @@ export type FeatureKey =
   | 'playgrounds'
   | 'communities'
   | 'podcasts'
+  | 'live_sessions'
   | 'ai'
   | 'analytics'
   | 'course_analytics'
@@ -50,10 +55,13 @@ export type FeatureKey =
   | 'api_access'
   | 'webhooks'
   | 'certifications'
+  | 'paths'
   | 'audit_logs'
   | 'sso'
+  | 'lti'
   | 'scorm'
   | 'seo'
+  | 'drip'
   // Features that are never plan-gated but can be admin-toggled off. Listed
   // here so FeatureGate can render the disabled card with the right icon.
   | 'courses'
@@ -99,6 +107,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.podcasts.title',
     descriptionKey: 'common.plans.feature_restricted.podcasts.description',
     Icon: Microphone,
+    upsellPlan: 'standard',
+  },
+  live_sessions: {
+    titleKey: 'common.plans.feature_restricted.live_sessions.title',
+    descriptionKey: 'common.plans.feature_restricted.live_sessions.description',
+    Icon: VideoCamera,
     upsellPlan: 'standard',
   },
   ai: {
@@ -161,6 +175,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     Icon: Certificate,
     upsellPlan: 'pro',
   },
+  paths: {
+    titleKey: 'common.plans.feature_restricted.paths.title',
+    descriptionKey: 'common.plans.feature_restricted.paths.description',
+    Icon: Steps,
+    upsellPlan: 'pro',
+  },
   audit_logs: {
     titleKey: 'common.plans.feature_restricted.audit_logs.title',
     descriptionKey: 'common.plans.feature_restricted.audit_logs.description',
@@ -173,6 +193,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     Icon: LockKey,
     upsellPlan: 'enterprise',
   },
+  lti: {
+    titleKey: 'common.plans.feature_restricted.lti.title',
+    descriptionKey: 'common.plans.feature_restricted.lti.description',
+    Icon: PlugsConnected,
+    upsellPlan: 'enterprise',
+  },
   scorm: {
     titleKey: 'common.plans.feature_restricted.scorm.title',
     descriptionKey: 'common.plans.feature_restricted.scorm.description',
@@ -183,6 +209,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.seo.title',
     descriptionKey: 'common.plans.feature_restricted.seo.description',
     Icon: Globe,
+    upsellPlan: 'standard',
+  },
+  drip: {
+    titleKey: 'common.plans.feature_restricted.drip.title',
+    descriptionKey: 'common.plans.feature_restricted.drip.description',
+    Icon: CalendarDots,
     upsellPlan: 'standard',
   },
   // Non-plan-gated; upsellPlan kept at 'free' so the upgrade card never fires.

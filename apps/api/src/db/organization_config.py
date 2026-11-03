@@ -176,6 +176,7 @@ class AdminToggles(BaseModel):
     folders: FeatureAdminToggle = FeatureAdminToggle()
     communities: FeatureAdminToggle = FeatureAdminToggle()
     members: MembersAdminToggle = MembersAdminToggle()
+    paths: FeatureAdminToggle = FeatureAdminToggle()
     payments: FeatureAdminToggle = FeatureAdminToggle()
     playgrounds: FeatureAdminToggle = FeatureAdminToggle()
     podcasts: FeatureAdminToggle = FeatureAdminToggle()

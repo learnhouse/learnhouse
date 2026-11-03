@@ -19,9 +19,14 @@ from src.db.courses.chapters import (
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from fastapi import HTTPException, status, Request
-from src.core.ee_hooks import check_ee_activity_paid_access
+from src.core.ee_hooks import (
+    check_ee_activity_paid_access,
+    get_ee_paid_locked_activity_ids,
+    notify_ee_course_content_changed,
+)
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import enqueue_course, index_course
+from src.services.courses.drip import apply_drip_to_chapters
 from src.services.courses.locks import (
     batch_accessible_restricted_uuids,
     is_locked_for_user,
@@ -265,6 +270,7 @@ async def delete_chapter(
     await db_session.delete(chapter)
     await db_session.commit()
     await enqueue_course(course.id, db_session)
+    notify_ee_course_content_changed(course.id)
 
     return {"detail": "chapter deleted"}
 
@@ -458,15 +464,20 @@ async def _apply_locks_to_chapters(
     if admin:
         return
 
-    # Paywall: the tree carries activity content, so a paid course must not
-    # hand it to someone who hasn't bought it. Paid access is per course (the
-    # EE check resolves any activity to its course and lets authors through).
-    first_activity = next((a for c in chapters for a in c.activities), None)
-    if first_activity is not None and not await check_ee_activity_paid_access(
-        request, first_activity.id, current_user, db_session
-    ):
-        for chapter in chapters:
-            for activity in chapter.activities:
+    # Paywall: the tree carries activity content, so sold lessons must not be
+    # handed to someone who hasn't bought them. A course, a chapter or a single
+    # lesson can be sold, and some lessons can be free previews; EE says which
+    # lessons stay locked (and lets authors and admins through).
+    locked_ids = await get_ee_paid_locked_activity_ids(request, course.id, current_user, db_session)
+    if locked_ids is None:
+        first_activity = next((a for c in chapters for a in c.activities), None)
+        locked_all = first_activity is not None and not await check_ee_activity_paid_access(
+            request, first_activity.id, current_user, db_session
+        )
+        locked_ids = {a.id for c in chapters for a in c.activities} if locked_all else set()
+    for chapter in chapters:
+        for activity in chapter.activities:
+            if activity.id in locked_ids:
                 activity.content = {"paid_access": False}
                 activity.details = None
 
@@ -523,6 +534,49 @@ async def _apply_locks_to_chapters(
             if activity_locked:
                 activity.content = {}
                 activity.details = None
+
+    # Drip content: chapters not released yet for this reader are held back
+    # the same way, on top of the locks above.
+    await apply_drip_to_chapters(chapters, course, current_user, db_session, request)
+
+    await _render_dynamic_chapter_content(chapters, course, current_user, db_session, request)
+
+
+async def _render_dynamic_chapter_content(
+    chapters: List[ChapterRead],
+    course: "Course",
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: AsyncSession,
+    request: Request | None,
+) -> None:
+    """The full tree carries activity content, so conditional blocks resolve
+    here too (see dynamic_content). One context serves the whole course."""
+    from src.services.courses.activities.access import can_edit_course
+    from src.services.courses.activities.dynamic_content import has_dynamic_content
+    from src.services.courses.activities.dynamic_context import (
+        build_render_context,
+        render_for_reader,
+    )
+
+    dynamic = [
+        activity
+        for chapter in chapters
+        for activity in chapter.activities
+        if not activity.is_locked and has_dynamic_content(activity.content)
+    ]
+    if not dynamic:
+        return
+    if request is not None and await can_edit_course(
+        request, course.course_uuid, current_user, db_session
+    ):
+        return
+    context = await build_render_context(request, current_user, course, db_session)
+    for activity in dynamic:
+        activity.content = await render_for_reader(
+            request, activity.content, course=course, current_user=current_user,
+            db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+            is_editor=False, context=context,
+        )
 
 
 # Important Note : this is legacy code that has been used because

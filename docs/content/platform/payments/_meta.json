@@ -1,6 +1,8 @@
 {
   "index": "Overview",
-  "offers": "Offers & Pricing",
-  "groups": "Groups & Bundles",
-  "enrollments": "Enrollments & Checkout"
+  "offers": "Products & Pricing",
+  "enrollments": "Customers & Access",
+  "api": "Sell with Any Tool",
+  "discounts": "Promotion Codes",
+  "groups": "Payment Groups (Legacy)"
 }

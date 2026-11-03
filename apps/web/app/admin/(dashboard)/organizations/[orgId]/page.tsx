@@ -1214,9 +1214,11 @@ type AdminToggles = {
   folders: FeatureToggle
   communities: FeatureToggle
   members: MembersToggle
+  paths: FeatureToggle
   payments: FeatureToggle
   playgrounds: FeatureToggle
   podcasts: FeatureToggle
+  live_sessions: FeatureToggle
 }
 
 const DEFAULT_ADMIN_TOGGLES: AdminToggles = {
@@ -1228,9 +1230,11 @@ const DEFAULT_ADMIN_TOGGLES: AdminToggles = {
   folders: { disabled: false },
   communities: { disabled: false },
   members: { disabled: false, signup_mode: 'open' },
+  paths: { disabled: false },
   payments: { disabled: false },
   playgrounds: { disabled: false },
   podcasts: { disabled: false },
+  live_sessions: { disabled: false },
 }
 
 const FEATURE_ORDER: { key: keyof AdminToggles; label: string; description: string }[] = [
@@ -1242,9 +1246,11 @@ const FEATURE_ORDER: { key: keyof AdminToggles; label: string; description: stri
   { key: 'folders', label: 'Folders', description: 'Organize courses and media into folders' },
   { key: 'communities', label: 'Communities', description: 'Public/private community spaces' },
   { key: 'members', label: 'Members', description: 'Member directory and roles' },
+  { key: 'paths', label: 'Paths', description: 'Ordered course sequences with their own certificate' },
   { key: 'payments', label: 'Payments', description: 'Paid courses and checkout' },
   { key: 'playgrounds', label: 'Playgrounds', description: 'Interactive code/exec environments' },
   { key: 'podcasts', label: 'Podcasts', description: 'Audio episodes inside courses' },
+  { key: 'live_sessions', label: 'Live sessions', description: 'Live classes with chat, Q&A, polls and attendance' },
 ]
 
 function ToggleSwitch({

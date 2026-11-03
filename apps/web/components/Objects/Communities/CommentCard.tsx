@@ -21,6 +21,7 @@ import {
 } from "@components/ui/dropdown-menu"
 import UserAvatar from '@components/Objects/UserAvatar'
 import { CommentUpvoteButton } from './CommentUpvoteButton'
+import HashtagText from './Tags/HashtagText'
 
 dayjs.extend(relativeTime)
 
@@ -204,7 +205,7 @@ export function CommentCard({ comment, canManage = false, onDeleted, onUpdated }
                   <span className="text-gray-400 text-xs">{timeAgo}</span>
                 </div>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap" dir="auto">
-                  {comment.content}
+                  <HashtagText text={comment.content} />
                 </p>
               </>
             )}

@@ -48,3 +48,30 @@ class TestPendingTokenProvenance:
         # that. Provenance decode is only ever called after that check.
         session = mint_session_tokens("a@b.co", amr="password", org_id=1)
         assert decode_mfa_pending_token(session.access_token) is None
+
+
+def test_lms_sessions_cannot_change_account_security():
+    """A session an LMS launch started is held to that org: it may never
+    delete the account or touch its second factor, email or password."""
+    import pytest
+    from fastapi import HTTPException
+
+    from src.security.session_context import (
+        SessionProvenance,
+        refuse_lms_session,
+        set_session_provenance,
+    )
+
+    try:
+        set_session_provenance(SessionProvenance(amr="lti", org_id=1))
+        with pytest.raises(HTTPException) as exc:
+            refuse_lms_session()
+        assert exc.value.status_code == 403
+        assert exc.value.detail["code"] == "LMS_SESSION_NOT_ALLOWED"
+        for amr in ("password", "google", "sso", None):
+            set_session_provenance(SessionProvenance(amr=amr, org_id=1))
+            refuse_lms_session()
+        set_session_provenance(None)
+        refuse_lms_session()
+    finally:
+        set_session_provenance(None)

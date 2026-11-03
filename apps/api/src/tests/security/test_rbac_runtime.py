@@ -47,11 +47,23 @@ class _FakePaymentsOffer(SQLModel, table=True):
     name: str = ""
     amount: float = 0.0
     currency: str = "USD"
+    payments_group_id: int = 0
+
+
+class _FakePaymentsGroupSync(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    payments_group_id: int = 0
     usergroup_id: int = 0
 
 
 _fake_payments_module = ModuleType("ee.db.payments.payments_offers")
 _fake_payments_module.PaymentsOffer = _FakePaymentsOffer
+_fake_groups_module = ModuleType("ee.db.payments.payments_groups")
+_fake_groups_module.PaymentsGroupSync = _FakePaymentsGroupSync
+_fake_ee_modules = {
+    "ee.db.payments.payments_offers": _fake_payments_module,
+    "ee.db.payments.payments_groups": _fake_groups_module,
+}
 
 
 def _role_with_dict_rights() -> Role:
@@ -163,7 +175,7 @@ class TestRBACRuntime:
         offer = SimpleNamespace(id=12, name="Pro", amount=19.0, currency="USD")
         session = _session_with_results(_result(first=offer))
 
-        with patch.dict(sys.modules, {"ee.db.payments.payments_offers": _fake_payments_module}):
+        with patch.dict(sys.modules, _fake_ee_modules):
             result = await _get_offer_for_usergroup(7, session)
 
         assert result == {
@@ -215,7 +227,7 @@ class TestRBACRuntime:
             _result(first=SimpleNamespace(id=77, name="VIP", amount=49.0, currency="EUR")),
         )
 
-        with patch.dict(sys.modules, {"ee.db.payments.payments_offers": _fake_payments_module}):
+        with patch.dict(sys.modules, _fake_ee_modules):
             with pytest.raises(HTTPException) as exc_info:
                 await check_usergroup_access("course_1", 99, session)
 

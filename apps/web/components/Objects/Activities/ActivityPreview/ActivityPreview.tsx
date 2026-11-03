@@ -478,6 +478,14 @@ function PreviewBody({ activity }: { activity: any }) {
     return <EmptyState text="SCORM package (preview unavailable)" />
   }
 
+  if (type === 'TYPE_LIVE_SESSION') {
+    return (
+      <EmptyState
+        text={content.mode === 'replay' ? 'Live session replay (open to watch)' : 'Live session (open to see the schedule)'}
+      />
+    )
+  }
+
   if (type === 'TYPE_CUSTOM') {
     return <EmptyState text="Custom activity (preview unavailable)" />
   }

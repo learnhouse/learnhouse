@@ -42,6 +42,8 @@ async def check_element_type(element_uuid):
         return "boards"
     elif element_uuid.startswith("playground_"):
         return "playgrounds"
+    elif element_uuid.startswith("livesession_"):
+        return "live_sessions"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

@@ -152,7 +152,7 @@ export default function MediaViewer({
 
   if (kind === 'video') {
     return (
-      <div className={`w-full ${maxHeightClass} bg-black rounded-xl overflow-hidden`}>
+      <div className={`w-full ${maxHeightClass} rounded-[20px] overflow-hidden`}>
         <LearnHousePlayer src={fileUrl} />
       </div>
     )

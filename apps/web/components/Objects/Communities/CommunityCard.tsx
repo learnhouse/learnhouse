@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 type PropsType = {
   community: Community
@@ -64,7 +65,7 @@ function CommunityCard(props: PropsType) {
         className="block relative aspect-video overflow-hidden bg-gray-50"
       >
         {props.community.thumbnail_image && org?.org_uuid ? (
-          <img
+          <ThumbnailImage
             src={getCommunityThumbnailMediaDirectory(
               org.org_uuid,
               props.community.community_uuid,

@@ -23,6 +23,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { Playground } from '@services/playgrounds/playgrounds'
 import { getPlaygroundThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 dayjs.extend(relativeTime)
 
@@ -121,7 +122,7 @@ export default function PlaygroundViewClient({
             {/* Thumbnail */}
             {thumbnailUrl && (
               <div className="bg-white nice-shadow rounded-lg overflow-hidden">
-                <img
+                <ThumbnailImage
                   src={thumbnailUrl}
                   alt={playground.name}
                   className="w-full aspect-video object-cover"

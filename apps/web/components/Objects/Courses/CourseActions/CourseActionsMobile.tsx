@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
-import { getOffersByResource } from '@services/payments/offers'
+import { getOffersByResource } from '@ee/services/payments/offers'
 import { LogIn, LogOut, ShoppingCart, Lock, UserPlus } from 'lucide-react'
 import { removeCourse, startCourse } from '@services/courses/activity'
 import { revalidateTags, asArray } from '@services/utils/ts/requests'
@@ -269,7 +269,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
           const formattedPrice = offer?.amount != null
             ? formatCurrency(offer.amount, offer.currency ?? 'USD', i18n.language)
             : null;
-          const storeHref = org?.slug ? getUriWithOrg(org.slug, `/store/offers/${offer.offer_id}`) : '#';
+          const storeHref = org?.slug ? getUriWithOrg(org.slug, `/store/offers/${offer.offer_uuid}`) : '#';
 
           return (
             <div className="space-y-3">

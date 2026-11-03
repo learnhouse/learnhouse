@@ -15,7 +15,7 @@ import { Switch } from '@components/ui/switch'
 import { Code2, Plus, Trash2, PencilLine, AlertTriangle } from "lucide-react"
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { getAPIUrl, getDeploymentMode } from '@services/config/config'
+import { getAPIUrl, getDeploymentMode, getTenancy } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
 import {
   Tooltip,
@@ -49,6 +49,9 @@ const OrgEditOther: React.FC = () => {
   const plan = usePlan()
   const isFree = plan === 'free'
   const isEE = getDeploymentMode() === 'ee'
+  // Matches lib/orgScripts: on a multi-tenant deployment scripts only run on
+  // the org's custom domain.
+  const isMultiTenant = getTenancy() === 'multi'
   const [selectedView, setSelectedView] = React.useState<'list' | 'edit'>('list')
   const [scripts, setScripts] = React.useState<Script[]>([])
   const [currentScript, setCurrentScript] = React.useState<Script | null>(null)
@@ -205,6 +208,11 @@ const OrgEditOther: React.FC = () => {
               <h2 className="text-gray-500 text-md">
                 {t('dashboard.organization.scripts.subtitle')}
               </h2>
+              {isMultiTenant && (
+                <p className="text-sm text-orange-700 mt-2">
+                  {t('dashboard.organization.scripts.custom_domain_only')}
+                </p>
+              )}
             </div>
             {selectedView === 'list' && (
               <Button

@@ -438,23 +438,14 @@ export async function regenerateAPIToken(
 }
 
 /**
- * Fetch OpenAPI specification from the backend
+ * Fetch the OpenAPI specification scoped to API token routes.
+ * The public /openapi.json only exists in development mode.
  */
-export async function fetchOpenAPISpec(accessToken?: string) {
-  const url = `${getAPIUrl().replace('/api/v1/', '')}/openapi.json`
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`
-  }
-
-  const response = await fetch(url, {
-    method: 'GET',
-    headers,
-    credentials: 'include',
-  })
+export async function fetchOpenAPISpec(orgId: number, accessToken: string) {
+  const response = await fetch(
+    `${getAPIUrl()}orgs/${orgId}/api-tokens/openapi.json`,
+    RequestBodyWithAuthHeader('GET', null, null, accessToken)
+  )
 
   if (!response.ok) {
     throw new Error('Failed to fetch OpenAPI spec')

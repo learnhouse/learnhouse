@@ -630,11 +630,14 @@ class TestFormativeRetry:
         )
         with patch(_RBAC, new_callable=AsyncMock), patch(
             _ROLES, new_callable=AsyncMock, return_value=False
-        ), patch(_REVOKE, new_callable=AsyncMock), patch(_SYNC, new_callable=AsyncMock):
+        ), patch(_REVOKE, new_callable=AsyncMock), patch(_SYNC, new_callable=AsyncMock), patch(
+            "src.services.courses.activities.assignments.notify_ee_learner_progress"
+        ) as notify:
             result = await retry_assignment_submission(
                 mock_request, a.assignment_uuid, regular_user, db
             )
         assert result["attempt_number"] == 2
+        notify.assert_called_once_with(regular_user.id, course.id)
 
     async def test_graded_assignment_still_refuses_a_submitted_retry(
         self, mock_request, db, org, course, chapter, activity, regular_user

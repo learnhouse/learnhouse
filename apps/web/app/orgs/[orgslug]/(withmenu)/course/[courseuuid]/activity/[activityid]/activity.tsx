@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Loader2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
+import DripGate from '@components/Objects/Courses/DripGate'
 import dynamic from 'next/dynamic'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
@@ -30,7 +31,7 @@ import CourseAccessError from '@components/Objects/Courses/CourseAccessError/Cou
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useMediaQuery, useWindowSize } from 'usehooks-ts'
-import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
+import PaidCourseActivityDisclaimer from '@ee/components/Payments/PaidCourseActivityDisclaimer'
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterDropdown'
@@ -69,6 +70,7 @@ const ScormActivity = lazy(() => import('@ee/components/Activities/ScormActivity
 const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
 const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
 const ResourceActivity = lazy(() => import('@components/Objects/Activities/Resource/ResourceActivity'))
+const LiveSessionActivity = lazy(() => import('@ee/components/LiveSessions/LiveSessionActivity'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -377,6 +379,12 @@ function ActivityClient(props: ActivityClientProps) {
             <ScormActivity course={course} activity={activity} />
           </Suspense>
         );
+      case 'TYPE_LIVE_SESSION':
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <LiveSessionActivity activity={activity} orgslug={orgslug} />
+          </Suspense>
+        );
       default:
         return null;
     }
@@ -525,8 +533,8 @@ function ActivityClient(props: ActivityClientProps) {
       setBgColor(isFocusMode ? 'bg-white' : 'bg-white nice-shadow');
       getAssignmentUI();
     }
-    else if (activity.activity_type == 'TYPE_VIDEO') {
-      // The player is the whole surface; no dark card around it.
+    else if (activity.activity_type == 'TYPE_VIDEO' || activity.activity_type == 'TYPE_LIVE_SESSION') {
+      // The player (or the session card) is the whole surface; no dark card around it.
       setBgColor('');
     }
     else {
@@ -592,6 +600,17 @@ function ActivityClient(props: ActivityClientProps) {
   const chapterNameFromCourse = allActivities[currentIndex]?.chapterName ?? ''
   const displayName = activity?.name ?? activityNameFromCourse
   const displayActivityType = allActivities[currentIndex]?.activity_type
+
+  if (activity?.is_locked && activity?.drip_reason) {
+    return (
+      <DripGate
+        activityName={displayName}
+        dripReason={activity.drip_reason}
+        dripUnlockAt={activity.drip_unlock_at}
+        courseHref={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+      />
+    )
+  }
 
   if (activity?.is_locked) {
     const isAuthenticated = session?.status === 'authenticated'
@@ -714,7 +733,7 @@ function ActivityClient(props: ActivityClientProps) {
                               href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
                             >
                               <img
-                                className="w-[60px] h-[34px] rounded-md drop-shadow-md"
+                                className="w-[60px] h-[34px] shrink-0 rounded-md drop-shadow-md object-cover"
                                 src={course.thumbnail_image
                                   ? getCourseThumbnailMediaDirectory(
                                       org?.org_uuid,
@@ -785,13 +804,13 @@ function ActivityClient(props: ActivityClientProps) {
                       {activity && activity.published == true && (
                         <>
                           {activity.content.paid_access == false ? (
-                            <PaidCourseActivityDisclaimer course={course} />
+                            <PaidCourseActivityDisclaimer course={course} activity={activity} />
                           ) : (
                             <motion.div
                               initial={isInitialRender.current ? false : { scale: 0.95, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
                               transition={{ delay: 0.3 }}
-                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? '' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
+                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : (activity.activity_type === 'TYPE_VIDEO' || activity.activity_type === 'TYPE_LIVE_SESSION') ? '' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
                             >
                               {/* Activity Types */}
                               <div className={activity.activity_type === 'TYPE_SCORM' ? 'overflow-hidden' : ''}>
@@ -912,7 +931,7 @@ function ActivityClient(props: ActivityClientProps) {
                                 href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
                               >
                                 <img
-                                  className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] rounded-md drop-shadow-md"
+                                  className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] shrink-0 rounded-md drop-shadow-md object-cover"
                                   src={course.thumbnail_image
                                     ? getCourseThumbnailMediaDirectory(
                                         org?.org_uuid,
@@ -1037,7 +1056,7 @@ function ActivityClient(props: ActivityClientProps) {
                                   </span>
                                   <span className="mx-1">•</span>
                                   <span>
-                                    {t('courses.last_updated')} {getRelativeTime(new Date(course.updated_at || course.last_updated || course.creation_date))}
+                                    {t('courses.last_updated')} {getRelativeTime(new Date(course.update_date || course.creation_date))}
                                   </span>
                                 </div>
                               </div>
@@ -1085,7 +1104,7 @@ function ActivityClient(props: ActivityClientProps) {
                       ) : activity.published == true ? (
                         <>
                           {activity.content.paid_access == false ? (
-                            <PaidCourseActivityDisclaimer course={course} />
+                            <PaidCourseActivityDisclaimer course={course} activity={activity} />
                           ) : (
                             // Video activities sit on a dark theater band (theater.css).
                             <div className={activity.activity_type === 'TYPE_VIDEO' ? 'lh-theater-band py-8 sm:py-12' : ''}>
@@ -1105,7 +1124,7 @@ function ActivityClient(props: ActivityClientProps) {
                               </button>
                             )}
                             <div className="flex gap-6">
-                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? '' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
+                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : (activity.activity_type === 'TYPE_VIDEO' || activity.activity_type === 'TYPE_LIVE_SESSION') ? '' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
                                 {activity.activity_type !== 'TYPE_VIDEO' && (
                                 <button
                                   onClick={() => setIsFocusMode(true)}

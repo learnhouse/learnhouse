@@ -6,12 +6,15 @@ import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import { getOrgAuthBackgroundMediaDirectory } from '@services/media/media'
 import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { getUriWithOrg } from '@services/config/config'
+import { usePlan } from '@components/Hooks/usePlan'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 interface AuthMobileHeaderProps {
   org: any
 }
 
 export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
+  const isWhiteLabel = isWhiteLabelPlan(usePlan())
   const authBranding = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding || {}
   const {
     background_type = 'gradient',
@@ -65,14 +68,20 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
             org={org}
             wideInsetClassName="p-1.5"
             fallback={
-              <Image
-                quality={100}
-                width={40}
-                height={40}
-                src={learnhouseIcon}
-                alt="LearnHouse"
-                className="object-contain"
-              />
+              isWhiteLabel ? (
+                <span className="text-lg font-black text-gray-800">
+                  {(org?.name || '?').charAt(0).toUpperCase()}
+                </span>
+              ) : (
+                <Image
+                  quality={100}
+                  width={40}
+                  height={40}
+                  src={learnhouseIcon}
+                  alt="LearnHouse"
+                  className="object-contain"
+                />
+              )
             }
           />
         </div>
