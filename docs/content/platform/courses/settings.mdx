@@ -2,12 +2,13 @@ import { Callout } from 'nextra/components'
 
 # Course Settings
 
-Open a course from **Courses** in the dashboard. Its settings are split into tabs:
+Open a course from **Courses** in the dashboard. Its settings are split into tabs. You only see the tabs your role allows:
 
 | Tab | What it covers |
 | --- | --- |
 | **General** | Name, description, learnings, tags and thumbnail. |
 | **Content** | Chapters and activities. See [Chapters & Activities](/platform/courses/chapters-and-activities). |
+| **Schedule** | Release chapters over time. See [Drip Content](/platform/courses/drip-content). |
 | **Access** | Who can see the course. |
 | **Contributors** | Who can edit the course. |
 | **SEO** | How the course appears in search engines and on social media. See [SEO](#seo) below. |
@@ -52,6 +53,8 @@ Contributors are users who can work on the course with you. Each has a role and 
 
 To add contributors, search users by name or username, select them and click **Add Selected**. You can then change a contributor's role and status, or remove them.
 
+<img src="/img/pages/courses/course-contributors.webp" alt="The Contributors tab with Open to Contributors and Closed to Contributors, the user search and the course creator listed as CREATOR and ACTIVE" width={1600} height={900} style={{ borderRadius: 10 }} />
+
 Set the course to **Open to Contributors** to let users apply from the course page with **Apply to contribute**. A user who applies is added as a **CONTRIBUTOR** with the **PENDING** status until a creator, maintainer or admin approves them. **Closed to Contributors** stops new applications; existing contributors keep their access.
 
 ## SEO
@@ -68,7 +71,7 @@ The tab has four sections:
 | **Robots & Structured Data** | **Prevent search engine indexing (noindex)**, **Prevent following links (nofollow)**, **Enable JSON-LD Structured Data**. |
 
 <Callout>
-On LearnHouse Cloud, SEO settings need the Standard plan or higher. Certification and Analytics need the Pro plan or higher; see [Course Analytics](/platform/analytics/course-analytics) for what the Analytics tab shows. Self-hosted instances do not apply these plan restrictions.
+On LearnHouse Cloud, SEO and Schedule settings need the Standard plan or higher. Certification and Analytics need the Pro plan or higher; see [Course Analytics](/platform/analytics/course-analytics) for what the Analytics tab shows. Self-hosted instances do not apply these plan restrictions.
 </Callout>
 
 ## Course updates

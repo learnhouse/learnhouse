@@ -4,13 +4,17 @@ import { Callout } from 'nextra/components'
 
 Courses follow a simple hierarchy: **Course → Chapters → Activities**. You build it in the **Content** tab of a course in the dashboard.
 
+<img src="/img/pages/courses/course-content-tab.webp" alt="The Content tab of a course with chapters, their published Dynamic Page activities and Add Activity buttons" width={1600} height={900} style={{ borderRadius: 10 }} />
+
 ## Chapters
 
 Chapters group activities into modules, units or topics. Click **Add Chapter**, give it a name and a description, and drag chapters to reorder them. Use **Rename** to change a chapter's name.
 
 ## Activities
 
-Click **Add Activity** inside a chapter and pick a type:
+Click **Add Activity** inside a chapter and pick a type in the **Create Activity** window:
+
+<img src="/img/pages/getting-started/create-activity-types.webp" alt="The Create Activity window with Dynamic Page, Video, Document, Assignments, Markdown, Embed, Resource and Scorm" width={1600} height={900} style={{ borderRadius: 10 }} />
 
 | Type | What it is |
 | --- | --- |
@@ -31,11 +35,15 @@ Quizzes come in two forms: the **Quiz** block inside a Dynamic Page (ungraded se
 
 ### Video settings
 
-When you add a Video activity you can also set:
+When you add a Video activity, choose the **Source**: **Upload** a file or paste a **YouTube** link. Under **Video Settings** you can also set:
 
-- A start time and an end time, so the video plays only part of the file.
+- A **Start Time** and an **End Time (optional)**, so the video plays only part of the file.
 - **Autoplay** and **Start muted**.
 - **AI Closed Captions** for uploaded videos. See [AI Video Captions](/platform/courses/video-captions).
+
+<img src="/img/pages/courses/video-activity-form.webp" alt="The Create Activity window for a video, with the Upload and YouTube sources, start and end times, Autoplay, Start muted and AI Closed Captions" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+Uploaded videos play in the LearnHouse video player, with chapters on the timeline and captions. See [Videos](/platform/courses/taking-a-course#videos) for what learners see.
 
 ## Publishing
 
@@ -58,3 +66,5 @@ Each chapter and activity has an access lock. Click it to choose who can open it
 | **User groups only** | Only members of the user groups you add. With no group added, only admins can open it. |
 
 Learners who can't open a locked item see **This activity is locked**, with a hint to sign in or ask to join the right user group. This works on top of the course-wide setting in the [Access](/platform/courses/settings#access) tab.
+
+To open chapters over time instead, for example one per week, use [Drip Content](/platform/courses/drip-content). Scheduled chapters show their release day (for example **Day 7**) next to their name in the **Content** tab.

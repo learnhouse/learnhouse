@@ -15,14 +15,17 @@ LearnHouse is an open-source platform for creating and delivering modern educati
   - [Courses](https://docs.learnhouse.app/platform/courses): Courses are the core content unit in LearnHouse
     - [Chapters & Activities](https://docs.learnhouse.app/platform/courses/chapters-and-activities): Courses follow a simple hierarchy: Course → Chapters → Activities
     - [Course Settings](https://docs.learnhouse.app/platform/courses/settings): Open a course from Courses in the dashboard
+    - [Drip Content](https://docs.learnhouse.app/platform/courses/drip-content): Drip content releases a course one chapter at a time instead of all at once
     - [AI Course Creator](https://docs.learnhouse.app/platform/courses/ai-course-creator): The AI Course Creator plans a course with you in a chat, then writes the content of each activity
     - [Import & Export](https://docs.learnhouse.app/platform/courses/import-export): LearnHouse can move courses between organizations and instances, bring them in from other learning platforms, and build a course from a fold
     - [AI Video Captions](https://docs.learnhouse.app/platform/courses/video-captions): LearnHouse can automatically generate closed captions (subtitles) for hosted video activities and translate them into any languages you choo
     - [Taking a Course](https://docs.learnhouse.app/platform/courses/taking-a-course): This page describes what learners see when they follow a course
     - [Trails](https://docs.learnhouse.app/platform/courses/trails): A Trail is a learner's record of progress across the courses they have started
     - [Library](https://docs.learnhouse.app/platform/courses/library): The Library is where you organize your organization's content into folders, like a shared drive
+  - [Learning Paths](https://docs.learnhouse.app/platform/paths): A learning path is an ordered set of courses with required and elective courses and its own certificate
   - [Editor](https://docs.learnhouse.app/platform/editor): Dynamic Page activities are written in a block-based editor
     - [Blocks](https://docs.learnhouse.app/platform/editor/blocks): Type / anywhere in a page to open the block menu
+    - [Dynamic Content & Templates](https://docs.learnhouse.app/platform/editor/dynamic-content): Variables, conditional blocks and community tags make one page read differently for every learner; templates reuse blocks and pages
     - [H5P](https://docs.learnhouse.app/platform/editor/h5p): The H5P block puts an interactive H5P activity (a course presentation, an interactive video, a drag-and-drop, a branching scenario) inside a
   - [Assignments](https://docs.learnhouse.app/platform/assignments): An assignment is an activity inside a course chapter that learners hand work in for
     - [Task Types](https://docs.learnhouse.app/platform/assignments/task-types): An assignment is made of one or more tasks
@@ -36,6 +39,7 @@ LearnHouse is an open-source platform for creating and delivering modern educati
     - [Managing Communities](https://docs.learnhouse.app/platform/discussions/managing): Open a community from Communities in the dashboard to change its settings
   - [Boards](https://docs.learnhouse.app/platform/boards): Boards are shared, freeform canvases that several people edit at the same time, like a whiteboard
   - [Podcasts](https://docs.learnhouse.app/platform/podcasts): Podcasts let you publish audio shows inside your organization
+  - [Calendar](https://docs.learnhouse.app/platform/calendar): The calendar shows each member their assignment deadlines, chapter releases, course updates, certificates, podcast episodes and live sessions
   - [Certifications](https://docs.learnhouse.app/platform/certifications): A course can award a certificate to learners who complete it
   - [Analytics](https://docs.learnhouse.app/platform/analytics): LearnHouse records what learners do (page views, enrollments, completions, submissions and more) and turns it into dashboards for admins
     - [Analytics Dashboard](https://docs.learnhouse.app/platform/analytics/dashboard): Open Analytics in the dashboard sidebar to see organization-wide numbers
@@ -125,6 +129,9 @@ LearnHouse is an open-source platform for creating and delivering modern educati
     - [Custom OIDC](https://docs.learnhouse.app/enterprise/sso/custom-oidc): The Custom OIDC provider lets you connect LearnHouse directly to any OpenID Connect 1.0 compatible identity provider
   - [Audit Logs](https://docs.learnhouse.app/enterprise/audit-logs): Audit logs record the changes people make in your organization, so administrators can see who did what and when
   - [SCORM](https://docs.learnhouse.app/enterprise/scorm): SCORM needs the Enterprise plan on LearnHouse Cloud, or the Enterprise Edition when self-hosted
+  - [LTI 1.3](https://docs.learnhouse.app/enterprise/lti): Launch LearnHouse courses from Moodle, Canvas, Open edX and other LTI 1.3 platforms, with deep linking, grade sync and roster sync
+    - [LMS Setup](https://docs.learnhouse.app/enterprise/lti/lms-setup): Register LearnHouse as an LTI 1.3 tool in each supported LMS
+  - [Live Sessions](https://docs.learnhouse.app/enterprise/live-sessions): Schedule classes, office hours and events in LearnHouse Meet, Google Meet, Zoom or any meeting link, with chat, polls, breakout rooms and attendance
 
 ## Optional
 
