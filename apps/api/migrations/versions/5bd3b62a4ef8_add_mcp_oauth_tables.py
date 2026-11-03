@@ -4,7 +4,7 @@ Clients, per-member grants, single-use authorization codes and hashed
 access/refresh tokens for the OAuth 2.1 authorization server in front of /mcp.
 
 Revision ID: 5bd3b62a4ef8
-Revises: e8f9a0b1c2d3
+Revises: a1l2v3s4e5s6
 Create Date: 2026-10-18 00:00:00.000000
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = '5bd3b62a4ef8'
-down_revision: Union[str, None] = 'e8f9a0b1c2d3'
+down_revision: Union[str, None] = 'a1l2v3s4e5s6'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

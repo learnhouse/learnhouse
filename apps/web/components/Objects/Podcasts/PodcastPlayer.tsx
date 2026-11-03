@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { formatDuration } from '@services/podcasts/episodes'
 import WaveSurfer from 'wavesurfer.js'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 export default function PodcastPlayer() {
   const { state, togglePlay, seekTo, setVolume, closePlayer, toggleMinimize, audioRef } = usePodcastPlayer()
@@ -210,7 +211,7 @@ export default function PodcastPlayer() {
                 isMinimized ? 'w-10 h-10' : 'w-16 h-16'
               }`}
             >
-              <img
+              <ThumbnailImage
                 src={thumbnailUrl}
                 alt={currentEpisode.title}
                 className="w-full h-full object-cover"

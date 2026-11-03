@@ -44,13 +44,14 @@ def startup_app(app: FastAPI) -> Callable:
         learnhouse_config: LearnHouseConfig = get_learnhouse_config()
         app.learnhouse_config = learnhouse_config  # type: ignore
 
-        # Connect to database
-        await connect_to_db(app)
-
         # Send application logs to stdout. Until this runs, the root logger
         # has no handler and Python's fallback drops everything below WARNING,
         # so every logger.info in the codebase is invisible in production.
+        # Before the database: the schema step logs what it migrated.
         init_logging()
+
+        # Connect to database (and bring its schema to this version)
+        await connect_to_db(app)
 
         # Create logs directory
         await create_logs_dir()
@@ -74,6 +75,11 @@ def startup_app(app: FastAPI) -> Callable:
         # external scheduler. No-op unless enabled; never raises.
         from src.services.nudges.scheduler import start_scheduler
         start_scheduler()
+
+        # Hourly "chapter is open" emails for courses with drip content and
+        # notifications on. Never raises.
+        from src.services.courses.drip_scheduler import start_scheduler as start_drip_scheduler
+        start_drip_scheduler()
 
         # The shared demo organization refreshes itself on an interval, so the
         # feature needs no external scheduler. No-op unless
@@ -151,6 +157,8 @@ def shutdown_app(app: FastAPI) -> Callable:
         # Stop the daily nudge tick.
         from src.services.nudges.scheduler import stop_scheduler
         await stop_scheduler()
+        from src.services.courses.drip_scheduler import stop_scheduler as stop_drip_scheduler
+        await stop_drip_scheduler()
         # Stop the demo refresh tick.
         from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
         await stop_demo_scheduler()

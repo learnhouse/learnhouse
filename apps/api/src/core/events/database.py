@@ -357,6 +357,12 @@ if not is_testing:
     except Exception:
         logging.warning("Failed to register cache invalidation hooks", exc_info=True)
 
+# Not a cache hook, so it runs under tests too: editing a course's content
+# moves the course's update_date.
+from src.core.events.content_dates import register_content_date_hooks  # noqa: E402
+
+register_content_date_hooks()
+
 
 # A saturated connection pooler ("max clients reached in session mode"), a
 # rolling database restart or a brief network blip are all transient: the pod
@@ -382,6 +388,16 @@ def _is_transient_connect_error(exc: BaseException) -> bool:
 
 
 async def _bootstrap_schema():
+    # The normal path: migrate (or bootstrap) the schema under a lock, in a
+    # worker thread since Alembic is synchronous. See src/core/migrations.py.
+    if not is_testing:
+        from src.core.migrations import auto_migrate_enabled, ensure_schema
+
+        if auto_migrate_enabled():
+            await asyncio.to_thread(ensure_schema)
+            return
+        logging.info("LEARNHOUSE_AUTO_MIGRATE is off; only creating missing tables")
+
     async with engine.begin() as conn:
         # Enable pgvector extension for vector similarity search (optional; used by the RAG feature)
         try:
@@ -405,7 +421,11 @@ async def connect_to_db(app: FastAPI):
             await _bootstrap_schema()
             break
         except Exception as e:
-            if attempt >= attempts or not _is_transient_connect_error(e):
+            from src.core.migrations import SchemaMigrationError
+
+            # A failed migration is not a blip: retrying only delays the
+            # crash that keeps this release from serving on the old schema.
+            if attempt >= attempts or isinstance(e, SchemaMigrationError) or not _is_transient_connect_error(e):
                 raise
             delay = _STARTUP_CONNECT_BACKOFF_SECONDS * attempt
             logging.warning(

@@ -20,6 +20,7 @@ import {
   Book,
   ChatCircleDots,
   Headphones,
+  VideoCamera,
   ChartBar,
   DotsThree,
   UsersThree,
@@ -42,6 +43,7 @@ import {
   Plus,
   Code,
   Lightning,
+  Steps,
 } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { useAtlasMini } from '@ee/components/Atlas/AtlasMiniContext'
@@ -72,7 +74,7 @@ import {
 } from "@components/ui/hover-menu"
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
-import OrgSquareLogo, { hasOrgLogo } from '@components/Objects/Org/OrgSquareLogo'
+import OrgSquareLogo, { hasOrgLogo, OrgInitial } from '@components/Objects/Org/OrgSquareLogo'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -86,6 +88,7 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import OnboardingSidebarBox from '@components/Dashboard/Onboarding/OnboardingSidebarBox'
 import { useOnboarding } from '@components/Hooks/useOnboarding'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 // Scattered night-sky starfield for the free-plan upgrade box. Fixed positions
 // (top/left %) so the constellation is stable across renders; `north` is the
@@ -231,8 +234,10 @@ function DashLeftMenu() {
   const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
 
   const showLibrary = isEnabled('folders')
+  const showPaths = isEnabled('paths')
   const showCommunities = isEnabled('communities')
   const showPodcasts = isEnabled('podcasts')
+  const showLiveSessions = isEnabled('live_sessions')
   const showBoards = isEnabled('boards')
   const showPlaygrounds = isEnabled('playgrounds')
   const showPayments = isEnabled('payments')
@@ -263,9 +268,9 @@ function DashLeftMenu() {
           className={cn("flex items-center transition-opacity hover:opacity-70", isCollapsed ? "" : "space-x-3")}
           href={'/'}
         >
-          {planMeetsRequirement(plan, 'standard') && hasOrgLogo(org) ? (
+          {(planMeetsRequirement(plan, 'standard') && hasOrgLogo(org)) || isWhiteLabelPlan(plan) ? (
             <div className="h-9 w-9 rounded-lg overflow-hidden bg-white shrink-0">
-              <OrgSquareLogo org={org} wideInsetClassName="p-1" fallback={null} />
+              <OrgSquareLogo org={org} wideInsetClassName="p-1" fallback={<OrgInitial org={org} />} />
             </div>
           ) : (
             <img
@@ -493,6 +498,15 @@ function DashLeftMenu() {
               })()}
             </HoverMenu>
             </div>
+            {showPaths && (
+              <MenuLink
+                href="/dash/paths"
+                icon={<Steps size={20} weight="fill" />}
+                label={t('paths.title')}
+                isCollapsed={isCollapsed}
+                active={isActivePath('/dash/paths')}
+              />
+            )}
             {showLibrary && (
               <MenuLink
                 href="/dash/library"
@@ -518,6 +532,15 @@ function DashLeftMenu() {
                 label={t('podcasts.podcasts')}
                 isCollapsed={isCollapsed}
                 active={isActivePath('/dash/podcasts')}
+              />
+            )}
+            {showLiveSessions && (
+              <MenuLink
+                href="/dash/live-sessions"
+                icon={<VideoCamera size={20} weight="fill" />}
+                label={t('live_sessions.title')}
+                isCollapsed={isCollapsed}
+                active={isActivePath('/dash/live-sessions')}
               />
             )}
             {showBoards && (
@@ -847,7 +870,7 @@ function DashLeftMenu() {
             </HoverMenu>
 
             {/* Disabled features shown in an "Other" hover menu */}
-            {(!showCommunities || !showPodcasts || !showBoards || !showPlaygrounds || !showPayments) && (
+            {(!showPaths || !showCommunities || !showPodcasts || !showLiveSessions || !showBoards || !showPlaygrounds || !showPayments) && (
               <HoverMenu
                 content={
                   <HoverMenuContent className="w-64">
@@ -858,6 +881,14 @@ function DashLeftMenu() {
                       </span>
                     </HoverMenuLabel>
                     <HoverMenuSeparator />
+                    {!showPaths && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/paths" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <Steps size={16} weight="fill" />
+                          <span className="flex items-center">{t('paths.title')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
                     {!showCommunities && (
                       <HoverMenuItem asChild>
                         <Link href="/dash/communities" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
@@ -871,6 +902,14 @@ function DashLeftMenu() {
                         <Link href="/dash/podcasts" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
                           <Headphones size={16} weight="fill" />
                           <span>{t('podcasts.podcasts')}</span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
+                    {!showLiveSessions && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/live-sessions" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <VideoCamera size={16} weight="fill" />
+                          <span>{t('live_sessions.title')}</span>
                         </Link>
                       </HoverMenuItem>
                     )}

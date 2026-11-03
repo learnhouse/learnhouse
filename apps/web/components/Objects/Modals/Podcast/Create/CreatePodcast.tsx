@@ -195,7 +195,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
               ) : (
                 <img
                   src="/empty_thumbnail.png"
-                  className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200"
+                  className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200 object-cover"
                 />
               )}
               <div className="flex justify-center items-center space-x-2">

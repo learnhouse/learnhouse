@@ -56,6 +56,15 @@ export const queryKeys = {
     analytics: (uuid: string) => ['assignment', uuid, 'analytics'] as const,
     allSubmissions: (uuid: string) => ['assignment', uuid, 'submissions'] as const,
   },
+  editorTemplates: {
+    list: (orgId: number) => ['editor-templates', orgId] as const,
+  },
+  dynamicOptions: {
+    detail: (activityUuid: string) => ['dynamic-options', activityUuid] as const,
+  },
+  editorVariables: {
+    list: (orgId: number) => ['editor-variables', orgId] as const,
+  },
   usergroups: {
     list: (orgId: number) => ['usergroups', orgId] as const,
     resources: (ugId: string, orgId: number) => ['usergroup', ugId, 'resources', orgId] as const,
@@ -75,6 +84,30 @@ export const queryKeys = {
     detail: (uuid: string) => ['podcast', uuid] as const,
     meta: (uuid: string) => ['podcast', uuid, 'meta'] as const,
     episodes: (uuid: string) => ['podcast', uuid, 'episodes'] as const,
+  },
+  paths: {
+    list: (orgId: number) => ['paths', orgId] as const,
+    detail: (uuid: string) => ['path', uuid] as const,
+    learners: (uuid: string) => ['path', uuid, 'learners'] as const,
+    mine: (orgId: number) => ['paths', orgId, 'mine'] as const,
+    forCourse: (courseUuid: string) => ['paths', 'course', courseUuid] as const,
+    certificate: (uuid: string) => ['pathCertificate', uuid] as const,
+    myCertificates: () => ['pathCertificates', 'mine'] as const,
+  },
+  calendar: {
+    all: ['calendar'] as const,
+    events: (orgId: number, start: string, end: string) => ['calendar', orgId, start, end] as const,
+  },
+  liveSessions: {
+    list: (orgId: number, scope: string, extra?: string) => ['liveSessions', orgId, scope, extra ?? ''] as const,
+    all: ['liveSessions'] as const,
+    detail: (uuid: string) => ['liveSession', uuid] as const,
+    now: (orgId: number) => ['liveSessions', orgId, 'now'] as const,
+    recordings: (uuid: string) => ['liveSession', uuid, 'recordings'] as const,
+    attendance: (uuid: string) => ['liveSession', uuid, 'attendance'] as const,
+    polls: (uuid: string) => ['liveSession', uuid, 'polls'] as const,
+    settings: (orgId: number) => ['liveSessions', orgId, 'settings'] as const,
+    activity: (activityUuid: string) => ['liveSession', 'activity', activityUuid] as const,
   },
   ai: {
     ragSessions: (orgSlug: string) => ['ai', 'rag', 'sessions', orgSlug] as const,
@@ -111,5 +144,14 @@ export const queryKeys = {
     offers: (orgId: number) => ['payments', orgId, 'offers'] as const,
     customers: (orgId: number) => ['payments', orgId, 'customers'] as const,
     groups: (orgId: number) => ['payments', orgId, 'groups'] as const,
+    stats: (orgId: number) => ['payments', orgId, 'stats'] as const,
+    sellable: (orgId: number) => ['payments', orgId, 'sellable'] as const,
+    included: (orgId: number, offerId: number) => ['payments', orgId, 'included', offerId] as const,
+    access: (orgId: number, filters: object) => ['payments', orgId, 'access', filters] as const,
+    promotionCodes: (orgId: number) => ['payments', orgId, 'promotionCodes'] as const,
+    paywall: (orgId: number, resourceUuid: string) => ['payments', orgId, 'paywall', resourceUuid] as const,
+    offerUserGroups: (orgId: number, offerId: number) => ['payments', orgId, 'offerUserGroups', offerId] as const,
+    courseAccess: (orgId: number, courseUuid: string) => ['payments', orgId, 'courseAccess', courseUuid] as const,
+    myCourseAccess: (orgId: number, courseUuid: string) => ['payments', orgId, 'myCourseAccess', courseUuid] as const,
   },
 }

@@ -10,8 +10,10 @@ import {
   Cube,
   FolderSimple,
   Headphones,
+  VideoCamera,
   ChartBar,
   Code,
+  Steps,
 } from '@phosphor-icons/react'
 
 export interface DashboardMenuItem {
@@ -45,6 +47,13 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     labelKey: 'common.assignments',
   },
   {
+    id: 'paths',
+    href: '/dash/paths',
+    icon: Steps,
+    labelKey: 'paths.title',
+    featureKey: 'paths',
+  },
+  {
     id: 'library',
     href: '/dash/library',
     icon: FolderSimple,
@@ -64,6 +73,13 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     icon: Headphones,
     labelKey: 'podcasts.podcasts',
     featureKey: 'podcasts',
+  },
+  {
+    id: 'live_sessions',
+    href: '/dash/live-sessions',
+    icon: VideoCamera,
+    labelKey: 'live_sessions.title',
+    featureKey: 'live_sessions',
   },
   {
     id: 'boards',

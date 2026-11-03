@@ -8,6 +8,7 @@ import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { getUriWithOrg } from '@services/config/config'
 import { cn } from '@/lib/utils'
 import { usePlan } from '@components/Hooks/usePlan'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 interface AuthBrandingPanelProps {
   org: any
@@ -32,10 +33,9 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
   const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral'
   const withUtm = (url: string) => (url ? `${url}${UNSPLASH_UTM}` : '')
 
-  // Check if org has enterprise plan - hide LearnHouse branding for enterprise users
-  // In OSS mode, always show branding regardless of plan
+  // Pro+ and EE are white-labelled; OSS keeps the LearnHouse mark
   const plan = usePlan()
-  const isEnterprise = plan === 'enterprise'
+  const isWhiteLabel = isWhiteLabelPlan(plan)
 
   // No org context (the generic apex login) → use the platform's auth
   // illustration instead of the flat gradient.
@@ -142,9 +142,9 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
 
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full p-10">
-          {/* Top bar with LearnHouse lrn.svg logo - hidden for enterprise users
+          {/* Top bar with LearnHouse lrn.svg logo - hidden for white-label plans
               and for the no-org apex panel (platform shows no logo on the image). */}
-          {!isEnterprise && !noOrg && (
+          {!isWhiteLabel && !noOrg && (
             <div className="login-topbar">
               <Link prefetch href="https://learnhouse.app" target="_blank">
                 <img
@@ -187,14 +187,20 @@ export default function AuthBrandingPanel({ org, welcomeText, title, subtitle }:
                         org={org}
                         wideInsetClassName="p-3"
                         fallback={
-                          <Image
-                            quality={100}
-                            width={96}
-                            height={96}
-                            src={learnhouseIcon}
-                            alt="LearnHouse"
-                            className="object-contain"
-                          />
+                          isWhiteLabel ? (
+                            <span className="text-4xl font-black text-gray-800">
+                              {(org?.name || '?').charAt(0).toUpperCase()}
+                            </span>
+                          ) : (
+                            <Image
+                              quality={100}
+                              width={96}
+                              height={96}
+                              src={learnhouseIcon}
+                              alt="LearnHouse"
+                              className="object-contain"
+                            />
+                          )
                         }
                       />
                     </div>

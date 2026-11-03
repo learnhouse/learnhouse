@@ -41,6 +41,7 @@ from src.db.users import (
     UserRead,
 )
 from src.services.trail.trail import _build_trail_read
+from src.core.ee_hooks import notify_ee_learner_progress
 from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
     is_course_fully_completed,
@@ -565,6 +566,7 @@ async def unenroll_user(
 
     await db_session.delete(trail_run)
     await db_session.commit()
+    notify_ee_learner_progress(user_id, course.id)
 
     return {"detail": "User unenrolled successfully"}
 
@@ -767,6 +769,8 @@ async def complete_activity(
             properties={"course_uuid": course.course_uuid},
         )
 
+    notify_ee_learner_progress(user_id, course.id)
+
     return {
         "activity_uuid": activity_uuid,
         "user_id": user_id,
@@ -812,6 +816,7 @@ async def uncomplete_activity(
         # stop counting it as completed.
         if course.id:
             await sync_trailrun_status(user_id, course.id, db_session)
+        notify_ee_learner_progress(user_id, course.id)
 
     return {
         "activity_uuid": activity_uuid,
@@ -945,6 +950,8 @@ async def complete_course(
             user_id=user_id,
             properties={"course_uuid": course.course_uuid},
         )
+
+    notify_ee_learner_progress(user_id, course.id)
 
     return {
         "course_uuid": course_uuid,
@@ -1980,6 +1987,7 @@ async def reset_user_progress(
         db_session.add(trail_run)
 
     await db_session.commit()
+    notify_ee_learner_progress(user_id, course.id)
 
     return {
         "course_uuid": course_uuid,
@@ -2691,6 +2699,8 @@ async def bulk_unenroll_users(
             )
         )
         await db_session.commit()
+        for uid in unenrolled:
+            notify_ee_learner_progress(uid, course.id)
 
     return {
         "unenrolled": unenrolled,

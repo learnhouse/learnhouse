@@ -26,7 +26,7 @@ from src.security.auth import (
     get_authenticated_user,
     revoke_user_sessions_before,
 )
-from src.security.session_context import carry_session_claims
+from src.security.session_context import carry_session_claims, refuse_lms_session
 from src.security.security import security_verify_password
 from src.services.auth.mfa import (
     build_provisioning_uri,
@@ -232,6 +232,7 @@ async def api_mfa_setup(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+    refuse_lms_session()
     _verify_password_if_set(user, form.password)
 
     existing = await get_user_mfa(db_session, user.id)
@@ -289,6 +290,7 @@ async def api_mfa_confirm(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+    refuse_lms_session()
     _check_mfa_rate_limit(request, "confirm", str(user.id))
 
     mfa = await get_user_mfa(db_session, user.id)
@@ -351,6 +353,7 @@ async def api_mfa_disable(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+    refuse_lms_session()
     _check_mfa_rate_limit(request, "disable", str(user.id))
     _verify_password_if_set(user, form.password)
 
@@ -397,6 +400,7 @@ async def api_mfa_regenerate_backup_codes(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+    refuse_lms_session()
     _check_mfa_rate_limit(request, "regen", str(user.id))
 
     mfa = await get_user_mfa(db_session, user.id)

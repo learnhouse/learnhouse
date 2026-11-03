@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import AccountGeneral from '@components/Objects/Account/subpages/AccountGeneral'
 import AccountProfile from '@components/Objects/Account/subpages/AccountProfile'
 import AccountSecurity from '@components/Objects/Account/subpages/AccountSecurity'
-import AccountPurchases from '@components/Objects/Account/subpages/AccountPurchases'
+import AccountPurchases from '@ee/components/Payments/AccountPurchases'
 import OrgEditMCP from '@components/Dashboard/Pages/Org/OrgEditMCP/OrgEditMCP'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 

@@ -11,6 +11,7 @@ from typing import Union
 from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, SuperadminAPITokenUser
@@ -78,4 +79,5 @@ async def require_author_may_still_post(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
     await require_community_participant(current_user, community, db_session)

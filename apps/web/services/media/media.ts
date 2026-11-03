@@ -1,4 +1,4 @@
-import { getBackendUrl, getConfig } from '@services/config/config'
+import { getBackendUrl, getConfig, isOnCustomDomain } from '@services/config/config'
 
 function getMediaUrl() {
   const raw = getConfig('NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL') || getBackendUrl();
@@ -8,6 +8,11 @@ function getMediaUrl() {
 }
 
 function getApiUrl() {
+  // On a custom domain the session cookie belongs to that host and is
+  // SameSite=Lax, so a stream request sent straight to the backend arrives
+  // without it and private media answers 401. Stay same-origin and go through
+  // the /api/v1 proxy, like getAPIUrl() does for every other call.
+  if (isOnCustomDomain()) return '/';
   // Normalize so URL building is correct whether or not the configured backend
   // URL carries a trailing slash (otherwise we'd get "...ioapi/v1/...").
   const base = getBackendUrl();
@@ -142,6 +147,14 @@ export function getFolderThumbnailMediaDirectory(
 ) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/folders/${folderUUID}/thumbnails/${fileId}`
   return uri
+}
+
+export function getPathThumbnailMediaDirectory(
+  orgUUID: string,
+  pathUUID: string,
+  fileId: string
+) {
+  return `${getMediaUrl()}content/orgs/${orgUUID}/paths/${pathUUID}/thumbnails/${fileId}`
 }
 
 export function getBoardThumbnailMediaDirectory(
@@ -362,4 +375,8 @@ export function getPodcastAudioStreamUrl(
   filename: string
 ) {
   return `${getApiUrl()}api/v1/stream/audio/${orgUUID}/${podcastUUID}/${episodeUUID}/${filename}`
+}
+
+export function getLiveRecordingMediaUrl(contentPath: string) {
+  return `${getMediaUrl()}content/${contentPath}`
 }

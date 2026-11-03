@@ -214,6 +214,10 @@ async def _verify_episode_access(
             raise HTTPException(status_code=401, detail="Authentication required")
         raise HTTPException(status_code=403, detail="Access denied")
 
+    # A sold podcast's audio is for its buyers.
+    from src.core.ee_hooks import require_ee_resource_paid_access
+    await require_ee_resource_paid_access(request, db_session, current_user, podcast.podcast_uuid)
+
     if not (podcast.published and episode.published):
         can_edit = (await check_resource_access(
             request, db_session, current_user, podcast.podcast_uuid,

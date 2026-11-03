@@ -25,6 +25,7 @@ import {
   SquaresFour,
   ChalkboardSimple,
   Signpost,
+  CalendarDots,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import {
@@ -49,6 +50,7 @@ import {
 } from '@components/ui/tooltip'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
+import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
@@ -89,6 +91,7 @@ export const OrgMenu = (props: any) => {
   const config = org?.config?.config
   const primaryColor = config?.customization?.general?.color || config?.general?.color || ''
   const colors = getMenuColorClasses(primaryColor)
+  const showBranding = useShowLearnHouseBranding()
 
   // Filter dashboard menu items by resolved_features from API
   const rf = config?.resolved_features
@@ -154,18 +157,19 @@ export const OrgMenu = (props: any) => {
       >
         <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center space-x-5 md:w-auto w-full">
-            <div className="logo flex md:w-auto w-full justify-center">
-              <Link href={getUriWithOrg(orgslug, '/')}>
+            <div className="logo flex shrink-0 md:w-auto w-full justify-center">
+              <Link href={getUriWithOrg(orgslug, '/')} className="shrink-0">
                 <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center">
                   {org?.logo_image ? (
                     <img
                       src={`${getOrgLogoMediaDirectory(org.org_uuid, org?.logo_image)}`}
-                      alt="Learnhouse"
-                      style={{ width: 'auto', height: '100%' }}
-                      className="rounded-md"
+                      alt={org?.name || 'Logo'}
+                      className="h-full w-auto max-w-[180px] shrink-0 object-contain rounded-md"
                     />
-                  ) : (
+                  ) : showBranding ? (
                     <LearnHouseLogo logoFilter={colors.logoFilter} />
+                  ) : (
+                    <span className={`text-lg font-bold truncate max-w-[200px] ${colors.text}`}>{org?.name}</span>
                   )}
                 </div>
               </Link>
@@ -198,6 +202,28 @@ export const OrgMenu = (props: any) => {
                     <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
                       {t('courses.progress')}
                       <Keys keys="g t" />
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </AuthenticatedClientElement>
+            {/* Calendar */}
+            <AuthenticatedClientElement checkMethod="authentication">
+              <div className="hidden md:flex">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={getUriWithOrg(orgslug, '/calendar')}
+                        className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                        aria-label={t('calendar.title')}
+                      >
+                        <CalendarDots size={20} weight="fill" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="flex items-center gap-2 text-xs">
+                      {t('calendar.title')}
+                      <Keys keys="g e" />
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

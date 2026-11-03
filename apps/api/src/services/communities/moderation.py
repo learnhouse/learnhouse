@@ -37,6 +37,11 @@ BASE_NODE_TYPES = frozenset(
     }
 )
 RICH_NODE_TYPES = frozenset({"youtube"})
+# "#community" tags: an inline pointer to another community, shown as a chip
+# with a hover card. Only the uuid and a display name are stored.
+COMMUNITY_TAG_NODE = "communityTag"
+COMMUNITY_UUID_PATTERN = re.compile(r"community_[A-Za-z0-9-]{1,64}")
+MAX_COMMUNITY_TAG_NAME = 100
 ALLOWED_MARK_TYPES = frozenset({"bold", "italic", "strike", "code", "link", "underline"})
 ALLOWED_LINK_SCHEMES = frozenset({"http", "https", "mailto"})
 YOUTUBE_HOSTS = frozenset(
@@ -112,6 +117,18 @@ def _walk_content_node(node: Any, allow_rich: bool, content_type: str) -> None:
                     "Only YouTube video links can be embedded.",
                     "MODERATION_EMBED_NOT_ALLOWED",
                 )
+    elif node_type == COMMUNITY_TAG_NODE:
+        attrs = node.get("attrs") or {}
+        uuid, name = attrs.get("communityUuid"), attrs.get("name")
+        if (
+            not isinstance(uuid, str) or not COMMUNITY_UUID_PATTERN.fullmatch(uuid)
+            or not isinstance(name, str) or len(name) > MAX_COMMUNITY_TAG_NAME
+            or set(attrs) - {"communityUuid", "name"}
+        ):
+            raise _rich_content_error(
+                f"Your {content_type} contains a community tag that is not valid.",
+                "MODERATION_UNSUPPORTED_CONTENT",
+            )
     elif node_type not in BASE_NODE_TYPES:
         raise _rich_content_error(
             f"Your {content_type} contains content that is not supported.",
@@ -322,6 +339,10 @@ def extract_text_from_tiptap(node: Any) -> str:
     if isinstance(node, dict):
         if node.get("type") == "text":
             return node.get("text", "")
+        # A community tag's display name is free text too: moderate it.
+        if node.get("type") == COMMUNITY_TAG_NODE:
+            name = (node.get("attrs") or {}).get("name")
+            return name if isinstance(name, str) else ""
 
         # Recursively process content array
         content = node.get("content", [])

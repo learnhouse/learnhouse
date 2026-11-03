@@ -12,6 +12,7 @@ class ActivityTypeEnum(str, Enum):
     TYPE_ASSIGNMENT = "TYPE_ASSIGNMENT"
     TYPE_CUSTOM = "TYPE_CUSTOM"
     TYPE_SCORM = "TYPE_SCORM"
+    TYPE_LIVE_SESSION = "TYPE_LIVE_SESSION"
 
 
 class ActivitySubTypeEnum(str, Enum):
@@ -33,6 +34,8 @@ class ActivitySubTypeEnum(str, Enum):
     # SCORM
     SUBTYPE_SCORM_12 = "SUBTYPE_SCORM_12"
     SUBTYPE_SCORM_2004 = "SUBTYPE_SCORM_2004"
+    # Live session
+    SUBTYPE_LIVE_SESSION = "SUBTYPE_LIVE_SESSION"
 
 
 class ActivityLockType(str, Enum):
@@ -107,3 +110,7 @@ class ActivityRead(ActivityBase):
     last_modified_by_username: Optional[str] = None
     # Computed per-request: true if current user cannot access this activity.
     is_locked: bool = False
+    # Set when the lock comes from the course's drip schedule (see
+    # services/courses/drip.py): when the parent chapter opens and why it waits.
+    drip_unlock_at: Optional[str] = None
+    drip_reason: Optional[str] = None

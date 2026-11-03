@@ -23,7 +23,7 @@ export type PlanLevel = 'free' | 'personal' | 'personal-family' | 'standard' | '
 export const PLAN_HIERARCHY: PlanLevel[] = ['free', 'personal', 'personal-family', 'standard', 'pro', 'enterprise']
 
 // Features blocked in OSS mode; they require EE or SaaS/enterprise plan
-const OSS_BLOCKED_FEATURES = new Set(['sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm'])
+const OSS_BLOCKED_FEATURES = new Set(['sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm', 'lti', 'live_sessions'])
 
 /**
  * Check if the current plan meets or exceeds the required plan level.
@@ -55,4 +55,16 @@ export function isFeatureAvailable(featureKey: string, _currentPlan?: PlanLevel)
   // SaaS: resolved_features from the API is the source of truth.
   // Return true here; callers gate on resolved_features separately.
   return true
+}
+
+/**
+ * Pro and above are white-labelled: no LearnHouse marks anywhere the org's
+ * learners or staff can see them. EE is white-label by license; OSS never is.
+ */
+export function isWhiteLabelPlan(
+  plan: PlanLevel,
+  mode: string = getDeploymentMode()
+): boolean {
+  if (mode === 'ee') return true
+  return plan !== 'oss' && planMeetsRequirement(plan, 'pro')
 }

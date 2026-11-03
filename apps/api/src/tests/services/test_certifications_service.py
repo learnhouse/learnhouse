@@ -1355,6 +1355,13 @@ class TestCertificateLookup:
         )
         assert result["certification"].certification_uuid == certification.certification_uuid
         assert result["course"]["course_uuid"] == course.course_uuid
+        # The holder is named (the certificate prints it) and nothing more.
+        assert result["user"] == {
+            "user_uuid": "user_regular",
+            "username": "regular",
+            "first_name": "Regular",
+            "last_name": "User",
+        }
 
     @pytest.mark.asyncio
     async def test_get_certificate_by_user_certification_uuid_missing_certificate(

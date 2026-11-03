@@ -5,6 +5,7 @@ import logging
 from sqlmodel import select, or_, and_, func
 from sqlalchemy import true as sa_true
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.ee_hooks import notify_ee_course_content_changed
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
@@ -1015,6 +1016,7 @@ async def update_course(
     await db_session.commit()
     await db_session.refresh(course)
     index_course(course.id)
+    notify_ee_course_content_changed(course.id)
 
     # Dispatch webhook if published state changed
     if course_object.published is not None and course.published != old_published:

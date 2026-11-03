@@ -34,6 +34,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.services.orgs.org_config_lookup import get_session_org_config
 from src.security.session_context import (
     AUTH_METHOD_API_TOKEN,
+    AUTH_METHOD_LTI,
     POLICY_AUTH_METHODS,
     SessionProvenance,
     get_session_provenance,
@@ -139,6 +140,12 @@ async def evaluate_org_auth(
             # leaves session sharing on: sharing lets sessions in, it never lets
             # one org's session out into another org.
             domain_bound = provenance.custom_domain and provenance.org_id is not None
+            # An LTI launch session is held to the org that registered the LMS
+            # the same way: an LMS that org runs must never sign anyone in to
+            # their other organizations.
+            domain_bound = domain_bound or (
+                provenance.amr == AUTH_METHOD_LTI and provenance.org_id is not None
+            )
 
             # Fast path: default config (all methods, sharing on) is a pure no-op,
             # so unmodified orgs (and every existing test that never sets
@@ -156,6 +163,13 @@ async def evaluate_org_auth(
                 # org) are cross-org by design.
                 is_api_token = provenance.amr == AUTH_METHOD_API_TOKEN
                 cross_org_token = is_api_token and provenance.org_id is None
+                # An LTI launch session is admitted by the org that registered
+                # the LMS (sorg): registering the platform is that org's
+                # opt-in. Anywhere else it is held to the policy like any
+                # other session.
+                lti_home_org = (
+                    provenance.amr == AUTH_METHOD_LTI and provenance.org_id == org_id
+                )
                 allowed = set(policy.allowed_auth_methods)
                 # A session with no ``amr`` means "we don't know how this
                 # user signed in", not "they used a forbidden method".
@@ -174,7 +188,7 @@ async def evaluate_org_auth(
                 #
                 # A session that positively names a method outside the
                 # allow-list is refused immediately, grace or not.
-                if not is_api_token and policy.method_restricted and (
+                if not is_api_token and not lti_home_org and policy.method_restricted and (
                     provenance.amr not in allowed
                     if provenance.amr is not None
                     else not _legacy_session_within_grace(provenance)

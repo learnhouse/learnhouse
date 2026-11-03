@@ -23,6 +23,7 @@ import { queryKeys } from '@/lib/query/keys'
 import toast from 'react-hot-toast'
 import { useState, useCallback } from 'react'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 export function CourseOverviewTop({
   params,
@@ -173,7 +174,7 @@ export function CourseOverviewTop({
             className="shrink-0"
           >
             {courseStructure?.thumbnail_image ? (
-              <img
+              <ThumbnailImage
                 className="w-[72px] sm:w-[100px] h-[41px] sm:h-[57px] rounded-md drop-shadow-md object-cover"
                 src={`${getCourseThumbnailMediaDirectory(
                   org?.org_uuid,
@@ -185,7 +186,7 @@ export function CourseOverviewTop({
             ) : (
               <Image
                 width={100}
-                className="w-[72px] sm:w-[100px] h-[41px] sm:h-[57px] rounded-md drop-shadow-md"
+                className="w-[72px] sm:w-[100px] h-[41px] sm:h-[57px] rounded-md drop-shadow-md object-cover"
                 src={EmptyThumbnailImage}
                 alt={courseStructure?.name || ''}
               />

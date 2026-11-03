@@ -13,6 +13,7 @@ Tests cover:
 - Regex-based origin matching
 """
 
+import pytest
 import asyncio
 import re
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -32,11 +33,12 @@ def _make_mock_config(
     return config
 
 
-def _make_request(method="POST", headers=None):
+def _make_request(method="POST", headers=None, path="/api/v1/courses/"):
     """Create a mock Starlette Request."""
     req = MagicMock()
     req.method = method
     req.headers = headers or {}
+    req.url.path = path
     return req
 
 
@@ -207,6 +209,27 @@ class TestCSRFExemptions:
         req = _make_request(headers={"x-platform-key": "some_platform_key"})
         with patch.dict("os.environ", {"LEARNHOUSE_PLATFORM_API_KEY": "some_platform_key"}):
             assert mw._is_csrf_exempt(req) is True
+
+    @pytest.mark.parametrize("path", [
+        "/api/v1/lti/ltiplatform_abc123/login",
+        "/api/v1/lti/ltiplatform_abc123/launch",
+    ])
+    def test_lti_launch_posts_exempt(self, path):
+        """An LMS posts the LTI login and launch cross-site; the signed launch
+        authorizes them, not the session cookie."""
+        mw = self._make_middleware()
+        assert mw._is_csrf_exempt(_make_request(path=path)) is True
+
+    @pytest.mark.parametrize("path", [
+        "/api/v1/lti/session/exchange",
+        "/api/v1/lti/admin/1/platforms",
+        "/api/v1/lti/link/somecode",
+        "/api/v1/lti/ltiplatform_abc123/launch/extra",
+        "/api/v1/courses/lti/x/launch",
+    ])
+    def test_other_lti_routes_not_exempt(self, path):
+        mw = self._make_middleware()
+        assert mw._is_csrf_exempt(_make_request(path=path)) is False
 
     def test_no_auth_not_exempt(self):
         middleware = self._make_middleware()
