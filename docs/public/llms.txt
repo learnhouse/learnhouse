@@ -6,67 +6,132 @@ LearnHouse is an open-source platform for creating and delivering modern educati
 
 ## Docs
 
-- [Getting Started](https://docs.learnhouse.app/getting-started): Set up your first organization and course
-  - [Quickstart](https://docs.learnhouse.app/getting-started/quickstart): Get up and running in minutes
-  - [Key Concepts](https://docs.learnhouse.app/getting-started/key-concepts): Organizations, courses, chapters, activities, and trails
-  - [Cloud vs Self Hosting](https://docs.learnhouse.app/getting-started/cloud-vs-self-hosting): Choose the right deployment model
+- [Getting Started](https://docs.learnhouse.app/getting-started): LearnHouse is an open-source learning management system for creating and delivering courses
+  - [Quickstart](https://docs.learnhouse.app/getting-started/quickstart): There are two ways to start using LearnHouse: the managed LearnHouse Cloud or a self-hosted deployment
+  - [Cloud vs Self Hosting](https://docs.learnhouse.app/getting-started/cloud-vs-self-hosting): LearnHouse is open-source software
+  - [Key Concepts](https://docs.learnhouse.app/getting-started/key-concepts): This page introduces the core building blocks of LearnHouse and how they fit together
 
-- [Platform](https://docs.learnhouse.app/platform): Complete guide to LearnHouse features
-  - [Courses](https://docs.learnhouse.app/platform/courses): Creating and managing courses
-    - [Chapters & Activities](https://docs.learnhouse.app/platform/courses/chapters-and-activities): Structuring course content
-    - [Collections](https://docs.learnhouse.app/platform/courses/collections): Grouping courses together
-    - [Trails](https://docs.learnhouse.app/platform/courses/trails): Student progression tracking
-  - [Editor](https://docs.learnhouse.app/platform/editor): Block-based WYSIWYG content editor
-    - [Blocks](https://docs.learnhouse.app/platform/editor/blocks): Available editor block types
-  - [AI Features](https://docs.learnhouse.app/platform/ai): Built-in AI assistant
-    - [For Students](https://docs.learnhouse.app/platform/ai/for-students): AI chat, explanations, quizzes
-    - [For Teachers](https://docs.learnhouse.app/platform/ai/for-teachers): AI content generation tools
-  - [Users](https://docs.learnhouse.app/platform/users): User management
-    - [Roles & Permissions](https://docs.learnhouse.app/platform/users/roles-and-permissions): Admin, teacher, student roles
-    - [Authentication](https://docs.learnhouse.app/platform/users/authentication): Login methods and OAuth
-  - [Organizations](https://docs.learnhouse.app/platform/organizations): Multi-org management
-    - [Settings](https://docs.learnhouse.app/platform/organizations/settings): Organization configuration
-    - [Multi-Tenancy](https://docs.learnhouse.app/platform/organizations/multi-tenancy): Running multiple orgs
-  - [Discussions](https://docs.learnhouse.app/platform/discussions): Discussion forums
-    - [Comments](https://docs.learnhouse.app/platform/discussions/comments): Comment system
-  - [Assignments](https://docs.learnhouse.app/platform/assignments): Student assignments
-    - [Grading](https://docs.learnhouse.app/platform/assignments/grading): Grading system
-  - [Playgrounds](https://docs.learnhouse.app/platform/playgrounds): Interactive code playgrounds
-  - [Boards](https://docs.learnhouse.app/platform/boards): Kanban-style boards
-  - [Analytics](https://docs.learnhouse.app/platform/analytics): Usage analytics
-  - [Certifications](https://docs.learnhouse.app/platform/certifications): Course certifications
-  - [Search](https://docs.learnhouse.app/platform/search): Full-text search
-  - [Podcasts](https://docs.learnhouse.app/platform/podcasts): Podcast support
-  - [Code Execution](https://docs.learnhouse.app/platform/code-execution): Sandboxed code execution
+- [Platform](https://docs.learnhouse.app/platform): This section documents the features of the LearnHouse platform for learners, teachers and administrators
+  - [Courses](https://docs.learnhouse.app/platform/courses): Courses are the core content unit in LearnHouse
+    - [Chapters & Activities](https://docs.learnhouse.app/platform/courses/chapters-and-activities): Courses follow a simple hierarchy: Course → Chapters → Activities
+    - [Course Settings](https://docs.learnhouse.app/platform/courses/settings): Open a course from Courses in the dashboard
+    - [Drip Content](https://docs.learnhouse.app/platform/courses/drip-content): Drip content releases a course one chapter at a time instead of all at once
+    - [AI Course Creator](https://docs.learnhouse.app/platform/courses/ai-course-creator): The AI Course Creator plans a course with you in a chat, then writes the content of each activity
+    - [Import & Export](https://docs.learnhouse.app/platform/courses/import-export): LearnHouse can move courses between organizations and instances, bring them in from other learning platforms, and build a course from a fold
+    - [AI Video Captions](https://docs.learnhouse.app/platform/courses/video-captions): LearnHouse can automatically generate closed captions (subtitles) for hosted video activities and translate them into any languages you choo
+    - [Taking a Course](https://docs.learnhouse.app/platform/courses/taking-a-course): This page describes what learners see when they follow a course
+    - [Trails](https://docs.learnhouse.app/platform/courses/trails): A Trail is a learner's record of progress across the courses they have started
+    - [Library](https://docs.learnhouse.app/platform/courses/library): The Library is where you organize your organization's content into folders, like a shared drive
+  - [Learning Paths](https://docs.learnhouse.app/platform/paths): A learning path is an ordered set of courses with required and elective courses and its own certificate
+  - [Editor](https://docs.learnhouse.app/platform/editor): Dynamic Page activities are written in a block-based editor
+    - [Blocks](https://docs.learnhouse.app/platform/editor/blocks): Type / anywhere in a page to open the block menu
+    - [Dynamic Content & Templates](https://docs.learnhouse.app/platform/editor/dynamic-content): Variables, conditional blocks and community tags make one page read differently for every learner; templates reuse blocks and pages
+    - [H5P](https://docs.learnhouse.app/platform/editor/h5p): The H5P block puts an interactive H5P activity (a course presentation, an interactive video, a drag-and-drop, a branching scenario) inside a
+  - [Assignments](https://docs.learnhouse.app/platform/assignments): An assignment is an activity inside a course chapter that learners hand work in for
+    - [Task Types](https://docs.learnhouse.app/platform/assignments/task-types): An assignment is made of one or more tasks
+    - [Grading & Submissions](https://docs.learnhouse.app/platform/assignments/grading): Each task is scored out of 100
+    - [Analytics](https://docs.learnhouse.app/platform/assignments/analytics): Each assignment has an Analytics tab in the dashboard, next to Editor and Submissions
+    - [Formative Assessment](https://docs.learnhouse.app/platform/assignments/formative): A formative assignment is handed in and never marked
+  - [Code Execution](https://docs.learnhouse.app/platform/code-execution): LearnHouse runs learners' code in a sandbox through Judge0
+  - [Playgrounds](https://docs.learnhouse.app/platform/playgrounds): A playground is an interactive web page (a simulation, a visualization, a small game or exercise) that AI writes from your description
+  - [Communities](https://docs.learnhouse.app/platform/discussions): A community is a discussion space inside your organization
+    - [Discussions & Replies](https://docs.learnhouse.app/platform/discussions/comments): Click New Discussion in a community
+    - [Managing Communities](https://docs.learnhouse.app/platform/discussions/managing): Open a community from Communities in the dashboard to change its settings
+  - [Boards](https://docs.learnhouse.app/platform/boards): Boards are shared, freeform canvases that several people edit at the same time, like a whiteboard
+  - [Podcasts](https://docs.learnhouse.app/platform/podcasts): Podcasts let you publish audio shows inside your organization
+  - [Calendar](https://docs.learnhouse.app/platform/calendar): The calendar shows each member their assignment deadlines, chapter releases, course updates, certificates, podcast episodes and live sessions
+  - [Certifications](https://docs.learnhouse.app/platform/certifications): A course can award a certificate to learners who complete it
+  - [Analytics](https://docs.learnhouse.app/platform/analytics): LearnHouse records what learners do (page views, enrollments, completions, submissions and more) and turns it into dashboards for admins
+    - [Analytics Dashboard](https://docs.learnhouse.app/platform/analytics/dashboard): Open Analytics in the dashboard sidebar to see organization-wide numbers
+    - [Course Analytics](https://docs.learnhouse.app/platform/analytics/course-analytics): Every course has its own analytics
+  - [Search](https://docs.learnhouse.app/platform/search): LearnHouse has one search that covers everything in your organization: courses, lessons, folders, communities, discussions, playgrounds, pod
+    - [Command Palette & Shortcuts](https://docs.learnhouse.app/platform/search/keyboard-shortcuts): Learners can move around a LearnHouse organization without a mouse
+  - [Payments](https://docs.learnhouse.app/platform/payments): Sell access to your courses with Stripe
+    - [Offers & Pricing](https://docs.learnhouse.app/platform/payments/offers): An offer is something learners can buy: access to one or more courses, for a one-time price or a subscription
+    - [Groups & Bundles](https://docs.learnhouse.app/platform/payments/groups): A payment group bundles several courses so that one offer unlocks them all
+    - [Store & Checkout](https://docs.learnhouse.app/platform/payments/enrollments): Your organization's store lives at /store
+  - [AI](https://docs.learnhouse.app/platform/ai): LearnHouse has AI features for both teachers and learners
+    - [For Students](https://docs.learnhouse.app/platform/ai/for-students): Learners have two AI assistants: Ask AI on each activity, and the Copilot for questions across courses
+    - [For Teachers](https://docs.learnhouse.app/platform/ai/for-teachers): These are the AI tools available when you build courses
+  - [Users & Access](https://docs.learnhouse.app/platform/users): Every person in LearnHouse has one account and can belong to several organizations
+    - [Members & Invites](https://docs.learnhouse.app/platform/users/members-and-invites): This page covers the Users, Signups & Invite Codes and Invite Members tabs under Users in the dashboard
+    - [User Groups](https://docs.learnhouse.app/platform/users/user-groups): User groups bundle members together so you can give them access to content in one step
+    - [Roles & Permissions](https://docs.learnhouse.app/platform/users/roles-and-permissions): Every member has exactly one role in each organization they belong to
+    - [Authentication](https://docs.learnhouse.app/platform/users/authentication): LearnHouse supports several ways to sign in
+    - [Two-Factor Authentication](https://docs.learnhouse.app/platform/users/two-factor): Two-factor authentication (2FA) asks for a one-time code from an authenticator app every time you sign in
+    - [Learner Analytics](https://docs.learnhouse.app/platform/users/learner-analytics): Learner analytics gathers everything one member has done in your organization on a single page: courses, assignments, code exercises, commun
+    - [Emails](https://docs.learnhouse.app/platform/users/emails): LearnHouse sends email for account and membership events
+  - [Organizations](https://docs.learnhouse.app/platform/organizations): An organization is the top-level tenant in LearnHouse
+    - [Settings](https://docs.learnhouse.app/platform/organizations/settings): Organization settings live under Organization in the dashboard (/dash/org/settings)
+    - [Landing Page](https://docs.learnhouse.app/platform/organizations/landing-page): By default, your organization's home page lists your courses and other content
+    - [Custom Domains](https://docs.learnhouse.app/platform/organizations/custom-domains): Serve your organization from your own domain, such as learn.mycompany.com, instead of the default LearnHouse address
+    - [SEO](https://docs.learnhouse.app/platform/organizations/seo): LearnHouse generates a sitemap and a robots.txt for your organization, and adds titles, descriptions and social sharing tags to your public 
+    - [Plans & Limits](https://docs.learnhouse.app/platform/organizations/plans): On LearnHouse Cloud, each organization is on a plan that decides which features it can use and how much
+    - [Multi-Tenancy](https://docs.learnhouse.app/platform/organizations/multi-tenancy): A LearnHouse instance can host one organization or many
+    - [Admin Dashboard](https://docs.learnhouse.app/platform/organizations/admin-dashboard): The admin dashboard at /admin is for whoever runs the LearnHouse instance
+  - [Automations](https://docs.learnhouse.app/platform/automations): LearnHouse pushes real-time events to your own systems and to no-code automation tools
+    - [Webhooks](https://docs.learnhouse.app/platform/automations/webhooks): Webhooks deliver real-time event notifications to any endpoint you control
+    - [Zapier](https://docs.learnhouse.app/platform/automations/zapier): LearnHouse ships the API that a Zapier integration needs: an auth test, a trigger catalogue, dropdown sources and REST Hook subscriptions
+    - [Event Catalogue](https://docs.learnhouse.app/platform/automations/events): Every event that can fire from LearnHouse, grouped by category
 
-- [Self Hosting](https://docs.learnhouse.app/self-hosting): Deploy on your own infrastructure
-  - [Installation](https://docs.learnhouse.app/self-hosting/installation): Install via the LearnHouse CLI
-    - [Requirements](https://docs.learnhouse.app/self-hosting/installation/requirements): System requirements
-    - [Quick Install](https://docs.learnhouse.app/self-hosting/installation/quick-install): Step-by-step install guide
-    - [CLI Reference](https://docs.learnhouse.app/self-hosting/installation/cli-reference): All CLI commands
-  - [Configuration](https://docs.learnhouse.app/self-hosting/configuration): Configure your instance
-    - [Environment Variables](https://docs.learnhouse.app/self-hosting/configuration/environment-variables): All env vars
-    - [SSL](https://docs.learnhouse.app/self-hosting/configuration/ssl): HTTPS and SSL setup
-    - [AI Setup](https://docs.learnhouse.app/self-hosting/configuration/ai-setup): Configure AI providers
-    - [Email](https://docs.learnhouse.app/self-hosting/configuration/email): Email delivery setup
-    - [Storage](https://docs.learnhouse.app/self-hosting/configuration/storage): S3 and filesystem storage
-  - [Maintenance](https://docs.learnhouse.app/self-hosting/maintenance): Keep your instance healthy
-    - [Backups](https://docs.learnhouse.app/self-hosting/maintenance/backups): Database backups
-    - [Updates](https://docs.learnhouse.app/self-hosting/maintenance/updates): Updating LearnHouse
-    - [Monitoring](https://docs.learnhouse.app/self-hosting/maintenance/monitoring): Health checks and monitoring
-    - [Troubleshooting](https://docs.learnhouse.app/self-hosting/maintenance/troubleshooting): Common issues
+- [Self Hosting](https://docs.learnhouse.app/self-hosting): LearnHouse can be self-hosted on your own infrastructure using the LearnHouse CLI
+  - [Installation](https://docs.learnhouse.app/self-hosting/installation): The LearnHouse CLI is the recommended and officially supported way to install and manage self-hosted LearnHouse instances
+    - [Requirements](https://docs.learnhouse.app/self-hosting/installation/requirements): Before installing LearnHouse, make sure your server meets the following requirements
+    - [Quick Install](https://docs.learnhouse.app/self-hosting/installation/quick-install): Follow these steps to install and start a self-hosted LearnHouse instance using the LearnHouse CLI
+    - [CLI Reference](https://docs.learnhouse.app/self-hosting/installation/cli-reference): Overview of the LearnHouse CLI commands for running a self-hosted instance
+  - [Configuration](https://docs.learnhouse.app/self-hosting/configuration): LearnHouse uses environment variables as its primary configuration method
+    - [Environment Variables](https://docs.learnhouse.app/self-hosting/configuration/environment-variables): This page is the deployment reference for LearnHouse environment variables
+    - [AI Setup](https://docs.learnhouse.app/self-hosting/configuration/ai-setup): LearnHouse includes AI-powered features for learning assistance and content editing
+    - [Email](https://docs.learnhouse.app/self-hosting/configuration/email): LearnHouse supports two email providers for transactional email delivery: Resend and SMTP
+    - [Content Storage](https://docs.learnhouse.app/self-hosting/configuration/storage): LearnHouse supports two storage backends for uploaded content such as images, videos, and documents
+    - [SSL & Domain](https://docs.learnhouse.app/self-hosting/configuration/ssl): Securing your LearnHouse instance with SSL is strongly recommended for production deployments
+  - [Maintenance](https://docs.learnhouse.app/self-hosting/maintenance): A self-hosted LearnHouse instance needs periodic maintenance
+    - [Updates](https://docs.learnhouse.app/self-hosting/maintenance/updates): Update LearnHouse regularly to get the latest features, bug fixes, and security patches
+    - [Backups](https://docs.learnhouse.app/self-hosting/maintenance/backups): Back up your LearnHouse data regularly
+    - [Monitoring](https://docs.learnhouse.app/self-hosting/maintenance/monitoring): Monitoring your self-hosted LearnHouse instance lets you catch issues before they affect your users
+    - [Troubleshooting](https://docs.learnhouse.app/self-hosting/maintenance/troubleshooting): This guide covers common issues with self-hosted LearnHouse instances and how to resolve them
 
-- [Developers](https://docs.learnhouse.app/developers): Architecture, API, and contributing
-  - [Architecture](https://docs.learnhouse.app/developers/architecture): System architecture
-    - [Backend](https://docs.learnhouse.app/developers/architecture/backend): FastAPI backend
-    - [Frontend](https://docs.learnhouse.app/developers/architecture/frontend): Next.js frontend
-    - [Services](https://docs.learnhouse.app/developers/architecture/services): Supporting services
-  - [API](https://docs.learnhouse.app/developers/api): REST API reference
-    - [Authentication](https://docs.learnhouse.app/developers/api/authentication): JWT and API tokens
-    - [Endpoints](https://docs.learnhouse.app/developers/api/endpoints): API endpoint reference
-  - [Contributing](https://docs.learnhouse.app/developers/contributing): How to contribute
-    - [Dev Environment](https://docs.learnhouse.app/developers/contributing/dev-environment): Development setup
-    - [Guidelines](https://docs.learnhouse.app/developers/contributing/guidelines): Contribution guidelines
+- [Developers](https://docs.learnhouse.app/developers): Welcome to the LearnHouse developer documentation
+  - [Architecture](https://docs.learnhouse.app/developers/architecture): LearnHouse is a multi-directory project with multiple applications that work together to deliver the full platform experience
+    - [Frontend](https://docs.learnhouse.app/developers/architecture/frontend): The LearnHouse frontend is a Next.js 16 application located at apps/web in the project
+    - [Backend](https://docs.learnhouse.app/developers/architecture/backend): The LearnHouse backend is a FastAPI application written in Python, located at apps/api in the project
+    - [Services](https://docs.learnhouse.app/developers/architecture/services): LearnHouse relies on several supporting services that run alongside the main applications
+  - [Contributing](https://docs.learnhouse.app/developers/contributing): Thank you for your interest in contributing to LearnHouse!
+    - [Dev Environment](https://docs.learnhouse.app/developers/contributing/dev-environment): The LearnHouse CLI sets up and runs the entire development environment with a single command
+    - [Guidelines](https://docs.learnhouse.app/developers/contributing/guidelines): This page outlines the workflow and standards for contributing to LearnHouse
+  - [API Reference](https://docs.learnhouse.app/developers/api): The LearnHouse API is a RESTful service built with FastAPI
+    - [Authentication](https://docs.learnhouse.app/developers/api/authentication): The LearnHouse API accepts two kinds of credentials
+    - [Endpoints](https://docs.learnhouse.app/developers/api/endpoints): This overview has been superseded by the full API Reference, a complete, always-up-to-date reference generated from the live OpenAPI specifi
+    - [Headless Assignments](https://docs.learnhouse.app/developers/api/headless-assignments): LearnHouse assignments can be driven entirely from your own frontend
+  - [Migration](https://docs.learnhouse.app/developers/migration): This section explains how to bring existing course content into LearnHouse using the public API
+    - [Import from Another LMS](https://docs.learnhouse.app/developers/migration/from-another-lms): LearnHouse converts course exports from other learning platforms into native LearnHouse courses: pages built with the course editor, graded 
+    - [Programmatic Migration](https://docs.learnhouse.app/developers/migration/programmatic): This guide walks through the full sequence of API calls needed to build a course from scratch
+    - [Activity Types Reference](https://docs.learnhouse.app/developers/migration/activity-types): Every activity in LearnHouse is described by two enums and one JSON content blob
+    - [AI-Assisted Migration](https://docs.learnhouse.app/developers/migration/assisted): LearnHouse exposes a three-call API that uploads a folder of media files, asks the configured AI model (Gemini by default) to organise them 
+
+- [Guides](https://docs.learnhouse.app/guides): Hands-on, end-to-end guides for building with LearnHouse. Ship your own headless learning platform with Next.js, drive the API, and react to events with webhooks.
+  - [Build a Learning Platform](https://docs.learnhouse.app/guides/build-learning-platform): Build your own headless learning platform on the web with Next.js and the LearnHouse API. Start with an anonymous public catalogue, then add authentication, enrollment, and progress tracking.
+    - [Do It Yourself](https://docs.learnhouse.app/guides/build-learning-platform/do-it-yourself): A complete, tested, step-by-step guide to building a headless learning platform with Next.js and the LearnHouse API. Public catalogue first, then authentication, enrollment, and progress tracking.
+    - [Let an Agent Build It](https://docs.learnhouse.app/guides/build-learning-platform/with-an-agent): Have a coding agent like Claude Code or Cursor build your headless LearnHouse platform for you, using a ready-made, self-contained specification.
+    - [Agent Spec](https://docs.learnhouse.app/guides/build-learning-platform/agent-spec): A self-contained, copy-paste specification a coding agent can follow to build a headless LearnHouse learning platform with Next.js, including the exact API contract and acceptance criteria.
+  - [Custom Features & Webhooks](https://docs.learnhouse.app/guides/custom-features): Extend LearnHouse beyond the official frontend. Authenticate with API tokens, create and query content programmatically, and react to events with webhooks.
+    - [Webhooks](https://docs.learnhouse.app/guides/custom-features/webhooks): Subscribe to LearnHouse events, verify HMAC-SHA256 signatures, and react to learning activity in real time with a Next.js webhook receiver.
+
+- [CLI](https://docs.learnhouse.app/cli): The LearnHouse CLI is the primary tool for deploying, managing, and developing LearnHouse
+  - [Commands](https://docs.learnhouse.app/cli/commands): Full reference for all LearnHouse CLI commands
+  - [Setup Wizard](https://docs.learnhouse.app/cli/setup-wizard): The setup wizard (npx learnhouse@latest setup) generates a complete Docker Compose deployment
+  - [Dev Mode](https://docs.learnhouse.app/cli/dev-mode): The dev command starts a full local development environment with hot reload for all services
+  - [Environment Variables](https://docs.learnhouse.app/cli/environment-variables): This page covers two things: the environment variables the CLI itself reads, and the .env file it generates for a Community installation
+
+- [Enterprise Edition](https://docs.learnhouse.app/enterprise): The LearnHouse Enterprise Edition (EE) is a commercially licensed extension of the open source platform
+  - [SSO](https://docs.learnhouse.app/enterprise/sso): SSO lets members sign in to your organization through your company's identity provider
+    - [WorkOS](https://docs.learnhouse.app/enterprise/sso/workos): WorkOS brokers SSO for many identity providers through one integration, over SAML or OIDC
+    - [Custom OIDC](https://docs.learnhouse.app/enterprise/sso/custom-oidc): The Custom OIDC provider lets you connect LearnHouse directly to any OpenID Connect 1.0 compatible identity provider
+  - [Audit Logs](https://docs.learnhouse.app/enterprise/audit-logs): Audit logs record the changes people make in your organization, so administrators can see who did what and when
+  - [SCORM](https://docs.learnhouse.app/enterprise/scorm): SCORM needs the Enterprise plan on LearnHouse Cloud, or the Enterprise Edition when self-hosted
+  - [LTI 1.3](https://docs.learnhouse.app/enterprise/lti): Launch LearnHouse courses from Moodle, Canvas, Open edX and other LTI 1.3 platforms, with deep linking, grade sync and roster sync
+    - [LMS Setup](https://docs.learnhouse.app/enterprise/lti/lms-setup): Register LearnHouse as an LTI 1.3 tool in each supported LMS
+  - [Live Sessions](https://docs.learnhouse.app/enterprise/live-sessions): Schedule classes, office hours and events in LearnHouse Meet, Google Meet, Zoom or any meeting link, with chat, polls, breakout rooms and attendance
 
 ## Optional
 

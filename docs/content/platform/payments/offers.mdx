@@ -2,6 +2,12 @@
 
 A product is what your learners buy: a price, and the content it unlocks. In the API and webhooks, products are called **offers**.
 
+Under **Payments** → **Products**, click **New product**. Give it a **Name**, a **Description** buyers see on the product page, and optional **Benefits, one per line** (for example "Lifetime access"). Then fill in the sections below and click **Create product**.
+
+<img src="/img/pages/payments/products.webp" alt="The Products tab with product cards showing their checkout type, price, content and number of customers" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+Each product card has **Link** (copy the product's link) and **Grant**.
+
 ## What a product can unlock
 
 Pick any mix of your content:
@@ -30,13 +36,17 @@ Inside a course, open a chapter's or lesson's lock menu in the Content tab. Belo
 
 - **Included with the course** (default): buyers of the course get it.
 - **Free preview**: anyone who can see the course can open it, even when the course is sold. Use it for the first lesson or a sample chapter.
-- **Sell on its own**: creates a product that unlocks just that chapter or lesson. This also works inside a free course, to sell one premium chapter.
+- **Sell this chapter on its own** / **Sell this lesson on its own**: creates a product that unlocks just that chapter or lesson. This also works inside a free course, to sell one premium chapter.
+
+<img src="/img/pages/payments/chapter-purchase-menu.webp" alt="A chapter's lock menu in the course editor, with access options and the Purchase section: Included with the course, Free preview and Sell this chapter on its own" width={1600} height={900} style={{ borderRadius: 10 }} />
 
 Buying the course always opens every chapter and lesson. In the course outline, learners see which lessons are **Paid** and which are **Free previews**, and opening a paid lesson shows the products that unlock it.
 
+<img src="/img/pages/payments/paid-lesson.webp" alt="A paid lesson as a learner sees it, with a Paid Content notice and the products that unlock it" width={1600} height={900} style={{ borderRadius: 10 }} />
+
 ## User groups
 
-A product can also add its buyers to one or more user groups (Users → User groups) while their access lasts. Buyers then get everything those groups already unlock, including "Users only" content, and the store page lists that content as included.
+A product can also add its buyers to one or more user groups (Users → User groups) while their access lasts, under **Also add buyers to user groups**. Buyers then get everything those groups already unlock, including "Users only" content, and the store page lists that content as included.
 
 When access ends, buyers only leave the groups the purchase put them in. People who were in a group before they bought, or who still have another purchase that adds them to it, keep their place. Linking a group to a product adds everyone who already has the product to it.
 
@@ -49,19 +59,21 @@ When access ends, buyers only leave the groups the purchase put them in. People 
 | Free | The learner signs in and claims it. No card needed. |
 | Invite only | No buy button. You grant access from Customers or through the API. |
 
+<img src="/img/pages/payments/product-checkout-options.webp" alt="The How people get it section of a new product, with Your own checkout selected, its checkout link, the price and the visibility switch" width={1600} height={900} style={{ borderRadius: 10 }} />
+
 ## Pricing
 
 - **One-time** or **subscription** (monthly or yearly).
-- **Was price**: an optional higher price, shown struck through next to the real one.
-- **Pay what you want** (Stripe, one-time): the price you set is the minimum.
-- **Free trial** (Stripe subscriptions): the number of days before the first charge.
-- **Promotion codes** (Stripe): turn this on to let buyers enter a [promotion code](/platform/payments/discounts) at checkout.
+- **Was (optional)**: a higher price, shown struck through next to the real one.
+- **Let buyers choose what to pay** (Stripe, one-time): the price you set is the minimum.
+- **Free trial days before the first charge** (Stripe subscriptions).
+- **Accept promotion codes at checkout** (Stripe): lets buyers enter a [promotion code](/platform/payments/discounts).
 
 Once a subscription product has active subscribers, its billing period can't be changed. Create a new product for the new period instead.
 
 ## Visibility
 
-Products are listed in your store and on the content they unlock. Turn **Show in your store** off to make a product private: it disappears from the store, but anyone with its link can still open it.
+Products are listed in your store and on the content they unlock. Turn **Show in your store and on its content** off to make a product private: it disappears from the store, but anyone with its link can still open it.
 
 ## Deleting a product
 

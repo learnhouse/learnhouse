@@ -1,20 +1,77 @@
+import { Callout } from 'nextra/components'
+
 # Certifications
 
-LearnHouse can generate certificates when students complete a course, as formal recognition of their work.
+A course can award a certificate to learners who complete it, and so can a [learning path](/platform/paths). Each certificate has a unique credential ID and a public page anyone can use to check it is genuine. Course and path certificates share the same design, the same designer and the same verification page.
 
-## How Certifications Work
+<YouTube video="guide-7" />
 
-When a student completes all activities in a course, a certification record is created and linked to their profile. Teachers and administrators can manage certifications at the course level.
+<Callout>
+On LearnHouse Cloud, certifications need the **Pro** plan or higher. Setting one up also needs permission to create certifications in the organization.
+</Callout>
 
-## Key Features
+## Setting up a course certificate
 
-- **Automatic generation**: Certificates are generated when a student's Trail shows full course completion.
-- **Course-level configuration**: Each course can have certifications enabled or disabled.
-- **Certificate retrieval**: Students can view and access their earned certificates from their profile.
-- **Verification**: Each certificate has a unique identifier that can be used for verification.
+Open the course in the dashboard and go to the **Certification** tab. Turn on the **Course Certification** switch, or click **Enable Certification**, then fill in:
 
-## Use Cases
+| Field | Notes |
+| --- | --- |
+| **Certification Name** | Required. Up to 100 characters. |
+| **Certification Description** | Required. Up to 500 characters. |
+| **Certification Type** | Course Completion (default), Achievement Based, Assessment Based, Participation, Skill Mastery, Professional Development, Continuing Education, Workshop Attendance or Specialization. The type is printed in the top corner of the certificate. |
+| **Signed by (optional)** | A name printed at the bottom left, under **Instructor**. Without it, that spot shows your organization under **Issued by**. |
+| **Style** | Professional (default), Minimal, Modern, Academic, Royal, Vintage, Tech, Nature, Geometric or Waves. Each style sets an accent color and a frame. |
 
-- **Professional development**: Issue certificates for compliance training or continuing education.
-- **Academic programs**: Provide completion certificates for course series or learning paths.
-- **Skill validation**: Give students a shareable credential they can reference externally.
+Click **Save** at the top of the course editor to apply your changes. Turning the switch off removes the certification from the course, but only while no learner has earned it: once certificates have been awarded, LearnHouse refuses to delete it so their verification links keep working.
+
+The live preview next to the form shows the certificate as learners will get it, with your organization's logo and name at the top. Learners see their own name, the award date and their credential ID.
+
+<img src="/img/pages/paths/path-certificate-designer.webp" alt="The certificate designer: name, description, type, signer and style on the left, and a live preview of the certificate on the right" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+The same designer is used on the **Certificate** tab of a [learning path](/platform/paths#the-path-certificate).
+
+## What a certificate shows
+
+Every certificate is an A4 landscape page with:
+
+- Your organization's logo (the square logo, or the wide logo when there is no square one) and name. See [Branding](/platform/organizations/settings#logos).
+- The certification type, the learner's name and the certification name and description.
+- The signer, or your organization, and the date awarded.
+- A QR code that opens the verification page, and the credential ID.
+
+## When a course certificate is awarded
+
+A learner earns the certificate when both are true:
+
+- Every published activity in the course is complete.
+- Every graded assignment in the course is graded and passed at its passing threshold. [Formative](/platform/assignments/formative) assignments only need to be handed in.
+
+A course without assignments awards the certificate on completion alone. If an assignment is still waiting for a grade, the certificate is issued once it is graded and passed.
+
+## What learners get
+
+At the end of the course, learners see their certificate with **Download Certificate PDF** and **View and share**. All their certificates, from courses and paths, are listed under **My Certificates** on their [Progress page](/platform/courses/trails).
+
+The PDF is the same page as the on-screen certificate, logo included.
+
+## Verifying a certificate
+
+Each course certificate has an ID like `AB-20261102-1a2b-3c4d5e6f`: two letters, the award date, part of the learner's ID and a random suffix. Its verification page is at `/certificates/{id}/verify`.
+
+The page shows **Verified credential**, the certificate itself, and the **Recipient**, **Issued by**, **Issued on** and **Credential ID**. Anyone can use **Copy verification link**. The holder also sees **Download PDF** and **Add to LinkedIn**, which opens LinkedIn with the certificate name, your organization, the issue month, the credential ID and the verification link already filled in.
+
+<img src="/img/pages/paths/path-certificate-verify.webp" alt="A certificate verification page with the Verified credential badge, the certificate, Download PDF, Add to LinkedIn and Copy verification link" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+A revoked certificate, or a wrong ID, shows **Certificate not found**.
+
+## Path certificates
+
+A [learning path](/platform/paths) can award its own certificate when a learner finishes it, on top of the course certificates. It uses the same designer and the same page layout. Path certificate IDs start with `PATH-`, and their verification page is at `/paths/certificate/{id}`. Under the certificate, the page lists the courses the learner completed to earn it.
+
+## Revocation
+
+A course certificate is revoked automatically when the learner no longer meets the conditions: an assignment is re-graded below its passing threshold, rejected, or reset for a retry. It is issued again once they pass. Admins can also revoke a course certificate through the admin API with an API token.
+
+Every course certificate revocation fires a `certificate_revoked` [webhook](/platform/automations/webhooks) event.
+
+Path certificates are revoked by hand. Open the path's **Learners** tab and click **Revoke** next to the learner, and **Reinstate** to undo it. See [Following learners](/platform/paths#following-learners).

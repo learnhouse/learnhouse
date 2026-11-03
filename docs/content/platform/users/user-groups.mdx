@@ -1,0 +1,43 @@
+import { Callout } from 'nextra/components'
+
+# User Groups
+
+User groups bundle members together so you can give them access to content in one step. Instead of opening a course to everyone in the organization, you link it to a group, and only that group's members can reach it.
+
+<Callout type="info">
+User groups need the **Standard** plan or higher on LearnHouse Cloud. They are included on every self-hosted instance.
+</Callout>
+
+## Creating a group
+
+1. Go to **Users** → **UserGroups**.
+2. Click **Create a UserGroup**, enter a **Name** (required) and a **Description**.
+3. Click **Manage Users** on the group's row to add members. Filter by **All Users**, **In Group** or **Not in Group**, then **Link** or **Unlink** people, or select several and use **Add to Group** / **Remove from Group**.
+
+**Edit** renames a group. **Delete** removes it, and every member of the group loses the access it granted.
+
+<img src="/img/pages/users/user-groups.webp" alt="The UserGroups tab with two groups, each with Manage Users, Edit and Delete" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+## What a group can unlock
+
+You link a group from the resource's own access settings, not from the Users page. These resources can be linked to a group:
+
+| Resource | Where to link it |
+| --- | --- |
+| Courses | The course's **Access** tab in the dashboard |
+| Communities | The community's access settings |
+| Folders | The folder's access popover in the Library |
+| Boards | The board's access tab |
+| Podcasts | The podcast's access settings |
+
+Inside a course, chapters and lessons can also be locked to user groups. Locked lessons are hidden from everyone outside the group, including in [search](/platform/search).
+
+To limit a course to a group, set **Access to the course** to **Users Only** on the course's **Access** tab, then click **Link to a UserGroup** and pick the group. Members outside the group lose access to the course.
+
+<img src="/img/pages/users/course-access-usergroup.webp" alt="The Access tab of a course set to Users Only, with the Partner agencies user group linked" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+## Other ways members join a group
+
+- **Invite codes** can be linked to a group. Everyone who signs up with the code is added to it. See [Invite codes](/platform/users/members-and-invites#invite-codes).
+- **Payments**: a payment group can be synced to a user group, so buyers are added automatically. See [Groups & Bundles](/platform/payments/groups).
+- **API**: API tokens with the **User Groups** permission can manage groups and their members.

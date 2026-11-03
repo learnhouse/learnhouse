@@ -1,19 +1,60 @@
+import { Callout } from 'nextra/components'
+
 # Search
 
-LearnHouse includes a built-in search system that lets users find courses, collections, and other users across the organization.
+LearnHouse has one search that covers everything in your organization: courses, lessons, folders, communities, discussions, playgrounds, podcasts and members. You can reach it in three ways:
 
-## How Search Works
+- The **Search** button in the top menu, which opens the [command palette](/platform/search/keyboard-shortcuts#command-palette).
+- The keyboard: press <kbd>⌘</kbd> <kbd>K</kbd> (macOS), <kbd>Ctrl</kbd> <kbd>K</kbd> (Windows and Linux) or <kbd>/</kbd> on any learner page.
+- The full search page at `/search`, which you also land on when you pick **See all results** in the palette.
 
-Search is scoped to the current organization. When a user enters a query, the system searches across:
+<img src="/img/pages/search/search-palette.webp" alt="The search palette with results for payments grouped as Courses, Lessons, Communities, Discussions and Podcasts" width={1600} height={900} style={{ borderRadius: 10 }} />
 
-- **Courses**: Match by course title, description, and content.
-- **Collections**: Find collections by name or description.
-- **Users**: Look up organization members by name or username.
+## What gets searched
 
-Results are returned with pagination, displaying up to 50 results per page.
+Every word you type has to appear somewhere in the result, in any order and in any of the searched fields. Matching is case-insensitive.
 
-## Features
+| Type | UI label | Fields matched |
+| --- | --- | --- |
+| Courses | Courses | Name, description, about, learnings, tags |
+| Lessons | Lessons | Lesson name only (lesson bodies are not searched) |
+| Folders | Folders | Name, description |
+| Communities | Communities | Name, description |
+| Discussions | Discussions | Title, content |
+| Playgrounds | Playgrounds | Name, description |
+| Podcasts | Podcasts | Name, description, tags |
+| Members | Members | Username, first name, last name, bio |
 
-- **Organization-scoped**: Each organization's search results are isolated, so users only see content from their own organization.
-- **Cross-content search**: A single search query returns results across multiple content types.
-- **Pagination**: Results are paginated for efficient browsing of large result sets.
+## Who sees what
+
+Search never shows something you could not open from its normal listing.
+
+- **Visitors who are not signed in** and **signed-in users who are not members** of the organization see public content only. They never get member results.
+- **Members** also see content restricted to the organization. Unpublished items are always left out.
+- Communities, discussions and podcasts that are restricted to user groups only appear for members of a linked group.
+- Lessons follow the course they belong to. A lesson must be published and placed in a chapter. Lessons locked to user groups only show up for organization admins.
+- Member results show public profile fields (name, username, avatar, bio). Email addresses are never returned by search.
+
+## The search page
+
+The search page at `/search` shows results grouped by type, with a count per type. Use **Filter by type** to narrow the list to **All**, **Courses**, **Lessons**, **Folders**, **Communities**, **Discussions**, **Playgrounds**, **Podcasts** or **Members**. Results are paginated with **Previous** and **Next**.
+
+## Limits
+
+| Limit | Value |
+| --- | --- |
+| Minimum query length | 3 characters |
+| Maximum query length | 200 characters |
+| Results per page | 10 by default, 50 at most |
+| Rate limit (signed in) | 60 searches per minute per user |
+| Rate limit (anonymous) | 30 searches per minute per IP address |
+
+When you go over the rate limit, the API answers `429 Too Many Requests` with a `Retry-After` header.
+
+<Callout type="info">
+API tokens can call search too. A token needs the **Search** read permission, and each result type is only included when the token can also read that resource (for example, member results need the **Users (Admin API)** read permission). See [API Authentication](/developers/api/authentication).
+</Callout>
+
+## Dashboard search
+
+The admin dashboard has its own command palette. Press <kbd>⌘</kbd> <kbd>K</kbd> or <kbd>Ctrl</kbd> <kbd>K</kbd> inside the dashboard to jump to dashboard pages (courses, users, roles, settings, payments and so on) or to search courses, users, communities, discussions, playgrounds and podcasts.
