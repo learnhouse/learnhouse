@@ -80,6 +80,7 @@ _READERS: dict[str, tuple[str, str, dict]] = {
     "usergroup": ("get_usergroup", "usergroup_uuid", {}),
     "role": ("get_role", "role_uuid", {}),
     "user": ("get_member", "member", {}),
+    "path": ("get_path", "path_uuid", {}),
 }
 _VIA_PARENT = {"chapter": "course", "assignment_task": "assignment", "comment": "discussion"}
 
@@ -100,8 +101,8 @@ async def _fetch(ctx: ToolContext, p: FetchParams):
             status_code=400,
             detail=(
                 f"fetch cannot open '{p.id}'. It opens course_, chapter_, activity_, assignment_, "
-                "community_, discussion_, comment_, folder_, board_, playground, usergroup_, role_ "
-                "and user_ ids; find one with search."
+                "community_, discussion_, comment_, folder_, board_, playground, usergroup_, role_, "
+                "path_ and user_ ids; find one with search."
             ),
         )
     tool, arg, extra = _READERS[kind]
@@ -151,7 +152,7 @@ SPECS: list[ToolSpec] = [
         description=(
             "Open anything by its id (from search or any result) and get its readable text: a "
             "course or chapter outline, a page as Markdown, an assignment with its tasks, a "
-            "discussion with replies, a member's profile. Returns {id, title, url, text, metadata}."
+            "discussion with replies, a learning path with its courses, a member's profile. Returns {id, title, url, text, metadata}."
         ),
         params_model=FetchParams,
         tier=ActionTier.READ,

@@ -15,7 +15,7 @@ Connecting AI apps is available on every plan.
 - Talk to it the way you would to a colleague, in your own words: "add a short quiz to the end of my solar course", "rename the myths page", "which pages are still drafts?". The app finds what you mean by name, only among what you can see, and asks you when a name could mean more than one thing.
 - What the app builds starts as a draft that only staff can see, and building drafts needs no approvals. It gives you the editor link, so you review, edit and publish when you're ready. Ask it to publish and it will, after your approval.
 - The app acts as you, inside the organization you picked. It can never do more than your role allows, and tools for features your plan doesn't include stay hidden.
-- Changes that matter always wait for your approval: deleting, making a course live or public, publishing or unpublishing inside a live course, find and replace across a live course, changing who can see or do what (co-authors included), revoking certificates, inviting people, organization settings, finalizing grades, adding embedded code or HTML to a page, and fetching files from outside links. Deletions and admin changes are always approved through a LearnHouse link, where you approve or decline while signed in. For the rest, apps that support it may ask you directly instead. An app can't approve its own requests.
+- Changes that matter always wait for your approval: deleting, making a course or learning path live or public, changing the courses of a live learning path, publishing or unpublishing inside a live course, find and replace across a live course, changing who can see or do what (co-authors included), revoking certificates, inviting people, organization settings, finalizing grades, adding embedded code or HTML to a page, and fetching files from outside links. Deletions and admin changes are always approved through a LearnHouse link, where you approve or decline while signed in. For the rest, apps that support it may ask you directly instead. An app can't approve its own requests.
 - Page edits are versioned, so you can always restore an earlier version.
 - You can disconnect an app at any time from **Account > AI apps**. Admins see every connected app in **Developers > AI apps** and can disconnect any of them, or turn AI app connections off for the whole organization. Changing your password or two-factor settings, or leaving the organization, disconnects your apps.
 
@@ -77,14 +77,17 @@ Tools are grouped by area, and the app only sees the ones your role and plan all
 | Courses | create a whole course with its chapters and pages in one step, add many pages to a chapter at once, add YouTube videos, video files and PDFs as activities, set a cover image from a link, copy a whole course, update, publish, move chapters and pages |
 | Content | read a page as Markdown or an outline, rewrite it in Markdown (quizzes, flipcards, coding exercises with tests, timers and extra files, branching scenarios, video embeds and buttons included, as fenced blocks; images, videos, audio and PDFs from links, link previews, H5P and custom HTML widgets after your approval), make precise edits, add callouts and media |
 | Teaching | assignments, submissions and grading; course rosters with progress, overdue work and certificates; per-learner reports (activities, grades, feedback, timeline, time spent); course and assignment statistics (completion per activity, grade spread, per-question correct rates, who hasn't handed in); dashboard analytics |
+| Learning paths | chain existing courses into a path (required courses and electives, in order, with a certificate), change its courses, publish it, see who follows it and how far they are, when your plan includes paths |
 | Advanced | audit a whole course for problems (empty or placeholder pages, quizzes with no right answer, missing media, pages with no practice), find and replace across every page of a course, copy chapters and pages between courses, completion certificates, co-authors |
 | Library, communities, playgrounds, boards | browse and manage, when your plan includes them |
 | People and settings | members, invitations, groups, roles and organization settings (admin access only) |
 
-The server also offers ready-made prompts (draft a course, improve a page, review a course, learner report) that apps show as shortcuts.
+The server also offers ready-made prompts that apps show as shortcuts: draft a course, improve a page, add a quiz to a page, review a course, grade submissions, build a learning path, learner report and community digest. You only see the ones your role, connection and plan allow. In apps that support it, the course, page, assignment or community a prompt asks for is suggested as you type.
+
+Apps can also attach LearnHouse items as context: the organization overview, a course outline, a page, an assignment, a learning path or a community (`learnhouse://course/{id}` and so on).
 
 <Callout type="info">
-Some apps limit how many tools they load (Cursor uses about 40). Add `?toolsets=essentials` to the server URL for course building and teaching only, or pick groups yourself with `?toolsets=courses,content` (any of `courses`, `content`, `teaching`, `advanced`, `library`, `communities`, `playgrounds`, `boards`, `people`, `org`). Search, context and reading tools are always included.
+Some apps limit how many tools they load (Cursor uses about 40). Add `?toolsets=essentials` to the server URL for course building and teaching only, `?toolsets=authoring` for writing and organizing content (courses, pages, course-wide tools, learning paths and the library), or `?toolsets=admin` for members and settings. You can also pick groups yourself with `?toolsets=courses,content` (any of `courses`, `content`, `teaching`, `advanced`, `paths`, `library`, `communities`, `playgrounds`, `boards`, `people`, `org`). Search, context and reading tools are always included.
 </Callout>
 
 ## Scripts and automations
@@ -96,3 +99,14 @@ On Enterprise plans, every change an AI app makes is recorded in the audit log.
 ## Self-hosting
 
 The MCP server is on by default. See [environment variables](/self-hosting/configuration/environment-variables#mcp) to turn it off or set its public URL behind a proxy.
+
+### Adding your own tools
+
+Self-hosted instances can add tools without changing LearnHouse itself. Install a Python package that declares an entry point in the `learnhouse.ai_tools` group, pointing at a module with a `SPECS` list of tools (and optionally `TOOLSET` and `FEATURE` names):
+
+```toml
+[project.entry-points."learnhouse.ai_tools"]
+acme = "acme_learnhouse.tools"
+```
+
+The tools show up in AI apps under their own toolset (`?toolsets=acme`) and go through the same checks as the built-in ones: the member's role, the connection's access, the plan feature and approvals. A package that fails to load is logged and skipped.

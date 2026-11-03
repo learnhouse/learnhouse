@@ -27,6 +27,7 @@ _ORDER = (
     "board_uuid",
     "playground_uuid",
     "folder_uuid",
+    "path_uuid",
     "media_uuid",
     "usergroup_uuid",
     "role_uuid",
