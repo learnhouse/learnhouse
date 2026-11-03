@@ -70,13 +70,15 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const CommunitiesPage = async (params: any) => {
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
   const orgslug = (await params.params).orgslug
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
+  const [session, org] = await Promise.all([
+    getServerSession(),
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+  ])
+  const access_token = session?.tokens?.access_token
   const org_id = org.id
 
   let communities = []

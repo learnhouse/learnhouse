@@ -142,8 +142,20 @@ export const isOnCustomDomain = (): boolean => {
   return !isSubdomainOf(hostname, domain) && !isSameHost(hostname, domain) && !isLocalhostCheck(hostname)
 }
 
+// Optional server-only backend base (e.g. `http://learnhouse-api-svc:80/`, same
+// shape as NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL). When set, server-side fetches
+// reach the API over the internal network instead of going back out through the
+// public load balancer. Never exposed to the browser.
+const getInternalBackendUrl = (): string | null => {
+  if (typeof window !== 'undefined') return null
+  const value = process.env.LEARNHOUSE_INTERNAL_API_URL
+  return value ? value.replace(/\/+$/, '') : null
+}
+
 // Derive API URL from backend URL (with backward compat for NEXT_PUBLIC_LEARNHOUSE_API_URL)
 const deriveAPIUrl = (): string => {
+  const internalBackendUrl = getInternalBackendUrl()
+  if (internalBackendUrl) return `${internalBackendUrl}/api/v1/`
   // Backward compat: if explicit API URL is set, use it
   const explicitApiUrl = getConfig('NEXT_PUBLIC_LEARNHOUSE_API_URL')
   if (explicitApiUrl) return explicitApiUrl

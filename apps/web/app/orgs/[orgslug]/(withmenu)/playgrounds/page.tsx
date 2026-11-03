@@ -17,13 +17,14 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
 
 export default async function PlaygroundsPage({ params }: { params: PageParams }) {
   const { orgslug } = await params
-  const session = await getServerSession()
+  const [session, org] = await Promise.all([
+    getServerSession(),
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+  ])
   const access_token = session?.tokens?.access_token
-
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
 
   let initialPlaygrounds: any[] = []
   try {
