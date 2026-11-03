@@ -40,7 +40,9 @@ def _ee_mode():
 
 @pytest.fixture(autouse=True)
 def _no_mfa():
-    with patch("src.services.messaging.messaging.enforce_org_mfa", new=AsyncMock()):
+    # The send-rate limit lives in Redis, which unit tests don't run.
+    with patch("src.services.messaging.messaging.enforce_org_mfa", new=AsyncMock()), \
+         patch("src.services.security.rate_limiting.check_rate_limit", return_value=(True, 0, 0)):
         yield
 
 
