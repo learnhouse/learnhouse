@@ -7,13 +7,13 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.43.121",
-    "botocore==1.43.121",
+    "boto3==1.43.123",
+    "botocore==1.43.123",
     "faker==40.44.0",
     "fastapi==0.162.0",
     "httpx==0.28.1",
     "google-genai==2.34.0",
-    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.63.0",
+    "pydantic-ai-slim[openai,anthropic,google,mistral]==2.64.0",
     "pwdlib[argon2]==0.3.1",
     "psycopg2-binary==2.9.13",
     "asyncpg==0.32.0",
@@ -34,7 +34,7 @@ dependencies = [
     "alembic==1.20.1",
     "alembic-postgresql-enum==1.11.1",
     "sqlalchemy-utils==0.43.0",
-    "stripe==16.0.1",
+    "stripe==16.1.0",
     "cryptography==50.0.2",
     "pyjwt[crypto]==2.15.1",
     "pyotp==2.10.0",
@@ -44,13 +44,13 @@ dependencies = [
     "sentry-sdk[fastapi]==2.73.0",
     "protobuf==7.36.2",
     "workos==10.6.0",
-    "dnspython==2.9.0",
+    "dnspython==2.9.1",
     "defusedxml==0.7.1",
     "pgvector==0.5.1",
     "pypdf==6.21.4",
     "regex==2026.9.29",
     "mcp==2.3.0",
-    "fakeredis==2.39.0",
+    "fakeredis==2.40.0",
 ]
 
 [tool.ruff]
