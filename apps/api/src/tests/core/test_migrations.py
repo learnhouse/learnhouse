@@ -214,6 +214,63 @@ class TestHelpers:
         assert SchemaReport(state="empty").summary() == "schema empty: none -> none, 0 reconciled"
 
 
+class TestDeferredIndexes:
+    @staticmethod
+    def _engine(execute_side_effect=None):
+        engine = MagicMock()
+        connection = engine.connect.return_value.execution_options.return_value.__enter__.return_value
+        connection.dialect.identifier_preparer.quote = lambda name: f'"{name}"'
+        if execute_side_effect is not None:
+            connection.execute.side_effect = execute_side_effect
+        return engine, connection
+
+    def test_nothing_to_build(self):
+        engine = MagicMock()
+        assert migrations.build_indexes_concurrently(engine, []) == []
+        engine.connect.assert_not_called()
+
+    def test_builds_concurrently_outside_a_transaction(self):
+        engine, connection = self._engine()
+        built = migrations.build_indexes_concurrently(engine, [("ix_a", "trail", ["user_id", "org_id"])])
+        assert built == ["ix_a"]
+        engine.connect.return_value.execution_options.assert_called_once_with(isolation_level="AUTOCOMMIT")
+        assert str(connection.execute.call_args.args[0]) == (
+            'CREATE INDEX CONCURRENTLY IF NOT EXISTS "ix_a" ON "trail" ("user_id", "org_id")'
+        )
+
+    def test_failed_build_is_dropped_and_the_rest_still_built(self, caplog):
+        engine, connection = self._engine([RuntimeError("canceled"), None, None])
+        with caplog.at_level(logging.WARNING):
+            built = migrations.build_indexes_concurrently(engine, [("ix_a", "t", ["c"]), ("ix_b", "t", ["d"])])
+        assert built == ["ix_b"]
+        statements = [str(call.args[0]) for call in connection.execute.call_args_list]
+        assert 'DROP INDEX CONCURRENTLY IF EXISTS "ix_a"' in statements
+        assert "Could not build index ix_a" in caplog.text
+
+    def test_failed_drop_only_logs(self, caplog):
+        engine, _ = self._engine([RuntimeError("canceled"), RuntimeError("gone")])
+        with caplog.at_level(logging.WARNING):
+            assert migrations.build_indexes_concurrently(engine, [("ix_a", "t", ["c"])]) == []
+        assert "Could not drop the invalid index ix_a" in caplog.text
+
+    def test_runner_builds_what_migrations_deferred(self, db_url, caplog):
+        ensure_schema(db_url, metadata=_models())
+
+        def upgrade(config, target):
+            config.attributes[migrations.DEFERRED_INDEXES].append(("ix_x", "widget", ["name"]))
+
+        with patch.object(migrations.command, "upgrade", side_effect=upgrade), \
+             patch.object(migrations, "build_indexes_concurrently", return_value=["ix_x"]) as build, \
+             caplog.at_level(logging.INFO, logger="src.core.migrations"):
+            ensure_schema(db_url, metadata=_models())
+        assert build.call_args.args[1] == [("ix_x", "widget", ["name"])]
+        assert "Built indexes concurrently: ix_x" in caplog.text
+
+    def test_hand_run_alembic_has_no_deferral_list(self):
+        assert migrations.DEFERRED_INDEXES not in migrations.alembic_config().attributes
+        assert migrations.alembic_config(deferred_indexes=[]).attributes[migrations.DEFERRED_INDEXES] == []
+
+
 class _FakeConnection:
     def __init__(self, got_lock: bool):
         self.dialect = MagicMock()
