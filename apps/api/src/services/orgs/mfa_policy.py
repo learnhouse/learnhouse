@@ -207,7 +207,10 @@ async def is_org_mfa_blocking(db_session: AsyncSession, user_id: int, org_id: in
         # row in the org at all; a per-org policy must not strand them.
         from src.security.superadmin import is_user_superadmin
 
-        if not await is_user_superadmin(user_id, db_session):
+        # Most orgs don't require 2FA. The policy read is shared with the
+        # auth-method gate, so checking it first skips the user lookup for them.
+        policy = await get_org_mfa_policy(db_session, org_id)
+        if policy.require_2fa and not await is_user_superadmin(user_id, db_session):
             user = (
                 await db_session.execute(select(User).where(User.id == user_id))
             ).scalars().first()
