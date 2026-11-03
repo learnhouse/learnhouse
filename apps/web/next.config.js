@@ -84,6 +84,30 @@ const nextConfig = {
           { key: 'X-Download-Options', value: 'noopen' },
         ],
       },
+      // Un-hashed files from public/. Next serves them with max-age=0, so every
+      // page view revalidated each logo and icon. They can change on deploy, so
+      // a day plus background revalidation, never immutable. api/, _next/ and
+      // the relays are excluded: media proxied through /api is not ours to cache.
+      {
+        source: '/:path((?!api/|_next/|ingest/|monitoring).*\\.(?:png|svg|ico|jpg|jpeg|webp))',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+        ],
+      },
+      {
+        source: '/:file(dir-init\\.js|embed-bg\\.js)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' },
+        ],
+      },
+      // Rewritten from the environment at container start (server-wrapper.js),
+      // so keep it short-lived.
+      {
+        source: '/runtime-config.js',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=600' },
+        ],
+      },
       {
         source: '/embed/:orgslug/course/:courseuuid/activity/:path*',
         headers: [
@@ -172,6 +196,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: [
       '@phosphor-icons/react',
+      '@icons-pack/react-simple-icons',
       'framer-motion',
       'lucide-react',
       '@emoji-mart/react',

@@ -16,7 +16,6 @@ from src.security.rbac.utils import (
     check_course_permissions_with_own,
     get_element_organization_id,
 )
-from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
 
 logger = logging.getLogger(__name__)
@@ -74,7 +73,7 @@ async def check_usergroup_access(
     Returns:
         bool: True if user has access (either no UserGroup restrictions or user is a member)
     """
-    logger.info("[USERGROUP_ACCESS] Checking access for resource_uuid=%s, user_id=%s", resource_uuid, user_id)
+    logger.debug("[USERGROUP_ACCESS] Checking access for resource_uuid=%s, user_id=%s", resource_uuid, user_id)
 
     # Check if resource has any UserGroups linked
     usergroup_stmt = select(UserGroupResource).where(
@@ -82,16 +81,16 @@ async def check_usergroup_access(
     )
     usergroup_resources = (await db_session.execute(usergroup_stmt)).scalars().all()
 
-    logger.info("[USERGROUP_ACCESS] Found %d UserGroupResource entries for resource", len(usergroup_resources))
+    logger.debug("[USERGROUP_ACCESS] Found %d UserGroupResource entries for resource", len(usergroup_resources))
 
     # If no UserGroups linked, resource is accessible to all authenticated users
     if not usergroup_resources:
-        logger.info("[USERGROUP_ACCESS] No UserGroups linked, granting access")
+        logger.debug("[USERGROUP_ACCESS] No UserGroups linked, granting access")
         return True
 
     # Check if user is a member of any linked UserGroup
     usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
-    logger.info("[USERGROUP_ACCESS] UserGroup IDs linked to resource: %s", usergroup_ids)
+    logger.debug("[USERGROUP_ACCESS] UserGroup IDs linked to resource: %s", usergroup_ids)
 
     membership_stmt = select(UserGroupUser).where(
         UserGroupUser.usergroup_id.in_(usergroup_ids),
@@ -100,16 +99,16 @@ async def check_usergroup_access(
     membership = (await db_session.execute(membership_stmt)).scalars().first()
 
     if membership:
-        logger.info("[USERGROUP_ACCESS] User %s IS a member of UserGroup %s, granting access", user_id, membership.usergroup_id)
+        logger.debug("[USERGROUP_ACCESS] User %s IS a member of UserGroup %s, granting access", user_id, membership.usergroup_id)
     else:
-        logger.info("[USERGROUP_ACCESS] User %s is NOT a member of any linked UserGroups %s, denying access", user_id, usergroup_ids)
+        logger.debug("[USERGROUP_ACCESS] User %s is NOT a member of any linked UserGroups %s, denying access", user_id, usergroup_ids)
 
         # Check if any of the blocking UserGroups is tied to a paid offer
         # If so, return HTTP 402 Payment Required (semantically distinct from 403 Forbidden)
         for ugid in usergroup_ids:
             offer_meta = await _get_offer_for_usergroup(ugid, db_session)
             if offer_meta:
-                logger.info("[USERGROUP_ACCESS] Resource is behind paid offer %s, returning 402", offer_meta["offer_id"])
+                logger.debug("[USERGROUP_ACCESS] Resource is behind paid offer %s, returning 402", offer_meta["offer_id"])
                 raise HTTPException(
                     status_code=status.HTTP_402_PAYMENT_REQUIRED,
                     detail={
@@ -263,14 +262,9 @@ async def _load_applicable_roles(
         )
         return (await db_session.execute(statement)).scalars().all()
 
-    is_member_of_target = (await db_session.execute(
-        select(UserOrganization).where(
-            UserOrganization.user_id == user_id,
-            UserOrganization.org_id == target_org_id,
-        )
-    )).scalars().first()
+    from src.security.org_auth import get_user_org_rows
 
-    if not is_member_of_target:
+    if not await get_user_org_rows(user_id, target_org_id, db_session):
         # Non-member: never grant role-based access to this org's resources.
         return []
 
@@ -459,16 +453,9 @@ async def authorization_verify_based_on_org_admin_status(
 
     # Check if user has admin or maintainer role in the TARGET organization
     # Note: This checks for admin/maintainer role which typically have full permissions
-    statement = (
-        select(UserOrganization)
-        .where(UserOrganization.user_id == user_id)
-        .where(UserOrganization.org_id == target_org_id)
-        .where(UserOrganization.role_id.in_(ADMIN_OR_MAINTAINER_ROLE_IDS))
-    )
+    from src.security.org_auth import holds_admin_or_maintainer_role
 
-    user_org = (await db_session.execute(statement)).scalars().first()
-
-    return user_org is not None
+    return await holds_admin_or_maintainer_role(user_id, target_org_id, db_session)
 
 
 # Tested and working
@@ -479,22 +466,22 @@ async def authorization_verify_based_on_roles_and_authorship(
     element_uuid: str,
     db_session: AsyncSession,
 ):
-    logger.info("[RBAC] authorization_verify_based_on_roles_and_authorship: user_id=%s, action=%s, element_uuid=%s", user_id, action, element_uuid)
+    logger.debug("[RBAC] authorization_verify_based_on_roles_and_authorship: user_id=%s, action=%s, element_uuid=%s", user_id, action, element_uuid)
 
     # Superadmin bypass - full access to all resources
     if await is_user_superadmin(user_id, db_session):
-        logger.info("[RBAC] Superadmin bypass for user_id=%s", user_id)
+        logger.debug("[RBAC] Superadmin bypass for user_id=%s", user_id)
         return True
 
     isAuthor = await authorization_verify_if_user_is_author(
         request, user_id, action, element_uuid, db_session
     )
-    logger.info("[RBAC] isAuthor=%s", isAuthor)
+    logger.debug("[RBAC] isAuthor=%s", isAuthor)
 
     isRole = await authorization_verify_based_on_roles(
         request, user_id, action, element_uuid, db_session
     )
-    logger.info("[RBAC] isRole=%s", isRole)
+    logger.debug("[RBAC] isRole=%s", isRole)
 
     # Authors and role-holders (e.g. course admins/maintainers) must never be
     # blocked by the paywall on a resource they own or manage. Grant access
@@ -502,7 +489,7 @@ async def authorization_verify_based_on_roles_and_authorship(
     # against them (check_usergroup_access raises HTTP 402 for paid offers, which
     # would otherwise lock the author/admin out of their own paid resource).
     if isAuthor or isRole:
-        logger.info("[RBAC] Access GRANTED via author/role before usergroup check")
+        logger.debug("[RBAC] Access GRANTED via author/role before usergroup check")
         return True
 
     # For read actions, also check UserGroup membership
@@ -512,7 +499,7 @@ async def authorization_verify_based_on_roles_and_authorship(
         hasUserGroupAccess = await check_usergroup_access(
             element_uuid, user_id, db_session
         )
-    logger.info("[RBAC] hasUserGroupAccess=%s", hasUserGroupAccess)
+    logger.debug("[RBAC] hasUserGroupAccess=%s", hasUserGroupAccess)
 
     # Enrollment-based access: users who have paid for this resource always get access,
     # regardless of UserGroup membership state (e.g. if an admin removes them from the group).
@@ -523,13 +510,13 @@ async def authorization_verify_based_on_roles_and_authorship(
             hasPaidEnrollmentAccess = await check_enrollment_access(element_uuid, user_id, db_session)
         except Exception:
             pass  # payments module not available (community edition), skip silently
-    logger.info("[RBAC] hasPaidEnrollmentAccess=%s", hasPaidEnrollmentAccess)
+    logger.debug("[RBAC] hasPaidEnrollmentAccess=%s", hasPaidEnrollmentAccess)
 
     if isAuthor or isRole or hasUserGroupAccess or hasPaidEnrollmentAccess:
-        logger.info("[RBAC] Access GRANTED (isAuthor=%s, isRole=%s, hasUserGroupAccess=%s, hasPaidEnrollmentAccess=%s)", isAuthor, isRole, hasUserGroupAccess, hasPaidEnrollmentAccess)
+        logger.debug("[RBAC] Access GRANTED (isAuthor=%s, isRole=%s, hasUserGroupAccess=%s, hasPaidEnrollmentAccess=%s)", isAuthor, isRole, hasUserGroupAccess, hasPaidEnrollmentAccess)
         return True
     else:
-        logger.info("[RBAC] Access DENIED (isAuthor=%s, isRole=%s, hasUserGroupAccess=%s, hasPaidEnrollmentAccess=%s)", isAuthor, isRole, hasUserGroupAccess, hasPaidEnrollmentAccess)
+        logger.debug("[RBAC] Access DENIED (isAuthor=%s, isRole=%s, hasUserGroupAccess=%s, hasPaidEnrollmentAccess=%s)", isAuthor, isRole, hasUserGroupAccess, hasPaidEnrollmentAccess)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User rights (roles & authorship) : You don't have the right to perform this action",

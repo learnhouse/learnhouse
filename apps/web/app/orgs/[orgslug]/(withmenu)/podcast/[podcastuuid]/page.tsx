@@ -99,13 +99,14 @@ export async function generateMetadata({
 
 export default async function PodcastPage({ params }: { params: PageParams }) {
   const { orgslug, podcastuuid } = await params
-  const session = await getServerSession()
+  const [session, org] = await Promise.all([
+    getServerSession(),
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+  ])
   const access_token = session?.tokens?.access_token
-
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
 
   let podcastMeta: PodcastMeta | null = null
   let fetchError: { status?: number } | null = null

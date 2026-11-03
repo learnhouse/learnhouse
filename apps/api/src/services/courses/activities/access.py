@@ -173,6 +173,8 @@ async def verify_activity_reader_access(
     course: Course,
     current_user,
     db_session: AsyncSession,
+    *,
+    parent_chapter: Chapter | None = None,
 ) -> None:
     """Raise unless ``current_user`` may consume ``activity``.
 
@@ -191,7 +193,8 @@ async def verify_activity_reader_access(
         raise HTTPException(status_code=403, detail=decision.reason)
 
     state = await _reader_state(
-        request, ActivityRead.model_validate(activity), activity, course, current_user, db_session
+        request, ActivityRead.model_validate(activity), activity, course, current_user, db_session,
+        parent_chapter=parent_chapter,
     )
     if state == "draft":
         raise HTTPException(status_code=404, detail="Activity not found")
@@ -215,17 +218,22 @@ async def verify_activity_reader_access_by_uuid(
     path like ``courses/{c}/activities/{a}`` can't mix one course's grant with
     another course's activity.
     """
+    # The parent chapter rides along for the lock check, saving it a query.
     row = (await db_session.execute(
-        select(Activity, Course)
+        select(Activity, Course, Chapter)
         .join(Course, Course.id == Activity.course_id)  # type: ignore[arg-type]
+        .outerjoin(ChapterActivity, ChapterActivity.activity_id == Activity.id)  # type: ignore[arg-type]
+        .outerjoin(Chapter, Chapter.id == ChapterActivity.chapter_id)  # type: ignore[arg-type]
         .where(Activity.activity_uuid == activity_uuid)
     )).first()
     if not row:
         raise HTTPException(status_code=404, detail="Activity not found")
-    activity, course = row
+    activity, course, parent_chapter = row
     if course_uuid is not None and course.course_uuid != course_uuid:
         raise HTTPException(status_code=404, detail="Activity not found")
-    await verify_activity_reader_access(request, activity, course, current_user, db_session)
+    await verify_activity_reader_access(
+        request, activity, course, current_user, db_session, parent_chapter=parent_chapter
+    )
     return activity, course
 
 

@@ -57,6 +57,15 @@ def _make_async_session(*results: object) -> AsyncMock:
     return session
 
 
+def _make_row_session(row: object) -> AsyncMock:
+    """An AsyncMock session whose ``(await session.execute(...)).first()`` is ``row``."""
+    session = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.first.return_value = row
+    session.execute.return_value = mock_result
+    return session
+
+
 class TestFeatureDependencies:
     async def test_require_org_admin_rejects_anonymous_user(self):
         with pytest.raises(HTTPException) as exc_info:
@@ -200,7 +209,7 @@ class TestFeatureDependencies:
         mock_check.assert_called_once_with("courses", 44, db_session)
 
     async def test_require_courses_feature_prefers_course_uuid(self):
-        db_session = _make_async_session(SimpleNamespace(org_id=5))
+        db_session = _make_async_session(5)
         request = _request({"course_uuid": "course-1"})
 
         with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check:
@@ -220,7 +229,7 @@ class TestFeatureDependencies:
         assert "Course not found" in exc_info.value.detail
 
     async def test_require_courses_feature_handles_activity_uuid(self):
-        db_session = _make_async_session(SimpleNamespace(course_id=2), SimpleNamespace(org_id=9))
+        db_session = _make_row_session((2, 9))
         request = _request({"activity_uuid": "activity-1"})
 
         with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check:
@@ -230,7 +239,7 @@ class TestFeatureDependencies:
         mock_check.assert_called_once_with("courses", 9, db_session)
 
     async def test_require_courses_feature_rejects_missing_activity_uuid(self):
-        db_session = _make_async_session(None)
+        db_session = _make_row_session(None)
         request = _request({"activity_uuid": "activity-1"})
 
         with pytest.raises(HTTPException) as exc_info:
@@ -240,7 +249,7 @@ class TestFeatureDependencies:
         assert "Activity not found" in exc_info.value.detail
 
     async def test_require_courses_feature_rejects_missing_course_for_activity(self):
-        db_session = _make_async_session(SimpleNamespace(course_id=2), None)
+        db_session = _make_row_session((2, None))
         request = _request({"activity_uuid": "activity-1"})
 
         with pytest.raises(HTTPException) as exc_info:
@@ -250,7 +259,7 @@ class TestFeatureDependencies:
         assert "Course not found" in exc_info.value.detail
 
     async def test_require_courses_feature_handles_org_slug(self):
-        db_session = _make_async_session(SimpleNamespace(id=12))
+        db_session = _make_async_session(12)
         request = _request({"org_slug": "org-12"})
 
         with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check:
@@ -336,7 +345,7 @@ class TestFeatureDependencies:
         mock_check.assert_called_once_with("boards", 42, db_session)
 
     async def test_require_boards_feature_rejects_below_personal_plan(self):
-        db_session = _make_async_session(SimpleNamespace(org_id=21), SimpleNamespace(config={"config_version": "2.0", "plan": "free"}))
+        db_session = _make_async_session(21, SimpleNamespace(config={"config_version": "2.0", "plan": "free"}))
         request = _request({"board_uuid": "board-1"})
 
         with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \
@@ -350,7 +359,7 @@ class TestFeatureDependencies:
         assert "Boards requires a Personal plan or higher" in exc_info.value.detail
 
     async def test_require_boards_feature_allows_pro_plan(self):
-        db_session = _make_async_session(SimpleNamespace(org_id=21), SimpleNamespace(config={"config_version": "2.0", "plan": "pro"}))
+        db_session = _make_async_session(21, SimpleNamespace(config={"config_version": "2.0", "plan": "pro"}))
         request = _request({"board_uuid": "board-1"})
 
         with patch("src.security.features_utils.dependencies._check_feature_enabled", new=AsyncMock(return_value=True)) as mock_check, \

@@ -641,7 +641,7 @@ async def head_block_audio(
     if not file_path:
         raise HTTPException(status_code=404, detail="Audio not found")
 
-    file_size, mime_type, exists = get_file_info(file_path)
+    file_size, mime_type, exists = await asyncio.to_thread(get_file_info, file_path)
 
     if not exists:
         raise HTTPException(status_code=404, detail="Audio not found")
@@ -814,7 +814,7 @@ async def head_activity_video(
     if not file_path:
         raise HTTPException(status_code=404, detail="Video not found")
 
-    file_size, mime_type, exists = get_file_info(file_path)
+    file_size, mime_type, exists = await asyncio.to_thread(get_file_info, file_path)
 
     if not exists:
         raise HTTPException(status_code=404, detail="Video not found")
@@ -879,7 +879,7 @@ async def head_block_video(
     if not file_path:
         raise HTTPException(status_code=404, detail="Video not found")
 
-    file_size, mime_type, exists = get_file_info(file_path)
+    file_size, mime_type, exists = await asyncio.to_thread(get_file_info, file_path)
 
     if not exists:
         raise HTTPException(status_code=404, detail="Video not found")
@@ -1048,7 +1048,7 @@ async def head_podcast_audio(
     if not file_path:
         raise HTTPException(status_code=404, detail="Audio not found")
 
-    file_size, mime_type, exists = get_file_info(file_path)
+    file_size, mime_type, exists = await asyncio.to_thread(get_file_info, file_path)
 
     if not exists:
         raise HTTPException(status_code=404, detail="Audio not found")

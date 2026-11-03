@@ -3,10 +3,9 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import ManageAccessPopover from '@components/Dashboard/Library/ManageAccessPopover'
 import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
-import { exportCourse, downloadBlob, ExportStatus } from '@services/courses/transfer'
+import type { ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { useQueryClient } from '@tanstack/react-query'
@@ -15,6 +14,7 @@ import { getCourseMetadata } from '@services/courses/courses'
 import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy, Download, CheckSquare, Square, Lock } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import React from 'react'
 import toast from 'react-hot-toast'
 import UserAvatar from '@components/Objects/UserAvatar'
@@ -28,6 +28,9 @@ import { useTranslation } from 'react-i18next'
 import { formatDate } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+
+// Admin-only; course cards are mostly seen by learners.
+const ManageAccessPopover = dynamic(() => import('@components/Dashboard/Library/ManageAccessPopover'), { ssr: false })
 
 type Course = {
   course_uuid: string
@@ -134,6 +137,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
     const toastId = exportToast.start('single', course.name)
 
     try {
+      const { exportCourse, downloadBlob } = await import('@services/courses/transfer')
       const blob = await exportCourse(
         course.course_uuid,
         session.data?.tokens?.access_token,

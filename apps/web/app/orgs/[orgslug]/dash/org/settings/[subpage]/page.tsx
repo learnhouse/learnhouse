@@ -6,19 +6,22 @@ import React, { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
 import Image from 'next/image'
-import OrgEditGeneral from '@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'
-import OrgEditBranding from '@components/Dashboard/Pages/Org/OrgEditBranding/OrgEditBranding'
-import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'
-import OrgEditOther from '@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'
-import OrgEditFeatures from '@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'
-import OrgEditAI from '@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'
-import OrgEditUsage from '@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'
-import OrgEditMenu from '@components/Dashboard/Pages/Org/OrgEditMenu/OrgEditMenu'
-import OrgEditCourseEnd from '@components/Dashboard/Pages/Org/OrgEditCourseEnd/OrgEditCourseEnd'
-import OrgEditDangerZone from '@components/Dashboard/Pages/Org/OrgEditDangerZone/OrgEditDangerZone'
 import { useTranslation } from 'react-i18next'
 import { PlanLevel } from '@services/plans/plans'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
+import dynamic from 'next/dynamic'
+
+// One chunk per tab: only the open tab's code is loaded.
+const OrgEditGeneral = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'))
+const OrgEditBranding = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditBranding/OrgEditBranding'))
+const OrgEditLanding = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'))
+const OrgEditOther = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'))
+const OrgEditFeatures = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'))
+const OrgEditAI = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'))
+const OrgEditUsage = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'))
+const OrgEditMenu = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditMenu/OrgEditMenu'))
+const OrgEditCourseEnd = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditCourseEnd/OrgEditCourseEnd'))
+const OrgEditDangerZone = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditDangerZone/OrgEditDangerZone'))
 
 // Security now lives with the people it governs, under Users, split across a
 // two-factor tab and a sign-in-methods tab. The old single URL keeps working.

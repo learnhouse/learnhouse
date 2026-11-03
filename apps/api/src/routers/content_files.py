@@ -11,6 +11,7 @@ SECURITY:
 - Podcast episode content for non-public podcasts requires auth
 """
 
+import asyncio
 import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -375,7 +376,8 @@ async def serve_content_file(
 
     # Get file metadata
     try:
-        head = s3_client.head_object(Bucket=bucket, Key=s3_key)
+        # boto3 is blocking; keep the S3 round trip off the event loop.
+        head = await asyncio.to_thread(s3_client.head_object, Bucket=bucket, Key=s3_key)
     except ClientError as e:
         code = e.response["Error"]["Code"]
         if code in ("NoSuchKey", "404"):
@@ -515,7 +517,8 @@ async def head_content_file(
         raise HTTPException(status_code=500, detail="Storage not configured")
 
     try:
-        head = s3_client.head_object(Bucket=bucket, Key=s3_key)
+        # boto3 is blocking; keep the S3 round trip off the event loop.
+        head = await asyncio.to_thread(s3_client.head_object, Bucket=bucket, Key=s3_key)
     except ClientError as e:
         code = e.response["Error"]["Code"]
         if code in ("NoSuchKey", "404"):

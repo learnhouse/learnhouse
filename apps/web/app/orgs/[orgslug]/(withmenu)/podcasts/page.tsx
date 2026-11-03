@@ -77,13 +77,14 @@ export async function generateMetadata({
 
 export default async function PodcastsPage({ params }: { params: PageParams }) {
   const { orgslug } = await params
-  const session = await getServerSession()
+  const [session, org] = await Promise.all([
+    getServerSession(),
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+  ])
   const access_token = session?.tokens?.access_token
-
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
 
   let initialPodcasts = []
   try {
