@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} désactivé",
           "description": "Cette fonctionnalité est désactivée pour votre organisation. Activez-la dans les paramètres pour la rendre disponible aux utilisateurs."
+        },
+        "platform": {
+          "description": "Cette fonctionnalité a été désactivée pour votre organisation par l'administrateur de la plateforme. Contactez le support si vous en avez besoin."
         }
       }
     },
@@ -3123,7 +3126,12 @@
       "other": "Autre",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "Fermer le menu",
-      "open_menu": "Ouvrir le menu"
+      "open_menu": "Ouvrir le menu",
+      "more_features": "Plus",
+      "features_off": "Désactivées",
+      "feature_off_badge": "Désactivé",
+      "features_locked": "Passez à un plan supérieur pour débloquer",
+      "manage_features": "Gérer les fonctionnalités"
     },
     "home": {
       "cards": {
@@ -4174,7 +4182,7 @@
           },
           "features": {
             "title": "Fonctionnalités",
-            "subtitle": "Activez ou désactivez les fonctionnalités de votre organisation"
+            "subtitle": "Choisissez les fonctionnalités utilisées par votre organisation"
           },
           "sso": {
             "title": "Authentification unique",
@@ -4552,6 +4560,18 @@
           "playgrounds": {
             "title": "Playgrounds",
             "description": "Créez des expériences interactives générées par IA pour vos apprenants"
+          },
+          "folders": {
+            "title": "Bibliothèque",
+            "description": "Organisez les cours et les médias dans des dossiers"
+          },
+          "paths": {
+            "title": "Parcours",
+            "description": "Séquences de cours ordonnées avec leur propre certificat"
+          },
+          "live_sessions": {
+            "title": "Sessions en direct",
+            "description": "Cours en direct avec chat, questions-réponses, sondages et présence"
           }
         },
         "toasts": {
@@ -4561,6 +4581,11 @@
           "disabled": "{{feature}} désactivé",
           "error": "Échec de la mise à jour de la configuration de {{feature}}",
           "admin_only": "Seuls les administrateurs de l'organisation peuvent activer ou désactiver les fonctionnalités"
+        },
+        "platform_disabled": "Désactivée par l'administrateur de la plateforme. Contactez le support pour la réactiver.",
+        "upgrade": "Passer au plan supérieur",
+        "sections": {
+          "locked": "Non inclus dans votre offre"
         }
       },
       "audit_logs": {

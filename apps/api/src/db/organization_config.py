@@ -124,7 +124,12 @@ class MembersAdminToggle(BaseModel):
 
 
 class FeatureAdminToggle(BaseModel):
+    # Platform kill switch (superadmin). Never takes away a feature a paid plan
+    # includes; see resolve_feature().
     disabled: bool = False
+    # The organization's own choice, set from its Features settings. Always
+    # honored: an org may turn off anything it does not want to use.
+    org_disabled: bool = False
 
 
 class SecurityAdminToggle(BaseModel):
@@ -181,6 +186,7 @@ class AdminToggles(BaseModel):
     payments: FeatureAdminToggle = FeatureAdminToggle()
     playgrounds: FeatureAdminToggle = FeatureAdminToggle()
     podcasts: FeatureAdminToggle = FeatureAdminToggle()
+    live_sessions: FeatureAdminToggle = FeatureAdminToggle()
     # AI app connections over MCP; see src/services/mcp/access.py.
     mcp: FeatureAdminToggle = FeatureAdminToggle()
 

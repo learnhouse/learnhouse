@@ -1244,8 +1244,10 @@ async def _update_feature_toggle(
     updated_config = _deep_copy_config(org_config)
 
     if _is_v2_config(updated_config):
+        # The org's own choice; the superadmin kill switch ("disabled") is left
+        # alone. See resolve_feature().
         updated_config.setdefault("admin_toggles", {}).setdefault(feature, {})
-        updated_config["admin_toggles"][feature]["disabled"] = not enabled
+        updated_config["admin_toggles"][feature]["org_disabled"] = not enabled
     else:
         updated_config.setdefault("features", {})
         if feature not in updated_config["features"]:
@@ -1260,6 +1262,24 @@ async def _update_feature_toggle(
     await db_session.refresh(org_config)
 
     return {"detail": f"{feature.capitalize()} configuration updated"}
+
+
+async def update_org_feature_toggle(
+    request: Request,
+    feature: str,
+    enabled: bool,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: AsyncSession,
+):
+    """Turn one of the org-toggleable features on or off (Features settings)."""
+    from src.security.features_utils.resolve import ORG_TOGGLEABLE_FEATURES
+
+    if feature not in ORG_TOGGLEABLE_FEATURES:
+        raise HTTPException(status_code=400, detail="This feature cannot be toggled")
+    return await _update_feature_toggle(
+        request, feature, enabled, org_id, current_user, db_session,
+    )
 
 
 async def update_org_communities_config(
