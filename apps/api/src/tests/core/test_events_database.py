@@ -3,7 +3,7 @@ import logging
 from types import SimpleNamespace
 
 import pytest
-from sqlalchemy import event as sa_event
+from sqlalchemy import event as sa_event, exc as sa_exc
 from sqlmodel import Session
 
 import src.core.events.database as database
@@ -435,14 +435,33 @@ def test_reload_module_covers_production_branch(monkeypatch, caplog):
     assert reloaded.is_testing is False
     assert reloaded.engine is not None
     sync_eng = reloaded.engine.sync_engine
-    assert (sync_eng, "connect") in engine_callbacks
     assert (sync_eng, "checkout") in engine_callbacks
     assert (sync_eng, "checkin") in engine_callbacks
 
-    # The callbacks just do logging.debug; invoke them to cover those branches.
-    engine_callbacks[(sync_eng, "connect")](None, None)
-    engine_callbacks[(sync_eng, "checkout")](None, None, None)
-    engine_callbacks[(sync_eng, "checkin")](None, None)
+    # Check-in stamps the connection; only a connection idle past the threshold
+    # is pinged on checkout, and a failed ping invalidates the pool.
+    checkin = engine_callbacks[(sync_eng, "checkin")]
+    checkout = engine_callbacks[(sync_eng, "checkout")]
+    pings = []
+    reloaded.engine.dialect = SimpleNamespace(do_ping=lambda conn: pings.append(conn) or True)
+
+    fresh = SimpleNamespace(info={})
+    checkout("conn", fresh, None)
+    checkin("conn", fresh)
+    assert "checked_in_at" in fresh.info
+    checkout("conn", fresh, None)
+    assert pings == []
+
+    idle = SimpleNamespace(info={"checked_in_at": 0.0})
+    checkout("conn", idle, None)
+    assert pings == ["conn"]
+
+    def _dead(conn):
+        raise OSError("connection reset")
+
+    reloaded.engine.dialect = SimpleNamespace(do_ping=_dead)
+    with pytest.raises(sa_exc.InvalidatePoolError):
+        checkout("conn", idle, None)
 
     # Reload with listen raising to cover the "Failed to register cache
     # invalidation hooks" warning path.
