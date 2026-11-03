@@ -18,7 +18,8 @@ from src.services.messaging import reminders as rem
 @pytest.fixture(autouse=True)
 def _ee_mode():
     with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="ee"), \
-         patch("src.services.messaging.messaging.enforce_org_mfa", new=AsyncMock()):
+         patch("src.services.messaging.messaging.enforce_org_mfa", new=AsyncMock()), \
+         patch("src.services.security.rate_limiting.check_rate_limit", return_value=(True, 0, 0)):
         yield
 
 
