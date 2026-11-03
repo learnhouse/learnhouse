@@ -1392,6 +1392,10 @@ async def remove_user_from_org_admin(
         )
 
     await db_session.delete(membership)
+    # Connected AI apps end with the membership, so rejoining starts fresh.
+    from src.services.mcp.oauth import revoke_member_grants
+
+    await revoke_member_grants(db_session, user_id, token_user.org_id)
     await db_session.commit()
 
     try:

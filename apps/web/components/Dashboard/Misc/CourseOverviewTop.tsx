@@ -10,6 +10,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
 import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check } from 'lucide-react'
+import { useRegisterAtlasPageContext } from '@ee/components/Atlas/AtlasMiniContext'
+import AtlasToggleButton from '@ee/components/Atlas/AtlasToggleButton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@components/ui/tooltip'
 import { useTranslation } from 'react-i18next'
 import { updateCourse } from '@services/courses/courses'
@@ -41,6 +43,19 @@ export function CourseOverviewTop({
 
   const courseStructure = course?.courseStructure
   const isPublished = courseStructure?.published
+
+  // Tell Atlas which course the user is viewing so the agent can pre-focus
+  // it and skip the "which course?" round-trip on terse messages like
+  // "fill this please". Cleared automatically on unmount.
+  useRegisterAtlasPageContext(
+    courseStructure?.course_uuid
+      ? {
+          course_uuid: courseStructure.course_uuid,
+          course_name: courseStructure.name,
+        }
+      : null,
+  )
+
   const isAIEnabled = org?.config?.config?.resolved_features?.ai?.enabled ?? org?.config?.config?.features?.ai?.enabled !== false
 
   const indexCourseForAI = useCallback(async () => {
@@ -271,6 +286,7 @@ export function CourseOverviewTop({
             <Eye className="w-4 h-4" />
             <span className="hidden sm:inline">{t('dashboard.courses.preview')}</span>
           </Link>
+          {isAIEnabled && <AtlasToggleButton />}
         </div>
       </div>
     </>

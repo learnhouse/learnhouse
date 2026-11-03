@@ -1,6 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Loader2 } from 'lucide-react'
+import { CircleNotch } from '@phosphor-icons/react'
 import { extractHtmlDocument } from './extractHtml'
 
 interface MagicBlockPreviewProps {
@@ -71,7 +71,7 @@ ${html}
     return (
       <div className="flex items-center justify-center w-full h-full bg-black/30" style={{ minHeight: '100%' }}>
         <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-400" />
+          <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-purple-400" />
           <p className="text-sm text-white/50">{t('editor.blocks.magic_block_content.generating_interactive')}</p>
         </div>
       </div>
@@ -96,7 +96,7 @@ ${html}
     <div className="relative w-full h-full" style={{ minHeight: 0 }}>
       {isLoading && streamingContent && (
         <div className="absolute top-4 end-4 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm ring-1 ring-inset ring-white/10">
-          <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+          <CircleNotch weight="bold" className="w-4 h-4 animate-spin text-purple-400" />
           <span className="text-xs text-white/70">{t('editor.blocks.magic_block_content.generating')}</span>
         </div>
       )}

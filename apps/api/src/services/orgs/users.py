@@ -190,8 +190,8 @@ async def _revoke_org_grants(
     """Drop the per-resource grants departing members hold in ``org``.
 
     Deleting the UserOrganization row alone leaves authorship, usergroup and
-    board membership plus their API tokens in place, each of which keeps
-    granting access. Staged on the session; the caller commits.
+    board membership plus their API tokens and connected AI apps in place,
+    each of which keeps granting access. Staged on the session; the caller commits.
     """
     if not user_ids:
         return
@@ -248,6 +248,11 @@ async def _revoke_org_grants(
         )
         .values(is_active=False, update_date=now)
     )
+    # Connected AI apps too, or rejoining later would bring them back.
+    from src.services.mcp.oauth import revoke_member_grants
+
+    for user_id in user_ids:
+        await revoke_member_grants(db_session, user_id, org.id)
 
 
 async def _drop_accepted_invites(
@@ -742,6 +747,13 @@ async def export_organization_users_csv(
     )
 
 
+async def _disconnect_ai_apps(db_session: AsyncSession, user_id: int, org_id: int) -> None:
+    """A member who leaves takes their AI app connections with them."""
+    from src.services.mcp.oauth import revoke_member_grants
+
+    await revoke_member_grants(db_session, user_id, org_id)
+
+
 async def remove_user_from_org(
     request: Request,
     org_id: int,
@@ -791,6 +803,7 @@ async def remove_user_from_org(
 
     await db_session.delete(user_org)
     await _revoke_org_grants(db_session, org, [user_id])
+    await _disconnect_ai_apps(db_session, user_id, org.id)
     await db_session.commit()
     await _drop_accepted_invites(db_session, org, [user_id])
 
@@ -847,6 +860,7 @@ async def leave_org(
 
     await db_session.delete(user_org)
     await _revoke_org_grants(db_session, org, [user_id])
+    await _disconnect_ai_apps(db_session, user_id, org.id)
     await db_session.commit()
     await _drop_accepted_invites(db_session, org, [user_id])
 
@@ -1213,10 +1227,6 @@ async def invite_batch_users(
             detail="Organization not found",
         )
 
-    # get User sender
-    statement = select(User).where(User.id == current_user.id)
-    user = (await db_session.execute(statement)).scalars().first()
-
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
@@ -1232,6 +1242,11 @@ async def invite_batch_users(
     await require_not_demo_org(org_id, db_session)
 
     acting_user_id = resolve_acting_user_id(current_user)
+    # The sender: the member themselves, or whoever created the API token
+    # (a token's own id is not a user id).
+    user = await db_session.get(User, acting_user_id) if acting_user_id else None
+    if user is None:
+        raise HTTPException(status_code=403, detail="Invitations must come from a member")
 
     # Free-tier abuse gate: the org AND the acting user must be at least
     # FREE_TIER_MIN_AGE_DAYS old before invites can be sent. This stops a
@@ -1355,7 +1370,7 @@ async def invite_batch_users(
             "email_sent": isEmailSent,
             "expires": ttl,
             "created_at": datetime.now().isoformat(),
-            "created_by": current_user.user_uuid,
+            "created_by": user.user_uuid,
         }
 
         r.set(
@@ -1384,7 +1399,7 @@ async def invite_batch_users(
             "org_id": org_id,
             "emails": invite_list,
             "invite_code_uuid": invite_code_uuid,
-            "invited_by": current_user.user_uuid,
+            "invited_by": user.user_uuid,
         },
     )
 
