@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} desactivado",
           "description": "Esta función está desactivada para su organización. Actívela en la configuración para que esté disponible para los usuarios."
+        },
+        "platform": {
+          "description": "El administrador de la plataforma desactivó esta funcionalidad para tu organización. Contacta con soporte si la necesitas."
         }
       }
     },
@@ -3123,7 +3126,12 @@
       "other": "Otros",
       "enterprise_edition": "Edición Enterprise",
       "close_menu": "Cerrar menú",
-      "open_menu": "Abrir menú"
+      "open_menu": "Abrir menú",
+      "more_features": "Más",
+      "features_off": "Desactivadas",
+      "feature_off_badge": "Desactivado",
+      "features_locked": "Mejora el plan para desbloquear",
+      "manage_features": "Gestionar funcionalidades"
     },
     "home": {
       "cards": {
@@ -4174,7 +4182,7 @@
           },
           "features": {
             "title": "Funcionalidades",
-            "subtitle": "Activa o desactiva funcionalidades para tu organización"
+            "subtitle": "Elige qué funcionalidades usa tu organización"
           },
           "sso": {
             "title": "Inicio de sesión único",
@@ -4552,6 +4560,18 @@
           "playgrounds": {
             "title": "Playgrounds",
             "description": "Crea experiencias interactivas generadas por IA para tus estudiantes"
+          },
+          "folders": {
+            "title": "Biblioteca",
+            "description": "Organiza cursos y archivos multimedia en carpetas"
+          },
+          "paths": {
+            "title": "Rutas",
+            "description": "Secuencias ordenadas de cursos con su propio certificado"
+          },
+          "live_sessions": {
+            "title": "Sesiones en vivo",
+            "description": "Clases en vivo con chat, preguntas y respuestas, encuestas y asistencia"
           }
         },
         "toasts": {
@@ -4561,6 +4581,11 @@
           "disabled": "{{feature}} deshabilitado",
           "error": "Error al actualizar la configuración de {{feature}}",
           "admin_only": "Solo los administradores de la organización pueden habilitar o deshabilitar funciones"
+        },
+        "platform_disabled": "Desactivada por el administrador de la plataforma. Contacta con soporte para volver a activarla.",
+        "upgrade": "Mejorar plan",
+        "sections": {
+          "locked": "No incluidas en tu plan"
         }
       },
       "audit_logs": {

@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} desativado",
           "description": "Esta funcionalidade está desativada para sua organização. Ative-a nas configurações para disponibilizá-la aos usuários."
+        },
+        "platform": {
+          "description": "Esta funcionalidade foi desativada para sua organização pelo administrador da plataforma. Entre em contato com o suporte se precisar dela."
         }
       }
     },
@@ -3123,7 +3126,12 @@
       "other": "Outros",
       "enterprise_edition": "Edição Enterprise",
       "close_menu": "Fechar menu",
-      "open_menu": "Abrir menu"
+      "open_menu": "Abrir menu",
+      "more_features": "Mais",
+      "features_off": "Desativadas",
+      "feature_off_badge": "Desativado",
+      "features_locked": "Faça upgrade para desbloquear",
+      "manage_features": "Gerenciar funcionalidades"
     },
     "home": {
       "cards": {
@@ -4174,7 +4182,7 @@
           },
           "features": {
             "title": "Funcionalidades",
-            "subtitle": "Ative ou desative funcionalidades para sua organização"
+            "subtitle": "Escolha quais funcionalidades sua organização usa"
           },
           "sso": {
             "title": "Login Único",
@@ -4552,6 +4560,18 @@
           "playgrounds": {
             "title": "Playgrounds",
             "description": "Crie experiências interativas geradas por IA para seus alunos"
+          },
+          "folders": {
+            "title": "Biblioteca",
+            "description": "Organize cursos e mídias em pastas"
+          },
+          "paths": {
+            "title": "Trilhas",
+            "description": "Sequências ordenadas de cursos com certificado próprio"
+          },
+          "live_sessions": {
+            "title": "Sessões ao vivo",
+            "description": "Aulas ao vivo com chat, perguntas e respostas, enquetes e presença"
           }
         },
         "toasts": {
@@ -4561,6 +4581,11 @@
           "disabled": "{{feature}} desativado",
           "error": "Falha ao atualizar configuração de {{feature}}",
           "admin_only": "Apenas administradores podem habilitar ou desabilitar recursos"
+        },
+        "platform_disabled": "Desativada pelo administrador da plataforma. Entre em contato com o suporte para reativá-la.",
+        "upgrade": "Fazer upgrade",
+        "sections": {
+          "locked": "Fora do seu plano"
         }
       },
       "audit_logs": {

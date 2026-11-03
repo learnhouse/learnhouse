@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}}已禁用",
           "description": "此功能已为您的组织禁用。在设置中启用它以使其对用户可用。"
+        },
+        "platform": {
+          "description": "平台管理员已为您的组织关闭此功能。如有需要，请联系支持团队。"
         }
       }
     },
@@ -3057,7 +3060,12 @@
       "other": "其他",
       "enterprise_edition": "企业版",
       "close_menu": "关闭菜单",
-      "open_menu": "打开菜单"
+      "open_menu": "打开菜单",
+      "more_features": "更多",
+      "features_off": "已关闭",
+      "feature_off_badge": "关闭",
+      "features_locked": "升级以解锁",
+      "manage_features": "管理功能"
     },
     "home": {
       "cards": {
@@ -4098,7 +4106,7 @@
           },
           "features": {
             "title": "功能",
-            "subtitle": "为您的组织启用或禁用功能"
+            "subtitle": "选择您的组织使用哪些功能"
           },
           "sso": {
             "title": "单点登录",
@@ -4473,6 +4481,18 @@
           "playgrounds": {
             "title": "Playground",
             "description": "为学习者创建由 AI 生成的互动体验"
+          },
+          "folders": {
+            "title": "资源库",
+            "description": "用文件夹整理课程和媒体"
+          },
+          "paths": {
+            "title": "学习路径",
+            "description": "按顺序排列的课程序列，带有专属证书"
+          },
+          "live_sessions": {
+            "title": "直播课堂",
+            "description": "带聊天、问答、投票和出勤的直播课程"
           }
         },
         "toasts": {
@@ -4482,6 +4502,11 @@
           "disabled": "{{feature}}已禁用",
           "error": "更新{{feature}}配置失败",
           "admin_only": "只有组织管理员才能启用或禁用功能"
+        },
+        "platform_disabled": "已被平台管理员关闭。请联系支持团队重新开启。",
+        "upgrade": "升级",
+        "sections": {
+          "locked": "不在您的套餐中"
         }
       },
       "audit_logs": {

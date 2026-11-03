@@ -750,7 +750,7 @@ async def test_update_org_settings_is_admin_only(registry, db, org, admin_user, 
     denied(await call(registry, "update_org_settings", args, _ctx(db, org, token, approved=True)), "preflight_denied")
     denied(await call(registry, "update_org_settings", args, _ctx(db, org, admin_user)), "approval_required")
     ok(await call(registry, "update_org_settings", args, _ctx(db, org, admin_user, approved=True)))
-    assert (await _org_config(db, org))["admin_toggles"]["communities"]["disabled"] is True
+    assert (await _org_config(db, org))["admin_toggles"]["communities"]["org_disabled"] is True
 
 
 async def test_update_org_settings_sections(registry, db, org, admin_user, setup):
@@ -802,7 +802,7 @@ async def test_update_org_settings_sections(registry, db, org, admin_user, setup
 
     await apply({"section": "features", "boards": False, "podcasts": True})
     toggles = (await _org_config(db, org))["admin_toggles"]
-    assert toggles["boards"]["disabled"] is True and toggles["podcasts"]["disabled"] is False
+    assert toggles["boards"]["org_disabled"] is True and toggles["podcasts"]["org_disabled"] is False
 
     # A refused field leaves the rest of the section untouched.
     denied(

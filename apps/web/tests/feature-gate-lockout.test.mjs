@@ -170,6 +170,51 @@ describe("resolveGateReason: the catalog fallback", () => {
   });
 });
 
+describe("resolveGateReason: the backend's availability answer", () => {
+  test("locks a feature the plan does not include even when the nominal tier is met", () => {
+    // Boards sit in Personal but not in Standard. Comparing tiers says a
+    // Standard org meets "personal", which used to show the feature as turned
+    // off instead of locked behind Pro.
+    const result = resolveGateReason({
+      resolved: { enabled: false, available: false, required_plan: "personal", upgrade_plan: "pro" },
+      catalogPlan: "standard",
+      currentPlan: "standard",
+      orgLoaded: true,
+    });
+
+    expect(result.reason).toBe("plan");
+    expect(result.meetsPlan).toBe(false);
+    expect(result.requiredPlan).toBe("pro");
+    expect(result.disabledBy).toBeUndefined();
+  });
+
+  test("reports who turned an available feature off", () => {
+    const result = resolveGateReason({
+      resolved: { enabled: false, available: true, required_plan: "standard", disabled_by: "org" },
+      catalogPlan: "standard",
+      currentPlan: "standard",
+      orgLoaded: true,
+    });
+
+    expect(result.reason).toBe("disabled");
+    expect(result.meetsPlan).toBe(true);
+    expect(result.disabledBy).toBe("org");
+  });
+
+  test("an available feature is granted whatever the tier comparison says", () => {
+    // Comp-granted through an override: available on a plan below the tier.
+    const result = resolveGateReason({
+      resolved: { enabled: true, available: true, required_plan: "pro" },
+      catalogPlan: "pro",
+      currentPlan: "free",
+      orgLoaded: true,
+    });
+
+    expect(result.reason).toBeUndefined();
+    expect(result.meetsPlan).toBe(true);
+  });
+});
+
 describe("Organization AI settings page", () => {
   const webRoot = path.resolve(import.meta.dirname, "..");
   const src = fs.readFileSync(
