@@ -19,7 +19,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { apiFetch } from '@services/utils/ts/requests'
+import { apiFetch, asArray } from '@services/utils/ts/requests'
 import { getUserGroups } from '@services/usergroups/usergroups'
 import {
   updatePlayground,
@@ -585,7 +585,7 @@ function LinkUserGroupForm({
   const { data: allGroups } = useQuery({
     queryKey: queryKeys.usergroups.list(orgId),
     queryFn: () => getUserGroups(orgId, accessToken),
-    select: (res: any) => res?.data ?? res,
+    select: (res: any) => asArray<any>(res),
     enabled: !!accessToken && !!orgId,
     staleTime: 60_000,
   })
@@ -593,7 +593,7 @@ function LinkUserGroupForm({
   const [selected, setSelected] = useState<string>('')
 
   useEffect(() => {
-    if (allGroups?.length > 0) setSelected(allGroups[0].usergroup_uuid)
+    if (allGroups && allGroups.length > 0) setSelected(allGroups[0].usergroup_uuid)
   }, [allGroups])
 
   const handleLink = async () => {

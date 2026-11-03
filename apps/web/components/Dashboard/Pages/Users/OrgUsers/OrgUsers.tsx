@@ -10,7 +10,7 @@ import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
-import { apiFetch } from '@services/utils/ts/requests'
+import { apiFetch, asArray } from '@services/utils/ts/requests'
 import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUp, ArrowDown, X, Filter, Download, BarChart3, GitCompare, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
@@ -115,6 +115,7 @@ function OrgUsers() {
   const { data: roles } = useQuery({
     queryKey: queryKeys.org.roles(org?.id),
     queryFn: () => apiFetch(`${getAPIUrl()}roles/org/${org.id}`, access_token),
+    select: (res: any) => asArray<any>(res),
     enabled: !!org?.id && !!access_token,
     staleTime: 60_000,
   })
@@ -123,6 +124,9 @@ function OrgUsers() {
   const { data: usergroups } = useQuery({
     queryKey: queryKeys.usergroups.list(org?.id),
     queryFn: () => apiFetch(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`, access_token),
+    // Shares its cache key with getUserGroups(), which stores the
+    // {success, data} envelope rather than the bare list.
+    select: (res: any) => asArray<any>(res),
     enabled: !!org?.id && !!access_token,
     staleTime: 60_000,
   })

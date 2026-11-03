@@ -1,3 +1,4 @@
+import { detailMessage } from '@services/utils/ts/requests'
 import { getAPIUrl } from '@services/config/config'
 import type {
   MagicBlockContext,
@@ -37,7 +38,7 @@ export async function startMagicBlockSession(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `HTTP error ${response.status}`)
+      throw new Error(detailMessage(errorData.detail, `HTTP error ${response.status}`))
     }
 
     await processStream(response, onChunk, onComplete, onError)
@@ -80,7 +81,7 @@ export async function iterateMagicBlock(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `HTTP error ${response.status}`)
+      throw new Error(detailMessage(errorData.detail, `HTTP error ${response.status}`))
     }
 
     await processStream(response, onChunk, onComplete, onError)
@@ -111,7 +112,7 @@ export async function getMagicBlockSession(
       const errorData = await response.json().catch(() => ({}))
       return {
         success: false,
-        error: errorData.detail || `HTTP error ${response.status}`,
+        error: detailMessage(errorData.detail, `HTTP error ${response.status}`),
       }
     }
 

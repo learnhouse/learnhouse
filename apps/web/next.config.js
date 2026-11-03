@@ -205,9 +205,14 @@ const nextConfig = {
       'react-katex',
     ],
   },
-  // Ensure consistent build IDs across multiple pods in Kubernetes
+  // The build id is how Next spots a tab still running an older deploy: on a
+  // mismatch it does a full page load instead of splicing new chunks into the
+  // old runtime. A fixed id hid every deploy, so open tabs crashed with
+  // "x is not a function" after each release. Pods share one image, so Next's
+  // per-build default is already consistent; CI pins it to the commit so
+  // per-arch builds agree too.
   generateBuildId: async () => {
-    return process.env.BUILD_ID || 'learnhouse-production'
+    return process.env.BUILD_ID || null
   },
 }
 

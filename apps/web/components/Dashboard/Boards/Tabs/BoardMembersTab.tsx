@@ -6,7 +6,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { apiFetch } from '@services/utils/ts/requests'
+import { apiFetch, asArray } from '@services/utils/ts/requests'
 import { addBoardMembersBatch, getBoardMembers, removeBoardMember } from '@services/boards/boards'
 import { getUserGroups } from '@services/usergroups/usergroups'
 import { searchMatchesAny } from '@/lib/search/normalize'
@@ -223,7 +223,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen }: {
   const { data: usergroups } = useQuery({
     queryKey: queryKeys.usergroups.list(orgId),
     queryFn: () => getUserGroups(orgId, accessToken),
-    select: (res: any) => res?.data ?? res,
+    select: (res: any) => asArray<any>(res),
     enabled: !!accessToken && !!orgId,
     staleTime: 60_000,
   })

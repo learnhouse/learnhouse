@@ -111,6 +111,10 @@ logger = logging.getLogger(__name__)
 LEARNER_ROLE_ID = 4
 
 
+class DemoSlugTakenError(RuntimeError):
+    """The demo slug belongs to an organization that is not the demo."""
+
+
 class _Sweep(NamedTuple):
     """One entry in the drift table: a model, its uuid column, its registry kind.
 
@@ -515,7 +519,7 @@ async def _sync_org(
             # Refusing rather than taking it over: the slug may belong to a real
             # organization on this install, and converting someone's org into
             # the demo would delete its content as drift on the next tick.
-            raise RuntimeError(
+            raise DemoSlugTakenError(
                 f"organization {slug!r} already exists and is not a demo org; "
                 f"set LEARNHOUSE_DEMO_SLUG to something else"
             )
