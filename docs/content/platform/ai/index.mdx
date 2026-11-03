@@ -9,14 +9,20 @@ LearnHouse has AI features for both teachers and learners. They work from your o
 
 ## Turning AI on
 
-AI is controlled per organization in the AI settings of the [Organization Settings](/platform/organizations/settings). Only admins can change them:
+AI is controlled per organization in the **AI** tab of the [Organization Settings](/platform/organizations/settings). Only admins can change it:
 
 | Setting | What it does |
 | --- | --- |
 | **Enable AI Features** | Turns every AI feature on or off for the organization. |
 | **AI Copilot** | Lets learners ask questions about course content. Answers come from your indexed course material, with citations. |
 
-The editor and activity AI features are always on while AI is enabled.
+The editor and activity AI features (**AI-powered content editor assistance** and **AI learning activity interactions**) are always on while AI is enabled.
+
+<img src="/img/pages/ai/ai-settings.webp" alt="The AI tab of the organization settings with Enable AI Features and AI Copilot turned on, and the editor and activity features marked Always on" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+### Indexing courses for AI
+
+The Copilot answers from an index of your course content. In a course's header in the dashboard, click **Index for AI** to index it. The button then shows **Indexed**, and the course is re-indexed automatically when its activities change.
 
 <Callout>
 On self-hosted instances AI also has to be configured on the server. LearnHouse supports several AI providers (Google Gemini is the default). Image generation and text to speech always use Google. See [AI Setup](/self-hosting/configuration/ai-setup).
@@ -36,9 +42,11 @@ On LearnHouse Cloud, each plan includes a number of credits per billing cycle:
 | Pro | 2000 |
 | Enterprise | Unlimited |
 
-You can buy extra credits as a monthly add-on. The dashboard home and the organization's usage page show how many are left. When credits run out, AI actions are refused until the next cycle or until you add more.
+You can buy extra credits as a monthly add-on. The dashboard home and the **Usage** tab of the organization settings show how many are left, under **AI Credits**. When credits run out, AI actions are refused until the next cycle or until you add more.
 
 Self-hosted instances have no credit limit. Usage is still counted.
+
+<img src="/img/pages/ai/ai-usage.webp" alt="The Usage tab with plan limits and the AI Credits section showing base, purchased, used and remaining credits" width={1600} height={900} style={{ borderRadius: 10 }} />
 
 ### Cost per action
 

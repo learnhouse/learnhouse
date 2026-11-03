@@ -4,6 +4,8 @@ import { Callout } from 'nextra/components'
 
 LearnHouse can move courses between organizations and instances, bring them in from other learning platforms, and build a course from a folder of files.
 
+<YouTube video="growth-7" />
+
 ## Exporting courses
 
 From **Courses** in the dashboard:
@@ -20,6 +22,8 @@ An export contains the course structure, its content and its files. Import it in
 ## Importing courses
 
 Click **Import Course** in the course list and pick a source:
+
+<img src="/img/pages/courses/import-course-sources.webp" alt="The Import Course window with SCORM Package, LearnHouse Courses and Another LMS" width={1600} height={900} style={{ borderRadius: 10 }} />
 
 | Source | Accepts |
 | --- | --- |
@@ -38,11 +42,15 @@ Click **Import Course** in the course list and pick a source:
 
 ### Another LMS
 
-Choose the **Source platform** (or leave **Auto-detect**), choose how **Quizzes** are converted (**Graded assignments** or **Interactive quiz blocks in pages**), drop the export and click **Upload and Convert**. After the conversion you get a report of what was created and skipped, then the same import options as above. The full list of supported formats and what each item becomes is in [Import from Another LMS](/developers/migration/from-another-lms).
+The **Import from Another LMS** window has three steps: **Upload Package**, **Configure** and **Complete**. Choose the **Source platform** (or leave **Auto-detect**), choose how **Quizzes** are converted (**Graded assignments** or **Interactive quiz blocks in pages**), drop the export and click **Upload and Convert**.
+
+<img src="/img/pages/courses/import-another-lms.webp" alt="The Import from Another LMS window on the Upload Package step, with Source platform set to Auto-detect and the two quiz options" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+After the conversion you get a report of what was created and skipped, then the same import options as above. The full list of supported formats and what each item becomes is in [Import from Another LMS](/developers/migration/from-another-lms).
 
 ## From existing content
 
-If you have a set of files but no course yet, use **Create Course** > **From Existing Content**. The **Migrate Content** wizard has three steps:
+If you have a set of files but no course yet, use **New Course** > **From Existing Content**. The **Migrate Content** wizard has three steps:
 
 1. **Upload**: drop your files. Accepted: videos (MP4, WebM, MOV), documents (PDF), images (PNG, JPG, WebP) and audio (MP3, WAV). Up to 5 GB per file and 20 GB in total. Enter a **Course Name** and a **One-liner Description**.
 2. **Organize**: click **Organize with AI** to have the files sorted into chapters and activities for you (1 AI credit), or **Organize Manually**. Either way you can then drag files between chapters and activities, and use **Add Chapter** and **Add Activity**.

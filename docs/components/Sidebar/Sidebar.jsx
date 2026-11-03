@@ -86,6 +86,10 @@ import {
   Tag,
   Crown,
   Books,
+  CalendarDots,
+  Steps,
+  BracketsCurly,
+  Drop,
 } from '@phosphor-icons/react/dist/ssr'
 
 const ICON_SIZE = 15
@@ -120,9 +124,11 @@ const iconMap = {
   '/platform/courses/import-export': UploadSimple,
   '/platform/courses/taking-a-course': Student,
   '/platform/courses/trails': Path,
+  '/platform/courses/drip-content': Drop,
 
   // Platform > Editor
   '/platform/editor/blocks': Cube,
+  '/platform/editor/dynamic-content': BracketsCurly,
 
   // Platform > AI
   '/platform/ai/for-students': GraduationCap,
@@ -159,6 +165,8 @@ const iconMap = {
 
   // Platform > Podcasts
   '/platform/podcasts': Microphone,
+  '/platform/calendar': CalendarDots,
+  '/platform/paths': Steps,
 
   // Platform > Certifications
   '/platform/certifications': Certificate,

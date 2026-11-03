@@ -117,6 +117,29 @@ Triggered when a previously issued certificate is revoked (e.g. a gating assignm
 }
 ```
 
+### `path_enrolled`
+
+Triggered when a user starts a [learning path](/platform/paths).
+
+```json
+{
+  "user": { "user_uuid": "string", "email": "string", "username": "string" },
+  "path": { "path_uuid": "string", "name": "string" }
+}
+```
+
+### `path_completed`
+
+Triggered when a user finishes a learning path: every required course plus the electives the path asks for. `certificate_uuid` holds the path certificate ID when the path awards one, and is empty otherwise.
+
+```json
+{
+  "user":        { "user_uuid": "string", "email": "string", "username": "string" },
+  "path":        { "path_uuid": "string", "name": "string" },
+  "certificate": { "certificate_uuid": "string" }
+}
+```
+
 ## User & access
 
 ### `user_signed_up`
@@ -490,3 +513,28 @@ Triggered when the organization payments configuration is updated.
 { "payments_enabled": "boolean" }
 ```
 
+## Payments
+
+### `payment_access_granted`
+
+Triggered when someone gets access through an offer: a Stripe purchase, a free claim, or a grant from the dashboard or the API.
+
+```json
+{
+  "user":   { "user_uuid": "string", "email": "string", "username": "string" },
+  "offer":  { "offer_uuid": "string", "name": "string" },
+  "access": { "access_uuid": "string", "status": "string", "source": "string" }
+}
+```
+
+### `payment_access_revoked`
+
+Triggered when someone loses access to an offer: a cancelled subscription, a refund, a dispute, or a revoke.
+
+```json
+{
+  "user":   { "user_uuid": "string", "email": "string", "username": "string" },
+  "offer":  { "offer_uuid": "string", "name": "string" },
+  "access": { "access_uuid": "string", "status": "string", "source": "string" }
+}
+```

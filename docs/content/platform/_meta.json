@@ -1,6 +1,7 @@
 {
   "index": "Overview",
   "courses": "Courses",
+  "paths": "Learning Paths",
   "editor": "Editor",
   "assignments": "Assignments",
   "code-execution": "Code Execution",
@@ -8,6 +9,7 @@
   "discussions": "Communities",
   "boards": "Boards",
   "podcasts": "Podcasts",
+  "calendar": "Calendar",
   "certifications": "Certifications",
   "analytics": "Analytics",
   "search": "Search",

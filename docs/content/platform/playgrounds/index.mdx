@@ -20,6 +20,8 @@ Playgrounds must be enabled in your [Organization Settings](/platform/organizati
 4. Ask for changes in the same chat. You can generate up to 10 times per editing session. The counter shows how many generations are left.
 5. Click **Save**, then **Publish** when it is ready for learners.
 
+<img src="/img/pages/playgrounds/playground-editor.webp" alt="The playground editor with a generated payout date calculator in the preview and the AI Generator chat on the right" width={1600} height={900} style={{ borderRadius: 10 }} />
+
 Each generation uses 3 [AI credits](/platform/ai#ai-credits).
 
 ## Options
@@ -32,19 +34,31 @@ Open the playground's options to change:
 | **Access** | **Public** (anyone on the internet), **Members only** (signed-in members of your organization, the default) or **Restricted** (only the user groups you pick). |
 | **Thumbnail** | Upload a PNG or JPG image (up to 8 MB), or generate one with AI. |
 
+<img src="/img/pages/playgrounds/playground-access.webp" alt="The Access tab of a playground's options, with Public, Members only and Restricted" width={1600} height={900} style={{ borderRadius: 10 }} />
+
 Unpublished playgrounds stay as **Draft** and only editors can see them.
 
 ## The playground page
 
 Learners open a published playground from the **Playgrounds** page. They can use it inline or in **Fullscreen**, and react with emoji under **Reactions**. The page also shows the author, access level and creation date. **Download** saves the playground as a single `.html` file.
 
+<img src="/img/pages/playgrounds/playground-page.webp" alt="A published playground page, with its details and reactions on the left and the playground on the right" width={1600} height={900} style={{ borderRadius: 10 }} />
+
 From the dashboard list you can also duplicate, delete or download several playgrounds at once.
+
+## Using a playground in a course
+
+To put a playground inside a lesson, add a **Library** block to a Dynamic Page, open its **Playgrounds** tab and choose your playground. It runs right inside the page. See [Blocks](/platform/editor/blocks).
+
+<img src="/img/pages/playgrounds/playground-in-lesson.webp" alt="A lesson with a playground embedded through a Library block" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+Playgrounds can also be sold as a [product](/platform/payments/offers). Until someone buys it, they see its page but cannot use it.
 
 ## Playgrounds, Magic Blocks and Code Playground
 
 | Feature | Where it lives | What it is |
 | --- | --- | --- |
-| **Playgrounds** (this page) | Its own page, listed under Playgrounds | AI-generated interactive page |
+| **Playgrounds** (this page) | Its own page, listed under Playgrounds, or in a lesson through a Library block | AI-generated interactive page |
 | **Magic Block** | Inside a course page, from the `/` menu | AI-generated interactive element embedded in a lesson. See [Blocks](/platform/editor/blocks). |
 | **AI Playground** on a board | On a [board](/platform/boards) | AI-generated interactive element on a canvas |
 | **Code Playground** | Inside a course page, from the `/` menu | A coding challenge that runs real code. See [Code Execution](/platform/code-execution). |

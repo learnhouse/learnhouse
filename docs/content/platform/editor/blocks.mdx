@@ -2,7 +2,7 @@ import { Callout } from 'nextra/components'
 
 # Blocks
 
-Type `/` anywhere in a page to open the block menu. Start typing to filter it (for example `/quiz` or `/table`), then press Enter. The menu groups blocks into **Text**, **Media**, **Interactive**, **Callouts**, **UI Elements** and **Tables**, in that order.
+Type `/` anywhere in a page to open the block menu. Start typing to filter it (for example `/quiz` or `/table`), then press Enter. The menu groups blocks into **Text**, **Media**, **Interactive**, **Callouts**, **Dynamic content**, **UI Elements** and **Tables**, in that order. Most blocks are also in the [editor toolbar](/platform/editor#the-toolbar).
 
 ## Text
 
@@ -56,8 +56,12 @@ The Audio block has four tabs:
 
 Blocks with an AI option use your organization's [AI credits](/platform/ai#ai-credits).
 
+<img src="/img/pages/editor/blocks-flipcards-math-code.webp" alt="A lesson in the editor with a row of flipcards, a Math Equation block with its Templates, Symbols and Help menus, and a code block" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+<img src="/img/pages/editor/magic-block.webp" alt="The Magic Block window: a generated refund calculator on the left and the Magic Chat with the prompt on the right, at 1 of 6 iterations" width={1600} height={900} style={{ borderRadius: 10 }} />
+
 <Callout>
-On LearnHouse Cloud, **Magic Block** needs the Standard plan or higher. It also uses AI credits. Self-hosted instances do not apply plan restrictions to it.
+**Magic Block** is available whenever AI is turned on for your organization. Each generation or change uses 3 AI credits.
 </Callout>
 
 ### Quiz block
@@ -83,6 +87,16 @@ Enter a **Website URL** and the block shows the page's title, description and im
 | Block | What it does |
 | --- | --- |
 | **Callout** | A highlighted box. Pick its type: **Info**, **Warning**, **Tip**, **Success** or **Error**. |
+
+## Dynamic content
+
+| Block | What it does |
+| --- | --- |
+| **Variable** | A value each learner reads as their own, such as their first name or progress. |
+| **Conditional content**, **Show to a group**, **Unlock later**, **A/B test** | Blocks only some learners see. |
+| **Insert template**, **Save as template** | Reuse saved blocks and pages. |
+
+See [Dynamic Content & Templates](/platform/editor/dynamic-content).
 
 ## UI Elements
 

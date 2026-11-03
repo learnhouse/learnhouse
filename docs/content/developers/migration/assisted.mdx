@@ -54,7 +54,7 @@ Files with any other extension are skipped. Per-file size limit is **5 GB**, and
 | # | Method | Path | Purpose |
 | --- | --- | --- | --- |
 | 1 | `POST` | `/api/v1/courses/migrate/upload?org_id={org_id}` | Upload one or more files to a temporary holding area. Returns a `temp_id`. |
-| 2 | `POST` | `/api/v1/courses/migrate/suggest?org_id={org_id}` | Ask Gemini to propose a course tree from the uploaded files. Returns the structure for you to review. |
+| 2 | `POST` | `/api/v1/courses/migrate/suggest?org_id={org_id}` | Ask the AI model to propose a course tree from the uploaded files. Returns the structure for you to review. |
 | 3 | `POST` | `/api/v1/courses/migrate/create?org_id={org_id}` | Commit the (possibly edited) structure: creates the course, chapters, activities, and uploads each file to its final destination. |
 
 Temporary uploads older than 60 minutes are garbage-collected automatically, so finish a migration in one sitting.
@@ -107,7 +107,7 @@ The server limits concurrent uploads to **3 simultaneous requests per process**.
 
 ## Step 2: Ask for a suggested structure
 
-Send the `temp_id` and a course name; Gemini groups the files into chapters and proposes activity titles:
+Send the `temp_id` and a course name; the AI model groups the files into chapters and proposes activity titles:
 
 ```bash
 curl -X POST "http://localhost:1338/api/v1/courses/migrate/suggest?org_id=1" \
@@ -264,7 +264,7 @@ A successfully completed migration leaves no temporary state behind: step 3 dele
 ## Limitations
 
 - **Media only.** Text content (Markdown, HTML, rich text) is not imported. The dynamic-page activities created from images and audio contain a single block referencing the file; no surrounding prose is generated.
-- **Single-chapter fallback.** If Gemini is unavailable, every file lands in one chapter named "Content". You can edit the structure before step 3 to rearrange.
+- **Single-chapter fallback.** If the AI model is unavailable, every file lands in one chapter named "Content". You can edit the structure before step 3 to rearrange.
 - **No assignments / quizzes / SCORM.** The flow does not infer interactive content from media. Create those separately via the programmatic flow.
 - **One file per activity.** Each migrated activity references exactly one source file. If you need an activity that combines multiple files (e.g. a dynamic page with several images), build that with the programmatic flow.
 
