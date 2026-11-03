@@ -16,6 +16,7 @@ from src.services.ai.llm.embeddings import (
     embed_documents,
     embed_query,
 )
+from src.services.ai.llm.errors import is_quota_error, is_spend_cap_error
 from src.services.ai.rag.text_chunking import split_text
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,8 @@ def chunk_text(text: str) -> list[str]:
 async def generate_embeddings(texts: list[str]) -> list[list[float]]:
     """
     Generate embeddings for a list of texts via the configured provider.
-    Batches inputs and retries transient failures with exponential backoff.
+    Batches inputs and retries transient failures with exponential backoff. A
+    spent provider budget is not retried: it fails the same way until topped up.
     """
     all_embeddings: list[list[float]] = []
 
@@ -48,8 +50,10 @@ async def generate_embeddings(texts: list[str]) -> list[list[float]]:
                 all_embeddings.extend(await embed_documents(batch))
                 break
             except Exception as e:
-                if attempt == MAX_RETRIES - 1:
-                    logger.error("Embedding failed after %d attempts: %s", MAX_RETRIES, e)
+                if attempt == MAX_RETRIES - 1 or is_spend_cap_error(e):
+                    (logger.warning if is_quota_error(e) else logger.error)(
+                        "Embedding failed after %d attempts: %s", attempt + 1, e,
+                    )
                     raise
                 wait = 2 ** attempt
                 logger.warning(
@@ -70,8 +74,10 @@ async def embed_single_text(text: str) -> list[float]:
         try:
             return await embed_query(text)
         except Exception as e:
-            if attempt == MAX_RETRIES - 1:
-                logger.error("Single embedding failed after %d attempts: %s", MAX_RETRIES, e)
+            if attempt == MAX_RETRIES - 1 or is_spend_cap_error(e):
+                (logger.warning if is_quota_error(e) else logger.error)(
+                    "Single embedding failed after %d attempts: %s", attempt + 1, e,
+                )
                 raise
             await asyncio.sleep(2 ** attempt)
     raise RuntimeError("unreachable")

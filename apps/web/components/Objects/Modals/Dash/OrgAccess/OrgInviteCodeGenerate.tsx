@@ -11,6 +11,7 @@ import { queryKeys } from '@/lib/query/keys'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { asArray } from '@services/utils/ts/requests'
 
 type OrgInviteCodeGenerateProps = {
     setInvitesModal: any
@@ -29,7 +30,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     const { data: usergroups } = useQuery({
         queryKey: queryKeys.usergroups.list(org?.id),
         queryFn: () => getUserGroups(org.id, access_token),
-        select: (res: any) => res?.data ?? res,
+        select: (res: any) => asArray<any>(res),
         enabled: !!(org?.id && access_token),
         staleTime: 60_000,
     })

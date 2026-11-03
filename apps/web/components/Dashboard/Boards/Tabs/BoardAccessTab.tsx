@@ -7,7 +7,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { apiFetch } from '@services/utils/ts/requests'
+import { apiFetch, asArray } from '@services/utils/ts/requests'
 import { updateBoard } from '@services/boards/boards'
 import { getUserGroups, linkResourcesToUserGroup, unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
@@ -225,10 +225,10 @@ function LinkUserGroupToBoard({ boardUuid, orgId, accessToken, setModalOpen }: {
   const org = useOrg() as any
   const queryClient = useQueryClient()
 
-  const { data: usergroups } = useQuery({
+  const { data: usergroups = [] } = useQuery({
     queryKey: queryKeys.usergroups.list(org?.id),
     queryFn: () => getUserGroups(org.id, accessToken),
-    select: (res: any) => res?.data ?? res,
+    select: (res: any) => asArray<any>(res),
     enabled: !!org?.id && !!accessToken,
     staleTime: 60_000,
   })

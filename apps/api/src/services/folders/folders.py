@@ -34,6 +34,7 @@ from src.security.org_auth import (
     require_org_role_permission,
 )
 from src.security.rbac import check_resource_access, AccessAction
+from src.security.rbac.resource_access import prime_resource_access
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 
@@ -333,6 +334,9 @@ async def _resolve_items(
                 include_private,
                 viewer_id,
             )
+        if current_user is not None and viewer_id is not None and resource_type in _RBAC_GATED_RESOURCE_TYPES:
+            # The per-item checks below reuse these rows and one authorship query.
+            await prime_resource_access(request, db_session, current_user, rows, uuid_field)
         for resource in rows:
             if not include_private and not getattr(resource, "public", False):
                 continue
@@ -417,6 +421,8 @@ async def _folder_to_read(
             select(Folder).where(Folder.parent_folder_id == folder.id), sort_mode
         )
         sub_rows = (await db_session.execute(sub_stmt)).scalars().all()
+        if current_user is not None and viewer_id is not None:
+            await prime_resource_access(request, db_session, current_user, sub_rows, "folder_uuid")
         for sub in sub_rows:
             if not include_private and not sub.public:
                 continue
@@ -1299,20 +1305,26 @@ async def add_org_root_content(
         )
     ).scalars().first()
     if not existing:
-        db_session.add(
-            FolderContent(
-                folder_id=None,
-                resource_uuid=resource_uuid,
-                org_id=int(org_id),
-                position=position,
-                creation_date=str(datetime.now()),
-                update_date=str(datetime.now()),
-            )
+        existing = FolderContent(
+            folder_id=None,
+            resource_uuid=resource_uuid,
+            org_id=int(org_id),
+            position=position,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
         )
+        db_session.add(existing)
         await db_session.commit()
 
-    items = await get_org_root_items(request, str(org_id), current_user, db_session)
-    return next((i for i in items if i.resource_uuid == resource_uuid), None)
+    # Resolve only the placed item: resolving the whole root ran an access
+    # check for every item in the library on each upload.
+    include_private = await _may_see_private(current_user, int(org_id), db_session)
+    items = await _resolve_items(
+        db_session, [existing], include_private=include_private,
+        viewer_id=resolve_acting_user_id(current_user),
+        request=request, current_user=current_user,
+    )
+    return items[0] if items else None
 
 
 async def _authors_item(request, current_user, db_session: AsyncSession, resource_uuid: str) -> bool:
