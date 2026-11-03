@@ -1,13 +1,13 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
+import { useMessagingEnabled } from '@components/Messaging/MessagingProvider'
 import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import {
   startRAGChatStream,
   sendRAGChatStream,
@@ -47,6 +47,15 @@ import {
 import Link from 'next/link'
 import { sourceLocation, sourcePath, sourceTitle, type CopilotSource } from '@/lib/copilot/sources'
 import { MarkdownImageLink } from '@components/Objects/Activities/AI/MarkdownImageLink'
+import {
+  BASE_REMARK_PLUGINS,
+  MATH_HINT,
+  NO_REHYPE_PLUGINS,
+  dropUnclosedMath,
+  loadMathPlugins,
+  normalizeMathDelimiters,
+  type MathPlugins,
+} from '@/lib/copilot/markdown'
 
 export type CopilotProps = {
   orgslug: string
@@ -59,6 +68,23 @@ export type ChatMessage = {
 }
 
 export default function Copilot({ orgslug }: CopilotProps) {
+  const messagingEnabled = useMessagingEnabled()
+  const router = useRouter()
+
+  // With Messages on, the copilot lives there as the org's default agent.
+  // Old /copilot and /copilot?chat= links land on it.
+  useEffect(() => {
+    if (messagingEnabled) router.replace(getUriWithOrg(orgslug, '/messages?agent=default'))
+  }, [messagingEnabled, orgslug, router])
+
+  if (messagingEnabled) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <SpinnerGap size={20} className="animate-spin text-neutral-300" />
+      </div>
+    )
+  }
+
   return (
     <AuthenticatedClientElement checkMethod="authentication">
       <CopilotChat orgslug={orgslug} />
@@ -919,80 +945,7 @@ function renderCitationsInText(text: string, sources: StreamSourceData['sources'
   return parts
 }
 
-// This module is pulled into the org menu bundle, so a static import would put
-// KaTeX and its stylesheet on every page of the app. Load them the first time a
-// message actually contains math, the way the editor's math block does.
-type MathPlugins = { remark: any[]; rehype: any[] }
-
-const BASE_REMARK_PLUGINS: any[] = [remarkGfm]
-const NO_REHYPE_PLUGINS: any[] = []
-
-// KaTeX paints a parse failure bright red; inside a chat bubble a formula the
-// model got wrong reads better in the surrounding text colour.
-const KATEX_OPTIONS = { errorColor: 'inherit' }
-
-let mathPluginsPromise: Promise<MathPlugins> | null = null
-
-function loadMathPlugins(): Promise<MathPlugins> {
-  if (!mathPluginsPromise) {
-    mathPluginsPromise = Promise.all([
-      import('remark-math'),
-      import('rehype-katex'),
-      import('katex/dist/katex.min.css'),
-    ]).then(([remarkMath, rehypeKatex]) => ({
-      remark: [remarkGfm, remarkMath.default],
-      rehype: [[rehypeKatex.default, KATEX_OPTIONS]],
-    }))
-  }
-  return mathPluginsPromise
-}
-
-// Dollar-delimited math, or the LaTeX \( \) / \[ \] forms.
-const MATH_HINT = /\$\$|\\\(|\\\[|\$[^\s$][^$\n]*\$/
-
-// Everything between a pair of code fences or inside a code span, so math
-// rewriting can skip it.
-const CODE_SEGMENT = /(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g
-
-/**
- * Rewrite LaTeX \( \) and \[ \] delimiters to the $ forms remark-math understands.
- * The model picks its own delimiters, and the backslash ones would otherwise reach
- * the reader as literal text with the backslashes stripped. The replacements stay on
- * one line: a blank line would end the list item or blockquote the formula sits in.
- */
-export function normalizeMathDelimiters(markdown: string): string {
-  return markdown
-    .split(CODE_SEGMENT)
-    .map((segment, i) =>
-      // Odd indices are the captured code segments, which stay verbatim.
-      i % 2 === 1
-        ? segment
-        : segment
-            // A \[ that opens its own line is a display equation, so it keeps the
-            // fenced form. Anywhere else (inside a list item, a table cell, a
-            // blockquote) it has to stay on one line, or the blank lines around
-            // the fence would close the block it sits in.
-            .replace(
-              /(^|\n)\\\[([\s\S]+?)\\\][ \t]*(?=\n|$)/g,
-              (_m, before, math) => `${before}$$\n${math.trim()}\n$$`
-            )
-            .replace(/\\\[([\s\S]+?)\\\]/g, (_m, math) => `$$${math.trim()}$$`)
-            .replace(/\\\(([\s\S]+?)\\\)/g, (_m, math) => `$${math.trim()}$`)
-    )
-    .join('')
-}
-
-/**
- * While the answer streams in, the closing $$ of the equation being written has
- * not arrived yet. Handed to remark-math as is, that open fence swallows every
- * chunk that follows it and renders the rest of the message as one parse error,
- * so hold the unfinished equation back until it is closed.
- */
-function dropUnclosedMath(markdown: string): string {
-  const fences = markdown.match(/\$\$/g)
-  if (!fences || fences.length % 2 === 0) return markdown
-  return markdown.slice(0, markdown.lastIndexOf('$$'))
-}
+export { normalizeMathDelimiters } from '@/lib/copilot/markdown'
 
 export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = false }: {
   content: string

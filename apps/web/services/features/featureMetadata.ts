@@ -56,6 +56,7 @@ export type FeatureKey =
   | 'webhooks'
   | 'certifications'
   | 'paths'
+  | 'messaging'
   | 'audit_logs'
   | 'sso'
   | 'lti'
@@ -179,6 +180,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
     titleKey: 'common.plans.feature_restricted.paths.title',
     descriptionKey: 'common.plans.feature_restricted.paths.description',
     Icon: Steps,
+    upsellPlan: 'pro',
+  },
+  messaging: {
+    titleKey: 'common.plans.feature_restricted.messaging.title',
+    descriptionKey: 'common.plans.feature_restricted.messaging.description',
+    Icon: ChatsCircle,
     upsellPlan: 'pro',
   },
   audit_logs: {

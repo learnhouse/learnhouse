@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, Palette, School, BarChart3, Menu as MenuIcon, AlertTriangle, Trophy } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, Palette, School, BarChart3, Menu as MenuIcon, AlertTriangle, Trophy, ToggleRight } from 'lucide-react'
 import React, { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
@@ -16,6 +16,7 @@ const OrgEditGeneral = dynamic(() => import('@components/Dashboard/Pages/Org/Org
 const OrgEditBranding = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditBranding/OrgEditBranding'))
 const OrgEditLanding = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'))
 const OrgEditOther = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'))
+const OrgEditFeatures = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'))
 const OrgEditAI = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'))
 const OrgEditUsage = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'))
 const OrgEditMenu = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditMenu/OrgEditMenu'))
@@ -54,6 +55,7 @@ interface TabConfig {
 
 const getSettingTabs = (t: any): TabConfig[] => [
   { id: 'general', label: t('dashboard.organization.settings.tabs.general'), icon: TextIcon },
+  { id: 'features', label: t('dashboard.organization.settings.tabs.features'), icon: ToggleRight },
   { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
   { id: 'menu', label: t('dashboard.organization.settings.tabs.menu') || 'Menu', icon: MenuIcon },
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
@@ -84,6 +86,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     if (params.subpage == 'general') {
       setH1Label(t('dashboard.organization.settings.pages.general.title'))
       setH2Label(t('dashboard.organization.settings.pages.general.subtitle'))
+    } else if (params.subpage == 'features') {
+      setH1Label(t('dashboard.organization.settings.pages.features.title'))
+      setH2Label(t('dashboard.organization.settings.pages.features.subtitle'))
     } else if (params.subpage == 'branding') {
       setH1Label(t('dashboard.organization.settings.pages.branding.title'))
       setH2Label(t('dashboard.organization.settings.pages.branding.subtitle'))
@@ -161,6 +166,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         className="flex-1 overflow-y-auto"
       >
         {params.subpage == 'general' ? <OrgEditGeneral /> : ''}
+        {params.subpage == 'features' ? <OrgEditFeatures /> : ''}
         {params.subpage == 'branding' ? <OrgEditBranding /> : ''}
         {params.subpage == 'menu' ? <OrgEditMenu /> : ''}
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}

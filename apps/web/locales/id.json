@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} Dinonaktifkan",
           "description": "Fitur ini dinonaktifkan untuk organisasi Anda. Aktifkan di pengaturan untuk membuatnya tersedia bagi pengguna."
+        },
+        "platform": {
+          "description": "Fitur ini dimatikan untuk organisasi Anda oleh administrator platform. Hubungi dukungan jika Anda membutuhkannya."
         }
       }
     },
@@ -3057,7 +3060,12 @@
       "other": "Lainnya",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "Tutup menu",
-      "open_menu": "Buka menu"
+      "open_menu": "Buka menu",
+      "more_features": "Lainnya",
+      "features_off": "Dimatikan",
+      "feature_off_badge": "Mati",
+      "features_locked": "Upgrade untuk membuka",
+      "manage_features": "Kelola fitur"
     },
     "home": {
       "cards": {
@@ -4098,7 +4106,7 @@
           },
           "features": {
             "title": "Fitur",
-            "subtitle": "Aktifkan atau nonaktifkan fitur untuk organisasi Anda"
+            "subtitle": "Pilih fitur yang digunakan organisasi Anda"
           },
           "sso": {
             "title": "Single Sign-On",
@@ -4473,6 +4481,18 @@
           "playgrounds": {
             "title": "Playground",
             "description": "Buat pengalaman interaktif berbasis AI bagi pelajar Anda"
+          },
+          "folders": {
+            "title": "Pustaka",
+            "description": "Atur kursus dan media ke dalam folder"
+          },
+          "paths": {
+            "title": "Jalur Belajar",
+            "description": "Urutan kursus dengan sertifikat tersendiri"
+          },
+          "live_sessions": {
+            "title": "Sesi langsung",
+            "description": "Kelas langsung dengan obrolan, tanya jawab, polling, dan absensi"
           }
         },
         "toasts": {
@@ -4482,6 +4502,11 @@
           "disabled": "{{feature}} dinonaktifkan",
           "error": "Gagal memperbarui konfigurasi {{feature}}",
           "admin_only": "Hanya admin organisasi yang dapat mengaktifkan atau menonaktifkan fitur"
+        },
+        "platform_disabled": "Dimatikan oleh administrator platform. Hubungi dukungan untuk mengaktifkannya kembali.",
+        "upgrade": "Upgrade",
+        "sections": {
+          "locked": "Tidak ada di paket Anda"
         }
       },
       "audit_logs": {

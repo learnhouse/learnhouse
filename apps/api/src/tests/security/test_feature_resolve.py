@@ -71,6 +71,8 @@ class TestFeatureResolve:
                 "available": True,
                 "limit": 0,
                 "required_plan": "standard",
+                "disabled_by": None,
+                "upgrade_plan": None,
             }
 
         for mode in ("ee", "oss"):
@@ -83,6 +85,8 @@ class TestFeatureResolve:
                     "available": True,
                     "limit": 0,
                     "required_plan": None,
+                    "disabled_by": None,
+                    "upgrade_plan": None,
                 }
 
     def test_saas_resolution_covers_overrides_limits_and_admin_toggles(self):
@@ -113,6 +117,8 @@ class TestFeatureResolve:
             "available": True,
             "limit": 17,
             "required_plan": None,
+            "disabled_by": None,
+            "upgrade_plan": None,
         }
         # force_enabled override → available even though the free plan omits it.
         assert analytics == {
@@ -120,6 +126,8 @@ class TestFeatureResolve:
             "available": True,
             "limit": 0,
             "required_plan": "standard",
+            "disabled_by": None,
+            "upgrade_plan": None,
         }
         # admin-disabled AND not in the (free) plan → unavailable and off.
         assert boards == {
@@ -127,6 +135,9 @@ class TestFeatureResolve:
             "available": False,
             "limit": 0,
             "required_plan": "personal",
+            "disabled_by": None,
+            # Standard does not include boards, so a free org is pointed at Pro.
+            "upgrade_plan": "pro",
         }
         # AI is enabled on the free plan (metered by a starter credit allowance),
         # so it resolves as available with a free requirement.
@@ -135,6 +146,8 @@ class TestFeatureResolve:
             "available": True,
             "limit": 0,
             "required_plan": "free",
+            "disabled_by": None,
+            "upgrade_plan": None,
         }
 
     def test_courses_saas_limit_resolution_uses_plan_overrides_and_purchased_extra(self):
@@ -158,12 +171,16 @@ class TestFeatureResolve:
             "available": True,
             "limit": 0,
             "required_plan": None,
+            "disabled_by": None,
+            "upgrade_plan": None,
         }
         assert limited == {
             "enabled": True,
             "available": True,
             "limit": 11,
             "required_plan": None,
+            "disabled_by": None,
+            "upgrade_plan": None,
         }
 
     def test_ee_and_oss_mode_shortcuts_cover_admin_toggle_and_ee_only_blocks(self):
@@ -194,6 +211,8 @@ class TestFeatureResolve:
             "available": True,
             "limit": 0,
             "required_plan": "standard",
+            "disabled_by": "platform",
+            "upgrade_plan": None,
         }
         # OSS: an EE-only feature is unavailable.
         assert oss_blocked == {
@@ -201,12 +220,16 @@ class TestFeatureResolve:
             "available": False,
             "limit": 0,
             "required_plan": "enterprise",
+            "disabled_by": None,
+            "upgrade_plan": "enterprise",
         }
         assert oss_allowed == {
             "enabled": True,
             "available": True,
             "limit": 0,
             "required_plan": "standard",
+            "disabled_by": None,
+            "upgrade_plan": None,
         }
 
     def test_paid_plan_feature_cannot_be_admin_disabled(self):
@@ -238,6 +261,63 @@ class TestFeatureResolve:
 
         assert members["available"] is True   # free plan includes members
         assert members["enabled"] is False    # ...but the admin turned it off
+
+    def test_org_toggle_turns_off_a_paid_plan_feature(self):
+        # The org's own choice applies even to a feature its paid plan includes;
+        # only the superadmin kill switch is held back by the paid guarantee.
+        config = {
+            "config_version": "2.0",
+            "plan": "pro",
+            "admin_toggles": {"boards": {"org_disabled": True, "disabled": True}},
+        }
+        with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="saas"):
+            boards = resolve_feature("boards", config, org_id=0)
+
+        assert boards["available"] is True
+        assert boards["enabled"] is False
+        assert boards["disabled_by"] == "org"
+        assert boards["upgrade_plan"] is None
+
+    def test_platform_toggle_reported_on_free_plan(self):
+        config = {
+            "config_version": "2.0",
+            "plan": "free",
+            "admin_toggles": {"members": {"disabled": True}},
+        }
+        with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="saas"):
+            members = resolve_feature("members", config, org_id=0)
+        assert members["disabled_by"] == "platform"
+
+    def test_org_toggle_in_self_hosted_modes(self):
+        config = {"config_version": "2.0", "admin_toggles": {"podcasts": {"org_disabled": True}}}
+        for mode in ("ee", "oss"):
+            with patch("src.security.features_utils.resolve.get_deployment_mode", return_value=mode):
+                podcasts = resolve_feature("podcasts", config, org_id=0)
+            assert podcasts["enabled"] is False
+            assert podcasts["disabled_by"] == "org"
+
+    def test_locked_feature_reports_the_plan_that_unlocks_it(self):
+        with patch("src.security.features_utils.resolve.get_deployment_mode", return_value="saas"):
+            standard = {"config_version": "2.0", "plan": "standard"}
+            assert resolve_feature("boards", standard, org_id=0)["upgrade_plan"] == "pro"
+            assert resolve_feature("live_sessions", standard, org_id=0)["upgrade_plan"] == "pro"
+            assert resolve_feature("communities", standard, org_id=0)["upgrade_plan"] is None
+            free = {"config_version": "2.0", "plan": "free"}
+            assert resolve_feature("communities", free, org_id=0)["upgrade_plan"] == "standard"
+            personal = {"config_version": "2.0", "plan": "personal"}
+            assert resolve_feature("paths", personal, org_id=0)["upgrade_plan"] == "pro"
+
+    def test_upgrade_plan_edges(self):
+        from src.security.features_utils.plans import get_upgrade_plan
+
+        # Already included: nothing to upgrade to.
+        assert get_upgrade_plan("pro", "boards") is None
+        # No plan includes it.
+        assert get_upgrade_plan("free", "not_a_feature") is None
+        # Unknown current plan starts from the bottom of the business line.
+        assert get_upgrade_plan("oss", "communities") == "standard"
+        # The personal line can move up through the business plans.
+        assert get_upgrade_plan("personal-family", "sso") == "enterprise"
 
     def test_fetch_purchased_extras_returns_defaults_when_org_id_zero(self):
         result = _fetch_purchased_extras(0)
@@ -295,7 +375,7 @@ class TestFeatureResolve:
         ):
             result = resolve_all_features({"config_version": "2.0"}, org_id=0)
         mock_fetch.assert_not_called()
-        assert len(result) == 22
+        assert len(result) == 23
 
     def test_resolve_all_features_uses_resolve_feature_for_every_entry(self):
         calls = []
@@ -321,6 +401,7 @@ class TestFeatureResolve:
             "live_sessions",
             "lti",
             "members",
+            "messaging",
             "paths",
             "payments",
             "playgrounds",
@@ -331,5 +412,5 @@ class TestFeatureResolve:
             "usergroups",
             "versioning",
         ]
-        assert len(calls) == 22
+        assert len(calls) == 23
         assert calls[0] == ("ai", {"config_version": "2.0"}, 9)

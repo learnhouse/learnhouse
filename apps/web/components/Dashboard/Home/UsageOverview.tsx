@@ -18,6 +18,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { OrgUsageResponse, getOrgUsage } from '@services/orgs/usage'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { FEATURES_SETTINGS_HREF, getOptionalFeatureState } from '@services/features/optionalFeatures'
 import { apiFetch } from '@services/utils/ts/requests'
 import { usePlan } from '@components/Hooks/usePlan'
 
@@ -102,6 +104,7 @@ export default function UsageOverview() {
       label: t('dashboard.home.courses'),
       icon: BookOpen,
       enabled: orgFeatures?.courses?.enabled !== false,
+      upgradePlan: null,
       href: '/dash/courses',
     },
     {
@@ -109,6 +112,7 @@ export default function UsageOverview() {
       label: t('dashboard.home.communities'),
       icon: ChatCircle,
       enabled: orgFeatures?.communities?.enabled !== false,
+      upgradePlan: getOptionalFeatureState(orgFeatures?.communities).upgradePlan,
       href: '/dash/communities',
     },
     {
@@ -116,6 +120,7 @@ export default function UsageOverview() {
       label: t('dashboard.home.podcasts'),
       icon: Microphone,
       enabled: orgFeatures?.podcasts?.enabled === true,
+      upgradePlan: getOptionalFeatureState(orgFeatures?.podcasts).upgradePlan,
       href: '/dash/podcasts',
     },
     {
@@ -123,6 +128,7 @@ export default function UsageOverview() {
       label: t('dashboard.home.boards'),
       icon: Chalkboard,
       enabled: orgFeatures?.boards?.enabled === true,
+      upgradePlan: getOptionalFeatureState(orgFeatures?.boards).upgradePlan,
       href: '/dash/boards',
     },
   ]
@@ -257,8 +263,13 @@ export default function UsageOverview() {
                     className="text-gray-300 hover:text-gray-500 transition-colors" data-dir-flip
                   />
                 </Link>
+              ) : feature.upgradePlan ? (
+                // Not in the plan: name the plan that unlocks it, not "Off".
+                <PlanBadge currentPlan={plan} requiredPlan={feature.upgradePlan} alwaysShow />
               ) : (
-                <span className="text-[10px] text-gray-300">{t('dashboard.home.off')}</span>
+                <Link href={FEATURES_SETTINGS_HREF} className="text-[10px] text-gray-300 hover:text-gray-500 transition-colors">
+                  {t('dashboard.home.off')}
+                </Link>
               )}
             </div>
           ))}

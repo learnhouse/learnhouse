@@ -10,11 +10,18 @@ import { PlanLevel, planMeetsRequirement } from '../../services/plans/plans'
 
 export type GateReason = 'plan' | 'disabled'
 
+/** Who turned an available feature off: the org itself, or the platform (superadmin). */
+export type DisabledBy = 'org' | 'platform'
+
 export interface ResolvedFeaturePayload {
   enabled?: boolean
+  /** In the org's plan (or comp-granted). False means an upgrade is needed. */
   available?: boolean
   limit?: number
   required_plan?: string | null
+  /** Cheapest plan that includes the feature, when it is not available. */
+  upgrade_plan?: string | null
+  disabled_by?: DisabledBy | null
 }
 
 export interface GateReasonInput {
@@ -36,7 +43,10 @@ export interface GateReasonInput {
 export interface GateReasonResult {
   /** Effective enabled flag from the backend (plan + overrides + admin toggles + packs). */
   enabled: boolean
-  /** Minimum plan tier required for the feature. */
+  /**
+   * Plan tier that unlocks the feature. When the backend reports it, this is
+   * the plan that actually includes it (upgrade_plan), not the nominal tier.
+   */
   requiredPlan: PlanLevel | null
   /** True when the current plan meets the gate's minimum requirement. */
   meetsPlan: boolean
@@ -47,6 +57,8 @@ export interface GateReasonResult {
    * `plan` = upgrade needed; `disabled` = plan is OK but feature is toggled off.
    */
   reason?: GateReason
+  /** Set with reason 'disabled' when the backend says who turned it off. */
+  disabledBy?: DisabledBy
 }
 
 export function resolveGateReason(input: GateReasonInput): GateReasonResult {
@@ -66,13 +78,29 @@ export function resolveGateReason(input: GateReasonInput): GateReasonResult {
     catalogPlan && catalogPlan !== 'free' && catalogPlan !== 'oss'
       ? (catalogPlan as PlanLevel)
       : null
-  const requiredPlan = (resolved?.required_plan ?? (loading ? null : catalogRequired)) as PlanLevel | null
   const enabled = resolved?.enabled !== false
-  const meetsPlan = requiredPlan ? planMeetsRequirement(currentPlan, requiredPlan) : true
+
+  // `available` is the backend's direct answer to "is this in the plan". The
+  // nominal tier comparison below cannot answer it: plans are not strictly
+  // nested (boards are in Personal but not Standard), so a Standard org "meets"
+  // the Personal requirement and a locked feature would read as switched off.
+  let requiredPlan: PlanLevel | null
+  let meetsPlan: boolean
+  if (typeof resolved?.available === 'boolean') {
+    meetsPlan = resolved.available
+    requiredPlan = (meetsPlan
+      ? resolved.required_plan ?? null
+      : resolved.upgrade_plan ?? resolved.required_plan ?? catalogRequired) as PlanLevel | null
+  } else {
+    requiredPlan = (resolved?.required_plan ?? (loading ? null : catalogRequired)) as PlanLevel | null
+    meetsPlan = requiredPlan ? planMeetsRequirement(currentPlan, requiredPlan) : true
+  }
 
   let reason: GateReason | undefined
   if (!meetsPlan) reason = 'plan'
   else if (!enabled && !allowWhenDisabled) reason = 'disabled'
 
-  return { enabled, requiredPlan, meetsPlan, loading, reason }
+  const disabledBy = reason === 'disabled' ? resolved?.disabled_by ?? undefined : undefined
+
+  return { enabled, requiredPlan, meetsPlan, loading, reason, disabledBy }
 }

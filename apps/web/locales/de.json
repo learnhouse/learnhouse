@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} deaktiviert",
           "description": "Diese Funktion ist für Ihre Organisation deaktiviert. Aktivieren Sie sie in den Einstellungen, um sie für Benutzer verfügbar zu machen."
+        },
+        "platform": {
+          "description": "Diese Funktion wurde für Ihre Organisation vom Plattformadministrator deaktiviert. Wenden Sie sich an den Support, wenn Sie sie benötigen."
         }
       }
     },
@@ -3084,7 +3087,12 @@
       "other": "Andere",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "Menü schließen",
-      "open_menu": "Menü öffnen"
+      "open_menu": "Menü öffnen",
+      "more_features": "Mehr",
+      "features_off": "Deaktiviert",
+      "feature_off_badge": "Aus",
+      "features_locked": "Upgrade zum Freischalten",
+      "manage_features": "Funktionen verwalten"
     },
     "home": {
       "cards": {
@@ -4127,7 +4135,7 @@
           },
           "features": {
             "title": "Funktionen",
-            "subtitle": "Aktivieren oder deaktivieren Sie Funktionen für Ihre Organisation"
+            "subtitle": "Wählen Sie, welche Funktionen Ihre Organisation nutzt"
           },
           "sso": {
             "title": "Single Sign-On",
@@ -4502,6 +4510,18 @@
           "playgrounds": {
             "title": "Playgrounds",
             "description": "Erstellen Sie interaktive KI-generierte Erlebnisse für Ihre Lernenden"
+          },
+          "folders": {
+            "title": "Bibliothek",
+            "description": "Kurse und Medien in Ordnern organisieren"
+          },
+          "paths": {
+            "title": "Lernpfade",
+            "description": "Geordnete Kursfolgen mit eigenem Zertifikat"
+          },
+          "live_sessions": {
+            "title": "Live-Sitzungen",
+            "description": "Live-Kurse mit Chat, Fragen und Antworten, Umfragen und Anwesenheit"
           }
         },
         "toasts": {
@@ -4511,6 +4531,11 @@
           "disabled": "{{feature}} deaktiviert",
           "error": "Fehler beim Aktualisieren der {{feature}}-Konfiguration",
           "admin_only": "Nur Organisationsadministratoren können Funktionen aktivieren oder deaktivieren"
+        },
+        "platform_disabled": "Vom Plattformadministrator deaktiviert. Wende dich an den Support, um sie wieder zu aktivieren.",
+        "upgrade": "Upgrade",
+        "sections": {
+          "locked": "Nicht in Ihrem Tarif"
         }
       },
       "audit_logs": {

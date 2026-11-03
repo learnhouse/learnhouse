@@ -182,6 +182,9 @@
         "dashboard": {
           "title": "{{feature}} uitgeschakeld",
           "description": "Deze functie is uitgeschakeld voor uw organisatie. Schakel deze in via de instellingen om deze beschikbaar te maken voor gebruikers."
+        },
+        "platform": {
+          "description": "Deze functie is voor je organisatie uitgeschakeld door de platformbeheerder. Neem contact op met support als je hem nodig hebt."
         }
       }
     },
@@ -3084,7 +3087,12 @@
       "other": "Overig",
       "enterprise_edition": "Enterprise Edition",
       "close_menu": "Menu sluiten",
-      "open_menu": "Menu openen"
+      "open_menu": "Menu openen",
+      "more_features": "Meer",
+      "features_off": "Uitgeschakeld",
+      "feature_off_badge": "Uit",
+      "features_locked": "Upgrade om te ontgrendelen",
+      "manage_features": "Functies beheren"
     },
     "home": {
       "cards": {
@@ -4127,7 +4135,7 @@
           },
           "features": {
             "title": "Functies",
-            "subtitle": "Schakel functies in of uit voor je organisatie"
+            "subtitle": "Kies welke functies je organisatie gebruikt"
           },
           "sso": {
             "title": "Single Sign-On",
@@ -4502,6 +4510,18 @@
           "playgrounds": {
             "title": "Playgrounds",
             "description": "Maak interactieve, door AI gegenereerde ervaringen voor je leerlingen"
+          },
+          "folders": {
+            "title": "Bibliotheek",
+            "description": "Organiseer cursussen en media in mappen"
+          },
+          "paths": {
+            "title": "Leerpaden",
+            "description": "Geordende cursusreeksen met een eigen certificaat"
+          },
+          "live_sessions": {
+            "title": "Live sessies",
+            "description": "Live lessen met chat, vragen en antwoorden, polls en aanwezigheid"
           }
         },
         "toasts": {
@@ -4511,6 +4531,11 @@
           "disabled": "{{feature}} uitgeschakeld",
           "error": "Bijwerken van {{feature}}-configuratie mislukt",
           "admin_only": "Alleen organisatiebeheerders kunnen functies in- of uitschakelen"
+        },
+        "platform_disabled": "Uitgeschakeld door de platformbeheerder. Neem contact op met support om het weer in te schakelen.",
+        "upgrade": "Upgraden",
+        "sections": {
+          "locked": "Niet in je abonnement"
         }
       },
       "audit_logs": {
