@@ -2381,11 +2381,6 @@
           "description": "บอร์ดของคุณ",
           "keywords": "บอร์ด, คัมบัง, งาน, การวางแผน, บันทึก, boards, kanban, tasks, planning, notes"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "ถามผู้ช่วย AI",
-          "keywords": "copilot, ai, ผู้ช่วย, แชท, ถาม, ช่วยเหลือ, assistant, chat, ask, help"
-        },
         "search": {
           "description": "ค้นหาแบบเต็มพร้อมตัวกรอง",
           "keywords": "ค้นหา, หา, ผลลัพธ์, ตัวกรอง, เรียกดู, search, find, results, filter"
@@ -2426,25 +2421,6 @@
     "about_question": "กิจกรรมนี้เกี่ยวกับอะไร?",
     "flashcards_question": "สร้างบัตรคำถาม (Flashcards) จากกิจกรรมนี้",
     "examples_question": "อธิบายกิจกรรมนี้ด้วยตัวอย่างที่นำไปใช้ได้จริง",
-    "copilot_bubble": {
-      "toggle_list": "สลับรายการการสนทนา",
-      "conversations": "การสนทนา",
-      "title": "Course Copilot",
-      "new_chat": "แชทใหม่",
-      "close": "ปิด Copilot",
-      "new_chat_button": "แชทใหม่",
-      "no_conversations": "ยังไม่มีการสนทนา",
-      "subtitle": "ถามคำถามเกี่ยวกับคอร์สของคุณ",
-      "select_mode": "เลือกโหมดแชท",
-      "mode_general": "โหมดทั่วไป",
-      "mode_course": "เฉพาะคอร์ส",
-      "select_course": "เลือกคอร์ส",
-      "ask_label": "ถามเกี่ยวกับคอร์สของคุณ",
-      "thinking": "กำลังคิด...",
-      "ask_placeholder": "ถามเกี่ยวกับคอร์สของคุณ...",
-      "send": "ส่งข้อความ",
-      "open": "เปิด Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "ภาพประกอบหลอดไฟแบบมินิมอล ไล่เฉดสีนุ่มนวล",
       "idea_robot": "หุ่นยนต์ติวเตอร์ 3 มิติที่เป็นมิตร แบบไอโซเมตริก โทนสีพาสเทล",
@@ -2526,39 +2502,6 @@
       "summarize_tooltip": "สรุปย่อหน้าหรือข้อความยาวด้วย AI",
       "translate_tooltip": "แปลเป็นภาษาต่าง ๆ ด้วย AI",
       "examples_tooltip": "ยกตัวอย่างเพื่อความเข้าใจที่ดีขึ้นด้วย AI"
-    },
-    "copilot_menu": {
-      "no_conversations": "ยังไม่มีการสนทนา",
-      "new_conversation": "การสนทนาใหม่",
-      "start_conversation": "เริ่มการสนทนา",
-      "view_all": "ดูการสนทนาทั้งหมด",
-      "open_in_bubble": "เปิดในบับเบิล"
-    },
-    "copilot": {
-      "group_favorites": "รายการโปรด",
-      "group_today": "วันนี้",
-      "group_previous_7_days": "7 วันที่ผ่านมา",
-      "group_older": "เก่ากว่า",
-      "selected_course": "คอร์สที่เลือก",
-      "all_courses": "คอร์สทั้งหมด",
-      "failed_load_session": "โหลดเซสชันไม่สำเร็จ",
-      "new_chat": "แชทใหม่",
-      "no_conversations": "ยังไม่มีการสนทนา",
-      "loading_conversation": "กำลังโหลดการสนทนา...",
-      "title": "Course Copilot",
-      "subtitle": "ถามคำถามเกี่ยวกับคอร์สของคุณและรับคำตอบที่อ้างอิงจากเนื้อหาคอร์ส พร้อมแหล่งอ้างอิง",
-      "mode_course_only": "เฉพาะคอร์ส",
-      "mode_general": "ทั่วไป",
-      "mode_course": "คอร์ส",
-      "mode_general_title": "โหมดความรู้ทั่วไป",
-      "mode_course_only_title": "โหมดเฉพาะคอร์ส",
-      "input_label": "ถามเกี่ยวกับคอร์สของคุณ",
-      "thinking": "กำลังคิด...",
-      "placeholder_general": "ถามอะไรก็ได้...",
-      "placeholder_course": "ถามเกี่ยวกับคอร์สของคุณ...",
-      "remove_favorite": "นำออกจากรายการโปรด",
-      "add_favorite": "เพิ่มในรายการโปรด",
-      "answering_from": "ตอบจาก {{courses}}"
     }
   },
   "payments": {

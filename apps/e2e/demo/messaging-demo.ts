@@ -9,7 +9,7 @@
  * person (a teacher, signed in over the API) types, replies and reacts, so
  * the realtime parts are real round trips, not mocks.
  *
- * Needs an instance where messaging is enabled (Pro plan in SaaS, or EE),
+ * Needs an instance where messaging is enabled (any plan in SaaS, or EE),
  * AI configured, course content indexed, and the teacher account below.
  *
  *   export E2E_BASE_URL=http://localhost:3047

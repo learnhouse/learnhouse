@@ -247,13 +247,6 @@ class TestListClamps:
 # ---------------------------------------------------------------------------
 
 class TestAISchemaLimits:
-    def test_rag_chat_message_capped(self):
-        from src.routers.ai.rag import RAGChatRequest
-
-        RAGChatRequest(message="x" * 8000)
-        with pytest.raises(ValidationError):
-            RAGChatRequest(message="x" * 8001)
-
     def test_activity_chat_message_capped(self):
         from src.services.ai.schemas.ai import SendActivityAIChatMessage, StartActivityAIChatSession
 

@@ -12,7 +12,6 @@ import { sitePage as store } from '@/app/orgs/[orgslug]/(withmenu)/store/page.se
 import { sitePage as trail } from '@/app/orgs/[orgslug]/(withmenu)/trail/page.search'
 import { sitePage as calendar } from '@/app/orgs/[orgslug]/(withmenu)/calendar/page.search'
 import { sitePage as boards } from '@/app/orgs/[orgslug]/(withmenu)/boards/page.search'
-import { sitePage as copilot } from '@/app/orgs/[orgslug]/(withmenu)/copilot/page.search'
 import { sitePage as search } from '@/app/orgs/[orgslug]/(withmenu)/search/page.search'
 import { searchMetas as accountMetas } from '@/app/orgs/[orgslug]/(withmenu)/account/page.search'
 
@@ -48,7 +47,6 @@ export const sitePages: SitePageMeta[] = [
   trail,
   calendar,
   boards,
-  copilot,
   search,
   ...account,
 ]

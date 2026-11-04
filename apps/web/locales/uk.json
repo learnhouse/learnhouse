@@ -2470,11 +2470,6 @@
           "description": "Ваші дошки",
           "keywords": "дошки, канбан, завдання, планування, нотатки"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Запитайте ШІ-асистента",
-          "keywords": "copilot, ші, асистент, чат, запитати, допомога"
-        },
         "search": {
           "description": "Повний пошук із фільтрами",
           "keywords": "пошук, знайти, результати, фільтр, огляд"
@@ -2515,25 +2510,6 @@
     "about_question": "Про що ця активність?",
     "flashcards_question": "Створити картки про цю активність",
     "examples_question": "Пояснити цю активність на практичних прикладах",
-    "copilot_bubble": {
-      "toggle_list": "Показати або сховати список розмов",
-      "conversations": "Розмови",
-      "title": "Course Copilot",
-      "new_chat": "Новий чат",
-      "close": "Закрити Copilot",
-      "new_chat_button": "Новий чат",
-      "no_conversations": "Розмов ще немає",
-      "subtitle": "Ставте запитання про свої курси.",
-      "select_mode": "Виберіть режим чату",
-      "mode_general": "Загальний режим",
-      "mode_course": "Лише курс",
-      "select_course": "Вибрати курс",
-      "ask_label": "Запитайте про свої курси",
-      "thinking": "Думаю...",
-      "ask_placeholder": "Запитайте про свої курси...",
-      "send": "Надіслати повідомлення",
-      "open": "Відкрити Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "Мінімалістична ілюстрація лампочки, м'які градієнти",
       "idea_robot": "Дружній 3D-робот-репетитор, ізометрія, пастельні кольори",
@@ -2621,39 +2597,6 @@
       "summarize_tooltip": "Стисло викласти довгий абзац або текст за допомогою ШІ",
       "translate_tooltip": "Перекласти різними мовами за допомогою ШІ",
       "examples_tooltip": "Навести приклади для кращого розуміння за допомогою ШІ"
-    },
-    "copilot_menu": {
-      "no_conversations": "Розмов ще немає",
-      "new_conversation": "Нова розмова",
-      "start_conversation": "Розпочати розмову",
-      "view_all": "Переглянути всі розмови",
-      "open_in_bubble": "Відкрити у спливному вікні"
-    },
-    "copilot": {
-      "group_favorites": "Обране",
-      "group_today": "Сьогодні",
-      "group_previous_7_days": "Попередні 7 днів",
-      "group_older": "Раніше",
-      "selected_course": "Вибраний курс",
-      "all_courses": "Усі курси",
-      "failed_load_session": "Не вдалося завантажити сеанс",
-      "new_chat": "Новий чат",
-      "no_conversations": "Розмов ще немає",
-      "loading_conversation": "Завантаження розмови...",
-      "title": "Course Copilot",
-      "subtitle": "Ставте запитання про свої курси й отримуйте відповіді на основі вмісту курсів із посиланнями на першоджерела.",
-      "mode_course_only": "Лише курс",
-      "mode_general": "Загальний",
-      "mode_course": "Курс",
-      "mode_general_title": "Режим загальних знань",
-      "mode_course_only_title": "Режим «Лише курс»",
-      "input_label": "Запитайте про свої курси",
-      "thinking": "Думаю...",
-      "placeholder_general": "Запитайте що завгодно...",
-      "placeholder_course": "Запитайте про свої курси...",
-      "remove_favorite": "Видалити з обраного",
-      "add_favorite": "Додати до обраного",
-      "answering_from": "Відповідь на основі: {{courses}}"
     }
   },
   "payments": {

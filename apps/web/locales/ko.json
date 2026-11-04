@@ -2381,11 +2381,6 @@
           "description": "내 보드",
           "keywords": "보드, 칸반, 작업, 계획, 메모, boards"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "AI 어시스턴트에게 질문하기",
-          "keywords": "copilot, ai, 어시스턴트, 채팅, 질문, 도움말"
-        },
         "search": {
           "description": "필터를 사용한 전체 검색",
           "keywords": "검색, 찾기, 결과, 필터, 둘러보기, search"
@@ -2426,25 +2421,6 @@
     "about_question": "이 활동은 무엇에 관한 것인가요?",
     "flashcards_question": "이 활동에 대한 플래시카드 생성",
     "examples_question": "이 활동을 구체적인 예시로 설명해 줘",
-    "copilot_bubble": {
-      "toggle_list": "대화 목록 전환",
-      "conversations": "대화",
-      "title": "코스 Copilot",
-      "new_chat": "새 채팅",
-      "close": "Copilot 닫기",
-      "new_chat_button": "새 채팅",
-      "no_conversations": "아직 대화가 없습니다",
-      "subtitle": "코스에 대해 질문하세요.",
-      "select_mode": "채팅 모드 선택",
-      "mode_general": "일반 모드",
-      "mode_course": "코스 전용",
-      "select_course": "코스 선택",
-      "ask_label": "코스에 대해 질문하기",
-      "thinking": "생각하는 중...",
-      "ask_placeholder": "코스에 대해 질문하세요...",
-      "send": "메시지 보내기",
-      "open": "Copilot 열기"
-    },
     "image_picker": {
       "idea_lightbulb": "부드러운 그라데이션의 미니멀한 전구 일러스트",
       "idea_robot": "친근한 3D 로봇 튜터, 아이소메트릭, 파스텔 색상",
@@ -2526,39 +2502,6 @@
       "summarize_tooltip": "AI로 긴 문단이나 텍스트를 요약합니다",
       "translate_tooltip": "AI로 다른 언어로 번역합니다",
       "examples_tooltip": "AI로 더 잘 이해할 수 있도록 예시를 제공합니다"
-    },
-    "copilot_menu": {
-      "no_conversations": "아직 대화가 없습니다",
-      "new_conversation": "새 대화",
-      "start_conversation": "대화 시작",
-      "view_all": "모든 대화 보기",
-      "open_in_bubble": "말풍선으로 열기"
-    },
-    "copilot": {
-      "group_favorites": "즐겨찾기",
-      "group_today": "오늘",
-      "group_previous_7_days": "지난 7일",
-      "group_older": "이전",
-      "selected_course": "선택한 코스",
-      "all_courses": "모든 코스",
-      "failed_load_session": "세션을 불러오지 못했습니다",
-      "new_chat": "새 채팅",
-      "no_conversations": "아직 대화가 없습니다",
-      "loading_conversation": "대화를 불러오는 중...",
-      "title": "코스 Copilot",
-      "subtitle": "코스에 대해 질문하면 출처 자료와 함께 코스 콘텐츠를 기반으로 한 답변을 받을 수 있습니다.",
-      "mode_course_only": "코스 전용",
-      "mode_general": "일반",
-      "mode_course": "코스",
-      "mode_general_title": "일반 지식 모드",
-      "mode_course_only_title": "코스 전용 모드",
-      "input_label": "코스에 대해 질문하기",
-      "thinking": "생각하는 중...",
-      "placeholder_general": "무엇이든 물어보세요...",
-      "placeholder_course": "코스에 대해 질문하세요...",
-      "remove_favorite": "즐겨찾기에서 제거",
-      "add_favorite": "즐겨찾기에 추가",
-      "answering_from": "{{courses}} 기반으로 답변 중"
     }
   },
   "payments": {
