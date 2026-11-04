@@ -165,3 +165,34 @@ def refuse_lms_session() -> None:
             },
         )
 
+
+def held_org_id() -> Optional[int]:
+    """The org a session is held to, or None.
+
+    Sessions an LMS launch started, and sessions signed in on an org's custom
+    domain, only count inside that org. Org-scoped routes enforce it through
+    the org auth policy; routes that read "my things across orgs" narrow to
+    this org instead.
+    """
+    provenance = get_session_provenance()
+    if provenance is None or provenance.org_id is None:
+        return None
+    if provenance.amr == AUTH_METHOD_LTI or provenance.custom_domain:
+        return provenance.org_id
+    return None
+
+
+def refuse_outside_held_org(org_id: int) -> None:
+    """Refuse a request for another org than the one the session is held to."""
+    from fastapi import HTTPException
+
+    held = held_org_id()
+    if held is not None and held != org_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "SESSION_NOT_BOUND_TO_ORG",
+                "message": "This session only works in the organization it was started for.",
+            },
+        )
+

@@ -931,6 +931,10 @@ async def get_all_user_certificates(
     """Get all certificates for the current user with complete linked information"""
     
     # Get all certificate users for this user
+    # A session held to one org (LMS launch, custom domain) lists that org's certificates only.
+    from src.security.session_context import held_org_id
+
+    held = held_org_id()
     statement = select(CertificateUser).where(CertificateUser.user_id == current_user.id)
     certificate_users = (await db_session.execute(statement)).scalars().all()
 
@@ -966,7 +970,7 @@ async def get_all_user_certificates(
             continue
 
         course = course_map.get(certification.course_id)
-        if not course:
+        if not course or (held is not None and course.org_id != held):
             continue
 
         user = user_map.get(cert_user.user_id)
