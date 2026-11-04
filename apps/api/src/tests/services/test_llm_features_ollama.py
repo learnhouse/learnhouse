@@ -108,17 +108,6 @@ async def test_chat_history_is_used():
 
 
 @pytest.mark.asyncio
-async def test_generate_chat_title():
-    """base.generate_chat_title: fast tier summarization."""
-    title = await base.generate_chat_title(
-        "How do volcanoes form?",
-        "Volcanoes form where magma rises through the crust and erupts.",
-    )
-    assert isinstance(title, str) and title.strip()
-    assert len(title) <= 60
-
-
-@pytest.mark.asyncio
 async def test_generate_follow_up_suggestions():
     """base.generate_follow_up_suggestions: fast tier, parsed into a list."""
     suggestions = await base.generate_follow_up_suggestions(

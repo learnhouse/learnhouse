@@ -2470,11 +2470,6 @@
           "description": "Ваши доски",
           "keywords": "доски, канбан, задачи, планирование, заметки"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Спросить ИИ-ассистента",
-          "keywords": "copilot, ии, ассистент, чат, спросить, помощь"
-        },
         "search": {
           "description": "Полный поиск с фильтрами",
           "keywords": "поиск, найти, результаты, фильтр, обзор"
@@ -2515,25 +2510,6 @@
     "about_question": "О чем это занятие?",
     "flashcards_question": "Создать карточки по этому занятию",
     "examples_question": "Объяснить это занятие на практических примерах",
-    "copilot_bubble": {
-      "toggle_list": "Показать или скрыть список бесед",
-      "conversations": "Беседы",
-      "title": "Course Copilot",
-      "new_chat": "Новый чат",
-      "close": "Закрыть Copilot",
-      "new_chat_button": "Новый чат",
-      "no_conversations": "Бесед пока нет",
-      "subtitle": "Задавайте вопросы о ваших курсах.",
-      "select_mode": "Выберите режим чата",
-      "mode_general": "Общий режим",
-      "mode_course": "Только курс",
-      "select_course": "Выберите курс",
-      "ask_label": "Спросите о ваших курсах",
-      "thinking": "Думаю...",
-      "ask_placeholder": "Спросите о ваших курсах...",
-      "send": "Отправить сообщение",
-      "open": "Открыть Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "Минималистичная иллюстрация лампочки, мягкие градиенты",
       "idea_robot": "Дружелюбный 3D-робот-репетитор, изометрия, пастельные цвета",
@@ -2621,39 +2597,6 @@
       "summarize_tooltip": "Кратко пересказать длинный абзац или текст с помощью ИИ",
       "translate_tooltip": "Перевести на другие языки с помощью ИИ",
       "examples_tooltip": "Привести примеры для лучшего понимания с помощью ИИ"
-    },
-    "copilot_menu": {
-      "no_conversations": "Бесед пока нет",
-      "new_conversation": "Новая беседа",
-      "start_conversation": "Начать беседу",
-      "view_all": "Все беседы",
-      "open_in_bubble": "Открыть во всплывающем окне"
-    },
-    "copilot": {
-      "group_favorites": "Избранное",
-      "group_today": "Сегодня",
-      "group_previous_7_days": "Предыдущие 7 дней",
-      "group_older": "Ранее",
-      "selected_course": "Выбранный курс",
-      "all_courses": "Все курсы",
-      "failed_load_session": "Не удалось загрузить сеанс",
-      "new_chat": "Новый чат",
-      "no_conversations": "Бесед пока нет",
-      "loading_conversation": "Загрузка беседы...",
-      "title": "Course Copilot",
-      "subtitle": "Задавайте вопросы о ваших курсах и получайте ответы на основе содержимого курсов со ссылками на исходные материалы.",
-      "mode_course_only": "Только курс",
-      "mode_general": "Общий",
-      "mode_course": "Курс",
-      "mode_general_title": "Режим общих знаний",
-      "mode_course_only_title": "Режим «Только курс»",
-      "input_label": "Спросите о ваших курсах",
-      "thinking": "Думаю...",
-      "placeholder_general": "Спросите о чём угодно...",
-      "placeholder_course": "Спросите о ваших курсах...",
-      "remove_favorite": "Убрать из избранного",
-      "add_favorite": "Добавить в избранное",
-      "answering_from": "Ответ на основе: {{courses}}"
     }
   },
   "payments": {

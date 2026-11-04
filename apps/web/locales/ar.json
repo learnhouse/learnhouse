@@ -2538,11 +2538,6 @@
           "description": "لوحاتك",
           "keywords": "اللوحات, كانبان, المهام, التخطيط, الملاحظات, boards"
         },
-        "copilot": {
-          "title": "المساعد",
-          "description": "اسأل المساعد الذكي",
-          "keywords": "المساعد, الذكاء الاصطناعي, محادثة, اسأل, مساعدة, copilot, ai"
-        },
         "search": {
           "description": "بحث كامل مع فلاتر",
           "keywords": "بحث, إيجاد, نتائج, فلترة, تصفّح, search"
@@ -2583,25 +2578,6 @@
     "about_question": "عن ماذا يتحدث هذا النشاط؟",
     "flashcards_question": "أنشئ بطاقات تعليمية لهذا النشاط",
     "examples_question": "اشرح هذا النشاط بأمثلة واقعية",
-    "copilot_bubble": {
-      "toggle_list": "إظهار/إخفاء قائمة المحادثات",
-      "conversations": "المحادثات",
-      "title": "مساعد الدورة",
-      "new_chat": "محادثة جديدة",
-      "close": "إغلاق المساعد",
-      "new_chat_button": "محادثة جديدة",
-      "no_conversations": "لا توجد محادثات بعد",
-      "subtitle": "اطرح أسئلة حول دوراتك.",
-      "select_mode": "اختيار وضع المحادثة",
-      "mode_general": "الوضع العام",
-      "mode_course": "الدورة فقط",
-      "select_course": "اختيار الدورة",
-      "ask_label": "اسأل عن دوراتك",
-      "thinking": "جارٍ التفكير...",
-      "ask_placeholder": "اسأل عن دوراتك...",
-      "send": "إرسال الرسالة",
-      "open": "فتح المساعد"
-    },
     "image_picker": {
       "idea_lightbulb": "رسم توضيحي بسيط لمصباح كهربائي بتدرجات ناعمة",
       "idea_robot": "روبوت معلّم ثلاثي الأبعاد ودود، بمنظور إيزومتري وألوان باستيل",
@@ -2693,39 +2669,6 @@
       "summarize_tooltip": "لخّص فقرة أو نصًا طويلًا بالذكاء الاصطناعي",
       "translate_tooltip": "ترجم إلى لغات مختلفة بالذكاء الاصطناعي",
       "examples_tooltip": "احصل على أمثلة لفهم أفضل بالذكاء الاصطناعي"
-    },
-    "copilot_menu": {
-      "no_conversations": "لا توجد محادثات بعد",
-      "new_conversation": "محادثة جديدة",
-      "start_conversation": "ابدأ محادثة",
-      "view_all": "عرض جميع المحادثات",
-      "open_in_bubble": "فتح في فقاعة"
-    },
-    "copilot": {
-      "group_favorites": "المفضلة",
-      "group_today": "اليوم",
-      "group_previous_7_days": "آخر 7 أيام",
-      "group_older": "أقدم",
-      "selected_course": "الدورة المحددة",
-      "all_courses": "جميع الدورات",
-      "failed_load_session": "تعذّر تحميل الجلسة",
-      "new_chat": "محادثة جديدة",
-      "no_conversations": "لا توجد محادثات بعد",
-      "loading_conversation": "جارٍ تحميل المحادثة...",
-      "title": "مساعد الدورة",
-      "subtitle": "اطرح أسئلة حول دوراتك واحصل على إجابات مستندة إلى محتوى الدورة مع إشارات إلى المواد المصدر.",
-      "mode_course_only": "الدورة فقط",
-      "mode_general": "عام",
-      "mode_course": "الدورة",
-      "mode_general_title": "وضع المعرفة العامة",
-      "mode_course_only_title": "وضع الدورة فقط",
-      "input_label": "اسأل عن دوراتك",
-      "thinking": "جارٍ التفكير...",
-      "placeholder_general": "اسأل أي شيء...",
-      "placeholder_course": "اسأل عن دوراتك...",
-      "remove_favorite": "إزالة من المفضلة",
-      "add_favorite": "إضافة إلى المفضلة",
-      "answering_from": "الإجابة من {{courses}}"
     }
   },
   "payments": {

@@ -7,7 +7,6 @@ grounded in course content.
 
 import json
 import logging
-from typing import AsyncGenerator
 
 from sqlalchemy import bindparam, text
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -15,8 +14,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.services.ai.rag.access import RagAccessScope, filter_readable_chunks
 from src.services.ai.rag.embedding_service import embed_single_text
 from src.services.ai.rag.types import Source, SourceType
-from src.services.ai.base import ask_ai_stream
-from src.services.ai.llm import model_for_tier
 
 logger = logging.getLogger(__name__)
 
@@ -152,97 +149,3 @@ async def query_course_rag(
     }
 
 
-async def query_course_rag_stream(
-    question: str,
-    org_id: int,
-    db_session: AsyncSession,
-    message_history: list,
-    scope: RagAccessScope,
-    mode: str = "course_only",
-) -> tuple[AsyncGenerator[str, None], list[dict]]:
-    """
-    Perform RAG retrieval and return a streaming LLM response.
-
-    Returns:
-        Tuple of (stream_generator, sources)
-    """
-    # Retrieve relevant context
-    rag_result = await query_course_rag(
-        question=question,
-        org_id=org_id,
-        db_session=db_session,
-        scope=scope,
-    )
-
-    context = rag_result["context"]
-    sources = rag_result["sources"]
-
-    # Build the grounding prompt based on mode
-    citation_instructions = (
-        "IMPORTANT: When referencing information from the provided sources, use numbered citations "
-        "like [1], [2], etc. matching the source numbers. Do NOT write out full source names, "
-        "paths, locations, or verbose references like '(From: Course > Chapter > Activity)'. "
-        "Just use the short [1] notation inline. Example: 'The building has 5 floors [2].'"
-    )
-
-    # The copilot renders answers with remark-math + KaTeX, which reads $...$ and
-    # $$...$$ only. A bare $ in front of a number would start a math run and swallow
-    # the rest of the sentence, so ask for it escaped.
-    math_instructions = (
-        "MATH: Write any mathematical expression as LaTeX between dollar signs: $x^2$ inline, "
-        "$$...$$ on its own lines for display equations. Escape a literal dollar sign as \\$ "
-        "(for example \\$5)."
-    )
-
-    if context and mode == "general":
-        system_prompt = (
-            "You are a helpful, knowledgeable educational assistant. Answer the student's question "
-            "thoroughly using both the course content provided below AND your own general knowledge. "
-            "Treat the course content as your primary reference, but freely expand with additional "
-            "context, explanations, examples, and insights from your training data. "
-            "When you add information beyond the course material, wrap that part in a blockquote "
-            "using the > prefix.\n\n"
-            f"{citation_instructions}\n\n"
-            f"{math_instructions}\n\n"
-            f"Course Content:\n{context}"
-        )
-    elif context:
-        # course_only mode (default)
-        system_prompt = (
-            "You are a helpful educational assistant. Answer the student's question "
-            "based on the course content provided below.\n\n"
-            f"{citation_instructions}\n\n"
-            "SUPPLEMENTARY KNOWLEDGE: When you add any information that is NOT directly from the "
-            "provided course content (even small additions, clarifications, or general context), "
-            "you MUST wrap that part in a blockquote using the > prefix. Always do this, even for "
-            "brief supplementary notes. Example:\n"
-            "> This is additional context from general knowledge.\n\n"
-            f"{math_instructions}\n\n"
-            f"Course Content:\n{context}"
-        )
-    elif mode == "general":
-        system_prompt = (
-            "You are a helpful, knowledgeable educational assistant. No specific course content "
-            "was found for this question, but that's fine: answer the student's question using "
-            "your general knowledge. Be thorough and helpful.\n\n"
-            f"{math_instructions}"
-        )
-    else:
-        system_prompt = (
-            "You are a helpful educational assistant. The student asked a question but "
-            "no relevant course content was found. Let them know you couldn't find "
-            "specific course material related to their question, but offer to help "
-            "with what you know.\n\n"
-            f"{math_instructions}"
-        )
-
-    # Create the streaming generator
-    stream = ask_ai_stream(
-        question=question,
-        message_history=message_history,
-        text_reference=context,
-        message_for_the_prompt=system_prompt,
-        model_name=model_for_tier("standard"),
-    )
-
-    return stream, sources

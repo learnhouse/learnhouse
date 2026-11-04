@@ -2406,11 +2406,6 @@
           "description": "আপনার বোর্ডগুলো",
           "keywords": "বোর্ড, কানবান, টাস্ক, পরিকল্পনা, নোট, boards"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "AI সহকারীকে জিজ্ঞাসা করুন",
-          "keywords": "copilot, ai, সহকারী, চ্যাট, জিজ্ঞাসা, সাহায্য"
-        },
         "search": {
           "description": "ফিল্টারসহ পূর্ণ অনুসন্ধান",
           "keywords": "অনুসন্ধান, খোঁজা, ফলাফল, ফিল্টার, ব্রাউজ, search"
@@ -2451,25 +2446,6 @@
     "about_question": "এই ক্রিয়াকলাপটি কী সম্পর্কে?",
     "flashcards_question": "এই ক্রিয়াকলাপ থেকে ফ্ল্যাশকার্ড তৈরি করুন",
     "examples_question": "বাস্তব উদাহরণ দিয়ে এই ক্রিয়াকলাপটি বুঝিয়ে দিন",
-    "copilot_bubble": {
-      "toggle_list": "কথোপকথনের তালিকা টগল করুন",
-      "conversations": "কথোপকথন",
-      "title": "কোর্স Copilot",
-      "new_chat": "নতুন চ্যাট",
-      "close": "Copilot বন্ধ করুন",
-      "new_chat_button": "নতুন চ্যাট",
-      "no_conversations": "এখনও কোনো কথোপকথন নেই",
-      "subtitle": "আপনার কোর্স সম্পর্কে প্রশ্ন করুন।",
-      "select_mode": "চ্যাট মোড নির্বাচন করুন",
-      "mode_general": "সাধারণ মোড",
-      "mode_course": "শুধু কোর্স",
-      "select_course": "কোর্স নির্বাচন করুন",
-      "ask_label": "আপনার কোর্স সম্পর্কে জিজ্ঞাসা করুন",
-      "thinking": "ভাবছি...",
-      "ask_placeholder": "আপনার কোর্স সম্পর্কে জিজ্ঞাসা করুন...",
-      "send": "বার্তা পাঠান",
-      "open": "Copilot খুলুন"
-    },
     "image_picker": {
       "idea_lightbulb": "সফট গ্রেডিয়েন্ট সহ একটি বাতির মিনিমালিস্ট চিত্র",
       "idea_robot": "একটি বন্ধুত্বপূর্ণ ৩D রোবট টিউটর, আইসোমেট্রিক, প্যাস্টেল রঙ",
@@ -2553,39 +2529,6 @@
       "summarize_tooltip": "AI দিয়ে একটি দীর্ঘ অনুচ্ছেদ বা লেখার সারসংক্ষেপ করুন",
       "translate_tooltip": "AI দিয়ে বিভিন্ন ভাষায় অনুবাদ করুন",
       "examples_tooltip": "ভালোভাবে বোঝার জন্য AI দিয়ে উদাহরণ দেখুন"
-    },
-    "copilot_menu": {
-      "no_conversations": "এখনও কোনো কথোপকথন নেই",
-      "new_conversation": "নতুন কথোপকথন",
-      "start_conversation": "একটি কথোপকথন শুরু করুন",
-      "view_all": "সব কথোপকথন দেখুন",
-      "open_in_bubble": "বাবলে খুলুন"
-    },
-    "copilot": {
-      "group_favorites": "প্রিয়",
-      "group_today": "আজ",
-      "group_previous_7_days": "গত ৭ দিন",
-      "group_older": "আরও পুরোনো",
-      "selected_course": "নির্বাচিত কোর্স",
-      "all_courses": "সব কোর্স",
-      "failed_load_session": "সেশন লোড করা যায়নি",
-      "new_chat": "নতুন চ্যাট",
-      "no_conversations": "এখনও কোনো কথোপকথন নেই",
-      "loading_conversation": "কথোপকথন লোড হচ্ছে...",
-      "title": "কোর্স Copilot",
-      "subtitle": "আপনার কোর্স সম্পর্কে প্রশ্ন করুন এবং কোর্সের কনটেন্টের উপর ভিত্তি করে সোর্স রেফারেন্স সহ উত্তর পান।",
-      "mode_course_only": "শুধু কোর্স",
-      "mode_general": "সাধারণ",
-      "mode_course": "কোর্স",
-      "mode_general_title": "সাধারণ জ্ঞান মোড",
-      "mode_course_only_title": "শুধু কোর্স মোড",
-      "input_label": "আপনার কোর্স সম্পর্কে জিজ্ঞাসা করুন",
-      "thinking": "ভাবছি...",
-      "placeholder_general": "যেকোনো কিছু জিজ্ঞাসা করুন...",
-      "placeholder_course": "আপনার কোর্স সম্পর্কে জিজ্ঞাসা করুন...",
-      "remove_favorite": "প্রিয় থেকে সরান",
-      "add_favorite": "প্রিয়তে যোগ করুন",
-      "answering_from": "{{courses}} থেকে উত্তর দেওয়া হচ্ছে"
     }
   },
   "payments": {

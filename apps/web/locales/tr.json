@@ -2406,11 +2406,6 @@
           "description": "Panolarınız",
           "keywords": "panolar, kanban, görevler, planlama, notlar"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Yapay zeka asistanına sorun",
-          "keywords": "copilot, yapay zeka, asistan, sohbet, sor, yardım"
-        },
         "search": {
           "description": "Filtreli tam arama",
           "keywords": "ara, bul, sonuçlar, filtre, göz at"
@@ -2451,25 +2446,6 @@
     "about_question": "Bu aktivite ne hakkında?",
     "flashcards_question": "Bu aktivite hakkında bilgi kartları oluştur",
     "examples_question": "Bu aktiviteyi pratik örneklerle açıkla",
-    "copilot_bubble": {
-      "toggle_list": "Sohbet listesini aç/kapat",
-      "conversations": "Sohbetler",
-      "title": "Kurs Copilot'u",
-      "new_chat": "Yeni sohbet",
-      "close": "Copilot'u kapat",
-      "new_chat_button": "Yeni Sohbet",
-      "no_conversations": "Henüz sohbet yok",
-      "subtitle": "Kurslarınız hakkında sorular sorun.",
-      "select_mode": "Sohbet modunu seç",
-      "mode_general": "Genel mod",
-      "mode_course": "Yalnızca kurs",
-      "select_course": "Kursu seç",
-      "ask_label": "Kurslarınız hakkında sorun",
-      "thinking": "Düşünüyor...",
-      "ask_placeholder": "Kurslarınız hakkında sorun...",
-      "send": "Mesaj gönder",
-      "open": "Copilot'u Aç"
-    },
     "image_picker": {
       "idea_lightbulb": "Yumuşak geçişli, minimalist bir ampul illüstrasyonu",
       "idea_robot": "Dostane 3D robot öğretmen, izometrik, pastel renkler",
@@ -2553,39 +2529,6 @@
       "summarize_tooltip": "Uzun bir paragrafı veya metni yapay zekayla özetleyin",
       "translate_tooltip": "Yapay zekayla farklı dillere çevirin",
       "examples_tooltip": "Daha iyi anlamak için yapay zekadan örnekler isteyin"
-    },
-    "copilot_menu": {
-      "no_conversations": "Henüz sohbet yok",
-      "new_conversation": "Yeni sohbet",
-      "start_conversation": "Bir sohbet başlat",
-      "view_all": "Tüm sohbetleri görüntüle",
-      "open_in_bubble": "Balonda aç"
-    },
-    "copilot": {
-      "group_favorites": "Favoriler",
-      "group_today": "Bugün",
-      "group_previous_7_days": "Önceki 7 gün",
-      "group_older": "Daha eski",
-      "selected_course": "Seçilen Kurs",
-      "all_courses": "Tüm kurslar",
-      "failed_load_session": "Oturum yüklenemedi",
-      "new_chat": "Yeni Sohbet",
-      "no_conversations": "Henüz sohbet yok",
-      "loading_conversation": "Sohbet yükleniyor...",
-      "title": "Kurs Copilot'u",
-      "subtitle": "Kurslarınız hakkında sorular sorun ve kaynak materyallere referanslarla birlikte kurs içeriğine dayalı yanıtlar alın.",
-      "mode_course_only": "Yalnızca Kurs",
-      "mode_general": "Genel",
-      "mode_course": "Kurs",
-      "mode_general_title": "Genel Bilgi modu",
-      "mode_course_only_title": "Yalnızca Kurs modu",
-      "input_label": "Kurslarınız hakkında sorun",
-      "thinking": "Düşünüyor...",
-      "placeholder_general": "Her şeyi sorun...",
-      "placeholder_course": "Kurslarınız hakkında sorun...",
-      "remove_favorite": "Favorilerden kaldır",
-      "add_favorite": "Favorilere ekle",
-      "answering_from": "{{courses}} kaynağından yanıtlanıyor"
     }
   },
   "payments": {

@@ -2406,11 +2406,6 @@
           "description": "Ihre Boards",
           "keywords": "boards, kanban, aufgaben, planung, notizen"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Den KI-Assistenten fragen",
-          "keywords": "copilot, ki, assistent, chat, fragen, hilfe"
-        },
         "search": {
           "description": "Vollständige Suche mit Filtern",
           "keywords": "suche, finden, ergebnisse, filter, durchsuchen"
@@ -2451,25 +2446,6 @@
     "about_question": "Worum geht es in dieser Aktivität?",
     "flashcards_question": "Karteikarten zu dieser Aktivität erstellen",
     "examples_question": "Erklären Sie diese Aktivität anhand von Praxisbeispielen",
-    "copilot_bubble": {
-      "toggle_list": "Konversationsliste umschalten",
-      "conversations": "Konversationen",
-      "title": "Kurs-Copilot",
-      "new_chat": "Neuer Chat",
-      "close": "Copilot schließen",
-      "new_chat_button": "Neuer Chat",
-      "no_conversations": "Noch keine Konversationen",
-      "subtitle": "Stellen Sie Fragen zu Ihren Kursen.",
-      "select_mode": "Chat-Modus wählen",
-      "mode_general": "Allgemeiner Modus",
-      "mode_course": "Nur Kurs",
-      "select_course": "Kurs auswählen",
-      "ask_label": "Fragen zu Ihren Kursen stellen",
-      "thinking": "Denkt nach...",
-      "ask_placeholder": "Fragen Sie zu Ihren Kursen...",
-      "send": "Nachricht senden",
-      "open": "Copilot öffnen"
-    },
     "image_picker": {
       "idea_lightbulb": "Eine minimalistische Illustration einer Glühbirne mit sanften Farbverläufen",
       "idea_robot": "Ein freundlicher 3D-Roboter-Tutor, isometrisch, Pastellfarben",
@@ -2553,39 +2529,6 @@
       "summarize_tooltip": "Einen langen Absatz oder Text mit KI zusammenfassen",
       "translate_tooltip": "Mit KI in verschiedene Sprachen übersetzen",
       "examples_tooltip": "Mit KI Beispiele für besseres Verständnis erhalten"
-    },
-    "copilot_menu": {
-      "no_conversations": "Noch keine Konversationen",
-      "new_conversation": "Neue Konversation",
-      "start_conversation": "Konversation starten",
-      "view_all": "Alle Konversationen anzeigen",
-      "open_in_bubble": "In Bubble öffnen"
-    },
-    "copilot": {
-      "group_favorites": "Favoriten",
-      "group_today": "Heute",
-      "group_previous_7_days": "Letzte 7 Tage",
-      "group_older": "Älter",
-      "selected_course": "Ausgewählter Kurs",
-      "all_courses": "Alle Kurse",
-      "failed_load_session": "Sitzung konnte nicht geladen werden",
-      "new_chat": "Neuer Chat",
-      "no_conversations": "Noch keine Konversationen",
-      "loading_conversation": "Konversation wird geladen...",
-      "title": "Kurs-Copilot",
-      "subtitle": "Stellen Sie Fragen zu Ihren Kursen und erhalten Sie Antworten auf Basis der Kursinhalte, mit Verweisen auf das Quellmaterial.",
-      "mode_course_only": "Nur Kurs",
-      "mode_general": "Allgemein",
-      "mode_course": "Kurs",
-      "mode_general_title": "Modus „Allgemeinwissen“",
-      "mode_course_only_title": "Modus „Nur Kurs“",
-      "input_label": "Fragen zu Ihren Kursen stellen",
-      "thinking": "Denkt nach...",
-      "placeholder_general": "Fragen Sie, was Sie möchten...",
-      "placeholder_course": "Fragen Sie zu Ihren Kursen...",
-      "remove_favorite": "Aus Favoriten entfernen",
-      "add_favorite": "Zu Favoriten hinzufügen",
-      "answering_from": "Antwort basiert auf {{courses}}"
     }
   },
   "payments": {

@@ -2470,11 +2470,6 @@
           "description": "Twoje tablice",
           "keywords": "tablice, kanban, zadania, planowanie, notatki"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Zapytaj asystenta AI",
-          "keywords": "copilot, ai, asystent, czat, zapytaj, pomoc"
-        },
         "search": {
           "description": "Pełne wyszukiwanie z filtrami",
           "keywords": "szukaj, znajdź, wyniki, filtr, przeglądaj"
@@ -2515,25 +2510,6 @@
     "about_question": "O czym jest ta aktywność?",
     "flashcards_question": "Stwórz fiszki na podstawie tej aktywności",
     "examples_question": "Wyjaśnij tę aktywność na praktycznych przykładach",
-    "copilot_bubble": {
-      "toggle_list": "Przełącz listę rozmów",
-      "conversations": "Rozmowy",
-      "title": "Course Copilot",
-      "new_chat": "Nowy czat",
-      "close": "Zamknij copilota",
-      "new_chat_button": "Nowy czat",
-      "no_conversations": "Brak rozmów",
-      "subtitle": "Zadawaj pytania o swoje kursy.",
-      "select_mode": "Wybierz tryb czatu",
-      "mode_general": "Tryb ogólny",
-      "mode_course": "Tylko kurs",
-      "select_course": "Wybierz kurs",
-      "ask_label": "Zapytaj o swoje kursy",
-      "thinking": "Myślenie...",
-      "ask_placeholder": "Zapytaj o swoje kursy...",
-      "send": "Wyślij wiadomość",
-      "open": "Otwórz Copilota"
-    },
     "image_picker": {
       "idea_lightbulb": "Minimalistyczna ilustracja żarówki, miękkie gradienty",
       "idea_robot": "Przyjazny robot-korepetytor w 3D, izometryczny, pastelowe kolory",
@@ -2621,39 +2597,6 @@
       "summarize_tooltip": "Podsumuj długi akapit lub tekst za pomocą AI",
       "translate_tooltip": "Przetłumacz na różne języki za pomocą AI",
       "examples_tooltip": "Podaj przykłady, aby lepiej zrozumieć, za pomocą AI"
-    },
-    "copilot_menu": {
-      "no_conversations": "Brak rozmów",
-      "new_conversation": "Nowa rozmowa",
-      "start_conversation": "Rozpocznij rozmowę",
-      "view_all": "Zobacz wszystkie rozmowy",
-      "open_in_bubble": "Otwórz w dymku"
-    },
-    "copilot": {
-      "group_favorites": "Ulubione",
-      "group_today": "Dziś",
-      "group_previous_7_days": "Poprzednie 7 dni",
-      "group_older": "Starsze",
-      "selected_course": "Wybrany kurs",
-      "all_courses": "Wszystkie kursy",
-      "failed_load_session": "Nie udało się wczytać sesji",
-      "new_chat": "Nowy czat",
-      "no_conversations": "Brak rozmów",
-      "loading_conversation": "Wczytywanie rozmowy...",
-      "title": "Course Copilot",
-      "subtitle": "Zadawaj pytania o swoje kursy i otrzymuj odpowiedzi oparte na treści kursów, wraz z odniesieniami do materiałów źródłowych.",
-      "mode_course_only": "Tylko kurs",
-      "mode_general": "Ogólny",
-      "mode_course": "Kurs",
-      "mode_general_title": "Tryb wiedzy ogólnej",
-      "mode_course_only_title": "Tryb tylko kurs",
-      "input_label": "Zapytaj o swoje kursy",
-      "thinking": "Myślenie...",
-      "placeholder_general": "Zapytaj o cokolwiek...",
-      "placeholder_course": "Zapytaj o swoje kursy...",
-      "remove_favorite": "Usuń z ulubionych",
-      "add_favorite": "Dodaj do ulubionych",
-      "answering_from": "Odpowiedź na podstawie: {{courses}}"
     }
   },
   "payments": {

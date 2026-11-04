@@ -67,11 +67,6 @@ UNAUTH_BILLING_ROUTES = [
     ),
     (
         "POST",
-        "/api/v1/ai/rag/chat",
-        {"message": "x", "org_slug": "x"},
-    ),
-    (
-        "POST",
         "/api/v1/ai/start/activity_chat_session",
         {"activity_uuid": "x", "message": "x"},
     ),

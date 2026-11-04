@@ -133,14 +133,9 @@ export enum AnalyticsEvent {
   UsergroupUnlinked = 'usergroup_unlinked',
   FolderLinkShared = 'folder_link_shared',
 
-  // ── Search, Copilot, Trail, Certificates, Account ────────────────────────
+  // ── Search, Trail, Certificates, Account ────────────────────────
   SearchExecuted = 'search_executed',
   SearchResultClicked = 'search_result_clicked',
-  CopilotMessageSent = 'copilot_message_sent',
-  CopilotResponseCompleted = 'copilot_response_completed',
-  CopilotResponseFailed = 'copilot_response_failed',
-  CopilotBubbleOpened = 'copilot_bubble_opened',
-  CopilotBubbleMessageSent = 'copilot_bubble_message_sent',
   TrailViewed = 'trail_viewed',
   CertificateViewed = 'certificate_viewed',
   CertificateDownloaded = 'certificate_downloaded',
