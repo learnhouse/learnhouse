@@ -202,7 +202,10 @@ def test_linear_time(name):
     # Growth, not wall clock, so a loaded CI runner does not fail it: four
     # times the input may take about four times as long, never sixteen
     # (quadratic). The old converter took about 23 s on the backtick case.
-    assert full < 8 * quarter + 0.05, f"{name}: {quarter:.3f}s for a quarter, {full:.3f}s for all"
+    # The floor covers inputs whose quarter is microseconds: a truncated
+    # fence loses its closing backtick and takes a shortcut, so the ratio
+    # alone means nothing there, and a CI runner needs ~60ms for the full one.
+    assert full < 8 * quarter + 0.25, f"{name}: {quarter:.3f}s for a quarter, {full:.3f}s for all"
     assert full < 10, f"{name}: {full:.2f}s"
 
 

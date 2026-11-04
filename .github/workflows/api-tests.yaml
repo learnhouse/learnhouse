@@ -37,10 +37,23 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
 
+      - name: Cache ffmpeg packages
+        # ffmpeg pulls ~60 MB of packages, and the Ubuntu mirror is sometimes
+        # slow enough to make this the longest step. apt still resolves the
+        # versions; it only skips downloading the ones already cached.
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/apt-archives
+          key: apt-ffmpeg-${{ runner.os }}-${{ runner.arch }}-v1
+
       - name: Install ffmpeg
         # Required by the video faststart / HLS transcode tests (they skip
         # without it, which would leave that code uncovered).
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+        run: |
+          mkdir -p ~/apt-archives/partial
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends -o Dir::Cache::Archives="$HOME/apt-archives" ffmpeg
+          sudo chown -R "$(id -u):$(id -g)" ~/apt-archives
 
       - name: Install dependencies
         run: uv sync
