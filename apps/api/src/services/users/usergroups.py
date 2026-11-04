@@ -352,8 +352,6 @@ async def get_usergroups_by_resource(
 
     # Batch fetch all usergroups in a single query
     usergroup_ids = [ug.usergroup_id for ug in usergroup_resources]
-    if not usergroup_ids:
-        return []
 
     statement = select(UserGroup).where(UserGroup.id.in_(usergroup_ids))  # type: ignore
     usergroups = (await db_session.execute(statement)).scalars().all()

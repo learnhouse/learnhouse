@@ -54,7 +54,13 @@ class TestTokenHelpers:
         assert prefix == full[:15]
         assert verify_token(full, h) is True
 
-    def test_generate_is_unique(self):
+    def test_generate_is_unique(self, monkeypatch):
+        # Uniqueness comes from the random part; skip the Argon2 hash, which
+        # made 200 calls take ten seconds.
+        monkeypatch.setattr(
+            "src.services.api_tokens.superadmin_api_tokens.security_hash_token",
+            lambda token: "hashed",
+        )
         seen = {generate_token()[0] for _ in range(200)}
         assert len(seen) == 200
 
