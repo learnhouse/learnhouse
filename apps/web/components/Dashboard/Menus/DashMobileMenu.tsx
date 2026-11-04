@@ -124,7 +124,7 @@ function DashMobileMenu() {
     <>
       <nav
         aria-label={t('dashboard.nav.mobile_navigation')}
-        className="lh-dash-tabbar fixed inset-x-0 bottom-0 bg-[#0f0f10]/95 backdrop-blur-xl backdrop-saturate-150 border-t border-white/[0.08]"
+        className="lh-dash-tabbar lh-bottom-bleed fixed inset-x-0 bottom-0 bg-[#0f0f10]/95 backdrop-blur-xl backdrop-saturate-150 border-t border-white/[0.08]"
         style={{ zIndex: 'var(--z-nav)', paddingBottom: 'var(--lh-safe-bottom)' }}
       >
         <ul className="flex items-stretch justify-around max-w-xl mx-auto" style={{ height: 'var(--lh-tabbar-h)' }}>

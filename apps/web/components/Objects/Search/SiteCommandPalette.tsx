@@ -234,14 +234,14 @@ export default function SiteCommandPalette() {
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
-          className="fixed inset-0 bg-black/30 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:duration-100 data-[state=closed]:duration-75 ease-out"
+          className="lh-modal-overlay fixed inset-0 bg-black/30 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:duration-100 data-[state=closed]:duration-75 ease-out"
           style={{ zIndex: 'var(--z-modal-backdrop)' as any }}
         />
         <DialogPrimitive.Content
           aria-label={t('search.palette.placeholder')}
           // Phones: a full-screen search view with Cancel, the way the OS
           // presents search; from md up, the floating palette.
-          className="fixed inset-x-3 top-[8vh] mx-auto flex max-h-[84vh] w-auto max-w-[620px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-2xl shadow-black/15 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out sm:top-[14vh] max-md:inset-0 max-md:max-h-none max-md:h-[100dvh] max-md:max-w-none max-md:rounded-none max-md:border-0 max-md:pt-[var(--lh-safe-top)] max-md:data-[state=open]:zoom-in-100 max-md:data-[state=closed]:zoom-out-100 max-md:data-[state=open]:slide-in-from-bottom-4"
+          className="lh-search-sheet fixed inset-x-3 top-[8vh] mx-auto flex max-h-[84vh] w-auto max-w-[620px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-2xl shadow-black/15 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out sm:top-[14vh] max-md:inset-0 max-md:max-h-none max-md:h-[100dvh] max-md:max-w-none max-md:rounded-none max-md:border-0 max-md:pt-[var(--lh-safe-top)] max-md:data-[state=open]:zoom-in-100 max-md:data-[state=closed]:zoom-out-100 max-md:data-[state=open]:slide-in-from-bottom-4"
           style={{ zIndex: 'var(--z-modal)' as any }}
           onOpenAutoFocus={(e) => {
             e.preventDefault()

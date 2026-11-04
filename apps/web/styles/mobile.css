@@ -191,14 +191,18 @@ textarea {
   }
 }
 
-/* Header search on 1280-1535px desktops: labelled links, the icons and the
-   avatar leave no room for a usable field, so it becomes a round icon button
-   that opens the same palette. */
-@media (min-width: 1280px) and (max-width: 1535px) {
+/* Header search: when labelled links, the icons and the avatar leave too
+   little room for a usable field, it becomes a round icon button that opens
+   the same palette. The search slot is flex-1, so its width is exactly the
+   space left over; a container query collapses it only when that space is
+   short (orgs with few links or signed-out visitors keep the full field).
+   From 1780px the slot sizes to its content again, as it always has. */
+@media (min-width: 1024px) and (max-width: 1779px) {
   .lh-header-search {
-    flex: none;
-    padding-inline: 0.75rem;
+    container-type: inline-size;
   }
+}
+@container (max-width: 210px) {
   .lh-header-search > button {
     width: 2.25rem;
     padding: 0;
@@ -211,5 +215,40 @@ textarea {
   .lh-header-search .lh-search-label,
   .lh-header-search .lh-search-kbd {
     display: none;
+  }
+}
+
+
+/*
+  iOS 26 Safari floats its toolbar over the page and keeps drawing the page
+  underneath it, below the edge that fixed elements are measured from. Bars
+  pinned to the bottom therefore left a strip of scrolling content under
+  them. Each surface continues into that strip in its own material: bars
+  through a pseudo-element that inherits their tint and blur, solid sheets
+  through a downward solid shadow (it survives their own overflow clipping),
+  and dimmed backdrops by reaching further down.
+*/
+@media (max-width: 1023px) {
+  .lh-bottom-bleed::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 240px;
+    background: inherit;
+    -webkit-backdrop-filter: inherit;
+    backdrop-filter: inherit;
+    pointer-events: none;
+  }
+  .lh-modal-overlay {
+    bottom: -240px !important;
+  }
+}
+@media (max-width: 767px) {
+  .lh-modal-content {
+    box-shadow: 0 -8px 32px rgb(0 0 0 / 0.12), 0 240px 0 0 #fff !important;
+  }
+  .lh-search-sheet {
+    box-shadow: 0 240px 0 0 #fff !important;
   }
 }

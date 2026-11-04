@@ -1,3 +1,23 @@
 /* Phone-width overrides for pages. Prefer Tailwind classes in the components;
    use this file only for rules a component cannot express (third-party
    markup, ProseMirror output). See mobile.css for the shell variables. */
+
+/* Auth pages on phones and tablets: the desktop form at touch size. Every
+   field and button there is h-[44px]; give them 48px and softer corners,
+   and pull the form up under the branding card. */
+@media (max-width: 1023px) {
+  .lh-auth .h-\[44px\] {
+    height: 48px;
+    border-radius: 12px;
+  }
+  .lh-auth textarea {
+    border-radius: 12px;
+  }
+  .lh-auth .max-w-\[420px\].py-10 {
+    padding-top: 1.75rem;
+  }
+  /* Short forms (forgot / reset password) sit under the card, not mid-screen. */
+  .lh-auth .flex-1.flex.items-center.justify-center {
+    align-items: flex-start;
+  }
+}
