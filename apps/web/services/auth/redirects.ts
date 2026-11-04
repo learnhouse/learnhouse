@@ -51,3 +51,13 @@ export function safeRedirectUrl(target: string | null | undefined, fallback = '/
   }
   return fallback
 }
+
+/**
+ * Where an auth flow (login, signup, email verification) lands when nothing
+ * asked for a specific page. On a school's own host (subdomain, custom domain,
+ * single tenancy) the page has an org and the user belongs to that school, so
+ * they land on its home page. Only the org-less apex goes to the platform hub.
+ */
+export function defaultPostAuthPath(org: unknown): string {
+  return org ? '/' : '/home'
+}

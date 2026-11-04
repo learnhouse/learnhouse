@@ -235,6 +235,7 @@
     "organizations": "سازمان‌ها",
     "billing": "صورت‌حساب",
     "create_organization": "ایجاد سازمان",
+    "start_your_own_organization": "سازمان خودتان را بسازید",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "حذف این سازمان ممکن نشد. لطفاً دوباره تلاش کنید.",
     "org_actions": "اقدامات سازمان",

@@ -235,6 +235,7 @@
     "organizations": "组织",
     "billing": "账单",
     "create_organization": "创建组织",
+    "start_your_own_organization": "创建您自己的组织",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "无法删除此组织。请重试。",
     "org_actions": "组织操作",

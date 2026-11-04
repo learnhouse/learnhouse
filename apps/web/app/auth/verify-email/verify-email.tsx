@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle, Loader2, X } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { verifyEmail } from '@services/auth/auth'
+import { defaultPostAuthPath } from '@services/auth/redirects'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
@@ -19,6 +20,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
     const token = searchParams.get('token') || ''
     const userUuid = searchParams.get('user') || ''
     const orgUuid = searchParams.get('org') || ''
+    const homePath = defaultPostAuthPath(org)
 
     const [isVerifying, setIsVerifying] = useState(true)
     const [error, setError] = useState('')
@@ -60,12 +62,12 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                     setSuccess(true)
                     setShowMessage(true)
                     // Verification also signs the user in (session cookies were
-                    // set via the auth proxy). Send them into the app hub (/home)
-                    // and NOT the apex '/' which is the public/login page, so a
-                    // fresh, now-verified user lands somewhere useful. A full
-                    // navigation lets auth bootstrap from the new cookies.
+                    // set via the auth proxy). Send them into their school's home
+                    // page, or the hub when verifying on the org-less apex (whose
+                    // '/' is the login page). A full navigation lets auth
+                    // bootstrap from the new cookies.
                     setTimeout(() => {
-                        window.location.assign('/home')
+                        window.location.assign(homePath)
                     }, 1200)
                 } else {
                     track(AnalyticsEvent.EmailVerificationCompleted, { result: 'fail' })
@@ -111,7 +113,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                 </span>
                                 {success && (
                                     <span className="text-sm ms-2">
-                                        · <Link href="/home" className="underline hover:no-underline">{t('auth.continue_to_dashboard', { defaultValue: 'Continue to your dashboard' })}</Link>
+                                        · <Link href={homePath} className="underline hover:no-underline">{t('auth.continue_to_dashboard', { defaultValue: 'Continue to your dashboard' })}</Link>
                                     </span>
                                 )}
                             </div>
@@ -173,7 +175,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                     </div>
                                 </div>
                                 <Link
-                                    href="/home"
+                                    href={homePath}
                                     className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none transition-all"
                                 >
                                     {t('auth.continue_to_dashboard', { defaultValue: 'Continue to your dashboard' })}
