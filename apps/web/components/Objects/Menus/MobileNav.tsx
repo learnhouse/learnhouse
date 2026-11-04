@@ -13,7 +13,6 @@ import {
   CalendarDots,
   ChalkboardSimple,
   ChatsCircle,
-  ChatCircle,
   User,
   ShoppingBag,
   Globe,
@@ -50,7 +49,6 @@ function hidesTabBar(pathname: string) {
   return (
     pathname.includes('/activity/') ||
     pathname.includes('/messages') ||
-    pathname.includes('/copilot') ||
     /\/live\/[^/]+\/room/.test(pathname)
   )
 }
@@ -267,7 +265,6 @@ function MobileMoreSheet({
     if (rf?.[item.featureKey]) return rf[item.featureKey].enabled
     return isFeatureAvailable(item.featureKey)
   })
-  const copilotEnabled = !messagingEnabled && rf?.ai?.enabled && config?.admin_toggles?.ai?.copilot_enabled !== false
   const currentLang = i18n.language.split('-')[0]
 
   return (
@@ -333,7 +330,6 @@ function MobileMoreSheet({
                   }
                 />
               )}
-              {copilotEnabled && <SheetRow href={getUriWithOrg(orgslug, '/copilot')} Icon={ChatCircle} label="Copilot" />}
               <SheetRow href={getUriWithOrg(orgslug, '/calendar')} Icon={CalendarDots} label={t('calendar.title')} />
               {rf?.boards?.enabled && (
                 <SheetRow href={getUriWithOrg(orgslug, '/boards')} Icon={ChalkboardSimple} label={t('common.boards')} />

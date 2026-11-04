@@ -2450,11 +2450,6 @@
           "description": "Seus quadros",
           "keywords": "quadros, kanban, tarefas, planejamento, anotações"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Pergunte ao assistente de IA",
-          "keywords": "copilot, ia, assistente, chat, perguntar, ajuda"
-        },
         "search": {
           "description": "Busca completa com filtros",
           "keywords": "buscar, encontrar, resultados, filtrar, explorar"
@@ -2495,25 +2490,6 @@
     "about_question": "Sobre o que é esta Atividade?",
     "flashcards_question": "Gerar flashcards sobre esta Atividade",
     "examples_question": "Explicar esta Atividade com exemplos práticos",
-    "copilot_bubble": {
-      "toggle_list": "Alternar lista de conversas",
-      "conversations": "Conversas",
-      "title": "Copilot do curso",
-      "new_chat": "Novo chat",
-      "close": "Fechar o Copilot",
-      "new_chat_button": "Novo chat",
-      "no_conversations": "Nenhuma conversa ainda",
-      "subtitle": "Faça perguntas sobre seus cursos.",
-      "select_mode": "Selecionar modo do chat",
-      "mode_general": "Modo geral",
-      "mode_course": "Somente o curso",
-      "select_course": "Selecionar curso",
-      "ask_label": "Pergunte sobre seus cursos",
-      "thinking": "Pensando...",
-      "ask_placeholder": "Pergunte sobre seus cursos...",
-      "send": "Enviar mensagem",
-      "open": "Abrir o Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "Uma ilustração minimalista de uma lâmpada, com gradientes suaves",
       "idea_robot": "Um tutor robô 3D simpático, isométrico, em cores pastel",
@@ -2599,39 +2575,6 @@
       "summarize_tooltip": "Resuma um parágrafo ou texto longo com IA",
       "translate_tooltip": "Traduza para outros idiomas com IA",
       "examples_tooltip": "Peça exemplos para entender melhor com IA"
-    },
-    "copilot_menu": {
-      "no_conversations": "Nenhuma conversa ainda",
-      "new_conversation": "Nova conversa",
-      "start_conversation": "Iniciar uma conversa",
-      "view_all": "Ver todas as conversas",
-      "open_in_bubble": "Abrir na bolha"
-    },
-    "copilot": {
-      "group_favorites": "Favoritos",
-      "group_today": "Hoje",
-      "group_previous_7_days": "Últimos 7 dias",
-      "group_older": "Mais antigas",
-      "selected_course": "Curso selecionado",
-      "all_courses": "Todos os cursos",
-      "failed_load_session": "Falha ao carregar a sessão",
-      "new_chat": "Novo chat",
-      "no_conversations": "Nenhuma conversa ainda",
-      "loading_conversation": "Carregando conversa...",
-      "title": "Copilot do curso",
-      "subtitle": "Faça perguntas sobre seus cursos e receba respostas baseadas no conteúdo, com referências ao material de origem.",
-      "mode_course_only": "Somente o curso",
-      "mode_general": "Geral",
-      "mode_course": "Curso",
-      "mode_general_title": "Modo de conhecimento geral",
-      "mode_course_only_title": "Modo somente o curso",
-      "input_label": "Pergunte sobre seus cursos",
-      "thinking": "Pensando...",
-      "placeholder_general": "Pergunte qualquer coisa...",
-      "placeholder_course": "Pergunte sobre seus cursos...",
-      "remove_favorite": "Remover dos favoritos",
-      "add_favorite": "Adicionar aos favoritos",
-      "answering_from": "Respondendo com base em {{courses}}"
     }
   },
   "payments": {
