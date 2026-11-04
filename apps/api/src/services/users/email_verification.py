@@ -161,7 +161,7 @@ async def send_verification_email(
                 if platform_url
                 else get_base_url_from_request(request)
             )
-    elif org is not None:
+    else:
         # Org signup: use the org-aware base URL so the verification link points at
         # the org's own host, including a verified CUSTOM DOMAIN (learn.acme.org),
         # not a generic host the request-derived URL would pick. Mirrors invites.
@@ -169,8 +169,6 @@ async def send_verification_email(
         base_url = await get_org_signup_base_url(
             org.slug, request, db_session=db_session, org_id=org_id
         )
-    else:
-        base_url = get_base_url_from_request(request)
 
     # Send verification email
     email_sent = send_email_verification_email(

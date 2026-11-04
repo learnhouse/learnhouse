@@ -1,5 +1,6 @@
 """Markdown to page documents and back (src/services/ai/tools/markdown.py)."""
 
+import gc
 import time
 
 import pytest
@@ -176,12 +177,20 @@ ADVERSARIAL = {
 
 
 def _convert_time(text: str) -> float:
-    """Best of two runs, so a busy machine adds less noise."""
+    """Best of five runs with GC paused, so a busy machine adds less noise.
+
+    The suite runs in parallel, so a worker can lose the CPU for a run; one
+    clean run out of five is enough to see the real growth rate.
+    """
     best = float("inf")
-    for _ in range(2):
-        start = time.perf_counter()
-        doc_to_markdown(markdown_to_doc(text))
-        best = min(best, time.perf_counter() - start)
+    gc.disable()
+    try:
+        for _ in range(5):
+            start = time.perf_counter()
+            doc_to_markdown(markdown_to_doc(text))
+            best = min(best, time.perf_counter() - start)
+    finally:
+        gc.enable()
     return best
 
 
@@ -193,7 +202,10 @@ def test_linear_time(name):
     # Growth, not wall clock, so a loaded CI runner does not fail it: four
     # times the input may take about four times as long, never sixteen
     # (quadratic). The old converter took about 23 s on the backtick case.
-    assert full < 8 * quarter + 0.05, f"{name}: {quarter:.3f}s for a quarter, {full:.3f}s for all"
+    # The floor covers inputs whose quarter is microseconds: a truncated
+    # fence loses its closing backtick and takes a shortcut, so the ratio
+    # alone means nothing there, and a CI runner needs ~60ms for the full one.
+    assert full < 8 * quarter + 0.25, f"{name}: {quarter:.3f}s for a quarter, {full:.3f}s for all"
     assert full < 10, f"{name}: {full:.2f}s"
 
 

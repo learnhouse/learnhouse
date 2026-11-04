@@ -858,9 +858,7 @@ async def _grade_code_task_async(task, task_submission):
             return 0
         return round(passed_weight / total_weight * task_max)
 
-    # equal_weight (default)
-    if total_count <= 0:
-        return 0
+    # equal_weight (default); an empty test list already returned 0 above
     return round(passed_count / total_count * task_max)
 
 

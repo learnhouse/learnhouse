@@ -307,9 +307,8 @@ async def update_role(
 
     # Update only the fields that were passed in
     update_data = role_object.model_dump(exclude_unset=True)
+    # model_dump() has already turned a Rights model into a plain dict.
     new_rights = update_data.get("rights")
-    if new_rights is not None and not isinstance(new_rights, dict):
-        new_rights = new_rights.model_dump()
 
     # Every check runs on the new rights BEFORE the row changes: with
     # autoflush, a value set on the row reaches the database at the next
