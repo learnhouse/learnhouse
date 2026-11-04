@@ -31,15 +31,21 @@ _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 #     TLD-agnostic so new/obscure TLDs (.dev .ai .ly .to …) can't slip through
 #   - a "word.tld" with a plausible TLD (schemeless, pathless)
 #   - explicit "dot"/"punto" obfuscation ("evil dot com")
+#
+# Each pattern only starts at the beginning of a run of word characters (the
+# lookbehinds). Unanchored, the engine retried from every character of a long
+# run and backtracked through the rest of it, which made a 2,000-character
+# signup answer cost about a second of CPU. A match that starts mid-run always
+# extends back to the run's start, so this finds exactly the same links.
 _URL_PATTERNS = [
-    re.compile(r"[a-z][a-z0-9+.-]*://", re.IGNORECASE),
+    re.compile(r"(?<![a-z0-9+.-])[0-9+.-]*+[a-z][a-z0-9+.-]*+://", re.IGNORECASE),
     re.compile(r"\bwww\.", re.IGNORECASE),
-    re.compile(r"[a-z0-9-]+\.[a-z]{2,24}/\S", re.IGNORECASE),
-    re.compile(r"[a-z0-9-]+\.(?:com|net|org|io|ru|online|site|click|xyz|top|shop|app|link|info|biz|co|me|tv|cc|pro|store|live|dev|ai|ly|to|sh|gg|us|uk|de|fr|es|it|nl|pl|in|cn|jp|br|za|ua|by|kz)\b", re.IGNORECASE),
+    re.compile(r"(?<![a-z0-9-])[a-z0-9-]+\.[a-z]{2,24}/\S", re.IGNORECASE),
+    re.compile(r"(?<![a-z0-9-])[a-z0-9-]+\.(?:com|net|org|io|ru|online|site|click|xyz|top|shop|app|link|info|biz|co|me|tv|cc|pro|store|live|dev|ai|ly|to|sh|gg|us|uk|de|fr|es|it|nl|pl|in|cn|jp|br|za|ua|by|kz)\b", re.IGNORECASE),
     # Obfuscated dot forms only: "evil[.]com", "evil(dot)com", "evil dot com".
     # Deliberately NOT a bare "." so ordinary names ("Dr. Strange", "J.R.R.")
     # are not flagged; real "word.tld" is already covered by the list above.
-    re.compile(r"[a-z0-9-]+\s*(?:\[\.\]|\(dot\)|\bdot\b|\bpunto\b)\s*[a-z]{2,}", re.IGNORECASE),
+    re.compile(r"(?<![a-z0-9-])[a-z0-9-]+\s*(?:\[\.\]|\(dot\)|\bdot\b|\bpunto\b)\s*[a-z]{2,}", re.IGNORECASE),
 ]
 
 

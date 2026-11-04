@@ -21,6 +21,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.services.demo import flags
 from src.services.demo.sync import sync_demo
+from src.tests.conftest import build_once
 
 EPOCH_DAY = date(2026, 8, 9)
 
@@ -50,10 +51,15 @@ def no_uploads(monkeypatch):
 
 
 @pytest.fixture
-async def synced(db, no_uploads):
-    """A demo organization built once, ready to be refreshed."""
-    stats = await sync_demo(db, today=EPOCH_DAY)
-    return stats
+async def synced(engine, db, no_uploads):
+    """A demo organization built once, ready to be refreshed.
+
+    The first test in a process runs the real sync; the rest get its rows
+    replayed, since a full build is ~10s of database round trips.
+    """
+    return await build_once(
+        engine, db, "demo_sync", lambda session: sync_demo(session, today=EPOCH_DAY)
+    )
 
 
 class _WriteCounter:

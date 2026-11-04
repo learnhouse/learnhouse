@@ -500,9 +500,6 @@ async def update_activity(
         if update_data['extra_metadata'] is not None or incoming:
             update_data['extra_metadata'] = incoming
 
-    if 'content' in update_data and isinstance(update_data['content'], str):
-        logger.warning("[Activity Update] Content is STRING not dict for %s", activity_uuid)
-
     for field, value in update_data.items():
         setattr(activity, field, value)
 

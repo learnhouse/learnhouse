@@ -138,7 +138,7 @@ async def join_org(
 
             return "Great, You're part of the Organization"
 
-        else:
+        else:  # pragma: no cover - org.id is checked above and a loaded user always has an id
             raise HTTPException(
                 status_code=403,
                 detail="Something wrong, try later.",
@@ -167,7 +167,7 @@ async def join_org(
 
             return "Great, You're part of the Organization"
 
-        else:
+        else:  # pragma: no cover - org.id is checked above and a loaded user always has an id
             raise HTTPException(
                 status_code=403,
                 detail="Something wrong, try later.",

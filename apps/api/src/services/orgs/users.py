@@ -1339,10 +1339,6 @@ async def invite_batch_users(
     results = []
 
     for email in invite_list:
-        email = email.strip()
-        if not email:
-            continue
-
         # Check if user is already invited
         invited_user = r.get(f"invited_user:{email}:org:{org.org_uuid}")
 
