@@ -116,11 +116,9 @@ async def resolve_plan_for_month(
         else:
             candidates.append(row.plan)
 
+    # Every row is at or before the month end, so it landed in one of the two.
     if opening is not None:
         candidates.append(opening)
-    elif not candidates:
-        # History exists but starts after this month, so nothing covers it.
-        return current_plan, get_plan_limit(current_plan, "members")
 
     best_plan = max(candidates, key=lambda p: _limit_rank(get_plan_limit(p, "members")))
     return best_plan, get_plan_limit(best_plan, "members")

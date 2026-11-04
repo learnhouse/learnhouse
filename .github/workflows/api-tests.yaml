@@ -47,7 +47,15 @@ jobs:
         working-directory: apps/api
 
       - name: Run tests with coverage
-        run: uv run pytest src/tests/ -v --tb=short --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=25
+        # One worker per core; worksteal rebalances when a worker lands the
+        # slow files. -q because -v printed ~10k lines nobody read. The
+        # coverage floor (100%) lives in pyproject.toml so local runs enforce
+        # the same number. --durations keeps new slow tests visible.
+        run: >-
+          uv run pytest src/tests/ -n auto --dist worksteal -q --tb=short
+          --durations=25
+          --cov=src --cov-report=html --cov-report=term-missing:skip-covered
+          --cov-report=xml:coverage.xml
         working-directory: apps/api
         env:
           TESTING: "true"

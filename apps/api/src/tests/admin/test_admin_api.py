@@ -8,12 +8,7 @@ Uses an in-memory SQLite database with real SQLModel tables.
 import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
-from sqlmodel import SQLModel, select
-from sqlalchemy import JSON
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.pool import StaticPool
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel import select
 from fastapi import HTTPException
 from starlette.requests import Request
 
@@ -91,32 +86,6 @@ FULL_ADMIN_API_RIGHTS = {
 
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
-
-
-@pytest.fixture
-async def engine():
-    # Replace JSONB columns with JSON before creating tables
-    for table in SQLModel.metadata.tables.values():
-        for col in table.columns:
-            if isinstance(col.type, JSONB):
-                col.type = JSON()
-
-    eng = create_async_engine(
-        "sqlite+aiosqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    async with eng.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-    yield eng
-    await eng.dispose()
-
-
-@pytest.fixture
-async def db(engine):
-    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with factory() as session:
-        yield session
 
 
 @pytest.fixture

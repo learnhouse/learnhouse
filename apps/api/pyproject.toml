@@ -41,6 +41,7 @@ dependencies = [
     "beautifulsoup4==4.15.0",
     "pillow==13.0.0",
     "pytest-asyncio==1.4.1",
+    "pytest-xdist==3.8.0",
     "sentry-sdk[fastapi]==2.73.0",
     "protobuf==7.36.2",
     "workos==10.6.0",
@@ -82,7 +83,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 25
+fail_under = 100
 show_missing = true
 exclude_lines = [
     "pragma: no cover",
