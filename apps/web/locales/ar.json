@@ -2354,7 +2354,22 @@
     "solution_locked_title": "الحل النموذجي مقفل",
     "solution_locked_on_submission": "سلّم عملك ليُفتح الحل النموذجي على الفور.",
     "solution_locked_after_grading": "يُفتح الحل النموذجي بعد تقييم عملك.",
-    "retry_assignment_confirm_ungraded": "ستتم إعادة تعيين تسليمك الحالي لتبدأ من جديد، وسيُقفل الحل النموذجي مجدداً حتى تسلّم المحاولة التالية."
+    "retry_assignment_confirm_ungraded": "ستتم إعادة تعيين تسليمك الحالي لتبدأ من جديد، وسيُقفل الحل النموذجي مجدداً حتى تسلّم المحاولة التالية.",
+    "status_not_started": "لم يبدأ",
+    "status_in_progress": "قيد التنفيذ",
+    "status_submitted": "تم التسليم",
+    "due_on": "موعد التسليم {{date}}",
+    "answered_progress": "تمت الإجابة على {{answered}} من {{total}}",
+    "handin_ready_title": "جاهز للتسليم؟",
+    "handin_ready_body": "تُحفظ إجاباتك تلقائيًا.",
+    "your_score": "درجتك",
+    "awaiting_grade_body": "عملك لدى معلمك. ستظهر درجتك هنا بعد التصحيح.",
+    "tasks_count_zero": "لا مهام",
+    "tasks_count_one": "مهمة واحدة",
+    "tasks_count_two": "مهمتان",
+    "tasks_count_few": "{{count}} مهام",
+    "tasks_count_many": "{{count}} مهمة",
+    "tasks_count_other": "{{count}} مهمة"
   },
   "certificate": {
     "certificate": "الشهادة",
@@ -6664,7 +6679,15 @@
           "hide_empty": "إخفاء الدورات الفارغة"
         },
         "new_assignment": "واجب جديد",
-        "clear_search": "مسح البحث"
+        "clear_search": "مسح البحث",
+        "subtitle": "أنشئ الواجبات وانشرها وقيّمها عبر جميع دوراتك.",
+        "columns": {
+          "grading": "التقييم",
+          "actions": "الإجراءات"
+        },
+        "empty_description": "توجد الواجبات داخل فصل من فصول الدورة. أنشئ واجبًا لتبدأ في استلام أعمال المتعلمين.",
+        "status_draft": "مسودة",
+        "no_due_date": "لا يوجد موعد نهائي"
       },
       "detail": {
         "title": "أدوات الواجب",
@@ -6698,8 +6721,10 @@
             "updating": "جاري تحديث الواجب...",
             "update_success": "تم تحديث الواجب بنجاح",
             "update_error": "خطأ أثناء تحديث الواجب، يرجى المحاولة لاحقاً."
-          }
-        }
+          },
+          "edit_settings": "تعديل الإعدادات"
+        },
+        "due_on": "موعد التسليم {{date}}"
       },
       "editor": {
         "tasks_title": "المهام",
@@ -6830,7 +6855,10 @@
           },
           "file": {
             "teacher_hint": "سيتمكن المستخدم من تسليم ملف لهذه المهمة، وستتمكن من مراجعته في تبويب التسليمات",
-            "submit_file": "تسليم الملف"
+            "submit_file": "تسليم الملف",
+            "uploaded": "تم الرفع",
+            "replace": "استبدال",
+            "no_file": "لم يُرسل أي ملف"
           },
           "quiz": {
             "last_option": "لا يمكن حذف الخيار الأخير. يلزم خيار واحد على الأقل.",
@@ -7001,7 +7029,14 @@
           "general": "عام",
           "content": "المحتوى"
         },
-        "no_task_selected": "لم يتم تحديد مهمة"
+        "no_task_selected": "لم يتم تحديد مهمة",
+        "task_position": "المهمة {{number}} من {{total}}",
+        "delete_task_confirm": "ستُحذف هذه المهمة نهائيًا من الواجب.",
+        "empty_title": "أضف مهمتك الأولى",
+        "empty_description": "المهام هي ما يعمل عليه المتعلمون: اختبارات، إجابات قصيرة، تمارين برمجة، رفع ملفات والمزيد.",
+        "points_short": "{{points}} نقطة",
+        "total_points": "{{points}} نقطة إجمالًا",
+        "max_tasks_reached": "وصل هذا الواجب إلى الحد الأقصى وهو {{max}} مهام."
       },
       "submissions": {
         "status": {
@@ -7024,7 +7059,8 @@
           "recently_graded": "تم تقييمه مؤخراً"
         },
         "stats": {
-          "total": "الإجمالي"
+          "total": "الإجمالي",
+          "to_grade": "بانتظار التقييم"
         },
         "preview": {
           "current_grade": "الدرجة الحالية",
@@ -7047,7 +7083,9 @@
         "evaluate": "تقييم",
         "evaluate_modal": {
           "title": "تقييم @{{username}}",
-          "description": "تقييم الواجب المسلم"
+          "description": "تقييم الواجب المسلم",
+          "title_name": "تقييم {{name}}",
+          "submitted_at": "سُلّم في {{date}}"
         },
         "task_label": "المهمة {{number}}:",
         "hint": "تلميح",
@@ -7069,7 +7107,12 @@
         "ungraded_title": "تكويني: غير مُقيَّم",
         "ungraded_description": "يُسلَّم هذا الواجب للاطلاع فقط. لا تُسجَّل أي درجة.",
         "download_to_grade": "نزّل الملف وقيّمه يدوياً، ثم أدخل الدرجة أعلاه",
-        "download_to_review": "نزّل الملف للاطلاع على ما سلّمه المتعلم."
+        "download_to_review": "نزّل الملف للاطلاع على ما سلّمه المتعلم.",
+        "empty_description": "عندما يسلّم المتعلمون هذا الواجب، ستظهر أعمالهم هنا لتقييمها.",
+        "columns": {
+          "learner": "المتعلم"
+        },
+        "review": "مراجعة"
       },
       "analytics": {
         "loading": "جارٍ تحميل التحليلات...",
@@ -12377,5 +12420,11 @@
     "sign_in_title": "سجّل الدخول لرؤية تقويمك",
     "title": "التقويم",
     "more_events": "+{{count}} أخرى"
+  },
+  "mobile_nav": {
+    "tabs": "الرئيسية",
+    "explore": "استكشف",
+    "you": "أنت",
+    "messages": "الرسائل"
   }
 }

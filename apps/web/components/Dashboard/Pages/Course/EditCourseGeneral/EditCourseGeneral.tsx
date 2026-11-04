@@ -173,7 +173,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     return (
       <div className="h-full">
         <div className="h-6" />
-        <div className="px-10 pb-10">
+        <div className="px-4 sm:px-10 pb-10">
           <div className="bg-white rounded-xl shadow-xs p-6">
             <div className="animate-pulse space-y-6">
               {/* Name field */}

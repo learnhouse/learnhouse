@@ -14,6 +14,8 @@ export function setDockMounted(on: boolean) {
 
 export function openInDock(conversationUuid: string): boolean {
   if (!mounted || typeof window === 'undefined') return false
+  // The dock is CSS-hidden below md, so phones go to the Messages page instead.
+  if (!window.matchMedia('(min-width: 768px)').matches) return false
   window.dispatchEvent(new CustomEvent(DOCK_OPEN_EVENT, { detail: { conversationUuid } }))
   return true
 }

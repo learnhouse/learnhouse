@@ -189,7 +189,7 @@ export default function CommandPalette() {
         />
         <DialogPrimitive.Content
           aria-label={t('dashboard.search.placeholder')}
-          className="fixed left-1/2 top-[10%] flex w-[94vw] max-w-[760px] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/85 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl backdrop-saturate-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out"
+          className="fixed left-1/2 top-[calc(12px+env(safe-area-inset-top))] sm:top-[10%] flex w-[94vw] max-w-[760px] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/95 sm:bg-black/85 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl backdrop-saturate-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out"
           style={{ zIndex: 'var(--z-modal)' as any }}
           onOpenAutoFocus={(e) => {
             e.preventDefault()
@@ -294,7 +294,7 @@ export default function CommandPalette() {
             </Command.List>
 
             {/* Footer */}
-            <div className="flex items-center gap-3 sm:gap-5 border-t border-white/[0.06] bg-black/20 px-4 sm:px-7 py-3 text-[12px] text-white/40">
+            <div className="hidden [@media(hover:hover)]:flex items-center gap-3 sm:gap-5 border-t border-white/[0.06] bg-black/20 px-4 sm:px-7 py-3 text-[12px] text-white/40">
               <FooterHint label={t('search.palette.keys.navigate')} keys={['↑', '↓']} />
               <FooterHint label={t('search.palette.keys.open')} keys={['↵']} />
               <span className="hidden sm:contents">

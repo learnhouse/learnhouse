@@ -139,7 +139,7 @@ function MarkdownActivity({ activity, editable = false, style }: MarkdownActivit
   }
 
   return (
-    <div className="w-full px-6 py-6" style={style}>
+    <div className="w-full px-1 py-2 sm:px-6 sm:py-6" style={style}>
       {editable && (
         <div className="mb-6 flex items-center gap-3">
           <MarkdownLogo size={20} weight="duotone" className="text-rose-400 flex-shrink-0" />

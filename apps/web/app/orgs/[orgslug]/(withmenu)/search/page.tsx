@@ -666,6 +666,11 @@ function ResourceCard({
             src={imageUrl}
             alt={title}
             className="w-full h-full object-cover"
+            // A course whose thumbnail file is gone would otherwise show its
+            // alt text in a grey box.
+            onError={(e) => {
+              if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'
+            }}
           />
         ) : (
           <FallbackIcon size={28} className="text-black/30" />

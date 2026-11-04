@@ -4,6 +4,7 @@ import { ArrowClockwise, PencilSimple, TextAlignLeft, TextAlignCenter, TextAlign
 import { cn } from '@/lib/utils'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
+import { isCompactFlipcardGrid } from './compactGrid'
 
 const FlipcardExtension: React.FC = (props: any) => {
   const { t } = useTranslation()
@@ -79,15 +80,18 @@ const FlipcardExtension: React.FC = (props: any) => {
 
   // Inside a flipcardGrid the container owns the layout: the card fills its cell
   // and per-card alignment stops meaning anything.
-  const inGrid = (() => {
+  const parentNode = (() => {
     const pos = typeof props.getPos === 'function' ? props.getPos() : null
-    if (pos === null || pos === undefined) return false
+    if (pos === null || pos === undefined) return null
     try {
-      return props.editor.state.doc.resolve(pos).parent.type.name === 'flipcardGrid'
+      return props.editor.state.doc.resolve(pos).parent
     } catch {
-      return false
+      return null
     }
   })()
+  const inGrid = parentNode?.type.name === 'flipcardGrid'
+  // Two cards share a phone's width in a compact grid, so they shrink further.
+  const compact = inGrid && isCompactFlipcardGrid(parentNode)
 
   /** Wrap this standalone card in a grid so more cards can sit beside it. */
   const groupIntoGrid = () => {
@@ -125,6 +129,14 @@ const FlipcardExtension: React.FC = (props: any) => {
       default: return 'w-80 h-48';
     }
   }
+
+  // Phones: full width and a height sized to a term, not to a desktop card.
+  const getMobileSizeClass = () => {
+    if (compact) return 'max-md:h-32'
+    return size === 'large' ? 'max-md:w-full max-md:h-44' : 'max-md:w-full max-md:h-36'
+  }
+
+  const faceMobileClass = compact ? 'max-md:p-3' : 'max-md:p-4'
 
   const getFontSizeClass = () => {
     switch (size) {
@@ -189,7 +201,10 @@ const FlipcardExtension: React.FC = (props: any) => {
           "flipcard-container relative",
           // In a grid the cell dictates the width; the height must stay explicit
           // because the front/back faces are absolutely positioned.
-          inGrid ? cn("w-full", getSizeClass().split(' ')[1]) : getSizeClass()
+          inGrid ? cn("w-full", getSizeClass().split(' ')[1]) : getSizeClass(),
+          getMobileSizeClass(),
+          // Gives a little under the finger on touch screens.
+          !isEditable && "lh-press"
         )}
       >
         <div
@@ -200,10 +215,11 @@ const FlipcardExtension: React.FC = (props: any) => {
           <div
             className={cn(
               "flipcard-front border-2 text-white p-6 nice-shadow flex flex-col items-center justify-center text-center rounded-xl",
+              faceMobileClass,
               getCardColor(color, false)
             )}
           >
-            <div className="flex items-center justify-center mb-3 select-none pointer-events-none">
+            <div className="flex items-center justify-center mb-3 max-md:mb-1.5 select-none pointer-events-none">
               <ArrowClockwise weight="duotone" size={getIconSizeClass()} className="opacity-70" />
             </div>
             <div className="flex-1 flex items-center justify-center">
@@ -217,7 +233,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                   placeholder={t('activities.enter_question')}
                 />
               ) : (
-                <div className={cn("text-center font-medium leading-relaxed flex items-center justify-center select-none", getFontSizeClass())}>
+                <div className={cn("text-center font-medium leading-relaxed flex items-center justify-center select-none", getFontSizeClass(), compact && "max-md:text-[15px] max-md:leading-snug")}>
                   <span className="select-none pointer-events-none">{question}</span>
                   {isEditable && (
                     <button
@@ -234,7 +250,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
             </div>
             {!isEditingQuestion && (
-              <div className="text-xs opacity-70 mt-3 select-none pointer-events-none">{t('activities.click_to_flip')}</div>
+              <div className={cn("text-xs opacity-70 mt-3 max-md:mt-1.5 select-none pointer-events-none", compact && "max-md:hidden")}>{t('activities.click_to_flip')}</div>
             )}
           </div>
 
@@ -242,10 +258,11 @@ const FlipcardExtension: React.FC = (props: any) => {
           <div
             className={cn(
               "flipcard-back border-2 text-white p-6 nice-shadow flex flex-col items-center justify-center text-center rounded-xl",
+              faceMobileClass,
               getCardColor(color, true)
             )}
           >
-            <div className="flex items-center justify-center mb-3 select-none pointer-events-none">
+            <div className="flex items-center justify-center mb-3 max-md:mb-1.5 select-none pointer-events-none">
               <ArrowClockwise weight="duotone" size={getIconSizeClass()} className="opacity-70 rotate-180" />
             </div>
             <div className="flex-1 flex items-center justify-center">
@@ -259,7 +276,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                   placeholder={t('activities.enter_answer')}
                 />
               ) : (
-                <div className={cn("text-center font-medium leading-relaxed flex items-center justify-center select-none", getFontSizeClass())}>
+                <div className={cn("text-center font-medium leading-relaxed flex items-center justify-center select-none", getFontSizeClass(), compact && "max-md:text-[15px] max-md:leading-snug")}>
                   <span className="select-none pointer-events-none">{answer}</span>
                   {isEditable && (
                     <button
@@ -276,7 +293,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
             </div>
             {!isEditingAnswer && (
-              <div className="text-xs opacity-70 mt-3">{t('activities.click_to_flip_back')}</div>
+              <div className={cn("text-xs opacity-70 mt-3 max-md:mt-1.5", compact && "max-md:hidden")}>{t('activities.click_to_flip_back')}</div>
             )}
           </div>
         </div>

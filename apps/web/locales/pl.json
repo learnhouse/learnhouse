@@ -2288,7 +2288,20 @@
     "solution_locked_title": "Wzorcowa odpowiedź zablokowana",
     "solution_locked_on_submission": "Oddaj swoją pracę, a wzorcowa odpowiedź zostanie od razu odblokowana.",
     "solution_locked_after_grading": "Wzorcowa odpowiedź zostanie odblokowana po ocenieniu Twojej pracy.",
-    "retry_assignment_confirm_ungraded": "Twoja obecna praca zostanie zresetowana, abyś mógł(-ła) zacząć od nowa, a wzorcowa odpowiedź zostanie ponownie zablokowana do czasu oddania kolejnej próby."
+    "retry_assignment_confirm_ungraded": "Twoja obecna praca zostanie zresetowana, abyś mógł(-ła) zacząć od nowa, a wzorcowa odpowiedź zostanie ponownie zablokowana do czasu oddania kolejnej próby.",
+    "status_not_started": "Nie rozpoczęto",
+    "status_in_progress": "W toku",
+    "status_submitted": "Oddano",
+    "due_on": "Termin: {{date}}",
+    "answered_progress": "Odpowiedziano na {{answered}} z {{total}}",
+    "handin_ready_title": "Gotowe do oddania?",
+    "handin_ready_body": "Twoje odpowiedzi zapisują się automatycznie.",
+    "your_score": "Twój wynik",
+    "awaiting_grade_body": "Twoja praca jest u nauczyciela. Wynik pojawi się tutaj po ocenieniu.",
+    "tasks_count_one": "{{count}} zadanie",
+    "tasks_count_few": "{{count}} zadania",
+    "tasks_count_many": "{{count}} zadań",
+    "tasks_count_other": "{{count}} zadania"
   },
   "certificate": {
     "certificate": "Certyfikat",
@@ -6528,7 +6541,15 @@
           "hide_empty": "Ukryj puste kursy"
         },
         "new_assignment": "Nowe zadanie",
-        "clear_search": "Wyczyść wyszukiwanie"
+        "clear_search": "Wyczyść wyszukiwanie",
+        "subtitle": "Twórz, publikuj i oceniaj zadania we wszystkich kursach.",
+        "columns": {
+          "grading": "Ocenianie",
+          "actions": "Akcje"
+        },
+        "empty_description": "Zadania znajdują się w rozdziale kursu. Utwórz pierwsze, aby zacząć zbierać prace uczniów.",
+        "status_draft": "Szkic",
+        "no_due_date": "Brak terminu"
       },
       "detail": {
         "title": "Narzędzia zadań",
@@ -6562,8 +6583,10 @@
             "updating": "Aktualizowanie zadania...",
             "update_success": "Zadanie zostało pomyślnie zaktualizowane",
             "update_error": "Wystąpił błąd podczas aktualizacji zadania. Spróbuj ponownie później."
-          }
-        }
+          },
+          "edit_settings": "Edytuj ustawienia"
+        },
+        "due_on": "Termin: {{date}}"
       },
       "editor": {
         "tasks_title": "Zadania składowe",
@@ -6694,7 +6717,10 @@
           },
           "file": {
             "teacher_hint": "Użytkownik będzie mógł przesłać plik dla tego zadania, a Ty przejrzysz go w karcie Zgłoszenia",
-            "submit_file": "Prześlij plik"
+            "submit_file": "Prześlij plik",
+            "uploaded": "Przesłano",
+            "replace": "Zamień",
+            "no_file": "Nie przesłano pliku"
           },
           "quiz": {
             "last_option": "Nie można usunąć ostatniej opcji. Wymagana jest co najmniej jedna opcja.",
@@ -6857,7 +6883,14 @@
           "general": "Ogólne",
           "content": "Treść"
         },
-        "no_task_selected": "Nie wybrano zadania"
+        "no_task_selected": "Nie wybrano zadania",
+        "task_position": "Polecenie {{number}} z {{total}}",
+        "delete_task_confirm": "To polecenie zostanie trwale usunięte z zadania.",
+        "empty_title": "Dodaj pierwsze polecenie",
+        "empty_description": "Polecenia to to, nad czym pracują uczniowie: quizy, krótkie odpowiedzi, ćwiczenia z kodu, przesyłanie plików i więcej.",
+        "points_short": "{{points}} pkt",
+        "total_points": "Łącznie {{points}} pkt",
+        "max_tasks_reached": "To zadanie osiągnęło limit {{max}} poleceń."
       },
       "submissions": {
         "status": {
@@ -6880,7 +6913,8 @@
           "recently_graded": "Ostatnio ocenione"
         },
         "stats": {
-          "total": "Łącznie"
+          "total": "Łącznie",
+          "to_grade": "Do oceny"
         },
         "preview": {
           "current_grade": "Aktualna ocena",
@@ -6903,7 +6937,9 @@
         "evaluate": "Oceń",
         "evaluate_modal": {
           "title": "Oceń użytkownika @{{username}}",
-          "description": "Oceń przesłaną pracę"
+          "description": "Oceń przesłaną pracę",
+          "title_name": "Oceń: {{name}}",
+          "submitted_at": "Oddano {{date}}"
         },
         "task_label": "Zadanie składowe {{number}} :",
         "hint": "Wskazówka",
@@ -6925,7 +6961,12 @@
         "ungraded_title": "Formatywne (nieoceniane)",
         "ungraded_description": "Ta praca domowa jest oddawana wyłącznie do przejrzenia. Wynik nie jest rejestrowany.",
         "download_to_grade": "Pobierz plik i oceń go ręcznie, a następnie wpisz ocenę powyżej",
-        "download_to_review": "Pobierz plik, aby przejrzeć, co oddał uczeń."
+        "download_to_review": "Pobierz plik, aby przejrzeć, co oddał uczeń.",
+        "empty_description": "Gdy uczniowie oddadzą to zadanie, ich prace pojawią się tutaj do oceny.",
+        "columns": {
+          "learner": "Uczeń"
+        },
+        "review": "Przejrzyj"
       },
       "analytics": {
         "loading": "Ładowanie analityki...",
@@ -11818,5 +11859,11 @@
     "sign_in_title": "Zaloguj się, aby zobaczyć kalendarz",
     "title": "Kalendarz",
     "more_events": "+{{count}} więcej"
+  },
+  "mobile_nav": {
+    "tabs": "Główne",
+    "explore": "Odkrywaj",
+    "you": "Ty",
+    "messages": "Wiadomości"
   }
 }

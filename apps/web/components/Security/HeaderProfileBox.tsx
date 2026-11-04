@@ -188,7 +188,9 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
               <DropdownMenuTrigger asChild>
                 <button className={`cursor-pointer flex items-center space-x-3 rounded-lg p-2 transition-colors ${colors.profileHover}`}>
                   <UserAvatar border="border-2" rounded="rounded-lg" width={30} shadow={primaryColor ? '' : undefined} />
-                  <div className="flex flex-col items-start space-y-0">
+                  {/* Name and email only where the header has room for them
+                      next to a full menu; the dropdown repeats both. */}
+                  <div className="hidden min-[1780px]:flex flex-col items-start space-y-0">
                     <div className="flex items-center space-x-2">
                       <p className={`text-sm font-semibold capitalize ${colors.profileName}`}>{session.data.user.username}</p>
                       {userRoleInfo && userRoleInfo.name !== 'USER' && (
@@ -220,7 +222,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                     </div>
                     <p className={`text-xs ${colors.profileMuted}`}>{session.data.user.email}</p>
                   </div>
-                  <CaretDown aria-hidden="true" size={16} weight="fill" className={colors.profileMuted} />
+                  <CaretDown aria-hidden="true" size={16} weight="fill" className={`hidden min-[1780px]:block ${colors.profileMuted}`} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">

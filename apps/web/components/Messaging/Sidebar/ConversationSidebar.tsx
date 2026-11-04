@@ -112,14 +112,14 @@ export function ConversationRow({
       aria-label={unread ? `${title}, ${c.unread_count} unread` : title}
       aria-current={active ? 'true' : undefined}
       data-conversation={c.conversation_uuid}
-      className={`group w-full flex items-center gap-3 rounded-lg px-2.5 py-2 text-start transition-colors ${
+      className={`group w-full flex items-center gap-3 rounded-lg px-2.5 py-2.5 md:py-2 text-start transition-colors active:bg-gray-100 ${
         active ? 'bg-gray-100' : 'hover:bg-gray-50'
       }`}
     >
       <ConversationAvatar conversation={c} viewerId={userId} size={40} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className={`truncate text-sm ${unread ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'}`}>
+          <p className={`truncate text-[15px] md:text-sm ${unread ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'}`}>
             {title}
           </p>
           {status?.status_emoji && <span className="text-xs" title={status.status_text}>{status.status_emoji}</span>}
@@ -130,7 +130,7 @@ export function ConversationRow({
           </span>
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <p className={`truncate text-xs ${unread ? 'text-gray-700' : 'text-gray-500'}`}>{preview || ' '}</p>
+          <p className={`truncate text-[13px] md:text-xs ${unread ? 'text-gray-700' : 'text-gray-500'}`}>{preview || ' '}</p>
           {unread &&
             (c.muted ? (
               <span className="ms-auto h-2 w-2 rounded-full bg-gray-300 flex-shrink-0" />
@@ -258,7 +258,7 @@ export default function ConversationSidebar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('messaging.search', { defaultValue: 'Search conversations and messages' })}
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
+            className="flex-1 bg-transparent text-base md:text-sm outline-none placeholder:text-gray-400"
           />
           {query && (
             <button onClick={() => setQuery('')} className="text-gray-400 hover:text-gray-700">
@@ -276,7 +276,7 @@ export default function ConversationSidebar({
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`flex-shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`flex-shrink-0 rounded-md px-3 py-1.5 md:px-2.5 md:py-1 text-[13px] md:text-xs font-medium transition-colors ${
                 filter === f.key ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-900'
               }`}
             >

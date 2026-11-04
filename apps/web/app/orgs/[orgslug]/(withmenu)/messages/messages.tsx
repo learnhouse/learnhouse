@@ -1,11 +1,13 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useMediaQuery } from 'usehooks-ts'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'motion/react'
-import { ChatsCircle, NotePencil, UsersThree } from '@phosphor-icons/react'
+import { ArrowLeft, ChatsCircle, NotePencil, UsersThree } from '@phosphor-icons/react'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { messagingKeys, useMessaging, useMessagingEnabled } from '@components/Messaging/MessagingProvider'
@@ -67,6 +69,45 @@ function EmptyState({
         {option(<UsersThree size={20} weight="fill" />, 'Build an agent', 'Your own tutor, with its own style', onNewAgent)}
       </div>
     </div>
+  )
+}
+
+/**
+ * On phones an open chat (or the agents gallery) covers the whole screen,
+ * header and tab bar included, like a native messenger. It is portaled to the
+ * body because the page content sits in its own stacking context, and it
+ * follows the visual viewport so the composer rides on top of the keyboard.
+ */
+function PhoneScreen({ children }: { children: React.ReactNode }) {
+  const [vv, setVv] = useState<{ top: number; height: number } | null>(null)
+  useEffect(() => {
+    const v = window.visualViewport
+    if (!v) return
+    const update = () => setVv({ top: v.offsetTop, height: v.height })
+    update()
+    v.addEventListener('resize', update)
+    v.addEventListener('scroll', update)
+    return () => {
+      v.removeEventListener('resize', update)
+      v.removeEventListener('scroll', update)
+    }
+  }, [])
+  // The page behind must not scroll while the screen is up.
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
+  return createPortal(
+    <div
+      className="fixed inset-x-0 top-0 flex flex-col bg-white pt-[var(--lh-safe-top)] pb-[var(--lh-safe-bottom)]"
+      style={{ zIndex: 'var(--z-nav-menu)', top: vv?.top ?? 0, height: vv ? vv.height : '100dvh' }}
+    >
+      {children}
+    </div>,
+    document.body
   )
 }
 
@@ -169,11 +210,56 @@ function MessagesApp({ orgslug }: { orgslug: string }) {
   }, [params])
 
   const defaultAgent = useMemo(() => agents.find((a) => a.is_default), [agents])
+  const isPhone = useMediaQuery('(max-width: 767px)', { initializeWithValue: false })
+  // Phones show either the list or one full-screen detail view.
+  const detail = Boolean(selected || showAgents)
+
+  const thread = selected ? (
+    <Thread
+      key={selected}
+      uuid={selected}
+      orgslug={orgslug}
+      focusMessageUuid={focus}
+      onBack={() => select(null)}
+      onLeft={() => select(null)}
+      onOpenConversation={openConversation}
+      onEditAgent={(agent) => setBuilder({ open: true, agent })}
+      onNewAgentChat={(uuid) => openAgent(uuid, true)}
+    />
+  ) : showAgents ? (
+    <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-8">
+      <div className="flex items-center gap-2.5">
+        <button
+          onClick={() => setQuery({ agents: null })}
+          className="md:hidden -ms-1.5 flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
+          aria-label="Back"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg bg-white nice-shadow">
+          <UsersThree size={16} weight="fill" className="text-black" />
+        </div>
+        <h2 className="text-xl font-bold tracking-tight text-gray-900">Agents</h2>
+      </div>
+      <p className="mt-2 mb-6 text-sm text-gray-500">
+        Assistants that answer from your courses, each with its own style.
+      </p>
+      <AgentsGallery orgslug={orgslug} onOpenChat={openConversation} />
+    </div>
+  ) : (
+    <EmptyState
+      onNewMessage={() => setNewOpen(true)}
+      onAgent={(a) => openAgent(a.agent_uuid)}
+      onNewAgent={() => setBuilder({ open: true, agent: null })}
+      defaultAgent={defaultAgent}
+    />
+  )
 
   return (
-    <div className="flex h-[calc(100dvh-72px)] w-full max-w-(--breakpoint-2xl) mx-auto px-0 sm:px-4 md:px-6 lg:px-8 gap-3 md:py-5">
+    // Phones: the list fills the space between the 60px header and the tab bar.
+    <div className="flex h-[calc(100dvh-60px-var(--lh-mobile-nav-h))] md:h-[calc(100dvh-72px)] w-full max-w-(--breakpoint-2xl) mx-auto px-0 sm:px-4 md:px-6 lg:px-8 gap-3 md:py-5">
       <aside
-        className={`${selected ? 'hidden md:flex' : 'flex'} w-full md:w-[340px] lg:w-[360px] flex-shrink-0 flex-col bg-white md:rounded-xl md:shadow-md md:shadow-gray-300/25 md:outline md:outline-1 md:outline-gray-200/40 overflow-hidden`}
+        className={`${detail ? 'hidden md:flex' : 'flex'} max-md:pb-[var(--lh-safe-bottom)] w-full md:w-[340px] lg:w-[360px] flex-shrink-0 flex-col bg-white md:rounded-xl md:shadow-md md:shadow-gray-300/25 md:outline md:outline-1 md:outline-gray-200/40 overflow-hidden`}
       >
         <ConversationSidebar
           orgslug={orgslug}
@@ -190,41 +276,13 @@ function MessagesApp({ orgslug }: { orgslug: string }) {
         />
       </aside>
 
-      <section aria-label="Conversation" data-messages-thread className={`${selected ? 'flex' : 'hidden md:flex'} flex-1 min-w-0 flex-col bg-white md:rounded-xl md:shadow-md md:shadow-gray-300/25 md:outline md:outline-1 md:outline-gray-200/40 overflow-hidden`}>
-        {selected ? (
-          <Thread
-            key={selected}
-            uuid={selected}
-            orgslug={orgslug}
-            focusMessageUuid={focus}
-            onBack={() => select(null)}
-            onLeft={() => select(null)}
-            onOpenConversation={openConversation}
-            onEditAgent={(agent) => setBuilder({ open: true, agent })}
-            onNewAgentChat={(uuid) => openAgent(uuid, true)}
-          />
-        ) : showAgents ? (
-          <div className="flex-1 overflow-y-auto p-5 sm:p-8">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white nice-shadow">
-                <UsersThree size={16} weight="fill" className="text-black" />
-              </div>
-              <h2 className="text-xl font-bold tracking-tight text-gray-900">Agents</h2>
-            </div>
-            <p className="mt-2 mb-6 text-sm text-gray-500">
-              Assistants that answer from your courses, each with its own style.
-            </p>
-            <AgentsGallery orgslug={orgslug} onOpenChat={openConversation} />
-          </div>
-        ) : (
-          <EmptyState
-            onNewMessage={() => setNewOpen(true)}
-            onAgent={(a) => openAgent(a.agent_uuid)}
-            onNewAgent={() => setBuilder({ open: true, agent: null })}
-            defaultAgent={defaultAgent}
-          />
-        )}
-      </section>
+      {isPhone && detail ? (
+        <PhoneScreen>{thread}</PhoneScreen>
+      ) : (
+        <section aria-label="Conversation" data-messages-thread className="hidden md:flex flex-1 min-w-0 flex-col bg-white md:rounded-xl md:shadow-md md:shadow-gray-300/25 md:outline md:outline-1 md:outline-gray-200/40 overflow-hidden">
+          {thread}
+        </section>
+      )}
 
       <NewConversationDialog
         open={newOpen}

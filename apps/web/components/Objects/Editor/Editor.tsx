@@ -30,7 +30,7 @@ import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
 import AudioBlock from './Extensions/Audio/AudioBlock'
-import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2, LayoutTemplate, UserRoundSearch } from 'lucide-react'
+import { Eye, History, AlertTriangle, RefreshCw, Loader2, LayoutTemplate, UserRoundSearch } from 'lucide-react'
 import EditorActionMenu from './Toolbar/EditorActionMenu'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
@@ -64,7 +64,6 @@ import Flipcard from './Extensions/Flipcard/Flipcard'
 import FlipcardGrid from './Extensions/Flipcard/FlipcardGrid'
 import Scenarios from './Extensions/Scenarios/Scenarios'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
-import { useMediaQuery } from 'usehooks-ts'
 import UserAvatar from '../UserAvatar'
 import UserBlock from './Extensions/Users/UserBlock'
 import DragHandle from './Extensions/DragHandle/DragHandle'
@@ -452,21 +451,6 @@ function Editor(props: EditorProps) {
     }
   }, [editor, props.setContent, markEditorContentSaved])
 
-  const isMobile = useMediaQuery('(max-width: 767px)')
-  if (isMobile) {
-    // TODO: Work on a better editor mobile experience
-    return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl font-bold mb-4">{t('editor.desktop_only')}</h2>
-          <Monitor className='mx-auto my-5' size={60} />
-          <p>{t('editor.desktop_only_message')}</p>
-          <p>{t('editor.switch_to_desktop')}</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="activity-editor-page">
       {/* Version History Panel: only mount when first opened so the chunk
@@ -757,7 +741,9 @@ function Editor(props: EditorProps) {
             delay: 0.5,
           }}
           exit={{ opacity: 0 }}
-          className="flex gap-5"
+          // Phone layout (sticky top bar, edge-to-edge page) lives in
+          // styles/mobile-dashboard.css under .activity-editor-body.
+          className="activity-editor-body flex gap-5"
           style={{ position: 'relative', margin: '0 40px' }}
         >
           <div className="activity-editor-content-wrapper" style={{ flex: 1, margin: 0, marginTop: '97px' }}>

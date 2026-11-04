@@ -10,11 +10,14 @@ import { getUriWithOrg } from '@services/config/config'
 import { fetchRAGChatSessions, RAGChatSession } from '@services/ai/ai'
 import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
 import MenuLinks from './OrgMenuLinks'
+import { MobileTabBar, OPEN_MOBILE_MORE_EVENT } from './MobileNav'
+import UserAvatar from '@components/Objects/UserAvatar'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { SearchTrigger } from '@components/Objects/Search/SearchTrigger'
 import { usePathname } from 'next/navigation'
+import { useMediaQuery } from 'usehooks-ts'
 import { useTranslation } from 'react-i18next'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import {
@@ -66,8 +69,8 @@ export const OrgMenu = (props: any) => {
   const session = useLHSession() as any;
   const _access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [isFocusMode, setIsFocusMode] = useState(false)
+  const isPhone = useMediaQuery('(max-width: 767px)')
   const pathname = usePathname()
   const { t } = useTranslation()
   const { rights } = useAdminStatus()
@@ -149,12 +152,9 @@ export const OrgMenu = (props: any) => {
     };
   }, [pathname]);
 
-  function toggleMenu() {
-    setIsMenuOpen(!isMenuOpen)
-  }
-
-  // Only hide menu if we're in an activity page and focus mode is enabled
-  if (pathname?.includes('/activity/') && isFocusMode) {
+  // Only hide menu if we're in an activity page and focus mode is enabled.
+  // Phones never enter focus mode (see activity.tsx).
+  if (pathname?.includes('/activity/') && isFocusMode && !isPhone) {
     return null;
   }
 
@@ -171,15 +171,15 @@ export const OrgMenu = (props: any) => {
         }}
       >
         <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
-          <div className="flex items-center space-x-5 md:w-auto w-full">
-            <div className="logo flex shrink-0 md:w-auto w-full justify-center">
+          <div className="flex items-center space-x-5 max-lg:min-w-0">
+            <div className="logo flex shrink-0">
               <Link href={getUriWithOrg(orgslug, '/')} className="shrink-0">
                 <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center">
                   {org?.logo_image ? (
                     <img
                       src={`${getOrgLogoMediaDirectory(org.org_uuid, org?.logo_image)}`}
                       alt={org?.name || 'Logo'}
-                      className="h-full w-auto max-w-[180px] shrink-0 object-contain rounded-md"
+                      className="h-full w-auto max-w-[150px] lg:max-w-[180px] shrink-0 object-contain rounded-md"
                     />
                   ) : showBranding ? (
                     <LearnHouseLogo logoFilter={colors.logoFilter} />
@@ -189,20 +189,23 @@ export const OrgMenu = (props: any) => {
                 </div>
               </Link>
             </div>
-            <div className="hidden md:flex">
+            <div className="hidden lg:flex">
               <MenuLinks orgslug={orgslug} primaryColor={primaryColor} />
             </div>
           </div>
 
           {/* Search Section */}
-          <div className="hidden md:flex flex-1 justify-center max-w-lg px-4">
+          {/* The header never fit a full search next to labelled links and
+              the profile name inside 1536px: below 1780px the search gives
+              way (icon-only from 1280 to 1535) so nothing is pushed off-screen. */}
+          <div className="lh-header-search hidden lg:flex flex-1 min-w-0 min-[1780px]:min-w-auto justify-center max-w-lg px-4">
             <SearchTrigger className="w-full" primaryColor={primaryColor} />
           </div>
 
           <div className="flex items-center space-x-2">
             {/* Progress / Trail */}
             <AuthenticatedClientElement checkMethod="authentication">
-              <div className="hidden md:flex">
+              <div className="hidden lg:flex">
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -224,7 +227,7 @@ export const OrgMenu = (props: any) => {
             </AuthenticatedClientElement>
             {/* Calendar */}
             <AuthenticatedClientElement checkMethod="authentication">
-              <div className="hidden md:flex">
+              <div className="hidden lg:flex">
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -247,7 +250,7 @@ export const OrgMenu = (props: any) => {
             {/* Boards */}
             {rf?.boards?.enabled && (
               <AuthenticatedClientElement checkMethod="authentication">
-                <div className="hidden md:flex">
+                <div className="hidden lg:flex">
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -271,7 +274,7 @@ export const OrgMenu = (props: any) => {
             {/* Messages */}
             {messagingEnabled && (
               <AuthenticatedClientElement checkMethod="authentication">
-                <div className="hidden md:flex">
+                <div className="hidden lg:flex">
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -299,7 +302,7 @@ export const OrgMenu = (props: any) => {
             {/* AI Copilot */}
             {!messagingEnabled && rf?.ai?.enabled && config?.admin_toggles?.ai?.copilot_enabled !== false && (
               <AuthenticatedClientElement checkMethod="authentication">
-                <div className="hidden md:flex">
+                <div className="hidden lg:flex">
                   <CopilotMenuButton
                     orgslug={orgslug}
                     iconBtnClass={colors.iconBtn}
@@ -313,7 +316,7 @@ export const OrgMenu = (props: any) => {
             )}
             {/* Dashboard Dropdown - Only visible to admins */}
             {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
-              <div className="hidden md:flex">
+              <div className="hidden lg:flex">
                 <DropdownMenu>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
@@ -360,7 +363,7 @@ export const OrgMenu = (props: any) => {
 
             {/* Help Dropdown - Only visible to admins/maintainers/instructors */}
             {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
-              <div className="hidden md:flex">
+              <div className="hidden lg:flex">
                 <DropdownMenu>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
@@ -434,63 +437,51 @@ export const OrgMenu = (props: any) => {
               </div>
             )}
 
-            <div className="hidden md:flex">
+            <div className="hidden lg:flex">
               <HeaderProfileBox primaryColor={primaryColor} />
             </div>
-            <button
-              className={`md:hidden focus:outline-hidden ${colors.text}`}
-              onClick={toggleMenu}
-            >
-              {isMenuOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
+            {/* Phone and tablet actions. Navigation lives in the bottom tab bar
+                (MobileTabBar); the header keeps only what a native app puts
+                top-right: the inbox when signed in, sign-in otherwise. */}
+            <div className="flex lg:hidden items-center gap-1">
+              {session?.status === 'authenticated' ? (
+                <>
+                  {messagingEnabled && (
+                    <Link
+                      href={getUriWithOrg(orgslug, '/messages')}
+                      className={`lh-press relative flex h-10 w-10 items-center justify-center rounded-full ${colors.iconBtn}`}
+                      aria-label={unreadTotal ? `Messages, ${unreadTotal} unread` : 'Messages'}
+                    >
+                      <ChatsCircle size={24} weight="fill" />
+                      {unreadTotal > 0 && (
+                        <span className="absolute top-1 end-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-4 text-center ring-2 ring-white tabular-nums">
+                          {unreadTotal > 99 ? '99+' : unreadTotal}
+                        </span>
+                      )}
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event(OPEN_MOBILE_MORE_EVENT))}
+                    className="lh-press flex h-10 w-10 items-center justify-center rounded-full"
+                    aria-label={t('common.more')}
+                  >
+                    <UserAvatar border="border-2" rounded="rounded-full" width={32} />
+                  </button>
+                </>
+              ) : session?.status === 'unauthenticated' ? (
+                <Link
+                  href={getUriWithOrg(orgslug, '/signup')}
+                  className={`lh-press rounded-full px-4 py-2 text-sm font-semibold ${colors.signUpBtn}`}
+                >
+                  {t('auth.sign_up')}
+                </Link>
+              ) : null}
+            </div>
           </div>
         </div>
       </nav>
-      <div
-        className={`fixed inset-x-0 bg-white/80 backdrop-blur-lg md:hidden shadow-lg transition-all duration-300 ease-in-out ${
-          isMenuOpen ? 'opacity-100' : '-top-full opacity-0'
-        }`}
-        style={{
-          zIndex: 'var(--z-nav-menu)',
-          top: isMenuOpen ? topOffset + 60 : undefined
-        }}
-      >
-        <div className="flex flex-col px-4 py-3 space-y-4 justify-center items-center">
-          {/* Mobile Search */}
-          <div className="w-full px-2">
-            <SearchTrigger isMobile />
-          </div>
-          <div className='py-4'>
-            <MenuLinks orgslug={orgslug} />
-          </div>
-          {messagingEnabled && session?.status === 'authenticated' && (
-            <Link
-              href={getUriWithOrg(orgslug, '/messages')}
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-neutral-800 bg-neutral-100"
-            >
-              <ChatsCircle size={18} weight="fill" />
-              Messages
-              {unreadTotal > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-[18px] text-center tabular-nums">
-                  {unreadTotal > 99 ? '99+' : unreadTotal}
-                </span>
-              )}
-            </Link>
-          )}
-          <div className="border-t border-gray-200">
-            <HeaderProfileBox />
-          </div>
-        </div>
-      </div>
+      <MobileTabBar orgslug={orgslug} primaryColor={primaryColor} />
 
       {/* Feedback Modal */}
       {feedbackModalMounted && (

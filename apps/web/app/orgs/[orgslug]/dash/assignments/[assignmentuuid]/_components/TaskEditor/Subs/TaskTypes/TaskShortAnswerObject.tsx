@@ -7,6 +7,7 @@ import {
 } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI'
+import { answerInputClass, answerKeyPanelClass, promptTextClass } from '@components/Objects/Activities/Assignment/assignmentUI'
 import {
   getAssignmentTask,
   getAssignmentTaskSubmissionsMe,
@@ -96,6 +97,11 @@ function TaskShortAnswerObject({
   const submissionIsGraded = Array.isArray(assignmentSubmission)
     && assignmentSubmission.length > 0
     && assignmentSubmission[0].submission_status === 'GRADED'
+  // Handed in (SUBMITTED) or graded: answers can no longer be saved, so
+  // they can't be edited either; typing would only look like it worked.
+  const answersLocked = submissionIsGraded || (Array.isArray(assignmentSubmission)
+    && assignmentSubmission.length > 0
+    && assignmentSubmission[0].submission_status === 'SUBMITTED');
   const showCorrectAnswers = view === 'student'
     && submissionIsGraded
     && !!assignment?.assignment_object?.show_correct_answers
@@ -319,7 +325,7 @@ function TaskShortAnswerObject({
 
   return (
     <AssignmentBoxUI
-      type="form"
+      type="short"
       view={view}
       saveFC={saveFC}
       submitFC={submitFC}
@@ -447,22 +453,22 @@ function TaskShortAnswerObject({
         {view === 'student' && (
           <>
             {contents.prompt && (
-              <p className="text-sm text-slate-700 whitespace-pre-wrap">{contents.prompt}</p>
+              <p className={promptTextClass}>{contents.prompt}</p>
             )}
             <input
               value={studentAnswer}
-              onChange={(e) => { if (!submissionIsGraded) { interactedRef.current = true; setStudentAnswer(e.target.value) } }}
-              readOnly={submissionIsGraded}
+              onChange={(e) => { if (!answersLocked) { interactedRef.current = true; setStudentAnswer(e.target.value) } }}
+              readOnly={answersLocked}
               placeholder={t(
                 'dashboard.assignments.editor.task_editor.short_answer.your_answer_placeholder'
               )}
-              className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-md bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none"
+              className={answerInputClass}
             />
             {/* No answer-key panel at all when the key was withheld; the
                 learner still sees their own answer and their score. A panel
                 holding one blank chip would be worse than nothing. */}
             {revealAnswerKey && (
-              <div className="flex flex-col space-y-1.5 p-3 rounded-md bg-emerald-50 border border-emerald-200">
+              <div className={answerKeyPanelClass}>
                 <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-700">
                   <CheckCircle2 size={13} />
                   <span>{t('dashboard.assignments.editor.task_editor.short_answer.accepted_answers_label')}</span>

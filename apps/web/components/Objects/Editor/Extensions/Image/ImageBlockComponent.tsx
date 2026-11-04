@@ -210,15 +210,23 @@ function ImageBlockComponent(props: any) {
   // Activity view mode - show only the image without block wrapper
   if (!isEditable && imageUrl) {
     const viewFrameStyle: React.CSSProperties = { width: imageSize.width, maxWidth: '100%' };
+    // On a phone, anything sized like a picture (not an icon or logo) spans the
+    // column; a few pixels short of full width just reads as a mistake there.
+    const phoneFullWidth = Number(imageSize.width) >= 240 ? 'max-md:!w-full' : '';
     return (
       <>
         <NodeViewWrapper className="block-image w-full">
           <div className={`w-full flex flex-col ${getItemsAlignmentClass()}`}>
-            <div className="relative group" style={viewFrameStyle}>
+            <div className={`relative group ${phoneFullWidth}`} style={viewFrameStyle}>
+              {/* On touch screens tapping the picture opens the viewer, since
+                  the hover controls below never show there. Desktop keeps them. */}
               <img
                 src={imageUrl}
                 alt=""
-                className="rounded-lg max-w-full h-auto w-full"
+                onClick={() => {
+                  if (window.matchMedia('(hover: none)').matches) handleExpand()
+                }}
+                className="rounded-lg max-md:rounded-xl max-w-full h-auto w-full"
               />
               <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
@@ -240,7 +248,7 @@ function ImageBlockComponent(props: any) {
               </div>
             </div>
             {unsplashCredit && (
-              <div style={viewFrameStyle}>
+              <div className={phoneFullWidth} style={viewFrameStyle}>
                 {unsplashCredit}
               </div>
             )}

@@ -78,15 +78,15 @@ function OrgUserGroups() {
                             {t('dashboard.users.usergroups.subtitle')}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {usergroups && usergroups.length > 0 && (
-                            <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
+                            <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium whitespace-nowrap">
                                 {usergroups.length} {usergroups.length === 1
                                     ? t('dashboard.users.usergroups.count.singular')
                                     : t('dashboard.users.usergroups.count.plural')}
                             </div>
                         )}
-                        <div className="relative flex-1 sm:flex-none">
+                        <div className="relative flex-1 min-w-0 sm:flex-none">
                             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 placeholder={t('dashboard.users.usergroups.search_placeholder')}
@@ -107,7 +107,7 @@ function OrgUserGroups() {
                             dialogTitle={t('dashboard.users.usergroups.modals.create.title')}
                             dialogDescription={t('dashboard.users.usergroups.modals.create.description')}
                             dialogTrigger={
-                                <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                                <button className="flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap px-4 py-2.5 sm:py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
                                     <SquareUserRound className="w-4 h-4" />
                                     <span>{t('dashboard.users.usergroups.actions.create')}</span>
                                 </button>
@@ -157,11 +157,11 @@ function OrgUserGroups() {
                             filteredUsergroups.map((usergroup: any) => (
                                 <div
                                     key={usergroup.id}
-                                    className="group flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                                    className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 hover:bg-gray-50 rounded-lg transition-all duration-200"
                                 >
                                     {/* Group Info */}
-                                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                                        <div className="bg-indigo-50 p-2.5 rounded-lg">
+                                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 w-full">
+                                        <div className="bg-indigo-50 p-2.5 rounded-lg shrink-0">
                                             <SquareUserRound className="w-5 h-5 text-indigo-600" />
                                         </div>
                                         <div className="flex flex-col min-w-0 flex-1">
@@ -178,7 +178,7 @@ function OrgUserGroups() {
                                                     </span>
                                                 )}
                                                 {usergroup.creation_date && (
-                                                    <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                                                    <span className="inline-flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap shrink-0">
                                                         <Calendar className="w-3 h-3" />
                                                         {(() => {
                                                             try {
@@ -194,7 +194,7 @@ function OrgUserGroups() {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex items-center gap-2 ms-4">
+                                    <div className="flex items-center gap-2 sm:ms-4 flex-wrap">
                                         <Modal
                                             isDialogOpen={
                                                 userGroupManagementModal &&
@@ -278,7 +278,7 @@ function MemberCountBadge({ usergroup_id, org_id, access_token }: { usergroup_id
     const count = users?.length || 0
 
     return (
-        <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs">
+        <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs whitespace-nowrap shrink-0">
             <Users className="w-3 h-3 me-1" />
             {count} {count === 1
                 ? t('dashboard.users.usergroups.member_count.singular')

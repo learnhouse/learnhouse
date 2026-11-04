@@ -2202,7 +2202,17 @@
     "solution_locked_title": "Đáp án mẫu đã bị khóa",
     "solution_locked_on_submission": "Hãy nộp bài và đáp án mẫu sẽ được mở khóa ngay.",
     "solution_locked_after_grading": "Đáp án mẫu sẽ được mở khóa sau khi bài của bạn được chấm điểm.",
-    "retry_assignment_confirm_ungraded": "Bài đã nộp hiện tại của bạn sẽ được đặt lại để bạn làm lại từ đầu, và đáp án mẫu sẽ bị khóa lại cho đến khi bạn nộp lần làm tiếp theo."
+    "retry_assignment_confirm_ungraded": "Bài đã nộp hiện tại của bạn sẽ được đặt lại để bạn làm lại từ đầu, và đáp án mẫu sẽ bị khóa lại cho đến khi bạn nộp lần làm tiếp theo.",
+    "status_not_started": "Chưa bắt đầu",
+    "status_in_progress": "Đang làm",
+    "status_submitted": "Đã nộp",
+    "due_on": "Hạn {{date}}",
+    "answered_progress": "Đã trả lời {{answered}}/{{total}}",
+    "handin_ready_title": "Sẵn sàng nộp bài?",
+    "handin_ready_body": "Câu trả lời của bạn được lưu tự động.",
+    "your_score": "Điểm của bạn",
+    "awaiting_grade_body": "Bài làm đang chờ giáo viên chấm. Điểm sẽ hiện ở đây sau khi chấm.",
+    "tasks_count_other": "{{count}} nhiệm vụ"
   },
   "certificate": {
     "certificate": "Chứng chỉ",
@@ -6363,7 +6373,15 @@
           "hide_empty": "Ẩn khóa học trống"
         },
         "new_assignment": "Bài tập mới",
-        "clear_search": "Xóa tìm kiếm"
+        "clear_search": "Xóa tìm kiếm",
+        "subtitle": "Tạo, xuất bản và chấm điểm bài tập trong mọi khóa học của bạn.",
+        "columns": {
+          "grading": "Chấm điểm",
+          "actions": "Thao tác"
+        },
+        "empty_description": "Bài tập nằm trong một chương của khóa học. Tạo một bài tập để bắt đầu nhận bài làm của học viên.",
+        "status_draft": "Bản nháp",
+        "no_due_date": "Không có hạn nộp"
       },
       "detail": {
         "title": "Công cụ bài tập",
@@ -6397,8 +6415,10 @@
             "updating": "Đang cập nhật bài tập...",
             "update_success": "Đã cập nhật bài tập thành công",
             "update_error": "Đã xảy ra lỗi khi cập nhật bài tập. Vui lòng thử lại sau."
-          }
-        }
+          },
+          "edit_settings": "Chỉnh sửa cài đặt"
+        },
+        "due_on": "Hạn nộp {{date}}"
       },
       "editor": {
         "tasks_title": "Nhiệm vụ",
@@ -6529,7 +6549,10 @@
           },
           "file": {
             "teacher_hint": "Người dùng sẽ có thể nộp một tệp cho nhiệm vụ này, bạn có thể xem lại trong tab Bài nộp",
-            "submit_file": "Nộp tệp"
+            "submit_file": "Nộp tệp",
+            "uploaded": "Đã tải lên",
+            "replace": "Thay thế",
+            "no_file": "Chưa nộp tệp nào"
           },
           "quiz": {
             "last_option": "Không thể xóa tùy chọn cuối cùng. Cần ít nhất một tùy chọn.",
@@ -6680,7 +6703,14 @@
           "general": "Chung",
           "content": "Nội dung"
         },
-        "no_task_selected": "Chưa chọn nhiệm vụ"
+        "no_task_selected": "Chưa chọn nhiệm vụ",
+        "task_position": "Nhiệm vụ {{number}}/{{total}}",
+        "delete_task_confirm": "Nhiệm vụ này sẽ bị xóa vĩnh viễn khỏi bài tập.",
+        "empty_title": "Thêm nhiệm vụ đầu tiên",
+        "empty_description": "Nhiệm vụ là những gì học viên thực hiện: trắc nghiệm, trả lời ngắn, bài tập lập trình, tải tệp lên và nhiều hơn nữa.",
+        "points_short": "{{points}} điểm",
+        "total_points": "Tổng {{points}} điểm",
+        "max_tasks_reached": "Bài tập này đã đạt tối đa {{max}} nhiệm vụ."
       },
       "submissions": {
         "status": {
@@ -6703,7 +6733,8 @@
           "recently_graded": "Chấm gần đây trước"
         },
         "stats": {
-          "total": "Tổng"
+          "total": "Tổng",
+          "to_grade": "Cần chấm"
         },
         "preview": {
           "current_grade": "Điểm hiện tại",
@@ -6726,7 +6757,9 @@
         "evaluate": "Đánh giá",
         "evaluate_modal": {
           "title": "Đánh giá @{{username}}",
-          "description": "Đánh giá bài nộp của bài tập"
+          "description": "Đánh giá bài nộp của bài tập",
+          "title_name": "Đánh giá {{name}}",
+          "submitted_at": "Đã nộp {{date}}"
         },
         "task_label": "Nhiệm vụ {{number}}:",
         "hint": "Gợi ý",
@@ -6748,7 +6781,12 @@
         "ungraded_title": "Đánh giá quá trình (không chấm điểm)",
         "ungraded_description": "Bài tập này chỉ được nộp để xem xét. Không ghi nhận điểm.",
         "download_to_grade": "Vui lòng tải tệp xuống và chấm điểm thủ công, sau đó nhập điểm ở trên",
-        "download_to_review": "Tải tệp xuống để xem lại những gì học viên đã nộp."
+        "download_to_review": "Tải tệp xuống để xem lại những gì học viên đã nộp.",
+        "empty_description": "Khi học viên nộp bài tập này, bài làm của họ sẽ hiện ở đây để chấm điểm.",
+        "columns": {
+          "learner": "Học viên"
+        },
+        "review": "Xem lại"
       },
       "analytics": {
         "loading": "Đang tải phân tích...",
@@ -11499,5 +11537,11 @@
     "sign_in_title": "Đăng nhập để xem lịch của bạn",
     "title": "Lịch",
     "more_events": "+{{count}} mục nữa"
+  },
+  "mobile_nav": {
+    "tabs": "Chính",
+    "explore": "Khám phá",
+    "you": "Bạn",
+    "messages": "Tin nhắn"
   }
 }
