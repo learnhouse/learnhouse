@@ -2258,7 +2258,19 @@
     "solution_locked_title": "Risposta modello bloccata",
     "solution_locked_on_submission": "Consegna il tuo lavoro e la risposta modello si sblocca subito.",
     "solution_locked_after_grading": "La risposta modello si sblocca dopo la valutazione del tuo lavoro.",
-    "retry_assignment_confirm_ungraded": "La tua consegna attuale verrà azzerata per permetterti di ricominciare, e la risposta modello si bloccherà di nuovo finché non consegnerai il tentativo successivo."
+    "retry_assignment_confirm_ungraded": "La tua consegna attuale verrà azzerata per permetterti di ricominciare, e la risposta modello si bloccherà di nuovo finché non consegnerai il tentativo successivo.",
+    "status_not_started": "Non iniziato",
+    "status_in_progress": "In corso",
+    "status_submitted": "Consegnato",
+    "due_on": "Scade il {{date}}",
+    "answered_progress": "{{answered}} su {{total}} risposte",
+    "handin_ready_title": "Pronto a consegnare?",
+    "handin_ready_body": "Le tue risposte vengono salvate automaticamente.",
+    "your_score": "Il tuo punteggio",
+    "awaiting_grade_body": "Il tuo lavoro è dal docente. Il punteggio comparirà qui dopo la valutazione.",
+    "tasks_count_one": "{{count}} attività",
+    "tasks_count_many": "{{count}} attività",
+    "tasks_count_other": "{{count}} attività"
   },
   "certificate": {
     "certificate": "Certificato",
@@ -6410,7 +6422,15 @@
           "hide_empty": "Nascondi corsi vuoti"
         },
         "new_assignment": "Nuovo compito",
-        "clear_search": "Cancella ricerca"
+        "clear_search": "Cancella ricerca",
+        "subtitle": "Crea, pubblica e valuta i compiti di tutti i tuoi corsi.",
+        "columns": {
+          "grading": "Valutazione",
+          "actions": "Azioni"
+        },
+        "empty_description": "I compiti si trovano in un capitolo del corso. Creane uno per iniziare a raccogliere il lavoro degli studenti.",
+        "status_draft": "Bozza",
+        "no_due_date": "Nessuna scadenza"
       },
       "detail": {
         "title": "Strumenti compito",
@@ -6444,8 +6464,10 @@
             "updating": "Aggiornamento compito...",
             "update_success": "Il compito è stato aggiornato con successo",
             "update_error": "Errore durante l'aggiornamento del compito, riprova più tardi."
-          }
-        }
+          },
+          "edit_settings": "Modifica impostazioni"
+        },
+        "due_on": "Scadenza {{date}}"
       },
       "editor": {
         "tasks_title": "Attività",
@@ -6576,7 +6598,10 @@
           },
           "file": {
             "teacher_hint": "L'utente potrà inviare un file per questa attività e tu potrai esaminarlo nella scheda Invii",
-            "submit_file": "Invia file"
+            "submit_file": "Invia file",
+            "uploaded": "Caricato",
+            "replace": "Sostituisci",
+            "no_file": "Nessun file inviato"
           },
           "quiz": {
             "last_option": "Impossibile eliminare l'ultima opzione. È richiesta almeno un'opzione.",
@@ -6735,7 +6760,14 @@
           "general": "Generale",
           "content": "Contenuto"
         },
-        "no_task_selected": "Nessuna attività selezionata"
+        "no_task_selected": "Nessuna attività selezionata",
+        "task_position": "Attività {{number}} di {{total}}",
+        "delete_task_confirm": "Questa attività verrà rimossa definitivamente dal compito.",
+        "empty_title": "Aggiungi la prima attività",
+        "empty_description": "Le attività sono ciò su cui lavorano gli studenti: quiz, risposte brevi, esercizi di codice, caricamento di file e altro.",
+        "points_short": "{{points}} pt",
+        "total_points": "{{points}} pt in totale",
+        "max_tasks_reached": "Questo compito ha raggiunto il massimo di {{max}} attività."
       },
       "submissions": {
         "status": {
@@ -6758,7 +6790,8 @@
           "recently_graded": "Valutate di recente"
         },
         "stats": {
-          "total": "Totale"
+          "total": "Totale",
+          "to_grade": "Da valutare"
         },
         "preview": {
           "current_grade": "Voto attuale",
@@ -6781,7 +6814,9 @@
         "evaluate": "Valuta",
         "evaluate_modal": {
           "title": "Valuta @{{username}}",
-          "description": "Valuta l'invio"
+          "description": "Valuta l'invio",
+          "title_name": "Valuta {{name}}",
+          "submitted_at": "Consegnato il {{date}}"
         },
         "task_label": "Attività {{number}} :",
         "hint": "Suggerimento",
@@ -6803,7 +6838,12 @@
         "ungraded_title": "Formativo (non valutato)",
         "ungraded_description": "Questo compito viene consegnato solo per essere rivisto. Non viene registrato alcun punteggio.",
         "download_to_grade": "Scarica il file e valutalo manualmente, poi inserisci il voto qui sopra",
-        "download_to_review": "Scarica il file per rivedere ciò che lo studente ha consegnato."
+        "download_to_review": "Scarica il file per rivedere ciò che lo studente ha consegnato.",
+        "empty_description": "Quando gli studenti consegnano questo compito, il loro lavoro compare qui per la valutazione.",
+        "columns": {
+          "learner": "Studente"
+        },
+        "review": "Rivedi"
       },
       "analytics": {
         "loading": "Caricamento delle analisi...",
@@ -11642,5 +11682,11 @@
     "sign_in_title": "Accedi per vedere il tuo calendario",
     "title": "Calendario",
     "more_events": "+{{count}} altri"
+  },
+  "mobile_nav": {
+    "tabs": "Principale",
+    "explore": "Esplora",
+    "you": "Tu",
+    "messages": "Messaggi"
   }
 }

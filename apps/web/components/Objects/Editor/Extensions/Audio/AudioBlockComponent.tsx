@@ -264,13 +264,13 @@ function PlaylistPlayer({
 
           {/* Controls row */}
           <div className="flex items-center gap-2">
-            <button onClick={() => skip(-15)} className="p-1 rounded-full hover:bg-gray-200 transition-colors outline-none">
+            <button onClick={() => skip(-15)} className="p-1 max-md:p-2.5 rounded-full hover:bg-gray-200 transition-colors outline-none">
               <SkipBack weight="duotone" size={14} className="text-gray-600" />
             </button>
 
             <button
               onClick={togglePlay}
-              className="rounded-full bg-gray-900 hover:bg-gray-800 p-2 transition-colors outline-none"
+              className="rounded-full bg-gray-900 hover:bg-gray-800 p-2 max-md:p-3 transition-colors outline-none"
             >
               {isPlaying ? (
                 <Pause weight="duotone" size={14} className="text-white" fill="white" />
@@ -279,7 +279,7 @@ function PlaylistPlayer({
               )}
             </button>
 
-            <button onClick={() => skip(15)} className="p-1 rounded-full hover:bg-gray-200 transition-colors outline-none">
+            <button onClick={() => skip(15)} className="p-1 max-md:p-2.5 rounded-full hover:bg-gray-200 transition-colors outline-none">
               <SkipForward weight="duotone" size={14} className="text-gray-600" />
             </button>
 
@@ -293,11 +293,11 @@ function PlaylistPlayer({
               // dir="ltr": see InlineAudioPlayer. Fill, thumb and seek math all
               // assume left-to-right, and audio transport is LTR everywhere.
               dir="ltr"
-              className="flex-1 h-1 bg-gray-200 rounded-full cursor-pointer relative group"
+              className="flex-1 h-1 max-md:h-1.5 bg-gray-200 rounded-full cursor-pointer relative group"
             >
               <div className="h-full bg-gray-900 rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-gray-900 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 max-md:w-3.5 max-md:h-3.5 bg-gray-900 rounded-full opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity"
                 style={{ left: `calc(${progress}% - 5px)` }}
               />
             </div>

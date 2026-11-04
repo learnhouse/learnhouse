@@ -129,12 +129,12 @@ export function CommentCard({ comment, canManage = false, onDeleted, onUpdated }
 
   return (
     <div
-      className="group flex items-center gap-4 py-3 px-4 transition-colors border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50"
+      className="group flex items-center gap-3 sm:gap-4 py-3 px-3 sm:px-4 transition-colors border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Upvote Section */}
-      <div className="flex-shrink-0 w-12">
+      <div className="flex-shrink-0 w-10 sm:w-12">
         <CommentUpvoteButton
           commentUuid={comment.comment_uuid}
           initialVoteCount={comment.upvote_count || 0}
@@ -177,7 +177,7 @@ export function CommentCard({ comment, canManage = false, onDeleted, onUpdated }
                   onKeyDown={handleKeyDown}
                   rows={2}
                   autoFocus
-                  className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-all resize-none ${
+                  className={`w-full px-3 py-2 text-base sm:text-sm border rounded-lg outline-none transition-all resize-none ${
                     error ? 'border-red-300' : 'border-gray-200 focus:border-gray-300'
                   }`}
                 />
@@ -215,10 +215,10 @@ export function CommentCard({ comment, canManage = false, onDeleted, onUpdated }
 
       {/* Actions - Right side */}
       {showMenu && !isEditing && (
-        <div className={`flex-shrink-0 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex-shrink-0 transition-opacity pointer-coarse:opacity-100 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button aria-label={t('communities.comments.actions')} className="p-1 hover:bg-gray-100 rounded transition-colors">
+              <button aria-label={t('communities.comments.actions')} className="p-2.5 -m-2 sm:p-1 sm:m-0 hover:bg-gray-100 rounded transition-colors">
                 <MoreHorizontal size={16} className="text-gray-400" />
               </button>
             </DropdownMenuTrigger>

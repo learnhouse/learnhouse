@@ -1,0 +1,172 @@
+/* Phone-width overrides for activities. Prefer Tailwind classes in the components;
+   use this file only for rules a component cannot express (third-party
+   markup, ProseMirror output). See mobile.css for the shell variables. */
+
+/*
+  Wide content that scrolls sideways inside its own box (equations, tables).
+  Momentum scroll, no scroll chaining into the page, and a soft fade on any
+  edge that still has content past it. The fade rides a scroll-driven
+  animation, so it only appears when the box actually overflows and simply
+  never shows on browsers without scroll timelines.
+*/
+.lh-hscroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  max-width: 100%;
+}
+.lh-hscroll::-webkit-scrollbar {
+  display: none;
+}
+
+@property --lh-fade-start {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --lh-fade-end {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes lh-hscroll-fade {
+  0% { --lh-fade-start: 0px; --lh-fade-end: 28px; }
+  6% { --lh-fade-start: 28px; --lh-fade-end: 28px; }
+  94% { --lh-fade-start: 28px; --lh-fade-end: 28px; }
+  100% { --lh-fade-start: 28px; --lh-fade-end: 0px; }
+}
+
+@supports (animation-timeline: scroll()) {
+  .lh-hscroll,
+  .canva-content-wrapper .ProseMirror .tableWrapper {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--lh-fade-start),
+      #000 calc(100% - var(--lh-fade-end)),
+      transparent
+    );
+    animation: lh-hscroll-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+
+/* Activity content (DynamicCanva) on phones. globals.css styles the same
+   selectors and is read after this file, so these carry an `html` prefix to
+   win on specificity rather than on order. */
+@media (max-width: 767px) {
+  /* Long URLs and unbroken words wrap instead of pushing the page wide. */
+  html .canva-content-wrapper .ProseMirror {
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
+
+  /* Tables keep readable columns and scroll inside their wrapper rather than
+     squeezing every column to a sliver. */
+  html .canva-content-wrapper .ProseMirror .tableWrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    margin: 1rem 0;
+  }
+  html .canva-content-wrapper .ProseMirror table {
+    table-layout: auto;
+    width: auto;
+    min-width: 100% !important;
+  }
+  html .canva-content-wrapper .ProseMirror table td,
+  html .canva-content-wrapper .ProseMirror table th {
+    min-width: 8rem;
+    padding: 8px 10px;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  /* Code blocks: scroll sideways, keep indentation, stay legible. */
+  html .canva-content-wrapper .ProseMirror pre {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    white-space: pre;
+    padding: 0.875rem 1rem;
+    border-radius: 0.75rem;
+  }
+  html .canva-content-wrapper .ProseMirror pre code {
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
+  /* Inline code wraps rather than overflowing a line. */
+  html .canva-content-wrapper .ProseMirror :not(pre) > code {
+    overflow-wrap: anywhere;
+  }
+
+  /* YouTube nodes from @tiptap/extension-youtube carry fixed pixel sizes. */
+  html .canva-content-wrapper .ProseMirror div[data-youtube-video] iframe {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9;
+    border-radius: 0.75rem;
+  }
+
+  html .canva-content-wrapper .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  html .canva-content-wrapper .ProseMirror blockquote {
+    border-inline-start: 3px solid rgb(0 0 0 / 0.12);
+    padding-inline-start: 0.875rem;
+    margin: 1rem 0;
+  }
+
+  /* Display math rendered outside the math block (markdown, AI answers). */
+  .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-block: 2px;
+  }
+
+  /* Flipcard grids with short terms stay two-up on a phone (FlipcardGrid
+     sets data-compact); longer cards keep the single column. */
+  .flipcard-grid[data-compact] .flipcard-grid-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+}
+
+/* Assignment status in the phone activity bar: the desktop two-line status
+   card becomes one pill that matches the Complete button. */
+.lh-assign-compact .rounded-md.nice-shadow {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 9999px;
+  justify-content: center;
+  box-shadow: none;
+}
+.lh-assign-compact .rounded-md.nice-shadow > span:first-child {
+  display: none;
+}
+.lh-assign-compact .rounded-md.nice-shadow .text-xs {
+  font-size: 14px;
+  white-space: nowrap;
+}
+/* Tablets: a 20% outline column is too narrow to read below 1024px, so the
+   lesson takes the full width there as it does on phones. */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:first-child {
+    display: none;
+  }
+  .canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:last-child {
+    width: 100%;
+  }
+}

@@ -38,8 +38,8 @@ function ResourceActivity({ activity, orgslug, style }: ResourceActivityProps) {
   const embedUrl = buildEmbedUrl(kind, baseUrl)
 
   return (
-    <div className="w-full px-6 py-6" style={style}>
-      <div className="mb-4 flex items-center justify-between">
+    <div className="w-full px-0 py-1 sm:px-6 sm:py-6" style={style}>
+      <div className="mb-3 sm:mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Icon size={20} weight="duotone" className={`${meta.color} flex-shrink-0`} />
           <span className="text-sm font-medium text-gray-600">{t(meta.labelKey)}</span>
@@ -48,16 +48,17 @@ function ResourceActivity({ activity, orgslug, style }: ResourceActivityProps) {
           href={baseUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors max-md:h-11 max-md:px-4 max-md:-me-1 max-md:rounded-full max-md:bg-gray-100 max-md:text-sm max-md:text-gray-700"
         >
           <ArrowSquareOut size={14} />
           {t('activities.resource.open')}
         </a>
       </div>
 
+      {/* On a phone the frame takes most of the screen but leaves room to
+          scroll past it (dvh tracks the collapsing browser toolbars). */}
       <div
-        className="w-full rounded-xl overflow-hidden nice-shadow bg-white"
-        style={{ height: '75vh', minHeight: 480 }}
+        className="w-full rounded-xl overflow-hidden nice-shadow bg-white h-[75vh] min-h-[480px] max-md:h-[72dvh] max-md:min-h-[420px]"
       >
         <iframe
           src={embedUrl}

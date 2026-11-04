@@ -331,7 +331,7 @@ export default function Composer({
           }}
           placeholder={placeholder}
           maxLength={4000}
-          className="block w-full resize-none bg-transparent px-4 pt-3 pb-1 text-sm leading-relaxed outline-none placeholder:text-gray-400"
+          className="block w-full resize-none bg-transparent px-4 pt-3 pb-1 text-base sm:text-sm leading-relaxed outline-none placeholder:text-gray-400"
         />
 
         <div className="flex items-center gap-0.5 px-2 pb-2">
@@ -355,7 +355,7 @@ export default function Composer({
                     value={courseQuery}
                     onChange={(e) => setCourseQuery(e.target.value)}
                     placeholder={t('messaging.find_course', { defaultValue: 'Find a course to share' })}
-                    className="flex-1 bg-transparent text-sm outline-none"
+                    className="flex-1 bg-transparent text-base sm:text-sm outline-none"
                   />
                 </div>
                 <div className="max-h-64 overflow-y-auto">
@@ -398,7 +398,7 @@ export default function Composer({
           <button
             onClick={submit}
             disabled={!text.trim() && !course}
-            className="h-8 w-8 rounded-lg bg-black text-white flex items-center justify-center disabled:bg-gray-100 disabled:text-gray-300 hover:bg-gray-800 transition-colors"
+            className="ms-auto sm:ms-0 h-9 w-9 sm:h-8 sm:w-8 rounded-lg bg-black text-white flex items-center justify-center disabled:bg-gray-100 disabled:text-gray-300 hover:bg-gray-800 transition-colors"
             aria-label="Send"
           >
             <PaperPlaneRight size={15} weight="fill" />

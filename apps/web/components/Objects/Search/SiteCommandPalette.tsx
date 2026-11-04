@@ -49,7 +49,7 @@ const TYPE_ICON: Record<SiteResultType, React.ComponentType<any>> = {
 }
 
 const ITEM_CLASS =
-  'group/item flex cursor-pointer select-none items-center gap-3 rounded-lg px-2.5 py-2 ' +
+  'group/item flex cursor-pointer select-none items-center gap-3 rounded-lg px-2.5 py-2 max-md:min-h-[52px] ' +
   'text-black/80 transition-colors aria-selected:bg-black/[0.045]'
 
 const THUMB_CLASS =
@@ -239,7 +239,9 @@ export default function SiteCommandPalette() {
         />
         <DialogPrimitive.Content
           aria-label={t('search.palette.placeholder')}
-          className="fixed inset-x-3 top-[8vh] mx-auto flex max-h-[84vh] w-auto max-w-[620px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-2xl shadow-black/15 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out sm:top-[14vh]"
+          // Phones: a full-screen search view with Cancel, the way the OS
+          // presents search; from md up, the floating palette.
+          className="fixed inset-x-3 top-[8vh] mx-auto flex max-h-[84vh] w-auto max-w-[620px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-2xl shadow-black/15 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out sm:top-[14vh] max-md:inset-0 max-md:max-h-none max-md:h-[100dvh] max-md:max-w-none max-md:rounded-none max-md:border-0 max-md:pt-[var(--lh-safe-top)] max-md:data-[state=open]:zoom-in-100 max-md:data-[state=closed]:zoom-out-100 max-md:data-[state=open]:slide-in-from-bottom-4"
           style={{ zIndex: 'var(--z-modal)' as any }}
           onOpenAutoFocus={(e) => {
             e.preventDefault()
@@ -256,7 +258,8 @@ export default function SiteCommandPalette() {
             shouldFilter={false}
             className="flex min-h-0 flex-col [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-black/45"
           >
-            <div className="flex items-center gap-3 border-b border-black/5 px-4 py-3.5">
+            <div className="flex items-center gap-3 border-b border-black/5 px-4 py-3.5 max-md:border-0 max-md:px-3 max-md:py-2.5">
+              <div className="contents max-md:flex max-md:min-w-0 max-md:flex-1 max-md:items-center max-md:gap-2 max-md:rounded-xl max-md:bg-black/[0.05] max-md:px-3 max-md:h-11">
               <SearchIcon size={18} className="shrink-0 text-black/40" />
               <Command.Input
                 value={query}
@@ -277,9 +280,13 @@ export default function SiteCommandPalette() {
               {(isLoading || isWaiting) && (
                 <span className="shrink-0 text-xs text-black/40">{t('search.palette.loading')}</span>
               )}
+              </div>
               <kbd className="hidden shrink-0 rounded-md bg-black/5 px-1.5 py-0.5 font-sans text-[10.5px] font-medium text-black/45 sm:inline-flex">
                 esc
               </kbd>
+              <DialogPrimitive.Close className="md:hidden shrink-0 px-1 text-[15px] font-medium text-black/70 active:opacity-60">
+                {t('common.cancel')}
+              </DialogPrimitive.Close>
             </div>
 
             <Command.List
@@ -309,7 +316,8 @@ export default function SiteCommandPalette() {
               {SITE_RESULT_ORDER.map((type) => {
                 const items = grouped[type]
                 if (items.length === 0) return null
-                const groupKey = type === 'activity' ? 'activities' : `${type}s`
+                const groupKey =
+                  type === 'activity' ? 'activities' : type === 'community' ? 'communities' : `${type}s`
                 return (
                   <Command.Group key={type} heading={t(`search.palette.groups.${groupKey}`)}>
                     {items.map(renderResult)}
@@ -337,7 +345,7 @@ export default function SiteCommandPalette() {
               )}
             </Command.List>
 
-            <div className="flex items-center gap-4 border-t border-black/5 bg-black/[0.02] px-4 py-2.5 text-[11.5px] text-black/45">
+            <div className="flex items-center gap-4 border-t border-black/5 bg-black/[0.02] px-4 py-2.5 text-[11.5px] text-black/45 max-md:hidden">
               <KeyHint label={t('search.palette.keys.navigate')} keys={['↑', '↓']} />
               <KeyHint label={t('search.palette.keys.open')} keys={['↵']} />
               <span className="hidden sm:contents">
@@ -369,7 +377,7 @@ export default function SiteCommandPalette() {
 
 function ReturnHint() {
   return (
-    <span className="hidden text-xs text-black/35 group-aria-selected/item:inline" aria-hidden="true">
+    <span className="hidden text-xs text-black/35 md:group-aria-selected/item:inline" aria-hidden="true">
       ↵
     </span>
   )

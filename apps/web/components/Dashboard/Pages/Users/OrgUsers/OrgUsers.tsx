@@ -514,7 +514,7 @@ function OrgUsers() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-100">
-                      <th className="text-start px-6 py-3 w-10">
+                      <th className="text-start px-3 sm:px-6 py-3 w-10">
                         <input
                           type="checkbox"
                           checked={allVisibleSelected}
@@ -522,14 +522,14 @@ function OrgUsers() {
                           className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                         />
                       </th>
-                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 sm:px-6 py-3">
                         {t('dashboard.users.active_users.table.user') || 'User'}
                       </th>
-                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 sm:px-6 py-3">
                         {t('dashboard.users.active_users.table.groups') || 'Groups'}
                       </th>
                       <th
-                        className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 cursor-pointer select-none hover:text-gray-700 transition-colors"
+                        className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 sm:px-6 py-3 cursor-pointer select-none hover:text-gray-700 transition-colors"
                         onClick={toggleSortOrder}
                       >
                         <div className="inline-flex items-center gap-1">
@@ -541,22 +541,22 @@ function OrgUsers() {
                           )}
                         </div>
                       </th>
-                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 sm:px-6 py-3">
                         {t('dashboard.users.active_users.table.status')}
                       </th>
-                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 sm:px-6 py-3">
                         {t('dashboard.users.active_users.table.role') || 'Role'}
                       </th>
                       {/* One column per custom signup field the org collects. */}
                       {customFields.map((field) => (
                         <th
                           key={field.key}
-                          className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 whitespace-nowrap"
+                          className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 sm:px-6 py-3 whitespace-nowrap"
                         >
                           {field.label || field.key}
                         </th>
                       ))}
-                      <th className="text-end text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                      <th className="text-end text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 sm:px-6 py-3">
                         {t('dashboard.users.active_users.table.actions') || 'Actions'}
                       </th>
                     </tr>
@@ -568,7 +568,7 @@ function OrgUsers() {
                         className={`hover:bg-gray-50 transition-colors ${selectedUserIds.has(user.user.id) ? 'bg-indigo-50/40' : ''}`}
                       >
                         {/* Checkbox */}
-                        <td className="px-6 py-4 w-10">
+                        <td className="px-3 sm:px-3 sm:px-6 py-3 sm:py-4 w-10">
                           <input
                             type="checkbox"
                             checked={selectedUserIds.has(user.user.id)}
@@ -578,7 +578,7 @@ function OrgUsers() {
                         </td>
 
                         {/* User Info */}
-                        <td className="px-6 py-4">
+                        <td className="px-3 sm:px-3 sm:px-6 py-3 sm:py-4">
                           <div className="flex items-center gap-3">
                             <UserAvatar
                               width={40}
@@ -607,7 +607,7 @@ function OrgUsers() {
                         </td>
 
                         {/* User Groups */}
-                        <td className="px-6 py-4">
+                        <td className="px-3 sm:px-3 sm:px-6 py-3 sm:py-4">
                           {user.usergroups && user.usergroups.length > 0 ? (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {user.usergroups.map((group: any) => (
@@ -627,14 +627,14 @@ function OrgUsers() {
                         </td>
 
                         {/* Joined */}
-                        <td className="px-6 py-4">
+                        <td className="px-3 sm:px-3 sm:px-6 py-3 sm:py-4">
                           <span className="text-xs text-gray-500">
                             {formatShortDate(user.joined_at)}
                           </span>
                         </td>
 
                         {/* Status (Verified + Sign-up method + Last login) */}
-                        <td className="px-6 py-4">
+                        <td className="px-3 sm:px-3 sm:px-6 py-3 sm:py-4">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
                               {user.user.email_verified ? (
@@ -684,7 +684,7 @@ function OrgUsers() {
                         </td>
 
                         {/* Role */}
-                        <td className="px-6 py-4">
+                        <td className="px-3 sm:px-3 sm:px-6 py-3 sm:py-4">
                           <Select
                             value={user.role.role_uuid}
                             onValueChange={(newRoleUuid) => handleRoleChange(user.user.id, newRoleUuid)}
@@ -733,7 +733,7 @@ function OrgUsers() {
                         {customFields.map((field) => (
                           <td
                             key={field.key}
-                            className="px-6 py-4 text-sm text-gray-600 max-w-[220px] truncate"
+                            className="px-3 sm:px-3 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 max-w-[220px] truncate"
                             title={formatCustomFieldValue(user.user.extra_metadata?.[field.key])}
                           >
                             {formatCustomFieldValue(user.user.extra_metadata?.[field.key]) || (
@@ -743,7 +743,7 @@ function OrgUsers() {
                         ))}
 
                         {/* Actions */}
-                        <td className="px-6 py-4 text-end">
+                        <td className="px-3 sm:px-3 sm:px-6 py-3 sm:py-4 text-end">
                           <div className="inline-flex items-center gap-1.5">
                             <button
                               onClick={() => setAnalyticsUserId(user.user.id)}

@@ -61,7 +61,8 @@ export default function PodcastClient({
   )
 
   // Add padding at bottom when player is visible
-  const bottomPadding = state.isVisible ? (state.isMinimized ? 'pb-20' : 'pb-28') : ''
+  // The expanded player wraps to two rows on phones, so it is taller there.
+  const bottomPadding = state.isVisible ? (state.isMinimized ? 'pb-20' : 'pb-32 md:pb-28') : ''
 
   if (error) {
     return (

@@ -2226,7 +2226,18 @@
     "solution_locked_title": "Model answer locked",
     "solution_locked_on_submission": "Hand your work in and the model answer unlocks right away.",
     "solution_locked_after_grading": "The model answer unlocks once your work has been graded.",
-    "retry_assignment_confirm_ungraded": "Your current hand-in will be reset so you can start over, and the model answer locks again until you hand in the next attempt."
+    "retry_assignment_confirm_ungraded": "Your current hand-in will be reset so you can start over, and the model answer locks again until you hand in the next attempt.",
+    "status_not_started": "Not started",
+    "status_in_progress": "In progress",
+    "status_submitted": "Submitted",
+    "due_on": "Due {{date}}",
+    "answered_progress": "{{answered}} of {{total}} answered",
+    "handin_ready_title": "Ready to hand in?",
+    "handin_ready_body": "Your answers save automatically.",
+    "your_score": "Your score",
+    "awaiting_grade_body": "Your work is with your teacher. Your score will show here once it's graded.",
+    "tasks_count_one": "{{count}} task",
+    "tasks_count_other": "{{count}} tasks"
   },
   "certificate": {
     "certificate": "Certificate",
@@ -6350,7 +6361,15 @@
           "hide_empty": "Hide empty courses"
         },
         "new_assignment": "New Assignment",
-        "clear_search": "Clear search"
+        "clear_search": "Clear search",
+        "subtitle": "Create, publish and grade assignments across your courses.",
+        "columns": {
+          "grading": "Grading",
+          "actions": "Actions"
+        },
+        "empty_description": "Assignments live inside a course chapter. Create one to start collecting work from learners.",
+        "status_draft": "Draft",
+        "no_due_date": "No due date"
       },
       "detail": {
         "title": "Assignment Tools",
@@ -6384,8 +6403,10 @@
             "updating": "Updating assignment...",
             "update_success": "The assignment has been updated successfully",
             "update_error": "Error updating assignment, please retry later."
-          }
-        }
+          },
+          "edit_settings": "Edit settings"
+        },
+        "due_on": "Due {{date}}"
       },
       "editor": {
         "tasks_title": "Tasks",
@@ -6516,7 +6537,10 @@
           },
           "file": {
             "teacher_hint": "User will be able to submit a file for this task, you'll be able to review it in the Submissions Tab",
-            "submit_file": "Submit File"
+            "submit_file": "Submit File",
+            "uploaded": "Uploaded",
+            "replace": "Replace",
+            "no_file": "No file submitted"
           },
           "quiz": {
             "last_option": "Cannot delete the last option. At least one option is required.",
@@ -6671,7 +6695,14 @@
           "general": "General",
           "content": "Content"
         },
-        "no_task_selected": "No Task Selected"
+        "no_task_selected": "No Task Selected",
+        "task_position": "Task {{number}} of {{total}}",
+        "delete_task_confirm": "This task will be permanently removed from the assignment.",
+        "empty_title": "Add your first task",
+        "empty_description": "Tasks are what learners work on: quizzes, short answers, code exercises, file uploads and more.",
+        "points_short": "{{points}} pts",
+        "total_points": "{{points}} pts total",
+        "max_tasks_reached": "This assignment has reached the maximum of {{max}} tasks."
       },
       "submissions": {
         "status": {
@@ -6694,7 +6725,8 @@
           "recently_graded": "Recently graded first"
         },
         "stats": {
-          "total": "Total"
+          "total": "Total",
+          "to_grade": "To grade"
         },
         "preview": {
           "current_grade": "Current grade",
@@ -6717,7 +6749,9 @@
         "evaluate": "Evaluate",
         "evaluate_modal": {
           "title": "Evaluate @{{username}}",
-          "description": "Evaluate the submission"
+          "description": "Evaluate the submission",
+          "title_name": "Evaluate {{name}}",
+          "submitted_at": "Submitted {{date}}"
         },
         "task_label": "Task {{number}} :",
         "hint": "Hint",
@@ -6739,7 +6773,12 @@
         "ungraded_title": "Formative (not graded)",
         "ungraded_description": "This assignment is handed in for review only. No score is recorded.",
         "download_to_grade": "Please download the file and grade it manually, then input the grade above",
-        "download_to_review": "Download the file to review what the learner handed in."
+        "download_to_review": "Download the file to review what the learner handed in.",
+        "empty_description": "When learners submit this assignment, their work shows up here for grading.",
+        "columns": {
+          "learner": "Learner"
+        },
+        "review": "Review"
       },
       "analytics": {
         "loading": "Loading analytics...",
@@ -11827,5 +11866,11 @@
     "sign_in_title": "Sign in to see your calendar",
     "title": "Calendar",
     "more_events": "+{{count}} more"
+  },
+  "mobile_nav": {
+    "tabs": "Main",
+    "explore": "Explore",
+    "you": "You",
+    "messages": "Messages"
   }
 }

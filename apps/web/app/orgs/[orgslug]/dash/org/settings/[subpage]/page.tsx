@@ -140,17 +140,17 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
       <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
-        <div className="pt-6 pb-4">
+        <div className="pt-4 pb-1 sm:pt-6 sm:pb-4">
           <Breadcrumbs items={[
             { label: t('common.organization'), href: '/dash/org/settings/general', icon: <School size={14} /> }
           ]} />
         </div>
-        <div className="my-2 py-2">
+        <div className="py-2 sm:my-2">
           <div className="w-full flex flex-col space-y-1 min-w-0">
-            <div className="pt-3 flex font-bold text-3xl sm:text-4xl tracking-tighter truncate">
+            <div className="sm:pt-3 flex font-bold text-2xl sm:text-4xl tracking-tighter truncate">
               {H1Label}
             </div>
-            <div className="flex font-medium text-gray-400 text-md truncate">
+            <div className="hidden sm:flex font-medium text-gray-400 text-md truncate">
               {H2Label}
             </div>
           </div>

@@ -56,7 +56,7 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
 
   return (
     <div
-      className="relative flex items-center gap-4 px-5 py-4 rounded-b-2xl overflow-hidden"
+      className="relative flex items-center gap-4 px-5 pb-4 pt-[calc(1rem+var(--lh-safe-top))] rounded-b-2xl overflow-hidden"
       style={getBackgroundStyle()}
     >
       {hasCustomBackground && (

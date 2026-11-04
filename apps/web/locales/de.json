@@ -2227,7 +2227,18 @@
     "solution_locked_title": "Musterlösung gesperrt",
     "solution_locked_on_submission": "Geben Sie Ihre Arbeit ab und die Musterlösung wird sofort freigeschaltet.",
     "solution_locked_after_grading": "Die Musterlösung wird freigeschaltet, sobald Ihre Arbeit bewertet wurde.",
-    "retry_assignment_confirm_ungraded": "Ihre aktuelle Abgabe wird zurückgesetzt, damit Sie von vorn beginnen können. Die Musterlösung ist wieder gesperrt, bis Sie den nächsten Versuch abgeben."
+    "retry_assignment_confirm_ungraded": "Ihre aktuelle Abgabe wird zurückgesetzt, damit Sie von vorn beginnen können. Die Musterlösung ist wieder gesperrt, bis Sie den nächsten Versuch abgeben.",
+    "status_not_started": "Nicht begonnen",
+    "status_in_progress": "In Bearbeitung",
+    "status_submitted": "Eingereicht",
+    "due_on": "Fällig am {{date}}",
+    "answered_progress": "{{answered}} von {{total}} beantwortet",
+    "handin_ready_title": "Bereit zur Abgabe?",
+    "handin_ready_body": "Deine Antworten werden automatisch gespeichert.",
+    "your_score": "Deine Punktzahl",
+    "awaiting_grade_body": "Deine Arbeit liegt bei deiner Lehrkraft. Deine Bewertung erscheint hier, sobald sie benotet ist.",
+    "tasks_count_one": "{{count}} Aufgabe",
+    "tasks_count_other": "{{count}} Aufgaben"
   },
   "certificate": {
     "certificate": "Zertifikat",
@@ -6348,7 +6359,15 @@
           "hide_empty": "Leere Kurse ausblenden"
         },
         "new_assignment": "Neue Aufgabe",
-        "clear_search": "Suche zurücksetzen"
+        "clear_search": "Suche zurücksetzen",
+        "subtitle": "Erstelle, veröffentliche und bewerte Aufgaben in all deinen Kursen.",
+        "columns": {
+          "grading": "Bewertung",
+          "actions": "Aktionen"
+        },
+        "empty_description": "Aufgaben befinden sich in einem Kurskapitel. Erstelle eine, um Arbeiten von Lernenden zu sammeln.",
+        "status_draft": "Entwurf",
+        "no_due_date": "Kein Abgabedatum"
       },
       "detail": {
         "title": "Aufgaben-Tools",
@@ -6382,8 +6401,10 @@
             "updating": "Aufgabe wird aktualisiert...",
             "update_success": "Die Aufgabe wurde erfolgreich aktualisiert",
             "update_error": "Fehler beim Aktualisieren der Aufgabe, bitte versuchen Sie es später erneut."
-          }
-        }
+          },
+          "edit_settings": "Einstellungen bearbeiten"
+        },
+        "due_on": "Fällig am {{date}}"
       },
       "editor": {
         "tasks_title": "Aufgabenstellungen",
@@ -6514,7 +6535,10 @@
           },
           "file": {
             "teacher_hint": "Benutzer können für diese Teilaufgabe eine Datei abgeben, die Sie im Tab „Abgaben“ prüfen können",
-            "submit_file": "Datei abgeben"
+            "submit_file": "Datei abgeben",
+            "uploaded": "Hochgeladen",
+            "replace": "Ersetzen",
+            "no_file": "Keine Datei eingereicht"
           },
           "quiz": {
             "last_option": "Die letzte Option kann nicht gelöscht werden. Mindestens eine Option ist erforderlich.",
@@ -6669,7 +6693,14 @@
           "general": "Allgemein",
           "content": "Inhalt"
         },
-        "no_task_selected": "Keine Teilaufgabe ausgewählt"
+        "no_task_selected": "Keine Teilaufgabe ausgewählt",
+        "task_position": "Teilaufgabe {{number}} von {{total}}",
+        "delete_task_confirm": "Diese Teilaufgabe wird dauerhaft aus der Aufgabe entfernt.",
+        "empty_title": "Erste Teilaufgabe hinzufügen",
+        "empty_description": "Teilaufgaben sind das, woran Lernende arbeiten: Quizze, Kurzantworten, Programmierübungen, Datei-Uploads und mehr.",
+        "points_short": "{{points}} Pkt.",
+        "total_points": "{{points}} Pkt. insgesamt",
+        "max_tasks_reached": "Diese Aufgabe hat das Maximum von {{max}} Teilaufgaben erreicht."
       },
       "submissions": {
         "status": {
@@ -6692,7 +6723,8 @@
           "recently_graded": "Zuletzt benotete zuerst"
         },
         "stats": {
-          "total": "Gesamt"
+          "total": "Gesamt",
+          "to_grade": "Zu bewerten"
         },
         "preview": {
           "current_grade": "Aktuelle Note",
@@ -6715,7 +6747,9 @@
         "evaluate": "Bewerten",
         "evaluate_modal": {
           "title": "Bewerten von @{{username}}",
-          "description": "Bewerten Sie die Einreichung"
+          "description": "Bewerten Sie die Einreichung",
+          "title_name": "{{name}} bewerten",
+          "submitted_at": "Abgegeben am {{date}}"
         },
         "task_label": "Aufgabenstellung {{number}} :",
         "hint": "Hinweis",
@@ -6737,7 +6771,12 @@
         "ungraded_title": "Formativ (nicht benotet)",
         "ungraded_description": "Diese Aufgabe wird nur zur Durchsicht abgegeben. Es wird keine Punktzahl erfasst.",
         "download_to_grade": "Bitte laden Sie die Datei herunter und bewerten Sie sie manuell, und tragen Sie dann oben die Note ein",
-        "download_to_review": "Laden Sie die Datei herunter, um zu prüfen, was der Lernende abgegeben hat."
+        "download_to_review": "Laden Sie die Datei herunter, um zu prüfen, was der Lernende abgegeben hat.",
+        "empty_description": "Sobald Lernende diese Aufgabe abgeben, erscheint ihre Arbeit hier zur Bewertung.",
+        "columns": {
+          "learner": "Lernende:r"
+        },
+        "review": "Ansehen"
       },
       "analytics": {
         "loading": "Analysen werden geladen...",
@@ -11522,5 +11561,11 @@
     "sign_in_title": "Melden Sie sich an, um Ihren Kalender zu sehen",
     "title": "Kalender",
     "more_events": "+{{count}} weitere"
+  },
+  "mobile_nav": {
+    "tabs": "Hauptmenü",
+    "explore": "Entdecken",
+    "you": "Du",
+    "messages": "Nachrichten"
   }
 }

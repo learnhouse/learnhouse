@@ -326,7 +326,8 @@ function QuizBlockComponent(props: any) {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1">
+            // Phones get these as a full-width bar under the questions instead.
+            <div className="flex items-center gap-1 max-md:hidden">
               <button
                 onClick={refreshUserSubmission}
                 disabled={!hasAnyAnswer && !submitted}
@@ -403,7 +404,7 @@ function QuizBlockComponent(props: any) {
                         className="w-full text-neutral-800 bg-transparent text-sm font-semibold outline-none placeholder:text-neutral-300"
                       />
                     ) : (
-                      <p className="text-neutral-800 text-sm font-semibold break-words leading-snug">
+                      <p className="text-neutral-800 text-sm max-md:text-[15px] font-semibold break-words leading-snug">
                         {question.question || (
                           <span className="text-neutral-300 italic font-normal">
                             {t(
@@ -470,7 +471,7 @@ function QuizBlockComponent(props: any) {
 
                 {/* Answers */}
                 <div
-                  className="space-y-1"
+                  className={cn('space-y-1', !isEditable && 'max-md:space-y-2')}
                   role={isEditable ? undefined : isSingleResponse ? 'radiogroup' : 'group'}
                   aria-label={
                     isEditable
@@ -496,6 +497,10 @@ function QuizBlockComponent(props: any) {
 
                     const row = cn(
                       'group flex items-center gap-2 rounded-lg nice-shadow px-2 py-1.5 transition-colors',
+                      // Take mode on phones: full-width rows a thumb can hit.
+                      !isEditable &&
+                        'max-md:min-h-12 max-md:gap-3 max-md:rounded-xl max-md:px-3 max-md:py-2.5 select-none',
+                      !isEditable && !submitted && 'lh-press',
                       // Take mode: default
                       !isEditable &&
                         !submitted &&
@@ -611,7 +616,7 @@ function QuizBlockComponent(props: any) {
                             {answer.correct ? <Check weight="duotone" size={12} /> : letter}
                           </button>
                         ) : (
-                          <div className={chip}>{letter}</div>
+                          <div className={cn(chip, 'max-md:w-7 max-md:h-7 max-md:text-xs')}>{letter}</div>
                         )}
 
                         {/* Answer text */}
@@ -635,7 +640,7 @@ function QuizBlockComponent(props: any) {
                           ) : (
                             <span
                               className={cn(
-                                'text-sm break-words',
+                                'text-sm max-md:text-[15px] max-md:leading-snug break-words',
                                 isCorrectReveal
                                   ? 'text-emerald-900 font-medium'
                                   : isWrongSelection
@@ -699,12 +704,39 @@ function QuizBlockComponent(props: any) {
           </div>
         )}
 
+        {/* Take-mode actions on phones: thumb-sized reset and submit. */}
+        {!isEditable && totalQuestions > 0 && (
+          <div className="md:hidden mt-3 flex items-center gap-2">
+            <button
+              onClick={refreshUserSubmission}
+              disabled={!hasAnyAnswer && !submitted}
+              className="lh-press shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-white nice-shadow text-neutral-500 disabled:opacity-40 outline-none"
+              title={t('editor.blocks.quiz_block.reset_answers')}
+              aria-label={t('editor.blocks.quiz_block.reset_answers')}
+            >
+              <ArrowCounterClockwise weight="bold" size={18} />
+            </button>
+            <button
+              onClick={handleUserSubmission}
+              disabled={submitted || !hasAnyAnswer}
+              className={cn(
+                'lh-press flex-1 h-11 rounded-xl text-[15px] font-semibold transition-colors outline-none',
+                submitted || !hasAnyAnswer
+                  ? 'bg-neutral-200/70 text-neutral-400'
+                  : 'bg-neutral-900 text-white'
+              )}
+            >
+              {t('editor.blocks.quiz_block.submit')}
+            </button>
+          </div>
+        )}
+
         {/* Submission message */}
         {submitted && (
           <div className="mt-2.5">
             <div
               className={cn(
-                'inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-md',
+                'inline-flex items-center gap-1.5 text-[11px] max-md:text-sm font-medium px-2 py-1 max-md:px-3 max-md:py-2 rounded-md max-md:rounded-lg',
                 submissionMessage === 'correct'
                   ? 'bg-emerald-50 text-emerald-700'
                   : 'bg-red-50 text-red-700'

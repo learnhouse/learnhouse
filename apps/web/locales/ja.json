@@ -2203,7 +2203,17 @@
     "solution_locked_title": "模範解答はロックされています",
     "solution_locked_on_submission": "提出すると、すぐに模範解答が表示されます。",
     "solution_locked_after_grading": "提出物が採点されると、模範解答が表示されます。",
-    "retry_assignment_confirm_ungraded": "現在の提出内容がリセットされてやり直せるようになり、次の挑戦を提出するまで模範解答は再びロックされます。"
+    "retry_assignment_confirm_ungraded": "現在の提出内容がリセットされてやり直せるようになり、次の挑戦を提出するまで模範解答は再びロックされます。",
+    "status_not_started": "未着手",
+    "status_in_progress": "取り組み中",
+    "status_submitted": "提出済み",
+    "due_on": "期限 {{date}}",
+    "answered_progress": "{{total}}問中{{answered}}問回答済み",
+    "handin_ready_title": "提出しますか？",
+    "handin_ready_body": "回答は自動で保存されます。",
+    "your_score": "あなたのスコア",
+    "awaiting_grade_body": "課題は先生の採点待ちです。採点後、ここにスコアが表示されます。",
+    "tasks_count_other": "{{count}}件の課題"
   },
   "certificate": {
     "certificate": "修了証",
@@ -6307,7 +6317,15 @@
           "hide_empty": "空のコースを非表示"
         },
         "new_assignment": "新しい課題",
-        "clear_search": "検索をクリア"
+        "clear_search": "検索をクリア",
+        "subtitle": "すべてのコースの課題を作成・公開・採点できます。",
+        "columns": {
+          "grading": "評価方式",
+          "actions": "操作"
+        },
+        "empty_description": "課題はコースの章の中に作成します。課題を作成して学習者の提出を受け付けましょう。",
+        "status_draft": "下書き",
+        "no_due_date": "期限なし"
       },
       "detail": {
         "title": "課題ツール",
@@ -6341,8 +6359,10 @@
             "updating": "課題を更新中...",
             "update_success": "課題が正常に更新されました",
             "update_error": "課題の更新中にエラーが発生しました。後でももう一度お試しください。"
-          }
-        }
+          },
+          "edit_settings": "設定を編集"
+        },
+        "due_on": "期限 {{date}}"
       },
       "editor": {
         "tasks_title": "タスク",
@@ -6473,7 +6493,10 @@
           },
           "file": {
             "teacher_hint": "ユーザーはこのタスクにファイルを提出できます。提出内容は「提出物」タブで確認できます",
-            "submit_file": "ファイルを提出"
+            "submit_file": "ファイルを提出",
+            "uploaded": "アップロード済み",
+            "replace": "置き換える",
+            "no_file": "ファイルは提出されていません"
           },
           "quiz": {
             "last_option": "最後の選択肢は削除できません。少なくとも1つの選択肢が必要です。",
@@ -6624,7 +6647,14 @@
           "general": "一般",
           "content": "内容"
         },
-        "no_task_selected": "タスクが選択されていません"
+        "no_task_selected": "タスクが選択されていません",
+        "task_position": "タスク {{number}} / {{total}}",
+        "delete_task_confirm": "このタスクは課題から完全に削除されます。",
+        "empty_title": "最初のタスクを追加",
+        "empty_description": "タスクは学習者が取り組む内容です：クイズ、短答、コード演習、ファイル提出など。",
+        "points_short": "{{points}} 点",
+        "total_points": "合計 {{points}} 点",
+        "max_tasks_reached": "この課題はタスクの上限（{{max}} 件）に達しています。"
       },
       "submissions": {
         "status": {
@@ -6647,7 +6677,8 @@
           "recently_graded": "最近採点されたもの先"
         },
         "stats": {
-          "total": "合計"
+          "total": "合計",
+          "to_grade": "採点待ち"
         },
         "preview": {
           "current_grade": "現在の成績",
@@ -6670,7 +6701,9 @@
         "evaluate": "評価する",
         "evaluate_modal": {
           "title": "@{{username}} を評価",
-          "description": "提出物を評価します"
+          "description": "提出物を評価します",
+          "title_name": "{{name}} を評価",
+          "submitted_at": "{{date}} に提出"
         },
         "task_label": "タスク {{number}} :",
         "hint": "ヒント",
@@ -6692,7 +6725,12 @@
         "ungraded_title": "形成的評価（採点なし）",
         "ungraded_description": "この課題は確認のためだけに提出されます。スコアは記録されません。",
         "download_to_grade": "ファイルをダウンロードして手動で採点し、上に成績を入力してください",
-        "download_to_review": "ファイルをダウンロードして、学習者の提出内容を確認します。"
+        "download_to_review": "ファイルをダウンロードして、学習者の提出内容を確認します。",
+        "empty_description": "学習者がこの課題を提出すると、採点のためにここに表示されます。",
+        "columns": {
+          "learner": "学習者"
+        },
+        "review": "確認"
       },
       "analytics": {
         "loading": "分析を読み込んでいます...",
@@ -11443,5 +11481,11 @@
     "sign_in_title": "ログインしてカレンダーを表示",
     "title": "カレンダー",
     "more_events": "他{{count}}件"
+  },
+  "mobile_nav": {
+    "tabs": "メイン",
+    "explore": "見つける",
+    "you": "あなた",
+    "messages": "メッセージ"
   }
 }

@@ -3,6 +3,7 @@ import { useAssignmentSubmission, useAssignmentTaskSubmissions } from '@componen
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
+import { answerInputClass } from '@components/Objects/Activities/Assignment/assignmentUI'
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Info, Minus, Plus, PlusCircle, X, Type } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -58,6 +59,11 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
     const submissionIsGraded = Array.isArray(assignmentSubmission)
         && assignmentSubmission.length > 0
         && assignmentSubmission[0].submission_status === 'GRADED';
+    // Handed in (SUBMITTED) or graded: answers can no longer be saved, so
+    // they can't be edited either; typing would only look like it worked.
+    const answersLocked = submissionIsGraded || (Array.isArray(assignmentSubmission)
+        && assignmentSubmission.length > 0
+        && assignmentSubmission[0].submission_status === 'SUBMITTED');
     const showCorrectAnswers = view === 'student'
         && submissionIsGraded
         && !!assignment?.assignment_object?.show_correct_answers;
@@ -542,6 +548,10 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                         placeholder={t('dashboard.assignments.editor.task_editor.form.question_placeholder')}
                                         className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                     />
+                                ) : view === 'student' ? (
+                                    <p className="w-full text-[15px] font-semibold leading-snug text-neutral-900">
+                                        {question.questionText}
+                                    </p>
                                 ) : (
                                     <p className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold">
                                         {question.questionText}
@@ -559,10 +569,39 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
 
                             {/* Blanks section */}
                             <div className="flex flex-col space-y-2">
-                                {question.blanks.map((blank, bIndex) => (
+                                {question.blanks.map((blank, bIndex) => view === 'student' ? (
+                                    // Learner: a plain labelled field per blank.
+                                    <div key={bIndex} className="flex flex-col gap-1.5">
+                                        <input
+                                            value={userSubmissions.submissions?.find(
+                                                (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
+                                            )?.answer || ''}
+                                            onChange={(e) => !answersLocked && handleUserAnswerChange(question.questionUUID!, blank.blankUUID!, e.target.value)}
+                                            onBlur={(e) => !answersLocked && handleUserAnswerBlur(question.questionUUID!, blank.blankUUID!, e.target.value)}
+                                            onPaste={handlePaste}
+                                            readOnly={answersLocked}
+                                            placeholder={blank.placeholder}
+                                            aria-label={blank.placeholder || question.questionText}
+                                            data-blank-id={blank.blankUUID}
+                                            className={answerInputClass}
+                                        />
+                                        {/* Nothing at all when this blank's key was withheld:
+                                            an empty "Expected answer:" is worse than nothing. */}
+                                        {revealAnswerKey && typeof blank.correctAnswer === 'string' && (
+                                            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700">
+                                                <Check size={11} />
+                                                <span className="font-semibold">{t('assignments.form.expected_answer')}:</span>
+                                                <span>{blank.correctAnswer}</span>
+                                            </span>
+                                        )}
+                                        {blank.hint && (
+                                            <p className="text-xs text-sky-700">💡 {blank.hint}</p>
+                                        )}
+                                    </div>
+                                ) : (
                                     <div key={bIndex} className="flex">
-                                        <div className={"blank-item outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 min-h-[40px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow " + (view == 'student' ? 'active:scale-105' : '')}>
-                                            <div className="font-bold text-base flex items-center justify-center h-full w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
+                                        <div className="blank-item outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 min-h-[40px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow">
+                                            <div className="font-bold text-base flex flex-none items-center justify-center self-stretch w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
                                                 <Type size={14} />
                                             </div>
                                             {view === 'teacher' ? (
@@ -616,7 +655,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                                         readOnly={submissionIsGraded}
                                                         placeholder={blank.placeholder}
                                                         data-blank-id={blank.blankUUID}
-                                                        className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
+                                                        className="w-full mx-2 px-3 pe-6 py-2 md:py-0 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
                                                     />
                                                     {/* Render nothing at all when this blank's key
                                                         was withheld; the learner still sees their
@@ -664,23 +703,6 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                                             <X size={12} className="mx-auto" />
                                                             <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.form.incorrect')}</p>
                                                         </>
-                                                    )}
-                                                </div>
-                                            )}
-                                            {view === 'student' && (
-                                                <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
-                                                    userSubmissions.submissions.find(
-                                                        (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
-                                                    )?.answer?.trim()
-                                                        ? "bg-green-200/60 text-green-500"
-                                                        : "bg-slate-200/60 text-slate-500"
-                                                } text-sm transition-all ease-linear`}>
-                                                    {userSubmissions.submissions.find(
-                                                        (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
-                                                    )?.answer?.trim() ? (
-                                                        <Check size={12} className="mx-auto" />
-                                                    ) : (
-                                                        <X size={12} className="mx-auto" />
                                                     )}
                                                 </div>
                                             )}

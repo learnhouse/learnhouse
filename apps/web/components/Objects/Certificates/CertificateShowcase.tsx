@@ -75,7 +75,7 @@ export function CertificateShowcase({
               <ShieldCheck size={14} />
               {t('certificate.page.verified')}
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight truncate" dir="auto">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight max-sm:line-clamp-3 sm:truncate" dir="auto">
               {certificate.certificationName}
             </h1>
             <p className="text-gray-500 mt-1" dir="auto">

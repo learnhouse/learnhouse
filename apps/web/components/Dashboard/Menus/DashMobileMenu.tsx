@@ -20,20 +20,19 @@ import {
   Cube,
   FolderSimple,
   Steps,
-  List,
-  X,
   Check,
   ChatCircleDots,
   Book,
   CaretDown,
+  CaretRight,
   MagnifyingGlass,
   Code,
+  DotsNine,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import React, { useEffect, useState } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getDeploymentMode } from '@services/config/config'
@@ -47,7 +46,13 @@ import { planMeetsRequirement } from '@services/plans/plans'
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { useCommandPalette } from '@components/Dashboard/CommandPalette/CommandPaletteContext'
 import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
+import { Dialog, DialogContent, DialogTitle } from '@components/ui/dialog'
 
+/**
+ * Dashboard navigation below lg: a dark bottom tab bar (the desktop sidebar's
+ * colours) with the four places admins live in, and every other section in a
+ * "More" sheet (a bottom sheet on phones, via the shared Dialog).
+ */
 function DashMobileMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
@@ -55,12 +60,19 @@ function DashMobileMenu() {
   const pathname = usePathname() || ''
   const plan = usePlan()
   const { toggle: openSearch } = useCommandPalette()
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [langExpanded, setLangExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  React.useEffect(() => { setMounted(true) }, [])
+  useEffect(() => { setMounted(true) }, [])
+
+  // Publish the bar's height (styles/mobile-dashboard.css) so pages, toasts
+  // and sticky footers can sit above it.
+  useEffect(() => {
+    document.documentElement.classList.add('lh-has-dash-tabbar')
+    return () => document.documentElement.classList.remove('lh-has-dash-tabbar')
+  }, [])
 
   if (!org || !session || !mounted) return null
 
@@ -82,237 +94,180 @@ function DashMobileMenu() {
     await signOut({ redirect: true, callbackUrl: getUriWithOrg(org.slug, '/login') })
   }
 
-  const close = () => { setMenuOpen(false); setLangExpanded(false) }
+  const close = () => { setMoreOpen(false); setLangExpanded(false) }
+
+  const tabs = [
+    { key: 'home', href: '/dash', Icon: House, label: t('common.home'), active: isActive('/dash') },
+    { key: 'courses', href: '/dash/courses', Icon: BookOpen, label: t('courses.courses'), active: isActive('/dash/courses') },
+    { key: 'assignments', href: '/dash/assignments', Icon: Files, label: t('common.assignments'), active: isActive('/dash/assignments') },
+    { key: 'users', href: '/dash/users/settings/users', Icon: Users, label: t('common.users'), active: isActive('/dash/users') },
+  ]
+
+  // Everything that isn't a tab, as a grid of large targets in the sheet.
+  const sections = [
+    isEnabled('paths') && { href: '/dash/paths', Icon: Steps, label: t('paths.title') },
+    isEnabled('folders') && { href: '/dash/library', Icon: FolderSimple, label: t('library.library') },
+    isEnabled('communities') && { href: '/dash/communities', Icon: ChatsCircle, label: t('communities.title') },
+    isEnabled('podcasts') && { href: '/dash/podcasts', Icon: Headphones, label: t('podcasts.podcasts') },
+    isEnabled('live_sessions') && { href: '/dash/live-sessions', Icon: VideoCamera, label: t('live_sessions.title') },
+    isEnabled('boards') && { href: '/dash/boards', Icon: ChalkboardSimple, label: t('common.boards') },
+    isEnabled('playgrounds') && { href: '/dash/playgrounds', Icon: Cube, label: t('common.playgrounds') },
+    isEnabled('payments') && { href: '/dash/payments/overview', Icon: CurrencyCircleDollar, label: t('common.payments') },
+    { href: '/dash/analytics', Icon: ChartBar, label: t('common.analytics') },
+    { href: '/dash/org/settings/general', Icon: Buildings, label: t('common.organization'), match: '/dash/org' },
+    { href: '/dash/developers/api', Icon: Code, label: t('dashboard.developers.breadcrumb', { defaultValue: 'Developers' }), match: '/dash/developers' },
+  ].filter(Boolean) as { href: string; Icon: any; label: string; match?: string }[]
+
+  const moreActive = moreOpen || sections.some((s) => isActive(s.match ?? s.href))
 
   return createPortal(
     <>
-      {/* Floating pill */}
       <nav
         aria-label={t('dashboard.nav.mobile_navigation')}
-        className="fixed inset-x-0 mx-auto w-fit z-[9999]"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}
+        className="lh-dash-tabbar fixed inset-x-0 bottom-0 bg-[#0f0f10]/95 backdrop-blur-xl backdrop-saturate-150 border-t border-white/[0.08]"
+        style={{ zIndex: 'var(--z-nav)', paddingBottom: 'var(--lh-safe-bottom)' }}
       >
-        <div
-          className="flex items-center gap-0.5 px-1.5 py-1.5 bg-[#111113]/90 backdrop-blur-xl rounded-full"
-          style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}
-        >
-          {/* LearnHouse logo, links to home */}
-          <Link
-            href="/dash"
-            className="flex items-center justify-center px-2.5 py-2.5 rounded-full transition-all duration-200"
-            aria-label={t('common.home')}
-          >
-            {isWhiteLabelPlan(plan) ? (
-              <House size={18} weight="fill" className="text-white opacity-60 hover:opacity-90 transition-opacity" />
-            ) : (
-              <img
-                src="/lrn-dash.svg"
-                alt="LearnHouse"
-                className="h-[18px] w-[18px] opacity-60 hover:opacity-90 transition-opacity"
-                style={{ filter: 'brightness(0) invert(1)' }}
-              />
-            )}
-          </Link>
-          {/* Progressive reveal: more icons as viewport widens */}
-          <PillLink href="/dash/courses" icon={<BookOpen size={18} weight="fill" />} active={isActive('/dash/courses')} className="hidden min-[340px]:flex" />
-          <PillLink href="/dash/assignments" icon={<Files size={18} weight="fill" />} active={isActive('/dash/assignments')} className="hidden min-[390px]:flex" />
-          <PillLink href="/dash/users/settings/users" icon={<Users size={18} weight="fill" />} active={isActive('/dash/users')} className="hidden min-[430px]:flex" />
-          {isEnabled('communities') && (
-            <PillLink href="/dash/communities" icon={<ChatsCircle size={18} weight="fill" />} active={isActive('/dash/communities')} className="hidden min-[470px]:flex" />
-          )}
-          {isEnabled('podcasts') && (
-            <PillLink href="/dash/podcasts" icon={<Headphones size={18} weight="fill" />} active={isActive('/dash/podcasts')} className="hidden min-[510px]:flex" />
-          )}
-          {isEnabled('live_sessions') && (
-            <PillLink href="/dash/live-sessions" icon={<VideoCamera size={18} weight="fill" />} active={isActive('/dash/live-sessions')} className="hidden min-[510px]:flex" />
-          )}
-          {isEnabled('boards') && (
-            <PillLink href="/dash/boards" icon={<ChalkboardSimple size={18} weight="fill" />} active={isActive('/dash/boards')} className="hidden min-[550px]:flex" />
-          )}
-          {isEnabled('playgrounds') && (
-            <PillLink href="/dash/playgrounds" icon={<Cube size={18} weight="fill" />} active={isActive('/dash/playgrounds')} className="hidden min-[590px]:flex" />
-          )}
-          <PillLink href="/dash/analytics" icon={<ChartBar size={18} weight="fill" />} active={isActive('/dash/analytics')} className="hidden min-[630px]:flex" />
-          <PillLink href="/dash/org/settings/general" icon={<Buildings size={18} weight="fill" />} active={isActive('/dash/org')} className="hidden min-[670px]:flex" />
-          <PillLink href="/dash/developers/api" icon={<Code size={18} weight="fill" />} active={isActive('/dash/developers')} className="hidden min-[710px]:flex" />
-          {isEnabled('payments') && (
-            <PillLink href="/dash/payments/overview" icon={<CurrencyCircleDollar size={18} weight="fill" />} active={isActive('/dash/payments')} className="hidden min-[750px]:flex" />
-          )}
-
-          <span className="w-px h-4 bg-white/[0.15] mx-1 shrink-0" />
-
-          {/* Search */}
-          <button
-            onClick={openSearch}
-            aria-label={t('common.search')}
-            className="p-2.5 rounded-full transition-all duration-200 text-white/60 hover:text-white hover:bg-white/[0.1]"
-          >
-            <MagnifyingGlass size={18} weight="bold" />
-          </button>
-
-          {/* Menu toggle */}
-          <button
-            onClick={() => setMenuOpen(v => !v)}
-            aria-label={menuOpen ? t('dashboard.nav.close_menu') : t('dashboard.nav.open_menu')}
-            aria-expanded={menuOpen}
-            className={cn(
-              'p-2.5 rounded-full transition-all duration-200 overflow-hidden',
-              menuOpen ? 'bg-white text-[#111113]' : 'text-white/60 hover:text-white hover:bg-white/[0.1]'
-            )}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              {menuOpen
-                ? <motion.span key="x" className="flex" initial={{ rotate: -45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 45, opacity: 0 }} transition={{ duration: 0.15 }}><X size={18} weight="bold" /></motion.span>
-                : <motion.span key="list" className="flex" initial={{ rotate: 45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -45, opacity: 0 }} transition={{ duration: 0.15 }}><List size={18} /></motion.span>
-              }
-            </AnimatePresence>
-          </button>
-
-        </div>
+        <ul className="flex items-stretch justify-around max-w-xl mx-auto" style={{ height: 'var(--lh-tabbar-h)' }}>
+          {tabs.map(({ key, href, Icon, label, active }) => (
+            <li key={key} className="flex flex-1 min-w-0">
+              <Link
+                href={href}
+                aria-current={active ? 'page' : undefined}
+                className={cn('lh-press flex flex-1 min-w-0 select-none', active ? 'text-white' : 'text-white/45')}
+              >
+                <TabInner Icon={Icon} label={label} active={active} />
+              </Link>
+            </li>
+          ))}
+          <li className="flex flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              aria-label={t('common.more')}
+              aria-expanded={moreOpen}
+              className={cn('lh-press flex flex-1 min-w-0 select-none', moreActive ? 'text-white' : 'text-white/45')}
+            >
+              <TabInner Icon={DotsNine} label={t('common.more')} active={moreActive} />
+            </button>
+          </li>
+        </ul>
       </nav>
 
-      {/* Compact menu panel */}
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-[9997] bg-black/50 backdrop-blur-[3px]"
-              onClick={close}
-            />
-
-            <motion.div
-              key="panel"
-              initial={{ opacity: 0, y: 12, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.97 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 360 }}
-              className="fixed start-4 end-4 z-[9998] max-w-sm mx-auto bg-[#0e0e10]/95 backdrop-blur-xl rounded-2xl overflow-hidden"
-              style={{
-                bottom: 'calc(env(safe-area-inset-bottom) + 5.5rem)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-              }}
-            >
-              {/* Org header */}
-              <div className="flex items-center gap-3 px-4 py-3.5">
-                {(planMeetsRequirement(plan, 'standard') && hasOrgLogo(org)) || isWhiteLabelPlan(plan) ? (
-                  <div className="h-7 w-7 rounded-lg overflow-hidden bg-white shrink-0">
-                    <OrgSquareLogo org={org} wideInsetClassName="p-0.5" fallback={<OrgInitial org={org} className="text-xs" />} />
-                  </div>
-                ) : (
-                  <div className="h-7 w-7 flex items-center justify-center bg-white/[0.06] rounded-lg">
-                    <img src="/lrn-dash.svg" alt="LearnHouse" className="h-4 w-4" style={{ filter: 'brightness(0) invert(1)' }} />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate leading-none mb-0.5">{org?.name}</p>
-                  <p className={cn(
-                    'text-[10px] font-medium',
-                    mode === 'ee' ? 'text-amber-400' :
-                    mode === 'oss' ? 'text-green-400' :
-                    plan === 'enterprise' ? 'text-amber-400' :
-                    plan === 'pro' ? 'text-purple-400' :
-                    plan === 'standard' ? 'text-blue-400' :
-                    'text-white/30'
-                  )}>{planLabel}</p>
+      <Dialog open={moreOpen} onOpenChange={(o) => { if (!o) close(); else setMoreOpen(true) }}>
+        <DialogContent className="lh-dash-sheet flex flex-col p-0 bg-[#0f0f10] border-white/[0.08] text-white max-h-[85dvh] [&>button:last-child]:hidden">
+          <DialogTitle className="sr-only">{t('common.more')}</DialogTitle>
+          <div className="flex-1 overflow-y-auto overscroll-contain pt-3 pb-4 space-y-4">
+            {/* Org */}
+            <div className="flex items-center gap-3 px-4">
+              {(planMeetsRequirement(plan, 'standard') && hasOrgLogo(org)) || isWhiteLabelPlan(plan) ? (
+                <div className="h-10 w-10 rounded-xl overflow-hidden bg-white shrink-0">
+                  <OrgSquareLogo org={org} wideInsetClassName="p-0.5" fallback={<OrgInitial org={org} className="text-sm" />} />
                 </div>
+              ) : (
+                <div className="h-10 w-10 flex items-center justify-center bg-white/[0.06] rounded-xl shrink-0">
+                  <img src="/lrn-dash.svg" alt="LearnHouse" className="h-5 w-5" style={{ filter: 'brightness(0) invert(1)' }} />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold text-white truncate leading-tight">{org?.name}</p>
+                <p className={cn(
+                  'text-xs font-medium',
+                  mode === 'ee' ? 'text-amber-400' :
+                  mode === 'oss' ? 'text-green-400' :
+                  plan === 'enterprise' ? 'text-amber-400' :
+                  plan === 'pro' ? 'text-purple-400' :
+                  plan === 'standard' ? 'text-blue-400' :
+                  'text-white/40'
+                )}>{planLabel}</p>
               </div>
+            </div>
 
-              <div className="h-px bg-white/[0.05] mx-4" />
+            {/* Search, styled as the field it opens */}
+            <div className="px-4">
+              <button
+                type="button"
+                onClick={() => { close(); openSearch() }}
+                className="lh-press flex items-center gap-2.5 w-full h-11 px-3.5 rounded-xl bg-white/[0.07] text-white/50 text-[15px]"
+              >
+                <MagnifyingGlass size={18} weight="bold" />
+                <span>{t('common.search')}</span>
+              </button>
+            </div>
 
-              {/* Nav items */}
-              <div className="py-2 px-2 max-h-[52vh] overflow-y-auto overscroll-contain space-y-px">
-                <PanelItem href="/dash" icon={<House size={15} weight="fill" />} label={t('common.home')} active={isActive('/dash')} onClick={close} />
-                <PanelItem href="/dash/courses" icon={<BookOpen size={15} weight="fill" />} label={t('courses.courses')} active={isActive('/dash/courses')} onClick={close} />
-                {isEnabled('paths') && <PanelItem href="/dash/paths" icon={<Steps size={15} weight="fill" />} label={t('paths.title')} active={isActive('/dash/paths')} onClick={close} />}
-                {isEnabled('folders') && <PanelItem href="/dash/library" icon={<FolderSimple size={15} weight="fill" />} label={t('library.library')} active={isActive('/dash/library')} onClick={close} />}
-                <PanelItem href="/dash/assignments" icon={<Files size={15} weight="fill" />} label={t('common.assignments')} active={isActive('/dash/assignments')} onClick={close} />
-                <PanelItem href="/dash/users/settings/users" icon={<Users size={15} weight="fill" />} label={t('common.users')} active={isActive('/dash/users')} onClick={close} />
-                {isEnabled('communities') && <PanelItem href="/dash/communities" icon={<ChatsCircle size={15} weight="fill" />} label={t('communities.title')} active={isActive('/dash/communities')} onClick={close} />}
-                {isEnabled('podcasts') && <PanelItem href="/dash/podcasts" icon={<Headphones size={15} weight="fill" />} label={t('podcasts.podcasts')} active={isActive('/dash/podcasts')} onClick={close} />}
-                {isEnabled('live_sessions') && <PanelItem href="/dash/live-sessions" icon={<VideoCamera size={15} weight="fill" />} label={t('live_sessions.title')} active={isActive('/dash/live-sessions')} onClick={close} />}
-                {isEnabled('boards') && <PanelItem href="/dash/boards" icon={<ChalkboardSimple size={15} weight="fill" />} label={t('common.boards')} active={isActive('/dash/boards')} onClick={close} />}
-                {isEnabled('playgrounds') && <PanelItem href="/dash/playgrounds" icon={<Cube size={15} weight="fill" />} label={t('common.playgrounds')} active={isActive('/dash/playgrounds')} onClick={close} />}
-                {isEnabled('payments') && <PanelItem href="/dash/payments/overview" icon={<CurrencyCircleDollar size={15} weight="fill" />} label={t('common.payments')} active={isActive('/dash/payments')} onClick={close} />}
-                <PanelItem href="/dash/analytics" icon={<ChartBar size={15} weight="fill" />} label={t('common.analytics')} active={isActive('/dash/analytics')} onClick={close} />
-                <PanelItem href="/dash/org/settings/general" icon={<Buildings size={15} weight="fill" />} label={t('common.organization')} active={isActive('/dash/org')} onClick={close} />
-                <PanelItem href="/dash/developers/api" icon={<Code size={15} weight="fill" />} label={t('dashboard.developers.breadcrumb', { defaultValue: 'Developers' })} active={isActive('/dash/developers')} onClick={close} />
-
-                <div className="h-px bg-white/[0.05] mx-2 my-1.5" />
-
-                <PanelItem href="/account/general" icon={<Gear size={15} weight="fill" />} label={t('common.settings')} active={isActive('/account')} onClick={close} />
-
-                {/* Language picker */}
-                <button
-                  onClick={() => setLangExpanded(v => !v)}
-                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
-                >
-                  <Globe size={15} weight="fill" />
-                  <span className="text-sm font-medium flex-1 text-start">{t('common.language')}</span>
-                  <CaretDown size={10} weight="bold" className={cn('transition-transform', langExpanded && 'rotate-180')} />
-                </button>
-                {langExpanded && (
-                  <div className="ms-2 ps-3 border-s border-white/[0.05] space-y-px">
-                    {AVAILABLE_LANGUAGES.map(lang => (
-                      <button
-                        key={lang.code}
-                        onClick={() => { changeLanguage(lang.code); setLangExpanded(false) }}
-                        className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-sm text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
-                      >
-                        <span className="font-medium">{lang.nativeName}</span>
-                        {i18n.language.split('-')[0] === lang.code && <Check size={11} weight="bold" className="text-green-500" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <a href="https://docs.learnhouse.app" target="_blank" rel="noopener noreferrer"
-                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
-                >
-                  <Book size={15} weight="fill" />
-                  <span className="text-sm font-medium">{t('common.help_menu.documentation')}</span>
-                </a>
-                <a href="http://learnhouse.to/discord" target="_blank" rel="noopener noreferrer"
-                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
-                >
-                  <DiscordIcon size={15} />
-                  <span className="text-sm font-medium">{t('common.help_menu.discord')}</span>
-                </a>
-                <button
-                  onClick={() => { setFeedbackModalOpen(true); close() }}
-                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
-                >
-                  <ChatCircleDots size={15} weight="fill" />
-                  <span className="text-sm font-medium">{t('common.help_menu.report_feedback')}</span>
-                </button>
-              </div>
-
-              {/* User footer */}
-              <div className="h-px bg-white/[0.05] mx-4" />
-              <div className="px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <UserAvatar width={28} rounded="rounded-full" shadow="shadow-none" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white/90 truncate leading-none mb-0.5">{session?.data?.user?.username}</p>
-                    <p className="text-[10px] text-white/30 truncate">{session?.data?.user?.email}</p>
-                  </div>
-                  <button
-                    onClick={logOutUI}
-                    aria-label={t('user.sign_out')}
-                    className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-white/[0.05] transition-all"
+            {/* Sections */}
+            <div className="grid grid-cols-3 gap-2 px-4">
+              {sections.map(({ href, Icon, label, match }) => {
+                const active = isActive(match ?? href)
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={close}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'lh-press flex flex-col items-center justify-center gap-1.5 min-h-[76px] px-1.5 py-2.5 rounded-2xl text-center transition-colors',
+                      active ? 'bg-white text-[#0f0f10]' : 'bg-white/[0.06] text-white/80 active:bg-white/[0.1]'
+                    )}
                   >
-                    <SignOut size={14} weight="fill" data-dir-flip />
-                  </button>
+                    <Icon size={22} weight="fill" />
+                    <span className="text-xs font-medium leading-tight line-clamp-2 break-words">{label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+
+            {/* Account and help */}
+            <div className="mx-4 rounded-2xl bg-white/[0.04] divide-y divide-white/[0.06] overflow-hidden">
+              <SheetRow href="/account/general" Icon={Gear} label={t('common.settings')} onClick={close} />
+              <SheetRow
+                Icon={Globe}
+                label={t('common.language')}
+                onClick={() => setLangExpanded(v => !v)}
+                trailing={<CaretDown size={12} weight="bold" className={cn('text-white/30 transition-transform', langExpanded && 'rotate-180')} />}
+              />
+              {langExpanded && (
+                <div className="py-1">
+                  {AVAILABLE_LANGUAGES.map(lang => (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => { changeLanguage(lang.code); setLangExpanded(false) }}
+                      className="flex items-center justify-between w-full ps-14 pe-4 min-h-[44px] text-[15px] text-white/70 active:bg-white/[0.06]"
+                    >
+                      <span className="font-medium">{lang.nativeName}</span>
+                      {i18n.language.split('-')[0] === lang.code && <Check size={14} weight="bold" className="text-green-500" />}
+                    </button>
+                  ))}
                 </div>
+              )}
+              <SheetRow href="https://docs.learnhouse.app" external Icon={Book} label={t('common.help_menu.documentation')} />
+              <SheetRow href="http://learnhouse.to/discord" external Icon={DiscordIcon} label={t('common.help_menu.discord')} />
+              <SheetRow
+                Icon={ChatCircleDots}
+                label={t('common.help_menu.report_feedback')}
+                onClick={() => { close(); setFeedbackModalOpen(true) }}
+              />
+            </div>
+
+            {/* User */}
+            <div className="mx-4 flex items-center gap-3 rounded-2xl bg-white/[0.04] p-3">
+              <UserAvatar width={40} rounded="rounded-full" shadow="shadow-none" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-semibold text-white truncate leading-tight">{session?.data?.user?.username}</p>
+                <p className="text-xs text-white/40 truncate">{session?.data?.user?.email}</p>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+              <button
+                type="button"
+                onClick={logOutUI}
+                aria-label={t('user.sign_out')}
+                className="lh-press flex items-center justify-center h-10 w-10 rounded-xl text-white/50 bg-white/[0.06] active:text-red-400"
+              >
+                <SignOut size={18} weight="fill" data-dir-flip />
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <FeedbackModal
         open={feedbackModalOpen}
@@ -326,60 +281,49 @@ function DashMobileMenu() {
   )
 }
 
-const PillLink = ({
-  href,
-  icon,
-  active,
-  className,
-}: {
-  href: string
-  icon: React.ReactNode
-  active: boolean
-  className?: string
-}) => (
-  <Link
-    href={href}
-    className={cn(
-      'flex items-center justify-center p-2.5 rounded-full transition-all duration-200',
-      active ? 'bg-white/[0.15] text-white' : 'text-white/50 hover:text-white hover:bg-white/[0.08]',
-      className
-    )}
-  >
-    {icon}
-  </Link>
+const TabInner = ({ Icon, label, active }: { Icon: any; label: string; active: boolean }) => (
+  <span className="flex flex-col items-center justify-center gap-[3px] h-full w-full">
+    <span className={cn('flex items-center justify-center h-7 w-12 rounded-full transition-colors', active && 'bg-white/[0.12]')}>
+      <Icon size={22} weight={active ? 'fill' : 'regular'} />
+    </span>
+    <span className={cn('text-[10.5px] leading-none tracking-tight truncate max-w-[72px]', active ? 'font-semibold' : 'font-medium')}>
+      {label}
+    </span>
+  </span>
 )
 
-const PanelItem = ({
+const SheetRow = ({
   href,
-  icon,
-  label,
-  active,
+  external,
   onClick,
+  Icon,
+  label,
+  trailing,
 }: {
-  href: string
-  icon: React.ReactNode
+  href?: string
+  external?: boolean
+  onClick?: () => void
+  Icon: any
   label: string
-  active: boolean
-  onClick: () => void
-}) => (
-  <Link
-    href={href}
-    onClick={onClick}
-    aria-current={active ? 'page' : undefined}
-    className={cn(
-      'relative flex items-center w-full rounded-lg px-2.5 py-2 gap-2 transition-all',
-      active ? 'text-white bg-white/[0.08]' : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
-    )}
-  >
-    {active && (
-      <span
-        aria-hidden="true"
-        className="absolute start-0.5 top-1/2 -translate-y-1/2 h-4 w-[2px] bg-white rounded-full"
-      />
-    )}
-    {icon}
-    <span className="text-sm font-medium">{label}</span>
-  </Link>
-)
+  trailing?: React.ReactNode
+}) => {
+  const body = (
+    <>
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-white/70">
+        <Icon size={17} weight="fill" />
+      </span>
+      <span className="flex-1 truncate text-[15px] font-medium text-white/85">{label}</span>
+      {trailing ?? <CaretRight size={12} weight="bold" className="text-white/25 rtl:rotate-180" />}
+    </>
+  )
+  const cls = 'lh-press flex w-full items-center gap-3 px-3 min-h-[52px] text-start active:bg-white/[0.04]'
+  if (href && external) {
+    return <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>{body}</a>
+  }
+  if (href) {
+    return <Link href={href} onClick={onClick} className={cls}>{body}</Link>
+  }
+  return <button type="button" onClick={onClick} className={cls}>{body}</button>
+}
 
 export default DashMobileMenu

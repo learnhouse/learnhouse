@@ -93,25 +93,25 @@ function PathEditorHeader({
 
   return (
     <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
-      <div className="pt-6 pb-4">
+      <div className="pt-4 pb-3 sm:pt-6 sm:pb-4">
         <Breadcrumbs
           items={[
             { label: t('paths.title'), href: '/dash/paths', icon: <Route size={14} /> },
             { label: path.name, href: `/dash/paths/path/${params.pathuuid}/general` },
           ]}
         />
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center space-x-4 min-w-0">
+        <div className="flex items-center justify-between gap-3 mt-3 sm:mt-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Link
               href={getUriWithOrg(params.orgslug, '/dash/paths')}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 -ms-2 sm:ms-0 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
               aria-label={t('paths.title')}
             >
               <ArrowLeft size={20} className="rtl:rotate-180" />
             </Link>
-            <h1 className="text-2xl font-bold truncate" dir="auto">{path.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold truncate min-w-0" dir="auto">{path.name}</h1>
             <span
-              className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full ${
+              className={`shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full ${
                 path.published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
               }`}
             >
@@ -121,7 +121,7 @@ function PathEditorHeader({
           <Link
             href={getUriWithOrg(params.orgslug, `/path/${params.pathuuid}`)}
             target="_blank"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors shrink-0"
+            className="text-sm text-gray-500 hover:text-gray-900 transition-colors shrink-0 whitespace-nowrap"
           >
             {t('paths.dashboard.view_path')} &rarr;
           </Link>

@@ -165,8 +165,11 @@ function MathEquationBlockComponent(props: any) {
     // Math notation is left-to-right by specification, in every language.
     return (
       <NodeViewWrapper className="block-math-equation" dir="ltr">
-        <div className="bg-neutral-50 rounded-xl p-5 nice-shadow">
-          <Suspense fallback={<div className="text-gray-400 text-sm p-2">{t('editor.blocks.math_block.loading')}</div>}><BlockMath>{equation}</BlockMath></Suspense>
+        <div className="bg-neutral-50 rounded-xl px-3 py-1 sm:p-5 nice-shadow">
+          {/* A long equation scrolls inside its own box instead of widening the page. */}
+          <div className="lh-hscroll">
+            <Suspense fallback={<div className="text-gray-400 text-sm p-2">{t('editor.blocks.math_block.loading')}</div>}><BlockMath>{equation}</BlockMath></Suspense>
+          </div>
         </div>
       </NodeViewWrapper>
     )
@@ -186,7 +189,7 @@ function MathEquationBlockComponent(props: any) {
         </div>
 
         {/* Equation Display */}
-        <div className="bg-white p-4 rounded-lg nice-shadow">
+        <div className="lh-hscroll bg-white p-4 rounded-lg nice-shadow">
           <Suspense fallback={<div className="text-gray-400 text-sm p-2">{t('editor.blocks.math_block.loading')}</div>}><BlockMath>{equation}</BlockMath></Suspense>
         </div>
 

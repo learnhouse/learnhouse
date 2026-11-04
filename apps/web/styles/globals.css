@@ -5,6 +5,13 @@
 
 @import 'tailwindcss';
 
+/* Phone layout: the app shell (bottom tab bar, sheets, touch behaviour) and
+   the per-area overrides that keep content inside a phone-width viewport. */
+@import "./mobile.css";
+@import "./mobile-activities.css";
+@import "./mobile-dashboard.css";
+@import "./mobile-pages.css";
+
 /* EE components (apps/web/ee) are gitignored, so automatic source detection
    skips them. Scan them explicitly. */
 @source '../ee';

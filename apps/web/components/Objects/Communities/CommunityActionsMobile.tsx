@@ -22,8 +22,9 @@ export function CommunityActionsMobile({
   const { canManageCommunity, canCreateDiscussion } = useCommunityRights(community.community_uuid)
 
   return (
-    <nav aria-label={t('communities.actions.mobile_actions')} className="fixed bottom-0 start-0 end-0 z-50 md:hidden">
-      <div className="mx-3 mb-4 bg-white/95 backdrop-blur-sm rounded-xl nice-shadow p-3">
+    // Floats just above the phone tab bar (--lh-mobile-nav-h is 0 without one).
+    <nav aria-label={t('communities.actions.mobile_actions')} className="fixed bottom-[calc(max(var(--lh-mobile-nav-h),var(--lh-safe-bottom))+0.5rem)] start-0 end-0 z-50 md:hidden">
+      <div className="mx-3 bg-white/95 backdrop-blur-sm rounded-2xl nice-shadow p-2.5">
         <div className="flex items-center gap-3">
           {/* Community Icon */}
           <div className="flex-shrink-0 w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -43,7 +44,7 @@ export function CommunityActionsMobile({
             {canManageCommunity && (
               <Link
                 href={getUriWithOrg(orgslug, '/dash/communities')}
-                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="w-11 h-11 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
                 aria-label={t('communities.actions.manage_community_label')}
               >
                 <Settings size={16} className="text-gray-600" />
@@ -52,7 +53,7 @@ export function CommunityActionsMobile({
             {canCreateDiscussion && onCreateDiscussion && (
               <button
                 onClick={onCreateDiscussion}
-                className="flex items-center gap-1.5 px-3 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-1.5 px-4 h-11 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl transition-colors text-sm font-medium"
               >
                 <Plus size={14} />
                 {t('communities.actions.new')}

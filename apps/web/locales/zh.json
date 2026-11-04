@@ -2203,7 +2203,17 @@
     "solution_locked_title": "参考答案已锁定",
     "solution_locked_on_submission": "提交作业后，参考答案将立即解锁。",
     "solution_locked_after_grading": "作业评分后，参考答案才会解锁。",
-    "retry_assignment_confirm_ungraded": "您当前提交的作业将被重置以便重新开始，在您提交下一次尝试之前，参考答案会再次锁定。"
+    "retry_assignment_confirm_ungraded": "您当前提交的作业将被重置以便重新开始，在您提交下一次尝试之前，参考答案会再次锁定。",
+    "status_not_started": "未开始",
+    "status_in_progress": "进行中",
+    "status_submitted": "已提交",
+    "due_on": "截止 {{date}}",
+    "answered_progress": "已回答 {{answered}}/{{total}}",
+    "handin_ready_title": "准备提交了吗？",
+    "handin_ready_body": "你的答案会自动保存。",
+    "your_score": "你的得分",
+    "awaiting_grade_body": "作业已交给老师，评分后得分会显示在这里。",
+    "tasks_count_other": "{{count}} 个任务"
   },
   "certificate": {
     "certificate": "证书",
@@ -6307,7 +6317,15 @@
           "hide_empty": "隐藏空课程"
         },
         "new_assignment": "新建作业",
-        "clear_search": "清除搜索"
+        "clear_search": "清除搜索",
+        "subtitle": "在所有课程中创建、发布和批改作业。",
+        "columns": {
+          "grading": "评分方式",
+          "actions": "操作"
+        },
+        "empty_description": "作业位于课程章节中。创建一个作业，开始收取学员的提交。",
+        "status_draft": "草稿",
+        "no_due_date": "无截止日期"
       },
       "detail": {
         "title": "作业工具",
@@ -6341,8 +6359,10 @@
             "updating": "正在更新作业...",
             "update_success": "作业更新成功",
             "update_error": "更新作业出错，请稍后重试。"
-          }
-        }
+          },
+          "edit_settings": "编辑设置"
+        },
+        "due_on": "截止 {{date}}"
       },
       "editor": {
         "tasks_title": "任务",
@@ -6473,7 +6493,10 @@
           },
           "file": {
             "teacher_hint": "用户可以为此任务提交文件，您可以在“提交”标签页中查看。",
-            "submit_file": "提交文件"
+            "submit_file": "提交文件",
+            "uploaded": "已上传",
+            "replace": "替换",
+            "no_file": "未提交文件"
           },
           "quiz": {
             "last_option": "无法删除最后一个选项。至少需要一个选项。",
@@ -6624,7 +6647,14 @@
           "general": "常规",
           "content": "内容"
         },
-        "no_task_selected": "未选择任务"
+        "no_task_selected": "未选择任务",
+        "task_position": "任务 {{number}}/{{total}}",
+        "delete_task_confirm": "此任务将从作业中永久删除。",
+        "empty_title": "添加第一个任务",
+        "empty_description": "任务是学员需要完成的内容：测验、简答、编程练习、文件上传等。",
+        "points_short": "{{points}} 分",
+        "total_points": "共 {{points}} 分",
+        "max_tasks_reached": "此作业已达到最多 {{max}} 个任务。"
       },
       "submissions": {
         "status": {
@@ -6647,7 +6677,8 @@
           "recently_graded": "最近评分优先"
         },
         "stats": {
-          "total": "总计"
+          "total": "总计",
+          "to_grade": "待批改"
         },
         "preview": {
           "current_grade": "当前成绩",
@@ -6670,7 +6701,9 @@
         "evaluate": "评估",
         "evaluate_modal": {
           "title": "评估 @{{username}}",
-          "description": "评估已提交的作业"
+          "description": "评估已提交的作业",
+          "title_name": "评估 {{name}}",
+          "submitted_at": "提交于 {{date}}"
         },
         "task_label": "任务 {{number}}：",
         "hint": "提示",
@@ -6692,7 +6725,12 @@
         "ungraded_title": "形成性（不评分）",
         "ungraded_description": "此作业仅提交供查阅，不记录分数。",
         "download_to_grade": "请下载文件并手动评分，然后在上方输入成绩",
-        "download_to_review": "下载文件以查看学习者提交的内容。"
+        "download_to_review": "下载文件以查看学习者提交的内容。",
+        "empty_description": "学员提交此作业后，作品会显示在这里等待批改。",
+        "columns": {
+          "learner": "学员"
+        },
+        "review": "查看"
       },
       "analytics": {
         "loading": "正在加载分析...",
@@ -11443,5 +11481,11 @@
     "sign_in_title": "登录后查看您的日历",
     "title": "日历",
     "more_events": "另外 {{count}} 项"
+  },
+  "mobile_nav": {
+    "tabs": "主菜单",
+    "explore": "探索",
+    "you": "我",
+    "messages": "消息"
   }
 }

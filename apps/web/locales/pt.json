@@ -2258,7 +2258,19 @@
     "solution_locked_title": "Resposta modelo bloqueada",
     "solution_locked_on_submission": "Entregue seu trabalho e a resposta modelo é liberada na hora.",
     "solution_locked_after_grading": "A resposta modelo é liberada depois que seu trabalho for corrigido.",
-    "retry_assignment_confirm_ungraded": "Sua entrega atual será redefinida para que você recomece, e a resposta modelo volta a ficar bloqueada até você entregar a próxima tentativa."
+    "retry_assignment_confirm_ungraded": "Sua entrega atual será redefinida para que você recomece, e a resposta modelo volta a ficar bloqueada até você entregar a próxima tentativa.",
+    "status_not_started": "Não iniciado",
+    "status_in_progress": "Em andamento",
+    "status_submitted": "Entregue",
+    "due_on": "Prazo: {{date}}",
+    "answered_progress": "{{answered}} de {{total}} respondidas",
+    "handin_ready_title": "Pronto para entregar?",
+    "handin_ready_body": "Suas respostas são salvas automaticamente.",
+    "your_score": "Sua nota",
+    "awaiting_grade_body": "Seu trabalho está com o professor. Sua nota aparecerá aqui após a correção.",
+    "tasks_count_one": "{{count}} tarefa",
+    "tasks_count_many": "{{count}} tarefas",
+    "tasks_count_other": "{{count}} tarefas"
   },
   "certificate": {
     "certificate": "Certificado",
@@ -6410,7 +6422,15 @@
           "hide_empty": "Ocultar cursos vazios"
         },
         "new_assignment": "Nova tarefa",
-        "clear_search": "Limpar busca"
+        "clear_search": "Limpar busca",
+        "subtitle": "Crie, publique e avalie trabalhos em todos os seus cursos.",
+        "columns": {
+          "grading": "Avaliação",
+          "actions": "Ações"
+        },
+        "empty_description": "Os trabalhos ficam dentro de um capítulo do curso. Crie um para começar a receber o trabalho dos alunos.",
+        "status_draft": "Rascunho",
+        "no_due_date": "Sem prazo"
       },
       "detail": {
         "title": "Ferramentas de Tarefa",
@@ -6444,8 +6464,10 @@
             "updating": "Atualizando tarefa...",
             "update_success": "A tarefa foi atualizada com sucesso",
             "update_error": "Erro ao atualizar tarefa, tente novamente mais tarde."
-          }
-        }
+          },
+          "edit_settings": "Editar configurações"
+        },
+        "due_on": "Prazo: {{date}}"
       },
       "editor": {
         "tasks_title": "Atividades",
@@ -6576,7 +6598,10 @@
           },
           "file": {
             "teacher_hint": "O usuário poderá enviar um arquivo para esta atividade e você poderá revisá-lo na aba Entregas",
-            "submit_file": "Enviar arquivo"
+            "submit_file": "Enviar arquivo",
+            "uploaded": "Enviado",
+            "replace": "Substituir",
+            "no_file": "Nenhum arquivo enviado"
           },
           "quiz": {
             "last_option": "Não é possível excluir a última opção. É necessária pelo menos uma opção.",
@@ -6735,7 +6760,14 @@
           "general": "Geral",
           "content": "Conteúdo"
         },
-        "no_task_selected": "Nenhuma atividade selecionada"
+        "no_task_selected": "Nenhuma atividade selecionada",
+        "task_position": "Tarefa {{number}} de {{total}}",
+        "delete_task_confirm": "Esta tarefa será removida permanentemente do trabalho.",
+        "empty_title": "Adicione a primeira tarefa",
+        "empty_description": "Tarefas são o que os alunos fazem: questionários, respostas curtas, exercícios de código, envio de arquivos e mais.",
+        "points_short": "{{points}} pts",
+        "total_points": "{{points}} pts no total",
+        "max_tasks_reached": "Este trabalho atingiu o máximo de {{max}} tarefas."
       },
       "submissions": {
         "status": {
@@ -6758,7 +6790,8 @@
           "recently_graded": "Avaliadas recentemente"
         },
         "stats": {
-          "total": "Total"
+          "total": "Total",
+          "to_grade": "A avaliar"
         },
         "preview": {
           "current_grade": "Nota atual",
@@ -6781,7 +6814,9 @@
         "evaluate": "Avaliar",
         "evaluate_modal": {
           "title": "Avaliar @{{username}}",
-          "description": "Avalie o envio"
+          "description": "Avalie o envio",
+          "title_name": "Avaliar {{name}}",
+          "submitted_at": "Entregue em {{date}}"
         },
         "task_label": "Atividade {{number}} :",
         "hint": "Dica",
@@ -6803,7 +6838,12 @@
         "ungraded_title": "Formativa (sem nota)",
         "ungraded_description": "Esta tarefa é entregue apenas para revisão. Nenhuma pontuação é registrada.",
         "download_to_grade": "Baixe o arquivo e corrija-o manualmente; depois informe a nota acima",
-        "download_to_review": "Baixe o arquivo para revisar o que o aluno entregou."
+        "download_to_review": "Baixe o arquivo para revisar o que o aluno entregou.",
+        "empty_description": "Quando os alunos entregarem este trabalho, ele aparecerá aqui para avaliação.",
+        "columns": {
+          "learner": "Aluno"
+        },
+        "review": "Revisar"
       },
       "analytics": {
         "loading": "A carregar análises...",
@@ -11642,5 +11682,11 @@
     "sign_in_title": "Entre para ver seu calendário",
     "title": "Calendário",
     "more_events": "+{{count}} mais"
+  },
+  "mobile_nav": {
+    "tabs": "Principal",
+    "explore": "Explorar",
+    "you": "Você",
+    "messages": "Mensagens"
   }
 }

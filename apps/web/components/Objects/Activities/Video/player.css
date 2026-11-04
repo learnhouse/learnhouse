@@ -8,6 +8,20 @@
   font-weight: 600;
 }
 
+/* Phone-width player: the title stays a caption, two lines at most, and clear
+   of the picture-in-picture and fullscreen buttons beside it. */
+@container media-root (width < 30rem) {
+  .learnhouse-player .media-title {
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    max-width: 62%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
 @container media-root (width >= 42rem) {
   .learnhouse-player .media-title {
     font-size: 1.75rem;
@@ -18,4 +32,15 @@
    it with one that stays while paused. */
 .learnhouse-player .media-playback-status-indicator {
   display: none;
+}
+
+/* The video activity runs full-bleed on phones (Video.tsx), so its corners go
+   square there. Inline players inside content keep theirs. */
+@media (max-width: 639px) {
+  .lh-video-bleed .learnhouse-player,
+  .lh-video-bleed .learnhouse-player .media-skin,
+  .lh-video-bleed .learnhouse-player .media-container {
+    --media-video-border-radius: 0px;
+    border-radius: 0;
+  }
 }

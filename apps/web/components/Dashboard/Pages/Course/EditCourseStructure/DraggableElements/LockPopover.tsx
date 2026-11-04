@@ -169,12 +169,12 @@ export default function LockPopover({
           disabled={disabled}
           title={t(trigger.titleKey, trigger.titleFallback)}
           aria-label={paid ? `Access for ${paid.resourceName}` : t(trigger.titleKey, trigger.titleFallback)}
-          className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${trigger.className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md transition-colors ${trigger.className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <TriggerIcon size={14} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={6} className="w-[300px] p-0 shadow-md shadow-gray-300/25 ring-1 ring-neutral-200/70 rounded-xl overflow-hidden border-0 bg-white">
+      <PopoverContent align="end" sideOffset={6} className="w-[300px] max-w-[calc(100vw-24px)] p-0 shadow-md shadow-gray-300/25 ring-1 ring-neutral-200/70 rounded-xl overflow-hidden border-0 bg-white">
         <div className="px-4 py-3 border-b border-gray-100">
           <div className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
             {t('course.lock.header_access', 'Access')}

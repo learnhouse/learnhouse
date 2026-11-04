@@ -2227,7 +2227,18 @@
     "solution_locked_title": "Örnek cevap kilitli",
     "solution_locked_on_submission": "Çalışmanızı teslim edin, örnek cevabın kilidi hemen açılır.",
     "solution_locked_after_grading": "Örnek cevabın kilidi, çalışmanız notlandırıldıktan sonra açılır.",
-    "retry_assignment_confirm_ungraded": "Mevcut teslim durumunuz sıfırlanacak ve yeniden başlayabileceksiniz; sonraki denemenizi teslim edene kadar örnek cevap tekrar kilitlenir."
+    "retry_assignment_confirm_ungraded": "Mevcut teslim durumunuz sıfırlanacak ve yeniden başlayabileceksiniz; sonraki denemenizi teslim edene kadar örnek cevap tekrar kilitlenir.",
+    "status_not_started": "Başlanmadı",
+    "status_in_progress": "Devam ediyor",
+    "status_submitted": "Teslim edildi",
+    "due_on": "Son tarih: {{date}}",
+    "answered_progress": "{{total}} sorudan {{answered}} yanıtlandı",
+    "handin_ready_title": "Teslim etmeye hazır mısın?",
+    "handin_ready_body": "Yanıtların otomatik olarak kaydedilir.",
+    "your_score": "Puanın",
+    "awaiting_grade_body": "Çalışman öğretmeninde. Notlandırılınca puanın burada görünecek.",
+    "tasks_count_one": "{{count}} görev",
+    "tasks_count_other": "{{count}} görev"
   },
   "certificate": {
     "certificate": "Sertifika",
@@ -6348,7 +6359,15 @@
           "hide_empty": "Boş kursları gizle"
         },
         "new_assignment": "Yeni Ödev",
-        "clear_search": "Aramayı temizle"
+        "clear_search": "Aramayı temizle",
+        "subtitle": "Tüm kurslarınızdaki ödevleri oluşturun, yayınlayın ve notlandırın.",
+        "columns": {
+          "grading": "Notlandırma",
+          "actions": "İşlemler"
+        },
+        "empty_description": "Ödevler bir kurs bölümünün içinde yer alır. Öğrencilerden çalışma toplamaya başlamak için bir ödev oluşturun.",
+        "status_draft": "Taslak",
+        "no_due_date": "Teslim tarihi yok"
       },
       "detail": {
         "title": "Ödev Aracı",
@@ -6382,8 +6401,10 @@
             "updating": "Ödev güncelleniyor...",
             "update_success": "Ödev başarıyla güncellendi",
             "update_error": "Ödev güncellenirken hata oluştu. Lütfen daha sonra tekrar deneyin."
-          }
-        }
+          },
+          "edit_settings": "Ayarları düzenle"
+        },
+        "due_on": "Son tarih: {{date}}"
       },
       "editor": {
         "tasks_title": "Görevler",
@@ -6514,7 +6535,10 @@
           },
           "file": {
             "teacher_hint": "Kullanıcı bu görev için bir dosya gönderebilecek, Gönderimler sekmesinde inceleyebileceksiniz",
-            "submit_file": "Dosyayı Gönder"
+            "submit_file": "Dosyayı Gönder",
+            "uploaded": "Yüklendi",
+            "replace": "Değiştir",
+            "no_file": "Dosya gönderilmedi"
           },
           "quiz": {
             "last_option": "Son seçenek silinemez. En az bir seçenek gereklidir.",
@@ -6669,7 +6693,14 @@
           "general": "Genel",
           "content": "İçerik"
         },
-        "no_task_selected": "Görev Seçilmedi"
+        "no_task_selected": "Görev Seçilmedi",
+        "task_position": "Görev {{number}} / {{total}}",
+        "delete_task_confirm": "Bu görev ödevden kalıcı olarak kaldırılacak.",
+        "empty_title": "İlk görevinizi ekleyin",
+        "empty_description": "Görevler öğrencilerin üzerinde çalıştığı şeylerdir: testler, kısa cevaplar, kod alıştırmaları, dosya yüklemeleri ve daha fazlası.",
+        "points_short": "{{points}} puan",
+        "total_points": "Toplam {{points}} puan",
+        "max_tasks_reached": "Bu ödev en fazla {{max}} görev sınırına ulaştı."
       },
       "submissions": {
         "status": {
@@ -6692,7 +6723,8 @@
           "recently_graded": "Son notlandırılanlar"
         },
         "stats": {
-          "total": "Toplam"
+          "total": "Toplam",
+          "to_grade": "Notlandırılacak"
         },
         "preview": {
           "current_grade": "Mevcut not",
@@ -6715,7 +6747,9 @@
         "evaluate": "Değerlendir",
         "evaluate_modal": {
           "title": "@{{username}} kullanıcısını değerlendir",
-          "description": "Ödev gönderimini değerlendirin"
+          "description": "Ödev gönderimini değerlendirin",
+          "title_name": "{{name}} değerlendir",
+          "submitted_at": "Teslim: {{date}}"
         },
         "task_label": "Görev {{number}}:",
         "hint": "İpucu",
@@ -6737,7 +6771,12 @@
         "ungraded_title": "Biçimlendirici (notlandırılmaz)",
         "ungraded_description": "Bu ödev yalnızca inceleme için teslim edilir. Puan kaydedilmez.",
         "download_to_grade": "Lütfen dosyayı indirip elle notlandırın, ardından notu yukarıya girin",
-        "download_to_review": "Öğrencinin teslim ettiğini incelemek için dosyayı indirin."
+        "download_to_review": "Öğrencinin teslim ettiğini incelemek için dosyayı indirin.",
+        "empty_description": "Öğrenciler bu ödevi teslim ettiğinde çalışmaları notlandırma için burada görünür.",
+        "columns": {
+          "learner": "Öğrenci"
+        },
+        "review": "İncele"
       },
       "analytics": {
         "loading": "Analizler yükleniyor...",
@@ -11522,5 +11561,11 @@
     "sign_in_title": "Takviminizi görmek için oturum açın",
     "title": "Takvim",
     "more_events": "+{{count}} tane daha"
+  },
+  "mobile_nav": {
+    "tabs": "Ana menü",
+    "explore": "Keşfet",
+    "you": "Sen",
+    "messages": "Mesajlar"
   }
 }

@@ -118,6 +118,8 @@ function LayoutContent({ children, orgslug }: { children: ReactNode; orgslug: st
       // target this element specifically.
       className="lh-org-font-root flex flex-col min-h-screen"
       style={{
+        // Room for the phone tab bar / activity bar (0 on desktop).
+        paddingBottom: 'var(--lh-mobile-nav-h)',
         backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
         ...(customFont ? { fontFamily: `'${customFont}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` } : {}),
       }}
