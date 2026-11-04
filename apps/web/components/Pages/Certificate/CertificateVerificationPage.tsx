@@ -84,7 +84,7 @@ function CertificateVerificationPage({ certificateUuid }: { certificateUuid: str
               className="w-28 aspect-video rounded-md bg-gray-100 ring-1 ring-black/5 shrink-0"
             />
             <div className="min-w-0 flex-1">
-              <div className="font-semibold text-gray-900 truncate" dir="auto">{course.name}</div>
+              <div className="font-semibold text-gray-900 max-sm:line-clamp-2 sm:truncate" dir="auto">{course.name}</div>
               {course.description && (
                 <p className="text-sm text-gray-500 line-clamp-2" dir="auto">{course.description}</p>
               )}

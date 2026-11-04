@@ -1,0 +1,93 @@
+/* Phone-width overrides for dashboard. Prefer Tailwind classes in the components;
+   use this file only for rules a component cannot express (third-party
+   markup, ProseMirror output). See mobile.css for the shell variables. */
+
+/* The dashboard tab bar (DashMobileMenu) shows below lg, wider than the
+   learner tab bar, so it publishes its own height for the same range. */
+@media (max-width: 1023px) {
+  html.lh-has-dash-tabbar {
+    --lh-mobile-nav-h: calc(var(--lh-tabbar-h) + var(--lh-safe-bottom));
+  }
+
+  /* Full-height dashboard pages (course editor, settings with an inner
+     scroller) stop at the tab bar instead of running under it. */
+  html.lh-has-dash-tabbar .lh-dash-main .h-screen {
+    height: calc(100dvh - var(--lh-mobile-nav-h));
+  }
+}
+
+/* The More sheet is dark like the bar; its grab handle needs to show on it. */
+.lh-dash-sheet .lh-sheet-handle::before {
+  background: rgb(255 255 255 / 0.2);
+}
+
+/*
+  Activity editor on phones. The desktop top bar is a fixed, floating card
+  with a fixed-height gap above the document; on a phone it becomes a sticky
+  bar flush with the top edge, its toolbar a single row that swipes
+  sideways, and the document runs edge to edge under it. The desktop rules
+  in globals.css load after this file, hence the html prefix; several
+  desktop margins are inline styles, hence !important.
+*/
+@media (max-width: 767px) {
+  html .activity-editor-page {
+    height: auto;
+    min-height: 100dvh;
+    padding-top: 0;
+    padding-bottom: calc(24px + var(--lh-safe-bottom));
+  }
+
+  html .activity-editor-top {
+    position: sticky;
+    top: 0;
+    margin: 0 0 10px;
+    padding: calc(8px + var(--lh-safe-top)) 10px 8px;
+    border-radius: 0 0 16px 16px;
+    gap: 6px;
+    /* Containing block for the toolbar menus below. */
+    contain: layout;
+  }
+
+  html .activity-editor-info-wrapper {
+    margin-bottom: 6px;
+  }
+
+  html .activity-editor-users-section {
+    padding-top: 6px;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  html .activity-editor-user-profile {
+    display: none;
+  }
+
+  html .activity-editor-body {
+    margin: 0 8px !important;
+  }
+
+  html .activity-editor-content-wrapper {
+    margin: 0 !important;
+  }
+
+  html .editor-toolbar-row {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    padding-bottom: 2px;
+  }
+  html .editor-toolbar-row > * {
+    flex-shrink: 0;
+  }
+
+  /* Toolbar menus would be clipped by the scrolling row; drop them as a
+     full-width panel under the bar instead. */
+  html .activity-editor-top .editor-menu-dropdown {
+    position: fixed;
+    top: calc(100% + 6px);
+    left: 8px;
+    right: 8px;
+    max-height: 60dvh;
+    overflow-y: auto;
+    margin-top: 0;
+  }
+}

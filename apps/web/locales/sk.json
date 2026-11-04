@@ -2289,7 +2289,20 @@
     "solution_locked_title": "Vzorová odpoveď je zamknutá",
     "solution_locked_on_submission": "Odovzdajte svoju prácu a vzorová odpoveď sa hneď odomkne.",
     "solution_locked_after_grading": "Vzorová odpoveď sa odomkne po ohodnotení vašej práce.",
-    "retry_assignment_confirm_ungraded": "Vaše aktuálne odovzdanie sa resetuje, aby ste mohli začať odznova, a vzorová odpoveď sa opäť zamkne, kým neodovzdáte ďalší pokus."
+    "retry_assignment_confirm_ungraded": "Vaše aktuálne odovzdanie sa resetuje, aby ste mohli začať odznova, a vzorová odpoveď sa opäť zamkne, kým neodovzdáte ďalší pokus.",
+    "status_not_started": "Nezačaté",
+    "status_in_progress": "Prebieha",
+    "status_submitted": "Odovzdané",
+    "due_on": "Termín: {{date}}",
+    "answered_progress": "Zodpovedané {{answered}} z {{total}}",
+    "handin_ready_title": "Pripravené na odovzdanie?",
+    "handin_ready_body": "Vaše odpovede sa ukladajú automaticky.",
+    "your_score": "Vaše skóre",
+    "awaiting_grade_body": "Vaša práca je u učiteľa. Skóre sa tu zobrazí po ohodnotení.",
+    "tasks_count_one": "{{count}} úloha",
+    "tasks_count_few": "{{count}} úlohy",
+    "tasks_count_many": "{{count}} úlohy",
+    "tasks_count_other": "{{count}} úloh"
   },
   "certificate": {
     "certificate": "Certifikát",
@@ -6472,7 +6485,15 @@
           "hide_empty": "Skryť prázdne kurzy"
         },
         "new_assignment": "Nová úloha",
-        "clear_search": "Vymazať hľadanie"
+        "clear_search": "Vymazať hľadanie",
+        "subtitle": "Vytvárajte, zverejňujte a hodnoťte zadania vo všetkých kurzoch.",
+        "columns": {
+          "grading": "Hodnotenie",
+          "actions": "Akcie"
+        },
+        "empty_description": "Zadania sa nachádzajú v kapitole kurzu. Vytvorte prvé a začnite zbierať práce študentov.",
+        "status_draft": "Koncept",
+        "no_due_date": "Bez termínu"
       },
       "detail": {
         "title": "Nástroje úlohy",
@@ -6506,8 +6527,10 @@
             "updating": "Aktualizuje sa úloha...",
             "update_success": "Úloha bola úspešne aktualizovaná",
             "update_error": "Chyba pri aktualizácii úlohy, skúste to neskôr."
-          }
-        }
+          },
+          "edit_settings": "Upraviť nastavenia"
+        },
+        "due_on": "Termín: {{date}}"
       },
       "editor": {
         "tasks_title": "Úlohy",
@@ -6638,7 +6661,10 @@
           },
           "file": {
             "teacher_hint": "Používateľ bude môcť odovzdať súbor k tejto úlohe a vy ho môžete skontrolovať na karte Odovzdania",
-            "submit_file": "Odovzdať súbor"
+            "submit_file": "Odovzdať súbor",
+            "uploaded": "Nahrané",
+            "replace": "Nahradiť",
+            "no_file": "Žiadny súbor nebol odovzdaný"
           },
           "quiz": {
             "last_option": "Poslednú možnosť nemožno odstrániť. Vyžaduje sa aspoň jedna možnosť.",
@@ -6801,7 +6827,14 @@
           "general": "Všeobecné",
           "content": "Obsah"
         },
-        "no_task_selected": "Nie je vybraná žiadna úloha"
+        "no_task_selected": "Nie je vybraná žiadna úloha",
+        "task_position": "Úloha {{number}} z {{total}}",
+        "delete_task_confirm": "Táto úloha bude natrvalo odstránená zo zadania.",
+        "empty_title": "Pridajte prvú úlohu",
+        "empty_description": "Úlohy sú to, na čom študenti pracujú: kvízy, krátke odpovede, programovacie cvičenia, nahrávanie súborov a ďalšie.",
+        "points_short": "{{points}} b.",
+        "total_points": "Spolu {{points}} b.",
+        "max_tasks_reached": "Toto zadanie dosiahlo maximum {{max}} úloh."
       },
       "submissions": {
         "status": {
@@ -6824,7 +6857,8 @@
           "recently_graded": "Najprv nedávno hodnotené"
         },
         "stats": {
-          "total": "Celkom"
+          "total": "Celkom",
+          "to_grade": "Na ohodnotenie"
         },
         "preview": {
           "current_grade": "Aktuálna známka",
@@ -6847,7 +6881,9 @@
         "evaluate": "Ohodnotiť",
         "evaluate_modal": {
           "title": "Ohodnotiť @{{username}}",
-          "description": "Ohodnotiť odovzdanie"
+          "description": "Ohodnotiť odovzdanie",
+          "title_name": "Ohodnotiť: {{name}}",
+          "submitted_at": "Odovzdané {{date}}"
         },
         "task_label": "Úloha {{number}} :",
         "hint": "Nápoveda",
@@ -6869,7 +6905,12 @@
         "ungraded_title": "Formatívne (nehodnotené)",
         "ungraded_description": "Toto zadanie sa odovzdáva len na kontrolu. Nezaznamenáva sa žiadne skóre.",
         "download_to_grade": "Stiahnite súbor, ohodnoťte ho ručne a potom zadajte známku vyššie",
-        "download_to_review": "Stiahnite súbor a skontrolujte, čo študent odovzdal."
+        "download_to_review": "Stiahnite súbor a skontrolujte, čo študent odovzdal.",
+        "empty_description": "Keď študenti odovzdajú toto zadanie, ich práca sa tu zobrazí na hodnotenie.",
+        "columns": {
+          "learner": "Študent"
+        },
+        "review": "Prezrieť"
       },
       "analytics": {
         "loading": "Načítava sa analytika...",
@@ -11762,5 +11803,11 @@
     "sign_in_title": "Prihláste sa a zobrazte si kalendár",
     "title": "Kalendár",
     "more_events": "+{{count}} ďalšie"
+  },
+  "mobile_nav": {
+    "tabs": "Hlavné",
+    "explore": "Objavovať",
+    "you": "Vy",
+    "messages": "Správy"
   }
 }

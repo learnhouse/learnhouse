@@ -197,7 +197,7 @@ export function DiscussionList({
   return (
     <div>
       {/* Header with Search and Filters */}
-      <div className="p-4 border-b border-gray-100 space-y-3">
+      <div className="p-3 sm:p-4 border-b border-gray-100 space-y-3">
         {/* Search Bar */}
         <div className="relative">
           <Search size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -206,12 +206,12 @@ export function DiscussionList({
             placeholder={t('communities.discussion_list.search_placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full ps-9 pe-9 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+            className="w-full ps-9 pe-9 py-2.5 sm:py-2 text-base sm:text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute end-1 sm:end-3 top-1/2 -translate-y-1/2 p-2 sm:p-0 text-gray-400 hover:text-gray-600"
             >
               <X size={14} />
             </button>
@@ -220,10 +220,11 @@ export function DiscussionList({
 
         {/* Filters and Actions Row */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* One swipeable chip row on phones */}
+          <div className="flex items-center gap-2 min-w-0 overflow-x-auto scrollbar-hide -ms-3 ps-3 sm:ms-0 sm:ps-0 sm:overflow-visible sm:flex-wrap [&>*]:shrink-0">
             <LabelFilter value={selectedLabel} onChange={handleLabelChange} />
             <SortDropdown value={sortBy} onChange={handleSortChange} />
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 whitespace-nowrap">
               {filteredDiscussions.length} {filteredDiscussions.length === 1 ? t('communities.discussion') : t('communities.discussions')}
             </span>
           </div>
@@ -233,7 +234,7 @@ export function DiscussionList({
             {canManageCommunity && filteredDiscussions.length > 0 && (
               <button
                 onClick={toggleSelectMode}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors h-8 ${
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors h-9 sm:h-8 ${
                   isSelectMode
                     ? 'bg-indigo-100 text-indigo-700'
                     : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'

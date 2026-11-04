@@ -481,14 +481,14 @@ const OrgEditLanding = () => {
 
   return (
     <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Enable/Disable Landing Page */}
-        <div className="flex items-center justify-between border-b pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4">
           <div>
             <h2 className="text-xl font-semibold flex items-center">{t('dashboard.organization.landing.title')}</h2>
             <p className="text-gray-600">{t('dashboard.organization.landing.subtitle')}</p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between sm:justify-start space-x-4">
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -513,9 +513,9 @@ const OrgEditLanding = () => {
         {isLandingEnabled && (
           <>
             {/* Section List */}
-            <div className="grid grid-cols-4 gap-6">
-              {/* Sections Panel */}
-              <div className="col-span-1 border-e pe-4">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Sections Panel; stacked above the editor below lg */}
+              <div className="lg:col-span-1 lg:border-e lg:pe-4">
                 <h3 className="font-medium mb-4">{t('dashboard.organization.landing.sections')}</h3>
                 <DragDropContext onDragEnd={onDragEnd}>
                   <Droppable droppableId="sections">
@@ -578,7 +578,7 @@ const OrgEditLanding = () => {
                                       <LogOut size={13} className="text-gray-400 shrink-0" aria-label={t('dashboard.organization.landing.visibility.logged_out')} />
                                     )}
                                   </div>
-                                  <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                  <div className="flex space-x-1 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200">
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation()
@@ -683,7 +683,7 @@ const OrgEditLanding = () => {
               </div>
 
               {/* Editor Panel */}
-              <div className="col-span-3">
+              <div className="lg:col-span-3 min-w-0">
                 {showPageSettings ? (
                   <PageSettingsEditor
                     settings={landingData.settings || {}}
@@ -1673,7 +1673,7 @@ const PeopleSectionEditor: React.FC<{
           <Label>{t('dashboard.organization.landing.people_editor.people')}</Label>
           <div className="space-y-4 mt-2">
             {section.people.map((person, index) => (
-              <div key={index} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 p-4 border rounded-lg">
+              <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 p-4 border rounded-lg">
                 <div className="space-y-2">
                   <Label>{t('dashboard.organization.landing.people_editor.name')}</Label>
                   <Input

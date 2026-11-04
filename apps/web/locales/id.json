@@ -2203,7 +2203,17 @@
     "solution_locked_title": "Jawaban contoh terkunci",
     "solution_locked_on_submission": "Kumpulkan hasil kerja Anda dan jawaban contoh akan langsung terbuka.",
     "solution_locked_after_grading": "Jawaban contoh akan terbuka setelah hasil kerja Anda dinilai.",
-    "retry_assignment_confirm_ungraded": "Pengumpulan Anda saat ini akan direset agar Anda dapat memulai dari awal, dan jawaban contoh terkunci lagi hingga Anda mengumpulkan percobaan berikutnya."
+    "retry_assignment_confirm_ungraded": "Pengumpulan Anda saat ini akan direset agar Anda dapat memulai dari awal, dan jawaban contoh terkunci lagi hingga Anda mengumpulkan percobaan berikutnya.",
+    "status_not_started": "Belum dimulai",
+    "status_in_progress": "Sedang dikerjakan",
+    "status_submitted": "Dikumpulkan",
+    "due_on": "Tenggat {{date}}",
+    "answered_progress": "{{answered}} dari {{total}} dijawab",
+    "handin_ready_title": "Siap mengumpulkan?",
+    "handin_ready_body": "Jawabanmu tersimpan otomatis.",
+    "your_score": "Nilaimu",
+    "awaiting_grade_body": "Tugasmu ada di pengajar. Nilaimu akan muncul di sini setelah dinilai.",
+    "tasks_count_other": "{{count}} tugas"
   },
   "certificate": {
     "certificate": "Sertifikat",
@@ -6307,7 +6317,15 @@
           "hide_empty": "Sembunyikan kursus kosong"
         },
         "new_assignment": "Tugas Baru",
-        "clear_search": "Hapus pencarian"
+        "clear_search": "Hapus pencarian",
+        "subtitle": "Buat, terbitkan, dan nilai tugas di semua kursus Anda.",
+        "columns": {
+          "grading": "Penilaian",
+          "actions": "Tindakan"
+        },
+        "empty_description": "Tugas berada di dalam bab kursus. Buat satu untuk mulai menerima hasil kerja peserta.",
+        "status_draft": "Draf",
+        "no_due_date": "Tanpa tenggat"
       },
       "detail": {
         "title": "Alat Tugas",
@@ -6341,8 +6359,10 @@
             "updating": "Memperbarui tugas...",
             "update_success": "Tugas telah berhasil diperbarui",
             "update_error": "Kesalahan memperbarui tugas, silakan coba lagi nanti."
-          }
-        }
+          },
+          "edit_settings": "Edit pengaturan"
+        },
+        "due_on": "Tenggat {{date}}"
       },
       "editor": {
         "tasks_title": "Tugas",
@@ -6473,7 +6493,10 @@
           },
           "file": {
             "teacher_hint": "Pengguna dapat mengirim file untuk tugas ini, Anda dapat meninjaunya di Tab Pengiriman",
-            "submit_file": "Kirim File"
+            "submit_file": "Kirim File",
+            "uploaded": "Terunggah",
+            "replace": "Ganti",
+            "no_file": "Tidak ada file yang dikirim"
           },
           "quiz": {
             "last_option": "Tidak dapat menghapus opsi terakhir. Setidaknya satu opsi diperlukan.",
@@ -6624,7 +6647,14 @@
           "general": "Umum",
           "content": "Konten"
         },
-        "no_task_selected": "Tidak Ada Tugas yang Dipilih"
+        "no_task_selected": "Tidak Ada Tugas yang Dipilih",
+        "task_position": "Soal {{number}} dari {{total}}",
+        "delete_task_confirm": "Soal ini akan dihapus permanen dari tugas.",
+        "empty_title": "Tambahkan soal pertama",
+        "empty_description": "Soal adalah yang dikerjakan peserta: kuis, jawaban singkat, latihan kode, unggah file, dan lainnya.",
+        "points_short": "{{points}} poin",
+        "total_points": "Total {{points}} poin",
+        "max_tasks_reached": "Tugas ini sudah mencapai batas {{max}} soal."
       },
       "submissions": {
         "status": {
@@ -6647,7 +6677,8 @@
           "recently_graded": "Baru dinilai dulu"
         },
         "stats": {
-          "total": "Total"
+          "total": "Total",
+          "to_grade": "Perlu dinilai"
         },
         "preview": {
           "current_grade": "Nilai saat ini",
@@ -6670,7 +6701,9 @@
         "evaluate": "Evaluasi",
         "evaluate_modal": {
           "title": "Evaluasi @{{username}}",
-          "description": "Evaluasi pengiriman"
+          "description": "Evaluasi pengiriman",
+          "title_name": "Nilai {{name}}",
+          "submitted_at": "Dikumpulkan {{date}}"
         },
         "task_label": "Tugas {{number}} :",
         "hint": "Petunjuk",
@@ -6692,7 +6725,12 @@
         "ungraded_title": "Formatif (tidak dinilai)",
         "ungraded_description": "Tugas ini dikumpulkan hanya untuk ditinjau. Tidak ada skor yang dicatat.",
         "download_to_grade": "Silakan unduh file dan nilai secara manual, lalu masukkan nilai di atas",
-        "download_to_review": "Unduh file untuk meninjau apa yang dikumpulkan pelajar."
+        "download_to_review": "Unduh file untuk meninjau apa yang dikumpulkan pelajar.",
+        "empty_description": "Saat peserta mengumpulkan tugas ini, hasil kerja mereka akan muncul di sini untuk dinilai.",
+        "columns": {
+          "learner": "Peserta"
+        },
+        "review": "Tinjau"
       },
       "analytics": {
         "loading": "Memuat analitik...",
@@ -11443,5 +11481,11 @@
     "sign_in_title": "Masuk untuk melihat kalender Anda",
     "title": "Kalender",
     "more_events": "+{{count}} lagi"
+  },
+  "mobile_nav": {
+    "tabs": "Utama",
+    "explore": "Jelajahi",
+    "you": "Anda",
+    "messages": "Pesan"
   }
 }

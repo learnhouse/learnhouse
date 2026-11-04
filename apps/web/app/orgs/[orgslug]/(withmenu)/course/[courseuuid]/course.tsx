@@ -15,9 +15,7 @@ import { getMyCourseAccess } from '@ee/services/payments/access'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import { useMediaQuery } from 'usehooks-ts'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
-import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
 import CoursePaths from '@components/Objects/Courses/CoursePaths/CoursePaths'
 import LinkifiedText from '@components/Objects/StyledElements/LinkifiedText/LinkifiedText'
@@ -50,7 +48,6 @@ const CourseClient = (props: any) => {
   const serverError = props.serverError
   const org = useOrg() as any
   const _router = useRouter()
-  const isMobile = useMediaQuery('(max-width: 768px)')
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient()
@@ -384,14 +381,14 @@ const CourseClient = (props: any) => {
       {!course || !org ? null : (
         <>
           <GeneralWrapperStyled>
-            <div className="pb-4">
+            <div className="hidden sm:block pb-4">
               <Breadcrumbs items={[
                 { label: t('courses.courses'), href: getUriWithOrg(orgslug, '/courses'), icon: <BookCopy size={14} /> },
                 { label: course.name }
               ]} />
             </div>
             <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-              <h1 className="text-3xl md:text-3xl font-bold" dir="auto">{course.name}</h1>
+              <h1 className="text-3xl max-sm:text-[26px] max-sm:leading-tight font-bold" dir="auto">{course.name}</h1>
               <div className="flex items-center gap-2">
                 <ShareCourseInMessagesButton orgslug={orgslug} courseUuid={`course_${courseuuid}`} />
                 <CourseShare
@@ -401,7 +398,7 @@ const CourseClient = (props: any) => {
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-8 pt-2">
+            <div className="flex flex-col md:flex-row gap-5 md:gap-8 pt-2">
               <div className="w-full md:w-3/4 space-y-4">
                 {(() => {
                   const showVideo = course.thumbnail_type === 'video' || (course.thumbnail_type === 'both' && activeThumbnailType === 'video');
@@ -409,7 +406,7 @@ const CourseClient = (props: any) => {
 
                   if (showVideo && course.thumbnail_video) {
                     return (
-                      <div className="relative inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px]">
+                      <div className="relative inset-0 ring-1 ring-inset ring-black/10 max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none max-sm:ring-0 max-sm:shadow-none rounded-lg shadow-xl w-full aspect-video sm:aspect-auto sm:h-[200px] md:h-[400px]">
                         {course.thumbnail_type === 'both' && (
                           <div className="absolute top-3 end-3 z-10">
                             <div className="bg-black/20 backdrop-blur-sm rounded-lg p-1 flex space-x-1">
@@ -445,7 +442,7 @@ const CourseClient = (props: any) => {
                               course?.course_uuid,
                               course?.thumbnail_video
                             )}
-                            className="w-full h-full bg-black rounded-lg"
+                            className="w-full h-full bg-black sm:rounded-lg"
                             controls
                             autoPlay
                             muted
@@ -457,7 +454,7 @@ const CourseClient = (props: any) => {
                     );
                   } else if (showImage && course.thumbnail_image) {
                     return (
-                      <div className="relative overflow-hidden ring-1 ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px] bg-gray-50">
+                      <div className="relative overflow-hidden ring-1 ring-black/10 max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none max-sm:ring-0 max-sm:shadow-none rounded-lg shadow-xl w-full aspect-video sm:aspect-auto sm:h-[200px] md:h-[400px] bg-gray-50">
                         <ThumbnailImage
                           src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_image)}
                           fetchPriority="high"
@@ -497,7 +494,7 @@ const CourseClient = (props: any) => {
                   } else {
                     return (
                       <div
-                        className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-full h-[400px] bg-cover bg-center"
+                        className="inset-0 ring-1 ring-inset ring-black/10 max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none rounded-lg shadow-xl relative w-full aspect-video sm:aspect-auto sm:h-[400px] bg-cover bg-center"
                         style={{
                           backgroundImage: `url('/empty_thumbnail.png')`,
                           backgroundSize: 'auto',
@@ -797,10 +794,8 @@ const CourseClient = (props: any) => {
             </Suspense>
           </GeneralWrapperStyled>
 
-          {/* Mobile Actions Box */}
-          {isMobile && (
-            <CourseActionsMobile courseuuid={courseuuid} orgslug={orgslug} course={course} trailData={trailData} />
-          )}
+          {/* Room for the start / continue button docked on phones. */}
+          <div className="md:hidden h-16" />
         </>
       )}
     </>

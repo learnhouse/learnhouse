@@ -102,6 +102,17 @@ function Canva(props: Editor) {
   const editor: any = useEditor({
     immediatelyRender: false,
     editable: isEditable,
+    // The surface is contenteditable only so selection works (see above). On a
+    // phone that would raise the keyboard and spellcheck squiggles on every
+    // tap into the text, so ask for neither.
+    editorProps: {
+      attributes: {
+        inputmode: 'none',
+        spellcheck: 'false',
+        autocorrect: 'off',
+        autocapitalize: 'off',
+      },
+    },
     extensions: [
       StarterKit.configure({
         heading: false,

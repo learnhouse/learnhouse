@@ -552,8 +552,8 @@ export default function Thread({
         }
       >
         {!dock && (
-          <button onClick={onBack} className="md:hidden p-1.5 -ms-1 rounded-lg text-gray-500 hover:bg-gray-100" aria-label="Back">
-            <ArrowLeft size={18} />
+          <button onClick={onBack} className="md:hidden flex h-10 w-10 items-center justify-center -ms-2 rounded-lg text-gray-600 hover:bg-gray-100" aria-label="Back">
+            <ArrowLeft size={20} />
           </button>
         )}
         {dock ? (

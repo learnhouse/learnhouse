@@ -170,8 +170,10 @@ export function DiscussionCard({
     <div
       data-kbd-item=""
       onClick={isSelectMode ? handleClick : undefined}
-      className={`flex items-center gap-4 py-3 px-4 transition-colors border-b border-gray-100 last:border-b-0 ${
-        isSelectMode ? 'cursor-pointer' : ''
+      // Phones stack the votes and replies under the title (a grid), so the
+      // title gets the full row width instead of ~12 characters.
+      className={`items-center py-3 px-3 sm:px-4 transition-colors border-b border-gray-100 last:border-b-0 ${
+        isSelectMode ? 'flex gap-3 sm:gap-4 cursor-pointer' : 'grid grid-cols-[auto_1fr_auto] gap-x-3 gap-y-2 sm:flex sm:gap-4'
       } ${
         isSelected
           ? 'bg-indigo-50/50'
@@ -197,7 +199,7 @@ export function DiscussionCard({
 
       {/* Upvote Section */}
       {!isSelectMode && (
-        <div className="flex-shrink-0 w-12">
+        <div className="flex-shrink-0 row-start-2 col-start-1 ms-11 sm:ms-0 sm:w-12">
           <UpvoteButton
             discussionUuid={discussion.discussion_uuid}
             initialVoteCount={discussion.upvote_count}
@@ -208,7 +210,7 @@ export function DiscussionCard({
       )}
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 row-start-1 col-start-1 col-span-2">
         <div className="flex items-start gap-3">
           {/* Discussion Icon - Custom emoji or Label icon */}
           <div
@@ -237,7 +239,7 @@ export function DiscussionCard({
               )}
 
               {isSelectMode ? (
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-1" dir="auto">
+                <h3 className="text-sm font-medium text-gray-900 max-sm:line-clamp-2 sm:line-clamp-1" dir="auto">
                   {discussion.title}
                 </h3>
               ) : (
@@ -246,7 +248,7 @@ export function DiscussionCard({
                   onClick={onClick}
                   className="block group flex-1 min-w-0"
                 >
-                  <h3 className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1" dir="auto">
+                  <h3 className="text-[15px] sm:text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors max-sm:line-clamp-2 sm:line-clamp-1" dir="auto">
                     {discussion.title}
                   </h3>
                 </Link>
@@ -280,7 +282,8 @@ export function DiscussionCard({
 
       {/* Right Side - Author Avatar & Comment Count */}
       {!isSelectMode && (
-        <div className="flex items-center gap-3 flex-shrink-0">
+        // `contents` on phones lets the reply count and menu join the row grid.
+        <div className="contents sm:flex items-center gap-3 flex-shrink-0">
           {/* Author Avatar */}
           <div className="hidden sm:block">
             <UserAvatar
@@ -297,7 +300,7 @@ export function DiscussionCard({
           </div>
 
           {/* Comment Count */}
-          <div className="flex items-center gap-1 text-gray-400 min-w-[40px] justify-end">
+          <div className="flex items-center gap-1 text-gray-400 min-w-[40px] row-start-2 col-start-2 sm:justify-end">
             <MessageSquare size={14} />
             <span className="text-xs">{commentCount}</span>
           </div>
@@ -307,7 +310,7 @@ export function DiscussionCard({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  className="row-start-1 col-start-3 self-start p-2.5 -m-2 sm:p-1 sm:m-0 hover:bg-gray-100 rounded transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreVertical size={16} className="text-gray-400" />

@@ -137,7 +137,7 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-3 py-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 py-1">
       {TASK_TYPES.map((type) => {
         const IconComponent = type.Icon
         return (
@@ -145,20 +145,22 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
             key={type.value}
             type="button"
             onClick={() => createTask(type.value)}
-            className={`relative flex flex-col items-center text-center p-5 rounded-xl nice-shadow cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden ${type.bgClass}`}
+            className={`relative flex sm:flex-col items-center gap-3 sm:gap-0 text-start sm:text-center p-4 sm:p-5 rounded-2xl nice-shadow cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 overflow-hidden ${type.bgClass}`}
             style={{
-              backgroundImage: `repeating-linear-gradient(135deg, transparent, transparent 5px, rgba(${type.stripeRgb},0.5) 5px, rgba(${type.stripeRgb},0.5) 6px)`,
+              backgroundImage: `repeating-linear-gradient(135deg, transparent, transparent 5px, rgba(${type.stripeRgb},0.35) 5px, rgba(${type.stripeRgb},0.35) 6px)`,
             }}
           >
-            <div className={`w-14 h-14 rounded-full bg-white nice-shadow flex items-center justify-center mb-3 ${type.iconColor}`}>
-              <IconComponent size={28} weight="duotone" />
+            <div className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-white nice-shadow flex items-center justify-center sm:mb-3 ${type.iconColor}`}>
+              <IconComponent size={26} weight="duotone" />
             </div>
-            <p className={`text-sm font-bold ${type.titleColor}`}>
-              {t(type.labelKey)}
-            </p>
-            <p className="text-[11px] text-gray-600 leading-tight mt-1 max-w-[180px]">
-              {t(type.descKey)}
-            </p>
+            <div className="min-w-0">
+              <p className={`text-sm font-bold ${type.titleColor}`}>
+                {t(type.labelKey)}
+              </p>
+              <p className="text-xs text-neutral-600 leading-snug mt-0.5 sm:mt-1 sm:max-w-[180px] sm:mx-auto">
+                {t(type.descKey)}
+              </p>
+            </div>
           </button>
         )
       })}

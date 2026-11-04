@@ -252,7 +252,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className={`flex items-center gap-3 py-2.5 px-3 my-2 w-full rounded-lg text-gray-500
+          className={`flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1.5 py-2.5 px-3 my-2 w-full rounded-lg text-gray-500
             ${snapshot.isDragging
               ? 'nice-shadow bg-white ring-2 ring-blue-500/20 z-drag-overlay rotate-1 scale-[1.02]'
               : props.isSelected
@@ -279,7 +279,7 @@ function ActivityElement(props: ActivitiyElementProps) {
           {/* Drag Handle */}
           <div
             {...provided.dragHandleProps}
-            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 transition-colors"
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 transition-colors p-1.5 -m-1.5 sm:p-0 sm:m-0 touch-none"
           >
             <GripVertical size={18} />
           </div>
@@ -344,9 +344,9 @@ function ActivityElement(props: ActivitiyElementProps) {
             )}
           </div>
 
-          {/* Status badge + quick actions */}
+          {/* Status badge + quick actions; their own row under the name on phones */}
           {!props.selectionMode && (
-            <div className="flex items-center gap-2 flex-shrink-0 ms-auto">
+            <div className="flex items-center gap-2 flex-shrink-0 ms-auto basis-full sm:basis-auto justify-between sm:justify-start ps-[3.75rem] sm:ps-0">
               <button
                 onClick={changePublicStatus}
                 disabled={isPublishing}
@@ -376,7 +376,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                     : t('dashboard.courses.structure.activity.status.draft')}
                 </span>
               </button>
-              <div className="w-px h-5 bg-gray-200/80 mx-1" />
+              <div className="hidden sm:block w-px h-5 bg-gray-200/80 mx-1" />
               <div className="flex items-center gap-1">
               {props.activity.activity_type === 'TYPE_VIDEO' ? (
                 <Modal
@@ -396,7 +396,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   }
                   dialogTrigger={
                     <button
-                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                       title={t('dashboard.courses.structure.activity.edit_modals.video_button')}
                     >
                       <FilePenLine size={15} />
@@ -421,7 +421,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   }
                   dialogTrigger={
                     <button
-                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                       title={t('dashboard.courses.structure.activity.edit_modals.document_button')}
                     >
                       <FilePenLine size={15} />
@@ -446,7 +446,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   }
                   dialogTrigger={
                     <button
-                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                       title={t('dashboard.courses.structure.activity.edit_modals.scorm_button')}
                     >
                       <FilePenLine size={15} />
@@ -465,18 +465,18 @@ function ActivityElement(props: ActivitiyElementProps) {
                   <Link
                     href={editHref}
                     target="_blank"
-                    className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                   >
                     <FilePenLine size={15} />
                   </Link>
                 </ToolTip>
               ) : (
-                <div className="h-7 w-7" />
+                <div className="h-9 w-9 sm:h-7 sm:w-7" />
               )}
               <ToolTip content={t('dashboard.courses.structure.actions.preview_activity')} side="top">
                 <Link
                   href={previewHref}
-                  className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 >
                   <Eye size={15} />
                 </Link>
@@ -492,7 +492,7 @@ function ActivityElement(props: ActivitiyElementProps) {
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <button className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
                     <MoreVertical size={16} />
                   </button>
                 </DropdownMenuTrigger>

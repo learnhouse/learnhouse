@@ -1,0 +1,215 @@
+/*
+  Phone shell.
+
+  --lh-mobile-nav-h is the height of whatever the app pins to the bottom edge
+  on a phone (the tab bar, or the activity bar inside a course). It is 0 when
+  nothing is pinned, so `bottom: var(--lh-mobile-nav-h)` and
+  `padding-bottom: var(--lh-mobile-nav-h)` are safe to use anywhere.
+  MobileTabBar and the activity bar set the html classes below while mounted.
+*/
+:root {
+  --lh-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --lh-safe-top: env(safe-area-inset-top, 0px);
+  --lh-tabbar-h: 58px;
+  --lh-activitybar-h: 64px;
+  --lh-mobile-nav-h: 0px;
+}
+
+/* The tab bar serves tablets too (below lg); the activity bar is phone-only. */
+@media (max-width: 1023px) {
+  html.lh-has-tabbar {
+    --lh-mobile-nav-h: calc(var(--lh-tabbar-h) + var(--lh-safe-bottom));
+  }
+}
+@media (max-width: 767px) {
+  html.lh-has-activitybar {
+    --lh-mobile-nav-h: calc(var(--lh-activitybar-h) + var(--lh-safe-bottom));
+  }
+}
+
+/* Touch: no grey flash on tap, no 300ms double-tap delay, no font inflation
+   when the phone rotates, and no rubber-band scroll chaining out of panels. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+a,
+button,
+[role='button'],
+label,
+summary,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  /* iOS zooms the page into any focused field under 16px and never zooms
+     back out. 16px on phones keeps the layout still. */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  select,
+  textarea,
+  [contenteditable='true'] {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Keyboard shortcuts mean nothing on a touchscreen, so their keycaps go. */
+@media (hover: none) and (pointer: coarse) {
+  kbd {
+    display: none !important;
+  }
+}
+
+/* Pressed state for touch: buttons and cards give way under the finger the
+   way native controls do, instead of hover styles that never fire. */
+@media (hover: none) and (pointer: coarse) {
+  .lh-press {
+    transition: transform 160ms cubic-bezier(0.2, 0, 0, 1), opacity 160ms ease;
+  }
+  .lh-press:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+}
+
+/* Horizontal chip/tab rows: swipe with momentum, snap, no scrollbar. */
+.lh-scroll-x {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.lh-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+.lh-scroll-x > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/*
+  Dialogs become bottom sheets on phones.
+
+  Every Radix dialog (components/ui/dialog.tsx) renders .lh-modal-content.
+  Centered cards at 95vw read as desktop leftovers on a phone; a sheet that
+  rises from the bottom edge, with a grab handle, is what the OS uses. The
+  centering translate is an inline style, hence !important here.
+*/
+@media (max-width: 767px) {
+  .lh-modal-content {
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    translate: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    max-height: calc(100dvh - var(--lh-safe-top) - 24px) !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+    padding-bottom: var(--lh-safe-bottom);
+    overscroll-behavior: contain;
+  }
+
+  .lh-modal-content[data-state='open'] {
+    animation: sheetEnter 320ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  }
+  .lh-modal-content[data-state='closed'] {
+    animation: sheetExit 220ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  }
+
+  /* While a finger drags the sheet, follow it 1:1 with no easing. */
+  .lh-modal-content.lh-sheet-dragging {
+    animation: none !important;
+    transition: none !important;
+  }
+  .lh-modal-content.lh-sheet-settling {
+    transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1) !important;
+  }
+}
+
+@keyframes sheetEnter {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes sheetExit {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+/* Grab handle drawn by DialogContent; phones only. */
+.lh-sheet-handle {
+  display: none;
+}
+@media (max-width: 767px) {
+  /* Absolutely placed so it never becomes a row in the dialog's own grid or
+     flex layout; it overlays the top padding every dialog already has. */
+  .lh-sheet-handle {
+    position: absolute;
+    top: 0;
+    inset-inline: 64px;
+    height: 24px;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    padding-top: 7px;
+    touch-action: none;
+    cursor: grab;
+  }
+  .lh-sheet-handle::before {
+    content: '';
+    width: 36px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgb(0 0 0 / 0.15);
+  }
+}
+
+/* Radix dropdowns and popovers can run wider than a phone. */
+@media (max-width: 767px) {
+  [data-radix-popper-content-wrapper] > [role='menu'],
+  [data-radix-popper-content-wrapper] > [data-radix-menu-content] {
+    max-width: calc(100vw - 24px);
+  }
+  [role='menuitem'] {
+    min-height: 40px;
+  }
+}
+
+/* Header search on 1280-1535px desktops: labelled links, the icons and the
+   avatar leave no room for a usable field, so it becomes a round icon button
+   that opens the same palette. */
+@media (min-width: 1280px) and (max-width: 1535px) {
+  .lh-header-search {
+    flex: none;
+    padding-inline: 0.75rem;
+  }
+  .lh-header-search > button {
+    width: 2.25rem;
+    padding: 0;
+  }
+  .lh-header-search .lh-search-icon {
+    inset: 0;
+    justify-content: center;
+    padding: 0;
+  }
+  .lh-header-search .lh-search-label,
+  .lh-header-search .lh-search-kbd {
+    display: none;
+  }
+}

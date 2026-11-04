@@ -260,7 +260,7 @@ const OrgEditMenu: React.FC = () => {
   return (
     <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
       <div className="pt-0.5">
-        <div className="flex items-center justify-between bg-gray-50 px-5 py-3 mx-3 my-3 rounded-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 px-4 sm:px-5 py-3 mx-3 my-3 rounded-md">
           <div className="flex flex-col -space-y-1">
             <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.menu.title')}</h1>
             <h2 className="text-gray-500 text-md">{t('dashboard.organization.menu.subtitle')}</h2>
@@ -268,7 +268,7 @@ const OrgEditMenu: React.FC = () => {
           <button
             onClick={save}
             disabled={!canEdit || saving || !dirty}
-            className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white nice-shadow hover:bg-neutral-800 transition-colors disabled:opacity-40"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-black px-4 py-2.5 sm:py-2 text-sm font-semibold text-white nice-shadow hover:bg-neutral-800 transition-colors disabled:opacity-40"
           >
             <FloppyDisk size={16} weight="bold" />
             <span>{t('dashboard.organization.menu.save')}</span>

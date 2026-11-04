@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { removeCourse, startCourse } from '@services/courses/activity'
 import { revalidateTags, asArray } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
@@ -68,6 +68,17 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   const { isUserPartOfTheOrg } = useOrgMembership()
   const queryClient = useQueryClient()
   const { track } = useLHAnalytics('learner')
+  // Phones: the start / continue button docks to the bottom edge once the
+  // actions box has scrolled away, so the next step is always under the thumb.
+  const boxRef = useRef<HTMLDivElement | null>(null)
+  const [boxVisible, setBoxVisible] = useState(true)
+  useEffect(() => {
+    const el = boxRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(([entry]) => setBoxVisible(entry.isIntersecting))
+    observer.observe(el)
+    return () => observer.disconnect()
+  })
 
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
@@ -502,8 +513,30 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     )
   }
 
+  const totalActivities = course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0
+
   return (
-    <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
+    <div ref={boxRef} className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
+      {totalActivities > 0 && (
+        <div
+          aria-hidden={boxVisible}
+          className={`md:hidden fixed inset-x-0 px-4 pt-6 pb-3 bg-gradient-to-t from-white via-white/90 to-transparent transition-all duration-300 ease-out ${
+            boxVisible ? 'pointer-events-none translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
+          }`}
+          style={{ bottom: 'var(--lh-mobile-nav-h)', zIndex: 'var(--z-sticky)' }}
+        >
+          <button
+            type="button"
+            tabIndex={boxVisible ? -1 : 0}
+            onClick={() => (isStarted ? resumeCourse() : handleCourseAction())}
+            disabled={isActionLoading}
+            className="lh-press flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 text-[15px] font-semibold text-white shadow-lg shadow-black/15"
+          >
+            {isStarted ? t('shortcuts.continue_course') : t('courses.start_course')}
+            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
+          </button>
+        </div>
+      )}
       <div className="space-y-4">
         {/* Progress Section */}
         {renderProgressSection()}

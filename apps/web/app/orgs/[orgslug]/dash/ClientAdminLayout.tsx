@@ -31,7 +31,7 @@ function ClientAdminLayout({
     // Accepted (the server layout passes it) but unused here.
     params?: any
 }) {
-    const isMobile = useMediaQuery('(max-width: 1024px)')
+    const isMobile = useMediaQuery('(max-width: 1023px)')
 
     return (
         <SessionGate>
@@ -49,7 +49,8 @@ function ClientAdminLayout({
                                 Public course pages stay translatable. */}
                             <div translate="no" className="notranslate flex flex-col lg:flex-row min-h-screen bg-[#f8f8f8]">
                                 {!isMobile && <DashLeftMenu />}
-                                <div className="flex flex-col w-full min-w-0 relative isolate pb-24 lg:pb-0">
+                                {/* Bottom padding = the mobile tab bar's height (0 on desktop). */}
+                                <div className="lh-dash-main flex flex-col w-full min-w-0 relative isolate pb-[var(--lh-mobile-nav-h)] lg:pb-0">
                                     {/* Renders nothing outside the demo organization. */}
                                     <DemoBanner />
                                     {children}

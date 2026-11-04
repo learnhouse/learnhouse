@@ -2258,7 +2258,19 @@
     "solution_locked_title": "Respuesta modelo bloqueada",
     "solution_locked_on_submission": "Entrega tu trabajo y la respuesta modelo se desbloquea de inmediato.",
     "solution_locked_after_grading": "La respuesta modelo se desbloquea cuando se haya calificado tu trabajo.",
-    "retry_assignment_confirm_ungraded": "Tu entrega actual se restablecerá para que puedas empezar de nuevo, y la respuesta modelo se bloqueará otra vez hasta que entregues el siguiente intento."
+    "retry_assignment_confirm_ungraded": "Tu entrega actual se restablecerá para que puedas empezar de nuevo, y la respuesta modelo se bloqueará otra vez hasta que entregues el siguiente intento.",
+    "status_not_started": "Sin empezar",
+    "status_in_progress": "En curso",
+    "status_submitted": "Entregado",
+    "due_on": "Vence el {{date}}",
+    "answered_progress": "{{answered}} de {{total}} respondidas",
+    "handin_ready_title": "¿Listo para entregar?",
+    "handin_ready_body": "Tus respuestas se guardan automáticamente.",
+    "your_score": "Tu nota",
+    "awaiting_grade_body": "Tu trabajo está con tu profesor. Tu nota aparecerá aquí cuando se califique.",
+    "tasks_count_one": "{{count}} tarea",
+    "tasks_count_many": "{{count}} tareas",
+    "tasks_count_other": "{{count}} tareas"
   },
   "certificate": {
     "certificate": "Certificado",
@@ -6410,7 +6422,15 @@
           "hide_empty": "Ocultar cursos vacíos"
         },
         "new_assignment": "Nueva tarea",
-        "clear_search": "Borrar búsqueda"
+        "clear_search": "Borrar búsqueda",
+        "subtitle": "Crea, publica y califica tareas en todos tus cursos.",
+        "columns": {
+          "grading": "Calificación",
+          "actions": "Acciones"
+        },
+        "empty_description": "Las tareas viven dentro de un capítulo del curso. Crea una para empezar a recibir trabajos de los estudiantes.",
+        "status_draft": "Borrador",
+        "no_due_date": "Sin fecha límite"
       },
       "detail": {
         "title": "Herramientas de tarea",
@@ -6444,8 +6464,10 @@
             "updating": "Actualizando tarea...",
             "update_success": "La tarea se ha actualizado con éxito",
             "update_error": "Error al actualizar la tarea, inténtalo de nuevo más tarde."
-          }
-        }
+          },
+          "edit_settings": "Editar ajustes"
+        },
+        "due_on": "Vence el {{date}}"
       },
       "editor": {
         "tasks_title": "Tareas",
@@ -6576,7 +6598,10 @@
           },
           "file": {
             "teacher_hint": "El usuario podrá entregar un archivo para este ejercicio y tú podrás revisarlo en la pestaña Entregas",
-            "submit_file": "Entregar archivo"
+            "submit_file": "Entregar archivo",
+            "uploaded": "Subido",
+            "replace": "Reemplazar",
+            "no_file": "No se envió ningún archivo"
           },
           "quiz": {
             "last_option": "No se puede eliminar la última opción. Se requiere al menos una opción.",
@@ -6735,7 +6760,14 @@
           "general": "General",
           "content": "Contenido"
         },
-        "no_task_selected": "Ningún ejercicio seleccionado"
+        "no_task_selected": "Ningún ejercicio seleccionado",
+        "task_position": "Actividad {{number}} de {{total}}",
+        "delete_task_confirm": "Esta actividad se eliminará de forma permanente de la tarea.",
+        "empty_title": "Añade tu primera actividad",
+        "empty_description": "Las actividades son lo que hacen los estudiantes: cuestionarios, respuestas cortas, ejercicios de código, subida de archivos y más.",
+        "points_short": "{{points}} pts",
+        "total_points": "{{points}} pts en total",
+        "max_tasks_reached": "Esta tarea ha alcanzado el máximo de {{max}} actividades."
       },
       "submissions": {
         "status": {
@@ -6758,7 +6790,8 @@
           "recently_graded": "Calificadas recientemente"
         },
         "stats": {
-          "total": "Total"
+          "total": "Total",
+          "to_grade": "Por calificar"
         },
         "preview": {
           "current_grade": "Nota actual",
@@ -6781,7 +6814,9 @@
         "evaluate": "Evaluar",
         "evaluate_modal": {
           "title": "Evaluar a @{{username}}",
-          "description": "Evaluar el envío"
+          "description": "Evaluar el envío",
+          "title_name": "Evaluar a {{name}}",
+          "submitted_at": "Entregado el {{date}}"
         },
         "task_label": "Tarea {{number}} :",
         "hint": "Pista",
@@ -6803,7 +6838,12 @@
         "ungraded_title": "Formativa (sin calificar)",
         "ungraded_description": "Esta tarea se entrega solo para revisión. No se registra ninguna puntuación.",
         "download_to_grade": "Descarga el archivo y califícalo manualmente; luego introduce la nota arriba",
-        "download_to_review": "Descarga el archivo para revisar lo que entregó el estudiante."
+        "download_to_review": "Descarga el archivo para revisar lo que entregó el estudiante.",
+        "empty_description": "Cuando los estudiantes entreguen esta tarea, su trabajo aparecerá aquí para calificarlo.",
+        "columns": {
+          "learner": "Estudiante"
+        },
+        "review": "Revisar"
       },
       "analytics": {
         "loading": "Cargando analíticas...",
@@ -11642,5 +11682,11 @@
     "sign_in_title": "Inicia sesión para ver tu calendario",
     "title": "Calendario",
     "more_events": "+{{count}} más"
+  },
+  "mobile_nav": {
+    "tabs": "Principal",
+    "explore": "Explorar",
+    "you": "Tú",
+    "messages": "Mensajes"
   }
 }

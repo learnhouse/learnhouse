@@ -29,8 +29,8 @@ const ChevronDivider = () => (
 
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   return (
-    <nav className="flex items-center">
-      <ol className="flex items-center text-[13px] font-medium rounded-lg bg-white overflow-hidden nice-shadow">
+    <nav className="flex items-center min-w-0 max-w-full">
+      <ol className="flex items-center min-w-0 max-w-full text-[13px] font-medium rounded-lg bg-white overflow-hidden nice-shadow">
         {items.map((item, index) => {
           const isLast = index === items.length - 1
           const isFirst = index === 0
@@ -38,11 +38,13 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
           return (
             <React.Fragment key={index}>
               {index > 0 && (
-                <li className="flex items-center h-8">
+                <li className="flex items-center shrink-0 h-9 sm:h-8">
                   <ChevronDivider />
                 </li>
               )}
-              <li className="flex items-center h-8">
+              {/* min-w-0 lets a long trail shrink to the phone's width;
+                  the last crumb gives way first. */}
+              <li className={`flex items-center h-9 sm:h-8 ${isLast ? 'min-w-0' : 'shrink-0'}`}>
                 {item.href && !isLast ? (
                   <Link
                     href={item.href}
@@ -51,10 +53,10 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
                     }`}
                   >
                     {item.icon}
-                    <span className="truncate max-w-[150px]">{item.label}</span>
+                    <span className="truncate max-w-[110px] sm:max-w-[150px]">{item.label}</span>
                   </Link>
                 ) : (
-                  <span className={`flex items-center h-full text-gray-900 ${
+                  <span className={`flex items-center min-w-0 h-full text-gray-900 ${
                     isFirst && item.icon ? 'gap-1.5 px-2.5' : 'px-2.5'
                   }`}>
                     {item.icon}

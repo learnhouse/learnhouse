@@ -225,7 +225,7 @@ export function ImageDropzone({
 
   return (
     <div className={cn('flex flex-col items-start gap-3', className)}>
-      <div className="flex items-end gap-4">
+      <div className="flex flex-wrap items-end gap-3 sm:gap-4">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}

@@ -211,7 +211,8 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
 
   return (
     <div
-      className={`fixed top-[60px] start-0 end-0 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
+      // Phones get MobileActivityBar at the bottom edge instead.
+      className={`max-md:hidden fixed top-[60px] start-0 end-0 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
         props.dark ? 'bg-[#141414]/90 border-b border-white/5' : 'bg-white/90'
       } ${isScrolled && !props.dark ? 'nice-shadow' : ''}`}
       style={{ zIndex: 'var(--z-drag-overlay)' }}

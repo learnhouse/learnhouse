@@ -9,7 +9,7 @@ import { getActivityByID } from '@services/courses/activities';
 import { updateAssignmentTask, updateReferenceFile } from '@services/courses/assignments';
 import { getTaskRefFileDir } from '@services/media/media';
 import { useFormik } from 'formik';
-import { Cloud, File, Info, Loader, UploadCloud } from 'lucide-react'
+import { Check, Download, File, Info, Loader, UploadCloud } from 'lucide-react'
 import Link from 'next/link';
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast';
@@ -87,13 +87,12 @@ export function AssignmentTaskGeneralEdit() {
             </FormField>
 
             <FormField name="hint">
-                <div className='flex space-x-3 justify-between items-center'>
+                <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1'>
                     <FormLabelAndMessage label={t('dashboard.assignments.editor.task_editor.general.reference_file')} message={formik.errors.hint} />
-                    <div className='flex space-x-1.5 text-xs items-center text-gray-500 '>
-                        <Info size={16} />
+                    <div className='flex gap-1.5 text-xs items-center text-neutral-500'>
+                        <Info size={14} className='shrink-0' />
                         <p>{t('dashboard.assignments.editor.task_editor.general.reference_file_info')}</p>
                     </div>
-
                 </div>
                 <Form.Control asChild>
                     <UpdateTaskRef />
@@ -104,9 +103,10 @@ export function AssignmentTaskGeneralEdit() {
             <Form.Submit asChild>
                 <button
                     type="submit"
-                    className="flex items-center justify-center w-full px-4 py-2 mt-4 font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"
+                    className="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto h-10 px-5 mt-4 rounded-xl bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 transition-colors"
                 >
-                    {t('dashboard.assignments.editor.task_editor.general.submit')}
+                    <Check size={16} />
+                    {t('common.save_changes')}
                 </button>
             </Form.Submit>
 
@@ -197,73 +197,53 @@ function UpdateTaskRef() {
 
 
     return (
-        <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
-            <div className="flex flex-col justify-center items-center h-full">
-                <div className="flex flex-col justify-center items-center">
-                    <div className="flex flex-col justify-center items-center">
-                        {error && (
-                            <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-2 transition-all shadow-xs">
-                                <div className="text-sm font-semibold">{error}</div>
-                            </div>
-                        )}
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50/60 px-4 py-6 text-center">
+            {error && (
+                <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{error}</div>
+            )}
 
-                    </div>
-                    {assignmentTaskState.assignmentTask.reference_file && !isLoading && (
-                        <div className='flex flex-col rounded-lg bg-white text-gray-400 shadow-lg nice-shadow px-5 py-3 space-y-1 items-center relative'>
-                            <div className='absolute top-0 end-0 transform translate-x-1/2 -translate-y-1/2 bg-green-500 rounded-full px-1.5 py-1.5 text-white flex justify-center items-center'>
-                                <Cloud size={15} />
-                            </div>
-                            <File size={20} className='' />
-                            <div className='font-semibold text-sm uppercase'>
-                                {assignmentTaskState.assignmentTask.reference_file.split('.').pop()}
-                            </div>
-                            <div className='flex space-x-2 mt-2'>
-                                <Link
-                                    href={getTaskRefDirUI()}
-                                    download
-                                    target='_blank'
-                                    className='bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold'>{t('dashboard.assignments.editor.task_editor.general.download')}</Link>
-                                {/** <button onClick={() => deleteReferenceFile()}
-                                    className='bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold'>Delete</button> */}
-                            </div>
-                        </div>
-                    )}
-
-                    {isLoading ? (
-                        <div className="flex justify-center items-center">
-                            <input
-                                type="file"
-                                accept={SUPPORTED_FILES}
-                                id="fileInput"
-                                style={{ display: 'none' }}
-                                onChange={handleFileChange}
-                            />
-                            <div className="font-bold  animate-pulse antialiased items-center bg-slate-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
-                                <Loader size={16} className="me-2" />
-                                <span>{t('dashboard.assignments.editor.task_editor.general.loading')}</span>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex justify-center items-center">
-                            <input
-                                type="file"
-                                accept={SUPPORTED_FILES}
-                                id="fileInput"
-                                style={{ display: 'none' }}
-                                onChange={handleFileChange}
-                            />
-                            <button
-                                className="font-bold antialiased items-center  text-gray text-sm rounded-md px-4  mt-6 flex"
-                                onClick={() => document.getElementById('fileInput')?.click()}
-                            >
-                                <UploadCloud size={16} className="me-2" />
-                                <span>{t('dashboard.assignments.editor.task_editor.general.change_reference_file')}</span>
-                            </button>
-                        </div>
-                    )}
-
+            {assignmentTaskState.assignmentTask.reference_file && !isLoading && (
+                <div className='flex items-center gap-3 rounded-xl bg-white nice-shadow ps-3 pe-2 py-2 max-w-full'>
+                    <span className='w-9 h-9 rounded-lg bg-neutral-100 text-neutral-500 flex items-center justify-center shrink-0'>
+                        <File size={18} />
+                    </span>
+                    <span className='text-sm font-semibold text-neutral-800 uppercase'>
+                        {assignmentTaskState.assignmentTask.reference_file.split('.').pop()}
+                    </span>
+                    <Link
+                        href={getTaskRefDirUI()}
+                        download
+                        target='_blank'
+                        className='inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-neutral-100 text-neutral-800 text-xs font-semibold hover:bg-neutral-200 transition-colors'
+                    >
+                        <Download size={14} />
+                        {t('dashboard.assignments.editor.task_editor.general.download')}
+                    </Link>
                 </div>
-            </div>
+            )}
+
+            <input
+                type="file"
+                accept={SUPPORTED_FILES}
+                id="fileInput"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+            />
+            {isLoading ? (
+                <div className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-neutral-100 text-sm font-semibold text-neutral-600">
+                    <Loader size={16} className="animate-spin" />
+                    <span>{t('dashboard.assignments.editor.task_editor.general.loading')}</span>
+                </div>
+            ) : (
+                <button
+                    type="button"
+                    className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-white nice-shadow text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition-colors"
+                    onClick={() => document.getElementById('fileInput')?.click()}
+                >
+                    <UploadCloud size={16} />
+                    <span>{t('dashboard.assignments.editor.task_editor.general.change_reference_file')}</span>
+                </button>
+            )}
         </div>
     )
 }
