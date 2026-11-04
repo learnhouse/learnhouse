@@ -74,7 +74,7 @@ export default function MobileActivityBar(props: MobileActivityBarProps) {
   return (
     <>
       <div
-        className={`md:hidden fixed inset-x-0 bottom-0 backdrop-blur-xl backdrop-saturate-150 ${
+        className={`lh-bottom-bleed md:hidden fixed inset-x-0 bottom-0 backdrop-blur-xl backdrop-saturate-150 ${
           dark ? 'bg-[#141414]/90 border-t border-white/5' : 'bg-white/90 border-t border-black/[0.06]'
         }`}
         style={{ zIndex: 'var(--z-nav)', paddingBottom: 'var(--lh-safe-bottom)' }}
