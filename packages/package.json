@@ -1,0 +1,14 @@
+{
+  "name": "learnhouse-packages",
+  "private": true,
+  "description": "npm packages published from the LearnHouse repo, versioned with each OSS release.",
+  "workspaces": [
+    "sdk",
+    "react"
+  ],
+  "scripts": {
+    "build": "bun run --cwd sdk build && bun run --cwd react build",
+    "test": "bun run --cwd sdk test:unit && bun run --cwd react test",
+    "check": "bun run --cwd sdk sync-version:check && bun run --cwd sdk generate:check && bun run --cwd react sync:check"
+  }
+}

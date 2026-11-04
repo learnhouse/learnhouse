@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
 
 /*
@@ -65,6 +65,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(H5PBlockComponent as any)
+    return lhNodeView(H5PBlockComponent as any)
   },
 })

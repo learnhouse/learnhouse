@@ -1,0 +1,160 @@
+name: Publish packages to npm
+
+# @learnhouse/sdk and @learnhouse/react ship with every OSS release, at the
+# release's version: the same `1.4.3`-style tag that builds the app image.
+#
+# Both are regenerated from that tag's source before publishing: the SDK's
+# types from the API's OpenAPI schema, the react package's renderer from
+# apps/web and its dependencies from apps/web/package.json. Publishing is
+# irreversible, so nothing is published if a build or test fails, or if the
+# tag, apps/web and both packages disagree on the version.
+#
+# Two jobs: `build` runs every install script and test with no secrets and no
+# OIDC token, then hands over the packed tarballs. `publish` only downloads
+# those tarballs and runs `npm publish`. Actions are pinned to commit SHAs
+# (Renovate updates them along with the version comments).
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+
+concurrency:
+  group: packages-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, Test & Pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.13.0'
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+
+      - name: Install API dependencies (for the OpenAPI schema)
+        run: uv sync --frozen
+        working-directory: apps/api
+
+      - name: Install web dependencies
+        run: bun install --frozen-lockfile
+        working-directory: apps/web
+
+      - name: Install package dependencies
+        run: bun install --frozen-lockfile
+        working-directory: packages
+
+      # ── Regenerate from this tag's source ──────────────────────────────
+      - name: Sync SDK version and regenerate API types
+        run: |
+          bun run --cwd sdk sync-version
+          bun run --cwd sdk generate
+        working-directory: packages
+        env:
+          LEARNHOUSE_API_PYTHON: ${{ github.workspace }}/apps/api/.venv/bin/python
+
+      - name: Build SDK
+        run: bun run --cwd sdk build
+        working-directory: packages
+
+      - name: Build react package and sync its version and dependencies
+        run: |
+          bun run --cwd react build
+          bun run --cwd react sync
+          bun install
+          bun run --cwd react build
+        working-directory: packages
+
+      # ── Safety gate 1: tests ───────────────────────────────────────────
+      - name: Test
+        run: bun run test
+        working-directory: packages
+
+      # ── Safety gate 2: one version everywhere ──────────────────────────
+      - name: Verify versions (tag == apps/web == sdk == react)
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+        run: |
+          WEB="$(node -p "require('./apps/web/package.json').version")"
+          SDK="$(node -p "require('./packages/sdk/package.json').version")"
+          REACT="$(node -p "require('./packages/react/package.json').version")"
+          REACT_SDK_DEP="$(node -p "require('./packages/react/package.json').dependencies['@learnhouse/sdk']")"
+          for v in "$WEB" "$SDK" "$REACT" "$REACT_SDK_DEP"; do
+            if [ "$v" != "$TAG_VERSION" ]; then
+              echo "::error::Version mismatch: tag=$TAG_VERSION web=$WEB sdk=$SDK react=$REACT react->sdk=$REACT_SDK_DEP"
+              exit 1
+            fi
+          done
+          bun run --cwd packages/sdk sync-version:check
+          bun run --cwd packages/react sync:check
+          echo "Versions agree: $TAG_VERSION"
+
+      # ── Safety gate 3: pack and validate both tarballs ─────────────────
+      - name: Pack
+        run: |
+          mkdir -p "$RUNNER_TEMP/tarballs"
+          (cd packages/sdk && npm pack --pack-destination "$RUNNER_TEMP/tarballs")
+          (cd packages/react && npm pack --pack-destination "$RUNNER_TEMP/tarballs")
+          (cd packages/sdk && npm publish --dry-run)
+          (cd packages/react && npm publish --dry-run)
+          ls -l "$RUNNER_TEMP/tarballs"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: npm-tarballs
+          path: ${{ runner.temp }}/tarballs/*.tgz
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    # Only this job can publish: it checks out no code and installs nothing.
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.13.0'
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: npm-tarballs
+          path: tarballs
+
+      # The SDK goes first: @learnhouse/react depends on this exact version.
+      - name: Publish @learnhouse/sdk
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish "tarballs/learnhouse-sdk-${TAG_VERSION}.tgz" --provenance --access public
+
+      - name: Publish @learnhouse/react
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish "tarballs/learnhouse-react-${TAG_VERSION}.tgz" --provenance --access public

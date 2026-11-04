@@ -82,6 +82,7 @@
     "@tiptap/pm": "3.32.2",
     "@tiptap/react": "3.32.2",
     "@tiptap/starter-kit": "3.32.2",
+    "@tiptap/static-renderer": "3.32.2",
     "@tiptap/suggestion": "3.32.2",
     "@uiw/codemirror-theme-tokyo-night": "^4.25.12",
     "@uiw/react-codemirror": "^4.25.12",
