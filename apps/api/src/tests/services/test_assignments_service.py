@@ -671,6 +671,34 @@ class TestHandleAssignmentTaskSubmission:
             )
         assert isinstance(result, AssignmentTaskSubmissionRead)
 
+    async def test_learner_cannot_hand_in_a_file_someone_else_uploaded(
+        self, mock_request, db, assignment_task, regular_user
+    ):
+        obj = AssignmentTaskSubmissionUpdate(
+            task_submission={"fileUUID": f"x_submission_u{regular_user.id + 1}.pdf"},
+        )
+        # is_instructor → False, enrollment → True
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, side_effect=[False, True]):
+            with pytest.raises(HTTPException) as exc:
+                await handle_assignment_task_submission(
+                    mock_request, assignment_task.assignment_task_uuid, obj, regular_user, db
+                )
+        assert exc.value.status_code == 403
+
+    async def test_learner_can_hand_in_their_own_file(
+        self, mock_request, db, assignment_task, regular_user
+    ):
+        obj = AssignmentTaskSubmissionUpdate(
+            task_submission={"fileUUID": f"x_submission_u{regular_user.id}.pdf"},
+        )
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), \
+             patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, side_effect=[False, True]):
+            result = await handle_assignment_task_submission(
+                mock_request, assignment_task.assignment_task_uuid, obj, regular_user, db
+            )
+        assert result.task_submission["fileUUID"].endswith(f"_u{regular_user.id}.pdf")
+
     async def test_regular_user_cannot_self_assign_grade(
         self, mock_request, db, assignment_task, regular_user
     ):
@@ -1327,6 +1355,26 @@ class TestPutAssignmentTaskSubmissionFile:
                 None,
             )
         assert result is None
+
+    async def test_upload_is_tagged_with_the_uploader(
+        self, mock_request, db, regular_user, assignment_task
+    ):
+        upload = AsyncMock(return_value=f"x_submission_u{regular_user.id}.pdf")
+        with patch(
+            "src.services.courses.activities.assignments.verify_activity_reader_access",
+            new_callable=AsyncMock,
+        ), patch(_PATCH_AUTH_ROLES, new_callable=AsyncMock, side_effect=[True, False]), patch(
+            "src.services.courses.activities.assignments.upload_submission_file", upload
+        ):
+            result = await put_assignment_task_submission_file(
+                mock_request,
+                db,
+                assignment_task.assignment_task_uuid,
+                regular_user,
+                SimpleNamespace(filename="essay.pdf"),
+            )
+        assert result == {"file_uuid": f"x_submission_u{regular_user.id}.pdf"}
+        assert upload.await_args.args[-1] == regular_user.id
 
 
 # ---------------------------------------------------------------------------

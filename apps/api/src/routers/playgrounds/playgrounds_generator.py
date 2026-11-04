@@ -17,6 +17,7 @@ from src.security.features_utils.dependencies import require_playgrounds_feature
 from src.services.ai.llm import model_for_tier
 from src.services.playgrounds.playgrounds_generator import (
     get_playground_session,
+    get_playground_session_owner,
     create_playground_session,
     generate_playground_stream,
     MAX_ITERATIONS,
@@ -157,6 +158,7 @@ async def start_playground_session(
     session = create_playground_session(
         playground_uuid=session_request.playground_uuid,
         context=session_request.context,
+        user_id=generate_acting_user_id,
     )
 
     stream = generate_playground_stream(
@@ -229,6 +231,9 @@ async def iterate_playground_session(
 
     # Verify user can edit
     iterate_acting_user_id = resolve_acting_user_id(current_user)
+    session_owner = get_playground_session_owner(session.session_uuid)
+    if session_owner is not None and session_owner != iterate_acting_user_id:
+        raise HTTPException(status_code=404, detail="Session not found")
     from src.services.playgrounds.playgrounds import _get_user_rights
     rights = await _get_user_rights(iterate_acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
@@ -310,6 +315,9 @@ async def get_session_state(
         raise HTTPException(status_code=404, detail="Playground not found")
 
     state_acting_user_id = resolve_acting_user_id(current_user)
+    session_owner = get_playground_session_owner(session.session_uuid)
+    if session_owner is not None and session_owner != state_acting_user_id:
+        raise HTTPException(status_code=404, detail="Session not found")
     from src.services.playgrounds.playgrounds import _get_user_rights
     rights = await _get_user_rights(state_acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
