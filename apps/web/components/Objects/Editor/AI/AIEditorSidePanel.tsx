@@ -962,7 +962,10 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                     {(() => {
                       const sel = aiEditorState.persistentSelection
                       if (sel && props.editor) {
-                        const text = props.editor.state.doc.textBetween(sel.from, sel.to)
+                        // The stored range can outlive an AI edit that shortened the doc
+                        const size = props.editor.state.doc.content.size
+                        const from = Math.min(sel.from, size)
+                        const text = props.editor.state.doc.textBetween(from, Math.min(Math.max(sel.to, from), size))
                         return text.length > 50 ? `"${text.slice(0, 50)}..."` : `"${text}"`
                       }
                       return ''
