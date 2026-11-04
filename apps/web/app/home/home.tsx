@@ -12,7 +12,7 @@ import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
 import { deleteOrganizationFromBackend, leaveOrg } from '@services/organizations/orgs'
 import { ChevronRight, Languages, Check, LogOut, Settings, LogIn, Plus, MoreVertical, CreditCard, Trash2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useSyncExternalStore } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -40,6 +40,8 @@ import {
 } from '@components/ui/dialog'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 
+const noSubscription = () => () => {}
+
 function HomeClient() {
   const { t, i18n } = useTranslation()
   const session = useLHSession() as any
@@ -47,7 +49,10 @@ function HomeClient() {
   const access_token = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
   const isLoading = session?.status === 'loading'
-  const platformUrl = getLEARNHOUSE_PLATFORM_URL_VAL()
+  // The platform URL is runtime config the browser reads; this page is
+  // prerendered without it. Read it through useSyncExternalStore so hydration
+  // matches the server HTML, then the link appears.
+  const platformUrl = useSyncExternalStore(noSubscription, getLEARNHOUSE_PLATFORM_URL_VAL, () => '')
 
   const { data: orgs, isLoading: orgsLoading } = useQuery({
     queryKey: ['orgs', 'user'],
