@@ -235,6 +235,7 @@
     "organizations": "संगठन",
     "billing": "बिलिंग",
     "create_organization": "संगठन बनाएँ",
+    "start_your_own_organization": "अपना खुद का संगठन शुरू करें",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "यह संगठन नहीं हटाया जा सका। कृपया पुनः प्रयास करें।",
     "org_actions": "संगठन की क्रियाएँ",

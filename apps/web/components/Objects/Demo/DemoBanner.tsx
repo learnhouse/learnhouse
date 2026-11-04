@@ -1,12 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { Sparkle } from '@phosphor-icons/react'
 
 import { useOrg } from '@components/Contexts/OrgContext'
-import { isMultiOrgModeEnabled } from '@services/config/config'
+import { getMainDomainUri, isMultiOrgModeEnabled } from '@services/config/config'
 import { DemoStatus, getDemoStatus } from '@services/demo/demo'
 
 function formatCountdown(
@@ -105,16 +104,17 @@ export default function DemoBanner() {
             })}
       </span>
       {/* The hub only exists in multi-tenancy; on a single-org install /new is
-          a 404, so the call to action is simply not offered there. */}
+          a 404, so the call to action is simply not offered there. It lives on
+          the main domain, not on the demo's own subdomain. */}
       {isMultiOrgModeEnabled() && (
-        <Link
-          href="/new"
+        <a
+          href={getMainDomainUri('/new')}
           className="ms-auto shrink-0 rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-800"
         >
           {t('demo.create_your_own', {
             defaultValue: 'Create your own organization',
           })}
-        </Link>
+        </a>
       )}
     </div>
   )

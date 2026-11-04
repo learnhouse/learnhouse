@@ -235,6 +235,7 @@
     "organizations": "Organizações",
     "billing": "Faturação",
     "create_organization": "Criar organização",
+    "start_your_own_organization": "Crie sua própria organização",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "Não foi possível eliminar esta organização. Tente novamente.",
     "org_actions": "Ações da organização",

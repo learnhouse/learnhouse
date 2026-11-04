@@ -91,7 +91,7 @@ import {
 } from '@services/features/optionalFeatures'
 import { usePlan } from '@components/Hooks/usePlan'
 import { planMeetsRequirement } from '@services/plans/plans'
-import useAdminStatus from '@components/Hooks/useAdminStatus'
+import useAdminStatus, { seesPlatformHubFromSession } from '@components/Hooks/useAdminStatus'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import OnboardingSidebarBox from '@components/Dashboard/Onboarding/OnboardingSidebarBox'
 import { useOnboarding } from '@components/Hooks/useOnboarding'
@@ -228,6 +228,11 @@ function DashLeftMenu() {
     }
     return orgs
   })()
+  // Staff of a single school (an instructor, say) have no use for the platform
+  // hub or for creating organizations; only people who run one do.
+  const managesAnyOrg = seesPlatformHubFromSession(session)
+  // Any second organization, the demo included, is somewhere to switch back from.
+  const showOrgSwitcher = managesAnyOrg || myOrgs.length > 1
   const planPillColor =
     mode === 'ee' ? 'bg-amber-400/15 text-amber-300' :
     mode === 'oss' ? 'bg-green-400/15 text-green-300' :
@@ -1223,7 +1228,7 @@ function DashLeftMenu() {
           </HoverMenu>
 
           {/* My Organizations with hover menu (multi-org / SaaS only) */}
-          {multiOrg && (
+          {multiOrg && showOrgSwitcher && (
             <HoverMenu
               align="end"
               content={
@@ -1233,12 +1238,14 @@ function DashLeftMenu() {
                     <span>{t('common.organizations', { defaultValue: 'Organizations' })}</span>
                   </HoverMenuLabel>
                   <HoverMenuSeparator />
-                  <HoverMenuItem asChild>
-                    <a href={getMainDomainUri('/home')} className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
-                      <House size={16} weight="fill" />
-                      <span>{t('common.home', { defaultValue: 'Home' })}</span>
-                    </a>
-                  </HoverMenuItem>
+                  {managesAnyOrg && (
+                    <HoverMenuItem asChild>
+                      <a href={getMainDomainUri('/home')} className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                        <House size={16} weight="fill" />
+                        <span>{t('common.home', { defaultValue: 'Home' })}</span>
+                      </a>
+                    </HoverMenuItem>
+                  )}
                   {canManageOrg && (
                     <HoverMenuItem asChild>
                       <a href={getMainDomainUri(`/billing?org=${org?.slug ?? ''}`)} className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
@@ -1260,13 +1267,17 @@ function DashLeftMenu() {
                       </a>
                     </HoverMenuItem>
                   ))}
-                  <HoverMenuSeparator />
-                  <HoverMenuItem asChild>
-                    <a href={getMainDomainUri('/new')} className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
-                      <Plus size={16} weight="bold" />
-                      <span>{t('common.create_organization', { defaultValue: 'Create organization' })}</span>
-                    </a>
-                  </HoverMenuItem>
+                  {managesAnyOrg && (
+                    <>
+                      <HoverMenuSeparator />
+                      <HoverMenuItem asChild>
+                        <a href={getMainDomainUri('/new')} className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white/80 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                          <Plus size={16} weight="bold" />
+                          <span>{t('common.create_organization', { defaultValue: 'Create organization' })}</span>
+                        </a>
+                      </HoverMenuItem>
+                    </>
+                  )}
                 </HoverMenuContent>
               }
             >

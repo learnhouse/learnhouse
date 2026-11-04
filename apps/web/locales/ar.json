@@ -239,6 +239,7 @@
     "organizations": "المؤسسات",
     "billing": "الفوترة",
     "create_organization": "إنشاء مؤسسة",
+    "start_your_own_organization": "أنشئ مؤسستك الخاصة",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "تعذّر حذف هذه المؤسسة. يرجى المحاولة مرة أخرى.",
     "org_actions": "إجراءات المؤسسة",

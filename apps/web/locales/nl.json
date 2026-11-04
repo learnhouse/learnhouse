@@ -235,6 +235,7 @@
     "organizations": "Organisaties",
     "billing": "Facturering",
     "create_organization": "Organisatie aanmaken",
+    "start_your_own_organization": "Start je eigen organisatie",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "Kan deze organisatie niet verwijderen. Probeer het opnieuw.",
     "org_actions": "Organisatieacties",

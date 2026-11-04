@@ -4,7 +4,7 @@ import React, { useMemo } from 'react'
 import Link from 'next/link'
 import { Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check, ShoppingBag, House, Buildings, Plus, CreditCard } from '@phosphor-icons/react'
 import UserAvatar from '@components/Objects/UserAvatar'
-import useAdminStatus from '@components/Hooks/useAdminStatus'
+import useAdminStatus, { seesPlatformHubFromSession } from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg, getMainDomainUri, isMultiOrgModeEnabled } from '@services/config/config'
@@ -45,7 +45,7 @@ interface CustomRoleInfo {
 
 export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string }) => {
   const session = useLHSession() as any
-  const { userRoles, rights } = useAdminStatus()
+  const { userRoles, rights, canManageOrg } = useAdminStatus()
   const org = useOrg() as any
   const { t, i18n } = useTranslation()
   const { track } = useLHAnalytics()
@@ -65,6 +65,13 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
     }
     return orgs
   }, [session?.data?.roles])
+  // Platform entries (hub, workspace switcher, billing, create) only make sense
+  // to people who run an organization. A member who signed up to this school
+  // sees the school, not LearnHouse; one who belongs to several schools still
+  // gets the switcher.
+  const managesAnyOrg = seesPlatformHubFromSession(session)
+  // Any second organization, the demo included, is somewhere to switch back from.
+  const showOrgSwitcher = managesAnyOrg || myOrgs.length > 1
 
 
   const userRoleInfo = useMemo((): RoleInfo | null => {
@@ -254,21 +261,25 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                     <span>{t('account.purchases')}</span>
                   </Link>
                 </DropdownMenuItem>
-                {multiOrg && (
+                {multiOrg && showOrgSwitcher && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href={getMainDomainUri('/home')} className="flex items-center space-x-2">
-                        <House size={16} weight="fill" />
-                        <span>{t('common.home', { defaultValue: 'Home' })}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={getMainDomainUri(`/billing?org=${org?.slug ?? ''}`)} className="flex items-center space-x-2">
-                        <CreditCard size={16} weight="fill" />
-                        <span>{t('common.billing', { defaultValue: 'Billing' })}</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    {managesAnyOrg && (
+                      <DropdownMenuItem asChild>
+                        <Link href={getMainDomainUri('/home')} className="flex items-center space-x-2">
+                          <House size={16} weight="fill" />
+                          <span>{t('common.home', { defaultValue: 'Home' })}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {canManageOrg && (
+                      <DropdownMenuItem asChild>
+                        <Link href={getMainDomainUri(`/billing?org=${org?.slug ?? ''}`)} className="flex items-center space-x-2">
+                          <CreditCard size={16} weight="fill" />
+                          <span>{t('common.billing', { defaultValue: 'Billing' })}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="flex items-center gap-2 space-x-2">
                         <Buildings size={16} weight="fill" />
@@ -292,13 +303,17 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                               </Link>
                             </DropdownMenuItem>
                           ))}
-                          {myOrgs.length > 0 && <DropdownMenuSeparator />}
-                          <DropdownMenuItem asChild>
-                            <Link href={getMainDomainUri('/new')} className="flex items-center space-x-2 font-semibold">
-                              <Plus size={16} weight="bold" />
-                              <span>{t('common.create_organization', { defaultValue: 'Create organization' })}</span>
-                            </Link>
-                          </DropdownMenuItem>
+                          {managesAnyOrg && (
+                            <>
+                              {myOrgs.length > 0 && <DropdownMenuSeparator />}
+                              <DropdownMenuItem asChild>
+                                <Link href={getMainDomainUri('/new')} className="flex items-center space-x-2 font-semibold">
+                                  <Plus size={16} weight="bold" />
+                                  <span>{t('common.create_organization', { defaultValue: 'Create organization' })}</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuSubContent>
                       </DropdownMenuPortal>
                     </DropdownMenuSub>

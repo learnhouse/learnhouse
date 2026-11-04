@@ -235,6 +235,7 @@
     "organizations": "Organizasyonlar",
     "billing": "Faturalandırma",
     "create_organization": "Organizasyon oluştur",
+    "start_your_own_organization": "Kendi organizasyonunu kur",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "Bu organizasyon silinemedi. Lütfen tekrar deneyin.",
     "org_actions": "Organizasyon işlemleri",

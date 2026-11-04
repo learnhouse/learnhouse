@@ -9,6 +9,7 @@ import * as Form from '@radix-ui/react-form'
 import { AlertTriangle, Info, Mail, User } from 'lucide-react'
 import Link from 'next/link'
 import { signUpWithInviteCode } from '@services/auth/auth'
+import { defaultPostAuthPath } from '@services/auth/redirects'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, isOnCustomDomain } from '@services/config/config'
@@ -131,11 +132,12 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
   useEffect(() => { }, [org])
 
   // Honor a sanitized ?next / ?redirect destination through the
-  // cross-domain /redirect_from_auth handoff; default to /home.
+  // cross-domain /redirect_from_auth handoff; default to the org's home (or the
+  // hub on the org-less apex).
   const buildCallbackUrl = () => {
     const params = new URLSearchParams(window.location.search)
     const raw = params.get('next') ?? params.get('redirect')
-    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : '/home'
+    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : defaultPostAuthPath(org)
     return `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(dest)}`
   }
 
