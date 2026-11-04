@@ -11,6 +11,7 @@ from src.services.playgrounds.playgrounds_generator import (
     extract_html_from_response,
     generate_playground_stream,
     get_playground_session,
+    get_playground_session_owner,
     get_redis_connection,
     save_playground_session,
 )
@@ -231,3 +232,48 @@ class TestPlaygroundsGeneratorService:
             ]
 
         assert error_chunks == ["Error: An internal error occurred while generating content."]
+
+
+class TestPlaygroundSessionOwner:
+    _CONFIG = SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string="redis://test"))
+
+    def _with_redis(self, fake_redis):
+        return patch(
+            "src.services.playgrounds.playgrounds_generator.redis.from_url",
+            return_value=fake_redis,
+        ), patch("src.services.playgrounds.playgrounds_generator.LH_CONFIG", self._CONFIG)
+
+    def test_create_records_the_creator(self):
+        fake_redis = Mock()
+        context = PlaygroundContext(playground_name="Quiz", playground_description="d")
+        p1, p2 = self._with_redis(fake_redis)
+        with p1, p2:
+            session = create_playground_session("playground_1", context, user_id=42)
+        keys = [call.args[0] for call in fake_redis.setex.call_args_list]
+        assert f"playground_session_owner:{session.session_uuid}" in keys
+        owner_call = next(c for c in fake_redis.setex.call_args_list if "owner" in c.args[0])
+        assert owner_call.args[2] == "42"
+
+    def test_owner_lookup(self):
+        fake_redis = Mock()
+        fake_redis.get.side_effect = [b"42", "7", None]
+        p1, p2 = self._with_redis(fake_redis)
+        with p1, p2:
+            assert get_playground_session_owner("pg_a") == 42
+            assert get_playground_session_owner("pg_b") == 7
+            assert get_playground_session_owner("pg_c") is None
+
+    def test_owner_storage_errors_are_swallowed(self):
+        bad_redis = Mock()
+        bad_redis.get.side_effect = RuntimeError("boom")
+        bad_redis.setex.side_effect = RuntimeError("boom")
+        context = PlaygroundContext(playground_name="Quiz", playground_description="d")
+        p1, p2 = self._with_redis(bad_redis)
+        with p1, p2:
+            assert get_playground_session_owner("pg_a") is None
+            create_playground_session("playground_1", context, user_id=42)
+        with patch(
+            "src.services.playgrounds.playgrounds_generator.LH_CONFIG",
+            SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string="")),
+        ):
+            assert get_playground_session_owner("pg_a") is None

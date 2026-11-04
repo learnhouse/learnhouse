@@ -30,10 +30,10 @@ TASK_UUID = "assignmenttask_subs_test"
 FILE = "submission_abc123.pdf"
 
 
-def _parts(course_uuid):
+def _parts(course_uuid, filename=FILE):
     return [
         "orgs", "org_x", "courses", course_uuid, "activities", "act_x",
-        "assignments", "asgn_x", "tasks", TASK_UUID, "subs", FILE,
+        "assignments", "asgn_x", "tasks", TASK_UUID, "subs", filename,
     ]
 
 
@@ -182,3 +182,63 @@ class TestEnforceSubmissionFileAccess:
                 _parts(course.course_uuid), token, db, request=MagicMock()
             )
         assert exc.value.status_code == 403
+
+
+class TestUploaderTaggedFiles:
+    def test_owner_tag_round_trips(self):
+        from src.security.submission_file_access import (
+            submission_file_owner,
+            submission_file_prefix,
+        )
+
+        assert submission_file_owner(f"abc_{submission_file_prefix(42)}.pdf") == 42
+        assert submission_file_owner("abc_submission.pdf") is None
+        assert submission_file_owner(None) is None
+
+    def test_submission_files_belong_to(self):
+        from src.security.submission_file_access import submission_files_belong_to
+
+        assert submission_files_belong_to({"fileUUID": "a_submission_u7.pdf"}, 7)
+        assert not submission_files_belong_to({"fileUUID": "a_submission_u8.pdf"}, 7)
+        # Legacy untagged names and non-file answers are left alone
+        assert submission_files_belong_to({"fileUUID": "a_submission.pdf"}, 7)
+        assert submission_files_belong_to({"answer": "text"}, 7)
+        assert submission_files_belong_to(None, 7)
+
+    @pytest.mark.asyncio
+    async def test_learner_referencing_someone_elses_file_is_denied(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        # The other learner's own submission names regular_user's tagged file
+        victim_file = f"x_submission_u{regular_user.id}.pdf"
+        thief = PublicUser(
+            id=98767, username="thief", first_name="T", last_name="H",
+            email="thief@test.com", user_uuid="user_thief",
+        )
+        await _seed(db, org, course, chapter, activity, thief, filename=victim_file)
+        with pytest.raises(HTTPException) as exc:
+            await enforce_submission_file_access(
+                _parts(course.course_uuid, victim_file), thief, db, request=None
+            )
+        assert exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_uploader_and_instructor_can_open_a_tagged_file(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        own_file = f"x_submission_u{regular_user.id}.pdf"
+        await _seed(db, org, course, chapter, activity, regular_user, filename=own_file)
+        await enforce_submission_file_access(
+            _parts(course.course_uuid, own_file), regular_user, db, request=None
+        )
+        teacher = PublicUser(
+            id=98768, username="teacher2", first_name="Te", last_name="A",
+            email="teacher2@test.com", user_uuid="user_teacher2",
+        )
+        with patch(
+            "src.security.rbac.authorization_verify_based_on_roles",
+            new=AsyncMock(return_value=True),
+        ):
+            await enforce_submission_file_access(
+                _parts(course.course_uuid, own_file), teacher, db, request=MagicMock()
+            )

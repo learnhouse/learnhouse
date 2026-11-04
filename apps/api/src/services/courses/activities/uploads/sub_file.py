@@ -1,4 +1,5 @@
 from fastapi import UploadFile
+from src.security.submission_file_access import submission_file_prefix
 from src.services.utils.upload_content import upload_file
 
 # Learner submissions: documents, images, office files and small zips only.
@@ -14,14 +15,15 @@ async def upload_submission_file(
     course_uuid: str,
     assignment_uuid: str,
     assignment_task_uuid: str,
+    user_id: int,
 ) -> str:
-    """Upload a submission file with file validation."""
+    """Upload a submission file with file validation, tagged with its uploader."""
     return await upload_file(
         file=file,
         directory=f"courses/{course_uuid}/activities/{activity_uuid}/assignments/{assignment_uuid}/tasks/{assignment_task_uuid}/subs",
         type_of_dir="orgs",
         uuid=org_uuid,
         allowed_types=SUBMISSION_ALLOWED_TYPES,
-        filename_prefix="submission",
+        filename_prefix=submission_file_prefix(user_id),
         max_size=SUBMISSION_MAX_SIZE,
     )
