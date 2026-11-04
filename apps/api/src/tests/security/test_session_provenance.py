@@ -75,3 +75,34 @@ def test_lms_sessions_cannot_change_account_security():
         refuse_lms_session()
     finally:
         set_session_provenance(None)
+
+
+def test_held_org_covers_lms_and_custom_domain_sessions():
+    import pytest
+    from fastapi import HTTPException
+
+    from src.security.session_context import (
+        SessionProvenance,
+        held_org_id,
+        refuse_outside_held_org,
+        set_session_provenance,
+    )
+
+    try:
+        for provenance, held in (
+            (SessionProvenance(amr="lti", org_id=3), 3),
+            (SessionProvenance(amr="password", org_id=3, custom_domain=True), 3),
+            (SessionProvenance(amr="password", org_id=3), None),
+            (SessionProvenance(amr="lti", org_id=None), None),
+            (None, None),
+        ):
+            set_session_provenance(provenance)
+            assert held_org_id() == held
+        set_session_provenance(SessionProvenance(amr="lti", org_id=3))
+        refuse_outside_held_org(3)
+        with pytest.raises(HTTPException) as exc:
+            refuse_outside_held_org(4)
+        assert exc.value.status_code == 403
+    finally:
+        set_session_provenance(None)
+

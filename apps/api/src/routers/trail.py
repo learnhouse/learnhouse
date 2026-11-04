@@ -3,6 +3,7 @@ from src.core.events.database import get_db_session
 from src.db.trails import TrailCreate, TrailRead
 from src.security.auth import get_current_user
 from src.security.features_utils.dependencies import require_courses_feature
+from src.security.session_context import held_org_id, refuse_outside_held_org
 from src.services.trail.trail import (
     Trail,
     add_activity_to_trail,
@@ -61,6 +62,10 @@ async def api_get_user_trail(
     """
     Get a user trails
     """
+    held = held_org_id()
+    if held is not None:
+        # A session held to one org (LMS launch, custom domain) sees that org's trail only.
+        return await get_user_trail_with_orgid(request, user, org_id=held, db_session=db_session)
     return await get_user_trails(request, user=user, db_session=db_session)
 
 
@@ -85,6 +90,7 @@ async def api_get_trail_by_org_id(
     """
     Get a user trails using org slug
     """
+    refuse_outside_held_org(org_id)
     return await get_user_trail_with_orgid(
         request, user, org_id=org_id, db_session=db_session
     )

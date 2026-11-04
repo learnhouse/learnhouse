@@ -73,3 +73,16 @@ class TestTrailRouter:
         with patch("src.routers.trail.remove_activity_from_trail", new_callable=AsyncMock, return_value=_mock_trail()):
             response = await client.delete("/api/v1/trail/remove_activity/activity_test")
         assert response.status_code == 200
+
+    async def test_session_held_to_one_org_sees_only_that_trail(self, client):
+        from src.security.session_context import SessionProvenance
+
+        held = SessionProvenance(amr="lti", org_id=5)
+        with patch("src.security.session_context.get_session_provenance", return_value=held), patch(
+            "src.routers.trail.get_user_trail_with_orgid", new_callable=AsyncMock, return_value=_mock_trail(org_id=5)
+        ) as by_org, patch("src.routers.trail.get_user_trails", new_callable=AsyncMock) as all_orgs:
+            assert (await client.get("/api/v1/trail/")).status_code == 200
+            assert by_org.await_args.kwargs["org_id"] == 5 and not all_orgs.await_count
+            response = await client.get("/api/v1/trail/org/1/trail")
+        assert response.status_code == 403
+
