@@ -131,7 +131,7 @@ export function MobileTabBar({ orgslug, primaryColor = '' }: { orgslug: string; 
     <>
       <nav
         aria-label={t('mobile_nav.tabs', { defaultValue: 'Main' })}
-        className="lg:hidden fixed inset-x-0 bottom-0 border-t border-black/[0.06] bg-white/85 backdrop-blur-xl backdrop-saturate-150"
+        className="lh-bottom-bleed lg:hidden fixed inset-x-0 bottom-0 border-t border-black/[0.06] bg-white/85 backdrop-blur-xl backdrop-saturate-150"
         style={{ zIndex: 'var(--z-nav)', paddingBottom: 'var(--lh-safe-bottom)' }}
       >
         <ul className="flex items-stretch justify-around" style={{ height: 'var(--lh-tabbar-h)' }}>
