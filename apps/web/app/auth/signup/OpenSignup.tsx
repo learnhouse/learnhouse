@@ -18,6 +18,7 @@ import { PasswordStrengthIndicator, validatePasswordStrength } from '@components
 import TurnstileWidget, { useTurnstileRequired, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { getAllowedAuthMethods } from '@services/auth/authMethods'
+import { defaultPostAuthPath } from '@services/auth/redirects'
 import CustomSignupFields, {
   initialCustomFieldValues,
   validateCustomFields,
@@ -144,11 +145,12 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
   useEffect(() => { }, [org])
 
   // Honor a sanitized ?next / ?redirect destination through the
-  // cross-domain /redirect_from_auth handoff; default to /home.
+  // cross-domain /redirect_from_auth handoff; default to the org's home (or the
+  // hub on the org-less apex).
   const buildCallbackUrl = () => {
     const params = new URLSearchParams(window.location.search)
     const raw = params.get('next') ?? params.get('redirect')
-    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : '/home'
+    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : defaultPostAuthPath(org)
     return `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(dest)}`
   }
 

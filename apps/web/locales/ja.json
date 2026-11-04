@@ -235,6 +235,7 @@
     "organizations": "組織",
     "billing": "請求",
     "create_organization": "組織を作成",
+    "start_your_own_organization": "自分の組織を作成",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "この組織を削除できませんでした。もう一度お試しください。",
     "org_actions": "組織の操作",

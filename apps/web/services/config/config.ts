@@ -417,6 +417,19 @@ export const getMainDomainUri = (path: string) => {
   return `${protocol}${domain}${path}`
 }
 
+/**
+ * The "go home" escape hatch for error and info screens. With several orgs it
+ * is the platform hub on the main domain: on an org host /home is that org's
+ * own page, which may be the very page that failed. Client-side only (reads
+ * the tenancy cookie).
+ */
+export const getPlatformHomeUri = () =>
+  isMultiOrgModeEnabled()
+    // The page's own protocol: the root layout may have failed before the
+    // runtime config (and its HTTPS flag) loaded.
+    ? `${window.location.protocol}//${getLEARNHOUSE_DOMAIN()}/home`
+    : getUriWithoutOrg('/home')
+
 export type DeploymentMode = 'saas' | 'oss' | 'ee'
 
 /**

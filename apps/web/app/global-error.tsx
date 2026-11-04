@@ -7,6 +7,7 @@ import { detectClientLanguage, directionForLanguage, type Direction } from '@lib
 import ErrorShell, { ErrorActionRows, ErrorButton, ErrorDetails } from '@components/Objects/StyledElements/Error/ErrorShell'
 import { Home, LogOut, MessageSquareWarning, RefreshCcw } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { getPlatformHomeUri } from '@services/config/config'
 
 // Last-resort boundary: catches errors thrown in the root layout itself, so it
 // renders OUTSIDE every provider (no router, no AuthContext, no i18n). Kept
@@ -92,7 +93,8 @@ export default function GlobalError({
               main={[
                 <ErrorButton key="retry" onClick={() => reset()} variant="primary" label="Try again"
                   icon={<RefreshCcw size={15} />} />,
-                <ErrorButton key="home" href="/home" label="Go home" icon={<Home size={15} />} />,
+                // On an org host /home is that org's own page, which may be what failed.
+                <ErrorButton key="home" onClick={() => window.location.assign(getPlatformHomeUri())} label="Go home" icon={<Home size={15} />} />,
               ]}
               quiet={[
                 <ErrorButton key="signout" onClick={doSignOut} disabled={signingOut} variant="subtle"

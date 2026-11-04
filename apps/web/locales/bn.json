@@ -235,6 +235,7 @@
     "organizations": "প্রতিষ্ঠান",
     "billing": "বিলিং",
     "create_organization": "প্রতিষ্ঠান তৈরি করুন",
+    "start_your_own_organization": "নিজের প্রতিষ্ঠান শুরু করুন",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "এই প্রতিষ্ঠানটি মুছে ফেলা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
     "org_actions": "প্রতিষ্ঠানের কার্যক্রম",

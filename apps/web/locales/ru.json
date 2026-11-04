@@ -235,6 +235,7 @@
     "organizations": "Организации",
     "billing": "Оплата",
     "create_organization": "Создать организацию",
+    "start_your_own_organization": "Создать свою организацию",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "Не удалось удалить эту организацию. Попробуйте ещё раз.",
     "org_actions": "Действия с организацией",

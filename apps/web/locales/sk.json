@@ -235,6 +235,7 @@
     "organizations": "Organizácie",
     "billing": "Fakturácia",
     "create_organization": "Vytvoriť organizáciu",
+    "start_your_own_organization": "Založte si vlastnú organizáciu",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "Túto organizáciu sa nepodarilo odstrániť. Skúste to znova.",
     "org_actions": "Akcie organizácie",

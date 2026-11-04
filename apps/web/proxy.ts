@@ -396,16 +396,31 @@ export default async function proxy(req: NextRequest) {
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   )
   if (pathname === '/home' || (instance.tenancy === 'multi' && isHubRoot)) {
-    // `/account/*` ALSO exists as an org-scoped dashboard route
-    // (/orgs/{slug}/account/[subpage]: general/security/purchases). On an org
-    // subdomain or custom domain it must resolve there, NOT the apex hub (which
-    // has no /account subpages), so let it fall through to the tenant catch-all.
     let onOrgHost = false
-    if ((pathname === '/account' || pathname.startsWith('/account/')) && instance.tenancy === 'multi') {
+    let sharesApexSession = false
+    if (instance.tenancy === 'multi') {
       const resolved = await resolveTenant(req, instance)
       onOrgHost = resolved.source === 'subdomain' || resolved.source === 'custom-domain'
+      // Same rule as cookieDomainFor: only a real subdomain shares the apex's
+      // session cookie (custom domains and *.localhost are host-only).
+      sharesApexSession = resolved.source === 'subdomain' && instance.top_domain !== 'localhost'
     }
-    if (!onOrgHost) {
+    const isAccount = pathname === '/account' || pathname.startsWith('/account/')
+    // The hub belongs to the platform, not to a school. Someone who signed up
+    // on acme.learnhouse.io (or learn.acme.org) is a member of that school and
+    // every auth flow there ends on /home, so on an org host /home is the
+    // school's own home page. The rest of the hub moves to the apex where the
+    // session follows; elsewhere it keeps rendering on this host as before.
+    // `/account/*` is the exception: it also exists as an org-scoped route
+    // (/orgs/{slug}/account/[subpage]) and falls through to the catch-all.
+    if (onOrgHost && (pathname === '/home' || pathname === '/home/')) {
+      return NextResponse.redirect(new URL(`/${search}`, req.url))
+    }
+    if (sharesApexSession && !isAccount) {
+      const apex = new URL(`${pathname}${search}`, `${req.nextUrl.protocol}//${instance.frontend_domain}`)
+      return NextResponse.redirect(apex)
+    }
+    if (!onOrgHost || !isAccount) {
       const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
       setInstanceCookies(req, response, instance)
       return response
@@ -434,9 +449,10 @@ export default async function proxy(req: NextRequest) {
     // `/signup` is NOT only a signup page: for a signed-in user on an org host
     // it is the JOIN screen (the "Join this organization" banner and every
     // invite link point at it). Bouncing them to /home dropped them on the org
-    // picker instead, and silently threw away any ?inviteCode. So only send a
-    // signed-in visitor to the hub when there is genuinely no org to join here:
-    // the org-less apex, with no invite code in hand.
+    // picker instead, and silently threw away any ?inviteCode. So only redirect
+    // a signed-in visitor when there is genuinely no org to join here: the
+    // org-less apex, with no invite code in hand. Signing up on the apex means
+    // "I want my own LearnHouse", so they go to create an organization.
     if (pathname === '/signup' && hasSession) {
       const onOrgHost =
         instance.tenancy === 'single'
@@ -444,7 +460,8 @@ export default async function proxy(req: NextRequest) {
         || resolved.source === 'custom-domain'
       const hasInviteCode = !!req.nextUrl.searchParams.get('inviteCode')
       if (!onOrgHost && !hasInviteCode) {
-        return NextResponse.redirect(new URL('/home', req.url))
+        // /new is part of the SaaS-only hub; elsewhere the picker is the hub.
+        return NextResponse.redirect(new URL(instance.mode === 'saas' ? '/new' : '/home', req.url))
       }
     }
 
