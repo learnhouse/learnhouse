@@ -2470,11 +2470,6 @@
           "description": "Vaše tabule",
           "keywords": "tabule, kanban, úlohy, plánovanie, poznámky"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Opýtajte sa AI asistenta",
-          "keywords": "copilot, ai, asistent, chat, opýtať sa, pomoc"
-        },
         "search": {
           "description": "Úplné vyhľadávanie s filtrami",
           "keywords": "hľadať, nájsť, výsledky, filter, prehliadať"
@@ -2515,25 +2510,6 @@
     "about_question": "O čom je táto aktivita?",
     "flashcards_question": "Vygeneruj kartičky o tejto aktivite",
     "examples_question": "Vysvetli túto aktivitu na praktických príkladoch",
-    "copilot_bubble": {
-      "toggle_list": "Prepnúť zoznam konverzácií",
-      "conversations": "Konverzácie",
-      "title": "Course Copilot",
-      "new_chat": "Nový chat",
-      "close": "Zavrieť Copilot",
-      "new_chat_button": "Nový chat",
-      "no_conversations": "Zatiaľ žiadne konverzácie",
-      "subtitle": "Pýtajte sa na svoje kurzy.",
-      "select_mode": "Vybrať režim chatu",
-      "mode_general": "Všeobecný režim",
-      "mode_course": "Len kurz",
-      "select_course": "Vybrať kurz",
-      "ask_label": "Opýtajte sa na svoje kurzy",
-      "thinking": "Premýšľa...",
-      "ask_placeholder": "Opýtajte sa na svoje kurzy...",
-      "send": "Odoslať správu",
-      "open": "Otvoriť Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "Minimalistická ilustrácia žiarovky, jemné prechody",
       "idea_robot": "Priateľský 3D robot-tútor, izometrický, pastelové farby",
@@ -2621,39 +2597,6 @@
       "summarize_tooltip": "Zhrnie dlhý odsek alebo text pomocou AI",
       "translate_tooltip": "Preloží do rôznych jazykov pomocou AI",
       "examples_tooltip": "Poskytne príklady pre lepšie pochopenie pomocou AI"
-    },
-    "copilot_menu": {
-      "no_conversations": "Zatiaľ žiadne konverzácie",
-      "new_conversation": "Nová konverzácia",
-      "start_conversation": "Začať konverzáciu",
-      "view_all": "Zobraziť všetky konverzácie",
-      "open_in_bubble": "Otvoriť v bubline"
-    },
-    "copilot": {
-      "group_favorites": "Obľúbené",
-      "group_today": "Dnes",
-      "group_previous_7_days": "Predchádzajúcich 7 dní",
-      "group_older": "Staršie",
-      "selected_course": "Vybraný kurz",
-      "all_courses": "Všetky kurzy",
-      "failed_load_session": "Reláciu sa nepodarilo načítať",
-      "new_chat": "Nový chat",
-      "no_conversations": "Zatiaľ žiadne konverzácie",
-      "loading_conversation": "Načítava sa konverzácia...",
-      "title": "Course Copilot",
-      "subtitle": "Pýtajte sa na svoje kurzy a získajte odpovede založené na obsahu kurzu s odkazmi na zdrojový materiál.",
-      "mode_course_only": "Len kurz",
-      "mode_general": "Všeobecný",
-      "mode_course": "Kurz",
-      "mode_general_title": "Režim všeobecných znalostí",
-      "mode_course_only_title": "Režim len kurz",
-      "input_label": "Opýtajte sa na svoje kurzy",
-      "thinking": "Premýšľa...",
-      "placeholder_general": "Opýtajte sa na čokoľvek...",
-      "placeholder_course": "Opýtajte sa na svoje kurzy...",
-      "remove_favorite": "Odstrániť z obľúbených",
-      "add_favorite": "Pridať do obľúbených",
-      "answering_from": "Odpovedá sa z: {{courses}}"
     }
   },
   "payments": {

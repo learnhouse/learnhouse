@@ -2406,11 +2406,6 @@
           "description": "تخته‌های شما",
           "keywords": "تخته‌ها، کانبان، وظایف، برنامه‌ریزی، یادداشت‌ها، boards"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "از دستیار هوش مصنوعی بپرسید",
-          "keywords": "copilot، هوش مصنوعی، دستیار، گفتگو، پرسیدن، کمک"
-        },
         "search": {
           "description": "جستجوی کامل با فیلترها",
           "keywords": "جستجو، یافتن، نتایج، فیلتر، مرور، search"
@@ -2451,25 +2446,6 @@
     "about_question": "این فعالیت درباره چیست؟",
     "flashcards_question": "ایجاد فلش‌کارت درباره این فعالیت",
     "examples_question": "این فعالیت را با مثال‌های عملی توضیح دهید",
-    "copilot_bubble": {
-      "toggle_list": "نمایش/پنهان کردن فهرست گفتگوها",
-      "conversations": "گفتگوها",
-      "title": "Copilot دوره",
-      "new_chat": "گفتگوی جدید",
-      "close": "بستن Copilot",
-      "new_chat_button": "گفتگوی جدید",
-      "no_conversations": "هنوز گفتگویی وجود ندارد",
-      "subtitle": "دربارهٔ دوره‌های خود سؤال بپرسید.",
-      "select_mode": "انتخاب حالت گفتگو",
-      "mode_general": "حالت عمومی",
-      "mode_course": "فقط دوره",
-      "select_course": "انتخاب دوره",
-      "ask_label": "دربارهٔ دوره‌های خود بپرسید",
-      "thinking": "در حال فکر کردن...",
-      "ask_placeholder": "دربارهٔ دوره‌های خود بپرسید...",
-      "send": "ارسال پیام",
-      "open": "باز کردن Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "تصویرسازی مینیمال از یک لامپ با گرادیان‌های نرم",
       "idea_robot": "یک ربات معلم صمیمی سه‌بعدی، ایزومتریک، با رنگ‌های پاستلی",
@@ -2553,39 +2529,6 @@
       "summarize_tooltip": "یک پاراگراف یا متن بلند را با هوش مصنوعی خلاصه کنید",
       "translate_tooltip": "با هوش مصنوعی به زبان‌های مختلف ترجمه کنید",
       "examples_tooltip": "برای درک بهتر، با هوش مصنوعی مثال بیاورید"
-    },
-    "copilot_menu": {
-      "no_conversations": "هنوز گفتگویی وجود ندارد",
-      "new_conversation": "گفتگوی جدید",
-      "start_conversation": "شروع یک گفتگو",
-      "view_all": "مشاهدهٔ همهٔ گفتگوها",
-      "open_in_bubble": "باز کردن در حباب"
-    },
-    "copilot": {
-      "group_favorites": "علاقه‌مندی‌ها",
-      "group_today": "امروز",
-      "group_previous_7_days": "۷ روز گذشته",
-      "group_older": "قدیمی‌تر",
-      "selected_course": "دورهٔ انتخاب‌شده",
-      "all_courses": "همهٔ دوره‌ها",
-      "failed_load_session": "بارگذاری نشست ناموفق بود",
-      "new_chat": "گفتگوی جدید",
-      "no_conversations": "هنوز گفتگویی وجود ندارد",
-      "loading_conversation": "در حال بارگذاری گفتگو...",
-      "title": "Copilot دوره",
-      "subtitle": "دربارهٔ دوره‌های خود سؤال بپرسید و پاسخ‌هایی مبتنی بر محتوای دوره، همراه با ارجاع به منابع دریافت کنید.",
-      "mode_course_only": "فقط دوره",
-      "mode_general": "عمومی",
-      "mode_course": "دوره",
-      "mode_general_title": "حالت دانش عمومی",
-      "mode_course_only_title": "حالت فقط دوره",
-      "input_label": "دربارهٔ دوره‌های خود بپرسید",
-      "thinking": "در حال فکر کردن...",
-      "placeholder_general": "هر چیزی بپرسید...",
-      "placeholder_course": "دربارهٔ دوره‌های خود بپرسید...",
-      "remove_favorite": "حذف از علاقه‌مندی‌ها",
-      "add_favorite": "افزودن به علاقه‌مندی‌ها",
-      "answering_from": "پاسخ بر اساس {{courses}}"
     }
   },
   "payments": {

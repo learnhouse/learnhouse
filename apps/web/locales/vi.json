@@ -2381,11 +2381,6 @@
           "description": "Các bảng của bạn",
           "keywords": "bảng, kanban, nhiệm vụ, lập kế hoạch, ghi chú, boards"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Hỏi trợ lý AI",
-          "keywords": "copilot, ai, trợ lý, trò chuyện, hỏi, trợ giúp, assistant"
-        },
         "search": {
           "description": "Tìm kiếm đầy đủ với bộ lọc",
           "keywords": "tìm kiếm, tìm, kết quả, lọc, duyệt, search"
@@ -2426,25 +2421,6 @@
     "about_question": "Hoạt động này nói về cái gì?",
     "flashcards_question": "Tạo thẻ ghi nhớ về hoạt động này",
     "examples_question": "Giải thích hoạt động này bằng ví dụ thực tế",
-    "copilot_bubble": {
-      "toggle_list": "Bật/tắt danh sách cuộc trò chuyện",
-      "conversations": "Cuộc trò chuyện",
-      "title": "Course Copilot",
-      "new_chat": "Cuộc trò chuyện mới",
-      "close": "Đóng copilot",
-      "new_chat_button": "Cuộc trò chuyện mới",
-      "no_conversations": "Chưa có cuộc trò chuyện nào",
-      "subtitle": "Đặt câu hỏi về các khóa học của bạn.",
-      "select_mode": "Chọn chế độ trò chuyện",
-      "mode_general": "Chế độ chung",
-      "mode_course": "Chỉ khóa học",
-      "select_course": "Chọn khóa học",
-      "ask_label": "Hỏi về các khóa học của bạn",
-      "thinking": "Đang suy nghĩ...",
-      "ask_placeholder": "Hỏi về các khóa học của bạn...",
-      "send": "Gửi tin nhắn",
-      "open": "Mở Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "Một hình minh họa tối giản về bóng đèn, chuyển sắc nhẹ nhàng",
       "idea_robot": "Một robot gia sư 3D thân thiện, phong cách isometric, màu pastel",
@@ -2526,39 +2502,6 @@
       "summarize_tooltip": "Tóm tắt một đoạn văn hoặc văn bản dài bằng AI",
       "translate_tooltip": "Dịch sang nhiều ngôn ngữ khác nhau bằng AI",
       "examples_tooltip": "Đưa ra ví dụ để hiểu rõ hơn bằng AI"
-    },
-    "copilot_menu": {
-      "no_conversations": "Chưa có cuộc trò chuyện nào",
-      "new_conversation": "Cuộc trò chuyện mới",
-      "start_conversation": "Bắt đầu một cuộc trò chuyện",
-      "view_all": "Xem tất cả cuộc trò chuyện",
-      "open_in_bubble": "Mở trong bong bóng"
-    },
-    "copilot": {
-      "group_favorites": "Yêu thích",
-      "group_today": "Hôm nay",
-      "group_previous_7_days": "7 ngày trước",
-      "group_older": "Cũ hơn",
-      "selected_course": "Khóa học đã chọn",
-      "all_courses": "Tất cả khóa học",
-      "failed_load_session": "Không thể tải phiên",
-      "new_chat": "Cuộc trò chuyện mới",
-      "no_conversations": "Chưa có cuộc trò chuyện nào",
-      "loading_conversation": "Đang tải cuộc trò chuyện...",
-      "title": "Course Copilot",
-      "subtitle": "Đặt câu hỏi về các khóa học của bạn và nhận câu trả lời dựa trên nội dung khóa học, kèm tham chiếu đến tài liệu nguồn.",
-      "mode_course_only": "Chỉ khóa học",
-      "mode_general": "Chung",
-      "mode_course": "Khóa học",
-      "mode_general_title": "Chế độ kiến thức chung",
-      "mode_course_only_title": "Chế độ chỉ khóa học",
-      "input_label": "Hỏi về các khóa học của bạn",
-      "thinking": "Đang suy nghĩ...",
-      "placeholder_general": "Hỏi bất cứ điều gì...",
-      "placeholder_course": "Hỏi về các khóa học của bạn...",
-      "remove_favorite": "Xóa khỏi yêu thích",
-      "add_favorite": "Thêm vào yêu thích",
-      "answering_from": "Trả lời dựa trên {{courses}}"
     }
   },
   "payments": {

@@ -2406,11 +2406,6 @@
           "description": "आपके बोर्ड",
           "keywords": "बोर्ड, कानबन, कार्य, योजना, नोट्स, boards, kanban"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "AI सहायक से पूछें",
-          "keywords": "कोपायलट, एआई, सहायक, चैट, पूछें, मदद, copilot, ai"
-        },
         "search": {
           "description": "फ़िल्टर के साथ पूरी खोज",
           "keywords": "खोज, ढूंढें, परिणाम, फ़िल्टर, ब्राउज़, search, find"
@@ -2451,25 +2446,6 @@
     "about_question": "यह गतिविधि किस बारे में है?",
     "flashcards_question": "इस गतिविधि के बारे में फ्लैशकार्ड तैयार करें",
     "examples_question": "इस गतिविधि को व्यावहारिक उदाहरणों में समझाएं",
-    "copilot_bubble": {
-      "toggle_list": "बातचीत की सूची दिखाएं/छिपाएं",
-      "conversations": "बातचीत",
-      "title": "Course Copilot",
-      "new_chat": "नई चैट",
-      "close": "Copilot बंद करें",
-      "new_chat_button": "नई चैट",
-      "no_conversations": "अभी तक कोई बातचीत नहीं",
-      "subtitle": "अपने पाठ्यक्रमों के बारे में सवाल पूछें।",
-      "select_mode": "चैट मोड चुनें",
-      "mode_general": "सामान्य मोड",
-      "mode_course": "केवल पाठ्यक्रम",
-      "select_course": "पाठ्यक्रम चुनें",
-      "ask_label": "अपने पाठ्यक्रमों के बारे में पूछें",
-      "thinking": "सोच रहा है...",
-      "ask_placeholder": "अपने पाठ्यक्रमों के बारे में पूछें...",
-      "send": "संदेश भेजें",
-      "open": "Copilot खोलें"
-    },
     "image_picker": {
       "idea_lightbulb": "बल्ब का एक न्यूनतम चित्र, हल्के ग्रेडिएंट के साथ",
       "idea_robot": "एक मिलनसार 3D रोबोट ट्यूटर, आइसोमेट्रिक, पेस्टल रंग",
@@ -2553,39 +2529,6 @@
       "summarize_tooltip": "AI से लंबे अनुच्छेद या टेक्स्ट का सारांश पाएं",
       "translate_tooltip": "AI से अलग-अलग भाषाओं में अनुवाद करें",
       "examples_tooltip": "बेहतर समझने के लिए AI से उदाहरण पाएं"
-    },
-    "copilot_menu": {
-      "no_conversations": "अभी तक कोई बातचीत नहीं",
-      "new_conversation": "नई बातचीत",
-      "start_conversation": "बातचीत शुरू करें",
-      "view_all": "सभी बातचीत देखें",
-      "open_in_bubble": "बबल में खोलें"
-    },
-    "copilot": {
-      "group_favorites": "पसंदीदा",
-      "group_today": "आज",
-      "group_previous_7_days": "पिछले 7 दिन",
-      "group_older": "पुराने",
-      "selected_course": "चुना गया पाठ्यक्रम",
-      "all_courses": "सभी पाठ्यक्रम",
-      "failed_load_session": "सत्र लोड नहीं हो सका",
-      "new_chat": "नई चैट",
-      "no_conversations": "अभी तक कोई बातचीत नहीं",
-      "loading_conversation": "बातचीत लोड हो रही है...",
-      "title": "Course Copilot",
-      "subtitle": "अपने पाठ्यक्रमों के बारे में सवाल पूछें और स्रोत सामग्री के संदर्भों के साथ पाठ्यक्रम की सामग्री पर आधारित उत्तर पाएं।",
-      "mode_course_only": "केवल पाठ्यक्रम",
-      "mode_general": "सामान्य",
-      "mode_course": "पाठ्यक्रम",
-      "mode_general_title": "सामान्य ज्ञान मोड",
-      "mode_course_only_title": "केवल पाठ्यक्रम मोड",
-      "input_label": "अपने पाठ्यक्रमों के बारे में पूछें",
-      "thinking": "सोच रहा है...",
-      "placeholder_general": "कुछ भी पूछें...",
-      "placeholder_course": "अपने पाठ्यक्रमों के बारे में पूछें...",
-      "remove_favorite": "पसंदीदा से हटाएं",
-      "add_favorite": "पसंदीदा में जोड़ें",
-      "answering_from": "{{courses}} के आधार पर उत्तर"
     }
   },
   "payments": {
