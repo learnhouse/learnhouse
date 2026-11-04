@@ -37,6 +37,7 @@ LearnHouse is an open-source platform for creating and delivering modern educati
   - [Communities](https://docs.learnhouse.app/platform/discussions): A community is a discussion space inside your organization
     - [Discussions & Replies](https://docs.learnhouse.app/platform/discussions/comments): Click New Discussion in a community
     - [Managing Communities](https://docs.learnhouse.app/platform/discussions/managing): Open a community from Communities in the dashboard to change its settings
+  - [Messages](https://docs.learnhouse.app/platform/messages): Messages is where members of your organization talk to each other and to AI agents
   - [Boards](https://docs.learnhouse.app/platform/boards): Boards are shared, freeform canvases that several people edit at the same time, like a whiteboard
   - [Podcasts](https://docs.learnhouse.app/platform/podcasts): Podcasts let you publish audio shows inside your organization
   - [Calendar](https://docs.learnhouse.app/platform/calendar): The calendar shows each member their assignment deadlines, chapter releases, course updates, certificates, podcast episodes and live sessions
@@ -51,7 +52,7 @@ LearnHouse is an open-source platform for creating and delivering modern educati
     - [Groups & Bundles](https://docs.learnhouse.app/platform/payments/groups): A payment group bundles several courses so that one offer unlocks them all
     - [Store & Checkout](https://docs.learnhouse.app/platform/payments/enrollments): Your organization's store lives at /store
   - [AI](https://docs.learnhouse.app/platform/ai): LearnHouse has AI features for both teachers and learners
-    - [For Students](https://docs.learnhouse.app/platform/ai/for-students): Learners have two AI assistants: Ask AI on each activity, and the Copilot for questions across courses
+    - [For Students](https://docs.learnhouse.app/platform/ai/for-students): Learners have two kinds of AI assistant: Ask AI on each activity, and Copilot and other agents in Messages for questions across courses
     - [For Teachers](https://docs.learnhouse.app/platform/ai/for-teachers): These are the AI tools available when you build courses
   - [Users & Access](https://docs.learnhouse.app/platform/users): Every person in LearnHouse has one account and can belong to several organizations
     - [Members & Invites](https://docs.learnhouse.app/platform/users/members-and-invites): This page covers the Users, Signups & Invite Codes and Invite Members tabs under Users in the dashboard
