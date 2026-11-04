@@ -18,7 +18,6 @@ export function useSitePages(): SitePageMeta[] {
   const resolvedFeatures = config?.resolved_features
   const menuItems: any[] | undefined =
     config?.customization?.menu?.items ?? config?.general?.menu?.items
-  const copilotEnabled = config?.admin_toggles?.ai?.copilot_enabled !== false
   const isAuthenticated = session?.status === 'authenticated'
 
   return useMemo(() => {
@@ -35,8 +34,7 @@ export function useSitePages(): SitePageMeta[] {
       if (page.requiresAuth && !isAuthenticated) return false
       if (page.featureKey && !featureEnabled(page.featureKey)) return false
       if (page.menuType && hiddenInMenu(page.menuType)) return false
-      if (page.requiresCopilot && !copilotEnabled) return false
       return true
     })
-  }, [resolvedFeatures, menuItems, copilotEnabled, isAuthenticated])
+  }, [resolvedFeatures, menuItems, isAuthenticated])
 }

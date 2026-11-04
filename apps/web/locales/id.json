@@ -2381,11 +2381,6 @@
           "description": "Papan Anda",
           "keywords": "papan, kanban, tugas, perencanaan, catatan"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Tanya asisten AI",
-          "keywords": "copilot, ai, asisten, obrolan, tanya, bantuan"
-        },
         "search": {
           "description": "Pencarian lengkap dengan filter",
           "keywords": "cari, temukan, hasil, filter, jelajahi"
@@ -2426,25 +2421,6 @@
     "about_question": "Tentang apakah Aktivitas ini?",
     "flashcards_question": "Buat flashcard tentang Aktivitas ini",
     "examples_question": "Jelaskan Aktivitas ini dengan contoh praktis",
-    "copilot_bubble": {
-      "toggle_list": "Tampilkan/sembunyikan daftar percakapan",
-      "conversations": "Percakapan",
-      "title": "Course Copilot",
-      "new_chat": "Obrolan baru",
-      "close": "Tutup copilot",
-      "new_chat_button": "Obrolan Baru",
-      "no_conversations": "Belum ada percakapan",
-      "subtitle": "Ajukan pertanyaan tentang kursus Anda.",
-      "select_mode": "Pilih mode obrolan",
-      "mode_general": "Mode umum",
-      "mode_course": "Khusus kursus",
-      "select_course": "Pilih kursus",
-      "ask_label": "Tanya tentang kursus Anda",
-      "thinking": "Berpikir...",
-      "ask_placeholder": "Tanya tentang kursus Anda...",
-      "send": "Kirim pesan",
-      "open": "Buka Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "Ilustrasi minimalis bola lampu, gradasi lembut",
       "idea_robot": "Robot tutor 3D yang ramah, isometrik, warna pastel",
@@ -2526,39 +2502,6 @@
       "summarize_tooltip": "Ringkas paragraf atau teks panjang dengan AI",
       "translate_tooltip": "Terjemahkan ke berbagai bahasa dengan AI",
       "examples_tooltip": "Berikan contoh agar lebih paham dengan AI"
-    },
-    "copilot_menu": {
-      "no_conversations": "Belum ada percakapan",
-      "new_conversation": "Percakapan baru",
-      "start_conversation": "Mulai percakapan",
-      "view_all": "Lihat semua percakapan",
-      "open_in_bubble": "Buka di gelembung"
-    },
-    "copilot": {
-      "group_favorites": "Favorit",
-      "group_today": "Hari ini",
-      "group_previous_7_days": "7 hari terakhir",
-      "group_older": "Lebih lama",
-      "selected_course": "Kursus Terpilih",
-      "all_courses": "Semua kursus",
-      "failed_load_session": "Gagal memuat sesi",
-      "new_chat": "Obrolan Baru",
-      "no_conversations": "Belum ada percakapan",
-      "loading_conversation": "Memuat percakapan...",
-      "title": "Course Copilot",
-      "subtitle": "Ajukan pertanyaan tentang kursus Anda dan dapatkan jawaban berdasarkan konten kursus, lengkap dengan referensi ke materi sumber.",
-      "mode_course_only": "Khusus Kursus",
-      "mode_general": "Umum",
-      "mode_course": "Kursus",
-      "mode_general_title": "Mode Pengetahuan Umum",
-      "mode_course_only_title": "Mode Khusus Kursus",
-      "input_label": "Tanya tentang kursus Anda",
-      "thinking": "Berpikir...",
-      "placeholder_general": "Tanya apa saja...",
-      "placeholder_course": "Tanya tentang kursus Anda...",
-      "remove_favorite": "Hapus dari favorit",
-      "add_favorite": "Tambahkan ke favorit",
-      "answering_from": "Menjawab dari {{courses}}"
     }
   },
   "payments": {

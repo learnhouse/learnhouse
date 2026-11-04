@@ -2406,11 +2406,6 @@
           "description": "Je borden",
           "keywords": "borden, kanban, taken, planning, notities"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Stel je vraag aan de AI-assistent",
-          "keywords": "copilot, ai, assistent, chat, vragen, hulp"
-        },
         "search": {
           "description": "Uitgebreid zoeken met filters",
           "keywords": "zoeken, vinden, resultaten, filter, bladeren"
@@ -2451,25 +2446,6 @@
     "about_question": "Waar gaat deze activiteit over?",
     "flashcards_question": "Maak flashcards over deze activiteit",
     "examples_question": "Leg deze activiteit uit met praktijkvoorbeelden",
-    "copilot_bubble": {
-      "toggle_list": "Gesprekkenlijst in-/uitschakelen",
-      "conversations": "Gesprekken",
-      "title": "Course Copilot",
-      "new_chat": "Nieuwe chat",
-      "close": "Copilot sluiten",
-      "new_chat_button": "Nieuwe chat",
-      "no_conversations": "Nog geen gesprekken",
-      "subtitle": "Stel vragen over je cursussen.",
-      "select_mode": "Chatmodus selecteren",
-      "mode_general": "Algemene modus",
-      "mode_course": "Alleen cursus",
-      "select_course": "Cursus selecteren",
-      "ask_label": "Stel een vraag over je cursussen",
-      "thinking": "Aan het denken...",
-      "ask_placeholder": "Stel een vraag over je cursussen...",
-      "send": "Bericht verzenden",
-      "open": "Copilot openen"
-    },
     "image_picker": {
       "idea_lightbulb": "Een minimalistische illustratie van een gloeilamp, zachte verlopen",
       "idea_robot": "Een vriendelijke 3D-robotdocent, isometrisch, pastelkleuren",
@@ -2553,39 +2529,6 @@
       "summarize_tooltip": "Vat een lange alinea of tekst samen met AI",
       "translate_tooltip": "Vertaal naar andere talen met AI",
       "examples_tooltip": "Geef voorbeelden voor beter begrip met AI"
-    },
-    "copilot_menu": {
-      "no_conversations": "Nog geen gesprekken",
-      "new_conversation": "Nieuw gesprek",
-      "start_conversation": "Een gesprek starten",
-      "view_all": "Alle gesprekken bekijken",
-      "open_in_bubble": "In bubbel openen"
-    },
-    "copilot": {
-      "group_favorites": "Favorieten",
-      "group_today": "Vandaag",
-      "group_previous_7_days": "Afgelopen 7 dagen",
-      "group_older": "Ouder",
-      "selected_course": "Geselecteerde cursus",
-      "all_courses": "Alle cursussen",
-      "failed_load_session": "Laden van sessie mislukt",
-      "new_chat": "Nieuwe chat",
-      "no_conversations": "Nog geen gesprekken",
-      "loading_conversation": "Gesprek laden...",
-      "title": "Course Copilot",
-      "subtitle": "Stel vragen over je cursussen en krijg antwoorden op basis van de cursusinhoud, met verwijzingen naar het bronmateriaal.",
-      "mode_course_only": "Alleen cursus",
-      "mode_general": "Algemeen",
-      "mode_course": "Cursus",
-      "mode_general_title": "Modus Algemene kennis",
-      "mode_course_only_title": "Modus Alleen cursus",
-      "input_label": "Stel een vraag over je cursussen",
-      "thinking": "Aan het denken...",
-      "placeholder_general": "Vraag maar raak...",
-      "placeholder_course": "Stel een vraag over je cursussen...",
-      "remove_favorite": "Uit favorieten verwijderen",
-      "add_favorite": "Aan favorieten toevoegen",
-      "answering_from": "Antwoord op basis van {{courses}}"
     }
   },
   "payments": {

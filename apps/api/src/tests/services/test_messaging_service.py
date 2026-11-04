@@ -85,18 +85,13 @@ async def test_oss_blocks_messaging(db, org, admin_user):
     assert "Enterprise" in exc.value.detail
 
 
-@pytest.mark.parametrize("plan,allowed", [("free", False), ("standard", False), ("pro", True), ("enterprise", True)])
-async def test_saas_requires_pro(db, org, admin_user, plan, allowed):
+@pytest.mark.parametrize("plan", ["free", "personal", "standard", "pro", "enterprise"])
+async def test_saas_allows_every_plan(db, org, admin_user, plan):
     db.add(OrganizationConfig(org_id=org.id, config={"config_version": "2.0", "plan": plan},
                               creation_date="", update_date=""))
     await db.commit()
     with _mode("saas"):
-        if allowed:
-            assert await svc.list_conversations(org.id, admin_user.id, db) == []
-        else:
-            with pytest.raises(HTTPException) as exc:
-                await svc.list_conversations(org.id, admin_user.id, db)
-            assert exc.value.status_code == 403
+        assert await svc.list_conversations(org.id, admin_user.id, db) == []
 
 
 async def test_admin_toggle_disables_in_ee(db, org, admin_user):

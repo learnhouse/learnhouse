@@ -2381,11 +2381,6 @@
           "description": "あなたのボード",
           "keywords": "ボード, かんばん, タスク, 計画, メモ, boards"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "AIアシスタントに質問",
-          "keywords": "copilot, ai, アシスタント, チャット, 質問, ヘルプ"
-        },
         "search": {
           "description": "フィルター付きの詳細検索",
           "keywords": "検索, 探す, 結果, フィルター, 閲覧, search"
@@ -2426,25 +2421,6 @@
     "about_question": "このアクティビティは何についてですか？",
     "flashcards_question": "このアクティビティのフラッシュカードを作成",
     "examples_question": "このアクティビティを具体例で説明して",
-    "copilot_bubble": {
-      "toggle_list": "会話一覧を切り替え",
-      "conversations": "会話",
-      "title": "Course Copilot",
-      "new_chat": "新しいチャット",
-      "close": "Copilotを閉じる",
-      "new_chat_button": "新しいチャット",
-      "no_conversations": "会話はまだありません",
-      "subtitle": "コースについて質問できます。",
-      "select_mode": "チャットモードを選択",
-      "mode_general": "一般モード",
-      "mode_course": "コース限定",
-      "select_course": "コースを選択",
-      "ask_label": "コースについて質問",
-      "thinking": "考え中...",
-      "ask_placeholder": "コースについて質問...",
-      "send": "メッセージを送信",
-      "open": "Copilotを開く"
-    },
     "image_picker": {
       "idea_lightbulb": "電球のミニマルなイラスト、やわらかなグラデーション",
       "idea_robot": "親しみやすい3Dロボット講師、アイソメトリック、パステルカラー",
@@ -2526,39 +2502,6 @@
       "summarize_tooltip": "AIで長い段落や文章を要約します",
       "translate_tooltip": "AIでさまざまな言語に翻訳します",
       "examples_tooltip": "AIが例を挙げて理解を助けます"
-    },
-    "copilot_menu": {
-      "no_conversations": "会話はまだありません",
-      "new_conversation": "新しい会話",
-      "start_conversation": "会話を始める",
-      "view_all": "すべての会話を表示",
-      "open_in_bubble": "バブルで開く"
-    },
-    "copilot": {
-      "group_favorites": "お気に入り",
-      "group_today": "今日",
-      "group_previous_7_days": "過去7日間",
-      "group_older": "それ以前",
-      "selected_course": "選択中のコース",
-      "all_courses": "すべてのコース",
-      "failed_load_session": "セッションを読み込めませんでした",
-      "new_chat": "新しいチャット",
-      "no_conversations": "会話はまだありません",
-      "loading_conversation": "会話を読み込み中...",
-      "title": "Course Copilot",
-      "subtitle": "コースについて質問すると、コースの内容に基づき、参照元つきで回答します。",
-      "mode_course_only": "コース限定",
-      "mode_general": "一般",
-      "mode_course": "コース",
-      "mode_general_title": "一般知識モード",
-      "mode_course_only_title": "コース限定モード",
-      "input_label": "コースについて質問",
-      "thinking": "考え中...",
-      "placeholder_general": "何でも質問してください...",
-      "placeholder_course": "コースについて質問...",
-      "remove_favorite": "お気に入りから削除",
-      "add_favorite": "お気に入りに追加",
-      "answering_from": "{{courses}}から回答中"
     }
   },
   "payments": {
