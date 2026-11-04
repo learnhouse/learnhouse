@@ -1,5 +1,5 @@
 import { InputRule, mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import DynamicVariableComponent from './DynamicVariableComponent'
 import { VARIABLE_INPUT_REGEX, variableDef } from './dynamicRules'
 
@@ -77,6 +77,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(DynamicVariableComponent)
+    return lhNodeView(DynamicVariableComponent)
   },
 })

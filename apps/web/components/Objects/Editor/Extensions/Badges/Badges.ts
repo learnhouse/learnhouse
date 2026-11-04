@@ -1,4 +1,4 @@
-import { ReactNodeViewRenderer } from "@tiptap/react";
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import { mergeAttributes, Node } from "@tiptap/core";
 import BadgesExtension from "@/components/Objects/Editor/Extensions/Badges/BadgesExtension";
 
@@ -34,6 +34,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(BadgesExtension);
+    return lhNodeView(BadgesExtension);
   },
 });

@@ -1,4 +1,4 @@
-import { ReactNodeViewRenderer } from "@tiptap/react";
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import { mergeAttributes, Node } from "@tiptap/core";
 import dynamic from "next/dynamic";
 
@@ -67,6 +67,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ScenariosExtension as any);
+    return lhNodeView(ScenariosExtension as any);
   },
 });

@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
 
 const VideoBlockComponent = dynamic(() => import('./VideoBlockComponent'), {
@@ -33,6 +33,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(VideoBlockComponent as any)
+    return lhNodeView(VideoBlockComponent as any)
   },
 })

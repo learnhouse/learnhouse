@@ -24,7 +24,7 @@ elif [[ -n "${1:-}" ]]; then
 fi
 
 # Every directory holding a package.json + bun.lock pair.
-BUN_WORKSPACES=(apps/web apps/collab apps/cli apps/e2e docs)
+BUN_WORKSPACES=(apps/web apps/collab apps/cli apps/e2e docs packages)
 
 FAILED=()
 

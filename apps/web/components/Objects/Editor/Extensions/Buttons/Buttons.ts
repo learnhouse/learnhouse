@@ -1,4 +1,4 @@
-import { ReactNodeViewRenderer } from "@tiptap/react";
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import { mergeAttributes, Node } from "@tiptap/core";
 import ButtonsExtension from "./ButtonsExtension";
 
@@ -38,6 +38,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ButtonsExtension);
+    return lhNodeView(ButtonsExtension);
   },
 });
