@@ -235,6 +235,7 @@
     "organizations": "องค์กร",
     "billing": "การเรียกเก็บเงิน",
     "create_organization": "สร้างองค์กร",
+    "start_your_own_organization": "สร้างองค์กรของคุณเอง",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "ไม่สามารถลบองค์กรนี้ได้ กรุณาลองอีกครั้ง",
     "org_actions": "การจัดการองค์กร",

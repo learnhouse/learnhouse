@@ -235,6 +235,7 @@
     "organizations": "Tổ chức",
     "billing": "Thanh toán",
     "create_organization": "Tạo tổ chức",
+    "start_your_own_organization": "Tạo tổ chức của riêng bạn",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "Không thể xóa tổ chức này. Vui lòng thử lại.",
     "org_actions": "Thao tác tổ chức",

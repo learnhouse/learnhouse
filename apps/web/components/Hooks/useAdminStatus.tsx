@@ -3,7 +3,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useMemo } from 'react';
 
 interface Role {
-    org: { id: number; org_uuid: string };
+    org: { id: number; org_uuid: string; is_demo?: boolean };
     role: {
         id: number;
         role_uuid: string;
@@ -97,6 +97,40 @@ interface UseAdminStatusReturn {
 export function canManageOrgFromSession(session: any, orgId?: number): boolean {
     if (!orgId) return false;
     if (session?.data?.user?.is_superadmin === true) return true;
+    const roles: Role[] = session?.data?.roles || [];
+    return roles.some(
+        (r) => r?.org?.id === orgId && r?.role?.rights?.organizations?.action_update === true,
+    );
+}
+
+/**
+ * Does the user run an organization of their own on this platform? This is what
+ * separates a LearnHouse customer (who gets the hub: switch workspaces, create
+ * one, billing) from someone who only joined a school as a member, for whom
+ * all of that is noise. The demo sandbox makes every visitor an admin, so it
+ * doesn't count.
+ */
+export function managesAnyOrgFromSession(session: any): boolean {
+    if (session?.data?.user?.is_superadmin === true) return true;
+    const roles: Role[] = session?.data?.roles || [];
+    return roles.some(
+        (r) => !r?.org?.is_demo && r?.role?.rights?.organizations?.action_update === true,
+    );
+}
+
+/**
+ * Should the platform entry points (hub, create organization, demo) show? Yes
+ * for people who run an organization, and for prospects whose only
+ * organization is the demo. No for members of schools.
+ */
+export function seesPlatformHubFromSession(session: any): boolean {
+    if (managesAnyOrgFromSession(session)) return true;
+    const roles: Role[] = session?.data?.roles || [];
+    return roles.length > 0 && roles.every((r) => r?.org?.is_demo === true);
+}
+
+/** Does the user hold an org-managing role in this org (superadmin aside)? */
+export function hasManagingRoleFromSession(session: any, orgId?: number): boolean {
     const roles: Role[] = session?.data?.roles || [];
     return roles.some(
         (r) => r?.org?.id === orgId && r?.role?.rights?.organizations?.action_update === true,

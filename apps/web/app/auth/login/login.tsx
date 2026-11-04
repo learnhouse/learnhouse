@@ -15,6 +15,7 @@ import { getLEARNHOUSE_TOP_DOMAIN_VAL, getDeploymentMode, isOnCustomDomain } fro
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { resendVerificationEmail } from '@services/auth/auth'
+import { defaultPostAuthPath } from '@services/auth/redirects'
 import AuthLayout from '@components/Auth/AuthLayout'
 import TurnstileWidget, { useTurnstileRequired, verifyTurnstileToken, type TurnstileWidgetHandle } from '@components/Auth/TurnstileWidget'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
@@ -133,19 +134,20 @@ const LoginClient = (props: LoginClientProps) => {
   // before the mfaToken state lands.
   useEffect(() => {
     if (isAuthenticated && !isSubmitting && !mfaToken && !arrivedWithMfaRef.current) {
-      router.replace('/home')
+      router.replace(defaultPostAuthPath(props.org))
     }
-  }, [isAuthenticated, isSubmitting, mfaToken, router])
+  }, [isAuthenticated, isSubmitting, mfaToken, router, props.org])
 
   // Honor a post-login redirect via ?next / ?redirect, sanitized to an
-  // internal same-origin path (no open-redirect), defaulting to /home.
+  // internal same-origin path (no open-redirect), defaulting to the org's home
+  // (or the hub on the org-less apex).
   // Forward it through the cross-domain /redirect_from_auth handoff.
   const buildCallbackUrl = () => {
     const params = new URLSearchParams(window.location.search)
     // `redirect_to` is what the magic-link consume endpoint forwards when it
     // bounces a 2FA-enabled user here instead of signing them straight in.
     const raw = params.get('next') ?? params.get('redirect') ?? params.get('redirect_to')
-    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : '/home'
+    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : defaultPostAuthPath(props.org)
     return `${window.location.origin}/redirect_from_auth?next=${encodeURIComponent(dest)}`
   }
 

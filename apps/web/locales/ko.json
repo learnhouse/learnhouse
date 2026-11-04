@@ -235,6 +235,7 @@
     "organizations": "조직",
     "billing": "결제",
     "create_organization": "조직 만들기",
+    "start_your_own_organization": "나만의 조직 시작하기",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "이 조직을 삭제할 수 없습니다. 다시 시도해 주세요.",
     "org_actions": "조직 작업",

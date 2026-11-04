@@ -1,5 +1,5 @@
 'use client'
-import { getUriWithoutOrg } from '@services/config/config'
+import { getPlatformHomeUri } from '@services/config/config'
 import { Diamond, Home, PersonStanding } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
@@ -25,7 +25,10 @@ function InfoUI(params: { message?: string, submessage?: string, cta?: string, h
                     <span className="text-md font-bold">{params.cta}</span>
                 </Link>
                 <Link
-                    href={getUriWithoutOrg('/home')}
+                    href="/home"
+                    // Resolved on click: it reads the tenancy cookie, and on an org
+                    // host /home is that org's own page, which may be what failed.
+                    onClick={(e) => { e.preventDefault(); window.location.assign(getPlatformHomeUri()) }}
                     className="flex space-x-2 items-center rounded-full px-4 py-1 text-gray-200 bg-gray-700 hover:bg-gray-800 transition-all ease-linear shadow-lg "
                 >
                     <Home className="text-gray-200" size={17} />

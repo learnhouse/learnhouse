@@ -235,6 +235,7 @@
     "organizations": "Organisasi",
     "billing": "Tagihan",
     "create_organization": "Buat organisasi",
+    "start_your_own_organization": "Buat organisasi Anda sendiri",
     "copyright": "© {{year}} LearnHouse, Inc.",
     "delete_organization_error": "Tidak dapat menghapus organisasi ini. Silakan coba lagi.",
     "org_actions": "Tindakan organisasi",

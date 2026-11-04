@@ -1,5 +1,5 @@
 'use client'
-import { getPlatformUrl, getUriWithoutOrg } from '@services/config/config'
+import { getPlatformHomeUri, getPlatformUrl } from '@services/config/config'
 import { signOut } from '@components/Contexts/AuthContext'
 import { openFeedbackDialog, isReportingAvailable } from '@lib/errors/report'
 import type { ResolutionKind } from '@lib/errors/types'
@@ -37,7 +37,7 @@ export default function ErrorActions({ resolutions, reset, eventId, loginNext }:
   // The org-less home URL depends on window.location, so resolving it during
   // render made the server and client hrefs disagree (hydration mismatch).
   const [homeHref, setHomeHref] = useState('/home')
-  useEffect(() => setHomeHref(getUriWithoutOrg('/home')), [])
+  useEffect(() => setHomeHref(getPlatformHomeUri()), [])
 
   // Dedupe while preserving order.
   const kinds = Array.from(new Set(resolutions))
