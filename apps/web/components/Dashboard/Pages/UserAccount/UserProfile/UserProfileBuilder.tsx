@@ -351,7 +351,7 @@ const UserProfileBuilder = () => {
     <div className="bg-white rounded-xl nice-shadow">
       <div className="flex flex-col gap-0">
         {/* Header */}
-        <div className="flex items-center justify-between bg-gray-50 px-5 py-3 mx-3 my-3 rounded-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 px-4 sm:px-5 py-3 mx-3 my-3 rounded-md">
           <div className="flex flex-col -space-y-1">
             <h1 className="font-bold text-xl text-gray-800 flex items-center">
               {t('user.settings.profile_builder.title')}

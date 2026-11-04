@@ -149,7 +149,9 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
       {activity && (
         <>
           {activity.activity_sub_type === 'SUBTYPE_VIDEO_HOSTED' && (
-            <div className="w-full">
+            // lh-video-bleed: square corners on phones, where the page runs the
+            // video edge to edge (player.css).
+            <div className="w-full lh-video-bleed">
               <div className="relative w-full aspect-video">
                 {(() => {
                   const { src, isHls } = getVideoSource()
@@ -216,7 +218,7 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
           )}
           {activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE' && (
             <div className="w-full">
-              <div className="relative w-full aspect-video overflow-hidden rounded-[20px] ring-1 ring-white/10">
+              <div className="relative w-full aspect-video overflow-hidden rounded-[20px] ring-1 ring-white/10 max-sm:rounded-none max-sm:ring-0">
                 <YouTube
                   className="w-full h-full"
                   opts={{

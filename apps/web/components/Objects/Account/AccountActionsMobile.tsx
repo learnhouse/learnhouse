@@ -22,30 +22,29 @@ export function AccountActionsMobile({ orgslug, currentSubpage }: AccountActions
   const { t } = useTranslation()
 
   return (
-    <nav aria-label={t('account.mobile_actions')} className="fixed bottom-0 start-0 end-0 z-50 md:hidden">
-      <div className="mx-3 mb-4 bg-white/95 backdrop-blur-sm rounded-xl nice-shadow p-2">
-        <div className="flex items-center justify-around">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon
-            const isActive = currentSubpage === item.id
-            return (
-              <Link
-                key={item.id}
-                href={getUriWithOrg(orgslug, `/account/${item.id}`)}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Icon size={18} />
-                <span className="text-[10px] font-medium truncate max-w-[60px]">
-                  {t(item.labelKey)}
-                </span>
-              </Link>
-            )
-          })}
-        </div>
+    // A swipeable segment row under the page title. The phone tab bar already
+    // owns the bottom edge, so this no longer floats there.
+    <nav aria-label={t('account.mobile_actions')} className="md:hidden -mx-4 px-4 sm:-mx-6 sm:px-6">
+      <div className="lh-scroll-x gap-2 py-1">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon
+          const isActive = currentSubpage === item.id
+          return (
+            <Link
+              key={item.id}
+              href={getUriWithOrg(orgslug, `/account/${item.id}`)}
+              aria-current={isActive ? 'page' : undefined}
+              className={`lh-press flex items-center gap-1.5 h-9 px-3.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                isActive
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white text-gray-600 nice-shadow'
+              }`}
+            >
+              <Icon size={15} />
+              {t(item.labelKey)}
+            </Link>
+          )
+        })}
       </div>
     </nav>
   )

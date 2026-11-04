@@ -161,7 +161,7 @@ export function CourseOverviewTop({
 
   return (
     <>
-      <div className="pt-6 pb-4">
+      <div className="pt-4 pb-1 sm:pt-6 sm:pb-4">
         <Breadcrumbs items={[
           { label: t('courses.courses'), href: '/dash/courses', icon: <BookCopy size={14} /> },
           { label: courseStructure.name }

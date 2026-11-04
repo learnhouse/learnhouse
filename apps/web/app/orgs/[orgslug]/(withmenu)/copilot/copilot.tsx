@@ -408,7 +408,8 @@ export function CopilotChat({ orgslug }: CopilotProps) {
   const isInputDisabled = isWaiting || isLoadingSession
 
   return (
-    <div className="flex h-[calc(100vh-72px)] w-full max-w-(--breakpoint-2xl) mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+    // Phones: fill below the 60px header, above the tab bar (if any) and home indicator.
+    <div className="flex h-[calc(100dvh-60px-var(--lh-mobile-nav-h))] md:h-[calc(100vh-72px)] max-md:pb-[var(--lh-safe-bottom)] w-full max-w-(--breakpoint-2xl) mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
       {/* Sidebar: overlay on mobile, inline on desktop */}
       {sidebarOpen && (
       <>
@@ -531,12 +532,12 @@ export function CopilotChat({ orgslug }: CopilotProps) {
                   {t('ai.copilot.subtitle')}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2">
                 {/* Mode toggle */}
                 <div className="flex items-center rounded-xl bg-neutral-50 dark:bg-neutral-800 nice-shadow p-0.5">
                   <button
                     onClick={() => setChatMode('course_only')}
-                    className={`flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all ${
                       chatMode === 'course_only'
                         ? 'bg-white dark:bg-neutral-700 text-neutral-800 dark:text-white shadow-sm'
                         : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
@@ -547,7 +548,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
                   </button>
                   <button
                     onClick={() => setChatMode('general')}
-                    className={`flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all ${
                       chatMode === 'general'
                         ? 'bg-white dark:bg-neutral-700 text-neutral-800 dark:text-white shadow-sm'
                         : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'

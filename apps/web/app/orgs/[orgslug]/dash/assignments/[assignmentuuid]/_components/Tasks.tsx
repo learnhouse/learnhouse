@@ -1,7 +1,7 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
-import { Clock, Code2, FileUp, GripVertical, Hash, ListTodo, Pencil, Plus, Sparkles, Type } from 'lucide-react';
-import React from 'react'
+import { Code2, FileUp, GripVertical, Hash, ListTodo, Pencil, Plus, Sparkles, Type } from 'lucide-react';
+import React, { useEffect } from 'react'
 import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -9,16 +9,16 @@ import NewTaskModal from './Modals/NewTaskModal';
 import GenerateTasksAIModal from './Modals/GenerateTasksAIModal';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useTranslation } from 'react-i18next';
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { queryKeys } from '@/lib/query/keys'
 import { moveTask, sortTasksByOrder } from '@/lib/assignments/taskOrder'
 import { reorderAssignmentTasks } from '@services/courses/assignments'
+import { BTN_PRIMARY, BTN_SECONDARY } from '../../_components/assignmentUi'
 
-dayjs.extend(relativeTime)
+// The API caps an assignment at this many tasks; past it the add actions hide.
+export const MAX_TASKS = 10
 
-const TASK_TYPE_META: Record<string, { label: string; labelKey?: string; Icon: React.ComponentType<{ size?: number; className?: string }> }> = {
+export const TASK_TYPE_META: Record<string, { label: string; labelKey?: string; Icon: React.ComponentType<{ size?: number; className?: string }> }> = {
     QUIZ: { label: 'Quiz', labelKey: 'dashboard.assignments.editor.task_type_labels.quiz', Icon: ListTodo },
     FILE_SUBMISSION: { label: 'File upload', labelKey: 'dashboard.assignments.editor.task_type_labels.file_submission', Icon: FileUp },
     FORM: { label: 'Form', labelKey: 'dashboard.assignments.editor.task_type_labels.form', Icon: Type },
@@ -27,12 +27,55 @@ const TASK_TYPE_META: Record<string, { label: string; labelKey?: string; Icon: R
     NUMBER_ANSWER: { label: 'Number', labelKey: 'dashboard.assignments.editor.task_type_labels.number_answer', Icon: Hash },
 }
 
-function stripMarkup(text: string): string {
-    if (!text) return ''
-    return text
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
+// "Add task" + "Generate with AI". Each instance owns its modal state, so the
+// actions can sit both at the top of the task list and inside the editor's
+// empty state.
+export function TaskCreateActions({ assignment_uuid, layout = 'stack' }: { assignment_uuid: string; layout?: 'stack' | 'row' }) {
+    const { t } = useTranslation()
+    const [isNewTaskModalOpen, setIsNewTaskModalOpen] = React.useState(false)
+    const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = React.useState(false)
+
+    return (
+        <div className={layout === 'row' ? 'flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2'}>
+            <Modal
+                isDialogOpen={isNewTaskModalOpen}
+                onOpenChange={setIsNewTaskModalOpen}
+                minHeight='no-min'
+                minWidth='md'
+                dialogContent={
+                    <NewTaskModal assignment_uuid={assignment_uuid} closeModal={setIsNewTaskModalOpen} />
+                }
+                dialogTitle={t('dashboard.assignments.editor.add_task_modal.title')}
+                dialogDescription={t('dashboard.assignments.editor.add_task_modal.description')}
+                dialogTrigger={
+                    <button type='button' className={`${BTN_PRIMARY} w-full ${layout === 'row' ? 'sm:w-auto' : ''}`}>
+                        <Plus size={16} />
+                        <span className='truncate'>{t('dashboard.assignments.editor.add_task')}</span>
+                    </button>
+                }
+            />
+            <Modal
+                isDialogOpen={isGenerateAIModalOpen}
+                onOpenChange={setIsGenerateAIModalOpen}
+                minHeight='no-min'
+                minWidth='md'
+                dialogContent={
+                    <GenerateTasksAIModal
+                        assignment_uuid={assignment_uuid}
+                        closeModal={setIsGenerateAIModalOpen}
+                    />
+                }
+                dialogTitle={t('dashboard.assignments.editor.generate_ai_modal.title', 'Generate tasks with AI')}
+                dialogDescription={t('dashboard.assignments.editor.generate_ai_modal.description', 'Describe what you want and preview tasks grounded on the course content before adding them.')}
+                dialogTrigger={
+                    <button type='button' className={`${BTN_SECONDARY} w-full ${layout === 'row' ? 'sm:w-auto' : ''}`}>
+                        <Sparkles size={16} className='text-violet-500' />
+                        <span className='truncate'>{t('dashboard.assignments.editor.generate_ai', 'Generate tasks with AI')}</span>
+                    </button>
+                }
+            />
+        </div>
+    )
 }
 
 function AssignmentTasks({ assignment_uuid }: any) {
@@ -40,8 +83,6 @@ function AssignmentTasks({ assignment_uuid }: any) {
     const assignments = useAssignments() as any;
     const assignmentTask = useAssignmentsTask() as any;
     const assignmentTaskHook = useAssignmentsTaskDispatch() as any;
-    const [isNewTaskModalOpen, setIsNewTaskModalOpen] = React.useState(false)
-    const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = React.useState(false)
     const queryClient = useQueryClient()
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token
@@ -51,6 +92,16 @@ function AssignmentTasks({ assignment_uuid }: any) {
     }
 
     const tasks: any[] = sortTasksByOrder(assignments?.assignment_tasks)
+    const selectedUUID = assignmentTask.selectedAssignmentTaskUUID
+    const firstTaskUUID = tasks[0]?.assignment_task_uuid
+
+    // Open the first task instead of an empty canvas: on first load, and again
+    // after the selected task is deleted (the editor resets the selection).
+    useEffect(() => {
+        if (!selectedUUID && firstTaskUUID) {
+            assignmentTaskHook({ type: 'setSelectedAssignmentTaskUUID', payload: firstTaskUUID })
+        }
+    }, [selectedUUID, firstTaskUUID, assignmentTaskHook])
 
     async function handleDragEnd(result: DropResult) {
         if (!result.destination || result.destination.index === result.source.index) return
@@ -71,75 +122,39 @@ function AssignmentTasks({ assignment_uuid }: any) {
         queryClient.invalidateQueries({ queryKey: tasksKey })
     }
 
+    const totalPoints = tasks.reduce((sum, task) => sum + (typeof task.max_grade_value === 'number' ? task.max_grade_value : 0), 0)
+
     return (
-        <div className='flex w-full'>
-            <div className='flex flex-col gap-2 w-[272px] mx-auto'>
-                {assignments && tasks.length < 10 && (
-                    <Modal
-                        isDialogOpen={isNewTaskModalOpen}
-                        onOpenChange={setIsNewTaskModalOpen}
-                        minHeight='no-min'
-                        minWidth='md'
-                        dialogContent={
-                            <NewTaskModal assignment_uuid={assignment_uuid} closeModal={setIsNewTaskModalOpen} />
-                        }
-                        dialogTitle={t('dashboard.assignments.editor.add_task_modal.title')}
-                        dialogDescription={t('dashboard.assignments.editor.add_task_modal.description')}
-                        dialogTrigger={
-                            <button
-                                type='button'
-                                className='group flex items-center justify-center gap-1.5 w-full px-3 py-2.5 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-black transition-colors'
-                            >
-                                <Plus size={14} className='transition-transform group-hover:scale-110' />
-                                <span>{t('dashboard.assignments.editor.add_task')}</span>
-                            </button>
-                        }
-                    />
-                )}
-
-                {assignments && tasks.length < 10 && (
-                    <Modal
-                        isDialogOpen={isGenerateAIModalOpen}
-                        onOpenChange={setIsGenerateAIModalOpen}
-                        minHeight='no-min'
-                        minWidth='md'
-                        dialogContent={
-                            <GenerateTasksAIModal
-                                assignment_uuid={assignment_uuid}
-                                closeModal={setIsGenerateAIModalOpen}
-                            />
-                        }
-                        dialogTitle={t('dashboard.assignments.editor.generate_ai_modal.title', 'Generate tasks with AI')}
-                        dialogDescription={t('dashboard.assignments.editor.generate_ai_modal.description', 'Describe what you want and preview tasks grounded on the course content before adding them.')}
-                        dialogTrigger={
-                            <button
-                                type='button'
-                                className='group flex items-center justify-center gap-1.5 w-full px-3 py-2.5 bg-white text-gray-700 text-xs font-semibold rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors nice-shadow'
-                            >
-                                <Sparkles size={14} className='transition-transform group-hover:scale-110' />
-                                <span>{t('dashboard.assignments.editor.generate_ai', 'Generate tasks with AI')}</span>
-                            </button>
-                        }
-                    />
-                )}
-
-                {tasks.length > 0 && (
-                    <div className='px-1 pt-1 pb-0.5 flex items-center justify-between'>
-                        <span className='text-[10px] font-semibold text-gray-400 uppercase tracking-wider'>
-                            {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
-                        </span>
-                        {tasks.length > 1 && (
-                            <span className='text-[10px] font-medium text-gray-300'>
-                                {t('dashboard.assignments.editor.drag_to_reorder', 'Drag to reorder')}
-                            </span>
+        <div className='flex flex-col w-full min-h-0 lg:h-full'>
+            {/* Panel header */}
+            <div className='flex-none px-4 sm:px-6 lg:px-5 pt-5 pb-4 space-y-3 lg:border-b lg:border-neutral-100'>
+                <div className='flex items-baseline justify-between gap-2'>
+                    <h2 className='text-base font-semibold text-neutral-900'>
+                        {t('dashboard.assignments.editor.tasks_title')}
+                        {tasks.length > 0 && (
+                            <span className='ms-2 text-sm font-medium text-neutral-400 tabular-nums'>{tasks.length}/{MAX_TASKS}</span>
                         )}
-                    </div>
+                    </h2>
+                    {totalPoints > 0 && (
+                        <span className='text-xs text-neutral-500 tabular-nums'>
+                            {t('dashboard.assignments.editor.total_points', { points: totalPoints })}
+                        </span>
+                    )}
+                </div>
+                {assignments && tasks.length < MAX_TASKS && (
+                    <TaskCreateActions assignment_uuid={assignment_uuid} />
                 )}
+                {assignments && tasks.length >= MAX_TASKS && (
+                    <p className='text-xs text-neutral-500'>{t('dashboard.assignments.editor.max_tasks_reached', { max: MAX_TASKS })}</p>
+                )}
+            </div>
 
+            {/* Task rows */}
+            <div className='flex-1 min-h-0 lg:overflow-y-auto px-2 sm:px-4 lg:px-3 pb-4 lg:py-3'>
                 <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId='assignment-tasks'>
                 {(droppableProvided) => (
-                <div
+                <ol
                     ref={droppableProvided.innerRef}
                     {...droppableProvided.droppableProps}
                     className='flex flex-col'
@@ -147,101 +162,77 @@ function AssignmentTasks({ assignment_uuid }: any) {
                 {tasks.map((task: any, index: number) => {
                     const meta = TASK_TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: Type }
                     const Icon = meta.Icon
-                    const isSelected = task.assignment_task_uuid === assignmentTask.selectedAssignmentTaskUUID
-                    const descriptionPreview = stripMarkup(task.description || '')
-                    const createdAt = task.creation_date ? dayjs(task.creation_date) : null
-                    const createdLabel = createdAt?.isValid() ? createdAt.fromNow() : null
-                    const position = index + 1
+                    const isSelected = task.assignment_task_uuid === selectedUUID
 
                     return (
                         <Draggable
                             key={task.assignment_task_uuid}
                             draggableId={task.assignment_task_uuid}
                             index={index}
-                            // The whole card is a <button>; let it start a drag
+                            // The whole row is a <button>; let it start a drag
                             // while a plain click still selects the task.
                             disableInteractiveElementBlocking
                         >
                         {(draggableProvided, snapshot) => (
-                        <button
-                            type='button'
+                        <li
                             ref={draggableProvided.innerRef}
                             {...draggableProvided.draggableProps}
+                            className='mb-1'
+                        >
+                        <button
+                            type='button'
                             {...draggableProvided.dragHandleProps}
                             onClick={() => setSelectTask(task.assignment_task_uuid)}
                             data-testid='assignment-task-card'
-                            className={`group relative w-full mb-2 text-start rounded-xl border transition-colors overflow-hidden
-                                ${isSelected
-                                    ? 'border-gray-900 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.08)]'
-                                    : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-[0_2px_8px_rgba(15,23,42,0.05)]'}
-                                ${snapshot.isDragging ? 'shadow-[0_8px_24px_rgba(15,23,42,0.15)]' : ''}
+                            aria-current={isSelected ? 'true' : undefined}
+                            className={`group relative w-full flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors
+                                ${isSelected ? 'bg-neutral-100' : 'hover:bg-neutral-50'}
+                                ${snapshot.isDragging ? 'bg-white nice-shadow' : ''}
                             `}
                         >
-                            {/* Accent bar when selected */}
                             <span
-                                className={`absolute start-0 top-0 bottom-0 w-[3px] transition-colors
-                                    ${isSelected ? 'bg-gray-900' : 'bg-transparent'}
+                                className={`relative w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors
+                                    ${isSelected ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500 ring-1 ring-inset ring-neutral-200'}
                                 `}
-                                aria-hidden
-                            />
-
-                            <div className='p-3 ps-[14px]'>
-                                {/* Meta row */}
-                                <div className='flex items-center justify-between mb-1.5'>
-                                    <div className='flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400'>
-                                        <span className='inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-100 text-gray-500 font-bold'>
-                                            {position}
-                                        </span>
-                                        <span>{meta.labelKey ? t(meta.labelKey) : meta.label}</span>
-                                    </div>
-                                    <div className='flex items-center gap-1 text-gray-300'>
-                                        <GripVertical
-                                            size={13}
-                                            className={`transition-opacity ${tasks.length > 1 ? 'opacity-0 group-hover:opacity-100' : 'hidden'}`}
-                                            aria-hidden
-                                        />
-                                        <Icon size={13} />
-                                    </div>
-                                </div>
-
-                                {/* Title */}
-                                <div className='text-sm font-semibold text-gray-800 leading-snug break-words'>
-                                    {task.title || <span className='text-gray-300 italic font-normal'>{t('dashboard.assignments.editor.untitled_task')}</span>}
-                                </div>
-
-                                {/* Description */}
-                                {descriptionPreview && (
-                                    <p className='mt-1.5 text-xs text-gray-500 leading-relaxed line-clamp-2'>
-                                        {descriptionPreview}
-                                    </p>
-                                )}
-
-                                {/* Footer */}
-                                <div className='mt-2.5 pt-2 border-t border-gray-50 flex items-center justify-between text-[11px] text-gray-400'>
-                                    <div className='flex items-center gap-1'>
-                                        <Clock size={10} />
-                                        <span>{createdLabel ?? t('dashboard.assignments.editor.not_available')}</span>
-                                    </div>
-                                    {typeof task.max_grade_value === 'number' && task.max_grade_value !== 100 && (
-                                        <span className='font-medium text-gray-500'>{t('dashboard.assignments.editor.out_of', { max: task.max_grade_value })}</span>
-                                    )}
-                                </div>
-                            </div>
+                            >
+                                <Icon size={16} />
+                            </span>
+                            <span className='min-w-0 flex-1'>
+                                <span className={`block text-sm leading-snug truncate ${isSelected ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-800'}`}>
+                                    {task.title || <span className='text-neutral-400 italic font-normal'>{t('dashboard.assignments.editor.untitled_task')}</span>}
+                                </span>
+                                <span className='mt-0.5 block text-xs text-neutral-500 truncate tabular-nums'>
+                                    {index + 1}. {meta.labelKey ? t(meta.labelKey) : meta.label}
+                                </span>
+                            </span>
+                            {typeof task.max_grade_value === 'number' && (
+                                <span className='shrink-0 text-xs font-medium text-neutral-500 tabular-nums'>
+                                    {t('dashboard.assignments.editor.points_short', { points: task.max_grade_value })}
+                                </span>
+                            )}
+                            {tasks.length > 1 && (
+                                <GripVertical
+                                    size={14}
+                                    className='shrink-0 -ms-1 text-neutral-300 opacity-60 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity'
+                                    aria-label={t('dashboard.assignments.editor.drag_to_reorder', 'Drag to reorder')}
+                                />
+                            )}
                         </button>
+                        </li>
                         )}
                         </Draggable>
                     )
                 })}
                 {droppableProvided.placeholder}
-                </div>
+                </ol>
                 )}
                 </Droppable>
                 </DragDropContext>
 
                 {tasks.length === 0 && assignments && (
-                    <div className='rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-8 text-center'>
-                        <div className='text-xs text-gray-400'>{t('dashboard.assignments.editor.no_tasks')}</div>
-                    </div>
+                    <p className='px-3 py-6 text-center text-sm text-neutral-500'>
+                        {t('dashboard.assignments.editor.no_tasks')}
+                    </p>
                 )}
             </div>
         </div>

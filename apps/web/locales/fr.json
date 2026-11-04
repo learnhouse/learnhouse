@@ -2257,7 +2257,19 @@
     "solution_locked_title": "Corrigé verrouillé",
     "solution_locked_on_submission": "Déposez votre travail et le corrigé se débloque aussitôt.",
     "solution_locked_after_grading": "Le corrigé se débloque une fois votre travail corrigé.",
-    "retry_assignment_confirm_ungraded": "Votre dépôt actuel sera réinitialisé pour recommencer, et le corrigé se reverrouille jusqu'au prochain dépôt."
+    "retry_assignment_confirm_ungraded": "Votre dépôt actuel sera réinitialisé pour recommencer, et le corrigé se reverrouille jusqu'au prochain dépôt.",
+    "status_not_started": "Pas commencé",
+    "status_in_progress": "En cours",
+    "status_submitted": "Rendu",
+    "due_on": "À rendre le {{date}}",
+    "answered_progress": "{{answered}} sur {{total}} répondues",
+    "handin_ready_title": "Prêt à rendre ?",
+    "handin_ready_body": "Vos réponses sont enregistrées automatiquement.",
+    "your_score": "Votre note",
+    "awaiting_grade_body": "Votre travail est chez votre enseignant. Votre note s'affichera ici une fois corrigé.",
+    "tasks_count_one": "{{count}} tâche",
+    "tasks_count_many": "{{count}} tâches",
+    "tasks_count_other": "{{count}} tâches"
   },
   "certificate": {
     "certificate": "Certificat",
@@ -6466,7 +6478,15 @@
           "hide_empty": "Masquer les cours vides"
         },
         "new_assignment": "Nouveau devoir",
-        "clear_search": "Effacer la recherche"
+        "clear_search": "Effacer la recherche",
+        "subtitle": "Créez, publiez et notez les devoirs de tous vos cours.",
+        "columns": {
+          "grading": "Notation",
+          "actions": "Actions"
+        },
+        "empty_description": "Les devoirs se trouvent dans un chapitre de cours. Créez-en un pour commencer à recevoir le travail des apprenants.",
+        "status_draft": "Brouillon",
+        "no_due_date": "Pas de date limite"
       },
       "detail": {
         "title": "Outils de devoir",
@@ -6500,8 +6520,10 @@
             "updating": "Mise à jour du devoir...",
             "update_success": "Le devoir a été mis à jour avec succès",
             "update_error": "Erreur lors de la mise à jour du devoir, veuillez réessayer plus tard."
-          }
-        }
+          },
+          "edit_settings": "Modifier les paramètres"
+        },
+        "due_on": "À rendre le {{date}}"
       },
       "editor": {
         "tasks_title": "Tâches",
@@ -6632,7 +6654,10 @@
           },
           "file": {
             "teacher_hint": "L'utilisateur pourra soumettre un fichier pour cette tâche, vous pourrez le consulter dans l'onglet Soumissions",
-            "submit_file": "Soumettre le fichier"
+            "submit_file": "Soumettre le fichier",
+            "uploaded": "Envoyé",
+            "replace": "Remplacer",
+            "no_file": "Aucun fichier envoyé"
           },
           "quiz": {
             "last_option": "Impossible de supprimer la dernière option. Au moins une option est requise.",
@@ -6791,7 +6816,14 @@
           "general": "Général",
           "content": "Contenu"
         },
-        "no_task_selected": "Aucune tâche sélectionnée"
+        "no_task_selected": "Aucune tâche sélectionnée",
+        "task_position": "Tâche {{number}} sur {{total}}",
+        "delete_task_confirm": "Cette tâche sera définitivement retirée du devoir.",
+        "empty_title": "Ajoutez votre première tâche",
+        "empty_description": "Les tâches sont ce sur quoi travaillent les apprenants : quiz, réponses courtes, exercices de code, envois de fichiers, etc.",
+        "points_short": "{{points}} pts",
+        "total_points": "{{points}} pts au total",
+        "max_tasks_reached": "Ce devoir a atteint le maximum de {{max}} tâches."
       },
       "submissions": {
         "status": {
@@ -6814,7 +6846,8 @@
           "recently_graded": "Récemment notés"
         },
         "stats": {
-          "total": "Total"
+          "total": "Total",
+          "to_grade": "À noter"
         },
         "preview": {
           "current_grade": "Note actuelle",
@@ -6837,7 +6870,9 @@
         "evaluate": "Évaluer",
         "evaluate_modal": {
           "title": "Évaluer @{{username}}",
-          "description": "Évaluer la soumission"
+          "description": "Évaluer la soumission",
+          "title_name": "Évaluer {{name}}",
+          "submitted_at": "Rendu le {{date}}"
         },
         "task_label": "Tâche {{number}} :",
         "hint": "Indice",
@@ -6859,7 +6894,12 @@
         "ungraded_title": "Formatif (non noté)",
         "ungraded_description": "Ce devoir est déposé pour consultation uniquement. Aucune note n'est enregistrée.",
         "download_to_grade": "Téléchargez le fichier, corrigez-le manuellement, puis saisissez la note ci-dessus",
-        "download_to_review": "Téléchargez le fichier pour consulter ce que l'apprenant a déposé."
+        "download_to_review": "Téléchargez le fichier pour consulter ce que l'apprenant a déposé.",
+        "empty_description": "Quand les apprenants rendent ce devoir, leur travail apparaît ici pour être noté.",
+        "columns": {
+          "learner": "Apprenant"
+        },
+        "review": "Consulter"
       },
       "analytics": {
         "loading": "Chargement des analyses...",
@@ -11698,5 +11738,11 @@
     "sign_in_title": "Connectez-vous pour voir votre calendrier",
     "title": "Calendrier",
     "more_events": "+{{count}} de plus"
+  },
+  "mobile_nav": {
+    "tabs": "Principal",
+    "explore": "Explorer",
+    "you": "Vous",
+    "messages": "Messages"
   }
 }

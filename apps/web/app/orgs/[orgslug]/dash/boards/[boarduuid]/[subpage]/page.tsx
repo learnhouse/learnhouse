@@ -116,7 +116,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1">
       <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative min-w-0 overflow-hidden">
-        <div className="pt-6 pb-4">
+        <div className="pt-4 pb-1 sm:pt-6 sm:pb-4">
           <Breadcrumbs items={[
             { label: t('common.boards'), href: '/dash/boards', icon: <ChalkboardSimple size={14} /> },
             { label: board.name },

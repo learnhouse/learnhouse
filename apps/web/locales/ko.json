@@ -2202,7 +2202,17 @@
     "solution_locked_title": "모범 답안 잠김",
     "solution_locked_on_submission": "과제를 제출하면 모범 답안이 바로 열립니다.",
     "solution_locked_after_grading": "과제가 채점되면 모범 답안이 열립니다.",
-    "retry_assignment_confirm_ungraded": "현재 제출 내용이 초기화되어 처음부터 다시 시작할 수 있으며, 다음 시도를 제출할 때까지 모범 답안은 다시 잠깁니다."
+    "retry_assignment_confirm_ungraded": "현재 제출 내용이 초기화되어 처음부터 다시 시작할 수 있으며, 다음 시도를 제출할 때까지 모범 답안은 다시 잠깁니다.",
+    "status_not_started": "시작 전",
+    "status_in_progress": "진행 중",
+    "status_submitted": "제출함",
+    "due_on": "마감 {{date}}",
+    "answered_progress": "{{total}}개 중 {{answered}}개 답변",
+    "handin_ready_title": "제출할 준비가 되셨나요?",
+    "handin_ready_body": "답변은 자동으로 저장됩니다.",
+    "your_score": "내 점수",
+    "awaiting_grade_body": "과제가 선생님께 전달되었습니다. 채점이 끝나면 여기에 점수가 표시됩니다.",
+    "tasks_count_other": "과제 {{count}}개"
   },
   "certificate": {
     "certificate": "수료증",
@@ -6363,7 +6373,15 @@
           "hide_empty": "빈 코스 숨기기"
         },
         "new_assignment": "새 과제",
-        "clear_search": "검색 지우기"
+        "clear_search": "검색 지우기",
+        "subtitle": "모든 강좌의 과제를 만들고, 게시하고, 채점하세요.",
+        "columns": {
+          "grading": "채점 방식",
+          "actions": "작업"
+        },
+        "empty_description": "과제는 강좌의 챕터 안에 있습니다. 과제를 만들어 학습자의 제출물을 받아 보세요.",
+        "status_draft": "초안",
+        "no_due_date": "마감일 없음"
       },
       "detail": {
         "title": "과제 도구",
@@ -6397,8 +6415,10 @@
             "updating": "과제 업데이트 중...",
             "update_success": "과제가 성공적으로 업데이트되었습니다",
             "update_error": "과제 업데이트 중 오류가 발생했습니다. 나중에 다시 시도해 주세요."
-          }
-        }
+          },
+          "edit_settings": "설정 편집"
+        },
+        "due_on": "마감 {{date}}"
       },
       "editor": {
         "tasks_title": "태스크",
@@ -6529,7 +6549,10 @@
           },
           "file": {
             "teacher_hint": "사용자가 이 항목에 파일을 제출할 수 있으며, 제출 탭에서 검토할 수 있습니다",
-            "submit_file": "파일 제출"
+            "submit_file": "파일 제출",
+            "uploaded": "업로드됨",
+            "replace": "교체",
+            "no_file": "제출된 파일 없음"
           },
           "quiz": {
             "last_option": "마지막 옵션은 삭제할 수 없습니다. 옵션이 하나 이상 필요합니다.",
@@ -6680,7 +6703,14 @@
           "general": "일반",
           "content": "콘텐츠"
         },
-        "no_task_selected": "선택된 항목 없음"
+        "no_task_selected": "선택된 항목 없음",
+        "task_position": "작업 {{number}}/{{total}}",
+        "delete_task_confirm": "이 작업은 과제에서 영구적으로 삭제됩니다.",
+        "empty_title": "첫 작업 추가",
+        "empty_description": "작업은 학습자가 수행하는 내용입니다: 퀴즈, 단답형, 코드 실습, 파일 업로드 등.",
+        "points_short": "{{points}}점",
+        "total_points": "총 {{points}}점",
+        "max_tasks_reached": "이 과제는 최대 작업 수({{max}}개)에 도달했습니다."
       },
       "submissions": {
         "status": {
@@ -6703,7 +6733,8 @@
           "recently_graded": "최근 채점 먼저"
         },
         "stats": {
-          "total": "전체"
+          "total": "전체",
+          "to_grade": "채점 대기"
         },
         "preview": {
           "current_grade": "현재 성적",
@@ -6726,7 +6757,9 @@
         "evaluate": "평가",
         "evaluate_modal": {
           "title": "@{{username}} 평가",
-          "description": "제출물 평가"
+          "description": "제출물 평가",
+          "title_name": "{{name}} 평가",
+          "submitted_at": "{{date}} 제출"
         },
         "task_label": "태스크 {{number}} :",
         "hint": "힌트",
@@ -6748,7 +6781,12 @@
         "ungraded_title": "형성평가 (채점 안 함)",
         "ungraded_description": "이 과제는 검토용으로만 제출됩니다. 점수는 기록되지 않습니다.",
         "download_to_grade": "파일을 다운로드하여 직접 채점한 후 위에 점수를 입력하세요",
-        "download_to_review": "파일을 다운로드하여 학습자가 제출한 내용을 검토하세요."
+        "download_to_review": "파일을 다운로드하여 학습자가 제출한 내용을 검토하세요.",
+        "empty_description": "학습자가 이 과제를 제출하면 채점을 위해 여기에 표시됩니다.",
+        "columns": {
+          "learner": "학습자"
+        },
+        "review": "검토"
       },
       "analytics": {
         "loading": "분석을 불러오는 중...",
@@ -11499,5 +11537,11 @@
     "sign_in_title": "로그인하여 캘린더 보기",
     "title": "캘린더",
     "more_events": "+{{count}}개 더보기"
+  },
+  "mobile_nav": {
+    "tabs": "메인",
+    "explore": "둘러보기",
+    "you": "나",
+    "messages": "메시지"
   }
 }

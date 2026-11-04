@@ -39,7 +39,7 @@ export function LabelFilter({ value, onChange }: LabelFilterProps) {
     <div className="flex items-center gap-1">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-1.5 px-3 py-2 h-8 text-xs bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
+          <button className="flex items-center gap-1.5 px-3 py-2 h-9 sm:h-8 whitespace-nowrap text-xs bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
             {currentLabel ? (
               <>
                 <span style={{ color: currentLabel.color }}>

@@ -4,6 +4,7 @@ import { Columns2, Columns3, Columns4, Plus, Ungroup } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
+import { isCompactFlipcardGrid } from './compactGrid'
 
 const COLUMN_OPTIONS: { value: number; Icon: any; labelKey: string }[] = [
   { value: 2, Icon: Columns2, labelKey: 'activities.grid_columns_2' },
@@ -62,6 +63,8 @@ const FlipcardGridExtension: React.FC = (props: any) => {
   return (
     <NodeViewWrapper
       className="flipcard-grid my-4"
+      // Short-term grids stay two-up on phones (mobile-activities.css).
+      data-compact={isCompactFlipcardGrid(props.node) ? '' : undefined}
       style={{ ['--flipcard-grid-columns' as any]: columns }}
     >
       {/* The column count rides a CSS variable rather than a Tailwind class:

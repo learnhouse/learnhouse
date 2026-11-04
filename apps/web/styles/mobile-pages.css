@@ -1,0 +1,3 @@
+/* Phone-width overrides for pages. Prefer Tailwind classes in the components;
+   use this file only for rules a component cannot express (third-party
+   markup, ProseMirror output). See mobile.css for the shell variables. */

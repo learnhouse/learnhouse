@@ -2226,7 +2226,18 @@
     "solution_locked_title": "Voorbeeldantwoord vergrendeld",
     "solution_locked_on_submission": "Lever je werk in en het voorbeeldantwoord wordt meteen ontgrendeld.",
     "solution_locked_after_grading": "Het voorbeeldantwoord wordt ontgrendeld zodra je werk is beoordeeld.",
-    "retry_assignment_confirm_ungraded": "Je huidige inlevering wordt gereset zodat je opnieuw kunt beginnen, en het voorbeeldantwoord wordt weer vergrendeld tot je de volgende poging inlevert."
+    "retry_assignment_confirm_ungraded": "Je huidige inlevering wordt gereset zodat je opnieuw kunt beginnen, en het voorbeeldantwoord wordt weer vergrendeld tot je de volgende poging inlevert.",
+    "status_not_started": "Niet begonnen",
+    "status_in_progress": "Bezig",
+    "status_submitted": "Ingeleverd",
+    "due_on": "Inleveren vóór {{date}}",
+    "answered_progress": "{{answered}} van {{total}} beantwoord",
+    "handin_ready_title": "Klaar om in te leveren?",
+    "handin_ready_body": "Je antwoorden worden automatisch opgeslagen.",
+    "your_score": "Je score",
+    "awaiting_grade_body": "Je werk ligt bij je docent. Je score verschijnt hier zodra het is nagekeken.",
+    "tasks_count_one": "{{count}} taak",
+    "tasks_count_other": "{{count}} taken"
   },
   "certificate": {
     "certificate": "Certificaat",
@@ -6404,7 +6415,15 @@
           "hide_empty": "Lege cursussen verbergen"
         },
         "new_assignment": "Nieuwe opdracht",
-        "clear_search": "Zoekopdracht wissen"
+        "clear_search": "Zoekopdracht wissen",
+        "subtitle": "Maak, publiceer en beoordeel opdrachten in al je cursussen.",
+        "columns": {
+          "grading": "Beoordeling",
+          "actions": "Acties"
+        },
+        "empty_description": "Opdrachten staan in een hoofdstuk van een cursus. Maak er een om werk van cursisten te verzamelen.",
+        "status_draft": "Concept",
+        "no_due_date": "Geen deadline"
       },
       "detail": {
         "title": "Opdracht Tooling",
@@ -6438,8 +6457,10 @@
             "updating": "Opdracht bijwerken...",
             "update_success": "Opdracht succesvol bijgewerkt",
             "update_error": "Er is een fout opgetreden bij het bijwerken van de opdracht. Probeer het later opnieuw."
-          }
-        }
+          },
+          "edit_settings": "Instellingen bewerken"
+        },
+        "due_on": "Inleveren voor {{date}}"
       },
       "editor": {
         "tasks_title": "Taken",
@@ -6570,7 +6591,10 @@
           },
           "file": {
             "teacher_hint": "De gebruiker kan voor deze taak een bestand indienen, dat je kunt beoordelen op het tabblad Inleveringen",
-            "submit_file": "Bestand indienen"
+            "submit_file": "Bestand indienen",
+            "uploaded": "Geüpload",
+            "replace": "Vervangen",
+            "no_file": "Geen bestand ingeleverd"
           },
           "quiz": {
             "last_option": "Kan de laatste optie niet verwijderen. Minimaal één optie is vereist.",
@@ -6725,7 +6749,14 @@
           "general": "Algemeen",
           "content": "Inhoud"
         },
-        "no_task_selected": "Geen taak geselecteerd"
+        "no_task_selected": "Geen taak geselecteerd",
+        "task_position": "Taak {{number}} van {{total}}",
+        "delete_task_confirm": "Deze taak wordt definitief uit de opdracht verwijderd.",
+        "empty_title": "Voeg je eerste taak toe",
+        "empty_description": "Taken zijn waar cursisten aan werken: quizzen, korte antwoorden, programmeeroefeningen, bestandsuploads en meer.",
+        "points_short": "{{points}} ptn",
+        "total_points": "{{points}} ptn totaal",
+        "max_tasks_reached": "Deze opdracht heeft het maximum van {{max}} taken bereikt."
       },
       "submissions": {
         "status": {
@@ -6748,7 +6779,8 @@
           "recently_graded": "Recent beoordeeld eerst"
         },
         "stats": {
-          "total": "Totaal"
+          "total": "Totaal",
+          "to_grade": "Te beoordelen"
         },
         "preview": {
           "current_grade": "Huidig cijfer",
@@ -6771,7 +6803,9 @@
         "evaluate": "Evalueren",
         "evaluate_modal": {
           "title": "Evalueer @{{username}}",
-          "description": "Evalueer de inzending"
+          "description": "Evalueer de inzending",
+          "title_name": "{{name}} beoordelen",
+          "submitted_at": "Ingeleverd op {{date}}"
         },
         "task_label": "Taak {{number}} :",
         "hint": "Tip",
@@ -6793,7 +6827,12 @@
         "ungraded_title": "Formatief (niet beoordeeld)",
         "ungraded_description": "Deze opdracht wordt alleen ter beoordeling ingeleverd. Er wordt geen score vastgelegd.",
         "download_to_grade": "Download het bestand en beoordeel het handmatig. Voer daarna het cijfer hierboven in",
-        "download_to_review": "Download het bestand om te bekijken wat de leerling heeft ingeleverd."
+        "download_to_review": "Download het bestand om te bekijken wat de leerling heeft ingeleverd.",
+        "empty_description": "Zodra cursisten deze opdracht inleveren, verschijnt hun werk hier om te beoordelen.",
+        "columns": {
+          "learner": "Cursist"
+        },
+        "review": "Bekijken"
       },
       "analytics": {
         "loading": "Analyses worden geladen...",
@@ -11578,5 +11617,11 @@
     "sign_in_title": "Log in om je agenda te bekijken",
     "title": "Agenda",
     "more_events": "+{{count}} meer"
+  },
+  "mobile_nav": {
+    "tabs": "Hoofdmenu",
+    "explore": "Ontdekken",
+    "you": "Jij",
+    "messages": "Berichten"
   }
 }

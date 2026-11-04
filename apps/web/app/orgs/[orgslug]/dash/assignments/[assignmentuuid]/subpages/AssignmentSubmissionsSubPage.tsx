@@ -9,7 +9,7 @@ import { queryKeys } from '@/lib/query/keys';
 import {
     AlertTriangle,
     ArrowUpDown,
-    Calendar,
+    Check,
     CheckCircle2,
     ChevronDown,
     CircleDashed,
@@ -24,11 +24,12 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import EvaluateAssignment from './Modals/EvaluateAssignment';
-import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext';
+import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import AssignmentSubmissionProvider from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/lib/format';
+import { BTN_PRIMARY_SM, BTN_SECONDARY_SM, Chip, type ChipTone } from '../../_components/assignmentUi';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
 
 type SortField =
@@ -124,16 +125,16 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
         };
     }, [assignmentSubmissions]);
 
-    const statusFilters: { key: StatusFilter; label: string; count: number; icon: React.ReactNode; activeClass: string }[] = [
-        { key: 'ALL', label: t('dashboard.assignments.submissions.filters.all'), count: stats.total, icon: <Users size={13} />, activeClass: 'bg-neutral-600/80 text-white' },
-        { key: 'LATE', label: t('dashboard.assignments.submissions.status.late'), count: stats.late, icon: <Clock size={13} />, activeClass: 'bg-rose-600/80 text-white' },
-        { key: 'SUBMITTED', label: t('dashboard.assignments.submissions.status.submitted'), count: stats.submitted, icon: <SendHorizonal size={13} />, activeClass: 'bg-amber-600/80 text-white' },
-        { key: 'GRADED', label: t('dashboard.assignments.submissions.status.graded'), count: stats.graded, icon: <CheckCircle2 size={13} />, activeClass: 'bg-emerald-600/80 text-white' },
+    const statusFilters: { key: StatusFilter; label: string; count: number; icon: React.ReactNode }[] = [
+        { key: 'ALL', label: t('dashboard.assignments.submissions.filters.all'), count: stats.total, icon: <Users size={14} /> },
+        { key: 'SUBMITTED', label: t('dashboard.assignments.submissions.status.submitted'), count: stats.submitted, icon: <SendHorizonal size={14} /> },
+        { key: 'LATE', label: t('dashboard.assignments.submissions.status.late'), count: stats.late, icon: <Clock size={14} /> },
+        { key: 'GRADED', label: t('dashboard.assignments.submissions.status.graded'), count: stats.graded, icon: <CheckCircle2 size={14} /> },
         // Only surfaced when they actually occur; most assignments have none of
         // these and the toolbar is already crowded. Kept visible while selected
         // so the pill can never vanish and strand the user on an empty list.
-        ...(stats.pending > 0 || statusFilter === 'PENDING' ? [{ key: 'PENDING' as StatusFilter, label: t('dashboard.assignments.submissions.status.pending', { defaultValue: 'In progress' }), count: stats.pending, icon: <Hourglass size={13} />, activeClass: 'bg-slate-500/80 text-white' }] : []),
-        ...(stats.not_submitted > 0 || statusFilter === 'NOT_SUBMITTED' ? [{ key: 'NOT_SUBMITTED' as StatusFilter, label: t('dashboard.assignments.submissions.preview.not_submitted'), count: stats.not_submitted, icon: <CircleDashed size={13} />, activeClass: 'bg-slate-500/80 text-white' }] : []),
+        ...(stats.pending > 0 || statusFilter === 'PENDING' ? [{ key: 'PENDING' as StatusFilter, label: t('dashboard.assignments.submissions.status.pending', { defaultValue: 'In progress' }), count: stats.pending, icon: <Hourglass size={14} /> }] : []),
+        ...(stats.not_submitted > 0 || statusFilter === 'NOT_SUBMITTED' ? [{ key: 'NOT_SUBMITTED' as StatusFilter, label: t('dashboard.assignments.submissions.preview.not_submitted'), count: stats.not_submitted, icon: <CircleDashed size={14} /> }] : []),
     ];
 
     const sortOptions: { field: SortField; label: string }[] = [
@@ -146,142 +147,143 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
         { field: 'recently_graded', label: t('dashboard.assignments.submissions.sort.recently_graded') },
     ];
 
+    const toGrade = stats.submitted + stats.late;
+
     return (
-        <div className="flex flex-col w-full h-full custom-dots-bg">
-            <div className="px-10 pt-6 pb-4 flex flex-col space-y-4">
-                {/* Stats row */}
-                <div className="flex gap-3">
-                    <div className="bg-white nice-shadow rounded-xl px-4 py-3 flex items-center space-x-3">
-                        <div className="bg-gray-100 rounded-lg p-1.5">
-                            <Users size={14} className="text-gray-600" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] uppercase tracking-wide font-semibold text-gray-400">{t('dashboard.assignments.submissions.stats.total')}</p>
-                            <p className="text-lg font-bold text-gray-900 -mt-0.5">{stats.total}</p>
-                        </div>
-                    </div>
-                    <div className="bg-white nice-shadow rounded-xl px-4 py-3 flex items-center space-x-3">
-                        <div className="bg-rose-50 rounded-lg p-1.5">
-                            <Clock size={14} className="text-rose-600" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] uppercase tracking-wide font-semibold text-gray-400">{t('dashboard.assignments.submissions.status.late')}</p>
-                            <p className="text-lg font-bold text-gray-900 -mt-0.5">{stats.late}</p>
-                        </div>
-                    </div>
-                    <div className="bg-white nice-shadow rounded-xl px-4 py-3 flex items-center space-x-3">
-                        <div className="bg-amber-50 rounded-lg p-1.5">
-                            <SendHorizonal size={14} className="text-amber-600" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] uppercase tracking-wide font-semibold text-gray-400">{t('dashboard.assignments.submissions.status.submitted')}</p>
-                            <p className="text-lg font-bold text-gray-900 -mt-0.5">{stats.submitted}</p>
-                        </div>
-                    </div>
-                    <div className="bg-white nice-shadow rounded-xl px-4 py-3 flex items-center space-x-3">
-                        <div className="bg-emerald-50 rounded-lg p-1.5">
-                            <CheckCircle2 size={14} className="text-emerald-600" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] uppercase tracking-wide font-semibold text-gray-400">{t('dashboard.assignments.submissions.status.graded')}</p>
-                            <p className="text-lg font-bold text-gray-900 -mt-0.5">{stats.graded}</p>
-                        </div>
-                    </div>
+        <div className="flex flex-col w-full min-w-0 lg:h-full lg:overflow-y-auto">
+            <div className="w-full px-4 sm:px-6 lg:px-10 pt-5 sm:pt-6 pb-10 flex flex-col gap-4">
+                {/* Stats */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <SubmissionStat
+                        icon={<Users size={16} />}
+                        iconClass="bg-neutral-100 text-neutral-600"
+                        label={t('dashboard.assignments.submissions.stats.total')}
+                        value={assignmentSubmissions ? stats.total : null}
+                    />
+                    <SubmissionStat
+                        icon={<SendHorizonal size={16} />}
+                        iconClass="bg-amber-50 text-amber-600"
+                        label={t('dashboard.assignments.submissions.stats.to_grade')}
+                        value={assignmentSubmissions ? toGrade : null}
+                        highlight={toGrade > 0}
+                    />
+                    <SubmissionStat
+                        icon={<Clock size={16} />}
+                        iconClass="bg-rose-50 text-rose-600"
+                        label={t('dashboard.assignments.submissions.status.late')}
+                        value={assignmentSubmissions ? stats.late : null}
+                    />
+                    <SubmissionStat
+                        icon={<CheckCircle2 size={16} />}
+                        iconClass="bg-emerald-50 text-emerald-600"
+                        label={t('dashboard.assignments.submissions.status.graded')}
+                        value={assignmentSubmissions ? stats.graded : null}
+                    />
                 </div>
 
                 {/* Toolbar */}
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col xl:flex-row xl:items-center gap-3">
                     {/* Search */}
-                    <div className="relative flex-1 max-w-sm">
-                        <Search size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <div className="relative flex-1 min-w-0 xl:max-w-sm">
+                        <Search size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={t('dashboard.assignments.submissions.search_placeholder')}
-                            className="w-full ps-9 pe-8 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 placeholder:text-gray-400"
+                            className="w-full h-10 ps-10 pe-9 text-sm bg-white nice-shadow rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900/10 placeholder:text-neutral-400"
                         />
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery('')}
-                                className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                aria-label={t('dashboard.assignments.home.clear_search')}
+                                className="absolute end-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                             >
                                 <X size={14} />
                             </button>
                         )}
                     </div>
 
-                    {/* Status filter pills */}
-                    <div className="flex gap-1.5">
-                        {statusFilters.map((filter) => (
-                            <button
-                                key={filter.key}
-                                onClick={() => setStatusFilter(filter.key)}
-                                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                                    statusFilter === filter.key
-                                        ? filter.activeClass
-                                        : 'bg-white nice-shadow text-gray-600 hover:bg-gray-50'
-                                }`}
-                            >
-                                {filter.icon}
-                                <span>{filter.label}</span>
-                                <span className={`${statusFilter === filter.key ? 'bg-white/20' : 'bg-gray-100'} px-1.5 py-0.5 rounded-full text-[10px] font-bold`}>
-                                    {filter.count}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Sort */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white nice-shadow rounded-full hover:bg-gray-50 transition-colors"
-                        >
-                            <ArrowUpDown size={12} />
-                            <span>{t('dashboard.assignments.submissions.sort.label')}</span>
-                            <ChevronDown size={11} className={`transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        {sortDropdownOpen && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setSortDropdownOpen(false)} />
-                                <div className="absolute end-0 top-full mt-2 z-20 bg-white nice-shadow rounded-xl py-1.5 min-w-[150px]">
-                                    {sortOptions.map((option) => (
+                    <div className="flex items-center gap-2 min-w-0">
+                        {/* Status filter (scrolls sideways on narrow screens) */}
+                        <div className="min-w-0 flex-1 xl:flex-none overflow-x-auto scrollbar-hide">
+                            <div className="inline-flex items-center rounded-xl bg-neutral-200/60 p-1" role="tablist">
+                                {statusFilters.map((filter) => {
+                                    const active = statusFilter === filter.key;
+                                    return (
                                         <button
-                                            key={option.field}
-                                            onClick={() => {
-                                                if (sortField === option.field) {
-                                                    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                                                } else {
-                                                    setSortField(option.field);
-                                                    setSortDirection('desc');
-                                                }
-                                                setSortDropdownOpen(false);
-                                            }}
-                                            className={`w-full px-3 py-1.5 text-xs text-start flex items-center justify-between hover:bg-gray-50 ${
-                                                sortField === option.field ? 'text-gray-900 font-bold' : 'text-gray-500 font-medium'
+                                            key={filter.key}
+                                            role="tab"
+                                            aria-selected={active}
+                                            onClick={() => setStatusFilter(filter.key)}
+                                            className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
+                                                active ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-800'
                                             }`}
                                         >
-                                            <span>{option.label}</span>
-                                            {sortField === option.field && (
-                                                <span className="text-gray-400 text-[10px]">
-                                                    {sortDirection === 'asc' ? '↑' : '↓'}
-                                                </span>
-                                            )}
+                                            {filter.icon}
+                                            <span>{filter.label}</span>
+                                            <span className={`tabular-nums ${active ? 'text-neutral-500' : 'text-neutral-400'}`}>{filter.count}</span>
                                         </button>
-                                    ))}
-                                </div>
-                            </>
-                        )}
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Sort */}
+                        <div className="relative shrink-0">
+                            <button
+                                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                                aria-haspopup="menu"
+                                aria-expanded={sortDropdownOpen}
+                                className="flex items-center gap-1.5 h-10 px-3 text-xs font-semibold text-neutral-700 bg-white nice-shadow rounded-xl hover:text-neutral-900 transition-colors"
+                            >
+                                <ArrowUpDown size={14} />
+                                <span className="hidden sm:inline">{sortOptions.find((o) => o.field === sortField)?.label ?? t('dashboard.assignments.submissions.sort.label')}</span>
+                                <ChevronDown size={14} className={`transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {sortDropdownOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setSortDropdownOpen(false)} />
+                                    <div role="menu" className="absolute end-0 top-full mt-2 z-20 bg-white nice-shadow rounded-xl p-1.5 min-w-[210px]">
+                                        <p className="px-2.5 pt-1 pb-1.5 text-xs text-neutral-500">{t('dashboard.assignments.submissions.sort.label')}</p>
+                                        {sortOptions.map((option) => {
+                                            const active = sortField === option.field;
+                                            return (
+                                                <button
+                                                    key={option.field}
+                                                    role="menuitem"
+                                                    onClick={() => {
+                                                        if (sortField === option.field) {
+                                                            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                                                        } else {
+                                                            setSortField(option.field);
+                                                            setSortDirection('desc');
+                                                        }
+                                                        setSortDropdownOpen(false);
+                                                    }}
+                                                    className={`w-full h-9 px-2.5 rounded-lg text-sm text-start flex items-center justify-between gap-3 hover:bg-neutral-50 ${
+                                                        active ? 'text-neutral-900 font-semibold' : 'text-neutral-600'
+                                                    }`}
+                                                >
+                                                    <span>{option.label}</span>
+                                                    {active && (
+                                                        <span className="text-neutral-400 text-xs">
+                                                            {sortDirection === 'asc' ? '↑' : '↓'}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Submissions list */}
-            <div className="flex-1 overflow-y-auto px-10 pb-6">
                 {isTruncated && (
-                    <div className="flex items-center gap-2 mb-3 px-3.5 py-2.5 rounded-lg bg-amber-50 text-amber-800 text-xs font-semibold ring-1 ring-inset ring-amber-200/60">
-                        <AlertTriangle size={14} className="shrink-0" />
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 text-amber-800 text-sm font-medium">
+                        <AlertTriangle size={16} className="shrink-0" />
                         <span>
                             {t('dashboard.assignments.submissions.truncated_warning', {
                                 max: SUBMISSIONS_FETCH_CAP,
@@ -290,6 +292,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                         </span>
                     </div>
                 )}
+
                 <SubmissionsList
                     submissions={assignmentSubmissions}
                     assignment_uuid={assignment_uuid}
@@ -302,6 +305,40 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
         </div>
     );
 }
+
+function SubmissionStat({
+    icon,
+    iconClass,
+    label,
+    value,
+    highlight = false,
+}: {
+    icon: React.ReactNode;
+    iconClass: string;
+    label: string;
+    value: number | null;
+    highlight?: boolean;
+}) {
+    return (
+        <div className={`flex items-center gap-3 bg-white nice-shadow rounded-2xl px-4 py-3.5 min-w-0 ${highlight ? 'ring-1 ring-amber-200' : ''}`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>{icon}</div>
+            <div className="min-w-0">
+                <p className="text-xs text-neutral-500 truncate">{label}</p>
+                {value === null ? (
+                    <div className="mt-1 h-5 w-8 rounded bg-neutral-100 animate-pulse" />
+                ) : (
+                    <p className="text-xl font-bold text-neutral-900 tabular-nums leading-tight">{value}</p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Desktop table layout: the card is the grid and the header, list and rows
+// are subgrids, so the auto-sized button column lines up across every row.
+const SUB_TABLE_GRID =
+    'xl:grid xl:grid-cols-[minmax(0,2.2fr)_minmax(0,1.2fr)_minmax(0,0.7fr)_minmax(0,1fr)_minmax(0,1.1fr)_auto] xl:gap-x-4';
+const SUB_ROW_GRID = 'xl:col-span-full xl:grid xl:grid-cols-subgrid xl:items-center xl:gap-x-4';
 
 function SubmissionsList({
     submissions,
@@ -343,15 +380,15 @@ function SubmissionsList({
 
     if (!submissions) {
         return (
-            <div className="bg-white nice-shadow rounded-xl overflow-hidden animate-pulse">
+            <div className="bg-white nice-shadow rounded-2xl overflow-hidden animate-pulse divide-y divide-neutral-100">
                 {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="flex items-center px-5 py-3.5 border-b border-gray-100 last:border-0 gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gray-100 flex-shrink-0" />
+                    <div key={i} className="flex items-center px-5 py-4 gap-3">
+                        <div className="w-10 h-10 rounded-full bg-neutral-100 flex-shrink-0" />
                         <div className="flex-1 space-y-1.5">
-                            <div className="h-3.5 bg-gray-100 rounded w-1/3" />
-                            <div className="h-3 bg-gray-100 rounded w-1/4" />
+                            <div className="h-3.5 bg-neutral-100 rounded w-1/3" />
+                            <div className="h-3 bg-neutral-100 rounded w-1/4" />
                         </div>
-                        <div className="h-6 w-20 bg-gray-100 rounded-full" />
+                        <div className="h-6 w-20 bg-neutral-100 rounded-full" />
                     </div>
                 ))}
             </div>
@@ -446,26 +483,38 @@ function SubmissionsList({
 
     if (filtered.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
-                <div className="bg-gray-100 rounded-2xl p-4">
-                    <Inbox size={24} />
+            <div className="bg-white nice-shadow rounded-2xl flex flex-col items-center justify-center text-center py-16 px-6 gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-400 flex items-center justify-center">
+                    <Inbox size={22} />
                 </div>
-                <p className="text-sm font-semibold">{t('dashboard.assignments.submissions.empty')}</p>
+                <p className="text-base font-semibold text-neutral-900">{t('dashboard.assignments.submissions.empty')}</p>
+                {submissions.length === 0 && (
+                    <p className="text-sm text-neutral-500 max-w-sm">{t('dashboard.assignments.submissions.empty_description')}</p>
+                )}
             </div>
         );
     }
 
     return (
-        <div className="bg-white nice-shadow rounded-xl overflow-hidden">
-            {filtered.map((submission: any, index: number) => (
-                <SubmissionRow
-                    key={submission.assignmentusersubmission_uuid || submission.id}
-                    submission={submission}
-                    assignment_uuid={assignment_uuid}
-                    user={usersById.get(submission.user_id)}
-                    isLast={index === filtered.length - 1}
-                />
-            ))}
+        <div className={`bg-white nice-shadow rounded-2xl overflow-hidden ${SUB_TABLE_GRID}`}>
+            <div className={`hidden ${SUB_ROW_GRID} px-5 py-3 border-b border-neutral-100 text-xs font-medium text-neutral-500`}>
+                <span>{t('dashboard.assignments.submissions.columns.learner')}</span>
+                <span>{t('dashboard.assignments.submissions.sort.date')}</span>
+                <span>{t('assignments.attempt_label')}</span>
+                <span>{t('common.status')}</span>
+                <span>{t('assignments.grade')}</span>
+                <span className="sr-only">{t('dashboard.assignments.home.columns.actions')}</span>
+            </div>
+            <ul className={`divide-y divide-neutral-100 ${SUB_ROW_GRID}`}>
+                {filtered.map((submission: any) => (
+                    <SubmissionRow
+                        key={submission.assignmentusersubmission_uuid || submission.id}
+                        submission={submission}
+                        assignment_uuid={assignment_uuid}
+                        user={usersById.get(submission.user_id)}
+                    />
+                ))}
+            </ul>
         </div>
     );
 }
@@ -474,15 +523,14 @@ function SubmissionRow({
     assignment_uuid,
     submission,
     user,
-    isLast,
 }: {
     assignment_uuid: string;
     submission: any;
     user: any;
-    isLast: boolean;
 }) {
     const { t, i18n } = useTranslation();
     const { track } = useLHAnalytics('dashboard');
+    const assignment = useAssignments() as any;
     const [gradeModalOpen, setGradeModalOpen] = useState(false);
 
     // Every status the API can return is listed explicitly. The old fallback
@@ -491,31 +539,31 @@ function SubmissionRow({
     // nothing and grading it would zero their in-flight retry. It also broke
     // the filter, which compares the real status and therefore hid the very
     // row that claimed to be "Submitted".
-    const statusConfig: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
+    const statusConfig: Record<string, { label: string; tone: ChipTone; icon: React.ReactNode }> = {
         LATE: {
             label: t('dashboard.assignments.submissions.status.late'),
-            className: 'bg-rose-50 text-rose-700',
-            icon: <Clock size={11} />,
+            tone: 'rose',
+            icon: <Clock size={12} />,
         },
         SUBMITTED: {
             label: t('dashboard.assignments.submissions.status.submitted'),
-            className: 'bg-amber-50 text-amber-700',
-            icon: <SendHorizonal size={11} />,
+            tone: 'amber',
+            icon: <SendHorizonal size={12} />,
         },
         GRADED: {
             label: t('dashboard.assignments.submissions.status.graded'),
-            className: 'bg-emerald-50 text-emerald-700',
-            icon: <CheckCircle2 size={11} />,
+            tone: 'emerald',
+            icon: <CheckCircle2 size={12} />,
         },
         PENDING: {
             label: t('dashboard.assignments.submissions.status.pending', { defaultValue: 'In progress' }),
-            className: 'bg-slate-100 text-slate-600',
-            icon: <Hourglass size={11} />,
+            tone: 'neutral',
+            icon: <Hourglass size={12} />,
         },
         NOT_SUBMITTED: {
             label: t('dashboard.assignments.submissions.preview.not_submitted'),
-            className: 'bg-slate-100 text-slate-600',
-            icon: <CircleDashed size={11} />,
+            tone: 'neutral',
+            icon: <CircleDashed size={12} />,
         },
     };
 
@@ -523,8 +571,8 @@ function SubmissionRow({
     // rather than claiming the student submitted.
     const status = statusConfig[submission.submission_status] || {
         label: submission.submission_status || t('common.unknown'),
-        className: 'bg-slate-100 text-slate-600',
-        icon: <CircleDashed size={11} />,
+        tone: 'neutral' as ChipTone,
+        icon: <CircleDashed size={12} />,
     };
     const submittedDate = new Date(submission.creation_date);
     // 'en-UK' was not a valid locale tag (the UK is en-GB), so this silently
@@ -541,74 +589,109 @@ function SubmissionRow({
         minute: '2-digit',
     });
 
+    const displayName = user?.first_name && user?.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : user?.username
+            ? `@${user.username}`
+            : '...';
+    const needsGrading = submission.submission_status === 'SUBMITTED' || submission.submission_status === 'LATE';
+    const attempt = submission.attempt_number || 1;
+
+    // Grade: show the computed display_grade (e.g. "B", "85/100", "Pass") so
+    // the list matches the evaluate modal and the student's own view instead
+    // of showing a naked raw sum.
+    const gradeCell = submission.submission_status === 'GRADED' ? (
+        <span className="inline-flex items-center gap-2 min-w-0">
+            <Chip tone={submission.grade_display ? (submission.grade_display.passed ? 'emerald' : 'rose') : 'neutral'} className="tabular-nums">
+                {submission.grade_display?.display_grade ?? submission.grade}
+            </Chip>
+            {submission.grade_display?.points_summary && (
+                <span className="text-xs text-neutral-500 tabular-nums truncate">{submission.grade_display.points_summary}</span>
+            )}
+        </span>
+    ) : (
+        <span className="text-sm text-neutral-300" aria-hidden>—</span>
+    );
+
+    // One trigger per layout (compact row / desktop cell); both open the same
+    // controlled dialog below, the same path the old DialogTrigger took.
+    const openEvaluate = () => {
+        track(AnalyticsEvent.SubmissionEvaluateOpened, {
+            submission_status: submission.submission_status,
+            attempt_number: submission.attempt_number ?? 1,
+        })
+        setGradeModalOpen(true)
+    };
+    const evaluateButton = (
+        <button
+            type="button"
+            onClick={openEvaluate}
+            className={needsGrading ? BTN_PRIMARY_SM : BTN_SECONDARY_SM}
+        >
+            {needsGrading ? <Check size={14} /> : null}
+            {needsGrading
+                ? t('dashboard.assignments.submissions.evaluate')
+                : t('dashboard.assignments.submissions.review')}
+        </button>
+    );
+
     return (
-        <div className={`flex items-center px-5 py-3.5 hover:bg-gray-50/60 transition-colors group ${!isLast ? 'border-b border-gray-100' : ''}`}>
-            {/* User info */}
-            <div className="flex items-center space-x-3 flex-1 min-w-0">
+        <li className={`px-4 sm:px-5 py-4 hover:bg-neutral-50/70 transition-colors ${SUB_ROW_GRID}`}>
+            {/* Learner */}
+            <div className="flex items-center gap-3 min-w-0">
                 <UserAvatar
-                    border="border-2"
                     avatar_url={getUserAvatarMediaDirectory(user?.user_uuid, user?.avatar_image)}
                     predefined_avatar={user?.avatar_image ? undefined : 'empty'}
-                    width={36}
+                    width={40}
+                    rounded="rounded-full"
                 />
-                <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                        {user?.first_name && user?.last_name
-                            ? `${user.first_name} ${user.last_name}`
-                            : user?.username
-                                ? `@${user.username}`
-                                : '...'}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-neutral-900 truncate">{displayName}</p>
+                    {user?.email && <p className="text-xs text-neutral-500 truncate">{user.email}</p>}
                 </div>
+                <span className="xl:hidden shrink-0">
+                    <Chip tone={status.tone} icon={status.icon}>{status.label}</Chip>
+                </span>
             </div>
 
-            {/* Grade: show the computed display_grade (e.g. "B", "85/100",
-                "Pass") so the list matches the evaluate modal and the
-                student's own view instead of showing a naked raw sum. */}
-            {submission.submission_status === 'GRADED' && (
-                <div className="flex items-center space-x-1.5 me-5">
-                    <span className="bg-gray-100 text-gray-500 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full">{t('dashboard.assignments.submissions.grade_label')}</span>
-                    <span className={`text-sm font-bold ${
-                        submission.grade_display
-                            ? (submission.grade_display.passed ? 'text-emerald-700' : 'text-rose-700')
-                            : 'text-gray-900'
-                    }`}>
-                        {submission.grade_display?.display_grade ?? submission.grade}
-                    </span>
-                    {submission.grade_display?.points_summary && (
-                        <span className="text-[10px] text-gray-400 font-medium">
-                            {submission.grade_display.points_summary}
-                        </span>
+            {/* Compact meta + action (below xl) */}
+            <div className="xl:hidden mt-2.5 ps-[52px] flex items-center gap-3">
+                <div className="min-w-0 flex-1 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-neutral-500">
+                    <span className="tabular-nums">{dateStr} · {timeStr}</span>
+                    {attempt > 1 && (
+                        <Chip tone="sky" icon={<RotateCcw size={12} />}>{t('assignments.attempt_count', { current: attempt })}</Chip>
                     )}
+                    {submission.submission_status === 'GRADED' && gradeCell}
                 </div>
-            )}
-
-            {/* Date */}
-            <div className="flex items-center space-x-1.5 me-5 text-gray-400">
-                <Calendar size={12} />
-                <span className="text-xs font-medium">{dateStr}</span>
-                <span className="text-[10px] text-gray-300">|</span>
-                <span className="text-xs text-gray-300">{timeStr}</span>
+                <span className="shrink-0">{evaluateButton}</span>
             </div>
 
-            {/* Status badge */}
-            <div className={`flex items-center space-x-1 px-2.5 py-1 rounded-full me-4 text-xs font-semibold ${status.className}`}>
-                {status.icon}
-                <span>{status.label}</span>
+            {/* Submitted */}
+            <div className="hidden xl:block min-w-0">
+                <p className="text-sm text-neutral-700 tabular-nums truncate">{dateStr}</p>
+                <p className="text-xs text-neutral-400 tabular-nums">{timeStr}</p>
             </div>
 
-            {/* Attempt indicator, only shown when the student is past the
-                first attempt so the row stays uncluttered for the common
-                case of a single submission. */}
-            {submission.attempt_number && submission.attempt_number > 1 && (
-                <div className="flex items-center space-x-1 px-2.5 py-1 rounded-full me-4 text-xs font-semibold bg-fuchsia-50 text-fuchsia-700">
-                    <RotateCcw size={11} />
-                    <span>{t('assignments.attempt_label')} {submission.attempt_number}</span>
-                </div>
-            )}
+            {/* Attempt */}
+            <div className="hidden xl:block">
+                {attempt > 1 ? (
+                    <Chip tone="sky" icon={<RotateCcw size={12} />} className="tabular-nums">{attempt}</Chip>
+                ) : (
+                    <span className="text-sm text-neutral-700 tabular-nums">{attempt}</span>
+                )}
+            </div>
 
-            {/* Evaluate button */}
+            {/* Status */}
+            <div className="hidden xl:block">
+                <Chip tone={status.tone} icon={status.icon}>{status.label}</Chip>
+            </div>
+
+            {/* Grade */}
+            <div className="hidden xl:block min-w-0">{gradeCell}</div>
+
+            {/* Evaluate (desktop cell) */}
+            <div className="hidden xl:flex xl:justify-end">{evaluateButton}</div>
+
             <Modal
                 isDialogOpen={gradeModalOpen}
                 onOpenChange={(open: boolean) => {
@@ -626,20 +709,20 @@ function SubmissionRow({
                     <AssignmentProvider assignment_uuid={'assignment_' + assignment_uuid}>
                         <AssignmentsTaskProvider>
                             <AssignmentSubmissionProvider assignment_uuid={'assignment_' + assignment_uuid}>
-                                <EvaluateAssignment user_id={submission.user_id} />
+                                <EvaluateAssignment
+                                    user_id={submission.user_id}
+                                    user={user}
+                                    submission={submission}
+                                    statusChip={<Chip tone={status.tone} icon={status.icon}>{status.label}</Chip>}
+                                />
                             </AssignmentSubmissionProvider>
                         </AssignmentsTaskProvider>
                     </AssignmentProvider>
                 }
-                dialogTitle={t('dashboard.assignments.submissions.evaluate_modal.title', { username: user?.username })}
-                dialogDescription={t('dashboard.assignments.submissions.evaluate_modal.description')}
-                dialogTrigger={
-                    <div className="bg-black hover:bg-gray-800 text-white font-bold py-1.5 px-3.5 rounded-md text-xs cursor-pointer nice-shadow transition-colors">
-                        {t('dashboard.assignments.submissions.evaluate')}
-                    </div>
-                }
+                dialogTitle={t('dashboard.assignments.submissions.evaluate_modal.title_name', { name: displayName })}
+                dialogDescription={assignment?.assignment_object?.title || t('dashboard.assignments.submissions.evaluate_modal.description')}
             />
-        </div>
+        </li>
     );
 }
 

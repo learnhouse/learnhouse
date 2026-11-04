@@ -532,7 +532,7 @@ export const ToolbarButtons = React.memo(({ editor }: any) => {
   }
 
   return (
-    <div className="flex flex-row items-center justify-start flex-wrap gap-[7px] max-[1200px]:gap-[5px]">
+    <div className="editor-toolbar-row flex flex-row items-center justify-start flex-nowrap md:flex-wrap overflow-x-auto md:overflow-visible scrollbar-hide gap-[7px] max-[1200px]:gap-[5px]">
       <div className="editor-tool-btn" onClick={() => editor.chain().focus().undo().run()} aria-label={t('editor.toolbar.undo')}>
         <ArrowCounterClockwise size={15} />
       </div>

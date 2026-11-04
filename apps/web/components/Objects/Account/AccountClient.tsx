@@ -7,7 +7,6 @@ import { AccountSidebar } from '@components/Objects/Account/AccountSidebar'
 import { AccountActionsMobile } from '@components/Objects/Account/AccountActionsMobile'
 import { User } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
-import { useMediaQuery } from 'usehooks-ts'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import AccountGeneral from '@components/Objects/Account/subpages/AccountGeneral'
@@ -35,7 +34,6 @@ const getSubpageTitle = (subpage: string, t: (_key: string) => string): string =
 }
 
 const AccountClient = ({ orgslug, org_id, subpage }: AccountClientProps) => {
-  const isMobile = useMediaQuery('(max-width: 768px)')
   const session = useLHSession() as any
   const user = session?.data?.user
   const { t } = useTranslation()
@@ -102,21 +100,16 @@ const AccountClient = ({ orgslug, org_id, subpage }: AccountClientProps) => {
                 {user?.first_name} {user?.last_name}
               </h1>
               <p className="mt-1 text-sm text-gray-500">@{user?.username}</p>
+              <div className="mt-3">
+                <AccountActionsMobile orgslug={orgslug} currentSubpage={subpage} />
+              </div>
             </div>
 
             {/* Subpage Content */}
             {renderSubpage()}
           </div>
         </div>
-
-        {/* Bottom padding for mobile action bar */}
-        {isMobile && <div className="h-24" />}
       </GeneralWrapperStyled>
-
-      {/* Mobile Actions Bar */}
-      {isMobile && (
-        <AccountActionsMobile orgslug={orgslug} currentSubpage={subpage} />
-      )}
     </>
   )
 }

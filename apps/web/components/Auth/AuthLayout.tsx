@@ -35,7 +35,7 @@ export default function AuthLayout({ org, welcomeText, title, subtitle, children
       {/* Language switcher: must sit ABOVE the right-hand branding panel
           (z-10), otherwise the panel intercepts its clicks. `z-dropdown`
           resolves to z-index:auto here, so use a concrete z-50. */}
-      <div className="absolute top-4 end-4 z-50">
+      <div className="absolute top-[calc(1rem+var(--lh-safe-top))] lg:top-4 end-4 z-50">
         <LanguageSwitcher />
       </div>
 
@@ -45,7 +45,7 @@ export default function AuthLayout({ org, welcomeText, title, subtitle, children
       </div>
 
       {/* Left Panel - Content / form */}
-      <div className="relative z-10 flex flex-col flex-1 lg:h-full overflow-auto bg-transparent">
+      <div className="relative z-10 flex flex-col flex-1 lg:h-full overflow-auto bg-transparent pb-[var(--lh-safe-bottom)]">
         <div className="flex-1 flex flex-col">{children}</div>
         {/* Terms footer (platform-style) */}
         <AuthFooter className="shrink-0" />

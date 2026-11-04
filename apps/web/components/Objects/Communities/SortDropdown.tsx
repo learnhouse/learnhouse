@@ -30,7 +30,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1.5 px-3 py-2 h-8 text-xs bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
+        <button className="flex items-center gap-1.5 px-3 py-2 h-9 sm:h-8 whitespace-nowrap text-xs bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
           <span className="text-gray-500">{t('communities.discussion_list.sort_by')}</span>
           <span className="font-medium text-gray-700">{currentOption.label}</span>
           <ChevronDown size={12} className="text-gray-400" />
