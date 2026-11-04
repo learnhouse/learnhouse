@@ -10,6 +10,8 @@ These helpers detect the submission sub-path and restrict access to the
 submission's owner or a course instructor.
 """
 
+import re
+
 from fastapi import HTTPException, Request
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -34,6 +36,37 @@ def _submission_references_file(task_submission, filename: str) -> bool:
     if not isinstance(task_submission, dict):
         return False
     return any(task_submission.get(k) == filename for k in _SUBMISSION_FILE_KEYS)
+
+
+# New submission files carry their uploader's id in the name
+# (``{uuid}_submission_u{user_id}.{ext}``), so a learner can't hand in, or
+# download, a file another learner uploaded just by knowing its name. Files
+# stored before this have no tag and keep the reference-only check.
+_OWNER_TAG = re.compile(r"_submission_u(\d+)\.[A-Za-z0-9]+$")
+
+
+def submission_file_prefix(user_id: int) -> str:
+    """Filename prefix for a submission file uploaded by ``user_id``."""
+    return f"submission_u{int(user_id)}"
+
+
+def submission_file_owner(filename) -> int | None:
+    """The uploader's id from a tagged submission filename, or None if untagged."""
+    if not isinstance(filename, str):
+        return None
+    match = _OWNER_TAG.search(filename)
+    return int(match.group(1)) if match else None
+
+
+def submission_files_belong_to(task_submission, user_id: int) -> bool:
+    """False when the submission references a tagged file someone else uploaded."""
+    if not isinstance(task_submission, dict):
+        return True
+    for key in _SUBMISSION_FILE_KEYS:
+        owner = submission_file_owner(task_submission.get(key))
+        if owner is not None and owner != int(user_id):
+            return False
+    return True
 
 
 # Structural segments the content access checks match on. Folded to lowercase
@@ -127,6 +160,11 @@ async def enforce_submission_file_access(
         except Exception:
             # Fall through to the owner check on any RBAC lookup error.
             pass
+
+    # A tagged file belongs to its uploader alone
+    owner = submission_file_owner(filename)
+    if owner is not None and owner != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     # Otherwise the caller must own a submission that references this exact file.
     task = (await db_session.execute(
