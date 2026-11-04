@@ -2391,11 +2391,6 @@
           "description": "您的看板",
           "keywords": "看板, 任务, 规划, 笔记, boards, kanban, tasks, planning, notes"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "向 AI 助手提问",
-          "keywords": "copilot, ai, 助手, 聊天, 提问, 帮助, assistant, chat, ask, help"
-        },
         "search": {
           "description": "带筛选的完整搜索",
           "keywords": "搜索, 查找, 结果, 筛选, 浏览, search, find, results, filter, browse"
@@ -2436,25 +2431,6 @@
     "about_question": "这个活动是关于什么的？",
     "flashcards_question": "为此活动创建抽认卡",
     "examples_question": "用实际例子解释这个活动",
-    "copilot_bubble": {
-      "toggle_list": "切换对话列表",
-      "conversations": "对话",
-      "title": "课程 Copilot",
-      "new_chat": "新对话",
-      "close": "关闭 Copilot",
-      "new_chat_button": "新对话",
-      "no_conversations": "还没有对话",
-      "subtitle": "询问有关您课程的问题。",
-      "select_mode": "选择对话模式",
-      "mode_general": "通用模式",
-      "mode_course": "仅限课程",
-      "select_course": "选择课程",
-      "ask_label": "询问有关您课程的问题",
-      "thinking": "思考中...",
-      "ask_placeholder": "询问有关您课程的问题...",
-      "send": "发送消息",
-      "open": "打开 Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "一幅极简风格的灯泡插画，柔和渐变",
       "idea_robot": "一个友好的 3D 机器人导师，等距视角，粉彩色调",
@@ -2536,39 +2512,6 @@
       "summarize_tooltip": "使用 AI 总结一长段文字",
       "translate_tooltip": "使用 AI 翻译成不同语言",
       "examples_tooltip": "使用 AI 提供示例，帮助更好地理解"
-    },
-    "copilot_menu": {
-      "no_conversations": "还没有对话",
-      "new_conversation": "新对话",
-      "start_conversation": "开始对话",
-      "view_all": "查看所有对话",
-      "open_in_bubble": "在气泡中打开"
-    },
-    "copilot": {
-      "group_favorites": "收藏",
-      "group_today": "今天",
-      "group_previous_7_days": "过去 7 天",
-      "group_older": "更早",
-      "selected_course": "已选课程",
-      "all_courses": "所有课程",
-      "failed_load_session": "加载会话失败",
-      "new_chat": "新对话",
-      "no_conversations": "还没有对话",
-      "loading_conversation": "正在加载对话...",
-      "title": "课程 Copilot",
-      "subtitle": "询问有关您课程的问题，获得基于课程内容的解答，并附有来源资料参考。",
-      "mode_course_only": "仅限课程",
-      "mode_general": "通用",
-      "mode_course": "课程",
-      "mode_general_title": "通用知识模式",
-      "mode_course_only_title": "仅限课程模式",
-      "input_label": "询问有关您课程的问题",
-      "thinking": "思考中...",
-      "placeholder_general": "随便问点什么...",
-      "placeholder_course": "询问有关您课程的问题...",
-      "remove_favorite": "取消收藏",
-      "add_favorite": "添加到收藏",
-      "answering_from": "基于 {{courses}} 回答"
     }
   },
   "payments": {

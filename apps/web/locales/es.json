@@ -2450,11 +2450,6 @@
           "description": "Tus pizarras",
           "keywords": "pizarras, kanban, tareas, planificación, notas"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Pregunta al asistente de IA",
-          "keywords": "copilot, ia, asistente, chat, preguntar, ayuda"
-        },
         "search": {
           "description": "Búsqueda completa con filtros",
           "keywords": "buscar, encontrar, resultados, filtrar, explorar"
@@ -2495,25 +2490,6 @@
     "about_question": "¿De qué trata esta actividad?",
     "flashcards_question": "Generar tarjetas de memoria de esta actividad",
     "examples_question": "Explicar esta actividad con ejemplos prácticos",
-    "copilot_bubble": {
-      "toggle_list": "Mostrar u ocultar lista de conversaciones",
-      "conversations": "Conversaciones",
-      "title": "Copilot del curso",
-      "new_chat": "Nuevo chat",
-      "close": "Cerrar Copilot",
-      "new_chat_button": "Nuevo chat",
-      "no_conversations": "Aún no hay conversaciones",
-      "subtitle": "Haz preguntas sobre tus cursos.",
-      "select_mode": "Seleccionar modo de chat",
-      "mode_general": "Modo general",
-      "mode_course": "Solo curso",
-      "select_course": "Seleccionar curso",
-      "ask_label": "Pregunta sobre tus cursos",
-      "thinking": "Pensando...",
-      "ask_placeholder": "Pregunta sobre tus cursos...",
-      "send": "Enviar mensaje",
-      "open": "Abrir Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "Una ilustración minimalista de una bombilla, con degradados suaves",
       "idea_robot": "Un simpático robot tutor en 3D, isométrico, en colores pastel",
@@ -2599,39 +2575,6 @@
       "summarize_tooltip": "Resume un párrafo o texto largo con IA",
       "translate_tooltip": "Traduce a diferentes idiomas con IA",
       "examples_tooltip": "Da ejemplos para entender mejor con IA"
-    },
-    "copilot_menu": {
-      "no_conversations": "Aún no hay conversaciones",
-      "new_conversation": "Nueva conversación",
-      "start_conversation": "Iniciar una conversación",
-      "view_all": "Ver todas las conversaciones",
-      "open_in_bubble": "Abrir en burbuja"
-    },
-    "copilot": {
-      "group_favorites": "Favoritos",
-      "group_today": "Hoy",
-      "group_previous_7_days": "Últimos 7 días",
-      "group_older": "Anteriores",
-      "selected_course": "Curso seleccionado",
-      "all_courses": "Todos los cursos",
-      "failed_load_session": "No se pudo cargar la sesión",
-      "new_chat": "Nuevo chat",
-      "no_conversations": "Aún no hay conversaciones",
-      "loading_conversation": "Cargando conversación...",
-      "title": "Copilot del curso",
-      "subtitle": "Haz preguntas sobre tus cursos y obtén respuestas basadas en el contenido del curso, con referencias al material de origen.",
-      "mode_course_only": "Solo curso",
-      "mode_general": "General",
-      "mode_course": "Curso",
-      "mode_general_title": "Modo de conocimiento general",
-      "mode_course_only_title": "Modo solo curso",
-      "input_label": "Pregunta sobre tus cursos",
-      "thinking": "Pensando...",
-      "placeholder_general": "Pregunta lo que quieras...",
-      "placeholder_course": "Pregunta sobre tus cursos...",
-      "remove_favorite": "Quitar de favoritos",
-      "add_favorite": "Añadir a favoritos",
-      "answering_from": "Respondiendo a partir de {{courses}}"
     }
   },
   "payments": {

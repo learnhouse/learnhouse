@@ -110,7 +110,6 @@ export const queryKeys = {
     activity: (activityUuid: string) => ['liveSession', 'activity', activityUuid] as const,
   },
   ai: {
-    ragSessions: (orgSlug: string) => ['ai', 'rag', 'sessions', orgSlug] as const,
   },
   certifications: {
     detail: (uuid: string) => ['certification', uuid] as const,

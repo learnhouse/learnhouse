@@ -2415,11 +2415,6 @@
           "description": "Your boards",
           "keywords": "boards, kanban, tasks, planning, notes"
         },
-        "copilot": {
-          "title": "Copilot",
-          "description": "Ask the AI assistant",
-          "keywords": "copilot, ai, assistant, chat, ask, help"
-        },
         "search": {
           "description": "Full search with filters",
           "keywords": "search, find, results, filter, browse"
@@ -2460,25 +2455,6 @@
     "about_question": "What is this Activity about ?",
     "flashcards_question": "Generate flashcards about this Activity",
     "examples_question": "Explain this Activity in practical examples",
-    "copilot_bubble": {
-      "toggle_list": "Toggle conversations list",
-      "conversations": "Conversations",
-      "title": "Course Copilot",
-      "new_chat": "New chat",
-      "close": "Close copilot",
-      "new_chat_button": "New Chat",
-      "no_conversations": "No conversations yet",
-      "subtitle": "Ask questions about your courses.",
-      "select_mode": "Select chat mode",
-      "mode_general": "General mode",
-      "mode_course": "Course only",
-      "select_course": "Select course",
-      "ask_label": "Ask about your courses",
-      "thinking": "Thinking...",
-      "ask_placeholder": "Ask about your courses...",
-      "send": "Send message",
-      "open": "Open Copilot"
-    },
     "image_picker": {
       "idea_lightbulb": "A minimalist illustration of a lightbulb, soft gradients",
       "idea_robot": "A friendly 3D robot tutor, isometric, pastel colors",
@@ -2562,39 +2538,6 @@
       "summarize_tooltip": "Summarize a long paragraph or text with AI",
       "translate_tooltip": "Translate to different languages with AI",
       "examples_tooltip": "Give examples to understand better with AI"
-    },
-    "copilot_menu": {
-      "no_conversations": "No conversations yet",
-      "new_conversation": "New conversation",
-      "start_conversation": "Start a conversation",
-      "view_all": "View all conversations",
-      "open_in_bubble": "Open in bubble"
-    },
-    "copilot": {
-      "group_favorites": "Favorites",
-      "group_today": "Today",
-      "group_previous_7_days": "Previous 7 days",
-      "group_older": "Older",
-      "selected_course": "Selected Course",
-      "all_courses": "All courses",
-      "failed_load_session": "Failed to load session",
-      "new_chat": "New Chat",
-      "no_conversations": "No conversations yet",
-      "loading_conversation": "Loading conversation...",
-      "title": "Course Copilot",
-      "subtitle": "Ask questions about your courses and get answers grounded in course content, with references to the source material.",
-      "mode_course_only": "Course Only",
-      "mode_general": "General",
-      "mode_course": "Course",
-      "mode_general_title": "General Knowledge mode",
-      "mode_course_only_title": "Course Only mode",
-      "input_label": "Ask about your courses",
-      "thinking": "Thinking...",
-      "placeholder_general": "Ask anything...",
-      "placeholder_course": "Ask about your courses...",
-      "remove_favorite": "Remove from favorites",
-      "add_favorite": "Add to favorites",
-      "answering_from": "Answering from {{courses}}"
     }
   },
   "payments": {

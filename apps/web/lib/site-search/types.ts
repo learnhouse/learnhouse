@@ -21,8 +21,6 @@ export interface SitePageMeta {
   menuType?: string
   /** Only offered to signed-in users. */
   requiresAuth?: boolean
-  /** Copilot has an extra admin toggle on top of the `ai` feature. */
-  requiresCopilot?: boolean
   /** Keyboard chord that jumps here, e.g. `g c`; shown as a hint wherever the page is linked. */
   shortcut?: string
 }

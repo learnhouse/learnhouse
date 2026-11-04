@@ -4,7 +4,7 @@ import { Callout } from 'nextra/components'
 
 LearnHouse has AI features for both teachers and learners. They work from your own course content, so answers and generated material are specific to what you teach.
 
-- **For learners**: an **Ask AI** chat on each activity, and the **Copilot**, an assistant that answers questions across your courses with citations. See [AI for Students](/platform/ai/for-students).
+- **For learners**: an **Ask AI** chat on each activity, and **Copilot** and other agents in [Messages](/platform/messages), which answer questions across your courses with citations. See [AI for Students](/platform/ai/for-students).
 - **For teachers**: the AI Editor, the AI Course Creator, Magic Blocks, quiz, scenario and assignment task generation, images, narrated audio, video captions and chapters. See [AI for Teachers](/platform/ai/for-teachers).
 
 ## Turning AI on
@@ -14,7 +14,7 @@ AI is controlled per organization in the **AI** tab of the [Organization Setting
 | Setting | What it does |
 | --- | --- |
 | **Enable AI Features** | Turns every AI feature on or off for the organization. |
-| **AI Copilot** | Lets learners ask questions about course content. Answers come from your indexed course material, with citations. |
+| **AI Copilot** | Turns on Copilot and the other [agents](/platform/messages#agents) in Messages. They answer from your indexed course material, with citations. |
 
 The editor and activity AI features (**AI-powered content editor assistance** and **AI learning activity interactions**) are always on while AI is enabled.
 
@@ -22,7 +22,7 @@ The editor and activity AI features (**AI-powered content editor assistance** an
 
 ### Indexing courses for AI
 
-The Copilot answers from an index of your course content. In a course's header in the dashboard, click **Index for AI** to index it. The button then shows **Indexed**, and the course is re-indexed automatically when its activities change.
+Copilot and the other agents answer from an index of your course content. In a course's header in the dashboard, click **Index for AI** to index it. The button then shows **Indexed**, and the course is re-indexed automatically when its activities change.
 
 <Callout>
 On self-hosted instances AI also has to be configured on the server. LearnHouse supports several AI providers (Google Gemini is the default). Image generation and text to speech always use Google. See [AI Setup](/self-hosting/configuration/ai-setup).
@@ -53,7 +53,7 @@ Self-hosted instances have no credit limit. Usage is still counted.
 | Action | Credits |
 | --- | --- |
 | **Ask AI** message on an activity | 1 |
-| Copilot message | 2 |
+| Agent reply in Messages (Copilot or your own agents) | 2 |
 | AI Editor message | 1 |
 | Magic Block generation or change | 3 |
 | Quiz block generation | 2 |
