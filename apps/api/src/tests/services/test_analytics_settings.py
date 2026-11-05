@@ -43,6 +43,12 @@ class TestGetSettings:
         assert org.id not in analytics_settings._cache
 
 
+    async def test_cache_is_bounded(self, db, org):
+        analytics_settings._cache.update({-i: (0, None) for i in range(1, analytics_settings.MAX_CACHE_ENTRIES + 1)})
+        await analytics_settings.get_settings(org.id, db)
+        assert list(analytics_settings._cache) == [org.id]
+
+
 class TestRetention:
     async def test_options_by_plan(self, db, org):
         with _plan("pro"), patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"):

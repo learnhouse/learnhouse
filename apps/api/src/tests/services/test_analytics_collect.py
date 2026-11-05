@@ -109,6 +109,19 @@ class TestLookups:
             assert await collect.org_exists(999, db) is False
         execute.assert_not_called()
 
+    async def test_org_id_out_of_range_is_rejected_without_a_query(self, db):
+        with patch.object(db, "execute") as execute:
+            assert await collect.org_exists(0, db) is False
+            assert await collect.org_exists(-3, db) is False
+            assert await collect.org_exists(2**40, db) is False
+        execute.assert_not_called()
+        assert collect._org_cache == {}
+
+    def test_caches_are_bounded(self):
+        cache = {i: i for i in range(collect.MAX_CACHE_ENTRIES)}
+        collect._remember(cache, "new", 1)
+        assert cache == {"new": 1}
+
     async def test_membership(self, db, org, admin_user, regular_user):
         assert await collect.membership(admin_user.id, org.id, db) == (True, True)
         assert await collect.membership(regular_user.id, org.id, db) == (True, False)

@@ -33,6 +33,10 @@ from src.services.analytics.settings import get_settings
 
 MAX_EVENTS_PER_BATCH = 25
 CACHE_TTL_SECONDS = 300
+# The caches are keyed on ids a client sends; past this many entries they're
+# dropped and rebuilt, so made-up ids can't grow memory without bound.
+MAX_CACHE_ENTRIES = 10_000
+MAX_ORG_ID = 2**31 - 1
 
 _BOT_UA = re.compile(
     r"bot|crawl|spider|slurp|headless|lighthouse|pagespeed|prerender|preview|"
@@ -112,14 +116,22 @@ def own_hosts(headers) -> set[str]:
     return hosts
 
 
+def _remember(cache: dict, key, value) -> None:
+    if len(cache) >= MAX_CACHE_ENTRIES:
+        cache.clear()
+    cache[key] = value
+
+
 async def org_exists(org_id: int, db_session: AsyncSession) -> bool:
+    if not 0 < org_id <= MAX_ORG_ID:
+        return False
     cached = _org_cache.get(org_id)
     if cached and cached[0] > time.monotonic():
         return cached[1]
     found = (
         await db_session.execute(select(Organization.id).where(Organization.id == org_id))
     ).first() is not None
-    _org_cache[org_id] = (time.monotonic() + (CACHE_TTL_SECONDS if found else 60), found)
+    _remember(_org_cache, org_id, (time.monotonic() + (CACHE_TTL_SECONDS if found else 60), found))
     return found
 
 
@@ -141,7 +153,7 @@ async def membership(user_id: int, org_id: int, db_session: AsyncSession) -> tup
     if row is not None:
         rights = row.rights if isinstance(row.rights, dict) else (row.rights.model_dump() if row.rights else {})
         is_staff = bool((rights.get("organizations") or {}).get("action_update"))
-    _membership_cache[key] = (time.monotonic() + CACHE_TTL_SECONDS, is_member, is_staff)
+    _remember(_membership_cache, key, (time.monotonic() + CACHE_TTL_SECONDS, is_member, is_staff))
     return is_member, is_staff
 
 

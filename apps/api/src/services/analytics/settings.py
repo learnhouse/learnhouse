@@ -20,6 +20,7 @@ from src.security.features_utils.plans import plan_meets_requirement
 STANDARD_RETENTION_DAYS = (90, 180, 365)
 EXTENDED_RETENTION_DAYS = (730, 1095, 1825, 2555)
 CACHE_TTL_SECONDS = 60
+MAX_CACHE_ENTRIES = 10_000
 
 _cache: dict[int, tuple[float, "SettingsView"]] = {}
 
@@ -52,6 +53,8 @@ async def get_settings(org_id: int, db_session: AsyncSession) -> SettingsView:
         collect_location=row.collect_location,
         exclude_staff=row.exclude_staff,
     )
+    if len(_cache) >= MAX_CACHE_ENTRIES:
+        _cache.clear()
     _cache[org_id] = (time.monotonic() + CACHE_TTL_SECONDS, view)
     return view
 
