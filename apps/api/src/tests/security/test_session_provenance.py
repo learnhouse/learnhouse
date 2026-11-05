@@ -117,9 +117,12 @@ class TestLoginTracking:
 
         from src.services.auth.session import track_login
 
-        with patch("src.services.auth.session.track", new_callable=AsyncMock) as mock_track:
+        with patch("src.services.auth.session.track", new_callable=AsyncMock) as mock_track, patch(
+            "src.services.auth.session._is_org_member", new=AsyncMock(return_value=True)
+        ):
             await track_login(5, "password", 9)
             await track_login(5, "api_token", 9)
+            await track_login(5, None, 9)
             await track_login(None, None, 9)
             await track_login(5, "google", None)
 
@@ -127,8 +130,33 @@ class TestLoginTracking:
         assert calls == [
             {"event_name": "user_logged_in", "org_id": 9, "user_id": 5, "properties": {"login_method": "password"}},
             {"event_name": "user_logged_in", "org_id": 9, "user_id": 5, "properties": {"login_method": "token_exchange"}},
-            {"event_name": "user_logged_in", "org_id": 9, "user_id": 0, "properties": {"login_method": "unknown"}},
+            {"event_name": "user_logged_in", "org_id": 9, "user_id": 5, "properties": {"login_method": "unknown"}},
         ]
+
+    async def test_track_login_skips_non_members_and_lookup_errors(self):
+        from unittest.mock import AsyncMock, patch
+
+        from src.services.auth.session import track_login
+
+        with patch("src.services.auth.session.track", new_callable=AsyncMock) as mock_track:
+            with patch("src.services.auth.session._is_org_member", new=AsyncMock(return_value=False)):
+                await track_login(5, "password", 9)
+            with patch("src.services.auth.session._is_org_member", new=AsyncMock(side_effect=RuntimeError("db"))):
+                await track_login(5, "password", 9)
+        mock_track.assert_not_awaited()
+
+    async def test_is_org_member(self, engine, org, regular_user):
+        from unittest.mock import patch
+
+        from sqlalchemy.ext.asyncio import async_sessionmaker
+        from sqlmodel.ext.asyncio.session import AsyncSession
+
+        from src.services.auth.session import _is_org_member
+
+        factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        with patch("src.core.events.database._async_session_factory", factory):
+            assert await _is_org_member(regular_user.id, org.id) is True
+            assert await _is_org_member(regular_user.id, org.id + 100) is False
 
     async def test_issue_session_tracks_only_real_sessions(self):
         from types import SimpleNamespace
@@ -138,6 +166,7 @@ class TestLoginTracking:
 
         user = SimpleNamespace(id=3, email="a@b.co")
         with patch("src.services.auth.session.track", new_callable=AsyncMock) as mock_track, \
+             patch("src.services.auth.session._is_org_member", new_callable=AsyncMock, return_value=True), \
              patch("src.services.auth.session.is_mfa_active", new_callable=AsyncMock, return_value=False):
             result = await issue_session_or_challenge(None, user, amr="magic_login", org_id=4)
         assert result.mfa_required is False

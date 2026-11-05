@@ -333,7 +333,7 @@ class TestLoginMFA:
         c1, c2 = self._patches()
         with c1, c2, patch(
             "src.services.auth.session.track", new_callable=AsyncMock
-        ) as mock_track:
+        ) as mock_track, patch("src.services.auth.session._is_org_member", new_callable=AsyncMock, return_value=True):
             async with AsyncClient(
                 transport=ASGITransport(app=app), base_url="http://test"
             ) as c:
