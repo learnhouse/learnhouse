@@ -49,7 +49,7 @@ export default function PlaygroundViewClient({
 
   useTrackView(
     AnalyticsEvent.PlaygroundViewed,
-    { has_content: !!playground.html_content, is_author: canEdit },
+    { playground_uuid: playground.playground_uuid, has_content: !!playground.html_content, is_author: canEdit },
     true,
     'learner',
   )

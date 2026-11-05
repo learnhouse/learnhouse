@@ -1299,7 +1299,466 @@ COURSE_DETAIL_QUERIES: dict[str, tuple[str, int]] = {
     "course_top_learners": (COURSE_TOP_LEARNERS, 90),
 }
 
-ALL_QUERIES = {**CORE_QUERIES, **ADVANCED_QUERIES, **DETAIL_QUERIES}
+# ---------------------------------------------------------------------------
+# Per-feature queries (available to all plans, like the core ones)
+#
+# Event properties are client- or server-supplied JSON scalars, so numbers are
+# read through ``_num`` (anything that isn't a JSON number is NULL instead of
+# a cast error that would fail the whole chart) and booleans compare the text
+# form, which matches both JSON ``true`` and the string ``"true"``.
+# ---------------------------------------------------------------------------
+
+# feature -> the events that count as using it.
+FEATURE_GROUPS: dict[str, tuple[str, ...]] = {
+    "learning": (
+        "course_view", "activity_view", "activity_completed", "course_enrolled",
+        "course_completed", "time_on_activity", "video_progress",
+    ),
+    "assessments": ("assignment_submitted", "assignment_graded", "quiz_submitted", "code_submitted"),
+    "community": (
+        "community_viewed", "discussion_posted", "comment_posted", "reaction_added",
+        "discussion_upvoted", "comment_upvoted",
+    ),
+    "ai": ("ai_assistant_opened", "ai_message_sent"),
+    "podcasts": ("podcast_episode_played", "podcast_episode_progress"),
+    "boards": ("board_viewed", "board_created"),
+    "playgrounds": ("playground_viewed", "playground_created"),
+    "paths": ("path_viewed", "path_enrolled", "path_completed"),
+    "search": ("search_query",),
+    "messaging": ("message_sent",),
+    "library": ("library_resource_opened",),
+    "certificates": ("certificate_claimed", "certificate_viewed"),
+}
+
+
+def _sql_list(names) -> str:
+    return ", ".join(f"'{name}'" for name in names)
+
+
+def _num(key: str) -> str:
+    """A numeric event property, or NULL when it is missing or not a JSON number."""
+    return (
+        f"(CASE WHEN jsonb_typeof(properties->'{key}') = 'number' "
+        f"THEN (properties->>'{key}')::numeric END)"
+    )
+
+
+def _pct(part: str, whole: str) -> str:
+    """part / whole * 100 from two numeric properties; NULL when whole is missing or 0."""
+    return f"(CASE WHEN {_num(whole)} > 0 THEN {_num(part)} / {_num(whole)} * 100 END)"
+
+
+_FEATURE_EVENTS = _sql_list(name for names in FEATURE_GROUPS.values() for name in names)
+_FEATURE_CASE = (
+    "CASE "
+    + " ".join(f"WHEN event_name IN ({_sql_list(names)}) THEN '{feature}'" for feature, names in FEATURE_GROUPS.items())
+    + " END"
+)
+_ORG = "(:org_id = 0 OR org_id = :org_id)"
+_WINDOW = "ts >= now() - make_interval(days => :days)"
+_DAY = "(ts AT TIME ZONE 'UTC')::date"
+
+# Current window vs the previous window of the same length.
+FEATURE_SUMMARY = f"""
+WITH tagged AS (
+    SELECT
+        {_FEATURE_CASE} AS feature,
+        actor_key,
+        ts >= now() - make_interval(days => :days) AS is_current
+    FROM analytics_event
+    WHERE
+        {_ORG}
+        AND event_name IN ({_FEATURE_EVENTS})
+        AND ts >= now() - make_interval(days => :days * 2)
+)
+SELECT
+    feature,
+    count(*) FILTER (WHERE is_current) AS events,
+    count(DISTINCT actor_key) FILTER (WHERE is_current AND actor_key <> '') AS actors,
+    count(*) FILTER (WHERE NOT is_current) AS prev_events,
+    count(DISTINCT actor_key) FILTER (WHERE NOT is_current AND actor_key <> '') AS prev_actors
+FROM tagged
+GROUP BY feature
+ORDER BY events DESC, feature
+"""
+
+FEATURE_USAGE_DAILY = f"""
+SELECT
+    {_DAY} AS date,
+    {_FEATURE_CASE} AS feature,
+    count(*) AS events,
+    count(DISTINCT actor_key) FILTER (WHERE actor_key <> '') AS actors
+FROM analytics_event
+WHERE
+    {_ORG}
+    AND event_name IN ({_FEATURE_EVENTS})
+    AND {_WINDOW}
+GROUP BY 1, 2
+ORDER BY date ASC, feature
+"""
+
+# Each viewer counts once per video, at the furthest point they reached.
+VIDEO_ENGAGEMENT = f"""
+WITH furthest AS (
+    SELECT
+        activity_uuid,
+        max(course_uuid) AS course_uuid,
+        actor_key,
+        max({_num("percent")}) AS pct
+    FROM analytics_event
+    WHERE
+        {_ORG}
+        AND event_name = 'video_progress'
+        AND activity_uuid <> ''
+        AND actor_key <> ''
+        AND {_WINDOW}
+    GROUP BY activity_uuid, actor_key
+)
+SELECT
+    coalesce(max(course_uuid), '') AS course_uuid,
+    activity_uuid,
+    count(*) FILTER (WHERE pct >= 25) AS reached_25,
+    count(*) FILTER (WHERE pct >= 50) AS reached_50,
+    count(*) FILTER (WHERE pct >= 75) AS reached_75,
+    count(*) FILTER (WHERE pct >= 100) AS reached_100
+FROM furthest
+GROUP BY activity_uuid
+ORDER BY reached_25 DESC, reached_100 DESC, activity_uuid
+LIMIT 20
+"""
+
+PODCAST_ENGAGEMENT = f"""
+WITH per_listener AS (
+    SELECT
+        properties->>'episode_uuid' AS episode_uuid,
+        max(properties->>'podcast_uuid') AS podcast_uuid,
+        actor_key,
+        bool_or(event_name = 'podcast_episode_played') AS played,
+        max({_num("percent")}) FILTER (WHERE event_name = 'podcast_episode_progress') AS pct
+    FROM analytics_event
+    WHERE
+        {_ORG}
+        AND event_name IN ('podcast_episode_played', 'podcast_episode_progress')
+        AND properties->>'episode_uuid' <> ''
+        AND actor_key <> ''
+        AND {_WINDOW}
+    GROUP BY 1, actor_key
+)
+SELECT
+    coalesce(max(podcast_uuid), '') AS podcast_uuid,
+    episode_uuid,
+    count(*) FILTER (WHERE played) AS plays,
+    count(*) FILTER (WHERE pct >= 50) AS reached_50,
+    count(*) FILTER (WHERE pct >= 100) AS reached_100
+FROM per_listener
+GROUP BY episode_uuid
+ORDER BY plays DESC, reached_50 DESC, episode_uuid
+LIMIT 20
+"""
+
+# Assignments are submitted, then graded (assignment_graded). Quizzes and code
+# are scored on submission, so every quiz_submitted / code_submitted is both a
+# submission and a graded attempt.
+_ASSESSMENT_EVENTS = "'assignment_submitted', 'assignment_graded', 'quiz_submitted', 'code_submitted'"
+_ASSESSMENT_ROWS = f"""
+    SELECT
+        CASE
+            WHEN event_name IN ('assignment_submitted', 'assignment_graded') THEN 'assignment'
+            WHEN event_name = 'quiz_submitted' THEN 'quiz'
+            ELSE 'code'
+        END AS kind,
+        {_DAY} AS date,
+        user_id,
+        event_name <> 'assignment_graded' AS is_submission,
+        event_name <> 'assignment_submitted' AS is_graded,
+        coalesce(properties->>'passed' = 'true', false) AS passed,
+        CASE event_name
+            WHEN 'assignment_graded' THEN {_pct("grade", "max_grade")}
+            WHEN 'quiz_submitted' THEN {_pct("score", "max_score")}
+            WHEN 'code_submitted' THEN {_pct("tests_passed", "tests_total")}
+        END AS score_pct
+    FROM analytics_event
+    WHERE
+        {_ORG}
+        AND event_name IN ({_ASSESSMENT_EVENTS})
+        AND {_WINDOW}
+"""
+
+ASSESSMENT_SUMMARY = f"""
+WITH attempts AS ({_ASSESSMENT_ROWS})
+SELECT
+    kind,
+    count(*) FILTER (WHERE is_submission) AS submissions,
+    count(*) FILTER (WHERE is_graded) AS graded,
+    count(*) FILTER (WHERE is_graded AND passed) AS passed,
+    coalesce(round(avg(score_pct), 1), 0) AS avg_score_pct,
+    count(DISTINCT user_id) FILTER (WHERE user_id <> 0) AS learners
+FROM attempts
+GROUP BY kind
+ORDER BY kind
+"""
+
+ASSESSMENT_DAILY = f"""
+WITH attempts AS ({_ASSESSMENT_ROWS})
+SELECT
+    date,
+    count(*) FILTER (WHERE is_submission) AS submissions,
+    count(*) FILTER (WHERE is_graded) AS graded,
+    count(*) FILTER (WHERE is_graded AND passed) AS passed
+FROM attempts
+GROUP BY date
+ORDER BY date ASC
+"""
+
+_COMMUNITY_ACTIONS = "'discussion_posted', 'comment_posted', 'reaction_added', 'discussion_upvoted', 'comment_upvoted'"
+
+COMMUNITY_DAILY = f"""
+SELECT
+    {_DAY} AS date,
+    count(*) FILTER (WHERE event_name = 'discussion_posted') AS discussions,
+    count(*) FILTER (WHERE event_name = 'comment_posted') AS comments,
+    count(*) FILTER (WHERE event_name = 'reaction_added') AS reactions,
+    count(*) FILTER (WHERE event_name IN ('discussion_upvoted', 'comment_upvoted')) AS upvotes,
+    count(DISTINCT user_id) FILTER (WHERE user_id <> 0) AS contributors
+FROM analytics_event
+WHERE
+    {_ORG}
+    AND event_name IN ({_COMMUNITY_ACTIONS})
+    AND {_WINDOW}
+GROUP BY 1
+ORDER BY date ASC
+"""
+
+TOP_COMMUNITIES = f"""
+SELECT
+    properties->>'community_uuid' AS community_uuid,
+    count(DISTINCT actor_key) FILTER (WHERE event_name = 'community_viewed' AND actor_key <> '') AS views,
+    count(*) FILTER (WHERE event_name = 'discussion_posted') AS discussions,
+    count(*) FILTER (WHERE event_name = 'comment_posted') AS comments,
+    count(*) FILTER (WHERE event_name = 'reaction_added') AS reactions,
+    count(DISTINCT user_id) FILTER (WHERE event_name <> 'community_viewed' AND user_id <> 0) AS contributors
+FROM analytics_event
+WHERE
+    {_ORG}
+    AND event_name IN ('community_viewed', {_COMMUNITY_ACTIONS})
+    AND properties->>'community_uuid' <> ''
+    AND {_WINDOW}
+GROUP BY 1
+ORDER BY contributors DESC, views DESC, community_uuid
+LIMIT 10
+"""
+
+AI_DAILY = f"""
+SELECT
+    {_DAY} AS date,
+    count(*) FILTER (WHERE event_name = 'ai_message_sent') AS messages,
+    count(DISTINCT user_id) FILTER (WHERE event_name = 'ai_message_sent' AND user_id <> 0) AS users,
+    count(*) FILTER (WHERE event_name = 'ai_assistant_opened') AS opens
+FROM analytics_event
+WHERE
+    {_ORG}
+    AND event_name IN ('ai_message_sent', 'ai_assistant_opened')
+    AND {_WINDOW}
+GROUP BY 1
+ORDER BY date ASC
+"""
+
+AI_BY_SURFACE = f"""
+SELECT
+    coalesce(nullif(properties->>'surface', ''), 'unknown') AS surface,
+    count(*) AS messages,
+    count(DISTINCT user_id) FILTER (WHERE user_id <> 0) AS users
+FROM analytics_event
+WHERE
+    {_ORG}
+    AND event_name = 'ai_message_sent'
+    AND {_WINDOW}
+GROUP BY 1
+ORDER BY messages DESC, surface
+"""
+
+# An invite event can stand for a batch (``count``); everything else is one.
+ACQUISITION_METHODS = f"""
+WITH acquisition AS (
+    SELECT
+        CASE event_name
+            WHEN 'user_signed_up' THEN 'signup'
+            WHEN 'user_joined_org' THEN 'join'
+            WHEN 'user_logged_in' THEN 'login'
+            ELSE 'invite'
+        END AS kind,
+        coalesce(nullif(CASE event_name
+            WHEN 'user_signed_up' THEN properties->>'signup_method'
+            WHEN 'user_joined_org' THEN properties->>'join_method'
+            WHEN 'user_logged_in' THEN properties->>'login_method'
+            ELSE properties->>'invite_method'
+        END, ''), 'unknown') AS method,
+        CASE WHEN event_name = 'user_invited' THEN greatest(coalesce(round({_num("count")}), 1), 0) ELSE 1 END AS n,
+        user_id
+    FROM analytics_event
+    WHERE
+        {_ORG}
+        AND event_name IN ('user_signed_up', 'user_joined_org', 'user_logged_in', 'user_invited')
+        AND {_WINDOW}
+)
+SELECT
+    kind,
+    method,
+    sum(n)::bigint AS events,
+    count(DISTINCT user_id) FILTER (WHERE user_id <> 0) AS users
+FROM acquisition
+GROUP BY kind, method
+ORDER BY kind, events DESC, method
+"""
+
+PATHS_SUMMARY = f"""
+SELECT
+    properties->>'path_uuid' AS path_uuid,
+    count(DISTINCT actor_key) FILTER (WHERE event_name = 'path_viewed' AND actor_key <> '') AS views,
+    count(DISTINCT user_id) FILTER (WHERE event_name = 'path_enrolled' AND user_id <> 0) AS enrollments,
+    count(DISTINCT user_id) FILTER (WHERE event_name = 'path_completed' AND user_id <> 0) AS completions
+FROM analytics_event
+WHERE
+    {_ORG}
+    AND event_name IN ('path_viewed', 'path_enrolled', 'path_completed')
+    AND properties->>'path_uuid' <> ''
+    AND {_WINDOW}
+GROUP BY 1
+ORDER BY views DESC, enrollments DESC, path_uuid
+LIMIT 20
+"""
+
+TOP_BOARDS_PLAYGROUNDS = f"""
+WITH viewed AS (
+    SELECT
+        CASE WHEN event_name = 'board_viewed' THEN 'board' ELSE 'playground' END AS kind,
+        CASE WHEN event_name = 'board_viewed'
+             THEN properties->>'board_uuid'
+             ELSE properties->>'playground_uuid' END AS uuid,
+        actor_key
+    FROM analytics_event
+    WHERE
+        {_ORG}
+        AND event_name IN ('board_viewed', 'playground_viewed')
+        AND {_WINDOW}
+),
+ranked AS (
+    SELECT
+        kind,
+        uuid,
+        count(*) AS views,
+        count(DISTINCT actor_key) FILTER (WHERE actor_key <> '') AS viewers,
+        row_number() OVER (PARTITION BY kind ORDER BY count(*) DESC, uuid) AS rn
+    FROM viewed
+    WHERE uuid <> ''
+    GROUP BY kind, uuid
+)
+SELECT kind, uuid, views, viewers
+FROM ranked
+WHERE rn <= 10
+ORDER BY kind, views DESC, uuid
+"""
+
+CONTENT_CREATION_DAILY = f"""
+SELECT
+    {_DAY} AS date,
+    count(*) FILTER (WHERE event_name = 'course_created') AS courses_created,
+    count(*) FILTER (WHERE event_name = 'course_published' AND properties->>'published' = 'true') AS courses_published,
+    count(*) FILTER (WHERE event_name = 'activity_created') AS activities_created,
+    count(*) FILTER (WHERE event_name = 'board_created') AS boards_created,
+    count(*) FILTER (WHERE event_name = 'playground_created') AS playgrounds_created,
+    count(*) FILTER (WHERE event_name = 'podcast_episode_published') AS episodes_published
+FROM analytics_event
+WHERE
+    {_ORG}
+    AND event_name IN (
+        'course_created', 'course_published', 'activity_created',
+        'board_created', 'playground_created', 'podcast_episode_published'
+    )
+    AND {_WINDOW}
+GROUP BY 1
+ORDER BY date ASC
+"""
+
+# sent / returned are distinct recipients per nudge type; a recipient returned
+# when they did anything in the browser (source 'web') within 7 days after a
+# nudge of that type. Nudges without a type fall back to their id.
+NUDGE_EFFECTIVENESS = f"""
+WITH nudges AS (
+    SELECT
+        org_id,
+        user_id,
+        ts,
+        coalesce(nullif(properties->>'nudge_type', ''), nullif(properties->>'nudge_id', ''), 'unknown') AS nudge_type
+    FROM analytics_event
+    WHERE
+        {_ORG}
+        AND event_name = 'nudge_sent'
+        AND user_id <> 0
+        AND {_WINDOW}
+),
+outcomes AS (
+    SELECT
+        n.nudge_type,
+        n.user_id,
+        EXISTS (
+            SELECT 1
+            FROM analytics_event e
+            WHERE e.org_id = n.org_id
+                AND e.user_id = n.user_id
+                AND e.source = 'web'
+                AND e.ts > n.ts
+                AND e.ts <= n.ts + interval '7 days'
+        ) AS returned
+    FROM nudges n
+)
+SELECT
+    nudge_type,
+    count(DISTINCT user_id) AS sent,
+    count(DISTINCT user_id) FILTER (WHERE returned) AS returned,
+    round(count(DISTINCT user_id) FILTER (WHERE returned)::numeric / count(DISTINCT user_id) * 100, 1) AS return_rate
+FROM outcomes
+GROUP BY nudge_type
+ORDER BY sent DESC, nudge_type
+"""
+
+LIBRARY_TOP_RESOURCES = f"""
+SELECT
+    properties->>'resource_uuid' AS resource_uuid,
+    coalesce(max(properties->>'resource_type'), '') AS resource_type,
+    count(*) AS opens,
+    count(DISTINCT actor_key) FILTER (WHERE actor_key <> '') AS viewers
+FROM analytics_event
+WHERE
+    {_ORG}
+    AND event_name = 'library_resource_opened'
+    AND properties->>'resource_uuid' <> ''
+    AND {_WINDOW}
+GROUP BY 1
+ORDER BY opens DESC, viewers DESC, resource_uuid
+LIMIT 15
+"""
+
+FEATURE_QUERIES: dict[str, tuple[str, int]] = {
+    "feature_summary": (FEATURE_SUMMARY, 30),
+    "feature_usage_daily": (FEATURE_USAGE_DAILY, 30),
+    "video_engagement": (VIDEO_ENGAGEMENT, 30),
+    "podcast_engagement": (PODCAST_ENGAGEMENT, 30),
+    "assessment_summary": (ASSESSMENT_SUMMARY, 30),
+    "assessment_daily": (ASSESSMENT_DAILY, 30),
+    "community_daily": (COMMUNITY_DAILY, 30),
+    "top_communities": (TOP_COMMUNITIES, 30),
+    "ai_daily": (AI_DAILY, 30),
+    "ai_by_surface": (AI_BY_SURFACE, 30),
+    "acquisition_methods": (ACQUISITION_METHODS, 30),
+    "paths_summary": (PATHS_SUMMARY, 30),
+    "top_boards_playgrounds": (TOP_BOARDS_PLAYGROUNDS, 30),
+    "content_creation_daily": (CONTENT_CREATION_DAILY, 30),
+    "nudge_effectiveness": (NUDGE_EFFECTIVENESS, 30),
+    "library_top_resources": (LIBRARY_TOP_RESOURCES, 30),
+}
+
+ALL_QUERIES = {**CORE_QUERIES, **FEATURE_QUERIES, **ADVANCED_QUERIES, **DETAIL_QUERIES}
 
 # ---------------------------------------------------------------------------
 # Superadmin queries (platform-wide page views, from the daily summary).

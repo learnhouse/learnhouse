@@ -45,7 +45,7 @@ afterAll(() => {
 });
 
 const { trackEvent, flushAnalytics, getSessionId } = await import("../services/analytics/analytics.ts");
-const { isTrackedPagePath, reachedMilestones } = await import("../services/analytics/rules.ts");
+const { isTrackedPagePath, reachedMilestones, createMilestoneTracker } = await import("../services/analytics/rules.ts");
 
 beforeEach(() => {
   flushAnalytics();
@@ -194,5 +194,32 @@ describe("reachedMilestones", () => {
     expect(reachedMilestones(5, NaN, new Set())).toEqual([]);
     expect(reachedMilestones(5, 0, new Set())).toEqual([]);
     expect(reachedMilestones(5, Infinity, new Set())).toEqual([]);
+  });
+});
+
+describe("createMilestoneTracker", () => {
+  test("reports each milestone once per item", () => {
+    const tracker = createMilestoneTracker();
+    expect(tracker.reached("ep_1", 30, 100)).toEqual([25]);
+    expect(tracker.reached("ep_1", 31, 100)).toEqual([]);
+    expect(tracker.reached("ep_1", 80, 100)).toEqual([50, 75]);
+    // Seeking back and playing again doesn't recount.
+    expect(tracker.reached("ep_1", 30, 100)).toEqual([]);
+    expect(tracker.reached("ep_1", 100, 100)).toEqual([100]);
+    expect(tracker.reached("ep_1", 100, 100)).toEqual([]);
+  });
+
+  test("keeps items apart", () => {
+    const tracker = createMilestoneTracker();
+    expect(tracker.reached("ep_1", 60, 100)).toEqual([25, 50]);
+    expect(tracker.reached("ep_2", 60, 100)).toEqual([25, 50]);
+    expect(tracker.reached("ep_2", 0, 100)).toEqual([]);
+  });
+
+  test("waits for a known duration", () => {
+    const tracker = createMilestoneTracker();
+    expect(tracker.reached("ep_1", 30, 0)).toEqual([]);
+    expect(tracker.reached("ep_1", 30, NaN)).toEqual([]);
+    expect(tracker.reached("ep_1", 30, 100)).toEqual([25]);
   });
 });

@@ -18,6 +18,7 @@ import {
 import useGetAIFeatures from '../../../../Hooks/useGetAIFeatures'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { usePathname } from 'next/navigation'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 type AICanvaToolkitProps = {
   editor: Editor
@@ -203,10 +204,14 @@ function AIActionButton(props: {
   const access_token = session?.data?.tokens?.access_token;
   const dispatchAIChatBot = useAIChatBotDispatch() as any
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
+  const { track } = useLHAnalytics('learner')
 
   async function handleAction(label: string) {
     const selection = getTipTapEditorSelectedText()
     const prompt = getPrompt(label, selection)
+    if (!aiChatBotState.isModalOpen) {
+      track(AnalyticsEvent.AiAssistantOpened, { surface: 'activity_selection' })
+    }
     dispatchAIChatBot({ type: 'setIsModalOpen' })
     await sendMessage(prompt)
   }

@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { ChartBar, ChartLine, ClockCounterClockwise, SquaresFour } from '@phosphor-icons/react'
+import { ChartBar, ChartLine, ClockCounterClockwise, SquaresFour, Stack } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'motion/react'
@@ -48,6 +48,7 @@ function RetentionLink() {
 // Core widgets: dynamic to code-split recharts
 const EventOverview = dynamic(() => import('@components/Dashboard/Analytics/EventOverview'))
 const CoreWidgetsRow = dynamic(() => import('@components/Dashboard/Analytics/CoreWidgetsRow'))
+const FeaturesTab = dynamic(() => import('@components/Dashboard/Analytics/Features/FeaturesTab'))
 
 // Advanced widgets: only loaded when user clicks the Advanced tab
 const AdvancedGate = dynamic(() => import('@components/Dashboard/Analytics/AdvancedGate').then(m => ({ default: m.AdvancedGate })))
@@ -73,6 +74,13 @@ const OVERVIEW_QUERIES = [
   'visitors_by_device', 'visitors_by_referrer', 'daily_visitor_breakdown',
 ]
 
+const FEATURE_QUERY_NAMES = [
+  'feature_summary', 'feature_usage_daily', 'video_engagement', 'podcast_engagement',
+  'assessment_summary', 'assessment_daily', 'community_daily', 'top_communities',
+  'ai_daily', 'ai_by_surface', 'acquisition_methods', 'nudge_effectiveness',
+  'paths_summary', 'top_boards_playgrounds', 'library_top_resources', 'content_creation_daily',
+]
+
 const ADVANCED_QUERY_NAMES = [
   'org_growth_trend', 'new_vs_returning', 'cohort_retention', 'peak_usage_hours',
   'course_dropoff', 'time_to_completion', 'completion_velocity',
@@ -88,7 +96,7 @@ const DATE_RANGES = [
   { label: '12m', value: '365' },
 ]
 
-type Tab = 'overview' | 'advanced'
+type Tab = 'overview' | 'features' | 'advanced'
 
 export default function AnalyticsDashboard() {
   const { t } = useTranslation()
@@ -142,7 +150,7 @@ export default function AnalyticsDashboard() {
               {isConfigured && (
                 <ExportAnalyticsButton
                   days={days}
-                  queries={tab === 'overview' ? OVERVIEW_QUERIES : ADVANCED_QUERY_NAMES}
+                  queries={tab === 'overview' ? OVERVIEW_QUERIES : tab === 'features' ? FEATURE_QUERY_NAMES : ADVANCED_QUERY_NAMES}
                 />
               )}
             </div>
@@ -155,6 +163,13 @@ export default function AnalyticsDashboard() {
             icon: <ChartLine size={16} />,
             onClick: () => setTab('overview'),
             active: tab === 'overview',
+          },
+          {
+            key: 'features',
+            label: t('analytics.features.tab'),
+            icon: <Stack size={16} />,
+            onClick: () => setTab('features'),
+            active: tab === 'features',
           },
           {
             key: 'advanced',
@@ -187,6 +202,8 @@ export default function AnalyticsDashboard() {
               </p>
             </div>
           </div>
+        ) : tab === 'features' ? (
+          <FeaturesTab days={days} />
         ) : tab === 'overview' ? (
           <div className="space-y-6 max-w-[1600px] mx-auto w-full">
             <EventOverview days={days} />

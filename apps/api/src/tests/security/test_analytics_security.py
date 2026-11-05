@@ -142,13 +142,54 @@ class TestQueryCatalog:
         assert len(q.DETAIL_QUERIES) == 5
         assert len(q.COURSE_QUERIES) == 18
         assert len(q.COURSE_DETAIL_QUERIES) == 2
-        assert set(q.ALL_QUERIES) == set(q.CORE_QUERIES) | set(q.ADVANCED_QUERIES) | set(q.DETAIL_QUERIES)
+        assert len(q.FEATURE_QUERIES) == 16
+        assert set(q.ALL_QUERIES) == (
+            set(q.CORE_QUERIES) | set(q.FEATURE_QUERIES) | set(q.ADVANCED_QUERIES) | set(q.DETAIL_QUERIES)
+        )
         assert q.CORE_QUERIES["live_users"][1] == 0
         assert q.ADVANCED_QUERIES["time_to_completion"][1] == 180
         assert set(q.USER_QUERIES) == {
             "user_time_total", "user_time_by_course", "user_views", "user_searches", "user_daily_activity",
         }
         assert set(q.SUPERADMIN_QUERIES) == {"superadmin_org_visits_rank", "superadmin_org_weekly_visits"}
+
+    def test_feature_queries_are_core_and_keep_their_names(self):
+        # The web dashboard reads these by name and column; plan-gated
+        # (advanced) queries would 403 on smaller plans.
+        from src.services.analytics import queries as q
+        assert list(q.FEATURE_QUERIES) == [
+            "feature_summary", "feature_usage_daily", "video_engagement", "podcast_engagement",
+            "assessment_summary", "assessment_daily", "community_daily", "top_communities",
+            "ai_daily", "ai_by_surface", "acquisition_methods", "paths_summary",
+            "top_boards_playgrounds", "content_creation_daily", "nudge_effectiveness",
+            "library_top_resources",
+        ]
+        assert not set(q.FEATURE_QUERIES) & set(q.ADVANCED_QUERIES)
+        assert not set(q.FEATURE_QUERIES) & set(q.CORE_QUERIES)
+        assert all(days == 30 for _sql, days in q.FEATURE_QUERIES.values())
+        for name, (sql, _days) in q.FEATURE_QUERIES.items():
+            assert q.ALL_QUERIES[name][0] is sql
+
+    def test_feature_groups_only_use_catalogued_events(self):
+        from src.services.analytics import queries as q
+        from src.services.analytics.events import CATALOG
+        grouped = [name for names in q.FEATURE_GROUPS.values() for name in names]
+        assert len(grouped) == len(set(grouped)), "an event belongs to two features"
+        assert set(grouped) <= set(CATALOG)
+        for name in grouped:
+            assert f"'{name}'" in q.FEATURE_SUMMARY and f"'{name}'" in q.FEATURE_USAGE_DAILY
+
+    def test_numeric_properties_are_read_without_casting_junk(self):
+        # A non-number "percent" from a public beacon must not fail the chart.
+        from src.services.analytics import queries as q
+        assert q._num("percent") == (
+            "(CASE WHEN jsonb_typeof(properties->'percent') = 'number' "
+            "THEN (properties->>'percent')::numeric END)"
+        )
+        assert q._pct("a", "b").startswith("(CASE WHEN " + q._num("b") + " > 0 THEN ")
+        for name in ("video_engagement", "podcast_engagement", "assessment_summary", "acquisition_methods"):
+            sql = q.FEATURE_QUERIES[name][0]
+            assert "->>'percent')::" not in sql.replace(q._num("percent"), ""), name
 
     def test_only_known_bind_parameters(self):
         allowed = {

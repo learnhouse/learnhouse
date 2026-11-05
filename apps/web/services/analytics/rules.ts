@@ -22,3 +22,24 @@ export function reachedMilestones(currentTime: number, duration: number, fired: 
   const percent = currentTime >= duration - 1 || raw >= 99 ? 100 : raw
   return VIDEO_MILESTONES.filter((m) => !fired.has(m) && percent >= m)
 }
+
+/**
+ * Milestones per playable item (e.g. podcast episodes in one player), each
+ * reported at most once per item for the tracker's lifetime.
+ */
+export function createMilestoneTracker() {
+  const fired = new Map<string, Set<number>>()
+  return {
+    /** Milestones `key` reaches at `currentTime` that weren't reported yet; marks them reported. */
+    reached(key: string, currentTime: number, duration: number): number[] {
+      let done = fired.get(key)
+      if (!done) {
+        done = new Set()
+        fired.set(key, done)
+      }
+      const reached = reachedMilestones(currentTime, duration, done)
+      for (const m of reached) done.add(m)
+      return reached
+    },
+  }
+}

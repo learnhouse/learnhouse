@@ -56,6 +56,13 @@ PODCAST_EPISODE_PLAYED = "podcast_episode_played"
 COURSE_SHARED = "course_shared"
 STORE_OFFER_VIEWED = "store_offer_viewed"
 COMMUNITY_VIEWED = "community_viewed"
+BOARD_VIEWED = "board_viewed"
+PLAYGROUND_VIEWED = "playground_viewed"
+PATH_VIEWED = "path_viewed"
+PODCAST_EPISODE_PROGRESS = "podcast_episode_progress"
+CERTIFICATE_VIEWED = "certificate_viewed"
+LIBRARY_RESOURCE_OPENED = "library_resource_opened"
+AI_ASSISTANT_OPENED = "ai_assistant_opened"
 
 # ---------------------------------------------------------------------------
 # Server events
@@ -95,6 +102,11 @@ NUDGE_SENT = "nudge_sent"
 
 # Messaging: one per message a member posts (direct, group, course channel).
 MESSAGE_SENT = "message_sent"
+COURSE_CREATED = "course_created"
+DISCUSSION_UPVOTED = "discussion_upvoted"
+COMMENT_UPVOTED = "comment_upvoted"
+PODCAST_EPISODE_PUBLISHED = "podcast_episode_published"
+USER_INVITED = "user_invited"
 
 
 CATALOG: dict[str, EventSpec] = {
@@ -109,9 +121,16 @@ CATALOG: dict[str, EventSpec] = {
         _spec(COURSE_SHARED, "channel", public=True),
         _spec(STORE_OFFER_VIEWED, "offer_id", public=True),
         _spec(COMMUNITY_VIEWED, "community_uuid", public=True),
+        _spec(BOARD_VIEWED, "board_uuid", public=True),
+        _spec(PLAYGROUND_VIEWED, "playground_uuid", public=True),
+        _spec(PATH_VIEWED, "path_uuid", public=True),
+        _spec(PODCAST_EPISODE_PROGRESS, "podcast_uuid", "episode_uuid", "percent", public=True),
+        _spec(CERTIFICATE_VIEWED, "certificate_uuid", public=True),
+        _spec(LIBRARY_RESOURCE_OPENED, "resource_uuid", "resource_type", public=True),
         # Web: members only
         _spec(TIME_ON_ACTIVITY, "activity_type", web=True),
         _spec(VIDEO_PROGRESS, "percent", "activity_type", web=True),
+        _spec(AI_ASSISTANT_OPENED, "surface", web=True),
         # Server
         _spec(COURSE_ENROLLED, "source"),
         _spec(COURSE_LEFT),
@@ -143,6 +162,11 @@ CATALOG: dict[str, EventSpec] = {
         _spec(ACTIVITY_CREATED, "activity_type"),
         _spec(NUDGE_SENT, "nudge_type", "nudge_id"),
         _spec(MESSAGE_SENT, "conversation_uuid", "conversation_kind"),
+        _spec(COURSE_CREATED, "source"),
+        _spec(DISCUSSION_UPVOTED, "community_uuid", "discussion_uuid"),
+        _spec(COMMENT_UPVOTED, "community_uuid", "discussion_uuid"),
+        _spec(PODCAST_EPISODE_PUBLISHED, "podcast_uuid", "episode_uuid"),
+        _spec(USER_INVITED, "invite_method", "count"),
     )
 }
 
