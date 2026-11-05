@@ -113,6 +113,10 @@ def startup_app(app: FastAPI) -> Callable:
         # video chapters) for whatever slipped through.
         from src.services.backfill.scheduler import start_scheduler as start_backfill
         start_backfill()
+        # Every few minutes, rebuild the analytics summaries; daily, apply
+        # each org's analytics retention.
+        from src.services.analytics.maintenance import start_scheduler as start_analytics
+        start_analytics()
         # Start the embedded MCP session manager when enabled. Starlette
         # mounts don't run sub-app lifespans, so the manager's run()
         # context is entered here and closed in shutdown_app — without it
@@ -169,6 +173,9 @@ def shutdown_app(app: FastAPI) -> Callable:
         # Stop the demo refresh tick.
         from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
         await stop_demo_scheduler()
+        # Stop analytics upkeep and write any events still queued.
+        from src.services.analytics.maintenance import stop_scheduler as stop_analytics
+        await stop_analytics()
         # Close the embedded MCP session manager (started in startup_app).
         global _mcp_lifespan_stack
         if _mcp_lifespan_stack is not None:

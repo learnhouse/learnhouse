@@ -1,11 +1,11 @@
 """Named-query analytics runner for the agent tools.
 
 Runs the same catalog queries as the `/analytics/dashboard` endpoints, with
-the same gates. The Tinybird client, membership/admin checks, window cap and
-SQL interpolation stay in `src/routers/analytics.py` (its tests patch them
-there), so this module reaches into it lazily instead of keeping a second
-copy that would drift. Only queries from `src/services/analytics/queries.py`
-can run, never raw SQL from callers.
+the same gates. The cached query executor, membership/admin checks, window
+cap and parameter validation stay in `src/routers/analytics.py` (its tests
+patch them there), so this module reaches into it lazily instead of keeping a
+second copy that would drift. Only queries from
+`src/services/analytics/queries.py` can run, never raw SQL from callers.
 """
 
 from __future__ import annotations
@@ -73,12 +73,12 @@ async def execute_org_query(
                     detail="Advanced analytics requires an Enterprise plan or higher.",
                 )
 
-    sql_template, default_days = ALL_QUERIES[query_name]
+    sql, default_days = ALL_QUERIES[query_name]
     safe_org_id = int(org_id)
     safe_days = _safe_days(days, default_days)
-    sql = router._build_sql(sql_template, safe_org_id, safe_days)
+    params = router._query_params(safe_org_id, safe_days)
 
-    result = await router._execute_tinybird_query(query_name, sql, safe_org_id, safe_days)
+    result = await router._execute_query(query_name, sql, params, safe_org_id, safe_days)
     result["data"] = await enrich_with_metadata(
         result.get("data", []), db_session, org_id=safe_org_id
     )
@@ -110,13 +110,13 @@ async def execute_course_query(
         raise HTTPException(status_code=404, detail="Unknown course query")
 
     safe_course_uuid = router._validate_course_uuid(course_uuid)
-    sql_template, default_days = COURSE_QUERIES[query_name]
+    sql, default_days = COURSE_QUERIES[query_name]
     safe_org_id = int(org_id)
     safe_days = _safe_days(days, default_days)
-    sql = router._build_sql(sql_template, safe_org_id, safe_days, safe_course_uuid)
+    params = router._query_params(safe_org_id, safe_days, safe_course_uuid)
 
-    result = await router._execute_tinybird_query(
-        query_name, sql, safe_org_id, safe_days, course_id=safe_course_uuid
+    result = await router._execute_query(
+        query_name, sql, params, safe_org_id, safe_days, course_id=safe_course_uuid
     )
     result["data"] = await enrich_with_metadata(
         result.get("data", []), db_session, org_id=safe_org_id
@@ -137,22 +137,19 @@ async def execute_detail_query(
     queries (``/dashboard/detail/{name}``), plus the Pro plan for course
     detail queries (``/dashboard/course/detail/{name}``). Rows keep their
     ``user_id``; callers resolve it to a member. Enrollments in a course fall
-    back to the trail when the event pipeline has none, like the endpoint."""
+    back to the trail when no enrollment events were recorded, like the endpoint."""
     from src.routers import analytics as router  # noqa: PLC0415
 
     await _verify_admin(acting_user_id, org_id, db_session)
     safe_org_id = int(org_id)
-    empty = {"data": [], "rows": 0, "meta": []}
 
     if course_uuid is None:
         if query_name not in DETAIL_QUERIES:
             raise HTTPException(status_code=404, detail="Unknown detail query")
-        sql_template, default_days = DETAIL_QUERIES[query_name]
+        sql, default_days = DETAIL_QUERIES[query_name]
         safe_days = _safe_days(days, default_days)
-        sql = router._build_sql(sql_template, safe_org_id, safe_days)
-        result = await router._execute_tinybird_query(
-            query_name, sql, safe_org_id, safe_days, empty_response=empty
-        )
+        params = router._query_params(safe_org_id, safe_days)
+        result = await router._execute_query(query_name, sql, params, safe_org_id, safe_days)
         data = list(result.get("data") or [])
     else:
         current_plan = await get_org_plan(org_id, db_session)
@@ -164,11 +161,11 @@ async def execute_detail_query(
         if query_name not in COURSE_DETAIL_QUERIES:
             raise HTTPException(status_code=404, detail="Unknown course detail query")
         safe_course_uuid = router._validate_course_uuid(course_uuid)
-        sql_template, default_days = COURSE_DETAIL_QUERIES[query_name]
+        sql, default_days = COURSE_DETAIL_QUERIES[query_name]
         safe_days = _safe_days(days, default_days)
-        sql = router._build_sql(sql_template, safe_org_id, safe_days, safe_course_uuid)
-        result = await router._execute_tinybird_query(
-            query_name, sql, safe_org_id, safe_days, course_id=safe_course_uuid, empty_response=empty
+        params = router._query_params(safe_org_id, safe_days, safe_course_uuid)
+        result = await router._execute_query(
+            query_name, sql, params, safe_org_id, safe_days, course_id=safe_course_uuid
         )
         data = list(result.get("data") or [])
         if query_name == "course_recent_enrollments" and not data:

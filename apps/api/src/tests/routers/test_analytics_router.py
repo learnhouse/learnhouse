@@ -4,19 +4,18 @@ from contextlib import contextmanager
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-import httpx
 import pytest
 from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 
-import src.routers.analytics as analytics_router_module
 from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser
 from src.routers.analytics import (
     _enrich_with_metadata,
+    _execute_query,
     _execute_tinybird_query,
-    _get_read_client,
     _parse_safe_params,
+    _query_params,
     _validate_course_uuid,
     _verify_org_admin,
     _verify_org_membership,
@@ -91,31 +90,6 @@ class TestAnalyticsHelpers:
 
         with pytest.raises(HTTPException):
             _validate_course_uuid("c" * 101)
-
-    def test_get_read_client_handles_missing_and_configured_tinybird(self, monkeypatch):
-        monkeypatch.setattr(analytics_router_module, "_read_client", None)
-        monkeypatch.setattr(
-            "src.routers.analytics.get_learnhouse_config",
-            lambda: SimpleNamespace(tinybird_config=None),
-        )
-        assert _get_read_client() is None
-
-        fake_client = SimpleNamespace()
-        monkeypatch.setattr(analytics_router_module, "_read_client", None)
-        monkeypatch.setattr(
-            "src.routers.analytics.get_learnhouse_config",
-            lambda: SimpleNamespace(
-                tinybird_config=SimpleNamespace(
-                    api_url="https://tinybird.test",
-                    read_token="token",
-                )
-            ),
-        )
-        with patch("src.routers.analytics.httpx.AsyncClient", return_value=fake_client):
-            assert _get_read_client() is fake_client
-
-        monkeypatch.setattr(analytics_router_module, "_read_client", fake_client)
-        assert _get_read_client() is fake_client
 
     async def test_verify_org_membership_and_admin(self):
         db = AsyncMock()
@@ -226,86 +200,101 @@ class TestAnalyticsHelpers:
         assert enriched[0]["course_name"] == "Course 2"
         assert enriched[0]["activity_name"] == "Activity 1"
 
-    def test_build_sql_validates_parameter_types_and_course_uuid(self):
-        template = "SELECT {org_id} AS org_id, {days} AS days"
-
-        assert analytics_router_module._build_sql(template, 1, 7) == "SELECT 1 AS org_id, 7 AS days"
+    def test_query_params_validates_parameter_types_and_course_uuid(self):
+        assert _query_params(1, 7) == {"org_id": 1, "days": 7}
+        assert _query_params(1, 7, "course_1") == {"org_id": 1, "days": 7, "course_uuid": "course_1"}
 
         with pytest.raises(HTTPException, match="Invalid parameter types"):
-            analytics_router_module._build_sql(template, "bad", 7)
+            _query_params("bad", 7)
 
         with pytest.raises(HTTPException, match="Invalid course_uuid"):
-            analytics_router_module._build_sql(template, 1, 7, "bad course")
+            _query_params(1, 7, "bad course")
+
+        with pytest.raises(HTTPException, match="Invalid course_uuid"):
+            _query_params(1, 7, "c" * 101)
 
     @pytest.mark.asyncio
-    async def test_execute_tinybird_query_cache_and_error_paths(self):
+    async def test_execute_query_cache_and_error_paths(self):
+        params = {"org_id": 1, "days": 30}
         cached = {"data": [{"ok": True}], "rows": 1, "meta": []}
-        with patch("src.routers.analytics.get_cached_result", return_value=cached):
-            assert await _execute_tinybird_query("daily_active_users", "sql", 1, 30) == cached
+        with patch("src.routers.analytics.get_cached_result", return_value=cached) as get_cached, patch(
+            "src.routers.analytics.store.run_query", new_callable=AsyncMock
+        ) as run_query:
+            assert await _execute_query("daily_active_users", "SQL", params, 1, 30, "course_1") == cached
+        get_cached.assert_called_once_with("daily_active_users", 1, 30, "course_1")
+        run_query.assert_not_awaited()
 
         with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
-            return_value=None,
-        ):
-            with pytest.raises(HTTPException, match="Analytics not configured"):
-                await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
-
-        request = httpx.Request("POST", "https://tinybird.test/v0/sql")
-        not_found_response = httpx.Response(404, request=request, content=b"table not found")
-        not_found_exc = httpx.HTTPStatusError("not found", request=request, response=not_found_response)
-        fake_client = SimpleNamespace(post=AsyncMock(side_effect=not_found_exc))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
-            return_value=fake_client,
+            "src.routers.analytics.store.run_query",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("boom"),
         ), patch("src.routers.analytics.set_cached_result") as set_cached:
-            result = await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
-        assert result == {"data": [], "rows": 0, "meta": []}
+            with pytest.raises(HTTPException, match="Analytics query failed") as exc_info:
+                await _execute_query("daily_active_users", "SQL", params, 1, 30)
+        assert exc_info.value.status_code == 502
+        set_cached.assert_not_called()
 
-        bad_response = httpx.Response(500, request=request, content=b"boom")
-        bad_exc = httpx.HTTPStatusError("boom", request=request, response=bad_response)
-        fake_client = SimpleNamespace(post=AsyncMock(side_effect=bad_exc))
+        rows = [{"date": "2026-11-01", "dau": 3}]
         with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
-            return_value=fake_client,
-        ):
-            with pytest.raises(HTTPException, match="Analytics query failed"):
-                await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
+            "src.routers.analytics.store.run_query", new_callable=AsyncMock, return_value=rows
+        ) as run_query, patch("src.routers.analytics.set_cached_result") as set_cached:
+            result = await _execute_query("daily_active_users", "SQL", params, 1, 30)
+        assert result == {"data": rows, "rows": 1, "meta": []}
+        run_query.assert_awaited_once_with("SQL", params)
+        set_cached.assert_called_once_with("daily_active_users", 1, 30, result, None)
 
-        fake_client = SimpleNamespace(post=AsyncMock(side_effect=RuntimeError("boom")))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
-            return_value=fake_client,
-        ):
-            with pytest.raises(HTTPException, match="Analytics query failed"):
-                await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
+    @pytest.mark.asyncio
+    async def test_legacy_tinybird_shim_resolves_by_name(self):
+        from src.services.analytics.queries import CORE_QUERIES, SUPERADMIN_QUERIES
 
-        payload = {
-            "data": [{"value": float("nan"), "other": float("inf"), "negative": float("-inf"), "ok": 1}],
-            "rows": 1,
-            "meta": [{"field": "value"}],
-        }
-        fake_response = SimpleNamespace(
-            raise_for_status=lambda: None,
-            json=lambda: payload,
-        )
-        fake_client = SimpleNamespace(post=AsyncMock(return_value=fake_response))
-        with patch("src.routers.analytics.get_cached_result", return_value=None), patch(
-            "src.routers.analytics._get_read_client",
-            return_value=fake_client,
-        ), patch("src.routers.analytics.set_cached_result") as set_cached:
-            result = await _execute_tinybird_query("daily_active_users", "sql", 1, 30)
-        assert result["data"][0]["value"] is None
-        assert result["data"][0]["other"] is None
-        assert result["data"][0]["negative"] is None
-        set_cached.assert_called_once()
+        rows = [{"org_id": 1, "views": 5}]
+        with patch(
+            "src.routers.analytics._execute_query", new_callable=AsyncMock,
+            return_value={"data": rows, "rows": 1, "meta": []},
+        ) as execute:
+            # The ClickHouse SQL the caller passes is ignored.
+            result = await _execute_tinybird_query("superadmin_org_visits_rank", "SELECT count() FROM events", 0, 30)
+            assert result["data"] == rows
+            execute.assert_awaited_with(
+                "superadmin_org_visits_rank", SUPERADMIN_QUERIES["superadmin_org_visits_rank"][0],
+                {"org_id": 0, "days": 30}, 0, 30, None,
+            )
+
+            await _execute_tinybird_query("superadmin_org_weekly_visits", "ignored", 0, 0)
+            execute.assert_awaited_with(
+                "superadmin_org_weekly_visits", SUPERADMIN_QUERIES["superadmin_org_weekly_visits"][0],
+                {"org_id": 0, "days": 7}, 0, 7, None,
+            )
+
+            await _execute_tinybird_query("superadmin_top_courses", "ignored", 4, 99999)
+            execute.assert_awaited_with(
+                "superadmin_top_courses", CORE_QUERIES["top_courses"][0],
+                {"org_id": 4, "days": 3650}, 4, 3650, None,
+            )
+
+            await _execute_tinybird_query("global_live_users", "ignored", 0, 30)
+            execute.assert_awaited_with(
+                "global_live_users", CORE_QUERIES["live_users"][0],
+                {"org_id": 0, "days": 30}, 0, 30, None,
+            )
+
+            assert await _execute_tinybird_query("superadmin_unknown", "ignored", 0, 30) == {
+                "data": [], "rows": 0, "meta": [],
+            }
+            assert await _execute_tinybird_query(
+                "superadmin_course_dropoff", "ignored", 0, 30, empty_response={"data": []}
+            ) == {"data": []}
+            assert execute.await_count == 4
+
+            with pytest.raises(HTTPException, match="Invalid parameter"):
+                await _execute_tinybird_query("superadmin_top_courses", "ignored", "bad", 30)
 
 
 class TestAnalyticsRouter:
     async def test_status_and_plan_info(self, client, app):
-        with patch("src.routers.analytics.get_learnhouse_config", return_value=SimpleNamespace(tinybird_config=None)):
-            response = await client.get("/api/v1/analytics/status")
+        response = await client.get("/api/v1/analytics/status")
         assert response.status_code == 200
-        assert response.json()["configured"] is False
+        assert response.json()["configured"] is True
 
         app.dependency_overrides[get_current_user] = lambda: AnonymousUser()
         response = await client.get("/api/v1/analytics/status")
@@ -327,76 +316,13 @@ class TestAnalyticsRouter:
         assert response.status_code == 401
         app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1)
 
-    async def test_ingest_frontend_event_branches(self, client, app):
-        app.dependency_overrides[get_current_user] = lambda: AnonymousUser()
-        response = await client.post(
-            "/api/v1/analytics/events",
-            json={"event_name": "page_view", "org_id": 1},
-        )
-        assert response.status_code == 401
-        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1)
-
-        with _analytics_guard_patches(), patch(
-            "src.routers.analytics.track",
-            new_callable=AsyncMock,
-        ):
-            response = await client.post(
-                "/api/v1/analytics/events",
-                json={"event_name": "bad_event", "org_id": 1},
-            )
-        assert response.status_code == 400
-
-        with _analytics_guard_patches(), patch(
-            "src.routers.analytics.track",
-            new_callable=AsyncMock,
-        ):
-            response = await client.post(
-                "/api/v1/analytics/events",
-                json={
-                    "event_name": "page_view",
-                    "org_id": 1,
-                    "session_id": "session-1",
-                    "properties": {"seconds_spent": 20000, "device_type": "desktop"},
-                },
-                headers={"cf-ipcountry": "us"},
-            )
-        assert response.status_code == 200
-
-        with _analytics_guard_patches(), patch(
-            "src.routers.analytics.track",
-            new_callable=AsyncMock,
-        ):
-            response = await client.post(
-                "/api/v1/analytics/events",
-                json={
-                    "event_name": "page_view",
-                    "org_id": 1,
-                    "properties": {"seconds_spent": 0},
-                },
-            )
-        assert response.status_code == 200
-
-        with _analytics_guard_patches(), patch(
-            "src.routers.analytics.track",
-            new_callable=AsyncMock,
-        ):
-            response = await client.post(
-                "/api/v1/analytics/events",
-                json={
-                    "event_name": "page_view",
-                    "org_id": 1,
-                    "properties": {"seconds_spent": "bad"},
-                },
-            )
-        assert response.status_code == 200
-
     async def test_dashboard_routes(self, client, db_session):
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
@@ -437,7 +363,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
@@ -506,7 +432,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
@@ -549,7 +475,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [], "rows": 0, "meta": []},
         ):
@@ -605,7 +531,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
@@ -618,7 +544,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
@@ -641,7 +567,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
@@ -659,7 +585,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
         ):
@@ -700,7 +626,7 @@ class TestAnalyticsRouter:
             new_callable=AsyncMock,
             side_effect=lambda rows, db, **_: rows,
         ), patch(
-            "src.routers.analytics._execute_tinybird_query",
+            "src.routers.analytics._execute_query",
             new_callable=AsyncMock,
             return_value={"data": [], "rows": 0, "meta": []},
         ):

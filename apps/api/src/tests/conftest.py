@@ -564,6 +564,22 @@ def no_legacy_link_markers():
 
 
 @pytest.fixture(autouse=True)
+def analytics_queue():
+    """Keep tracked events in memory instead of writing them to the app database.
+
+    ``track()`` queues rows and schedules a flush on the real session factory;
+    unpatched, every test that touches a tracked feature would leave a pending
+    write behind. The list is the queue, for tests that want to look at it.
+    """
+    from src.services.analytics import analytics
+
+    analytics._buffer.clear()
+    with patch("src.services.analytics.analytics._schedule"):
+        yield analytics._buffer
+    analytics._buffer.clear()
+
+
+@pytest.fixture(autouse=True)
 def rag_dispatch():
     """Keep content saves from starting real AI indexing runs.
 

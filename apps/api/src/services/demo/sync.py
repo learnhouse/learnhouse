@@ -231,9 +231,9 @@ def _demo_org_config() -> dict:
       visitor cannot buy a subscription for a shared sandbox.
 
     Analytics is enabled because it is part of pro and a prospect should see
-    the page exists; it is backed by Tinybird, which the demo does not write
-    to, so it will look sparse unless the deployment has Tinybird configured.
-    That is a known and deliberate limitation rather than an oversight.
+    the page exists. The seed writes no analytics events, so the charts only
+    fill in with what visitors actually do in the demo. That is a known and
+    deliberate limitation rather than an oversight.
     """
     return {
         "config_version": "2.0",

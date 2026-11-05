@@ -184,9 +184,16 @@ async def test_group_reply_shares_scope_and_course(db, org, course, admin_user, 
          patch("src.security.features_utils.usage.reserve_ai_credit", new=AsyncMock()), \
          patch.object(agents_svc, "_share_scope", new=share), \
          patch.object(agents_svc, "_stream_reply", new=stream), \
-         patch.object(agents_svc.asyncio, "create_task", new=MagicMock()):
+         patch.object(agents_svc.asyncio, "create_task", new=MagicMock()), \
+         patch("src.services.analytics.analytics.track", new=AsyncMock()) as mock_track:
         out = await agents_svc.trigger_agent_reply(MagicMock(), conv, copilot, msg, admin_user, db)
     share.assert_awaited_once()
+    mock_track.assert_awaited_once()
+    assert mock_track.await_args.kwargs["event_name"] == "ai_message_sent"
+    assert mock_track.await_args.kwargs["org_id"] == org.id
+    assert mock_track.await_args.kwargs["user_id"] == admin_user.id
+    assert mock_track.await_args.kwargs["properties"]["surface"] == "copilot"
+    assert isinstance(mock_track.await_args.kwargs["properties"]["model"], str)
     assert out["status"] == "streaming"
     assert f"(Shared course: {course.name})" in stream.call_args.kwargs["question"]
 

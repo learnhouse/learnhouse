@@ -4105,7 +4105,8 @@
           "automations": "Automazioni",
           "menu": "Menu",
           "danger": "Zona Pericolosa",
-          "course_end": "Completamento del corso"
+          "course_end": "Completamento del corso",
+          "analytics": "Analitica"
         },
         "pages": {
           "general": {
@@ -4162,6 +4163,10 @@
           "course_end": {
             "title": "Completamento del corso",
             "subtitle": "Personalizza la schermata che gli studenti vedono quando terminano un corso"
+          },
+          "analytics": {
+            "title": "Analitica",
+            "subtitle": "Scegli per quanto tempo conservare i dati di analitica e cosa raccogliere"
           }
         },
         "name": "Nome organizzazione",
@@ -5562,6 +5567,48 @@
         "button_link_help": "Un percorso interno come /courses, oppure un URL https:// completo. Lascia vuoto per collegare al catalogo dei corsi.",
         "link_invalid": "Usa un percorso interno che inizia con / oppure un URL http(s) completo",
         "preview": "Anteprima"
+      },
+      "analytics_settings": {
+        "title": "Dati di analitica",
+        "subtitle": "Conservazione e privacy dell'analitica della tua organizzazione",
+        "save": "Salva",
+        "saving": "Salvataggio...",
+        "saved": "Impostazioni di analitica salvate",
+        "error": "Impossibile salvare le impostazioni di analitica",
+        "load_error": "Impossibile caricare le impostazioni di analitica",
+        "admin_only": "Solo gli amministratori dell'organizzazione possono modificare le impostazioni di analitica.",
+        "retention_title": "Conservazione dei dati",
+        "retention_description": "Per quanto tempo gli eventi di analitica vengono conservati prima di essere eliminati.",
+        "retention_note": "Ridurre la conservazione elimina i dati più vecchi alla successiva pulizia notturna.",
+        "retention_default": "{{label}} (predefinito)",
+        "retention_options": {
+          "days_90": "90 giorni",
+          "days_180": "6 mesi",
+          "days_365": "1 anno",
+          "days_730": "2 anni",
+          "days_1095": "3 anni",
+          "days_1825": "5 anni",
+          "days_2555": "7 anni",
+          "days_n": "{{count}} giorni"
+        },
+        "extended_locked": "Conservare i dati per più di un anno è disponibile con il piano Enterprise.",
+        "privacy_title": "Privacy",
+        "track_anonymous": "Conta i visitatori non connessi",
+        "track_anonymous_description": "Includi le visualizzazioni di pagine e corsi delle persone senza account. Vengono contate senza cookie, con un ID anonimo che cambia ogni giorno.",
+        "collect_location": "Memorizza il paese dei visitatori",
+        "collect_location_description": "Registra il paese da cui proviene una visita. Gli indirizzi IP non vengono mai memorizzati.",
+        "exclude_staff": "Escludi amministratori e manutentori dalle statistiche",
+        "exclude_staff_description": "Le visualizzazioni di chi gestisce l'organizzazione non vengono contate, così i tuoi test non falsano i numeri.",
+        "export_title": "Scarica gli eventi grezzi (CSV)",
+        "export_description": "Tutti gli eventi di analitica memorizzati nel periodo scelto, una riga per evento.",
+        "export_period": "Periodo di esportazione",
+        "export_last_days": "Ultimi {{count}} giorni",
+        "export_all": "Tutto ciò che è conservato",
+        "export_button": "Scarica CSV",
+        "exporting": "Preparazione del download...",
+        "export_done": "Download avviato",
+        "export_error": "Impossibile esportare gli eventi di analitica",
+        "export_locked": "L'esportazione degli eventi grezzi è disponibile con il piano Enterprise."
       }
     },
     "users": {
@@ -8281,6 +8328,7 @@
     "unsaved_changes_warning": "Hai modifiche non salvate. Uscire senza salvare?"
   },
   "analytics": {
+    "data_kept": "Dati conservati per {{period}}",
     "title": "Analisi",
     "subtitle": "Informazioni sui tuoi studenti e contenuti",
     "tabs": {
@@ -8350,7 +8398,12 @@
       "courses": "Corsi",
       "count": "Conteggio",
       "active_users_last_5_minutes": "Utenti attivi negli ultimi 5 minuti",
-      "course_fallback_name": "Corso {{uuid}}"
+      "course_fallback_name": "Corso {{uuid}}",
+      "visitors": "Visitatori",
+      "signed_in_learners": "Studenti connessi",
+      "traffic": "Traffico",
+      "page_views_count": "{{value}} visualizzazioni di pagina",
+      "vs_previous_period": "vs periodo precedente"
     },
     "modals": {
       "live_users": {

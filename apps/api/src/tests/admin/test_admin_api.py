@@ -671,8 +671,15 @@ class TestUnenrollUser:
     @patch("src.services.admin.admin.track", new_callable=AsyncMock)
     async def test_unenrolls_user(self, mock_track, token_user, user, course, db, mock_request):
         await enroll_user(mock_request, token_user, user.id, "course_test123", db)
+        mock_track.reset_mock()
         result = await unenroll_user(token_user, user.id, "course_test123", db)
         assert result["detail"] == "User unenrolled successfully"
+        mock_track.assert_awaited_once_with(
+            event_name="course_left",
+            org_id=token_user.org_id,
+            user_id=user.id,
+            properties={"course_uuid": "course_test123"},
+        )
 
     @patch("src.services.admin.admin.track", new_callable=AsyncMock)
     async def test_unenrolls_user_and_removes_steps(self, mock_track, token_user, user, course, db, mock_request):
@@ -1105,9 +1112,16 @@ class TestIssueUserToken:
         await db.commit()
         return u
 
+    @patch("src.services.auth.session.track", new_callable=AsyncMock)
     @patch("src.services.admin.admin.create_access_token", return_value="jwt_test_token")
-    async def test_issues_token(self, mock_create, reader_token, member, db):
+    async def test_issues_token(self, mock_create, mock_track, reader_token, member, db):
         result = await issue_user_token(reader_token, member.id, db)
+        mock_track.assert_awaited_once_with(
+            event_name="user_logged_in",
+            org_id=reader_token.org_id,
+            user_id=member.id,
+            properties={"login_method": "token_exchange"},
+        )
         assert result["access_token"] == "jwt_test_token"
         assert result["token_type"] == "bearer"
         assert result["user_id"] == member.id
@@ -1173,6 +1187,12 @@ class TestProvisionUser:
         assert membership.role_id == 4
         mock_admin_side_effects["check_limits_with_usage"].assert_called_once()
         mock_admin_side_effects["increase_feature_usage"].assert_called_once()
+        mock_admin_side_effects["track"].assert_any_await(
+            event_name="user_joined_org",
+            org_id=token_user.org_id,
+            user_id=result.id,
+            properties={"join_method": "admin_api"},
+        )
 
     async def test_dashboard_role_provision_enforces_admin_seat(
         self, token_user, student_role, mock_request, db, mock_admin_side_effects
@@ -1555,6 +1575,11 @@ class TestRemoveUserFromOrg:
     async def test_removes_membership(self, token_user, second_user, db, mock_admin_side_effects):
         result = await remove_user_from_org_admin(token_user, second_user.id, db)
         assert result["detail"] == "User removed from org"
+        mock_admin_side_effects["track"].assert_awaited_once_with(
+            event_name="user_removed_from_org",
+            org_id=token_user.org_id,
+            user_id=second_user.id,
+        )
 
         membership = (await db.execute(
             select(UserOrganization).where(
@@ -2191,6 +2216,12 @@ class TestRevokeCertificate:
             db_session=db,
         )
         assert result["detail"] == "Certificate revoked"
+        mock_admin_side_effects["track"].assert_any_await(
+            event_name="certificate_revoked",
+            org_id=token_user.org_id,
+            user_id=user.id,
+            properties={"course_uuid": course.course_uuid},
+        )
 
         remaining = (await db.execute(
             select(CertificateUser).where(
@@ -2517,6 +2548,12 @@ class TestBulkUnenroll:
         )
         assert sorted(result["unenrolled"]) == sorted([user.id, second_user.id])
         assert result["not_enrolled"] == []
+        left = [
+            c.kwargs["user_id"]
+            for c in mock_admin_side_effects["track"].await_args_list
+            if c.kwargs["event_name"] == "course_left"
+        ]
+        assert sorted(left) == sorted([user.id, second_user.id])
 
         remaining = (await db.execute(
             select(TrailRun).where(TrailRun.course_id == course.id)

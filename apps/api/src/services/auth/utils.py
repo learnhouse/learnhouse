@@ -334,8 +334,16 @@ async def signWithGoogle(
             # Existing account joining a new org: the account-creation welcome
             # only fires for brand new users, so without this the OAuth-invite
             # path lands them in an org they were never told about.
+            from src.services.analytics import events as analytics_events
+            from src.services.analytics.analytics import track
             from src.services.orgs.join_notifications import notify_user_joined_org
 
+            await track(
+                event_name=analytics_events.USER_JOINED_ORG,
+                org_id=org_id,
+                user_id=user.id,
+                properties={"join_method": "google"},
+            )
             await notify_user_joined_org(request, db_session, user, org_id)
 
     # Update last login info

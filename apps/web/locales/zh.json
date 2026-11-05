@@ -4027,7 +4027,8 @@
           "automations": "自动化",
           "menu": "菜单",
           "danger": "危险区域",
-          "course_end": "课程完成"
+          "course_end": "课程完成",
+          "analytics": "分析"
         },
         "pages": {
           "general": {
@@ -4084,6 +4085,10 @@
           "course_end": {
             "title": "课程完成",
             "subtitle": "自定义学习者完成课程时看到的页面"
+          },
+          "analytics": {
+            "title": "分析",
+            "subtitle": "选择分析数据的保留时长以及收集哪些内容"
           }
         },
         "name": "组织名称",
@@ -5471,6 +5476,48 @@
         "button_link_help": "内部路径（如 /courses）或完整的 https:// URL。留空则链接到您的课程目录。",
         "link_invalid": "请使用以 / 开头的内部路径或完整的 http(s) URL",
         "preview": "预览"
+      },
+      "analytics_settings": {
+        "title": "分析数据",
+        "subtitle": "组织分析数据的保留与隐私",
+        "save": "保存",
+        "saving": "正在保存...",
+        "saved": "分析设置已保存",
+        "error": "无法保存分析设置",
+        "load_error": "无法加载分析设置",
+        "admin_only": "只有组织管理员可以更改分析设置。",
+        "retention_title": "数据保留",
+        "retention_description": "分析事件在删除前保留的时长。",
+        "retention_note": "缩短保留期后，较旧的数据会在下一次夜间清理时删除。",
+        "retention_default": "{{label}}（默认）",
+        "retention_options": {
+          "days_90": "90 天",
+          "days_180": "6 个月",
+          "days_365": "1 年",
+          "days_730": "2 年",
+          "days_1095": "3 年",
+          "days_1825": "5 年",
+          "days_2555": "7 年",
+          "days_n": "{{count}} 天"
+        },
+        "extended_locked": "保留数据超过一年需要 Enterprise 套餐。",
+        "privacy_title": "隐私",
+        "track_anonymous": "统计未登录的访客",
+        "track_anonymous_description": "包括没有账户的人对页面和课程的浏览。统计时不使用 Cookie，而是使用每天更换的匿名 ID。",
+        "collect_location": "保存访客所在国家",
+        "collect_location_description": "记录访问来自哪个国家。从不保存 IP 地址。",
+        "exclude_staff": "不将管理员和维护者计入统计",
+        "exclude_staff_description": "管理组织的人的浏览不计入统计，这样你自己的测试不会影响数据。",
+        "export_title": "下载原始事件（CSV）",
+        "export_description": "所选时间段内存储的所有分析事件，每个事件一行。",
+        "export_period": "导出时间段",
+        "export_last_days": "最近 {{count}} 天",
+        "export_all": "所有已保留的数据",
+        "export_button": "下载 CSV",
+        "exporting": "正在准备下载...",
+        "export_done": "下载已开始",
+        "export_error": "无法导出分析事件",
+        "export_locked": "导出原始事件需要 Enterprise 套餐。"
       }
     },
     "users": {
@@ -8162,6 +8209,7 @@
     "unsaved_changes_warning": "您有未保存的更改。要不保存就离开吗？"
   },
   "analytics": {
+    "data_kept": "数据保留 {{period}}",
     "title": "分析",
     "subtitle": "关于学习者和内容的洞察",
     "tabs": {
@@ -8231,7 +8279,12 @@
       "courses": "课程",
       "count": "数量",
       "active_users_last_5_minutes": "过去 5 分钟内的活跃用户",
-      "course_fallback_name": "课程 {{uuid}}"
+      "course_fallback_name": "课程 {{uuid}}",
+      "visitors": "访客",
+      "signed_in_learners": "已登录学员",
+      "traffic": "流量",
+      "page_views_count": "{{value}} 次页面浏览",
+      "vs_previous_period": "与上一周期相比"
     },
     "modals": {
       "live_users": {

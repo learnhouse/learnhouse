@@ -6,9 +6,11 @@ Tests cover:
 - _verify_org_membership allows members
 - _verify_org_membership allows superadmins
 - _validate_course_uuid rejects SQL injection
-- _build_sql type safety
-- FrontendEvent model validation
+- _query_params type safety (queries take bind parameters, never interpolation)
+- the query catalog only uses known bind parameters and scopes every query
 """
+
+import re
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -88,37 +90,96 @@ class TestValidateCourseUuid:
             _validate_course_uuid("course uuid")
 
 
-class TestBuildSql:
-    """Test _build_sql type safety."""
+class TestQueryParams:
+    """Test _query_params type safety."""
 
     def test_integer_params(self):
-        from src.routers.analytics import _build_sql
-        sql = _build_sql("SELECT * WHERE org_id={org_id} AND days={days}", 1, 30)
-        assert "org_id=1" in sql
-        assert "days=30" in sql
+        from src.routers.analytics import _query_params
+        assert _query_params(1, 30) == {"org_id": 1, "days": 30}
 
     def test_string_org_id_rejected(self):
-        from src.routers.analytics import _build_sql
+        from src.routers.analytics import _query_params
         with pytest.raises(HTTPException):
-            _build_sql("SELECT *", "1; DROP TABLE", 30)
+            _query_params("1; DROP TABLE", 30)
+
+    def test_string_days_rejected(self):
+        from src.routers.analytics import _query_params
+        with pytest.raises(HTTPException):
+            _query_params(1, "30")
 
     def test_course_uuid_validated(self):
-        from src.routers.analytics import _build_sql
+        from src.routers.analytics import _query_params
         with pytest.raises(HTTPException):
-            _build_sql(
-                "SELECT * WHERE course_uuid='{course_uuid}'",
-                1, 30,
-                course_uuid="'; DROP TABLE events; --"
-            )
+            _query_params(1, 30, course_uuid="'; DROP TABLE events; --")
 
-    def test_valid_course_uuid_in_sql(self):
-        from src.routers.analytics import _build_sql
-        sql = _build_sql(
-            "SELECT * WHERE course_uuid='{course_uuid}'",
-            1, 30,
-            course_uuid="course_abc-123"
-        )
-        assert "course_abc-123" in sql
+    def test_valid_course_uuid_bound(self):
+        from src.routers.analytics import _query_params
+        assert _query_params(1, 30, course_uuid="course_abc-123")["course_uuid"] == "course_abc-123"
+
+
+def _bind_names(sql: str) -> set[str]:
+    # Same rule as SQLAlchemy text(): ":name" not preceded by ":" or a word char
+    # (so "::date" casts are not binds).
+    return set(re.findall(r"(?<![:\w]):(\w+)", sql))
+
+
+class TestQueryCatalog:
+    """Static checks over every catalog query (the SQL itself is exercised on
+    Postgres by scripts/ci_analytics_queries.py)."""
+
+    def _registries(self):
+        from src.services.analytics import queries as q
+        return {
+            "org": {**q.ALL_QUERIES, **q.SUPERADMIN_QUERIES},
+            "course": {**q.COURSE_QUERIES, **q.COURSE_DETAIL_QUERIES},
+            "user": q.USER_QUERIES,
+        }
+
+    def test_query_names_and_defaults_unchanged(self):
+        from src.services.analytics import queries as q
+        assert len(q.CORE_QUERIES) == 10
+        assert len(q.ADVANCED_QUERIES) == 13
+        assert len(q.DETAIL_QUERIES) == 5
+        assert len(q.COURSE_QUERIES) == 18
+        assert len(q.COURSE_DETAIL_QUERIES) == 2
+        assert set(q.ALL_QUERIES) == set(q.CORE_QUERIES) | set(q.ADVANCED_QUERIES) | set(q.DETAIL_QUERIES)
+        assert q.CORE_QUERIES["live_users"][1] == 0
+        assert q.ADVANCED_QUERIES["time_to_completion"][1] == 180
+        assert set(q.USER_QUERIES) == {
+            "user_time_total", "user_time_by_course", "user_views", "user_searches", "user_daily_activity",
+        }
+        assert set(q.SUPERADMIN_QUERIES) == {"superadmin_org_visits_rank", "superadmin_org_weekly_visits"}
+
+    def test_only_known_bind_parameters(self):
+        allowed = {
+            "org": {"org_id", "days"},
+            "course": {"org_id", "days", "course_uuid"},
+            "user": {"org_id", "days", "user_id"},
+        }
+        for kind, registry in self._registries().items():
+            for name, (sql, _days) in registry.items():
+                binds = _bind_names(sql)
+                assert binds <= allowed[kind], f"{name}: unexpected binds {binds - allowed[kind]}"
+                assert "org_id" in binds, f"{name} is not scoped to an org"
+
+    def test_every_query_is_scoped(self):
+        for kind, registry in self._registries().items():
+            for name, (sql, _days) in registry.items():
+                if kind == "user":
+                    assert "org_id = :org_id" in sql and "user_id = :user_id" in sql, name
+                else:
+                    assert "(:org_id = 0 OR org_id = :org_id)" in sql, name
+                if kind == "course":
+                    assert "course_uuid = :course_uuid" in sql, name
+
+    def test_no_string_formatting_or_clickhouse_left(self):
+        # Older callers still run the SQL through str.format, so braces would break them.
+        for registry in self._registries().values():
+            for name, (sql, _days) in registry.items():
+                assert "{" not in sql and "}" not in sql, name
+                assert sql.format(org_id=1, days=30) == sql, name
+                for token in ("FROM events", "uniqExact", "JSONExtract", "countIf", "toDate", "INTERVAL "):
+                    assert token not in sql, f"{name} still uses {token}"
 
 
 class TestParseParams:

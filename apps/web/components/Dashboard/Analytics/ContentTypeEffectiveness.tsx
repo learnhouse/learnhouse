@@ -3,12 +3,13 @@ import React from 'react'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useTranslation } from 'react-i18next'
+import { activityTypeLabel } from './analyticsFormat'
 
 export default function ContentTypeEffectiveness({ days = '30' }: { days?: string }) {
   const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsPipe('content_type_effectiveness', { days })
   const rows = (data?.data ?? []).map((r: any) => ({
-    activity_type: r.activity_type,
+    activity_type: activityTypeLabel(r.activity_type, t),
     view_count: r.view_count,
     completion_count: r.completion_count,
   }))

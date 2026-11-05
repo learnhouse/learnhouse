@@ -4027,7 +4027,8 @@
           "automations": "Tự động hóa",
           "menu": "Menu",
           "danger": "Vùng Nguy Hiểm",
-          "course_end": "Hoàn thành khóa học"
+          "course_end": "Hoàn thành khóa học",
+          "analytics": "Phân tích"
         },
         "pages": {
           "general": {
@@ -4084,6 +4085,10 @@
           "course_end": {
             "title": "Hoàn thành khóa học",
             "subtitle": "Tùy chỉnh màn hình học viên thấy khi hoàn thành một khóa học"
+          },
+          "analytics": {
+            "title": "Phân tích",
+            "subtitle": "Chọn thời gian lưu dữ liệu phân tích và những gì được thu thập"
           }
         },
         "name": "Tên tổ chức",
@@ -5471,6 +5476,48 @@
         "button_link_help": "Một đường dẫn nội bộ như /courses, hoặc URL https:// đầy đủ. Để trống để liên kết đến danh mục khóa học của bạn.",
         "link_invalid": "Hãy dùng đường dẫn nội bộ bắt đầu bằng / hoặc URL http(s) đầy đủ",
         "preview": "Xem trước"
+      },
+      "analytics_settings": {
+        "title": "Dữ liệu phân tích",
+        "subtitle": "Lưu trữ và quyền riêng tư cho phân tích của tổ chức bạn",
+        "save": "Lưu",
+        "saving": "Đang lưu...",
+        "saved": "Đã lưu cài đặt phân tích",
+        "error": "Không thể lưu cài đặt phân tích",
+        "load_error": "Không thể tải cài đặt phân tích",
+        "admin_only": "Chỉ quản trị viên tổ chức mới có thể thay đổi cài đặt phân tích.",
+        "retention_title": "Lưu trữ dữ liệu",
+        "retention_description": "Thời gian các sự kiện phân tích được lưu trước khi bị xóa.",
+        "retention_note": "Rút ngắn thời gian lưu sẽ xóa dữ liệu cũ hơn trong lần dọn dẹp ban đêm tiếp theo.",
+        "retention_default": "{{label}} (mặc định)",
+        "retention_options": {
+          "days_90": "90 ngày",
+          "days_180": "6 tháng",
+          "days_365": "1 năm",
+          "days_730": "2 năm",
+          "days_1095": "3 năm",
+          "days_1825": "5 năm",
+          "days_2555": "7 năm",
+          "days_n": "{{count}} ngày"
+        },
+        "extended_locked": "Lưu dữ liệu hơn một năm có trong gói Enterprise.",
+        "privacy_title": "Quyền riêng tư",
+        "track_anonymous": "Đếm khách chưa đăng nhập",
+        "track_anonymous_description": "Bao gồm lượt xem trang và khóa học từ người không có tài khoản. Họ được đếm mà không dùng cookie, với một ID ẩn danh thay đổi mỗi ngày.",
+        "collect_location": "Lưu quốc gia của khách",
+        "collect_location_description": "Ghi lại lượt truy cập đến từ quốc gia nào. Địa chỉ IP không bao giờ được lưu.",
+        "exclude_staff": "Không tính quản trị viên và người bảo trì vào thống kê",
+        "exclude_staff_description": "Lượt xem của những người quản lý tổ chức không được tính, để việc thử nghiệm của bạn không làm sai lệch số liệu.",
+        "export_title": "Tải xuống sự kiện thô (CSV)",
+        "export_description": "Mọi sự kiện phân tích đã lưu trong khoảng thời gian đã chọn, mỗi sự kiện một dòng.",
+        "export_period": "Khoảng thời gian xuất",
+        "export_last_days": "{{count}} ngày gần nhất",
+        "export_all": "Mọi dữ liệu đang lưu",
+        "export_button": "Tải xuống CSV",
+        "exporting": "Đang chuẩn bị tải xuống...",
+        "export_done": "Đã bắt đầu tải xuống",
+        "export_error": "Không thể xuất các sự kiện phân tích",
+        "export_locked": "Xuất sự kiện thô có trong gói Enterprise."
       }
     },
     "users": {
@@ -8162,6 +8209,7 @@
     "unsaved_changes_warning": "Bạn có thay đổi chưa lưu. Rời đi mà không lưu?"
   },
   "analytics": {
+    "data_kept": "Dữ liệu được lưu {{period}}",
     "title": "Phân tích",
     "subtitle": "Thông tin chi tiết về người học và nội dung của bạn",
     "tabs": {
@@ -8231,7 +8279,12 @@
       "courses": "Khóa học",
       "count": "Số lượng",
       "active_users_last_5_minutes": "Người dùng hoạt động trong 5 phút qua",
-      "course_fallback_name": "Khóa học {{uuid}}"
+      "course_fallback_name": "Khóa học {{uuid}}",
+      "visitors": "Khách truy cập",
+      "signed_in_learners": "Học viên đã đăng nhập",
+      "traffic": "Lưu lượng",
+      "page_views_count": "{{value}} lượt xem trang",
+      "vs_previous_period": "so với kỳ trước"
     },
     "modals": {
       "live_users": {

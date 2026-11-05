@@ -4027,7 +4027,8 @@
           "automations": "自動化",
           "menu": "メニュー",
           "danger": "危険ゾーン",
-          "course_end": "コース修了"
+          "course_end": "コース修了",
+          "analytics": "分析"
         },
         "pages": {
           "general": {
@@ -4084,6 +4085,10 @@
           "course_end": {
             "title": "コース修了",
             "subtitle": "学習者がコースを修了したときに表示される画面をカスタマイズします"
+          },
+          "analytics": {
+            "title": "分析",
+            "subtitle": "分析データの保存期間と収集する内容を選択します"
           }
         },
         "name": "組織名",
@@ -5471,6 +5476,48 @@
         "button_link_help": "/courses のような内部パス、または完全な https:// のURLを指定します。空のままにすると、コースカタログにリンクします。",
         "link_invalid": "/ で始まる内部パス、または完全なhttp(s)のURLを使用してください",
         "preview": "プレビュー"
+      },
+      "analytics_settings": {
+        "title": "分析データ",
+        "subtitle": "組織の分析データの保存期間とプライバシー",
+        "save": "保存",
+        "saving": "保存中...",
+        "saved": "分析設定を保存しました",
+        "error": "分析設定を保存できませんでした",
+        "load_error": "分析設定を読み込めませんでした",
+        "admin_only": "分析設定を変更できるのは組織の管理者のみです。",
+        "retention_title": "データ保存期間",
+        "retention_description": "分析イベントが削除されるまで保存される期間です。",
+        "retention_note": "保存期間を短くすると、次回の夜間クリーンアップで古いデータが削除されます。",
+        "retention_default": "{{label}}（デフォルト）",
+        "retention_options": {
+          "days_90": "90日",
+          "days_180": "6か月",
+          "days_365": "1年",
+          "days_730": "2年",
+          "days_1095": "3年",
+          "days_1825": "5年",
+          "days_2555": "7年",
+          "days_n": "{{count}}日"
+        },
+        "extended_locked": "1年を超えるデータ保存は Enterprise プランで利用できます。",
+        "privacy_title": "プライバシー",
+        "track_anonymous": "ログインしていない訪問者をカウントする",
+        "track_anonymous_description": "アカウントを持たない人のページやコースの閲覧を含めます。Cookie を使わず、毎日変わる匿名 ID でカウントされます。",
+        "collect_location": "訪問者の国を保存する",
+        "collect_location_description": "訪問がどの国から来たかを記録します。IP アドレスは保存されません。",
+        "exclude_staff": "管理者とメンテナーを統計から除外する",
+        "exclude_staff_description": "組織を管理する人の閲覧はカウントされないため、自分のテストで数値が偏りません。",
+        "export_title": "生イベントをダウンロード（CSV）",
+        "export_description": "選択した期間に保存されたすべての分析イベント（1イベント1行）。",
+        "export_period": "エクスポート期間",
+        "export_last_days": "過去{{count}}日間",
+        "export_all": "保存されているすべて",
+        "export_button": "CSV をダウンロード",
+        "exporting": "ダウンロードを準備しています...",
+        "export_done": "ダウンロードを開始しました",
+        "export_error": "分析イベントをエクスポートできませんでした",
+        "export_locked": "生イベントのエクスポートは Enterprise プランで利用できます。"
       }
     },
     "users": {
@@ -8162,6 +8209,7 @@
     "unsaved_changes_warning": "保存されていない変更があります。保存せずに移動しますか？"
   },
   "analytics": {
+    "data_kept": "データ保持期間: {{period}}",
     "title": "アナリティクス",
     "subtitle": "学習者とコンテンツに関するインサイト",
     "tabs": {
@@ -8231,7 +8279,12 @@
       "courses": "コース",
       "count": "件数",
       "active_users_last_5_minutes": "直近5分間のアクティブユーザー",
-      "course_fallback_name": "コース {{uuid}}"
+      "course_fallback_name": "コース {{uuid}}",
+      "visitors": "訪問者",
+      "signed_in_learners": "ログイン中の学習者",
+      "traffic": "トラフィック",
+      "page_views_count": "{{value}} ページビュー",
+      "vs_previous_period": "前期間比"
     },
     "modals": {
       "live_users": {

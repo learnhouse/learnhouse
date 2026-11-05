@@ -47,6 +47,8 @@ from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_patterns
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
 
@@ -1020,6 +1022,12 @@ async def update_course(
 
     # Dispatch webhook if published state changed
     if course_object.published is not None and course.published != old_published:
+        await track(
+            event_name=analytics_events.COURSE_PUBLISHED,
+            org_id=course.org_id,
+            user_id=resolve_acting_user_id(current_user),
+            properties={"course_uuid": course.course_uuid, "published": bool(course.published)},
+        )
         await dispatch_webhooks(
             event_name="course_published",
             org_id=course.org_id,

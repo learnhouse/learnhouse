@@ -24,10 +24,13 @@ from src.db.users import User
 from src.security.auth import create_access_token, create_refresh_token, decode_jwt
 from src.security.session_context import (
     AMR_CLAIM,
+    AUTH_METHOD_API_TOKEN,
     CUSTOM_DOMAIN_CLAIM,
     SORG_CLAIM,
     session_claims,
 )
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from src.services.auth.mfa import is_mfa_active
 
 MFA_PENDING_PURPOSE = "mfa_pending"
@@ -150,6 +153,29 @@ def mint_session_tokens(
     )
 
 
+# ``amr`` values that read differently on the analytics side. Sessions minted
+# for a user by an API token (``/users/{id}/token``, admin-issued sign-in links)
+# are token exchanges, not something the person typed in.
+_LOGIN_METHODS = {AUTH_METHOD_API_TOKEN: "token_exchange"}
+
+
+async def track_login(user_id: Optional[int], amr: Optional[str], org_id: Optional[int]) -> None:
+    """Record ``user_logged_in`` for a session that was actually minted.
+
+    Called once per sign-in, after the second factor when there is one, so a
+    pending MFA challenge is never counted. Sessions with no org context (the
+    apex login page) have nowhere to be filed and are skipped.
+    """
+    if not org_id:
+        return
+    await track(
+        event_name=analytics_events.USER_LOGGED_IN,
+        org_id=org_id,
+        user_id=user_id or 0,
+        properties={"login_method": _LOGIN_METHODS.get(amr or "", amr or "unknown")},
+    )
+
+
 async def issue_session_or_challenge(
     db_session: AsyncSession,
     user: User,
@@ -165,4 +191,6 @@ async def issue_session_or_challenge(
             mfa_required=True,
             mfa_token=create_mfa_pending_token(user.email, amr, org_id, custom_domain),
         )
-    return mint_session_tokens(user.email, amr, org_id, custom_domain)
+    result = mint_session_tokens(user.email, amr, org_id, custom_domain)
+    await track_login(user.id, amr, org_id)
+    return result

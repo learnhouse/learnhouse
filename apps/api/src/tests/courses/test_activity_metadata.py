@@ -114,7 +114,9 @@ async def test_create_documentpdf_activity_passes_extra_metadata(
         "src.services.courses.activities.pdf.upload_pdf",
         new_callable=AsyncMock,
         return_value="x.pdf",
-    ) as mock_upload:
+    ) as mock_upload, patch(
+        "src.services.courses.activities.utils.track", new_callable=AsyncMock
+    ) as mock_track:
         created = await create_documentpdf_activity(
             mock_request,
             name="pdf-activity",
@@ -126,6 +128,16 @@ async def test_create_documentpdf_activity_passes_extra_metadata(
         )
 
     mock_upload.assert_awaited_once()
+    mock_track.assert_awaited_once_with(
+        event_name="activity_created",
+        org_id=course.org_id,
+        user_id=admin_user.id,
+        properties={
+            "course_uuid": course.course_uuid,
+            "activity_uuid": created.activity_uuid,
+            "activity_type": "TYPE_DOCUMENT",
+        },
+    )
     assert created.extra_metadata == {"source": "upload", "page_count": 3}
     assert created.activity_type == ActivityTypeEnum.TYPE_DOCUMENT
     assert created.activity_sub_type == ActivitySubTypeEnum.SUBTYPE_DOCUMENT_PDF

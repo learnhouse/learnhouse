@@ -4055,7 +4055,8 @@
           "menu": "Menu",
           "danger": "Danger Zone",
           "course_end": "Course completion",
-          "mcp": "AI apps"
+          "mcp": "AI apps",
+          "analytics": "Analytics"
         },
         "pages": {
           "general": {
@@ -4116,6 +4117,10 @@
           "mcp": {
             "title": "AI apps (MCP)",
             "subtitle": "Connect Claude, ChatGPT, Cursor and other AI apps to your organization"
+          },
+          "analytics": {
+            "title": "Analytics",
+            "subtitle": "Choose how long analytics data is kept and what gets collected"
           }
         },
         "name": "Organization Name",
@@ -5508,6 +5513,48 @@
         "button_link_help": "An internal path like /courses, or a full https:// URL. Leave empty to link to your course catalog.",
         "link_invalid": "Use an internal path starting with / or a full http(s) URL",
         "preview": "Preview"
+      },
+      "analytics_settings": {
+        "title": "Analytics data",
+        "subtitle": "Retention and privacy for your organization's analytics",
+        "save": "Save",
+        "saving": "Saving...",
+        "saved": "Analytics settings saved",
+        "error": "Could not save the analytics settings",
+        "load_error": "Could not load the analytics settings",
+        "admin_only": "Only organization admins can change analytics settings.",
+        "retention_title": "Data retention",
+        "retention_description": "How long analytics events are kept before they are deleted.",
+        "retention_note": "Shortening retention deletes older data at the next nightly cleanup.",
+        "retention_default": "{{label}} (default)",
+        "retention_options": {
+          "days_90": "90 days",
+          "days_180": "6 months",
+          "days_365": "1 year",
+          "days_730": "2 years",
+          "days_1095": "3 years",
+          "days_1825": "5 years",
+          "days_2555": "7 years",
+          "days_n": "{{count}} days"
+        },
+        "extended_locked": "Keeping data for more than a year is available on the Enterprise plan.",
+        "privacy_title": "Privacy",
+        "track_anonymous": "Count visitors who aren't signed in",
+        "track_anonymous_description": "Include page and course views from people without an account. They're counted without cookies, using an anonymous ID that changes every day.",
+        "collect_location": "Store visitor country",
+        "collect_location_description": "Record which country a visit comes from. IP addresses are never stored.",
+        "exclude_staff": "Leave admins and maintainers out of stats",
+        "exclude_staff_description": "Views from people who manage the organization aren't counted, so your own testing doesn't skew the numbers.",
+        "export_title": "Download raw events (CSV)",
+        "export_description": "Every stored analytics event for the chosen period, one row per event.",
+        "export_period": "Export period",
+        "export_last_days": "Last {{count}} days",
+        "export_all": "Everything kept",
+        "export_button": "Download CSV",
+        "exporting": "Preparing your download...",
+        "export_done": "Download started",
+        "export_error": "Could not export the analytics events",
+        "export_locked": "Raw event export is available on the Enterprise plan."
       }
     },
     "users": {
@@ -8473,6 +8520,7 @@
     "unsaved_changes_warning": "You have unsaved changes. Leave without saving?"
   },
   "analytics": {
+    "data_kept": "Data kept for {{period}}",
     "title": "Analytics",
     "subtitle": "Insights about your learners and content",
     "tabs": {
@@ -8542,7 +8590,12 @@
       "courses": "Courses",
       "count": "Count",
       "active_users_last_5_minutes": "Active users in last 5 minutes",
-      "course_fallback_name": "Course {{uuid}}"
+      "course_fallback_name": "Course {{uuid}}",
+      "visitors": "Visitors",
+      "signed_in_learners": "Signed-in learners",
+      "traffic": "Traffic",
+      "page_views_count": "{{value}} page views",
+      "vs_previous_period": "vs previous period"
     },
     "modals": {
       "live_users": {

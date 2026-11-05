@@ -4105,7 +4105,8 @@
           "automations": "Automatisations",
           "menu": "Menu",
           "danger": "Zone dangereuse",
-          "course_end": "Fin de cours"
+          "course_end": "Fin de cours",
+          "analytics": "Analytique"
         },
         "pages": {
           "general": {
@@ -4162,6 +4163,10 @@
           "course_end": {
             "title": "Fin de cours",
             "subtitle": "Personnalisez l'écran que voient les apprenants à la fin d'un cours"
+          },
+          "analytics": {
+            "title": "Analytique",
+            "subtitle": "Choisissez combien de temps les données d'analytique sont conservées et ce qui est collecté"
           }
         },
         "name": "Nom de l'organisation",
@@ -5562,6 +5567,48 @@
         "button_link_help": "Un chemin interne comme /courses, ou une URL https:// complète. Laissez vide pour pointer vers votre catalogue de cours.",
         "link_invalid": "Utilisez un chemin interne commençant par / ou une URL http(s) complète",
         "preview": "Aperçu"
+      },
+      "analytics_settings": {
+        "title": "Données d'analytique",
+        "subtitle": "Conservation et confidentialité de l'analytique de votre organisation",
+        "save": "Enregistrer",
+        "saving": "Enregistrement...",
+        "saved": "Paramètres d'analytique enregistrés",
+        "error": "Impossible d'enregistrer les paramètres d'analytique",
+        "load_error": "Impossible de charger les paramètres d'analytique",
+        "admin_only": "Seuls les administrateurs de l'organisation peuvent modifier les paramètres d'analytique.",
+        "retention_title": "Conservation des données",
+        "retention_description": "Durée de conservation des événements d'analytique avant leur suppression.",
+        "retention_note": "Réduire la durée de conservation supprime les données plus anciennes lors du prochain nettoyage nocturne.",
+        "retention_default": "{{label}} (par défaut)",
+        "retention_options": {
+          "days_90": "90 jours",
+          "days_180": "6 mois",
+          "days_365": "1 an",
+          "days_730": "2 ans",
+          "days_1095": "3 ans",
+          "days_1825": "5 ans",
+          "days_2555": "7 ans",
+          "days_n": "{{count}} jours"
+        },
+        "extended_locked": "Conserver les données plus d'un an est disponible avec l'offre Enterprise.",
+        "privacy_title": "Confidentialité",
+        "track_anonymous": "Compter les visiteurs non connectés",
+        "track_anonymous_description": "Inclure les vues de pages et de cours des personnes sans compte. Elles sont comptées sans cookies, avec un identifiant anonyme qui change chaque jour.",
+        "collect_location": "Enregistrer le pays des visiteurs",
+        "collect_location_description": "Enregistrer le pays d'origine d'une visite. Les adresses IP ne sont jamais conservées.",
+        "exclude_staff": "Exclure les administrateurs et mainteneurs des statistiques",
+        "exclude_staff_description": "Les vues des personnes qui gèrent l'organisation ne sont pas comptées, pour que vos propres tests ne faussent pas les chiffres.",
+        "export_title": "Télécharger les événements bruts (CSV)",
+        "export_description": "Tous les événements d'analytique conservés sur la période choisie, une ligne par événement.",
+        "export_period": "Période d'export",
+        "export_last_days": "{{count}} derniers jours",
+        "export_all": "Tout ce qui est conservé",
+        "export_button": "Télécharger le CSV",
+        "exporting": "Préparation du téléchargement...",
+        "export_done": "Téléchargement lancé",
+        "export_error": "Impossible d'exporter les événements d'analytique",
+        "export_locked": "L'export des événements bruts est disponible avec l'offre Enterprise."
       }
     },
     "users": {
@@ -8281,6 +8328,7 @@
     "unsaved_changes_warning": "Vous avez des modifications non enregistrées. Quitter sans enregistrer ?"
   },
   "analytics": {
+    "data_kept": "Données conservées {{period}}",
     "title": "Analytique",
     "subtitle": "Informations sur vos apprenants et votre contenu",
     "tabs": {
@@ -8350,7 +8398,12 @@
       "courses": "Cours",
       "count": "Nombre",
       "active_users_last_5_minutes": "Utilisateurs actifs ces 5 dernières minutes",
-      "course_fallback_name": "Cours {{uuid}}"
+      "course_fallback_name": "Cours {{uuid}}",
+      "visitors": "Visiteurs",
+      "signed_in_learners": "Apprenants connectés",
+      "traffic": "Trafic",
+      "page_views_count": "{{value}} pages vues",
+      "vs_previous_period": "vs période précédente"
     },
     "modals": {
       "live_users": {

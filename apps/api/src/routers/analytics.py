@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlmodel import select
-from config.config import get_learnhouse_config
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
@@ -20,11 +19,9 @@ from src.security.superadmin import is_user_superadmin
 from src.security.org_auth import enforce_org_mfa
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
-import httpx
-from src.services.analytics.analytics import track
+from src.services.analytics import store
 from src.services.analytics.cache import get_cached_result, set_cached_result
 from src.services.analytics.enrichment import enrich_with_metadata
-from src.services.analytics.events import ALLOWED_FRONTEND_EVENTS
 from src.services.orgs.users import _csv_safe
 from src.services.analytics.queries import (
     ALL_QUERIES,
@@ -32,6 +29,8 @@ from src.services.analytics.queries import (
     DETAIL_QUERIES,
     COURSE_QUERIES,
     COURSE_DETAIL_QUERIES,
+    CORE_QUERIES,
+    SUPERADMIN_QUERIES,
 )
 
 logger = logging.getLogger(__name__)
@@ -76,13 +75,6 @@ async def _users_map(
 # -------------------------------------------------------------------
 # Request / response models
 # -------------------------------------------------------------------
-class FrontendEvent(BaseModel):
-    event_name: str
-    org_id: int
-    session_id: str = ""
-    properties: dict = {}
-
-
 class PlanInfoResponse(BaseModel):
     tier: str  # "core" | "advanced"
     plan: str
@@ -92,31 +84,61 @@ class AnalyticsStatusResponse(BaseModel):
     configured: bool
 
 
-# Lazy singleton httpx client for Tinybird Query API
-_read_client: httpx.AsyncClient | None = None
-
-
-def _get_read_client() -> httpx.AsyncClient | None:
-    global _read_client
-    if _read_client is not None:
-        return _read_client
-
-    config = get_learnhouse_config()
-    tb = config.tinybird_config
-    if tb is None:
-        return None
-
-    _read_client = httpx.AsyncClient(
-        base_url=tb.api_url,
-        headers={"Authorization": f"Bearer {tb.read_token}"},
-        timeout=30.0,
-    )
-    return _read_client
-
-
 # -------------------------------------------------------------------
-# Shared Tinybird query execution with Redis caching
+# Query execution (Postgres) with Redis caching
 # -------------------------------------------------------------------
+def _empty_result() -> dict:
+    return {"data": [], "rows": 0, "meta": []}
+
+
+async def _execute_query(
+    query_name: str,
+    sql: str,
+    params: dict,
+    org_id: int,
+    days: int,
+    course_id: str | None = None,
+) -> dict:
+    """Run a catalog query (``queries.py``) on Postgres, with Redis caching.
+
+    1. Return the cached result when there is one.
+    2. Otherwise run ``sql`` with its bind ``params`` through ``store.run_query``.
+    3. Cache and return ``{"data": rows, "rows": n, "meta": []}``, the shape
+       the dashboards read.
+
+    The cache key is (query_name, org_id, days, course_id): callers must not
+    pass parameters outside that key (e.g. a user id) through here.
+    """
+    cached = get_cached_result(query_name, org_id, days, course_id)
+    if cached is not None:
+        return cached
+
+    try:
+        rows = await store.run_query(sql, params)
+    except Exception as exc:
+        logger.warning("Analytics query '%s' failed: %s", query_name, str(exc)[:500])
+        raise HTTPException(status_code=502, detail="Analytics query failed")
+
+    response = {"data": rows, "rows": len(rows), "meta": []}
+    set_cached_result(query_name, org_id, days, response, course_id)
+    return response
+
+
+def _resolve_legacy_query(query_name: str) -> tuple[str, int] | None:
+    """The catalog query a legacy (Tinybird-era) caller means by ``query_name``."""
+    if query_name in SUPERADMIN_QUERIES:
+        return SUPERADMIN_QUERIES[query_name]
+    for prefix in ("superadmin_", "global_"):
+        if query_name.startswith(prefix) and query_name[len(prefix):] in CORE_QUERIES:
+            return CORE_QUERIES[query_name[len(prefix):]]
+    return None
+
+
+# DEPRECATED: kept only for the Enterprise superadmin router, which still
+# imports it and passes ClickHouse SQL. The SQL is ignored: the query is
+# resolved by name ("superadmin_org_visits_rank", "superadmin_org_weekly_visits",
+# "superadmin_<core query>" / "global_<core query>") and run on Postgres.
+# Unknown names return the empty response. New code uses `_execute_query`.
 async def _execute_tinybird_query(
     query_name: str,
     sql: str,
@@ -125,63 +147,18 @@ async def _execute_tinybird_query(
     course_id: str | None = None,
     empty_response: dict | None = None,
 ) -> dict:
-    """
-    Execute a SQL query via Tinybird Query API with Redis caching.
-
-    1. Check Redis cache for a previous result.
-    2. On miss, POST SQL to Tinybird /v0/sql.
-    3. Cache the response on success.
-    4. Return the JSON result dict.
-    """
-    if empty_response is None:
-        empty_response = {"data": [], "rows": 0, "meta": []}
-
-    # --- cache check ---
-    cached = get_cached_result(query_name, org_id, days, course_id)
-    if cached is not None:
-        return cached
-
-    # --- Tinybird SQL API call ---
-    client = _get_read_client()
-    if client is None:
-        raise HTTPException(status_code=503, detail="Analytics not configured")
-
+    resolved = _resolve_legacy_query(query_name)
+    if resolved is None:
+        return empty_response if empty_response is not None else _empty_result()
+    query_sql, default_days = resolved
     try:
-        resp = await client.post("/v0/sql", content=sql + " FORMAT JSON")
-        resp.raise_for_status()
-        result = resp.json()
-    except httpx.HTTPStatusError as exc:
-        error_msg = exc.response.text[:500]
-        logger.warning(
-            "Tinybird query '%s' failed (%s): %s",
-            query_name, exc.response.status_code, error_msg,
-        )
-        if any(s in error_msg for s in ("UNKNOWN_TABLE", "doesn't exist", "not found")):
-            return empty_response
-        raise HTTPException(status_code=502, detail="Analytics query failed")
-    except Exception as exc:
-        logger.warning("Tinybird query '%s' failed: %s", query_name, str(exc)[:500])
-        raise HTTPException(status_code=502, detail="Analytics query failed")
-
-    # Tinybird returns {"data": [...], "rows": N, "meta": [...]}, the same shape the frontend expects.
-    # Safety net: sanitize NaN/Inf values in the response
-    rows = result.get("data", [])
-    for row in rows:
-        for key, val in row.items():
-            if isinstance(val, float) and (val != val or val == float('inf') or val == float('-inf')):
-                logger.debug("Query '%s' returned NaN/Inf for key '%s', converting to None", query_name, key)
-                row[key] = None
-
-    response = {
-        "data": rows,
-        "rows": result.get("rows", len(rows)),
-        "meta": result.get("meta", []),
-    }
-
-    # --- cache store ---
-    set_cached_result(query_name, org_id, days, response, course_id)
-
-    return response
+        safe_org_id = int(org_id)
+        safe_days = int(days) if days else default_days
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid parameter")
+    safe_days = max(1, min(safe_days, 3650))
+    params = _query_params(safe_org_id, safe_days)
+    return await _execute_query(query_name, query_sql, params, safe_org_id, safe_days, course_id)
 
 
 async def _verify_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> None:
@@ -270,12 +247,12 @@ _enrich_with_metadata = enrich_with_metadata
 
 
 # -------------------------------------------------------------------
-# GET /status: whether analytics (Tinybird) is configured
+# GET /status: whether analytics is available
 # -------------------------------------------------------------------
 @router.get(
     "/status",
     summary="Check analytics configuration",
-    description="Returns whether the analytics backend (Tinybird) is configured on the server.",
+    description="Returns whether analytics is available. Analytics is stored in the main database, so it is always configured.",
     responses={
         200: {"description": "Analytics configuration status"},
         401: {"description": "Authentication required"},
@@ -287,88 +264,23 @@ async def analytics_status(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    config = get_learnhouse_config()
-    return AnalyticsStatusResponse(configured=config.tinybird_config is not None)
+    return AnalyticsStatusResponse(configured=True)
 
 
 # -------------------------------------------------------------------
-# POST /events: frontend event proxy
-# -------------------------------------------------------------------
-@router.post(
-    "/events",
-    summary="Ingest a frontend analytics event",
-    description="Proxies a whitelisted analytics event from the frontend to the analytics backend. The authenticated user must belong to the target organization, and the event name must be in the allowed list.",
-    responses={
-        200: {"description": "Event ingested successfully"},
-        400: {"description": "Invalid event name"},
-        401: {"description": "Authentication required"},
-        403: {"description": "User is not a member of the target organization"},
-    },
-)
-async def ingest_frontend_event(
-    body: FrontendEvent,
-    request: Request,
-    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: AsyncSession = Depends(get_db_session),
-):
-    if isinstance(current_user, AnonymousUser):
-        raise HTTPException(status_code=401, detail="Authentication required")
-
-    await _verify_org_membership(resolve_acting_user_id(current_user), body.org_id, db_session)
-
-    if body.event_name not in ALLOWED_FRONTEND_EVENTS:
-        raise HTTPException(status_code=400, detail="Invalid event name")
-
-    ip = request.client.host if request.client else ""
-
-    # Sanitize seconds_spent: cap at 4 hours, reject negatives
-    properties = dict(body.properties)
-    if "seconds_spent" in properties:
-        try:
-            seconds = float(properties["seconds_spent"])
-            if seconds <= 0:
-                properties.pop("seconds_spent")
-            elif seconds > 14400:
-                properties["seconds_spent"] = 14400
-        except (ValueError, TypeError):
-            properties.pop("seconds_spent")
-
-    # Enrich all frontend events with server-side geo data from proxy headers
-    country = (
-        request.headers.get("cf-ipcountry")  # Cloudflare
-        or request.headers.get("x-country-code")  # Custom proxy
-        or ""
-    )
-    if country and country not in ("XX", "T1"):
-        properties.setdefault("country_code", country.upper())
-
-    await track(
-        event_name=body.event_name,
-        org_id=body.org_id,
-        user_id=resolve_acting_user_id(current_user),
-        session_id=body.session_id,
-        properties=properties,
-        source="frontend",
-        ip=ip,
-    )
-    return {"ok": True}
-
-
-# -------------------------------------------------------------------
-# GET /dashboard/detail/{query_name}: Tinybird + PostgreSQL enrichment
+# GET /dashboard/detail/{query_name}: detail rows + PostgreSQL enrichment
 # -------------------------------------------------------------------
 @router.get(
     "/dashboard/detail/{query_name}",
     summary="Run a detail dashboard query",
-    description="Executes a predefined analytics detail query against Tinybird and enriches the result rows with course, activity, and user metadata from PostgreSQL. Requires org admin privileges.",
+    description="Executes a predefined analytics detail query and enriches the result rows with course, activity, and user metadata from PostgreSQL. Requires org admin privileges.",
     responses={
         200: {"description": "Detail query results with enriched metadata"},
         400: {"description": "Invalid query parameter"},
         401: {"description": "Authentication required"},
         403: {"description": "User is not a member or admin of the organization"},
         404: {"description": "Unknown detail query name"},
-        502: {"description": "Upstream analytics query failed"},
-        503: {"description": "Analytics backend is not configured"},
+        502: {"description": "Analytics query failed"},
     },
 )
 async def query_dashboard_detail(
@@ -388,17 +300,14 @@ async def query_dashboard_detail(
     if query_name not in DETAIL_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown detail query")
 
-    sql_template, default_days = DETAIL_QUERIES[query_name]
+    sql, default_days = DETAIL_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = _build_sql(sql_template, safe_org_id, safe_days)
+    params = _query_params(safe_org_id, safe_days)
 
-    ch_result = await _execute_tinybird_query(
-        query_name, sql, safe_org_id, safe_days,
-        empty_response={"data": [], "users": {}},
-    )
+    result = await _execute_query(query_name, sql, params, safe_org_id, safe_days)
 
-    ch_data = ch_result.get("data", [])
+    ch_data = result.get("data", [])
 
     # Enrich with course/activity metadata from PostgreSQL
     ch_data = await _enrich_with_metadata(ch_data, db_session, org_id=safe_org_id)
@@ -415,20 +324,19 @@ async def query_dashboard_detail(
 
 
 # -------------------------------------------------------------------
-# GET /dashboard/{query_name}: run analytics query via Tinybird
+# GET /dashboard/{query_name}: run a catalog analytics query
 # -------------------------------------------------------------------
 @router.get(
     "/dashboard/{query_name}",
     summary="Run a dashboard analytics query",
-    description="Executes a predefined analytics query via Tinybird and returns the aggregated results. Advanced queries require an Enterprise plan. Requires org admin privileges.",
+    description="Executes a predefined analytics query and returns the aggregated results. Advanced queries require an Enterprise plan. Requires org admin privileges.",
     responses={
         200: {"description": "Query results with enriched metadata"},
         400: {"description": "Invalid query parameter"},
         401: {"description": "Authentication required"},
         403: {"description": "User is not a member/admin, or plan does not permit advanced queries"},
         404: {"description": "Unknown query name"},
-        502: {"description": "Upstream analytics query failed"},
-        503: {"description": "Analytics backend is not configured"},
+        502: {"description": "Analytics query failed"},
     },
 )
 async def query_dashboard(
@@ -461,12 +369,12 @@ async def query_dashboard(
                     detail="Advanced analytics requires an Enterprise plan or higher.",
                 )
 
-    sql_template, default_days = ALL_QUERIES[query_name]
+    sql, default_days = ALL_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = _build_sql(sql_template, safe_org_id, safe_days)
+    params = _query_params(safe_org_id, safe_days)
 
-    result = await _execute_tinybird_query(query_name, sql, safe_org_id, safe_days)
+    result = await _execute_query(query_name, sql, params, safe_org_id, safe_days)
     result["data"] = await _enrich_with_metadata(result.get("data", []), db_session, org_id=safe_org_id)
     return result
 
@@ -549,7 +457,8 @@ _SAFE_COURSE_UUID = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 
 def _validate_course_uuid(course_uuid: str) -> str:
-    """Validate course_uuid is safe for string interpolation into SQL."""
+    """Validate course_uuid (bound as a parameter, but kept to the uuid
+    alphabet so bad input fails fast and never reaches the cache key)."""
     if not course_uuid or not _SAFE_COURSE_UUID.match(course_uuid):
         raise HTTPException(status_code=400, detail="Invalid course_uuid")
     if len(course_uuid) > 100:
@@ -557,19 +466,13 @@ def _validate_course_uuid(course_uuid: str) -> str:
     return course_uuid
 
 
-def _build_sql(
-    sql_template: str,
+def _query_params(
     org_id: int,
     days: int,
     course_uuid: str | None = None,
-) -> str:
-    """
-    Build SQL from template with validated parameters.
-
-    Tinybird SQL API does not support parameterized queries, so we must
-    interpolate values. This function centralizes that interpolation and
-    enforces type safety so callers cannot accidentally pass unvalidated input.
-    """
+) -> dict:
+    """Bind parameters for a catalog query, with their types enforced so a
+    caller can't pass unvalidated input through."""
     # org_id and days are already validated as int by _parse_safe_params
     if not isinstance(org_id, int) or not isinstance(days, int):
         raise HTTPException(status_code=400, detail="Invalid parameter types")
@@ -582,7 +485,7 @@ def _build_sql(
             raise HTTPException(status_code=400, detail="Invalid course_uuid")
         params["course_uuid"] = course_uuid
 
-    return sql_template.format(**params)
+    return params
 
 
 # -------------------------------------------------------------------
@@ -591,15 +494,14 @@ def _build_sql(
 @router.get(
     "/dashboard/course/detail/{query_name}",
     summary="Run a course-level detail analytics query",
-    description="Executes a predefined course-level detail query via Tinybird with fallback to PostgreSQL TrailRun data, and enriches results with course, activity, and user metadata. Requires org admin privileges and a Pro plan or higher.",
+    description="Executes a predefined course-level detail query, with a fallback to TrailRun data for enrollments,, and enriches results with course, activity, and user metadata. Requires org admin privileges and a Pro plan or higher.",
     responses={
         200: {"description": "Course detail query results with enriched metadata"},
         400: {"description": "Invalid query parameter or course_uuid"},
         401: {"description": "Authentication required"},
         403: {"description": "User is not admin or the organization lacks a Pro plan"},
         404: {"description": "Unknown course detail query name"},
-        502: {"description": "Upstream analytics query failed"},
-        503: {"description": "Analytics backend is not configured"},
+        502: {"description": "Analytics query failed"},
     },
 )
 async def query_course_dashboard_detail(
@@ -630,20 +532,20 @@ async def query_course_dashboard_detail(
 
     safe_course_uuid = _validate_course_uuid(course_uuid)
 
-    sql_template, default_days = COURSE_DETAIL_QUERIES[query_name]
+    sql, default_days = COURSE_DETAIL_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = _build_sql(sql_template, safe_org_id, safe_days, safe_course_uuid)
+    params = _query_params(safe_org_id, safe_days, safe_course_uuid)
 
-    ch_result = await _execute_tinybird_query(
-        query_name, sql, safe_org_id, safe_days,
+    result = await _execute_query(
+        query_name, sql, params, safe_org_id, safe_days,
         course_id=safe_course_uuid,
-        empty_response={"data": [], "users": {}},
     )
 
-    ch_data = ch_result.get("data", [])
+    ch_data = result.get("data", [])
 
-    # Fallback: if Tinybird has no enrollment data, use PostgreSQL TrailRun
+    # Fallback: if no enrollment events were recorded (e.g. enrollments from
+    # before analytics moved to Postgres), use the TrailRun table
     if query_name == "course_recent_enrollments" and not ch_data:
         course_obj = (await db_session.execute(
             select(Course).where(Course.course_uuid == safe_course_uuid)
@@ -686,15 +588,14 @@ async def query_course_dashboard_detail(
 @router.get(
     "/dashboard/course/{query_name}",
     summary="Run a course-level analytics query",
-    description="Executes a predefined course-level analytics query via Tinybird and returns enriched aggregated results. Requires org admin privileges and a Pro plan or higher.",
+    description="Executes a predefined course-level analytics query and returns enriched aggregated results. Requires org admin privileges and a Pro plan or higher.",
     responses={
         200: {"description": "Course query results with enriched metadata"},
         400: {"description": "Invalid query parameter or course_uuid"},
         401: {"description": "Authentication required"},
         403: {"description": "User is not admin or the organization lacks a Pro plan"},
         404: {"description": "Unknown course query name"},
-        502: {"description": "Upstream analytics query failed"},
-        503: {"description": "Analytics backend is not configured"},
+        502: {"description": "Analytics query failed"},
     },
 )
 async def query_course_dashboard(
@@ -725,13 +626,13 @@ async def query_course_dashboard(
 
     safe_course_uuid = _validate_course_uuid(course_uuid)
 
-    sql_template, default_days = COURSE_QUERIES[query_name]
+    sql, default_days = COURSE_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = _build_sql(sql_template, safe_org_id, safe_days, safe_course_uuid)
+    params = _query_params(safe_org_id, safe_days, safe_course_uuid)
 
-    result = await _execute_tinybird_query(
-        query_name, sql, safe_org_id, safe_days,
+    result = await _execute_query(
+        query_name, sql, params, safe_org_id, safe_days,
         course_id=safe_course_uuid,
     )
     result["data"] = await _enrich_with_metadata(result.get("data", []), db_session, org_id=safe_org_id)
@@ -750,8 +651,7 @@ async def query_course_dashboard(
         400: {"description": "Invalid format, queries, or parameters"},
         401: {"description": "Authentication required"},
         403: {"description": "User is not admin of the organization"},
-        502: {"description": "Upstream analytics query failed"},
-        503: {"description": "Analytics backend is not configured"},
+        502: {"description": "Analytics query failed"},
     },
 )
 async def export_analytics(
@@ -828,10 +728,10 @@ async def export_analytics(
     for qname in query_names:
         if qname not in allowed:
             continue
-        sql_template, default_days = allowed[qname]
+        sql, default_days = allowed[qname]
         d = safe_days if safe_days else default_days
-        sql = _build_sql(sql_template, safe_org_id, d, safe_course_uuid)
-        result = await _execute_tinybird_query(qname, sql, safe_org_id, d, course_id=safe_course_uuid)
+        params = _query_params(safe_org_id, d, safe_course_uuid)
+        result = await _execute_query(qname, sql, params, safe_org_id, d, course_id=safe_course_uuid)
         result["data"] = await _enrich_with_metadata(result.get("data", []), db_session, org_id=safe_org_id)
         results[qname] = result
 

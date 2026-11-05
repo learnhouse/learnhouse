@@ -165,6 +165,20 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
     dispatch({ type: 'CLOSE_PLAYER' })
   }, [])
 
+  // Org analytics: count an episode once, the first time it starts playing
+  // while this player is mounted (resuming or replaying it doesn't recount).
+  const playedEpisodes = useRef<Set<string>>(new Set())
+  const playingEpisodeUuid = state.isPlaying ? state.currentEpisode?.episode_uuid : undefined
+  const playingPodcastUuid = state.podcast?.podcast_uuid
+  useEffect(() => {
+    if (!playingEpisodeUuid || playedEpisodes.current.has(playingEpisodeUuid)) return
+    playedEpisodes.current.add(playingEpisodeUuid)
+    trackRef.current(AnalyticsEvent.PodcastEpisodePlayed, {
+      podcast_uuid: playingPodcastUuid,
+      episode_uuid: playingEpisodeUuid,
+    })
+  }, [playingEpisodeUuid, playingPodcastUuid])
+
   const seekTo = useCallback((time: number) => {
     if (audioRef.current) {
       audioRef.current.currentTime = time

@@ -4153,7 +4153,8 @@
           "automations": "Automatizácie",
           "menu": "Ponuka",
           "danger": "Nebezpečná zóna",
-          "course_end": "Dokončenie kurzu"
+          "course_end": "Dokončenie kurzu",
+          "analytics": "Analytika"
         },
         "pages": {
           "general": {
@@ -4210,6 +4211,10 @@
           "course_end": {
             "title": "Dokončenie kurzu",
             "subtitle": "Prispôsobte obrazovku, ktorú študenti uvidia po dokončení kurzu"
+          },
+          "analytics": {
+            "title": "Analytika",
+            "subtitle": "Vyberte, ako dlho sa uchovávajú analytické údaje a čo sa zbiera"
           }
         },
         "name": "Názov organizácie",
@@ -5618,6 +5623,48 @@
         "button_link_help": "Interná cesta, napríklad /courses, alebo úplná URL https://. Nechajte prázdne, ak chcete odkazovať na katalóg kurzov.",
         "link_invalid": "Použite internú cestu začínajúcu / alebo úplnú URL http(s)",
         "preview": "Náhľad"
+      },
+      "analytics_settings": {
+        "title": "Analytické údaje",
+        "subtitle": "Uchovávanie a ochrana súkromia v analytike vašej organizácie",
+        "save": "Uložiť",
+        "saving": "Ukladá sa...",
+        "saved": "Nastavenia analytiky boli uložené",
+        "error": "Nastavenia analytiky sa nepodarilo uložiť",
+        "load_error": "Nastavenia analytiky sa nepodarilo načítať",
+        "admin_only": "Nastavenia analytiky môžu meniť iba správcovia organizácie.",
+        "retention_title": "Uchovávanie údajov",
+        "retention_description": "Ako dlho sa analytické udalosti uchovávajú, kým sa vymažú.",
+        "retention_note": "Skrátenie doby uchovávania vymaže staršie údaje pri najbližšom nočnom čistení.",
+        "retention_default": "{{label}} (predvolené)",
+        "retention_options": {
+          "days_90": "90 dní",
+          "days_180": "6 mesiacov",
+          "days_365": "1 rok",
+          "days_730": "2 roky",
+          "days_1095": "3 roky",
+          "days_1825": "5 rokov",
+          "days_2555": "7 rokov",
+          "days_n": "{{count}} dní"
+        },
+        "extended_locked": "Uchovávanie údajov dlhšie ako rok je dostupné v pláne Enterprise.",
+        "privacy_title": "Súkromie",
+        "track_anonymous": "Počítať neprihlásených návštevníkov",
+        "track_anonymous_description": "Zahrnúť zobrazenia stránok a kurzov od ľudí bez účtu. Počítajú sa bez cookies, s anonymným identifikátorom, ktorý sa mení každý deň.",
+        "collect_location": "Ukladať krajinu návštevníka",
+        "collect_location_description": "Zaznamenať, z ktorej krajiny návšteva pochádza. IP adresy sa nikdy neukladajú.",
+        "exclude_staff": "Vynechať správcov a údržbárov zo štatistík",
+        "exclude_staff_description": "Zobrazenia ľudí, ktorí spravujú organizáciu, sa nepočítajú, aby vaše vlastné testovanie neskresľovalo čísla.",
+        "export_title": "Stiahnuť surové udalosti (CSV)",
+        "export_description": "Všetky uložené analytické udalosti za zvolené obdobie, jeden riadok na udalosť.",
+        "export_period": "Obdobie exportu",
+        "export_last_days": "Posledných {{count}} dní",
+        "export_all": "Všetko uchované",
+        "export_button": "Stiahnuť CSV",
+        "exporting": "Pripravuje sa sťahovanie...",
+        "export_done": "Sťahovanie sa začalo",
+        "export_error": "Analytické udalosti sa nepodarilo exportovať",
+        "export_locked": "Export surových udalostí je dostupný v pláne Enterprise."
       }
     },
     "users": {
@@ -8351,6 +8398,7 @@
     "unsaved_changes_warning": "Máte neuložené zmeny. Odísť bez uloženia?"
   },
   "analytics": {
+    "data_kept": "Údaje uchovávané: {{period}}",
     "title": "Analytika",
     "subtitle": "Prehľady o vašich študentoch a obsahu",
     "tabs": {
@@ -8420,7 +8468,12 @@
       "courses": "Kurzy",
       "count": "Počet",
       "active_users_last_5_minutes": "Aktívni používatelia za posledných 5 minút",
-      "course_fallback_name": "Kurz {{uuid}}"
+      "course_fallback_name": "Kurz {{uuid}}",
+      "visitors": "Návštevníci",
+      "signed_in_learners": "Prihlásení študenti",
+      "traffic": "Návštevnosť",
+      "page_views_count": "Zobrazenia stránok: {{value}}",
+      "vs_previous_period": "oproti predchádzajúcemu obdobiu"
     },
     "modals": {
       "live_users": {

@@ -941,7 +941,9 @@ class TestCourseMutationsAndRights:
         ), patch(
             "src.services.courses.courses.dispatch_webhooks",
             new_callable=AsyncMock,
-        ) as mock_webhooks:
+        ) as mock_webhooks, patch(
+            "src.services.courses.courses.track", new_callable=AsyncMock
+        ) as mock_track:
             updated = await update_course(
                 mock_request,
                 CourseUpdate(published=True),
@@ -952,6 +954,12 @@ class TestCourseMutationsAndRights:
 
         assert updated.published is True
         mock_webhooks.assert_awaited_once()
+        mock_track.assert_awaited_once_with(
+            event_name="course_published",
+            org_id=course.org_id,
+            user_id=admin_user.id,
+            properties={"course_uuid": course.course_uuid, "published": True},
+        )
 
     @pytest.mark.asyncio
     async def test_get_course_user_rights_variants(
