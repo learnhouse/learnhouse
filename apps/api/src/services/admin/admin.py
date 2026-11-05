@@ -399,6 +399,9 @@ async def issue_user_token(
         },
         expires_delta=timedelta(hours=1),
     )
+    from src.services.auth.session import track_login
+
+    await track_login(user.id, AUTH_METHOD_API_TOKEN, token_user.org_id)
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -567,6 +570,13 @@ async def unenroll_user(
     await db_session.delete(trail_run)
     await db_session.commit()
     notify_ee_learner_progress(user_id, course.id)
+
+    await track(
+        event_name=analytics_events.COURSE_LEFT,
+        org_id=token_user.org_id,
+        user_id=user_id,
+        properties={"course_uuid": course.course_uuid},
+    )
 
     return {"detail": "User unenrolled successfully"}
 
@@ -1337,6 +1347,12 @@ async def provision_user(
         user_id=user.id if user.id else 0,
         properties={"signup_method": "admin_api"},
     )
+    await track(
+        event_name=analytics_events.USER_JOINED_ORG,
+        org_id=token_user.org_id,
+        user_id=user.id if user.id else 0,
+        properties={"join_method": "admin_api"},
+    )
     await dispatch_webhooks(
         event_name=analytics_events.USER_SIGNED_UP,
         org_id=token_user.org_id,
@@ -1409,6 +1425,11 @@ async def remove_user_from_org_admin(
     except Exception:
         pass
 
+    await track(
+        event_name=analytics_events.USER_REMOVED_FROM_ORG,
+        org_id=token_user.org_id,
+        user_id=user_id,
+    )
     await dispatch_webhooks(
         event_name=analytics_events.USER_REMOVED_FROM_ORG,
         org_id=token_user.org_id,
@@ -2079,6 +2100,12 @@ async def revoke_certificate(
     await db_session.delete(cert_user)
     await db_session.commit()
 
+    await track(
+        event_name=analytics_events.CERTIFICATE_REVOKED,
+        org_id=token_user.org_id,
+        user_id=user_id,
+        properties={"course_uuid": course.course_uuid},
+    )
     await dispatch_webhooks(
         event_name=analytics_events.CERTIFICATE_REVOKED,
         org_id=token_user.org_id,
@@ -2701,6 +2728,12 @@ async def bulk_unenroll_users(
         await db_session.commit()
         for uid in unenrolled:
             notify_ee_learner_progress(uid, course.id)
+            await track(
+                event_name=analytics_events.COURSE_LEFT,
+                org_id=token_user.org_id,
+                user_id=uid,
+                properties={"course_uuid": course.course_uuid},
+            )
 
     return {
         "unenrolled": unenrolled,

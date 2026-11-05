@@ -46,6 +46,7 @@ from src.services.auth.session import (
     decode_mfa_pending_provenance,
     mfa_pending_token_usable,
     mint_session_tokens,
+    track_login,
     spend_mfa_pending_token,
 )
 from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
@@ -528,6 +529,7 @@ async def api_login_mfa(
             detail={"code": "MFA_SESSION_EXPIRED", "message": "Please sign in again."},
         )
 
+    await track_login(user.id, pending_amr, pending_org_id)
     set_auth_cookies(response, result.access_token, result.refresh_token, request)
 
     return {

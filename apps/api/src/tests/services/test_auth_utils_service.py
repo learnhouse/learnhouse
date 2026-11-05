@@ -225,7 +225,9 @@ class TestAuthUtilsService:
             "src.security.features_utils.usage.increase_feature_usage", AsyncMock()
         ), patch(
             "src.routers.users._invalidate_session_cache"
-        ) as mock_invalidate:
+        ) as mock_invalidate, patch(
+            "src.services.analytics.analytics.track", new_callable=AsyncMock
+        ) as mock_track:
             await signWithGoogle(
                 request=request,
                 access_token="access-token",
@@ -236,6 +238,12 @@ class TestAuthUtilsService:
             )
 
         mock_invalidate.assert_called_once_with(user.id)
+        mock_track.assert_awaited_once_with(
+            event_name="user_joined_org",
+            org_id=10,
+            user_id=user.id,
+            properties={"join_method": "google"},
+        )
 
     @pytest.mark.asyncio
     async def test_sign_with_google_username_fallback_to_user(self):

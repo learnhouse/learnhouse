@@ -2,7 +2,9 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { ChartBar, ChartLine, SquaresFour } from '@phosphor-icons/react'
+import { ChartBar, ChartLine, ClockCounterClockwise, SquaresFour } from '@phosphor-icons/react'
+import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { useAnalyticsStatus } from '@components/Dashboard/Analytics/useAnalyticsDashboard'
@@ -11,6 +13,37 @@ import { DashTabBar } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
 import ExportAnalyticsButton from '@components/Dashboard/Analytics/AnalyticsExport'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { getAnalyticsSettings } from '@services/analytics/settings'
+
+/** "Data kept for 1 year" chip linking to the analytics settings (admins only). */
+function RetentionLink() {
+  const { t } = useTranslation()
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const token = session?.data?.tokens?.access_token
+  const { data } = useQuery({
+    queryKey: ['analytics-settings', org?.id],
+    queryFn: () => getAnalyticsSettings(org.id, token),
+    enabled: !!(org?.id && token),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+  if (!data?.retention_days) return null
+  const period = t(`dashboard.organization.analytics_settings.retention_options.days_${data.retention_days}`, {
+    defaultValue: t('dashboard.organization.analytics_settings.retention_options.days_n', { count: data.retention_days }),
+  })
+  return (
+    <Link
+      href="/dash/org/settings/analytics"
+      className="hidden md:flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+    >
+      <ClockCounterClockwise size={14} />
+      {t('analytics.data_kept', { period: period.toLowerCase() })}
+    </Link>
+  )
+}
 
 // Core widgets: dynamic to code-split recharts
 const EventOverview = dynamic(() => import('@components/Dashboard/Analytics/EventOverview'))
@@ -52,6 +85,7 @@ const DATE_RANGES = [
   { label: '7d', value: '7' },
   { label: '30d', value: '30' },
   { label: '90d', value: '90' },
+  { label: '12m', value: '365' },
 ]
 
 type Tab = 'overview' | 'advanced'
@@ -89,6 +123,7 @@ export default function AnalyticsDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <RetentionLink />
               <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
                 {DATE_RANGES.map((r) => (
                   <button

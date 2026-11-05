@@ -54,8 +54,8 @@ class UserAuditEventType:
 class UserAuditEvent(SQLModel, table=True):
     """Append-only, legal-grade record of a student's learning activity.
 
-    This is the durable source of truth that complements the lossy, TTL'd Tinybird
-    analytics stream: rows are never updated or deleted, timestamps are real
+    This is the durable source of truth that complements the analytics event
+    stream (sampled by what clients send, pruned by retention): rows are never updated or deleted, timestamps are real
     ``timestamptz`` values, and writes are committed synchronously (see
     ``services/audit/audit.py``). It also preserves history the live tables
     overwrite, e.g. an assignment retry resets the submission row in place, but

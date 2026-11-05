@@ -1,10 +1,10 @@
-// Same-origin relays to third parties: PostHog (/ingest, next.config rewrite)
+// Same-origin relays to third parties: PostHog (/lhrel, next.config rewrite)
 // and the Sentry tunnel (/monitoring, added by withSentryConfig). Both are
 // external rewrites, and Next forwards the browser's request headers to the
 // destination as-is, session cookies (LH_access / LH_refresh) included. The
 // proxy strips credentials from these paths before the rewrite runs.
 
-const RELAY_PATH = /^\/(ingest|monitoring)(\/|$)/
+const RELAY_PATH = /^\/(lhrel|monitoring)(\/|$)/
 
 /** Request headers that carry the user's credentials and must not leave us. */
 const CREDENTIAL_HEADERS = ['cookie', 'authorization']

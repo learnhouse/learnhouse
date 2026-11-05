@@ -8,8 +8,8 @@ inside ONE organization, by unioning three sources:
      participation, certificates.
   2. The append-only ``user_audit_event`` log (connections + a permanent event
      timeline that survives live-table overwrites such as assignment retries).
-  3. Tinybird behavioral enrichment (time-on-activity, views, searches), best-effort;
-     degrades gracefully to empty when analytics is not configured.
+  3. Behavioral enrichment from the analytics events (time-on-activity, views,
+     searches), best-effort; degrades gracefully to empty when it fails.
 
 Everything is org-scoped so an org admin can never see another org's data through a
 shared user. Read-only: this module never writes.
@@ -53,7 +53,7 @@ from src.services.courses.activities.assignments import compute_assignment_grade
 
 logger = logging.getLogger(__name__)
 
-# Type of the Tinybird executor injected by the router: (user_id, org_id, days) ->
+# Type of the analytics executor injected by the router: (user_id, org_id, days) ->
 # a dict of behavioral sections. Kept as a callable so this service has no HTTP
 # dependency and stays unit-testable.
 BehaviorFetcher = Callable[[int, int, int], Awaitable[dict]]
@@ -625,7 +625,7 @@ def _coverage_notes() -> list[str]:
 
 
 async def _enrich_behavior(behavior: dict, db_session: AsyncSession) -> dict:
-    """Resolve identifiers in the Tinybird sections and label the event names.
+    """Resolve identifiers in the behavioral sections and label the event names.
 
     Best-effort, like the fetch itself: analytics enrichment failing should degrade
     to unenriched rows, never break the durable Postgres dossier around it.
@@ -660,7 +660,7 @@ async def build_user_dossier(
     include_raw: bool = False,
 ) -> dict:
     """Assemble the full per-student dossier. ``behavior_fetcher`` is optional so
-    the durable Postgres dossier still renders when analytics is unconfigured.
+    the durable Postgres dossier still renders without the behavioral sections.
 
     ``include_raw`` adds each task's original stored submission payload alongside the
     rendered answer. Off by default: the rendering is what a reader wants, and the raw

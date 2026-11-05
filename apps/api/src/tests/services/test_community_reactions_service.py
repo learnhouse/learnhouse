@@ -181,7 +181,9 @@ class TestCommunityReactionsService:
         ), patch(
             "src.services.communities.reactions.check_resource_access",
             new_callable=AsyncMock,
-        ):
+        ), patch(
+            "src.services.communities.reactions.track", new_callable=AsyncMock
+        ) as mock_track:
             added = await toggle_reaction(
                 mock_request, discussion.discussion_uuid, "🔥", regular_user, db
             )
@@ -195,6 +197,17 @@ class TestCommunityReactionsService:
 
         assert added == {"action": "added", "emoji": "🔥"}
         assert removed == {"action": "removed", "emoji": "🔥"}
+        # Removing a reaction is not tracked; adding one is, once.
+        mock_track.assert_awaited_once_with(
+            event_name="reaction_added",
+            org_id=community.org_id,
+            user_id=regular_user.id,
+            properties={
+                "community_uuid": community.community_uuid,
+                "discussion_uuid": "discussion_c",
+                "reaction": "🔥",
+            },
+        )
         assert reaction_count == []
 
         with patch(

@@ -587,6 +587,20 @@ async def trigger_agent_reply(
     await db.commit()
     await db.refresh(placeholder)
 
+    from src.services.ai.llm import model_for_tier
+    from src.services.analytics import events as analytics_events
+    from src.services.analytics.analytics import track
+
+    await track(
+        event_name=analytics_events.AI_MESSAGE_SENT,
+        org_id=conv.org_id,
+        user_id=user.id,
+        properties={
+            "surface": "copilot" if agent.is_default else "agent",
+            "model": model_for_tier("standard"),
+        },
+    )
+
     payload = await serialize_message(placeholder, conv.conversation_uuid, None, db)
     recipients = await member_ids(conv.id, db)
     realtime.publish_to_users(conv.org_id, recipients, {"type": "message.new", "conversation_uuid": conv.conversation_uuid, "message": payload})

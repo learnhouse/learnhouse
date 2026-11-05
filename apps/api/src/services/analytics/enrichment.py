@@ -7,7 +7,7 @@ through :func:`enrich_with_metadata` first.
 
 Lives in ``services`` rather than in the analytics router because the audit dossier
 service needs it too, and a service importing from ``src.routers`` would be a layering
-inversion (the analytics router also pulls in the Tinybird HTTP setup).
+inversion (the analytics router also carries the endpoints and their auth gates).
 """
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession

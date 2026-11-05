@@ -17,17 +17,9 @@ import {
   Timer,
   ArrowsOutSimple,
 } from '@phosphor-icons/react'
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Cell,
-} from 'recharts'
 import AnalyticsDetailModal from './AnalyticsDetailModal'
 import { useTranslation } from 'react-i18next'
+import { activityTypeLabel } from './analyticsFormat'
 
 const kFormatter = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v))
 
@@ -43,6 +35,50 @@ function ExpandButton({ onClick }: { onClick: () => void }) {
     >
       <ArrowsOutSimple size={14} />
     </button>
+  )
+}
+
+/**
+ * Funnel as stepped rows: each bar is the share of the first step, and the
+ * pill between rows is the step-to-step conversion. A plain bar chart made
+ * enrollments invisible next to thousands of page views.
+ */
+function FunnelSteps({ steps, large = false }: { steps: { name: string; value: number }[]; large?: boolean }) {
+  const first = steps[0]?.value || 0
+  return (
+    <div className={large ? 'space-y-1.5' : 'space-y-1'}>
+      {steps.map((step, i) => {
+        const share = first > 0 ? Math.max((step.value / first) * 100, step.value > 0 ? 2 : 0) : 0
+        const prev = i > 0 ? steps[i - 1].value : 0
+        const conversion = i > 0 && prev > 0 ? (step.value / prev) * 100 : null
+        return (
+          <div key={step.name}>
+            {conversion !== null && (
+              <div className="flex items-center gap-1.5 ps-2 py-0.5 text-[10px] text-gray-400">
+                <span className="h-3 w-px bg-gray-200" />
+                <span className="font-semibold tabular-nums text-gray-500">
+                  {conversion < 10 ? conversion.toFixed(1) : Math.round(conversion)}%
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <span className={`${large ? 'w-32 text-sm' : 'w-24 text-xs'} shrink-0 text-gray-500 truncate`}>
+                {step.name}
+              </span>
+              <div className={`relative flex-1 ${large ? 'h-8' : 'h-6'} rounded-md bg-gray-50 overflow-hidden`}>
+                <div
+                  className="h-full rounded-md transition-all"
+                  style={{ width: `${share}%`, background: COLORS[i % COLORS.length] }}
+                />
+              </div>
+              <span className={`${large ? 'w-16 text-sm' : 'w-12 text-xs'} shrink-0 text-right font-semibold tabular-nums text-gray-800`}>
+                {kFormatter(step.value ?? 0)}
+              </span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -102,41 +138,8 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
               {t('analytics.common.no_data')}
             </div>
           ) : (
-            <div style={{ height: 220 }}>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={chartData} layout="vertical">
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 11 }}
-                    stroke="#9ca3af"
-                    tickFormatter={kFormatter}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fontSize: 11 }}
-                    stroke="#6b7280"
-                    axisLine={false}
-                    tickLine={false}
-                    width={100}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: '1px solid #f3f4f6',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    }}
-                    formatter={(value = 0) => [value.toLocaleString(), '']}
-                  />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                    {chartData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-[220px] flex flex-col justify-center">
+              <FunnelSteps steps={chartData} />
             </div>
           )}
         </div>
@@ -209,42 +212,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
           <div className="text-center text-gray-300 py-12">{t('analytics.common.no_data')}</div>
         ) : (
           <div className="space-y-6">
-            <div style={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData} layout="vertical">
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 12 }}
-                    stroke="#9ca3af"
-                    tickFormatter={kFormatter}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fontSize: 13 }}
-                    stroke="#374151"
-                    axisLine={false}
-                    tickLine={false}
-                    width={120}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: '1px solid #f3f4f6',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    }}
-                    formatter={(value = 0) => [value.toLocaleString(), '']}
-                  />
-                  <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                    {chartData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <FunnelSteps steps={chartData} large />
 
             {/* Conversion rates */}
             <div className="grid grid-cols-3 gap-4">
@@ -397,7 +365,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
             </div>
             {activityRows.map((row: any, i: number) => {
               const typeIcon =
-                row.activity_type === 'video' ? (
+                (row.activity_type === 'video' || row.activity_type === 'TYPE_VIDEO') ? (
                   <Play size={14} weight="duotone" className="text-blue-300" />
                 ) : (
                   <BookOpen
@@ -435,7 +403,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                     </span>
                   </div>
                   <span className="text-xs text-gray-400 text-right capitalize">
-                    {row.activity_type}
+                    {activityTypeLabel(row.activity_type, t)}
                   </span>
                   <span className="text-sm text-gray-600 text-right tabular-nums">
                     {row.views.toLocaleString()}
@@ -510,8 +478,9 @@ function CourseRow({ row, org }: { row: any; org: any }) {
 }
 
 function ActivityRow({ row }: { row: any }) {
+  const { t } = useTranslation()
   const typeIcon =
-    row.activity_type === 'video' ? (
+    (row.activity_type === 'video' || row.activity_type === 'TYPE_VIDEO') ? (
       <Play size={14} weight="duotone" className="text-blue-300" />
     ) : (
       <BookOpen size={14} weight="duotone" className="text-gray-300" />
@@ -538,7 +507,7 @@ function ActivityRow({ row }: { row: any }) {
           {row.activity_name || row.activity_uuid}
         </p>
         <div className="flex items-center gap-3 text-[11px] text-gray-400">
-          <span className="capitalize">{row.activity_type}</span>
+          <span>{activityTypeLabel(row.activity_type, t)}</span>
           <span className="flex items-center gap-0.5">
             <Eye size={11} />
             {row.views}

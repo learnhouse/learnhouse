@@ -1,9 +1,10 @@
 """
-Redis cache layer for Tinybird analytics queries.
+Redis cache layer for analytics dashboard queries.
 
 Caches query results by (query_name, org_id, days, course_id) with a
-configurable TTL.  Falls back gracefully: if Redis is unavailable the
-query runs against Tinybird directly.
+configurable TTL, so a dashboard reload doesn't rerun every aggregate on
+Postgres. Falls back gracefully: if Redis is unavailable the query runs
+against Postgres directly.
 """
 
 import hashlib

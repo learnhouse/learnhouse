@@ -25,6 +25,8 @@ from src.core.ee_hooks import check_ee_live_board_access
 from src.security.org_auth import is_org_admin, is_org_member, require_org_create_permission, require_org_membership
 from src.services.utils.upload_content import upload_file
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 
 async def create_board(
@@ -71,6 +73,12 @@ async def create_board(
     db_session.add(resource_author)
     await db_session.commit()
 
+    await track(
+        event_name=analytics_events.BOARD_CREATED,
+        org_id=org_id,
+        user_id=current_user.id,
+        properties={"board_uuid": board.board_uuid},
+    )
     await dispatch_webhooks(
         event_name="board_created",
         org_id=org_id,

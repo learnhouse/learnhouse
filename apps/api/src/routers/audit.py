@@ -25,14 +25,14 @@ from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.services.orgs.users import _csv_safe
 from src.services.audit.dossier import build_user_dossier, build_users_summary
+from src.services.analytics import store
 from src.services.analytics.queries import USER_QUERIES
 
-# Reuse the battle-tested RBAC + Tinybird helpers from the analytics router
-# rather than duplicating them.
+# Reuse the battle-tested RBAC helpers from the analytics router rather than
+# duplicating them.
 from src.routers.analytics import (
     _verify_org_membership,
     _verify_org_admin,
-    _get_read_client,
 )
 
 logger = logging.getLogger(__name__)
@@ -142,32 +142,26 @@ def _parse_user_ids(request: Request) -> list[int]:
 
 
 # -------------------------------------------------------------------
-# Tinybird behavioral enrichment (per-user, uncached)
+# Behavioral enrichment from the analytics events (per-user, uncached)
 # -------------------------------------------------------------------
-def _build_user_sql(template: str, org_id: int, user_id: int, days: int) -> str:
-    # All three are validated ints, safe to interpolate into the Tinybird SQL.
+def _user_params(org_id: int, user_id: int, days: int) -> dict:
     if not all(isinstance(v, int) for v in (org_id, user_id, days)):
         raise HTTPException(status_code=400, detail="Invalid query parameter types")
-    return template.format(org_id=org_id, user_id=user_id, days=days)
+    return {"org_id": org_id, "user_id": user_id, "days": days}
 
 
 async def _make_behavior_fetcher(org_id: int, user_id: int, days: int):
-    """Return a coroutine that runs the per-user behavioral queries against
-    Tinybird. Bypasses the shared analytics cache (its key excludes user_id, so
-    caching per-user results there would leak one student's data to another)."""
+    """Return a coroutine that runs the per-user behavioral queries on the
+    analytics events. Bypasses the shared analytics cache (its key excludes
+    user_id, so caching per-user results there would leak one student's data
+    to another). A failing query degrades its section to an empty list."""
 
     async def fetch(u_id: int, o_id: int, d: int) -> dict:
-        client = _get_read_client()
-        if client is None:
-            return {}  # analytics not configured; dossier still renders from Postgres
-
         out: dict = {}
-        for name, (template, default_days) in USER_QUERIES.items():
-            sql = _build_user_sql(template, o_id, u_id, d or default_days)
+        for name, (sql, default_days) in USER_QUERIES.items():
+            params = _user_params(o_id, u_id, d or default_days)
             try:
-                resp = await client.post("/v0/sql", content=sql + " FORMAT JSON")
-                resp.raise_for_status()
-                out[name] = resp.json().get("data", [])
+                out[name] = await store.run_query(sql, params)
             except Exception:
                 logger.warning("Per-user analytics query '%s' failed for user %s", name, u_id)
                 out[name] = []

@@ -39,6 +39,34 @@ from src.services.courses.activities.utils import (
 logger = logging.getLogger(__name__)
 
 
+async def track_ai_message(
+    org_id: int | None,
+    user_id: int | None,
+    surface: str,
+    model: str,
+    course_uuid: str | None = None,
+    activity_uuid: str | None = None,
+) -> None:
+    """``ai_message_sent`` once a chat turn got an answer (failed or empty turns
+    are refunded and not counted)."""
+    if not org_id:
+        return
+    from src.services.analytics import events as analytics_events
+    from src.services.analytics.analytics import track
+
+    properties = {"surface": surface, "model": model}
+    if course_uuid:
+        properties["course_uuid"] = course_uuid
+    if activity_uuid:
+        properties["activity_uuid"] = activity_uuid
+    await track(
+        event_name=analytics_events.AI_MESSAGE_SENT,
+        org_id=org_id,
+        user_id=user_id or 0,
+        properties=properties,
+    )
+
+
 async def _authorize_activity_ai_access(
     request: Request,
     course: CourseRead,
@@ -243,6 +271,14 @@ async def ai_start_activity_chat_session(
         course_uuid=course.course_uuid,
         org_id=course.org_id,
     )
+    await track_ai_message(
+        course.org_id,
+        resolve_acting_user_id(current_user),
+        "activity_chat",
+        ai_model,
+        course_uuid=course.course_uuid,
+        activity_uuid=activity.activity_uuid,
+    )
 
     return ActivityAIChatSessionResponse(
         aichat_uuid=chat_session["aichat_uuid"],
@@ -395,6 +431,14 @@ async def ai_send_activity_chat_message(
         user_id=resolve_acting_user_id(current_user),
         course_uuid=course.course_uuid,
         org_id=course.org_id,
+    )
+    await track_ai_message(
+        course.org_id,
+        resolve_acting_user_id(current_user),
+        "activity_chat",
+        ai_model,
+        course_uuid=course.course_uuid,
+        activity_uuid=activity.activity_uuid,
     )
 
     return ActivityAIChatSessionResponse(

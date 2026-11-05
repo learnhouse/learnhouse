@@ -55,6 +55,8 @@ from src.services.orgs.orgs import is_org_admin_role, rbac_check
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.users.emails import send_role_changed_email
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 logger = logging.getLogger(__name__)
 
@@ -812,6 +814,11 @@ async def remove_user_from_org(
 
     await decrease_feature_usage("members", org_id, db_session)
 
+    await track(
+        event_name=analytics_events.USER_REMOVED_FROM_ORG,
+        org_id=org_id,
+        user_id=user_id,
+    )
     await dispatch_webhooks(
         event_name="user_removed_from_org",
         org_id=org_id,
@@ -869,6 +876,11 @@ async def leave_org(
 
     await decrease_feature_usage("members", org_id, db_session)
 
+    await track(
+        event_name=analytics_events.USER_REMOVED_FROM_ORG,
+        org_id=org_id,
+        user_id=user_id,
+    )
     await dispatch_webhooks(
         event_name="user_removed_from_org",
         org_id=org_id,
@@ -948,6 +960,15 @@ async def remove_batch_users_from_org(
 
     for _ in range(removed_count):
         await decrease_feature_usage("members", org_id, db_session)
+
+    # One per member actually removed; the batch is capped by
+    # enforce_batch_size_limit, so this stays small.
+    for uid in removed_user_ids:
+        await track(
+            event_name=analytics_events.USER_REMOVED_FROM_ORG,
+            org_id=org_id,
+            user_id=uid,
+        )
 
     return {"detail": f"{removed_count} user(s) removed from org"}
 

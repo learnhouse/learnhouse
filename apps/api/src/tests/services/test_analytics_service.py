@@ -1,191 +1,170 @@
-"""Tests for src/services/analytics/analytics.py."""
+"""Tests for src/services/analytics/analytics.py (the buffered event writer)."""
 
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-import src.services.analytics.analytics as analytics_module
-from src.services.analytics.analytics import _get_ingest_client, _send_event, track
+from src.services.analytics import analytics
 
-
-def _make_config(*, tinybird_config=None):
-    return SimpleNamespace(tinybird_config=tinybird_config)
-
-
-class TestAnalyticsTrack:
-    @pytest.mark.asyncio
-    async def test_track_no_tinybird_config_returns_without_scheduling(self):
-        with patch(
-            "src.services.analytics.analytics.get_learnhouse_config",
-            return_value=_make_config(),
-        ), patch("src.services.analytics.analytics.asyncio.create_task") as mock_create_task:
-            await track("page_view", org_id=10)
-
-        mock_create_task.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_track_schedules_fire_and_forget_event(self):
-        tinybird_config = SimpleNamespace(api_url="https://tinybird.test", ingest_token="secret")
-        scheduled = {}
-
-        def _fake_create_task(coro):
-            scheduled["coro"] = coro
-            coro.close()
-            return Mock(name="task")
-
-        with patch(
-            "src.services.analytics.analytics.get_learnhouse_config",
-            return_value=_make_config(tinybird_config=tinybird_config),
-        ), patch("src.services.analytics.analytics.asyncio.create_task", side_effect=_fake_create_task) as mock_create_task:
-            await track(
-                "course_view",
-                org_id=11,
-                user_id=22,
-                session_id="session-1",
-                properties={"course_uuid": "course-1"},
-                source="web",
-                ip="127.0.0.1",
-            )
-
-        assert "coro" in scheduled
-        mock_create_task.assert_called_once()
+# The autouse ``analytics_queue`` fixture replaces ``_schedule``; keep the real one.
+_REAL_SCHEDULE = analytics._schedule
 
 
-class TestAnalyticsSendEvent:
-    @pytest.mark.asyncio
-    async def test_send_event_returns_when_client_unavailable(self):
-        with patch(
-            "src.services.analytics.analytics._get_ingest_client",
-            return_value=None,
-        ), patch("src.services.analytics.analytics.logger.warning") as mock_warning:
-            await _send_event(
-                "page_view",
-                org_id=1,
-                user_id=2,
-                session_id="session",
-                properties={},
-                source="api",
-                ip="",
-            )
+class TestBuildRow:
+    def test_uncatalogued_event_is_dropped(self):
+        assert analytics.build_row("made_up_event", 1) is None
 
-        mock_warning.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_send_event_logs_client_error_on_4xx(self):
-        response = SimpleNamespace(status_code=400, text="bad-request")
-        client = AsyncMock()
-        client.post.return_value = response
-
-        with patch(
-            "src.services.analytics.analytics._get_ingest_client",
-            return_value=client,
-        ), patch("src.services.analytics.analytics.datetime") as mock_datetime, patch(
-            "src.services.analytics.analytics.logger.error"
-        ) as mock_error:
-            mock_datetime.now.return_value = SimpleNamespace(strftime=Mock(return_value="2024-01-01 00:00:00"))
-            await _send_event("page_view", org_id=1, user_id=2, session_id="s", properties={}, source="api", ip="")
-
-        mock_error.assert_called_once()
-        assert mock_error.call_args.args[1] == 400
-
-    @pytest.mark.asyncio
-    async def test_send_event_posts_payload_and_logs_http_errors(self):
-        response = SimpleNamespace(status_code=500, text="failure-body")
-        client = AsyncMock()
-        client.post.return_value = response
-        fixed_now = SimpleNamespace(strftime=Mock(return_value="2024-01-02 03:04:05"))
-
-        with patch(
-            "src.services.analytics.analytics._get_ingest_client",
-            return_value=client,
-        ), patch(
-            "src.services.analytics.analytics.datetime"
-        ) as mock_datetime, patch("src.services.analytics.analytics.logger.warning") as mock_warning:
-            mock_datetime.now.return_value = fixed_now
-
-            await _send_event(
-                "course_completed",
-                org_id=7,
-                user_id=8,
-                session_id="session-2",
-                properties={"course_uuid": "course-2"},
-                source="api",
-                ip="10.0.0.1",
-            )
-
-        client.post.assert_awaited_once()
-        assert client.post.await_args.args == ("/v0/events?name=events",)
-        assert client.post.await_args.kwargs["json"] == {
-            "event_name": "course_completed",
-            "timestamp": "2024-01-02 03:04:05",
-            "org_id": 7,
-            "user_id": 8,
-            "session_id": "session-2",
-            "properties": '{"course_uuid": "course-2"}',
-            "source": "api",
-            "ip": "10.0.0.1",
-        }
-        mock_warning.assert_called_once_with(
-            "Tinybird ingest server error (%s): %s",
-            500,
-            "failure-body",
+    def test_columns_and_catalogued_properties(self):
+        row = analytics.build_row(
+            "activity_view",
+            org_id="7",
+            user_id=3,
+            session_id="s" * 80,
+            properties={
+                "course_uuid": "course_1",
+                "activity_uuid": 42,
+                "path": "",
+                "activity_type": "TYPE_VIDEO",
+                "email": "someone@example.com",
+                "seconds_spent": "12",
+            },
+            source="web",
+            country="fr",
+            device="mobile",
         )
+        assert row["org_id"] == 7
+        assert row["actor_key"] == "u:3"
+        assert len(row["session_id"]) == 64
+        assert row["course_uuid"] == "course_1"
+        assert row["activity_uuid"] == "42"
+        assert row["path"] is None
+        assert row["country"] == "FR"
+        assert row["device"] == "mobile"
+        assert row["seconds_spent"] == 12.0
+        # Only catalogued, non-column properties end up in JSONB.
+        assert row["properties"] == {"activity_type": "TYPE_VIDEO"}
 
-    @pytest.mark.asyncio
-    async def test_send_event_logs_exception_and_swallow_failure(self):
-        client = AsyncMock()
-        client.post.side_effect = RuntimeError("boom")
+    def test_anonymous_row_uses_given_actor_and_no_geo(self):
+        row = analytics.build_row("page_view", 1, actor_key="v:abc", properties={"path": "/x"})
+        assert row["user_id"] == 0
+        assert row["actor_key"] == "v:abc"
+        assert row["country"] is None and row["device"] is None
+        assert row["seconds_spent"] is None
 
-        with patch(
-            "src.services.analytics.analytics._get_ingest_client",
-            return_value=client,
-        ), patch("src.services.analytics.analytics.logger.warning") as mock_warning:
-            await _send_event(
-                "page_view",
-                org_id=1,
-                user_id=2,
-                session_id="session-3",
-                properties={"path": "/"},
-                source="api",
-                ip="127.0.0.1",
-            )
-
-        client.post.assert_awaited_once()
-        mock_warning.assert_called_once()
-        assert mock_warning.call_args.args[0] == "Failed to send analytics event %s"
-        assert mock_warning.call_args.args[1] == "page_view"
-        assert mock_warning.call_args.kwargs["exc_info"] is True
-
-
-class TestAnalyticsIngestClient:
-    def test_get_ingest_client_missing_config_returns_none(self):
-        with patch(
-            "src.services.analytics.analytics.get_learnhouse_config",
-            return_value=_make_config(),
-        ):
-            assert _get_ingest_client() is None
-
-    def test_get_ingest_client_builds_and_reuses_singleton(self):
-        tinybird_config = SimpleNamespace(api_url="https://tinybird.test", ingest_token="secret")
-        fake_client = Mock(name="async_client")
-
-        with patch(
-            "src.services.analytics.analytics.get_learnhouse_config",
-            return_value=_make_config(tinybird_config=tinybird_config),
-        ), patch("src.services.analytics.analytics.httpx.AsyncClient", return_value=fake_client) as mock_async_client, patch.object(
-            analytics_module,
-            "_ingest_client",
-            None,
-        ):
-            first = _get_ingest_client()
-            second = _get_ingest_client()
-
-        assert first is fake_client
-        assert second is fake_client
-        mock_async_client.assert_called_once_with(
-            base_url="https://tinybird.test",
-            headers={"Authorization": "Bearer secret"},
-            timeout=10.0,
+    def test_property_values_are_cleaned(self):
+        row = analytics.build_row(
+            "assignment_graded",
+            1,
+            user_id=1,
+            properties={
+                "grade": float("nan"),
+                "max_grade": 20,
+                "passed": True,
+                "assignment_uuid": "a" * 600,
+                "attempt": {"nested": 1},
+            },
         )
+        props = row["properties"]
+        assert "grade" not in props
+        assert props["max_grade"] == 20
+        assert props["passed"] is True
+        assert len(props["assignment_uuid"]) == analytics.MAX_STRING
 
+    @pytest.mark.parametrize(
+        "value,expected",
+        [("abc", None), (None, None), (-5, None), (0, None), (float("inf"), None), (99999, 14400.0), (30.5, 30.5)],
+    )
+    def test_seconds_spent(self, value, expected):
+        assert analytics._seconds(value) == expected
+
+    def test_clean_value_none(self):
+        assert analytics._clean_value(None) is None
+
+    def test_non_scalar_properties_are_dropped(self):
+        row = analytics.build_row("assignment_submitted", 1, user_id=1, properties={"attempt": {"n": 1}})
+        assert row["properties"] == {}
+
+
+class TestTrack:
+    async def test_track_queues_a_row(self, analytics_queue):
+        await analytics.track("course_enrolled", 1, user_id=2, properties={"course_uuid": "c"})
+        assert len(analytics_queue) == 1
+        assert analytics_queue[0]["event_name"] == "course_enrolled"
+
+    async def test_track_ignores_uncatalogued_events(self, analytics_queue):
+        await analytics.track("nope", 1)
+        assert analytics_queue == []
+
+    async def test_track_swallows_bad_input(self, analytics_queue):
+        await analytics.track("course_enrolled", org_id="not-a-number")
+        assert analytics_queue == []
+
+
+class TestQueue:
+    def test_enqueue_drops_when_full(self, analytics_queue):
+        analytics_queue.extend([{}] * analytics.MAX_QUEUED)
+        analytics.enqueue([{"x": 1}])
+        assert len(analytics_queue) == analytics.MAX_QUEUED
+
+    def test_enqueue_flushes_now_when_buffer_is_large(self, analytics_queue):
+        with patch.object(analytics, "_schedule") as schedule:
+            analytics.enqueue([{}] * analytics.MAX_BUFFER)
+            schedule.assert_called_once_with(0)
+            analytics.enqueue([{}])
+            schedule.assert_called_with(0)
+        analytics_queue.clear()
+        with patch.object(analytics, "_schedule") as schedule:
+            analytics.enqueue([{}])
+            schedule.assert_called_once_with(analytics.FLUSH_INTERVAL_SECONDS)
+
+    async def test_schedule_reuses_pending_delayed_flush(self):
+        with patch.object(analytics, "_flush_after", new=AsyncMock()) as flush_after:
+            _REAL_SCHEDULE(5)
+            first = analytics._flush_task
+            _REAL_SCHEDULE(5)
+            assert analytics._flush_task is first
+            _REAL_SCHEDULE(0)
+            assert analytics._flush_task is not first
+            await asyncio.gather(*list(analytics._background_tasks))
+        assert flush_after.await_count == 2
+
+    async def test_flush_after_waits_then_flushes(self):
+        with patch.object(analytics.asyncio, "sleep", new=AsyncMock()) as sleep, patch.object(
+            analytics, "flush", new=AsyncMock()
+        ) as flush:
+            await analytics._flush_after(1.0)
+            await analytics._flush_after(0)
+        sleep.assert_awaited_once_with(1.0)
+        assert flush.await_count == 2
+
+
+class TestFlush:
+    async def test_flush_with_empty_queue_is_a_no_op(self):
+        with patch("src.core.events.database._async_session_factory") as factory:
+            await analytics.flush()
+        factory.assert_not_called()
+
+    async def test_flush_writes_rows(self, engine, analytics_queue):
+        factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        await analytics.track("page_view", 1, actor_key="v:1", properties={"path": "/a"})
+        await analytics.track("course_enrolled", 1, user_id=4, properties={"course_uuid": "c1"})
+        with patch("src.core.events.database._async_session_factory", factory):
+            await analytics.flush()
+        assert analytics_queue == []
+        async with factory() as db:
+            rows = (await db.execute(text("SELECT event_name, user_id, path FROM analytics_event ORDER BY id"))).all()
+        assert rows == [("page_view", 0, "/a"), ("course_enrolled", 4, None)]
+
+    async def test_flush_swallows_database_errors(self, analytics_queue):
+        broken = MagicMock(side_effect=RuntimeError("db down"))
+        analytics_queue.append({"event_name": "page_view"})
+        with patch("src.core.events.database._async_session_factory", broken), patch.object(
+            analytics.logger, "warning"
+        ) as warning:
+            await analytics.flush()
+        warning.assert_called_once()
+        assert analytics_queue == []

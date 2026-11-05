@@ -534,12 +534,12 @@ async def test_run_analytics_detail_gates(registry, db, org, regular_user):
 def gates_open():
     from src.routers import analytics as router
 
-    tinybird = AsyncMock(return_value={"data": [], "rows": 0, "meta": []})
+    execute = AsyncMock(return_value={"data": [], "rows": 0, "meta": []})
     with patch.object(router, "_verify_org_membership", new_callable=AsyncMock), \
             patch.object(router, "_verify_org_admin", new_callable=AsyncMock), \
-            patch.object(router, "_execute_tinybird_query", tinybird), \
+            patch.object(router, "_execute_query", execute), \
             patch.object(runner, "get_org_plan", new_callable=AsyncMock, return_value="pro"):
-        yield tinybird
+        yield execute
 
 
 async def test_runner_detail_query_gates(db, org, course, gates_open):

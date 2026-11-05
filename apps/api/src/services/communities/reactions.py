@@ -18,6 +18,8 @@ from src.security.rbac import check_resource_access, AccessAction, authorization
 from src.services.communities.moderation import get_community_settings
 from src.services.communities.access import require_community_participant
 from src.security.auth import resolve_acting_user_id
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 
 async def get_reactions(
@@ -185,4 +187,14 @@ async def toggle_reaction(
         )
         db_session.add(reaction)
         await db_session.commit()
+        await track(
+            event_name=analytics_events.REACTION_ADDED,
+            org_id=community.org_id,
+            user_id=reactor_id,
+            properties={
+                "community_uuid": community.community_uuid,
+                "discussion_uuid": discussion.discussion_uuid,
+                "reaction": emoji[:32],
+            },
+        )
         return {"action": "added", "emoji": emoji}

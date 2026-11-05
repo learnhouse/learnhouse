@@ -4153,7 +4153,8 @@
           "automations": "Automatyzacje",
           "menu": "Menu",
           "danger": "Strefa Zagrożenia",
-          "course_end": "Ukończenie kursu"
+          "course_end": "Ukończenie kursu",
+          "analytics": "Analityka"
         },
         "pages": {
           "general": {
@@ -4210,6 +4211,10 @@
           "course_end": {
             "title": "Ukończenie kursu",
             "subtitle": "Dostosuj ekran, który uczniowie widzą po ukończeniu kursu"
+          },
+          "analytics": {
+            "title": "Analityka",
+            "subtitle": "Wybierz, jak długo przechowywać dane analityczne i co jest zbierane"
           }
         },
         "name": "Nazwa organizacji",
@@ -5618,6 +5623,48 @@
         "button_link_help": "Ścieżka wewnętrzna, np. /courses, lub pełny adres URL https://. Zostaw puste, aby linkować do katalogu kursów.",
         "link_invalid": "Użyj ścieżki wewnętrznej zaczynającej się od / lub pełnego adresu URL http(s)",
         "preview": "Podgląd"
+      },
+      "analytics_settings": {
+        "title": "Dane analityczne",
+        "subtitle": "Przechowywanie danych i prywatność w analityce Twojej organizacji",
+        "save": "Zapisz",
+        "saving": "Zapisywanie...",
+        "saved": "Ustawienia analityki zapisane",
+        "error": "Nie udało się zapisać ustawień analityki",
+        "load_error": "Nie udało się wczytać ustawień analityki",
+        "admin_only": "Tylko administratorzy organizacji mogą zmieniać ustawienia analityki.",
+        "retention_title": "Przechowywanie danych",
+        "retention_description": "Jak długo zdarzenia analityczne są przechowywane przed usunięciem.",
+        "retention_note": "Skrócenie okresu przechowywania usuwa starsze dane podczas najbliższego nocnego czyszczenia.",
+        "retention_default": "{{label}} (domyślnie)",
+        "retention_options": {
+          "days_90": "90 dni",
+          "days_180": "6 miesięcy",
+          "days_365": "1 rok",
+          "days_730": "2 lata",
+          "days_1095": "3 lata",
+          "days_1825": "5 lat",
+          "days_2555": "7 lat",
+          "days_n": "{{count}} dni"
+        },
+        "extended_locked": "Przechowywanie danych dłużej niż rok jest dostępne w planie Enterprise.",
+        "privacy_title": "Prywatność",
+        "track_anonymous": "Licz niezalogowanych odwiedzających",
+        "track_anonymous_description": "Uwzględniaj wyświetlenia stron i kursów przez osoby bez konta. Są liczone bez plików cookie, z anonimowym identyfikatorem zmieniającym się codziennie.",
+        "collect_location": "Zapisuj kraj odwiedzającego",
+        "collect_location_description": "Zapisuj, z jakiego kraju pochodzi wizyta. Adresy IP nigdy nie są przechowywane.",
+        "exclude_staff": "Pomijaj administratorów i opiekunów w statystykach",
+        "exclude_staff_description": "Wyświetlenia osób zarządzających organizacją nie są liczone, więc Twoje własne testy nie zaburzają wyników.",
+        "export_title": "Pobierz surowe zdarzenia (CSV)",
+        "export_description": "Wszystkie zapisane zdarzenia analityczne z wybranego okresu, jeden wiersz na zdarzenie.",
+        "export_period": "Okres eksportu",
+        "export_last_days": "Ostatnie {{count}} dni",
+        "export_all": "Wszystko, co przechowywane",
+        "export_button": "Pobierz CSV",
+        "exporting": "Przygotowywanie pobierania...",
+        "export_done": "Pobieranie rozpoczęte",
+        "export_error": "Nie udało się wyeksportować zdarzeń analitycznych",
+        "export_locked": "Eksport surowych zdarzeń jest dostępny w planie Enterprise."
       }
     },
     "users": {
@@ -8351,6 +8398,7 @@
     "unsaved_changes_warning": "Masz niezapisane zmiany. Opuścić stronę bez zapisywania?"
   },
   "analytics": {
+    "data_kept": "Dane przechowywane: {{period}}",
     "title": "Analityka",
     "subtitle": "Statystyki dotyczące uczniów i treści",
     "tabs": {
@@ -8420,7 +8468,12 @@
       "courses": "Kursy",
       "count": "Liczba",
       "active_users_last_5_minutes": "Aktywni użytkownicy w ciągu ostatnich 5 minut",
-      "course_fallback_name": "Kurs {{uuid}}"
+      "course_fallback_name": "Kurs {{uuid}}",
+      "visitors": "Odwiedzający",
+      "signed_in_learners": "Zalogowani uczniowie",
+      "traffic": "Ruch",
+      "page_views_count": "Odsłony: {{value}}",
+      "vs_previous_period": "vs poprzedni okres"
     },
     "modals": {
       "live_users": {

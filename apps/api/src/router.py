@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from src.routers import admin as admin_router_module
 from src.routers import analytics as analytics_router_module
 from src.routers import audit as audit_router_module
+from src.routers import signals as signals_router_module
 from src.routers import code_execution
 from src.routers import code_submissions
 from src.routers import health
@@ -385,6 +386,15 @@ v1_router.include_router(
     dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
 )
 
+# Analytics collection takes anonymous visitors too; it has its own checks.
+v1_router.include_router(signals_router_module.router, prefix="/signals", tags=["analytics"])
+v1_router.include_router(signals_router_module.legacy_router, prefix="/analytics", tags=["analytics"])
+v1_router.include_router(
+    signals_router_module.settings_router,
+    prefix="/analytics",
+    tags=["analytics"],
+    dependencies=[Depends(require_authenticated_user)],
+)
 v1_router.include_router(
     analytics_router_module.router,
     prefix="/analytics",

@@ -4057,7 +4057,8 @@
           "automations": "Otomasyonlar",
           "menu": "Menü",
           "danger": "Tehlike Bölgesi",
-          "course_end": "Kurs tamamlama"
+          "course_end": "Kurs tamamlama",
+          "analytics": "Analitik"
         },
         "pages": {
           "general": {
@@ -4114,6 +4115,10 @@
           "course_end": {
             "title": "Kurs tamamlama",
             "subtitle": "Öğrencilerin bir kursu bitirdiklerinde gördükleri ekranı özelleştirin"
+          },
+          "analytics": {
+            "title": "Analitik",
+            "subtitle": "Analitik verilerinin ne kadar süre saklanacağını ve nelerin toplanacağını seçin"
           }
         },
         "name": "Organizasyon Adı",
@@ -5506,6 +5511,48 @@
         "button_link_help": "/courses gibi bir dahili yol veya tam bir https:// URL'si. Kurs kataloğunuza bağlamak için boş bırakın.",
         "link_invalid": "/ ile başlayan bir dahili yol veya tam bir http(s) URL'si kullanın",
         "preview": "Önizleme"
+      },
+      "analytics_settings": {
+        "title": "Analitik verileri",
+        "subtitle": "Kuruluşunuzun analitiği için saklama ve gizlilik",
+        "save": "Kaydet",
+        "saving": "Kaydediliyor...",
+        "saved": "Analitik ayarları kaydedildi",
+        "error": "Analitik ayarları kaydedilemedi",
+        "load_error": "Analitik ayarları yüklenemedi",
+        "admin_only": "Analitik ayarlarını yalnızca kuruluş yöneticileri değiştirebilir.",
+        "retention_title": "Veri saklama",
+        "retention_description": "Analitik olaylarının silinmeden önce ne kadar süre saklanacağı.",
+        "retention_note": "Saklama süresini kısaltmak, eski verileri bir sonraki gece temizliğinde siler.",
+        "retention_default": "{{label}} (varsayılan)",
+        "retention_options": {
+          "days_90": "90 gün",
+          "days_180": "6 ay",
+          "days_365": "1 yıl",
+          "days_730": "2 yıl",
+          "days_1095": "3 yıl",
+          "days_1825": "5 yıl",
+          "days_2555": "7 yıl",
+          "days_n": "{{count}} gün"
+        },
+        "extended_locked": "Verileri bir yıldan uzun saklamak Enterprise planında kullanılabilir.",
+        "privacy_title": "Gizlilik",
+        "track_anonymous": "Oturum açmamış ziyaretçileri say",
+        "track_anonymous_description": "Hesabı olmayan kişilerin sayfa ve kurs görüntülemelerini dahil edin. Çerez kullanılmadan, her gün değişen anonim bir kimlikle sayılırlar.",
+        "collect_location": "Ziyaretçi ülkesini sakla",
+        "collect_location_description": "Bir ziyaretin hangi ülkeden geldiğini kaydedin. IP adresleri asla saklanmaz.",
+        "exclude_staff": "Yöneticileri ve bakımcıları istatistiklerin dışında tut",
+        "exclude_staff_description": "Kuruluşu yöneten kişilerin görüntülemeleri sayılmaz, böylece kendi testleriniz rakamları bozmaz.",
+        "export_title": "Ham olayları indir (CSV)",
+        "export_description": "Seçilen dönemdeki tüm saklanan analitik olayları, olay başına bir satır.",
+        "export_period": "Dışa aktarma dönemi",
+        "export_last_days": "Son {{count}} gün",
+        "export_all": "Saklanan her şey",
+        "export_button": "CSV indir",
+        "exporting": "İndirme hazırlanıyor...",
+        "export_done": "İndirme başladı",
+        "export_error": "Analitik olayları dışa aktarılamadı",
+        "export_locked": "Ham olayları dışa aktarma Enterprise planında kullanılabilir."
       }
     },
     "users": {
@@ -8211,6 +8258,7 @@
     "unsaved_changes_warning": "Kaydedilmemiş değişiklikleriniz var. Kaydetmeden ayrılınsın mı?"
   },
   "analytics": {
+    "data_kept": "Veriler {{period}} saklanır",
     "title": "Analitik",
     "subtitle": "Öğrencileriniz ve içerikleriniz hakkında bilgiler",
     "tabs": {
@@ -8280,7 +8328,12 @@
       "courses": "Kurslar",
       "count": "Sayı",
       "active_users_last_5_minutes": "Son 5 dakikadaki aktif kullanıcılar",
-      "course_fallback_name": "Kurs {{uuid}}"
+      "course_fallback_name": "Kurs {{uuid}}",
+      "visitors": "Ziyaretçiler",
+      "signed_in_learners": "Giriş yapmış öğrenciler",
+      "traffic": "Trafik",
+      "page_views_count": "{{value}} sayfa görüntüleme",
+      "vs_previous_period": "önceki döneme göre"
     },
     "modals": {
       "live_users": {

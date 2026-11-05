@@ -34,6 +34,12 @@ def _no_webhooks():
         yield mock
 
 
+@pytest.fixture(autouse=True)
+def _no_analytics():
+    with patch("src.services.paths.paths.track", new_callable=AsyncMock) as mock:
+        yield mock
+
+
 async def _course(db, org, idx: int, *, published: bool = True, public: bool = True) -> Course:
     """A course with one published activity, so it can be completed."""
     now = str(datetime.now())
@@ -288,7 +294,9 @@ class TestCompletion:
         assert [i.locked for i in view.courses] == [False, False, True]
         assert view.courses[0].completed and view.courses[0].progress == 100
 
-    async def test_enroll_then_finish_issues_certificate(self, db, org, admin_user, regular_user, _no_webhooks):
+    async def test_enroll_then_finish_issues_certificate(
+        self, db, org, admin_user, regular_user, _no_webhooks, _no_analytics
+    ):
         a, b = await _course(db, org, 1), await _course(db, org, 2)
         read = await _path(db, org, admin_user, [(a, True), (b, True)], certificate_enabled=True)
 
@@ -309,6 +317,14 @@ class TestCompletion:
         assert view.progress.certificate_uuid == cert.certificate_uuid
         events = [call.kwargs["event_name"] for call in _no_webhooks.await_args_list]
         assert events == ["path_enrolled", "path_completed"]
+        tracked = [
+            (c.kwargs["event_name"], c.kwargs["org_id"], c.kwargs["user_id"], c.kwargs["properties"])
+            for c in _no_analytics.await_args_list
+        ]
+        assert tracked == [
+            ("path_enrolled", org.id, regular_user.id, {"path_uuid": read.path_uuid}),
+            ("path_completed", org.id, regular_user.id, {"path_uuid": read.path_uuid}),
+        ]
 
         verified = await svc.get_path_certificate(None, cert.certificate_uuid, db)
         assert verified["path"]["name"] == "Data Path"

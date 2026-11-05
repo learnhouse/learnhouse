@@ -4057,7 +4057,8 @@
           "automations": "Automatisierungen",
           "menu": "Menü",
           "danger": "Gefahrenzone",
-          "course_end": "Kursabschluss"
+          "course_end": "Kursabschluss",
+          "analytics": "Analytik"
         },
         "pages": {
           "general": {
@@ -4114,6 +4115,10 @@
           "course_end": {
             "title": "Kursabschluss",
             "subtitle": "Passen Sie den Bildschirm an, den Lernende beim Abschluss eines Kurses sehen"
+          },
+          "analytics": {
+            "title": "Analytik",
+            "subtitle": "Legen Sie fest, wie lange Analysedaten aufbewahrt werden und was erfasst wird"
           }
         },
         "name": "Organisations-Name",
@@ -5506,6 +5511,48 @@
         "button_link_help": "Ein interner Pfad wie /courses oder eine vollständige https://-URL. Leer lassen, um auf Ihren Kurskatalog zu verlinken.",
         "link_invalid": "Verwenden Sie einen internen Pfad, der mit / beginnt, oder eine vollständige http(s)-URL",
         "preview": "Vorschau"
+      },
+      "analytics_settings": {
+        "title": "Analysedaten",
+        "subtitle": "Aufbewahrung und Datenschutz für die Analytik Ihrer Organisation",
+        "save": "Speichern",
+        "saving": "Wird gespeichert...",
+        "saved": "Analytik-Einstellungen gespeichert",
+        "error": "Die Analytik-Einstellungen konnten nicht gespeichert werden",
+        "load_error": "Die Analytik-Einstellungen konnten nicht geladen werden",
+        "admin_only": "Nur Administratoren der Organisation können die Analytik-Einstellungen ändern.",
+        "retention_title": "Datenaufbewahrung",
+        "retention_description": "Wie lange Analyse-Ereignisse aufbewahrt werden, bevor sie gelöscht werden.",
+        "retention_note": "Eine kürzere Aufbewahrung löscht ältere Daten bei der nächsten nächtlichen Bereinigung.",
+        "retention_default": "{{label}} (Standard)",
+        "retention_options": {
+          "days_90": "90 Tage",
+          "days_180": "6 Monate",
+          "days_365": "1 Jahr",
+          "days_730": "2 Jahre",
+          "days_1095": "3 Jahre",
+          "days_1825": "5 Jahre",
+          "days_2555": "7 Jahre",
+          "days_n": "{{count}} Tage"
+        },
+        "extended_locked": "Daten länger als ein Jahr aufzubewahren ist im Enterprise-Tarif verfügbar.",
+        "privacy_title": "Datenschutz",
+        "track_anonymous": "Nicht angemeldete Besucher zählen",
+        "track_anonymous_description": "Seiten- und Kursaufrufe von Personen ohne Konto einbeziehen. Sie werden ohne Cookies gezählt, mit einer anonymen ID, die sich täglich ändert.",
+        "collect_location": "Land der Besucher speichern",
+        "collect_location_description": "Erfassen, aus welchem Land ein Besuch kommt. IP-Adressen werden nie gespeichert.",
+        "exclude_staff": "Admins und Maintainer aus der Statistik ausschließen",
+        "exclude_staff_description": "Aufrufe von Personen, die die Organisation verwalten, werden nicht gezählt, damit Ihre eigenen Tests die Zahlen nicht verfälschen.",
+        "export_title": "Rohdaten-Ereignisse herunterladen (CSV)",
+        "export_description": "Alle gespeicherten Analyse-Ereignisse im gewählten Zeitraum, eine Zeile pro Ereignis.",
+        "export_period": "Exportzeitraum",
+        "export_last_days": "Letzte {{count}} Tage",
+        "export_all": "Alles Gespeicherte",
+        "export_button": "CSV herunterladen",
+        "exporting": "Download wird vorbereitet...",
+        "export_done": "Download gestartet",
+        "export_error": "Die Analyse-Ereignisse konnten nicht exportiert werden",
+        "export_locked": "Der Export der Rohdaten-Ereignisse ist im Enterprise-Tarif verfügbar."
       }
     },
     "users": {
@@ -8211,6 +8258,7 @@
     "unsaved_changes_warning": "Sie haben ungespeicherte Änderungen. Ohne Speichern verlassen?"
   },
   "analytics": {
+    "data_kept": "Daten gespeichert: {{period}}",
     "title": "Analytik",
     "subtitle": "Einblicke in Ihre Lernenden und Inhalte",
     "tabs": {
@@ -8280,7 +8328,12 @@
       "courses": "Kurse",
       "count": "Anzahl",
       "active_users_last_5_minutes": "Aktive Benutzer in den letzten 5 Minuten",
-      "course_fallback_name": "Kurs {{uuid}}"
+      "course_fallback_name": "Kurs {{uuid}}",
+      "visitors": "Besucher",
+      "signed_in_learners": "Angemeldete Lernende",
+      "traffic": "Traffic",
+      "page_views_count": "{{value}} Seitenaufrufe",
+      "vs_previous_period": "ggü. Vorperiode"
     },
     "modals": {
       "live_users": {

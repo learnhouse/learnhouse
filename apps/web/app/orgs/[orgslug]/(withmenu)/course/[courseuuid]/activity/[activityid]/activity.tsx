@@ -301,6 +301,7 @@ function ActivityClient(props: ActivityClientProps) {
           track(AnalyticsEvent.TimeOnActivity, {
             activity_uuid: activityUuidForTracking,
             course_uuid: courseUuidForTracking,
+            activity_type: activityTypeForTracking,
             seconds_spent: seconds,
           })
         }

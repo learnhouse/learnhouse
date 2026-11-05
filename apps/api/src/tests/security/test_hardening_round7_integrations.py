@@ -239,7 +239,7 @@ class TestEnrichmentOrgScope:
         user = PublicUser(id=1, user_uuid="user_x", username="u", first_name="", last_name="", email="u@example.com")
         with patch.object(analytics_router, "_verify_org_membership", new_callable=AsyncMock), \
              patch.object(analytics_router, "_verify_org_admin", new_callable=AsyncMock), \
-             patch.object(analytics_router, "_execute_tinybird_query", new_callable=AsyncMock,
+             patch.object(analytics_router, "_execute_query", new_callable=AsyncMock,
                           return_value={"data": [{"course_uuid": "c"}]}), \
              patch.object(analytics_router, "_enrich_with_metadata", enrich):
             await analytics_router.query_dashboard(

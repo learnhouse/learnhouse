@@ -127,7 +127,9 @@ class TestCommunityCommentsAndVotes:
             "src.services.communities.comments.get_user_votes_for_comments",
             new_callable=AsyncMock,
             return_value={},
-        ):
+        ), patch(
+            "src.services.communities.comments.track", new_callable=AsyncMock
+        ) as mock_track:
             created = await create_comment(
                 mock_request,
                 discussion.discussion_uuid,
@@ -152,6 +154,16 @@ class TestCommunityCommentsAndVotes:
         assert created.content == "First comment"
         assert comments[0].author.username == regular_user.username
         assert updated.content == "Edited comment"
+        # Only the new comment counts; editing it is not another post.
+        mock_track.assert_awaited_once_with(
+            event_name="comment_posted",
+            org_id=community.org_id,
+            user_id=regular_user.id,
+            properties={
+                "community_uuid": community.community_uuid,
+                "discussion_uuid": "discussion_a",
+            },
+        )
         # get_comment_count now enforces community read access; mock it for the
         # count assertions. A missing discussion raises 404 (was: returned 0).
         with patch(

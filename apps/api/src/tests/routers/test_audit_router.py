@@ -484,19 +484,18 @@ class TestDossierRichSections:
 
 
 class TestBehaviorEnrichment:
-    async def test_behavior_fetcher_runs_when_configured(self, client, regular_user, seed_activity):
-        """A configured read client populates the behavior sections."""
-        class _FakeResp:
-            def raise_for_status(self): pass
-            def json(self): return {"data": [{"total_seconds": 120}]}
+    async def test_behavior_fetcher_runs_the_user_queries(self, client, regular_user, seed_activity):
+        """Each per-user query runs with the target's ids and fills its section."""
+        from src.services.analytics.queries import USER_QUERIES
 
-        class _FakeClient:
-            async def post(self, *a, **k): return _FakeResp()
-
-        with _bypass_plan(), patch("src.routers.audit._get_read_client", return_value=_FakeClient()):
-            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
+        run_query = AsyncMock(side_effect=lambda sql, params: [{"total_seconds": 120}])
+        with _bypass_plan(), patch("src.routers.audit.store.run_query", run_query):
+            resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1&days=30")
         assert resp.status_code == 200
         assert resp.json()["behavior"]["user_time_total"] == [{"total_seconds": 120}]
+        assert run_query.await_count == len(USER_QUERIES)
+        for call in run_query.await_args_list:
+            assert call.args[1] == {"org_id": 1, "user_id": regular_user.id, "days": 30}
 
 
 class TestParamValidation:
@@ -579,22 +578,21 @@ class TestPlanAndTargetGuards:
 
 class TestBehaviorFetcherEdgeCases:
     async def test_query_failure_yields_empty_section(self, client, regular_user, seed_activity):
-        """A failing Tinybird query degrades that section to [] instead of erroring."""
-        class _BoomClient:
-            async def post(self, *a, **k):
-                raise RuntimeError("tinybird down")
-
-        with _bypass_plan(), patch("src.routers.audit._get_read_client", return_value=_BoomClient()):
+        """A failing analytics query degrades that section to [] instead of erroring."""
+        with _bypass_plan(), patch(
+            "src.routers.audit.store.run_query", new_callable=AsyncMock, side_effect=RuntimeError("db down")
+        ):
             resp = await client.get(f"/api/v1/audit/user/{regular_user.id}?org_id=1")
         assert resp.status_code == 200
         assert resp.json()["behavior"]["user_time_total"] == []
 
-    def test_build_user_sql_rejects_non_int(self):
-        from src.routers.audit import _build_user_sql
+    def test_user_params_rejects_non_int(self):
+        from src.routers.audit import _user_params
         import pytest as _pytest
         from fastapi import HTTPException
+        assert _user_params(1, 2, 30) == {"org_id": 1, "user_id": 2, "days": 30}
         with _pytest.raises(HTTPException):
-            _build_user_sql("SELECT {user_id}", 1, "not-int", 30)  # type: ignore[arg-type]
+            _user_params(1, "not-int", 30)  # type: ignore[arg-type]
 
 
 class TestExportCsvRows:
@@ -655,7 +653,7 @@ class TestExportCsvRows:
         assert "'=cmd|" in resp.text
 
     def test_behavior_sections_reach_the_csv(self):
-        """The Tinybird sections are part of the record too, resolved to names."""
+        """The behavioral sections are part of the record too, resolved to names."""
         from src.routers.audit import _dossier_to_csv_rows
 
         rows = list(_dossier_to_csv_rows({

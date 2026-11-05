@@ -4027,7 +4027,8 @@
           "automations": "Otomatisasi",
           "menu": "Menu",
           "danger": "Zona Bahaya",
-          "course_end": "Penyelesaian kursus"
+          "course_end": "Penyelesaian kursus",
+          "analytics": "Analitik"
         },
         "pages": {
           "general": {
@@ -4084,6 +4085,10 @@
           "course_end": {
             "title": "Penyelesaian kursus",
             "subtitle": "Sesuaikan layar yang dilihat pelajar saat menyelesaikan kursus"
+          },
+          "analytics": {
+            "title": "Analitik",
+            "subtitle": "Pilih berapa lama data analitik disimpan dan apa yang dikumpulkan"
           }
         },
         "name": "Nama Organisasi",
@@ -5471,6 +5476,48 @@
         "button_link_help": "Path internal seperti /courses, atau URL https:// lengkap. Biarkan kosong untuk menautkan ke katalog kursus Anda.",
         "link_invalid": "Gunakan path internal yang diawali / atau URL http(s) lengkap",
         "preview": "Pratinjau"
+      },
+      "analytics_settings": {
+        "title": "Data analitik",
+        "subtitle": "Penyimpanan dan privasi untuk analitik organisasi Anda",
+        "save": "Simpan",
+        "saving": "Menyimpan...",
+        "saved": "Pengaturan analitik disimpan",
+        "error": "Tidak dapat menyimpan pengaturan analitik",
+        "load_error": "Tidak dapat memuat pengaturan analitik",
+        "admin_only": "Hanya admin organisasi yang dapat mengubah pengaturan analitik.",
+        "retention_title": "Penyimpanan data",
+        "retention_description": "Berapa lama peristiwa analitik disimpan sebelum dihapus.",
+        "retention_note": "Memperpendek masa penyimpanan akan menghapus data lama pada pembersihan malam berikutnya.",
+        "retention_default": "{{label}} (default)",
+        "retention_options": {
+          "days_90": "90 hari",
+          "days_180": "6 bulan",
+          "days_365": "1 tahun",
+          "days_730": "2 tahun",
+          "days_1095": "3 tahun",
+          "days_1825": "5 tahun",
+          "days_2555": "7 tahun",
+          "days_n": "{{count}} hari"
+        },
+        "extended_locked": "Menyimpan data lebih dari setahun tersedia di paket Enterprise.",
+        "privacy_title": "Privasi",
+        "track_anonymous": "Hitung pengunjung yang belum masuk",
+        "track_anonymous_description": "Sertakan tampilan halaman dan kursus dari orang tanpa akun. Mereka dihitung tanpa cookie, dengan ID anonim yang berganti setiap hari.",
+        "collect_location": "Simpan negara pengunjung",
+        "collect_location_description": "Catat dari negara mana kunjungan berasal. Alamat IP tidak pernah disimpan.",
+        "exclude_staff": "Kecualikan admin dan pengelola dari statistik",
+        "exclude_staff_description": "Tampilan dari orang yang mengelola organisasi tidak dihitung, sehingga pengujian Anda sendiri tidak memengaruhi angka.",
+        "export_title": "Unduh peristiwa mentah (CSV)",
+        "export_description": "Semua peristiwa analitik yang tersimpan untuk periode yang dipilih, satu baris per peristiwa.",
+        "export_period": "Periode ekspor",
+        "export_last_days": "{{count}} hari terakhir",
+        "export_all": "Semua yang disimpan",
+        "export_button": "Unduh CSV",
+        "exporting": "Menyiapkan unduhan...",
+        "export_done": "Unduhan dimulai",
+        "export_error": "Tidak dapat mengekspor peristiwa analitik",
+        "export_locked": "Ekspor peristiwa mentah tersedia di paket Enterprise."
       }
     },
     "users": {
@@ -8162,6 +8209,7 @@
     "unsaved_changes_warning": "Anda memiliki perubahan yang belum disimpan. Keluar tanpa menyimpan?"
   },
   "analytics": {
+    "data_kept": "Data disimpan {{period}}",
     "title": "Analitik",
     "subtitle": "Wawasan tentang pelajar dan konten Anda",
     "tabs": {
@@ -8231,7 +8279,12 @@
       "courses": "Kursus",
       "count": "Jumlah",
       "active_users_last_5_minutes": "Pengguna aktif dalam 5 menit terakhir",
-      "course_fallback_name": "Kursus {{uuid}}"
+      "course_fallback_name": "Kursus {{uuid}}",
+      "visitors": "Pengunjung",
+      "signed_in_learners": "Pelajar yang masuk",
+      "traffic": "Lalu lintas",
+      "page_views_count": "{{value}} tampilan halaman",
+      "vs_previous_period": "vs periode sebelumnya"
     },
     "modals": {
       "live_users": {
