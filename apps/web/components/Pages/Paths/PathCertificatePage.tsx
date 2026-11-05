@@ -15,6 +15,7 @@ import { getAbsoluteUriWithOrg, getUriWithOrg } from '@services/config/config'
 import { getPathCertificate, removePathPrefix } from '@services/paths/paths'
 import { queryKeys } from '@/lib/query/keys'
 import { formatDate } from '@/lib/format'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 function PathCertificatePage({ orgslug, certificateUuid }: { orgslug: string; certificateUuid: string }) {
   const { t, i18n } = useTranslation()
@@ -24,6 +25,12 @@ function PathCertificatePage({ orgslug, certificateUuid }: { orgslug: string; ce
     queryFn: () => getPathCertificate(certificateUuid),
     retry: false,
   })
+
+  useTrackView(
+    AnalyticsEvent.CertificateViewed,
+    { certificate_uuid: data?.certificate?.certificate_uuid, source: 'path' },
+    !!data?.certificate,
+  )
 
   if (isLoading) return <CertificateShowcaseSkeleton />
   if (isError || !data) {

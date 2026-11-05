@@ -1409,6 +1409,16 @@ async def invite_batch_users(
     skipped = sum(1 for r in results if r["status"] == "already_invited")
     invalid = sum(1 for r in results if r["status"] == "invalid_email")
 
+    # One event per admin action. Failed emails still count: the invite is
+    # recorded and can be resent; already-pending and malformed ones don't.
+    if sent + failed:
+        await track(
+            event_name=analytics_events.USER_INVITED,
+            org_id=org_id,
+            user_id=acting_user_id,
+            properties={"invite_method": "email", "count": sent + failed},
+        )
+
     await dispatch_webhooks(
         event_name="user_invited_to_org",
         org_id=org_id,

@@ -27,6 +27,12 @@ export enum AnalyticsEvent {
   PageViewed = 'page_view',
   VideoProgress = 'video_progress',
   PodcastEpisodePlayed = 'podcast_episode_played',
+  PodcastEpisodeProgress = 'podcast_episode_progress',
+  PathViewed = 'path_viewed',
+  LibraryResourceOpened = 'library_resource_opened',
+  // Also backend events, grouped with their feature below: BoardViewed,
+  // PlaygroundViewed, CertificateViewed, AiAssistantOpened, CommunityViewed,
+  // CourseShared, OfferViewed.
 
   // ── Auth & onboarding ─────────────────────────────────────────────────────
   SignupSubmitted = 'signup_submitted',
@@ -270,15 +276,23 @@ export const BACKEND_EVENTS: ReadonlySet<AnalyticsEvent> = new Set([
   AnalyticsEvent.CourseShared,
   AnalyticsEvent.OfferViewed,
   AnalyticsEvent.CommunityViewed,
+  AnalyticsEvent.BoardViewed,
+  AnalyticsEvent.PlaygroundViewed,
+  AnalyticsEvent.PathViewed,
+  AnalyticsEvent.PodcastEpisodeProgress,
+  AnalyticsEvent.CertificateViewed,
+  AnalyticsEvent.LibraryResourceOpened,
   // Signed-in org members only
   AnalyticsEvent.TimeOnActivity,
   AnalyticsEvent.VideoProgress,
+  AnalyticsEvent.AiAssistantOpened,
 ])
 
 /** Backend events the API only keeps for signed-in members. */
 export const MEMBER_ONLY_BACKEND_EVENTS: ReadonlySet<AnalyticsEvent> = new Set([
   AnalyticsEvent.TimeOnActivity,
   AnalyticsEvent.VideoProgress,
+  AnalyticsEvent.AiAssistantOpened,
 ])
 
 /**
@@ -291,6 +305,7 @@ export const BACKEND_ONLY_EVENTS: ReadonlySet<AnalyticsEvent> = new Set([
   AnalyticsEvent.SearchQuery,
   AnalyticsEvent.PodcastEpisodePlayed,
   AnalyticsEvent.VideoProgress,
+  AnalyticsEvent.PodcastEpisodeProgress,
 ])
 
 /**
@@ -308,6 +323,7 @@ const GROUP_PREFIXES: Array<[string, string[]]> = [
   ['playground', ['playground_']],
   ['board', ['board_']],
   ['library', ['library_', 'folder_', 'media_', 'resource_', 'usergroup_']],
+  ['path', ['path_']],
   ['search', ['search_']],
   ['copilot', ['copilot_', 'ai_assistant', 'ai_message']],
   ['certificate', ['certificate_', 'trail_']],

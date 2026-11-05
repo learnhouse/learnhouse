@@ -641,7 +641,9 @@ class TestOrgUsersService:
         ), patch(
             "src.services.orgs.users.dispatch_webhooks",
             new_callable=AsyncMock,
-        ) as dispatch_mock:
+        ) as dispatch_mock, patch(
+            "src.services.orgs.users.track", new_callable=AsyncMock
+        ) as mock_track:
             result = await invite_batch_users(
                 mock_request,
                 org.id,
@@ -665,6 +667,14 @@ class TestOrgUsersService:
         ]
         assert fake_redis.set.call_count == 2
         dispatch_mock.assert_awaited_once()
+        # One event for the whole batch; the already-pending address is not
+        # counted, the failed email is (its invite is recorded).
+        mock_track.assert_awaited_once_with(
+            event_name="user_invited",
+            org_id=org.id,
+            user_id=admin_user.id,
+            properties={"invite_method": "email", "count": 2},
+        )
 
     @pytest.mark.asyncio
     async def test_get_and_remove_invited_users_redis_paths(
@@ -1325,6 +1335,35 @@ class TestOrgUsersService:
 
         assert result["summary"]["sent"] == 1
         assert result["summary"]["already_invited"] == 1
+
+        with patch(
+            "src.services.orgs.users.get_learnhouse_config",
+            return_value=fake_config,
+        ), patch(
+            "src.services.orgs.users.redis.Redis.from_url",
+            return_value=fake_redis,
+        ), patch(
+            "src.services.orgs.users.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.check_members_limit_with_pending",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.enforce_free_tier_age_gate",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.users.track", new_callable=AsyncMock
+        ) as mock_track:
+            again = await invite_batch_users(
+                mock_request, org.id, "existing@test.com", "invite_uuid", db, admin_user
+            )
+
+        # Nobody new was invited, so nothing is tracked.
+        assert again["summary"]["already_invited"] == 1
+        mock_track.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_invite_batch_users_rejects_malformed_and_oversized(

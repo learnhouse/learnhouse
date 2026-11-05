@@ -6,12 +6,15 @@ counts what it claims to. This script does:
 
 1. Seed a small, deterministic event history (two orgs, signed-in users,
    anonymous visitors, enrollments, completions, time spent, searches,
-   signups, certificates, discussions) spread over ~60 days.
+   signups, certificates, discussions) spread over ~60 days, plus per-feature
+   events (video and podcast progress, assessments, community, AI, sign-in
+   methods, paths, boards, playgrounds, content creation, nudges, library).
 2. Rebuild the summary tables with ``maintenance.refresh_rollups``.
 3. Run every catalog query (org, course, course detail, per-user audit and
    superadmin) for one org and for all orgs, through ``store.run_query``.
 4. Check known values: visitors count individually in traffic metrics, the
-   anonymous ``user_id = 0`` is never reported as a learner.
+   anonymous ``user_id = 0`` is never reported as a learner, and the
+   per-feature queries count what they claim to.
 
 Run from apps/api against a migrated database:
 
@@ -168,6 +171,135 @@ def seed_events() -> list[dict]:
     return rows
 
 
+VID = "course_aq_vid"
+
+
+def seed_feature_events() -> list[dict]:
+    """Per-feature events (FEATURE_QUERIES). Only users 101-106 and visitors,
+    never on day 3 and never a course_view/enrollment, so the core checks
+    above keep their numbers."""
+    rows: list[dict] = []
+    add = rows.append
+
+    def web(name, ts, user=0, actor=None, org=ORG_A, **cols):
+        add(event(name, ts, org=org, user=user, actor=actor, source="web", **cols))
+
+    def api(name, ts, user, org=ORG_A, **props):
+        add(event(name, ts, org=org, user=user, props=props))
+
+    # Video: act_vid_1 reached 25% by 101/102/103, 50% by 101/102, 75% and 100% by 101.
+    for user, percents in ((101, (25, 50, 75, 100)), (102, (25, 50)), (103, (30,)), (104, ("abc",))):
+        for pct in percents:
+            web("video_progress", day(12), user=user, course_uuid=VID, activity_uuid="act_vid_1",
+                props={"percent": pct, "activity_type": "TYPE_VIDEO"})
+    web("video_progress", day(12), user=101, course_uuid=VID, activity_uuid="act_vid_2", props={"percent": 10})
+    web("video_progress", day(12), org=ORG_B, user=201, course_uuid=VID, activity_uuid="act_vid_1",
+        props={"percent": 100})
+
+    # Podcast: episode_aq_1 played by 101 (twice), 102 and a visitor; 101 reached 100%, 102 60%.
+    ep1 = {"podcast_uuid": "podcast_aq", "episode_uuid": "episode_aq_1"}
+    for user, actor in ((101, None), (101, None), (102, None), (0, "v:pod1")):
+        web("podcast_episode_played", day(7), user=user, actor=actor, props=ep1)
+    for user, actor, pct in ((101, None, 50), (101, None, 100), (102, None, 60), (0, "v:pod1", 20)):
+        web("podcast_episode_progress", day(7), user=user, actor=actor, props={**ep1, "percent": pct})
+    web("podcast_episode_played", day(7), user=101, props={"podcast_uuid": "podcast_aq", "episode_uuid": "episode_aq_2"})
+
+    # Assessments (day 8).
+    for user in (101, 102, 103):
+        api("assignment_submitted", day(8, 10), user, assignment_uuid="assignment_aq", attempt=1)
+    api("assignment_graded", day(8, 11), 101, assignment_uuid="assignment_aq", grade=8, max_grade=10, passed=True)
+    api("assignment_graded", day(8, 11), 102, assignment_uuid="assignment_aq", grade=4, max_grade=10, passed=False)
+    api("assignment_graded", day(8, 11), 103, assignment_uuid="assignment_aq", grade=0, max_grade=0, passed=False)
+    api("quiz_submitted", day(8, 12), 101, score=9, max_score=10, passed=True)
+    api("quiz_submitted", day(8, 12), 102, score=5, max_score=10, passed=False)
+    api("code_submitted", day(8, 13), 101, language="python", tests_passed=3, tests_total=3, passed=True)
+    api("code_submitted", day(8, 13), 105, language="python", tests_passed=1, tests_total=4, passed=False)
+
+    # Community (day 6; the core seed already has 101's discussion in community_aq).
+    aq = {"community_uuid": "community_aq", "discussion_uuid": "discussion_aq"}
+    for user in (102, 106):
+        api("comment_posted", day(6, 13), user, **aq)
+    api("reaction_added", day(6, 13), 104, reaction="like", **aq)
+    api("discussion_upvoted", day(6, 13), 105, **aq)
+    api("comment_upvoted", day(6, 13), 101, **aq)
+    api("comment_posted", day(6, 14), 103, community_uuid="community_two", discussion_uuid="discussion_two")
+    for user, actor in ((101, None), (102, None), (0, "v:com1"), (0, "v:com1")):
+        web("community_viewed", day(6), user=user, actor=actor, props={"community_uuid": "community_aq"})
+    web("community_viewed", day(6), actor="v:com2", props={"community_uuid": "community_two"})
+
+    # AI (day 11; 104 opens the assistant on day 18).
+    for user in (101, 102):
+        web("ai_assistant_opened", day(11), user=user, props={"surface": "course"})
+    web("ai_assistant_opened", day(18), user=104, props={"surface": "course"})
+    for user in (101, 101, 102):
+        api("ai_message_sent", day(11, 13), user, surface="course", model="m")
+    api("ai_message_sent", day(11, 13), 103, model="m")
+    api("ai_message_sent", day(11, 13), 201, org=ORG_B, surface="course", model="m")
+
+    # Acquisition (the core seed has the email signups).
+    api("user_joined_org", day(21, 10), 104, join_method="invite")
+    api("user_joined_org", day(10, 9), 105, join_method="")
+    api("user_logged_in", day(9, 8), 101, login_method="password")
+    api("user_logged_in", day(9, 9), 101, login_method="password")
+    api("user_logged_in", day(9, 9), 102, login_method="google")
+    api("user_invited", day(9, 10), 101, invite_method="email", count=5)
+    api("user_invited", day(9, 10), 102, invite_method="email", count=2)
+    api("user_invited", day(9, 10), 101, invite_method="csv")
+
+    # Paths (day 13).
+    for user, actor in ((101, None), (102, None), (0, "v:path1"), (0, "v:path1")):
+        web("path_viewed", day(13), user=user, actor=actor, props={"path_uuid": "path_aq"})
+    web("path_viewed", day(13), actor="v:path2", props={"path_uuid": "path_two"})
+    for user in (101, 102, 102):
+        api("path_enrolled", day(13, 13), user, path_uuid="path_aq")
+    api("path_completed", day(13, 14), 101, path_uuid="path_aq")
+
+    # Boards and playgrounds (day 13): board_aq leads 13 boards; only 10 are listed.
+    for user in (101, 101, 101, 102):
+        web("board_viewed", day(13), user=user, props={"board_uuid": "board_aq"})
+    web("board_viewed", day(13), actor="v:b", props={"board_uuid": "board_two"})
+    for n in range(11):
+        web("board_viewed", day(13), actor="v:bulk", props={"board_uuid": f"board_bulk_{n:02d}"})
+    for user, actor in ((101, None), (0, "v:p"), (0, "v:p")):
+        web("playground_viewed", day(13), user=user, actor=actor, props={"playground_uuid": "playground_aq"})
+
+    # Content creation (day 7).
+    for _ in range(2):
+        api("course_created", day(7, 9), 101, source="editor")
+    api("course_published", day(7, 10), 101, published=True)
+    api("course_published", day(7, 10), 101, published=False)
+    for _ in range(3):
+        api("activity_created", day(7, 11), 101, activity_type="TYPE_DYNAMIC")
+    api("board_created", day(7, 12), 101, board_uuid="board_aq")
+    api("playground_created", day(7, 12), 101, playground_uuid="playground_aq")
+    for _ in range(2):
+        api("podcast_episode_published", day(7, 13), 101, podcast_uuid="podcast_aq", episode_uuid="episode_aq_1")
+
+    # Nudges: 101 and 103 come back in the browser within a week (103 through
+    # the core seed's course view), 105 doesn't (only server events after its
+    # nudge); 104 (typed only by id) opens the assistant two days after.
+    for user in (101, 103, 105):
+        api("nudge_sent", day(9, 12), user, nudge_type="inactive_learner", nudge_id="n1")
+    api("nudge_sent", day(20, 12), 104, nudge_id="admin_onboarding")
+
+    # Library (day 6).
+    for user, actor in ((101, None), (101, None), (0, "v:lib")):
+        web("library_resource_opened", day(6), user=user, actor=actor,
+            props={"resource_uuid": "course_lib", "resource_type": "courses"})
+    web("library_resource_opened", day(6), user=102, props={"resource_uuid": "media_lib", "resource_type": "media"})
+
+    # Messaging and certificates, for the feature summary.
+    api("message_sent", day(6, 15), 101, conversation_uuid="conv_aq", conversation_kind="direct")
+    web("certificate_viewed", day(5), actor="v:cert", props={"certificate_uuid": "cert_aq"})
+
+    # Previous 30-day window, for feature_summary's comparison.
+    api("ai_message_sent", day(45), 101, surface="course", model="m")
+    api("ai_message_sent", day(45), 101, surface="course", model="m")
+    web("search_query", day(50), user=101, props={"query": "old", "results_count": 1})
+    web("board_viewed", day(40), actor="v:old", props={"board_uuid": "board_aq"})
+    return rows
+
+
 class Checker:
     def __init__(self):
         self.failures: list[str] = []
@@ -195,11 +327,12 @@ async def main() -> int:
         ALL_QUERIES,
         COURSE_DETAIL_QUERIES,
         COURSE_QUERIES,
+        FEATURE_QUERIES,
         SUPERADMIN_QUERIES,
         USER_QUERIES,
     )
 
-    seed = seed_events()
+    seed = seed_events() + seed_feature_events()
     async with _async_session_factory() as db:
         for table in ("analytics_event", "analytics_daily_actor", "analytics_hourly_count"):
             await db.execute(text(f"DELETE FROM {table} WHERE org_id = ANY(:orgs)"), {"orgs": list(SEED_ORGS)})
@@ -385,6 +518,104 @@ async def main() -> int:
     c.check(rows_for(shim_rank["data"], org_id=ORG_A) == rows_for(rank, org_id=ORG_A), f"shim visits rank: {shim_rank}")
     c.check(shim_core["data"] == top, f"shim superadmin_top_courses: {shim_core}")
     c.check(shim_unknown == {"data": [], "rows": 0, "meta": []}, f"shim unknown: {shim_unknown}")
+
+    # ---- per-feature queries -------------------------------------------
+    d6, d7, d8, d11, d18 = (day(n).date().isoformat() for n in (6, 7, 8, 11, 18))
+    c.check(all(name in ALL_QUERIES for name in FEATURE_QUERIES), "FEATURE_QUERIES missing from ALL_QUERIES")
+    for name in FEATURE_QUERIES:
+        c.check(r[(name, ORG_EMPTY, 30)] == [], f"{name} for an empty org: {r[(name, ORG_EMPTY, 30)]}")
+
+    summary = r[("feature_summary", ORG_A, 30)]
+    c.check(one(summary, feature="ai") == {"feature": "ai", "events": 7, "actors": 4, "prev_events": 2, "prev_actors": 1},
+            f"feature_summary ai: {summary}")
+    c.check(one(summary, feature="search") == {"feature": "search", "events": 4, "actors": 2, "prev_events": 1, "prev_actors": 1},
+            f"feature_summary search: {summary}")
+    c.check(one(summary, feature="boards") == {"feature": "boards", "events": 17, "actors": 4, "prev_events": 1, "prev_actors": 1},
+            f"feature_summary boards: {summary}")
+    c.check({row["feature"] for row in summary} == {
+        "learning", "assessments", "community", "ai", "podcasts", "boards", "playgrounds",
+        "paths", "search", "messaging", "library", "certificates"}, f"feature_summary features: {summary}")
+    daily_ai = one(r[("feature_usage_daily", ORG_A, 30)], date=d11, feature="ai")
+    c.check(daily_ai == {"date": d11, "feature": "ai", "events": 6, "actors": 3}, f"feature_usage_daily ai {d11}: {daily_ai}")
+
+    for org in (ORG_A, 0):
+        for row in r[("video_engagement", org, 30)]:
+            c.check(row["reached_25"] >= row["reached_50"] >= row["reached_75"] >= row["reached_100"],
+                    f"video_engagement not monotonic: {row}")
+    video = r[("video_engagement", ORG_A, 30)]
+    c.check(video[:1] == [{"course_uuid": VID, "activity_uuid": "act_vid_1", "reached_25": 3, "reached_50": 2,
+                           "reached_75": 1, "reached_100": 1}], f"video_engagement: {video}")
+    c.check(one(video, activity_uuid="act_vid_2").get("reached_25") == 0, f"video_engagement act_vid_2: {video}")
+    c.check(one(r[("video_engagement", 0, 30)], activity_uuid="act_vid_1").get("reached_100") == 2,
+            f"video_engagement all orgs: {r[('video_engagement', 0, 30)]}")
+
+    podcasts = r[("podcast_engagement", ORG_A, 30)]
+    c.check(podcasts == [
+        {"podcast_uuid": "podcast_aq", "episode_uuid": "episode_aq_1", "plays": 3, "reached_50": 2, "reached_100": 1},
+        {"podcast_uuid": "podcast_aq", "episode_uuid": "episode_aq_2", "plays": 1, "reached_50": 0, "reached_100": 0},
+    ], f"podcast_engagement: {podcasts}")
+
+    c.check(r[("assessment_summary", ORG_A, 30)] == [
+        {"kind": "assignment", "submissions": 3, "graded": 3, "passed": 1, "avg_score_pct": 60.0, "learners": 3},
+        {"kind": "code", "submissions": 2, "graded": 2, "passed": 1, "avg_score_pct": 62.5, "learners": 2},
+        {"kind": "quiz", "submissions": 2, "graded": 2, "passed": 1, "avg_score_pct": 70.0, "learners": 2},
+    ], f"assessment_summary: {r[('assessment_summary', ORG_A, 30)]}")
+    c.check(r[("assessment_daily", ORG_A, 30)] == [{"date": d8, "submissions": 7, "graded": 7, "passed": 3}],
+            f"assessment_daily: {r[('assessment_daily', ORG_A, 30)]}")
+
+    c.check(one(r[("community_daily", ORG_A, 30)], date=d6) == {
+        "date": d6, "discussions": 1, "comments": 3, "reactions": 1, "upvotes": 2, "contributors": 6},
+        f"community_daily: {r[('community_daily', ORG_A, 30)]}")
+    c.check(r[("top_communities", ORG_A, 30)] == [
+        {"community_uuid": "community_aq", "views": 3, "discussions": 1, "comments": 2, "reactions": 1, "contributors": 5},
+        {"community_uuid": "community_two", "views": 1, "discussions": 0, "comments": 1, "reactions": 0, "contributors": 1},
+    ], f"top_communities: {r[('top_communities', ORG_A, 30)]}")
+
+    c.check(r[("ai_daily", ORG_A, 30)] == [
+        {"date": d18, "messages": 0, "users": 0, "opens": 1},
+        {"date": d11, "messages": 4, "users": 3, "opens": 2},
+    ], f"ai_daily: {r[('ai_daily', ORG_A, 30)]}")
+    c.check(r[("ai_by_surface", ORG_A, 30)] == [
+        {"surface": "course", "messages": 3, "users": 2},
+        {"surface": "unknown", "messages": 1, "users": 1},
+    ], f"ai_by_surface: {r[('ai_by_surface', ORG_A, 30)]}")
+
+    acquisition = r[("acquisition_methods", ORG_A, 30)]
+    expected_acquisition = [
+        ("invite", "email", 7, 2), ("invite", "csv", 1, 1),
+        ("join", "invite", 1, 1), ("join", "unknown", 1, 1),
+        ("login", "password", 2, 1), ("login", "google", 1, 1),
+        ("signup", "email", 3, 3),
+    ]
+    c.check([(row["kind"], row["method"], row["events"], row["users"]) for row in acquisition] == expected_acquisition,
+            f"acquisition_methods: {acquisition}")
+
+    c.check(r[("paths_summary", ORG_A, 30)] == [
+        {"path_uuid": "path_aq", "views": 3, "enrollments": 2, "completions": 1},
+        {"path_uuid": "path_two", "views": 1, "enrollments": 0, "completions": 0},
+    ], f"paths_summary: {r[('paths_summary', ORG_A, 30)]}")
+
+    tops = r[("top_boards_playgrounds", ORG_A, 30)]
+    boards = rows_for(tops, kind="board")
+    c.check(len(boards) == 10 and boards[0] == {"kind": "board", "uuid": "board_aq", "views": 4, "viewers": 2},
+            f"top_boards_playgrounds boards: {boards}")
+    c.check(rows_for(tops, kind="playground") == [{"kind": "playground", "uuid": "playground_aq", "views": 3, "viewers": 2}],
+            f"top_boards_playgrounds playgrounds: {tops}")
+
+    c.check(r[("content_creation_daily", ORG_A, 30)] == [{
+        "date": d7, "courses_created": 2, "courses_published": 1, "activities_created": 3,
+        "boards_created": 1, "playgrounds_created": 1, "episodes_published": 2}],
+        f"content_creation_daily: {r[('content_creation_daily', ORG_A, 30)]}")
+
+    c.check(r[("nudge_effectiveness", ORG_A, 30)] == [
+        {"nudge_type": "inactive_learner", "sent": 3, "returned": 2, "return_rate": 66.7},
+        {"nudge_type": "admin_onboarding", "sent": 1, "returned": 1, "return_rate": 100.0},
+    ], f"nudge_effectiveness: {r[('nudge_effectiveness', ORG_A, 30)]}")
+
+    c.check(r[("library_top_resources", ORG_A, 30)] == [
+        {"resource_uuid": "course_lib", "resource_type": "courses", "opens": 3, "viewers": 2},
+        {"resource_uuid": "media_lib", "resource_type": "media", "opens": 1, "viewers": 1},
+    ], f"library_top_resources: {r[('library_top_resources', ORG_A, 30)]}")
 
     # Org isolation: org A's numbers never include org B.
     c.check(all(row["org_id"] == ORG_A for row in r[("event_counts", ORG_A, 30)]), "event_counts leaked another org")

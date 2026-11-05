@@ -721,6 +721,7 @@ async def create_course(
     db_session: AsyncSession,
     thumbnail_file: UploadFile | None = None,
     thumbnail_type: ThumbnailType = ThumbnailType.IMAGE,
+    creation_source: str = "manual",
 ):
     """
     Create a new course
@@ -824,6 +825,13 @@ async def create_course(
 
     # Feature usage
     await increase_feature_usage("courses", course.org_id, db_session)
+
+    await track(
+        event_name=analytics_events.COURSE_CREATED,
+        org_id=course.org_id,
+        user_id=author_user_id,
+        properties={"course_uuid": course.course_uuid, "source": creation_source},
+    )
 
     await dispatch_webhooks(
         event_name="course_created",
@@ -1752,6 +1760,13 @@ async def clone_course(
 
     # Increase feature usage for the new course
     await increase_feature_usage("courses", new_course.org_id, db_session)
+
+    await track(
+        event_name=analytics_events.COURSE_CREATED,
+        org_id=new_course.org_id,
+        user_id=author_user_id,
+        properties={"course_uuid": new_course.course_uuid, "source": "clone"},
+    )
 
     # Get course authors with their roles
     authors_statement = (

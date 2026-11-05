@@ -397,6 +397,34 @@ class TestAnalyticsRouter:
             response = await client.get("/api/v1/analytics/dashboard/db/grade_distribution?org_id=1")
         assert response.status_code == 403
 
+    async def test_feature_queries_are_served_on_every_plan(self, client, db_session):
+        from src.services.analytics.queries import FEATURE_QUERIES
+
+        rows = [{"kind": "board", "uuid": "board_1", "views": 2, "viewers": 1}]
+        enrich = AsyncMock(side_effect=lambda rows, db, **_: [{**row, "name": "Board"} for row in rows])
+        get_plan = AsyncMock(return_value="free")
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics._enrich_with_metadata", enrich
+        ), patch(
+            "src.routers.analytics.get_org_plan", get_plan
+        ), patch(
+            "src.routers.analytics._execute_query",
+            new_callable=AsyncMock,
+            return_value={"data": rows, "rows": 1, "meta": []},
+        ) as execute:
+            for name in FEATURE_QUERIES:
+                response = await client.get(f"/api/v1/analytics/dashboard/{name}?org_id=7")
+                assert response.status_code == 200, name
+                assert response.json()["data"][0]["name"] == "Board"
+                query_name, sql, params, org_id, days = execute.await_args.args
+                assert (query_name, sql, params, org_id, days) == (name, FEATURE_QUERIES[name][0], {"org_id": 7, "days": 30}, 7, 30)
+
+            response = await client.get("/api/v1/analytics/dashboard/feature_summary?org_id=7&days=7")
+            assert execute.await_args.args[2] == {"org_id": 7, "days": 7}
+
+        get_plan.assert_not_awaited()
+        assert enrich.await_args.kwargs == {"org_id": 7}
+
     async def test_dashboard_db_and_course_routes(self, client, db_session):
         def _make_execute_result(all_result=None, first_result=None):
             scalars = MagicMock()

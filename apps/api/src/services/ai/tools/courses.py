@@ -550,6 +550,7 @@ async def _create_course(ctx: ToolContext, p: CreateCourseParams):
         ),
         ctx.user,
         ctx.db_session,
+        creation_source="ai",
     )
     course = await refs.load(ctx, "course", created.course_uuid)
     built = await _build_outline(ctx, course, p.chapters, docs) if p.chapters else {"chapters": []}

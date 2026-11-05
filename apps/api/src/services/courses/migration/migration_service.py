@@ -33,6 +33,8 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.security.auth import resolve_acting_user_id
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from src.services.ai.rag.queue import index_activity
 from src.services.blocks.schemas.files import BlockFile
 from src.services.courses.transfer.import_service import file_content_matches_extension
@@ -774,6 +776,13 @@ async def create_course_from_migration(
 
         # Track course usage for billing, consistent with the other create paths.
         await increase_feature_usage("courses", org_id, db_session)
+
+        await track(
+            event_name=analytics_events.COURSE_CREATED,
+            org_id=org_id,
+            user_id=resolve_acting_user_id(current_user),
+            properties={"course_uuid": course_uuid, "source": "migration"},
+        )
 
         # Clean up temp directory (temp_real already validated above)
         shutil.rmtree(temp_real, ignore_errors=True)

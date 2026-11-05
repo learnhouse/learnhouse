@@ -214,6 +214,27 @@ async def test_assignment_limit_fails_the_course_with_a_clear_message(db, org, a
 
 
 @pytest.mark.asyncio
+async def test_finished_lms_conversion_is_tracked_as_lms_import(db, org, admin_user, mock_request, tmp_path,
+                                                               import_env):
+    temp_id, course_key = _write_package(tmp_path, import_env["imports"])
+    owner = lms_principal(admin_user)
+    (import_env["imports"] / temp_id / "lms_status.json").write_text(json.dumps({"status": "ready", "owner": owner}))
+    org_id, user_id = org.id, admin_user.id
+
+    with patch(f"{SERVICE}.track", new_callable=AsyncMock) as mock_track:
+        result = await import_courses(mock_request, temp_id, org_id, ImportOptions(course_uuids=[course_key]),
+                                      admin_user, db)
+
+    assert result.successful == 1, result.courses[0].error
+    mock_track.assert_awaited_once_with(
+        event_name="course_created",
+        org_id=org_id,
+        user_id=user_id,
+        properties={"course_uuid": result.courses[0].new_uuid, "source": "lms_import"},
+    )
+
+
+@pytest.mark.asyncio
 async def test_unfinished_lms_conversion_cannot_be_imported(db, org, admin_user, mock_request, import_env):
     temp_id = str(uuid4())
     temp_dir = import_env["imports"] / temp_id

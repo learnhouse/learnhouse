@@ -375,6 +375,7 @@ async def _record_sent(spec: NudgeSpec, snapshot: OrgSnapshot, admin: AdminRow) 
             user_id=admin.user_id,
             properties={
                 "nudge_id": spec.id,
+                "nudge_type": spec.track,
                 "track": spec.track,
                 "plan": snapshot.plan,
                 "lang": snapshot.lang,

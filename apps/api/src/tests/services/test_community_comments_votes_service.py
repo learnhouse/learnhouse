@@ -272,7 +272,9 @@ class TestCommunityCommentsAndVotes:
         ), patch(
             "src.services.communities.votes.dispatch_webhooks",
             new_callable=AsyncMock,
-        ):
+        ), patch(
+            "src.services.communities.votes.track", new_callable=AsyncMock
+        ) as mock_track:
             vote = await upvote_discussion(
                 mock_request, discussion.discussion_uuid, regular_user, db
             )
@@ -292,6 +294,16 @@ class TestCommunityCommentsAndVotes:
         assert voted == {discussion.discussion_uuid: True, "missing": False}
         assert removed == {"detail": "Upvote removed"}
         assert duplicate_exc.value.status_code == 400
+        # Only the upvote counts; removing it is not tracked.
+        mock_track.assert_awaited_once_with(
+            event_name="discussion_upvoted",
+            org_id=community.org_id,
+            user_id=regular_user.id,
+            properties={
+                "community_uuid": "community_votes",
+                "discussion_uuid": "discussion_votes",
+            },
+        )
 
     @pytest.mark.asyncio
     async def test_comment_vote_error_branches(
@@ -833,7 +845,9 @@ class TestCommunityCommentsAndVotes:
         ), patch(
             "src.services.communities.comment_votes.check_resource_access",
             new_callable=AsyncMock,
-        ):
+        ), patch(
+            "src.services.communities.comment_votes.track", new_callable=AsyncMock
+        ) as mock_track:
             vote = await upvote_comment(
                 mock_request, comment.comment_uuid, regular_user, db
             )
@@ -853,6 +867,15 @@ class TestCommunityCommentsAndVotes:
         assert user_votes == {comment.id: True, 999: False}
         assert removed == {"detail": "Upvote removed"}
         assert duplicate_exc.value.status_code == 400
+        mock_track.assert_awaited_once_with(
+            event_name="comment_upvoted",
+            org_id=community.org_id,
+            user_id=regular_user.id,
+            properties={
+                "community_uuid": "community_comment_votes",
+                "discussion_uuid": "discussion_comment_votes",
+            },
+        )
 
     @pytest.mark.asyncio
     async def test_remove_upvotes_on_a_discussion_without_community_404(
