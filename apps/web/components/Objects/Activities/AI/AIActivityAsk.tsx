@@ -21,6 +21,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
 import AIMarkdownRenderer from './AIMarkdownRenderer'
 import AIFollowUpSuggestions from './AIFollowUpSuggestions'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 // Phones (<768px, the shell's breakpoint) can't spare a 380px column for the
 // side panel, so it floats above the bottom bar instead.
@@ -48,6 +49,7 @@ function AIActivityAsk(props: AIActivityAskProps) {
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
   const dispatchAIChatBot = useAIChatBotDispatch() as any
   const { mode } = useAIPanelMode()
+  const { track } = useLHAnalytics('learner')
 
   useEffect(() => {
     if (is_ai_feature_enabled) {
@@ -56,6 +58,7 @@ function AIActivityAsk(props: AIActivityAskProps) {
   }, [is_ai_feature_enabled])
 
   const handleOpenAI = () => {
+    track(AnalyticsEvent.AiAssistantOpened, { surface: 'activity' })
     if (mode === 'hover') {
       dispatchAIChatBot({ type: 'setIsModalOpen' })
     } else {

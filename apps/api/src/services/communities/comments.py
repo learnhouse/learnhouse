@@ -18,6 +18,8 @@ from src.services.communities.comment_votes import get_user_votes_for_comments
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
 from src.services.communities.moderation import validate_comment_content, enforce_auto_lock
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from src.services.communities.access import (
     require_author_may_still_post,
     require_community_participant,
@@ -112,6 +114,16 @@ async def create_comment(
     db_session.add(comment)
     await db_session.commit()
     await db_session.refresh(comment)
+
+    await track(
+        event_name=analytics_events.COMMENT_POSTED,
+        org_id=community.org_id,
+        user_id=author_id,
+        properties={
+            "community_uuid": community.community_uuid,
+            "discussion_uuid": discussion.discussion_uuid,
+        },
+    )
 
     # Get author info
     author_statement = select(User).where(User.id == comment.author_id)

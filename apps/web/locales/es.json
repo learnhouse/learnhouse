@@ -3126,8 +3126,6 @@
       "episodes": "episodios",
       "participants": "participantes",
       "loading": "Cargando...",
-      "enable_analytics_description": "Habilite las analíticas para ver usuarios en vivo, registros y más.",
-      "enable": "Habilitar",
       "quick_stats": "Estadísticas rápidas",
       "full_analytics": "Analíticas completas",
       "live_now": "En vivo ahora",
@@ -4105,7 +4103,8 @@
           "automations": "Automatizaciones",
           "menu": "Menú",
           "danger": "Zona de Peligro",
-          "course_end": "Finalización del curso"
+          "course_end": "Finalización del curso",
+          "analytics": "Analítica"
         },
         "pages": {
           "general": {
@@ -4162,6 +4161,10 @@
           "course_end": {
             "title": "Finalización del curso",
             "subtitle": "Personaliza la pantalla que ven los estudiantes al terminar un curso"
+          },
+          "analytics": {
+            "title": "Analítica",
+            "subtitle": "Elige cuánto tiempo se conservan los datos de analítica y qué se recopila"
           }
         },
         "name": "Nombre de la organización",
@@ -5562,6 +5565,48 @@
         "button_link_help": "Una ruta interna como /courses o una URL https:// completa. Déjalo vacío para enlazar al catálogo de tus cursos.",
         "link_invalid": "Usa una ruta interna que empiece por / o una URL http(s) completa",
         "preview": "Vista previa"
+      },
+      "analytics_settings": {
+        "title": "Datos de analítica",
+        "subtitle": "Conservación y privacidad de la analítica de tu organización",
+        "save": "Guardar",
+        "saving": "Guardando...",
+        "saved": "Configuración de analítica guardada",
+        "error": "No se pudo guardar la configuración de analítica",
+        "load_error": "No se pudo cargar la configuración de analítica",
+        "admin_only": "Solo los administradores de la organización pueden cambiar la configuración de analítica.",
+        "retention_title": "Conservación de datos",
+        "retention_description": "Cuánto tiempo se conservan los eventos de analítica antes de eliminarse.",
+        "retention_note": "Acortar la conservación elimina los datos más antiguos en la próxima limpieza nocturna.",
+        "retention_default": "{{label}} (predeterminado)",
+        "retention_options": {
+          "days_90": "90 días",
+          "days_180": "6 meses",
+          "days_365": "1 año",
+          "days_730": "2 años",
+          "days_1095": "3 años",
+          "days_1825": "5 años",
+          "days_2555": "7 años",
+          "days_n": "{{count}} días"
+        },
+        "extended_locked": "Conservar los datos más de un año está disponible en el plan Enterprise.",
+        "privacy_title": "Privacidad",
+        "track_anonymous": "Contar a los visitantes que no han iniciado sesión",
+        "track_anonymous_description": "Incluye las visitas a páginas y cursos de personas sin cuenta. Se cuentan sin cookies, con un identificador anónimo que cambia cada día.",
+        "collect_location": "Guardar el país del visitante",
+        "collect_location_description": "Registra desde qué país llega una visita. Las direcciones IP nunca se guardan.",
+        "exclude_staff": "Excluir a administradores y mantenedores de las estadísticas",
+        "exclude_staff_description": "Las visitas de quienes gestionan la organización no se cuentan, para que tus propias pruebas no distorsionen las cifras.",
+        "export_title": "Descargar eventos sin procesar (CSV)",
+        "export_description": "Todos los eventos de analítica guardados del periodo elegido, una fila por evento.",
+        "export_period": "Periodo de exportación",
+        "export_last_days": "Últimos {{count}} días",
+        "export_all": "Todo lo conservado",
+        "export_button": "Descargar CSV",
+        "exporting": "Preparando la descarga...",
+        "export_done": "Descarga iniciada",
+        "export_error": "No se pudieron exportar los eventos de analítica",
+        "export_locked": "La exportación de eventos sin procesar está disponible en el plan Enterprise."
       }
     },
     "users": {
@@ -8281,15 +8326,81 @@
     "unsaved_changes_warning": "Tienes cambios sin guardar. ¿Salir sin guardar?"
   },
   "analytics": {
+    "features": {
+      "tab": "Funciones",
+      "adoption_title": "Uso de funciones",
+      "adoption_subtitle": "Personas que usan cada función, comparado con el periodo anterior. Haz clic en una para graficarla.",
+      "events_count": "{{value}} eventos",
+      "names": {
+        "learning": "Aprendizaje",
+        "assessments": "Evaluaciones",
+        "community": "Comunidad",
+        "ai": "Asistente de IA",
+        "podcasts": "Pódcasts",
+        "boards": "Pizarras",
+        "playgrounds": "Playgrounds",
+        "paths": "Rutas de aprendizaje",
+        "search": "Búsqueda",
+        "messaging": "Mensajería",
+        "library": "Biblioteca",
+        "certificates": "Certificados"
+      },
+      "video_title": "Interacción con videos",
+      "video_subtitle": "Hasta dónde llegan los espectadores en cada video",
+      "finished": "Terminado",
+      "podcast_title": "Reproducción de pódcasts",
+      "podcast_subtitle": "Reproducciones por episodio y cuántos escuchan hasta el final",
+      "assessments_title": "Evaluaciones",
+      "assessments_subtitle": "Entregas, tasa de aprobación y puntuación media",
+      "assignment": "Tareas",
+      "quiz": "Cuestionarios",
+      "code": "Ejercicios de código",
+      "submissions": "Entregas",
+      "pass_rate": "Tasa de aprobación",
+      "avg_score": "Punt. media",
+      "passed": "Aprobados",
+      "community_title": "Actividad de la comunidad",
+      "community_subtitle": "Debates, comentarios, reacciones y votos positivos por día",
+      "discussions": "Debates",
+      "comments": "Comentarios",
+      "reactions": "Reacciones",
+      "upvotes": "Votos positivos",
+      "peak_contributors": "Hasta {{value}} colaboradores al día",
+      "top_communities": "Principales comunidades",
+      "ai_title": "Asistente de IA",
+      "ai_subtitle": "Mensajes enviados y personas que usan el asistente",
+      "messages": "Mensajes",
+      "users": "Personas",
+      "by_surface": "Dónde se usa",
+      "acquisition_title": "Registro e inicio de sesión",
+      "acquisition_subtitle": "Cómo se registran, se unen e inician sesión las personas",
+      "signup": "Registros",
+      "join": "Uniones",
+      "login": "Inicios de sesión",
+      "invite": "Invitaciones",
+      "nudges_title": "Recordatorios por correo",
+      "nudges_subtitle": "Personas que volvieron en los 7 días posteriores a un recordatorio",
+      "sent": "Enviados",
+      "returned": "Volvieron",
+      "return_rate": "Tasa de retorno",
+      "paths_title": "Rutas de aprendizaje",
+      "boards_title": "Pizarras y playgrounds",
+      "library_title": "Biblioteca",
+      "creation_title": "Creación de contenido",
+      "creation_subtitle": "Lo que tu equipo creó en este periodo",
+      "courses_created": "Cursos creados",
+      "courses_published": "Cursos publicados",
+      "activities_created": "Actividades",
+      "boards_created": "Pizarras",
+      "playgrounds_created": "Playgrounds",
+      "episodes_published": "Episodios"
+    },
+    "data_kept": "Datos conservados {{period}}",
     "title": "Analíticas",
     "subtitle": "Información sobre tus estudiantes y contenido",
     "tabs": {
       "overview": "Resumen",
       "advanced": "Avanzado"
-    },
-    "not_configured": {
-      "title": "Analíticas no configuradas",
-      "description": "Las analíticas requieren una conexión Tinybird. Configura las variables de entorno <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> y <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> para habilitarlas."
     },
     "advanced_gate": {
       "requires": "Requiere",
@@ -8350,7 +8461,12 @@
       "courses": "Cursos",
       "count": "Recuento",
       "active_users_last_5_minutes": "Usuarios activos en los últimos 5 minutos",
-      "course_fallback_name": "Curso {{uuid}}"
+      "course_fallback_name": "Curso {{uuid}}",
+      "visitors": "Visitantes",
+      "signed_in_learners": "Estudiantes con sesión",
+      "traffic": "Tráfico",
+      "page_views_count": "{{value}} páginas vistas",
+      "vs_previous_period": "vs periodo anterior"
     },
     "modals": {
       "live_users": {
@@ -8490,8 +8606,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analítica no configurada",
-      "not_configured_desc": "La analítica requiere que Tinybird esté configurado. Por favor, contacte a su administrador.",
       "common": {
         "loading": "Cargando...",
         "no_data": "Aún no hay datos",
@@ -10535,7 +10649,6 @@
       "joined": "Se unió",
       "na": "n/d",
       "no_analytics": "No hay analíticas disponibles",
-      "ensure_tinybird": "Asegúrate de que las analíticas de Tinybird estén configuradas",
       "period": "Periodo:",
       "days_short": "{{count}} d",
       "live_users": "Usuarios en directo",
@@ -10699,7 +10812,6 @@
     "analytics": {
       "failed_load": "No se pudieron cargar las analíticas",
       "no_data_available": "No hay datos de analíticas disponibles",
-      "ensure_tinybird": "Asegúrate de que las analíticas de Tinybird estén configuradas",
       "no_data": "Sin datos"
     },
     "ee_error": {

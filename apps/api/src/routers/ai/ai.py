@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.services.ai.ai import (
+    track_ai_message,
     ai_send_activity_chat_message,
     ai_start_activity_chat_session,
     ai_start_activity_chat_session_stream,
@@ -122,6 +123,10 @@ async def activity_chat_event_generator(
         save_message_to_history(
             aichat_uuid, user_message, full_response,
             user_id=user_id, course_uuid=course_uuid, org_id=org_id,
+        )
+        await track_ai_message(
+            org_id, user_id, "activity_chat", ai_model,
+            course_uuid=course_uuid, activity_uuid=activity_uuid,
         )
 
         # Send done event immediately (without waiting for follow-ups)
@@ -407,6 +412,9 @@ async def editor_chat_event_generator(
         save_message_to_history(
             aichat_uuid, user_message, full_response,
             user_id=user_id, org_id=org_id, listed=False,
+        )
+        await track_ai_message(
+            org_id, user_id, "editor", ai_model, activity_uuid=activity_uuid,
         )
 
         # Send done event

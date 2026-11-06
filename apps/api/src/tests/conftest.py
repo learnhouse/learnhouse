@@ -564,6 +564,25 @@ def no_legacy_link_markers():
 
 
 @pytest.fixture(autouse=True)
+def analytics_queue():
+    """Collect the events ``track()`` sends instead of handing them to EE.
+
+    ``track()`` forwards every event to the Enterprise Edition, which stores
+    it. Here each call is kept as a dict of its arguments (``event_name``,
+    ``org_id``, ``user_id``, ``properties``...), in order, for tests that want
+    to look at them; nothing reaches EE even when it is installed. The EE
+    suite overrides this fixture with one that yields its writer's queue.
+    """
+    queue: list[dict] = []
+
+    async def record(**event) -> None:
+        queue.append(event)
+
+    with patch("src.services.analytics.analytics.track_ee_analytics_event", new=record):
+        yield queue
+
+
+@pytest.fixture(autouse=True)
 def rag_dispatch():
     """Keep content saves from starting real AI indexing runs.
 

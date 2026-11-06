@@ -61,6 +61,7 @@ import {
   updateConversation,
 } from '@services/messaging/messaging'
 import { getUriWithOrg } from '@services/config/config'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 import { dayLabel, isGrouped, presenceLine, sameDay } from '@components/Messaging/utils'
 
 const NEAR_BOTTOM_PX = 140
@@ -221,6 +222,11 @@ export default function Thread({
     enabled: Boolean(agentUuid && token),
     staleTime: 60_000,
   })
+
+  // A chat with an agent (Copilot or a custom one) is the AI assistant. Both
+  // the page and the dock mount one Thread per conversation, so this counts
+  // one open per conversation shown.
+  useTrackView(AnalyticsEvent.AiAssistantOpened, { surface: 'copilot' }, conversation?.kind === 'agent', 'learner')
 
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null)
   const [editing, setEditing] = useState<ChatMessage | null>(null)

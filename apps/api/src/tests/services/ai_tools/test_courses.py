@@ -278,23 +278,29 @@ async def test_get_course_refuses_other_org_and_wrong_kind(registry, db, org, ad
 
 
 async def test_create_course_with_outline_makes_viewable_pages(registry, db, org, admin_user):
-    out = await call(
-        registry,
-        ctx_for(db, org, admin_user),
-        "create_course",
-        {
-            "name": "Plants",
-            "description": "Green things",
-            "learnings": ["Name the parts of a leaf"],
-            "tags": ["biology", "plants"],
-            "chapters": [
-                {"name": "Leaves", "activities": [{"name": "Intro", "markdown": "# Hi\n\nText"}, {"name": "Empty"}]},
-                {"name": "Roots"},
-            ],
-        },
-    )
+    with patch("src.services.courses.courses.track", new_callable=AsyncMock) as mock_track:
+        out = await call(
+            registry,
+            ctx_for(db, org, admin_user),
+            "create_course",
+            {
+                "name": "Plants",
+                "description": "Green things",
+                "learnings": ["Name the parts of a leaf"],
+                "tags": ["biology", "plants"],
+                "chapters": [
+                    {"name": "Leaves", "activities": [{"name": "Intro", "markdown": "# Hi\n\nText"}, {"name": "Empty"}]},
+                    {"name": "Roots"},
+                ],
+            },
+        )
     assert out.status == "executed", out.reason
     res = out.result
+    # Courses the assistant builds are counted as AI-created.
+    course_created = [c for c in mock_track.await_args_list if c.kwargs["event_name"] == "course_created"]
+    assert [c.kwargs["properties"] for c in course_created] == [
+        {"course_uuid": res["course"]["uuid"], "source": "ai"}
+    ]
     assert res["ok"] and "stopped" not in res
     assert res["course"]["kind"] == "course" and res["course"]["published"] is False
     assert [c["name"] for c in res["chapters"]] == ["Leaves", "Roots"]

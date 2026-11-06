@@ -49,6 +49,9 @@ from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import is_feature_enabled_for_plan
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
 from src.services.ai.rag.queue import enqueue_course
+from src.security.auth import resolve_acting_user_id
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 from .models import (
     ImportAnalysisResponse,
@@ -568,7 +571,8 @@ async def import_courses(
     # Packages converted from another LMS are built in the background
     # (lms_import_service); refuse to claim one that is not finished
     lms_status_path = os.path.join(temp_dir, "lms_status.json")
-    if os.path.isfile(lms_status_path):
+    converted_from_lms = os.path.isfile(lms_status_path)
+    if converted_from_lms:
         try:
             with open(lms_status_path, "r", encoding="utf-8") as f:
                 lms_status = json.load(f)
@@ -659,6 +663,15 @@ async def import_courses(
             # Commit the outer transaction so the course is persisted
             await db_session.commit()
             await enqueue_course(new_course.id, db_session)
+            await track(
+                event_name=analytics_events.COURSE_CREATED,
+                org_id=organization_id,
+                user_id=resolve_acting_user_id(current_user),
+                properties={
+                    "course_uuid": new_course.course_uuid,
+                    "source": "lms_import" if converted_from_lms else "import",
+                },
+            )
 
             # Track usage AFTER commit: increase_feature_usage calls commit()
             # internally, so it must not run inside the savepoint

@@ -754,7 +754,10 @@ class TestImportHelpers:
         ), patch(
             "src.services.courses.transfer.import_service.uuid4",
             side_effect=lambda: next(new_uuid_sequence),
-        ):
+        ), patch(
+            "src.services.courses.transfer.import_service.track",
+            new_callable=AsyncMock,
+        ) as mock_track:
             # Snapshot org.id before the call: SAVEPOINT rollback in import_courses
             # expires session-tracked instances, so post-call attribute access on
             # `org` would trigger a lazy reload (and fail in this sync block).
@@ -779,6 +782,13 @@ class TestImportHelpers:
         assert "boom" in result.courses[2].error
         assert check_limits.call_count == 2
         increase_usage.assert_called_once_with("courses", expected_org_id, db)
+        # Only the course that actually imported is counted.
+        mock_track.assert_awaited_once_with(
+            event_name="course_created",
+            org_id=expected_org_id,
+            user_id=admin_user.id,
+            properties={"course_uuid": "course-new-1", "source": "import"},
+        )
         delete_storage_directory.assert_called_once()
         assert not os.path.exists(tmp_path / f"{temp_id}-importing")
 

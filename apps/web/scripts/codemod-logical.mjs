@@ -101,7 +101,7 @@ const DENY = [
   'components/Objects/Activities/Video/',
   // recharts emits absolute SVG x-coordinates; dir=rtl flips the DOM but not
   // the geometry, detaching axis labels from their ticks.
-  'components/Dashboard/Analytics/',
+  'ee/components/Analytics/Dashboard/',
   // KaTeX is LTR by specification.
   'components/Objects/Editor/Extensions/MathEquation/',
   // Rasterised to PDF by html2canvas, which handles logical properties worst

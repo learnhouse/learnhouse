@@ -1,26 +1,22 @@
-"""Integrations hardening: Zapier subscription limits, SSRF address policy,
-org-scoped analytics enrichment."""
+"""Integrations hardening: Zapier subscription limits, SSRF address policy.
+(Org-scoped analytics enrichment is tested with EE analytics.)"""
 
 import ipaddress
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi import HTTPException
 from sqlmodel import select
 
-from src.db.courses.activities import Activity, ActivitySubTypeEnum, ActivityTypeEnum
-from src.db.courses.courses import Course
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
-from src.db.users import APITokenUser, PublicUser, User
+from src.db.users import APITokenUser, User
 from src.db.webhooks import WebhookEndpoint
-from src.routers import analytics as analytics_router
 from src.routers.integrations.zapier import (
     ZapierSubscriptionCreate,
     zapier_create_subscription,
 )
-from src.services.analytics.enrichment import enrich_with_metadata
 from src.services.utils.ssrf_guard import (
     SSRFBlockedError,
     _embedded_ipv4,
@@ -179,70 +175,3 @@ def test_webhook_create_validation_uses_guard_policy(addr):
         with pytest.raises(HTTPException) as exc:
             webhooks_service._validate_webhook_url("https://hooks.example/x")
     assert exc.value.status_code == 400
-
-
-# ---------------------------------------------------------------------------
-# Analytics enrichment only names the org's own courses/activities
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture
-async def foreign_content(db, other_org):
-    c = Course(
-        id=50, name="Foreign Course", description="", public=False, published=False,
-        open_to_contributors=False, org_id=other_org.id, course_uuid="course_foreign",
-        creation_date=_now(), update_date=_now(),
-    )
-    db.add(c)
-    await db.commit()
-    a = Activity(
-        id=50, name="Foreign Activity", activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
-        activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE, content={},
-        org_id=other_org.id, course_id=c.id, activity_uuid="activity_foreign",
-        creation_date=_now(), update_date=_now(),
-    )
-    db.add(a)
-    await db.commit()
-    return c, a
-
-
-class TestEnrichmentOrgScope:
-    async def test_foreign_uuids_are_not_resolved(self, db, org, activity, foreign_content):
-        rows = [
-            {"course_uuid": "course_foreign", "activity_uuid": "activity_foreign"},
-            {"activity_uuid": "activity_foreign"},
-            {"course_uuid": "course_test", "activity_uuid": "activity_test"},
-            {"last_activity_uuid": "activity_test"},
-        ]
-        out = await enrich_with_metadata(rows, db, org_id=org.id)
-        assert "course_name" not in out[0] and "activity_name" not in out[0]
-        assert "course_uuid" not in out[1] and "activity_name" not in out[1]
-        assert out[2]["course_name"] == "Test Course"
-        assert out[2]["activity_name"] == "Test Activity"
-        # Parent course resolved through the org-scoped extra lookup.
-        assert out[3]["course_name"] == "Test Course"
-        assert out[3]["last_activity_name"] == "Test Activity"
-
-    async def test_parent_course_lookup_is_org_scoped(self, db, org, activity, foreign_content):
-        rows = [{"activity_uuid": "activity_test"}, {"activity_uuid": "activity_foreign"}]
-        out = await enrich_with_metadata(rows, db, org_id=org.id)
-        assert out[0]["course_uuid"] == "course_test"
-        assert out[0]["course_name"] == "Test Course"
-        assert out[1] == {"activity_uuid": "activity_foreign"}
-
-    async def test_unscoped_call_keeps_previous_behaviour(self, db, org, activity, foreign_content):
-        out = await enrich_with_metadata([{"activity_uuid": "activity_foreign"}], db)
-        assert out[0]["course_name"] == "Foreign Course"
-
-    async def test_dashboard_route_passes_org_id(self, mock_request):
-        enrich = AsyncMock(side_effect=lambda rows, db, **_: rows)
-        user = PublicUser(id=1, user_uuid="user_x", username="u", first_name="", last_name="", email="u@example.com")
-        with patch.object(analytics_router, "_verify_org_membership", new_callable=AsyncMock), \
-             patch.object(analytics_router, "_verify_org_admin", new_callable=AsyncMock), \
-             patch.object(analytics_router, "_execute_tinybird_query", new_callable=AsyncMock,
-                          return_value={"data": [{"course_uuid": "c"}]}), \
-             patch.object(analytics_router, "_enrich_with_metadata", enrich):
-            await analytics_router.query_dashboard(
-                "daily_active_users", 7, mock_request, current_user=user, db_session=AsyncMock()
-            )
-        assert enrich.await_args.kwargs["org_id"] == 7

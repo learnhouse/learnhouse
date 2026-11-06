@@ -25,6 +25,8 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
     reserve_ai_credit,
 )
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from src.services.ai.llm import resolve_model_for_org, model_for_tier
 from src.services.ai.llm.errors import ai_error_message, log_ai_failure
 from src.services.ai.courseplanning import (
@@ -358,6 +360,12 @@ async def finalize_course_plan(
     await db_session.commit()
     await db_session.refresh(course)
     await increase_feature_usage("courses", org.id, db_session)
+    await track(
+        event_name=analytics_events.COURSE_CREATED,
+        org_id=org.id,
+        user_id=resolve_acting_user_id(current_user),
+        properties={"course_uuid": course.course_uuid, "source": "ai"},
+    )
 
     # Make the current user the creator of the course (resolve API tokens to
     # their creator so authorship records a real user_id, not the token id 0).

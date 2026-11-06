@@ -3086,8 +3086,6 @@
       "episodes": "एपिसोड",
       "participants": "प्रतिभागी",
       "loading": "लोड हो रहा है...",
-      "enable_analytics_description": "लाइव उपयोगकर्ता, साइन अप और अधिक देखने के लिए विश्लेषण सक्षम करें।",
-      "enable": "सक्षम करें",
       "quick_stats": "त्वरित आंकड़े",
       "full_analytics": "पूर्ण विश्लेषण",
       "live_now": "अभी लाइव",
@@ -4057,7 +4055,8 @@
           "automations": "स्वचालन",
           "menu": "मेनू",
           "danger": "डेंजर जोन",
-          "course_end": "पाठ्यक्रम पूर्णता"
+          "course_end": "पाठ्यक्रम पूर्णता",
+          "analytics": "विश्लेषण"
         },
         "pages": {
           "general": {
@@ -4114,6 +4113,10 @@
           "course_end": {
             "title": "पाठ्यक्रम पूर्णता",
             "subtitle": "पाठ्यक्रम पूरा करने पर शिक्षार्थियों को दिखने वाली स्क्रीन को अपने अनुसार बनाएं"
+          },
+          "analytics": {
+            "title": "विश्लेषण",
+            "subtitle": "चुनें कि विश्लेषण डेटा कितने समय तक रखा जाए और क्या एकत्र किया जाए"
           }
         },
         "name": "संगठन का नाम",
@@ -5506,6 +5509,48 @@
         "button_link_help": "/courses जैसा आंतरिक पाथ, या पूरा https:// URL। अपने पाठ्यक्रम कैटलॉग से लिंक करने के लिए खाली छोड़ें।",
         "link_invalid": "/ से शुरू होने वाला आंतरिक पाथ या पूरा http(s) URL इस्तेमाल करें",
         "preview": "प्रीव्यू"
+      },
+      "analytics_settings": {
+        "title": "विश्लेषण डेटा",
+        "subtitle": "आपके संगठन के विश्लेषण के लिए डेटा अवधि और गोपनीयता",
+        "save": "सहेजें",
+        "saving": "सहेजा जा रहा है...",
+        "saved": "विश्लेषण सेटिंग्स सहेजी गईं",
+        "error": "विश्लेषण सेटिंग्स सहेजी नहीं जा सकीं",
+        "load_error": "विश्लेषण सेटिंग्स लोड नहीं हो सकीं",
+        "admin_only": "केवल संगठन के एडमिन ही विश्लेषण सेटिंग्स बदल सकते हैं।",
+        "retention_title": "डेटा अवधि",
+        "retention_description": "विश्लेषण इवेंट हटाए जाने से पहले कितने समय तक रखे जाते हैं।",
+        "retention_note": "अवधि छोटी करने पर पुराना डेटा अगली रात की सफ़ाई में हटा दिया जाता है।",
+        "retention_default": "{{label}} (डिफ़ॉल्ट)",
+        "retention_options": {
+          "days_90": "90 दिन",
+          "days_180": "6 महीने",
+          "days_365": "1 साल",
+          "days_730": "2 साल",
+          "days_1095": "3 साल",
+          "days_1825": "5 साल",
+          "days_2555": "7 साल",
+          "days_n": "{{count}} दिन"
+        },
+        "extended_locked": "एक साल से अधिक डेटा रखना Enterprise प्लान में उपलब्ध है।",
+        "privacy_title": "गोपनीयता",
+        "track_anonymous": "साइन इन न किए हुए आगंतुकों को गिनें",
+        "track_anonymous_description": "बिना खाते वाले लोगों के पेज और कोर्स व्यू शामिल करें। इन्हें कुकीज़ के बिना, हर दिन बदलने वाली एक गुमनाम ID से गिना जाता है।",
+        "collect_location": "आगंतुक का देश सहेजें",
+        "collect_location_description": "दर्ज करें कि विज़िट किस देश से आई। IP पते कभी सहेजे नहीं जाते।",
+        "exclude_staff": "एडमिन और मेंटेनर को आँकड़ों से बाहर रखें",
+        "exclude_staff_description": "संगठन का प्रबंधन करने वालों के व्यू नहीं गिने जाते, ताकि आपकी अपनी जाँच से आँकड़े न बिगड़ें।",
+        "export_title": "रॉ इवेंट डाउनलोड करें (CSV)",
+        "export_description": "चुनी गई अवधि के सभी सहेजे गए विश्लेषण इवेंट, हर इवेंट के लिए एक पंक्ति।",
+        "export_period": "एक्सपोर्ट अवधि",
+        "export_last_days": "पिछले {{count}} दिन",
+        "export_all": "सारा रखा गया डेटा",
+        "export_button": "CSV डाउनलोड करें",
+        "exporting": "डाउनलोड तैयार किया जा रहा है...",
+        "export_done": "डाउनलोड शुरू हो गया",
+        "export_error": "विश्लेषण इवेंट एक्सपोर्ट नहीं हो सके",
+        "export_locked": "रॉ इवेंट एक्सपोर्ट Enterprise प्लान में उपलब्ध है।"
       }
     },
     "users": {
@@ -8211,15 +8256,81 @@
     "unsaved_changes_warning": "आपके बदलाव सहेजे नहीं गए हैं। बिना सहेजे छोड़ दें?"
   },
   "analytics": {
+    "features": {
+      "tab": "सुविधाएँ",
+      "adoption_title": "सुविधा उपयोग",
+      "adoption_subtitle": "हर सुविधा का उपयोग करने वाले लोग, पिछली अवधि की तुलना में। चार्ट में देखने के लिए किसी एक पर क्लिक करें।",
+      "events_count": "{{value}} इवेंट",
+      "names": {
+        "learning": "सीखना",
+        "assessments": "मूल्यांकन",
+        "community": "समुदाय",
+        "ai": "AI सहायक",
+        "podcasts": "पॉडकास्ट",
+        "boards": "बोर्ड",
+        "playgrounds": "प्लेग्राउंड",
+        "paths": "लर्निंग पाथ",
+        "search": "खोज",
+        "messaging": "मैसेजिंग",
+        "library": "लाइब्रेरी",
+        "certificates": "प्रमाणपत्र"
+      },
+      "video_title": "वीडियो एंगेजमेंट",
+      "video_subtitle": "दर्शक हर वीडियो को कितनी दूर तक देखते हैं",
+      "finished": "पूरा देखा",
+      "podcast_title": "पॉडकास्ट सुनना",
+      "podcast_subtitle": "प्रति एपिसोड प्ले और कितने लोग अंत तक सुनते हैं",
+      "assessments_title": "मूल्यांकन",
+      "assessments_subtitle": "सबमिशन, उत्तीर्ण दर और औसत स्कोर",
+      "assignment": "असाइनमेंट",
+      "quiz": "क्विज़",
+      "code": "कोड अभ्यास",
+      "submissions": "सबमिशन",
+      "pass_rate": "उत्तीर्ण दर",
+      "avg_score": "औसत स्कोर",
+      "passed": "उत्तीर्ण",
+      "community_title": "समुदाय गतिविधि",
+      "community_subtitle": "प्रतिदिन चर्चाएँ, टिप्पणियाँ, प्रतिक्रियाएँ और अपवोट",
+      "discussions": "चर्चाएँ",
+      "comments": "टिप्पणियाँ",
+      "reactions": "प्रतिक्रियाएँ",
+      "upvotes": "अपवोट",
+      "peak_contributors": "प्रतिदिन अधिकतम {{value}} योगदानकर्ता",
+      "top_communities": "शीर्ष समुदाय",
+      "ai_title": "AI सहायक",
+      "ai_subtitle": "भेजे गए संदेश और सहायक का उपयोग करने वाले लोग",
+      "messages": "संदेश",
+      "users": "लोग",
+      "by_surface": "कहाँ उपयोग होता है",
+      "acquisition_title": "साइन-अप और साइन-इन",
+      "acquisition_subtitle": "लोग कैसे साइन अप करते हैं, जुड़ते हैं और लॉग इन करते हैं",
+      "signup": "साइन-अप",
+      "join": "जुड़ना",
+      "login": "लॉगिन",
+      "invite": "आमंत्रण",
+      "nudges_title": "ईमेल नज",
+      "nudges_subtitle": "नज के 7 दिनों के भीतर वापस आने वाले लोग",
+      "sent": "भेजे गए",
+      "returned": "वापस आए",
+      "return_rate": "वापसी दर",
+      "paths_title": "लर्निंग पाथ",
+      "boards_title": "बोर्ड और प्लेग्राउंड",
+      "library_title": "लाइब्रेरी",
+      "creation_title": "कंटेंट निर्माण",
+      "creation_subtitle": "इस अवधि में आपकी टीम ने क्या बनाया",
+      "courses_created": "बनाए गए कोर्स",
+      "courses_published": "प्रकाशित कोर्स",
+      "activities_created": "गतिविधियाँ",
+      "boards_created": "बोर्ड",
+      "playgrounds_created": "प्लेग्राउंड",
+      "episodes_published": "एपिसोड"
+    },
+    "data_kept": "डेटा {{period}} तक रखा जाता है",
     "title": "विश्लेषण",
     "subtitle": "अपने शिक्षार्थियों और सामग्री के बारे में जानकारी",
     "tabs": {
       "overview": "अवलोकन",
       "advanced": "उन्नत"
-    },
-    "not_configured": {
-      "title": "Analytics कॉन्फ़िगर नहीं किया गया",
-      "description": "Analytics के लिए Tinybird कनेक्शन की आवश्यकता है। इसे सक्षम करने के लिए <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> और <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> एनवायरनमेंट वेरिएबल सेट करें।"
     },
     "advanced_gate": {
       "requires": "आवश्यक",
@@ -8280,7 +8391,12 @@
       "courses": "कोर्स",
       "count": "गिनती",
       "active_users_last_5_minutes": "पिछले 5 मिनट में सक्रिय उपयोगकर्ता",
-      "course_fallback_name": "पाठ्यक्रम {{uuid}}"
+      "course_fallback_name": "पाठ्यक्रम {{uuid}}",
+      "visitors": "आगंतुक",
+      "signed_in_learners": "साइन-इन शिक्षार्थी",
+      "traffic": "ट्रैफ़िक",
+      "page_views_count": "{{value}} पेज व्यू",
+      "vs_previous_period": "पिछली अवधि की तुलना में"
     },
     "modals": {
       "live_users": {
@@ -8419,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "एनालिटिक्स कॉन्फ़िगर नहीं है",
-      "not_configured_desc": "एनालिटिक्स के लिए Tinybird कॉन्फ़िगर करना आवश्यक है। कृपया अपने व्यवस्थापक से संपर्क करें।",
       "common": {
         "loading": "लोड हो रहा है...",
         "no_data": "अभी तक कोई डेटा नहीं",
@@ -10432,7 +10546,6 @@
       "joined": "जुड़े",
       "na": "लागू नहीं",
       "no_analytics": "कोई एनालिटिक्स उपलब्ध नहीं",
-      "ensure_tinybird": "सुनिश्चित करें कि Tinybird एनालिटिक्स कॉन्फ़िगर है",
       "period": "अवधि:",
       "days_short": "{{count}} दिन",
       "live_users": "लाइव उपयोगकर्ता",
@@ -10593,7 +10706,6 @@
     "analytics": {
       "failed_load": "एनालिटिक्स लोड नहीं हो सका",
       "no_data_available": "कोई एनालिटिक्स डेटा उपलब्ध नहीं",
-      "ensure_tinybird": "सुनिश्चित करें कि Tinybird एनालिटिक्स कॉन्फ़िगर है",
       "no_data": "कोई डेटा नहीं"
     },
     "ee_error": {

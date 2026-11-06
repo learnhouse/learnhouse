@@ -14,7 +14,7 @@ const LTR_LOCKED = [
     "components/Objects/Activities/Video/**",
     // recharts emits absolute SVG x-coordinates; dir=rtl moves the labels but
     // not the ticks they belong to.
-    "components/Dashboard/Analytics/**",
+    "ee/components/Analytics/Dashboard/**",
     // KaTeX is left-to-right by specification.
     "components/Objects/Editor/Extensions/MathEquation/**",
     // Rasterised to PDF by html2canvas, which reproduces logical properties

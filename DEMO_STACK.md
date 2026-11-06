@@ -87,10 +87,10 @@ Riverbend Academy, on the **pro** plan so every feature is visible:
 - A store: 5 offers (a subscription, two single courses, a bundle, one
   pay-what-you-want) and 18 enrolments
 
-**Analytics will look sparse.** It is enabled because it is part of pro, but
-every chart reads from Tinybird, which the demo does not write to. There is no
-Postgres fallback, so this is a known limitation rather than something seeding
-can fix.
+**Analytics will look sparse.** Analytics is an Enterprise Edition feature, and
+the seed writes no analytics events, so the charts only fill in with what
+visitors actually do in the demo. This is a known limitation rather than
+something seeding should fake.
 
 **The store needs the Enterprise Edition.** Payments models live in the private
 `ee/` tree and their tables are not in the migrations, so the seeding step skips

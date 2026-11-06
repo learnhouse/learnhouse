@@ -3058,8 +3058,6 @@
       "episodes": "에피소드",
       "participants": "참가자",
       "loading": "로딩 중...",
-      "enable_analytics_description": "분석을 활성화하여 실시간 사용자, 가입 현황 등을 확인하세요.",
-      "enable": "활성화",
       "quick_stats": "빠른 통계",
       "full_analytics": "전체 분석",
       "live_now": "현재 접속 중",
@@ -4027,7 +4025,8 @@
           "automations": "자동화",
           "menu": "메뉴",
           "danger": "위험 영역",
-          "course_end": "코스 수료"
+          "course_end": "코스 수료",
+          "analytics": "분석"
         },
         "pages": {
           "general": {
@@ -4084,6 +4083,10 @@
           "course_end": {
             "title": "코스 수료",
             "subtitle": "학습자가 코스를 마쳤을 때 표시되는 화면을 사용자 지정합니다"
+          },
+          "analytics": {
+            "title": "분석",
+            "subtitle": "분석 데이터 보관 기간과 수집 항목을 선택하세요"
           }
         },
         "name": "조직 이름",
@@ -5471,6 +5474,48 @@
         "button_link_help": "/courses 같은 내부 경로 또는 전체 https:// URL입니다. 비워 두면 코스 카탈로그로 연결됩니다.",
         "link_invalid": "/로 시작하는 내부 경로 또는 전체 http(s) URL을 사용하세요",
         "preview": "미리보기"
+      },
+      "analytics_settings": {
+        "title": "분석 데이터",
+        "subtitle": "조직 분석의 보관 기간 및 개인정보 보호",
+        "save": "저장",
+        "saving": "저장 중...",
+        "saved": "분석 설정이 저장되었습니다",
+        "error": "분석 설정을 저장할 수 없습니다",
+        "load_error": "분석 설정을 불러올 수 없습니다",
+        "admin_only": "조직 관리자만 분석 설정을 변경할 수 있습니다.",
+        "retention_title": "데이터 보관",
+        "retention_description": "분석 이벤트가 삭제되기 전까지 보관되는 기간입니다.",
+        "retention_note": "보관 기간을 줄이면 다음 야간 정리 때 오래된 데이터가 삭제됩니다.",
+        "retention_default": "{{label}} (기본값)",
+        "retention_options": {
+          "days_90": "90일",
+          "days_180": "6개월",
+          "days_365": "1년",
+          "days_730": "2년",
+          "days_1095": "3년",
+          "days_1825": "5년",
+          "days_2555": "7년",
+          "days_n": "{{count}}일"
+        },
+        "extended_locked": "1년이 넘는 데이터 보관은 Enterprise 플랜에서 사용할 수 있습니다.",
+        "privacy_title": "개인정보 보호",
+        "track_anonymous": "로그인하지 않은 방문자 집계",
+        "track_anonymous_description": "계정이 없는 사람의 페이지 및 강좌 조회를 포함합니다. 쿠키 없이 매일 바뀌는 익명 ID로 집계됩니다.",
+        "collect_location": "방문자 국가 저장",
+        "collect_location_description": "방문이 어느 국가에서 왔는지 기록합니다. IP 주소는 저장되지 않습니다.",
+        "exclude_staff": "관리자와 유지관리자를 통계에서 제외",
+        "exclude_staff_description": "조직을 관리하는 사람의 조회는 집계되지 않으므로, 직접 테스트해도 수치가 왜곡되지 않습니다.",
+        "export_title": "원시 이벤트 다운로드 (CSV)",
+        "export_description": "선택한 기간에 저장된 모든 분석 이벤트, 이벤트당 한 행.",
+        "export_period": "내보내기 기간",
+        "export_last_days": "최근 {{count}}일",
+        "export_all": "보관된 전체",
+        "export_button": "CSV 다운로드",
+        "exporting": "다운로드를 준비하는 중...",
+        "export_done": "다운로드가 시작되었습니다",
+        "export_error": "분석 이벤트를 내보낼 수 없습니다",
+        "export_locked": "원시 이벤트 내보내기는 Enterprise 플랜에서 사용할 수 있습니다."
       }
     },
     "users": {
@@ -8162,15 +8207,81 @@
     "unsaved_changes_warning": "저장하지 않은 변경 사항이 있습니다. 저장하지 않고 나가시겠습니까?"
   },
   "analytics": {
+    "features": {
+      "tab": "기능",
+      "adoption_title": "기능 사용 현황",
+      "adoption_subtitle": "각 기능을 사용한 사람 수(이전 기간 대비). 클릭하면 차트로 볼 수 있습니다.",
+      "events_count": "이벤트 {{value}}건",
+      "names": {
+        "learning": "학습",
+        "assessments": "평가",
+        "community": "커뮤니티",
+        "ai": "AI 어시스턴트",
+        "podcasts": "팟캐스트",
+        "boards": "보드",
+        "playgrounds": "플레이그라운드",
+        "paths": "학습 경로",
+        "search": "검색",
+        "messaging": "메시지",
+        "library": "라이브러리",
+        "certificates": "수료증"
+      },
+      "video_title": "동영상 참여도",
+      "video_subtitle": "시청자가 각 동영상을 어디까지 보는지",
+      "finished": "시청 완료",
+      "podcast_title": "팟캐스트 청취",
+      "podcast_subtitle": "에피소드별 재생 수와 끝까지 들은 사람 수",
+      "assessments_title": "평가",
+      "assessments_subtitle": "제출 수, 통과율, 평균 점수",
+      "assignment": "과제",
+      "quiz": "퀴즈",
+      "code": "코드 연습",
+      "submissions": "제출",
+      "pass_rate": "통과율",
+      "avg_score": "평균 점수",
+      "passed": "통과",
+      "community_title": "커뮤니티 활동",
+      "community_subtitle": "하루 토론, 댓글, 반응, 추천 수",
+      "discussions": "토론",
+      "comments": "댓글",
+      "reactions": "반응",
+      "upvotes": "추천",
+      "peak_contributors": "하루 최대 {{value}}명 기여",
+      "top_communities": "인기 커뮤니티",
+      "ai_title": "AI 어시스턴트",
+      "ai_subtitle": "보낸 메시지 수와 어시스턴트 사용자",
+      "messages": "메시지",
+      "users": "사용자",
+      "by_surface": "사용 위치",
+      "acquisition_title": "가입 및 로그인",
+      "acquisition_subtitle": "가입, 참여, 로그인 현황",
+      "signup": "가입",
+      "join": "참여",
+      "login": "로그인",
+      "invite": "초대",
+      "nudges_title": "이메일 알림",
+      "nudges_subtitle": "알림 후 7일 이내에 돌아온 사람",
+      "sent": "발송",
+      "returned": "재방문",
+      "return_rate": "재방문율",
+      "paths_title": "학습 경로",
+      "boards_title": "보드 및 플레이그라운드",
+      "library_title": "라이브러리",
+      "creation_title": "콘텐츠 제작",
+      "creation_subtitle": "이 기간 동안 팀이 만든 것",
+      "courses_created": "생성한 강좌",
+      "courses_published": "게시한 강좌",
+      "activities_created": "활동",
+      "boards_created": "보드",
+      "playgrounds_created": "플레이그라운드",
+      "episodes_published": "에피소드"
+    },
+    "data_kept": "데이터 보관 기간: {{period}}",
     "title": "분석",
     "subtitle": "학습자와 콘텐츠에 대한 인사이트",
     "tabs": {
       "overview": "개요",
       "advanced": "고급"
-    },
-    "not_configured": {
-      "title": "분석이 구성되지 않았습니다",
-      "description": "분석 기능을 사용하려면 Tinybird 연결이 필요합니다. 활성화하려면 <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> 및 <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> 환경 변수를 설정하세요."
     },
     "advanced_gate": {
       "requires": "필요",
@@ -8231,7 +8342,12 @@
       "courses": "코스",
       "count": "개수",
       "active_users_last_5_minutes": "최근 5분 내 활성 사용자",
-      "course_fallback_name": "코스 {{uuid}}"
+      "course_fallback_name": "코스 {{uuid}}",
+      "visitors": "방문자",
+      "signed_in_learners": "로그인한 학습자",
+      "traffic": "트래픽",
+      "page_views_count": "페이지뷰 {{value}}회",
+      "vs_previous_period": "이전 기간 대비"
     },
     "modals": {
       "live_users": {
@@ -8369,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "분석 미설정",
-      "not_configured_desc": "분석을 사용하려면 Tinybird 설정이 필요합니다. 관리자에게 문의하세요.",
       "common": {
         "loading": "로딩 중...",
         "no_data": "아직 데이터가 없습니다",
@@ -10370,7 +10484,6 @@
       "joined": "가입일",
       "na": "해당 없음",
       "no_analytics": "사용 가능한 분석 데이터가 없습니다",
-      "ensure_tinybird": "Tinybird 분석이 구성되어 있는지 확인하세요",
       "period": "기간:",
       "days_short": "{{count}}일",
       "live_users": "실시간 사용자",
@@ -10528,7 +10641,6 @@
     "analytics": {
       "failed_load": "분석을 불러오지 못했습니다",
       "no_data_available": "사용 가능한 분석 데이터가 없습니다",
-      "ensure_tinybird": "Tinybird 분석이 구성되어 있는지 확인하세요",
       "no_data": "데이터 없음"
     },
     "ee_error": {

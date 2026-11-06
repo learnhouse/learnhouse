@@ -23,6 +23,8 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.features_utils.usage import check_feature_access
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from src.security.superadmin import is_user_superadmin
 
 
@@ -179,6 +181,22 @@ async def get_episodes_by_podcast(
     ]
 
 
+async def _track_episode_published(
+    podcast: Podcast,
+    episode: PodcastEpisode,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+) -> None:
+    await track(
+        event_name=analytics_events.PODCAST_EPISODE_PUBLISHED,
+        org_id=podcast.org_id,
+        user_id=resolve_acting_user_id(current_user),
+        properties={
+            "podcast_uuid": podcast.podcast_uuid,
+            "episode_uuid": episode.episode_uuid,
+        },
+    )
+
+
 async def create_episode(
     request: Request,
     podcast_uuid: str,
@@ -249,6 +267,9 @@ async def create_episode(
     await db_session.commit()
     await db_session.refresh(episode)
 
+    if episode.published:
+        await _track_episode_published(podcast, episode, current_user)
+
     await dispatch_webhooks(
         event_name="podcast_episode_created",
         org_id=podcast.org_id,
@@ -294,6 +315,8 @@ async def update_episode(
     # Same plan gate as adding an episode
     await check_feature_access("podcasts", podcast.org_id, db_session)
 
+    was_published = bool(episode.published)
+
     # Update only the fields that were passed in
     # Skip empty strings for file fields to prevent accidental clearing
     file_fields = {'audio_file', 'thumbnail_image'}
@@ -309,6 +332,9 @@ async def update_episode(
     db_session.add(episode)
     await db_session.commit()
     await db_session.refresh(episode)
+
+    if episode.published and not was_published:
+        await _track_episode_published(podcast, episode, current_user)
 
     return PodcastEpisodeRead(**episode.model_dump())
 

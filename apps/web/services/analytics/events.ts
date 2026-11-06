@@ -10,17 +10,29 @@
  * - Toggles carry their resulting state in a property, never two event names
  *   (`course_published_toggled { published }`, not `course_published`/`_unpublished`).
  *
- * The enum VALUE is the wire name sent to the backend sink. Where the canonical
- * PostHog name should differ from the legacy backend name, add an entry to
- * POSTHOG_NAME_OVERRIDES below; call-sites never deal with this.
+ * Every event goes to PostHog. The few listed in BACKEND_EVENTS also go to
+ * the LearnHouse backend, which powers the org analytics dashboards; for
+ * those the enum VALUE is the backend wire name and must match the API's
+ * catalog (apps/api/src/services/analytics/events.py), which drops anything
+ * it doesn't know. Where the PostHog name should differ from the backend
+ * name, add an entry to POSTHOG_NAME_OVERRIDES below; call-sites never deal
+ * with this.
  */
 export enum AnalyticsEvent {
-  // ── Existing events already in code (preserved wire names) ────────────────
+  // ── Org analytics (backend) events; see BACKEND_EVENTS ───────────────────
   CourseViewed = 'course_view',
   ActivityViewed = 'activity_view',
   TimeOnActivity = 'time_on_activity',
   SearchQuery = 'search_query',
   PageViewed = 'page_view',
+  VideoProgress = 'video_progress',
+  PodcastEpisodePlayed = 'podcast_episode_played',
+  PodcastEpisodeProgress = 'podcast_episode_progress',
+  PathViewed = 'path_viewed',
+  LibraryResourceOpened = 'library_resource_opened',
+  // Also backend events, grouped with their feature below: BoardViewed,
+  // PlaygroundViewed, CertificateViewed, AiAssistantOpened, CommunityViewed,
+  // CourseShared, OfferViewed.
 
   // ── Auth & onboarding ─────────────────────────────────────────────────────
   SignupSubmitted = 'signup_submitted',
@@ -163,7 +175,7 @@ export enum AnalyticsEvent {
   // ── Store & checkout (buyer) ─────────────────────────────────────────────
   StoreViewed = 'store_viewed',
   StoreOfferCardClicked = 'store_offer_card_clicked',
-  OfferViewed = 'offer_viewed',
+  OfferViewed = 'store_offer_viewed',
   OfferCheckoutStarted = 'offer_checkout_started',
   CheckoutLoginRedirected = 'checkout_login_redirected',
   CheckoutSessionCreated = 'checkout_session_created',
@@ -246,10 +258,55 @@ export enum AnalyticsEvent {
 export const POSTHOG_NAME_OVERRIDES: Partial<Record<AnalyticsEvent, string>> = {
   [AnalyticsEvent.CourseViewed]: 'course_viewed',
   [AnalyticsEvent.ActivityViewed]: 'activity_viewed',
-  [AnalyticsEvent.SearchQuery]: 'search_executed',
-  // PageViewed is emitted to PostHog as the native $pageview via trackPageView,
-  // never through capture(AnalyticsEvent.PageViewed).
+  [AnalyticsEvent.OfferViewed]: 'offer_viewed',
 }
+
+/**
+ * Events the backend accepts from the browser (`POST /signals/batch`). Only
+ * these are sent there; everything else is PostHog-only. Must stay in step
+ * with the web events in the API catalog.
+ */
+export const BACKEND_EVENTS: ReadonlySet<AnalyticsEvent> = new Set([
+  // Accepted from visitors who aren't signed in too
+  AnalyticsEvent.PageViewed,
+  AnalyticsEvent.CourseViewed,
+  AnalyticsEvent.ActivityViewed,
+  AnalyticsEvent.SearchQuery,
+  AnalyticsEvent.PodcastEpisodePlayed,
+  AnalyticsEvent.CourseShared,
+  AnalyticsEvent.OfferViewed,
+  AnalyticsEvent.CommunityViewed,
+  AnalyticsEvent.BoardViewed,
+  AnalyticsEvent.PlaygroundViewed,
+  AnalyticsEvent.PathViewed,
+  AnalyticsEvent.PodcastEpisodeProgress,
+  AnalyticsEvent.CertificateViewed,
+  AnalyticsEvent.LibraryResourceOpened,
+  // Signed-in org members only
+  AnalyticsEvent.TimeOnActivity,
+  AnalyticsEvent.VideoProgress,
+  AnalyticsEvent.AiAssistantOpened,
+])
+
+/** Backend events the API only keeps for signed-in members. */
+export const MEMBER_ONLY_BACKEND_EVENTS: ReadonlySet<AnalyticsEvent> = new Set([
+  AnalyticsEvent.TimeOnActivity,
+  AnalyticsEvent.VideoProgress,
+  AnalyticsEvent.AiAssistantOpened,
+])
+
+/**
+ * Backend events that are not sent to PostHog: PostHog already gets the same
+ * moment from another event (native $pageview, search_executed,
+ * episode_played), or it's too chatty to be worth the volume there.
+ */
+export const BACKEND_ONLY_EVENTS: ReadonlySet<AnalyticsEvent> = new Set([
+  AnalyticsEvent.PageViewed,
+  AnalyticsEvent.SearchQuery,
+  AnalyticsEvent.PodcastEpisodePlayed,
+  AnalyticsEvent.VideoProgress,
+  AnalyticsEvent.PodcastEpisodeProgress,
+])
 
 /**
  * Coarse feature group for an event, attached as the `feature` property so
@@ -266,6 +323,7 @@ const GROUP_PREFIXES: Array<[string, string[]]> = [
   ['playground', ['playground_']],
   ['board', ['board_']],
   ['library', ['library_', 'folder_', 'media_', 'resource_', 'usergroup_']],
+  ['path', ['path_']],
   ['search', ['search_']],
   ['copilot', ['copilot_', 'ai_assistant', 'ai_message']],
   ['certificate', ['certificate_', 'trail_']],

@@ -34,7 +34,11 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
   const certificateCaptureRef = useRef<HTMLDivElement>(null);
   const { track } = useLHAnalytics('learner');
 
-  useTrackView(AnalyticsEvent.CertificateViewed, {}, !!userCertificate);
+  useTrackView(
+    AnalyticsEvent.CertificateViewed,
+    { certificate_uuid: userCertificate?.certificate_user?.user_certification_uuid, source: 'owner' },
+    !!userCertificate,
+  );
 
   // Recipient's display name for the certificate. Falls back through
   // full name -> username -> the session user, and is empty when unknown so

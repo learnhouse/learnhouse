@@ -3101,7 +3101,7 @@ async def create_assignment_submission(
             properties={
                 "assignment_uuid": assignment_uuid,
                 "course_uuid": course.course_uuid,
-                "attempt_number": submitted_attempt_number,
+                "attempt": submitted_attempt_number,
             },
         )
         # Durable audit row. Retries reset the live submission in place, so each
@@ -4035,6 +4035,33 @@ async def _apply_grade_and_finalize(
     notify_ee_learner_progress(user_id, course.id)
 
     if dispatch_webhook:
+        await track(
+            event_name=analytics_events.ASSIGNMENT_GRADED,
+            org_id=course.org_id,
+            user_id=user_id,
+            properties={
+                "course_uuid": course.course_uuid,
+                "assignment_uuid": assignment.assignment_uuid,
+                "grade": computed["grade"],
+                "max_grade": computed["max_grade"],
+                "passed": computed["passed"],
+            },
+        )
+        # Quiz tasks are graded here, server-side, from the stored answers: one
+        # quiz_submitted per quiz the learner handed in with this attempt.
+        for row in computed["tasks"]:
+            if row["assignment_type"] == AssignmentTaskTypeEnum.QUIZ and row["submitted"]:
+                await track(
+                    event_name=analytics_events.QUIZ_SUBMITTED,
+                    org_id=course.org_id,
+                    user_id=user_id,
+                    properties={
+                        "course_uuid": course.course_uuid,
+                        "score": row["grade"],
+                        "max_score": row["max_grade"],
+                        "passed": row["passed"],
+                    },
+                )
         await dispatch_webhooks(
             event_name="assignment_graded",
             org_id=course.org_id,

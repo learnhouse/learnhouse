@@ -90,6 +90,7 @@ export const OrgMenu = (props: any) => {
   // Filter dashboard menu items by resolved_features from API
   const rf = config?.resolved_features
   const visibleDashboardItems = DASHBOARD_MENU_ITEMS.filter((item: DashboardMenuItem) => {
+    if (item.available && !item.available()) return false
     if (!item.featureKey) return true
     if (rf?.[item.featureKey]) return rf[item.featureKey].enabled
     return isFeatureAvailable(item.featureKey)
