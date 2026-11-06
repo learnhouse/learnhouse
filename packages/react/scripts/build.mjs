@@ -45,6 +45,16 @@ export const SHIMS = {
   '@sentry/nextjs': `${shims}/sentry.ts`,
 }
 
+// Web files replaced however they are imported (alias or relative path). The
+// app's analytics hook reaches PostHog; blocks import it from several places.
+const SHIM_FILES = {
+  'services/analytics/useLHAnalytics': `${shims}/analytics.ts`,
+}
+const shimForFile = (file) => {
+  const rel = path.relative(webDir, file).replace(/\.(tsx?|jsx?)$/, '')
+  return SHIM_FILES[rel]
+}
+
 const webAliases = Object.entries({
   '@components/': 'components/',
   '@public/': 'public/',
@@ -80,6 +90,8 @@ const sourcePlugin = {
       const shim = SHIMS[args.path]
       if (shim) return { path: shim }
       const web = resolveWebPath(args.path)
+      const target = web ?? (args.path.startsWith('.') ? path.resolve(args.resolveDir, args.path) : null)
+      if (target && shimForFile(target)) return { path: shimForFile(target) }
       if (web) {
         // Let esbuild find the extension / index file inside the web tree.
         const r = await b.resolve('./' + path.basename(web), {
