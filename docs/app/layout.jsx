@@ -40,14 +40,7 @@ export const metadata = {
     siteName: 'LearnHouse Docs',
     description:
       'Official documentation for LearnHouse, the open-source learning management system (LMS). Guides for self-hosting, course creation, AI features, API reference, and more.',
-    images: [
-      {
-        url: 'https://docs.learnhouse.app/img/pages/learnhouse-github.png',
-        alt: 'LearnHouse Docs',
-        width: 2051,
-        height: 1016,
-      },
-    ],
+    images: [{ url: 'https://docs.learnhouse.app/og', alt: 'LearnHouse Docs', width: 1200, height: 630 }],
   },
   twitter: {
     creator: '@getlearnhouse',

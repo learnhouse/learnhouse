@@ -1,3 +1,7 @@
+---
+description: Set up a domain and SSL for self-hosted LearnHouse with automatic Let's Encrypt certificates or your own reverse proxy, and set the cookie domain.
+---
+
 import { Callout } from '@/components/mdx'
 
 # SSL and Domain Setup
@@ -20,7 +24,7 @@ Choose **I'll handle SSL myself** in the wizard when TLS ends in a proxy you run
 
 ### Caddy
 
-```
+```text title="Caddyfile"
 learn.example.com {
     reverse_proxy localhost:80
 }

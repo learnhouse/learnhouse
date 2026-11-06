@@ -54,7 +54,7 @@ export function DemoGallery({ limit, filters = true }) {
         {demos.map((demo) => (
           <Link key={demo.id} href={`/demos/${demo.id}`} className="lhx-card lhd-card">
             <div className="lhx-shot">
-              <img src={`/img/headless/${demo.id}.jpg`} alt={`${demo.name} demo`} loading="lazy" />
+              <img src={`/img/headless/thumbs/${demo.id}.webp`} alt={`${demo.name} demo`} loading="lazy" decoding="async" width="640" height="400" />
             </div>
             <span className="lhx-body">
               <span className="lhx-name">{demo.name}</span>

@@ -3,11 +3,15 @@ import { ArrowRight } from '@phosphor-icons/react/dist/ssr'
 import { DemoGallery } from '@/components/headless/Headless'
 import { demos } from '@/lib/demos'
 import './demos.css'
+import { socialMetadata } from '../../lib/seo'
+
+const DESCRIPTION = `${demos.length} open-source apps built on the LearnHouse API: course sites, themes, embeds, AI tools and industry portals. Try them and start from their code.`
 
 export const metadata = {
   title: 'Demos',
-  description: `${demos.length} apps built on the LearnHouse API: products, themes, embeds, AI experiments and industry portals. Try them live and start from their open-source code.`,
+  description: DESCRIPTION,
   alternates: { canonical: 'https://docs.learnhouse.app/demos' },
+  ...socialMetadata({ title: 'LearnHouse Headless demos', description: DESCRIPTION, path: '/demos', image: '/og/demos' }),
 }
 
 export default function DemosPage() {

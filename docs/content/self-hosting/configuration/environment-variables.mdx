@@ -1,3 +1,7 @@
+---
+description: Reference for every environment variable a self-hosted LearnHouse instance reads, with types, defaults and the service that uses each one.
+---
+
 import { Callout } from '@/components/mdx'
 
 # Environment Variables
@@ -5,7 +9,9 @@ import { Callout } from '@/components/mdx'
 This page is the deployment reference for LearnHouse environment variables. The backend
 loads `apps/api/config/config.yaml` first, then overrides matching settings from the
 environment. The web app reads `NEXT_PUBLIC_*` values from runtime config or `process.env`.
-The CLI-generated `.env` file is the recommended way to configure a self-hosted instance.
+The CLI-generated `.env` file is the recommended way to configure a self-hosted instance. See
+[CLI Environment Variables](/cli/environment-variables) for how that file is laid out and the
+variables the CLI itself reads.
 
 <Callout type="info">
 Values shown as "required" have no safe production fallback. Values shown as "unset" are
@@ -46,6 +52,8 @@ optional: the feature stays disabled or uses a runtime fallback when the variabl
 | --- | --- | --- | --- | --- |
 | `LEARNHOUSE_SQL_CONNECTION_STRING` | PostgreSQL connection string for the API and Alembic migrations. | PostgreSQL URL | `postgresql://learnhouse:learnhouse@localhost:5432/learnhouse`; production installs should set it | API, API migrations, CLI |
 | `LEARNHOUSE_DB_URL` | Fallback database URL for the standalone `apps/api/scripts/migrate.py` migration helper when `DATABASE_URL` is unset. | PostgreSQL URL | `postgresql://learnhouse:learnhouse@localhost:5432/learnhouse` | API migration script |
+| `LEARNHOUSE_AUTO_MIGRATE` | Migrate the database schema when the API starts. Set to `false` to run migrations yourself (`uv run python cli.py migrate`); the API then only creates missing tables. See [Database Migrations](/self-hosting/maintenance/updates#database-migrations). | boolean | `true` | API |
+| `LEARNHOUSE_DB_PING_AFTER_IDLE_SECONDS` | A pooled database connection that sat idle this many seconds is checked before reuse. Lower it if a pooler or firewall drops idle connections sooner. | number | `10` | API |
 | `LEARNHOUSE_PGBOUNCER` | Forces PgBouncer/Supavisor-safe asyncpg settings even when the URL does not reveal a pooler. | boolean | `false` | API |
 | `LEARNHOUSE_REDIS_CONNECTION_STRING` | Redis URL for the API cache/session/event clients. | Redis URL | `redis://localhost:6379/learnhouse` | API, CLI |
 | `LEARNHOUSE_REDIS_URL` | Redis URL for the collaboration server. | Redis URL | `redis://localhost:6379`; CLI setup emits `redis://redis:6379` | Collab, CLI |
@@ -168,6 +176,8 @@ These jobs run inside the API process. Most of them need Redis.
 | `LEARNHOUSE_BACKFILL_INTERVAL_HOURS` | Hours between scheduled backfill runs, which catch up work that predates a feature: HLS transcodes for older videos (when HLS is enabled), AI search indexing, and AI chapters for captioned videos on paid plans. `0` turns them off. | number | `48` | API |
 | `LEARNHOUSE_BACKFILL_HLS_LIMIT` | Maximum videos one backfill run queues for HLS. | integer | `50` | API |
 | `LEARNHOUSE_BACKFILL_CHAPTERS_LIMIT` | Maximum videos one backfill run spends AI credits on for chapters. | integer | `100` | API |
+| `LEARNHOUSE_DRIP_EMAILS_DISABLED` | Any value turns off the hourly job that emails learners when drip content unlocks. | any value or unset | unset (job runs) | API |
+| `LEARNHOUSE_MESSAGING_EMAILS_DISABLED` | Any value turns off the job that emails unread messages and delivers reminders. | any value or unset | unset (job runs) | API |
 
 ## Demo organization
 
@@ -178,16 +188,13 @@ These jobs run inside the API process. Most of them need Redis.
 | `LEARNHOUSE_DEMO_REFRESH_MINUTES` | Minutes between demo resets. | integer | `10` | API |
 | `LEARNHOUSE_DEMO_NO_SCHEDULER` | Turn off the built-in reset schedule, for example to run the API's `demo-sync` command from your own cron. | boolean | `false` | API |
 
-## Code execution and analytics
+## Code execution
 
 | Variable | Description | Type | Default / required | Used by |
 | --- | --- | --- | --- | --- |
 | `LEARNHOUSE_JUDGE0_API_URL` | Judge0 API URL. Setting it enables code execution routes. | URL | unset | API |
 | `LEARNHOUSE_JUDGE0_CLIENT_ID` | Optional Judge0 client ID. | string | unset | API |
 | `LEARNHOUSE_JUDGE0_CLIENT_SECRET` | Optional Judge0 client secret. | secret string | unset | API |
-| `LEARNHOUSE_TINYBIRD_API_URL` | Tinybird regional API URL. Setting it enables analytics config. | URL | unset | API |
-| `LEARNHOUSE_TINYBIRD_INGEST_TOKEN` | Tinybird token with ingest/write permissions. | secret string | unset; required for event ingestion | API |
-| `LEARNHOUSE_TINYBIRD_READ_TOKEN` | Tinybird token with read/query permissions. | secret string | unset; required for analytics reads | API |
 
 ## Observability
 
@@ -261,6 +268,25 @@ See [Live Sessions](/enterprise/live-sessions).
 | `LEARNHOUSE_LIVE_ZOOM_CLIENT_ID` / `_SECRET` | Platform Zoom OAuth app for live sessions. | string / secret | unset | EE backend |
 | `LEARNHOUSE_LIVE_OAUTH_REDIRECT_URI` | Exact OAuth callback URL for live session providers. | URL | `<API>/api/v1/live_sessions/oauth/callback` | EE backend |
 
+### Analytics
+
+See [Analytics](/platform/analytics). Analytics is stored in PostgreSQL and needs no extra service.
+
+| Variable | Description | Type | Default / required | Used by |
+| --- | --- | --- | --- | --- |
+| `LEARNHOUSE_ANALYTICS_MAINTENANCE` | Run the analytics summary and retention job inside the API. Set to `false` only if another process runs it. | boolean | `true` | EE backend |
+| `LEARNHOUSE_TINYBIRD_API_URL` | Legacy. Only read by the one-time [Tinybird import](/platform/analytics#migrating-from-tinybird). | URL | unset | EE import script |
+| `LEARNHOUSE_TINYBIRD_READ_TOKEN` | Legacy. Tinybird read token for the same import. | secret string | unset | EE import script |
+
+### LTI
+
+See [LTI](/enterprise/lti).
+
+| Variable | Description | Type | Default / required | Used by |
+| --- | --- | --- | --- | --- |
+| `LEARNHOUSE_LTI_BASE_URL` | Public API origin used in the tool URLs you give the LMS (login, launch, keyset, registration). Set it when the LMS reaches the API through a different host than browsers do. | URL | unset; resolved like `LEARNHOUSE_MEDIA_URL` | EE backend |
+| `LEARNHOUSE_LTI_ALLOW_PRIVATE_HOSTS` | Allow LTI requests to LMS addresses on private or internal networks. Accepts `true`/`1`/`yes`. Ignored on LearnHouse Cloud. | boolean | `false` | EE backend |
+
 ## LearnHouse Cloud only
 
 The hosted LearnHouse Cloud platform reads these variables. Self-hosted instances don't need them.
@@ -294,7 +320,7 @@ These variables do not use the `LEARNHOUSE_` prefix, but the CLI writes them int
 
 ## Full example
 
-```env filename=".env" copy
+```env title=".env"
 # Domain and hosting
 LEARNHOUSE_DOMAIN=learn.example.com
 HTTP_PORT=443

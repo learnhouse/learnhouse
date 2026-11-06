@@ -68,7 +68,6 @@ import {
   Package,
   Scroll,
   Robot,
-  WebhooksLogo,
   PlugsConnected,
   Keyboard,
   Sparkle,
@@ -226,7 +225,6 @@ const iconMap = {
   // Self Hosting > Installation
   '/self-hosting/installation/requirements': ListChecks,
   '/self-hosting/installation/quick-install': Lightning,
-  '/self-hosting/installation/cli-reference': Terminal,
 
   // Self Hosting > Configuration
   '/self-hosting/configuration/environment-variables': Code,
@@ -284,7 +282,6 @@ const iconMap = {
 
   // Developers > API
   '/developers/api/authentication': Key,
-  '/developers/api/endpoints': Plug,
 
   // Developers > Migration
   '/developers/migration/programmatic': Code,
@@ -300,8 +297,6 @@ const iconMap = {
   '/guides/build-learning-platform/with-an-agent': Robot,
   '/guides/build-learning-platform/agent-spec': ClipboardText,
 
-  // Guides > Custom Features
-  '/guides/custom-features/webhooks': WebhooksLogo,
 }
 
 function getIcon(route) {
@@ -318,7 +313,7 @@ const labelMap = {
   '/developers/sdk': 'JavaScript SDK',
   '/developers/api': 'REST API',
   '/guides/build-learning-platform': 'Build a Learning Platform',
-  '/guides/custom-features': 'Custom Features & Webhooks',
+  '/guides/custom-features': 'Custom Features with the API',
 }
 
 // Explicit child ordering for folders whose pages shouldn't be alphabetical.

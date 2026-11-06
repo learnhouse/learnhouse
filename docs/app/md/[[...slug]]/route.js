@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { demoListFrom, listContentPages, mdxToMarkdown } from '@/lib/markdown/mdx-to-md.mjs'
+import { demoListFrom, listContentPages, mdxToMarkdown, SITE_URL } from '@/lib/markdown/mdx-to-md.mjs'
 
 // Every docs page as Markdown at `<route>.md` (rewritten here by next.config).
 // Built once at build time; agents and "Copy page" read these.
@@ -24,6 +24,8 @@ export async function GET(_req, { params }) {
   return new Response(markdown, {
     headers: {
       'Content-Type': 'text/markdown; charset=utf-8',
+      // The HTML page is the one to index; this is its plain-text twin.
+      Link: `<${SITE_URL}/${route}>; rel="canonical"`,
       'Cache-Control': 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800',
     },
   })

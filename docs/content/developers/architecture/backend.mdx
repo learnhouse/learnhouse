@@ -1,3 +1,8 @@
+---
+title: "Backend Architecture"
+description: "Learn how the LearnHouse FastAPI backend is built: Python 3.14, SQLModel, Alembic, PostgreSQL with pgvector, Redis, background jobs and CLI tasks."
+---
+
 import { Callout } from '@/components/mdx'
 
 # Backend Architecture
@@ -30,6 +35,7 @@ Exact versions are pinned in `apps/api/pyproject.toml` and `uv.lock`.
 - **boto3**: S3-compatible storage
 - **resend**: Transactional email (SMTP is also supported)
 - **sentry-sdk**: Error tracking and monitoring
+- **mcp**: The MCP server that lets AI apps work with an organization
 
 ## Configuration
 
@@ -42,7 +48,7 @@ The API prefix for all endpoints is `/api/v1/`. See the [environment variable re
 
 ## Command-line tasks
 
-`apps/api/cli.py` holds maintenance commands that run against the configured database, for example `install` (create the first organization and admin), `backfill`, `index-backfill`, `transcode-backfill`, `chapters-backfill` and `demo-sync`. Run them with `uv run python cli.py <command>` from `apps/api`, or inside the app container from `/app/api`.
+`apps/api/cli.py` holds maintenance commands that run against the configured database, for example `migrate` (bring the schema up to date; the API also does this on startup unless `LEARNHOUSE_AUTO_MIGRATE=false`), `install` (create the first organization and admin), `lms-import` (convert exports from another LMS), `backfill`, `index-backfill`, `transcode-backfill` and `chapters-backfill`. Run them with `uv run python cli.py <command>` from `apps/api`, or inside the app container from `/app/api`.
 
 ## Responsibilities
 
@@ -56,11 +62,12 @@ The backend handles all core platform operations:
 - **Search**: Content indexing and search across courses and activities
 - **Payments**: Stripe integration for course monetization
 - **Email**: Transactional email via Resend or SMTP
+- **MCP server**: Served at `/mcp` with its own OAuth flow, so AI apps can read and change content with a member's permissions
 - **Background jobs**: AI search indexing, HLS video transcoding, AI captions and scheduled backfills, run inside the API process with Redis as the queue
 
 ## Database Layer
 
-SQLModel is used as the ORM, connecting to a PostgreSQL 16 database with the pgvector extension for AI embeddings. Database models define the schema for all entities: organizations, users, courses, chapters, activities, collections, and more. Migrations are managed with **Alembic** to keep the schema in sync across environments.
+SQLModel is used as the ORM, connecting to a PostgreSQL 16 database with the pgvector extension for AI embeddings. Database models define the schema for all entities: organizations, users, courses, chapters, activities, folders, and more. Migrations are managed with **Alembic** and applied by `cli.py migrate` or on API startup.
 
 ## Caching
 

@@ -1,3 +1,7 @@
+---
+description: Reference for every LearnHouse CLI command, including setup, start, update, backup, restore, doctor, env, scale and dev, with flags and exit codes.
+---
+
 import { Callout } from '@/components/mdx'
 
 # Commands
@@ -83,7 +87,7 @@ Re-running `setup` on an existing installation (same `--name` or directory) reco
 
 ## `start`
 
-Start all containers for your deployment (`docker compose up -d`).
+Start all containers for your deployment (`docker compose up -d`). The first start pulls the images. After you edit `.env` by hand, run `start` again: it recreates the containers whose configuration changed.
 
 ```bash
 npx learnhouse start
@@ -293,6 +297,8 @@ Enterprise installations get their own categories: License & Images, Domain & TL
 
 Secret values are always masked and are entered without echo. Only the variables you change are rewritten; the rest of the file stays as it was. When you change `HTTP_PORT`, `learnhouse.config.json` is updated to match. At the end the CLI offers to restart services so the change takes effect.
 
+`env` edits a fixed set of variables. For anything else, such as the [AI provider settings](/self-hosting/configuration/ai-setup), edit `.env` directly and run `npx learnhouse start`.
+
 <Callout type="warning">
 Changing `POSTGRES_PASSWORD` in `.env` does not change the password of the running database, because PostgreSQL only reads it when the data volume is first created. Change it in PostgreSQL first (`ALTER USER ... PASSWORD ...`), then in `.env`. To change the domain, re-run `setup`: the URLs, cookie domain and proxy configuration were all generated from it.
 </Callout>
@@ -336,11 +342,13 @@ Run `npx learnhouse doctor`. It scans recent logs and reports errors. Common cau
 
 ### `update` migration fails
 
-If the migrations fail, `update` restores the previous image in `docker-compose.yml` and starts the previous version again. Your pre-upgrade dump is in `backups/`. Check the [LearnHouse releases page](https://github.com/learnhouse/learnhouse/releases) and the [GitHub issues](https://github.com/learnhouse/learnhouse/issues) for your version before retrying. To retry the migrations by hand:
+If the migrations fail, `update` restores the previous image in `docker-compose.yml` and starts the previous version again. Your pre-upgrade dump is in `backups/`. Check the [LearnHouse releases page](https://github.com/learnhouse/learnhouse/releases) and the [GitHub issues](https://github.com/learnhouse/learnhouse/issues) for your version before retrying. To run the migrations by hand, from the installation directory:
 
 ```bash
-docker compose exec learnhouse-app sh -c "cd /app/api && uv run alembic upgrade heads"
+docker compose exec learnhouse-app sh -c "cd /app/api && uv run python cli.py migrate"
 ```
+
+See [Database Migrations](/self-hosting/maintenance/updates#database-migrations) for how the API migrates on startup.
 
 ### Database unreachable after update
 
@@ -348,4 +356,4 @@ The database container may need a moment after startup. Wait 20 to 30 seconds an
 
 ### Docker is not on your PATH, or you use a compatible CLI
 
-Set `LEARNHOUSE_DOCKER_BIN` to the Docker executable the CLI should call, for example an absolute path or another Docker-compatible CLI. See [Environment Variables](/cli/environment-variables).
+Set `LEARNHOUSE_DOCKER_BIN` to the Docker executable the CLI should call, for example an absolute path or another Docker-compatible CLI. See [CLI Environment Variables](/cli/environment-variables).

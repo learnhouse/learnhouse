@@ -1,10 +1,14 @@
+---
+description: Walk through the LearnHouse setup wizard step by step, from edition, domain and HTTPS to database, Redis, organization, admin and features.
+---
+
 import { Callout } from '@/components/mdx'
 
 # Setup Wizard
 
 The setup wizard (`npx learnhouse@latest setup`) generates a complete Docker Compose deployment. You can go back to the previous step after each step, and edit any step from the summary before confirming.
 
-The wizard needs a terminal. For scripts and CI, use `setup --ci` with flags instead (see [Commands](/cli/commands#setup)).
+The wizard needs a terminal. For scripts and CI, use `setup --ci` with flags instead (see [Commands](/cli/commands#setup)). For the install steps around the wizard, see [Quick Install](/self-hosting/installation/quick-install).
 
 ## Before the steps
 
@@ -27,7 +31,7 @@ Choose a name for the installation. Installations live in `~/.learnhouse/<name>`
 - **Domain**: hostname (default: `localhost`)
 - **HTTPS** (only asked for a domain other than `localhost`):
   - **Automatic SSL** (recommended): Let's Encrypt certificates through Caddy. The wizard asks for an email address for Let's Encrypt notices.
-  - **Manual SSL**: you terminate TLS in your own reverse proxy or a service like Cloudflare. LearnHouse runs on plain HTTP behind it.
+  - **I'll handle SSL myself**: you terminate TLS in your own reverse proxy or a service like Cloudflare. LearnHouse runs on plain HTTP behind it, and the generated URLs use `https://`.
   - **No HTTPS**: HTTP only (not recommended for production)
 - **Port**: with automatic SSL, the HTTPS port (default `443`; Caddy also listens on `80` for redirects). Otherwise the HTTP port (default `80`). If port 80 is taken, the wizard suggests a free one such as `8080`, and it refuses a port above 1024 that is already in use.
 
@@ -84,7 +88,7 @@ It then asks **Start LearnHouse now?** If you accept, it runs `docker compose up
 
 ## Generated Files
 
-```
+```text
 ~/.learnhouse/<name>/
 ├── docker-compose.yml        # Service definitions
 ├── .env                      # All configuration variables (owner-only permissions)

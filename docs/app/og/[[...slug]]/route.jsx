@@ -8,17 +8,25 @@ const size = { width: 1200, height: 630 }
 export const dynamic = 'force-static'
 export const dynamicParams = false
 
+// Sections that aren't MDX pages get a card of their own.
+const EXTRA = {
+  reference: { section: 'API Reference', title: 'LearnHouse REST API', description: 'Every endpoint with parameters, schemas and examples in cURL, JavaScript, Python and the SDK.' },
+  releases: { section: 'Releases', title: 'Releases and versions', description: 'Every LearnHouse and CLI release with its notes, and the current version of each package.' },
+  demos: { section: 'Demos', title: 'LearnHouse Headless demos', description: 'Fifty learning apps built on the LearnHouse API, from course catalogs to quiz games.' },
+}
+
 export function generateStaticParams() {
-  return getPages().map((page) => ({ slug: page.slug }))
+  return [...getPages().map((page) => ({ slug: page.slug })), ...Object.keys(EXTRA).map((key) => ({ slug: [key] }))]
 }
 
 export async function GET(_req, { params }) {
   const { slug = [] } = await params
-  const page = getPage(slug)
+  const extra = slug.length === 1 ? EXTRA[slug[0]] : null
+  const page = extra ? null : getPage(slug)
   const crumbs = page ? getBreadcrumbs(page.route) : []
-  const section = crumbs.length > 1 ? crumbs[0].title : 'Documentation'
-  const title = page?.route === '/' ? 'Run your academy. Build anything on top.' : (page?.title ?? 'LearnHouse Docs')
-  const description = page?.description ?? ''
+  const section = extra?.section ?? (crumbs.length > 1 ? crumbs[0].title : 'Documentation')
+  const title = extra?.title ?? (page?.route === '/' ? 'Run your academy. Build anything on top.' : (page?.title ?? 'LearnHouse Docs'))
+  const description = extra?.description ?? page?.description ?? ''
 
   return new ImageResponse(
     (

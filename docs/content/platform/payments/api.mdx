@@ -1,3 +1,7 @@
+---
+description: "Sell LearnHouse content through Gumroad, Paddle, Shopify or invoices, then grant, revoke or check buyer access from Zapier, Make or your backend."
+---
+
 # Sell with Any Tool
 
 Already selling on Gumroad, Paddle, Lemon Squeezy, Shopify, or by invoice? Keep doing that. LearnHouse only needs to know who paid, and you can tell it from Zapier, Make, n8n or your own backend.
@@ -5,10 +9,10 @@ Already selling on Gumroad, Paddle, Lemon Squeezy, Shopify, or by invoice? Keep 
 ## Set up
 
 1. Create a product with **Your own checkout** (and paste your checkout link) or **Invite only**.
-2. Under **Developers → API**, create an API token with the **Payments** create, read and delete rights.
+2. Under **Developers → API Access**, create an API token with the **Payments** create, read and delete rights.
 3. When a payment clears, call the grant endpoint with the buyer's email.
 
-Find a product's `offer_uuid` in its link (Products → Copy link). All endpoints live under `/api/v1/payments/{org_id}`.
+Find a product's `offer_uuid` in its link (**Products** → **Link** on the product card). All endpoints live under `/api/v1/payments/{org_id}`.
 
 **Payments** → **Settings** shows these steps with your organization ID filled in, and ready-to-copy examples for granting, revoking and checking access.
 
@@ -49,9 +53,9 @@ You can name the person by `email` or `user_id`. If the email has no account yet
 
 ## Webhooks
 
-Subscribe a webhook (Developers → Automations) to keep your other tools in sync:
+Subscribe a [webhook](/platform/automations/webhooks) (**Developers → Automations**) to keep your other tools in sync:
 
 - `payment_access_granted`: someone got access (a Stripe purchase, a free claim, or a grant).
 - `payment_access_revoked`: someone lost access (cancelled, refunded, disputed or revoked).
 
-Both send the user (`user_uuid`, `email`, `username`), the offer (`offer_uuid`, `name`), and the access (`access_uuid`, `status`, `source`).
+Both send the user (`user_uuid`, `email`, `username`), the offer (`offer_uuid`, `name`), and the access (`access_uuid`, `status`, `source`). See the [Event Catalogue](/platform/automations/events#payments) for the full payloads.

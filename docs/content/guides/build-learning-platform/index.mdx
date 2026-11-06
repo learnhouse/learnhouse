@@ -1,6 +1,6 @@
 ---
-title: Build a Learning Platform
-description: Build your own headless learning platform on the web with Next.js and the LearnHouse API. Start with an anonymous public catalogue, then add authentication, enrollment, and progress tracking.
+title: "Build a Learning Platform"
+description: "Build a headless learning platform with Next.js and the LearnHouse API: a public course catalogue first, then sign-in, enrollment and progress."
 ---
 
 import { Callout, Tabs } from '@/components/mdx'
@@ -71,10 +71,10 @@ Everything in LearnHouse hangs off an **Organization**. Content is a tree of **C
 
 ## Prerequisites
 
-- **Node.js 18+** and a package manager (`npm`, `pnpm`, or `bun`).
+- **Node.js 20.9+** (what current Next.js needs) and a package manager (`npm`, `pnpm`, or `bun`).
 - **A running LearnHouse instance.** Spin one up locally with the [Quickstart](/getting-started/quickstart) or [self-hosting guide](/self-hosting), or use [LearnHouse Cloud](https://learnhouse.app). The examples assume the API is at `http://localhost:1338`.
 - **Your organization slug** and **at least one public, published course** with some content. Create one in the dashboard if you don't have it yet.
-- Basic familiarity with the [API Reference](/developers/api).
+- Basic familiarity with the [API Reference](/reference).
 
 <Callout type="warning">
 Throughout this guide the API base URL is `http://localhost:1338/api/v1`. If your instance lives elsewhere (a custom port, a domain, or Cloud), substitute your own base URL. Every example reads it from a single environment variable.

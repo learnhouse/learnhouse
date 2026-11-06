@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getMDXComponents } from '@/mdx-components'
 import Wrapper from '@/components/Wrapper/Wrapper'
 import { getBreadcrumbs, getNeighbours, getPage, getPages, getTree, SITE_URL } from '@/lib/source'
+import { clampDescription } from '@/lib/seo'
 
 export const dynamicParams = false
 
@@ -16,6 +17,8 @@ const textOf = (node) => {
   return textOf(node.props?.children)
 }
 
+const HOME_TITLE = 'LearnHouse Docs: Open-Source LMS Documentation'
+
 export async function generateMetadata(props) {
   const { slug = [] } = await props.params
   const page = getPage(slug)
@@ -23,20 +26,30 @@ export async function generateMetadata(props) {
   const url = `${SITE_URL}${page.route === '/' ? '' : page.route}`
   const md = `${SITE_URL}${page.route === '/' ? '/index' : page.route}.md`
   const image = { url: `${SITE_URL}/og${page.route === '/' ? '' : page.route}`, width: 1200, height: 630, alt: page.title }
+  const description = clampDescription(page.description) || undefined
   return {
-    title: page.route === '/' ? { absolute: 'LearnHouse Docs' } : page.title,
-    description: page.description || undefined,
+    title: page.route === '/' ? { absolute: HOME_TITLE } : page.title,
+    description,
     alternates: { canonical: url, types: { 'text/markdown': md } },
     openGraph: {
       type: 'article',
       url,
-      title: page.title,
-      description: page.description || undefined,
+      title: page.route === '/' ? HOME_TITLE : page.title,
+      description,
       siteName: 'LearnHouse Docs',
       images: [image],
     },
-    twitter: { card: 'summary_large_image', title: page.title, description: page.description || undefined, images: [image.url] },
+    twitter: { card: 'summary_large_image', title: page.route === '/' ? HOME_TITLE : page.title, description, images: [image.url] },
   }
+}
+
+const ORGANIZATION = {
+  '@type': 'Organization',
+  '@id': 'https://learnhouse.app/#organization',
+  name: 'LearnHouse',
+  url: 'https://learnhouse.app',
+  logo: `${SITE_URL}/img/logos/black_logo.png`,
+  sameAs: ['https://github.com/learnhouse/learnhouse', 'https://discord.gg/CMyZjjYZ6x'],
 }
 
 function JsonLd({ page, crumbs }) {
@@ -46,10 +59,13 @@ function JsonLd({ page, crumbs }) {
       ? [
           {
             '@type': 'WebSite',
+            '@id': `${SITE_URL}/#website`,
             name: 'LearnHouse Docs',
             url: SITE_URL,
-            publisher: { '@type': 'Organization', name: 'LearnHouse', url: 'https://learnhouse.app' },
+            inLanguage: 'en',
+            publisher: { '@id': 'https://learnhouse.app/#organization' },
           },
+          ORGANIZATION,
         ]
       : [
           {
@@ -60,7 +76,8 @@ function JsonLd({ page, crumbs }) {
             dateModified: page.lastModified ? new Date(page.lastModified).toISOString() : undefined,
             inLanguage: 'en',
             isPartOf: { '@type': 'WebSite', name: 'LearnHouse Docs', url: SITE_URL },
-            publisher: { '@type': 'Organization', name: 'LearnHouse', url: 'https://learnhouse.app' },
+            image: `${SITE_URL}/og${page.route}`,
+            publisher: ORGANIZATION,
           },
           {
             '@type': 'BreadcrumbList',

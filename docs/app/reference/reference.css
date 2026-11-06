@@ -16,7 +16,7 @@
 
   --r-text: #171717;
   --r-muted: #525252;
-  --r-faint: #a3a3a3;
+  --r-faint: #6b6b6b;
   --r-ink: #0a0a0a;
   --r-bg: #ffffff;
   --r-panel: #f8f8f8;
@@ -1339,6 +1339,7 @@ details.lhr-response[open] > summary::after {
 
 .lhr-response-note a {
   color: var(--r-text);
+  text-decoration: underline;
   text-underline-offset: 3px;
 }
 

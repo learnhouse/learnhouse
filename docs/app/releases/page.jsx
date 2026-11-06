@@ -6,14 +6,18 @@ import CurrentVersions from './_components/CurrentVersions'
 import ReleaseCard from './_components/ReleaseCard'
 import ReleaseFilter from './_components/ReleaseFilter'
 import { formatDate, formatMonth, formatShortDate } from './_components/format'
+import { socialMetadata } from '../../lib/seo'
 
 export const revalidate = 3600
 
+const DESCRIPTION =
+  'Every LearnHouse and CLI release with notes, the current app, CLI and npm package versions, and how LearnHouse versioning works.'
+
 export const metadata = {
   title: 'Releases',
-  description:
-    'Every LearnHouse and LearnHouse CLI release with its notes, the current versions of the app, CLI, @learnhouse/sdk and @learnhouse/react, and how LearnHouse versions work.',
+  description: DESCRIPTION,
   alternates: { canonical: '/releases' },
+  ...socialMetadata({ title: 'LearnHouse releases', description: DESCRIPTION, path: '/releases', image: '/og/releases' }),
 }
 
 function groupByMonth(releases) {

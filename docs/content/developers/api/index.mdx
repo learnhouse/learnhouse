@@ -1,6 +1,6 @@
 ---
-title: REST API
-description: The LearnHouse REST API — base URL, authentication, response format, and the full interactive reference.
+title: "REST API"
+description: "Find your way around the LearnHouse REST API: base URLs, where the full endpoint reference lives, and the guides for tokens and headless grading."
 ---
 
 import { Callout } from '@/components/mdx'
@@ -11,54 +11,38 @@ import { DevHero } from '../../../components/developers/Developers'
   any language, and get webhooks when things happen.
 </DevHero>
 
-The LearnHouse API is a RESTful service built with **FastAPI**. All endpoints are prefixed with `/api/v1/`.
+The LearnHouse API is a JSON REST API. Every path starts with `/api/v1/`.
+
+| Where LearnHouse runs | Base URL |
+| --- | --- |
+| LearnHouse Cloud | `https://api.learnhouse.io/api/v1/` |
+| Self-hosted | `https://your-domain.com/api/v1/` |
+| Local development | `http://localhost:1338/api/v1/` |
 
 <Callout type="info">
   Writing JavaScript or TypeScript? The [SDK](/developers/sdk) wraps this API with full types, retries and errors, and
   works in browsers, Node, edge workers and React Native.
 </Callout>
 
-## Full API Reference
+## API Reference
+
+The **[API Reference](/reference)** documents every endpoint with its request and response schemas, the token right it
+needs, cURL, SDK, JavaScript and Python examples, and a live playground. It is generated from the API's OpenAPI
+document, so it matches what the server accepts. Start with its guides:
+
+- **[Authentication](/reference/guides/authentication)**: API tokens, user sessions, token rights, and which endpoint groups refuse tokens.
+- **[Errors](/reference/guides/errors)**: status codes and the shape of `detail`.
+- **[Rate limits & pagination](/reference/guides/rate-limits)**: per-endpoint limits and paginated lists.
+
+## More in this section
+
+- **[API tokens](/developers/api/authentication)**: create, scope, regenerate and revoke tokens in the dashboard.
+- **[Headless Assignments](/developers/api/headless-assignments)**: author assignments, submit for learners and grade them with an API token.
+- **[Webhooks](/platform/automations/webhooks)**: get a signed request on your server when something happens in LearnHouse.
+
+The OpenAPI document the reference is built from is published at [/reference/openapi.json](/reference/openapi.json).
 
 <Callout type="info">
-The **[full API Reference](/reference)** documents every public endpoint, with request and response
-schemas, cURL/JavaScript/Python examples with your own token substituted in, and a live
-in-browser playground. It is generated directly from the live OpenAPI specification, so it never
-goes stale.
+On a self-hosted instance, the raw OpenAPI document (`/openapi.json`) and Swagger UI (`/docs`) are only served in
+development mode (`LEARNHOUSE_DEVELOPMENT_MODE=true`).
 </Callout>
-
-## Base URL
-
-In local development, the API is available at:
-
-```
-http://localhost:1338/api/v1/
-```
-
-On LearnHouse Cloud, the API is served at `https://api.learnhouse.io/api/v1/`. Self-hosted
-production instances serve it behind a reverse proxy under `/api/v1/` on their own domain.
-
-## Response Format
-
-All API responses are returned as JSON. Successful responses typically include the requested data directly, while error responses follow this structure:
-
-```json
-{
-  "detail": "Description of the error"
-}
-```
-
-## Sections
-
-- **[Full API Reference](/reference)**: Every endpoint, schema, code example and playground.
-- **[Authentication](/developers/api/authentication)**: How to obtain and use authentication tokens.
-- **[Endpoints](/developers/api/endpoints)**: Overview of the key API endpoint groups.
-- **[Webhooks](/guides/custom-features/webhooks)**: Get a request on your server when something happens in LearnHouse.
-
-## OpenAPI Specification
-
-Since the API is built with FastAPI, a machine-readable OpenAPI specification is served at
-`/openapi.json`. For LearnHouse Cloud that is
-[https://api.learnhouse.io/openapi.json](https://api.learnhouse.io/openapi.json). Use it to
-generate client libraries or import the API into testing tools. (The interactive Swagger UI at
-`/docs` is only enabled on development instances.)

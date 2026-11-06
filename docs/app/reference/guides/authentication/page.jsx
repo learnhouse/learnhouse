@@ -14,7 +14,7 @@ const LEDE =
   'The API accepts two credentials: organization API tokens (lh_…) for servers, and user session JWTs for acting as a person. Which one an endpoint takes is fixed per group.'
 
 export const metadata = referenceMetadata({
-  title: 'API Authentication',
+  title: 'Authenticating API Requests',
   description:
     'Authenticate to the LearnHouse API with lh_ API tokens or user session JWTs: token rights, session-only endpoints, login, refresh and MFA.',
   path: '/reference/guides/authentication',

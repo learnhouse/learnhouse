@@ -5,6 +5,7 @@ import { SECTION_ICONS } from '@/components/headless/sections'
 import { DEMOS_REPO, demos, getDemo } from '@/lib/demos'
 import LiveFrame from '../LiveFrame'
 import '../demos.css'
+import { clampDescription, socialMetadata } from '../../../lib/seo'
 
 export const dynamicParams = false
 
@@ -17,10 +18,13 @@ export async function generateMetadata({ params }) {
   const found = getDemo(id)
   if (!found) return {}
   const { demo } = found
+  const title = `${demo.name} demo`
+  const description = clampDescription(`${demo.blurb} A LearnHouse Headless demo built on the LearnHouse API.`)
   return {
-    title: `${demo.name} demo`,
-    description: `${demo.blurb} A LearnHouse Headless demo built on the LearnHouse API.`,
+    title,
+    description,
     alternates: { canonical: `https://docs.learnhouse.app/demos/${demo.id}` },
+    ...socialMetadata({ title, description, path: `/demos/${demo.id}`, image: `/img/headless/${demo.id}.jpg` }),
   }
 }
 
