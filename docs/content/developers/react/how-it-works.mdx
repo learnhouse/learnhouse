@@ -1,0 +1,48 @@
+---
+title: How It Works
+description: How @learnhouse/react renders activities without an editor, and how it is built from LearnHouse's own source at every release.
+---
+
+import { RendererPipeline, BuildPipeline } from '../../../components/developers/Developers'
+
+# How It Works
+
+## Rendering without an editor
+
+Inside LearnHouse, the editor shows activities too: it is how authors write them. But a learner who only reads a lesson
+doesn't need an editor, its document model and its plugins. The component (and the [embed](/developers/embed)) skip
+it entirely.
+
+<RendererPipeline />
+
+The saved document is walked once and turned into React elements. Plain content (headings, lists, tables, code) becomes
+HTML directly. Each LearnHouse block (quiz, flipcard, scenario, math, image…) is drawn by the **same component the
+editor uses** for it, so it behaves the same: a quiz still checks answers, a flipcard still flips. Code blocks get the
+same syntax highlighting as in LearnHouse.
+
+Block components load on demand. A lesson with text and one quiz downloads the quiz block and nothing else. A
+document that contains a block this version doesn't know (written on a newer LearnHouse) keeps its text instead of
+failing.
+
+## Built from LearnHouse, not copied
+
+`@learnhouse/react` contains no copy of LearnHouse's blocks. At each release, the package is compiled from the web app's
+source:
+
+<BuildPipeline />
+
+- **Blocks and renderer** come straight from the web app.
+- **Styles** are the web app's own stylesheet, scoped under `.lh-activity` so they don't affect your page.
+- **Translations** are LearnHouse's, cut down to the strings blocks use, one file per language.
+- **Dependencies** are the exact versions the web app uses.
+
+The few parts of the web app that only make sense inside LearnHouse are swapped for small adapters: its routing, its
+sign-in flow (your app passes a token instead), its analytics (they become `onEvent`), and its own runtime settings
+(your `baseUrl` replaces them).
+
+The result: when LearnHouse ships a new block or fixes one, the next package release has it, with no porting.
+
+## Same renderer as the embed
+
+The [embed](/developers/embed) page and the component use the same renderer. What you see in an embed is what the
+component draws, and both got faster together.

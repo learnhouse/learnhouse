@@ -1,0 +1,197 @@
+/* Developers section. Follows the LearnHouse app's own UI: neutral greys,
+   white rounded-xl cards with the app's nice-shadow, small uppercase grey
+   labels, black primary actions. Colour only where it shows a real block. */
+
+.lhd-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 229, 229, 0.4);
+}
+
+.lhd-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+/* ── Page hero ──────────────────────────────────────────────────────── */
+.lhd-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin: 8px 0 40px;
+  padding: 8px;
+}
+.lhd-hero-copy { padding: 22px 20px 22px 22px; display: flex; flex-direction: column; justify-content: center; }
+.lhd-hero h1.lhd-title {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 10px 0 10px;
+  color: #171717;
+}
+.lhd-hero .lhd-lede { font-size: 15px; line-height: 1.6; color: #525252; margin: 0 0 18px; max-width: 46ch; }
+.lhd-hero .lhd-lede p { margin: 0; }
+.lhd-hero .lhd-lede code { font-size: 13px; }
+.lhd-art {
+  border-radius: 10px;
+  background: #f8f8f8;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+}
+.lhd-install {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--lh-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  color: #262626;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.lhd-install span { color: #a3a3a3; user-select: none; }
+.lhd-scene { width: 100%; height: auto; display: block; }
+
+/* ── Build paths (overview) ─────────────────────────────────────────── */
+.lhd-paths {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0 36px;
+}
+.lhd-path {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  text-decoration: none !important;
+  color: inherit;
+  transition: box-shadow 0.15s ease;
+}
+.lhd-path:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04); }
+.lhd-path .lhd-art { padding: 14px 16px 0; align-items: flex-end; }
+.lhd-path-body { padding: 14px 10px 8px; display: flex; flex-direction: column; gap: 4px; }
+.lhd-path-title { display: flex; align-items: center; justify-content: space-between; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #171717; margin-top: 2px; }
+.lhd-path-title svg { color: #a3a3a3; transition: transform 0.15s ease, color 0.15s ease; }
+.lhd-path:hover .lhd-path-title svg { transform: translateX(2px); color: #171717; }
+.lhd-path-desc { font-size: 14px; line-height: 1.5; color: #737373; }
+
+/* ── Path picker ─────────────────────────────────────────────────────── */
+.lhd-picker { margin: 18px 0 36px; overflow: hidden; }
+.lhd-q {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border-top: 1px solid #f5f5f5;
+}
+.lhd-q:first-child { border-top: 0; }
+.lhd-q-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 12px; color: #737373; background: #f5f5f5;
+}
+.lhd-q-text { font-size: 14px; color: #262626; line-height: 1.45; }
+.lhd-q-text small { display: block; color: #a3a3a3; font-size: 12.5px; margin-top: 1px; }
+.lhd-q-answer {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600;
+  padding: 7px 11px; border-radius: 8px;
+  color: #fff !important; background: #0a0a0a;
+  text-decoration: none !important; white-space: nowrap;
+}
+.lhd-q-answer:hover { background: rgba(10, 10, 10, 0.85); }
+
+/* ── Figures and screenshots ────────────────────────────────────────── */
+.lhd-figure { margin: 24px 0 28px; }
+.lhd-figure figcaption { font-size: 13px; color: #a3a3a3; margin-top: 10px; line-height: 1.5; }
+.lhd-shot { padding: 6px; }
+.lhd-shot-inner { border-radius: 8px; overflow: hidden; background: #f8f8f8; }
+.lhd-shot-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+.lhd-shot-bar i { width: 8px; height: 8px; border-radius: 50%; background: #e5e5e5; display: block; }
+.lhd-shot-bar code { margin-left: 8px; font-size: 11px; color: #a3a3a3; background: none !important; padding: 0 !important; border: 0 !important; }
+.lhd-shot img { display: block; width: 100%; height: auto; margin: 0 !important; border: 0 !important; border-radius: 6px !important; box-shadow: none !important; background: #fff; }
+.lhd-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 20px 0 28px; }
+.lhd-gallery .lhd-figure { margin: 0; }
+
+/* ── Tiles, panels, timeline ─────────────────────────────────────────── */
+.lhd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0 28px; }
+.lhd-tile { display: flex; align-items: center; gap: 12px; padding: 12px 14px; font-size: 14px; font-weight: 500; color: #262626; }
+.lhd-tile small { display: block; font-size: 12px; font-weight: 400; color: #a3a3a3; }
+.lhd-chip { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #f5f5f5; color: #404040; }
+
+.lhd-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 18px 0 28px; }
+.lhd-panel { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.lhd-panel-head { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: #171717; }
+.lhd-panel ul { margin: 0 !important; padding-left: 18px !important; font-size: 13.5px; color: #525252; line-height: 1.55; }
+.lhd-panel li { margin: 2px 0 !important; }
+
+.lhd-timeline { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin: 22px 0 30px; overflow: hidden; }
+.lhd-tl-step { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 16px; border-left: 1px solid #f5f5f5; min-width: 0; }
+.lhd-tl-step:first-child { border-left: 0; }
+.lhd-tl-step .lhd-label { font-size: 10px; }
+.lhd-tl-step code { align-self: flex-start; font-size: 12px !important; }
+.lhd-tl-step span.lhd-tl-sub { font-size: 12px; color: #737373; line-height: 1.4; }
+
+.lhd-release { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0; margin: 20px 0 28px; overflow: hidden; }
+.lhd-release-tag { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 18px 22px; background: #f8f8f8; border-right: 1px solid #f0f0f0; }
+.lhd-release-tag strong { font-family: var(--lh-font-mono, ui-monospace, Menlo, monospace); font-size: 22px; font-weight: 600; color: #171717; letter-spacing: -0.02em; }
+.lhd-release-items { display: flex; flex-direction: column; }
+.lhd-release-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid #f5f5f5; font-size: 13.5px; color: #262626; }
+.lhd-release-item:first-child { border-top: 0; }
+.lhd-release-item small { color: #a3a3a3; font-size: 12px; margin-left: auto; font-family: var(--lh-font-mono, ui-monospace, Menlo, monospace); }
+
+/* ── Embed builder ───────────────────────────────────────────────────── */
+.lhd-builder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 8px; margin: 20px 0 30px; padding: 8px; }
+.lhd-builder label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 500; color: #525252; }
+.lhd-builder input[type='text'] { font: inherit; font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid #e5e5e5; background: #fff; color: #171717; outline: none; }
+.lhd-builder input[type='text']:focus { border-color: #a3a3a3; }
+.lhd-builder .lhd-row { display: flex; gap: 10px; align-items: center; }
+.lhd-builder .lhd-row > * { flex: 1 1 0; }
+.lhd-builder .lhd-check { flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: #404040; }
+.lhd-builder input[type='checkbox'] { accent-color: #0a0a0a; }
+.lhd-builder-fields { display: flex; flex-direction: column; gap: 12px; padding: 14px 12px; }
+.lhd-builder-out { display: flex; flex-direction: column; gap: 10px; min-width: 0; background: #f8f8f8; border-radius: 10px; padding: 14px; }
+.lhd-builder-out pre { margin: 0 !important; flex: 1; white-space: pre-wrap; word-break: break-all; font-size: 12px; line-height: 1.65; background: #fff !important; color: #262626; border-radius: 8px; padding: 14px; box-shadow: none !important; outline: 1px solid #f0f0f0; }
+.lhd-builder-out button { align-self: flex-start; font: inherit; font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 8px; border: 0; background: #0a0a0a; color: #fff; cursor: pointer; }
+.lhd-builder-out button:hover { background: rgba(10, 10, 10, 0.85); }
+.lhd-swatch { display: flex; justify-content: flex-end; }
+.lhd-swatch input[type='color'] { width: 30px; height: 30px; padding: 2px; border: 1px solid #e5e5e5; border-radius: 8px; background: #fff; }
+.lhd-swatch input[type='color']:disabled { opacity: 0.35; }
+
+@media (max-width: 760px) {
+  .lhd-hero, .lhd-paths, .lhd-cols, .lhd-gallery, .lhd-builder { grid-template-columns: 1fr; }
+  .lhd-hero-copy { padding: 16px 14px; }
+  .lhd-hero h1.lhd-title { font-size: 26px; }
+  .lhd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lhd-q { grid-template-columns: 28px minmax(0, 1fr); }
+  .lhd-q-answer { grid-column: 2; justify-self: start; }
+  .lhd-timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lhd-tl-step { border-left: 0; border-top: 1px solid #f5f5f5; }
+  .lhd-release { grid-template-columns: 1fr; }
+  .lhd-release-tag { border-right: 0; border-bottom: 1px solid #f0f0f0; }
+}
+
+/* Patterns: dotted backdrop in illustration panels, diagonal lines in the release tag. */
+.lhd-art {
+  background-color: #f8f8f8;
+  background-image: var(--lh-pattern-dots);
+  background-size: 14px 14px;
+}
+.lhd-release-tag {
+  background-color: #f8f8f8;
+  background-image: var(--lh-pattern-diagonal);
+}
+.lhd-builder-out {
+  background-color: #f8f8f8;
+  background-image: var(--lh-pattern-dots);
+  background-size: 14px 14px;
+}

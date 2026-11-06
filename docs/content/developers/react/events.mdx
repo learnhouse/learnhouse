@@ -1,0 +1,83 @@
+---
+title: Events
+description: Listen to what learners do in a LearnHouseActivity — loading, links, media playback, size changes, visibility and completion.
+---
+
+import { Callout } from '@/components/mdx'
+import { EventTimeline } from '../../../components/developers/Developers'
+
+# Events
+
+Pass `onEvent` to a `LearnHouseActivity` (or to `LearnHouseProvider` to hear every activity below it). Each event is a
+plain object with a `type`.
+
+<EventTimeline />
+
+```tsx
+<LearnHouseActivity
+  activityId="activity_…"
+  trackCompletion
+  onEvent={(event) => {
+    if (event.type === 'complete') markLessonDone(event.activityId)
+    if (event.type === 'media' && event.action === 'ended') analytics.track('video_finished', { src: event.src })
+  }}
+/>
+```
+
+## All events
+
+| `type` | Fields | When |
+| --- | --- | --- |
+| `load` | `activity` | The activity was fetched (or given as a prop) |
+| `ready` | | Its first content is on screen, after any block code has loaded |
+| `visible` | `ratio` | The activity scrolled into view, once |
+| `resize` | `width`, `height` | Its rendered size changed (a block expanded, an image loaded) |
+| `link_click` | `href`, `external` | A link inside the activity was clicked |
+| `media` | `action` (`play`, `pause`, `ended`, `progress`), `media` (`video`, `audio`), `src`, `currentTime`, `duration` | Video and audio playback. `progress` fires at most every 5 seconds |
+| `complete` | `activityId` | The end of the activity scrolled into view. Only with `trackCompletion` |
+| `error` | `error` | Loading or rendering failed |
+| `analytics` | `name`, plus the block's own fields | The product events LearnHouse's blocks already send |
+
+`onLoad(activity)` and `onError(error)` are also available as separate props.
+
+## Recipes
+
+### Mark the lesson complete in LearnHouse
+
+`complete` fires when the learner reaches the end. Record it with the [SDK](/developers/sdk/resources#progress) as the
+learner, the same as the "Mark as complete" button in LearnHouse:
+
+```tsx
+const lh = useLearnHouseClient() // the provider's @learnhouse/sdk client
+
+<LearnHouseActivity
+  activityId={id}
+  trackCompletion
+  onEvent={(e) => e.type === 'complete' && lh.trail.completeActivity(id)}
+/>
+```
+
+### Size a modal or an iframe to the content
+
+```tsx
+<LearnHouseActivity
+  activityId="activity_…"
+  onEvent={(e) => e.type === 'resize' && window.parent.postMessage({ lessonHeight: e.height }, '*')}
+/>
+```
+
+### Send everything to your analytics
+
+```tsx
+<LearnHouseProvider
+  baseUrl="https://learn.your-school.com"
+  onEvent={({ type, ...data }) => posthog.capture(`lesson_${type}`, data)}
+>
+  {children}
+</LearnHouseProvider>
+```
+
+<Callout type="info">
+  When both the provider and the component have `onEvent`, both are called: the component's for that activity, the
+  provider's for all of them.
+</Callout>

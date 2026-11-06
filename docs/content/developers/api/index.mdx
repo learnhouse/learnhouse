@@ -1,8 +1,22 @@
-import { Callout } from 'nextra/components'
+---
+title: REST API
+description: The LearnHouse REST API — base URL, authentication, response format, and the full interactive reference.
+---
 
-# API Reference
+import { Callout } from '@/components/mdx'
+import { DevHero } from '../../../components/developers/Developers'
 
-The LearnHouse API is a RESTful service built with **FastAPI**. It powers all platform operations, from user authentication to course management and AI features. All endpoints are prefixed with `/api/v1/`.
+<DevHero section="api" eyebrow="Any language" title="The REST API">
+  Everything LearnHouse does goes through this API: courses, learners, progress, assignments, payments. Call it from
+  any language, and get webhooks when things happen.
+</DevHero>
+
+The LearnHouse API is a RESTful service built with **FastAPI**. All endpoints are prefixed with `/api/v1/`.
+
+<Callout type="info">
+  Writing JavaScript or TypeScript? The [SDK](/developers/sdk) wraps this API with full types, retries and errors, and
+  works in browsers, Node, edge workers and React Native.
+</Callout>
 
 ## Full API Reference
 
@@ -39,6 +53,7 @@ All API responses are returned as JSON. Successful responses typically include t
 - **[Full API Reference](/reference)**: Every endpoint, schema, code example and playground.
 - **[Authentication](/developers/api/authentication)**: How to obtain and use authentication tokens.
 - **[Endpoints](/developers/api/endpoints)**: Overview of the key API endpoint groups.
+- **[Webhooks](/guides/custom-features/webhooks)**: Get a request on your server when something happens in LearnHouse.
 
 ## OpenAPI Specification
 

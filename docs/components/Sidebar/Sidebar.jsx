@@ -1,10 +1,10 @@
 'use client'
 
-import { useConfig } from 'nextra-theme-docs'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { activeTab } from '../site/sections'
 import {
   House,
   RocketLaunch,
@@ -90,6 +90,16 @@ import {
   Steps,
   BracketsCurly,
   Drop,
+  FrameCorners,
+  SquaresFour,
+  FileVue,
+  Atom,
+  FileTs,
+  Palette,
+  Broadcast,
+  Translate,
+  Cpu,
+  DeviceMobile,
 } from '@phosphor-icons/react/dist/ssr'
 
 const ICON_SIZE = 15
@@ -239,10 +249,29 @@ const iconMap = {
   '/cli/environment-variables': Gear,
 
   // Developers
+  '/developers/embed': FrameCorners,
+  '/developers/react': Atom,
+  '/developers/vue': FileVue,
+  '/developers/sdk': FileTs,
+  '/developers/versioning': Tag,
   '/developers/architecture': TreeStructure,
   '/developers/contributing': GitBranch,
   '/developers/api': Plug,
   '/developers/migration': ArrowsClockwise,
+
+  // Developers > React component
+  '/developers/react/customization': Palette,
+  '/developers/react/events': Broadcast,
+  '/developers/react/localization': Translate,
+  '/developers/react/frameworks': Stack,
+  '/developers/react/reference': ListBullets,
+  '/developers/react/how-it-works': Cpu,
+
+  // Developers > SDK
+  '/developers/sdk/authentication': Key,
+  '/developers/sdk/resources': Cube,
+  '/developers/sdk/requests': BracketsCurly,
+  '/developers/sdk/react-native': DeviceMobile,
 
   // Developers > Architecture
   '/developers/architecture/frontend': Browser,
@@ -284,19 +313,16 @@ function getIcon(route) {
 // Explicit sidebar label overrides (the page map auto-titleizes folder names,
 // which drops articles like "a" and can't express "&"). Keyed by route.
 const labelMap = {
+  '/developers/react': 'React Component',
+  '/developers/vue': 'Vue Component',
+  '/developers/sdk': 'JavaScript SDK',
+  '/developers/api': 'REST API',
   '/guides/build-learning-platform': 'Build a Learning Platform',
   '/guides/custom-features': 'Custom Features & Webhooks',
 }
 
 // Explicit child ordering for folders whose pages shouldn't be alphabetical.
-const childOrder = {
-  '/guides/build-learning-platform': [
-    '/guides/build-learning-platform',
-    '/guides/build-learning-platform/do-it-yourself',
-    '/guides/build-learning-platform/with-an-agent',
-    '/guides/build-learning-platform/agent-spec',
-  ],
-}
+const childOrder = {}
 
 function orderedChildren(item) {
   const order = childOrder[item.route]
@@ -331,14 +357,22 @@ function SidebarItem({ item, depth = 0, parentRoute = null, onNavigate }) {
 
   if (item.display === 'hidden') return null
 
+  if (item.type === 'link') {
+    return (
+      <Link href={item.route} className="lh-sidebar-link" style={{ paddingLeft: 10 }} onClick={onNavigate}>
+        {item.title}
+      </Link>
+    )
+  }
+
   // Resolve the display label: explicit override → "Overview" for a folder's
   // own index child → page map title → name.
   const isIndexChild = parentRoute && item.route === parentRoute && !hasChildren
-  const title = (isIndexChild && item.route?.startsWith('/guides') ? 'Overview' : null)
+  const title = (isIndexChild ? 'Overview' : null)
     ?? labelMap[item.route]
     ?? (typeof item.title === 'string' ? item.title : item.name)
 
-  const icon = getIcon(item.route)
+  const icon = depth <= 1 ? getIcon(item.route) : null
 
   if (hasChildren) {
     return (
@@ -369,7 +403,9 @@ function SidebarItem({ item, depth = 0, parentRoute = null, onNavigate }) {
         {open && (
           <div className="lh-sidebar-children">
             {orderedChildren(item).map((child, i) => (
-              <SidebarItem key={child.route || i} item={child} depth={depth + 1} parentRoute={item.route} onNavigate={onNavigate} />
+              <Fragment key={child.route || i}>
+                <SidebarItem item={child} depth={depth + 1} parentRoute={item.route} onNavigate={onNavigate} />
+              </Fragment>
             ))}
           </div>
         )}
@@ -390,40 +426,35 @@ function SidebarItem({ item, depth = 0, parentRoute = null, onNavigate }) {
   )
 }
 
-function SidebarContent({ onNavigate }) {
-  const config = useConfig()
+function SidebarContent({ tree = [], onNavigate }) {
   const pathname = usePathname()
-  const { docsDirectories } = config.normalizePagesResult
+  const docsDirectories = tree
+  const tab = activeTab(pathname)
 
-  const isDevSection = pathname?.startsWith('/developers') || pathname?.startsWith('/self-hosting') || pathname?.startsWith('/cli') || pathname?.startsWith('/enterprise')
-
-  const devRoutes = ['/developers', '/self-hosting', '/cli', '/enterprise']
-  const items = docsDirectories.filter((item) => {
-    const isDev = devRoutes.some(r => item.route?.startsWith(r))
-    return isDevSection ? isDev : !isDev
-  })
-
-  // Enforce sidebar order for dev section
-  const devOrder = ['/developers', '/cli', '/self-hosting', '/enterprise']
-  items.sort((a, b) => {
-    const aIdx = devOrder.indexOf(a.route)
-    const bIdx = devOrder.indexOf(b.route)
-    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx
-    if (aIdx !== -1) return -1
-    if (bIdx !== -1) return 1
-    return 0
-  })
+  // Only the active tab's folders, in the tab's own order.
+  const items = tab.folders
+    .map((route) => docsDirectories.find((item) => item.route === route))
+    .filter(Boolean)
 
   return (
-    <nav className="lh-sidebar-nav">
-      {items.map((item, i) => (
-        <SidebarItem key={item.route || i} item={item} depth={0} onNavigate={onNavigate} />
+    <nav className="lh-sidebar-nav" aria-label={`${tab.label} pages`}>
+      {items.map((item) => (
+        <div key={item.route} className="lh-sidebar-group">
+          <div className="lh-sidebar-group-title">
+            {labelMap[item.route] ?? (typeof item.title === 'string' ? item.title : item.name)}
+          </div>
+          {(item.children ? orderedChildren(item) : [item]).map((child, i) => (
+            <Fragment key={child.route || i}>
+              <SidebarItem item={child} depth={1} parentRoute={item.route} onNavigate={onNavigate} />
+            </Fragment>
+          ))}
+        </div>
       ))}
     </nav>
   )
 }
 
-function MobileSidebarPortal({ onNavigate }) {
+function MobileSidebarPortal({ tree, onNavigate }) {
   const [mountNode, setMountNode] = useState(null)
 
   useEffect(() => {
@@ -433,19 +464,19 @@ function MobileSidebarPortal({ onNavigate }) {
 
   if (!mountNode) return null
 
-  return createPortal(<SidebarContent onNavigate={onNavigate} />, mountNode)
+  return createPortal(<SidebarContent tree={tree} onNavigate={onNavigate} />, mountNode)
 }
 
-export default function Sidebar() {
+export default function Sidebar({ tree }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="lh-sidebar">
-        <SidebarContent />
+      <aside className="lh-sidebar" data-pagefind-ignore="all">
+        <SidebarContent tree={tree} />
       </aside>
 
       {/* Portal into mobile drawer */}
-      <MobileSidebarPortal />
+      <MobileSidebarPortal tree={tree} />
     </>
   )
 }

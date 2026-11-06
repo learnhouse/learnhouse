@@ -1,30 +1,108 @@
-# Developers
+---
+title: LearnHouse Headless
+description: Build your own learning platform on LearnHouse — embed lessons, render them in React, or drive everything from the SDK and REST API. Fifty real demos to start from.
+---
 
-Welcome to the LearnHouse developer documentation. This section covers everything you need to understand, build, and contribute to the LearnHouse platform.
+import { Callout } from '@/components/mdx'
+import { DevHero, BuildPaths, PathPicker, RendererPipeline, ReleaseLockstep } from '../../components/developers/Developers'
+import { DemoGallery, CopyBlock } from '../../components/headless/Headless'
 
-## Project Structure
+export const PROMPT = `You are building a custom learning platform frontend on top of LearnHouse, used headless.
 
-LearnHouse is organized as a monorepo containing four main applications:
+## What to build
+<Describe your product: who it is for, the main screens, the look and feel. Example: "A mobile-first microlearning app for retail staff: today's lesson, a 3-question quiz, a streak.">
 
-| App | Technology | Description |
-| --- | --- | --- |
-| **web** | Next.js (React) | Frontend web application |
-| **api** | FastAPI (Python) | Backend REST API |
-| **collab** | Hocuspocus | Real-time collaboration WebSocket server |
-| **cli** | Commander (Node.js) | Command-line interface for development and management |
+## Stack
+- Next.js (App Router) + TypeScript. Plain CSS or Tailwind.
+- Server-only environment variables: LEARNHOUSE_URL, LEARNHOUSE_TOKEN (an lh_ org API token, optional for public courses), LEARNHOUSE_ORG_SLUG.
+- npm packages: @learnhouse/sdk (typed API client) and @learnhouse/react (renders lessons with LearnHouse's own blocks). Install the version that matches the LearnHouse instance.
 
-All four apps live under the `apps/` directory in the [LearnHouse repository](https://github.com/learnhouse/learnhouse).
+## Data (server side, with @learnhouse/sdk)
+- const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL, token: process.env.LEARNHOUSE_TOKEN })
+- Courses: lh.courses.list(orgSlug, { limit: 50 })
+- Course tree (chapters, activities): lh.courses.getMeta(courseUuid, { slim: true })
+- A lesson with its content: lh.activities.get(activityUuid)
+- Search: lh.search.org(orgSlug, query)
+- Media URLs: lh.media.* helpers
+- Never send the token to the browser. Fetch in Server Components or route handlers.
 
-## Sections
+## Lessons (client side, with @learnhouse/react)
+- Import '@learnhouse/react/styles.css' once.
+- Render a lesson fetched on the server: <LearnHouseActivity activity={activity} courseId={courseUuid} baseUrl={LEARNHOUSE_URL} />
+- Match the product's look with theme={{ accent, fontFamily, radius, contentWidth }}, and replace blocks with components={{ blockQuiz: MyQuiz }} when needed.
+- Use onEvent (load, ready, complete, media...) for analytics and progress.
 
-### [Architecture](/developers/architecture)
+## Learner state
+An lh_ API token acts for the organization, not a learner. Keep progress in your app (localStorage for a prototype, your database for production), or sign learners in to LearnHouse and use lh.trail.completeActivity with their own token.
 
-Learn how the different parts of LearnHouse fit together, from the frontend and backend to the supporting services that power the platform.
+## Quality bar
+Responsive down to 375px, keyboard accessible, real loading/empty/error states, no placeholder text: use the real courses from the API.
 
-### [Contributing](/developers/contributing)
+Docs: https://docs.learnhouse.app/developers`
 
-Get your local development environment running, understand our contribution workflow, and review code style guidelines.
+export const STARTER = `git clone https://github.com/learnhouse/headless-examples
+cd headless-examples && bun install
+cp .env.example .env.local   # set LEARNHOUSE_API_URL and LEARNHOUSE_ORG_SLUG
+bun dev --port 3100`
 
-### [API Reference](/developers/api)
+<DevHero section="overview" eyebrow="LearnHouse Headless" title="Build your own learning platform">
+  Keep authoring, learners and progress in LearnHouse, and put the learning wherever you want it: a page, your React
+  app, a mobile app, an internal tool.
+</DevHero>
 
-Explore the RESTful API that drives LearnHouse. Covers authentication, key endpoints, and how to interact with the platform programmatically.
+## The building blocks
+
+<BuildPaths />
+
+## What people build with it
+
+Every card is a real app built on the LearnHouse API, from full products to small widgets. They are open source, so
+you can start from the one closest to your idea.
+
+<DemoGallery limit={6} filters={false} />
+
+## Which one do I need?
+
+<PathPicker />
+
+They combine well. A common setup is the SDK on your server to list courses and track progress, and
+`<LearnHouseActivity>` in the browser to show the lessons themselves.
+
+## Let an AI assistant build it
+
+Paste this into Claude, Codex or any coding assistant, fill in the first section, and let it build the first version.
+For a longer, step-by-step spec, see [Build with an agent](/guides/build-learning-platform/with-an-agent).
+
+<CopyBlock label="Prompt">{PROMPT}</CopyBlock>
+
+## Run the demos locally
+
+<CopyBlock label="Terminal">{STARTER}</CopyBlock>
+
+Point it at your own instance, or at any public LearnHouse organization. The demos fetch on their server, so no token
+reaches the browser.
+
+## Same blocks everywhere
+
+Embeds and the React component render lessons with LearnHouse's own blocks, without starting the editor.
+
+<RendererPipeline />
+
+## One version for everything
+
+The SDK and the React component are released with LearnHouse itself, under the same version number.
+
+<ReleaseLockstep />
+
+<Callout type="info">
+  Install the version that matches your self-hosted instance, or the latest one for LearnHouse Cloud. See
+  [Versions & releases](/developers/versioning) and the full [release history](/releases).
+</Callout>
+
+## Inside LearnHouse
+
+Working on LearnHouse itself rather than on top of it?
+
+- [Architecture](/developers/architecture): how the web app, API and collaboration server fit together.
+- [Contributing](/developers/contributing): run the stack locally and open your first pull request.
+- [Migration](/developers/migration): bring courses over from another LMS.

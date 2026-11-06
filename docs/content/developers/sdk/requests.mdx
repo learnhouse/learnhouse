@@ -1,0 +1,130 @@
+---
+title: Typed Requests & Errors
+description: Call any LearnHouse API endpoint with full types, handle errors, and control timeouts, retries, cancellation and request hooks in @learnhouse/sdk.
+---
+
+import { Callout } from '@/components/mdx'
+
+# Typed Requests & Errors
+
+## Any endpoint, typed
+
+`lh.GET`, `lh.POST`, `lh.PUT`, `lh.PATCH` and `lh.DELETE` take an API path exactly as the
+[API reference](/reference) lists it. Paths autocomplete, parameters and bodies are checked, and the result is typed
+from the endpoint's response schema.
+
+```ts
+// Path and query parameters
+const meta = await lh.GET('/api/v1/courses/{course_uuid}/meta', {
+  params: { path: { course_uuid: 'course_…' }, query: { slim: true } },
+})
+
+// JSON body
+const chapter = await lh.POST('/api/v1/chapters/', {
+  body: { name: 'Week 2', course_id: 12, org_id: 1 },
+})
+```
+
+A missing path parameter, a wrong type or an unknown path is a compile error. Calls return the response data directly,
+or throw.
+
+### Files and forms
+
+Pass `FormData` as the body for uploads, or `bodyType: 'form'` to send a plain object as form fields:
+
+```ts
+const form = new FormData()
+form.append('thumbnail', file)
+await lh.PUT('/api/v1/courses/{course_uuid}/thumbnail', {
+  params: { path: { course_uuid: 'course_…' } },
+  body: form,
+})
+```
+
+### Other response formats
+
+`parseAs` reads the body as `'json'` (default for JSON), `'text'`, `'blob'`, `'arrayBuffer'`, `'stream'`, or gives you the
+raw `'response'`.
+
+### Endpoints outside the schema
+
+`lh.request(method, path, options)` sends any request with the same auth, retries and errors, without types.
+
+## Errors
+
+Every failure throws a `LearnHouseError`:
+
+```ts
+import { LearnHouseError, isLearnHouseError } from '@learnhouse/sdk'
+
+try {
+  await lh.activities.get('activity_…')
+} catch (err) {
+  if (isLearnHouseError(err)) {
+    console.log(err.status) // 404
+    console.log(err.code)   // 'HTTP_ERROR', or the API's own code like 'RATE_LIMITED'
+    console.log(err.detail) // the API's `detail`
+  } else {
+    throw err
+  }
+}
+```
+
+| Field | |
+| --- | --- |
+| `status` | HTTP status (`0` when there was no response) |
+| `code` | `HTTP_ERROR`, `NETWORK_ERROR`, `TIMEOUT`, `PARSE_ERROR`, `VALIDATION_ERROR`, or the code the API sent |
+| `detail` | The API's `detail`: a message, an object, or a list of validation errors |
+| `method`, `path`, `url` | The request that failed |
+| `body`, `cause` | The raw error body, and the underlying error for network failures |
+
+`isLearnHouseError` also recognises errors from another copy of the SDK (two bundles on one page).
+
+## Timeouts, retries, cancellation
+
+```ts
+const lh = createClient({
+  baseUrl,
+  timeoutMs: 15_000, // per attempt, body included. 0 turns it off
+  retry: 3,          // GET and HEAD only, on network errors, timeouts and 5xx
+})
+
+// Per call
+const controller = new AbortController()
+await lh.courses.getMeta('course_…', { signal: controller.signal, timeoutMs: 5_000, retry: false })
+```
+
+Retries back off exponentially. Requests that change data are never retried, so nothing is applied twice. Aborting
+throws the platform's `AbortError`, not a `LearnHouseError`.
+
+## Hooks
+
+`onRequest` runs before each attempt and can change the request; `onResponse` sees every response.
+
+```ts
+const lh = createClient({
+  baseUrl,
+  token,
+  onRequest: (ctx) => {
+    ctx.init.headers.set('X-Request-Id', crypto.randomUUID())
+  },
+  onResponse: (ctx) => {
+    metrics.timing('learnhouse.request', ctx.path, ctx.response.status)
+  },
+})
+```
+
+`ctx.path` is the path template (`/api/v1/courses/{course_uuid}`), which makes it a good metrics label.
+
+## Custom fetch
+
+Pass `fetch` to use your own implementation: a proxy-aware one in Node, Next.js's cached `fetch`, or a mock in tests.
+
+```ts
+const lh = createClient({ baseUrl, token, fetch: (url, init) => fetch(url, { ...init, next: { revalidate: 60 } }) })
+```
+
+<Callout type="info">
+  Types come from the API of the release the SDK was published with. If your instance is older, a few newer endpoints
+  may not exist on it yet; see [Versions & releases](/developers/versioning).
+</Callout>

@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { API_GROUPS, METHOD_TO_ACTION } from '../lib/reference/config.js'
+import { demoListFrom, listContentPages, mdxToMarkdown } from '../lib/markdown/mdx-to-md.mjs'
+import { TAB_DATA } from '../components/site/tabs.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CONTENT_DIR = path.join(__dirname, '..', 'content')
@@ -10,57 +12,15 @@ const SITE_URL = 'https://docs.learnhouse.app'
 const API_BASE_URL = (process.env.LEARNHOUSE_API_URL || 'https://api.learnhouse.io').replace(/\/$/, '')
 const SNAPSHOT_PATH = path.join(__dirname, '..', 'lib', 'reference', 'openapi.snapshot.json')
 
-function collectMdxFiles(dir, basePath = '') {
-  const entries = fs.readdirSync(dir, { withFileTypes: true })
-  const files = []
 
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name)
-    if (entry.isDirectory()) {
-      files.push(...collectMdxFiles(fullPath, path.join(basePath, entry.name)))
-    } else if (entry.name.endsWith('.mdx')) {
-      const slug = entry.name === 'index.mdx'
-        ? basePath || '/'
-        : path.join(basePath, entry.name.replace(/\.mdx$/, ''))
-      files.push({ filePath: fullPath, slug: slug.replace(/\\/g, '/') })
-    }
-  }
 
-  return files
-}
 
-function stripMdxImportsAndJsx(content) {
-  // Remove import lines
-  let cleaned = content.replace(/^import\s+.*$/gm, '')
-
-  // Remove JSX component tags like <Callout ...>...</Callout> but keep inner text
-  cleaned = cleaned.replace(/<Callout[^>]*>\n?/g, '')
-  cleaned = cleaned.replace(/<\/Callout>\n?/g, '')
-
-  // Remove self-closing JSX tags like <img ... />
-  cleaned = cleaned.replace(/<img[^>]*\/?\s*>/g, '')
-
-  // Remove other self-closing component tags
-  cleaned = cleaned.replace(/<[A-Z][a-zA-Z]*[^>]*\/>/g, '')
-
-  // Collapse multiple blank lines
-  cleaned = cleaned.replace(/\n{3,}/g, '\n\n')
-
-  return cleaned.trim()
-}
-
-function extractTitle(content) {
-  const match = content.match(/^#\s+(.+)$/m)
-  return match ? match[1] : 'Untitled'
-}
-
-const mdxFiles = collectMdxFiles(CONTENT_DIR)
-
-// Sort: index first, then alphabetical
-mdxFiles.sort((a, b) => {
-  if (a.slug === '/') return -1
-  if (b.slug === '/') return 1
-  return a.slug.localeCompare(b.slug)
+const DEMOS_JSON = path.join(__dirname, '..', 'components', 'headless', 'demos.json')
+const pages = listContentPages(CONTENT_DIR).map(({ slug, file }) => {
+  const { title, description, markdown } = mdxToMarkdown(fs.readFileSync(file, 'utf-8'), {
+    demoList: () => demoListFrom(DEMOS_JSON),
+  })
+  return { slug, title, description, markdown, url: slug ? `${SITE_URL}/${slug}` : SITE_URL }
 })
 
 const sections = []
@@ -68,27 +28,59 @@ const sections = []
 sections.push('# LearnHouse Documentation: Full Content')
 sections.push('')
 sections.push('> This file contains the complete text of all LearnHouse documentation pages.')
-sections.push(`> Source: ${SITE_URL}`)
+sections.push(`> Source: ${SITE_URL}. Each page is also available on its own at <page URL>.md`)
 sections.push('')
 
-for (const { filePath, slug } of mdxFiles) {
-  const raw = fs.readFileSync(filePath, 'utf-8')
-  const cleaned = stripMdxImportsAndJsx(raw)
-  const title = extractTitle(cleaned)
-  const url = slug === '/' ? SITE_URL : `${SITE_URL}/${slug}`
-
+for (const page of pages) {
   sections.push('---')
   sections.push('')
-  sections.push(`# ${title}`)
-  sections.push(`URL: ${url}`)
+  sections.push(`URL: ${page.url}`)
   sections.push('')
-  // Remove the first heading since we already printed it
-  const body = cleaned.replace(/^#\s+.+\n*/, '').trim()
-  if (body) {
-    sections.push(body)
-  }
+  sections.push(page.markdown.trim())
   sections.push('')
 }
+
+// ── llms.txt: an index of every page, grouped like the site's tabs ───────────
+const llms = [
+  '# LearnHouse Documentation',
+  '',
+  '> LearnHouse is an open-source learning platform: a block editor for courses, AI tutoring, assignments, payments and communities, on LearnHouse Cloud or self-hosted with one command. Developers can build on it with the REST API, the @learnhouse/sdk TypeScript client, and the @learnhouse/react and @learnhouse/vue components.',
+  '',
+  'Every page below is plain Markdown at its URL. The complete text of all pages is at ' + SITE_URL + '/llms-full.txt.',
+  '',
+]
+for (const tab of TAB_DATA) {
+  const inTab = pages.filter((p) => tab.folders.some((f) => `/${p.slug}` === f || `/${p.slug}`.startsWith(f + '/')))
+  if (tab.key === 'reference') {
+    llms.push(
+      '## API Reference',
+      '',
+      `- [API Reference index](${SITE_URL}/reference/llms.txt): every endpoint group as Markdown, with parameters, schemas and examples`,
+      `- [Operations JSON](${SITE_URL}/reference/operations.json): machine-readable list of every operation`,
+      '',
+    )
+    continue
+  }
+  if (tab.key === 'releases') {
+    llms.push('## Releases', '', `- [Releases](${SITE_URL}/releases): release notes for LearnHouse, the CLI and the npm packages`, '')
+    continue
+  }
+  if (tab.key === 'demos') {
+    llms.push('## Demos', '', `- [Demos](${SITE_URL}/demos): fifty apps built on the LearnHouse API, each with a live version and source`, '')
+    continue
+  }
+  if (!inTab.length) continue
+  llms.push(`## ${tab.label}`, '')
+  for (const p of inTab) llms.push(`- [${p.title}](${p.url}.md)${p.description ? `: ${p.description}` : ''}`)
+  llms.push('')
+}
+const other = pages.filter((p) => !TAB_DATA.some((t) => t.folders.some((f) => `/${p.slug}` === f || `/${p.slug}`.startsWith(f + '/'))))
+if (other.length) {
+  llms.push('## Optional', '')
+  for (const p of other) llms.push(`- [${p.title}](${p.url === SITE_URL ? SITE_URL + '/index' : p.url}.md)${p.description ? `: ${p.description}` : ''}`)
+  llms.push('')
+}
+fs.writeFileSync(path.join(__dirname, '..', 'public', 'llms.txt'), llms.join('\n'))
 
 // ── API Reference (generated from the OpenAPI spec) ──────────────────────────
 // Compact per-endpoint text so LLMs and agents can drive the API from this file.
@@ -169,4 +161,4 @@ for (const group of API_GROUPS) {
 }
 
 fs.writeFileSync(OUTPUT_FILE, sections.join('\n'))
-console.log(`Generated llms-full.txt (${mdxFiles.length} pages + API reference)`)
+console.log(`Generated llms.txt and llms-full.txt (${pages.length} pages + API reference)`)

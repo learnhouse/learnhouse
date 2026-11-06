@@ -1,9 +1,18 @@
-import nextra from 'nextra'
+import { createMDX } from 'fumadocs-mdx/next'
 
-const withNextra = nextra({ search: true })
+const withMDX = createMDX()
 
-export default withNextra({
+export default withMDX({
   trailingSlash: false,
+  experimental: {
+    optimizePackageImports: ['@phosphor-icons/react', '@icons-pack/react-simple-icons'],
+  },
+  async rewrites() {
+    return [
+      // Every docs page as Markdown, for AI agents: /developers/react.md
+      { source: '/:path*.md', destination: '/md/:path*' },
+    ]
+  },
   async headers() {
     return [
       {

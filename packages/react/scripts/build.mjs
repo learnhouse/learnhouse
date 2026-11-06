@@ -185,7 +185,9 @@ async function buildLocales(metafile) {
 async function buildJs({ write = true } = {}) {
   const result = await build({
     write,
-    entryPoints: [path.join(pkgDir, 'src/index.ts')],
+    // index: the React component. element: the same component as a custom
+    // element (<learnhouse-activity>) for non-React apps. They share chunks.
+    entryPoints: [path.join(pkgDir, 'src/index.ts'), path.join(pkgDir, 'src/element.tsx')],
     outdir: distDir,
     bundle: true,
     splitting: true,
@@ -294,6 +296,7 @@ async function buildTypes() {
     stdio: 'inherit',
   })
   await writeFile(path.join(distDir, 'index.d.ts'), "export * from './types/public'\n")
+  await writeFile(path.join(distDir, 'element.d.ts'), "export * from './types/element-public'\n")
 }
 
 async function main() {
@@ -331,7 +334,8 @@ async function main() {
 
   const js = Object.entries(metafile.outputs).filter(([f]) => f.endsWith('.js'))
   const entry = js.find(([f]) => f.endsWith('dist/index.js'))
-  console.log(`js: ${js.length} files, entry ${(entry[1].bytes / 1024).toFixed(1)} KB, total ${(js.reduce((n, [, o]) => n + o.bytes, 0) / 1024).toFixed(1)} KB`)
+  const element = js.find(([f]) => f.endsWith('dist/element.js'))
+  console.log(`js: ${js.length} files, entry ${(entry[1].bytes / 1024).toFixed(1)} KB, element ${(element[1].bytes / 1024).toFixed(1)} KB, total ${(js.reduce((n, [, o]) => n + o.bytes, 0) / 1024).toFixed(1)} KB`)
   console.log(`css: ${(cssBytes / 1024).toFixed(1)} KB`)
   console.log(`external deps: ${Object.keys(deps).length}`)
 }

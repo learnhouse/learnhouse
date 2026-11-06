@@ -1,0 +1,146 @@
+---
+title: Next.js & Vite
+description: Use LearnHouseActivity in the Next.js App Router (including server rendering and fetching on the server) and in Vite apps.
+---
+
+import { Callout, Tabs } from '@/components/mdx'
+
+# Next.js & Vite
+
+## Next.js (App Router)
+
+`LearnHouseActivity` is a client component, so you can use it straight from a Server Component page. Import the
+stylesheet once, in your root layout.
+
+```tsx filename="app/layout.tsx"
+import '@learnhouse/react/styles.css'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+```tsx filename="app/lessons/[id]/page.tsx"
+import { LearnHouseActivity } from '@learnhouse/react'
+
+export default async function LessonPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  return <LearnHouseActivity baseUrl={process.env.NEXT_PUBLIC_LEARNHOUSE_URL!} activityId={id} />
+}
+```
+
+### Fetch on the server, render with no client round trip
+
+Load the activity in the Server Component with the [SDK](/developers/sdk) and hand it over as `activity`. The page is
+server-rendered with the lesson already in the HTML, and your API token never leaves the server.
+
+```tsx filename="app/lessons/[id]/page.tsx"
+import { createClient } from '@learnhouse/sdk'
+import { LearnHouseActivity } from '@learnhouse/react'
+
+const lh = createClient({
+  baseUrl: process.env.LEARNHOUSE_URL!,
+  token: process.env.LEARNHOUSE_TOKEN!, // lh_… org API token, server only
+})
+
+export default async function LessonPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const activity = await lh.activities.get(id)
+  // Media blocks need the course uuid. Skip this call if you already store it.
+  const course = await lh.GET('/api/v1/courses/id/{course_id}', {
+    params: { path: { course_id: activity.course_id! } },
+  })
+
+  return (
+    <LearnHouseActivity
+      baseUrl={process.env.NEXT_PUBLIC_LEARNHOUSE_URL!}
+      activity={activity}
+      courseId={course.course_uuid}
+    />
+  )
+}
+```
+
+The same works with `content={doc}` for documents you store yourself: Next prerenders the whole lesson as static HTML.
+
+### Event handlers need a client component
+
+Props that are functions (`onEvent`, `onLinkClick`, `components`, `transformContent`, render-prop `header`/`footer`)
+can't cross from a Server Component. Put them in a small client wrapper:
+
+```tsx filename="app/lessons/[id]/lesson.tsx"
+'use client'
+
+import { LearnHouseActivity, type LearnHouseActivityData } from '@learnhouse/react'
+import { useRouter } from 'next/navigation'
+
+export function Lesson({ activity, courseId }: { activity: LearnHouseActivityData; courseId: string }) {
+  const router = useRouter()
+  return (
+    <LearnHouseActivity
+      baseUrl={process.env.NEXT_PUBLIC_LEARNHOUSE_URL!}
+      activity={activity}
+      courseId={courseId}
+      trackCompletion
+      onEvent={(e) => e.type === 'complete' && router.refresh()}
+    />
+  )
+}
+```
+
+## Vite
+
+Nothing to configure.
+
+```tsx filename="src/main.tsx"
+import { createRoot } from 'react-dom/client'
+import { LearnHouseActivity } from '@learnhouse/react'
+import '@learnhouse/react/styles.css'
+
+createRoot(document.getElementById('root')!).render(
+  <LearnHouseActivity baseUrl="https://learn.your-school.com" activityId="activity_…" courseId="course_…" />,
+)
+```
+
+## Other setups
+
+Any React 18+ app with a bundler that handles CSS imports and dynamic `import()` works (Remix, React Router,
+Astro islands, Rsbuild…). Blocks are split into their own chunks, so a page only downloads the blocks it shows.
+
+Not a React app? Vue and Nuxt have [`@learnhouse/vue`](/developers/vue), and anything else can use the
+`<learnhouse-activity>` custom element from `@learnhouse/react/element`.
+
+## Bundle size
+
+The core of the package is small; most of the weight is the blocks themselves, loaded on demand:
+
+| What | Loaded when |
+| --- | --- |
+| Component, provider, data loading | Always |
+| Page renderer and text blocks | The activity is a page |
+| Quiz, flipcards, scenarios, math, code playground… | The page contains that block |
+| Video player | The activity (or a block) is a video |
+| PDF viewer | The activity (or a block) is a PDF |
+| One language's strings | `locale` isn't English |
+
+## Where to fetch: browser or server
+
+When you pass `activityId`, the component fetches the activity from the browser. LearnHouse's API only answers browsers
+on origins it trusts:
+
+| Instance | Browser requests are accepted from |
+| --- | --- |
+| Self-hosted, single organization | The instance's own domain, and `localhost` |
+| Self-hosted, multi-organization | Origins matching `LEARNHOUSE_ALLOWED_REGEXP` (by default the instance domain and its subdomains) |
+| LearnHouse Cloud | LearnHouse's own domains |
+
+So if your app runs on another domain, **fetch on your server and pass `activity`** (or `content`), as in
+[Fetch on the server](#fetch-on-the-server-render-with-no-client-round-trip) above. It is also the faster option:
+the lesson arrives with the page. Images, video and audio in the lesson load straight from your instance.
+
+Fetching from the browser with `activityId` works when your app runs on the instance's domain or a subdomain it
+trusts, and on `localhost` while you develop.
