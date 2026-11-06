@@ -1,0 +1,103 @@
+---
+title: LearnHouse JavaScript SDK
+description: "@learnhouse/sdk: a typed JavaScript and TypeScript client for the LearnHouse API with no dependencies, for browsers, Node, Bun, Deno and React Native."
+---
+
+import { Callout, Steps, Tabs } from '@/components/mdx'
+import { DevHero, RuntimeGrid, AuthModes } from '../../../components/developers/Developers'
+
+<DevHero section="sdk" eyebrow="@learnhouse/sdk" title="The LearnHouse API, typed" install="npm install @learnhouse/sdk">
+  Every endpoint, parameter and response is typed from the API itself, so your editor autocompletes LearnHouse. No
+  dependencies: it only needs `fetch`.
+</DevHero>
+
+## Runs everywhere JavaScript does
+
+<RuntimeGrid />
+
+## Quickstart
+
+<Steps>
+
+### Install
+
+```bash
+npm install @learnhouse/sdk
+```
+
+### Create a client
+
+<Tabs items={['Server (API token)', 'Browser (signed-in user)']}>
+  <Tabs.Tab>
+    ```ts
+    import { createClient } from '@learnhouse/sdk'
+
+    // Dashboard → Developers → API Access → Create Token. It starts with lh_.
+    const lh = createClient({
+      baseUrl: process.env.LEARNHOUSE_URL!,   // your instance, without /api/v1
+      token: process.env.LEARNHOUSE_TOKEN!,
+    })
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ts
+    import { createClient } from '@learnhouse/sdk'
+
+    // On the instance's own domain, the learner's session cookie is enough.
+    const lh = createClient({
+      baseUrl: 'https://learn.your-school.com',
+      credentials: 'include',
+    })
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+### Call the API
+
+```ts
+const org = await lh.orgs.get('your-school')
+const courses = await lh.courses.list('your-school', { limit: 12 })
+const course = await lh.courses.getMeta(courses[0].course_uuid!)   // chapters and activities
+
+for (const chapter of course.chapters ?? []) {
+  console.log(chapter.name, chapter.activities?.map((a) => a.name))
+}
+```
+
+</Steps>
+
+Responses are typed from the API's schema: `course.chapters` autocompletes, and a typo in a field name is a compile
+error, not a runtime surprise.
+
+## Server or browser?
+
+<AuthModes />
+
+More in [Authentication](/developers/sdk/authentication).
+
+## Everything else
+
+The resources (`orgs`, `courses`, `activities`, `trail`…) cover the common reads and progress. For anything else, call
+any endpoint by its path, still fully typed:
+
+```ts
+const meta = await lh.GET('/api/v1/courses/{course_uuid}/meta', {
+  params: { path: { course_uuid: 'course_…' }, query: { slim: true } },
+})
+```
+
+See [Typed requests & errors](/developers/sdk/requests), and the [API reference](/reference) for every endpoint.
+
+## Pairs with the React component
+
+`@learnhouse/react` uses this SDK. Fetch on your server with an API token, render in the browser:
+
+```tsx
+const activity = await lh.activities.get('activity_…')
+return <LearnHouseActivity activity={activity} courseId="course_…" baseUrl={LEARNHOUSE_URL} />
+```
+
+<Callout type="info">
+  The SDK's version is the LearnHouse release its types came from. Use the one that matches your instance; see
+  [Versions & releases](/developers/versioning).
+</Callout>

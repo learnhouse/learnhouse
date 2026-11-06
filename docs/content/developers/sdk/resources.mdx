@@ -1,0 +1,113 @@
+---
+title: SDK Resources
+description: The @learnhouse/sdk resources — organizations, courses, chapters, activities, search, progress, users, auth and media URLs — and the endpoint each method calls.
+---
+
+import { Callout } from '@/components/mdx'
+
+# Resources
+
+Resources wrap the calls most integrations need. Each method returns typed data and throws a
+[`LearnHouseError`](/developers/sdk/requests#errors) on failure. Every method takes a last `options` argument with
+`signal`, `headers`, `timeoutMs`, `retry` and `skipAuth`.
+
+## Organizations
+
+| Method | Calls |
+| --- | --- |
+| `lh.orgs.get(slug)` | `GET /api/v1/orgs/slug/{org_slug}` |
+| `lh.orgs.getByUuid(uuid)` | `GET /api/v1/orgs/uuid/{org_uuid}` |
+
+## Courses
+
+| Method | Calls |
+| --- | --- |
+| `lh.courses.list(orgSlug, { page, limit, includeUnpublished })` | `GET /api/v1/courses/org_slug/{org_slug}/page/{page}/limit/{limit}` |
+| `lh.courses.count(orgSlug)` | `GET /api/v1/courses/org_slug/{org_slug}/count` |
+| `lh.courses.get(courseUuid)` | `GET /api/v1/courses/{course_uuid}` |
+| `lh.courses.getMeta(courseUuid, { slim, withUnpublishedActivities })` | `GET /api/v1/courses/{course_uuid}/meta`: the course with its chapters and activities |
+
+```ts
+const course = await lh.courses.getMeta('course_…', { slim: true }) // slim: no activity content, enough for navigation
+```
+
+## Chapters
+
+| Method | Calls |
+| --- | --- |
+| `lh.chapters.get(chapterId)` | `GET /api/v1/chapters/{chapter_id}` |
+| `lh.chapters.listForCourse(courseUuid)` | The `chapters` of `GET /api/v1/courses/{course_uuid}/meta?slim=true` |
+
+## Activities
+
+| Method | Calls |
+| --- | --- |
+| `lh.activities.get(activityUuid)` | `GET /api/v1/activities/{activity_uuid}`, including its `content` |
+| `lh.activities.listForChapter(chapterId)` | `GET /api/v1/activities/chapter/{chapter_id}` |
+
+An activity's `content` is the document [`<LearnHouseActivity>`](/developers/react) renders.
+
+## Search
+
+| Method | Calls |
+| --- | --- |
+| `lh.search.org(orgSlug, query, { page, limit })` | `GET /api/v1/search/org_slug/{org_slug}` |
+
+## Progress
+
+Progress belongs to a learner, so these need a [signed-in learner](/developers/sdk/authentication#signed-in-learner-browsers-and-apps),
+not an API token.
+
+| Method | Calls |
+| --- | --- |
+| `lh.trail.get()` | `GET /api/v1/trail/`: the learner's courses and progress |
+| `lh.trail.getForOrg(orgId)` | `GET /api/v1/trail/org/{org_id}/trail` |
+| `lh.trail.startCourse(courseUuid)` | `POST /api/v1/trail/add_course/{course_uuid}` |
+| `lh.trail.leaveCourse(courseUuid)` | `DELETE /api/v1/trail/remove_course/{course_uuid}` |
+| `lh.trail.completeActivity(activityUuid)` | `POST /api/v1/trail/add_activity/{activity_uuid}`: same as "Mark as complete" |
+| `lh.trail.uncompleteActivity(activityUuid)` | `DELETE /api/v1/trail/remove_activity/{activity_uuid}` |
+
+## Users
+
+| Method | Calls |
+| --- | --- |
+| `lh.users.session()` | `GET /api/v1/users/session`: the signed-in user and their roles |
+| `lh.users.getByUuid(userUuid)` | `GET /api/v1/users/uuid/{user_uuid}` |
+
+## Auth
+
+| Method | Calls |
+| --- | --- |
+| `lh.auth.login({ email, password, orgSlug })` | `POST /api/v1/auth/login` |
+| `lh.auth.loginMfa({ mfaToken, code, isBackupCode })` | `POST /api/v1/auth/login/mfa` |
+| `lh.auth.refresh({ refreshToken })` | `GET /api/v1/auth/refresh` (never retried) |
+| `lh.auth.logout()` | `DELETE /api/v1/auth/logout` |
+| `lh.auth.me()` | `GET /api/v1/auth/me` |
+
+See [Authentication](/developers/sdk/authentication).
+
+## Media URLs
+
+Course thumbnails, block images, videos and files live under your instance's `content/` path. `lh.media` builds those
+URLs exactly the way the LearnHouse web app does (it is the same code):
+
+```ts
+const org = await lh.orgs.get('your-school')
+const course = await lh.courses.get('course_…')
+
+const thumbnail = lh.media.getCourseThumbnailMediaDirectory(org.org_uuid!, course.course_uuid!, course.thumbnail_image!)
+```
+
+If files are served from somewhere else (a CDN or bucket), pass `mediaUrl` to `createClient`. The helpers also exist
+standalone, without a client:
+
+```ts
+import { media } from '@learnhouse/sdk'
+
+media.getUserAvatarMediaDirectory({ baseUrl: 'https://learn.your-school.com' }, userUuid, fileId)
+```
+
+<Callout type="info">
+  Need an endpoint that isn't here? Every API endpoint is callable, typed, with
+  [`lh.GET` / `lh.POST`…](/developers/sdk/requests).
+</Callout>

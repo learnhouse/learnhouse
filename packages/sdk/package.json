@@ -1,0 +1,72 @@
+{
+  "name": "@learnhouse/sdk",
+  "version": "1.4.3",
+  "description": "Typed JavaScript/TypeScript client for the LearnHouse API. Runs in browsers, Node 18+, Bun, Deno, edge workers and React Native.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "react-native": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude tests/integration.test.ts",
+    "test:integration": "vitest run tests/integration.test.ts",
+    "generate": "node scripts/generate.mjs",
+    "generate:check": "node scripts/generate.mjs --check",
+    "sync-version": "node scripts/sync-version.mjs",
+    "sync-version:check": "node scripts/sync-version.mjs --check",
+    "prepublishOnly": "node scripts/sync-version.mjs --check && tsup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/learnhouse/learnhouse.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://learnhouse.app",
+  "bugs": {
+    "url": "https://github.com/learnhouse/learnhouse/issues"
+  },
+  "keywords": [
+    "learnhouse",
+    "lms",
+    "sdk",
+    "api-client",
+    "openapi",
+    "education",
+    "react-native"
+  ],
+  "author": "LearnHouse",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "tsup": "^9.0.0",
+    "typescript": "5.9.3",
+    "vitest": "^5.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

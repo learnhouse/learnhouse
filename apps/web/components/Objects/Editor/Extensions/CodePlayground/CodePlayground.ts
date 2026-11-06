@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
 
 const CodePlaygroundComponent = dynamic(() => import('./CodePlaygroundComponent'), {
@@ -84,6 +84,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(CodePlaygroundComponent as any)
+    return lhNodeView(CodePlaygroundComponent as any)
   },
 })

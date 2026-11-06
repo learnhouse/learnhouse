@@ -1,8 +1,12 @@
-import { Callout } from 'nextra/components'
+---
+description: "See every email LearnHouse sends for accounts, invitations, drip chapters, unread messages and live sessions, how it is branded and how to unsubscribe."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Emails
 
-LearnHouse sends email for account and membership events. There is no in-app inbox or notification center: everything below arrives by email.
+LearnHouse sends email for account and membership events, and for a few learning events that members can control.
 
 ## Account and membership emails
 
@@ -25,6 +29,16 @@ These emails can't be turned off. They carry your organization's branding:
 - **Language**: your organization's **Default Language**.
 - **Logo and color**: your square logo (or your wide logo if there is no square one) and your primary color from **Branding**.
 - **"Powered by LearnHouse"** line: follows your watermark setting on LearnHouse Cloud and the Enterprise Edition. Open source instances always show it.
+
+## Learning and activity emails
+
+These carry the same branding, and each one can be turned off:
+
+| Email | Sent when | How to turn it off |
+| --- | --- | --- |
+| Chapter unlocked | A scheduled chapter of a course opens for an enrolled learner. One email per learner and course, from a job that runs every hour. | Off unless the course turns on **Email learners when a chapter opens**. See [Drip content](/platform/courses/drip-content). |
+| Unread messages | A member has [messages](/platform/messages) they haven't read for a while (1 hour by default). One summary email covers every conversation. | Each member chooses in their Messages settings. See [Messages settings](/platform/messages#settings). |
+| Live session reminders | The day before and 15 minutes before a [live session](/enterprise/live-sessions), and when it starts, for people who RSVP'd and the host. | Per session with **Reminders**. Admins pick which reminders are sent under **Settings** → **Reminders** in live sessions. |
 
 ## Tips for organization admins (LearnHouse Cloud)
 

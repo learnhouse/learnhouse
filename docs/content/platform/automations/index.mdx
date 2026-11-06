@@ -1,4 +1,8 @@
-import { Callout } from 'nextra/components'
+---
+description: "Push LearnHouse events to your own systems with webhooks or Zapier, and choose the right option for CRMs, Slack alerts and other automations."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Automations
 
@@ -18,7 +22,7 @@ Automations are available on the **Pro plan** or higher. You manage webhooks fro
 
 Every automation runs on the same internal event bus:
 
-1. Something happens inside LearnHouse (a learner completes a course, a user is invited, an assignment is graded, …).
+1. Something happens inside LearnHouse (a learner completes a course, a user is invited, an assignment is graded, and so on).
 2. The event is dispatched to every active subscriber for that organization: webhook endpoints you configured in the dashboard, and any Zapier REST Hook subscriptions.
 3. Each endpoint receives the same JSON envelope with an event name, a delivery ID, an organization ID, and an event-specific `data` payload.
 
@@ -26,7 +30,7 @@ Signing, retries, delivery logs, and SSRF protection all work identically across
 
 ## Choosing between webhooks and Zapier
 
-| You want to… | Use |
+| You want to | Use |
 | --- | --- |
 | Call a custom backend you control | **Webhooks** |
 | Route events into Slack, Google Sheets, HubSpot, Airtable, Notion, etc. | **Zapier** |

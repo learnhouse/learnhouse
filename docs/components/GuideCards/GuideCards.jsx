@@ -26,7 +26,7 @@ const SETS = {
       href: '/guides/custom-features',
       icon: PlugsConnected,
       color: '#10b981',
-      title: 'Custom features & webhooks',
+      title: 'Custom features with the API',
       desc: 'Drive the API with tokens, automate with webhooks, and extend LearnHouse with your own integrations.',
     },
   ],
@@ -57,7 +57,7 @@ const SETS = {
       desc: 'API tokens, request conventions, and recipes for creating and querying content programmatically.',
     },
     {
-      href: '/guides/custom-features/webhooks',
+      href: '/platform/automations/webhooks',
       icon: WebhooksLogo,
       color: '#f97316',
       title: 'Consume webhooks',

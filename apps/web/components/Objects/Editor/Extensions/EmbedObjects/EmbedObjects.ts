@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
 
 const EmbedObjectsComponent = dynamic(() => import('./EmbedObjectsComponent'), {
@@ -52,7 +52,7 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(EmbedObjectsComponent as any)
+    return lhNodeView(EmbedObjectsComponent as any)
   },
   
 })

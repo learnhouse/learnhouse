@@ -1,0 +1,642 @@
+{
+  "sections": [
+    {
+      "id": "products",
+      "title": "Products",
+      "note": "Things you could ship to customers."
+    },
+    {
+      "id": "themes",
+      "title": "Themes",
+      "note": "One catalog, dressed ten ways."
+    },
+    {
+      "id": "embeds",
+      "title": "Embeds & widgets",
+      "note": "Lessons inside other tools and pages."
+    },
+    {
+      "id": "ai",
+      "title": "AI & experiments",
+      "note": "New ways to study the same content."
+    },
+    {
+      "id": "industries",
+      "title": "Industries",
+      "note": "The same engine, branded for real sectors."
+    }
+  ],
+  "demos": [
+    {
+      "id": "kids",
+      "name": "Kids",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "Neo-brutalist learning portal with a quest map, stars for every quiz and a daily streak.",
+      "features": [
+        "course trees",
+        "native lessons",
+        "quizzes"
+      ],
+      "icon": "Smiley"
+    },
+    {
+      "id": "mobile",
+      "name": "Mobile App",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "iPhone app with tab bar, live search across the org and a “continue learning” home.",
+      "features": [
+        "org-wide search",
+        "course trees",
+        "native lessons"
+      ],
+      "icon": "DeviceMobile"
+    },
+    {
+      "id": "vr",
+      "name": "VR Experience",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "3D living room with a Vision Pro-style floating window rendering the real lessons.",
+      "features": [
+        "course trees",
+        "native lessons"
+      ],
+      "icon": "VirtualReality"
+    },
+    {
+      "id": "retro",
+      "name": "Retro Terminal",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "CRT terminal you drive with commands: ls, cd, cat, grep, quiz.",
+      "features": [
+        "org-wide search",
+        "lesson content",
+        "quizzes"
+      ],
+      "icon": "Monitor"
+    },
+    {
+      "id": "luxe",
+      "name": "Luxury Magazine",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "Editorial magazine with an issue contents page, reading times and drop-cap articles.",
+      "features": [
+        "lesson content",
+        "reading time",
+        "course trees"
+      ],
+      "icon": "Feather"
+    },
+    {
+      "id": "docs",
+      "name": "Help Center",
+      "section": "products",
+      "kind": "app",
+      "blurb": "Docs site with a ⌘K command palette, per-page table of contents and feedback.",
+      "features": [
+        "org-wide search",
+        "lesson content",
+        "lesson headings"
+      ],
+      "icon": "BookBookmark"
+    },
+    {
+      "id": "onboarding",
+      "name": "In-app Onboarding",
+      "section": "products",
+      "kind": "app",
+      "blurb": "An academy admin dashboard with a getting-started checklist and lesson drawer driven by a course.",
+      "features": [
+        "course trees",
+        "native lessons",
+        "certificates"
+      ],
+      "icon": "Compass"
+    },
+    {
+      "id": "reader",
+      "name": "Reader",
+      "section": "products",
+      "kind": "app",
+      "blurb": "Publication-style reader with reading time, progress bar, focus mode and type controls.",
+      "features": [
+        "lesson content",
+        "reading time",
+        "course trees"
+      ],
+      "icon": "Article"
+    },
+    {
+      "id": "practice",
+      "name": "Practice",
+      "section": "products",
+      "kind": "app",
+      "blurb": "Pulls every quiz and flashcard out of a course into a spaced-repetition study deck.",
+      "features": [
+        "lesson content",
+        "quizzes",
+        "flashcards"
+      ],
+      "icon": "Cards"
+    },
+    {
+      "id": "slides",
+      "name": "Slides",
+      "section": "products",
+      "kind": "app",
+      "blurb": "Turns any course into a keyboard-driven slide deck with speaker view and outline.",
+      "features": [
+        "lesson content",
+        "course trees",
+        "lesson sections"
+      ],
+      "icon": "PresentationChart"
+    },
+    {
+      "id": "catalog",
+      "name": "Shelf",
+      "section": "products",
+      "kind": "app",
+      "blurb": "A course storefront with filters by topic, length and level, and rich course pages.",
+      "features": [
+        "course listing",
+        "course trees",
+        "lesson content"
+      ],
+      "icon": "Storefront"
+    },
+    {
+      "id": "cohort",
+      "name": "Cohort",
+      "section": "products",
+      "kind": "app",
+      "blurb": "A cohort schedule that unlocks one chapter a week from a start date you pick.",
+      "features": [
+        "course trees",
+        "lesson content",
+        "quizzes"
+      ],
+      "icon": "CalendarDots"
+    },
+    {
+      "id": "certify",
+      "name": "Certify",
+      "section": "products",
+      "kind": "app",
+      "blurb": "Timed certification exams built from a course’s quizzes, with a pass mark and certificate.",
+      "features": [
+        "quizzes",
+        "course trees",
+        "certificates"
+      ],
+      "icon": "Certificate"
+    },
+    {
+      "id": "daily",
+      "name": "Daily",
+      "section": "products",
+      "kind": "app",
+      "blurb": "One bite-sized lesson card a day, swiped like stories, with a streak to keep.",
+      "features": [
+        "lesson content",
+        "lesson sections",
+        "quizzes"
+      ],
+      "icon": "Lightning"
+    },
+    {
+      "id": "paths",
+      "name": "Paths",
+      "section": "products",
+      "kind": "app",
+      "blurb": "Stitch several courses into a learning path with total time and progress.",
+      "features": [
+        "course listing",
+        "course trees",
+        "reading time"
+      ],
+      "icon": "Path"
+    },
+    {
+      "id": "zine",
+      "name": "Riso Zine",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "The catalog as a two-colour risograph zine, misregistration and all.",
+      "features": [
+        "course trees",
+        "native lessons"
+      ],
+      "icon": "Printer"
+    },
+    {
+      "id": "blueprint",
+      "name": "Blueprint",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "Courses drafted as engineering blueprints with dimension lines and title blocks.",
+      "features": [
+        "course trees",
+        "native lessons"
+      ],
+      "icon": "Ruler"
+    },
+    {
+      "id": "pixel",
+      "name": "Pixel Quest",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "A four-shade handheld game where every lesson is a level.",
+      "features": [
+        "course trees",
+        "native lessons",
+        "quizzes"
+      ],
+      "icon": "GameController"
+    },
+    {
+      "id": "notebook",
+      "name": "Notebook",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "Lined paper, margin doodles and highlighter: a student’s notebook.",
+      "features": [
+        "course trees",
+        "native lessons"
+      ],
+      "icon": "NotePencil"
+    },
+    {
+      "id": "swiss",
+      "name": "Grid",
+      "section": "themes",
+      "kind": "theme",
+      "blurb": "Strict International Typographic Style: grid, red, and nothing else.",
+      "features": [
+        "course trees",
+        "native lessons"
+      ],
+      "icon": "GridFour"
+    },
+    {
+      "id": "widget",
+      "name": "Course card",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "A drop-in course card for any blog post, shown on a sample article with its embed snippet.",
+      "features": [
+        "course listing",
+        "course trees"
+      ],
+      "icon": "Code"
+    },
+    {
+      "id": "chatbot",
+      "name": "Huddle bot",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "A team-chat bot that posts the lesson of the day and runs quizzes in the thread.",
+      "features": [
+        "lesson content",
+        "quizzes"
+      ],
+      "icon": "ChatCircleDots"
+    },
+    {
+      "id": "digest",
+      "name": "Weekly digest",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "A weekly email digest of new lessons, rendered as the email learners receive.",
+      "features": [
+        "course listing",
+        "lesson content"
+      ],
+      "icon": "EnvelopeSimple"
+    },
+    {
+      "id": "extension",
+      "name": "Sidekick",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "A browser side panel that keeps your current lesson next to whatever you are reading.",
+      "features": [
+        "org-wide search",
+        "lesson content"
+      ],
+      "icon": "PuzzlePiece"
+    },
+    {
+      "id": "wiki",
+      "name": "Wiki block",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "A lesson embedded as a live block inside a company wiki page.",
+      "features": [
+        "lesson content",
+        "quizzes"
+      ],
+      "icon": "BookOpenText"
+    },
+    {
+      "id": "progress",
+      "name": "Progress widget",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "A learning-progress widget for an intranet home page, with assigned courses and due dates.",
+      "features": [
+        "course trees",
+        "course listing"
+      ],
+      "icon": "Gauge"
+    },
+    {
+      "id": "searchbox",
+      "name": "Search box",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "A search box any site can add, with instant course and lesson results.",
+      "features": [
+        "org-wide search"
+      ],
+      "icon": "MagnifyingGlass"
+    },
+    {
+      "id": "quizlet",
+      "name": "Quiz embed",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "A single quiz dropped into an article, with its own score and retry.",
+      "features": [
+        "quizzes",
+        "lesson content"
+      ],
+      "icon": "Question"
+    },
+    {
+      "id": "poster",
+      "name": "Poster",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "Printable posters with QR codes that open each lesson on a phone.",
+      "features": [
+        "course trees"
+      ],
+      "icon": "QrCode"
+    },
+    {
+      "id": "planner",
+      "name": "Study planner",
+      "section": "embeds",
+      "kind": "app",
+      "blurb": "Plan study sessions across a course and download them as a calendar file.",
+      "features": [
+        "course trees",
+        "reading time"
+      ],
+      "icon": "CalendarPlus"
+    },
+    {
+      "id": "ask",
+      "name": "Ask the course",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "Ask a question and get answers quoted from the lessons, with links to each source.",
+      "features": [
+        "lesson content",
+        "org-wide search"
+      ],
+      "icon": "ChatTeardropText"
+    },
+    {
+      "id": "voice",
+      "name": "Voice tutor",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "Lessons read aloud, driven by voice commands like “next” and “repeat”.",
+      "features": [
+        "lesson content",
+        "lesson sections"
+      ],
+      "icon": "Microphone"
+    },
+    {
+      "id": "podcast",
+      "name": "Course radio",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "Any course turned into a two-voice audio show with chapters and a waveform.",
+      "features": [
+        "lesson content",
+        "course trees"
+      ],
+      "icon": "Headphones"
+    },
+    {
+      "id": "tldr",
+      "name": "TL;DR",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "Short summaries and key terms pulled from each lesson’s own sentences.",
+      "features": [
+        "lesson content"
+      ],
+      "icon": "Sparkle"
+    },
+    {
+      "id": "graph",
+      "name": "Concept map",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "Courses, chapters, lessons and recurring terms drawn as an explorable graph.",
+      "features": [
+        "course trees",
+        "lesson content"
+      ],
+      "icon": "Graph"
+    },
+    {
+      "id": "gameshow",
+      "name": "Quiz show",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "A timed quiz game with lives, streaks and a final score, built from course quizzes.",
+      "features": [
+        "quizzes",
+        "flashcards"
+      ],
+      "icon": "Trophy"
+    },
+    {
+      "id": "typing",
+      "name": "Typist",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "Learn the material by typing it: lesson sentences become typing drills.",
+      "features": [
+        "lesson content"
+      ],
+      "icon": "Keyboard"
+    },
+    {
+      "id": "cloze",
+      "name": "Fill the gap",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "Fill-in-the-blank exercises generated from key terms in each lesson.",
+      "features": [
+        "lesson content"
+      ],
+      "icon": "BracketsSquare"
+    },
+    {
+      "id": "focus",
+      "name": "Focus room",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "A focus timer with one lesson in view and short breaks between sessions.",
+      "features": [
+        "lesson content",
+        "reading time"
+      ],
+      "icon": "Timer"
+    },
+    {
+      "id": "wordcloud",
+      "name": "Word map",
+      "section": "ai",
+      "kind": "app",
+      "blurb": "The vocabulary of a course as a weighted word map, linked back to lessons.",
+      "features": [
+        "lesson content"
+      ],
+      "icon": "Cloud"
+    },
+    {
+      "id": "corporate",
+      "name": "Acme Academy",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "Mandatory training with due dates, completion status and a manager view.",
+      "features": [
+        "course trees",
+        "certificates"
+      ],
+      "icon": "Buildings"
+    },
+    {
+      "id": "school",
+      "name": "Maple School",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "A class page where a teacher assigns lessons and students see what is due.",
+      "features": [
+        "course trees",
+        "lesson content"
+      ],
+      "icon": "Student"
+    },
+    {
+      "id": "campus",
+      "name": "Northbridge U",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "A campus portal with terms, modules and a weekly timetable.",
+      "features": [
+        "course listing",
+        "course trees"
+      ],
+      "icon": "GraduationCap"
+    },
+    {
+      "id": "bootcamp",
+      "name": "Forge",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "A dark, code-first bootcamp dashboard with sprints and challenges.",
+      "features": [
+        "course trees",
+        "quizzes"
+      ],
+      "icon": "TerminalWindow"
+    },
+    {
+      "id": "clinic",
+      "name": "CarePoint CE",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "Continuing-education credits for clinicians, with credit hours per course.",
+      "features": [
+        "course trees",
+        "reading time",
+        "certificates"
+      ],
+      "icon": "FirstAidKit"
+    },
+    {
+      "id": "nonprofit",
+      "name": "Volunteer Hub",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "Short training a volunteer finishes before their first shift.",
+      "features": [
+        "course trees",
+        "lesson content"
+      ],
+      "icon": "HandHeart"
+    },
+    {
+      "id": "retail",
+      "name": "Shift",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "Five-minute lessons store staff open on a shared tablet between customers.",
+      "features": [
+        "lesson content",
+        "quizzes"
+      ],
+      "icon": "ShoppingBag"
+    },
+    {
+      "id": "civic",
+      "name": "CityLearn",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "Accessible public training for residents and city staff, plain and high-contrast.",
+      "features": [
+        "course listing",
+        "lesson content"
+      ],
+      "icon": "Bank"
+    },
+    {
+      "id": "creator",
+      "name": "Studio",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "A creator’s sales page for their course, with curriculum and preview lessons.",
+      "features": [
+        "course listing",
+        "course trees",
+        "lesson content"
+      ],
+      "icon": "MicrophoneStage"
+    },
+    {
+      "id": "factory",
+      "name": "Floor",
+      "section": "industries",
+      "kind": "app",
+      "blurb": "A rugged shop-floor kiosk with big buttons and safety checks before each shift.",
+      "features": [
+        "course trees",
+        "quizzes"
+      ],
+      "icon": "Factory"
+    }
+  ]
+}
