@@ -7,7 +7,8 @@ client sends.
 
 Two kinds of events:
 
-* **Web** events are sent by the browser through ``POST /signals/batch``.
+* **Web** events are sent by the browser to Enterprise analytics
+  (``POST /signals/batch``, an EE route; community installs send nothing).
   ``public`` ones (page and content views, searches) are also accepted from
   visitors who aren't signed in; the rest need a signed-in org member.
 * **Server** events are recorded by the API itself with ``track()`` at the
@@ -21,8 +22,8 @@ Naming: ``object_action``, snake_case, past tense, matching the web app's
 
 from dataclasses import dataclass, field
 
-# Properties that are stored as real columns on ``analytics_event`` (see
-# ``src/db/analytics.py``). Every event may carry them.
+# Properties that are stored as real columns on ``analytics_event`` (see the EE
+# model ``ee/db/analytics.py``). Every event may carry them.
 COLUMN_PROPERTIES = frozenset(
     {"course_uuid", "activity_uuid", "path", "referrer_domain", "seconds_spent"}
 )
@@ -170,8 +171,5 @@ CATALOG: dict[str, EventSpec] = {
     )
 }
 
-# Kept for callers that predate the catalog.
-ALLOWED_FRONTEND_EVENTS = frozenset(name for name, spec in CATALOG.items() if spec.web)
-PUBLIC_WEB_EVENTS = frozenset(name for name, spec in CATALOG.items() if spec.public)
 # Browsing events dropped for staff when an org sets ``exclude_staff``.
 STAFF_EXCLUDABLE_EVENTS = frozenset({PAGE_VIEW, COURSE_VIEW, ACTIVITY_VIEW, TIME_ON_ACTIVITY, VIDEO_PROGRESS})

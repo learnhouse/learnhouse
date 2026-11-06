@@ -2688,7 +2688,7 @@ async def _delete_unowned_org_drift(
     NULL org_id by design (a connection is not an organization's event), so
     they are not the demo's rows to delete, and a sweep matching NULL would be
     writing outside the demo org. The dossier that exposed them is scoped in
-    routers/audit.py instead, which is where the leak actually was.
+    the EE audit router instead, which is where the leak actually was.
     """
     from src.security.rbac.constants import ADMIN_ROLE_ID
 

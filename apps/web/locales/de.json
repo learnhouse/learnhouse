@@ -3086,8 +3086,6 @@
       "episodes": "Episoden",
       "participants": "Teilnehmer",
       "loading": "Laden...",
-      "enable_analytics_description": "Aktivieren Sie Analysen, um Live-Benutzer, Anmeldungen und mehr zu sehen.",
-      "enable": "Aktivieren",
       "quick_stats": "Schnellstatistik",
       "full_analytics": "Vollständige Analysen",
       "live_now": "Jetzt live",
@@ -8334,10 +8332,6 @@
       "overview": "Übersicht",
       "advanced": "Erweitert"
     },
-    "not_configured": {
-      "title": "Analytik nicht konfiguriert",
-      "description": "Analytik erfordert eine Tinybird-Verbindung. Setzen Sie die Umgebungsvariablen <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> und <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code>, um sie zu aktivieren."
-    },
     "advanced_gate": {
       "requires": "Erfordert",
       "upgrade_description": "Upgraden Sie, um erweiterte Analytik freizuschalten"
@@ -8541,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analytik nicht konfiguriert",
-      "not_configured_desc": "Analytik erfordert die Konfiguration von Tinybird. Bitte kontaktieren Sie Ihren Administrator.",
       "common": {
         "loading": "Laden...",
         "no_data": "Noch keine Daten",
@@ -10554,7 +10546,6 @@
       "joined": "Beigetreten",
       "na": "k. A.",
       "no_analytics": "Keine Analysen verfügbar",
-      "ensure_tinybird": "Stellen Sie sicher, dass Tinybird-Analysen konfiguriert sind",
       "period": "Zeitraum:",
       "days_short": "{{count}} T.",
       "live_users": "Live-Benutzer",
@@ -10715,7 +10706,6 @@
     "analytics": {
       "failed_load": "Analysen konnten nicht geladen werden",
       "no_data_available": "Keine Analysedaten verfügbar",
-      "ensure_tinybird": "Stellen Sie sicher, dass Tinybird-Analysen konfiguriert sind",
       "no_data": "Keine Daten"
     },
     "ee_error": {

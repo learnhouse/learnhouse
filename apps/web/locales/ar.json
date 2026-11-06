@@ -3251,8 +3251,6 @@
       "episodes": "الحلقات",
       "participants": "المشاركون",
       "loading": "جارٍ التحميل...",
-      "enable_analytics_description": "قم بتفعيل التحليلات لرؤية المستخدمين المباشرين والتسجيلات والمزيد.",
-      "enable": "تفعيل",
       "quick_stats": "إحصائيات سريعة",
       "full_analytics": "التحليلات الكاملة",
       "live_now": "مباشر الآن",
@@ -8887,10 +8885,6 @@
       "overview": "نظرة عامة",
       "advanced": "متقدم"
     },
-    "not_configured": {
-      "title": "التحليلات غير مهيأة",
-      "description": "تتطلب التحليلات اتصال Tinybird. قم بتعيين متغيرات البيئة <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> و <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> لتفعيلها."
-    },
     "advanced_gate": {
       "requires": "يتطلب",
       "upgrade_description": "قم بالترقية لفتح التحليلات المتقدمة"
@@ -9098,8 +9092,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "التحليلات غير مُهيأة",
-      "not_configured_desc": "تتطلب التحليلات تهيئة Tinybird. يُرجى التواصل مع المسؤول.",
       "common": {
         "loading": "جاري التحميل...",
         "no_data": "لا توجد بيانات بعد",
@@ -11285,7 +11277,6 @@
       "joined": "تاريخ الانضمام",
       "na": "غير متاح",
       "no_analytics": "لا توجد تحليلات متاحة",
-      "ensure_tinybird": "تأكد من إعداد تحليلات Tinybird",
       "period": "الفترة:",
       "days_short": "{{count}} ي",
       "live_users": "المستخدمون المتصلون الآن",
@@ -11458,7 +11449,6 @@
     "analytics": {
       "failed_load": "تعذّر تحميل التحليلات",
       "no_data_available": "لا تتوفر بيانات تحليلات",
-      "ensure_tinybird": "تأكد من إعداد تحليلات Tinybird",
       "no_data": "لا توجد بيانات"
     },
     "ee_error": {

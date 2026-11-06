@@ -60,6 +60,17 @@ def run_ee_startup(app):
     if hooks and hasattr(hooks, "on_startup"):
         hooks.on_startup(app)
 
+
+async def run_ee_shutdown(app):
+    """Let EE stop its background tasks and write what it still holds (e.g.
+    queued analytics events). Never raises: shutdown carries on regardless."""
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "on_shutdown"):
+        try:
+            await hooks.on_shutdown(app)
+        except Exception:
+            logger.exception("EE shutdown hook failed")
+
 def register_ee_rag_sources():
     """Let EE register extractors for its own content types (e.g. SCORM) with
     the AI search source registry."""
@@ -174,3 +185,24 @@ def notify_ee_learner_progress(user_id: int, course_id: int) -> None:
             hooks.on_learner_progress(user_id, course_id)
         except Exception:
             logger.exception("EE learner-progress hook failed")
+
+
+async def track_ee_analytics_event(**event) -> None:
+    """Hand an analytics event (the arguments of
+    ``src.services.analytics.analytics.track``) to EE, which stores it. Org
+    analytics is an EE feature: without EE this does nothing."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "track_analytics_event", None) if hooks else None
+    if hook is not None:
+        await hook(**event)
+
+
+async def get_ee_user_behavior(user_id: int, org_id: int, days: int) -> dict:
+    """One member's behavioural analytics in an org (time per course, views,
+    searches...), keyed by section, for the per-student audit. Comes from EE
+    analytics; empty without EE."""
+    hooks = get_ee_hooks()
+    hook = getattr(hooks, "user_analytics_behavior", None) if hooks else None
+    if hook is None:
+        return {}
+    return await hook(user_id, org_id, days)

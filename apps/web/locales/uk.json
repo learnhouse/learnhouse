@@ -3166,8 +3166,6 @@
       "episodes": "Епізоди",
       "participants": "Учасники",
       "loading": "Завантаження...",
-      "enable_analytics_description": "Увімкніть аналітику, щоб побачити активних користувачів, реєстрації тощо.",
-      "enable": "Увімкнути",
       "quick_stats": "Швидка статистика",
       "full_analytics": "Повна аналітика",
       "live_now": "Активні зараз",
@@ -8474,10 +8472,6 @@
       "overview": "Огляд",
       "advanced": "Розширено"
     },
-    "not_configured": {
-      "title": "Аналітику не налаштовано",
-      "description": "Для Analytics потрібне підключення Tinybird. Установіть змінні середовища <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> і <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code>, щоб увімкнути аналітику."
-    },
     "advanced_gate": {
       "requires": "Вимагає",
       "upgrade_description": "Перейдіть на вищий тариф, щоб отримати розширену аналітику"
@@ -8683,8 +8677,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Аналітика не налаштована",
-      "not_configured_desc": "Для Analytics потрібно налаштувати Tinybird. Зверніться до свого адміністратора.",
       "common": {
         "loading": "Завантаження...",
         "no_data": "Даних ще немає",
@@ -10760,7 +10752,6 @@
       "joined": "Приєднався",
       "na": "н/д",
       "no_analytics": "Аналітика недоступна",
-      "ensure_tinybird": "Переконайтеся, що аналітику Tinybird налаштовано",
       "period": "Період:",
       "days_short": "{{count}} д.",
       "live_users": "Користувачі онлайн",
@@ -10927,7 +10918,6 @@
     "analytics": {
       "failed_load": "Не вдалося завантажити аналітику",
       "no_data_available": "Даних аналітики немає",
-      "ensure_tinybird": "Переконайтеся, що аналітику Tinybird налаштовано",
       "no_data": "Немає даних"
     },
     "ee_error": {

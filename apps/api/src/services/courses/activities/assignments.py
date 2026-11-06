@@ -3101,7 +3101,7 @@ async def create_assignment_submission(
             properties={
                 "assignment_uuid": assignment_uuid,
                 "course_uuid": course.course_uuid,
-                "attempt_number": submitted_attempt_number,
+                "attempt": submitted_attempt_number,
             },
         )
         # Durable audit row. Retries reset the live submission in place, so each

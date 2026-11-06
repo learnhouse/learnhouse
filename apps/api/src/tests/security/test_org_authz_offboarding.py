@@ -190,24 +190,24 @@ class TestOrgSessionPolicy:
         mfa.assert_not_awaited()
 
     async def test_analytics_gates_enforce_org_policy(self, db, org, admin_user):
-        from src.routers.analytics import _verify_org_admin, _verify_org_membership
+        from src.security.org_auth import verify_org_admin, verify_org_membership
 
         blocked = HTTPException(status_code=403, detail="2fa")
         with patch(
-            "src.routers.analytics.enforce_org_mfa", new_callable=AsyncMock, side_effect=blocked
+            "src.security.org_auth.enforce_org_mfa", new_callable=AsyncMock, side_effect=blocked
         ):
             with pytest.raises(HTTPException):
-                await _verify_org_membership(admin_user.id, org.id, db)
+                await verify_org_membership(admin_user.id, org.id, db)
             with pytest.raises(HTTPException):
-                await _verify_org_admin(admin_user.id, org.id, db)
+                await verify_org_admin(admin_user.id, org.id, db)
 
     async def test_superadmin_is_not_blocked_by_policy(self, db, org):
-        from src.routers.analytics import _verify_org_membership
+        from src.security.org_auth import verify_org_membership
 
         boss = await _outsider(db, 20, "boss")
-        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=True), \
-             patch("src.routers.analytics.enforce_org_mfa", new_callable=AsyncMock) as mfa:
-            await _verify_org_membership(boss.id, org.id, db)
+        with patch("src.security.org_auth.is_user_superadmin", new_callable=AsyncMock, return_value=True), \
+             patch("src.security.org_auth.enforce_org_mfa", new_callable=AsyncMock) as mfa:
+            await verify_org_membership(boss.id, org.id, db)
         mfa.assert_not_awaited()
 
 

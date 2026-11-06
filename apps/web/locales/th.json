@@ -3058,8 +3058,6 @@
       "episodes": "ตอน",
       "participants": "ผู้เข้าร่วม",
       "loading": "กำลังโหลด...",
-      "enable_analytics_description": "เปิดใช้งานการวิเคราะห์เพื่อดูผู้ใช้แบบเรียลไทม์ การสมัครสมาชิก และอื่นๆ",
-      "enable": "เปิดใช้งาน",
       "quick_stats": "สถิติด่วน",
       "full_analytics": "การวิเคราะห์ทั้งหมด",
       "live_now": "ออนไลน์ขณะนี้",
@@ -8285,10 +8283,6 @@
       "overview": "ภาพรวม",
       "advanced": "ขั้นสูง"
     },
-    "not_configured": {
-      "title": "ยังไม่ได้กำหนดค่าการวิเคราะห์",
-      "description": "การวิเคราะห์ต้องการการเชื่อมต่อ Tinybird ตั้งค่าตัวแปรสภาพแวดล้อม <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> และ <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> เพื่อเปิดใช้งาน"
-    },
     "advanced_gate": {
       "requires": "ต้องการ",
       "upgrade_description": "อัปเกรดเพื่อปลดล็อกการวิเคราะห์ขั้นสูง"
@@ -8491,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "ยังไม่ได้กำหนดค่าการวิเคราะห์",
-      "not_configured_desc": "การวิเคราะห์ต้องกำหนดค่า Tinybird กรุณาติดต่อผู้ดูแลระบบ",
       "common": {
         "loading": "กำลังโหลด...",
         "no_data": "ยังไม่มีข้อมูล",
@@ -10492,7 +10484,6 @@
       "joined": "เข้าร่วมเมื่อ",
       "na": "ไม่มี",
       "no_analytics": "ไม่มีการวิเคราะห์",
-      "ensure_tinybird": "ตรวจสอบว่าได้กำหนดค่าการวิเคราะห์ Tinybird แล้ว",
       "period": "ช่วงเวลา:",
       "days_short": "{{count}} วัน",
       "live_users": "ผู้ใช้ออนไลน์",
@@ -10650,7 +10641,6 @@
     "analytics": {
       "failed_load": "โหลดการวิเคราะห์ไม่สำเร็จ",
       "no_data_available": "ไม่มีข้อมูลการวิเคราะห์",
-      "ensure_tinybird": "ตรวจสอบว่าได้กำหนดค่าการวิเคราะห์ Tinybird แล้ว",
       "no_data": "ไม่มีข้อมูล"
     },
     "ee_error": {

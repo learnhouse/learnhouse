@@ -7,7 +7,7 @@ from src.core.events.autoinstall import auto_install
 from src.core.events.content import check_content_directory
 from src.core.events.database import close_database, connect_to_db
 from src.core.events.logs import create_logs_dir, init_logging
-from src.core.ee_hooks import run_ee_startup
+from src.core.ee_hooks import run_ee_shutdown, run_ee_startup
 
 logger = logging.getLogger(__name__)
 
@@ -113,10 +113,6 @@ def startup_app(app: FastAPI) -> Callable:
         # video chapters) for whatever slipped through.
         from src.services.backfill.scheduler import start_scheduler as start_backfill
         start_backfill()
-        # Every few minutes, rebuild the analytics summaries; daily, apply
-        # each org's analytics retention.
-        from src.services.analytics.maintenance import start_scheduler as start_analytics
-        start_analytics()
         # Start the embedded MCP session manager when enabled. Starlette
         # mounts don't run sub-app lifespans, so the manager's run()
         # context is entered here and closed in shutdown_app — without it
@@ -173,9 +169,9 @@ def shutdown_app(app: FastAPI) -> Callable:
         # Stop the demo refresh tick.
         from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
         await stop_demo_scheduler()
-        # Stop analytics upkeep and write any events still queued.
-        from src.services.analytics.maintenance import stop_scheduler as stop_analytics
-        await stop_analytics()
+        # Let EE stop its background work and write what it still holds
+        # (queued analytics events). Never raises.
+        await run_ee_shutdown(app)
         # Close the embedded MCP session manager (started in startup_app).
         global _mcp_lifespan_stack
         if _mcp_lifespan_stack is not None:

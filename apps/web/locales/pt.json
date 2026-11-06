@@ -3126,8 +3126,6 @@
       "episodes": "episódios",
       "participants": "participantes",
       "loading": "Carregando...",
-      "enable_analytics_description": "Ative as análises para ver usuários ao vivo, inscrições e mais.",
-      "enable": "Ativar",
       "quick_stats": "Estatísticas rápidas",
       "full_analytics": "Análises completas",
       "live_now": "Ao vivo agora",
@@ -8404,10 +8402,6 @@
       "overview": "Visão geral",
       "advanced": "Avançado"
     },
-    "not_configured": {
-      "title": "Análises não configuradas",
-      "description": "As análises requerem uma conexão com o Tinybird. Defina as variáveis de ambiente <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> e <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> para habilitá-las."
-    },
     "advanced_gate": {
       "requires": "Requer",
       "upgrade_description": "Atualize para desbloquear análises avançadas"
@@ -8612,8 +8606,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analytics não configurado",
-      "not_configured_desc": "O Analytics requer que o Tinybird esteja configurado. Entre em contato com seu administrador.",
       "common": {
         "loading": "Carregando...",
         "no_data": "Sem dados ainda",
@@ -10657,7 +10649,6 @@
       "joined": "Entrou em",
       "na": "n/d",
       "no_analytics": "Nenhuma análise disponível",
-      "ensure_tinybird": "Verifique se as análises do Tinybird estão configuradas",
       "period": "Período:",
       "days_short": "{{count}} d",
       "live_users": "Usuários ao vivo",
@@ -10821,7 +10812,6 @@
     "analytics": {
       "failed_load": "Falha ao carregar as análises",
       "no_data_available": "Nenhum dado de análise disponível",
-      "ensure_tinybird": "Verifique se as análises do Tinybird estão configuradas",
       "no_data": "Sem dados"
     },
     "ee_error": {

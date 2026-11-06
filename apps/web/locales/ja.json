@@ -3058,8 +3058,6 @@
       "episodes": "エピソード",
       "participants": "参加者",
       "loading": "読み込み中...",
-      "enable_analytics_description": "アナリティクスを有効にして、ライブユーザー、登録状況などを確認しましょう。",
-      "enable": "有効にする",
       "quick_stats": "クイック統計",
       "full_analytics": "完全なアナリティクス",
       "live_now": "現在オンライン",
@@ -8285,10 +8283,6 @@
       "overview": "概要",
       "advanced": "高度"
     },
-    "not_configured": {
-      "title": "分析が構成されていません",
-      "description": "分析にはTinybird接続が必要です。有効にするには、<code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code>および<code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code>環境変数を設定してください。"
-    },
     "advanced_gate": {
       "requires": "必要",
       "upgrade_description": "高度な分析を解除するにはアップグレードしてください"
@@ -8491,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "アナリティクス未設定",
-      "not_configured_desc": "アナリティクスにはTinybirdの設定が必要です。管理者にお問い合わせください。",
       "common": {
         "loading": "読み込み中...",
         "no_data": "データがまだありません",
@@ -10492,7 +10484,6 @@
       "joined": "参加日",
       "na": "該当なし",
       "no_analytics": "利用できるアナリティクスがありません",
-      "ensure_tinybird": "Tinybirdアナリティクスが設定されていることを確認してください",
       "period": "期間：",
       "days_short": "{{count}}日",
       "live_users": "ライブユーザー",
@@ -10650,7 +10641,6 @@
     "analytics": {
       "failed_load": "アナリティクスを読み込めませんでした",
       "no_data_available": "利用できるアナリティクスデータがありません",
-      "ensure_tinybird": "Tinybirdアナリティクスが設定されていることを確認してください",
       "no_data": "データなし"
     },
     "ee_error": {

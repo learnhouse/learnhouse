@@ -3086,8 +3086,6 @@
       "episodes": "एपिसोड",
       "participants": "प्रतिभागी",
       "loading": "लोड हो रहा है...",
-      "enable_analytics_description": "लाइव उपयोगकर्ता, साइन अप और अधिक देखने के लिए विश्लेषण सक्षम करें।",
-      "enable": "सक्षम करें",
       "quick_stats": "त्वरित आंकड़े",
       "full_analytics": "पूर्ण विश्लेषण",
       "live_now": "अभी लाइव",
@@ -8334,10 +8332,6 @@
       "overview": "अवलोकन",
       "advanced": "उन्नत"
     },
-    "not_configured": {
-      "title": "Analytics कॉन्फ़िगर नहीं किया गया",
-      "description": "Analytics के लिए Tinybird कनेक्शन की आवश्यकता है। इसे सक्षम करने के लिए <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> और <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> एनवायरनमेंट वेरिएबल सेट करें।"
-    },
     "advanced_gate": {
       "requires": "आवश्यक",
       "upgrade_description": "उन्नत विश्लेषण अनलॉक करने के लिए अपग्रेड करें"
@@ -8541,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "एनालिटिक्स कॉन्फ़िगर नहीं है",
-      "not_configured_desc": "एनालिटिक्स के लिए Tinybird कॉन्फ़िगर करना आवश्यक है। कृपया अपने व्यवस्थापक से संपर्क करें।",
       "common": {
         "loading": "लोड हो रहा है...",
         "no_data": "अभी तक कोई डेटा नहीं",
@@ -10554,7 +10546,6 @@
       "joined": "जुड़े",
       "na": "लागू नहीं",
       "no_analytics": "कोई एनालिटिक्स उपलब्ध नहीं",
-      "ensure_tinybird": "सुनिश्चित करें कि Tinybird एनालिटिक्स कॉन्फ़िगर है",
       "period": "अवधि:",
       "days_short": "{{count}} दिन",
       "live_users": "लाइव उपयोगकर्ता",
@@ -10715,7 +10706,6 @@
     "analytics": {
       "failed_load": "एनालिटिक्स लोड नहीं हो सका",
       "no_data_available": "कोई एनालिटिक्स डेटा उपलब्ध नहीं",
-      "ensure_tinybird": "सुनिश्चित करें कि Tinybird एनालिटिक्स कॉन्फ़िगर है",
       "no_data": "कोई डेटा नहीं"
     },
     "ee_error": {

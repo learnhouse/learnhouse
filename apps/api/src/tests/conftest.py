@@ -565,18 +565,21 @@ def no_legacy_link_markers():
 
 @pytest.fixture(autouse=True)
 def analytics_queue():
-    """Keep tracked events in memory instead of writing them to the app database.
+    """Collect the events ``track()`` sends instead of handing them to EE.
 
-    ``track()`` queues rows and schedules a flush on the real session factory;
-    unpatched, every test that touches a tracked feature would leave a pending
-    write behind. The list is the queue, for tests that want to look at it.
+    ``track()`` forwards every event to the Enterprise Edition, which stores
+    it. Here each call is kept as a dict of its arguments (``event_name``,
+    ``org_id``, ``user_id``, ``properties``...), in order, for tests that want
+    to look at them; nothing reaches EE even when it is installed. The EE
+    suite overrides this fixture with one that yields its writer's queue.
     """
-    from src.services.analytics import analytics
+    queue: list[dict] = []
 
-    analytics._buffer.clear()
-    with patch("src.services.analytics.analytics._schedule"):
-        yield analytics._buffer
-    analytics._buffer.clear()
+    async def record(**event) -> None:
+        queue.append(event)
+
+    with patch("src.services.analytics.analytics.track_ee_analytics_event", new=record):
+        yield queue
 
 
 @pytest.fixture(autouse=True)

@@ -159,39 +159,16 @@ def mint_session_tokens(
 _LOGIN_METHODS = {AUTH_METHOD_API_TOKEN: "token_exchange"}
 
 
-async def _is_org_member(user_id: int, org_id: int) -> bool:
-    from sqlmodel import select
-
-    from src.core.events.database import _async_session_factory
-    from src.db.user_organizations import UserOrganization
-
-    async with _async_session_factory() as db:
-        row = (
-            await db.execute(
-                select(UserOrganization.user_id).where(
-                    UserOrganization.user_id == user_id, UserOrganization.org_id == org_id
-                )
-            )
-        ).first()
-    return row is not None
-
-
 async def track_login(user_id: Optional[int], amr: Optional[str], org_id: Optional[int]) -> None:
     """Record ``user_logged_in`` for a session that was actually minted.
 
     Called once per sign-in, after the second factor when there is one, so a
     pending MFA challenge is never counted. Sessions with no org context (the
-    apex login page) have nowhere to be filed and are skipped. The org comes
-    from the request, so the login is only filed under it when the user is a
-    member: an org's analytics must never name someone outside it.
+    apex login page) have nowhere to be filed and are skipped. Analytics drops
+    logins by people who aren't members of the org (an org's analytics never
+    name outsiders).
     """
     if not org_id or not user_id:
-        return
-    try:
-        if not await _is_org_member(user_id, org_id):
-            return
-    except Exception:
-        # Analytics never gets in the way of signing in.
         return
     await track(
         event_name=analytics_events.USER_LOGGED_IN,

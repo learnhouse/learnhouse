@@ -103,7 +103,6 @@ TOOL_MODULES: tuple[ToolModule, ...] = (
     ToolModule("assignments", "teaching"),
     ToolModule("learners", "teaching"),
     ToolModule("course_stats", "teaching"),
-    ToolModule("analytics", "teaching", "analytics"),
     ToolModule("paths", "paths", "paths"),
     ToolModule("library", "library"),
     ToolModule("communities", "communities", "communities"),
