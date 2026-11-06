@@ -106,13 +106,21 @@ class TestBoardsService:
         ), patch(
             "src.services.boards.boards.dispatch_webhooks",
             new_callable=AsyncMock,
-        ):
+        ), patch(
+            "src.services.boards.boards.track", new_callable=AsyncMock
+        ) as mock_track:
             created = await create_board(
                 mock_request,
                 org.id,
                 BoardCreate(name="Board", description="Desc", thumbnail_image=""),
                 admin_user,
                 db,
+            )
+            mock_track.assert_awaited_once_with(
+                event_name="board_created",
+                org_id=org.id,
+                user_id=admin_user.id,
+                properties={"board_uuid": created.board_uuid},
             )
 
             fetched = await get_board(mock_request, created.board_uuid, admin_user, db)

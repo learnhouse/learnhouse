@@ -81,7 +81,9 @@ class TestOrgInvitesService:
         ), patch(
             "src.services.orgs.invites.secrets.choice",
             side_effect=list("ABCDEFGH"),
-        ):
+        ), patch(
+            "src.services.orgs.invites.track", new_callable=AsyncMock
+        ) as mock_track:
             result = await create_invite_code(
                 mock_request,
                 org.id,
@@ -95,6 +97,12 @@ class TestOrgInvitesService:
         assert result["usergroup_id"] == usergroup.id
         # Code creation now uses an atomic Lua script (eval) instead of SET.
         fake_redis.eval.assert_called_once()
+        mock_track.assert_awaited_once_with(
+            event_name="user_invited",
+            org_id=org.id,
+            user_id=admin_user.id,
+            properties={"invite_method": "invite_code"},
+        )
 
     @pytest.mark.asyncio
     async def test_create_invite_code_validation_and_limit_guards(

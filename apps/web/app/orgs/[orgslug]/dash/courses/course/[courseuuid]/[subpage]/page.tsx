@@ -13,6 +13,7 @@ import { PlanLevel } from '@services/plans/plans';
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate';
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar';
 import dynamic from 'next/dynamic'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 
 // One chunk per tab: only the open tab's code (charts, editors) is loaded.
 const EditCourseStructure = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'))
@@ -22,7 +23,7 @@ const EditCourseContributors = dynamic(() => import('@components/Dashboard/Pages
 const EditCourseCertification = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'))
 const EditCourseSEO = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'))
 const EditCourseSchedule = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSchedule/EditCourseSchedule'))
-const CourseAnalyticsTab = dynamic(() => import('@components/Dashboard/Analytics/Course/CourseAnalyticsTab'))
+const CourseAnalyticsTab = dynamic(() => import('@ee/components/Analytics/Dashboard/Course/CourseAnalyticsTab'))
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -44,7 +45,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   const { hasPermission, isLoading: rightsLoading } = useCourseRights(courseuuid)
 
   // Define tab configurations with their required permissions
-  const tabs = [
+  const allTabs = [
     {
       key: 'general',
       label: t('dashboard.courses.settings.tabs.general'),
@@ -106,6 +107,8 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
       requiresPlan: 'pro' as PlanLevel
     }
   ]
+  // Course analytics ship with Enterprise Edition; the tab is hidden without it.
+  const tabs = allTabs.filter((tab) => tab.key !== 'analytics' || isOrgAnalyticsAvailable())
 
   // Filter tabs based on permissions
   const visibleTabs = tabs.filter(tab => hasPermission(tab.requiredPermission))

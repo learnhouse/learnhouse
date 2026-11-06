@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, Palette, School, BarChart3, Menu as MenuIcon, AlertTriangle, Trophy, ToggleRight } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, Palette, School, BarChart3, Menu as MenuIcon, AlertTriangle, Trophy, ToggleRight, ChartLine } from 'lucide-react'
 import React, { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { PlanLevel } from '@services/plans/plans'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 import dynamic from 'next/dynamic'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 
 // One chunk per tab: only the open tab's code is loaded.
 const OrgEditGeneral = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'))
@@ -18,6 +19,7 @@ const OrgEditLanding = dynamic(() => import('@components/Dashboard/Pages/Org/Org
 const OrgEditOther = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'))
 const OrgEditFeatures = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'))
 const OrgEditAI = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'))
+const OrgEditAnalytics = dynamic(() => import('@ee/components/Analytics/Settings/OrgEditAnalytics'))
 const OrgEditUsage = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'))
 const OrgEditMenu = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditMenu/OrgEditMenu'))
 const OrgEditCourseEnd = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditCourseEnd/OrgEditCourseEnd'))
@@ -61,6 +63,7 @@ const getSettingTabs = (t: any): TabConfig[] => [
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
   { id: 'course-end', label: t('dashboard.organization.settings.tabs.course_end'), icon: Trophy },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
+  { id: 'analytics', label: t('dashboard.organization.settings.tabs.analytics'), icon: ChartLine },
   { id: 'usage', label: t('dashboard.organization.settings.tabs.usage') || 'Usage', icon: BarChart3 },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
   { id: 'danger', label: t('dashboard.organization.settings.tabs.danger') || 'Danger Zone', icon: AlertTriangle },
@@ -72,7 +75,8 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
   const params = use(props.params);
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
-  const SETTING_TABS = getSettingTabs(t)
+  // Analytics settings ship with Enterprise Edition; the tab is hidden without it.
+  const SETTING_TABS = getSettingTabs(t).filter((tab) => tab.id !== 'analytics' || isOrgAnalyticsAvailable())
 
   // Redirect legacy developer subpages to the new top-level Developers dashboard.
   const movedTo = MOVED_TO_DEVELOPERS[params.subpage]
@@ -104,6 +108,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     } else if (params.subpage == 'ai') {
       setH1Label(t('dashboard.organization.settings.pages.ai.title') || 'AI Features')
       setH2Label(t('dashboard.organization.settings.pages.ai.subtitle') || 'Configure AI capabilities for your organization')
+    } else if (params.subpage == 'analytics') {
+      setH1Label(t('dashboard.organization.settings.pages.analytics.title'))
+      setH2Label(t('dashboard.organization.settings.pages.analytics.subtitle'))
     } else if (params.subpage == 'usage') {
       setH1Label(t('dashboard.organization.settings.pages.usage.title') || 'Usage')
       setH2Label(t('dashboard.organization.settings.pages.usage.subtitle') || 'Monitor your organization\'s resource usage and plan limits')
@@ -172,6 +179,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
         {params.subpage == 'course-end' ? <OrgEditCourseEnd /> : ''}
         {params.subpage == 'ai' ? <OrgEditAI /> : ''}
+        {params.subpage == 'analytics' ? <OrgEditAnalytics /> : ''}
         {params.subpage == 'usage' ? <OrgEditUsage /> : ''}
         {params.subpage == 'other' ? <OrgEditOther /> : ''}
         {params.subpage == 'danger' ? <OrgEditDangerZone /> : ''}

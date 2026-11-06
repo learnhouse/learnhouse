@@ -3251,8 +3251,6 @@
       "episodes": "الحلقات",
       "participants": "المشاركون",
       "loading": "جارٍ التحميل...",
-      "enable_analytics_description": "قم بتفعيل التحليلات لرؤية المستخدمين المباشرين والتسجيلات والمزيد.",
-      "enable": "تفعيل",
       "quick_stats": "إحصائيات سريعة",
       "full_analytics": "التحليلات الكاملة",
       "live_now": "مباشر الآن",
@@ -4257,7 +4255,8 @@
           "menu": "القائمة",
           "danger": "منطقة الخطر",
           "course_end": "إتمام الدورة",
-          "mcp": "تطبيقات الذكاء الاصطناعي"
+          "mcp": "تطبيقات الذكاء الاصطناعي",
+          "analytics": "التحليلات"
         },
         "pages": {
           "general": {
@@ -4318,6 +4317,10 @@
           "mcp": {
             "title": "تطبيقات الذكاء الاصطناعي (MCP)",
             "subtitle": "اربط Claude وChatGPT وCursor وتطبيقات الذكاء الاصطناعي الأخرى بمؤسستك"
+          },
+          "analytics": {
+            "title": "التحليلات",
+            "subtitle": "اختر مدة الاحتفاظ ببيانات التحليلات وما يتم جمعه"
           }
         },
         "name": "اسم المنظمة",
@@ -5742,6 +5745,48 @@
         "button_link_help": "مسار داخلي مثل ‎/courses أو رابط كامل يبدأ بـ https://. اتركه فارغًا للربط بدليل دوراتك.",
         "link_invalid": "استخدم مسارًا داخليًا يبدأ بـ / أو رابط http(s) كاملًا",
         "preview": "معاينة"
+      },
+      "analytics_settings": {
+        "title": "بيانات التحليلات",
+        "subtitle": "الاحتفاظ بالبيانات والخصوصية في تحليلات مؤسستك",
+        "save": "حفظ",
+        "saving": "جاري الحفظ...",
+        "saved": "تم حفظ إعدادات التحليلات",
+        "error": "تعذّر حفظ إعدادات التحليلات",
+        "load_error": "تعذّر تحميل إعدادات التحليلات",
+        "admin_only": "يمكن لمسؤولي المؤسسة فقط تغيير إعدادات التحليلات.",
+        "retention_title": "الاحتفاظ بالبيانات",
+        "retention_description": "مدة الاحتفاظ بأحداث التحليلات قبل حذفها.",
+        "retention_note": "تقصير مدة الاحتفاظ يحذف البيانات الأقدم في عملية التنظيف الليلية التالية.",
+        "retention_default": "{{label}} (افتراضي)",
+        "retention_options": {
+          "days_90": "90 يومًا",
+          "days_180": "6 أشهر",
+          "days_365": "سنة واحدة",
+          "days_730": "سنتان",
+          "days_1095": "3 سنوات",
+          "days_1825": "5 سنوات",
+          "days_2555": "7 سنوات",
+          "days_n": "{{count}} يوم"
+        },
+        "extended_locked": "الاحتفاظ بالبيانات لأكثر من سنة متاح في خطة Enterprise.",
+        "privacy_title": "الخصوصية",
+        "track_anonymous": "احتساب الزوار غير المسجلين",
+        "track_anonymous_description": "تضمين مشاهدات الصفحات والدورات من الأشخاص الذين ليس لديهم حساب. يتم احتسابهم دون ملفات تعريف الارتباط، بمعرّف مجهول يتغير كل يوم.",
+        "collect_location": "حفظ بلد الزائر",
+        "collect_location_description": "تسجيل البلد الذي تأتي منه الزيارة. لا يتم حفظ عناوين IP أبدًا.",
+        "exclude_staff": "استبعاد المسؤولين والمشرفين من الإحصاءات",
+        "exclude_staff_description": "لا تُحتسب مشاهدات من يديرون المؤسسة، حتى لا تؤثر اختباراتك على الأرقام.",
+        "export_title": "تنزيل الأحداث الخام (CSV)",
+        "export_description": "جميع أحداث التحليلات المحفوظة للفترة المختارة، صف واحد لكل حدث.",
+        "export_period": "فترة التصدير",
+        "export_last_days": "آخر {{count}} يوم",
+        "export_all": "كل ما هو محفوظ",
+        "export_button": "تنزيل CSV",
+        "exporting": "جاري تجهيز التنزيل...",
+        "export_done": "بدأ التنزيل",
+        "export_error": "تعذّر تصدير أحداث التحليلات",
+        "export_locked": "تصدير الأحداث الخام متاح في خطة Enterprise."
       }
     },
     "users": {
@@ -8764,15 +8809,81 @@
     "unsaved_changes_warning": "لديك تغييرات غير محفوظة. هل تريد المغادرة دون حفظ؟"
   },
   "analytics": {
+    "features": {
+      "tab": "الميزات",
+      "adoption_title": "استخدام الميزات",
+      "adoption_subtitle": "عدد الأشخاص الذين يستخدمون كل ميزة مقارنة بالفترة السابقة. انقر على ميزة لعرضها في الرسم البياني.",
+      "events_count": "{{value}} حدث",
+      "names": {
+        "learning": "التعلّم",
+        "assessments": "التقييمات",
+        "community": "المجتمع",
+        "ai": "مساعد الذكاء الاصطناعي",
+        "podcasts": "البودكاست",
+        "boards": "اللوحات",
+        "playgrounds": "ساحات التجربة",
+        "paths": "مسارات التعلّم",
+        "search": "البحث",
+        "messaging": "المراسلة",
+        "library": "المكتبة",
+        "certificates": "الشهادات"
+      },
+      "video_title": "التفاعل مع الفيديو",
+      "video_subtitle": "إلى أي مدى يشاهد المشاهدون كل فيديو",
+      "finished": "انتهى",
+      "podcast_title": "الاستماع إلى البودكاست",
+      "podcast_subtitle": "مرات التشغيل لكل حلقة وعدد من يستمع حتى النهاية",
+      "assessments_title": "التقييمات",
+      "assessments_subtitle": "التسليمات ونسبة النجاح والدرجة المتوسطة",
+      "assignment": "الواجبات",
+      "quiz": "الاختبارات القصيرة",
+      "code": "تمارين البرمجة",
+      "submissions": "التسليمات",
+      "pass_rate": "نسبة النجاح",
+      "avg_score": "متوسط الدرجة",
+      "passed": "ناجحون",
+      "community_title": "نشاط المجتمع",
+      "community_subtitle": "النقاشات والتعليقات والتفاعلات والتصويتات الإيجابية يوميًا",
+      "discussions": "النقاشات",
+      "comments": "التعليقات",
+      "reactions": "التفاعلات",
+      "upvotes": "التصويتات الإيجابية",
+      "peak_contributors": "حتى {{value}} مساهمين يوميًا",
+      "top_communities": "أفضل المجتمعات",
+      "ai_title": "مساعد الذكاء الاصطناعي",
+      "ai_subtitle": "الرسائل المرسلة والأشخاص الذين يستخدمون المساعد",
+      "messages": "الرسائل",
+      "users": "الأشخاص",
+      "by_surface": "أين يُستخدم",
+      "acquisition_title": "التسجيل وتسجيل الدخول",
+      "acquisition_subtitle": "كيف يسجّل الأشخاص وينضمون ويسجّلون الدخول",
+      "signup": "التسجيلات",
+      "join": "الانضمامات",
+      "login": "عمليات تسجيل الدخول",
+      "invite": "الدعوات",
+      "nudges_title": "تنبيهات البريد الإلكتروني",
+      "nudges_subtitle": "الأشخاص الذين عادوا خلال 7 أيام من التنبيه",
+      "sent": "المرسلة",
+      "returned": "عادوا",
+      "return_rate": "معدل العودة",
+      "paths_title": "مسارات التعلّم",
+      "boards_title": "اللوحات وساحات التجربة",
+      "library_title": "المكتبة",
+      "creation_title": "إنشاء المحتوى",
+      "creation_subtitle": "ما أنشأه فريقك في هذه الفترة",
+      "courses_created": "الدورات المنشأة",
+      "courses_published": "الدورات المنشورة",
+      "activities_created": "الأنشطة",
+      "boards_created": "اللوحات",
+      "playgrounds_created": "ساحات التجربة",
+      "episodes_published": "الحلقات"
+    },
+    "data_kept": "تُحفظ البيانات لمدة {{period}}",
     "title": "التحليلات",
     "subtitle": "رؤى حول المتعلمين والمحتوى",
     "tabs": {
       "overview": "نظرة عامة",
       "advanced": "متقدم"
-    },
-    "not_configured": {
-      "title": "التحليلات غير مهيأة",
-      "description": "تتطلب التحليلات اتصال Tinybird. قم بتعيين متغيرات البيئة <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> و <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> لتفعيلها."
     },
     "advanced_gate": {
       "requires": "يتطلب",
@@ -8833,7 +8944,12 @@
       "courses": "الدورات",
       "count": "العدد",
       "active_users_last_5_minutes": "المستخدمون النشطون في آخر 5 دقائق",
-      "course_fallback_name": "الدورة {{uuid}}"
+      "course_fallback_name": "الدورة {{uuid}}",
+      "visitors": "الزوار",
+      "signed_in_learners": "المتعلمون المسجلون",
+      "traffic": "الزيارات",
+      "page_views_count": "مشاهدات الصفحات: {{value}}",
+      "vs_previous_period": "مقارنة بالفترة السابقة"
     },
     "modals": {
       "live_users": {
@@ -8976,8 +9092,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "التحليلات غير مُهيأة",
-      "not_configured_desc": "تتطلب التحليلات تهيئة Tinybird. يُرجى التواصل مع المسؤول.",
       "common": {
         "loading": "جاري التحميل...",
         "no_data": "لا توجد بيانات بعد",
@@ -11163,7 +11277,6 @@
       "joined": "تاريخ الانضمام",
       "na": "غير متاح",
       "no_analytics": "لا توجد تحليلات متاحة",
-      "ensure_tinybird": "تأكد من إعداد تحليلات Tinybird",
       "period": "الفترة:",
       "days_short": "{{count}} ي",
       "live_users": "المستخدمون المتصلون الآن",
@@ -11336,7 +11449,6 @@
     "analytics": {
       "failed_load": "تعذّر تحميل التحليلات",
       "no_data_available": "لا تتوفر بيانات تحليلات",
-      "ensure_tinybird": "تأكد من إعداد تحليلات Tinybird",
       "no_data": "لا توجد بيانات"
     },
     "ee_error": {

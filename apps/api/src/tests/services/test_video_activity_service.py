@@ -84,7 +84,9 @@ class TestCreateVideoActivity:
             "src.services.courses.activities.video.upload_video",
             new_callable=AsyncMock,
             return_value="video_test.mp4",
-        ):
+        ), patch(
+            "src.services.courses.activities.utils.track", new_callable=AsyncMock
+        ) as mock_track:
             result = await create_video_activity(
                 mock_request,
                 name="Test Video",
@@ -96,6 +98,9 @@ class TestCreateVideoActivity:
 
         assert result.name == "Test Video"
         assert rag_dispatch.call_args.args[2] is True  # transcribe only uploads
+        assert mock_track.await_args.kwargs["event_name"] == "activity_created"
+        assert mock_track.await_args.kwargs["properties"]["activity_type"] == "TYPE_VIDEO"
+        assert mock_track.await_args.kwargs["properties"]["activity_uuid"] == result.activity_uuid
 
 
 class TestCreateExternalVideoActivity:
@@ -123,9 +128,14 @@ class TestCreateExternalVideoActivity:
         with patch(
             "src.services.courses.activities.video.check_resource_access",
             new_callable=AsyncMock,
-        ):
+        ), patch(
+            "src.services.courses.activities.utils.track", new_callable=AsyncMock
+        ) as mock_track:
             result = await create_external_video_activity(
                 mock_request, admin_user, data, db
             )
         assert result.name == "YT Video"
+        assert mock_track.await_args.kwargs["event_name"] == "activity_created"
+        assert mock_track.await_args.kwargs["org_id"] == course.org_id
+        assert mock_track.await_args.kwargs["properties"]["activity_type"] == "TYPE_VIDEO"
         assert rag_dispatch.call_args.args[2] is False  # transcribe only uploads

@@ -17,6 +17,7 @@ from src.security.api_token_utils import reject_api_token_access
 from src.security.auth import get_current_user
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.demo import flags
+from src.security.session_context import refuse_lms_session
 
 router = APIRouter()
 
@@ -109,6 +110,7 @@ async def enter_demo(
     live. The endpoints that would let an admin do real damage (invites,
     custom domains, billing, deleting the org) are blocked separately.
     """
+    refuse_lms_session()
     if not flags.demo_enabled():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

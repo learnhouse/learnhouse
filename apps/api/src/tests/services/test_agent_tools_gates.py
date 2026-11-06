@@ -113,7 +113,6 @@ def test_built_registry_fields():
     specs = {s.name: s for s in registry.specs()}
     assert specs["create_community"].feature == "communities"
     assert specs["get_learner_progress"].feature is None
-    assert specs["run_analytics"].feature == "analytics"
     assert specs["list_courses"].toolset == "courses"
     assert specs["get_context"].toolset == "core" and specs["get_course"].toolset == "core"
     assert specs["add_media_block"].open_world is True

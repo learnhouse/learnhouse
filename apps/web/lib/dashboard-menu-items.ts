@@ -15,6 +15,7 @@ import {
   Code,
   Steps,
 } from '@phosphor-icons/react'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 
 export interface DashboardMenuItem {
   id: string
@@ -25,6 +26,8 @@ export interface DashboardMenuItem {
   featureKey?: string
   /** If true, the feature defaults to disabled (must be explicitly enabled). */
   defaultDisabled?: boolean
+  /** Hides the item when it returns false (e.g. Enterprise-only pages). */
+  available?: () => boolean
 }
 
 export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
@@ -121,6 +124,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     href: '/dash/analytics',
     icon: ChartBar,
     labelKey: 'common.analytics',
+    available: isOrgAnalyticsAvailable,
   },
   {
     id: 'developers',

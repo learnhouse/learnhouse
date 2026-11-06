@@ -1,4 +1,4 @@
-"""Assignment, grading, learner and analytics tools, run through the full
+"""Assignment, grading and learner tools, run through the full
 tool pipeline (validation, scope, rights pre-flight, approval gate, execute)."""
 
 from datetime import datetime, timedelta
@@ -28,7 +28,7 @@ from src.services.ai.tools import (
     make_synthetic_request,
     run_tool,
 )
-from src.services.ai.tools import analytics, assignments, learners, refs
+from src.services.ai.tools import assignments, learners, refs
 
 NOW = str(datetime.now())
 SVC = "src.services.courses.activities.assignments"
@@ -40,7 +40,7 @@ SVC = "src.services.courses.activities.assignments"
 @pytest.fixture
 def registry():
     r = ToolRegistry()
-    r.register_all([*assignments.SPECS, *learners.SPECS, *analytics.SPECS])
+    r.register_all([*assignments.SPECS, *learners.SPECS])
     return r
 
 
@@ -654,71 +654,17 @@ async def test_get_learner_progress_token(registry, db, org, regular_user):
     assert out["learner"]["uuid"] == "user_regular"
 
 
-# ─── analytics ───────────────────────────────────────────────────────────────
-
-
-async def test_run_analytics_maps_users_and_drops_ids(registry, db, org, admin_user, regular_user):
-    rows = {"data": [{"org_id": 1, "user_id": regular_user.id, "views": 3}, {"org_id": 1, "user_id": 999, "views": 1}]}
-    runner = AsyncMock(return_value=rows)
-    with patch.object(analytics, "execute_org_query", new=runner):
-        out = ok(await call(registry, ctx_for(db, org, admin_user), "run_analytics", {"query": "cohort_retention", "days": 7}))
-    assert runner.await_args.args[:3] == ("cohort_retention", org.id, 7)
-    assert out["scope"] == "organization" and out["row_count"] == 2
-    assert out["rows"][0] == {"member": {"kind": "user", "uuid": "user_regular", "name": "Regular User",
-                                         "url": "https://acme.test/user/regular", "username": "regular"}, "views": 3}
-    assert out["rows"][1]["member"] is None
-
-
-async def test_run_analytics_course_query(registry, db, org, admin_user, course):
-    runner = AsyncMock(return_value={"data": []})
-    with patch.object(analytics, "execute_course_query", new=runner):
-        out = ok(await call(registry, ctx_for(db, org, admin_user), "run_analytics", {"query": "course_overview_stats", "course_uuid": "course_test"}))
-    assert out["course"]["uuid"] == "course_test" and "note" in out
-    assert runner.await_args.args[1] == "course_test"
-
-
-@pytest.mark.parametrize(
-    "args",
-    [
-        {"query": "course_overview_stats"},
-        {"query": "daily_active_users", "course_uuid": "course_test"},
-        {"query": "detail_signups", "course_uuid": "course_test"},
-        {"query": "course_top_learners"},
-        {"query": "drop table"},
-        {"query": "daily_active_users", "days": 366},
-    ],
-)
-async def test_run_analytics_rejects(registry, db, org, admin_user, args):
-    out = await call(registry, ctx_for(db, org, admin_user), "run_analytics", args)
-    assert out.denied_code == "invalid_args"
-
-
-async def test_run_analytics_not_configured_is_final(registry, db, org, admin_user):
-    boom = AsyncMock(side_effect=HTTPException(status_code=503, detail="Analytics not configured"))
-    with patch.object(analytics, "execute_org_query", new=boom):
-        out = await call(registry, ctx_for(db, org, admin_user), "run_analytics", {"query": "top_courses"})
-    assert out.denied_code == "http_400" and "Retrying will not help" in out.reason
-
-
-async def test_run_analytics_gates(registry, db, org, admin_user, regular_user):
-    out = await call(registry, ctx_for(db, org, token(org, dashboard=ALL)), "run_analytics", {"query": "top_courses"})
-    assert out.denied_code == "not_for_api_tokens"
-    # The real runner refuses non-admins before any query runs.
-    out = await call(registry, ctx_for(db, org, regular_user), "run_analytics", {"query": "top_courses"})
-    assert out.denied_code == "http_403"
-
-
 # ─── catalog hygiene ─────────────────────────────────────────────────────────
 
 
 def test_specs_follow_conventions():
-    specs = [*assignments.SPECS, *learners.SPECS, *analytics.SPECS]
+    specs = [*assignments.SPECS, *learners.SPECS]
     names = {s.name for s in specs}
     assert names == {
         "list_assignments", "get_assignment", "create_assignment", "update_assignment",
         "delete_assignment", "create_assignment_tasks", "update_assignment_task",
         "delete_assignment_task", "list_submissions", "get_submission", "grade_submission",
-        "list_course_learners", "get_learner_progress", "run_analytics",
+        "list_course_learners", "get_learner_progress",
     }
     for spec in specs:
         assert len(spec.description) <= 450, spec.name
@@ -730,4 +676,3 @@ def test_specs_follow_conventions():
     by_name = {s.name: s for s in specs}
     assert by_name["delete_assignment"].approval_for(None) is True
     assert by_name["update_assignment"].may_need_approval is True
-    assert by_name["run_analytics"].api_tokens is False

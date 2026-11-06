@@ -133,6 +133,65 @@ async def require_org_admin(user_id: int, org_id: int, db_session: AsyncSession)
     await enforce_org_mfa(user_id, org_id, db_session)
 
 
+async def verify_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> None:
+    """Gate of the org reporting surfaces (per-student audit, analytics):
+    403 unless the user belongs to the org. Superadmins pass without the org's
+    session policies; members go through them.
+
+    Prevents cross-org data access (IDOR) by ensuring the requesting user
+    actually belongs to the org whose data they are querying.
+    """
+    if await is_user_superadmin(user_id, db_session):
+        return
+
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
+    )).scalars().first()
+    if not membership:
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
+    await enforce_org_mfa(user_id, org_id, db_session)
+
+
+async def verify_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> None:
+    """403 unless the user's role in this org grants
+    ``organizations.action_update`` (admins, maintainers, custom roles with
+    that right). Superadmins pass.
+
+    Scoped to the org being accessed, not any org the user belongs to.
+    """
+    if await is_user_superadmin(user_id, db_session):
+        return
+
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
+    )).scalars().first()
+    if not membership:
+        raise HTTPException(status_code=403, detail="Admin access required for this organization")
+
+    role = (await db_session.execute(
+        select(Role).where(Role.id == membership.role_id)
+    )).scalars().first()
+    if not role:
+        raise HTTPException(status_code=403, detail="Admin access required for this organization")
+
+    if role.rights:
+        rights = role.rights
+        org_rights = rights.get("organizations") if isinstance(rights, dict) else getattr(rights, "organizations", None)
+        if org_rights:
+            has_update = org_rights.get("action_update", False) if isinstance(org_rights, dict) else getattr(org_rights, "action_update", False)
+            if has_update:
+                await enforce_org_mfa(user_id, org_id, db_session)
+                return
+
+    raise HTTPException(status_code=403, detail="Admin access required for this organization")
+
+
 async def require_org_role_permission(
     user_id: int,
     org_id: int,

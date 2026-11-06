@@ -547,6 +547,7 @@ function Editor(props: EditorProps) {
                         onClick={() => {
                           if (!aiEditorState.isSidePanelOpen) {
                             track(AnalyticsEvent.AiEditorPanelOpened)
+                            track(AnalyticsEvent.AiAssistantOpened, { surface: 'editor' })
                           }
                           dispatchAIEditor({
                             type: aiEditorState.isSidePanelOpen

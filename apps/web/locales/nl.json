@@ -3086,8 +3086,6 @@
       "episodes": "afleveringen",
       "participants": "deelnemers",
       "loading": "Laden...",
-      "enable_analytics_description": "Schakel analyses in om live gebruikers, aanmeldingen en meer te zien.",
-      "enable": "Inschakelen",
       "quick_stats": "Snelle statistieken",
       "full_analytics": "Volledige analyses",
       "live_now": "Nu live",
@@ -4057,7 +4055,8 @@
           "automations": "Automatiseringen",
           "menu": "Menu",
           "danger": "Gevaarzone",
-          "course_end": "Cursusafronding"
+          "course_end": "Cursusafronding",
+          "analytics": "Analyse"
         },
         "pages": {
           "general": {
@@ -4114,6 +4113,10 @@
           "course_end": {
             "title": "Cursusafronding",
             "subtitle": "Pas het scherm aan dat leerlingen zien wanneer ze een cursus afronden"
+          },
+          "analytics": {
+            "title": "Analyse",
+            "subtitle": "Kies hoe lang analysegegevens worden bewaard en wat er wordt verzameld"
           }
         },
         "name": "Organisatienaam",
@@ -5506,6 +5509,48 @@
         "button_link_help": "Een intern pad zoals /courses, of een volledige https://-URL. Laat leeg om naar je cursuscatalogus te linken.",
         "link_invalid": "Gebruik een intern pad dat met / begint of een volledige http(s)-URL",
         "preview": "Voorbeeld"
+      },
+      "analytics_settings": {
+        "title": "Analysegegevens",
+        "subtitle": "Bewaring en privacy voor de analyse van je organisatie",
+        "save": "Opslaan",
+        "saving": "Opslaan...",
+        "saved": "Analyse-instellingen opgeslagen",
+        "error": "Kan de analyse-instellingen niet opslaan",
+        "load_error": "Kan de analyse-instellingen niet laden",
+        "admin_only": "Alleen beheerders van de organisatie kunnen de analyse-instellingen wijzigen.",
+        "retention_title": "Gegevensbewaring",
+        "retention_description": "Hoe lang analyse-events worden bewaard voordat ze worden verwijderd.",
+        "retention_note": "Een kortere bewaartermijn verwijdert oudere gegevens bij de volgende nachtelijke opschoning.",
+        "retention_default": "{{label}} (standaard)",
+        "retention_options": {
+          "days_90": "90 dagen",
+          "days_180": "6 maanden",
+          "days_365": "1 jaar",
+          "days_730": "2 jaar",
+          "days_1095": "3 jaar",
+          "days_1825": "5 jaar",
+          "days_2555": "7 jaar",
+          "days_n": "{{count}} dagen"
+        },
+        "extended_locked": "Gegevens langer dan een jaar bewaren is beschikbaar in het Enterprise-abonnement.",
+        "privacy_title": "Privacy",
+        "track_anonymous": "Bezoekers tellen die niet zijn ingelogd",
+        "track_anonymous_description": "Neem pagina- en cursusweergaven mee van mensen zonder account. Ze worden geteld zonder cookies, met een anonieme ID die elke dag verandert.",
+        "collect_location": "Land van bezoekers opslaan",
+        "collect_location_description": "Leg vast uit welk land een bezoek komt. IP-adressen worden nooit opgeslagen.",
+        "exclude_staff": "Beheerders en maintainers buiten de statistieken houden",
+        "exclude_staff_description": "Weergaven van mensen die de organisatie beheren worden niet geteld, zodat je eigen tests de cijfers niet vertekenen.",
+        "export_title": "Ruwe events downloaden (CSV)",
+        "export_description": "Alle opgeslagen analyse-events in de gekozen periode, één rij per event.",
+        "export_period": "Exportperiode",
+        "export_last_days": "Afgelopen {{count}} dagen",
+        "export_all": "Alles wat bewaard is",
+        "export_button": "CSV downloaden",
+        "exporting": "Download wordt voorbereid...",
+        "export_done": "Download gestart",
+        "export_error": "Kan de analyse-events niet exporteren",
+        "export_locked": "Ruwe events exporteren is beschikbaar in het Enterprise-abonnement."
       }
     },
     "users": {
@@ -8211,15 +8256,81 @@
     "unsaved_changes_warning": "Je hebt niet-opgeslagen wijzigingen. Weggaan zonder op te slaan?"
   },
   "analytics": {
+    "features": {
+      "tab": "Functies",
+      "adoption_title": "Gebruik van functies",
+      "adoption_subtitle": "Mensen die elke functie gebruiken, vergeleken met de vorige periode. Klik op een functie om die in de grafiek te tonen.",
+      "events_count": "{{value}} gebeurtenissen",
+      "names": {
+        "learning": "Leren",
+        "assessments": "Beoordelingen",
+        "community": "Community",
+        "ai": "AI-assistent",
+        "podcasts": "Podcasts",
+        "boards": "Borden",
+        "playgrounds": "Playgrounds",
+        "paths": "Leerpaden",
+        "search": "Zoeken",
+        "messaging": "Berichten",
+        "library": "Bibliotheek",
+        "certificates": "Certificaten"
+      },
+      "video_title": "Videobetrokkenheid",
+      "video_subtitle": "Hoe ver kijkers komen in elke video",
+      "finished": "Voltooid",
+      "podcast_title": "Podcast luisteren",
+      "podcast_subtitle": "Afspeelbeurten per aflevering en hoeveel mensen tot het einde luisteren",
+      "assessments_title": "Beoordelingen",
+      "assessments_subtitle": "Inzendingen, slagingspercentage en gemiddelde score",
+      "assignment": "Opdrachten",
+      "quiz": "Quizzen",
+      "code": "Code-oefeningen",
+      "submissions": "Inzendingen",
+      "pass_rate": "Slagingspercentage",
+      "avg_score": "Gem. score",
+      "passed": "Geslaagd",
+      "community_title": "Communityactiviteit",
+      "community_subtitle": "Discussies, opmerkingen, reacties en upvotes per dag",
+      "discussions": "Discussies",
+      "comments": "Opmerkingen",
+      "reactions": "Reacties",
+      "upvotes": "Upvotes",
+      "peak_contributors": "Tot {{value}} bijdragers per dag",
+      "top_communities": "Populairste communities",
+      "ai_title": "AI-assistent",
+      "ai_subtitle": "Verzonden berichten en mensen die de assistent gebruiken",
+      "messages": "Berichten",
+      "users": "Mensen",
+      "by_surface": "Waar het wordt gebruikt",
+      "acquisition_title": "Aanmelden en inloggen",
+      "acquisition_subtitle": "Hoe mensen zich aanmelden, deelnemen en inloggen",
+      "signup": "Aanmeldingen",
+      "join": "Deelnames",
+      "login": "Logins",
+      "invite": "Uitnodigingen",
+      "nudges_title": "E-mailherinneringen",
+      "nudges_subtitle": "Mensen die binnen 7 dagen na een herinnering terugkwamen",
+      "sent": "Verzonden",
+      "returned": "Teruggekomen",
+      "return_rate": "Terugkeerpercentage",
+      "paths_title": "Leerpaden",
+      "boards_title": "Borden en playgrounds",
+      "library_title": "Bibliotheek",
+      "creation_title": "Inhoud maken",
+      "creation_subtitle": "Wat je team in deze periode heeft gemaakt",
+      "courses_created": "Cursussen gemaakt",
+      "courses_published": "Cursussen gepubliceerd",
+      "activities_created": "Activiteiten",
+      "boards_created": "Borden",
+      "playgrounds_created": "Playgrounds",
+      "episodes_published": "Afleveringen"
+    },
+    "data_kept": "Gegevens bewaard: {{period}}",
     "title": "Analyse",
     "subtitle": "Inzichten over uw leerlingen en inhoud",
     "tabs": {
       "overview": "Overzicht",
       "advanced": "Geavanceerd"
-    },
-    "not_configured": {
-      "title": "Analytics niet geconfigureerd",
-      "description": "Analytics vereist een Tinybird-verbinding. Stel de omgevingsvariabelen <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> en <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> in om dit te activeren."
     },
     "advanced_gate": {
       "requires": "Vereist",
@@ -8280,7 +8391,12 @@
       "courses": "Cursussen",
       "count": "Aantal",
       "active_users_last_5_minutes": "Actieve gebruikers in de afgelopen 5 minuten",
-      "course_fallback_name": "Cursus {{uuid}}"
+      "course_fallback_name": "Cursus {{uuid}}",
+      "visitors": "Bezoekers",
+      "signed_in_learners": "Ingelogde cursisten",
+      "traffic": "Verkeer",
+      "page_views_count": "{{value}} paginaweergaven",
+      "vs_previous_period": "t.o.v. vorige periode"
     },
     "modals": {
       "live_users": {
@@ -8419,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analytics niet geconfigureerd",
-      "not_configured_desc": "Analytics vereist dat Tinybird geconfigureerd is. Neem contact op met uw beheerder.",
       "common": {
         "loading": "Laden...",
         "no_data": "Nog geen gegevens",
@@ -10432,7 +10546,6 @@
       "joined": "Lid sinds",
       "na": "n.v.t.",
       "no_analytics": "Geen analyses beschikbaar",
-      "ensure_tinybird": "Zorg dat Tinybird-analyses zijn geconfigureerd",
       "period": "Periode:",
       "days_short": "{{count}}d",
       "live_users": "Live gebruikers",
@@ -10593,7 +10706,6 @@
     "analytics": {
       "failed_load": "Laden van analyses mislukt",
       "no_data_available": "Geen analysegegevens beschikbaar",
-      "ensure_tinybird": "Zorg dat Tinybird-analyses zijn geconfigureerd",
       "no_data": "Geen gegevens"
     },
     "ee_error": {

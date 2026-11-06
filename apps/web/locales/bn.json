@@ -3086,8 +3086,6 @@
       "episodes": "পর্বসমূহ",
       "participants": "অংশগ্রহণকারী",
       "loading": "লোড হচ্ছে...",
-      "enable_analytics_description": "লাইভ ব্যবহারকারী, সাইন আপ এবং আরও অনেক কিছু দেখতে বিশ্লেষণ সক্রিয় করুন।",
-      "enable": "সক্রিয় করুন",
       "quick_stats": "দ্রুত পরিসংখ্যান",
       "full_analytics": "সম্পূর্ণ বিশ্লেষণ",
       "live_now": "এখন লাইভ",
@@ -4057,7 +4055,8 @@
           "automations": "অটোমেশন",
           "menu": "মেনু",
           "danger": "ঝুঁকিপূর্ণ জোন",
-          "course_end": "কোর্স সমাপ্তি"
+          "course_end": "কোর্স সমাপ্তি",
+          "analytics": "বিশ্লেষণ"
         },
         "pages": {
           "general": {
@@ -4114,6 +4113,10 @@
           "course_end": {
             "title": "কোর্স সমাপ্তি",
             "subtitle": "কোর্স শেষ করার পর শিক্ষার্থীরা যে স্ক্রিন দেখেন তা কাস্টমাইজ করুন"
+          },
+          "analytics": {
+            "title": "বিশ্লেষণ",
+            "subtitle": "বিশ্লেষণ ডেটা কতদিন রাখা হবে এবং কী সংগ্রহ করা হবে তা বেছে নিন"
           }
         },
         "name": "সংস্থার নাম",
@@ -5506,6 +5509,48 @@
         "button_link_help": "/courses-এর মতো একটি অভ্যন্তরীণ পাথ, অথবা সম্পূর্ণ https:// URL। আপনার কোর্স ক্যাটালগে লিঙ্ক করতে ফাঁকা রাখুন।",
         "link_invalid": "/ দিয়ে শুরু হওয়া একটি অভ্যন্তরীণ পাথ অথবা সম্পূর্ণ http(s) URL ব্যবহার করুন",
         "preview": "প্রিভিউ"
+      },
+      "analytics_settings": {
+        "title": "বিশ্লেষণ ডেটা",
+        "subtitle": "আপনার প্রতিষ্ঠানের বিশ্লেষণের জন্য ডেটা সংরক্ষণ ও গোপনীয়তা",
+        "save": "সংরক্ষণ করুন",
+        "saving": "সংরক্ষণ করা হচ্ছে...",
+        "saved": "বিশ্লেষণ সেটিংস সংরক্ষিত হয়েছে",
+        "error": "বিশ্লেষণ সেটিংস সংরক্ষণ করা যায়নি",
+        "load_error": "বিশ্লেষণ সেটিংস লোড করা যায়নি",
+        "admin_only": "শুধু প্রতিষ্ঠানের অ্যাডমিনরাই বিশ্লেষণ সেটিংস পরিবর্তন করতে পারেন।",
+        "retention_title": "ডেটা সংরক্ষণ",
+        "retention_description": "বিশ্লেষণ ইভেন্ট মুছে ফেলার আগে কতদিন রাখা হয়।",
+        "retention_note": "সংরক্ষণের সময় কমালে পুরোনো ডেটা পরের রাতের পরিষ্কারের সময় মুছে যায়।",
+        "retention_default": "{{label}} (ডিফল্ট)",
+        "retention_options": {
+          "days_90": "৯০ দিন",
+          "days_180": "৬ মাস",
+          "days_365": "১ বছর",
+          "days_730": "২ বছর",
+          "days_1095": "৩ বছর",
+          "days_1825": "৫ বছর",
+          "days_2555": "৭ বছর",
+          "days_n": "{{count}} দিন"
+        },
+        "extended_locked": "এক বছরের বেশি ডেটা রাখা Enterprise প্ল্যানে পাওয়া যায়।",
+        "privacy_title": "গোপনীয়তা",
+        "track_anonymous": "সাইন ইন না করা দর্শকদের গণনা করুন",
+        "track_anonymous_description": "অ্যাকাউন্ট ছাড়া মানুষের পেজ ও কোর্স ভিউ অন্তর্ভুক্ত করুন। এগুলো কুকি ছাড়া, প্রতিদিন বদলানো একটি বেনামী ID দিয়ে গণনা করা হয়।",
+        "collect_location": "দর্শকের দেশ সংরক্ষণ করুন",
+        "collect_location_description": "ভিজিট কোন দেশ থেকে এসেছে তা রেকর্ড করুন। IP ঠিকানা কখনো সংরক্ষণ করা হয় না।",
+        "exclude_staff": "অ্যাডমিন ও মেইনটেইনারদের পরিসংখ্যানের বাইরে রাখুন",
+        "exclude_staff_description": "প্রতিষ্ঠান পরিচালনাকারীদের ভিউ গণনা করা হয় না, তাই আপনার নিজের পরীক্ষায় সংখ্যা বিকৃত হয় না।",
+        "export_title": "র ইভেন্ট ডাউনলোড করুন (CSV)",
+        "export_description": "নির্বাচিত সময়ের সব সংরক্ষিত বিশ্লেষণ ইভেন্ট, প্রতিটি ইভেন্টের জন্য একটি সারি।",
+        "export_period": "এক্সপোর্টের সময়কাল",
+        "export_last_days": "গত {{count}} দিন",
+        "export_all": "সংরক্ষিত সবকিছু",
+        "export_button": "CSV ডাউনলোড করুন",
+        "exporting": "ডাউনলোড প্রস্তুত করা হচ্ছে...",
+        "export_done": "ডাউনলোড শুরু হয়েছে",
+        "export_error": "বিশ্লেষণ ইভেন্ট এক্সপোর্ট করা যায়নি",
+        "export_locked": "র ইভেন্ট এক্সপোর্ট Enterprise প্ল্যানে পাওয়া যায়।"
       }
     },
     "users": {
@@ -8211,15 +8256,81 @@
     "unsaved_changes_warning": "আপনার অসংরক্ষিত পরিবর্তন আছে। সংরক্ষণ না করেই চলে যাবেন?"
   },
   "analytics": {
+    "features": {
+      "tab": "ফিচার",
+      "adoption_title": "ফিচার ব্যবহার",
+      "adoption_subtitle": "প্রতিটি ফিচার যারা ব্যবহার করছেন, আগের সময়ের সঙ্গে তুলনা। চার্টে দেখতে একটিতে ক্লিক করুন।",
+      "events_count": "{{value}}টি ইভেন্ট",
+      "names": {
+        "learning": "শেখা",
+        "assessments": "মূল্যায়ন",
+        "community": "কমিউনিটি",
+        "ai": "এআই সহকারী",
+        "podcasts": "পডকাস্ট",
+        "boards": "বোর্ড",
+        "playgrounds": "প্লেগ্রাউন্ড",
+        "paths": "লার্নিং পাথ",
+        "search": "অনুসন্ধান",
+        "messaging": "মেসেজিং",
+        "library": "লাইব্রেরি",
+        "certificates": "সার্টিফিকেট"
+      },
+      "video_title": "ভিডিও এনগেজমেন্ট",
+      "video_subtitle": "দর্শকরা প্রতিটি ভিডিও কতদূর দেখেন",
+      "finished": "শেষ করেছেন",
+      "podcast_title": "পডকাস্ট শোনা",
+      "podcast_subtitle": "প্রতি পর্বে প্লে এবং কতজন শেষ পর্যন্ত শোনেন",
+      "assessments_title": "মূল্যায়ন",
+      "assessments_subtitle": "জমা, পাসের হার ও গড় স্কোর",
+      "assignment": "অ্যাসাইনমেন্ট",
+      "quiz": "কুইজ",
+      "code": "কোড অনুশীলন",
+      "submissions": "জমা",
+      "pass_rate": "পাসের হার",
+      "avg_score": "গড় স্কোর",
+      "passed": "পাস করেছেন",
+      "community_title": "কমিউনিটি কার্যকলাপ",
+      "community_subtitle": "প্রতিদিন আলোচনা, মন্তব্য, প্রতিক্রিয়া ও আপভোট",
+      "discussions": "আলোচনা",
+      "comments": "মন্তব্য",
+      "reactions": "প্রতিক্রিয়া",
+      "upvotes": "আপভোট",
+      "peak_contributors": "প্রতিদিন সর্বোচ্চ {{value}} জন অবদানকারী",
+      "top_communities": "শীর্ষ কমিউনিটি",
+      "ai_title": "এআই সহকারী",
+      "ai_subtitle": "পাঠানো বার্তা এবং সহকারী ব্যবহারকারী",
+      "messages": "বার্তা",
+      "users": "মানুষ",
+      "by_surface": "কোথায় ব্যবহৃত হয়",
+      "acquisition_title": "সাইন-আপ ও সাইন-ইন",
+      "acquisition_subtitle": "মানুষ কীভাবে সাইন আপ করে, যোগ দেয় ও লগ ইন করে",
+      "signup": "সাইন-আপ",
+      "join": "যোগদান",
+      "login": "লগইন",
+      "invite": "আমন্ত্রণ",
+      "nudges_title": "ইমেইল নাজ",
+      "nudges_subtitle": "নাজের ৭ দিনের মধ্যে যারা ফিরে এসেছেন",
+      "sent": "পাঠানো",
+      "returned": "ফিরে এসেছেন",
+      "return_rate": "ফেরার হার",
+      "paths_title": "লার্নিং পাথ",
+      "boards_title": "বোর্ড ও প্লেগ্রাউন্ড",
+      "library_title": "লাইব্রেরি",
+      "creation_title": "কনটেন্ট তৈরি",
+      "creation_subtitle": "এই সময়ে আপনার দল যা তৈরি করেছে",
+      "courses_created": "তৈরি কোর্স",
+      "courses_published": "প্রকাশিত কোর্স",
+      "activities_created": "কার্যক্রম",
+      "boards_created": "বোর্ড",
+      "playgrounds_created": "প্লেগ্রাউন্ড",
+      "episodes_published": "পর্ব"
+    },
+    "data_kept": "ডেটা রাখা হয় {{period}}",
     "title": "বিশ্লেষণ",
     "subtitle": "আপনার শিক্ষার্থী এবং বিষয়বস্তু সম্পর্কে অন্তর্দৃষ্টি",
     "tabs": {
       "overview": "সংক্ষিপ্ত বিবরণ",
       "advanced": "উন্নত"
-    },
-    "not_configured": {
-      "title": "বিশ্লেষণ কনফিগার করা হয়নি",
-      "description": "বিশ্লেষণের জন্য Tinybird সংযোগ প্রয়োজন। এটি সক্ষম করতে <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> এবং <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> এনভায়রনমেন্ট ভেরিয়েবল সেট করুন।"
     },
     "advanced_gate": {
       "requires": "প্রয়োজন",
@@ -8280,7 +8391,12 @@
       "courses": "কোর্স",
       "count": "সংখ্যা",
       "active_users_last_5_minutes": "গত ৫ মিনিটে সক্রিয় ব্যবহারকারী",
-      "course_fallback_name": "কোর্স {{uuid}}"
+      "course_fallback_name": "কোর্স {{uuid}}",
+      "visitors": "ভিজিটর",
+      "signed_in_learners": "সাইন-ইন করা শিক্ষার্থী",
+      "traffic": "ট্রাফিক",
+      "page_views_count": "{{value}} পেজ ভিউ",
+      "vs_previous_period": "আগের সময়ের তুলনায়"
     },
     "modals": {
       "live_users": {
@@ -8419,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "অ্যানালিটিক্স কনফিগার করা হয়নি",
-      "not_configured_desc": "অ্যানালিটিক্সের জন্য Tinybird কনফিগার করা প্রয়োজন। অনুগ্রহ করে আপনার প্রশাসকের সাথে যোগাযোগ করুন।",
       "common": {
         "loading": "লোড হচ্ছে...",
         "no_data": "এখনও কোনো ডেটা নেই",
@@ -10432,7 +10546,6 @@
       "joined": "যোগ দিয়েছেন",
       "na": "প্রযোজ্য নয়",
       "no_analytics": "কোনো অ্যানালিটিক্স উপলব্ধ নেই",
-      "ensure_tinybird": "নিশ্চিত করুন যে Tinybird অ্যানালিটিক্স কনফিগার করা আছে",
       "period": "সময়কাল:",
       "days_short": "{{count}}দি",
       "live_users": "লাইভ ব্যবহারকারী",
@@ -10593,7 +10706,6 @@
     "analytics": {
       "failed_load": "অ্যানালিটিক্স লোড করা যায়নি",
       "no_data_available": "কোনো অ্যানালিটিক্স ডেটা উপলব্ধ নেই",
-      "ensure_tinybird": "নিশ্চিত করুন যে Tinybird অ্যানালিটিক্স কনফিগার করা আছে",
       "no_data": "কোনো ডেটা নেই"
     },
     "ee_error": {

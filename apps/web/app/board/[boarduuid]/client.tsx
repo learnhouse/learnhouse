@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
@@ -9,6 +9,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import BoardCanvas from '@components/Dashboard/Boards/BoardCanvas'
 import { useTrackView, AnalyticsEvent } from '@services/analytics'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { OrgContext } from '@components/Contexts/OrgContext'
 import { useSearchParams } from 'next/navigation'
 
 interface BoardCanvasClientProps {
@@ -50,13 +51,6 @@ export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, use
     staleTime: 60_000,
   })
 
-  useTrackView(
-    AnalyticsEvent.BoardViewed,
-    { is_public: board?.public ?? false },
-    !isLoading && !!board,
-    'learner',
-  )
-
   // No token yet means AuthContext is still trading the refresh cookie for an
   // access token. The board query is disabled until then, so keep showing the
   // spinner rather than falling through to "not found".
@@ -77,13 +71,40 @@ export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, use
   }
 
   return (
-    <BoardCanvas
-      board={board}
-      accessToken={token}
-      orgslug={orgslug}
-      username={displayName}
-      orgUuid={orgData?.org_uuid || ''}
-      embedded={embedded}
-    />
+    <>
+      <BoardViewTracker board={board} org={orgData} orgslug={orgslug} />
+      <BoardCanvas
+        board={board}
+        accessToken={token}
+        orgslug={orgslug}
+        username={displayName}
+        orgUuid={orgData?.org_uuid || ''}
+        embedded={embedded}
+      />
+    </>
   )
+}
+
+/**
+ * The board route sits outside the org layout, so there's no OrgProvider to
+ * tell analytics which org the view belongs to; give the tracker the org this
+ * page already loaded. Scoped to the tracker so the canvas is unaffected.
+ */
+function BoardViewTracker({ board, org, orgslug }: { board: any; org: any; orgslug: string }) {
+  const value = useMemo(() => ({ org: org ?? null, isUserPartOfTheOrg: true, orgslug }), [org, orgslug])
+  return (
+    <OrgContext.Provider value={value}>
+      <TrackBoardView board={board} />
+    </OrgContext.Provider>
+  )
+}
+
+function TrackBoardView({ board }: { board: any }) {
+  useTrackView(
+    AnalyticsEvent.BoardViewed,
+    { board_uuid: board.board_uuid, is_public: board.public ?? false },
+    true,
+    'learner',
+  )
+  return null
 }

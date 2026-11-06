@@ -22,6 +22,8 @@ from src.services.orgs.orgs import (
     rbac_check,
 )
 from src.services.users.emails import send_invitation_email
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 logger = logging.getLogger(__name__)
 
@@ -174,6 +176,14 @@ async def create_invite_code(
             status_code=400,
             detail="Maximum number of invite codes reached",
         )
+
+    # A shareable link invites nobody in particular yet, so no count.
+    await track(
+        event_name=analytics_events.USER_INVITED,
+        org_id=org_id,
+        user_id=resolve_acting_user_id(current_user),
+        properties={"invite_method": "invite_code"},
+    )
 
     return inviteCodeObject
 

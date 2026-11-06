@@ -3085,8 +3085,6 @@
       "episodes": "episodes",
       "participants": "participants",
       "loading": "Loading...",
-      "enable_analytics_description": "Enable analytics to see live users, signups, and more.",
-      "enable": "Enable",
       "quick_stats": "Quick Stats",
       "full_analytics": "Full Analytics",
       "live_now": "Live Now",
@@ -4055,7 +4053,8 @@
           "menu": "Menu",
           "danger": "Danger Zone",
           "course_end": "Course completion",
-          "mcp": "AI apps"
+          "mcp": "AI apps",
+          "analytics": "Analytics"
         },
         "pages": {
           "general": {
@@ -4116,6 +4115,10 @@
           "mcp": {
             "title": "AI apps (MCP)",
             "subtitle": "Connect Claude, ChatGPT, Cursor and other AI apps to your organization"
+          },
+          "analytics": {
+            "title": "Analytics",
+            "subtitle": "Choose how long analytics data is kept and what gets collected"
           }
         },
         "name": "Organization Name",
@@ -5508,6 +5511,48 @@
         "button_link_help": "An internal path like /courses, or a full https:// URL. Leave empty to link to your course catalog.",
         "link_invalid": "Use an internal path starting with / or a full http(s) URL",
         "preview": "Preview"
+      },
+      "analytics_settings": {
+        "title": "Analytics data",
+        "subtitle": "Retention and privacy for your organization's analytics",
+        "save": "Save",
+        "saving": "Saving...",
+        "saved": "Analytics settings saved",
+        "error": "Could not save the analytics settings",
+        "load_error": "Could not load the analytics settings",
+        "admin_only": "Only organization admins can change analytics settings.",
+        "retention_title": "Data retention",
+        "retention_description": "How long analytics events are kept before they are deleted.",
+        "retention_note": "Shortening retention deletes older data at the next nightly cleanup.",
+        "retention_default": "{{label}} (default)",
+        "retention_options": {
+          "days_90": "90 days",
+          "days_180": "6 months",
+          "days_365": "1 year",
+          "days_730": "2 years",
+          "days_1095": "3 years",
+          "days_1825": "5 years",
+          "days_2555": "7 years",
+          "days_n": "{{count}} days"
+        },
+        "extended_locked": "Keeping data for more than a year is available on the Enterprise plan.",
+        "privacy_title": "Privacy",
+        "track_anonymous": "Count visitors who aren't signed in",
+        "track_anonymous_description": "Include page and course views from people without an account. They're counted without cookies, using an anonymous ID that changes every day.",
+        "collect_location": "Store visitor country",
+        "collect_location_description": "Record which country a visit comes from. IP addresses are never stored.",
+        "exclude_staff": "Leave admins and maintainers out of stats",
+        "exclude_staff_description": "Views from people who manage the organization aren't counted, so your own testing doesn't skew the numbers.",
+        "export_title": "Download raw events (CSV)",
+        "export_description": "Every stored analytics event for the chosen period, one row per event.",
+        "export_period": "Export period",
+        "export_last_days": "Last {{count}} days",
+        "export_all": "Everything kept",
+        "export_button": "Download CSV",
+        "exporting": "Preparing your download...",
+        "export_done": "Download started",
+        "export_error": "Could not export the analytics events",
+        "export_locked": "Raw event export is available on the Enterprise plan."
       }
     },
     "users": {
@@ -8473,15 +8518,81 @@
     "unsaved_changes_warning": "You have unsaved changes. Leave without saving?"
   },
   "analytics": {
+    "features": {
+      "tab": "Features",
+      "adoption_title": "Feature adoption",
+      "adoption_subtitle": "People using each feature, compared with the previous period. Click one to chart it.",
+      "events_count": "{{value}} events",
+      "names": {
+        "learning": "Learning",
+        "assessments": "Assessments",
+        "community": "Community",
+        "ai": "AI assistant",
+        "podcasts": "Podcasts",
+        "boards": "Boards",
+        "playgrounds": "Playgrounds",
+        "paths": "Learning paths",
+        "search": "Search",
+        "messaging": "Messaging",
+        "library": "Library",
+        "certificates": "Certificates"
+      },
+      "video_title": "Video engagement",
+      "video_subtitle": "How far viewers get through each video",
+      "finished": "Finished",
+      "podcast_title": "Podcast listening",
+      "podcast_subtitle": "Plays per episode and how many listen to the end",
+      "assessments_title": "Assessments",
+      "assessments_subtitle": "Submissions, pass rate and average score",
+      "assignment": "Assignments",
+      "quiz": "Quizzes",
+      "code": "Code exercises",
+      "submissions": "Submissions",
+      "pass_rate": "Pass rate",
+      "avg_score": "Avg score",
+      "passed": "Passed",
+      "community_title": "Community activity",
+      "community_subtitle": "Discussions, comments, reactions and upvotes per day",
+      "discussions": "Discussions",
+      "comments": "Comments",
+      "reactions": "Reactions",
+      "upvotes": "Upvotes",
+      "peak_contributors": "Up to {{value}} contributors a day",
+      "top_communities": "Top communities",
+      "ai_title": "AI assistant",
+      "ai_subtitle": "Messages sent and people using the assistant",
+      "messages": "Messages",
+      "users": "People",
+      "by_surface": "Where it's used",
+      "acquisition_title": "Sign-up and sign-in",
+      "acquisition_subtitle": "How people sign up, join and log in",
+      "signup": "Sign-ups",
+      "join": "Joins",
+      "login": "Logins",
+      "invite": "Invites",
+      "nudges_title": "Email nudges",
+      "nudges_subtitle": "People who came back within 7 days of a nudge",
+      "sent": "Sent",
+      "returned": "Came back",
+      "return_rate": "Return rate",
+      "paths_title": "Learning paths",
+      "boards_title": "Boards and playgrounds",
+      "library_title": "Library",
+      "creation_title": "Content creation",
+      "creation_subtitle": "What your team built in this period",
+      "courses_created": "Courses created",
+      "courses_published": "Courses published",
+      "activities_created": "Activities",
+      "boards_created": "Boards",
+      "playgrounds_created": "Playgrounds",
+      "episodes_published": "Episodes"
+    },
+    "data_kept": "Data kept for {{period}}",
     "title": "Analytics",
     "subtitle": "Insights about your learners and content",
     "tabs": {
       "overview": "Overview",
       "advanced": "Advanced"
-    },
-    "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
     },
     "advanced_gate": {
       "requires": "Requires",
@@ -8542,7 +8653,12 @@
       "courses": "Courses",
       "count": "Count",
       "active_users_last_5_minutes": "Active users in last 5 minutes",
-      "course_fallback_name": "Course {{uuid}}"
+      "course_fallback_name": "Course {{uuid}}",
+      "visitors": "Visitors",
+      "signed_in_learners": "Signed-in learners",
+      "traffic": "Traffic",
+      "page_views_count": "{{value}} page views",
+      "vs_previous_period": "vs previous period"
     },
     "modals": {
       "live_users": {
@@ -8681,8 +8797,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analytics Not Configured",
-      "not_configured_desc": "Analytics requires Tinybird to be configured. Please contact your administrator.",
       "common": {
         "loading": "Loading...",
         "no_data": "No data yet",
@@ -10737,7 +10851,6 @@
       "joined": "Joined",
       "na": "n/a",
       "no_analytics": "No analytics available",
-      "ensure_tinybird": "Ensure Tinybird analytics is configured",
       "period": "Period:",
       "days_short": "{{count}}d",
       "live_users": "Live Users",
@@ -10898,7 +11011,6 @@
     "analytics": {
       "failed_load": "Failed to load analytics",
       "no_data_available": "No analytics data available",
-      "ensure_tinybird": "Ensure Tinybird analytics is configured",
       "no_data": "No data"
     },
     "ee_error": {

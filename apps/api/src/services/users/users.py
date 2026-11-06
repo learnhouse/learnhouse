@@ -313,6 +313,12 @@ async def create_user(
         user_id=user.id if user.id else 0,
         properties={"signup_method": signup_provider},
     )
+    await track(
+        event_name=analytics_events.USER_JOINED_ORG,
+        org_id=org_id,
+        user_id=user.id if user.id else 0,
+        properties={"join_method": "invite_code" if signup_provider == "invite" else "signup"},
+    )
     await dispatch_webhooks(
         event_name=analytics_events.USER_SIGNED_UP,
         org_id=org_id,
