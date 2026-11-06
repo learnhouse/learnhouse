@@ -1,3 +1,8 @@
+---
+title: "Programmatic Migration"
+description: "Script a full course migration through the LearnHouse API: create the course, chapters and every activity type, upload media, reorder and publish."
+---
+
 import { Callout } from '@/components/mdx'
 
 # Programmatic Migration
@@ -7,7 +12,7 @@ This guide walks through the full sequence of API calls needed to build a course
 The base URL in every example is `http://localhost:1338/api/v1`. Replace it with your instance domain.
 
 <Callout type="info">
-All examples use an API token (`Authorization: Bearer lh_...`). A user JWT works identically.
+Most examples use an API token (`Authorization: Bearer lh_...`). A user JWT works the same way. Media blocks (step 4) reject API tokens and need a JWT.
 </Callout>
 
 ## 1. Create the course
@@ -405,7 +410,7 @@ The script below creates a complete, public, published course with **one of ever
 Save the assets you want to use to a folder (the script expects `thumbnail.jpg`, `diagram.jpg`, `clip.mp4`, `doc.pdf`) and run it. Total runtime is under 10 seconds against a local dev instance.
 
 <Callout type="info">
-**Pre-requisites:** `bash`, `curl`, `jq`, and `python3` (for one inline JSON-builder). The script uses the API-token-to-JWT swap so it works with either an `lh_*` API token (the recommended setup) or by replacing `TOKEN=...` with a JWT you already have.
+**Pre-requisites:** `bash`, `curl`, `jq`, and `python3` (for one inline JSON-builder). The script uses the API-token-to-JWT swap so it works with either an `lh_*` API token (the recommended setup) or by replacing `TOKEN=...` with a JWT you already have. The swap only works for a member who is not an Admin or Maintainer, so set `USER_ID` to an account with a role that can create courses, such as Instructor.
 </Callout>
 
 ```bash
@@ -418,12 +423,14 @@ API=http://localhost:1338/api/v1
 API_TOKEN=lh_your_api_token        # Pro-plan API token
 ORG_SLUG=default                   # your org slug
 ORG_ID=1                           # your org id
-USER_ID=1                          # which user the script acts as
+USER_ID=2                          # the account the script acts as: an Instructor (or a custom role
+                                   # that can create courses), not an Admin or Maintainer
 ASSETS=./assets                    # folder containing thumbnail.jpg, diagram.jpg, clip.mp4, doc.pdf
 
 # ── 0. Mint a user JWT from the API token ───────────────────────────────────
-# (Most endpoints accept the API token directly, but the JWT path is universal,
-# including the AI-assisted migration endpoints which reject API tokens.)
+# Most endpoints accept the API token directly, but media blocks need a user
+# session. The token needs the Update right on Users (Admin API), and the JWT
+# lasts 1 hour. See Overview → Authentication for the swap rules.
 TOKEN=$(curl -fsS -X POST "$API/admin/$ORG_SLUG/auth/token" \
   -H "Authorization: Bearer $API_TOKEN" \
   -H 'Content-Type: application/json' \
@@ -566,7 +573,7 @@ What you should see in the browser at the printed URL:
 - **Hosted MP4 sample** in the LearnHouse video player.
 - **YouTube embed** with the YouTube iframe player.
 - **Sample PDF document** in the embedded PDF.js viewer with toolbar.
-- **Final assignment** showing the description, due date, and File Submission widget, **but only when signed in**. The `/api/v1/assignments/*` router rejects anonymous requests, so on a public course an anonymous viewer sees a blank panel where the assignment widget would be. Sign in (or open via the dashboard) to see the description, tasks, and submission UI.
+- **Final assignment** showing the description, due date, and File Submission widget, **but only when signed in**. The `/api/v1/assignments/*` endpoints reject anonymous requests, so on a public course an anonymous viewer sees a blank panel where the assignment widget would be. Sign in (or open via the dashboard) to see the description, tasks, and submission UI.
 
 ## Verifying the result
 

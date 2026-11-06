@@ -1,41 +1,33 @@
+---
+description: Install and use the LearnHouse CLI to deploy, update, back up and manage a self-hosted instance, or run a local development stack.
+---
+
 import { Callout } from '@/components/mdx'
 
 # CLI
 
 The LearnHouse CLI is the primary tool for deploying, managing, and developing LearnHouse. It generates and runs a Docker Compose deployment, provides an interactive setup wizard, and starts a full local development environment.
 
-<img src="/img/pages/cli/cli-screenshot.png" alt="LearnHouse CLI" style={{ borderRadius: '12px', marginTop: '1rem' }} />
+<img src="/img/pages/cli/cli-screenshot.webp" alt="The LearnHouse CLI setup wizard running in a terminal" width={1400} height={1333} style={{ borderRadius: '12px', marginTop: '1rem' }} />
 
 **Package**: [`learnhouse`](https://www.npmjs.com/package/learnhouse) on npm
 
 ## Installation
 
-### Quick Start (recommended)
+You don't need to install the CLI globally. Run the setup wizard with `npx`:
 
 ```bash
 npx learnhouse@latest setup
 ```
 
-### One-line Install (macOS / Linux)
-
-Installs Docker and Node.js if they are missing, then launches the setup wizard:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli/install.sh | bash
-```
-
-### Windows (PowerShell)
-
-Installs Docker Desktop and Node.js (through winget or Chocolatey) if they are missing, then launches the setup wizard:
-
-```powershell
-irm https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli/install.ps1 | iex
-```
+On a fresh server, the one-line installers for macOS, Linux and Windows install Docker and Node.js first. See [Quick Install](/self-hosting/installation/quick-install) for the full install steps.
 
 ## Requirements
 
 - **Node.js** 22 or newer
 - **Docker** with the Compose v2 plugin (`docker compose`)
+
+See [Requirements](/self-hosting/installation/requirements) for hardware, ports and supported systems.
 
 ## What It Does
 
@@ -93,5 +85,5 @@ npx learnhouse --dir ~/.learnhouse/production status
 Running `npx learnhouse` with no command prints the list of available commands.
 
 <Callout type="info">
-See [Commands](/cli/commands) for the full reference including all flags, and [Environment Variables](/cli/environment-variables) for the variables the CLI reads and the `.env` file it writes.
+See [Commands](/cli/commands) for the full reference including all flags, and [CLI Environment Variables](/cli/environment-variables) for the variables the CLI reads and the `.env` file it writes.
 </Callout>

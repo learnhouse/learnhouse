@@ -1,3 +1,8 @@
+---
+title: "Headless Assignments"
+description: "Run LearnHouse assignments from your own frontend with an API token: create tasks with custom data, submit answers for learners and grade them."
+---
+
 import { Callout } from '@/components/mdx'
 
 # Headless Assignments
@@ -5,7 +10,7 @@ import { Callout } from '@/components/mdx'
 LearnHouse assignments can be driven entirely from your own frontend. With an API token you can author assignments and tasks, store an arbitrary custom data object on each task, read submissions and grades, submit answers on behalf of your learners, and grade them. It all goes through the standard REST API, so you do not need the LearnHouse UI.
 
 <Callout type="info">
-API tokens are available on the **Pro plan**. Create one under **Developers → API Access** and grant it the **Assignments** permission. Tokens are prefixed with `lh_` and are scoped to a single organization.
+API tokens need the **Pro** plan or higher on LearnHouse Cloud, and are available on every self-hosted instance. Create one under **Developers → API Access** and grant it the **Assignments** permission. Tokens are prefixed with `lh_` and are scoped to a single organization.
 </Callout>
 
 ## Permissions
@@ -150,4 +155,4 @@ A custom frontend can run the whole lifecycle with one token (`create` + `read` 
 4. `POST /assignments/{uuid}/submissions?on_behalf_of_user_id=42`: mark it submitted.
 5. `PUT  /assignments/{uuid}/submissions/42`: set the grade and feedback.
 
-See [Authentication](/developers/api/authentication) for how to create and use API tokens, and the [Assignments platform guide](/platform/assignments) for the in-app workflow.
+See [API Authentication](/developers/api/authentication) for how to create and use API tokens, and the [Assignments platform guide](/platform/assignments) for the in-app workflow.

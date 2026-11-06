@@ -1,3 +1,8 @@
+---
+title: Quickstart
+description: Start a LearnHouse academy on LearnHouse Cloud or your own server, then create your first course, brand it, and invite your first learners.
+---
+
 import { Callout, Steps } from '@/components/mdx'
 
 # Quickstart
@@ -34,8 +39,7 @@ Continue with [the steps below](#set-up-your-academy).
 
 ## Option B: Self-hosted
 
-You need [Docker](https://docs.docker.com/get-docker/) with the Compose v2 plugin and [Node.js](https://nodejs.org/) 22
-or newer.
+You need Docker with the Compose v2 plugin and Node.js 22 or newer. See [System requirements](/self-hosting/installation/requirements).
 
 <Steps>
 
@@ -49,29 +53,14 @@ It asks for your domain, database, admin account and optional features (AI, emai
 
 ### Start LearnHouse
 
-Accept **Start LearnHouse now?** at the end of the wizard, or run:
-
-```bash
-npx learnhouse start
-```
-
-Your instance is at `http://localhost`, or at the domain you chose.
-
-### Know the everyday commands
-
-```bash
-npx learnhouse stop     # Stop all services
-npx learnhouse logs     # Stream logs
-npx learnhouse backup   # Back up the database, .env and uploads
-npx learnhouse update   # Update to the latest version
-npx learnhouse doctor   # Run diagnostics
-```
+Accept **Start LearnHouse now?** at the end of the wizard, or run `npx learnhouse start`. Your instance is at `http://localhost`, or at the domain you chose.
 
 </Steps>
 
 <Callout type="info">
-  More options in [Quick install](/self-hosting/installation/quick-install), every setting in
-  [Configuration](/self-hosting/configuration), and what changed in each version in [Releases](/releases).
+  [Quick install](/self-hosting/installation/quick-install) covers the one-line installers, non-interactive setup and
+  how to check the install. [CLI commands](/cli/commands) lists the everyday commands (`stop`, `logs`, `backup`,
+  `update`, `doctor`), and [Configuration](/self-hosting/configuration) every setting.
 </Callout>
 
 ## Set up your academy

@@ -4,6 +4,7 @@ import { ArrowLeft } from '@phosphor-icons/react/dist/ssr'
 import { getLatestVersions, getRelease, getReleases } from '../../../lib/releases'
 import ReleaseCard from '../_components/ReleaseCard'
 import { formatDate, releaseTitle } from '../_components/format'
+import { socialMetadata } from '../../../lib/seo'
 
 export const revalidate = 3600
 export const dynamicParams = true
@@ -23,10 +24,12 @@ export async function generateMetadata({ params }) {
   if (!found) return { title: 'Release not found' }
   const r = found.release
   const title = releaseTitle(r)
+  const description = `Release notes for ${title}, released ${formatDate(r.date)}: new features, fixes and upgrade notes.`
   return {
     title,
-    description: `Release notes for ${title}, released ${formatDate(r.date)}.`,
+    description,
     alternates: { canonical: `/releases/${r.tag}` },
+    ...socialMetadata({ title, description, path: `/releases/${r.tag}`, image: '/og/releases' }),
   }
 }
 

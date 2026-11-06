@@ -82,6 +82,7 @@
 }
 
 .lhr-link {
+  overflow-wrap: anywhere;
   color: var(--lhr-text);
   text-decoration: underline;
   text-decoration-color: #d4d4d4;

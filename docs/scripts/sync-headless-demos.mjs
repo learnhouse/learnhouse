@@ -8,6 +8,7 @@ import { writeFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
+import sharp from 'sharp'
 
 const here = path.dirname(new URL(import.meta.url).pathname)
 const docs = path.resolve(here, '..')
@@ -19,7 +20,7 @@ if (!existsSync(path.join(repo, 'src/lib/themes.ts'))) {
 
 const { THEMES, SECTIONS } = await import(path.join(repo, 'src/lib/themes.ts'))
 const outImg = path.join(docs, 'public/img/headless')
-await mkdir(outImg, { recursive: true })
+await mkdir(path.join(outImg, 'thumbs'), { recursive: true })
 
 const demos = []
 for (const t of THEMES) {
@@ -30,6 +31,8 @@ for (const t of THEMES) {
   }
   // 960px wide is enough for a card at 2x; macOS sips keeps it dependency-free.
   execFileSync('sips', ['-Z', '960', '-s', 'format', 'jpeg', '-s', 'formatOptions', '72', src, '--out', path.join(outImg, `${t.id}.jpg`)], { stdio: 'ignore' })
+  // Small WebP for the gallery cards and the home page marquee (sharp ships with Next).
+  await sharp(src).resize({ width: 640 }).webp({ quality: 80 }).toFile(path.join(outImg, 'thumbs', `${t.id}.webp`))
   demos.push({
     id: t.id,
     name: t.name,

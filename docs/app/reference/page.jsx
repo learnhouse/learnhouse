@@ -85,7 +85,7 @@ export default async function ReferenceOverviewPage() {
           <Link href="/reference/guides/authentication" className="lhr-btn lhr-btn-secondary">
             Authentication
           </Link>
-          <a href={`${API_BASE_URL}/openapi.json`} className="lhr-btn lhr-btn-ghost" rel="nofollow">
+          <a href="/reference/openapi.json" className="lhr-btn lhr-btn-ghost">
             OpenAPI document <ArrowUpRight size={12} weight="bold" />
           </a>
         </div>
@@ -241,7 +241,7 @@ export default async function ReferenceOverviewPage() {
           <div className="lhr-machine-links">
             <a href="/reference/llms.txt" className="lhr-btn lhr-btn-secondary">llms.txt</a>
             <a href="/reference/operations.json" className="lhr-btn lhr-btn-secondary">operations.json</a>
-            <a href={`${API_BASE_URL}/openapi.json`} className="lhr-btn lhr-btn-secondary" rel="nofollow">
+            <a href="/reference/openapi.json" className="lhr-btn lhr-btn-secondary">
               openapi.json
             </a>
           </div>

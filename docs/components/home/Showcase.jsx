@@ -18,7 +18,7 @@ function Row({ demos, reverse }) {
               return (
                 <Link key={`${copy}-${demo.id}`} href={`/demos/${demo.id}`} className="lhh-demo" tabIndex={copy === 1 ? -1 : undefined}>
                   <span className="lhh-demo-shot">
-                    <img src={`/img/headless/${demo.id}.jpg`} alt={copy === 1 ? '' : `${demo.name} demo`} loading="lazy" decoding="async" width="960" height="600" />
+                    <img src={`/img/headless/thumbs/${demo.id}.webp`} alt={copy === 1 ? '' : `${demo.name} demo`} loading="lazy" decoding="async" width="640" height="400" />
                   </span>
                   <span className="lhh-demo-meta">
                     <span className="lhh-demo-name">{demo.name}</span>

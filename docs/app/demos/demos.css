@@ -55,7 +55,7 @@
   .lhdm-page { padding: 20px 16px 56px; }
   .lhdm-title { font-size: 28px; }
   .lhdm-head { flex-direction: column; align-items: flex-start; }
-  .lhdm-grid { grid-template-columns: 1fr; }
+  .lhdm-grid { grid-template-columns: minmax(0, 1fr); }
   .lhdm-frame-body { height: 70vh; }
   .lhdm-pager-link { min-width: 0; flex: 1; }
 }

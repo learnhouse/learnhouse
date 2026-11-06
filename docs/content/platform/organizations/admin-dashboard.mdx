@@ -1,3 +1,7 @@
+---
+description: "Use the LearnHouse admin dashboard at /admin to manage every organization and user on your instance, toggle features and create superadmin API tokens."
+---
+
 import { Callout } from '@/components/mdx'
 
 # Admin Dashboard
@@ -31,7 +35,7 @@ Open an organization to see these tabs:
 | **Overview** | Counts of users, courses, admins and custom domains, the organization's details, admin users and usage against limits |
 | **Courses** | Every course with its status and visibility |
 | **Users** | Every member with their email, role and join date |
-| **Analytics** | The organization's analytics over a period you pick. Needs [Tinybird](/platform/analytics). |
+| **Analytics** | The organization's [analytics](/platform/analytics) over a period you pick. |
 | **Plan** | LearnHouse Cloud only. Change the plan, see feature limits and manage AI credits. |
 | **Features** | Turn features on or off for this organization: AI (and AI Copilot, which controls the agents in Messages), Analytics, API, Boards, Collaboration, Folders, Communities, Members (and the signup mode), Payments, Playgrounds and Podcasts. On the Enterprise Edition, AI credits are managed here. |
 | **Settings** | Edit the organization's name, slug, email and description |
@@ -44,7 +48,7 @@ A read-only list of every account on the instance, with email, organizations, ro
 
 ## Analytics
 
-**Global Analytics** shows usage across all organizations over the last 30 days. It needs the same Tinybird setup as [organization analytics](/platform/analytics#setting-up-analytics-on-a-self-hosted-instance).
+**Global Analytics** shows usage across all organizations over the last 30 days. It reads the same data as [organization analytics](/platform/analytics).
 
 ## Developers
 
