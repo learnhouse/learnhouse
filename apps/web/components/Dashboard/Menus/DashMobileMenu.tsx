@@ -36,6 +36,7 @@ import React, { useEffect, useState } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getDeploymentMode } from '@services/config/config'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage } from '@/lib/i18n'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
@@ -113,7 +114,7 @@ function DashMobileMenu() {
     isEnabled('boards') && { href: '/dash/boards', Icon: ChalkboardSimple, label: t('common.boards') },
     isEnabled('playgrounds') && { href: '/dash/playgrounds', Icon: Cube, label: t('common.playgrounds') },
     isEnabled('payments') && { href: '/dash/payments/overview', Icon: CurrencyCircleDollar, label: t('common.payments') },
-    { href: '/dash/analytics', Icon: ChartBar, label: t('common.analytics') },
+    isOrgAnalyticsAvailable() && { href: '/dash/analytics', Icon: ChartBar, label: t('common.analytics') },
     { href: '/dash/org/settings/general', Icon: Buildings, label: t('common.organization'), match: '/dash/org' },
     { href: '/dash/developers/api', Icon: Code, label: t('dashboard.developers.breadcrumb', { defaultValue: 'Developers' }), match: '/dash/developers' },
   ].filter(Boolean) as { href: string; Icon: any; label: string; match?: string }[]

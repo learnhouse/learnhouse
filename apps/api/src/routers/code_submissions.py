@@ -11,6 +11,9 @@ from src.core.events.database import get_db_session
 from src.db.code_submissions import CodeSubmission, CodeSubmissionRead
 from src.db.users import AnonymousUser, PublicUser
 from src.security.auth import get_current_user
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
+from src.services.audit.answers import judge0_language_name
 from src.services.courses.activities.access import verify_activity_reader_access_by_uuid
 from src.services.security.rate_limiting import check_rate_limit
 
@@ -149,7 +152,7 @@ async def save_submission(
         raise HTTPException(status_code=422, detail="passed_tests cannot exceed total_tests")
 
     # Only save against an activity the caller may actually consume.
-    await verify_activity_reader_access_by_uuid(
+    activity, course = await verify_activity_reader_access_by_uuid(
         request, body.activity_uuid, current_user, db_session
     )
 
@@ -184,4 +187,20 @@ async def save_submission(
 
     await db_session.commit()
     await db_session.refresh(submission)
+
+    # Counts come from the browser (tests run client-side); ``passed`` is the
+    # server's own derivation from them, same as the stored row.
+    await track(
+        event_name=analytics_events.CODE_SUBMITTED,
+        org_id=course.org_id,
+        user_id=current_user.id,
+        properties={
+            "course_uuid": course.course_uuid,
+            "activity_uuid": activity.activity_uuid,
+            "language": judge0_language_name(body.language_id),
+            "passed": submission.passed,
+            "tests_passed": body.passed_tests,
+            "tests_total": body.total_tests,
+        },
+    )
     return CodeSubmissionRead.model_validate(submission)

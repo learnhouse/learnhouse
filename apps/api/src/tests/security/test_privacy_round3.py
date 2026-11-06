@@ -3,7 +3,7 @@
 1. Org admins received the global account record: signup answers collected by
    OTHER orgs (``extra_metadata``) and the platform ``is_superadmin`` flag.
 2. The audit dossier mixed in org-agnostic login rows (other orgs' IPs and
-   devices) and account-global lockout state.
+   devices) and account-global lockout state (tested with the EE dossier).
 3. ``/users/id|uuid|username`` let any logged-in account read any user.
 4. GDPR anonymization left signup answers, login traces, audit IPs and AI
    chats behind.
@@ -11,7 +11,6 @@
 6. The public org read returned ``org.email`` (the creator's address).
 """
 
-import json
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -145,43 +144,6 @@ class TestOrgMemberView:
 
         u = await _make_user(db, 92, [org.id], extra_metadata=dict(LEAKY_META))
         assert OrgMemberUserRead.for_org(u, set()).extra_metadata == {}
-
-
-# -- 2. audit dossier ----------------------------------------------------------
-
-
-@pytest.mark.asyncio
-class TestDossierScope:
-    async def test_org_agnostic_and_foreign_events_excluded(self, db, org, other_org, regular_user):
-        from src.services.audit.dossier import _connections_and_timeline
-
-        for org_id, ip in ((None, "1.1.1.1"), (other_org.id, "2.2.2.2"), (org.id, "3.3.3.3")):
-            db.add(UserAuditEvent(
-                event_type=UserAuditEventType.LOGIN, user_id=regular_user.id,
-                org_id=org_id, ip=ip, created_at=datetime.now(timezone.utc),
-            ))
-        await db.commit()
-
-        connections, timeline = await _connections_and_timeline(db, regular_user.id, org.id)
-        assert [c["ip"] for c in connections] == ["3.3.3.3"]
-        assert {e["ip"] for e in timeline} == {"3.3.3.3"}
-
-    async def test_identity_omits_global_login_state(self, db, org, regular_user):
-        from src.services.audit.dossier import _identity
-
-        user = (await db.execute(select(User).where(User.id == regular_user.id))).scalars().one()
-        user.last_login_ip = "9.9.9.9"
-        user.failed_login_attempts = 4
-        user.locked_until = "2099-01-01"
-        db.add(user)
-        await db.commit()
-
-        identity = await _identity(db, regular_user.id, org.id)
-        sec = identity["security"]
-        assert "last_login_ip" not in sec
-        assert "failed_login_attempts" not in sec
-        assert "locked_until" not in sec
-        assert "9.9.9.9" not in json.dumps(identity, default=str)
 
 
 # -- 3. user lookups -----------------------------------------------------------

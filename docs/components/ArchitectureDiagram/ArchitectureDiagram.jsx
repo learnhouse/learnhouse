@@ -21,7 +21,6 @@ import {
   Envelope,
   Terminal,
   Key,
-  ChartBar,
 } from '@phosphor-icons/react/dist/ssr'
 
 const nodeDefaults = {
@@ -79,7 +78,6 @@ const nodes = [
   makeNode('judge0', <Terminal size={14} weight="fill" color="#16A34A" />, 'Judge0', 'Code execution', 0, 490, '#f0fdf4', '#86efac', 145),
   makeNode('workos', <Key size={14} weight="fill" color="#7C3AED" />, 'WorkOS', 'Enterprise SSO', 165, 490, '#fdf4ff', '#d8b4fe', 145),
   makeNode('sentry', <SiSentry size={13} color="#362D59" />, 'Sentry', 'Error tracking', 330, 490, '#faf5ff', '#c4b5fd', 145),
-  makeNode('tinybird', <ChartBar size={14} weight="fill" color="#0d9488" />, 'Tinybird', 'Analytics', 495, 490, '#f0fdfa', '#5eead4', 145),
 
   // Web → Unsplash
   makeNode('unsplash', <SiUnsplash size={12} color="#000" />, 'Unsplash', 'Stock images', 30, 260, '#f5f5f4', '#d6d3d1', 105),
@@ -120,7 +118,6 @@ const edges = [
   { id: 'api-judge0', source: 'api', target: 'judge0', ...dashed },
   { id: 'api-workos', source: 'api', target: 'workos', ...dashed },
   { id: 'api-sentry', source: 'api', target: 'sentry', ...dashed },
-  { id: 'api-tinybird', source: 'api', target: 'tinybird', ...dashed },
 
   // Web → External
   { id: 'web-unsplash', source: 'web', target: 'unsplash', ...dashed },

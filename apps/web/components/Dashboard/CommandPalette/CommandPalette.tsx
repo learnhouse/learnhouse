@@ -61,6 +61,7 @@ function usePagesFiltered(): SearchMeta[] {
   return useMemo(
     () =>
       dashboardPages.filter((p) => {
+        if (p.available && !p.available()) return false
         if (!p.featureKey) return true
         const rf = resolvedFeatures?.[p.featureKey]
         if (rf) return rf.enabled

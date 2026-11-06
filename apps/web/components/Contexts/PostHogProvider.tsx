@@ -32,8 +32,9 @@ function initPostHog(key: string) {
   initialized = true
   posthog.init(key, {
     // Same-origin reverse proxy (see next.config.js rewrites) so adblockers
-    // don't strip ingestion. ui_host keeps "open in PostHog" links working.
-    api_host: '/ingest',
+    // don't strip ingestion. Not '/ingest': filter lists block '/ingest/*ip='.
+    // ui_host keeps "open in PostHog" links working.
+    api_host: '/lhrel',
     ui_host: 'https://eu.posthog.com',
     persistence: 'localStorage+cookie',
     autocapture: true,

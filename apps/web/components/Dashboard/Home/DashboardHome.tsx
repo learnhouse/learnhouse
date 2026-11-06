@@ -17,7 +17,8 @@ import { getAPIUrl } from '@services/config/config'
 import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { usePlan } from '@components/Hooks/usePlan'
-import QuickStats from './QuickStats'
+import QuickStats from '@ee/components/Analytics/Home/QuickStats'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 import RecentCourses from './RecentCourses'
 import RecentMembers from './RecentMembers'
 import ContentOverview from './ContentOverview'
@@ -81,13 +82,15 @@ export default function DashboardHome() {
                 <PlusCircle size={14} weight="bold" />
                 {t('dashboard.home.create_course')}
               </Link>
-              <Link
-                href="/dash/analytics"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-600 bg-white rounded-lg nice-shadow hover:bg-gray-50 transition-colors"
-              >
-                <ChartBar size={14} weight="bold" />
-                {t('dashboard.home.analytics')}
-              </Link>
+              {isOrgAnalyticsAvailable() && (
+                <Link
+                  href="/dash/analytics"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-600 bg-white rounded-lg nice-shadow hover:bg-gray-50 transition-colors"
+                >
+                  <ChartBar size={14} weight="bold" />
+                  {t('dashboard.home.analytics')}
+                </Link>
+              )}
               <Link
                 href="/dash/users/settings/users"
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-600 bg-white rounded-lg nice-shadow hover:bg-gray-50 transition-colors"
@@ -121,7 +124,7 @@ export default function DashboardHome() {
                 </div>
                 <div className="space-y-6">
                   <UsageOverview />
-                  <QuickStats />
+                  {isOrgAnalyticsAvailable() && <QuickStats />}
                 </div>
               </div>
             </div>

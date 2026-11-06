@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useRef, useEffect, useMemo } from 'react'
 import { Podcast, PodcastEpisode } from '@services/podcasts/podcasts'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { createMilestoneTracker } from '@services/analytics/rules'
 import { safePlay } from '@/lib/media/safePlay'
 
 interface PodcastPlayerState {
@@ -164,6 +165,36 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
     audioRef.current?.pause()
     dispatch({ type: 'CLOSE_PLAYER' })
   }, [])
+
+  // Org analytics: count an episode once, the first time it starts playing
+  // while this player is mounted (resuming or replaying it doesn't recount).
+  const playedEpisodes = useRef<Set<string>>(new Set())
+  const playingEpisodeUuid = state.isPlaying ? state.currentEpisode?.episode_uuid : undefined
+  const playingPodcastUuid = state.podcast?.podcast_uuid
+  useEffect(() => {
+    if (!playingEpisodeUuid || playedEpisodes.current.has(playingEpisodeUuid)) return
+    playedEpisodes.current.add(playingEpisodeUuid)
+    trackRef.current(AnalyticsEvent.PodcastEpisodePlayed, {
+      podcast_uuid: playingPodcastUuid,
+      episode_uuid: playingEpisodeUuid,
+    })
+  }, [playingEpisodeUuid, playingPodcastUuid])
+
+  // Listening depth: 25/50/75/100% of each episode, each reported once per
+  // episode while this player is mounted.
+  const progressMilestones = useRef(createMilestoneTracker())
+  const currentEpisodeUuid = state.currentEpisode?.episode_uuid
+  useEffect(() => {
+    if (!currentEpisodeUuid) return
+    const reached = progressMilestones.current.reached(currentEpisodeUuid, state.currentTime, state.duration)
+    for (const percent of reached) {
+      trackRef.current(AnalyticsEvent.PodcastEpisodeProgress, {
+        podcast_uuid: playingPodcastUuid,
+        episode_uuid: currentEpisodeUuid,
+        percent,
+      })
+    }
+  }, [currentEpisodeUuid, playingPodcastUuid, state.currentTime, state.duration])
 
   const seekTo = useCallback((time: number) => {
     if (audioRef.current) {

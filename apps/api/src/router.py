@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends
 from src.routers import admin as admin_router_module
-from src.routers import analytics as analytics_router_module
-from src.routers import audit as audit_router_module
 from src.routers import code_execution
 from src.routers import code_submissions
 from src.routers import health
@@ -385,20 +383,8 @@ v1_router.include_router(
     dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
 )
 
-v1_router.include_router(
-    analytics_router_module.router,
-    prefix="/analytics",
-    tags=["analytics"],
-    dependencies=[Depends(require_authenticated_user)],
-)
-
-# Per-student audit & analytics (org-admin only; enforced inside the router)
-v1_router.include_router(
-    audit_router_module.router,
-    prefix="/audit",
-    tags=["audit"],
-    dependencies=[Depends(require_authenticated_user)],
-)
+# Org analytics (dashboards, the browser beacon, settings, the per-student
+# audit) is mounted by EE.
 
 v1_router.include_router(
     code_execution.router,

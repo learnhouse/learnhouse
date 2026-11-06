@@ -40,6 +40,8 @@ from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.security.org_auth import enforce_org_mfa, is_org_admin, is_org_member
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from src.services.messaging import realtime
 
 logger = logging.getLogger(__name__)
@@ -850,6 +852,12 @@ async def send_message(conversation_uuid: str, body: MessageCreate, user: User, 
         raise HTTPException(status_code=403, detail="Only the course team can post in this channel")
     enforce_send_rate(user.id)
     msg = await post_message(conv, user, body, db)
+    await track(
+        event_name=analytics_events.MESSAGE_SENT,
+        org_id=conv.org_id,
+        user_id=user.id,
+        properties={"conversation_uuid": conv.conversation_uuid, "conversation_kind": conv.kind},
+    )
     return conv, msg, await serialize_message(msg, conv.conversation_uuid, user.id, db)
 
 

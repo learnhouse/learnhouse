@@ -120,7 +120,6 @@ export const queryKeys = {
     detail: (orgId: number, queryName: string, params: string) => ['analytics', orgId, 'detail', queryName, params] as const,
     db: (orgId: number, queryName: string, params: string) => ['analytics', orgId, 'db', queryName, params] as const,
     planInfo: (orgId: number) => ['analytics', orgId, 'planInfo'] as const,
-    status: () => ['analytics', 'status'] as const,
     coursePipe: (orgId: number, courseUuid: string, pipeName: string, params: string) => ['analytics', orgId, 'course', courseUuid, 'pipe', pipeName, params] as const,
     courseDetail: (orgId: number, courseUuid: string, queryName: string, params: string) => ['analytics', orgId, 'course', courseUuid, 'detail', queryName, params] as const,
   },

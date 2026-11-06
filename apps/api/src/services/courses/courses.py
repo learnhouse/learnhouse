@@ -47,6 +47,8 @@ from src.services.ai.rag.queue import enqueue_course, index_course
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_patterns
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
 
@@ -719,6 +721,7 @@ async def create_course(
     db_session: AsyncSession,
     thumbnail_file: UploadFile | None = None,
     thumbnail_type: ThumbnailType = ThumbnailType.IMAGE,
+    creation_source: str = "manual",
 ):
     """
     Create a new course
@@ -822,6 +825,13 @@ async def create_course(
 
     # Feature usage
     await increase_feature_usage("courses", course.org_id, db_session)
+
+    await track(
+        event_name=analytics_events.COURSE_CREATED,
+        org_id=course.org_id,
+        user_id=author_user_id,
+        properties={"course_uuid": course.course_uuid, "source": creation_source},
+    )
 
     await dispatch_webhooks(
         event_name="course_created",
@@ -1020,6 +1030,12 @@ async def update_course(
 
     # Dispatch webhook if published state changed
     if course_object.published is not None and course.published != old_published:
+        await track(
+            event_name=analytics_events.COURSE_PUBLISHED,
+            org_id=course.org_id,
+            user_id=resolve_acting_user_id(current_user),
+            properties={"course_uuid": course.course_uuid, "published": bool(course.published)},
+        )
         await dispatch_webhooks(
             event_name="course_published",
             org_id=course.org_id,
@@ -1744,6 +1760,13 @@ async def clone_course(
 
     # Increase feature usage for the new course
     await increase_feature_usage("courses", new_course.org_id, db_session)
+
+    await track(
+        event_name=analytics_events.COURSE_CREATED,
+        org_id=new_course.org_id,
+        user_id=author_user_id,
+        properties={"course_uuid": new_course.course_uuid, "source": "clone"},
+    )
 
     # Get course authors with their roles
     authors_statement = (

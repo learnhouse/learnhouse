@@ -501,6 +501,7 @@ class TestPutSubmissionFile:
         assert upload.await_args.args[1:] == (
             activity.activity_uuid, org.org_uuid, course.course_uuid,
             assignment.assignment_uuid, assignment_task.assignment_task_uuid,
+            regular_user.id,
         )
 
 

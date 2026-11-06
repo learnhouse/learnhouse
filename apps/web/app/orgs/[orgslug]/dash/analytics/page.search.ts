@@ -1,5 +1,6 @@
 import { ChartLine } from '@phosphor-icons/react'
 import type { SearchMeta } from '@/lib/dashboard-search/types'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 
 export const searchMeta: SearchMeta = {
   id: 'dash.analytics',
@@ -9,4 +10,5 @@ export const searchMeta: SearchMeta = {
   icon: ChartLine,
   href: '/dash/analytics',
   group: 'analytics',
+  available: isOrgAnalyticsAvailable,
 }

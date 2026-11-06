@@ -23,6 +23,8 @@ from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
 from src.services.utils.upload_content import upload_file
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 
 _SUPERADMIN_PLAYGROUND_RIGHTS = {
@@ -257,6 +259,12 @@ async def create_playground(
     await db_session.commit()
     await db_session.refresh(playground)
 
+    await track(
+        event_name=analytics_events.PLAYGROUND_CREATED,
+        org_id=org_id,
+        user_id=acting_user_id,
+        properties={"playground_uuid": playground.playground_uuid},
+    )
     await dispatch_webhooks(
         event_name="playground_created",
         org_id=org_id,

@@ -3058,8 +3058,6 @@
       "episodes": "tập",
       "participants": "người tham gia",
       "loading": "Đang tải...",
-      "enable_analytics_description": "Bật phân tích để xem người dùng trực tuyến, đăng ký và nhiều hơn nữa.",
-      "enable": "Bật",
       "quick_stats": "Thống kê nhanh",
       "full_analytics": "Phân tích đầy đủ",
       "live_now": "Đang trực tuyến",
@@ -4027,7 +4025,8 @@
           "automations": "Tự động hóa",
           "menu": "Menu",
           "danger": "Vùng Nguy Hiểm",
-          "course_end": "Hoàn thành khóa học"
+          "course_end": "Hoàn thành khóa học",
+          "analytics": "Phân tích"
         },
         "pages": {
           "general": {
@@ -4084,6 +4083,10 @@
           "course_end": {
             "title": "Hoàn thành khóa học",
             "subtitle": "Tùy chỉnh màn hình học viên thấy khi hoàn thành một khóa học"
+          },
+          "analytics": {
+            "title": "Phân tích",
+            "subtitle": "Chọn thời gian lưu dữ liệu phân tích và những gì được thu thập"
           }
         },
         "name": "Tên tổ chức",
@@ -5471,6 +5474,48 @@
         "button_link_help": "Một đường dẫn nội bộ như /courses, hoặc URL https:// đầy đủ. Để trống để liên kết đến danh mục khóa học của bạn.",
         "link_invalid": "Hãy dùng đường dẫn nội bộ bắt đầu bằng / hoặc URL http(s) đầy đủ",
         "preview": "Xem trước"
+      },
+      "analytics_settings": {
+        "title": "Dữ liệu phân tích",
+        "subtitle": "Lưu trữ và quyền riêng tư cho phân tích của tổ chức bạn",
+        "save": "Lưu",
+        "saving": "Đang lưu...",
+        "saved": "Đã lưu cài đặt phân tích",
+        "error": "Không thể lưu cài đặt phân tích",
+        "load_error": "Không thể tải cài đặt phân tích",
+        "admin_only": "Chỉ quản trị viên tổ chức mới có thể thay đổi cài đặt phân tích.",
+        "retention_title": "Lưu trữ dữ liệu",
+        "retention_description": "Thời gian các sự kiện phân tích được lưu trước khi bị xóa.",
+        "retention_note": "Rút ngắn thời gian lưu sẽ xóa dữ liệu cũ hơn trong lần dọn dẹp ban đêm tiếp theo.",
+        "retention_default": "{{label}} (mặc định)",
+        "retention_options": {
+          "days_90": "90 ngày",
+          "days_180": "6 tháng",
+          "days_365": "1 năm",
+          "days_730": "2 năm",
+          "days_1095": "3 năm",
+          "days_1825": "5 năm",
+          "days_2555": "7 năm",
+          "days_n": "{{count}} ngày"
+        },
+        "extended_locked": "Lưu dữ liệu hơn một năm có trong gói Enterprise.",
+        "privacy_title": "Quyền riêng tư",
+        "track_anonymous": "Đếm khách chưa đăng nhập",
+        "track_anonymous_description": "Bao gồm lượt xem trang và khóa học từ người không có tài khoản. Họ được đếm mà không dùng cookie, với một ID ẩn danh thay đổi mỗi ngày.",
+        "collect_location": "Lưu quốc gia của khách",
+        "collect_location_description": "Ghi lại lượt truy cập đến từ quốc gia nào. Địa chỉ IP không bao giờ được lưu.",
+        "exclude_staff": "Không tính quản trị viên và người bảo trì vào thống kê",
+        "exclude_staff_description": "Lượt xem của những người quản lý tổ chức không được tính, để việc thử nghiệm của bạn không làm sai lệch số liệu.",
+        "export_title": "Tải xuống sự kiện thô (CSV)",
+        "export_description": "Mọi sự kiện phân tích đã lưu trong khoảng thời gian đã chọn, mỗi sự kiện một dòng.",
+        "export_period": "Khoảng thời gian xuất",
+        "export_last_days": "{{count}} ngày gần nhất",
+        "export_all": "Mọi dữ liệu đang lưu",
+        "export_button": "Tải xuống CSV",
+        "exporting": "Đang chuẩn bị tải xuống...",
+        "export_done": "Đã bắt đầu tải xuống",
+        "export_error": "Không thể xuất các sự kiện phân tích",
+        "export_locked": "Xuất sự kiện thô có trong gói Enterprise."
       }
     },
     "users": {
@@ -8162,15 +8207,81 @@
     "unsaved_changes_warning": "Bạn có thay đổi chưa lưu. Rời đi mà không lưu?"
   },
   "analytics": {
+    "features": {
+      "tab": "Tính năng",
+      "adoption_title": "Mức sử dụng tính năng",
+      "adoption_subtitle": "Số người dùng từng tính năng, so với kỳ trước. Nhấp vào một tính năng để xem trên biểu đồ.",
+      "events_count": "{{value}} sự kiện",
+      "names": {
+        "learning": "Học tập",
+        "assessments": "Đánh giá",
+        "community": "Cộng đồng",
+        "ai": "Trợ lý AI",
+        "podcasts": "Podcast",
+        "boards": "Bảng",
+        "playgrounds": "Playground",
+        "paths": "Lộ trình học",
+        "search": "Tìm kiếm",
+        "messaging": "Nhắn tin",
+        "library": "Thư viện",
+        "certificates": "Chứng chỉ"
+      },
+      "video_title": "Mức độ xem video",
+      "video_subtitle": "Người xem xem được bao xa trong mỗi video",
+      "finished": "Đã xem xong",
+      "podcast_title": "Nghe podcast",
+      "podcast_subtitle": "Lượt phát mỗi tập và số người nghe đến hết",
+      "assessments_title": "Đánh giá",
+      "assessments_subtitle": "Bài nộp, tỷ lệ đạt và điểm trung bình",
+      "assignment": "Bài tập",
+      "quiz": "Bài trắc nghiệm",
+      "code": "Bài tập lập trình",
+      "submissions": "Bài nộp",
+      "pass_rate": "Tỷ lệ đạt",
+      "avg_score": "Điểm TB",
+      "passed": "Đạt",
+      "community_title": "Hoạt động cộng đồng",
+      "community_subtitle": "Thảo luận, bình luận, cảm xúc và lượt bình chọn mỗi ngày",
+      "discussions": "Thảo luận",
+      "comments": "Bình luận",
+      "reactions": "Cảm xúc",
+      "upvotes": "Bình chọn",
+      "peak_contributors": "Tối đa {{value}} người đóng góp mỗi ngày",
+      "top_communities": "Cộng đồng hàng đầu",
+      "ai_title": "Trợ lý AI",
+      "ai_subtitle": "Tin nhắn đã gửi và số người dùng trợ lý",
+      "messages": "Tin nhắn",
+      "users": "Người dùng",
+      "by_surface": "Nơi được sử dụng",
+      "acquisition_title": "Đăng ký và đăng nhập",
+      "acquisition_subtitle": "Cách mọi người đăng ký, tham gia và đăng nhập",
+      "signup": "Đăng ký",
+      "join": "Tham gia",
+      "login": "Đăng nhập",
+      "invite": "Lời mời",
+      "nudges_title": "Email nhắc nhở",
+      "nudges_subtitle": "Số người quay lại trong vòng 7 ngày sau khi nhận nhắc nhở",
+      "sent": "Đã gửi",
+      "returned": "Đã quay lại",
+      "return_rate": "Tỷ lệ quay lại",
+      "paths_title": "Lộ trình học",
+      "boards_title": "Bảng và playground",
+      "library_title": "Thư viện",
+      "creation_title": "Tạo nội dung",
+      "creation_subtitle": "Những gì nhóm bạn đã tạo trong kỳ này",
+      "courses_created": "Khóa học đã tạo",
+      "courses_published": "Khóa học đã xuất bản",
+      "activities_created": "Hoạt động",
+      "boards_created": "Bảng",
+      "playgrounds_created": "Playground",
+      "episodes_published": "Tập"
+    },
+    "data_kept": "Dữ liệu được lưu {{period}}",
     "title": "Phân tích",
     "subtitle": "Thông tin chi tiết về người học và nội dung của bạn",
     "tabs": {
       "overview": "Tổng quan",
       "advanced": "Nâng cao"
-    },
-    "not_configured": {
-      "title": "Chưa cấu hình phân tích",
-      "description": "Phân tích yêu cầu kết nối Tinybird. Đặt các biến môi trường <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> và <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> để bật."
     },
     "advanced_gate": {
       "requires": "Yêu cầu",
@@ -8231,7 +8342,12 @@
       "courses": "Khóa học",
       "count": "Số lượng",
       "active_users_last_5_minutes": "Người dùng hoạt động trong 5 phút qua",
-      "course_fallback_name": "Khóa học {{uuid}}"
+      "course_fallback_name": "Khóa học {{uuid}}",
+      "visitors": "Khách truy cập",
+      "signed_in_learners": "Học viên đã đăng nhập",
+      "traffic": "Lưu lượng",
+      "page_views_count": "{{value}} lượt xem trang",
+      "vs_previous_period": "so với kỳ trước"
     },
     "modals": {
       "live_users": {
@@ -8369,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Chưa cấu hình phân tích",
-      "not_configured_desc": "Phân tích yêu cầu cấu hình Tinybird. Vui lòng liên hệ quản trị viên.",
       "common": {
         "loading": "Đang tải...",
         "no_data": "Chưa có dữ liệu",
@@ -10370,7 +10484,6 @@
       "joined": "Ngày tham gia",
       "na": "không có",
       "no_analytics": "Không có dữ liệu phân tích",
-      "ensure_tinybird": "Hãy đảm bảo đã cấu hình phân tích Tinybird",
       "period": "Giai đoạn:",
       "days_short": "{{count}} ngày",
       "live_users": "Người dùng trực tuyến",
@@ -10528,7 +10641,6 @@
     "analytics": {
       "failed_load": "Không thể tải phân tích",
       "no_data_available": "Không có dữ liệu phân tích",
-      "ensure_tinybird": "Hãy đảm bảo đã cấu hình phân tích Tinybird",
       "no_data": "Không có dữ liệu"
     },
     "ee_error": {

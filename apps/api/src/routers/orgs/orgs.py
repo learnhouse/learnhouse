@@ -129,6 +129,7 @@ async def api_create_org_withconfig(
     """
     Create new organization
     """
+    refuse_lms_session()
     # SECURITY: create_org_with_config() persists the client-supplied config
     # verbatim. The config carries the org's billing plan (cloud.plan), so a
     # self-service caller could otherwise mint a free "enterprise"/"pro" org and

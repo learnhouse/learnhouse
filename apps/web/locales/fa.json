@@ -3086,8 +3086,6 @@
       "episodes": "قسمت‌ها",
       "participants": "شرکت‌کنندگان",
       "loading": "در حال بارگذاری...",
-      "enable_analytics_description": "تحلیل‌ها را فعال کنید تا کاربران آنلاین، ثبت‌نام‌ها و موارد بیشتر را مشاهده کنید.",
-      "enable": "فعال‌سازی",
       "quick_stats": "آمار سریع",
       "full_analytics": "تحلیل کامل",
       "live_now": "در حال حاضر آنلاین",
@@ -4057,7 +4055,8 @@
           "automations": "اتوماسیون‌ها",
           "menu": "منو",
           "danger": "منطقه خطر",
-          "course_end": "تکمیل دوره"
+          "course_end": "تکمیل دوره",
+          "analytics": "تحلیل‌ها"
         },
         "pages": {
           "general": {
@@ -4114,6 +4113,10 @@
           "course_end": {
             "title": "تکمیل دوره",
             "subtitle": "صفحه‌ای را که یادگیرندگان هنگام پایان دوره می‌بینند سفارشی کنید"
+          },
+          "analytics": {
+            "title": "تحلیل‌ها",
+            "subtitle": "انتخاب کنید داده‌های تحلیلی چه مدت نگهداری شوند و چه چیزی جمع‌آوری شود"
           }
         },
         "name": "نام سازمان",
@@ -5506,6 +5509,48 @@
         "button_link_help": "یک مسیر داخلی مانند /courses یا یک نشانی کامل https://. برای پیوند به فهرست دوره‌های خود خالی بگذارید.",
         "link_invalid": "از یک مسیر داخلی که با / شروع می‌شود یا یک نشانی کامل http(s) استفاده کنید",
         "preview": "پیش‌نمایش"
+      },
+      "analytics_settings": {
+        "title": "داده‌های تحلیلی",
+        "subtitle": "نگهداری داده و حریم خصوصی برای تحلیل‌های سازمان شما",
+        "save": "ذخیره",
+        "saving": "در حال ذخیره...",
+        "saved": "تنظیمات تحلیل ذخیره شد",
+        "error": "ذخیره تنظیمات تحلیل ممکن نشد",
+        "load_error": "بارگذاری تنظیمات تحلیل ممکن نشد",
+        "admin_only": "فقط مدیران سازمان می‌توانند تنظیمات تحلیل را تغییر دهند.",
+        "retention_title": "نگهداری داده",
+        "retention_description": "مدت زمانی که رویدادهای تحلیلی پیش از حذف نگهداری می‌شوند.",
+        "retention_note": "کوتاه کردن مدت نگهداری، داده‌های قدیمی‌تر را در پاک‌سازی شبانه بعدی حذف می‌کند.",
+        "retention_default": "{{label}} (پیش‌فرض)",
+        "retention_options": {
+          "days_90": "۹۰ روز",
+          "days_180": "۶ ماه",
+          "days_365": "۱ سال",
+          "days_730": "۲ سال",
+          "days_1095": "۳ سال",
+          "days_1825": "۵ سال",
+          "days_2555": "۷ سال",
+          "days_n": "{{count}} روز"
+        },
+        "extended_locked": "نگهداری داده بیش از یک سال در طرح Enterprise در دسترس است.",
+        "privacy_title": "حریم خصوصی",
+        "track_anonymous": "شمارش بازدیدکنندگانی که وارد نشده‌اند",
+        "track_anonymous_description": "بازدید صفحه‌ها و دوره‌ها توسط افراد بدون حساب را هم در نظر بگیرید. آن‌ها بدون کوکی و با یک شناسه ناشناس که هر روز تغییر می‌کند شمرده می‌شوند.",
+        "collect_location": "ذخیره کشور بازدیدکننده",
+        "collect_location_description": "ثبت کنید بازدید از کدام کشور آمده است. نشانی‌های IP هرگز ذخیره نمی‌شوند.",
+        "exclude_staff": "کنار گذاشتن مدیران و نگهدارندگان از آمار",
+        "exclude_staff_description": "بازدیدهای افرادی که سازمان را مدیریت می‌کنند شمرده نمی‌شود تا آزمایش‌های خودتان اعداد را منحرف نکند.",
+        "export_title": "دانلود رویدادهای خام (CSV)",
+        "export_description": "همه رویدادهای تحلیلی ذخیره‌شده در بازه انتخابی، یک ردیف برای هر رویداد.",
+        "export_period": "بازه خروجی",
+        "export_last_days": "{{count}} روز اخیر",
+        "export_all": "همه داده‌های نگهداری‌شده",
+        "export_button": "دانلود CSV",
+        "exporting": "در حال آماده‌سازی دانلود...",
+        "export_done": "دانلود آغاز شد",
+        "export_error": "خروجی گرفتن از رویدادهای تحلیلی ممکن نشد",
+        "export_locked": "خروجی رویدادهای خام در طرح Enterprise در دسترس است."
       }
     },
     "users": {
@@ -8211,15 +8256,81 @@
     "unsaved_changes_warning": "تغییرات ذخیره‌نشده دارید. بدون ذخیره خارج می‌شوید؟"
   },
   "analytics": {
+    "features": {
+      "tab": "ویژگی‌ها",
+      "adoption_title": "استفاده از ویژگی‌ها",
+      "adoption_subtitle": "تعداد افرادی که از هر ویژگی استفاده می‌کنند، در مقایسه با دورهٔ قبل. برای نمایش در نمودار روی یکی کلیک کنید.",
+      "events_count": "{{value}} رویداد",
+      "names": {
+        "learning": "یادگیری",
+        "assessments": "ارزیابی‌ها",
+        "community": "انجمن",
+        "ai": "دستیار هوش مصنوعی",
+        "podcasts": "پادکست‌ها",
+        "boards": "بوردها",
+        "playgrounds": "زمین‌های آزمایش",
+        "paths": "مسیرهای یادگیری",
+        "search": "جستجو",
+        "messaging": "پیام‌رسانی",
+        "library": "کتابخانه",
+        "certificates": "گواهی‌ها"
+      },
+      "video_title": "تعامل با ویدیو",
+      "video_subtitle": "مخاطبان هر ویدیو را تا کجا تماشا می‌کنند",
+      "finished": "تمام‌شده",
+      "podcast_title": "شنیدن پادکست",
+      "podcast_subtitle": "تعداد پخش در هر قسمت و تعداد کسانی که تا آخر گوش می‌دهند",
+      "assessments_title": "ارزیابی‌ها",
+      "assessments_subtitle": "ارسال‌ها، نرخ قبولی و میانگین نمره",
+      "assignment": "تکالیف",
+      "quiz": "آزمون‌ها",
+      "code": "تمرین‌های کدنویسی",
+      "submissions": "ارسال‌ها",
+      "pass_rate": "نرخ قبولی",
+      "avg_score": "میانگین نمره",
+      "passed": "قبول‌شده",
+      "community_title": "فعالیت انجمن",
+      "community_subtitle": "بحث‌ها، نظرها، واکنش‌ها و رأی‌های مثبت در هر روز",
+      "discussions": "بحث‌ها",
+      "comments": "نظرها",
+      "reactions": "واکنش‌ها",
+      "upvotes": "رأی‌های مثبت",
+      "peak_contributors": "تا {{value}} مشارکت‌کننده در روز",
+      "top_communities": "انجمن‌های برتر",
+      "ai_title": "دستیار هوش مصنوعی",
+      "ai_subtitle": "پیام‌های ارسال‌شده و افرادی که از دستیار استفاده می‌کنند",
+      "messages": "پیام‌ها",
+      "users": "افراد",
+      "by_surface": "محل استفاده",
+      "acquisition_title": "ثبت‌نام و ورود",
+      "acquisition_subtitle": "نحوهٔ ثبت‌نام، پیوستن و ورود افراد",
+      "signup": "ثبت‌نام‌ها",
+      "join": "پیوستن‌ها",
+      "login": "ورودها",
+      "invite": "دعوت‌ها",
+      "nudges_title": "یادآورهای ایمیلی",
+      "nudges_subtitle": "افرادی که ظرف ۷ روز پس از یادآور بازگشتند",
+      "sent": "ارسال‌شده",
+      "returned": "بازگشته",
+      "return_rate": "نرخ بازگشت",
+      "paths_title": "مسیرهای یادگیری",
+      "boards_title": "بوردها و زمین‌های آزمایش",
+      "library_title": "کتابخانه",
+      "creation_title": "تولید محتوا",
+      "creation_subtitle": "آنچه تیم شما در این دوره ساخته است",
+      "courses_created": "دوره‌های ساخته‌شده",
+      "courses_published": "دوره‌های منتشرشده",
+      "activities_created": "فعالیت‌ها",
+      "boards_created": "بوردها",
+      "playgrounds_created": "زمین‌های آزمایش",
+      "episodes_published": "قسمت‌ها"
+    },
+    "data_kept": "نگهداری داده‌ها: {{period}}",
     "title": "تحلیل‌ها",
     "subtitle": "بینش‌هایی درباره زبان‌آموزان و محتوای شما",
     "tabs": {
       "overview": "نمای کلی",
       "advanced": "پیشرفته"
-    },
-    "not_configured": {
-      "title": "تحلیل‌ها پیکربندی نشده است",
-      "description": "تحلیل‌ها به اتصال Tinybird نیاز دارد. متغیرهای محیطی <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> و <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> را برای فعال‌سازی آن تنظیم کنید."
     },
     "advanced_gate": {
       "requires": "نیاز به",
@@ -8280,7 +8391,12 @@
       "courses": "دوره‌ها",
       "count": "تعداد",
       "active_users_last_5_minutes": "کاربران فعال در ۵ دقیقهٔ اخیر",
-      "course_fallback_name": "دوره {{uuid}}"
+      "course_fallback_name": "دوره {{uuid}}",
+      "visitors": "بازدیدکنندگان",
+      "signed_in_learners": "یادگیرندگان واردشده",
+      "traffic": "ترافیک",
+      "page_views_count": "بازدید صفحه: {{value}}",
+      "vs_previous_period": "نسبت به دوره قبل"
     },
     "modals": {
       "live_users": {
@@ -8419,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "تحلیل‌ها پیکربندی نشده است",
-      "not_configured_desc": "تحلیل‌ها به پیکربندی Tinybird نیاز دارد. لطفاً با مدیر خود تماس بگیرید.",
       "common": {
         "loading": "در حال بارگذاری...",
         "no_data": "هنوز داده‌ای وجود ندارد",
@@ -10432,7 +10546,6 @@
       "joined": "تاریخ عضویت",
       "na": "ندارد",
       "no_analytics": "تحلیلی در دسترس نیست",
-      "ensure_tinybird": "مطمئن شوید تحلیل‌های Tinybird پیکربندی شده است",
       "period": "بازه:",
       "days_short": "{{count}} روز",
       "live_users": "کاربران زنده",
@@ -10593,7 +10706,6 @@
     "analytics": {
       "failed_load": "بارگذاری تحلیل‌ها ناموفق بود",
       "no_data_available": "داده‌ای برای تحلیل در دسترس نیست",
-      "ensure_tinybird": "مطمئن شوید تحلیل‌های Tinybird پیکربندی شده است",
       "no_data": "بدون داده"
     },
     "ee_error": {
