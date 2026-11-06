@@ -96,6 +96,21 @@ In dark mode, text and background follow the theme. Blocks keep the light cards 
 
 `onEvent` receives `load`, `ready`, `error`, `link_click`, `media` (`play`/`pause`/`ended`/`progress` for video and audio), `resize` (useful for sizing an iframe or modal), `visible`, `complete` (the end of the activity scrolled into view, with `trackCompletion`) and `analytics` (the events LearnHouse's own blocks send). There are also `onLoad` and `onError` callbacks.
 
+## Custom element
+
+`@learnhouse/react/element` registers `<learnhouse-activity>`, the same component as a custom element for apps that don't render React (Svelte, Angular, plain HTML; Vue has [`@learnhouse/vue`](https://www.npmjs.com/package/@learnhouse/vue)). It renders in its own light DOM, so the same stylesheet applies.
+
+```html
+<script type="module">
+  import '@learnhouse/react/element'
+  import '@learnhouse/react/styles.css'
+</script>
+
+<learnhouse-activity base-url="https://learn.example.com" activity-id="activity_…" course-id="course_…" theme='{"accent":"#7c3aed"}'></learnhouse-activity>
+```
+
+Attributes: `activity-id`, `activity-name`, `course-id`, `base-url`, `media-url`, `site-url`, `org-id`, `token`, `locale`, `dir`, `link-target`, `theme`, `messages` and `content` (JSON), `hide-blocks` (comma list or JSON), and the booleans `show-title`, `track-completion`, `show-powered-by`, `unstyled`, `hide-error`. Objects and functions (`activity`, `content`, `client`, `getToken`, `user`, `transformContent`) are set as properties. Events arrive as DOM events: `lh-load`, `lh-ready`, `lh-error`, `lh-complete`, `lh-media`, `lh-resize`, `lh-visible`, `lh-analytics`, `lh-event` (all of them) and the cancelable `lh-link-click`, each with the event in `detail`. `el.reload()` mounts the activity again.
+
 ## Styles
 
 `@learnhouse/react/styles.css` is LearnHouse's own stylesheet, compiled for the blocks the renderer uses and scoped under `.lh-activity`, so it doesn't leak into your page.

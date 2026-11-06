@@ -3,7 +3,7 @@ permissions:
   contents: read
 
 # @learnhouse/react is compiled from apps/web source, so web changes can break
-# it too; the SDK's types come from the API.
+# it (and @learnhouse/vue, which wraps it) too; the SDK's types come from the API.
 on:
   push:
     branches:
@@ -58,5 +58,5 @@ jobs:
         working-directory: packages
 
       - name: Type-check
-        run: bun run --cwd sdk typecheck && bun run --cwd react typecheck
+        run: bun run --cwd sdk typecheck && bun run --cwd react typecheck && bun run --cwd vue typecheck
         working-directory: packages

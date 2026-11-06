@@ -1,5 +1,13 @@
-import { API_BASE_URL, API_GROUPS, groupForTag, groupBySlug, METHOD_TO_ACTION } from './config'
 import {
+  API_BASE_URL,
+  API_GROUPS,
+  SITE_URL,
+  groupForTag,
+  groupBySlug,
+  METHOD_TO_ACTION,
+} from './config'
+import {
+  schemaMeta,
   resolveRef,
   simplifyAnyOf,
   schemaToExample,
@@ -21,7 +29,7 @@ const CONTENT_TYPE_PRIORITY = [
 /** Operations that must not show a bearer header (they produce credentials). */
 const NO_AUTH_OPERATIONS = new Set(['POST /api/v1/auth/login'])
 
-function operationId(method, path) {
+export function operationId(method, path) {
   const trimmed = path.replace(/^\/api\/v1/, '') || '/'
   return `${method.toLowerCase()}${trimmed}`
     .replace(/[{}]/g, '')
@@ -86,6 +94,7 @@ function paramRows(spec, parameters, location) {
         nullable: !!schema?.nullable,
         description: p.description || schema?.description || '',
         enumValues: schema?.enum || null,
+        ...schemaMeta(schema),
         children: [],
         example: schemaToExample(spec, p.schema || {}, 0, p.name),
       }
@@ -126,26 +135,29 @@ function requestBodyModel(spec, op) {
   }
 }
 
-async function responseModels(spec, op) {
+async function responseModels(spec, op, { html = true } = {}) {
   const out = []
   for (const [status, rawResponse] of Object.entries(op.responses || {})) {
     const response = resolveRef(spec, rawResponse)
     const schema = response?.content?.['application/json']?.schema
+    const label = schema ? typeLabel(spec, schema) : null
     const entry = {
       status,
       description: response?.description || '',
-      typeLabel: schema ? typeLabel(spec, schema) : null,
+      typeLabel: label,
+      // The 422 body is the same everywhere: the Errors guide documents it once.
+      isValidationError: label === 'HTTPValidationError',
       fields: [],
-      exampleRaw: null,
       exampleHtml: null,
+      exampleJson: null,
     }
     if (schema) {
-      const isSuccess = status.startsWith('2')
-      if (isSuccess) entry.fields = schemaFields(spec, schema)
+      if (!entry.isValidationError) entry.fields = schemaFields(spec, schema)
       const example = schemaToExample(spec, schema)
       if (example !== null && example !== undefined) {
-        entry.exampleRaw = JSON.stringify(example, null, 2)
-        entry.exampleHtml = await highlight(entry.exampleRaw, 'json')
+        const json = JSON.stringify(example, null, 2)
+        if (html) entry.exampleHtml = await highlight(json, 'json')
+        else entry.exampleJson = json
       }
     }
     out.push(entry)
@@ -167,6 +179,22 @@ function exampleUrl(path, queryParams) {
   return url
 }
 
+const SNIPPET_LANGS = [
+  ['curl', 'bash'],
+  ['sdk', 'javascript'],
+  ['js', 'javascript'],
+  ['python', 'python'],
+]
+
+/** Highlight a buildSnippets() result: { curl: html, sdk: html, js: html, python: html }. */
+export async function highlightSnippets(raw) {
+  const out = {}
+  for (const [key, lang] of SNIPPET_LANGS) {
+    if (raw[key]) out[key] = await highlight(raw[key], lang)
+  }
+  return out
+}
+
 /** Full model for one group page. All heavy lifting stays server-side. */
 export async function buildGroupModel(spec, slug) {
   const group = groupBySlug(slug)
@@ -186,19 +214,18 @@ export async function buildGroupModel(spec, slug) {
       method,
       url: exampleUrl(path, queryParams),
       auth,
-      // Session-only endpoints reject lh_ tokens, so show a JWT placeholder
-      // instead so the examples can't mislead (token substitution leaves it alone).
-      authValue: group.access === 'session' ? 'YOUR_JWT' : undefined,
+      // Session-only and credential endpoints reject lh_ tokens, so show a JWT
+      // placeholder so the examples can't mislead (token substitution leaves it alone).
+      authValue: group.access === 'session' || group.access === 'public' ? 'YOUR_JWT' : undefined,
       contentType: requestBody?.contentType || null,
       bodyExample: requestBody ? requestBody.example : null,
       bodyFields: requestBody?.fieldSchemas || [],
+      path,
+      pathParams,
+      queryParams,
     })
 
-    const snippets = {
-      curl: { raw: raw.curl, html: await highlight(raw.curl, 'bash') },
-      js: { raw: raw.js, html: await highlight(raw.js, 'javascript') },
-      python: { raw: raw.python, html: await highlight(raw.python, 'python') },
-    }
+    const snippets = await highlightSnippets(raw)
 
     const isMultipart = requestBody?.contentType === 'multipart/form-data'
     operations.push({
@@ -221,7 +248,6 @@ export async function buildGroupModel(spec, slug) {
             required: requestBody.required,
             typeLabel: requestBody.typeLabel,
             fields: requestBody.fields,
-            exampleJson: JSON.stringify(requestBody.example, null, 2),
           }
         : null,
       responses,
@@ -260,6 +286,8 @@ export async function buildGroupModel(spec, slug) {
     slug: group.slug,
     title: group.title,
     description: group.description,
+    access: group.access,
+    rightsBucket: group.rightsBucket,
     baseUrl: API_BASE_URL,
     operations,
   }
@@ -272,6 +300,8 @@ export function buildGroupDirectory(spec) {
     slug: group.slug,
     title: group.title,
     description: group.description,
+    access: group.access,
+    rightsBucket: group.rightsBucket,
     count: byGroup.get(group.slug).length,
   })).filter((g) => g.count > 0)
 }
@@ -281,4 +311,151 @@ export function validationErrorFields(spec) {
   const schema = spec.components?.schemas?.HTTPValidationError
   if (!schema) return []
   return schemaFields(spec, schema)
+}
+
+/**
+ * Flat, light index of every documented operation (no schemas, no snippets).
+ * Feeds /reference/llms.txt, /reference/operations.json and the guides.
+ */
+export function buildOperationIndex(spec) {
+  const byGroup = collectByGroup(spec)
+  const out = []
+  for (const group of API_GROUPS) {
+    for (const { path, method, op } of byGroup.get(group.slug)) {
+      const id = operationId(method, path)
+      out.push({
+        id,
+        group: group.slug,
+        groupTitle: group.title,
+        method,
+        path,
+        summary: op.summary || path,
+        description: op.description || '',
+        deprecated: !!op.deprecated,
+        access: group.access,
+        auth: !NO_AUTH_OPERATIONS.has(`${method} ${path}`),
+        tokenRight: group.rightsBucket
+          ? { bucket: group.rightsBucket, action: METHOD_TO_ACTION[method] || 'read' }
+          : null,
+        url: `${SITE_URL}/reference/${group.slug}#${id}`,
+      })
+    }
+  }
+  return out
+}
+
+/**
+ * Documented list endpoints and how they paginate, read straight from the
+ * spec: `page`/`limit` as path segments or query parameters, or `offset`/`limit`.
+ */
+export function paginatedOperations(spec) {
+  const index = new Map(buildOperationIndex(spec).map((o) => [`${o.method} ${o.path}`, o]))
+  const out = []
+  for (const [path, methods] of Object.entries(spec.paths || {})) {
+    for (const method of METHODS) {
+      const op = methods?.[method]
+      const entry = op && index.get(`${method.toUpperCase()} ${path}`)
+      if (!entry) continue
+      const params = (op.parameters || []).map((p) => resolveRef(spec, p)).filter(Boolean)
+      const names = (where) => new Set(params.filter((p) => p.in === where).map((p) => p.name))
+      const inPath = names('path')
+      const inQuery = names('query')
+      let style = null
+      if (inPath.has('page') && inPath.has('limit')) style = 'path'
+      else if (inQuery.has('page') && inQuery.has('limit')) style = 'query'
+      else if (inQuery.has('offset') && inQuery.has('limit')) style = 'offset'
+      if (!style) continue
+      const limitParam = params.find((p) => p.name === 'limit')
+      const limitSchema = simplifyAnyOf(spec, limitParam?.schema || {})
+      out.push({
+        ...entry,
+        style,
+        maxLimit: limitSchema?.maximum ?? null,
+        defaultLimit: limitSchema?.default ?? null,
+      })
+    }
+  }
+  return out
+}
+
+/**
+ * Plain (un-highlighted) docs for one group, for the markdown export that
+ * LLMs and other tools read: params, body fields, responses, body example.
+ */
+export async function buildGroupDocs(spec, slug) {
+  const group = groupBySlug(slug)
+  if (!group) return null
+  const entries = collectByGroup(spec).get(slug) || []
+  const operations = []
+  for (const { path, method, op } of entries) {
+    const requestBody = requestBodyModel(spec, op)
+    operations.push({
+      id: operationId(method, path),
+      method,
+      path,
+      summary: op.summary || path,
+      description: op.description || '',
+      deprecated: !!op.deprecated,
+      auth: !NO_AUTH_OPERATIONS.has(`${method} ${path}`),
+      access: group.access,
+      tokenRight: group.rightsBucket
+        ? { bucket: group.rightsBucket, action: METHOD_TO_ACTION[method] || 'read' }
+        : null,
+      pathParams: paramRows(spec, op.parameters, 'path'),
+      queryParams: paramRows(spec, op.parameters, 'query'),
+      requestBody: requestBody
+        ? {
+            contentType: requestBody.contentType,
+            required: requestBody.required,
+            typeLabel: requestBody.typeLabel,
+            fields: requestBody.fields,
+            exampleJson: JSON.stringify(requestBody.example, null, 2),
+          }
+        : null,
+      responses: await responseModels(spec, op, { html: false }),
+    })
+  }
+  return { ...group, operations }
+}
+
+/** Example JSON body of an operation's first 2xx response (for guides/quickstart). */
+export function successExample(spec, method, path) {
+  const op = spec.paths?.[path]?.[method.toLowerCase()]
+  if (!op) return null
+  const status = Object.keys(op.responses || {}).find((s) => s.startsWith('2'))
+  const response = status && resolveRef(spec, op.responses[status])
+  const schema = response?.content?.['application/json']?.schema
+  if (!schema) return null
+  const example = schemaToExample(spec, schema)
+  return example === null || example === undefined ? null : { status, json: JSON.stringify(example, null, 2) }
+}
+
+/**
+ * One representative call per group for the SDK guide: how a method + path
+ * from this reference becomes `lh.GET(path, { params, body })`.
+ */
+export function sdkCallExamples(spec) {
+  const byGroup = collectByGroup(spec)
+  const out = []
+  for (const group of API_GROUPS) {
+    const entries = byGroup.get(group.slug)
+    if (!entries.length) continue
+    const pick =
+      entries.find((e) => e.method === 'GET' && /\{/.test(e.path)) ||
+      entries.find((e) => e.method === 'GET') ||
+      entries[0]
+    const params = (pick.op.parameters || []).map((p) => resolveRef(spec, p)).filter(Boolean)
+    out.push({
+      group: group.slug,
+      groupTitle: group.title,
+      id: operationId(pick.method, pick.path),
+      method: pick.method,
+      path: pick.path,
+      summary: pick.op.summary || pick.path,
+      pathParams: params.filter((p) => p.in === 'path').map((p) => p.name),
+      requiredQuery: params.filter((p) => p.in === 'query' && p.required).map((p) => p.name),
+      hasBody: !!pick.op.requestBody,
+    })
+  }
+  return out
 }

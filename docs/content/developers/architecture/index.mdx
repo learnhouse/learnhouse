@@ -1,5 +1,5 @@
-import { Callout } from 'nextra/components'
-import ArchitectureDiagram from '../../../components/ArchitectureDiagram/ArchitectureDiagram'
+import { Callout } from '@/components/mdx'
+import ArchitectureDiagram from '../../../components/ArchitectureDiagram/LazyArchitectureDiagram'
 
 # Architecture Overview
 
@@ -14,6 +14,9 @@ learnhouse/
 │   ├── api/      # FastAPI backend
 │   ├── collab/   # Hocuspocus collaboration server
 │   └── cli/      # LearnHouse CLI
+├── packages/
+│   ├── sdk/      # @learnhouse/sdk, typed API client (types generated from the API)
+│   └── react/    # @learnhouse/react, built from apps/web's activity renderer
 ├── docker/       # Helpers for the app image (internal nginx config, start.sh)
 ├── scripts/      # Repository scripts (for example lockfile regeneration)
 └── Dockerfile    # Single image (ghcr.io/learnhouse/app) used by CLI deployments

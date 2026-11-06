@@ -4,11 +4,12 @@
   "description": "npm packages published from the LearnHouse repo, versioned with each OSS release.",
   "workspaces": [
     "sdk",
-    "react"
+    "react",
+    "vue"
   ],
   "scripts": {
-    "build": "bun run --cwd sdk build && bun run --cwd react build",
-    "test": "bun run --cwd sdk test:unit && bun run --cwd react test",
-    "check": "bun run --cwd sdk sync-version:check && bun run --cwd sdk generate:check && bun run --cwd react sync:check"
+    "build": "bun run --cwd sdk build && bun run --cwd react build && bun run --cwd vue build",
+    "test": "bun run --cwd sdk test:unit && bun run --cwd react test && bun run --cwd vue test",
+    "check": "bun run --cwd sdk sync-version:check && bun run --cwd sdk generate:check && bun run --cwd react sync:check && bun run --cwd vue sync:check"
   }
 }

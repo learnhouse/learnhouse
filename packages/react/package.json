@@ -10,11 +10,16 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./element": {
+      "types": "./dist/element.d.ts",
+      "default": "./dist/element.js"
+    },
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },
   "sideEffects": [
-    "*.css"
+    "*.css",
+    "./dist/element.js"
   ],
   "files": [
     "dist",

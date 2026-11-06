@@ -1,123 +1,67 @@
 'use client'
 
-import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Search } from 'nextra/components'
-import { GithubLogo, DiscordLogo, Code, ArrowUpRight, List, X, Plug, Globe, GraduationCap, BracketsCurly } from '@phosphor-icons/react/dist/ssr'
+import { usePathname } from 'next/navigation'
+import Search from '../Search/Search'
+import { GithubLogo, DiscordLogo, List, X, ArrowUpRight } from '@phosphor-icons/react/dist/ssr'
+import { TABS, activeTab } from '../site/sections'
 
-function Navbar() {
-  const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+function Navbar({ version }) {
+  const pathname = usePathname()
+  const current = activeTab(pathname)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  useEffect(() => setMounted(true), [])
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    const handleRouteChange = () => setMobileMenuOpen(false)
-    window.addEventListener('popstate', handleRouteChange)
-    return () => window.removeEventListener('popstate', handleRouteChange)
-  }, [])
+  // Close the drawer whenever the route changes.
+  useEffect(() => setMobileMenuOpen(false), [pathname])
 
-  // Prevent body scroll when mobile menu is open
+  // Prevent body scroll while the drawer is open.
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : ''
+    return () => {
       document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = '' }
   }, [mobileMenuOpen])
-
-  const logoSrc = '/img/logos/learnhouse-dark.svg'
 
   return (
     <>
-      <div className="lh-navbar">
-        <div className="lh-navbar-inner">
-          {/* Left: logo + nav */}
+      <div className="lh-navbar" role="banner" data-pagefind-ignore="all">
+        <div className="lh-navbar-row">
           <div className="lh-navbar-left">
-            <Link href="/" className="lh-navbar-logo">
-              {mounted ? (
-                <img src={logoSrc} alt="LearnHouse" />
-              ) : (
-                <div style={{ width: 100, height: 20 }} />
-              )}
+            <Link href="/" className="lh-navbar-logo" aria-label="LearnHouse Docs home">
+              <img src="/img/logos/learnhouse-dark.svg" alt="LearnHouse" />
             </Link>
-
-            <span className="lh-navbar-badge">docs</span>
-
-            <nav className="lh-navbar-nav lh-hide-mobile">
-              <Link
-                href="/developers"
-                className="lh-navbar-nav-item"
-              >
-                <Code size={15} weight="fill" />
-                Developers
-              </Link>
-              <Link
-                href="/reference"
-                className="lh-navbar-nav-item"
-              >
-                <BracketsCurly size={15} weight="fill" />
-                API Reference
-              </Link>
-              <a
-                href="https://university.learnhouse.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lh-navbar-nav-item"
-              >
-                <GraduationCap size={15} weight="fill" />
-                Learn
-                <ArrowUpRight size={11} weight="bold" />
-              </a>
-              <a
-                href="https://learnhouse.app/integrations"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lh-navbar-nav-item"
-              >
-                <Plug size={15} weight="fill" />
-                Integrations
-                <ArrowUpRight size={11} weight="bold" />
-              </a>
-              <a
-                href="https://learnhouse.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lh-navbar-nav-item"
-              >
-                <Globe size={15} weight="fill" />
-                Website
-                <ArrowUpRight size={11} weight="bold" />
-              </a>
-            </nav>
+            <span className="lh-navbar-badge">Docs</span>
           </div>
 
-          {/* Right: search + links + hamburger */}
           <div className="lh-navbar-right">
-            <Search className="lh-navbar-search" placeholder="Search docs..." />
+            <Search className="lh-navbar-search" placeholder="Search the docs…" />
+            {version && (
+              <Link href="/releases" className="lh-navbar-version lh-hide-mobile" title="Latest release">
+                v{version}
+              </Link>
+            )}
             <a
               href="https://github.com/learnhouse/learnhouse"
               target="_blank"
               rel="noopener noreferrer"
-              className="lh-navbar-nav-item lh-hide-mobile"
+              className="lh-navbar-icon lh-hide-mobile"
+              aria-label="GitHub"
             >
-              <GithubLogo size={16} weight="fill" />
-              GitHub
+              <GithubLogo size={18} weight="fill" />
             </a>
             <a
               href="https://discord.gg/CMyZjjYZ6x"
               target="_blank"
               rel="noopener noreferrer"
-              className="lh-navbar-nav-item lh-hide-mobile"
+              className="lh-navbar-icon lh-hide-mobile"
+              aria-label="Discord"
             >
-              <DiscordLogo size={16} weight="fill" />
-              Discord
+              <DiscordLogo size={18} weight="fill" />
             </a>
-
-            {/* Mobile hamburger */}
+            <a href="https://learnhouse.app" target="_blank" rel="noopener noreferrer" className="lh-navbar-cta lh-hide-mobile">
+              Try LearnHouse
+            </a>
             <button
               className="lh-mobile-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -127,49 +71,45 @@ function Navbar() {
             </button>
           </div>
         </div>
+
+        <nav className="lh-navbar-tabs" aria-label="Documentation sections">
+          <div className="lh-navbar-tabs-inner">
+            {TABS.map(({ key, href, label, icon: Icon }) => (
+              <Link
+                key={key}
+                href={href}
+                className={`lh-navbar-tab ${key === current.key ? 'lh-navbar-tab-active' : ''}`}
+                aria-current={key === current.key ? 'page' : undefined}
+              >
+                <Icon size={15} weight={key === current.key ? 'fill' : 'regular'} />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </nav>
       </div>
 
-      {/* Mobile menu overlay */}
-      {mobileMenuOpen && (
-        <div className="lh-mobile-overlay" onClick={() => setMobileMenuOpen(false)} />
-      )}
+      {mobileMenuOpen && <div className="lh-mobile-overlay" onClick={() => setMobileMenuOpen(false)} />}
 
-      {/* Mobile sidebar drawer */}
-      <div className={`lh-mobile-drawer ${mobileMenuOpen ? 'lh-mobile-drawer-open' : ''}`}>
+      <div className={`lh-mobile-drawer ${mobileMenuOpen ? 'lh-mobile-drawer-open' : ''}`} data-pagefind-ignore="all">
         <div className="lh-mobile-drawer-links">
-          <Link href="/developers" className="lh-mobile-drawer-link" onClick={() => setMobileMenuOpen(false)}>
-            <Code size={16} weight="fill" />
-            Developers
-          </Link>
-          <Link href="/reference" className="lh-mobile-drawer-link" onClick={() => setMobileMenuOpen(false)}>
-            <BracketsCurly size={16} weight="fill" />
-            API Reference
-          </Link>
-          <a href="https://university.learnhouse.io" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
-            <GraduationCap size={16} weight="fill" />
-            Learn
-            <ArrowUpRight size={12} weight="bold" />
-          </a>
-          <a href="https://learnhouse.app/integrations" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
-            <Plug size={16} weight="fill" />
-            Integrations
-            <ArrowUpRight size={12} weight="bold" />
-          </a>
-          <a href="https://learnhouse.app" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
-            <Globe size={16} weight="fill" />
-            Website
-            <ArrowUpRight size={12} weight="bold" />
-          </a>
+          {version && (
+            <Link href="/releases" className="lh-mobile-drawer-link">
+              Latest release: v{version}
+            </Link>
+          )}
           <a href="https://github.com/learnhouse/learnhouse" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
-            <GithubLogo size={16} weight="fill" />
-            GitHub
+            GitHub <ArrowUpRight size={12} weight="bold" />
           </a>
           <a href="https://discord.gg/CMyZjjYZ6x" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
-            <DiscordLogo size={16} weight="fill" />
-            Discord
+            Discord <ArrowUpRight size={12} weight="bold" />
+          </a>
+          <a href="https://learnhouse.app" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
+            Try LearnHouse <ArrowUpRight size={12} weight="bold" />
           </a>
         </div>
-        <div className="lh-mobile-drawer-sidebar" id="mobile-sidebar-mount" />
+        <div className="lh-mobile-drawer-divider" />
+        <div id="mobile-sidebar-mount" />
       </div>
     </>
   )

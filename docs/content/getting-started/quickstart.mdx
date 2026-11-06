@@ -1,52 +1,63 @@
-import { Callout, Steps } from 'nextra/components'
+import { Callout, Steps } from '@/components/mdx'
 
 # Quickstart
 
-There are two ways to start using LearnHouse: the managed **LearnHouse Cloud** or a **self-hosted** deployment. Pick the path that suits your needs, then follow [Set up your academy](#set-up-your-academy) to go from an empty organization to your first learners.
+Two ways in: **LearnHouse Cloud** if you want to start teaching today, or **self-hosting** if you want it on your own
+servers. Both end with the same academy; [Set up your academy](#set-up-your-academy) takes it from empty to your first
+learners.
 
 <YouTube video="start-tour" />
 
----
-
 ## Option A: LearnHouse Cloud
 
-The fastest way to get started. No infrastructure to manage.
+No servers, no updates to run. Hosting, backups and SSL are handled for you.
 
-1. **Sign up**: create an account at [learnhouse.app](https://learnhouse.app).
-2. **Create an organization**: after signing in, create your first organization. This is the top-level container for all of your courses, users, and settings.
-3. **Set up your academy**: follow the steps [below](#set-up-your-academy).
+<Steps>
 
-LearnHouse Cloud handles hosting, updates, backups, and SSL for you.
+### Sign up
+
+Create an account at [learnhouse.app](https://learnhouse.app).
+
+### Create an organization
+
+The organization is your academy: it holds your courses, members and settings.
+
+### Set up your academy
+
+Continue with [the steps below](#set-up-your-academy).
+
+</Steps>
 
 <Callout>
-Not sure whether Cloud or self-hosting is right for you? See the [Cloud vs Self Hosting](/getting-started/cloud-vs-self-hosting) comparison.
+  Weighing the two? [Cloud or self-hosting](/getting-started/cloud-vs-self-hosting) compares them.
 </Callout>
 
----
+## Option B: Self-hosted
 
-## Option B: Self-Hosted
+You need [Docker](https://docs.docker.com/get-docker/) with the Compose v2 plugin and [Node.js](https://nodejs.org/) 22
+or newer.
 
-Run LearnHouse on your own infrastructure using the LearnHouse CLI. You'll need [Docker](https://docs.docker.com/get-docker/) with the Compose v2 plugin and [Node.js](https://nodejs.org/) 22 or newer installed.
+<Steps>
 
-### 1. Run the setup wizard
+### Run the setup wizard
 
 ```bash
 npx learnhouse@latest setup
 ```
 
-The interactive wizard walks you through domain configuration, database setup, admin account creation, and optional features (AI, email, storage, OAuth).
+It asks for your domain, database, admin account and optional features (AI, email, storage, sign-in providers).
 
-### 2. Start LearnHouse
+### Start LearnHouse
 
-At the end of the wizard, accept **Start LearnHouse now?** and the CLI starts everything and waits until it is ready. If you skipped that step, run:
+Accept **Start LearnHouse now?** at the end of the wizard, or run:
 
 ```bash
 npx learnhouse start
 ```
 
-Your instance will be available at `http://localhost` (or the domain you configured during setup).
+Your instance is at `http://localhost`, or at the domain you chose.
 
-### 3. Manage your instance
+### Know the everyday commands
 
 ```bash
 npx learnhouse stop     # Stop all services
@@ -56,11 +67,12 @@ npx learnhouse update   # Update to the latest version
 npx learnhouse doctor   # Run diagnostics
 ```
 
-<Callout type="info">
-For detailed installation options, see the [Quick Install](/self-hosting/installation/quick-install) guide. For environment variables and configuration, see [Configuration](/self-hosting/configuration).
-</Callout>
+</Steps>
 
----
+<Callout type="info">
+  More options in [Quick install](/self-hosting/installation/quick-install), every setting in
+  [Configuration](/self-hosting/configuration), and what changed in each version in [Releases](/releases).
+</Callout>
 
 ## Set up your academy
 

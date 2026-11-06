@@ -1,0 +1,121 @@
+---
+title: Props Reference
+description: Every prop of LearnHouseActivity and LearnHouseProvider, and everything @learnhouse/react exports.
+---
+
+# Props Reference
+
+## `<LearnHouseActivity>`
+
+### What to render
+
+Pass one of `activityId`, `activityName` + `courseId`, `activity` or `content`.
+
+| Prop | Type | |
+| --- | --- | --- |
+| `activityId` | `string` | Activity uuid (`activity_…`), fetched from the instance |
+| `activityName` | `string` | Find the activity by name inside `courseId` (case-insensitive) |
+| `courseId` | `string` | Course uuid (`course_…`). Loads in parallel with `activityId`; lets media blocks find their files |
+| `activity` | `LearnHouseActivityData` | An activity object you already have (from the API or `@learnhouse/sdk`) |
+| `content` | `ActivityDocument \| string` | A document (TipTap JSON, as LearnHouse stores it), as an object or a JSON string |
+
+### Instance
+
+| Prop | Type | |
+| --- | --- | --- |
+| `baseUrl` | `string` | The instance's API address. Not needed inside `LearnHouseProvider` |
+| `token` | `string` | A user access token. Never an `lh_` API token |
+| `orgId` | `string` | Org uuid, for media blocks when rendering `content` without fetching |
+| `siteUrl` | `string` | The LearnHouse site's address, for the "Made with LearnHouse" link |
+
+### Look
+
+| Prop | Type | Default | |
+| --- | --- | --- | --- |
+| `theme` | `LearnHouseTheme` | | See [Theme](/developers/react/customization#theme) |
+| `className` | `string` | | Added to the root element (`.lh-activity`) |
+| `style` | `CSSProperties` | | Merged into the root element's style |
+| `unstyled` | `boolean` | `false` | Don't set the theme variables |
+| `showTitle` | `boolean` | `false` | Show the activity's name above it |
+| `header` | `ReactNode \| (activity) => ReactNode` | | Above the content |
+| `footer` | `ReactNode \| (activity) => ReactNode` | | Below the content |
+| `showPoweredBy` | `boolean` | `false` | A small link back to the activity (needs `siteUrl`) |
+
+### Content
+
+| Prop | Type | |
+| --- | --- | --- |
+| `components` | `Record<string, ComponentType<BlockOverrideProps>>` | Replace or wrap blocks by name. [Block names](/developers/react/customization#block-names) |
+| `marks` | `Record<string, ComponentType<MarkOverrideProps>>` | Replace inline marks by name |
+| `hideBlocks` | `string[]` | Block names to leave out |
+| `transformContent` | `(doc) => doc` | Rewrite the document before rendering |
+
+### Behaviour
+
+| Prop | Type | Default | |
+| --- | --- | --- | --- |
+| `linkTarget` | `'_blank' \| '_self' \| '_parent' \| '_top'` | `'_blank'` | Where links open |
+| `onLinkClick` | `(href, event) => boolean \| void` | | Return `false` to cancel the navigation |
+| `trackCompletion` | `boolean` | `false` | Emit `complete` when the end scrolls into view |
+
+### Language
+
+| Prop | Type | Default | |
+| --- | --- | --- | --- |
+| `locale` | `string` | `'en'` | One of [22 languages](/developers/react/localization#languages) |
+| `messages` | `object` | | String overrides, keyed like LearnHouse's locale files |
+| `dir` | `'ltr' \| 'rtl' \| 'auto'` | `'auto'` | `auto` follows the locale |
+
+### States & callbacks
+
+| Prop | Type | |
+| --- | --- | --- |
+| `fallback` | `ReactNode` | While loading the activity or a block's code |
+| `errorFallback` | `ReactNode \| (error, retry) => ReactNode` | When loading or rendering fails |
+| `onLoad` | `(activity) => void` | The activity is loaded |
+| `onError` | `(error) => void` | Loading or rendering failed |
+| `onEvent` | `(event: LearnHouseEvent) => void` | Every event. See [Events](/developers/react/events) |
+
+## `<LearnHouseProvider>`
+
+| Prop | Type | |
+| --- | --- | --- |
+| `baseUrl` | `string` | **Required.** The instance's API address |
+| `mediaUrl` | `string` | Where files are served from, if not `baseUrl` (a CDN or bucket) |
+| `client` | `LearnHouseClient` | Your own `@learnhouse/sdk` client (shared hooks, custom `fetch`) |
+| `token` | `string` | A user access token |
+| `getToken` | `() => string \| null \| Promise<string \| null>` | Called for each request; use it for tokens that refresh |
+| `user` | `object` | The signed-in user, for blocks that personalise |
+| `siteUrl` | `string` | The LearnHouse site's address |
+| `theme`, `locale`, `messages`, `linkTarget` | | Defaults for every activity below |
+| `onEvent` | `(event) => void` | Events from every activity below |
+
+## Exports
+
+```ts
+import {
+  LearnHouseActivity,
+  LearnHouseProvider,
+  useLearnHouseClient, // the provider's @learnhouse/sdk client
+  SUPPORTED_LOCALES,
+  themeToStyle,        // theme object → CSS variables, for your own wrappers
+  VERSION,             // the LearnHouse release this build matches
+} from '@learnhouse/react'
+
+import type {
+  LearnHouseActivityProps,
+  LearnHouseProviderProps,
+  LearnHouseActivityData,
+  ActivityDocument,
+  LearnHouseTheme,
+  LearnHouseEvent,
+  BlockOverrideProps,
+  MarkOverrideProps,
+} from '@learnhouse/react'
+```
+
+## Limits
+
+- One LearnHouse instance per page: media URLs follow the most recently mounted provider's `baseUrl`.
+- Assignments, SCORM packages and other activity types that need the course player aren't rendered; `errorFallback`
+  is shown instead. Pages, videos, PDFs, markdown and embedded-URL activities are.

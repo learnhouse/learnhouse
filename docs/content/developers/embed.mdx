@@ -1,0 +1,97 @@
+---
+title: Embed
+description: Put a LearnHouse activity on any website with an iframe, and change its colours and branding with URL parameters.
+---
+
+import { Callout, Steps } from '@/components/mdx'
+import { DevHero } from '../../components/developers/Developers'
+import EmbedBuilder from '../../components/developers/EmbedBuilder'
+
+<DevHero section="embed" eyebrow="No code" title="Embed an activity anywhere">
+  Every page, video and PDF activity has an embed link. Paste it into a blog post, a help center article, a Notion
+  page or a slide, and learners use it right there.
+</DevHero>
+
+## Get the embed code
+
+<Steps>
+
+### Open the activity
+
+Open the activity as a learner would, in its course.
+
+### Share → Embed
+
+Open the **Share** menu at the top of the activity and choose **Embed**. The iframe code is copied to your clipboard.
+
+### Paste it
+
+Paste the code anywhere that accepts HTML. Most site builders have an "HTML" or "Embed" block for this.
+
+</Steps>
+
+The copied code looks like this:
+
+```html
+<iframe
+  src="https://learn.your-school.com/embed/your-school/course/9f2a…/activity/0b3c…"
+  width="100%"
+  height="600"
+  frameborder="0"
+  allowfullscreen
+></iframe>
+```
+
+## Try the options
+
+Change the values below and copy the result. Embed URLs use the bare ids, so the builder drops the `course_` and
+`activity_` prefixes if you paste full ids.
+
+<EmbedBuilder />
+
+## URL parameters
+
+| Parameter | Example | What it does |
+| --- | --- | --- |
+| `bgcolor` | `bgcolor=f8fafc` | Page background, as a hex colour without `#`. It is applied before the page paints, so there is no white flash on dark sites. |
+| `textcolor` | `textcolor=1e293b` | Text colour for the activity, hex without `#`. |
+| `showlearnhouselogo` | `showlearnhouselogo=false` | Hides the small LearnHouse badge in the corner. |
+
+<Callout type="info">
+  On LearnHouse Cloud's Free plan the badge is always shown. Paid plans can hide it with `showlearnhouselogo=false`,
+  and white-label plans never show it. Self-hosted instances follow the org's watermark setting.
+</Callout>
+
+## What can be embedded
+
+| Activity | Embeds |
+| --- | --- |
+| Pages (dynamic activities) | Yes, with every block: quizzes, flipcards, scenarios, code playgrounds, math, images, video, audio, PDFs |
+| Markdown and embedded-URL pages | Yes |
+| Videos | Yes |
+| PDF documents | Yes |
+| Assignments, SCORM and other types | No. The embed shows a card linking to the activity instead |
+
+Only **published** activities embed. Visitors see what a signed-out visitor of your site would see, so the course has
+to be public for the content to show.
+
+## Sizing
+
+An iframe can't size itself to its content. Pick a `height` that fits most of the activity, or let it scroll inside
+the frame. If you need the height to follow the content, render the activity with the
+[React component](/developers/react) instead: it reports its size through the `resize` event.
+
+## Performance
+
+The embed renders the activity without starting the editor, and loads each block's code only when the activity uses
+that block. A text-and-quiz lesson loads a fraction of what the full course player does.
+
+## Embed vs. the React component
+
+|  | Embed | `<LearnHouseActivity>` |
+| --- | --- | --- |
+| Setup | Paste HTML | `npm install` |
+| Styling | Background, text colour, badge | Full theme, your fonts, block overrides |
+| Height | Fixed | Follows the content |
+| Events | None | Load, ready, links, media, completion |
+| Works on | Any site | React apps |
