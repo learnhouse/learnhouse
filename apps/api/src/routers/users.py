@@ -236,10 +236,10 @@ async def api_create_user_with_orgid(
     response_model=UserRead,
     tags=["users"],
     summary="Create user with invite code",
-    description="Create a user and attach them to the given organization using an invite code. Only valid when the organization is configured as invite-only.",
+    description="Create a user and attach them to the given organization using an invite code. Required for invite-only organizations; optional for open ones.",
     responses={
         200: {"description": "User created and attached via invite code.", "model": UserRead},
-        403: {"description": "Organization does not require an invite code"},
+        404: {"description": "Invite code not found"},
     },
 )
 async def api_create_user_with_orgid_and_invite(
@@ -272,19 +272,12 @@ async def api_create_user_with_orgid_and_invite(
             headers={"Retry-After": str(retry_after)},
         )
 
-    # TODO: This is temporary, logic should be moved to service
-    if (
-        await get_org_join_mechanism(request, org_id, current_user, db_session)
-        == "inviteOnly"
-    ):
-        return await create_user_with_invite(
-            request, db_session, current_user, user_object, org_id, invite_code
-        )
-    else:
-        raise HTTPException(
-            status_code=403,
-            detail="This organization does not require an invite code",
-        )
+    # The code is validated either way. Invite-only orgs require it; open orgs
+    # accept it as optional (an invalid code is still rejected, and a valid one
+    # still applies its user group).
+    return await create_user_with_invite(
+        request, db_session, current_user, user_object, org_id, invite_code
+    )
 
 
 @router.post(

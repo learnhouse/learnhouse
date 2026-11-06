@@ -1,6 +1,6 @@
 'use client'
 import { useFormik } from 'formik'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect } from 'react'
 import FormLayout, {
   FormField,
@@ -8,7 +8,7 @@ import FormLayout, {
 import * as Form from '@radix-ui/react-form'
 import { AlertTriangle, Info, Mail, User } from 'lucide-react'
 import Link from 'next/link'
-import { signup, resendVerificationEmail } from '@services/auth/auth'
+import { signup, signUpWithInviteCode, resendVerificationEmail } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, isOnCustomDomain } from '@services/config/config'
@@ -73,6 +73,8 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
   const contextOrg = useOrg() as any
   const org = (contextOrg && (contextOrg.id || contextOrg.slug)) ? contextOrg : propOrg
   const _router = useRouter()
+  // An invite link (?inviteCode=...) prefills the optional invite code field.
+  const inviteCodeParam = useSearchParams().get('inviteCode') || ''
   const [error, setError] = React.useState('')
   const [message, setMessage] = React.useState<{ email_verified: boolean } | null>(null)
   const [resendState, setResendState] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -104,6 +106,7 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       bio: '',
       first_name: '',
       last_name: '',
+      invite_code: inviteCodeParam,
       custom_fields: initialCustomFieldValues(customFields),
       turnstileToken: null as string | null,
     },
@@ -113,9 +116,16 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       setError('')
       setMessage(null)
       setIsSubmitting(true)
-      track(AnalyticsEvent.SignupSubmitted, { invite_code_present: false, has_bio: !!values.bio })
+      const { invite_code, ...accountValues } = values
+      // The code is optional: with one (and an org) we sign up through the
+      // invite endpoint, otherwise through the regular one.
+      const code = (invite_code || '').trim()
+      const useInvite = !!code && !!org?.id
+      track(AnalyticsEvent.SignupSubmitted, { invite_code_present: useInvite, has_bio: !!values.bio })
       try {
-        let res = await signup(values)
+        let res = useInvite
+          ? await signUpWithInviteCode(accountValues, code)
+          : await signup(accountValues)
         let message = await res.json().catch(() => ({}))
         if (res.status == 200) {
           track(AnalyticsEvent.SignupSucceeded, { email_verified: message.email_verified })
@@ -165,6 +175,11 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
       const domainAttr = (topDomain === 'localhost' || isOnCustomDomain()) ? '' : `; domain=.${topDomain}`;
       document.cookie = `LH_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `LH_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
+      // Carry an optional invite code through the Google redirect.
+      const code = formik.values.invite_code.trim();
+      if (code && org.id) {
+        document.cookie = `LH_oauth_invite_code=${encodeURIComponent(code)}${baseAttributes}${domainAttr}`;
+      }
     }
     // Use absolute URL with current origin for custom domain support
     signIn('google', { callbackUrl: buildCallbackUrl() });
@@ -371,6 +386,23 @@ function OpenSignUpComponent({ org: propOrg }: OpenSignUpComponentProps = {}) {
           </FormField>
 
           <CustomSignupFields fields={customFields} formik={formik} />
+
+          <FormField name="invite_code">
+            <div className="flex items-center space-x-2 mb-1.5">
+              <Form.Label className="grow text-[13px] font-semibold text-black/70">{`${t('auth.invite_code')} (${t('common.optional')})`}</Form.Label>
+            </div>
+            <Form.Control asChild>
+              <input
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.invite_code}
+                type="text"
+                autoComplete="off"
+                placeholder={t('auth.enter_invite_code')}
+                className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
+              />
+            </Form.Control>
+          </FormField>
 
           <TurnstileWidget
             ref={turnstileRef}

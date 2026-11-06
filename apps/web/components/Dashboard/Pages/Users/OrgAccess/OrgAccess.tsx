@@ -168,7 +168,9 @@ function OrgAccess() {
               />
             </div>
             {/* Invite codes section */}
-            <div className={joinMethod == 'open' ? 'opacity-20 pointer-events-none' : 'pointer-events-auto'}>
+            {/* Codes are required in invite-only mode and optional in open mode,
+                so the section stays usable in both. */}
+            <div>
               <div className="px-4 sm:px-6 py-4 border-t border-gray-100">
                 <h2 className="font-bold text-lg text-gray-800">{t('dashboard.users.signups.invite_codes.title')}</h2>
                 <p className="text-sm text-gray-500 mt-0.5">{t('dashboard.users.signups.invite_codes.subtitle')}</p>
