@@ -3058,8 +3058,6 @@
       "episodes": "episode",
       "participants": "peserta",
       "loading": "Memuat...",
-      "enable_analytics_description": "Aktifkan analitik untuk melihat pengguna langsung, pendaftaran, dan lainnya.",
-      "enable": "Aktifkan",
       "quick_stats": "Statistik Cepat",
       "full_analytics": "Analitik Lengkap",
       "live_now": "Langsung Sekarang",
@@ -8285,10 +8283,6 @@
       "overview": "Ringkasan",
       "advanced": "Lanjutan"
     },
-    "not_configured": {
-      "title": "Analitik belum dikonfigurasi",
-      "description": "Analitik memerlukan koneksi Tinybird. Setel variabel lingkungan <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> dan <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> untuk mengaktifkannya."
-    },
     "advanced_gate": {
       "requires": "Memerlukan",
       "upgrade_description": "Tingkatkan untuk membuka analitik lanjutan"
@@ -8491,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analitik Belum Dikonfigurasi",
-      "not_configured_desc": "Analitik memerlukan konfigurasi Tinybird. Silakan hubungi administrator Anda.",
       "common": {
         "loading": "Memuat...",
         "no_data": "Belum ada data",
@@ -10492,7 +10484,6 @@
       "joined": "Bergabung",
       "na": "N/A",
       "no_analytics": "Tidak ada analitik tersedia",
-      "ensure_tinybird": "Pastikan analitik Tinybird sudah dikonfigurasi",
       "period": "Periode:",
       "days_short": "{{count}}h",
       "live_users": "Pengguna Langsung",
@@ -10650,7 +10641,6 @@
     "analytics": {
       "failed_load": "Gagal memuat analitik",
       "no_data_available": "Tidak ada data analitik",
-      "ensure_tinybird": "Pastikan analitik Tinybird sudah dikonfigurasi",
       "no_data": "Tidak ada data"
     },
     "ee_error": {

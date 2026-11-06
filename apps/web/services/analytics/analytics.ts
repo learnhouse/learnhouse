@@ -1,4 +1,4 @@
-import { getAPIUrl } from '@services/config/config'
+import { getAPIUrl, getDeploymentMode } from '@services/config/config'
 
 /**
  * Transport for org analytics events (the backend sink of useLHAnalytics).
@@ -13,6 +13,9 @@ import { getAPIUrl } from '@services/config/config'
  * `sendBeacon` so signed-in requests can still carry their Authorization
  * header after the page is gone. Keepalive bodies share a 64KB budget per
  * page, hence the per-request cap below.
+ *
+ * The endpoint ships with Enterprise Edition, so an OSS deployment queues and
+ * sends nothing.
  *
  * Nothing in here throws: analytics must never break the app.
  */
@@ -156,6 +159,8 @@ export function trackEvent(
 ): void {
   try {
     if (typeof window === 'undefined' || !orgId || !eventName) return
+    // OSS has no signals endpoint.
+    if (getDeploymentMode() === 'oss') return
     const key = `${orgId}|${accessToken ?? ''}`
     let queue = queues.get(key)
     if (!queue) {

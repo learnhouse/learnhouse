@@ -3,8 +3,10 @@
 
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
 
+let deploymentMode = "saas";
 mock.module("@services/config/config", () => ({
   getAPIUrl: () => "http://api.test/api/v1/",
+  getDeploymentMode: () => deploymentMode,
 }));
 
 // A minimal browser: the transport only touches these.
@@ -52,9 +54,24 @@ beforeEach(() => {
   calls.length = 0;
   fakeDocument.prerendering = false;
   fakeDocument.visibilityState = "visible";
+  deploymentMode = "saas";
 });
 
 describe("signals transport", () => {
+  test("sends nothing on an OSS deployment, which has no signals endpoint", () => {
+    deploymentMode = "oss";
+    for (let i = 0; i < 25; i++) trackEvent("page_view", 7, { path: "/courses" });
+    flushAnalytics();
+    expect(calls).toHaveLength(0);
+  });
+
+  test("sends on EE as well as SaaS", () => {
+    deploymentMode = "ee";
+    trackEvent("page_view", 7, { path: "/courses" });
+    flushAnalytics();
+    expect(calls).toHaveLength(1);
+  });
+
   test("batches queued events into one request to the neutral endpoint", () => {
     trackEvent("page_view", 7, { path: "/courses" });
     trackEvent("course_view", 7, { course_uuid: "course_1" });

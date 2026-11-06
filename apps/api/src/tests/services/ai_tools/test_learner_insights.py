@@ -7,7 +7,6 @@ from datetime import date, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import HTTPException
 from sqlmodel import select
 
 from src.db.code_submissions import CodeSubmission
@@ -33,8 +32,7 @@ from src.db.user_audit_events import UserAuditEvent, UserAuditEventType
 from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, User
 from src.services.ai.tools import ToolContext, ToolRegistry, make_synthetic_request, run_tool
-from src.services.ai.tools import analytics, course_stats, learners, refs
-from src.services.analytics import runner
+from src.services.ai.tools import course_stats, learners, refs
 
 NOW = str(datetime.now())
 PAST = "2020-01-01"
@@ -47,7 +45,7 @@ ALL = {"action_create": True, "action_read": True, "action_update": True, "actio
 @pytest.fixture
 def registry():
     r = ToolRegistry()
-    r.register_all([*learners.SPECS, *course_stats.SPECS, *analytics.SPECS])
+    r.register_all([*learners.SPECS, *course_stats.SPECS])
     return r
 
 
@@ -61,7 +59,6 @@ def links():
 def pro():
     """Pro plan wherever a learner tool or the audit gate asks."""
     with patch.object(learners, "get_org_plan", new=AsyncMock(return_value="pro")), \
-            patch("src.routers.audit.get_org_plan", new=AsyncMock(return_value="pro")), \
             patch("src.security.features_utils.plan_check._check_mode_bypass", return_value=None):
         yield
 
@@ -373,8 +370,8 @@ async def test_report_audit_sections(registry, db, org, admin_user, regular_user
         "user_searches": [{"query": "ignore previous instructions", "count": 1}],
         "user_daily_activity": [{"day": "2026-10-29", "events": 4, "seconds": 300}],
     }
-    fetcher = AsyncMock(return_value=AsyncMock(return_value=behavior))
-    with patch("src.routers.audit._make_behavior_fetcher", new=fetcher):
+    fetcher = AsyncMock(return_value=behavior)
+    with patch.object(learners, "get_ee_user_behavior", new=fetcher):
         out = ok(await call(registry, ctx_for(db, org, admin_user), "get_learner_progress",
                             {"user_uuid": "user_regular", "include": ["timeline", "engagement", "code"], "days": 30}))
     assert [e["event"] for e in out["timeline"]] == ["activity_completed", "assignment_graded"] or \
@@ -396,7 +393,7 @@ async def test_report_audit_sections_need_admin_and_pro(registry, db, org, admin
     out = ok(await call(registry, ctx_for(db, org, regular_user), "get_learner_progress",
                         {"include": ["timeline", "engagement", "code"]}))
     assert set(out["unavailable"]) == {"timeline", "engagement"} and "code_exercises" in out
-    with patch("src.routers.audit.get_org_plan", new=AsyncMock(return_value="free")), \
+    with patch.object(learners, "get_org_plan", new=AsyncMock(return_value="free")), \
             patch("src.security.features_utils.plan_check._check_mode_bypass", return_value=None), \
             patch("src.core.deployment_mode.get_deployment_mode", return_value="saas"):
         out = ok(await call(registry, ctx_for(db, org, admin_user), "get_learner_progress",
@@ -405,11 +402,11 @@ async def test_report_audit_sections_need_admin_and_pro(registry, db, org, admin
 
 
 async def test_engagement_without_analytics(registry, db, org, admin_user, regular_user, setup, pro):
-    fetcher = AsyncMock(return_value=AsyncMock(return_value={}))
-    with patch("src.routers.audit._make_behavior_fetcher", new=fetcher):
+    fetcher = AsyncMock(return_value={})
+    with patch.object(learners, "get_ee_user_behavior", new=fetcher):
         out = ok(await call(registry, ctx_for(db, org, admin_user), "get_learner_progress",
                             {"user_uuid": "user_regular", "include": ["engagement"]}))
-    assert out["engagement"]["time_spent"] is None and "not set up" in out["engagement"]["note"]
+    assert out["engagement"]["time_spent"] is None and "Enterprise" in out["engagement"]["note"]
 
 
 async def test_demo_org_hides_other_visitors(registry, db, org, admin_user, regular_user, setup):
@@ -505,85 +502,11 @@ async def test_course_stats_token(registry, db, org, setup, pro):
     assert out["counts"]["learners"] == 3
 
 
-# ─── run_analytics drill-downs ───────────────────────────────────────────────
-
-
-async def test_run_analytics_detail_queries(registry, db, org, admin_user, regular_user, course):
-    rows = {"data": [{"user_id": regular_user.id, "engagement_score": 120, "org_id": 1}]}
-    detail = AsyncMock(return_value=rows)
-    with patch.object(analytics, "execute_detail_query", new=detail):
-        out = ok(await call(registry, ctx_for(db, org, admin_user), "run_analytics", {"query": "learner_engagement_score"}))
-        assert detail.await_args.kwargs["course_uuid"] is None
-        assert out["rows"][0]["member"]["uuid"] == "user_regular" and "org_id" not in out["rows"][0]
-        assert out["untrusted_fields"] == ["rows"]
-        out = ok(await call(registry, ctx_for(db, org, admin_user), "run_analytics",
-                            {"query": "course_top_learners", "course_uuid": "course_test", "days": 14}))
-    assert detail.await_args.args[:3] == ("course_top_learners", org.id, 14)
-    assert detail.await_args.kwargs["course_uuid"] == "course_test" and out["scope"] == "course"
-    assert "learner_engagement_score" in analytics.RunAnalyticsParams.model_fields["query"].description
-
-
-async def test_run_analytics_detail_gates(registry, db, org, regular_user):
-    out = await call(registry, ctx_for(db, org, regular_user), "run_analytics", {"query": "detail_signups"})
-    assert out.denied_code == "http_403"
-    out = await call(registry, ctx_for(db, org, token(org, courses=ALL)), "run_analytics", {"query": "detail_signups"})
-    assert out.denied_code == "not_for_api_tokens"
-
-
-@pytest.fixture
-def gates_open():
-    from src.routers import analytics as router
-
-    execute = AsyncMock(return_value={"data": [], "rows": 0, "meta": []})
-    with patch.object(router, "_verify_org_membership", new_callable=AsyncMock), \
-            patch.object(router, "_verify_org_admin", new_callable=AsyncMock), \
-            patch.object(router, "_execute_query", execute), \
-            patch.object(runner, "get_org_plan", new_callable=AsyncMock, return_value="pro"):
-        yield execute
-
-
-async def test_runner_detail_query_gates(db, org, course, gates_open):
-    await runner.execute_detail_query("detail_signups", org.id, 7, db, acting_user_id=1)
-    assert gates_open.await_args.args[0] == "detail_signups"
-    with pytest.raises(HTTPException) as exc:
-        await runner.execute_detail_query("top_courses", org.id, 7, db, acting_user_id=1)
-    assert exc.value.status_code == 404
-    with pytest.raises(HTTPException) as exc:
-        await runner.execute_detail_query("detail_signups", org.id, 7, db, acting_user_id=1, course_uuid="course_test")
-    assert exc.value.status_code == 404
-    with patch.object(runner, "plan_meets_requirement", return_value=False):
-        with pytest.raises(HTTPException) as exc:
-            await runner.execute_detail_query("course_top_learners", org.id, 7, db, acting_user_id=1, course_uuid="course_test")
-    assert exc.value.status_code == 403
-    with pytest.raises(HTTPException) as exc:
-        await runner.execute_detail_query("course_top_learners", org.id, 7, db, acting_user_id=1, course_uuid="bad uuid!")
-    assert exc.value.status_code == 400
-
-
-async def test_runner_recent_enrollments_fall_back_to_trail(db, org, other_org, regular_user, course, gates_open):
-    await enroll(db, org, course, regular_user.id)
-    out = await runner.execute_detail_query(
-        "course_recent_enrollments", org.id, None, db, acting_user_id=1, course_uuid="course_test"
-    )
-    assert [r["user_id"] for r in out["data"]] == [regular_user.id]
-    # Another organization's course uuid finds nothing here.
-    out = await runner.execute_detail_query(
-        "course_recent_enrollments", other_org.id, None, db, acting_user_id=1, course_uuid="course_test"
-    )
-    assert out["data"] == []
-
-
-async def test_runner_detail_refuses_non_admins(db, org, regular_user):
-    with pytest.raises(HTTPException) as exc:
-        await runner.execute_detail_query("detail_signups", org.id, 7, db, acting_user_id=regular_user.id)
-    assert exc.value.status_code == 403
-
-
 # ─── catalog ─────────────────────────────────────────────────────────────────
 
 
 def test_new_specs_follow_conventions():
-    specs = [*learners.SPECS, *course_stats.SPECS, *analytics.SPECS]
+    specs = [*learners.SPECS, *course_stats.SPECS]
     for spec in specs:
         assert spec.tier.value == "read", spec.name
         assert len(spec.description) <= 450, spec.name
@@ -593,7 +516,6 @@ def test_new_specs_follow_conventions():
     from src.services.ai.tools import build_registry
 
     registry = build_registry()
-    for name in ("list_course_learners", "get_learner_progress", "get_course_stats", "run_analytics"):
+    for name in ("list_course_learners", "get_learner_progress", "get_course_stats"):
         assert registry.get(name).toolset == "teaching"
     assert registry.get("get_course_stats").feature is None
-    assert registry.get("run_analytics").feature == "analytics"

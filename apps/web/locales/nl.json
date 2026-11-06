@@ -3086,8 +3086,6 @@
       "episodes": "afleveringen",
       "participants": "deelnemers",
       "loading": "Laden...",
-      "enable_analytics_description": "Schakel analyses in om live gebruikers, aanmeldingen en meer te zien.",
-      "enable": "Inschakelen",
       "quick_stats": "Snelle statistieken",
       "full_analytics": "Volledige analyses",
       "live_now": "Nu live",
@@ -8334,10 +8332,6 @@
       "overview": "Overzicht",
       "advanced": "Geavanceerd"
     },
-    "not_configured": {
-      "title": "Analytics niet geconfigureerd",
-      "description": "Analytics vereist een Tinybird-verbinding. Stel de omgevingsvariabelen <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> en <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> in om dit te activeren."
-    },
     "advanced_gate": {
       "requires": "Vereist",
       "upgrade_description": "Upgrade om geavanceerde analyse te ontgrendelen"
@@ -8541,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analytics niet geconfigureerd",
-      "not_configured_desc": "Analytics vereist dat Tinybird geconfigureerd is. Neem contact op met uw beheerder.",
       "common": {
         "loading": "Laden...",
         "no_data": "Nog geen gegevens",
@@ -10554,7 +10546,6 @@
       "joined": "Lid sinds",
       "na": "n.v.t.",
       "no_analytics": "Geen analyses beschikbaar",
-      "ensure_tinybird": "Zorg dat Tinybird-analyses zijn geconfigureerd",
       "period": "Periode:",
       "days_short": "{{count}}d",
       "live_users": "Live gebruikers",
@@ -10715,7 +10706,6 @@
     "analytics": {
       "failed_load": "Laden van analyses mislukt",
       "no_data_available": "Geen analysegegevens beschikbaar",
-      "ensure_tinybird": "Zorg dat Tinybird-analyses zijn geconfigureerd",
       "no_data": "Geen gegevens"
     },
     "ee_error": {

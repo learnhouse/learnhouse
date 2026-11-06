@@ -3058,8 +3058,6 @@
       "episodes": "tập",
       "participants": "người tham gia",
       "loading": "Đang tải...",
-      "enable_analytics_description": "Bật phân tích để xem người dùng trực tuyến, đăng ký và nhiều hơn nữa.",
-      "enable": "Bật",
       "quick_stats": "Thống kê nhanh",
       "full_analytics": "Phân tích đầy đủ",
       "live_now": "Đang trực tuyến",
@@ -8285,10 +8283,6 @@
       "overview": "Tổng quan",
       "advanced": "Nâng cao"
     },
-    "not_configured": {
-      "title": "Chưa cấu hình phân tích",
-      "description": "Phân tích yêu cầu kết nối Tinybird. Đặt các biến môi trường <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> và <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> để bật."
-    },
     "advanced_gate": {
       "requires": "Yêu cầu",
       "upgrade_description": "Nâng cấp để mở khóa phân tích nâng cao"
@@ -8491,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Chưa cấu hình phân tích",
-      "not_configured_desc": "Phân tích yêu cầu cấu hình Tinybird. Vui lòng liên hệ quản trị viên.",
       "common": {
         "loading": "Đang tải...",
         "no_data": "Chưa có dữ liệu",
@@ -10492,7 +10484,6 @@
       "joined": "Ngày tham gia",
       "na": "không có",
       "no_analytics": "Không có dữ liệu phân tích",
-      "ensure_tinybird": "Hãy đảm bảo đã cấu hình phân tích Tinybird",
       "period": "Giai đoạn:",
       "days_short": "{{count}} ngày",
       "live_users": "Người dùng trực tuyến",
@@ -10650,7 +10641,6 @@
     "analytics": {
       "failed_load": "Không thể tải phân tích",
       "no_data_available": "Không có dữ liệu phân tích",
-      "ensure_tinybird": "Hãy đảm bảo đã cấu hình phân tích Tinybird",
       "no_data": "Không có dữ liệu"
     },
     "ee_error": {

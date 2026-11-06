@@ -3058,8 +3058,6 @@
       "episodes": "集数",
       "participants": "参与者",
       "loading": "加载中...",
-      "enable_analytics_description": "启用分析以查看实时用户、注册情况等。",
-      "enable": "启用",
       "quick_stats": "快速统计",
       "full_analytics": "完整分析",
       "live_now": "当前在线",
@@ -8285,10 +8283,6 @@
       "overview": "概览",
       "advanced": "高级"
     },
-    "not_configured": {
-      "title": "分析未配置",
-      "description": "分析功能需要 Tinybird 连接。请设置 <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> 和 <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> 环境变量以启用此功能。"
-    },
     "advanced_gate": {
       "requires": "需要",
       "upgrade_description": "升级以解锁高级分析"
@@ -8491,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "分析未配置",
-      "not_configured_desc": "分析功能需要配置 Tinybird。请联系管理员。",
       "common": {
         "loading": "加载中...",
         "no_data": "暂无数据",
@@ -10492,7 +10484,6 @@
       "joined": "加入时间",
       "na": "不适用",
       "no_analytics": "没有可用的分析数据",
-      "ensure_tinybird": "请确保已配置 Tinybird 分析",
       "period": "时间段：",
       "days_short": "{{count}} 天",
       "live_users": "在线用户",
@@ -10650,7 +10641,6 @@
     "analytics": {
       "failed_load": "加载分析数据失败",
       "no_data_available": "没有可用的分析数据",
-      "ensure_tinybird": "请确保已配置 Tinybird 分析",
       "no_data": "没有数据"
     },
     "ee_error": {

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { PlanLevel } from '@services/plans/plans'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 import dynamic from 'next/dynamic'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 
 // One chunk per tab: only the open tab's code is loaded.
 const OrgEditGeneral = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'))
@@ -18,7 +19,7 @@ const OrgEditLanding = dynamic(() => import('@components/Dashboard/Pages/Org/Org
 const OrgEditOther = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'))
 const OrgEditFeatures = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'))
 const OrgEditAI = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'))
-const OrgEditAnalytics = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditAnalytics/OrgEditAnalytics'))
+const OrgEditAnalytics = dynamic(() => import('@ee/components/Analytics/Settings/OrgEditAnalytics'))
 const OrgEditUsage = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'))
 const OrgEditMenu = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditMenu/OrgEditMenu'))
 const OrgEditCourseEnd = dynamic(() => import('@components/Dashboard/Pages/Org/OrgEditCourseEnd/OrgEditCourseEnd'))
@@ -74,7 +75,8 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
   const params = use(props.params);
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
-  const SETTING_TABS = getSettingTabs(t)
+  // Analytics settings ship with Enterprise Edition; the tab is hidden without it.
+  const SETTING_TABS = getSettingTabs(t).filter((tab) => tab.id !== 'analytics' || isOrgAnalyticsAvailable())
 
   // Redirect legacy developer subpages to the new top-level Developers dashboard.
   const movedTo = MOVED_TO_DEVELOPERS[params.subpage]

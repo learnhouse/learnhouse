@@ -19,7 +19,7 @@ the stored grade.
 
 **Answer keys.** The output includes the teacher's correct answers. The only caller is
 the per-student audit dossier, which is org-admin + Pro gated (``_require_admin`` /
-``_enforce_plan`` in ``src.routers.audit``); ``_strip_answer_key`` in the assignments
+``_enforce_plan`` in ``ee.routers.analytics_audit``); ``_strip_answer_key`` in the assignments
 service guards the *student* read paths and is not applicable here. Two things are
 still withheld because an export gets forwarded by email: the task's reference
 ``solution_code``, and the stdin/expected output of test cases the teacher marked

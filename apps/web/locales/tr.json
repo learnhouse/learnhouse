@@ -3086,8 +3086,6 @@
       "episodes": "bölümler",
       "participants": "katılımcılar",
       "loading": "Yükleniyor...",
-      "enable_analytics_description": "Canlı kullanıcıları, kayıtları ve daha fazlasını görmek için analitiği etkinleştirin.",
-      "enable": "Etkinleştir",
       "quick_stats": "Hızlı İstatistikler",
       "full_analytics": "Tam Analitik",
       "live_now": "Şimdi Canlı",
@@ -8334,10 +8332,6 @@
       "overview": "Genel Bakış",
       "advanced": "Gelişmiş"
     },
-    "not_configured": {
-      "title": "Analitik yapılandırılmadı",
-      "description": "Analitik bir Tinybird bağlantısı gerektirir. Etkinleştirmek için <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> ve <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> ortam değişkenlerini ayarlayın."
-    },
     "advanced_gate": {
       "requires": "Gerektirir",
       "upgrade_description": "Gelişmiş analitikleri açmak için yükseltin"
@@ -8541,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analitik Yapılandırılmadı",
-      "not_configured_desc": "Analitik için Tinybird yapılandırılması gerekir. Lütfen yöneticinize başvurun.",
       "common": {
         "loading": "Yükleniyor...",
         "no_data": "Henüz veri yok",
@@ -10554,7 +10546,6 @@
       "joined": "Katıldı",
       "na": "yok",
       "no_analytics": "Analitik verisi yok",
-      "ensure_tinybird": "Tinybird analitiğinin yapılandırıldığından emin olun",
       "period": "Dönem:",
       "days_short": "{{count}}g",
       "live_users": "Canlı Kullanıcılar",
@@ -10715,7 +10706,6 @@
     "analytics": {
       "failed_load": "Analitik yüklenemedi",
       "no_data_available": "Kullanılabilir analitik verisi yok",
-      "ensure_tinybird": "Tinybird analitiğinin yapılandırıldığından emin olun",
       "no_data": "Veri yok"
     },
     "ee_error": {

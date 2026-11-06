@@ -3086,8 +3086,6 @@
       "episodes": "قسمت‌ها",
       "participants": "شرکت‌کنندگان",
       "loading": "در حال بارگذاری...",
-      "enable_analytics_description": "تحلیل‌ها را فعال کنید تا کاربران آنلاین، ثبت‌نام‌ها و موارد بیشتر را مشاهده کنید.",
-      "enable": "فعال‌سازی",
       "quick_stats": "آمار سریع",
       "full_analytics": "تحلیل کامل",
       "live_now": "در حال حاضر آنلاین",
@@ -8334,10 +8332,6 @@
       "overview": "نمای کلی",
       "advanced": "پیشرفته"
     },
-    "not_configured": {
-      "title": "تحلیل‌ها پیکربندی نشده است",
-      "description": "تحلیل‌ها به اتصال Tinybird نیاز دارد. متغیرهای محیطی <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> و <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> را برای فعال‌سازی آن تنظیم کنید."
-    },
     "advanced_gate": {
       "requires": "نیاز به",
       "upgrade_description": "برای دسترسی به تحلیل‌های پیشرفته ارتقا دهید"
@@ -8541,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "تحلیل‌ها پیکربندی نشده است",
-      "not_configured_desc": "تحلیل‌ها به پیکربندی Tinybird نیاز دارد. لطفاً با مدیر خود تماس بگیرید.",
       "common": {
         "loading": "در حال بارگذاری...",
         "no_data": "هنوز داده‌ای وجود ندارد",
@@ -10554,7 +10546,6 @@
       "joined": "تاریخ عضویت",
       "na": "ندارد",
       "no_analytics": "تحلیلی در دسترس نیست",
-      "ensure_tinybird": "مطمئن شوید تحلیل‌های Tinybird پیکربندی شده است",
       "period": "بازه:",
       "days_short": "{{count}} روز",
       "live_users": "کاربران زنده",
@@ -10715,7 +10706,6 @@
     "analytics": {
       "failed_load": "بارگذاری تحلیل‌ها ناموفق بود",
       "no_data_available": "داده‌ای برای تحلیل در دسترس نیست",
-      "ensure_tinybird": "مطمئن شوید تحلیل‌های Tinybird پیکربندی شده است",
       "no_data": "بدون داده"
     },
     "ee_error": {

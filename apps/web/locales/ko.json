@@ -3058,8 +3058,6 @@
       "episodes": "에피소드",
       "participants": "참가자",
       "loading": "로딩 중...",
-      "enable_analytics_description": "분석을 활성화하여 실시간 사용자, 가입 현황 등을 확인하세요.",
-      "enable": "활성화",
       "quick_stats": "빠른 통계",
       "full_analytics": "전체 분석",
       "live_now": "현재 접속 중",
@@ -8285,10 +8283,6 @@
       "overview": "개요",
       "advanced": "고급"
     },
-    "not_configured": {
-      "title": "분석이 구성되지 않았습니다",
-      "description": "분석 기능을 사용하려면 Tinybird 연결이 필요합니다. 활성화하려면 <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> 및 <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> 환경 변수를 설정하세요."
-    },
     "advanced_gate": {
       "requires": "필요",
       "upgrade_description": "고급 분석을 잠금 해제하려면 업그레이드하세요"
@@ -8491,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "분석 미설정",
-      "not_configured_desc": "분석을 사용하려면 Tinybird 설정이 필요합니다. 관리자에게 문의하세요.",
       "common": {
         "loading": "로딩 중...",
         "no_data": "아직 데이터가 없습니다",
@@ -10492,7 +10484,6 @@
       "joined": "가입일",
       "na": "해당 없음",
       "no_analytics": "사용 가능한 분석 데이터가 없습니다",
-      "ensure_tinybird": "Tinybird 분석이 구성되어 있는지 확인하세요",
       "period": "기간:",
       "days_short": "{{count}}일",
       "live_users": "실시간 사용자",
@@ -10650,7 +10641,6 @@
     "analytics": {
       "failed_load": "분석을 불러오지 못했습니다",
       "no_data_available": "사용 가능한 분석 데이터가 없습니다",
-      "ensure_tinybird": "Tinybird 분석이 구성되어 있는지 확인하세요",
       "no_data": "데이터 없음"
     },
     "ee_error": {

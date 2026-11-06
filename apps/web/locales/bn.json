@@ -3086,8 +3086,6 @@
       "episodes": "পর্বসমূহ",
       "participants": "অংশগ্রহণকারী",
       "loading": "লোড হচ্ছে...",
-      "enable_analytics_description": "লাইভ ব্যবহারকারী, সাইন আপ এবং আরও অনেক কিছু দেখতে বিশ্লেষণ সক্রিয় করুন।",
-      "enable": "সক্রিয় করুন",
       "quick_stats": "দ্রুত পরিসংখ্যান",
       "full_analytics": "সম্পূর্ণ বিশ্লেষণ",
       "live_now": "এখন লাইভ",
@@ -8334,10 +8332,6 @@
       "overview": "সংক্ষিপ্ত বিবরণ",
       "advanced": "উন্নত"
     },
-    "not_configured": {
-      "title": "বিশ্লেষণ কনফিগার করা হয়নি",
-      "description": "বিশ্লেষণের জন্য Tinybird সংযোগ প্রয়োজন। এটি সক্ষম করতে <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> এবং <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> এনভায়রনমেন্ট ভেরিয়েবল সেট করুন।"
-    },
     "advanced_gate": {
       "requires": "প্রয়োজন",
       "upgrade_description": "উন্নত বিশ্লেষণ আনলক করতে আপগ্রেড করুন"
@@ -8541,8 +8535,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "অ্যানালিটিক্স কনফিগার করা হয়নি",
-      "not_configured_desc": "অ্যানালিটিক্সের জন্য Tinybird কনফিগার করা প্রয়োজন। অনুগ্রহ করে আপনার প্রশাসকের সাথে যোগাযোগ করুন।",
       "common": {
         "loading": "লোড হচ্ছে...",
         "no_data": "এখনও কোনো ডেটা নেই",
@@ -10554,7 +10546,6 @@
       "joined": "যোগ দিয়েছেন",
       "na": "প্রযোজ্য নয়",
       "no_analytics": "কোনো অ্যানালিটিক্স উপলব্ধ নেই",
-      "ensure_tinybird": "নিশ্চিত করুন যে Tinybird অ্যানালিটিক্স কনফিগার করা আছে",
       "period": "সময়কাল:",
       "days_short": "{{count}}দি",
       "live_users": "লাইভ ব্যবহারকারী",
@@ -10715,7 +10706,6 @@
     "analytics": {
       "failed_load": "অ্যানালিটিক্স লোড করা যায়নি",
       "no_data_available": "কোনো অ্যানালিটিক্স ডেটা উপলব্ধ নেই",
-      "ensure_tinybird": "নিশ্চিত করুন যে Tinybird অ্যানালিটিক্স কনফিগার করা আছে",
       "no_data": "কোনো ডেটা নেই"
     },
     "ee_error": {

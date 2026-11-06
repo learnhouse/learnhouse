@@ -543,7 +543,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
         else yaml_config.get("mailing_config", {}).get("smtp_use_tls", True)
     )
 
-    # Tinybird config, auto-enabled when API URL is set
+    # Legacy Tinybird credentials: only read by the Enterprise one-time import of old
+    # analytics data. Analytics itself no longer uses Tinybird.
     env_tinybird_api_url = os.environ.get("LEARNHOUSE_TINYBIRD_API_URL")
     env_tinybird_ingest_token = os.environ.get("LEARNHOUSE_TINYBIRD_INGEST_TOKEN")
     env_tinybird_read_token = os.environ.get("LEARNHOUSE_TINYBIRD_READ_TOKEN")

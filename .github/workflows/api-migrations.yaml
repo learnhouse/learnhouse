@@ -67,13 +67,6 @@ jobs:
           uv run python cli.py migrate --strict
           uv run python cli.py migrate --status
 
-      - name: Analytics queries on Postgres
-        # The unit tests mock the analytics query runner (SQLite can't run
-        # this SQL). This seeds a small event history into the fresh schema,
-        # runs every dashboard query and checks known values.
-        working-directory: apps/api
-        run: uv run python scripts/ci_analytics_queries.py
-
       - name: Upgrade from the base branch
         # The path every existing install takes: the previous release's
         # schema, stamped, then this branch's migrations. --strict fails

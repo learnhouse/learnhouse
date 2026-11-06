@@ -30,9 +30,6 @@ export default function GlobalAnalytics({ days = 30 }: { days?: number }) {
         <p className="mt-4 text-lg">
           {error ? t('admin.analytics.failed_load') : t('admin.analytics.no_data_available')}
         </p>
-        <p className="text-sm text-white/25 mt-1">
-          {t('admin.analytics.ensure_tinybird')}
-        </p>
       </div>
     )
   }

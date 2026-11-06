@@ -663,7 +663,6 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
       <div className="flex flex-col items-center justify-center py-20 text-white/40">
         <ChartBar size={48} weight="fill" />
         <p className="mt-4 text-lg">{t('admin.org_detail.no_analytics')}</p>
-        <p className="text-sm text-white/25 mt-1">{t('admin.org_detail.ensure_tinybird')}</p>
       </div>
     )
   }

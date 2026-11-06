@@ -5,7 +5,6 @@ F-15 : password-reset endpoints accept email in body (no more email-in-URL).
 F-17 : cookie-domain validation at boot refuses single-label public parents.
 F-20 : webhook / invite / search rate limiters return a standard 429.
 F-22 : file validator enforces per-type size caps.
-F-24 : analytics course_uuid validator rejects SQL-injection characters.
 """
 
 from unittest.mock import MagicMock, patch
@@ -191,34 +190,3 @@ def test_file_validator_rejects_svg_outright():
     with pytest.raises(HTTPException) as exc:
         validate_upload(f, allowed_types=["image"])
     assert exc.value.status_code == 415
-
-
-# ---------------------------------------------------------------------------
-# F-24: analytics course_uuid validator rejects SQL injection
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    "bad_uuid",
-    [
-        "course'; DROP TABLE events;--",
-        "course_test UNION SELECT * FROM users",
-        "course_test) OR 1=1",
-        "course_test;SELECT",
-        "' OR '1'='1",
-        "x" * 101,  # > 100 chars
-        "course_test with spaces",
-    ],
-)
-def test_analytics_validator_rejects_sql_injection_attempts(bad_uuid):
-    """F-24: course_uuid validator refuses every SQL-meaningful character."""
-    from src.routers.analytics import _validate_course_uuid
-
-    with pytest.raises(HTTPException) as exc:
-        _validate_course_uuid(bad_uuid)
-    assert exc.value.status_code == 400
-
-
-def test_analytics_validator_accepts_legitimate_uuid():
-    from src.routers.analytics import _validate_course_uuid
-
-    assert _validate_course_uuid("course_abc-123") == "course_abc-123"

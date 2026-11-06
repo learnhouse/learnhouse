@@ -3166,8 +3166,6 @@
       "episodes": "epizódy",
       "participants": "účastníci",
       "loading": "Načítava sa...",
-      "enable_analytics_description": "Zapnite analytiku pre zobrazenie aktívnych používateľov, registrácií a ďalšieho.",
-      "enable": "Zapnúť",
       "quick_stats": "Rýchle štatistiky",
       "full_analytics": "Plná analytika",
       "live_now": "Práve online",
@@ -8474,10 +8472,6 @@
       "overview": "Prehľad",
       "advanced": "Pokročilé"
     },
-    "not_configured": {
-      "title": "Analytika nie je nakonfigurovaná",
-      "description": "Analytika vyžaduje pripojenie k Tinybird. Zapnete ju nastavením premenných prostredia <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> a <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code>."
-    },
     "advanced_gate": {
       "requires": "Vyžaduje",
       "upgrade_description": "Navýšte si plán a odomknite pokročilú analytiku"
@@ -8683,8 +8677,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analytika nie je nakonfigurovaná",
-      "not_configured_desc": "Analytika vyžaduje konfiguráciu Tinybird. Kontaktujte administrátora.",
       "common": {
         "loading": "Načítava sa...",
         "no_data": "Zatiaľ žiadne údaje",
@@ -10760,7 +10752,6 @@
       "joined": "Pripojený",
       "na": "n/a",
       "no_analytics": "Analytika nie je dostupná",
-      "ensure_tinybird": "Uistite sa, že je nakonfigurovaná analytika Tinybird",
       "period": "Obdobie:",
       "days_short": "{{count}} d",
       "live_users": "Živí používatelia",
@@ -10927,7 +10918,6 @@
     "analytics": {
       "failed_load": "Analytiku sa nepodarilo načítať",
       "no_data_available": "Nie sú dostupné žiadne údaje analytiky",
-      "ensure_tinybird": "Uistite sa, že je nakonfigurovaná analytika Tinybird",
       "no_data": "Žiadne údaje"
     },
     "ee_error": {

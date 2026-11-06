@@ -3085,8 +3085,6 @@
       "episodes": "episodes",
       "participants": "participants",
       "loading": "Loading...",
-      "enable_analytics_description": "Enable analytics to see live users, signups, and more.",
-      "enable": "Enable",
       "quick_stats": "Quick Stats",
       "full_analytics": "Full Analytics",
       "live_now": "Live Now",
@@ -8596,10 +8594,6 @@
       "overview": "Overview",
       "advanced": "Advanced"
     },
-    "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
-    },
     "advanced_gate": {
       "requires": "Requires",
       "upgrade_description": "Upgrade to unlock advanced analytics"
@@ -8803,8 +8797,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Analytics Not Configured",
-      "not_configured_desc": "Analytics requires Tinybird to be configured. Please contact your administrator.",
       "common": {
         "loading": "Loading...",
         "no_data": "No data yet",
@@ -10859,7 +10851,6 @@
       "joined": "Joined",
       "na": "n/a",
       "no_analytics": "No analytics available",
-      "ensure_tinybird": "Ensure Tinybird analytics is configured",
       "period": "Period:",
       "days_short": "{{count}}d",
       "live_users": "Live Users",
@@ -11020,7 +11011,6 @@
     "analytics": {
       "failed_load": "Failed to load analytics",
       "no_data_available": "No analytics data available",
-      "ensure_tinybird": "Ensure Tinybird analytics is configured",
       "no_data": "No data"
     },
     "ee_error": {

@@ -1112,10 +1112,9 @@ class TestIssueUserToken:
         await db.commit()
         return u
 
-    @patch("src.services.auth.session._is_org_member", new_callable=AsyncMock, return_value=True)
     @patch("src.services.auth.session.track", new_callable=AsyncMock)
     @patch("src.services.admin.admin.create_access_token", return_value="jwt_test_token")
-    async def test_issues_token(self, mock_create, mock_track, _member_check, reader_token, member, db):
+    async def test_issues_token(self, mock_create, mock_track, reader_token, member, db):
         result = await issue_user_token(reader_token, member.id, db)
         mock_track.assert_awaited_once_with(
             event_name="user_logged_in",

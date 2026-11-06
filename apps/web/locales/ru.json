@@ -3166,8 +3166,6 @@
       "episodes": "эпизоды",
       "participants": "участники",
       "loading": "Загрузка...",
-      "enable_analytics_description": "Включите аналитику, чтобы видеть пользователей онлайн, регистрации и многое другое.",
-      "enable": "Включить",
       "quick_stats": "Быстрая статистика",
       "full_analytics": "Полная аналитика",
       "live_now": "Сейчас онлайн",
@@ -8474,10 +8472,6 @@
       "overview": "Обзор",
       "advanced": "Расширенная"
     },
-    "not_configured": {
-      "title": "Аналитика не настроена",
-      "description": "Для аналитики требуется подключение к Tinybird. Чтобы её включить, задайте переменные окружения <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> и <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code>."
-    },
     "advanced_gate": {
       "requires": "Требуется",
       "upgrade_description": "Обновите для доступа к расширенной аналитике"
@@ -8683,8 +8677,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Аналитика не настроена",
-      "not_configured_desc": "Для аналитики требуется настройка Tinybird. Обратитесь к администратору.",
       "common": {
         "loading": "Загрузка...",
         "no_data": "Данных пока нет",
@@ -10760,7 +10752,6 @@
       "joined": "Присоединился",
       "na": "н/д",
       "no_analytics": "Аналитика недоступна",
-      "ensure_tinybird": "Убедитесь, что аналитика Tinybird настроена",
       "period": "Период:",
       "days_short": "{{count}} дн.",
       "live_users": "Пользователи онлайн",
@@ -10927,7 +10918,6 @@
     "analytics": {
       "failed_load": "Не удалось загрузить аналитику",
       "no_data_available": "Данные аналитики недоступны",
-      "ensure_tinybird": "Убедитесь, что аналитика Tinybird настроена",
       "no_data": "Нет данных"
     },
     "ee_error": {
