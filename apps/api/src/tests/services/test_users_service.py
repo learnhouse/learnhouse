@@ -329,7 +329,7 @@ class TestCreateAndUpdateUser:
         ), patch(
             "src.services.users.users.track",
             new_callable=AsyncMock,
-        ), patch(
+        ) as mock_track, patch(
             "src.services.users.users.dispatch_webhooks",
             new_callable=AsyncMock,
         ), patch(
@@ -383,6 +383,12 @@ class TestCreateAndUpdateUser:
 
         assert created.email_verified is True
         assert updated.username == "updateduser"
+        mock_track.assert_any_await(
+            event_name="user_joined_org",
+            org_id=org.id,
+            user_id=created.id,
+            properties={"join_method": "signup"},
+        )
 
     @pytest.mark.asyncio
     async def test_create_user_branch_modes_and_duplicate_guards(

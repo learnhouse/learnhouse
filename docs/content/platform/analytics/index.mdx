@@ -13,37 +13,56 @@ LearnHouse records what learners do (page views, enrollments, completions, submi
 | Deployment | Overview tab | Course analytics | Learner analytics | Advanced tab |
 | --- | --- | --- | --- | --- |
 | LearnHouse Cloud | Standard plan and above | Pro plan and above | Pro plan and above | Enterprise plan |
-| Self-hosted, open source | Yes | Yes | No | No |
+| Self-hosted, open source | No | No | No | No |
 | Self-hosted, Enterprise Edition | Yes | Yes | Yes | Yes |
 
-The dashboards read from Tinybird, so they need a Tinybird connection (see below). Analytics data is only visible to organization admins: users whose role can update the organization (the Admin role by default, or a custom role with that permission).
+Analytics is part of the [Enterprise Edition](/enterprise). Open source instances don't collect or store any analytics. Analytics data is only visible to organization admins: users whose role can update the organization (the Admin role by default, or a custom role with that permission).
 
 ## How it works
 
-Analytics is built on [Tinybird](https://www.tinybird.co/), a hosted ClickHouse service.
+Analytics runs inside the LearnHouse API and stores events in the main PostgreSQL database. Nothing is sent to a third-party analytics service.
 
-1. The web app sends view events (`page_view`, `course_view`, `activity_view`, `search_query`, `time_on_activity`) through the LearnHouse API. Only signed-in members of the organization are tracked, and only these event names are accepted.
-2. The API sends server-side events itself when something happens: `course_enrolled`, `course_completed`, `activity_completed`, `assignment_submitted`, `user_signed_up`, `user_removed_from_org`, `certificate_claimed`, `certificate_revoked`, `discussion_posted` and `nudge_sent`.
-3. Events land in a single `events` data source in Tinybird. The dashboards query it on demand.
+1. The web app sends browsing events (page, course and activity views, searches, podcast plays and more) in small batches to `POST /api/v1/signals/batch`. The path is neutral on purpose, so ad blockers don't drop learners from your numbers. Visitors who aren't signed in are counted for public events only; time spent, video progress and AI assistant use are only recorded for signed-in members. Only known event names and properties are accepted, and bots are ignored.
+2. The API records server-side events itself when something happens: enrollments, completions, assignment and quiz submissions, grading, sign-ups, logins, certificates, discussions, payments, live sessions, messages and more.
+3. A background job in the API refreshes daily summaries every 5 minutes and deletes events past the organization's retention period once a day.
 
-Each event carries the organization, the user and a session ID. The country is taken from the `cf-ipcountry` (Cloudflare) or `x-country-code` proxy header when one is present. Time spent on a lesson is capped at 4 hours per event.
+Each event carries the organization, the user (or an anonymous visitor ID) and a session ID. Time spent on a lesson is capped at 4 hours per event.
 
-Query results are cached in Redis to keep the dashboards fast: 1 minute for overview and course widgets, 5 minutes for advanced widgets, 30 seconds for detail views. The **Live Now** counter is never cached. If Redis is down, queries go straight to Tinybird.
+Query results are cached in Redis to keep the dashboards fast: 1 minute for overview and course widgets, 5 minutes for advanced widgets, 30 seconds for detail views. The **Live Now** counter is never cached. If Redis is down, queries go straight to PostgreSQL.
+
+## Privacy
+
+- **No cookies.** Visitors are not tracked with cookies.
+- **No stored IP addresses.** A visitor who isn't signed in is counted with a hash that changes every day, so the same person can't be followed across days or across organizations. Signed-in users who aren't members of the organization are counted the same way.
+- **Country only.** The country comes from a geo header your CDN or proxy adds (`cf-ipcountry`, `x-vercel-ip-country`, `cloudfront-viewer-country` or `x-country-code`). LearnHouse never looks up IP addresses.
+
+## Settings
+
+Admins can change how their organization's analytics are collected and kept, from the organization settings or through `GET`/`PUT /api/v1/analytics/settings`:
+
+| Setting | What it does |
+| --- | --- |
+| **Retention** | How long events are kept: 90 days, 180 days or 1 year (the default). On the Enterprise plan: 2, 3, 5 or 7 years. Shortening it deletes older data at the next nightly cleanup. |
+| **Anonymous visitors** | Count visitors who aren't signed in. On by default. |
+| **Location** | Record the visitor's country. On by default. |
+| **Exclude staff** | Leave out browsing by people who can manage the organization. Off by default. |
+
+On the Enterprise plan, admins can also download every stored event as CSV with `GET /api/v1/analytics/export/events`.
 
 ## Setting up analytics on a self-hosted instance
 
-Analytics turns on when the API has a Tinybird URL and tokens. Set these on the API service:
+There is nothing to set up beyond the [Enterprise Edition](/enterprise) license: the database migrations create the analytics tables, and the API starts collecting as soon as the license is active. The summary and retention job runs inside the API. Set `LEARNHOUSE_ANALYTICS_MAINTENANCE=false` only if you run that job somewhere else.
 
-| Variable | Purpose |
-| --- | --- |
-| `LEARNHOUSE_TINYBIRD_API_URL` | Your Tinybird workspace's regional API URL, for example `https://api.europe-west2.gcp.tinybird.co`. Setting it enables analytics. |
-| `LEARNHOUSE_TINYBIRD_INGEST_TOKEN` | A token that can append to the `events` data source. |
-| `LEARNHOUSE_TINYBIRD_READ_TOKEN` | A token that can run SQL queries. |
+### Migrating from Tinybird
 
-Then deploy the `events` data source from `apps/api/src/db/tinybird/` with the Tinybird CLI. The README in that folder walks through it. The data source keeps events for 365 days.
+Earlier versions stored analytics in Tinybird. To keep that history (Tinybird kept 365 days), run the import once from `apps/api` on the API host, after the migrations:
 
-<Callout type="info">
-Without these variables the API skips tracking and the dashboard shows **Analytics not configured**. Nothing else in LearnHouse depends on analytics.
-</Callout>
+```bash
+LEARNHOUSE_TINYBIRD_API_URL=https://api.europe-west2.gcp.tinybird.co \
+LEARNHOUSE_TINYBIRD_READ_TOKEN=your-read-token \
+python ee/scripts/import_tinybird_analytics.py [--days 365] [--dry-run]
+```
+
+It works one day at a time and skips days it has already imported, so you can stop it and run it again. Unknown events and properties are dropped and IP addresses are not carried over. Once it finishes, you can remove the Tinybird variables and your Tinybird workspace.
 
 See [Environment Variables](/self-hosting/configuration/environment-variables) for the full list.

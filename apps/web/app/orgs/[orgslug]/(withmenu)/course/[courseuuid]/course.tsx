@@ -392,6 +392,7 @@ const CourseClient = (props: any) => {
               <div className="flex items-center gap-2">
                 <ShareCourseInMessagesButton orgslug={orgslug} courseUuid={`course_${courseuuid}`} />
                 <CourseShare
+                  courseUuid={course.course_uuid}
                   courseName={course.name}
                   courseUrl={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
                 />

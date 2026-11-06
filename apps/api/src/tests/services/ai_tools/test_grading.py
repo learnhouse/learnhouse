@@ -40,7 +40,7 @@ from src.services.ai.tools import (
     make_synthetic_request,
     run_tool,
 )
-from src.services.ai.tools import analytics, assignments, learners, refs
+from src.services.ai.tools import assignments, learners, refs
 
 NOW = str(datetime.now())
 SVC = "src.services.courses.activities.assignments"
@@ -52,7 +52,7 @@ SVC = "src.services.courses.activities.assignments"
 @pytest.fixture
 def registry():
     r = ToolRegistry()
-    r.register_all([*assignments.SPECS, *learners.SPECS, *analytics.SPECS])
+    r.register_all([*assignments.SPECS, *learners.SPECS])
     return r
 
 
@@ -916,66 +916,3 @@ async def test_learner_helpers():
 async def test_token_sees_every_roster(db, org, course):
     ctx = ctx_for(db, org, token(org, courses=ALL))
     assert await learners.can_see_course_learners(ctx, course) is True
-
-
-# ─── analytics ──────────────────────────────────────────────────────────────
-
-
-async def test_analytics_odd_user_ids_and_truncation(registry, db, org, admin_user, regular_user):
-    data = [{"user_id": "abc", "views": 1}, {"user_id": None, "views": 2}, {"user_id": [1], "x": "y" * 400}]
-    data += [{"views": n, "thumbnail_image": "t.png"} for n in range(120)]
-    runner = AsyncMock(return_value={"data": data})
-    with patch.object(analytics, "execute_org_query", new=runner):
-        out = ok(await call(registry, ctx_for(db, org, admin_user), "run_analytics", {"query": "top_courses", "days": 365}))
-    assert out["truncated"] is True and out["row_count"] == 123 and len(out["rows"]) == 100
-    assert out["rows"][0] == {"member": None, "views": 1}
-    assert out["rows"][1]["member"] is None
-    assert out["rows"][2]["member"] is None and len(out["rows"][2]["x"]) <= 280
-    assert "thumbnail_image" not in out["rows"][3] and out["days"] == 365 and "note" not in out
-
-
-async def test_analytics_empty_window_says_so(registry, db, org, admin_user):
-    with patch.object(analytics, "execute_org_query", new=AsyncMock(return_value={})):
-        out = ok(await call(registry, ctx_for(db, org, admin_user), "run_analytics", {"query": "live_users", "days": 1}))
-    assert out["rows"] == [] and out["note"] == "No data for this window yet."
-
-
-@pytest.mark.parametrize("days", [0, -5, 1000, "a week"])
-async def test_analytics_rejects_bad_ranges(registry, db, org, admin_user, days):
-    out = await call(registry, ctx_for(db, org, admin_user), "run_analytics", {"query": "daily_active_users", "days": days})
-    assert out.denied_code == "invalid_args"
-
-
-@pytest.mark.parametrize("query", ["DAILY_ACTIVE_USERS", "course_overview", "", "top_courses; drop table users"])
-async def test_analytics_rejects_unknown_queries(registry, db, org, admin_user, query):
-    out = await call(registry, ctx_for(db, org, admin_user), "run_analytics", {"query": query})
-    assert out.denied_code == "invalid_args"
-
-
-async def test_analytics_course_you_cannot_see(registry, db, org, other_org, admin_user, regular_user, course):
-    db.add(Course(
-        id=50, name="Elsewhere", description="", public=True, published=True, open_to_contributors=False,
-        org_id=other_org.id, course_uuid="course_elsewhere", creation_date=NOW, update_date=NOW,
-    ))
-    await db.commit()
-    runner = AsyncMock(return_value={"data": []})
-    with patch.object(analytics, "execute_course_query", new=runner):
-        out = await call(registry, ctx_for(db, org, admin_user), "run_analytics",
-                         {"query": "course_overview_stats", "course_uuid": "course_elsewhere"})
-        assert out.status == "denied"
-        out = await call(registry, ctx_for(db, org, admin_user), "run_analytics",
-                         {"query": "course_overview_stats", "course_uuid": "course_missing"})
-        assert out.status == "denied"
-    runner.assert_not_awaited()
-    # The real runner refuses a non-admin on a course query too.
-    out = await call(registry, ctx_for(db, org, regular_user), "run_analytics",
-                     {"query": "course_overview_stats", "course_uuid": "course_test"})
-    assert out.denied_code == "http_403"
-
-
-async def test_analytics_other_errors_pass_through(registry, db, org, admin_user, course):
-    boom = AsyncMock(side_effect=HTTPException(status_code=402, detail="Upgrade to Pro"))
-    with patch.object(analytics, "execute_course_query", new=boom):
-        out = await call(registry, ctx_for(db, org, admin_user), "run_analytics",
-                         {"query": "course_overview_stats", "course_uuid": "course_test", "days": 30})
-    assert out.status == "denied" and "Retrying will not help" not in (out.reason or "")

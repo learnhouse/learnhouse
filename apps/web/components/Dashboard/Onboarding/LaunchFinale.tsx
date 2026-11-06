@@ -7,6 +7,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getAbsoluteUriWithOrg, getUriWithOrg } from '@services/config/config'
 import { useOnboarding } from '@components/Hooks/useOnboarding'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 
 const NEXT = [
   { key: 'certificates', icon: Certificate, href: '/dash/courses' },
@@ -91,7 +92,7 @@ export default function LaunchFinale() {
           <h3 className="text-sm font-semibold text-gray-700">{t('onboarding.finale.whats_next')}</h3>
         </div>
         <ul className="px-2 pb-2">
-          {NEXT.map((n) => (
+          {NEXT.filter((n) => n.key !== 'analytics' || isOrgAnalyticsAvailable()).map((n) => (
             <li key={n.key}>
               <Link
                 href={getUriWithOrg(orgSlug, n.href)}

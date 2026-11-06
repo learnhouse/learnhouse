@@ -55,10 +55,12 @@ from src.db.user_activity import UserActivityDay
 from src.db.user_audit_events import UserAuditEvent, UserAuditEventType
 from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, User
+from src.core.ee_hooks import get_ee_user_behavior
 from src.security.auth import resolve_acting_user_id
+from src.security.features_utils import plan_check
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
-from src.security.org_auth import is_org_admin
+from src.security.org_auth import is_org_admin, verify_org_admin, verify_org_membership
 from src.security.rbac import AccessAction, authorization_verify_based_on_roles
 from src.services.ai.tools import refs, results
 from src.services.ai.tools.base import ActionTier, ToolContext, ToolSpec
@@ -937,14 +939,18 @@ async def _assignment_details(
 
 async def _audit_gate(ctx: ToolContext) -> str | None:
     """None when the caller passes the per-student audit gate (the same
-    checks as /audit: org admin of this org, Pro plan), else why not."""
+    checks as the EE /audit routes: org admin of this org, Pro plan), else
+    why not."""
     if _is_token(ctx):
         return "Not available to API tokens (the per-student audit routes refuse them)."
-    from src.routers import audit as audit_router  # noqa: PLC0415 (avoids an import cycle)
-
+    acting_id = resolve_acting_user_id(ctx.user)
     try:
-        await audit_router._require_admin(ctx.user, ctx.org.id, ctx.db_session)
-        await audit_router._enforce_plan(ctx.org.id, ctx.db_session)
+        await verify_org_membership(acting_id, ctx.org.id, ctx.db_session)
+        await verify_org_admin(acting_id, ctx.org.id, ctx.db_session)
+        # Looked up on the module so tests can pin the deployment mode.
+        if plan_check._check_mode_bypass("analytics_advanced") is None:
+            if not plan_meets_requirement(await get_org_plan(ctx.org.id, ctx.db_session), "pro"):
+                return "Student audit & analytics requires a Pro plan or higher."
     except HTTPException as e:
         return str(e.detail)
     return None
@@ -1033,8 +1039,8 @@ async def _timeline(ctx: ToolContext, user_id: int, days: int, course: Course | 
 
 
 async def _engagement(ctx: ToolContext, user_id: int, days: int, course: Course | None) -> dict:
-    """Active days (always recorded) and, when the analytics pipeline is set
-    up, time spent, views and recent searches, as the audit dossier reads them."""
+    """Active days (always recorded) and, when EE analytics is available,
+    time spent, views and recent searches, as the audit dossier reads them."""
     since = date.today() - timedelta(days=days)
     active = (
         await ctx.db_session.execute(
@@ -1051,18 +1057,15 @@ async def _engagement(ctx: ToolContext, user_id: int, days: int, course: Course 
         "last_active_day": max(active).isoformat() if active else None,
     }
 
-    from src.routers import audit as audit_router  # noqa: PLC0415
-
     try:
-        fetch = await audit_router._make_behavior_fetcher(ctx.org.id, user_id, days)
-        behavior = await fetch(user_id, ctx.org.id, days)
+        behavior = await get_ee_user_behavior(user_id, ctx.org.id, days)
     except Exception:
         behavior = {}
     if not behavior:
         out["time_spent"] = None
         out["note"] = (
-            "Time spent, views and searches come from the analytics pipeline, which is not "
-            "set up on this server (or did not answer). Active days are still counted."
+            "Time spent, views and searches come from analytics, which needs the Enterprise "
+            "Edition (or did not answer). Active days are still counted."
         )
         return out
 

@@ -29,6 +29,7 @@ from src.services.courses.activities.access import (
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.ai.rag.queue import index_activity
 from src.services.courses.activities.versioning import create_activity_version
+from src.services.courses.activities.utils import track_activity_created
 from src.services.courses.activities.dynamic_content import (
     conditional_blocks,
     conditional_reach,
@@ -132,6 +133,7 @@ async def create_activity(
     await db_session.refresh(activity)
     index_activity(activity.id)
     notify_ee_course_content_changed(chapter.course_id)
+    await track_activity_created(activity, course, current_user)
 
     return ActivityRead.model_validate(activity)
 

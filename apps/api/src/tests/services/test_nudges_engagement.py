@@ -178,6 +178,6 @@ class TestAnalyticsEvent:
         admin = AdminRow(7, "user_x", "a@b.com", "A", "a", True, None)
         with patch(
             "src.services.analytics.analytics.track",
-            side_effect=RuntimeError("tinybird down"),
+            side_effect=RuntimeError("analytics down"),
         ):
             await _record_sent(get_spec("content.course_draft_d3"), snap(), admin)

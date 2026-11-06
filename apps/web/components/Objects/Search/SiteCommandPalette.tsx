@@ -1,5 +1,5 @@
 'use client'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { Command } from 'cmdk'
@@ -124,6 +124,22 @@ export default function SiteCommandPalette() {
     if (open) track(AnalyticsEvent.CommandPaletteOpened)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
+
+  // Report a search to org analytics once the visitor stops typing and the
+  // results are in, so half-typed words aren't counted as searches.
+  const reportedQuery = useRef('')
+  useEffect(() => {
+    if (!open || !hasQuery || isLoading || isWaiting || reportedQuery.current === trimmed) return
+    const timer = setTimeout(() => {
+      reportedQuery.current = trimmed
+      track(AnalyticsEvent.SearchQuery, {
+        query: trimmed,
+        results_count: total,
+        surface: 'command_palette',
+      })
+    }, 1200)
+    return () => clearTimeout(timer)
+  }, [open, hasQuery, isLoading, isWaiting, trimmed, total, track])
 
   const go = (href: string, resultType: string, index: number) => {
     track(AnalyticsEvent.CommandPaletteResultSelected, {

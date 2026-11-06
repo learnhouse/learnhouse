@@ -106,3 +106,51 @@ def test_held_org_covers_lms_and_custom_domain_sessions():
     finally:
         set_session_provenance(None)
 
+
+
+class TestLoginTracking:
+    """``user_logged_in`` is recorded once per minted session, never for a
+    pending MFA challenge, and only when the session belongs to an org."""
+
+    async def test_track_login_maps_methods_and_skips_orgless(self):
+        from unittest.mock import AsyncMock, patch
+
+        from src.services.auth.session import track_login
+
+        with patch("src.services.auth.session.track", new_callable=AsyncMock) as mock_track:
+            await track_login(5, "password", 9)
+            await track_login(5, "api_token", 9)
+            await track_login(5, None, 9)
+            await track_login(None, None, 9)
+            await track_login(5, "google", None)
+
+        calls = [c.kwargs for c in mock_track.await_args_list]
+        assert calls == [
+            {"event_name": "user_logged_in", "org_id": 9, "user_id": 5, "properties": {"login_method": "password"}},
+            {"event_name": "user_logged_in", "org_id": 9, "user_id": 5, "properties": {"login_method": "token_exchange"}},
+            {"event_name": "user_logged_in", "org_id": 9, "user_id": 5, "properties": {"login_method": "unknown"}},
+        ]
+
+    async def test_issue_session_tracks_only_real_sessions(self):
+        from types import SimpleNamespace
+        from unittest.mock import AsyncMock, patch
+
+        from src.services.auth.session import issue_session_or_challenge
+
+        user = SimpleNamespace(id=3, email="a@b.co")
+        with patch("src.services.auth.session.track", new_callable=AsyncMock) as mock_track, \
+             patch("src.services.auth.session.is_mfa_active", new_callable=AsyncMock, return_value=False):
+            result = await issue_session_or_challenge(None, user, amr="magic_login", org_id=4)
+        assert result.mfa_required is False
+        mock_track.assert_awaited_once_with(
+            event_name="user_logged_in",
+            org_id=4,
+            user_id=3,
+            properties={"login_method": "magic_login"},
+        )
+
+        with patch("src.services.auth.session.track", new_callable=AsyncMock) as mock_track, \
+             patch("src.services.auth.session.is_mfa_active", new_callable=AsyncMock, return_value=True):
+            result = await issue_session_or_challenge(None, user, amr="password", org_id=4)
+        assert result.mfa_required is True
+        mock_track.assert_not_awaited()

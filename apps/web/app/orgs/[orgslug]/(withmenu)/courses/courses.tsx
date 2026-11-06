@@ -126,6 +126,11 @@ function Courses(props: CourseProps) {
         results_count: filteredCourses.length,
         total_courses: allCourses.length,
       })
+      track(AnalyticsEvent.SearchQuery, {
+        query,
+        results_count: filteredCourses.length,
+        surface: 'course_catalog',
+      })
     }, 500)
     return () => clearTimeout(timer)
   }, [searchQuery, filteredCourses.length, allCourses.length, track])

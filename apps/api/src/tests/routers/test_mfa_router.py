@@ -328,8 +328,12 @@ class TestLoginMFA:
         await _enroll(db, user.id, secret)
         token = create_mfa_pending_token(user.email, AUTH_METHOD_PASSWORD, 1)
 
+        from unittest.mock import AsyncMock, patch
+
         c1, c2 = self._patches()
-        with c1, c2:
+        with c1, c2, patch(
+            "src.services.auth.session.track", new_callable=AsyncMock
+        ) as mock_track:
             async with AsyncClient(
                 transport=ASGITransport(app=app), base_url="http://test"
             ) as c:
@@ -341,6 +345,13 @@ class TestLoginMFA:
         body = response.json()
         assert body["tokens"]["access_token"]
         assert body["user"]["email"] == user.email
+        # The login is counted once, when the second factor is accepted.
+        mock_track.assert_awaited_once_with(
+            event_name="user_logged_in",
+            org_id=1,
+            user_id=user.id,
+            properties={"login_method": "password"},
+        )
 
     async def test_backup_code_mints_session(self, app, db, regular_user):
         app.dependency_overrides.pop(get_authenticated_user, None)

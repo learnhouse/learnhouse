@@ -541,11 +541,18 @@ async def test_agent_reply_is_triggered(db, org, admin_user, regular_user):
     default = (await agents_svc.list_agents(org.id, regular_user, db))[0]
     conv = await agents_svc.open_agent_chat(default["agent_uuid"], agents_svc.AgentChatOpen(), regular_user, db)
     trigger = AsyncMock(return_value={"message_uuid": "m"})
-    with patch("src.services.messaging.agents.trigger_agent_reply", trigger):
+    with patch("src.services.messaging.agents.trigger_agent_reply", trigger), \
+         patch("src.services.messaging.messaging.track", new=AsyncMock()) as mock_track:
         out = await agents_svc.send_and_reply(MagicMock(), conv["conversation_uuid"],
                                               svc.MessageCreate(content="What is DNS?"), regular_user, db)
     assert out["message"]["content"] == "What is DNS?"
     assert out["agent_replies"] == [{"message_uuid": "m"}]
+    mock_track.assert_awaited_once_with(
+        event_name="message_sent",
+        org_id=org.id,
+        user_id=regular_user.id,
+        properties={"conversation_uuid": conv["conversation_uuid"], "conversation_kind": "agent"},
+    )
 
 
 async def test_agent_mentions_in_group(db, org, admin_user, regular_user):

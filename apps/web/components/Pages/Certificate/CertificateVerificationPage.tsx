@@ -38,6 +38,12 @@ function CertificateVerificationPage({ certificateUuid }: { certificateUuid: str
     { verification_status: record ? 'valid' : 'invalid' },
     !isLoading && !!org?.id,
   )
+  // The org analytics count of certificate views, which only covers real ones.
+  useTrackView(
+    AnalyticsEvent.CertificateViewed,
+    { certificate_uuid: record?.certificate_user?.user_certification_uuid, source: 'verification' },
+    !!record,
+  )
 
   if (isLoading || !org?.id) return <CertificateShowcaseSkeleton />
   if (!record) {

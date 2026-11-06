@@ -454,13 +454,22 @@ class TestTrailService:
         # constraint. A single step is enough to verify removal deletes it.
         await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
 
-        removed = await remove_course_from_trail(
-            mock_request,
-            admin_user,
-            course.course_uuid,
-            db,
-        )
+        with patch(
+            "src.services.trail.trail.track", new_callable=AsyncMock
+        ) as mock_track:
+            removed = await remove_course_from_trail(
+                mock_request,
+                admin_user,
+                course.course_uuid,
+                db,
+            )
 
+        mock_track.assert_awaited_once_with(
+            event_name="course_left",
+            org_id=course.org_id,
+            user_id=admin_user.id,
+            properties={"course_uuid": course.course_uuid},
+        )
         assert missing_course_exc.value.status_code == 404
         assert missing_trail_exc.value.status_code == 404
         assert removed.runs == []

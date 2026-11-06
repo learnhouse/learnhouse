@@ -14,6 +14,7 @@ import { resourceHref } from '@components/Dashboard/Library/resourceLink'
 import MediaPreview from '@components/Dashboard/Library/MediaPreview'
 import MediaLightbox from '@components/Objects/Media/MediaLightbox'
 import { mediaKind } from '@/lib/media/mediaKind'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import {
   FolderSimple,
   GraduationCap,
@@ -110,12 +111,25 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
   const { t } = useTranslation()
   const org = useOrg() as any
   const [previewOpen, setPreviewOpen] = React.useState(false)
+  const { track } = useLHAnalytics('learner')
   const type = item.resource_type as ResourceType
   const resource = item.resource || {}
+  const trackOpened = () =>
+    track(AnalyticsEvent.LibraryResourceOpened, { resource_uuid: item.resource_uuid, resource_type: type })
 
-  // Courses keep their full rich thumbnail card.
+  // Courses keep their full rich thumbnail card. `contents` keeps the wrapper
+  // out of the grid layout; it only listens for a click on a link that opens
+  // the course (not the card's menu, nor its link into the dashboard).
   if (type === 'courses' && resource?.course_uuid) {
-    return <CourseThumbnail course={resource} orgslug={orgslug} />
+    const onCardClick = (e: React.MouseEvent) => {
+      const link = (e.target as HTMLElement).closest('a')
+      if (link && !link.getAttribute('href')?.includes('/dash/')) trackOpened()
+    }
+    return (
+      <div className="contents" onClickCapture={onCardClick}>
+        <CourseThumbnail course={resource} orgslug={orgslug} />
+      </div>
+    )
   }
 
   const name = resource?.name || resource?.title || t('library.untitled')
@@ -156,7 +170,14 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
   if (type === 'media') {
     return (
       <>
-        <button type="button" onClick={() => setPreviewOpen(true)} className={`${BIG} text-start`}>
+        <button
+          type="button"
+          onClick={() => {
+            trackOpened()
+            setPreviewOpen(true)
+          }}
+          className={`${BIG} text-start`}
+        >
           {body}
         </button>
         <MediaLightbox
@@ -168,6 +189,6 @@ export function LibraryItemCard({ item, orgslug }: { item: any; orgslug: string 
       </>
     )
   }
-  if (href) return <Link data-kbd-item="" href={href} className={BIG}>{body}</Link>
+  if (href) return <Link data-kbd-item="" href={href} onClick={trackOpened} className={BIG}>{body}</Link>
   return <div className={BIG}>{body}</div>
 }

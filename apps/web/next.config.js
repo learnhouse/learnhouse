@@ -51,18 +51,21 @@ const turbopackRoot =
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
   // Required by PostHog's reverse-proxy rewrites below so the trailing-slash
-  // handling on /ingest/* doesn't 308-redirect ingestion requests.
+  // handling on /lhrel/* doesn't 308-redirect ingestion requests.
   skipTrailingSlashRedirect: true,
   async rewrites() {
     return [
       // PostHog reverse proxy (EU cloud), served same-origin so adblockers
-      // don't strip ingestion. The client SDK points at api_host: '/ingest'.
+      // don't strip ingestion. The client SDK points at api_host: '/lhrel'.
+      // Not PostHog's suggested '/ingest': uBlock Origin and AdGuard lists
+      // block '/ingest/*ip=' (the SDK adds ip= to its requests), so that path
+      // lost every visitor running them. '/lhrel' matches no filter list.
       {
-        source: '/ingest/static/:path*',
+        source: '/lhrel/static/:path*',
         destination: 'https://eu-assets.i.posthog.com/static/:path*',
       },
       {
-        source: '/ingest/:path*',
+        source: '/lhrel/:path*',
         destination: 'https://eu.i.posthog.com/:path*',
       },
     ]
@@ -89,7 +92,7 @@ const nextConfig = {
       // a day plus background revalidation, never immutable. api/, _next/ and
       // the relays are excluded: media proxied through /api is not ours to cache.
       {
-        source: '/:path((?!api/|_next/|ingest/|monitoring).*\\.(?:png|svg|ico|jpg|jpeg|webp))',
+        source: '/:path((?!api/|_next/|lhrel/|monitoring).*\\.(?:png|svg|ico|jpg|jpeg|webp))',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
         ],

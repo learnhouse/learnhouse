@@ -126,7 +126,7 @@ export const ENDPOINTS: EndpointDoc[] = [
     method: 'GET',
     pathTemplate: 'ee/superadmin/organizations/{org_id}/analytics',
     title: 'Get org analytics',
-    description: 'Core Tinybird analytics for a single organization over the last N days.',
+    description: 'Core analytics for a single organization over the last N days.',
     pathParams: [{ name: 'org_id', type: 'integer', required: true, picker: 'org_id' }],
   },
 

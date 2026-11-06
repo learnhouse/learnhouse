@@ -38,6 +38,8 @@ from src.security.api_token_utils import require_token_right
 from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import is_org_member, require_org_role_permission
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 logger = logging.getLogger(__name__)
 
@@ -697,6 +699,12 @@ async def enroll_in_path(
             await db_session.rollback()
             await db_session.refresh(path)
         else:
+            await track(
+                event_name=analytics_events.PATH_ENROLLED,
+                org_id=path.org_id,
+                user_id=user_id,
+                properties={"path_uuid": path.path_uuid},
+            )
             try:
                 await dispatch_webhooks(
                     event_name="path_enrolled",
@@ -893,6 +901,12 @@ async def check_path_completion(
             ).scalars().first()
             certificate_uuid = raced.certificate_uuid if raced and not raced.revoked_at else ""
 
+    await track(
+        event_name=analytics_events.PATH_COMPLETED,
+        org_id=path.org_id,
+        user_id=user_id,
+        properties={"path_uuid": path.path_uuid},
+    )
     try:
         await dispatch_webhooks(
             event_name="path_completed",

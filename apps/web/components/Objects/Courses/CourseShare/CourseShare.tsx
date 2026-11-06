@@ -13,11 +13,12 @@ import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 
 interface CourseShareProps {
+  courseUuid?: string
   courseName: string
   courseUrl: string
 }
 
-function CourseShare({ courseName, courseUrl }: CourseShareProps) {
+function CourseShare({ courseUuid, courseName, courseUrl }: CourseShareProps) {
   const { t } = useTranslation()
   const { track } = useLHAnalytics('learner')
   const [isOpen, setIsOpen] = useState(false)
@@ -77,7 +78,12 @@ function CourseShare({ courseName, courseUrl }: CourseShareProps) {
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(absoluteCourseUrl)
-      track(AnalyticsEvent.CourseShared, { network: 'copy_link', source: 'course_page' })
+      track(AnalyticsEvent.CourseShared, {
+        course_uuid: courseUuid,
+        channel: 'copy_link',
+        network: 'copy_link',
+        source: 'course_page',
+      })
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
@@ -134,7 +140,12 @@ function CourseShare({ courseName, courseUrl }: CourseShareProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => {
-                  track(AnalyticsEvent.CourseShared, { network: link.name, source: 'course_page' })
+                  track(AnalyticsEvent.CourseShared, {
+                    course_uuid: courseUuid,
+                    channel: link.name.toLowerCase(),
+                    network: link.name,
+                    source: 'course_page',
+                  })
                   setIsOpen(false)
                 }}
                 className={`flex items-center gap-2.5 px-3 py-2 text-sm text-neutral-600 transition-all duration-200 ${link.color}`}

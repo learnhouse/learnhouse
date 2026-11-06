@@ -521,11 +521,12 @@ class TestWipeOrgContent:
 # leave_org (self-service member departure)
 class TestLeaveOrg:
     @pytest.mark.asyncio
+    @patch("src.services.orgs.users.track", new_callable=AsyncMock)
     @patch("src.services.orgs.users.dispatch_webhooks", new_callable=AsyncMock)
     @patch("src.services.orgs.users.decrease_feature_usage", new_callable=AsyncMock)
     @patch("src.routers.users._invalidate_session_cache")
     async def test_leave_org_success(
-        self, mock_inv, mock_dec, mock_wh, mock_request, db, org, admin_user, regular_user
+        self, mock_inv, mock_dec, mock_wh, mock_track, mock_request, db, org, admin_user, regular_user
     ):
         # regular_user (non-admin member) leaves; admin_user remains as the admin.
         result = await leave_org(mock_request, org.id, db, regular_user)
@@ -544,6 +545,11 @@ class TestLeaveOrg:
         mock_inv.assert_called_once_with(regular_user.id)
         mock_dec.assert_awaited_once()
         mock_wh.assert_awaited_once()
+        mock_track.assert_awaited_once_with(
+            event_name="user_removed_from_org",
+            org_id=org.id,
+            user_id=regular_user.id,
+        )
 
     @pytest.mark.asyncio
     async def test_leave_org_last_admin_blocked(self, mock_request, db, org, admin_user):

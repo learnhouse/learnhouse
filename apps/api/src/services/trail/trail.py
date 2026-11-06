@@ -622,6 +622,15 @@ async def remove_course_from_trail(
     await db_session.commit()
     notify_ee_learner_progress(user.id, course.id)
 
+    # Only a real enrollment that was removed counts as leaving the course.
+    if trail_run:
+        await track(
+            event_name=analytics_events.COURSE_LEFT,
+            org_id=course.org_id,
+            user_id=user.id,
+            properties={"course_uuid": course.course_uuid},
+        )
+
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
     trail_runs_raw = (await db_session.execute(statement)).scalars().all()
 

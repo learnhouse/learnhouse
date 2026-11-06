@@ -20,6 +20,7 @@ import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { queryKeys } from '@/lib/query/keys'
 import { usePath } from '@/hooks/queries/usePaths'
 import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+import { useTrackView, AnalyticsEvent } from '@services/analytics'
 
 // Same box the course page uses for its sidebar and lesson list.
 const BOX = 'bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden'
@@ -56,6 +57,8 @@ function PathView({ path, orgslug }: { path: Path; orgslug: string }) {
   const learnerName = signedIn
     ? [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username
     : undefined
+
+  useTrackView(AnalyticsEvent.PathViewed, { path_uuid: path.path_uuid }, true, 'learner')
 
   const progress = path.progress
   const enrolled = !!progress?.enrolled

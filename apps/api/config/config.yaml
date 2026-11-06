@@ -108,7 +108,7 @@ ai_config:
   tts_model: ""         # AI audio / podcast generation  (default: gemini-2.5-flash-preview-tts)
 
 tinybird_config:
-  # Set api_url to enable analytics automatically
+  # Legacy: only read by the Enterprise one-time import of old Tinybird analytics data
   api_url: ""
   ingest_token: ""
   read_token: ""

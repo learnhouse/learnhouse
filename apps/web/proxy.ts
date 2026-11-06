@@ -280,14 +280,15 @@ export const config = {
      * 5. /examples (inside /public)
      * 6. all root files inside /public (e.g. /favicon.ico)
      * 7. /embed (activity embeds)
-     * 8. /ingest (PostHog reverse proxy; must reach the next.config rewrite
-     *    untouched; otherwise the middleware mis-routes it and ingestion 404s)
+     * 8. /lhrel (PostHog reverse proxy; must reach the next.config rewrite
+     *    untouched; otherwise the middleware mis-routes it and ingestion 404s.
+     *    Named neutrally because filter lists target PostHog's usual /ingest)
      *
-     * /ingest and /monitoring are matched again below on their own, only so
+     * /lhrel and /monitoring are matched again below on their own, only so
      * the credentials can be stripped before the rewrite forwards them.
      */
-    '/((?!api|_next|fonts|umami|ingest|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
-    '/ingest/:path*',
+    '/((?!api|_next|fonts|umami|lhrel|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
+    '/lhrel/:path*',
     '/monitoring/:path*',
     '/sitemap.xml',
     '/robots.txt',

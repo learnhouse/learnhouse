@@ -3058,8 +3058,6 @@
       "episodes": "集数",
       "participants": "参与者",
       "loading": "加载中...",
-      "enable_analytics_description": "启用分析以查看实时用户、注册情况等。",
-      "enable": "启用",
       "quick_stats": "快速统计",
       "full_analytics": "完整分析",
       "live_now": "当前在线",
@@ -4027,7 +4025,8 @@
           "automations": "自动化",
           "menu": "菜单",
           "danger": "危险区域",
-          "course_end": "课程完成"
+          "course_end": "课程完成",
+          "analytics": "分析"
         },
         "pages": {
           "general": {
@@ -4084,6 +4083,10 @@
           "course_end": {
             "title": "课程完成",
             "subtitle": "自定义学习者完成课程时看到的页面"
+          },
+          "analytics": {
+            "title": "分析",
+            "subtitle": "选择分析数据的保留时长以及收集哪些内容"
           }
         },
         "name": "组织名称",
@@ -5471,6 +5474,48 @@
         "button_link_help": "内部路径（如 /courses）或完整的 https:// URL。留空则链接到您的课程目录。",
         "link_invalid": "请使用以 / 开头的内部路径或完整的 http(s) URL",
         "preview": "预览"
+      },
+      "analytics_settings": {
+        "title": "分析数据",
+        "subtitle": "组织分析数据的保留与隐私",
+        "save": "保存",
+        "saving": "正在保存...",
+        "saved": "分析设置已保存",
+        "error": "无法保存分析设置",
+        "load_error": "无法加载分析设置",
+        "admin_only": "只有组织管理员可以更改分析设置。",
+        "retention_title": "数据保留",
+        "retention_description": "分析事件在删除前保留的时长。",
+        "retention_note": "缩短保留期后，较旧的数据会在下一次夜间清理时删除。",
+        "retention_default": "{{label}}（默认）",
+        "retention_options": {
+          "days_90": "90 天",
+          "days_180": "6 个月",
+          "days_365": "1 年",
+          "days_730": "2 年",
+          "days_1095": "3 年",
+          "days_1825": "5 年",
+          "days_2555": "7 年",
+          "days_n": "{{count}} 天"
+        },
+        "extended_locked": "保留数据超过一年需要 Enterprise 套餐。",
+        "privacy_title": "隐私",
+        "track_anonymous": "统计未登录的访客",
+        "track_anonymous_description": "包括没有账户的人对页面和课程的浏览。统计时不使用 Cookie，而是使用每天更换的匿名 ID。",
+        "collect_location": "保存访客所在国家",
+        "collect_location_description": "记录访问来自哪个国家。从不保存 IP 地址。",
+        "exclude_staff": "不将管理员和维护者计入统计",
+        "exclude_staff_description": "管理组织的人的浏览不计入统计，这样你自己的测试不会影响数据。",
+        "export_title": "下载原始事件（CSV）",
+        "export_description": "所选时间段内存储的所有分析事件，每个事件一行。",
+        "export_period": "导出时间段",
+        "export_last_days": "最近 {{count}} 天",
+        "export_all": "所有已保留的数据",
+        "export_button": "下载 CSV",
+        "exporting": "正在准备下载...",
+        "export_done": "下载已开始",
+        "export_error": "无法导出分析事件",
+        "export_locked": "导出原始事件需要 Enterprise 套餐。"
       }
     },
     "users": {
@@ -8162,15 +8207,81 @@
     "unsaved_changes_warning": "您有未保存的更改。要不保存就离开吗？"
   },
   "analytics": {
+    "features": {
+      "tab": "功能",
+      "adoption_title": "功能使用情况",
+      "adoption_subtitle": "使用各功能的人数(与上一周期对比)。点击某项可在图表中查看。",
+      "events_count": "{{value}} 个事件",
+      "names": {
+        "learning": "学习",
+        "assessments": "评估",
+        "community": "社区",
+        "ai": "AI 助手",
+        "podcasts": "播客",
+        "boards": "白板",
+        "playgrounds": "实验场",
+        "paths": "学习路径",
+        "search": "搜索",
+        "messaging": "消息",
+        "library": "资料库",
+        "certificates": "证书"
+      },
+      "video_title": "视频参与度",
+      "video_subtitle": "观众观看每个视频的进度",
+      "finished": "已看完",
+      "podcast_title": "播客收听",
+      "podcast_subtitle": "每集播放次数及听到结尾的人数",
+      "assessments_title": "评估",
+      "assessments_subtitle": "提交数、通过率和平均分",
+      "assignment": "作业",
+      "quiz": "测验",
+      "code": "代码练习",
+      "submissions": "提交",
+      "pass_rate": "通过率",
+      "avg_score": "平均分",
+      "passed": "已通过",
+      "community_title": "社区活动",
+      "community_subtitle": "每日讨论、评论、回应和点赞",
+      "discussions": "讨论",
+      "comments": "评论",
+      "reactions": "回应",
+      "upvotes": "点赞",
+      "peak_contributors": "每天最多 {{value}} 位贡献者",
+      "top_communities": "热门社区",
+      "ai_title": "AI 助手",
+      "ai_subtitle": "已发送的消息和使用助手的人数",
+      "messages": "消息",
+      "users": "用户",
+      "by_surface": "使用位置",
+      "acquisition_title": "注册与登录",
+      "acquisition_subtitle": "用户如何注册、加入和登录",
+      "signup": "注册",
+      "join": "加入",
+      "login": "登录",
+      "invite": "邀请",
+      "nudges_title": "邮件提醒",
+      "nudges_subtitle": "收到提醒后 7 天内回访的人",
+      "sent": "已发送",
+      "returned": "已回访",
+      "return_rate": "回访率",
+      "paths_title": "学习路径",
+      "boards_title": "白板和实验场",
+      "library_title": "资料库",
+      "creation_title": "内容创作",
+      "creation_subtitle": "团队在此周期内创建的内容",
+      "courses_created": "已创建课程",
+      "courses_published": "已发布课程",
+      "activities_created": "活动",
+      "boards_created": "白板",
+      "playgrounds_created": "实验场",
+      "episodes_published": "剧集"
+    },
+    "data_kept": "数据保留 {{period}}",
     "title": "分析",
     "subtitle": "关于学习者和内容的洞察",
     "tabs": {
       "overview": "概览",
       "advanced": "高级"
-    },
-    "not_configured": {
-      "title": "分析未配置",
-      "description": "分析功能需要 Tinybird 连接。请设置 <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> 和 <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> 环境变量以启用此功能。"
     },
     "advanced_gate": {
       "requires": "需要",
@@ -8231,7 +8342,12 @@
       "courses": "课程",
       "count": "数量",
       "active_users_last_5_minutes": "过去 5 分钟内的活跃用户",
-      "course_fallback_name": "课程 {{uuid}}"
+      "course_fallback_name": "课程 {{uuid}}",
+      "visitors": "访客",
+      "signed_in_learners": "已登录学员",
+      "traffic": "流量",
+      "page_views_count": "{{value}} 次页面浏览",
+      "vs_previous_period": "与上一周期相比"
     },
     "modals": {
       "live_users": {
@@ -8369,8 +8485,6 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "分析未配置",
-      "not_configured_desc": "分析功能需要配置 Tinybird。请联系管理员。",
       "common": {
         "loading": "加载中...",
         "no_data": "暂无数据",
@@ -10370,7 +10484,6 @@
       "joined": "加入时间",
       "na": "不适用",
       "no_analytics": "没有可用的分析数据",
-      "ensure_tinybird": "请确保已配置 Tinybird 分析",
       "period": "时间段：",
       "days_short": "{{count}} 天",
       "live_users": "在线用户",
@@ -10528,7 +10641,6 @@
     "analytics": {
       "failed_load": "加载分析数据失败",
       "no_data_available": "没有可用的分析数据",
-      "ensure_tinybird": "请确保已配置 Tinybird 分析",
       "no_data": "没有数据"
     },
     "ee_error": {

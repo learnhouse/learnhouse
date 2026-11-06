@@ -56,6 +56,7 @@ const CommunityClient = ({
   )
 
   useTrackView(AnalyticsEvent.CommunityViewed, {
+    community_uuid: community.community_uuid,
     is_public: community.public,
     initial_discussion_count: initialDiscussions.length,
   })

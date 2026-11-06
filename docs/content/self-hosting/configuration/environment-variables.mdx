@@ -178,16 +178,13 @@ These jobs run inside the API process. Most of them need Redis.
 | `LEARNHOUSE_DEMO_REFRESH_MINUTES` | Minutes between demo resets. | integer | `10` | API |
 | `LEARNHOUSE_DEMO_NO_SCHEDULER` | Turn off the built-in reset schedule, for example to run the API's `demo-sync` command from your own cron. | boolean | `false` | API |
 
-## Code execution and analytics
+## Code execution
 
 | Variable | Description | Type | Default / required | Used by |
 | --- | --- | --- | --- | --- |
 | `LEARNHOUSE_JUDGE0_API_URL` | Judge0 API URL. Setting it enables code execution routes. | URL | unset | API |
 | `LEARNHOUSE_JUDGE0_CLIENT_ID` | Optional Judge0 client ID. | string | unset | API |
 | `LEARNHOUSE_JUDGE0_CLIENT_SECRET` | Optional Judge0 client secret. | secret string | unset | API |
-| `LEARNHOUSE_TINYBIRD_API_URL` | Tinybird regional API URL. Setting it enables analytics config. | URL | unset | API |
-| `LEARNHOUSE_TINYBIRD_INGEST_TOKEN` | Tinybird token with ingest/write permissions. | secret string | unset; required for event ingestion | API |
-| `LEARNHOUSE_TINYBIRD_READ_TOKEN` | Tinybird token with read/query permissions. | secret string | unset; required for analytics reads | API |
 
 ## Observability
 
@@ -260,6 +257,16 @@ See [Live Sessions](/enterprise/live-sessions).
 | `LEARNHOUSE_LIVE_GOOGLE_CLIENT_ID` / `_SECRET` | Platform Google OAuth app for live sessions. Unset: org admins can use their own app. | string / secret | unset | EE backend |
 | `LEARNHOUSE_LIVE_ZOOM_CLIENT_ID` / `_SECRET` | Platform Zoom OAuth app for live sessions. | string / secret | unset | EE backend |
 | `LEARNHOUSE_LIVE_OAUTH_REDIRECT_URI` | Exact OAuth callback URL for live session providers. | URL | `<API>/api/v1/live_sessions/oauth/callback` | EE backend |
+
+### Analytics
+
+See [Analytics](/platform/analytics). Analytics is stored in PostgreSQL and needs no extra service.
+
+| Variable | Description | Type | Default / required | Used by |
+| --- | --- | --- | --- | --- |
+| `LEARNHOUSE_ANALYTICS_MAINTENANCE` | Run the analytics summary and retention job inside the API. Set to `false` only if another process runs it. | boolean | `true` | EE backend |
+| `LEARNHOUSE_TINYBIRD_API_URL` | Legacy. Only read by the one-time [Tinybird import](/platform/analytics#migrating-from-tinybird). | URL | unset | EE import script |
+| `LEARNHOUSE_TINYBIRD_READ_TOKEN` | Legacy. Tinybird read token for the same import. | secret string | unset | EE import script |
 
 ## LearnHouse Cloud only
 
