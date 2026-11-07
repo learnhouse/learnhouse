@@ -19,6 +19,7 @@ const DAYJS_LOCALES: Record<string, () => Promise<unknown>> = {
   bn: () => import('dayjs/locale/bn'),
   de: () => import('dayjs/locale/de'),
   es: () => import('dayjs/locale/es'),
+  ca: () => import('dayjs/locale/ca'),
   fa: () => import('dayjs/locale/fa'),
   fr: () => import('dayjs/locale/fr'),
   hi: () => import('dayjs/locale/hi'),
