@@ -8,6 +8,10 @@ import { embedMessage, isHostMessage, type EmbedEventType } from '@/lib/embed/pr
  * ready, its content height (so public/embed.js can size the iframe), when the
  * learner reaches the end, media playback and link clicks. Does nothing when
  * the page isn't framed.
+ *
+ * Any site can frame an embed, and messages go to '*', so they carry no
+ * content: no media URLs, no link targets, nothing a signed-in visitor sees
+ * that the framing site couldn't.
  */
 const SETTLE_MS = 800
 
@@ -87,7 +91,6 @@ export function useEmbedBridge({
       post('media', {
         action,
         media: el instanceof HTMLVideoElement ? 'video' : 'audio',
-        src: el.currentSrc,
         currentTime: el.currentTime,
         duration: Number.isFinite(el.duration) ? el.duration : null,
       })
@@ -99,7 +102,7 @@ export function useEmbedBridge({
     const onClick = (event: MouseEvent) => {
       const link = (event.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null
       if (!link) return
-      post('link_click', { href: link.href, external: link.origin !== window.location.origin })
+      post('link_click', { external: link.origin !== window.location.origin })
     }
     document.addEventListener('click', onClick, true)
 
@@ -115,10 +118,14 @@ export function useEmbedBridge({
   }, [ready, activityId, containerRef, endRef])
 }
 
-/** Tells the host the activity can't be shown here (missing, unpublished, or not embeddable). */
-export function useEmbedUnavailable(activityId: string, unavailable: boolean, reason: string) {
+/**
+ * Tells the host the activity can't be shown here. One signal for missing,
+ * unpublished and non-embeddable activities, so a framing page can't probe
+ * which unpublished activities exist.
+ */
+export function useEmbedUnavailable(activityId: string, unavailable: boolean) {
   useEffect(() => {
     if (!unavailable || typeof window === 'undefined' || window.parent === window) return
-    window.parent.postMessage(embedMessage('unavailable', activityId, { reason }), '*')
-  }, [activityId, unavailable, reason])
+    window.parent.postMessage(embedMessage('unavailable', activityId), '*')
+  }, [activityId, unavailable])
 }

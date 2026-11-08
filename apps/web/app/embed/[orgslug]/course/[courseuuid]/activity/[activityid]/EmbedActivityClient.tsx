@@ -106,15 +106,15 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug }: EmbedActivityC
   )
   useEmbedBridge({ activityId, ready, containerRef, endRef })
 
-  const missing = !isLoading && (!activity || activity.detail === 'Not Found' || !course || course.detail === 'Not Found')
-  const unavailableReason = missing
-    ? 'not_found'
-    : !isLoading && activity && !activity.published
-      ? 'unpublished'
-      : !isLoading && activity && !RENDERABLE_ACTIVITY_TYPES.includes(activity.activity_type)
-        ? 'not_embeddable'
-        : null
-  useEmbedUnavailable(activityId, unavailableReason !== null, unavailableReason ?? '')
+  const unavailable =
+    !isLoading &&
+    (!activity ||
+      activity.detail === 'Not Found' ||
+      !course ||
+      course.detail === 'Not Found' ||
+      !activity.published ||
+      !RENDERABLE_ACTIVITY_TYPES.includes(activity.activity_type))
+  useEmbedUnavailable(activityId, unavailable)
 
   const getActivityUrl = () => {
     const cleanCourseUuid = (course?.course_uuid ?? courseuuid).replace('course_', '')
