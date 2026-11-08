@@ -20,6 +20,7 @@ export interface LearnHouseErrorInit {
   body?: unknown
   cause?: unknown
   message?: string
+  retryAfterMs?: number
 }
 
 /**
@@ -40,6 +41,8 @@ export class LearnHouseError extends Error {
   /** The parsed response body, when there was one. */
   readonly body: unknown
   readonly cause: unknown
+  /** The server's `Retry-After` (or `detail.retry_after`) in ms, when it sent one. */
+  readonly retryAfterMs?: number
 
   constructor(init: LearnHouseErrorInit) {
     super(init.message ?? messageFromDetail(init.detail, init.status))
@@ -54,6 +57,7 @@ export class LearnHouseError extends Error {
     this.url = init.url
     this.body = init.body
     this.cause = init.cause
+    if (init.retryAfterMs !== undefined) this.retryAfterMs = init.retryAfterMs
   }
 }
 

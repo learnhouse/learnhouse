@@ -97,11 +97,64 @@ The package's `react-native` field points at the ESM build. It avoids
 | `mediaUrl` | `baseUrl` | Origin serving `content/...` files, if different |
 | `headers` | | Sent with every request |
 | `timeoutMs` | `30000` | Per attempt, including the response body. `0` disables |
-| `retry` | `2` | GET only, on network errors, timeouts and 5xx, with backoff. `false` disables |
+| `retry` | `2` | GET/HEAD on network errors, timeouts and 5xx, and any method on 429, with backoff. `false` disables |
 | `fetch` | global `fetch` | Custom implementation |
 | `onRequest` / `onResponse` | | Hooks; `onRequest` may edit `ctx.init.headers` |
 
 Every call also takes `signal`, `headers`, `timeoutMs` and `retry`.
+
+## Rate limits
+
+A `429` or `503` with a `Retry-After` header (seconds or an HTTP date) is retried
+after exactly that delay, as long as it fits in the retry policy's `maxDelayMs`
+(default 5000). A longer wait is not retried early: the error is thrown with
+`err.retryAfterMs` set so you can schedule the next try.
+
+## Pagination
+
+```ts
+for await (const course of lh.courses.listAll('your-school')) {
+  console.log(course.name)
+}
+
+for await (const page of lh.search.orgPages('your-school', 'payouts')) {
+  console.log(page.courses.length)
+}
+```
+
+Both stop after the first short page and never request past the end. For any
+other page/limit endpoint, `paginate(({ page, pageSize, signal }) => ..., { pageSize })`
+does the same.
+
+## Rendering an activity
+
+`activities.resolve` loads an activity by id (with or without the `activity_`
+prefix) or by name inside a course, the way `@learnhouse/react` does. Fetch on
+your server and pass the result to the component, so the browser needs no CORS
+setup and never sees your token:
+
+```tsx
+const activity = await lh.activities.resolve({ courseId: 'course_...', activityName: 'How payouts work' })
+return <LearnHouseActivity activity={activity} courseId="course_..." baseUrl={LEARNHOUSE_URL} />
+```
+
+## Webhooks
+
+```ts
+import { parseWebhook } from '@learnhouse/sdk'
+
+const { event, deliveryId, data } = await parseWebhook({
+  payload: await req.text(), // the raw body, not req.json()
+  headers: req.headers,
+  secret: process.env.LEARNHOUSE_WEBHOOK_SECRET!,
+})
+```
+
+It checks the `X-Webhook-Signature` HMAC with Web Crypto and throws a
+`LearnHouseError` (`INVALID_SIGNATURE`, status 401, or `INVALID_PAYLOAD`, status
+400) when it fails. `verifyWebhookSignature({ payload, signature, secret })`
+returns a boolean instead. The signature carries no timestamp of its own, so
+store each `deliveryId` and ignore repeats; retries reuse it.
 
 ## Development
 

@@ -21,11 +21,24 @@ export type {
   UntypedRequestOptions,
 } from './core/types'
 
+export { paginate } from './core/paginate'
+export type { PageContext, PaginateOptions } from './core/paginate'
+
+export { parseWebhook, verifyWebhookSignature } from './webhooks'
+export type {
+  ParseWebhookInput,
+  VerifyWebhookSignatureInput,
+  WebhookEvent,
+  WebhookHeaders,
+  WebhookPayload,
+} from './webhooks'
+
 export { bindMedia, media } from './media'
 export type { MediaConfig, MediaHelpers, StandaloneMediaHelpers } from './media'
 
-export type { ListCoursesOptions, CourseMetaOptions } from './resources/courses'
-export type { SearchOptions } from './resources/search'
+export type { ListCoursesOptions, ListAllCoursesOptions, CourseMetaOptions } from './resources/courses'
+export type { ActivityRef, ResolveActivityOptions } from './resources/activities'
+export type { SearchOptions, SearchPagesOptions } from './resources/search'
 export type { LoginInput, RefreshOptions } from './resources/auth'
 
 export type {

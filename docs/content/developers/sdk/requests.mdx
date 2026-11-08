@@ -1,6 +1,6 @@
 ---
 title: SDK Typed Requests & Errors
-description: Call any LearnHouse API endpoint with full types, handle errors, and control timeouts, retries, cancellation and request hooks in @learnhouse/sdk.
+description: Call any LearnHouse API endpoint with full types, handle errors, and control timeouts, retries, rate limits, pagination, cancellation and hooks in @learnhouse/sdk.
 ---
 
 import { Callout } from '@/components/mdx'
@@ -77,6 +77,7 @@ try {
 | `detail` | The API's `detail`: a message, an object, or a list of validation errors |
 | `method`, `path`, `url` | The request that failed |
 | `body`, `cause` | The raw error body, and the underlying error for network failures |
+| `retryAfterMs` | How long the API asked you to wait, when it sent `Retry-After` (on `429` and `503`) |
 
 `isLearnHouseError` also recognises errors from another copy of the SDK (two bundles on one page).
 
@@ -86,7 +87,7 @@ try {
 const lh = createClient({
   baseUrl,
   timeoutMs: 15_000, // per attempt, body included. 0 turns it off
-  retry: 3,          // GET and HEAD only, on network errors, timeouts and 5xx
+  retry: 3,          // or { retries, baseDelayMs, maxDelayMs }. false turns it off
 })
 
 // Per call
@@ -94,8 +95,77 @@ const controller = new AbortController()
 await lh.courses.getMeta('course_…', { signal: controller.signal, timeoutMs: 5_000, retry: false })
 ```
 
-Retries back off exponentially. Requests that change data are never retried, so nothing is applied twice. Aborting
-throws the platform's `AbortError`, not a `LearnHouseError`.
+The SDK retries:
+
+- `GET` and `HEAD` requests that hit a network error, a timeout or a `5xx`.
+- Any request that gets a `429 Too Many Requests`. The API refused it before doing anything, so sending it again is
+  safe.
+
+Retries back off exponentially, starting at `baseDelayMs` (300 ms) and capped at `maxDelayMs` (5 s). Other requests
+that change data are never retried, so nothing is applied twice.
+
+Aborting stops the request, and any wait between retries, and throws the platform's `AbortError`, not a
+`LearnHouseError`.
+
+### Rate limits
+
+When a `429` or `503` carries a `Retry-After` header, the SDK waits exactly that long before the next attempt, instead
+of its own backoff. Both forms work: seconds (`Retry-After: 30`) and an HTTP date.
+
+If the API asks for a longer wait than `maxDelayMs`, the SDK does not retry early, since that only earns another
+`429`. It throws right away, and `err.retryAfterMs` tells you when to try again:
+
+```ts
+try {
+  await lh.search.org('your-school', 'payouts')
+} catch (err) {
+  if (isLearnHouseError(err) && err.status === 429) {
+    console.log(`Try again in ${err.retryAfterMs ?? 1000} ms`)
+  } else {
+    throw err
+  }
+}
+```
+
+Raise `maxDelayMs` if your code can afford to wait longer, for example in a background job.
+
+## Pagination
+
+`lh.courses.listAll()` walks every page for you. Use it with `for await`:
+
+```ts
+for await (const course of lh.courses.listAll('your-school')) {
+  console.log(course.name)
+}
+```
+
+It asks for 100 courses per request (the API's maximum) and stops after the first page that comes back short. It
+never requests a page past the end. `break` out of the loop and no further page is fetched.
+
+For other endpoints that take a page and a limit, use `paginate()`. Give it a function that fetches one page:
+
+```ts
+import { paginate } from '@learnhouse/sdk'
+
+const controller = new AbortController()
+const pages = paginate(
+  ({ page, pageSize, signal }) => lh.courses.list('your-school', { page, limit: pageSize, signal }),
+  { pageSize: 50, signal: controller.signal },
+)
+
+for await (const course of pages) {
+  if (course.name === 'Payouts') break
+}
+```
+
+| Option | Default | |
+| --- | --- | --- |
+| `pageSize` | `20` | Items per request. Keep it at or under the endpoint's maximum, or a capped page reads as the last one |
+| `startPage` | `1` | First page to fetch |
+| `signal` | | Stops between pages. Pass it to your own call too, as above |
+
+Search results are paged per result type, so they have their own iterator. See
+[Search](/developers/sdk/resources#search).
 
 ## Hooks
 

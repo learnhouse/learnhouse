@@ -50,7 +50,10 @@ export interface RetryOptions {
   retries?: number
   /** First backoff delay; doubles each attempt, with jitter. Default 300ms. */
   baseDelayMs?: number
-  /** Upper bound for a single backoff delay. Default 5000ms. */
+  /**
+   * Upper bound for a single backoff delay. Default 5000ms. A `Retry-After`
+   * longer than this is not waited for: the error is thrown with `retryAfterMs`.
+   */
   maxDelayMs?: number
 }
 
@@ -60,7 +63,7 @@ export interface BaseRequestOptions {
   headers?: HeadersInit
   /** Overrides the client's `timeoutMs` for this call. 0 disables the timeout. */
   timeoutMs?: number
-  /** Overrides the client's `retry` for this call. Only GET/HEAD are ever retried. */
+  /** Overrides the client's `retry` for this call. Only GET/HEAD retry, except on 429. */
   retry?: RetryOptions | number | false
   /**
    * How to read a successful response. `auto` (default) parses JSON when the
