@@ -26,7 +26,7 @@
   function hello(frame) {
     try {
       if (frame.contentWindow) frame.contentWindow.postMessage({ source: 'learnhouse-host', type: 'hello' }, '*')
-    } catch (e) {
+    } catch (_e) {
       /* the frame is gone */
     }
   }
