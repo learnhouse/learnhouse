@@ -24,7 +24,9 @@ export default function OrgLanguageSync({ locale }: { locale?: string | null } =
     let userPicked: string | null = null
     try {
       userPicked = localStorage.getItem(USER_PICKED_KEY)
-    } catch {}
+    } catch {
+      // Storage blocked (private mode, sandboxed frame): fall back to the org default.
+    }
     if (userPicked) return
 
     if (i18n.language.split('-')[0] !== orgDefault) {

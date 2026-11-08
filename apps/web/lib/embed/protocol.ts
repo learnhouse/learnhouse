@@ -39,7 +39,7 @@ export interface EmbedOptions {
   showLogo: boolean
 }
 
-type ParamSource = { get(name: string): string | null }
+type ParamSource = { get(_name: string): string | null }
 
 /** Reads the embed's URL options. Anything invalid is ignored rather than injected into styles. */
 export function parseEmbedOptions(params: ParamSource, supportedLocales: readonly string[]): EmbedOptions {
