@@ -15,18 +15,6 @@ export interface ActivitySource {
 }
 
 const strip = (uuid: string, prefix: string) => uuid.replace(prefix, '')
-const slug = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '')
-
-function findActivityByName(meta: any, name: string): string | null {
-  const wanted = name.trim().toLowerCase()
-  for (const chapter of meta?.chapters ?? []) {
-    for (const activity of chapter.activities ?? []) {
-      const actual = String(activity.name ?? '')
-      if (actual.toLowerCase() === wanted || slug(actual) === slug(name)) return activity.activity_uuid
-    }
-  }
-  return null
-}
 
 function asDocument(content: ActivityDocument | string | undefined): any {
   if (typeof content !== 'string') return content
@@ -75,12 +63,13 @@ export function useActivitySource(props: LearnHouseActivityProps): ActivitySourc
       const metaPromise = courseId ? client.courses.getMeta(courseId, { slim: true, signal }) : null
       // If the activity fails first, the course's own failure is irrelevant.
       metaPromise?.catch(() => {})
-      let uuid = activityId
-      if (!uuid && activityName && metaPromise) {
-        uuid = findActivityByName(await metaPromise, activityName) ?? undefined
-        if (!uuid) throw new Error(`No activity named "${activityName}" in this course`)
-      }
-      const activity = local ? null : await client.activities.get(uuid!, { signal })
+      // Same lookup as a server would do with the SDK; the meta request is shared.
+      const activity = local
+        ? null
+        : await client.activities.resolve(
+            activityId ? { activityId } : { activityName: activityName!, courseId: courseId! },
+            { signal, courseMeta: metaPromise ?? undefined },
+          )
       let course = metaPromise ? await metaPromise : null
       if (!course && activity?.course_id != null) {
         // Only the activity was given: find its course for media URLs.

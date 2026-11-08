@@ -44,7 +44,10 @@ export interface CoreOptions {
   headers?: HeadersInit
   /** Per-attempt timeout in ms, covering the response body too. Default 30000; 0 disables. */
   timeoutMs?: number
-  /** Retry policy for GET/HEAD on network errors, timeouts and 5xx. Default 2 retries; false disables. */
+  /**
+   * Retry policy: GET/HEAD on network errors, timeouts and 5xx, plus any method
+   * on 429. Honours `Retry-After`. Default 2 retries; false disables.
+   */
   retry?: RetryOptions | number | false
   onRequest?: (ctx: RequestContext) => void | Promise<void>
   onResponse?: (ctx: ResponseContext) => void | Promise<void>
@@ -159,7 +162,7 @@ function makeAbortError(): Error {
   return err
 }
 
-function abortReason(signal: AbortSignal): unknown {
+export function abortReason(signal: AbortSignal): unknown {
   const reason = (signal as { reason?: unknown }).reason
   return reason !== undefined ? reason : makeAbortError()
 }
@@ -190,6 +193,22 @@ function backoffDelay(attempt: number, r: Required<RetryOptions>): number {
   return Math.round(exp * (0.5 + Math.random() * 0.5))
 }
 
+/** `Retry-After` as delay-seconds or an HTTP date, in ms from `now`. */
+export function parseRetryAfter(value: string | null | undefined, now = Date.now()): number | undefined {
+  if (!value) return undefined
+  const v = value.trim()
+  if (/^\d+(\.\d+)?$/.test(v)) return Math.round(Number(v) * 1000)
+  const at = Date.parse(v)
+  return Number.isNaN(at) ? undefined : Math.max(0, at - now)
+}
+
+// Some API limiters send the delay only as `detail.retry_after` (seconds).
+function retryAfterFromDetail(detail: unknown): number | undefined {
+  if (!detail || typeof detail !== 'object' || Array.isArray(detail)) return undefined
+  const s = (detail as { retry_after?: unknown }).retry_after
+  return typeof s === 'number' && s >= 0 ? Math.round(s * 1000) : undefined
+}
+
 // ---------------------------------------------------------------------------
 // Response handling
 
@@ -212,7 +231,8 @@ async function readError(res: Response, method: string, path: string, url: strin
     body && typeof body === 'object' && !Array.isArray(body) && 'detail' in body
       ? (body as { detail: unknown }).detail
       : body
-  return new LearnHouseError({ status: res.status, detail, body, method, path, url })
+  const retryAfterMs = parseRetryAfter(res.headers.get('retry-after')) ?? retryAfterFromDetail(detail)
+  return new LearnHouseError({ status: res.status, detail, body, method, path, url, retryAfterMs })
 }
 
 async function readBody(res: Response, parseAs: ParseAs, method: string, path: string, url: string): Promise<unknown> {
@@ -292,7 +312,9 @@ export function createHttpCore(options: CoreOptions): HttpCore {
     }
 
     const retry = resolveRetry(opts.retry !== undefined ? opts.retry : options.retry)
-    const maxRetries = M === 'GET' || M === 'HEAD' ? retry.retries : 0
+    const idempotent = M === 'GET' || M === 'HEAD'
+    // A stream body is consumed by the first attempt and cannot be sent again.
+    const replayable = !(typeof ReadableStream !== 'undefined' && body instanceof ReadableStream)
     const timeoutMs = opts.timeoutMs ?? options.timeoutMs ?? DEFAULT_TIMEOUT_MS
     const parseAs: ParseAs = opts.parseAs ?? 'auto'
     const signal = opts.signal
@@ -301,15 +323,29 @@ export function createHttpCore(options: CoreOptions): HttpCore {
       try {
         return await attemptOnce(attempt)
       } catch (err) {
-        const retryable =
-          err instanceof RetryableStatus ||
-          (err instanceof LearnHouseError && (err.code === 'NETWORK_ERROR' || err.code === 'TIMEOUT'))
-        if (retryable && attempt < maxRetries && !signal?.aborted) {
-          await sleep(backoffDelay(attempt, retry), signal)
+        const delay = retryDelay(err, attempt)
+        if (delay !== undefined && !signal?.aborted) {
+          await sleep(delay, signal)
           continue
         }
         throw err instanceof RetryableStatus ? err.error : err
       }
+    }
+
+    /** ms to wait before the next attempt, or undefined to give up. */
+    function retryDelay(err: unknown, attempt: number): number | undefined {
+      let error: LearnHouseError
+      if (err instanceof RetryableStatus) error = err.error
+      else if (err instanceof LearnHouseError && (err.code === 'NETWORK_ERROR' || err.code === 'TIMEOUT')) error = err
+      else return undefined
+      // A 429 was refused before the server did anything, so any method may retry it.
+      const limit = error.status === 429 ? (replayable ? retry.retries : 0) : idempotent ? retry.retries : 0
+      if (attempt >= limit) return undefined
+      if ((error.status === 429 || error.status === 503) && error.retryAfterMs !== undefined) {
+        // Retrying before the server's time only earns another refusal.
+        return error.retryAfterMs <= retry.maxDelayMs ? error.retryAfterMs : undefined
+      }
+      return backoffDelay(attempt, retry)
     }
 
     async function attemptOnce(attempt: number): Promise<unknown> {
@@ -382,7 +418,7 @@ export function createHttpCore(options: CoreOptions): HttpCore {
           } catch (cause) {
             throw failure(cause)
           }
-          if (res.status >= 500) throw new RetryableStatus(error)
+          if (res.status >= 500 || res.status === 429) throw new RetryableStatus(error)
           throw error
         }
         if (parseAs === 'response' || parseAs === 'stream') detachCaller = false

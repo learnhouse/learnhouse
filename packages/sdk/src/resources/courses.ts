@@ -1,4 +1,5 @@
 import type { HttpCore } from '../core/http'
+import { paginate } from '../core/paginate'
 import type { BaseRequestOptions } from '../core/types'
 import type { Course, CourseMeta } from '../models'
 
@@ -11,6 +12,16 @@ export interface ListCoursesOptions extends BaseRequestOptions {
   includeUnpublished?: boolean
 }
 
+export interface ListAllCoursesOptions extends BaseRequestOptions {
+  /** Courses per request, 1..100 (the API's cap). Default 100. */
+  pageSize?: number
+  /** Include unpublished courses (only honoured for users who may see them). */
+  includeUnpublished?: boolean
+}
+
+/** The API serves at most this many courses per page. */
+const MAX_COURSES_PAGE = 100
+
 export interface CourseMetaOptions extends BaseRequestOptions {
   /** Leave out heavy activity content/details; enough for navigation. */
   slim?: boolean
@@ -19,7 +30,8 @@ export interface CourseMetaOptions extends BaseRequestOptions {
 }
 
 export function createCoursesResource(http: HttpCore) {
-  return {
+  // Named so methods still work when destructured off the resource.
+  const resource = {
     /** `GET /api/v1/courses/org_slug/{org_slug}/page/{page}/limit/{limit}` */
     list(orgSlug: string, options: ListCoursesOptions = {}): Promise<Course[]> {
       const { page = 1, limit = 20, includeUnpublished, ...rest } = options
@@ -29,6 +41,19 @@ export function createCoursesResource(http: HttpCore) {
           path: { org_slug: orgSlug, page, limit },
           query: includeUnpublished === undefined ? undefined : { include_unpublished: includeUnpublished },
         },
+      })
+    },
+    /**
+     * Every course of the org, page by page, until a short page.
+     * `for await (const course of lh.courses.listAll(slug)) {}`
+     */
+    listAll(orgSlug: string, options: ListAllCoursesOptions = {}): AsyncGenerator<Course, void, undefined> {
+      const { pageSize = MAX_COURSES_PAGE, ...rest } = options
+      // A larger page would come back capped and read as the last one.
+      const size = Math.min(pageSize, MAX_COURSES_PAGE)
+      return paginate(({ page }) => resource.list(orgSlug, { ...rest, page, limit: size }), {
+        pageSize: size,
+        signal: rest.signal,
       })
     },
     /** `GET /api/v1/courses/org_slug/{org_slug}/count` */
@@ -57,6 +82,7 @@ export function createCoursesResource(http: HttpCore) {
       })
     },
   }
+  return resource
 }
 
 export type CoursesResource = ReturnType<typeof createCoursesResource>

@@ -1,6 +1,6 @@
 ---
 title: SDK Resources
-description: The @learnhouse/sdk resources — organizations, courses, chapters, activities, search, progress, users, auth and media URLs — and the endpoint each method calls.
+description: The @learnhouse/sdk resources (organizations, courses, chapters, activities, search, progress, users, auth and media URLs) and the endpoint each method calls.
 ---
 
 import { Callout } from '@/components/mdx'
@@ -23,6 +23,7 @@ Resources wrap the calls most integrations need. Each method returns typed data 
 | Method | Calls |
 | --- | --- |
 | `lh.courses.list(orgSlug, { page, limit, includeUnpublished })` | `GET /api/v1/courses/org_slug/{org_slug}/page/{page}/limit/{limit}` |
+| `lh.courses.listAll(orgSlug, { pageSize, includeUnpublished })` | The same endpoint, page after page, as an async iterator |
 | `lh.courses.count(orgSlug)` | `GET /api/v1/courses/org_slug/{org_slug}/count` |
 | `lh.courses.get(courseUuid)` | `GET /api/v1/courses/{course_uuid}` |
 | `lh.courses.getMeta(courseUuid, { slim, withUnpublishedActivities })` | `GET /api/v1/courses/{course_uuid}/meta`: the course with its chapters and activities |
@@ -30,6 +31,16 @@ Resources wrap the calls most integrations need. Each method returns typed data 
 ```ts
 const course = await lh.courses.getMeta('course_…', { slim: true }) // slim: no activity content, enough for navigation
 ```
+
+`listAll` yields every course of the org. It stops after the first short page, so it never fetches past the end:
+
+```ts
+for await (const course of lh.courses.listAll('your-school')) {
+  console.log(course.name)
+}
+```
+
+`pageSize` defaults to 100, the most the API returns per page. See [Pagination](/developers/sdk/requests#pagination).
 
 ## Chapters
 
@@ -44,14 +55,63 @@ const course = await lh.courses.getMeta('course_…', { slim: true }) // slim: n
 | --- | --- |
 | `lh.activities.get(activityUuid)` | `GET /api/v1/activities/{activity_uuid}`, including its `content` |
 | `lh.activities.listForChapter(chapterId)` | `GET /api/v1/activities/chapter/{chapter_id}` |
+| `lh.activities.resolve({ activityId })` | `GET /api/v1/activities/{activity_uuid}`. Takes the id with or without its `activity_` prefix |
+| `lh.activities.resolve({ courseId, activityName })` | Finds the activity by name in `GET /api/v1/courses/{course_uuid}/meta?slim=true`, then loads it |
 
 An activity's `content` is the document [`<LearnHouseActivity>`](/developers/react) renders.
+
+### Load an activity to render
+
+`resolve` loads an activity the same way `<LearnHouseActivity>` does: by id, or by name inside a course. Ids work with
+or without their prefix, so you can paste them from a LearnHouse URL (`/course/<id>/activity/<id>`). Names match
+without regard to case, spacing or punctuation.
+
+```ts
+const byId = await lh.activities.resolve({ activityId: 'activity_…' })
+const byName = await lh.activities.resolve({ courseId: 'course_…', activityName: 'How payouts work' })
+```
+
+An unknown name throws a `LearnHouseError` with status `404` and code `ACTIVITY_NOT_FOUND`. If you already have the
+course meta, pass it as `courseMeta` and the name lookup skips its own request.
+
+### Fetch on the server, render in the browser
+
+Load the activity on your server with an API token, then pass it to the component as `activity`. The browser never
+calls the LearnHouse API, so you need no CORS setup, and the token stays on your server.
+
+```tsx title="app/lessons/[name]/page.tsx"
+import { createClient } from '@learnhouse/sdk'
+import { LearnHouseActivity } from '@learnhouse/react'
+
+const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL!, token: process.env.LEARNHOUSE_TOKEN! })
+
+export default async function Lesson({ params }: { params: Promise<{ name: string }> }) {
+  const { name } = await params
+  const activity = await lh.activities.resolve({ courseId: 'course_…', activityName: decodeURIComponent(name) })
+  return <LearnHouseActivity activity={activity} courseId="course_…" baseUrl={process.env.LEARNHOUSE_URL} />
+}
+```
+
+Keep `courseId` and `baseUrl` on the component: media blocks use them to build image and video URLs.
 
 ## Search
 
 | Method | Calls |
 | --- | --- |
 | `lh.search.org(orgSlug, query, { page, limit })` | `GET /api/v1/search/org_slug/{org_slug}` |
+| `lh.search.orgPages(orgSlug, query, { pageSize })` | The same endpoint, page after page, as an async iterator |
+
+Each search result type (courses, activities, users…) is paged on its own. `orgPages` yields one `SearchResult` per page
+and stops once every type comes back shorter than `pageSize` (default and maximum 50):
+
+```ts
+for await (const page of lh.search.orgPages('your-school', 'payouts')) {
+  console.log(page.courses.length, page.activities?.length)
+}
+```
+
+Search is rate limited per user. If you hit the limit, the SDK waits for the time the API asks, within `maxDelayMs`.
+See [Rate limits](/developers/sdk/requests#rate-limits).
 
 ## Progress
 
