@@ -9,12 +9,14 @@ import { useActivity } from '@/hooks/queries/useActivity'
 import { useCourseMeta } from '@/hooks/queries/useCourses'
 import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
 import ActivityRenderer, { RENDERABLE_ACTIVITY_TYPES } from '@components/Objects/Activities/ActivityRenderer/ActivityRenderer'
+import { parseEmbedOptions } from '@/lib/embed/protocol'
+import { SUPPORTED_LANGUAGES } from '@/lib/i18n'
+import { useEmbedBridge, useEmbedUnavailable } from './useEmbedBridge'
 
 interface EmbedActivityClientProps {
   activityId: string
   courseuuid: string
   orgslug: string
-  bgcolor: string | null
 }
 
 // Returns a selector for the DOM element that signals content is ready.
@@ -86,12 +88,13 @@ function useContentReady(activityType: string, activitySubType?: string) {
   return { ready, containerRef }
 }
 
-function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: EmbedActivityClientProps) {
+function EmbedActivityClient({ activityId, courseuuid, orgslug }: EmbedActivityClientProps) {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
+  const options = parseEmbedOptions(searchParams, SUPPORTED_LANGUAGES)
   const showBranding = useShowLearnHouseBranding()
-  const showLearnHouseLogo = showBranding && searchParams.get('showlearnhouselogo') !== 'false'
-  const textColor = searchParams.get('textcolor')
+  const showLearnHouseLogo = showBranding && options.showLogo
+  const endRef = useRef<HTMLDivElement>(null)
 
   const { data: activity, isLoading: activityLoading } = useActivity(activityId)
   const { data: course, isLoading: courseLoading } = useCourseMeta(courseuuid)
@@ -101,6 +104,17 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
     activity?.activity_type ?? '',
     activity?.activity_sub_type,
   )
+  useEmbedBridge({ activityId, ready, containerRef, endRef })
+
+  const missing = !isLoading && (!activity || activity.detail === 'Not Found' || !course || course.detail === 'Not Found')
+  const unavailableReason = missing
+    ? 'not_found'
+    : !isLoading && activity && !activity.published
+      ? 'unpublished'
+      : !isLoading && activity && !RENDERABLE_ACTIVITY_TYPES.includes(activity.activity_type)
+        ? 'not_embeddable'
+        : null
+  useEmbedUnavailable(activityId, unavailableReason !== null, unavailableReason ?? '')
 
   const getActivityUrl = () => {
     const cleanCourseUuid = (course?.course_uuid ?? courseuuid).replace('course_', '')
@@ -169,11 +183,11 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
   const defaultBg = activity.activity_type === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
 
   const customStyles: React.CSSProperties = {
-    backgroundColor: bgcolor ?? defaultBg,
+    backgroundColor: options.bgcolor ?? defaultBg,
     // Prevent browser auto-dark-mode from inverting text inside the embed container
     colorScheme: 'light',
-    ...(textColor
-      ? { color: `#${textColor}` }
+    ...(options.textcolor
+      ? { color: options.textcolor }
       : activity.activity_type === 'TYPE_DYNAMIC'
         ? { color: '#000000' }
         : {}),
@@ -189,6 +203,8 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
         }}
       >
         <ActivityRenderer activity={activity} course={course} style={customStyles} />
+        {/* Reaching this marks the activity complete for the host page. */}
+        <div ref={endRef} aria-hidden style={{ height: 1 }} />
       </div>
       {showLearnHouseLogo && ready && <PoweredByBadge activityUrl={getActivityUrl()} />}
     </div>
