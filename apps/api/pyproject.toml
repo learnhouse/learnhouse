@@ -44,7 +44,7 @@ dependencies = [
     "pytest-xdist==3.8.0",
     "sentry-sdk[fastapi]==2.73.0",
     "protobuf==7.36.2",
-    "workos==10.6.0",
+    "workos==10.7.0",
     "dnspython==2.9.2",
     "defusedxml==0.7.1",
     "pgvector==0.5.1",
