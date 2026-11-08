@@ -105,7 +105,7 @@ To keep a fixed height and let the activity scroll inside the frame, leave the s
     markLessonDone(event.detail.activityId)
   })
   document.addEventListener('learnhouse:media', (event) => {
-    if (event.detail.action === 'ended') analytics.track('video_finished', { src: event.detail.src })
+    if (event.detail.action === 'ended') analytics.track('video_finished', { activity: event.detail.activityId })
   })
 </script>
 ```
@@ -115,11 +115,15 @@ To keep a fixed height and let the activity scroll inside the frame, leave the s
 | `learnhouse:ready` | | The activity is on screen |
 | `learnhouse:resize` | `height`, `width` | Its content size changed |
 | `learnhouse:complete` | `reason` (`scrolled_to_end` or `media_ended`) | The learner reached the end of the activity, or a video or audio played to the end. Once per load |
-| `learnhouse:media` | `action` (`play`, `pause`, `ended`), `media` (`video`, `audio`), `src`, `currentTime`, `duration` | Video and audio playback |
-| `learnhouse:link_click` | `href`, `external` | A link inside the activity was clicked |
-| `learnhouse:unavailable` | `reason` (`not_found`, `unpublished`, `not_embeddable`) | The activity can't be shown in an embed |
+| `learnhouse:media` | `action` (`play`, `pause`, `ended`), `media` (`video`, `audio`), `currentTime`, `duration` | Video and audio playback |
+| `learnhouse:link_click` | `external` | A link inside the activity was clicked |
+| `learnhouse:unavailable` | | The activity can't be shown: it doesn't exist, isn't published, or its type doesn't embed |
 
 Every `detail` also has `activityId`: the bare id from the embed URL.
+
+Any site can frame an embed, so the events carry no content: no media URLs, no link targets, and one `unavailable`
+signal whatever the cause. For the full details, render the activity with the [React component](/developers/react),
+whose events include them.
 
 ### Without the script
 
