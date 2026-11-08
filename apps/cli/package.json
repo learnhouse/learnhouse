@@ -45,12 +45,12 @@
     "@clack/core": "^1.5.1",
     "@clack/prompts": "^1.8.1",
     "@types/node": "^26.6.6",
-    "@vitest/coverage-v8": "^5.0.5",
+    "@vitest/coverage-v8": "^5.1.0",
     "commander": "^15.0.0",
     "picocolors": "^1.1.1",
     "tsup": "^9.0.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "engines": {
     "node": ">=22"
