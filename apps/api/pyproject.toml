@@ -7,8 +7,8 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.43.123",
-    "botocore==1.43.123",
+    "boto3==1.43.124",
+    "botocore==1.43.124",
     "faker==40.44.0",
     "fastapi==0.162.0",
     "httpx==0.28.1",
@@ -18,7 +18,7 @@ dependencies = [
     "psycopg2-binary==2.9.13",
     "asyncpg==0.32.0",
     "aiosqlite==0.22.1",
-    "pydantic[email]==2.14.2",
+    "pydantic[email]==2.14.3",
     "pytest==9.2.0",
     "pytest-cov==7.1.0",
     "python-dotenv==1.2.4",
@@ -42,7 +42,7 @@ dependencies = [
     "pillow==13.0.0",
     "pytest-asyncio==1.4.1.post1",
     "pytest-xdist==3.8.0",
-    "sentry-sdk[fastapi]==2.73.0",
+    "sentry-sdk[fastapi]==2.74.0",
     "protobuf==7.36.2",
     "workos==10.6.0",
     "dnspython==2.9.2",
