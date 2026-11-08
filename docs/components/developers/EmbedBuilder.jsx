@@ -5,9 +5,18 @@ import './developers.css'
 
 const strip = (value, prefix) => value.trim().replace(new RegExp(`^${prefix}`), '')
 
+// The UI languages LearnHouse ships (apps/web/locales).
+const LANGUAGES = [
+  ['en', 'English'], ['ar', 'Arabic'], ['bn', 'Bengali'], ['de', 'German'], ['es', 'Spanish'], ['fa', 'Persian'],
+  ['fr', 'French'], ['hi', 'Hindi'], ['id', 'Indonesian'], ['it', 'Italian'], ['ja', 'Japanese'], ['ko', 'Korean'],
+  ['nl', 'Dutch'], ['pl', 'Polish'], ['pt', 'Portuguese'], ['ru', 'Russian'], ['sk', 'Slovak'], ['th', 'Thai'],
+  ['tr', 'Turkish'], ['uk', 'Ukrainian'], ['vi', 'Vietnamese'], ['zh', 'Chinese'],
+]
+
 /**
- * Builds the same iframe the activity's Share → Embed menu copies, plus the
- * optional look parameters, so readers can try them before pasting.
+ * Builds the same code the activity's Share → Embed menu copies (the iframe and
+ * the embed.js helper), plus the optional URL parameters, so readers can try
+ * them before pasting.
  */
 export default function EmbedBuilder() {
   const [site, setSite] = useState('https://learn.your-school.com')
@@ -15,23 +24,28 @@ export default function EmbedBuilder() {
   const [course, setCourse] = useState('course_9f2a…')
   const [activity, setActivity] = useState('activity_0b3c…')
   const [height, setHeight] = useState('600')
-  const [useBg, setUseBg] = useState(false)
+  const [bgMode, setBgMode] = useState('default')
   const [bg, setBg] = useState('#ffffff')
   const [useText, setUseText] = useState(false)
   const [text, setText] = useState('#09090b')
   const [logo, setLogo] = useState(true)
+  const [locale, setLocale] = useState('')
+  const [autoResize, setAutoResize] = useState(true)
   const [copied, setCopied] = useState(false)
 
   const code = useMemo(() => {
     const params = new URLSearchParams()
-    if (useBg) params.set('bgcolor', bg.replace('#', ''))
+    if (bgMode === 'color') params.set('bgcolor', bg.replace('#', ''))
+    if (bgMode === 'transparent') params.set('bgcolor', 'transparent')
     if (useText) params.set('textcolor', text.replace('#', ''))
     if (!logo) params.set('showlearnhouselogo', 'false')
+    if (locale) params.set('locale', locale)
     const query = params.toString() ? `?${params}` : ''
     const base = site.trim().replace(/\/+$/, '')
     const src = `${base}/embed/${org.trim()}/course/${strip(course, 'course_')}/activity/${strip(activity, 'activity_')}${query}`
-    return `<iframe\n  src="${src}"\n  width="100%"\n  height="${height || 600}"\n  frameborder="0"\n  allowfullscreen\n></iframe>`
-  }, [site, org, course, activity, height, useBg, bg, useText, text, logo])
+    const iframe = `<iframe\n  src="${src}"\n  width="100%"\n  height="${height || 600}"\n  style="border:0"\n  allow="fullscreen; autoplay"\n  allowfullscreen${autoResize ? '\n  data-learnhouse-embed' : ''}\n></iframe>`
+    return autoResize ? `${iframe}\n<script src="${base}/embed.js" async></script>` : iframe
+  }, [site, org, course, activity, height, bgMode, bg, useText, text, logo, locale, autoResize])
 
   const copy = async () => {
     try {
@@ -64,16 +78,34 @@ export default function EmbedBuilder() {
             <input type="text" value={activity} onChange={(e) => setActivity(e.target.value)} />
           </label>
         </div>
-        <label>
-          Height (px)
-          <input type="text" value={height} onChange={(e) => setHeight(e.target.value.replace(/\D/g, ''))} />
-        </label>
         <div className="lhd-row">
-          <label className="lhd-check">
-            <input type="checkbox" checked={useBg} onChange={(e) => setUseBg(e.target.checked)} /> Background
+          <label>
+            {autoResize ? 'Starting height (px)' : 'Height (px)'}
+            <input type="text" value={height} onChange={(e) => setHeight(e.target.value.replace(/\D/g, ''))} />
+          </label>
+          <label>
+            Language
+            <select value={locale} onChange={(e) => setLocale(e.target.value)}>
+              <option value="">Organization default</option>
+              {LANGUAGES.map(([code, name]) => (
+                <option key={code} value={code}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="lhd-row">
+          <label>
+            Background
+            <select value={bgMode} onChange={(e) => setBgMode(e.target.value)}>
+              <option value="default">Default</option>
+              <option value="color">Colour</option>
+              <option value="transparent">Transparent</option>
+            </select>
           </label>
           <span className="lhd-swatch">
-            <input type="color" value={bg} disabled={!useBg} onChange={(e) => setBg(e.target.value)} aria-label="Background colour" />
+            <input type="color" value={bg} disabled={bgMode !== 'color'} onChange={(e) => setBg(e.target.value)} aria-label="Background colour" />
           </span>
         </div>
         <div className="lhd-row">
@@ -86,6 +118,9 @@ export default function EmbedBuilder() {
         </div>
         <label className="lhd-check">
           <input type="checkbox" checked={logo} onChange={(e) => setLogo(e.target.checked)} /> Show the LearnHouse badge
+        </label>
+        <label className="lhd-check">
+          <input type="checkbox" checked={autoResize} onChange={(e) => setAutoResize(e.target.checked)} /> Fit the height to the content
         </label>
       </div>
       <div className="lhd-builder-out">

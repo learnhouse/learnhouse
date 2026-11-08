@@ -1,6 +1,6 @@
 ---
 title: Embed LearnHouse Activities
-description: Put a LearnHouse activity on any website with an iframe, and change its colours and branding with URL parameters.
+description: "Put a LearnHouse activity on any website with an iframe: fit it to its content, set colours and language, and react when learners finish."
 ---
 
 import { Callout, Steps } from '@/components/mdx'
@@ -22,7 +22,7 @@ Open the activity as a learner would, in its course.
 
 ### Share → Embed
 
-Open the **Share** menu at the top of the activity and choose **Embed**. The iframe code is copied to your clipboard.
+Open the **Share** menu at the top of the activity and choose **Embed**. The embed code is copied to your clipboard.
 
 ### Paste it
 
@@ -37,10 +37,16 @@ The copied code looks like this:
   src="https://learn.your-school.com/embed/your-school/course/9f2a…/activity/0b3c…"
   width="100%"
   height="600"
-  frameborder="0"
+  style="border:0"
+  allow="fullscreen; autoplay"
   allowfullscreen
+  data-learnhouse-embed
 ></iframe>
+<script src="https://learn.your-school.com/embed.js" async></script>
 ```
+
+The iframe works on its own. The `embed.js` script is optional: it fits the iframe to its content and lets your page
+[listen to what learners do](#events). Add it once per page, however many activities you embed.
 
 ## Try the options
 
@@ -55,7 +61,9 @@ Change the values below and copy the result. Embed URLs use the bare ids, so the
 | --- | --- | --- |
 | `bgcolor` | `bgcolor=f8fafc` | Page background, as a hex colour without `#`. It is applied before the page paints, so there is no white flash on dark sites. |
 | `textcolor` | `textcolor=1e293b` | Text colour for the activity, hex without `#`. |
+| `bgcolor` | `bgcolor=transparent` | No background, so the activity sits on your page's own background. |
 | `showlearnhouselogo` | `showlearnhouselogo=false` | Hides the small LearnHouse badge in the corner. |
+| `locale` | `locale=fr` | Shows buttons, labels and player controls in this language instead of the organization's default. Any language LearnHouse ships works; anything else is ignored. |
 
 <Callout type="info">
   On LearnHouse Cloud's Free plan the badge is always shown. Paid plans can hide it with `showlearnhouselogo=false`,
@@ -77,9 +85,62 @@ to be public for the content to show.
 
 ## Sizing
 
-An iframe can't size itself to its content. Pick a `height` that fits most of the activity, or let it scroll inside
-the frame. If you need the height to follow the content, render the activity with the
-[React component](/developers/react) instead: it reports its size through the `resize` event.
+With `embed.js` on the page, the iframe takes the height of its content and keeps following it as images load and
+blocks expand. The `height` attribute is only the starting height, used until the activity has loaded.
+
+To keep a fixed height and let the activity scroll inside the frame, leave the script out, or opt one iframe out:
+
+```html
+<iframe src="…" height="600" data-learnhouse-embed data-learnhouse-autoresize="false"></iframe>
+```
+
+## Events
+
+`embed.js` turns what happens inside the activity into DOM events on the iframe. They bubble, so one listener on
+`document` covers every embed on the page. The details are in `event.detail`.
+
+```html
+<script>
+  document.addEventListener('learnhouse:complete', (event) => {
+    markLessonDone(event.detail.activityId)
+  })
+  document.addEventListener('learnhouse:media', (event) => {
+    if (event.detail.action === 'ended') analytics.track('video_finished', { src: event.detail.src })
+  })
+</script>
+```
+
+| Event | `detail` fields | When |
+| --- | --- | --- |
+| `learnhouse:ready` | | The activity is on screen |
+| `learnhouse:resize` | `height`, `width` | Its content size changed |
+| `learnhouse:complete` | `reason` (`scrolled_to_end` or `media_ended`) | The learner reached the end of the activity, or a video or audio played to the end. Once per load |
+| `learnhouse:media` | `action` (`play`, `pause`, `ended`), `media` (`video`, `audio`), `src`, `currentTime`, `duration` | Video and audio playback |
+| `learnhouse:link_click` | `href`, `external` | A link inside the activity was clicked |
+| `learnhouse:unavailable` | `reason` (`not_found`, `unpublished`, `not_embeddable`) | The activity can't be shown in an embed |
+
+Every `detail` also has `activityId`: the bare id from the embed URL.
+
+### Without the script
+
+The events come from `postMessage` messages the embed sends to its parent page, so you can also read them yourself:
+
+```js
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://learn.your-school.com') return
+  const message = event.data
+  if (message?.source !== 'learnhouse' || message.version !== 1) return
+  // message.type is ready, resize, complete, media, link_click or unavailable
+})
+```
+
+Check `event.origin` against your LearnHouse address, since any frame on the page can post messages.
+
+<Callout type="info">
+  Completion here means the learner saw the end of the activity on your site. To record progress in LearnHouse
+  itself, the learner has to be signed in to LearnHouse, or you record it from your server with the
+  [SDK](/developers/sdk/resources).
+</Callout>
 
 ## Performance
 
@@ -91,7 +152,7 @@ that block. A text-and-quiz lesson loads a fraction of what the full course play
 |  | Embed | `<LearnHouseActivity>` |
 | --- | --- | --- |
 | Setup | Paste HTML | `npm install` |
-| Styling | Background, text colour, badge | Full theme, your fonts, block overrides |
-| Height | Fixed | Follows the content |
-| Events | None | Load, ready, links, media, completion |
+| Styling | Background, text colour, language, badge | Full theme, your fonts, block overrides |
+| Height | Follows the content with `embed.js` | Follows the content |
+| Events | Ready, size, completion, media, links (with `embed.js`) | Load, ready, size, links, media, completion, analytics |
 | Works on | Any site | React apps |

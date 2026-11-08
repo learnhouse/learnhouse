@@ -152,8 +152,8 @@
 /* ── Embed builder ───────────────────────────────────────────────────── */
 .lhd-builder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 8px; margin: 20px 0 30px; padding: 8px; }
 .lhd-builder label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 500; color: #525252; }
-.lhd-builder input[type='text'] { min-width: 0; width: 100%; font: inherit; font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid #e5e5e5; background: #fff; color: #171717; outline: none; }
-.lhd-builder input[type='text']:focus { border-color: #a3a3a3; }
+.lhd-builder input[type='text'], .lhd-builder select { min-width: 0; width: 100%; font: inherit; font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid #e5e5e5; background: #fff; color: #171717; outline: none; }
+.lhd-builder input[type='text']:focus, .lhd-builder select:focus { border-color: #a3a3a3; }
 .lhd-builder .lhd-row { display: flex; gap: 10px; align-items: center; }
 .lhd-builder .lhd-row > * { flex: 1 1 0; }
 .lhd-builder .lhd-check { flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: #404040; }
