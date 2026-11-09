@@ -90,6 +90,9 @@ export function mdxToMarkdown(source, { title: fallbackTitle, demoList = () => '
     return `${t ? `# ${t}\n\n` : ''}${inner.trim()}${install ? `\n\n\`\`\`bash\n${install}\n\`\`\`` : ''}`
   })
 
+  // Calls to action are for readers of the site, not for agents.
+  body = body.replace(/<CloudCta\b[^>]*>[\s\S]*?<\/CloudCta>/g, '')
+
   // Callouts → blockquotes.
   body = body.replace(/<Callout\b[^>]*>([\s\S]*?)<\/Callout>/g, (_m, inner) =>
     inner

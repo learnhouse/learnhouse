@@ -22,6 +22,17 @@ function loadPostHog() {
   return client
 }
 
+/**
+ * Records a product event. Loads PostHog if it isn't yet, and sends with a
+ * beacon so the event survives the click that navigates away.
+ */
+export function track(event, properties) {
+  if (!KEY || typeof window === 'undefined') return
+  loadPostHog()
+    .then((posthog) => posthog.capture(event, properties, { transport: 'sendBeacon' }))
+    .catch(() => {})
+}
+
 function whenIdle(fn) {
   if (typeof window.requestIdleCallback === 'function') {
     const id = window.requestIdleCallback(fn, { timeout: 4000 })

@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, ArrowSquareOut, GithubLogo } from '@phosphor-ico
 import { SECTION_ICONS } from '@/components/headless/sections'
 import { DEMOS_REPO, demos, getDemo } from '@/lib/demos'
 import LiveFrame from '../LiveFrame'
+import CtaLink from '@/components/cta/CtaLink'
+import { SIGNUP_URL } from '@/lib/cta'
 import '../demos.css'
 import { clampDescription, socialMetadata } from '../../../lib/seo'
 
@@ -55,8 +57,11 @@ export default async function DemoPage({ params }) {
           </div>
         </div>
         <div className="lhdm-actions">
+          <CtaLink href={SIGNUP_URL} placement="demo_header" term={demo.id} target="_blank" rel="noopener" className="lhdm-btn lhdm-btn-primary">
+            Build this on your academy
+          </CtaLink>
           {liveUrl && (
-            <a href={liveUrl} target="_blank" rel="noopener noreferrer" className="lhdm-btn lhdm-btn-primary">
+            <a href={liveUrl} target="_blank" rel="noopener noreferrer" className="lhdm-btn">
               Open full screen <ArrowSquareOut size={13} weight="bold" />
             </a>
           )}
@@ -90,6 +95,16 @@ export default async function DemoPage({ params }) {
           <Link href="/developers" className="lhdm-link">
             Build on LearnHouse <ArrowRight size={12} weight="bold" />
           </Link>
+        </div>
+        <div className="lhdm-card">
+          <span className="lhdm-label">Your own academy</span>
+          <p>
+            Everything this demo shows comes from a LearnHouse academy. Create yours for free, add a course, then point
+            the demo at it with your organization&apos;s slug.
+          </p>
+          <CtaLink href={SIGNUP_URL} placement="demo_card" term={demo.id} target="_blank" rel="noopener" className="lhdm-link">
+            Start free on LearnHouse Cloud <ArrowRight size={12} weight="bold" />
+          </CtaLink>
         </div>
         <div className="lhdm-card">
           <span className="lhdm-label">Start from it</span>

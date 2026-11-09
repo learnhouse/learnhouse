@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation'
 import Search from '../Search/Search'
 import { GithubLogo, DiscordLogo, List, X, ArrowUpRight } from '@phosphor-icons/react/dist/ssr'
 import { TABS, activeTab } from '../site/sections'
+import CtaLink from '../cta/CtaLink'
+import { SIGNUP_URL } from '@/lib/cta'
 
 function Navbar({ version }) {
   const pathname = usePathname()
@@ -59,9 +61,9 @@ function Navbar({ version }) {
             >
               <DiscordLogo size={18} weight="fill" />
             </a>
-            <a href="https://learnhouse.app" target="_blank" rel="noopener noreferrer" className="lh-navbar-cta lh-hide-mobile">
-              Try LearnHouse
-            </a>
+            <CtaLink href={SIGNUP_URL} placement="navbar" target="_blank" rel="noopener" className="lh-navbar-cta lh-hide-mobile">
+              Start free
+            </CtaLink>
             <button
               className="lh-mobile-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -104,9 +106,9 @@ function Navbar({ version }) {
           <a href="https://discord.gg/CMyZjjYZ6x" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
             Discord <ArrowUpRight size={12} weight="bold" />
           </a>
-          <a href="https://learnhouse.app" target="_blank" rel="noopener noreferrer" className="lh-mobile-drawer-link">
-            Try LearnHouse <ArrowUpRight size={12} weight="bold" />
-          </a>
+          <CtaLink href={SIGNUP_URL} placement="mobile_menu" target="_blank" rel="noopener" className="lh-mobile-drawer-link">
+            Start free on LearnHouse Cloud <ArrowUpRight size={12} weight="bold" />
+          </CtaLink>
         </div>
         <div className="lh-mobile-drawer-divider" />
         <div id="mobile-sidebar-mount" />
