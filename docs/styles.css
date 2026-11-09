@@ -1597,3 +1597,56 @@ a, button, input, [role='tab'] {
 .lh-not-found-card-title { font-size: 14px; font-weight: 600; color: var(--lh-fg); }
 .lh-not-found-card-text { font-size: 13px; color: var(--lh-fg-muted); }
 @media (max-width: 560px) { .lh-not-found-grid { grid-template-columns: 1fr; } }
+
+/* ── Calls to action ─────────────────────────────────────────── */
+.lh-plan-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.lh-plan-cta a { text-decoration: none !important; font-weight: 600; }
+.lh-plan-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  color: #fff !important;
+  background: #0a0a0a;
+}
+.lh-plan-cta-primary:hover { background: rgba(10, 10, 10, 0.85); }
+.lh-plan-cta-secondary { color: var(--lh-fg) !important; text-decoration: underline !important; text-underline-offset: 3px; text-decoration-color: var(--lh-border) !important; }
+
+.lh-cloud-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin: 20px 0 28px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8f8f8;
+  background-image: var(--lh-pattern-dots);
+  background-size: 14px 14px;
+  outline: 1px solid var(--lh-nice-outline);
+}
+.lh-cloud-cta-copy { font-size: 14px; line-height: 1.55; color: var(--lh-fg-muted); }
+.lh-cloud-cta-copy strong { color: var(--lh-fg); font-weight: 600; }
+.lh-cloud-cta-button {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff !important;
+  background: #0a0a0a;
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+.lh-cloud-cta-button:hover { background: rgba(10, 10, 10, 0.85); }
+@media (max-width: 560px) {
+  .lh-cloud-cta { flex-direction: column; align-items: flex-start; }
+}

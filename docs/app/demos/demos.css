@@ -41,7 +41,7 @@
 .lhdm-hidden { opacity: 0; pointer-events: none; }
 .lhdm-shot { display: block; width: 100%; border-radius: 9px; }
 
-.lhdm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 24px 0; }
+.lhdm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 14px; margin: 24px 0; }
 .lhdm-card { display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: 12px; background: #fff; box-shadow: var(--lh-nice-shadow); outline: 1px solid var(--lh-nice-outline); }
 .lhdm-card p { margin: 0; font-size: 14px; line-height: 1.6; color: #525252; }
 .lhdm-card pre { margin: 0; font-family: var(--lh-font-mono); font-size: 12px; line-height: 1.7; color: #404040; background: #fafafa; border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
