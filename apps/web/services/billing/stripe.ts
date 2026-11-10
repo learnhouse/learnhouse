@@ -733,6 +733,79 @@ export async function getPackSubscriptionDetails(subscriptionId: string) {
   };
 }
 
+// Statuses in which a subscription can still bill the customer again.
+const CHARGEABLE_SUBSCRIPTION_STATUSES = new Set([
+  "active",
+  "trialing",
+  "past_due",
+  "unpaid",
+  "paused",
+  "incomplete",
+]);
+
+/**
+ * Every subscription that can still charge for `orgId`: plan and packs alike,
+ * whoever pays for them. The payer is often not the admin doing the work (an
+ * org's billing email vs. a teammate), so this looks the org up by metadata
+ * rather than by the caller's customers. Stripe search lags writes by up to a
+ * minute, so the caller's own customers are scanned too, which covers a
+ * subscription they started moments ago.
+ *
+ * `orgId` must be a plain integer: it is interpolated into a search query.
+ */
+export async function listChargeableOrgSubscriptions(orgId: string, callerEmail?: string): Promise<any[]> {
+  if (!/^\d+$/.test(orgId)) throw new Error(`Invalid org id: ${orgId}`);
+
+  const byId = new Map<string, any>();
+  const keep = (sub: any) => {
+    if (String(sub?.metadata?.org_id) !== orgId) return;
+    if (!CHARGEABLE_SUBSCRIPTION_STATUSES.has(sub.status)) return;
+    byId.set(sub.id, sub);
+  };
+
+  let page: string | undefined;
+  for (let i = 0; i < 20; i++) {
+    const res = await stripe.subscriptions.search({
+      query: `metadata['org_id']:'${orgId}'`,
+      limit: 100,
+      ...(page ? { page } : {}),
+    });
+    res.data.forEach(keep);
+    if (!res.has_more || !res.next_page) break;
+    page = res.next_page;
+  }
+
+  if (callerEmail) {
+    for (const customerId of await listCustomerIdsByEmail(callerEmail)) {
+      const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
+      subs.data.forEach(keep);
+    }
+  }
+
+  return Array.from(byId.values());
+}
+
+/**
+ * Cancel subscriptions right away, with no proration credit or final invoice.
+ * Used once the org they pay for is gone, so there is nothing left to bill for.
+ * Never throws: each failure is returned so the caller can report it.
+ */
+export async function cancelSubscriptionsNow(
+  subscriptions: any[],
+): Promise<{ canceled: string[]; failed: { id: string; error: string }[] }> {
+  const canceled: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+  for (const sub of subscriptions) {
+    try {
+      await stripe.subscriptions.cancel(sub.id, { prorate: false, invoice_now: false });
+      canceled.push(sub.id);
+    } catch (err: any) {
+      failed.push({ id: sub.id, error: err?.message ?? String(err) });
+    }
+  }
+  return { canceled, failed };
+}
+
 export async function cancelPackSubscription(subscriptionId: string) {
   const canceled = await stripe.subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
