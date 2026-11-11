@@ -42,7 +42,7 @@ const cards = [
     icon: Code,
     color: '#8b5cf6',
     title: 'Developers',
-    desc: 'Architecture, REST API, and contributing guide',
+    desc: 'Embed activities, the React component, the SDK and the REST API',
     pattern: 'repeating-linear-gradient(0deg, currentColor 0px, currentColor 1px, transparent 1px, transparent 6px)',
     patternSize: '6px 6px',
   },

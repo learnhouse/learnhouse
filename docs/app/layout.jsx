@@ -1,11 +1,10 @@
-import { Layout } from 'nextra-theme-docs'
-import { Head } from 'nextra/components'
-import { getPageMap } from 'nextra/page-map'
-import 'nextra-theme-docs/style.css'
+import { Wix_Madefor_Text } from 'next/font/google'
 import '../styles.css'
 import CustomNavbar from '../components/Navbar/Navbar'
+import SectionMain from '../components/site/SectionMain'
 import CustomFooter from '../components/Footer/Footer'
 import PostHogProvider from '../components/Analytics/PostHogProvider'
+import { getLatestVersions } from '../lib/releases'
 
 export const metadata = {
   title: {
@@ -42,14 +41,7 @@ export const metadata = {
     siteName: 'LearnHouse Docs',
     description:
       'Official documentation for LearnHouse, the open-source learning management system (LMS). Guides for self-hosting, course creation, AI features, API reference, and more.',
-    images: [
-      {
-        url: 'https://docs.learnhouse.app/img/pages/learnhouse-github.png',
-        alt: 'LearnHouse Docs',
-        width: 2051,
-        height: 1016,
-      },
-    ],
+    images: [{ url: 'https://docs.learnhouse.app/og', alt: 'LearnHouse Docs', width: 1200, height: 630 }],
   },
   twitter: {
     creator: '@getlearnhouse',
@@ -66,31 +58,30 @@ export const metadata = {
   manifest: '/favicons/site.webmanifest',
 }
 
+// Self-hosted and preloaded by Next: no request to Google, no render-blocking CSS.
+const wix = Wix_Madefor_Text({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-wix',
+})
+
+async function latestAppVersion() {
+  try {
+    const { app } = await getLatestVersions()
+    return app?.version ?? null
+  } catch {
+    return null
+  }
+}
+
 export default async function RootLayout({ children }) {
+  const version = await latestAppVersion()
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
-      <Head faviconGlyph="">
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Text:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@600;700;800;900&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </Head>
+    <html lang="en" dir="ltr" className={wix.variable} suppressHydrationWarning>
       <body>
         <PostHogProvider>
-          <CustomNavbar />
-          <Layout
-            pageMap={await getPageMap()}
-            docsRepositoryBase="https://github.com/learnhouse/learnhouse/tree/dev/docs"
-            sidebar={{ defaultMenuCollapseLevel: 2 }}
-            editLink="Edit this page on GitHub"
-            footer={<></>}
-            navbar={<></>}
-            nextThemes={{ forcedTheme: 'light', defaultTheme: 'light' }}
-          >
-            {children}
-          </Layout>
+          <CustomNavbar version={version} />
+          <SectionMain>{children}</SectionMain>
           <CustomFooter />
         </PostHogProvider>
       </body>

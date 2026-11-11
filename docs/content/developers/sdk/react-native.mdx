@@ -1,0 +1,90 @@
+---
+title: LearnHouse SDK for React Native
+description: Use @learnhouse/sdk in React Native and Expo apps — sign learners in, keep their tokens in secure storage, and refresh them.
+---
+
+import { Callout, Steps } from '@/components/mdx'
+
+# React Native
+
+The SDK runs on React Native and Expo with no polyfills. It avoids the APIs Hermes lacks or only partly implements
+(`URL`, `URLSearchParams`, `DOMException`), and its `react-native` entry points Metro at the right build.
+
+There are no cookies to lean on in an app, so you keep the learner's tokens yourself.
+
+<Steps>
+
+### Install
+
+```bash
+npx expo install @learnhouse/sdk expo-secure-store
+```
+
+### Create the client with `getToken`
+
+```ts filename="lib/learnhouse.ts"
+import * as SecureStore from 'expo-secure-store'
+import { createClient } from '@learnhouse/sdk'
+
+export const lh = createClient({
+  baseUrl: 'https://learn.your-school.com',
+  getToken: () => SecureStore.getItemAsync('lh_access'),
+})
+```
+
+`getToken` runs before every request, so a refreshed token is picked up immediately.
+
+### Sign in
+
+```ts
+const res = await lh.auth.login({ email, password })
+
+if (res.mfa_required) {
+  // Show a code field, then: await lh.auth.loginMfa({ mfaToken: res.mfa_token, code })
+} else {
+  await SecureStore.setItemAsync('lh_access', res.tokens.access_token)
+  await SecureStore.setItemAsync('lh_refresh', res.tokens.refresh_token)
+}
+```
+
+### Refresh before the access token expires
+
+Access tokens last 8 hours. Refresh tokens are single-use: always store the new one.
+
+```ts
+export async function refreshSession() {
+  const refreshToken = await SecureStore.getItemAsync('lh_refresh')
+  if (!refreshToken) return false
+  try {
+    const tokens = await lh.auth.refresh({ refreshToken })
+    await SecureStore.setItemAsync('lh_access', tokens.access_token)
+    await SecureStore.setItemAsync('lh_refresh', tokens.refresh_token)
+    return true
+  } catch {
+    await SecureStore.deleteItemAsync('lh_access')
+    await SecureStore.deleteItemAsync('lh_refresh')
+    return false // send the learner to sign in again
+  }
+}
+```
+
+</Steps>
+
+## Using it
+
+```ts
+const trail = await lh.trail.get()                       // the learner's courses and progress
+const course = await lh.courses.getMeta('course_…', { slim: true })
+await lh.trail.completeActivity('activity_…')             // mark a lesson done
+```
+
+<Callout type="info">
+  Never ship an `lh_` API token inside an app: anyone can extract it from the bundle. Apps act as the signed-in
+  learner, with their own tokens.
+</Callout>
+
+## Showing lessons
+
+`@learnhouse/react` renders with the DOM, so it doesn't run in React Native views. In an app, show a lesson in a
+`WebView` pointed at its [embed URL](/developers/embed), or build native screens from the activity's content with the
+SDK.

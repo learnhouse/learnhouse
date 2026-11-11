@@ -1,49 +1,48 @@
-import { Callout } from 'nextra/components'
+---
+title: "REST API"
+description: "Find your way around the LearnHouse REST API: base URLs, where the full endpoint reference lives, and the guides for tokens and headless grading."
+---
 
-# API Reference
+import { Callout } from '@/components/mdx'
+import { DevHero } from '../../../components/developers/Developers'
 
-The LearnHouse API is a RESTful service built with **FastAPI**. It powers all platform operations, from user authentication to course management and AI features. All endpoints are prefixed with `/api/v1/`.
+<DevHero section="api" eyebrow="Any language" title="The REST API">
+  Everything LearnHouse does goes through this API: courses, learners, progress, assignments, payments. Call it from
+  any language, and get webhooks when things happen.
+</DevHero>
 
-## Full API Reference
+The LearnHouse API is a JSON REST API. Every path starts with `/api/v1/`.
+
+| Where LearnHouse runs | Base URL |
+| --- | --- |
+| LearnHouse Cloud | `https://api.learnhouse.io/api/v1/` |
+| Self-hosted | `https://your-domain.com/api/v1/` |
+| Local development | `http://localhost:1338/api/v1/` |
 
 <Callout type="info">
-The **[full API Reference](/reference)** documents every public endpoint, with request and response
-schemas, cURL/JavaScript/Python examples with your own token substituted in, and a live
-in-browser playground. It is generated directly from the live OpenAPI specification, so it never
-goes stale.
+  Writing JavaScript or TypeScript? The [SDK](/developers/sdk) wraps this API with full types, retries and errors, and
+  works in browsers, Node, edge workers and React Native.
 </Callout>
 
-## Base URL
+## API Reference
 
-In local development, the API is available at:
+The **[API Reference](/reference)** documents every endpoint with its request and response schemas, the token right it
+needs, cURL, SDK, JavaScript and Python examples, and a live playground. It is generated from the API's OpenAPI
+document, so it matches what the server accepts. Start with its guides:
 
-```
-http://localhost:1338/api/v1/
-```
+- **[Authentication](/reference/guides/authentication)**: API tokens, user sessions, token rights, and which endpoint groups refuse tokens.
+- **[Errors](/reference/guides/errors)**: status codes and the shape of `detail`.
+- **[Rate limits & pagination](/reference/guides/rate-limits)**: per-endpoint limits and paginated lists.
 
-On LearnHouse Cloud, the API is served at `https://api.learnhouse.io/api/v1/`. Self-hosted
-production instances serve it behind a reverse proxy under `/api/v1/` on their own domain.
+## More in this section
 
-## Response Format
+- **[API tokens](/developers/api/authentication)**: create, scope, regenerate and revoke tokens in the dashboard.
+- **[Headless Assignments](/developers/api/headless-assignments)**: author assignments, submit for learners and grade them with an API token.
+- **[Webhooks](/platform/automations/webhooks)**: get a signed request on your server when something happens in LearnHouse.
 
-All API responses are returned as JSON. Successful responses typically include the requested data directly, while error responses follow this structure:
+The OpenAPI document the reference is built from is published at [/reference/openapi.json](/reference/openapi.json).
 
-```json
-{
-  "detail": "Description of the error"
-}
-```
-
-## Sections
-
-- **[Full API Reference](/reference)**: Every endpoint, schema, code example and playground.
-- **[Authentication](/developers/api/authentication)**: How to obtain and use authentication tokens.
-- **[Endpoints](/developers/api/endpoints)**: Overview of the key API endpoint groups.
-
-## OpenAPI Specification
-
-Since the API is built with FastAPI, a machine-readable OpenAPI specification is served at
-`/openapi.json`. For LearnHouse Cloud that is
-[https://api.learnhouse.io/openapi.json](https://api.learnhouse.io/openapi.json). Use it to
-generate client libraries or import the API into testing tools. (The interactive Swagger UI at
-`/docs` is only enabled on development instances.)
+<Callout type="info">
+On a self-hosted instance, the raw OpenAPI document (`/openapi.json`) and Swagger UI (`/docs`) are only served in
+development mode (`LEARNHOUSE_DEVELOPMENT_MODE=true`).
+</Callout>

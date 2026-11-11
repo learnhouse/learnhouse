@@ -51,3 +51,6 @@ next-env.d.ts
 
 # Sentry
 next.config.original.js
+
+# fumadocs-mdx (generated at dev/build time)
+/.source

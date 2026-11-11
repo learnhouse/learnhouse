@@ -1,4 +1,9 @@
-import { Callout } from 'nextra/components'
+---
+title: "Migrating Content into LearnHouse"
+description: "Choose how to bring existing courses into LearnHouse: import another LMS export, script every call through the API, or let AI propose the structure."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Migrating Content into LearnHouse
 
@@ -26,7 +31,7 @@ All endpoints below are prefixed with `/api/v1/`. In local development the base 
 Every migration call must be authenticated. There are two token types:
 
 - **JWT access tokens** (`POST /api/v1/auth/login`): a user session, 8-hour lifetime, refreshable.
-- **API tokens** (Pro plan): prefixed with `lh_`, issued per organization, no expiry.
+- **API tokens** (`lh_…`): issued per organization, valid until revoked or until their optional expiry date. On LearnHouse Cloud they need the Pro plan or higher.
 
 Both are sent the same way:
 
@@ -38,7 +43,7 @@ curl http://localhost:1338/api/v1/courses/?org_id=1 \
 API tokens are bound to a single organization at creation time. Any attempt to operate on a different `org_id` is rejected at the auth layer, so a leaked token cannot reach across tenants.
 
 <Callout type="warning">
-**API tokens cannot call every endpoint.** A small set of routers, including the AI-assisted migration endpoints under `/api/v1/courses/migrate/*` and several user-scoped endpoints like `/users/profile`, explicitly reject API tokens (HTTP 403, `"API tokens cannot access this resource"`). For these calls, you need a user JWT. The supported pattern is the **admin token-swap**: use your API token once to mint a JWT on behalf of any user in your organization, then use that JWT for the protected calls.
+**API tokens cannot call every endpoint.** Some groups, including the AI-assisted migration endpoints under `/api/v1/courses/migrate/*`, media blocks and user-scoped endpoints like `/users/profile`, reject API tokens (HTTP 403, `"API tokens cannot access this resource"`). For these calls, you need a user JWT. If you only have an API token, use the **admin token-swap**: the token mints a short-lived JWT for a user in your organization, and you use that JWT for the protected calls.
 
 ```bash
 # Mint a user JWT using your API token
@@ -49,7 +54,13 @@ curl -X POST 'http://localhost:1338/api/v1/admin/{org_slug}/auth/token' \
 # → { "access_token": "eyJ...", "token_type": "bearer", "user_id": 1, "user_uuid": "..." }
 ```
 
-The minted JWT is a normal user session and works on every endpoint, including the migration endpoints. The API token must have the `users.action_read` permission and the target user must belong to the same organization.
+The minted JWT is a user session that lasts **1 hour** and works on every endpoint the user can reach, including the migration endpoints. The swap has rules:
+
+- The API token needs the **Update** right on **Users (Admin API)**.
+- The target user must belong to the token's organization and to no other organization.
+- The target cannot be an Admin, a Maintainer or a platform superadmin, and their role cannot hold rights the token does not have.
+
+For migrations, create a dedicated account with a role that can create courses (the Instructor role, or a custom role) and swap to that account.
 </Callout>
 
 | Endpoint group | API token | JWT |
@@ -61,9 +72,9 @@ The minted JWT is a normal user session and works on every endpoint, including t
 | `POST /assignments/`, `POST /assignments/{uuid}/tasks` | ✓ | ✓ |
 | `POST /courses/migrate/upload` / `/suggest` / `/create` | ✗ | ✓ |
 
-The blocks router has `Depends(get_non_api_token_user)` at the router level, so even though individual block handlers accept anonymous + JWT users, an `lh_*` API token is rejected with `403 "API tokens cannot access this resource"`. The same is true for the AI-assisted migration endpoints. For both, use the admin token-swap to mint a JWT first (see callout above).
+The media block endpoints and the AI-assisted migration endpoints reject an `lh_*` API token with `403 "API tokens cannot access this resource"`. For both, use the admin token-swap to mint a JWT first (see the callout above).
 
-See [Authentication](/developers/api/authentication) for token issuance.
+See [API Authentication](/developers/api/authentication) for creating tokens and choosing their rights.
 
 ## The data model in one diagram
 
@@ -89,13 +100,15 @@ Both are returned in every create response, so capture them as you go.
 | `TYPE_DYNAMIC` | `SUBTYPE_DYNAMIC_PAGE` | Rich-text page (TipTap / ProseMirror) | JSON document in `content` |
 | `TYPE_DYNAMIC` | `SUBTYPE_DYNAMIC_MARKDOWN` | Page rendered from a remote Markdown URL | `content: { markdown_url }` |
 | `TYPE_DYNAMIC` | `SUBTYPE_DYNAMIC_EMBED` | Iframe embed (Google Doc, Notion, etc.) | `content: { embed_url }` |
+| `TYPE_DYNAMIC` | `SUBTYPE_DYNAMIC_RESOURCE` | A file or other resource picked from the [Library](/platform/courses/library) | `content: { resource_uuid, resource_type }` |
 | `TYPE_VIDEO` | `SUBTYPE_VIDEO_HOSTED` | Self-hosted video file | Multipart upload to `/activities/video` |
 | `TYPE_VIDEO` | `SUBTYPE_VIDEO_YOUTUBE` | Embedded YouTube / Vimeo video | JSON `POST /activities/external_video` |
 | `TYPE_DOCUMENT` | `SUBTYPE_DOCUMENT_PDF` | PDF document | Multipart upload to `/activities/documentpdf` |
 | `TYPE_DOCUMENT` | `SUBTYPE_DOCUMENT_DOC` | Generic document | Reserved, not exposed via a dedicated upload endpoint |
 | `TYPE_ASSIGNMENT` | `SUBTYPE_ASSIGNMENT_ANY` | Graded assignment with tasks | Three-step: activity shell + assignment record + at least one task |
 | `TYPE_CUSTOM` | `SUBTYPE_CUSTOM` | Free-form structured content | JSON `content` of any shape |
-| `TYPE_SCORM` | `SUBTYPE_SCORM_12` / `SUBTYPE_SCORM_2004` | SCORM packages | Reserved, handled by the SCORM uploader |
+| `TYPE_SCORM` | `SUBTYPE_SCORM_12` / `SUBTYPE_SCORM_2004` | SCORM packages (Enterprise) | Reserved, handled by the SCORM uploader |
+| `TYPE_LIVE_SESSION` | `SUBTYPE_LIVE_SESSION` | A [live session](/enterprise/live-sessions) linked to the course (Enterprise) | Created by scheduling a session, not for migration |
 
 The full per-type `content` JSON schemas, including the dynamic page block list, are documented in [Activity Types Reference](/developers/migration/activity-types).
 

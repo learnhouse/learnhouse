@@ -1,4 +1,8 @@
-import { Callout } from 'nextra/components'
+---
+description: "Open one learner's analytics record in LearnHouse to review their courses, assignments, sign-ins and certificates, then compare or export records."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Learner Analytics
 
@@ -6,6 +10,7 @@ Learner analytics gathers everything one member has done in your organization on
 
 <Callout type="info">
 Learner analytics needs the **Pro** plan or higher on LearnHouse Cloud, or the Enterprise Edition when self-hosted. Only organization admins can open it.
+<PlanCta plan="Pro" />
 </Callout>
 
 ## Opening a learner's record
@@ -31,15 +36,15 @@ The header shows the member's identity, a **Verified** or **Unverified** badge f
 | **Code** | Code exercise submissions and their test results |
 | **Community** | Discussions and comments the learner posted |
 | **Certificates** | Certificates earned, with their credential ID |
-| **Behavior** | Time by course, searches and page views. This tab needs [analytics](/platform/analytics) to be set up. |
+| **Behavior** | Time by course, searches and page views, from the organization's [analytics](/platform/analytics) events. |
 
 ## Comparing and exporting
 
 Select several members in the **Users** list to:
 
 - **Compare analytics**: a **Compare students** table with enrolled courses, completions, certificates and last connection for each.
+- **Export analytics**: download the selected records.
 
 <img src="/img/pages/users/learner-compare.webp" alt="The Compare students table for three selected learners" width={1600} height={900} style={{ borderRadius: 10 }} />
-- **Export analytics**: download the selected records.
 
 From a single record, **Export** downloads it as CSV, JSON or PDF. Turn on **Include raw submission data** to add the full submission contents.

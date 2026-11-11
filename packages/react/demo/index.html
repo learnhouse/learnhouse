@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@learnhouse/react demo</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #f4f4f5; color: #18181b; }
+      .shell { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+      aside { background: #fff; border-right: 1px solid #e4e4e7; padding: 20px; display: flex; flex-direction: column; gap: 14px; font-size: 14px; position: sticky; top: 0; height: 100vh; box-sizing: border-box; overflow: auto; }
+      aside h1 { font-size: 16px; margin: 0 0 4px; }
+      aside label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
+      aside .row { flex-direction: row; align-items: center; gap: 8px; font-weight: 400; }
+      aside select, aside input[type=text] { padding: 6px 8px; border: 1px solid #d4d4d8; border-radius: 6px; font: inherit; }
+      main { padding: 32px; min-width: 0; }
+      .card { background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+      .log { font: 12px ui-monospace, monospace; background: #18181b; color: #a1a1aa; border-radius: 8px; padding: 8px; height: 180px; overflow: auto; white-space: pre-wrap; }
+      @media (max-width: 760px) { .shell { grid-template-columns: 1fr; } aside { position: static; height: auto; } main { padding: 16px; } .card { padding: 16px; } }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

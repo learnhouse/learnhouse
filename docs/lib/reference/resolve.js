@@ -190,6 +190,43 @@ export function schemaToExample(spec, schema, depth = 0, propName = '') {
   return null
 }
 
+/** Render a default/const value the way it would appear in JSON. */
+function formatValue(value) {
+  if (value === undefined) return null
+  if (typeof value === 'string') return JSON.stringify(value)
+  try {
+    const json = JSON.stringify(value)
+    return json.length > 80 ? `${json.slice(0, 77)}…` : json
+  } catch {
+    return String(value)
+  }
+}
+
+/**
+ * Extra facts worth showing next to a field: default, format and the
+ * numeric/length constraints FastAPI/Pydantic put in the schema.
+ */
+export function schemaMeta(schema) {
+  if (!schema || typeof schema !== 'object') return { defaultValue: null, format: null, constraints: [] }
+  const constraints = []
+  if (schema.minLength !== undefined) constraints.push(`min length ${schema.minLength}`)
+  if (schema.maxLength !== undefined) constraints.push(`max length ${schema.maxLength}`)
+  if (schema.minimum !== undefined) constraints.push(`≥ ${schema.minimum}`)
+  if (schema.exclusiveMinimum !== undefined) constraints.push(`> ${schema.exclusiveMinimum}`)
+  if (schema.maximum !== undefined) constraints.push(`≤ ${schema.maximum}`)
+  if (schema.exclusiveMaximum !== undefined) constraints.push(`< ${schema.exclusiveMaximum}`)
+  if (schema.minItems !== undefined) constraints.push(`min items ${schema.minItems}`)
+  if (schema.maxItems !== undefined) constraints.push(`max items ${schema.maxItems}`)
+  if (schema.pattern) constraints.push(`pattern ${schema.pattern}`)
+  const format =
+    schema.format && schema.format !== 'binary' ? schema.format : null
+  return {
+    defaultValue: schema.default !== undefined && schema.default !== null ? formatValue(schema.default) : null,
+    format,
+    constraints,
+  }
+}
+
 /**
  * Flatten a schema into display rows:
  * { name, type, required, nullable, description, enumValues, children }
@@ -217,6 +254,7 @@ export function schemaFields(spec, schema, depth = 0) {
       nullable: !!prop.nullable,
       description: prop.description || '',
       enumValues: prop.enum || null,
+      ...schemaMeta(prop),
       children: [],
     }
 

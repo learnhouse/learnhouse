@@ -10,6 +10,7 @@ const LinkedinIcon = ({ size = 24 }: { size?: number }) => (
   </svg>
 );
 import { useTranslation } from 'react-i18next'
+import { embedSnippet } from '@/lib/embed/protocol'
 
 interface ActivityShareDropdownProps {
   activityName: string
@@ -50,10 +51,7 @@ function ActivityShareDropdown({
     return `${baseUrl}/embed/${orgslug}/course/${cleanCourseUuid}/activity/${activityId}`
   }
 
-  const getEmbedCode = () => {
-    const embedUrl = getEmbedUrl()
-    return `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`
-  }
+  const getEmbedCode = () => embedSnippet(getEmbedUrl(), window.location.origin)
 
   const shareLinks = [
     {

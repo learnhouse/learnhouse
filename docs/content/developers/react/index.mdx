@@ -1,0 +1,145 @@
+---
+title: LearnHouse React Component
+description: Render LearnHouse activities inside any React app with @learnhouse/react — the same blocks and styles as LearnHouse, themed to match your product.
+---
+
+import { Callout, Steps, Tabs } from '@/components/mdx'
+import { DevHero, Screenshot, Gallery } from '../../../components/developers/Developers'
+
+<DevHero section="react" eyebrow="@learnhouse/react" title="Activities as a React component" install="npm install @learnhouse/react">
+  `<LearnHouseActivity>` renders pages, quizzes, flipcards, scenarios, code playgrounds, math, video and PDFs inside
+  your app, with LearnHouse's own blocks and your look.
+</DevHero>
+
+<CloudCta variant="developer">Publish a course on a free Cloud organization and render it here. Public courses need no token.</CloudCta>
+
+## Quickstart
+
+<Steps>
+
+### Install
+
+```bash
+npm install @learnhouse/react
+```
+
+React 18 or 19 is required. Everything else the blocks need comes with the package.
+
+### Import the component and its stylesheet
+
+```tsx
+import { LearnHouseActivity } from '@learnhouse/react'
+import '@learnhouse/react/styles.css'
+```
+
+The stylesheet is LearnHouse's own, scoped under `.lh-activity`, so it never touches the rest of your page.
+
+### Render an activity
+
+```tsx
+export function Lesson() {
+  return (
+    <LearnHouseActivity
+      baseUrl="https://learn.your-school.com"
+      activityId="activity_0b3c…"
+      courseId="course_9f2a…"
+    />
+  )
+}
+```
+
+`baseUrl` is the address of your LearnHouse instance (its API). Ids are the full uuids, with their `activity_` and
+`course_` prefixes. You can copy them from the API or the activity's URL.
+
+</Steps>
+
+<Callout type="info">
+  With `activityId`, the browser fetches the activity, and LearnHouse only answers browsers on its own domain (and
+  `localhost`). If your app lives on another domain, load the activity on your server with the SDK and pass it as
+  `activity`: see [Where to fetch](/developers/react/frameworks#where-to-fetch-browser-or-server).
+</Callout>
+
+<Screenshot
+  src="/img/developers/react-blocks.png"
+  alt="A LearnHouse page rendered by LearnHouseActivity: headings, lists, highlighted code, a table and callouts"
+  caption="One component, every block. This page, its code highlighting and its callouts are LearnHouse's own components."
+  url="localhost:5173"
+/>
+
+## Four ways to say what to render
+
+<Tabs items={['By id', 'By name', 'From an activity', 'From JSON']}>
+  <Tabs.Tab>
+    ```tsx
+    // Passing courseId as well loads the course in parallel (faster).
+    <LearnHouseActivity activityId="activity_…" courseId="course_…" />
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```tsx
+    // Looks the activity up by name inside the course (case-insensitive).
+    <LearnHouseActivity activityName="How payouts work" courseId="course_…" />
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```tsx
+    // An activity you already fetched, for example on the server with @learnhouse/sdk.
+    <LearnHouseActivity activity={activity} courseId="course_…" />
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```tsx
+    // A document as LearnHouse stores it. No network calls for the content itself.
+    <LearnHouseActivity content={doc} orgId="org_…" courseId="course_…" />
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+`courseId` and `orgId` tell image, video, audio and PDF blocks where their files live. Without them, text blocks still
+render, but media blocks can't find their files.
+
+## Share one setup with a provider
+
+Wrap your app (or a layout) in `LearnHouseProvider` once. Every activity below shares the client, the signed-in user and
+your defaults.
+
+```tsx
+import { LearnHouseProvider, LearnHouseActivity } from '@learnhouse/react'
+
+export function App({ session }) {
+  return (
+    <LearnHouseProvider
+      baseUrl="https://learn.your-school.com"
+      getToken={() => session.accessToken}
+      theme={{ accent: '#7c3aed', fontFamily: 'Inter, sans-serif' }}
+      locale="fr"
+      onEvent={(event) => analytics.track(`lesson_${event.type}`, event)}
+    >
+      <LearnHouseActivity activityId="activity_…" courseId="course_…" />
+    </LearnHouseProvider>
+  )
+}
+```
+
+<Callout type="warning">
+  In the browser, pass the signed-in learner's own access token (or nothing, for public courses). Never pass an
+  `lh_` API token to a browser: it acts on your whole org. Keep those on your server with the
+  [SDK](/developers/sdk/authentication).
+</Callout>
+
+## It's interactive
+
+Blocks keep their behaviour: quizzes check answers and celebrate, flipcards flip, and scenarios branch, exactly as they
+do inside LearnHouse.
+
+<Gallery>
+  <Screenshot src="/img/developers/react-quiz-fr.png" alt="A quiz answered correctly, with the interface in French" caption="A quiz after answering, with locale=&quot;fr&quot;." />
+  <Screenshot src="/img/developers/react-blocks-interactive.png" alt="Badge, button, a math equation and an interactive scenario" caption="Badges, buttons, KaTeX math and a branching scenario." />
+</Gallery>
+
+## Next
+
+- [Customization](/developers/react/customization): theme it, replace blocks, hide or rewrite content.
+- [Events](/developers/react/events): analytics, completion, iframe sizing.
+- [Next.js & Vite](/developers/react/frameworks): server components, fetching on the server, bundling.
+- [Props reference](/developers/react/reference): every prop of both components.
