@@ -1,3 +1,8 @@
+---
+title: "Contribution Guidelines"
+description: "Follow the LearnHouse contribution workflow: branch naming, lockfiles, pull requests against dev, code style and the CI checks to run locally."
+---
+
 # Contribution Guidelines
 
 This page outlines the workflow and standards for contributing to LearnHouse.
@@ -78,9 +83,11 @@ CI runs these checks on pull requests that touch each app. You can run the same 
 
 | App | Directory | Commands |
 | --- | --- | --- |
-| API | `apps/api` | `uv run pytest src/tests/` and `uvx ruff check .` |
-| Web | `apps/web` | `bun run test` and `bunx tsc --noEmit` (after `bunx next typegen`) |
+| API | `apps/api` | `uv run pytest src/tests/ -n auto` and `uvx ruff check .` |
+| Web | `apps/web` | `bun run test`, `bunx tsc --noEmit` (after `bunx next typegen`), and `bun run lint:strict <changed files>` |
 | CLI | `apps/cli` | `bun run typecheck`, `bun run test`, and `bun run test:integration` (needs Docker) |
+
+The API test suite enforces 100% coverage (set in `apps/api/pyproject.toml`), so add tests for every line you change. Files you change in the web app must pass the strict lint. Playwright end-to-end tests in `apps/e2e` run nightly.
 
 ## Review Process
 

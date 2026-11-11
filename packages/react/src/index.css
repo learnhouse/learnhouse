@@ -1,0 +1,52 @@
+/* Renderer root. Theme values arrive as --lh-* custom properties (theme.ts);
+   unset ones fall back to LearnHouse's own look. */
+.lh-activity {
+  --font-default: var(--lh-font, ui-sans-serif, system-ui, sans-serif);
+  position: relative;
+  font-family: var(--font-default);
+  font-size: var(--lh-font-size, 1rem);
+  color: var(--lh-text, #09090b);
+  background: var(--lh-bg, transparent);
+  padding: var(--lh-padding, 0);
+  color-scheme: light;
+}
+.lh-activity.dark {
+  color: var(--lh-text, #fafafa);
+  color-scheme: dark;
+}
+.lh-activity .lh-activity-body {
+  max-width: var(--lh-content-width, 100%);
+  margin-inline: auto;
+}
+.lh-activity :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--lh-heading-font, inherit);
+}
+.lh-activity :is(code, pre, kbd) {
+  font-family: var(--lh-code-font, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+.lh-activity .canva-content-wrapper .ProseMirror a {
+  color: var(--lh-accent, #2563eb);
+}
+.lh-activity .canva-content-wrapper .ProseMirror a:hover {
+  color: var(--lh-accent, #1d4ed8);
+  opacity: 0.85;
+}
+.lh-activity [data-node-view-wrapper] > :first-child {
+  border-radius: var(--lh-radius, revert-layer);
+}
+.lh-activity .lh-activity-title {
+  padding-inline: 16px; /* same inset as the ProseMirror surface below */
+  font-size: 1.875em;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.lh-activity .lh-powered-by {
+  display: inline-flex;
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--lh-muted, #71717a);
+  text-decoration: none;
+}
+.lh-activity .lh-complete-sentinel {
+  height: 1px;
+}

@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist/types",
+    "types": [],
+    "paths": {
+      "@learnhouse/sdk": [
+        "../sdk/dist/index.d.ts"
+      ]
+    },
+    "rootDir": "src"
+  },
+  "include": [
+    "src/public.ts",
+    "src/types.ts",
+    "src/element-public.ts"
+  ]
+}

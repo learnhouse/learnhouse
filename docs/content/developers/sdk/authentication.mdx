@@ -1,0 +1,99 @@
+---
+title: SDK Authentication
+description: Authenticate @learnhouse/sdk with an org API token on servers, or as a signed-in learner in browsers and apps.
+---
+
+import { Callout } from '@/components/mdx'
+import { AuthModes } from '../../../components/developers/Developers'
+
+# Authentication
+
+The client sends one kind of credential per request. Pick it by where your code runs.
+
+<AuthModes />
+
+## Org API token (servers)
+
+```ts
+const lh = createClient({
+  baseUrl: process.env.LEARNHOUSE_URL!,
+  token: process.env.LEARNHOUSE_TOKEN!, // lh_…
+})
+```
+
+Create the token in the dashboard under **Developers → API Access**. It acts on one organization, with the permissions
+you give it (read-only, full, or per resource), and never more than the user who created it. See
+[API tokens](/developers/api/authentication#api-tokens) for permissions, expiry and what tokens can't do.
+
+<Callout type="warning">
+  An API token is a password for your organization's content. Keep it in server environment variables. Never put it in
+  browser code, a mobile app, or a repository.
+</Callout>
+
+## Signed-in learner (browsers and apps)
+
+Requests made as a learner see exactly what that learner can see, and progress (`trail`) is recorded for them.
+
+### Browser on the instance's domain: the cookie
+
+```ts
+const lh = createClient({ baseUrl: 'https://learn.your-school.com', credentials: 'include' })
+const me = await lh.users.session()
+```
+
+The learner's LearnHouse session cookie is sent along. This works when your page runs on the instance's domain (or a
+subdomain it trusts), since the API only answers browsers on origins it allows.
+
+### Your own token storage: `getToken`
+
+`getToken` is called before every request, so the client always uses your freshest token:
+
+```ts
+const lh = createClient({
+  baseUrl: 'https://learn.your-school.com',
+  getToken: () => tokenStore.accessToken, // string, null, or a Promise of either
+})
+```
+
+### Signing in with email and password
+
+```ts
+const res = await lh.auth.login({ email, password })
+
+if (res.mfa_required) {
+  // Ask for the 6-digit code, then:
+  const session = await lh.auth.loginMfa({ mfaToken: res.mfa_token, code })
+}
+
+// res.tokens.access_token   → valid for 8 hours
+// res.tokens.refresh_token  → single-use: store the new one after every refresh
+```
+
+### Refreshing
+
+```ts
+const tokens = await lh.auth.refresh({ refreshToken: stored.refreshToken })
+// Store both tokens.access_token and tokens.refresh_token.
+```
+
+In a browser on the instance's domain, `lh.auth.refresh()` without arguments uses the refresh cookie.
+
+<Callout type="info">
+  Refresh is never retried automatically: a refresh token can be used once, and replaying it signs the learner out
+  everywhere. If a refresh fails on a network error, ask the learner to sign in again.
+</Callout>
+
+### Signing out
+
+```ts
+await lh.auth.logout()
+```
+
+## Per-request options
+
+Skip auth for one call, or add headers:
+
+```ts
+await lh.orgs.get('your-school', { skipAuth: true })
+await lh.courses.get('course_…', { headers: { 'X-Request-Id': id } })
+```

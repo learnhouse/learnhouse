@@ -1,0 +1,104 @@
+/* LearnHouse Headless: demo gallery and copy blocks, in the app's style. */
+
+.lhx-gallery { margin: 18px 0 32px; }
+.lhx-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lhx-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #525252;
+  background: #f5f5f5;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 11px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.lhx-filter:hover { background: #ececec; color: #0a0a0a; }
+.lhx-filter-active, .lhx-filter-active:hover { background: #0a0a0a; color: #fff; }
+.lhx-source {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #525252 !important;
+  text-decoration: none !important;
+}
+.lhx-source:hover { color: #0a0a0a !important; }
+.lhx-note { font-size: 13.5px !important; color: #a3a3a3 !important; margin: 10px 0 0 !important; }
+
+.lhx-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.lhx-card { margin: 0; padding: 6px; display: flex; flex-direction: column; }
+.lhx-shot { border-radius: 8px; overflow: hidden; background: #f8f8f8; aspect-ratio: 16 / 10; }
+.lhx-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; margin: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; transition: transform 0.4s ease; }
+.lhx-card:hover .lhx-shot img { transform: scale(1.02); }
+.lhx-body { display: flex; flex-direction: column; gap: 4px; padding: 10px 8px 8px; }
+.lhx-name { font-size: 14px; font-weight: 600; color: #171717; }
+.lhx-blurb { font-size: 12.5px; line-height: 1.5; color: #737373; }
+.lhx-features { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.lhx-feature { font-size: 11px; color: #737373; background: #f5f5f5; border-radius: 6px; padding: 2px 7px; }
+
+.lhx-copy { margin: 16px 0 28px; overflow: hidden; }
+.lhx-copy-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #f5f5f5; }
+.lhx-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: #0a0a0a;
+  border: 0;
+  border-radius: 7px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.lhx-copy-btn:hover { background: rgba(10, 10, 10, 0.85); }
+.lhx-copy-pre {
+  margin: 0 !important;
+  max-height: 340px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: var(--lh-font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+  color: #404040;
+  background: #fafafa !important;
+  padding: 14px 16px;
+  border-radius: 0 !important;
+}
+
+@media (max-width: 960px) { .lhx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .lhx-grid { grid-template-columns: 1fr; } .lhx-source { margin-left: 0; } }
+
+.lhx-card { cursor: pointer; transition: box-shadow 0.15s; }
+.lhx-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04); }
+.lhx-card:focus-visible { outline: 2px solid #0a0a0a; }
+.lhx-more { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 13.5px; font-weight: 600; color: #0a0a0a !important; text-decoration: none !important; }
+
+.lhx-dialog-backdrop { position: fixed; inset: 0; z-index: 300; background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.lhx-dialog { position: relative; width: min(980px, 100%); max-height: calc(100vh - 48px); overflow: auto; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 8px; padding: 8px; }
+.lhx-dialog-shot { border-radius: 8px; overflow: hidden; background: #f8f8f8; }
+.lhx-dialog-shot img { display: block; width: 100%; height: auto; margin: 0 !important; border-radius: 0 !important; }
+.lhx-dialog-body { display: flex; flex-direction: column; gap: 6px; padding: 18px 14px 14px 10px; }
+.lhx-dialog-title { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: #0a0a0a; }
+.lhx-dialog-text { font-size: 14px !important; line-height: 1.6; color: #525252 !important; margin: 0 0 6px !important; }
+.lhx-dialog-actions { margin-top: auto; padding-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.lhx-dialog-actions .lhx-copy-btn { text-decoration: none !important; padding: 8px 12px; }
+.lhx-dialog-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #0a0a0a !important; text-decoration: none !important; }
+.lhx-dialog-close { position: absolute; top: 14px; right: 14px; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(255, 255, 255, 0.9); color: #262626; cursor: pointer; box-shadow: var(--lh-nice-shadow); }
+@media (max-width: 760px) { .lhx-dialog { grid-template-columns: 1fr; } }
+
+/* Patterns: screenshot frames sit on a dotted backing while images load. */
+.lhx-shot, .lhx-dialog-shot {
+  background-color: #f8f8f8;
+  background-image: var(--lh-pattern-dots);
+  background-size: 12px 12px;
+}
+.lhx-card { text-decoration: none !important; color: inherit; }

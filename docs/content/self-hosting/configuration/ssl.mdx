@@ -1,8 +1,14 @@
-import { Callout } from 'nextra/components'
+---
+description: Set up a domain and SSL for self-hosted LearnHouse with automatic Let's Encrypt certificates or your own reverse proxy, and set the cookie domain.
+---
+
+import { Callout } from '@/components/mdx'
 
 # SSL and Domain Setup
 
 Securing your LearnHouse instance with SSL is strongly recommended for production deployments. This guide covers domain configuration and SSL setup options.
+
+<CloudCta variant="selfhost">LearnHouse Cloud handles certificates for you, custom domains included.</CloudCta>
 
 Make sure your DNS records point to the server running LearnHouse before enabling SSL.
 
@@ -20,7 +26,7 @@ Choose **I'll handle SSL myself** in the wizard when TLS ends in a proxy you run
 
 ### Caddy
 
-```
+```text title="Caddyfile"
 learn.example.com {
     reverse_proxy localhost:80
 }

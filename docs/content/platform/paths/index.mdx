@@ -1,4 +1,8 @@
-import { Callout, Steps } from 'nextra/components'
+---
+description: Build a learning path from your courses with required and elective courses, guided order and a path certificate, then follow learners' progress through it.
+---
+
+import { Callout, Steps } from '@/components/mdx'
 
 # Learning Paths
 
@@ -8,6 +12,7 @@ A learning path is an ordered set of courses that learners follow from start to 
 
 <Callout type="info">
 Learning paths need the **Pro** plan or higher on LearnHouse Cloud. They are included on every self-hosted instance. Creating and editing paths needs a role with the **create** and **update** rights on courses (Admin and Maintainer by default). Path certificates keep verifying even if the organization later moves to a lower plan.
+<PlanCta plan="Pro" />
 </Callout>
 
 ## Creating a path
@@ -61,17 +66,7 @@ Work done before the learner started the path counts. A learner who has already 
 
 ## The path certificate
 
-On the **Certificate** tab, click **Award a certificate**, then set it up with the same designer as course certificates:
-
-| Field | Notes |
-| --- | --- |
-| **Certification Name** | Required. Up to 100 characters. |
-| **Certification Description** | Up to 500 characters. |
-| **Certification Type** | Course Completion, Achievement Based, Assessment Based, Participation, Skill Mastery, Professional Development, Continuing Education, Workshop Attendance or Specialization. |
-| **Signed by (optional)** | A name printed at the bottom of the certificate, for example the head of your school. |
-| **Style** | Professional (default), Minimal, Modern, Academic, Royal, Vintage, Tech, Nature, Geometric or Waves. |
-
-The live preview shows the certificate with your organization's logo and name. Learners see their own name, date and credential ID. Click **Save changes**.
+On the **Certificate** tab, click **Award a certificate**, then set it up with the same designer as course certificates: a name, a description, a type, an optional signer and a style. The fields are described in [Setting up a course certificate](/platform/certifications#setting-up-a-course-certificate). The live preview shows the certificate with your organization's logo and name. Click **Save changes**.
 
 <img src="/img/pages/paths/path-certificate-designer.webp" alt="The Certificate tab of a path with the certificate form on the left and a live preview of the Academic style on the right" width={1600} height={900} style={{ borderRadius: 10 }} />
 

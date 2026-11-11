@@ -83,6 +83,9 @@ export const initialLocaleReady = Promise.all([
  * Switch language safely: preloads the bundle before switching
  * so the UI never flashes English as a fallback.
  */
+/** Every UI language the app ships. */
+export const SUPPORTED_LANGUAGES = ['en', ...Object.keys(LOCALE_LOADERS)]
+
 export async function changeLanguage(lng: string) {
   await Promise.all([loadLocale(lng), loadDateLocale(lng)])
   return i18n.changeLanguage(lng)

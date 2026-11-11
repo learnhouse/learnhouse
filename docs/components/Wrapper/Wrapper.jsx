@@ -1,40 +1,25 @@
-'use client'
-
-import Sidebar from '../Sidebar/Sidebar'
-import TOC from '../TOC/TOC'
-import { useConfig } from 'nextra-theme-docs'
-import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { PencilSimple } from '@phosphor-icons/react/dist/ssr'
+import Sidebar from '../Sidebar/Sidebar'
+import TOC from '../TOC/TOC'
+import PageActions from './PageActions'
+import CtaLink from '../cta/CtaLink'
+import { SIGNUP_URL } from '@/lib/cta'
 
-function Breadcrumb() {
-  const config = useConfig()
-  const { activePath } = config.normalizePagesResult
-
-  if (!activePath || activePath.length <= 1) return null
-
-  // Nextra emits both a folder entry and its index page with the same route
-  // (e.g. /developers/migration appears twice once you open /developers/migration).
-  // Collapse consecutive duplicates so React keys stay unique and the trail
-  // does not show the same crumb twice.
-  const trail = activePath.filter((item, i, arr) => {
-    const next = arr[i + 1]
-    return !next || next.route !== item.route
-  })
-
+function Breadcrumb({ crumbs }) {
+  if (!crumbs || crumbs.length <= 1) return null
   return (
-    <nav className="lh-breadcrumb" aria-label="breadcrumb">
-      {trail.map((item, i) => {
-        const isLast = i === trail.length - 1
-        const title = typeof item.title === 'string' ? item.title : item.name
+    <nav className="lh-breadcrumb" aria-label="Breadcrumb">
+      {crumbs.map((crumb, i) => {
+        const isLast = i === crumbs.length - 1
         return (
-          <span key={`${item.route || ''}-${i}`} className="lh-breadcrumb-item">
+          <span key={crumb.route} className="lh-breadcrumb-item">
             {i > 0 && <span className="lh-breadcrumb-sep">/</span>}
             {isLast ? (
-              <span className="lh-breadcrumb-current">{title}</span>
+              <span className="lh-breadcrumb-current">{crumb.title}</span>
             ) : (
-              <Link href={item.route || '#'} className="lh-breadcrumb-link">
-                {title}
+              <Link href={crumb.route} className="lh-breadcrumb-link">
+                {crumb.title}
               </Link>
             )}
           </span>
@@ -44,156 +29,113 @@ function Breadcrumb() {
   )
 }
 
-function Pagination() {
-  const config = useConfig()
-  const { flatDocsDirectories, activeIndex } = config.normalizePagesResult
-
-  const prev = activeIndex > 0 ? flatDocsDirectories[activeIndex - 1] : null
-  const next = activeIndex < flatDocsDirectories.length - 1 ? flatDocsDirectories[activeIndex + 1] : null
-
+function Pagination({ prev, next }) {
   if (!prev && !next) return null
-
   return (
-    <div className="lh-pagination">
+    <div className="lh-pagination" data-pagefind-ignore="all">
       {prev ? (
         <Link href={prev.route} className="lh-pagination-link lh-pagination-prev">
           <span className="lh-pagination-label">Previous</span>
-          <span className="lh-pagination-title">
-            {typeof prev.title === 'string' ? prev.title : prev.name}
-          </span>
+          <span className="lh-pagination-title">{prev.title}</span>
         </Link>
-      ) : <div />}
+      ) : (
+        <div />
+      )}
       {next ? (
         <Link href={next.route} className="lh-pagination-link lh-pagination-next">
           <span className="lh-pagination-label">Next</span>
-          <span className="lh-pagination-title">
-            {typeof next.title === 'string' ? next.title : next.name}
-          </span>
+          <span className="lh-pagination-title">{next.title}</span>
         </Link>
-      ) : <div />}
+      ) : (
+        <div />
+      )}
     </div>
   )
 }
 
-function EditOnGitHub({ filePath }) {
-  // `filePath` comes from Nextra page metadata and is the actual source path
-  // relative to the docs app root (e.g. "content/cli/index.mdx"). The docs app
-  // lives under docs/ in the learnhouse monorepo, so prefix with that. Using it
-  // directly avoids guessing folder-index vs leaf-file from the URL.
-  if (!filePath) return null
+// The card beside every page, worded for what the reader is doing there.
+const CLOUD_CARDS = [
+  {
+    prefix: ['/self-hosting', '/cli'],
+    title: 'Skip the servers',
+    text: 'Updates, backups, SSL and email are handled for you on LearnHouse Cloud.',
+  },
+  {
+    prefix: ['/developers', '/reference', '/guides'],
+    title: 'Build on a real academy',
+    text: 'Create a free Cloud organization, publish a course, and render it with the SDK or components.',
+  },
+  {
+    prefix: ['/platform', '/enterprise'],
+    title: 'Try it in your own academy',
+    text: 'Everything on this page works on LearnHouse Cloud, and the Free plan gets you started.',
+  },
+]
+const DEFAULT_CARD = { title: 'Start your academy', text: 'Create courses and invite learners today. Free to start.' }
 
-  const href = `https://github.com/learnhouse/learnhouse/edit/dev/docs/${filePath}`
-
+function CloudAd({ route }) {
+  const card = CLOUD_CARDS.find((c) => c.prefix.some((p) => route.startsWith(p))) ?? DEFAULT_CARD
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="lh-edit-github"
-    >
-      <PencilSimple size={13} weight="bold" />
-      Edit on GitHub
-    </a>
+    <CtaLink href={SIGNUP_URL} placement="toc_card" target="_blank" rel="noopener" className="lh-cloud-card">
+      <span className="lh-cloud-card-label">LearnHouse Cloud</span>
+      <span className="lh-cloud-card-title">{card.title}</span>
+      <span className="lh-cloud-card-text">{card.text}</span>
+      <span className="lh-cloud-card-link">Start free →</span>
+    </CtaLink>
   )
 }
 
-function LastEdited({ timestamp }) {
-  if (!timestamp) return null
+const formatDate = (value) =>
+  new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
-  const date = new Date(timestamp).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-
-  return (
-    <div className="lh-last-edited">
-      Last edited on {date}
-    </div>
-  )
-}
-
-function CloudAd() {
-  return (
-    <a
-      href="https://learnhouse.app"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group block nice-shadow rounded-2xl overflow-hidden bg-white! no-underline! relative transition-transform hover:scale-[1.02]"
-    >
-      {/* Dot pattern background */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-40"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #a5b4fc 1px, transparent 1px)',
-          backgroundSize: '14px 14px',
-          maskImage: 'linear-gradient(to bottom, black 20%, transparent 70%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 70%)',
-        }}
-      />
-
-      <div className="relative p-4">
-        <div className="flex items-center gap-2.5" style={{ marginBottom: 16 }}>
-          <img src="/img/logos/learnhouse-dark.svg" alt="LearnHouse" className="h-3.5" />
-          <span
-            className="text-[8px] font-bold uppercase tracking-wide text-white! px-1.5 py-px rounded"
-            style={{
-              background: 'linear-gradient(180deg, #818cf8 0%, #6366f1 100%)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 3px rgba(99,102,241,0.4), 0 0.5px 0 rgba(99,102,241,0.2)',
-              border: '0.5px solid rgba(99,102,241,0.5)',
-              textShadow: '0 1px 1px rgba(0,0,0,0.15)',
-            }}
-          >
-            Cloud
-          </span>
-        </div>
-        <p className="text-[12px] font-semibold text-neutral-900! leading-snug m-0!">
-          Try LearnHouse Cloud
-        </p>
-        <p className="mt-1.5 text-[10.5px] text-neutral-400! leading-relaxed m-0!">
-          Managed hosting with automatic updates, backups, and scaling.
-        </p>
-        <div className="mt-3 inline-flex items-center gap-1 text-[10.5px] font-semibold text-indigo-500! group-hover:gap-2 transition-all">
-          Get started free
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </div>
+/**
+ * The docs page shell: sidebar, article (breadcrumb, actions, content,
+ * last edited, previous/next) and the "On this page" rail. The home page is a
+ * full-width landing page instead.
+ */
+export default function Wrapper({ route, tree, crumbs, prev, next, toc, file, lastModified, children }) {
+  if (route === '/') {
+    return (
+      <div className="lh-home">
+        <div className="lh-prose lh-home-prose">{children}</div>
       </div>
-    </a>
-  )
-}
-
-export default function Wrapper({ children, toc, metadata }) {
-  const pathname = usePathname()
-  const isHome = pathname === '/'
+    )
+  }
 
   return (
     <div className="lh-page">
-      <Sidebar />
+      <Sidebar tree={tree} />
       <div className="lh-content-area">
         <article className="lh-article">
-          <div className="lh-article-header">
-            <Breadcrumb />
-            {!isHome && <EditOnGitHub filePath={metadata?.filePath} />}
+          <div className="lh-article-header" data-pagefind-ignore="all">
+            <Breadcrumb crumbs={crumbs} />
+            <div className="lh-article-actions">
+              <PageActions route={route} />
+              {file && (
+                <a
+                  href={`https://github.com/learnhouse/learnhouse/edit/dev/docs/content/${file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="lh-edit-github"
+                >
+                  <PencilSimple size={13} weight="bold" />
+                  Edit
+                </a>
+              )}
+            </div>
           </div>
-          <div className="lh-prose">
-            {children}
-          </div>
-          {!isHome && (
-            <div className="lh-article-footer">
-              <LastEdited timestamp={metadata?.timestamp} />
+          <div className="lh-prose">{children}</div>
+          {lastModified && (
+            <div className="lh-article-footer" data-pagefind-ignore="all">
+              <div className="lh-last-edited">Last edited on {formatDate(lastModified)}</div>
             </div>
           )}
-          <Pagination />
+          <Pagination prev={prev} next={next} />
         </article>
-        <div className="lh-toc">
-          {toc && toc.length > 0 && (
-            <TOC headings={toc} />
-          )}
-          <CloudAd />
-        </div>
+        <aside className="lh-toc" data-pagefind-ignore="all">
+          {toc?.length > 0 && <TOC headings={toc} />}
+          <CloudAd route={route} />
+        </aside>
       </div>
     </div>
   )

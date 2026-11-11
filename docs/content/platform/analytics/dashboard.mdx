@@ -1,11 +1,15 @@
-import { Callout } from 'nextra/components'
+---
+description: "Read the LearnHouse analytics dashboard, from live users and enrollment funnels to feature adoption and advanced retention widgets, and export the data."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Analytics Dashboard
 
-Open **Analytics** in the dashboard sidebar to see organization-wide numbers. The page has two tabs, **Overview** and **Advanced**, and a time range picker with **7d**, **30d** and **90d** (30 days by default). The range applies to every widget that uses one.
+Open **Analytics** in the dashboard sidebar to see organization-wide numbers. The page has three tabs, **Overview**, **Features** and **Advanced**, and a time range picker with **7d**, **30d**, **90d** and **12m** (30 days by default). The range applies to every widget that uses one. Admins also see how long data is kept (for example "1 year"), which links to the [analytics settings](/platform/analytics#settings).
 
 <Callout type="info">
-The dashboard needs analytics to be set up and an eligible plan. See [Analytics](/platform/analytics) for availability and setup.
+The dashboard needs the Enterprise Edition when self-hosted, or an eligible plan on LearnHouse Cloud. See [Analytics](/platform/analytics) for availability.
 </Callout>
 
 ## Overview
@@ -17,12 +21,13 @@ The dashboard needs analytics to be set up and an eligible plan. See [Analytics]
 | Widget | What it shows |
 | --- | --- |
 | **Live Now** | Users active in the last 5 minutes. Click it to see each user's current page, device, country and last seen time. |
-| **Signups** | New registrations in the selected range. Click it for the list with email and signup method. |
-| **Enrollments** | Course enrollments in the range. |
-| **Completions** | Course completions in the range. |
+| **Visitors** | Unique visitors in the selected range, with their page views. |
+| **Signups** | New registrations in the range. Click it for the list with email and signup method. |
+| **Enrollments** | Course enrollments in the range. Click it for the list. |
+| **Completions** | Course completions in the range. Click it for the list. |
 | **Submissions** | Assignment submissions in the range. |
-| **Daily Active Users** | Unique users per day. |
-| **Countries** / **Top Countries** | Where visitors come from. Needs a proxy that sets a country header, such as Cloudflare. |
+| **Traffic** | Visitors and signed-in learners per day. Hover a day for its device split, top countries and top referrer. |
+| **Countries** / **Top Countries** | Where visitors come from. Needs a CDN or proxy that sets a country header, such as Cloudflare. |
 | **Devices** | Split between **Desktop**, **Mobile** and **Tablet**. |
 | **Top Referrers** | The sites that send you traffic. |
 
@@ -35,6 +40,23 @@ The dashboard needs analytics to be set up and an eligible plan. See [Analytics]
 | **Activity Engagement** | The lessons learners spend the most time on, with type and average time. |
 
 <img src="/img/pages/analytics/analytics-core-widgets.webp" alt="Countries, Devices and Top Referrers above the Enrollment Funnel, Top Courses and Activity Engagement widgets" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+## Features
+
+The **Features** tab shows how each part of LearnHouse is used in the selected range.
+
+| Section | What it shows |
+| --- | --- |
+| **Feature adoption** | People using each feature (learning, assessments, community, AI assistant, podcasts, boards, playgrounds, learning paths, search, messaging, library and certificates), compared with the previous period. Click a feature to chart it. |
+| **Video engagement** | How far viewers get through each video. |
+| **Podcast listening** | Plays per episode and how many listen to the end. |
+| **Assessments** | Submissions, pass rate and average score for assignments, quizzes and code exercises. |
+| **Community activity** | Discussions, comments, reactions and upvotes per day, and the top communities. |
+| **AI assistant** | Messages sent, people using the assistant and where it is used. |
+| **Sign-up and sign-in** | Sign-ups, joins, logins and invites. |
+| **Email nudges** | Nudges sent and how many people came back within 7 days. |
+| **Learning paths**, **Boards and playgrounds**, **Library** | Use of each of these features. |
+| **Content creation** | Courses created and published, activities, boards, playgrounds and podcast episodes your team made. |
 
 ## Advanced
 
@@ -64,7 +86,7 @@ The **Advanced** tab adds deeper widgets. Each one shows a plan badge and an upg
 
 ## Exporting
 
-Click **Export** in the page header and choose **Download JSON** or **Download CSV**. The file holds the data behind the tab you are on (Overview or Advanced) for the selected range, and is named like `analytics_30d.csv`. Exporting needs the same admin rights and plan as viewing the widgets.
+Click **Export** in the page header and choose **Download JSON** or **Download CSV**. The file holds the data behind the tab you are on (Overview, Features or Advanced) for the selected range, and is named like `analytics_30d.csv`. Exporting needs the same admin rights and plan as viewing the widgets.
 
 ## Data freshness
 

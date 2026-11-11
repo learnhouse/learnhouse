@@ -1,4 +1,9 @@
-import { Callout } from 'nextra/components'
+---
+title: LMS setup guides
+description: Connect LearnHouse to Moodle, Canvas, Open edX, Sakai, ILIAS, Chamilo or OpenOLAT over LTI 1.3 with step-by-step setup for each LMS.
+---
+
+import { Callout } from '@/components/mdx'
 
 # LMS setup guides
 
@@ -14,16 +19,16 @@ Each guide starts in LearnHouse under **Developers → LTI**. Menu names are fro
 | [Chamilo](#chamilo) | 1.11 | Manual | Yes | Yes | Yes |
 | [OpenOLAT](#openolat) | 21 | Manual | Yes | Yes | Yes |
 
-### Content and assignments per LMS
+## Content and assignments per LMS
 
 Every LMS above can open all LearnHouse content types and receives assignment grades. What differs is how many items one selection can add and what the LMS does with the gradebook column.
 
 | LMS | Items per selection | Assignment while waiting for grading | Due date from LearnHouse |
 |---|---|---|---|
-| Moodle | Several (one activity each) | Comment "Submitted — waiting for grading" | No |
+| Moodle | Several (one activity each) | Comment "Submitted — waiting for grading in LearnHouse" | No |
 | Canvas | Several from **Modules → Add item → External Tool**; one from an assignment's submission type | "Needs grading" | Yes, and later LearnHouse changes follow |
 | Open edX | One per LTI block | Pending | No |
-| Sakai | One per **Add Learning App** | Comment "Submitted — waiting for grading" | No |
+| Sakai | One per **Add Learning App** | Comment "Submitted — waiting for grading in LearnHouse" | No |
 | ILIAS | One per LTI Consumer object | No score yet | No |
 | Chamilo | Several (one tool each) | No score yet | No |
 | OpenOLAT | Several in one LTI page element | No score yet | No |

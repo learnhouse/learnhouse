@@ -1,4 +1,8 @@
-import { Callout } from 'nextra/components'
+---
+description: Use the LearnHouse command palette and keyboard shortcuts to search, jump between pages with g chords and move through courses and lessons without a mouse.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Command Palette and Keyboard Shortcuts
 
@@ -17,7 +21,7 @@ Open the palette with <kbd>⌘</kbd> <kbd>K</kbd> on macOS, <kbd>Ctrl</kbd> <kbd
 Before you type, the palette shows:
 
 - **Actions**: the shortcuts available on the current page (for example **Start course** on a course page).
-- **Go to**: the pages of your organization, such as Home, Courses, Library, Podcasts, Communities, Playgrounds, Store, Progress, Boards and your account pages. A page only appears when the feature is turned on for the organization and you are allowed to open it.
+- **Go to**: the pages of your organization, such as Home, Courses, Paths, Library, Podcasts, Live, Communities, Playgrounds, Store, Progress, Boards, Calendar and your account pages. A page only appears when the feature is turned on for the organization and you are allowed to open it.
 
 <img src="/img/pages/search/search-palette.webp" alt="The command palette with search results grouped by type and the navigation keys at the bottom" width={1600} height={900} style={{ borderRadius: 10 }} />
 
@@ -47,13 +51,16 @@ Type 3 characters or more to search content. Results are grouped as **Courses**,
 | --- | --- |
 | <kbd>g</kbd> then <kbd>h</kbd> | Home |
 | <kbd>g</kbd> then <kbd>c</kbd> | Courses |
+| <kbd>g</kbd> then <kbd>r</kbd> | Learning paths |
 | <kbd>g</kbd> then <kbd>l</kbd> | Library |
 | <kbd>g</kbd> then <kbd>p</kbd> | Podcasts |
+| <kbd>g</kbd> then <kbd>v</kbd> | Live sessions |
 | <kbd>g</kbd> then <kbd>m</kbd> | Communities |
 | <kbd>g</kbd> then <kbd>y</kbd> | Playgrounds |
 | <kbd>g</kbd> then <kbd>s</kbd> | Store |
 | <kbd>g</kbd> then <kbd>t</kbd> | Progress (your trail) |
 | <kbd>g</kbd> then <kbd>b</kbd> | Boards |
+| <kbd>g</kbd> then <kbd>e</kbd> | Calendar |
 | <kbd>g</kbd> then <kbd>u</kbd> | Account settings |
 
 A chord only exists when its page is available to you. If the organization has turned off podcasts, for example, <kbd>g</kbd> <kbd>p</kbd> does nothing.
