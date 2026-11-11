@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 from uuid import uuid4
 from datetime import datetime
 from sqlmodel import select
@@ -119,12 +119,15 @@ async def toggle_reaction(
     emoji: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
     db_session: AsyncSession,
+    active: Optional[bool] = None,
 ) -> dict:
     """
-    Toggle a reaction on a discussion.
+    Toggle a reaction on a discussion, or set it to an explicit state.
 
-    If the user has already reacted with this emoji, it will be removed.
-    If the user has not reacted with this emoji, it will be added.
+    Without ``active``, an existing reaction with this emoji is removed and a
+    missing one is added. With ``active=True`` the reaction is added only if
+    missing; with ``active=False`` it is removed only if present. Either way
+    the response reports the resulting state, so repeating a call is safe.
     """
     # Verify user is not anonymous
     await authorization_verify_if_user_is_anon(current_user.id)
@@ -170,6 +173,13 @@ async def toggle_reaction(
         DiscussionReaction.emoji == emoji,
     )
     existing_reaction = (await db_session.execute(existing_reaction_statement)).scalars().first()
+
+    if existing_reaction and active is True:
+        # Already reacted: nothing to add
+        return {"action": "added", "emoji": emoji}
+    if not existing_reaction and active is False:
+        # Not reacted: nothing to remove
+        return {"action": "removed", "emoji": emoji}
 
     if existing_reaction:
         # Remove the reaction

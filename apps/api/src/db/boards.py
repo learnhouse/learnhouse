@@ -76,6 +76,17 @@ class BoardRead(BoardBase):
     member_count: int = 0
 
 
+class BoardReadWithRole(BoardRead):
+    """A board as listed for the current user."""
+
+    # The caller's own member role ('owner' | 'editor' | 'viewer'), the role
+    # GET /boards/{uuid}/membership reports from the member record. None when
+    # the caller has no member row (they see the board as public, an author,
+    # through a usergroup or as an org admin, which that endpoint reports as
+    # read-only 'viewer' access).
+    my_role: Optional[str] = None
+
+
 class BoardMemberCreate(SQLModel):
     user_id: int
     role: str = BoardMemberRole.EDITOR

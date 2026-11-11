@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
-from src.db.boards import Board, BoardMemberRead, BoardRead
+from src.db.boards import Board, BoardMemberRead, BoardRead, BoardReadWithRole
 from src.routers.boards.boards import internal_router, router as boards_router
 from src.routers.boards.boards_playground import router as boards_playground_router
 from src.routers.boards.boards_playground import (
@@ -450,10 +450,14 @@ class TestBoardsRouter:
         with patch(
             "src.routers.boards.boards.get_boards_by_org",
             new_callable=AsyncMock,
-            return_value=[_mock_board()],
+            return_value=[
+                BoardReadWithRole(**_mock_board().model_dump(), my_role="editor"),
+                BoardReadWithRole(**_mock_board(id=2, board_uuid="board_2").model_dump()),
+            ],
         ):
             response = await client.get("/api/v1/boards/org/1")
         assert response.status_code == 200
+        assert [b["my_role"] for b in response.json()] == ["editor", None]
 
         with patch(
             "src.routers.boards.boards.get_board",
