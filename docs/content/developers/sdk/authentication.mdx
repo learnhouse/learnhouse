@@ -30,6 +30,31 @@ you give it (read-only, full, or per resource), and never more than the user who
   browser code, a mobile app, or a repository.
 </Callout>
 
+## Embed sessions (your server mints, the browser uses)
+
+When learners sign in to *your* app, not LearnHouse, mint them a short-lived LearnHouse session on your server and hand
+it to the browser. The API token stays on the server:
+
+```ts
+// server
+const session = await lh.embed.createSession({ orgSlug: 'your-school', userId: 42 })
+// → { access_token, expires_at, expires_in, user_id, user_uuid, org_id }
+```
+
+```ts
+// browser
+const learner = createClient({
+  baseUrl: 'https://learn.your-school.com',
+  getSession: () => fetch('/api/learnhouse-session', { method: 'POST' }).then((r) => r.json()),
+})
+await learner.trail.completeActivity('activity_…')
+```
+
+`getSession` is called when there is no session yet, shortly before one expires, and once when the API answers 401.
+Pass `session` instead if you already have one. Embed sessions only reach the routes the embed components use; see
+[Signed-in learners](/developers/react/learners) for the full rules. `@learnhouse/react` and `@learnhouse/vue` take
+the same `session` / `getSession`.
+
 ## Signed-in learner (browsers and apps)
 
 Requests made as a learner see exactly what that learner can see, and progress (`trail`) is recorded for them.

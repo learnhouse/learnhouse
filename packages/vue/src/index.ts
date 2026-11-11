@@ -11,4 +11,5 @@ export type {
   ThemeMode,
 } from '@learnhouse/react'
 export type { LearnHouseLinkClickDetail } from '@learnhouse/react/element'
+export type { GetLearnHouseSession, LearnHouseSessionInput } from '@learnhouse/sdk'
 export { VERSION } from './version'

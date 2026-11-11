@@ -1,7 +1,7 @@
-import { computed, defineComponent, inject, provide, toValue } from 'vue'
+import { computed, defineComponent, inject, onScopeDispose, provide, toValue, watch } from 'vue'
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter, PropType, SlotsType } from 'vue'
-import { createClient } from '@learnhouse/sdk'
-import type { LearnHouseClient } from '@learnhouse/sdk'
+import { SessionStore, createClient } from '@learnhouse/sdk'
+import type { GetLearnHouseSession, LearnHouseClient, LearnHouseSessionInput } from '@learnhouse/sdk'
 import type { LearnHouseEvent, LearnHouseTheme } from '@learnhouse/react'
 
 export type LinkTarget = '_blank' | '_self' | '_parent' | '_top'
@@ -9,9 +9,18 @@ export type LinkTarget = '_blank' | '_self' | '_parent' | '_top'
 export interface LearnHouseOptions {
   /** Base URL of the LearnHouse instance, e.g. `https://learn.acme.com`. */
   baseUrl: string
-  /** A user access token. Never pass an `lh_` API token to the browser. */
+  /**
+   * The learner session: an embed session minted on your server with
+   * `client.embed.createSession()` (the object, or its `access_token`).
+   * Without one, activities are read-only and anonymous. Never pass an `lh_`
+   * API token to the browser.
+   */
+  session?: LearnHouseSessionInput | null
+  /** Fetches a new learner session from your server before the current one expires. */
+  getSession?: GetLearnHouseSession
+  /** @deprecated Use `session`. A user access token. */
   token?: string
-  /** Returns a user access token; called on each request (refresh on demand). */
+  /** @deprecated Use `getSession`. Called on each request for a user access token. */
   getToken?: () => string | null | undefined | Promise<string | null | undefined>
   /** Where media is served from, if not the instance itself (CDN, S3). */
   mediaUrl?: string
@@ -33,6 +42,8 @@ export interface LearnHouseOptions {
 export interface LearnHouseContext {
   options: ComputedRef<LearnHouseOptions>
   client: ComputedRef<LearnHouseClient>
+  /** The learner session every activity below shares (one refresh for all). */
+  sessionStore: SessionStore
 }
 
 export const LEARNHOUSE_KEY: InjectionKey<LearnHouseContext> = Symbol('learnhouse')
@@ -48,20 +59,42 @@ export function provideLearnHouse(options: MaybeRefOrGetter<LearnHouseOptions>):
   const own = computed(() => resolved.value.client)
   const baseUrl = computed(() => resolved.value.baseUrl)
   const mediaUrl = computed(() => resolved.value.mediaUrl)
+  const initial = resolved.value
+  const usesSessions = initial.session !== undefined || !!initial.getSession
+  // One store for the provider: every activity below reads the same session,
+  // and getSession runs once per renewal however many activities there are.
+  const sessionStore = new SessionStore(
+    initial.session ?? initial.token ?? null,
+    initial.getSession ? () => resolved.value.getSession?.() : undefined,
+  )
+  watch(
+    () => {
+      const s = resolved.value.session ?? resolved.value.token
+      return s === undefined ? undefined : typeof s === 'string' ? s : (s?.access_token ?? null)
+    },
+    (key, old) => {
+      if (key !== old && key !== undefined) sessionStore.set(resolved.value.session ?? resolved.value.token)
+    },
+  )
+  watch(
+    () => !!resolved.value.getSession,
+    (has) => sessionStore.setSource(has ? () => resolved.value.getSession?.() : undefined),
+  )
+  onScopeDispose(() => sessionStore.dispose())
+
   const client = computed(() => {
     if (own.value) return own.value
-    return createClient({
-      baseUrl: baseUrl.value,
-      mediaUrl: mediaUrl.value,
-      // Read at request time, so a refreshed token is picked up.
-      getToken: async () => {
-        const { token, getToken } = resolved.value
-        if (token) return token
-        return (await getToken?.()) ?? null
-      },
-    })
+    // Legacy getToken: asked on each request, as before.
+    if (!usesSessions && initial.token === undefined && resolved.value.getToken) {
+      return createClient({
+        baseUrl: baseUrl.value,
+        mediaUrl: mediaUrl.value,
+        getToken: async () => (await resolved.value.getToken?.()) ?? null,
+      })
+    }
+    return createClient({ baseUrl: baseUrl.value, mediaUrl: mediaUrl.value, sessionStore })
   })
-  const context = { options: resolved, client }
+  const context = { options: resolved, client, sessionStore }
   provide(LEARNHOUSE_KEY, context)
   return context
 }
@@ -80,6 +113,8 @@ export const LearnHouseProvider = defineComponent({
   name: 'LearnHouseProvider',
   props: {
     baseUrl: { type: String, required: true },
+    session: [String, Object] as PropType<LearnHouseSessionInput | null>,
+    getSession: Function as PropType<GetLearnHouseSession>,
     token: String,
     getToken: Function as PropType<LearnHouseOptions['getToken']>,
     mediaUrl: String,

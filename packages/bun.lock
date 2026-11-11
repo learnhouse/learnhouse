@@ -7,7 +7,7 @@
     },
     "react": {
       "name": "@learnhouse/react",
-      "version": "1.4.3",
+      "version": "1.4.4",
       "dependencies": {
         "@codemirror/autocomplete": "^6.20.4",
         "@codemirror/lang-cpp": "^6.0.3",
@@ -29,7 +29,7 @@
         "@codemirror/view": "^6.43.15",
         "@emoji-mart/react": "^1.1.1",
         "@icons-pack/react-simple-icons": "^13.15.1",
-        "@learnhouse/sdk": "1.4.3",
+        "@learnhouse/sdk": "1.4.4",
         "@phosphor-icons/react": "^2.1.10",
         "@radix-ui/react-checkbox": "^1.4.1",
         "@radix-ui/react-dialog": "^1.3.1",
@@ -85,6 +85,7 @@
         "tailwind-merge": "^3.7.0",
         "tippy.js": "^6.3.7",
         "typescript": "6.0.3",
+        "usehooks-ts": "^3.1.1",
         "uuid": "^14.0.3",
       },
       "devDependencies": {
@@ -110,7 +111,7 @@
     },
     "sdk": {
       "name": "@learnhouse/sdk",
-      "version": "1.4.3",
+      "version": "1.4.4",
       "devDependencies": {
         "openapi-typescript": "7.13.0",
         "tsup": "^9.0.0",
@@ -120,7 +121,7 @@
     },
     "vue": {
       "name": "@learnhouse/vue",
-      "version": "1.4.3",
+      "version": "1.4.4",
       "dependencies": {
         "@learnhouse/react": "1.4.3",
         "@learnhouse/sdk": "1.4.3",
@@ -938,6 +939,8 @@
 
     "load-tsconfig": ["load-tsconfig@0.2.5", "", {}, "sha512-IXO6OCs9yg8tMKzfPZ1YmheJbZCiEsnBdcB03l0OcfK9prKnJb96siuHCr5Fl37/yo9DnKU+TLpxzTUspw9shg=="],
 
+    "lodash.debounce": ["lodash.debounce@4.0.8", "", {}, "sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow=="],
+
     "longest-streak": ["longest-streak@3.1.0", "", {}, "sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g=="],
 
     "loose-envify": ["loose-envify@1.4.0", "", { "dependencies": { "js-tokens": "^3.0.0 || ^4.0.0" }, "bin": { "loose-envify": "cli.js" } }, "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="],
@@ -1285,6 +1288,8 @@
     "use-sidecar": ["use-sidecar@1.1.3", "", { "dependencies": { "detect-node-es": "^1.1.0", "tslib": "^2.0.0" }, "peerDependencies": { "@types/react": "*", "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-Fedw0aZvkhynoPYlA5WXrMCAMm+nSWdZt6lzJQ7Ok8S6Q+VsHmHpRWndVRJ8Be0ZbkfPc5LRYH+5XrzXcEeLRQ=="],
 
     "use-sync-external-store": ["use-sync-external-store@1.7.0", "", { "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-6L+EeigHMQhdaIPNIFUKwfWJSwWFQ8gJbJ2DLOs5sDIegTwR9fRxvnM3uciHKjIZhFz+KAv2emhWMRvDmMcY8A=="],
+
+    "usehooks-ts": ["usehooks-ts@3.1.1", "", { "dependencies": { "lodash.debounce": "^4.0.8" }, "peerDependencies": { "react": "^16.8.0  || ^17 || ^18 || ^19 || ^19.0.0-rc" } }, "sha512-I4diPp9Cq6ieSUH2wu+fDAVQO43xwtulo+fKEidHUwZPnYImbtkTjzIJYcDcJqxgmX31GVqNFURodvcgHcW0pA=="],
 
     "uuid": ["uuid@14.0.3", "", { "bin": { "uuid": "dist-node/bin/uuid" } }, "sha512-Sc5u1VVln93y1Xnz4R+CunOZc7R9LUcTmhj7Rc7Eg3HVcf7rVn2FOoa812fe0W8p3jD7xeoGSYbfqCGGH2B6xw=="],
 

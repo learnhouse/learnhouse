@@ -174,9 +174,11 @@ export function pickKeys(messages, keys) {
 }
 
 async function buildLocales(metafile) {
+  // Web source, plus the package's own components (they reuse web keys).
+  const srcDir = path.join(pkgDir, 'src')
   const webInputs = Object.keys(metafile.inputs)
     .map((f) => path.resolve(pkgDir, f))
-    .filter((f) => f.startsWith(webDir) && /\.(t|j)sx?$/.test(f))
+    .filter((f) => (f.startsWith(webDir) || f.startsWith(srcDir)) && /\.(t|j)sx?$/.test(f))
   const sources = await Promise.all(webInputs.map((f) => readFile(f, 'utf8')))
   const localesDir = path.join(webDir, 'locales')
   const en = JSON.parse(await readFile(path.join(localesDir, 'en.json'), 'utf8'))
@@ -280,6 +282,8 @@ async function buildCss() {
     'components/Contexts',
     'lib',
     'services',
+    // Learner-side assignment task editors (rendered for signed-in learners).
+    'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes',
   ].map((dir) => `@source '${path.join(webDir, dir)}';`)
   const input = globals
     .replace(/@import ['"]tailwindcss['"];/, `@import 'tailwindcss' source(none);\n${sources.join('\n')}\n@source '${path.join(pkgDir, 'src')}';`)

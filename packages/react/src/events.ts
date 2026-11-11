@@ -10,7 +10,7 @@ interface Options {
   trackCompletion: boolean
 }
 
-const READY_SELECTOR = '.lh-static-canva > *, video, iframe, .markdown-body, img'
+const READY_SELECTOR = '.lh-static-canva > *, .lh-assignment > *, video, iframe, .markdown-body, img'
 const PROGRESS_EVERY_MS = 5000
 const COMPLETION_SETTLE_MS = 1500
 

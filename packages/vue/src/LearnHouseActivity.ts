@@ -7,7 +7,7 @@ import type {
   LearnHouseTheme,
 } from '@learnhouse/react'
 import type { LearnHouseActivityElement, LearnHouseLinkClickDetail } from '@learnhouse/react/element'
-import type { Activity } from '@learnhouse/sdk'
+import type { Activity, GetLearnHouseSession, LearnHouseSessionInput } from '@learnhouse/sdk'
 import { useLearnHouseContext } from './provider'
 import type { LinkTarget } from './provider'
 
@@ -42,7 +42,14 @@ export const LearnHouseActivity = defineComponent({
     content: [Object, String] as PropType<ActivityDocument | string>,
     /** Base URL of the LearnHouse instance. Defaults to the provider's. */
     baseUrl: String,
-    /** A user access token. Never pass an `lh_` API token to the browser. */
+    /**
+     * The learner session, when this activity uses its own `baseUrl` (otherwise
+     * the provider's session is shared). Never pass an `lh_` API token.
+     */
+    session: [String, Object] as PropType<LearnHouseSessionInput | null>,
+    /** Fetches a new learner session from your server (with `session` / `baseUrl`). */
+    getSession: Function as PropType<GetLearnHouseSession>,
+    /** @deprecated Use `session`. */
     token: String,
     /** Org uuid for media URLs when rendering `content` without fetching. */
     orgId: String,
@@ -60,6 +67,11 @@ export const LearnHouseActivity = defineComponent({
     linkTarget: String as PropType<LinkTarget>,
     /** Emit `complete` when the end of the activity scrolls into view. */
     trackCompletion: Boolean,
+    /**
+     * How a signed-in learner completes the activity: `button` (default with a
+     * session), `scroll` (when the end comes into view) or `none`.
+     */
+    completion: String as PropType<'button' | 'scroll' | 'none'>,
     /** Show the activity name above the content. */
     showTitle: Boolean,
     showPoweredBy: Boolean,
@@ -77,6 +89,10 @@ export const LearnHouseActivity = defineComponent({
     load: (_activity: LearnHouseActivityData) => true,
     ready: () => true,
     complete: (_event: EventOf<'complete'>) => true,
+    /** The learner's completion changed (saved to their progress). */
+    progress: (_event: EventOf<'progress'>) => true,
+    /** The session ran out and no new one could be fetched. */
+    sessionExpired: (_event: EventOf<'session_expired'>) => true,
     media: (_event: EventOf<'media'>) => true,
     resize: (_event: EventOf<'resize'>) => true,
     error: (_error: Error) => true,
@@ -125,6 +141,8 @@ export const LearnHouseActivity = defineComponent({
       },
       'lh-ready': () => emit('ready'),
       'lh-complete': (e) => emit('complete', e.detail),
+      'lh-progress': (e) => emit('progress', e.detail),
+      'lh-session-expired': (e) => emit('sessionExpired', e.detail),
       'lh-media': (e) => emit('media', e.detail),
       'lh-resize': (e) => emit('resize', e.detail),
       'lh-event': (e) => {
@@ -155,6 +173,10 @@ export const LearnHouseActivity = defineComponent({
           content: raw(props.content),
           orgId: props.orgId,
           baseUrl: props.baseUrl ?? defaults?.baseUrl,
+          // The provider's client carries its session store; a separate
+          // instance gets this component's own session.
+          session: ownInstance ? undefined : props.session,
+          getSession: ownInstance ? undefined : props.getSession,
           token: props.token ?? (ownInstance ? defaults?.token : undefined),
           getToken: ownInstance ? defaults?.getToken : undefined,
           // Share the provider's client (and its cache) when it's the same instance.
@@ -168,6 +190,7 @@ export const LearnHouseActivity = defineComponent({
           hideBlocks: raw(props.hideBlocks),
           linkTarget: props.linkTarget ?? defaults?.linkTarget,
           trackCompletion: props.trackCompletion,
+          completion: props.completion,
           showTitle: props.showTitle,
           showPoweredBy: props.showPoweredBy,
           unstyled: props.unstyled,

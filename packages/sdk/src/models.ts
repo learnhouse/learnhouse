@@ -45,3 +45,21 @@ export interface LoginMfaChallenge {
 }
 
 export type LoginResult = LoginSuccess | LoginMfaChallenge
+
+/**
+ * A short-lived learner session for the embed components, minted on your
+ * server with `client.embed.createSession()`. Hand `access_token` to the
+ * browser; the org API token stays on the server.
+ */
+export interface EmbedSession {
+  access_token: string
+  token_type: 'bearer'
+  /** Seconds until it expires. */
+  expires_in: number
+  /** Unix time (seconds) it expires at. */
+  expires_at: number
+  user_id: number
+  user_uuid: string
+  /** The organization the session works in (and only in). */
+  org_id: number
+}

@@ -5,7 +5,7 @@ Provides headless API operations using API token authentication.
 All functions require an APITokenUser and operate within the token's org scope.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from urllib.parse import quote
 from uuid import uuid4
@@ -56,7 +56,12 @@ from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.auth import create_access_token
 from src.security.org_auth import org_owns_account
-from src.security.session_context import AUTH_METHOD_API_TOKEN, session_claims
+from src.security.embed_session import (
+    EMBED_SESSION_DEFAULT_TTL,
+    EMBED_SESSION_MAX_TTL,
+    EMBED_SESSION_MIN_TTL,
+)
+from src.security.session_context import AUTH_METHOD_API_TOKEN, AUTH_METHOD_EMBED, session_claims
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.security.features_utils.usage import (
@@ -407,6 +412,60 @@ async def issue_user_token(
         "token_type": "bearer",
         "user_id": user.id,
         "user_uuid": user.user_uuid,
+    }
+
+
+async def issue_embed_session(
+    token_user: APITokenUser,
+    user_id: int,
+    db_session: AsyncSession,
+    ttl_seconds: Optional[int] = None,
+) -> dict:
+    """Mint an embed session for a learner of the token's org.
+
+    Same gate as :func:`issue_user_token` (``users.action_update``, no
+    privileged or shared accounts, no target with rights beyond the token's),
+    but the result is meant for a browser: it lives at most an hour, has no
+    refresh token, is held to the org and only reaches the embed routes (see
+    :mod:`src.security.embed_session`).
+    """
+    _require_token_right(token_user, "users", "update")
+
+    if ttl_seconds is None:
+        ttl = EMBED_SESSION_DEFAULT_TTL
+    else:
+        ttl = timedelta(seconds=ttl_seconds)
+        if not EMBED_SESSION_MIN_TTL <= ttl <= EMBED_SESSION_MAX_TTL:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"ttl_seconds must be between {int(EMBED_SESSION_MIN_TTL.total_seconds())} "
+                    f"and {int(EMBED_SESSION_MAX_TTL.total_seconds())}"
+                ),
+            )
+
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _check_token_can_impersonate(user, token_user, db_session)
+
+    expires_at = datetime.now(timezone.utc) + ttl
+    access_token = create_access_token(
+        data={
+            "sub": user.email,
+            "purpose": "session",
+            **session_claims(AUTH_METHOD_EMBED, token_user.org_id),
+        },
+        expires_delta=ttl,
+    )
+    # Not recorded as a login: hosts mint one per page view or every few
+    # minutes, which would drown the org's sign-in analytics.
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": int(ttl.total_seconds()),
+        "expires_at": int(expires_at.timestamp()),
+        "user_id": user.id,
+        "user_uuid": user.user_uuid,
+        "org_id": token_user.org_id,
     }
 
 
