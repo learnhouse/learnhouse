@@ -11,11 +11,19 @@ on:
       # e.g. `cli-1.4.9`, NOT `cli-v1.4.9`. The version (everything after `cli-`)
       # must equal apps/cli/package.json "version".
       - 'cli-[0-9]*'
+  # Publish an existing CLI tag again (e.g. when its tag push didn't start a
+  # run). The CLI is still built from that tag's source.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'CLI tag to publish, e.g. cli-1.6.0'
+        required: true
+        type: string
 
 # Never run two publishes for the same tag concurrently, and never cancel one
 # mid-flight (interrupting the publish step is the one thing we must not do).
 concurrency:
-  group: cli-publish-${{ github.ref }}
+  group: cli-publish-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 # Least privilege: this job pushes nothing back to the repo. `id-token: write`
@@ -34,6 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
 
       - uses: actions/setup-node@v7.1.0
         with:
@@ -55,7 +65,14 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#cli-}" >> "$GITHUB_OUTPUT"
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          if ! [[ "$TAG" =~ ^cli-[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Not a CLI tag: $TAG"
+            exit 1
+          fi
+          echo "version=${TAG#cli-}" >> "$GITHUB_OUTPUT"
 
       # ── Safety gate 2: the tag, package.json and the version compiled into the
       # freshly-built binary must all agree. Executing dist/ catches both a broken
