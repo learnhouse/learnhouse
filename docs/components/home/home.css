@@ -283,7 +283,34 @@
 /* Concept and topic chips pick up a tiny dotted backing on hover. */
 .lhh-topic .lhh-chip, .lhh-concept .lhh-chip { transition: background 0.2s; }
 .lhh-topic:hover .lhh-chip {
-  background-color: #f5f5f5;
+  background-color: var(--lh-accent-soft);
   background-image: var(--lh-pattern-dots);
   background-size: 6px 6px;
 }
+
+/* Color: each card's chip and label gets one of the section hues. */
+.lhh-hero > .lhh-label { color: var(--lh-accent-text); }
+.lhh-chip { background: var(--lh-accent-soft); color: var(--lh-accent-text); }
+.lhh-start-card .lhh-label { color: var(--lh-accent-text); }
+.lhh-start-action { color: var(--lh-accent-text); }
+
+.lhh-start-card:nth-child(1) { --lh-accent: #3b82f6; --lh-accent-text: #1d4ed8; --lh-accent-soft: #eff6ff; --lh-accent-ring: #dbeafe; }
+html[class~='dark'] .lhh-start-card:nth-child(1) { --lh-accent: #60a5fa; --lh-accent-text: #93c5fd; --lh-accent-soft: rgba(59,130,246, 0.12); --lh-accent-ring: rgba(59,130,246, 0.28); }
+.lhh-start-card:nth-child(2) { --lh-accent: #10b981; --lh-accent-text: #047857; --lh-accent-soft: #ecfdf5; --lh-accent-ring: #d1fae5; }
+html[class~='dark'] .lhh-start-card:nth-child(2) { --lh-accent: #34d399; --lh-accent-text: #6ee7b7; --lh-accent-soft: rgba(16,185,129, 0.12); --lh-accent-ring: rgba(16,185,129, 0.28); }
+.lhh-start-card:nth-child(3) { --lh-accent: #8b5cf6; --lh-accent-text: #6d28d9; --lh-accent-soft: #f5f3ff; --lh-accent-ring: #ede9fe; }
+html[class~='dark'] .lhh-start-card:nth-child(3) { --lh-accent: #a78bfa; --lh-accent-text: #c4b5fd; --lh-accent-soft: rgba(139,92,246, 0.12); --lh-accent-ring: rgba(139,92,246, 0.28); }
+.lhh-topic:nth-child(7n+1), .lhh-concept:nth-child(7n+1) { --lh-accent: #3b82f6; --lh-accent-text: #1d4ed8; --lh-accent-soft: #eff6ff; --lh-accent-ring: #dbeafe; }
+html[class~='dark'] .lhh-topic:nth-child(7n+1), html[class~='dark'] .lhh-concept:nth-child(7n+1) { --lh-accent: #60a5fa; --lh-accent-text: #93c5fd; --lh-accent-soft: rgba(59,130,246, 0.12); --lh-accent-ring: rgba(59,130,246, 0.28); }
+.lhh-topic:nth-child(7n+2), .lhh-concept:nth-child(7n+2) { --lh-accent: #8b5cf6; --lh-accent-text: #6d28d9; --lh-accent-soft: #f5f3ff; --lh-accent-ring: #ede9fe; }
+html[class~='dark'] .lhh-topic:nth-child(7n+2), html[class~='dark'] .lhh-concept:nth-child(7n+2) { --lh-accent: #a78bfa; --lh-accent-text: #c4b5fd; --lh-accent-soft: rgba(139,92,246, 0.12); --lh-accent-ring: rgba(139,92,246, 0.28); }
+.lhh-topic:nth-child(7n+3), .lhh-concept:nth-child(7n+3) { --lh-accent: #10b981; --lh-accent-text: #047857; --lh-accent-soft: #ecfdf5; --lh-accent-ring: #d1fae5; }
+html[class~='dark'] .lhh-topic:nth-child(7n+3), html[class~='dark'] .lhh-concept:nth-child(7n+3) { --lh-accent: #34d399; --lh-accent-text: #6ee7b7; --lh-accent-soft: rgba(16,185,129, 0.12); --lh-accent-ring: rgba(16,185,129, 0.28); }
+.lhh-topic:nth-child(7n+4), .lhh-concept:nth-child(7n+4) { --lh-accent: #f59e0b; --lh-accent-text: #b45309; --lh-accent-soft: #fffbeb; --lh-accent-ring: #fef3c7; }
+html[class~='dark'] .lhh-topic:nth-child(7n+4), html[class~='dark'] .lhh-concept:nth-child(7n+4) { --lh-accent: #fbbf24; --lh-accent-text: #fcd34d; --lh-accent-soft: rgba(245,158,11, 0.12); --lh-accent-ring: rgba(245,158,11, 0.28); }
+.lhh-topic:nth-child(7n+5), .lhh-concept:nth-child(7n+5) { --lh-accent: #ec4899; --lh-accent-text: #be185d; --lh-accent-soft: #fdf2f8; --lh-accent-ring: #fce7f3; }
+html[class~='dark'] .lhh-topic:nth-child(7n+5), html[class~='dark'] .lhh-concept:nth-child(7n+5) { --lh-accent: #f472b6; --lh-accent-text: #f9a8d4; --lh-accent-soft: rgba(236,72,153, 0.12); --lh-accent-ring: rgba(236,72,153, 0.28); }
+.lhh-topic:nth-child(7n+6), .lhh-concept:nth-child(7n+6) { --lh-accent: #0ea5e9; --lh-accent-text: #0369a1; --lh-accent-soft: #f0f9ff; --lh-accent-ring: #e0f2fe; }
+html[class~='dark'] .lhh-topic:nth-child(7n+6), html[class~='dark'] .lhh-concept:nth-child(7n+6) { --lh-accent: #38bdf8; --lh-accent-text: #7dd3fc; --lh-accent-soft: rgba(14,165,233, 0.12); --lh-accent-ring: rgba(14,165,233, 0.28); }
+.lhh-topic:nth-child(7n+7), .lhh-concept:nth-child(7n+7) { --lh-accent: #14b8a6; --lh-accent-text: #0f766e; --lh-accent-soft: #f0fdfa; --lh-accent-ring: #ccfbf1; }
+html[class~='dark'] .lhh-topic:nth-child(7n+7), html[class~='dark'] .lhh-concept:nth-child(7n+7) { --lh-accent: #2dd4bf; --lh-accent-text: #5eead4; --lh-accent-soft: rgba(20,184,166, 0.12); --lh-accent-ring: rgba(20,184,166, 0.28); }

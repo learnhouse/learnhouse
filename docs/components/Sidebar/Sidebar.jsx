@@ -99,6 +99,9 @@ import {
   Translate,
   Cpu,
   DeviceMobile,
+  ChatsCircle,
+  VideoCamera,
+  ArrowSquareIn,
 } from '@phosphor-icons/react/dist/ssr'
 
 const ICON_SIZE = 15
@@ -171,6 +174,7 @@ const iconMap = {
 
   // Platform > Boards
   '/platform/boards': ChalkboardSimple,
+  '/platform/messages': ChatsCircle,
 
   // Platform > Podcasts
   '/platform/podcasts': Microphone,
@@ -216,6 +220,8 @@ const iconMap = {
   '/enterprise/sso': IdentificationBadge,
   '/enterprise/audit-logs': Scroll,
   '/enterprise/scorm': Package,
+  '/enterprise/lti': ArrowSquareIn,
+  '/enterprise/live-sessions': VideoCamera,
 
   // Self Hosting
   '/self-hosting/installation': DownloadSimple,
