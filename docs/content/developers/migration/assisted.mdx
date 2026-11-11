@@ -1,8 +1,15 @@
-import { Callout } from 'nextra/components'
+---
+title: AI-Assisted Migration
+description: Upload a folder of videos, PDFs, images and audio, let LearnHouse AI propose chapters and activities, then create the whole course in one API call.
+---
+
+import { Callout } from '@/components/mdx'
 
 # AI-Assisted Migration
 
-LearnHouse exposes a three-call API that uploads a folder of media files, asks Gemini to organise them into chapters and activities, and then creates the entire course in a single transaction. This is the right path when you have a directory full of legacy lecture recordings, PDFs, and images but no existing structure.
+LearnHouse exposes a three-call API that uploads a folder of media files, asks the instance's configured AI model (see [AI Setup](/self-hosting/configuration/ai-setup)) to organise them into chapters and activities, and then creates the entire course in a single transaction. This is the right path when you have a directory full of legacy lecture recordings, PDFs, and images but no existing structure.
+
+The same flow is available without code in the dashboard: **Create Course** > **From Existing Content** opens the **Migrate Content** wizard. See [Import & Export](/platform/courses/import-export#from-existing-content). The suggest step uses 1 [AI credit](/platform/ai#ai-credits).
 
 All three endpoints live under `/api/v1/courses/migrate/`. They require an **authenticated user session (JWT)** with permission to create courses in the target organization.
 
@@ -13,14 +20,14 @@ All three endpoints live under `/api/v1/courses/migrate/`. They require an **aut
 JWT=$(curl -s -X POST 'http://localhost:1338/api/v1/admin/{org_slug}/auth/token' \
   -H 'Authorization: Bearer lh_your_api_token' \
   -H 'Content-Type: application/json' \
-  -d '{"user_id": 1}' | jq -r .access_token)
+  -d '{"user_id": 2}' | jq -r .access_token)
 
 # Now use $JWT for the migrate/* calls
 curl -X POST "http://localhost:1338/api/v1/courses/migrate/upload?org_id=1" \
   -H "Authorization: Bearer $JWT" -F 'files=@./video.mp4'
 ```
 
-The token-swap endpoint requires the API token to have the `users.action_read` permission and the target user must belong to the same organization.
+The API token needs the **Update** right on **Users (Admin API)**. The target must be a member of your organization only, with a role that can create courses but is not Admin or Maintainer (for example Instructor). The JWT lasts 1 hour. See [the swap rules](/developers/migration#authentication).
 </Callout>
 
 ## When to use this vs. programmatic migration
@@ -52,7 +59,7 @@ Files with any other extension are skipped. Per-file size limit is **5 GB**, and
 | # | Method | Path | Purpose |
 | --- | --- | --- | --- |
 | 1 | `POST` | `/api/v1/courses/migrate/upload?org_id={org_id}` | Upload one or more files to a temporary holding area. Returns a `temp_id`. |
-| 2 | `POST` | `/api/v1/courses/migrate/suggest?org_id={org_id}` | Ask Gemini to propose a course tree from the uploaded files. Returns the structure for you to review. |
+| 2 | `POST` | `/api/v1/courses/migrate/suggest?org_id={org_id}` | Ask the AI model to propose a course tree from the uploaded files. Returns the structure for you to review. |
 | 3 | `POST` | `/api/v1/courses/migrate/create?org_id={org_id}` | Commit the (possibly edited) structure: creates the course, chapters, activities, and uploads each file to its final destination. |
 
 Temporary uploads older than 60 minutes are garbage-collected automatically, so finish a migration in one sitting.
@@ -64,7 +71,7 @@ Upload up to 20 GB of files in one or more requests. Pass `temp_id` on subsequen
 ```bash
 # First batch: creates a new temp_id
 curl -X POST "http://localhost:1338/api/v1/courses/migrate/upload?org_id=1" \
-  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Authorization: Bearer $JWT" \
   -F 'files=@./lectures/lesson-01.mp4' \
   -F 'files=@./lectures/lesson-02.mp4' \
   -F 'files=@./handouts/syllabus.pdf'
@@ -93,7 +100,7 @@ Append more files to the same `temp_id`:
 
 ```bash
 curl -X POST "http://localhost:1338/api/v1/courses/migrate/upload?org_id=1&temp_id=9c4e3...-d8f1-4..." \
-  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Authorization: Bearer $JWT" \
   -F 'files=@./images/diagram-01.png'
 ```
 
@@ -105,11 +112,11 @@ The server limits concurrent uploads to **3 simultaneous requests per process**.
 
 ## Step 2: Ask for a suggested structure
 
-Send the `temp_id` and a course name; Gemini groups the files into chapters and proposes activity titles:
+Send the `temp_id` and a course name; the AI model groups the files into chapters and proposes activity titles:
 
 ```bash
 curl -X POST "http://localhost:1338/api/v1/courses/migrate/suggest?org_id=1" \
-  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Authorization: Bearer $JWT" \
   -H "Content-Type: application/json" \
   -d '{
     "temp_id": "9c4e3...-d8f1-4...",
@@ -172,7 +179,7 @@ Post the (possibly edited) structure back with the same `temp_id`. The server cr
 
 ```bash
 curl -X POST "http://localhost:1338/api/v1/courses/migrate/create?org_id=1" \
-  -H "Authorization: Bearer lh_your_api_token" \
+  -H "Authorization: Bearer $JWT" \
   -H "Content-Type: application/json" \
   -d '{
     "temp_id": "9c4e3...-d8f1-4...",
@@ -209,7 +216,7 @@ Response:
 }
 ```
 
-The created course is **unpublished and private** by default (`public: false`, `published: false`). Visit `/{org_slug}/courses/{course_uuid}/edit` in the dashboard to review and publish it, or use `PUT /api/v1/courses/{course_uuid}` to publish programmatically.
+The created course is **unpublished and private** by default (`public: false`, `published: false`). Open it from **Courses** in the dashboard to review and publish it, or use `PUT /api/v1/courses/{course_uuid}` to publish programmatically.
 
 If anything fails (database error, file copy failure, missing files), the entire transaction is rolled back and `success` is `false` with the error in `error`. The temporary upload directory is cleaned up either way, so start over from step 1 with a fresh upload.
 
@@ -223,7 +230,7 @@ API=http://localhost:1338/api/v1
 API_TOKEN=lh_your_api_token        # Pro-plan API token
 ORG_SLUG=default
 ORG_ID=1
-USER_ID=1                          # the user to act as
+USER_ID=2                          # an Instructor account, not an Admin or Maintainer
 COURSE_NAME="Migrated content"
 
 # 0. Swap the API token for a user JWT (migrate/* endpoints reject API tokens)
@@ -262,7 +269,7 @@ A successfully completed migration leaves no temporary state behind: step 3 dele
 ## Limitations
 
 - **Media only.** Text content (Markdown, HTML, rich text) is not imported. The dynamic-page activities created from images and audio contain a single block referencing the file; no surrounding prose is generated.
-- **Single-chapter fallback.** If Gemini is unavailable, every file lands in one chapter named "Content". You can edit the structure before step 3 to rearrange.
+- **Single-chapter fallback.** If the AI model is unavailable, every file lands in one chapter named "Content". You can edit the structure before step 3 to rearrange.
 - **No assignments / quizzes / SCORM.** The flow does not infer interactive content from media. Create those separately via the programmatic flow.
 - **One file per activity.** Each migrated activity references exactly one source file. If you need an activity that combines multiple files (e.g. a dynamic page with several images), build that with the programmatic flow.
 

@@ -1,48 +1,71 @@
+---
+description: "Learn what the Admin, Maintainer, Instructor and User roles can do in LearnHouse, and create custom roles with their own permissions on the Pro plan."
+---
+
+import { Callout } from '@/components/mdx'
+
 # Roles and Permissions
 
-LearnHouse uses a role-based access control model. Roles are stored as database rows with a per-resource permission matrix (courses, users, usergroups, collections, organizations, chapters, activities, roles, dashboard, communities, discussions, podcasts, boards, playgrounds), so organizations can customize permissions or create their own roles on top of the defaults.
+Every member has exactly one role in each organization they belong to. A role is a permission matrix: for each resource (courses, users, user groups and so on) it says whether the member can create, read, update or delete, and whether that applies to everything or only to items they own.
 
-Every new instance is seeded with four default global roles:
+## Default roles
 
-## Admin
+Every instance ships with four roles. They are marked **System-wide** in the dashboard and cannot be edited or deleted; use **View Rights** to see their permissions.
 
-Admins have full control over the organization. They can:
+<img src="/img/pages/users/roles-list.webp" alt="The Roles tab listing Admin, Maintainer, Instructor and User, each marked System-wide with its permission count" width={1600} height={900} style={{ borderRadius: 10 }} />
 
-- Manage all courses, collections, and content
-- Manage users and assign roles
-- Configure organization settings (branding, AI, signup)
-- Access all platform features
+| Role | Description |
+| --- | --- |
+| **Admin** | Full platform control |
+| **Maintainer** | Mid-level manager, wide permissions but no platform control |
+| **Instructor** | Can manage their own content |
+| **User** | Read-only learner. The default role for new members. |
 
-## Maintainer
+### What each default role can do
 
-Maintainers are mid-level managers who can operate most of the organization day-to-day but cannot change platform-level settings. They can:
+C = create, R = read, U = update, D = delete. "own" means only items the member created.
 
-- Manage courses, collections, and published content
-- Manage users within the organization
-- Moderate community discussions and boards
+| Resource | Admin | Maintainer | Instructor | User |
+| --- | --- | --- | --- | --- |
+| Courses | C R U D | C R U D | C R, U own, D own | R |
+| Chapters and activities | C R U D | C R U D | C R | R |
+| Assignments | C R U D | C R U D | C R U | R |
+| Users | C R U D | C R U | none | none |
+| User groups | C R U D | C R U D | R | R |
+| Folders and media | C R U D | C R U D | C R | R |
+| Organization | C R U D | R | none | none |
+| Roles | C R U D | R | none | none |
+| Communities | C R U D | C R U D | R | R |
+| Discussions | C R U D | C R U D | C R, U own, D own | C R, U own, D own |
+| Podcasts, boards, playgrounds | C R U D | C R U D | C R, U own, D own | R |
+| Dashboard access | Yes | Yes | Yes | No |
 
-## Instructor
+In practice:
 
-Instructors focus on teaching and creating educational content. They can:
+- **Admins** manage everything, including organization settings, roles, sign-in and two-factor policies.
+- **Maintainers** run the organization day to day: content, members and groups. They cannot change organization settings or roles, and cannot delete users.
+- **Instructors** create courses and other content and manage what they own. They cannot manage members.
+- **Users** take courses, join discussions and track their progress. They have no dashboard.
 
-- Create and edit their own courses, chapters, and activities
-- View learner progress for their courses
-- Use the AI assistant for content creation
-- Manage collections they own
+Some settings are restricted to the Admin role specifically, such as the [sign-in methods and two-factor policy](/platform/users/two-factor). Analytics and other "organization admin" features check for permission to update the organization, which only Admin has among the defaults.
 
-Instructors cannot modify organization-level settings or manage other users' roles.
+## Custom roles
 
-## User
+<Callout type="info">
+Custom roles need the **Pro** plan or higher on LearnHouse Cloud. They are included on every self-hosted instance.
+</Callout>
 
-Users are the default learner role. They can:
+Go to **Users** → **Roles** and click **Create a Role**.
 
-- Browse and enroll in available courses
-- Complete activities, assignments, and quizzes
-- View their own Trail and progress
-- Interact with the AI assistant for learning support
+1. Enter a **Role Name** (at least 2 characters) and a **Description** (at least 10 characters).
+2. Optionally start from one of the **Predefined Rights**: Admin, Maintainer, Instructor, Viewer, Content Creator, User Manager, Moderator, Analyst or Guest. A preset only fills in the checkboxes; you can change them afterwards.
+3. Under **Permissions**, tick the actions the role should have for each resource: Courses, Users, User Groups, Folders, Media, Organizations, Course Chapters, Activities, Roles and Dashboard. Actions are **create**, **read**, **read own**, **update**, **update own**, **delete** and **delete own**. Dashboard only has **access**.
+4. Save. The role now appears in the role dropdown on the **Users** tab.
 
-Users cannot create or edit courses or access administrative features.
+<img src="/img/pages/users/role-create.webp" alt="The Create a Role dialog with a role name, the Predefined Rights presets and the permission checkboxes per resource" width={1600} height={900} style={{ borderRadius: 10 }} />
 
-## Custom Roles
+Custom roles belong to your organization. Deleting a role cannot be undone, and members who had it lose its permissions.
 
-Admins can create additional roles (global or organization-scoped) and fine-tune each permission individually from the dashboard.
+## Admin seats
+
+On LearnHouse Cloud, every member whose role has dashboard access takes an admin seat. See [member limits](/platform/users#member-limits-on-learnhouse-cloud).

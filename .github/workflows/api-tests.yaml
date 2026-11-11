@@ -28,26 +28,47 @@ jobs:
           python-version: "3.14"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.2
+        uses: astral-sh/setup-uv@v10.3.3
         with:
-          version: "0.13.5"
+          version: "0.13.7"
           # Resolving and downloading the API's wheels from scratch on every
           # run is pure repetition; the lockfile is what decides the answer,
           # so key the cache on it.
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
 
+      - name: Cache ffmpeg packages
+        # ffmpeg pulls ~60 MB of packages, and the Ubuntu mirror is sometimes
+        # slow enough to make this the longest step. apt still resolves the
+        # versions; it only skips downloading the ones already cached.
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/apt-archives
+          key: apt-ffmpeg-${{ runner.os }}-${{ runner.arch }}-v1
+
       - name: Install ffmpeg
         # Required by the video faststart / HLS transcode tests (they skip
         # without it, which would leave that code uncovered).
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+        run: |
+          mkdir -p ~/apt-archives/partial
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends -o Dir::Cache::Archives="$HOME/apt-archives" ffmpeg
+          sudo chown -R "$(id -u):$(id -g)" ~/apt-archives
 
       - name: Install dependencies
         run: uv sync
         working-directory: apps/api
 
       - name: Run tests with coverage
-        run: uv run pytest src/tests/ -v --tb=short --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=25
+        # One worker per core; worksteal rebalances when a worker lands the
+        # slow files. -q because -v printed ~10k lines nobody read. The
+        # coverage floor (100%) lives in pyproject.toml so local runs enforce
+        # the same number. --durations keeps new slow tests visible.
+        run: >-
+          uv run pytest src/tests/ -n auto --dist worksteal -q --tb=short
+          --durations=25
+          --cov=src --cov-report=html --cov-report=term-missing:skip-covered
+          --cov-report=xml:coverage.xml
         working-directory: apps/api
         env:
           TESTING: "true"

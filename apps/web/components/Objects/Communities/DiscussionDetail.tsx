@@ -107,13 +107,13 @@ export function DiscussionDetail({
   return (
     <div className="bg-white nice-shadow rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="p-6 pb-0">
+      <div className="p-4 pb-0 sm:p-6 sm:pb-0">
         {/* Title Row */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900 break-words flex items-start gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words flex items-start gap-3">
               {discussion.emoji && (
-                <span className="text-3xl flex-shrink-0">{discussion.emoji}</span>
+                <span className="text-2xl sm:text-3xl flex-shrink-0">{discussion.emoji}</span>
               )}
               <span dir="auto">{discussion.title}</span>
             </h1>
@@ -122,7 +122,7 @@ export function DiscussionDetail({
           {isAuthor && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button aria-label="Discussion detail" className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <button aria-label={t('communities.discussion_detail.actions')} className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                   <MoreVertical size={18} />
                 </button>
               </DropdownMenuTrigger>
@@ -171,7 +171,7 @@ export function DiscussionDetail({
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {discussion.content ? (
           <div className="prose prose-gray max-w-none">
             <DiscussionContent

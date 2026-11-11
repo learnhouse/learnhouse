@@ -523,6 +523,8 @@ async def test_create_course_from_migration_success_and_failure(monkeypatch, tmp
         ],
     )
 
+    mock_track = AsyncMock()
+    monkeypatch.setattr(migrations, "track", mock_track)
     result = await migrations.create_course_from_migration(
         org.id,
         admin_user,
@@ -533,6 +535,12 @@ async def test_create_course_from_migration_success_and_failure(monkeypatch, tmp
 
     assert result.success is True
     assert result.course_name == "Migrated Course"
+    mock_track.assert_awaited_once_with(
+        event_name="course_created",
+        org_id=org.id,
+        user_id=admin_user.id,
+        properties={"course_uuid": result.course_uuid, "source": "migration"},
+    )
     assert result.chapters_created == 1
     assert result.activities_created == 2
 

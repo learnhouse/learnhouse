@@ -8,6 +8,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import LearnHousePlayer, { type PlayerNavItem } from './LearnHousePlayer'
 import VideoChapters from './VideoChapters'
 import { positiveIntParam } from '@/lib/copilot/sources'
+import { useVideoProgress } from '@services/analytics/useVideoProgress'
 import {
   isActivityHlsReady,
   resolveActivityVideoSource,
@@ -85,6 +86,47 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
   const linkedStart = typeof window !== 'undefined' ? positiveIntParam(window.location.search, 't') : null
   const details = linkedStart ? { ...activity.details, startTime: linkedStart } : activity.details
 
+  // Org analytics: video_progress at 25/50/75/100%.
+  const { report: reportProgress, complete: completeProgress } = useVideoProgress(
+    course?.course_uuid,
+    activity?.activity_uuid,
+  )
+  React.useEffect(() => {
+    if (!videoEl) return
+    const onTimeUpdate = () => reportProgress(videoEl.currentTime, videoEl.duration)
+    videoEl.addEventListener('timeupdate', onTimeUpdate)
+    videoEl.addEventListener('ended', completeProgress)
+    return () => {
+      videoEl.removeEventListener('timeupdate', onTimeUpdate)
+      videoEl.removeEventListener('ended', completeProgress)
+    }
+  }, [videoEl, reportProgress, completeProgress])
+
+  // The YouTube iframe has no timeupdate event: sample its position while it
+  // plays.
+  const youtubePoll = React.useRef<ReturnType<typeof setInterval> | null>(null)
+  const stopYoutubePoll = React.useCallback(() => {
+    if (youtubePoll.current) clearInterval(youtubePoll.current)
+    youtubePoll.current = null
+  }, [])
+  React.useEffect(() => stopYoutubePoll, [stopYoutubePoll])
+  const onYoutubeStateChange = (event: { data: number; target: any }) => {
+    stopYoutubePoll()
+    if (event.data === 0) {
+      completeProgress()
+      return
+    }
+    if (event.data !== 1) return
+    const player = event.target
+    const sample = () => {
+      Promise.all([player?.getCurrentTime?.(), player?.getDuration?.()])
+        .then(([time, duration]) => reportProgress(Number(time), Number(duration)))
+        .catch(() => {})
+    }
+    sample()
+    youtubePoll.current = setInterval(sample, 2000)
+  }
+
   React.useEffect(() => {
     if (activity?.content?.uri) {
       var getYouTubeID = require('get-youtube-id')
@@ -149,7 +191,9 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
       {activity && (
         <>
           {activity.activity_sub_type === 'SUBTYPE_VIDEO_HOSTED' && (
-            <div className="w-full">
+            // lh-video-bleed: square corners on phones, where the page runs the
+            // video edge to edge (player.css).
+            <div className="w-full lh-video-bleed">
               <div className="relative w-full aspect-video">
                 {(() => {
                   const { src, isHls } = getVideoSource()
@@ -216,7 +260,7 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
           )}
           {activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE' && (
             <div className="w-full">
-              <div className="relative w-full aspect-video overflow-hidden rounded-[20px] ring-1 ring-white/10">
+              <div className="relative w-full aspect-video overflow-hidden rounded-[20px] ring-1 ring-white/10 max-sm:rounded-none max-sm:ring-0">
                 <YouTube
                   className="w-full h-full"
                   opts={{
@@ -238,6 +282,7 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
                       event.target.seekTo(activity.details.startTime, true)
                     }
                   }}
+                  onStateChange={onYoutubeStateChange}
                 />
               </div>
             </div>

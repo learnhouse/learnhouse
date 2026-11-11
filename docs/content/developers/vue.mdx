@@ -1,0 +1,336 @@
+---
+title: LearnHouse Vue Component
+description: Render LearnHouse activities in Vue 3 and Nuxt with @learnhouse/vue, using the same renderer and blocks as LearnHouse and @learnhouse/react.
+---
+
+import { Callout, Steps, Tabs } from '@/components/mdx'
+import { DevHero } from '../../components/developers/Developers'
+import { VueBridge } from '../../components/developers/Vue'
+
+<DevHero section="vue" eyebrow="@learnhouse/vue" title="Activities as a Vue component" install="npm install @learnhouse/vue">
+  `<LearnHouseActivity>` for Vue 3 and Nuxt. Pages, quizzes, flipcards, scenarios, code playgrounds, math, video and
+  PDFs render with LearnHouse's own blocks, with Vue props, events and slots around them.
+</DevHero>
+
+<CloudCta variant="developer">Publish a course on a free Cloud organization and render it here. Public courses need no token.</CloudCta>
+
+## Quickstart
+
+<Steps>
+
+### Install
+
+```bash
+npm install @learnhouse/vue
+```
+
+Vue 3.3 or later is required. The package brings `@learnhouse/react` and React itself with it: see
+[What it costs](#what-it-costs).
+
+### Import the stylesheet once
+
+```ts filename="src/main.ts"
+import { createApp } from 'vue'
+import '@learnhouse/vue/styles.css'
+import App from './App.vue'
+
+createApp(App).mount('#app')
+```
+
+It is the same stylesheet as `@learnhouse/react`'s, scoped under `.lh-activity`, so it never touches the rest of
+your page.
+
+### Render an activity
+
+```vue filename="src/Lesson.vue"
+<script setup lang="ts">
+import { LearnHouseActivity } from '@learnhouse/vue'
+</script>
+
+<template>
+  <LearnHouseActivity
+    base-url="https://learn.your-school.com"
+    activity-id="activity_0b3c…"
+    course-id="course_9f2a…"
+  />
+</template>
+```
+
+`base-url` is the address of your LearnHouse instance (its API). Ids are the full uuids, with their `activity_` and
+`course_` prefixes.
+
+</Steps>
+
+<Callout type="info">
+  With `activity-id`, the browser fetches the activity, and LearnHouse only answers browsers on its own domain (and
+  `localhost`). On another domain, fetch on your server with the [SDK](/developers/sdk) and pass `:activity`, as
+  described in [Where to fetch](/developers/react/frameworks#where-to-fetch-browser-or-server).
+</Callout>
+
+## Four ways to say what to render
+
+<Tabs items={['By id', 'By name', 'From an activity', 'From JSON']}>
+  <Tabs.Tab>
+    ```vue
+    <!-- Passing course-id as well loads the course in parallel (faster). -->
+    <LearnHouseActivity activity-id="activity_…" course-id="course_…" />
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```vue
+    <!-- Looks the activity up by name inside the course (case-insensitive). -->
+    <LearnHouseActivity activity-name="How payouts work" course-id="course_…" />
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```vue
+    <!-- An activity you already fetched: with useActivity, or on your server. -->
+    <LearnHouseActivity :activity="activity" course-id="course_…" />
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```vue
+    <!-- A document as LearnHouse stores it. No network calls for the content itself. -->
+    <LearnHouseActivity :content="doc" org-id="org_…" course-id="course_…" />
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+`course-id` and `org-id` tell image, video, audio and PDF blocks where their files live.
+
+## Share one setup with a provider
+
+`LearnHouseProvider` gives every activity below it the same instance, token and defaults, and gives your own code an
+SDK client.
+
+```vue filename="src/App.vue"
+<script setup lang="ts">
+import { LearnHouseProvider, type LearnHouseEvent } from '@learnhouse/vue'
+
+const props = defineProps<{ accessToken?: string }>()
+const track = (event: LearnHouseEvent) => analytics.track(`lesson_${event.type}`, event)
+</script>
+
+<template>
+  <LearnHouseProvider
+    base-url="https://learn.your-school.com"
+    :token="props.accessToken"
+    :theme="{ accent: '#7c3aed', fontFamily: 'Inter, sans-serif' }"
+    locale="fr"
+    @event="track"
+  >
+    <RouterView />
+  </LearnHouseProvider>
+</template>
+```
+
+An activity's own props win over the provider's; `theme` is merged key by key. You can also call
+`provideLearnHouse({ baseUrl, token, … })` in a root component's `setup()` instead of rendering the component.
+
+<Callout type="warning">
+  In the browser, pass the signed-in learner's own access token (or nothing, for public courses). Never pass an `lh_`
+  API token to a browser: it acts on your whole org.
+</Callout>
+
+## Composables
+
+Both need a provider (or `provideLearnHouse`) above them.
+
+```vue
+<script setup lang="ts">
+import { LearnHouseActivity, useActivity, useLearnHouseClient } from '@learnhouse/vue'
+
+const props = defineProps<{ id: string }>()
+
+// Refetches whenever props.id changes; aborts the previous request.
+const { activity, loading, error, refresh } = useActivity(() => props.id)
+
+// The provider's @learnhouse/sdk client, for anything else.
+const client = useLearnHouseClient()
+const loadOutline = () => client.courses.getMeta('course_…', { slim: true })
+</script>
+
+<template>
+  <p v-if="loading">Loading…</p>
+  <p v-else-if="error">{{ error.message }}</p>
+  <LearnHouseActivity v-else-if="activity" :activity="activity" course-id="course_…" />
+</template>
+```
+
+| Composable | Returns |
+| --- | --- |
+| `useActivity(id, { client? })` | `{ activity, error, loading, refresh }`. `id` can be a string, a ref or a getter |
+| `useLearnHouseClient()` | The provider's [SDK client](/developers/sdk/resources) |
+
+## Events
+
+| Event | Payload |
+| --- | --- |
+| `@load` | The activity, once fetched |
+| `@ready` | Nothing. The first content is on screen |
+| `@complete` | `{ type, activityId }`, with `track-completion`, when the end scrolls into view |
+| `@media` | `{ action, media, src, currentTime, duration }` for video and audio |
+| `@resize` | `{ width, height }` of the rendered activity |
+| `@error` | The `Error` |
+| `@event` | Every event above, plus `link_click`, `visible` and `analytics` (see [Events](/developers/react/events)) |
+| `@link-click` | `{ href, external, originalEvent }`. Return `false` to stop the navigation |
+
+```vue
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { LearnHouseActivity, type LearnHouseLinkClickDetail } from '@learnhouse/vue'
+
+const router = useRouter()
+// Keep links to your own site inside the app.
+function onLinkClick({ href, external }: LearnHouseLinkClickDetail) {
+  if (external) return
+  router.push(new URL(href).pathname)
+  return false
+}
+</script>
+
+<template>
+  <LearnHouseActivity activity-id="activity_…" track-completion @complete="markDone" @link-click="onLinkClick" />
+</template>
+```
+
+## Slots
+
+```vue
+<LearnHouseActivity activity-id="activity_…">
+  <template #fallback><Spinner /></template>
+  <template #header="{ activity }"><h2>{{ activity.name }}</h2></template>
+  <template #footer="{ activity }"><NextLessonButton :after="activity.activity_uuid" /></template>
+  <template #error="{ error, retry }">
+    <p>{{ error.message }}</p>
+    <button @click="retry">Try again</button>
+  </template>
+</LearnHouseActivity>
+```
+
+| Slot | Shown | Props |
+| --- | --- | --- |
+| `fallback` | While the renderer or the activity loads (and in server-rendered HTML) | none |
+| `header` / `footer` | Above / below the activity, once loaded | `{ activity }` |
+| `error` | Instead of the built-in message when loading fails | `{ error, retry }` |
+
+Slots are Vue content placed around the renderer, so they use your app's styles, not the activity theme.
+
+## Nuxt
+
+Add the stylesheet in `nuxt.config.ts` and use the components in any page. There is nothing to wrap in
+`<ClientOnly>`: on the server the component renders its `fallback` slot, and the renderer loads in the browser after
+hydration.
+
+```ts filename="nuxt.config.ts"
+export default defineNuxtConfig({
+  css: ['@learnhouse/vue/styles.css'],
+})
+```
+
+To keep the activity off the browser's network path (another domain, private courses), load it in a server route
+with the [SDK](/developers/sdk) and your API token, which never reaches the browser:
+
+```ts filename="server/api/lessons/[id].get.ts"
+import { createClient } from '@learnhouse/sdk'
+
+const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL!, token: process.env.LEARNHOUSE_TOKEN! })
+
+export default defineEventHandler(async (event) => {
+  const activity = await lh.activities.get(getRouterParam(event, 'id')!)
+  const course = await lh.GET('/api/v1/courses/id/{course_id}', {
+    params: { path: { course_id: activity.course_id! } },
+  })
+  return { activity, courseId: course.course_uuid }
+})
+```
+
+```vue filename="app/pages/lessons/[id].vue"
+<script setup lang="ts">
+import { LearnHouseActivity } from '@learnhouse/vue'
+
+const route = useRoute()
+const { data } = await useFetch(`/api/lessons/${route.params.id}`)
+</script>
+
+<template>
+  <LearnHouseActivity
+    v-if="data"
+    :activity="data.activity"
+    :course-id="data.courseId"
+    base-url="https://learn.your-school.com"
+  >
+    <template #fallback><p>Loading the lesson…</p></template>
+  </LearnHouseActivity>
+</template>
+```
+
+## How it works
+
+<VueBridge />
+
+`@learnhouse/react` also ships the renderer as a custom element, `<learnhouse-activity>`. `@learnhouse/vue` renders
+that element, sets its properties from your props and turns its DOM events (`lh-load`, `lh-complete`…) into Vue events.
+The blocks are the React components of the LearnHouse release you installed, so the Vue and React packages always
+render the same thing.
+
+The element has no shadow DOM, which is why the one stylesheet works for both. You can also use it directly, from
+Svelte, Angular or plain HTML:
+
+```html
+<script type="module">
+  import '@learnhouse/react/element'
+  import '@learnhouse/react/styles.css'
+</script>
+
+<learnhouse-activity base-url="https://learn.your-school.com" activity-id="activity_…" course-id="course_…"></learnhouse-activity>
+```
+
+## What it costs
+
+React is part of the bill. A Vue app using this package also downloads React and React DOM, about **67 KB gzipped**,
+on top of the renderer itself. That weight loads lazily: `@learnhouse/vue` adds about 6 KB gzipped to your entry
+bundle (2 KB for the components, the rest is the SDK client), and React, the renderer and the blocks are fetched after
+the component mounts, only on pages that show an activity.
+
+The renderer costs the same as in a React app. Blocks are split into their own chunks, so a page only downloads the
+blocks it contains, the video player only for videos and the PDF viewer only for PDFs. See
+[Bundle size](/developers/react/frameworks#bundle-size).
+
+## Props
+
+| Prop | Type | Notes |
+| --- | --- | --- |
+| `activity-id` | `string` | Activity uuid, fetched from the instance |
+| `activity-name` | `string` | Look up by name inside `course-id` |
+| `course-id` | `string` | Needed with `activity-name`; tells media blocks their course |
+| `activity` | `object` | An activity you already fetched |
+| `content` | `object \| string` | A raw document; no network for the content |
+| `base-url` | `string` | Your instance. Defaults to the provider's |
+| `token` | `string` | A user access token. Defaults to the provider's |
+| `org-id` | `string` | Org uuid for media URLs with `content` |
+| `site-url` | `string` | Your LearnHouse site, for the "Made with LearnHouse" link |
+| `theme` | `LearnHouseTheme` | Merged over the provider's. See [Theming](/developers/react/customization) |
+| `locale` | `string` | UI language of the blocks. Defaults to the provider's, then `en` |
+| `messages` | `object` | Override UI strings |
+| `dir` | `'ltr' \| 'rtl' \| 'auto'` | Text direction. `auto` follows the locale |
+| `hide-blocks` | `string[]` | Node names to drop (`blockQuiz`, `table`…) |
+| `link-target` | `'_blank' \| '_self' \| '_parent' \| '_top'` | Where links open. Default `_blank` |
+| `track-completion` | `boolean` | Emit `complete` at the end of the activity |
+| `show-title` | `boolean` | Show the activity name above the content |
+| `show-powered-by` | `boolean` | A small "Made with LearnHouse" link |
+| `unstyled` | `boolean` | Skip the root theming styles |
+| `transform-content` | `(doc) => doc` | Rewrite the document before rendering |
+
+`LearnHouseProvider` takes `base-url` (required), `token`, `get-token`, `media-url`, `site-url`, `client`, `user`,
+`theme`, `locale`, `messages` and `link-target`, and emits `@event` for every activity below it.
+
+The component also exposes `reload()` (through a template ref), which mounts the activity again and refetches it.
+
+## Not in this version
+
+- **Block and mark overrides.** `components` and `marks`, which replace blocks with your own React components in
+  `@learnhouse/react`, have no Vue equivalent yet. Use `hide-blocks` and `transform-content` to change what renders.
+- **`header` and `footer` inside the theme.** Vue slots render around the activity, not inside its themed root.
+- **Several instances on one page.** As with `@learnhouse/react`, media URLs follow the most recently mounted
+  `base-url`, so keep to one LearnHouse instance per page.

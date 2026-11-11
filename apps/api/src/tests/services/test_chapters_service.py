@@ -864,3 +864,35 @@ class TestApplyLocksToChapters:
                     with_unpublished_activities=True, slim=False, course=course,
                 )
         assert len(full_result[0].activities) == 1
+
+
+class TestPaidLessonsInTheTree:
+    """EE names the lessons a viewer has not bought; only those lose their content."""
+
+    @pytest.mark.asyncio
+    async def test_only_locked_lessons_are_stripped(self, db, course, regular_user):
+        helper = TestApplyLocksToChapters()
+        sold = helper._make_activity_read("act_sold", ActivityLockType.PUBLIC)
+        free = helper._make_activity_read("act_free", ActivityLockType.PUBLIC).model_copy(update={"id": 2})
+        sold.content = {"body": "paid"}
+        free.content = {"body": "preview"}
+        chapter = helper._make_chapter_read("ch_paid", LockType.PUBLIC, activities=[sold, free])
+        with patch(
+            "src.services.courses.chapters.get_ee_paid_locked_activity_ids",
+            new=AsyncMock(return_value={sold.id}),
+        ):
+            await _apply_locks_to_chapters([chapter], course, regular_user, db)
+        assert chapter.activities[0].content == {"paid_access": False}
+        assert chapter.activities[1].content == {"body": "preview"}
+
+
+@pytest.mark.asyncio
+async def test_locked_lesson_hook_without_ee():
+    from src.core.ee_hooks import get_ee_paid_locked_activity_ids
+
+    with patch("src.core.ee_hooks.get_ee_hooks", return_value=None):
+        assert await get_ee_paid_locked_activity_ids(None, 1, None, None) is None
+    hooks = SimpleNamespace(paid_locked_activity_ids=AsyncMock(return_value={3}))
+    with patch("src.core.ee_hooks.get_ee_hooks", return_value=hooks):
+        assert await get_ee_paid_locked_activity_ids("req", 1, "user", "db") == {3}
+    hooks.paid_locked_activity_ids.assert_awaited_once_with("req", 1, "user", "db")

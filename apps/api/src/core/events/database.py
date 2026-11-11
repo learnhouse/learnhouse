@@ -2,10 +2,11 @@ import asyncio
 import logging
 import os
 import importlib
+import time
 from config.config import get_learnhouse_config
 from fastapi import FastAPI
 from sqlmodel import SQLModel, Session
-from sqlalchemy import event
+from sqlalchemy import event, exc as sa_exc
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -101,9 +102,10 @@ else:
         or os.getenv("LEARNHOUSE_PGBOUNCER", "").lower() in ("1", "true", "yes")
     )
 
+    # Pre-ping is done by hand below: only for connections that sat idle.
     if is_pooled:
         engine_kwargs = dict(
-            pool_pre_ping=True,
+            pool_pre_ping=False,
             pool_size=5,
             max_overflow=10,
             pool_recycle=1800,
@@ -113,7 +115,7 @@ else:
         logging.info("DB engine: detected connection pooler, using small client-side pool.")
     else:
         engine_kwargs = dict(
-            pool_pre_ping=True,
+            pool_pre_ping=False,
             pool_size=20,
             max_overflow=10,
             pool_recycle=300,
@@ -123,17 +125,28 @@ else:
 
     engine = create_async_engine(sql_url, echo=False, **engine_kwargs)  # type: ignore
 
-    @event.listens_for(engine.sync_engine, "connect")
-    def receive_connect(dbapi_connection, connection_record):
-        logging.debug("Database connection established")
-
-    @event.listens_for(engine.sync_engine, "checkout")
-    def receive_checkout(dbapi_connection, connection_record, connection_proxy):
-        logging.debug("Connection checked out from pool")
+    _PING_AFTER_IDLE_SECONDS = float(os.getenv("LEARNHOUSE_DB_PING_AFTER_IDLE_SECONDS", "10"))
 
     @event.listens_for(engine.sync_engine, "checkin")
     def receive_checkin(dbapi_connection, connection_record):
-        logging.debug("Connection returned to pool")
+        connection_record.info["checked_in_at"] = time.monotonic()
+
+    # SQLAlchemy's pool_pre_ping pings on every checkout, and on asyncpg a ping
+    # is BEGIN + a prepared ";" + ROLLBACK: four round trips to the database
+    # before each request does any work. A connection that was in use a moment
+    # ago is alive, so only ping the ones that sat idle long enough for the
+    # pooler or a database restart to have dropped them. A failed ping raises
+    # InvalidatePoolError: the pool hands out a fresh connection and recycles
+    # the others, exactly like pool_pre_ping.
+    @event.listens_for(engine.sync_engine, "checkout")
+    def ping_if_idle(dbapi_connection, connection_record, connection_proxy):
+        checked_in_at = connection_record.info.get("checked_in_at")
+        if checked_in_at is None or time.monotonic() - checked_in_at < _PING_AFTER_IDLE_SECONDS:
+            return
+        try:
+            engine.dialect.do_ping(dbapi_connection)
+        except Exception as error:
+            raise sa_exc.InvalidatePoolError() from error
 
 
 _async_session_factory = async_sessionmaker(
@@ -357,6 +370,12 @@ if not is_testing:
     except Exception:
         logging.warning("Failed to register cache invalidation hooks", exc_info=True)
 
+# Not a cache hook, so it runs under tests too: editing a course's content
+# moves the course's update_date.
+from src.core.events.content_dates import register_content_date_hooks  # noqa: E402
+
+register_content_date_hooks()
+
 
 # A saturated connection pooler ("max clients reached in session mode"), a
 # rolling database restart or a brief network blip are all transient: the pod
@@ -382,6 +401,16 @@ def _is_transient_connect_error(exc: BaseException) -> bool:
 
 
 async def _bootstrap_schema():
+    # The normal path: migrate (or bootstrap) the schema under a lock, in a
+    # worker thread since Alembic is synchronous. See src/core/migrations.py.
+    if not is_testing:
+        from src.core.migrations import auto_migrate_enabled, ensure_schema
+
+        if auto_migrate_enabled():
+            await asyncio.to_thread(ensure_schema)
+            return
+        logging.info("LEARNHOUSE_AUTO_MIGRATE is off; only creating missing tables")
+
     async with engine.begin() as conn:
         # Enable pgvector extension for vector similarity search (optional; used by the RAG feature)
         try:
@@ -405,7 +434,11 @@ async def connect_to_db(app: FastAPI):
             await _bootstrap_schema()
             break
         except Exception as e:
-            if attempt >= attempts or not _is_transient_connect_error(e):
+            from src.core.migrations import SchemaMigrationError
+
+            # A failed migration is not a blip: retrying only delays the
+            # crash that keeps this release from serving on the old schema.
+            if attempt >= attempts or isinstance(e, SchemaMigrationError) or not _is_transient_connect_error(e):
                 raise
             delay = _STARTUP_CONNECT_BACKOFF_SECONDS * attempt
             logging.warning(

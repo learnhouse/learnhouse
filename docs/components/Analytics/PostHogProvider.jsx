@@ -1,47 +1,56 @@
 'use client'
 
-import posthog from 'posthog-js'
-import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react'
-import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect, Suspense } from 'react'
+import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
-    capture_pageview: false,
-    capture_pageleave: true,
-  })
+// PostHog is loaded only after the page is idle, so analytics never delays
+// the first paint or adds to the JavaScript every page ships with.
+const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
+let client = null
+
+function loadPostHog() {
+  if (!client) {
+    client = import('posthog-js').then(({ default: posthog }) => {
+      posthog.init(KEY, {
+        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+        capture_pageview: false,
+        capture_pageleave: true,
+      })
+      return posthog
+    })
+  }
+  return client
 }
 
-function PostHogPageView() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const posthog = usePostHog()
+/**
+ * Records a product event. Loads PostHog if it isn't yet, and sends with a
+ * beacon so the event survives the click that navigates away.
+ */
+export function track(event, properties) {
+  if (!KEY || typeof window === 'undefined') return
+  loadPostHog()
+    .then((posthog) => posthog.capture(event, properties, { transport: 'sendBeacon' }))
+    .catch(() => {})
+}
 
-  useEffect(() => {
-    if (pathname && posthog) {
-      let url = window.origin + pathname
-      if (searchParams.toString()) {
-        url = url + '?' + searchParams.toString()
-      }
-      posthog.capture('$pageview', { $current_url: url })
-    }
-  }, [pathname, searchParams, posthog])
-
-  return null
+function whenIdle(fn) {
+  if (typeof window.requestIdleCallback === 'function') {
+    const id = window.requestIdleCallback(fn, { timeout: 4000 })
+    return () => window.cancelIdleCallback(id)
+  }
+  const id = window.setTimeout(fn, 1500)
+  return () => window.clearTimeout(id)
 }
 
 export default function PostHogProvider({ children }) {
-  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-    return children
-  }
+  const pathname = usePathname()
 
-  return (
-    <PHProvider client={posthog}>
-      <Suspense fallback={null}>
-        <PostHogPageView />
-      </Suspense>
-      {children}
-    </PHProvider>
-  )
+  useEffect(() => {
+    if (!KEY) return
+    return whenIdle(() => {
+      loadPostHog().then((posthog) => posthog.capture('$pageview', { $current_url: window.location.href }))
+    })
+  }, [pathname])
+
+  return children
 }

@@ -435,7 +435,8 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         with patch.object(cp, "get_course_planning_session", return_value=session), \
              patch.object(cp, "save_course_planning_session"), \
              patch.object(cp, "check_limits_with_usage", new=AsyncMock()), \
-             patch.object(cp, "increase_feature_usage", new=AsyncMock()):
+             patch.object(cp, "increase_feature_usage", new=AsyncMock()), \
+             patch.object(cp, "track", new=AsyncMock()) as mock_track:
             result = await cp.finalize_course_plan(
                 mock_request,
                 FinalizeCoursePlanRequest(
@@ -458,6 +459,12 @@ class TestFinalizeCoursePlanRequiresCreateRight:
         assert author is not None
         assert author.user_id == admin_user.id
         assert author.authorship == ResourceAuthorshipEnum.CREATOR
+        mock_track.assert_awaited_once_with(
+            event_name="course_created",
+            org_id=org.id,
+            user_id=admin_user.id,
+            properties={"course_uuid": result.course_uuid, "source": "ai"},
+        )
 
     async def test_plan_course_limit_is_enforced(
         self, db, org, admin_role, admin_user, mock_request

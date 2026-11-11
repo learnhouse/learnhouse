@@ -1,3 +1,4 @@
+import { detailMessage } from '@services/utils/ts/requests'
 import { getAPIUrl } from '@services/config/config'
 import type {
   MagicBlockContext,
@@ -14,16 +15,18 @@ export async function startMagicBlockSession(
   prompt: string,
   context: MagicBlockContext,
   accessToken: string,
-  onChunk: (chunk: string) => void,
-  onComplete: (sessionUuid: string) => void,
-  onError: (error: string) => void
+  onChunk: (_chunk: string) => void,
+  onComplete: (_sessionUuid: string) => void,
+  onError: (_error: string) => void,
+  styleReference?: string | null
 ): Promise<void> {
-  const data = {
+  const data: Record<string, unknown> = {
     activity_uuid: activityUuid,
     block_uuid: blockUuid,
     prompt,
     context,
   }
+  if (styleReference) data.style_reference = styleReference
 
   try {
     const response = await fetch(`${getAPIUrl()}ai/magicblocks/start`, {
@@ -37,7 +40,7 @@ export async function startMagicBlockSession(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `HTTP error ${response.status}`)
+      throw new Error(detailMessage(errorData.detail, `HTTP error ${response.status}`))
     }
 
     await processStream(response, onChunk, onComplete, onError)
@@ -55,18 +58,20 @@ export async function iterateMagicBlock(
   blockUuid: string,
   message: string,
   accessToken: string,
-  onChunk: (chunk: string) => void,
-  onComplete: (sessionUuid: string) => void,
-  onError: (error: string) => void,
-  currentHtml?: string | null
+  onChunk: (_chunk: string) => void,
+  onComplete: (_sessionUuid: string) => void,
+  onError: (_error: string) => void,
+  currentHtml?: string | null,
+  styleReference?: string | null
 ): Promise<void> {
-  const data = {
+  const data: Record<string, unknown> = {
     session_uuid: sessionUuid,
     activity_uuid: activityUuid,
     block_uuid: blockUuid,
     message,
     current_html: currentHtml || undefined,
   }
+  if (styleReference) data.style_reference = styleReference
 
   try {
     const response = await fetch(`${getAPIUrl()}ai/magicblocks/iterate`, {
@@ -80,7 +85,7 @@ export async function iterateMagicBlock(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `HTTP error ${response.status}`)
+      throw new Error(detailMessage(errorData.detail, `HTTP error ${response.status}`))
     }
 
     await processStream(response, onChunk, onComplete, onError)
@@ -111,7 +116,7 @@ export async function getMagicBlockSession(
       const errorData = await response.json().catch(() => ({}))
       return {
         success: false,
-        error: errorData.detail || `HTTP error ${response.status}`,
+        error: detailMessage(errorData.detail, `HTTP error ${response.status}`),
       }
     }
 
@@ -130,9 +135,9 @@ export async function getMagicBlockSession(
  */
 async function processStream(
   response: Response,
-  onChunk: (chunk: string) => void,
-  onComplete: (sessionUuid: string) => void,
-  onError: (error: string) => void
+  onChunk: (_chunk: string) => void,
+  onComplete: (_sessionUuid: string) => void,
+  onError: (_error: string) => void
 ): Promise<void> {
   const reader = response.body?.getReader()
   if (!reader) {

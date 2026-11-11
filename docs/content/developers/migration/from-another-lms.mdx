@@ -1,4 +1,9 @@
-import { Callout } from 'nextra/components'
+---
+title: Import from Another LMS
+description: Import a Moodle, Canvas, Blackboard, Brightspace, Open edX or Common Cartridge export into LearnHouse from the dashboard, the CLI or the API.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Import from Another LMS
 
@@ -15,13 +20,20 @@ LearnHouse converts course exports from other learning platforms into native Lea
 
 The format is detected automatically. A zip holding several exports (a publisher test bank with one archive per chapter, for example) is combined into one course. You can import from the dashboard, from the command line, or through the API.
 
+<YouTube video="migrate-1" />
+<YouTube video="migrate-2" />
+<YouTube video="migrate-3" />
+<YouTube video="growth-12" />
+
 ## From the dashboard
 
-1. Go to **Courses** and click **Import course**.
+1. Go to **Courses** in the dashboard and click **Import Course**.
 2. Choose **Another LMS**.
-3. Pick the platform (or leave **Auto-detect**), choose how quizzes are converted, and drop the export file.
+3. Pick the **Source platform** (or leave **Auto-detect**), choose how **Quizzes** are converted, drop the export file and click **Upload and Convert**.
 4. Wait for the conversion. Large backups with many videos can take a few minutes.
-5. Review the report: what was created, what was skipped and why. Set a name prefix and visibility, then click **Import**.
+5. Review the report: what was created, what was skipped and why. Pick the courses to import and set the import options (**Course Name Prefix**, **Set as private**, **Set as unpublished**), then click the import button.
+
+<img src="/img/pages/courses/import-another-lms.webp" alt="The Import from Another LMS window on the Upload Package step, with Source platform set to Auto-detect and the two quiz options" width={1600} height={900} style={{ borderRadius: 10 }} />
 
 The report lists every source item that has no LearnHouse equivalent under **Skipped items** (discussions, LTI tools, files missing from the export...). **Warnings** only appear when something in the export could not be read or converted, so a healthy export shows none.
 
@@ -87,7 +99,7 @@ The converter ships in the LearnHouse image as `learnhouse-lms-import`:
 # What is in this export?
 docker exec -it learnhouse learnhouse-lms-import inspect /data/backup.mbz
 
-# Convert to a LearnHouse course package (import it from the dashboard: Import course › LearnHouse Courses)
+# Convert to a LearnHouse course package (import it from the dashboard: Import Course › LearnHouse Courses)
 docker exec -it learnhouse learnhouse-lms-import convert /data/backup.mbz -o /data/course.zip --report /data/report.json
 
 # Convert and import into an instance in one step, with an API token
@@ -130,5 +142,5 @@ curl -X POST "https://learn.example.com/api/v1/courses/import?org_id=1" -H "Auth
 `GET /api/v1/courses/import/lms/sources` lists the supported formats. All three calls need permission to create courses in the organization; a conversion is only visible to the user or token that uploaded it.
 
 <Callout type="info">
-Uploads are limited to 4 GB by default. Set `LEARNHOUSE_LMS_IMPORT_MAX_MB` on the API to change it, and make sure your reverse proxy accepts bodies that large. The upload request must carry a `Content-Length` header (browsers and `curl -F` always do); a larger declared size is refused before the body is read. Like the LearnHouse package import, the upload and the import must reach the same API instance.
+Uploads are limited to 4 GB by default. Set `LEARNHOUSE_LMS_IMPORT_MAX_MB` on the API to change it, and make sure your reverse proxy accepts bodies that large. The upload request must carry a `Content-Length` header (browsers and `curl -F` always do); a larger declared size is refused before the body is read. Like the LearnHouse package import, the upload and the import must reach the same API instance. Each API process converts at most 2 exports at a time and queues up to 8 more, with a limit of 2 conversions per user.
 </Callout>

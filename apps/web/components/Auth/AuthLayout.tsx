@@ -16,7 +16,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ org, welcomeText, title, subtitle, children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen lg:h-screen bg-white flex flex-col lg:flex-row relative overflow-hidden">
+    <div className="lh-auth min-h-screen lg:h-screen bg-white flex flex-col lg:flex-row relative overflow-hidden">
       {/* Page-level blueprint grid, bottom-anchored */}
       <div
         className="absolute inset-0 pointer-events-none z-0"
@@ -35,17 +35,18 @@ export default function AuthLayout({ org, welcomeText, title, subtitle, children
       {/* Language switcher: must sit ABOVE the right-hand branding panel
           (z-10), otherwise the panel intercepts its clicks. `z-dropdown`
           resolves to z-index:auto here, so use a concrete z-50. */}
-      <div className="absolute top-4 end-4 z-50">
+      {/* Phones carry the switcher inside the branding card instead. */}
+      <div className="hidden lg:block absolute top-4 end-4 z-50">
         <LanguageSwitcher />
       </div>
 
       {/* Mobile Header - visible only on small screens */}
       <div className="lg:hidden relative z-10">
-        <AuthMobileHeader org={org} />
+        <AuthMobileHeader org={org} welcomeText={welcomeText} />
       </div>
 
       {/* Left Panel - Content / form */}
-      <div className="relative z-10 flex flex-col flex-1 lg:h-full overflow-auto bg-transparent">
+      <div className="relative z-10 flex flex-col flex-1 lg:h-full overflow-auto bg-transparent pb-[var(--lh-safe-bottom)]">
         <div className="flex-1 flex flex-col">{children}</div>
         {/* Terms footer (platform-style) */}
         <AuthFooter className="shrink-0" />

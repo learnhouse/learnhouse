@@ -54,6 +54,7 @@ from src.security.features_utils.usage import (
     decrease_feature_usage,
     increase_feature_usage,
 )
+from src.security.submission_file_access import submission_files_belong_to
 from src.security.rbac import (
     authorization_verify_based_on_roles,
     authorization_verify_api_token_permissions,
@@ -87,6 +88,7 @@ from src.services.analytics import events as analytics_events
 from src.services.audit.audit import record_audit_event
 from src.db.user_audit_events import UserAuditEventType
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.core.ee_hooks import notify_ee_course_content_changed, notify_ee_learner_progress
 
 # Hard caps for regex answer-matching (defense-in-depth alongside the timeout).
 _REGEX_MAX_LEN = 1000
@@ -857,9 +859,7 @@ async def _grade_code_task_async(task, task_submission):
             return 0
         return round(passed_weight / total_weight * task_max)
 
-    # equal_weight (default)
-    if total_count <= 0:
-        return 0
+    # equal_weight (default); an empty test list already returned 0 above
     return round(passed_count / total_count * task_max)
 
 
@@ -1333,6 +1333,8 @@ async def update_assignment(
     await db_session.commit()
     await db_session.refresh(assignment)
     index_activity(assignment.activity_id)
+    # Title / due date changes follow to LMS gradebook columns (LTI).
+    notify_ee_course_content_changed(course.id)
 
     # return assignment read. The caller passed the UPDATE authorization above,
     # so they are an instructor and the corrige is theirs to see.
@@ -1503,6 +1505,7 @@ async def delete_assignment(
     await db_session.delete(assignment)
     await db_session.commit()
     index_activity(activity_id)
+    notify_ee_course_content_changed(course.id)
 
     return {"message": "Assignment deleted"}
 
@@ -1901,6 +1904,7 @@ async def put_assignment_task_submission_file(
             course.course_uuid,
             assignment.assignment_uuid,
             assignment_task_uuid,
+            current_user.id,
         )
 
         return {"file_uuid": name_in_disk}
@@ -2305,6 +2309,14 @@ async def handle_assignment_task_submission(
     # For non-instructors (session students AND token submit-on-behalf), the call
     # writes a learner ANSWER, never a grade.
     if not is_instructor:
+        # A learner can only hand in files they uploaded themselves
+        if not submission_files_belong_to(
+            assignment_task_submission_object.task_submission, submitter.id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="You can only submit files you uploaded",
+            )
         if not is_token_submit:
             # Session students must be enrolled and within the deadline. A token
             # acting for a learner is an authorized external writer; the custom
@@ -3089,7 +3101,7 @@ async def create_assignment_submission(
             properties={
                 "assignment_uuid": assignment_uuid,
                 "course_uuid": course.course_uuid,
-                "attempt_number": submitted_attempt_number,
+                "attempt": submitted_attempt_number,
             },
         )
         # Durable audit row. Retries reset the live submission in place, so each
@@ -3312,6 +3324,10 @@ async def create_assignment_submission(
                 )
 
     # return assignment user submission read
+    # Last, so the trail step and any auto-grade above are committed before
+    # EE reads them (e.g. LTI reporting the submission to an LMS gradebook).
+    notify_ee_learner_progress(submitter.id, course.id)
+
     return AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
 
 
@@ -3561,6 +3577,7 @@ async def update_assignment_submission(
     db_session.add(assignment_user_submission)
     await db_session.commit()
     await db_session.refresh(assignment_user_submission)
+    notify_ee_learner_progress(assignment_user_submission.user_id, course.id)
 
     # return assignment user submission read
     return AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
@@ -3645,6 +3662,7 @@ async def delete_assignment_submission(
         # The activity is no longer complete; demote the enrollment status so
         # analytics/enrollment stop reporting this learner as "completed".
         await sync_trailrun_status(user_id, course.id, db_session)
+        notify_ee_learner_progress(user_id, course.id)
 
     return {"message": "Assignment User Submission deleted"}
 
@@ -3824,6 +3842,7 @@ async def retry_assignment_submission(
     # enrollment status so a retrying learner isn't still counted as completed.
     if course.id:
         await sync_trailrun_status(int(current_user.id), course.id, db_session)
+        notify_ee_learner_progress(int(current_user.id), course.id)
 
     return {
         "message": "Assignment User Submission reset for retry",
@@ -4012,7 +4031,37 @@ async def _apply_grade_and_finalize(
         },
     )
 
+    # Also on bulk regrades (no webhook): an LMS gradebook must follow.
+    notify_ee_learner_progress(user_id, course.id)
+
     if dispatch_webhook:
+        await track(
+            event_name=analytics_events.ASSIGNMENT_GRADED,
+            org_id=course.org_id,
+            user_id=user_id,
+            properties={
+                "course_uuid": course.course_uuid,
+                "assignment_uuid": assignment.assignment_uuid,
+                "grade": computed["grade"],
+                "max_grade": computed["max_grade"],
+                "passed": computed["passed"],
+            },
+        )
+        # Quiz tasks are graded here, server-side, from the stored answers: one
+        # quiz_submitted per quiz the learner handed in with this attempt.
+        for row in computed["tasks"]:
+            if row["assignment_type"] == AssignmentTaskTypeEnum.QUIZ and row["submitted"]:
+                await track(
+                    event_name=analytics_events.QUIZ_SUBMITTED,
+                    org_id=course.org_id,
+                    user_id=user_id,
+                    properties={
+                        "course_uuid": course.course_uuid,
+                        "score": row["grade"],
+                        "max_score": row["max_grade"],
+                        "passed": row["passed"],
+                    },
+                )
         await dispatch_webhooks(
             event_name="assignment_graded",
             org_id=course.org_id,
@@ -4311,6 +4360,7 @@ async def mark_activity_as_done_for_user(
         await check_course_completion_and_create_certificate(
             request, user_id, course.id, db_session
         )
+        notify_ee_learner_progress(user_id, course.id)
 
     # return OK
     return {"message": "Activity marked as done for user"}

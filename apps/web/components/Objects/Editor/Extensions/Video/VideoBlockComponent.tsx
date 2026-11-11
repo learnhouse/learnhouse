@@ -314,7 +314,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                 width: '100%'
               }}
             >
-              <div className="relative group w-full aspect-video overflow-hidden rounded-lg bg-black">
+              <div className="relative group w-full aspect-video overflow-hidden rounded-[20px]">
                 <LearnHousePlayer {...playerProps} />
                 <div className="absolute top-2 end-2 z-40 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
@@ -337,7 +337,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
           minWidth="lg"
           minHeight="lg"
           dialogContent={
-            <div className="w-full aspect-video overflow-hidden rounded-lg bg-black">
+            <div className="w-full aspect-video overflow-hidden rounded-[20px]">
               <LearnHousePlayer
                 key={isModalOpen ? videoUrl : undefined}
                 {...playerProps}
@@ -504,7 +504,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
           minWidth="lg"
           minHeight="lg"
           dialogContent={
-            <div className="w-full aspect-video overflow-hidden rounded-lg bg-black">
+            <div className="w-full aspect-video overflow-hidden rounded-[20px]">
               <LearnHousePlayer
                 key={isModalOpen ? videoUrl : undefined}
                 {...playerProps}

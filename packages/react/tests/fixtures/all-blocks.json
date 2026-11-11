@@ -1,0 +1,405 @@
+{
+ "type": "doc",
+ "content": [
+  {
+   "type": "heading",
+   "attrs": {
+    "level": 2
+   },
+   "content": [
+    {
+     "type": "text",
+     "text": "Getting paid"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "content": [
+    {
+     "type": "text",
+     "text": "Payouts are "
+    },
+    {
+     "type": "text",
+     "text": "weekly",
+     "marks": [
+      {
+       "type": "bold"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "text": ", "
+    },
+    {
+     "type": "text",
+     "text": "automatic",
+     "marks": [
+      {
+       "type": "italic"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "text": " and use "
+    },
+    {
+     "type": "text",
+     "text": "payout()",
+     "marks": [
+      {
+       "type": "code"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "text": ". Read the "
+    },
+    {
+     "type": "text",
+     "text": "fee guide",
+     "marks": [
+      {
+       "type": "link",
+       "attrs": {
+        "href": "https://example.com/fees",
+        "target": "_blank"
+       }
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "text": "."
+    }
+   ]
+  },
+  {
+   "type": "bulletList",
+   "content": [
+    {
+     "type": "listItem",
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Verified bank account"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Tax ID"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "orderedList",
+   "attrs": {
+    "start": 1
+   },
+   "content": [
+    {
+     "type": "listItem",
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Sell"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Get paid"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "blockquote",
+   "content": [
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Money in, money out."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "codeBlock",
+   "attrs": {
+    "language": "javascript"
+   },
+   "content": [
+    {
+     "type": "text",
+     "text": "const fee = amount * 0.029 + 30\nreturn fee"
+    }
+   ]
+  },
+  {
+   "type": "table",
+   "content": [
+    {
+     "type": "tableRow",
+     "content": [
+      {
+       "type": "tableHeader",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Plan"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableHeader",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Fee"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "content": [
+      {
+       "type": "tableCell",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Standard"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "2.9%"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "attrs": {
+    "type": "tip"
+   },
+   "content": [
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Add your bank account before launch day."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "calloutWarning",
+   "content": [
+    {
+     "type": "text",
+     "text": "Legacy warning callout."
+    }
+   ]
+  },
+  {
+   "type": "blockQuiz",
+   "attrs": {
+    "quizId": "c3_payout_quiz",
+    "questions": [
+     {
+      "question_id": "c3q1",
+      "question": "How long does your first payout take to arrive?",
+      "type": "multiple_choice",
+      "response_type": "single",
+      "answers": [
+       {
+        "answer_id": "c3q1a",
+        "answer": "7 days after your first sale",
+        "correct": true
+       },
+       {
+        "answer_id": "c3q1b",
+        "answer": "Instantly",
+        "correct": false
+       },
+       {
+        "answer_id": "c3q1c",
+        "answer": "At the end of the month",
+        "correct": false
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "flipcardGrid",
+   "attrs": {
+    "columns": 2
+   },
+   "content": [
+    {
+     "type": "flipcard",
+     "attrs": {
+      "question": "What is a payout?",
+      "answer": "Money sent to your bank",
+      "color": "blue"
+     }
+    },
+    {
+     "type": "flipcard",
+     "attrs": {
+      "question": "What is a refund?",
+      "answer": "Money sent back to a buyer",
+      "color": "green"
+     }
+    }
+   ]
+  },
+  {
+   "type": "badge",
+   "attrs": {
+    "color": "sky",
+    "emoji": "💡"
+   },
+   "content": [
+    {
+     "type": "text",
+     "text": "Pro tip badge"
+    }
+   ]
+  },
+  {
+   "type": "button",
+   "attrs": {
+    "emoji": "🔗",
+    "link": "https://example.com/dashboard",
+    "color": "blue",
+    "alignment": "left"
+   },
+   "content": [
+    {
+     "type": "text",
+     "text": "Open dashboard"
+    }
+   ]
+  },
+  {
+   "type": "blockMathEquation",
+   "attrs": {
+    "math_equation": "fee = a \\times 0.029 + 30"
+   }
+  },
+  {
+   "type": "scenarios",
+   "attrs": {
+    "title": "Handle a dispute"
+   }
+  },
+  {
+   "type": "blockImage",
+   "attrs": {
+    "blockObject": {
+     "block_uuid": "block_img1",
+     "content": {
+      "file_id": "chart",
+      "file_format": "png"
+     }
+    },
+    "size": {
+     "width": 400
+    },
+    "alignment": "center"
+   }
+  },
+  {
+   "type": "horizontalRule"
+  },
+  {
+   "type": "futureBlock",
+   "attrs": {
+    "x": 1
+   },
+   "content": [
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Text inside a block this build does not know."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

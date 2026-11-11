@@ -245,6 +245,26 @@ class TestTrailService:
         assert (await db.execute(TrailStep.__table__.select())).all()
 
     @pytest.mark.asyncio
+    async def test_progress_changes_notify_ee_once(
+        self, db, org, admin_user, mock_request, activity, course
+    ):
+        with patch("src.services.trail.trail.track", new_callable=AsyncMock), patch(
+            "src.services.trail.trail.dispatch_webhooks", new_callable=AsyncMock
+        ), patch(
+            "src.services.trail.trail.check_course_completion_and_create_certificate",
+            new_callable=AsyncMock,
+        ), patch("src.services.trail.trail.notify_ee_learner_progress") as notify:
+            await add_activity_to_trail(mock_request, admin_user, activity.activity_uuid, db)
+            # A re-visit is not a progress change.
+            await add_activity_to_trail(mock_request, admin_user, activity.activity_uuid, db)
+            assert notify.call_args_list == [((admin_user.id, course.id),)]
+            await remove_activity_from_trail(mock_request, admin_user, activity.activity_uuid, db)
+            assert notify.call_count == 2
+            # Leaving the course drops its progress too.
+            await remove_course_from_trail(mock_request, admin_user, course.course_uuid, db)
+            assert notify.call_count == 3
+
+    @pytest.mark.asyncio
     async def test_add_activity_to_trail_rejects_missing_activity_and_course(
         self, db, org, admin_user, mock_request
     ):
@@ -434,13 +454,22 @@ class TestTrailService:
         # constraint. A single step is enough to verify removal deletes it.
         await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
 
-        removed = await remove_course_from_trail(
-            mock_request,
-            admin_user,
-            course.course_uuid,
-            db,
-        )
+        with patch(
+            "src.services.trail.trail.track", new_callable=AsyncMock
+        ) as mock_track:
+            removed = await remove_course_from_trail(
+                mock_request,
+                admin_user,
+                course.course_uuid,
+                db,
+            )
 
+        mock_track.assert_awaited_once_with(
+            event_name="course_left",
+            org_id=course.org_id,
+            user_id=admin_user.id,
+            properties={"course_uuid": course.course_uuid},
+        )
         assert missing_course_exc.value.status_code == 404
         assert missing_trail_exc.value.status_code == 404
         assert removed.runs == []

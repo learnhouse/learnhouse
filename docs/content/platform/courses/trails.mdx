@@ -1,24 +1,32 @@
-import { Callout } from 'nextra/components'
+---
+description: Learn how a learner's Trail records course progress and completions, what the Progress page shows, and what happens when a learner quits a course.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Trails
 
-Trails let students track their progress through courses, providing a clear view of what they have completed and what is left.
+A Trail is a learner's record of progress across the courses they have started. Each learner has one per organization.
 
-<br/>
-<img style={{borderRadius:10}} quality={100} src="/img/pages/trails/trails.png" alt="Trails overview" width={800} height={500} />
+## How progress is recorded
 
-## How Trails Work
+- When a learner starts a course, it is added to their Trail.
+- Each activity they complete is recorded. Learners mark an activity complete with **Mark as complete** (or the `m` key). Assignments are completed when they are submitted with automatic grading, or when a teacher clicks **Finalize & Complete**.
+- A course is finished when every activity is complete. If the course has a [certification](/platform/certifications), the certificate is awarded at that point, provided every graded assignment is passed.
 
-When a student starts a course, a Trail is automatically created for them. As they work through activities, their progress is recorded, including activity completions and quiz submissions.
+Learners can undo a completion with **Unmark Activity**, which lowers their progress.
 
-Students can view their Trail at any time to see:
+## The Progress page
 
-- Which activities they have completed
-- Quiz results and scores
-- Overall course progression
+Learners open their Trail from the **Progress** page (`g` then `t`). It shows:
 
-This encourages self-directed learning and helps students stay on track.
+- Every course in progress, with how far along they are.
+- **My Certificates**: the certificates they have earned.
 
-<Callout>
-A Trail is created automatically when a student starts a course. All quiz submissions and progression data are recorded in the Trail.
+<img src="/img/pages/courses/progress-page.webp" alt="The Progress page with course cards showing the percentage completed, a finished course with its certificate, and the Quit All Courses button" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+**Quit Course** on a course card removes that course and its progress from the Trail. **Quit All Courses** on the Progress page does the same for every course.
+
+<Callout type="warning">
+Quitting a course deletes the learner's progress in it. It can't be undone.
 </Callout>

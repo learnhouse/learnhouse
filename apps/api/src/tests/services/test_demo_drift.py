@@ -17,6 +17,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.users import User
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.demo.sync import sync_demo
+from src.tests.conftest import build_once
 
 EPOCH_DAY = date(2026, 8, 9)
 
@@ -37,8 +38,11 @@ def no_uploads(monkeypatch):
 
 
 @pytest.fixture
-async def synced(db, no_uploads):
-    await sync_demo(db, today=EPOCH_DAY)
+async def synced(engine, db, no_uploads):
+    # Built once per process and replayed after; see test_demo_sync.synced.
+    await build_once(
+        engine, db, "demo_sync", lambda session: sync_demo(session, today=EPOCH_DAY)
+    )
 
 
 @pytest.fixture

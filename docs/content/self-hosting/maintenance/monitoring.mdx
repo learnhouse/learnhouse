@@ -1,4 +1,8 @@
-import { Callout } from 'nextra/components'
+---
+description: Monitor a self-hosted LearnHouse instance with CLI health checks, the /api/v1/health endpoint, logs, Sentry error tracking and resource limits.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Monitoring
 
@@ -9,42 +13,66 @@ Monitoring your self-hosted LearnHouse instance lets you catch issues before the
 The CLI offers three complementary commands:
 
 ```bash
-learnhouse status    # quick container status for each service
-learnhouse health    # PostgreSQL, Redis, HTTP health endpoint, disk, resources
-learnhouse doctor    # deep diagnostics (Docker, ports, DNS, env validation, logs)
+npx learnhouse status    # URL and container status for each service
+npx learnhouse health    # containers, PostgreSQL, Redis, HTTP health endpoint, disk, resources
+npx learnhouse doctor    # deeper diagnostics (Docker, restarts, ports, DNS, disk, log errors, .env)
 ```
 
-You can also verify the application health endpoint directly:
+`health` and `doctor` exit with code `1` when a check fails, so you can run them from a scheduled job and alert on the exit code.
+
+## Health Endpoint
+
+The API exposes a health endpoint you can point an uptime monitor at:
 
 ```bash
 curl http://localhost/api/v1/health
 ```
+
+| Response | Meaning |
+| --- | --- |
+| `200` with body `true` | The API is up and can query the database |
+| `503` with `{"detail": "Database is not healthy"}` | The API is up but the database check failed |
+| No response or `502` | The API or the reverse proxy is down |
+
+The endpoint needs no authentication. It rejects API tokens, so call it without one. The generated `docker-compose.yml` uses the same endpoint for the app container's Docker health check (every 30 seconds after a 60-second start period).
+
+The endpoint `GET /api/v1/instance/info` is also public and returns the instance's configuration (edition mode, tenancy, default organization slug, frontend and top domains), which is useful to check that the API answers with the settings you expect.
+
+## Error Tracking
+
+Set `LEARNHOUSE_SENTRY_DSN` (API) and `NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN` (web app) to send errors to your own [Sentry](https://sentry.io) project. `LEARNHOUSE_ENV` and `NEXT_PUBLIC_LEARNHOUSE_ENV` set the environment label.
+
+When Sentry is configured, the in-app feedback form sends user feedback to Sentry through `POST /api/v1/monitoring/feedback`. Without Sentry, the endpoint accepts the feedback and discards it.
 
 ## Viewing Logs
 
 Stream logs from all containers:
 
 ```bash
-learnhouse logs
+npx learnhouse logs
 ```
+
+The app container runs the web app, the API and the collaboration server under one process manager, so their logs are interleaved in the `learnhouse-app` output. Set `LEARNHOUSE_LOG_LEVEL` (for example `DEBUG` or `WARNING`) to change how much the API logs. The default is `INFO`.
 
 ## What to Monitor
 
 ### Application Health
 
-- Run `learnhouse doctor` regularly to verify all services are running and healthy
-- Watch for container restarts, which may indicate memory issues or application errors
+- Run `npx learnhouse doctor` regularly to verify all services are running and healthy
+- Watch for container restarts, which may indicate memory issues or application errors. `doctor` warns when a container has restarted more than 3 times.
 
 ### Disk Usage
 
-- Monitor disk space, especially if using filesystem storage for uploaded content
+- Monitor disk space, especially if you use filesystem storage for uploaded content
 - Database size grows over time as more content is created
-- Docker images and logs also consume disk space
+- Backups in `<installDir>/backups/`, Docker images and logs also consume disk space
+- `doctor` warns when less than 1 GB is free
 
 ### Memory Usage
 
-- LearnHouse requires at least 2 GB of RAM
-- Monitor memory consumption to ensure the server is not swapping, which degrades performance
+- LearnHouse needs at least 2 GB of RAM
+- Make sure the server is not swapping, which degrades performance
+- Use `npx learnhouse scale` to cap the memory of each container
 
 ### Database Performance
 
@@ -55,7 +83,7 @@ learnhouse logs
 
 For production deployments, consider setting up:
 
-- **Uptime monitoring**: use an external service to check that your LearnHouse instance is accessible (e.g., monitor `http://your-domain/api/v1/health`)
+- **Uptime monitoring**: an external service that checks `https://your-domain/api/v1/health`
 - **Disk space alerts**: get notified before disk space runs out
 - **Log aggregation**: ship logs to a centralized logging system for easier analysis
-- **Container monitoring**: tools like Docker's built-in stats, cAdvisor, or Prometheus with node-exporter can track resource usage over time
+- **Container monitoring**: tools like `docker stats`, cAdvisor, or Prometheus with node-exporter can track resource usage over time

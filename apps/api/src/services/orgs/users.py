@@ -55,6 +55,8 @@ from src.services.orgs.orgs import is_org_admin_role, rbac_check
 from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.users.emails import send_role_changed_email
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 logger = logging.getLogger(__name__)
 
@@ -190,8 +192,8 @@ async def _revoke_org_grants(
     """Drop the per-resource grants departing members hold in ``org``.
 
     Deleting the UserOrganization row alone leaves authorship, usergroup and
-    board membership plus their API tokens in place, each of which keeps
-    granting access. Staged on the session; the caller commits.
+    board membership plus their API tokens and connected AI apps in place,
+    each of which keeps granting access. Staged on the session; the caller commits.
     """
     if not user_ids:
         return
@@ -248,6 +250,11 @@ async def _revoke_org_grants(
         )
         .values(is_active=False, update_date=now)
     )
+    # Connected AI apps too, or rejoining later would bring them back.
+    from src.services.mcp.oauth import revoke_member_grants
+
+    for user_id in user_ids:
+        await revoke_member_grants(db_session, user_id, org.id)
 
 
 async def _drop_accepted_invites(
@@ -742,6 +749,13 @@ async def export_organization_users_csv(
     )
 
 
+async def _disconnect_ai_apps(db_session: AsyncSession, user_id: int, org_id: int) -> None:
+    """A member who leaves takes their AI app connections with them."""
+    from src.services.mcp.oauth import revoke_member_grants
+
+    await revoke_member_grants(db_session, user_id, org_id)
+
+
 async def remove_user_from_org(
     request: Request,
     org_id: int,
@@ -791,6 +805,7 @@ async def remove_user_from_org(
 
     await db_session.delete(user_org)
     await _revoke_org_grants(db_session, org, [user_id])
+    await _disconnect_ai_apps(db_session, user_id, org.id)
     await db_session.commit()
     await _drop_accepted_invites(db_session, org, [user_id])
 
@@ -799,6 +814,11 @@ async def remove_user_from_org(
 
     await decrease_feature_usage("members", org_id, db_session)
 
+    await track(
+        event_name=analytics_events.USER_REMOVED_FROM_ORG,
+        org_id=org_id,
+        user_id=user_id,
+    )
     await dispatch_webhooks(
         event_name="user_removed_from_org",
         org_id=org_id,
@@ -847,6 +867,7 @@ async def leave_org(
 
     await db_session.delete(user_org)
     await _revoke_org_grants(db_session, org, [user_id])
+    await _disconnect_ai_apps(db_session, user_id, org.id)
     await db_session.commit()
     await _drop_accepted_invites(db_session, org, [user_id])
 
@@ -855,6 +876,11 @@ async def leave_org(
 
     await decrease_feature_usage("members", org_id, db_session)
 
+    await track(
+        event_name=analytics_events.USER_REMOVED_FROM_ORG,
+        org_id=org_id,
+        user_id=user_id,
+    )
     await dispatch_webhooks(
         event_name="user_removed_from_org",
         org_id=org_id,
@@ -934,6 +960,15 @@ async def remove_batch_users_from_org(
 
     for _ in range(removed_count):
         await decrease_feature_usage("members", org_id, db_session)
+
+    # One per member actually removed; the batch is capped by
+    # enforce_batch_size_limit, so this stays small.
+    for uid in removed_user_ids:
+        await track(
+            event_name=analytics_events.USER_REMOVED_FROM_ORG,
+            org_id=org_id,
+            user_id=uid,
+        )
 
     return {"detail": f"{removed_count} user(s) removed from org"}
 
@@ -1213,10 +1248,6 @@ async def invite_batch_users(
             detail="Organization not found",
         )
 
-    # get User sender
-    statement = select(User).where(User.id == current_user.id)
-    user = (await db_session.execute(statement)).scalars().first()
-
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
@@ -1232,6 +1263,11 @@ async def invite_batch_users(
     await require_not_demo_org(org_id, db_session)
 
     acting_user_id = resolve_acting_user_id(current_user)
+    # The sender: the member themselves, or whoever created the API token
+    # (a token's own id is not a user id).
+    user = await db_session.get(User, acting_user_id) if acting_user_id else None
+    if user is None:
+        raise HTTPException(status_code=403, detail="Invitations must come from a member")
 
     # Free-tier abuse gate: the org AND the acting user must be at least
     # FREE_TIER_MIN_AGE_DAYS old before invites can be sent. This stops a
@@ -1324,10 +1360,6 @@ async def invite_batch_users(
     results = []
 
     for email in invite_list:
-        email = email.strip()
-        if not email:
-            continue
-
         # Check if user is already invited
         invited_user = r.get(f"invited_user:{email}:org:{org.org_uuid}")
 
@@ -1355,7 +1387,7 @@ async def invite_batch_users(
             "email_sent": isEmailSent,
             "expires": ttl,
             "created_at": datetime.now().isoformat(),
-            "created_by": current_user.user_uuid,
+            "created_by": user.user_uuid,
         }
 
         r.set(
@@ -1377,6 +1409,16 @@ async def invite_batch_users(
     skipped = sum(1 for r in results if r["status"] == "already_invited")
     invalid = sum(1 for r in results if r["status"] == "invalid_email")
 
+    # One event per admin action. Failed emails still count: the invite is
+    # recorded and can be resent; already-pending and malformed ones don't.
+    if sent + failed:
+        await track(
+            event_name=analytics_events.USER_INVITED,
+            org_id=org_id,
+            user_id=acting_user_id,
+            properties={"invite_method": "email", "count": sent + failed},
+        )
+
     await dispatch_webhooks(
         event_name="user_invited_to_org",
         org_id=org_id,
@@ -1384,7 +1426,7 @@ async def invite_batch_users(
             "org_id": org_id,
             "emails": invite_list,
             "invite_code_uuid": invite_code_uuid,
-            "invited_by": current_user.user_uuid,
+            "invited_by": user.user_uuid,
         },
     )
 

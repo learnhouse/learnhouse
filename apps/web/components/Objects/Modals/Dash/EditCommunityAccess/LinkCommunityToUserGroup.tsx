@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
+import { asArray } from '@services/utils/ts/requests'
 
 type LinkCommunityToUserGroupProps = {
   setUserGroupModal: (value: boolean) => void
@@ -25,10 +26,10 @@ function LinkCommunityToUserGroup(props: LinkCommunityToUserGroupProps) {
   const access_token = session?.data?.tokens?.access_token
   const queryClient = useQueryClient()
 
-  const { data: usergroups } = useQuery({
+  const { data: usergroups = [] } = useQuery({
     queryKey: queryKeys.usergroups.list(org?.id),
     queryFn: () => getUserGroups(org.id, access_token),
-    select: (res: any) => res?.data ?? res,
+    select: (res: any) => asArray<any>(res),
     enabled: !!(community && org?.id && access_token),
     staleTime: 60_000,
   })

@@ -1,5 +1,24 @@
 from src.db.courses.activities import ActivityRead
 from src.db.courses.courses import CourseRead
+from src.security.auth import resolve_acting_user_id
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
+
+
+async def track_activity_created(activity, course, current_user) -> None:
+    """``activity_created`` for a freshly committed activity, whichever kind of
+    create endpoint made it (generic, PDF, uploaded or external video)."""
+    activity_type = activity.activity_type
+    await track(
+        event_name=analytics_events.ACTIVITY_CREATED,
+        org_id=course.org_id,
+        user_id=resolve_acting_user_id(current_user),
+        properties={
+            "course_uuid": course.course_uuid,
+            "activity_uuid": activity.activity_uuid,
+            "activity_type": getattr(activity_type, "value", activity_type) or "",
+        },
+    )
 
 
 def structure_activity_content_by_type(activity):

@@ -3,16 +3,18 @@ import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
 import {
   autoDetectDeploymentId,
+  composeServiceContainer,
   dockerExec,
   dockerStats,
   dockerStatsForContainers,
   getDockerDiskUsage,
-  isContainerRunning,
   listDeploymentContainers,
 } from '../services/docker.js'
+import { hasComposeService, publicUrl } from '../services/stack.js'
 
+let failures = 0
 function pass(msg: string): string { return `${pc.green('●')} ${msg}` }
-function fail(msg: string): string { return `${pc.red('●')} ${msg}` }
+function fail(msg: string): string { failures++; return `${pc.red('●')} ${msg}` }
 
 export async function healthCommand() {
   const dir = findInstallDir()
@@ -23,6 +25,7 @@ export async function healthCommand() {
   }
 
   p.intro(pc.cyan('LearnHouse Health Check'))
+  failures = 0
 
   const id = config.deploymentId || autoDetectDeploymentId()
   if (!id) {
@@ -38,44 +41,50 @@ export async function healthCommand() {
   } else {
     for (const c of containers) {
       const isUp = c.status.toLowerCase().startsWith('up')
-      const svcName = c.name.replace(`-${id}`, '')
-      p.log.message(isUp ? pass(`${svcName}: ${c.status}`) : fail(`${svcName}: ${c.status}`))
+      p.log.message(isUp ? pass(`${c.service}: ${c.status}`) : fail(`${c.service}: ${c.status}`))
     }
   }
 
-  // 2. Database connection
+  // 2. Database connection (services are addressed by compose name, so this
+  // works for both editions; external databases/redis are not ours to probe)
   p.log.step('Database')
-  const dbContainer = `learnhouse-db-${id}`
-  if (isContainerRunning(dbContainer)) {
-    try {
-      dockerExec(dbContainer, 'pg_isready -U learnhouse')
-      p.log.message(pass('PostgreSQL accepting connections'))
-    } catch {
-      p.log.message(fail('PostgreSQL not ready'))
-    }
+  if (!hasComposeService(config.installDir, 'db')) {
+    p.log.message(pc.dim('External database (not managed by this install)'))
   } else {
-    p.log.message(fail('Database container not running'))
+    const db = composeServiceContainer(config.installDir, 'db')
+    if (db) {
+      try {
+        dockerExec(db, ['pg_isready', '-q'])
+        p.log.message(pass('PostgreSQL accepting connections'))
+      } catch {
+        p.log.message(fail('PostgreSQL not ready'))
+      }
+    } else {
+      p.log.message(fail('Database container not running'))
+    }
   }
 
   // 3. Redis ping
   p.log.step('Redis')
-  const redisContainer = `learnhouse-redis-${id}`
-  if (isContainerRunning(redisContainer)) {
-    try {
-      const pong = dockerExec(redisContainer, 'redis-cli ping')
-      p.log.message(pong === 'PONG' ? pass('Redis responding') : fail(`Redis returned: ${pong}`))
-    } catch {
-      p.log.message(fail('Redis not responding'))
-    }
+  if (!hasComposeService(config.installDir, 'redis')) {
+    p.log.message(pc.dim('External Redis (not managed by this install)'))
   } else {
-    p.log.message(fail('Redis container not running'))
+    const redis = composeServiceContainer(config.installDir, 'redis')
+    if (redis) {
+      try {
+        const pong = dockerExec(redis, ['redis-cli', 'ping'])
+        p.log.message(pong === 'PONG' ? pass('Redis responding') : fail(`Redis returned: ${pong}`))
+      } catch {
+        p.log.message(fail('Redis not responding'))
+      }
+    } else {
+      p.log.message(fail('Redis container not running'))
+    }
   }
 
   // 4. HTTP endpoint
   p.log.step('HTTP Endpoint')
-  const protocol = config.useHttps ? 'https' : 'http'
-  const portSuffix = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80) ? '' : `:${config.httpPort}`
-  const healthUrl = `${protocol}://${config.domain}${portSuffix}/api/v1/health`
+  const healthUrl = `${publicUrl(config)}/api/v1/health`
   try {
     const start = Date.now()
     const resp = await fetch(healthUrl, { signal: AbortSignal.timeout(5000) })
@@ -118,5 +127,10 @@ export async function healthCommand() {
     }
   }
 
-  p.outro(pc.dim('Health check complete'))
+  if (failures > 0) {
+    p.outro(pc.red(`Health check found ${failures} problem${failures === 1 ? '' : 's'}`))
+    process.exitCode = 1
+  } else {
+    p.outro(pc.dim('Health check complete'))
+  }
 }

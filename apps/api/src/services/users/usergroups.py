@@ -352,8 +352,6 @@ async def get_usergroups_by_resource(
 
     # Batch fetch all usergroups in a single query
     usergroup_ids = [ug.usergroup_id for ug in usergroup_resources]
-    if not usergroup_ids:
-        return []
 
     statement = select(UserGroup).where(UserGroup.id.in_(usergroup_ids))  # type: ignore
     usergroups = (await db_session.execute(statement)).scalars().all()
@@ -567,7 +565,8 @@ async def add_users_to_usergroup(
         usergroup_user = (await db_session.execute(statement)).scalars().first()
 
         if usergroup_user:
-            logging.error(f"User with id {user_id} already exists in UserGroup")
+            # Already linked: adding is idempotent.
+            logging.info(f"User with id {user_id} already exists in UserGroup")
             continue
 
         membership_statement = select(UserOrganization).where(
@@ -707,7 +706,8 @@ async def add_resources_to_usergroup(
         usergroup_resource = (await db_session.execute(statement)).scalars().first()
 
         if usergroup_resource:
-            logging.error(f"Resource {resource_uuid} already exists in UserGroup")
+            # Already linked: adding is idempotent.
+            logging.info(f"Resource {resource_uuid} already exists in UserGroup")
             continue
 
         # Validate that resource exists and belongs to this organization

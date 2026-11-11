@@ -27,6 +27,7 @@ from src.core.middleware.body_size import RequestBodySizeLimitMiddleware
 from src.core.middleware.cors import configure_cors
 from src.security.csrf import CSRFProtectionMiddleware
 from src.router import v1_router
+from src.services.ai.llm.errors import is_quota_error
 from src.routers.content_files import router as content_files_router
 from src.routers.local_content import router as local_content_router
 
@@ -65,18 +66,21 @@ class _SelectiveGZipResponder(GZipResponder):
     """GZipResponder that opts out once the response's Content-Type is known.
 
     Starlette picks the responder from the request's Accept-Encoding alone, so
-    the content type is only visible on `http.response.start`. Marking the
-    response excluded there routes it down Starlette's own pass-through path,
-    which forwards every body chunk untouched.
+    the content type is only visible on `http.response.start`. Adding it to
+    the exclude list before Starlette sees that message routes the response
+    down Starlette's own pass-through path. Flipping `content_type_is_excluded`
+    afterwards is not enough: since Starlette 1.9 the pass-through path forwards
+    the start message while handling it, so a response excluded late (any
+    redirect, application/octet-stream) sent its body with no start and uvicorn
+    answered a bare 500.
     """
 
     async def send_with_compression(self, message: Message) -> None:
         if message["type"] == "http.response.start":
-            await super().send_with_compression(message)
-            if not self.content_type_is_excluded:
-                content_type = Headers(raw=message["headers"]).get("content-type", "")
-                self.content_type_is_excluded = not _is_compressible(content_type)
-            return
+            content_type = Headers(raw=message["headers"]).get("content-type", "")
+            if not _is_compressible(content_type):
+                media_type = content_type.partition(";")[0].strip().lower()
+                self.exclude_content_types = (*self.exclude_content_types, media_type)
         await super().send_with_compression(message)
 
 
@@ -102,6 +106,12 @@ class SelectiveGZipMiddleware(GZipMiddleware):
 def _before_send(event, hint):
     transaction = event.get("transaction") or ""
     if transaction in _HEALTH_TRANSACTIONS:
+        return None
+    # An AI provider refusing work over a rate limit, quota or spending cap is
+    # an operational state, logged as a warning where we handle it. The SDK
+    # integrations capture it on their own as well, once per attempt.
+    exc_info = hint.get("exc_info")
+    if exc_info and is_quota_error(exc_info[1]):
         return None
     return event
 
@@ -147,7 +157,7 @@ app = FastAPI(
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
     # The schema lists every internal route; publish it only where the docs are.
     openapi_url="/openapi.json" if learnhouse_config.general_config.development_mode else None,
-    version="1.4.3",
+    version="1.4.4",
     lifespan=lifespan,
 )
 
@@ -166,6 +176,27 @@ configure_cors(app)
 # JSON; 6 is gzip's own default.
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000, compresslevel=6)
 register_ee_middlewares(app)
+
+# MCP server for external AI apps, plus the OAuth server MCP clients sign in
+# through. Mounted on the root app so v1 router dependencies don't interfere.
+# The session manager's lifecycle is driven from startup_app/shutdown_app via
+# app.state.mcp_session_manager (mounted sub-apps get no lifespan).
+if learnhouse_config.mcp_config.enabled:
+    from src.core.middleware.mcp_cors import PublicCORSMiddleware
+    from src.routers.mcp_oauth import public_router as mcp_oauth_public_router
+    from src.security.mcp_auth import MCPAuthMiddleware
+    from src.services.mcp.server import MCPASGIApp, build_mcp_session_manager
+
+    _mcp_session_manager = build_mcp_session_manager()
+    app.state.mcp_session_manager = _mcp_session_manager
+    _mcp_app = MCPAuthMiddleware(MCPASGIApp(_mcp_session_manager))
+    # A plain route on both spellings: a Mount would 307 "/mcp" to "/mcp/",
+    # and not every client follows a redirect on POST.
+    app.add_route("/mcp", _mcp_app, methods=["GET", "POST", "DELETE", "OPTIONS"])
+    app.add_route("/mcp/", _mcp_app, methods=["GET", "POST", "DELETE", "OPTIONS"])
+    app.include_router(mcp_oauth_public_router)
+    # Outermost: answers CORS for these public paths before the API's own CORS.
+    app.add_middleware(PublicCORSMiddleware)
 
 # Content delivery: S3-aware router when S3 is enabled, local otherwise.
 # Both paths enforce access control; neither serves raw StaticFiles.

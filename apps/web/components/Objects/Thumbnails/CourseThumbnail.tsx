@@ -3,10 +3,9 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import ManageAccessPopover from '@components/Dashboard/Library/ManageAccessPopover'
 import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
-import { exportCourse, downloadBlob, ExportStatus } from '@services/courses/transfer'
+import type { ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { useQueryClient } from '@tanstack/react-query'
@@ -15,6 +14,7 @@ import { getCourseMetadata } from '@services/courses/courses'
 import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy, Download, CheckSquare, Square, Lock } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import React from 'react'
 import toast from 'react-hot-toast'
 import UserAvatar from '@components/Objects/UserAvatar'
@@ -27,6 +27,10 @@ import {
 import { useTranslation } from 'react-i18next'
 import { formatDate } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+
+// Admin-only; course cards are mostly seen by learners.
+const ManageAccessPopover = dynamic(() => import('@components/Dashboard/Library/ManageAccessPopover'), { ssr: false })
 
 type Course = {
   course_uuid: string
@@ -133,6 +137,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
     const toastId = exportToast.start('single', course.name)
 
     try {
+      const { exportCourse, downloadBlob } = await import('@services/courses/transfer')
       const blob = await exportCourse(
         course.course_uuid,
         session.data?.tokens?.access_token,
@@ -160,7 +165,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       {isDashboard && onToggleSelect && (
         <button
           onClick={handleSelectClick}
-          aria-label={isSelected ? 'Deselect course' : 'Select course'}
+          aria-label={isSelected ? t('courses.deselect_course') : t('courses.select_course')}
           className={`absolute top-2 start-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
             isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
@@ -184,20 +189,11 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       />
 
       <Link prefetch={false} href={courseLink} onClick={handleCardOpen} className="block relative aspect-video overflow-hidden bg-gray-50">
-        {/* Hidden img gives the browser a real resource hint so it can fetch the background-image early as an LCP candidate */}
-        {isPriority && (
-           
-          <img
-            src={thumbnailImage}
-            alt=""
-            aria-hidden="true"
-            fetchPriority="high"
-            className="absolute w-0 h-0 opacity-0 pointer-events-none"
-          />
-        )}
-        <div
-          className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-          style={{ backgroundImage: `url(${thumbnailImage})` }}
+        <ThumbnailImage
+          src={thumbnailImage}
+          fetchPriority={isPriority ? 'high' : undefined}
+          loading={isPriority ? 'eager' : 'lazy'}
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
         {isDashboard && (
@@ -309,7 +305,7 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
       }`}>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
-            <button aria-label="Course actions"className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
+            <button aria-label={t('courses.actions')} className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
               <MoreVertical size={18} className="text-gray-700" />
             </button>
           </DropdownMenuTrigger>

@@ -20,8 +20,13 @@ from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 logger = logging.getLogger(__name__)
 
 
-async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> Optional[UserOrganization]:
-    """Return the UserOrganization row, or None. Does NOT check superadmin."""
+async def get_user_org_rows(user_id: int, org_id: int, db_session: AsyncSession) -> list[UserOrganization]:
+    """Every membership row the user has in the org (normally exactly one).
+
+    Membership, admin status and role lookups all start from these rows, and a
+    single request asks several of those questions about the same user and org.
+    Memoized per session so they share one query. Does NOT check superadmin.
+    """
     _cache = getattr(db_session, '_user_org_cache', None)
     if _cache is None:
         db_session._user_org_cache = {}
@@ -33,15 +38,28 @@ async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> O
         UserOrganization.user_id == user_id,
         UserOrganization.org_id == org_id,
     )
-    result = (await db_session.execute(statement)).scalars().first()
-    # Only cache positive memberships. Caching a None ("not a member") result
-    # is unsafe: a membership granted later within the same request/session
+    rows = list((await db_session.execute(statement)).scalars().all())
+    # Only cache positive memberships. Caching a "not a member" result is
+    # unsafe: a membership granted later within the same request/session
     # (e.g. add-to-org immediately followed by an authz check) would otherwise
     # keep returning the stale "not a member" answer and incorrectly deny
     # access. Positive rows are safe to memoize for the request's lifetime.
-    if result is not None:
-        _cache[key] = result
-    return result
+    if rows:
+        _cache[key] = rows
+    return rows
+
+
+async def get_user_org(user_id: int, org_id: int, db_session: AsyncSession) -> Optional[UserOrganization]:
+    """Return the UserOrganization row, or None. Does NOT check superadmin."""
+    rows = await get_user_org_rows(user_id, org_id, db_session)
+    return rows[0] if rows else None
+
+
+async def holds_admin_or_maintainer_role(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
+    """True if any of the user's membership rows in the org is admin/maintainer.
+    Does NOT check superadmin."""
+    rows = await get_user_org_rows(user_id, org_id, db_session)
+    return any(row.role_id in ADMIN_OR_MAINTAINER_ROLE_IDS for row in rows)
 
 
 async def is_org_member(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
@@ -113,6 +131,65 @@ async def require_org_admin(user_id: int, org_id: int, db_session: AsyncSession)
             detail="Only organization administrators and maintainers can perform this action",
         )
     await enforce_org_mfa(user_id, org_id, db_session)
+
+
+async def verify_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> None:
+    """Gate of the org reporting surfaces (per-student audit, analytics):
+    403 unless the user belongs to the org. Superadmins pass without the org's
+    session policies; members go through them.
+
+    Prevents cross-org data access (IDOR) by ensuring the requesting user
+    actually belongs to the org whose data they are querying.
+    """
+    if await is_user_superadmin(user_id, db_session):
+        return
+
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
+    )).scalars().first()
+    if not membership:
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
+    await enforce_org_mfa(user_id, org_id, db_session)
+
+
+async def verify_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> None:
+    """403 unless the user's role in this org grants
+    ``organizations.action_update`` (admins, maintainers, custom roles with
+    that right). Superadmins pass.
+
+    Scoped to the org being accessed, not any org the user belongs to.
+    """
+    if await is_user_superadmin(user_id, db_session):
+        return
+
+    membership = (await db_session.execute(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
+    )).scalars().first()
+    if not membership:
+        raise HTTPException(status_code=403, detail="Admin access required for this organization")
+
+    role = (await db_session.execute(
+        select(Role).where(Role.id == membership.role_id)
+    )).scalars().first()
+    if not role:
+        raise HTTPException(status_code=403, detail="Admin access required for this organization")
+
+    if role.rights:
+        rights = role.rights
+        org_rights = rights.get("organizations") if isinstance(rights, dict) else getattr(rights, "organizations", None)
+        if org_rights:
+            has_update = org_rights.get("action_update", False) if isinstance(org_rights, dict) else getattr(org_rights, "action_update", False)
+            if has_update:
+                await enforce_org_mfa(user_id, org_id, db_session)
+                return
+
+    raise HTTPException(status_code=403, detail="Admin access required for this organization")
 
 
 async def require_org_role_permission(

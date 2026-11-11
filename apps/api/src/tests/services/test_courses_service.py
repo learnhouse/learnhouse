@@ -698,7 +698,9 @@ class TestCourseMutationsAndRights:
         ) as mock_upload, patch(
             "src.services.courses.courses.dispatch_webhooks",
             new_callable=AsyncMock,
-        ):
+        ), patch(
+            "src.services.courses.courses.track", new_callable=AsyncMock
+        ) as mock_track:
             created = await create_course(
                 mock_request,
                 org.id,
@@ -718,6 +720,12 @@ class TestCourseMutationsAndRights:
         assert created.thumbnail_video == ""
         assert created.thumbnail_type == ThumbnailType.IMAGE
         mock_upload.assert_not_called()
+        mock_track.assert_awaited_once_with(
+            event_name="course_created",
+            org_id=org.id,
+            user_id=admin_user.id,
+            properties={"course_uuid": created.course_uuid, "source": "manual"},
+        )
 
     @pytest.mark.asyncio
     async def test_create_course_and_get_user_courses(
@@ -941,7 +949,9 @@ class TestCourseMutationsAndRights:
         ), patch(
             "src.services.courses.courses.dispatch_webhooks",
             new_callable=AsyncMock,
-        ) as mock_webhooks:
+        ) as mock_webhooks, patch(
+            "src.services.courses.courses.track", new_callable=AsyncMock
+        ) as mock_track:
             updated = await update_course(
                 mock_request,
                 CourseUpdate(published=True),
@@ -952,6 +962,12 @@ class TestCourseMutationsAndRights:
 
         assert updated.published is True
         mock_webhooks.assert_awaited_once()
+        mock_track.assert_awaited_once_with(
+            event_name="course_published",
+            org_id=course.org_id,
+            user_id=admin_user.id,
+            properties={"course_uuid": course.course_uuid, "published": True},
+        )
 
     @pytest.mark.asyncio
     async def test_get_course_user_rights_variants(
@@ -1201,7 +1217,9 @@ class TestCourseMutationsAndRights:
             "src.services.courses.courses._copy_storage_directory"
         ) as mock_copy_dir, patch(
             "os.makedirs"
-        ):
+        ), patch(
+            "src.services.courses.courses.track", new_callable=AsyncMock
+        ) as mock_track:
             cloned = await clone_course(
                 mock_request,
                 course.course_uuid,
@@ -1232,6 +1250,13 @@ class TestCourseMutationsAndRights:
         # The activity folder, then the video block's HLS renditions.
         assert mock_copy_dir.call_count == 2
         assert mock_copy_dir.call_args_list[1].args[0].endswith("/videoBlock/block_old/hls")
+        # API token clones are attributed to the token's creator.
+        mock_track.assert_awaited_once_with(
+            event_name="course_created",
+            org_id=course.org_id,
+            user_id=regular_user.id,
+            properties={"course_uuid": cloned.course_uuid, "source": "clone"},
+        )
 
     @pytest.mark.asyncio
     async def test_clone_course_missing_course_and_org_failures(

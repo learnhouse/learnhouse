@@ -20,6 +20,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import { deleteActivity, updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useCourse } from '@components/Contexts/CourseContext'
+import { useTranslation } from 'react-i18next'
 
 interface ModifiedActivityInterface {
   activityId: string
@@ -27,6 +28,7 @@ interface ModifiedActivityInterface {
 }
 
 function Activity(props: any) {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any;
   const queryClient = useQueryClient()
@@ -80,7 +82,7 @@ function Activity(props: any) {
                 <div className="flex space-x-2 items-center">
                   <Video size={16} />{' '}
                   <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
-                    Video
+                    {t('activities.video')}
                   </div>{' '}
                 </div>
               </>
@@ -92,7 +94,7 @@ function Activity(props: any) {
                     <File size={16} />{' '}
                   </div>
                   <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
-                    Document
+                    {t('activities.document')}
                   </div>{' '}
                 </div>
               </>
@@ -102,7 +104,7 @@ function Activity(props: any) {
                 <div className="flex space-x-2 items-center">
                   <Sparkles size={16} />{' '}
                   <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
-                    Dynamic
+                    {t('course.draggables.type_dynamic')}
                   </div>{' '}
                 </div>
               </>
@@ -115,7 +117,7 @@ function Activity(props: any) {
                 <input
                   type="text"
                   className="bg-transparent outline-hidden text-xs text-gray-500"
-                  placeholder="Activity name"
+                  placeholder={t('course.draggables.activity_name')}
                   value={
                     modifiedActivity
                       ? modifiedActivity?.activityName
@@ -163,7 +165,7 @@ function Activity(props: any) {
                   className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
                   rel="noopener noreferrer"
                 >
-                  <div className="text-sky-100 font-bold text-xs">Edit </div>
+                  <div className="text-sky-100 font-bold text-xs">{t('course.draggables.edit')} </div>
                 </Link>
               </>
             )}
@@ -182,9 +184,9 @@ function Activity(props: any) {
           <div className="flex flex-row pe-3 space-x-1 items-center">
             <MoreVertical size={15} className="text-gray-300" />
             <ConfirmationModal
-              confirmationMessage="Are you sure you want to delete this activity ?"
-              confirmationButtonText="Delete Activity"
-              dialogTitle={'Delete ' + props.activity.name + ' ?'}
+              confirmationMessage={t('course.draggables.delete_activity_confirm')}
+              confirmationButtonText={t('course.draggables.delete_activity')}
+              dialogTitle={t('course.draggables.delete_title', { name: props.activity.name })}
               dialogTrigger={
                 <div
                   className=" hover:cursor-pointer p-1 px-5 bg-red-600 rounded-md"

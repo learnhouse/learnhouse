@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.services.ai.ai import (
+    track_ai_message,
     ai_send_activity_chat_message,
     ai_start_activity_chat_session,
     ai_start_activity_chat_session_stream,
@@ -16,6 +17,7 @@ from src.services.ai.editor import (
     editor_ai_send_message_stream,
 )
 from src.services.ai.base import ask_ai_stream, save_message_to_history, generate_follow_up_suggestions
+from src.services.ai.llm.errors import ai_error_message, log_ai_failure
 from src.services.ai.schemas.ai import (
     ActivityAIChatSessionResponse,
     SendActivityAIChatMessage,
@@ -122,6 +124,10 @@ async def activity_chat_event_generator(
             aichat_uuid, user_message, full_response,
             user_id=user_id, course_uuid=course_uuid, org_id=org_id,
         )
+        await track_ai_message(
+            org_id, user_id, "activity_chat", ai_model,
+            course_uuid=course_uuid, activity_uuid=activity_uuid,
+        )
 
         # Send done event immediately (without waiting for follow-ups)
         yield f"data: {json.dumps({'type': 'done', 'aichat_uuid': aichat_uuid, 'activity_uuid': activity_uuid})}\n\n"
@@ -144,10 +150,11 @@ async def activity_chat_event_generator(
         # (full_response empty), so a disconnect *after* a full response can't
         # be abused to get free AI. Re-raise so Starlette observes the cancel.
         raise
-    except Exception:
+    except Exception as e:
         stream_failed = True
-        logger.exception("Error in activity_chat_event_generator")
-        yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI chat request.'})}\n\n"
+        log_ai_failure(logger, e, "Error in activity_chat_event_generator")
+        message = ai_error_message(e, "An internal error occurred while processing the AI chat request.")
+        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
     finally:
         # Refund credit if the model produced nothing useful.
         if org_id is not None and (stream_failed or not full_response):
@@ -406,6 +413,9 @@ async def editor_chat_event_generator(
             aichat_uuid, user_message, full_response,
             user_id=user_id, org_id=org_id, listed=False,
         )
+        await track_ai_message(
+            org_id, user_id, "editor", ai_model, activity_uuid=activity_uuid,
+        )
 
         # Send done event
         yield f"data: {json.dumps({'type': 'done', 'aichat_uuid': aichat_uuid, 'activity_uuid': activity_uuid})}\n\n"
@@ -428,10 +438,11 @@ async def editor_chat_event_generator(
         # empty), so a disconnect *after* a full response can't be abused to
         # get free AI. Re-raise so Starlette observes the cancel.
         raise
-    except Exception:
+    except Exception as e:
         stream_failed = True
-        logger.exception("Error in editor_chat_event_generator")
-        yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI request.'})}\n\n"
+        log_ai_failure(logger, e, "Error in editor_chat_event_generator")
+        message = ai_error_message(e, "An internal error occurred while processing the AI request.")
+        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
     finally:
         if org_id is not None and (stream_failed or not full_response):
             try:

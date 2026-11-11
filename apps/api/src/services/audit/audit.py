@@ -1,7 +1,8 @@
 """Durable audit-event write path.
 
-Unlike ``services/analytics/analytics.track``, which fires-and-forgets to Tinybird
-and swallows every error, this records a legal-grade row in Postgres and commits it.
+Unlike ``services/analytics/analytics.track``, which is fire-and-forget (it hands
+the event to Enterprise analytics, when installed) and swallows every error, this
+records a legal-grade row in Postgres and commits it.
 It writes in its **own** isolated session (from the app session factory) so the audit
 row is a self-contained transaction that neither depends on nor interferes with the
 caller's unit of work. Callers emit an audit event AFTER the authoritative action has

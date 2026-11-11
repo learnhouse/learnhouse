@@ -4,17 +4,20 @@ import { motion } from 'motion/react'
 import { getUriWithOrg } from '@services/config/config'
 import { KeyRound, ScanEye, ShieldCheck, SquareUserRound, UserPlus, Users, Shield } from 'lucide-react'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import OrgUsers from '@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'
-import OrgAccess from '@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'
-import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'
-import OrgUserGroups from '@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'
-import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
-import OrgAuditLogs from '@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'
-import OrgTwoFactorPolicy from '@components/Dashboard/Pages/Users/Security/OrgTwoFactorPolicy'
-import OrgSignInMethods from '@components/Dashboard/Pages/Users/Security/OrgSignInMethods'
 import { ShieldAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
+import dynamic from 'next/dynamic'
+
+// One chunk per tab: only the open tab's code is loaded.
+const OrgUsers = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'))
+const OrgAccess = dynamic(() => import('@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'))
+const OrgUsersAdd = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'))
+const OrgUserGroups = dynamic(() => import('@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'))
+const OrgRoles = dynamic(() => import('@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'))
+const OrgAuditLogs = dynamic(() => import('@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'))
+const OrgTwoFactorPolicy = dynamic(() => import('@components/Dashboard/Pages/Users/Security/OrgTwoFactorPolicy'))
+const OrgSignInMethods = dynamic(() => import('@components/Dashboard/Pages/Users/Security/OrgSignInMethods'))
 
 export type SettingsParams = {
   subpage: string
@@ -135,17 +138,17 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1 overflow-hidden">
       <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
-        <div className="pt-6 pb-4">
+        <div className="pt-4 pb-1 sm:pt-6 sm:pb-4">
           <Breadcrumbs items={[
             { label: t('common.users'), href: '/dash/users/settings/users', icon: <Users size={14} /> }
           ]} />
         </div>
-        <div className="my-2 py-3">
+        <div className="py-2 sm:my-2 sm:py-3">
           <div className="w-full flex flex-col space-y-1 min-w-0">
-            <div className="pt-3 flex font-bold text-3xl sm:text-4xl tracking-tighter truncate">
+            <div className="sm:pt-3 flex font-bold text-2xl sm:text-4xl tracking-tighter truncate">
               {H1Label}
             </div>
-            <div className="flex font-medium text-gray-400 text-md truncate">
+            <div className="hidden sm:flex font-medium text-gray-400 text-md truncate">
               {H2Label}
             </div>
           </div>

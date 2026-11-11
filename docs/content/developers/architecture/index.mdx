@@ -1,5 +1,9 @@
-import { Callout } from 'nextra/components'
-import ArchitectureDiagram from '../../../components/ArchitectureDiagram/ArchitectureDiagram'
+---
+title: "Architecture Overview"
+description: "See how LearnHouse fits together: the Next.js web app, FastAPI backend, collaboration server, CLI, PostgreSQL, Redis and the single app image."
+---
+
+import ArchitectureDiagram from '../../../components/ArchitectureDiagram/LazyArchitectureDiagram'
 
 # Architecture Overview
 
@@ -12,10 +16,17 @@ learnhouse/
 ├── apps/
 │   ├── web/      # Next.js frontend
 │   ├── api/      # FastAPI backend
-│   ├── collab/   # Hocuspocus collaboration server
-│   └── cli/      # LearnHouse CLI
-├── docker/       # Production Dockerfile helpers (nginx config, start.sh)
-└── Dockerfile    # Monolithic image used by the CLI setup wizard
+│   ├── collab/   # Hocuspocus collaboration server (boards)
+│   ├── cli/      # LearnHouse CLI
+│   └── e2e/      # Playwright end-to-end tests
+├── packages/
+│   ├── sdk/      # @learnhouse/sdk, typed API client (types generated from the API)
+│   ├── react/    # @learnhouse/react, built from apps/web's activity renderer
+│   └── vue/      # @learnhouse/vue, wraps the React renderer for Vue apps
+├── docs/         # This documentation site
+├── docker/       # Helpers for the app image (internal nginx config, start.sh)
+├── scripts/      # Repository scripts (for example lockfile regeneration)
+└── Dockerfile    # Single image (ghcr.io/learnhouse/app) used by CLI deployments
 ```
 
 Self-hosted deployments do not have a checked-in `docker-compose.yml`. The LearnHouse CLI (`apps/cli`) generates `docker-compose.yml`, `.env`, and reverse proxy config at setup time from the templates in `apps/cli/src/templates/`.
@@ -25,9 +36,11 @@ Self-hosted deployments do not have a checked-in `docker-compose.yml`. The Learn
 The platform consists of four applications backed by two core services:
 
 - **Web (Next.js)**: The user-facing frontend that communicates with the backend API and the collaboration server.
-- **API (FastAPI)**: The backend that handles authentication, course management, storage, uploads, AI features, and all business logic.
-- **Collab (Hocuspocus)**: A WebSocket server that powers real-time collaborative editing with JWT authentication, Redis persistence, and per-board user limits.
-- **CLI (Commander)**: A command-line tool used for local development and management tasks.
+- **API (FastAPI)**: The backend that handles authentication, course management, storage, uploads, AI features, the MCP server for AI apps, and all business logic.
+- **Collab (Hocuspocus)**: A WebSocket server that powers real-time collaboration on [boards](/platform/boards), with JWT authentication, Redis persistence and per-board seat limits.
+- **CLI (Commander)**: A command-line tool that deploys and manages self-hosted instances and runs the local development environment.
+
+The API also runs background work inside its own process: AI search indexing, video transcoding to HLS (when enabled), AI captions, scheduled backfills and the demo organization reset. These jobs use Redis as their queue.
 
 <ArchitectureDiagram />
 
@@ -36,4 +49,17 @@ The platform consists of four applications backed by two core services:
 LearnHouse relies on two primary backing services:
 
 - **PostgreSQL 16 (pgvector)**: The primary relational database for storing all application data including users, courses, organizations, and activity records. Uses the pgvector extension for AI embedding storage. Both dev and self-host production use the `pgvector/pgvector:pg16` image.
-- **Redis**: Used for caching, session management, collaboration state persistence, and message brokering between services. Dev mode uses `redis:8.6.1-alpine`; the CLI-generated self-host production stack uses `redis:7.2.3-alpine`.
+- **Redis**: Used for caching, session management, rate limiting, background job queues, and collaboration state persistence. Dev mode uses `redis:8.6.1-alpine`; the CLI-generated self-host production stack uses `redis:7.4-alpine`.
+
+## Deployed Image
+
+The root `Dockerfile` builds one image that contains all three runtime services. Inside the container, `start.sh` starts the web app (port 8000), the API (port 9000) and the collaboration server (port 4000) under pm2, and an internal nginx on port 80 routes requests:
+
+| Path | Goes to |
+| --- | --- |
+| `/api/v1`, `/content` | API (9000) |
+| `/mcp`, `/.well-known/oauth-*`, `/oauth/*` | API (9000), for the MCP server and its OAuth flow |
+| `/collab` | Collaboration server (4000) |
+| `/api/auth`, `/api/revalidate`, everything else | Web app (8000) |
+
+The CLI's Caddy or nginx container sits in front of this and forwards to the app container's port 80. Building with `LEARNHOUSE_PUBLIC=true` removes the Enterprise folders and produces the community build.

@@ -1,27 +1,72 @@
-import { Callout } from 'nextra/components'
+---
+description: "Learn how LearnHouse analytics collects and stores learner activity, who can see it, and how to set retention and privacy for your organization."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Analytics
 
-LearnHouse provides analytics to help administrators and teachers understand how learners engage with content. Analytics track user activity, course engagement, and platform usage.
+LearnHouse records what learners do (page views, enrollments, completions, submissions and more) and turns it into dashboards for admins. There are three views:
 
-<Callout>
-Analytics must be enabled in your [Organization Settings](/platform/organizations/settings) to be available.
-</Callout>
+- **[Analytics dashboard](/platform/analytics/dashboard)**: organization-wide numbers under **Analytics** in the dashboard, with **Overview**, **Features** and **Advanced** tabs.
+- **[Course analytics](/platform/analytics/course-analytics)**: the **Analytics** tab of a single course.
+- **[Learner analytics](/platform/users/learner-analytics)**: one learner's full record, opened from the **Users** list.
 
-## What's Tracked
+## Availability
 
-- **User engagement**: Activity views, time spent, and interaction patterns.
-- **Course analytics**: Which courses and activities are most popular and how students progress through them.
-- **Organization-level metrics**: Overall platform usage and growth trends.
+| Deployment | Overview and Features tabs | Course analytics | Learner analytics | Advanced tab |
+| --- | --- | --- | --- | --- |
+| LearnHouse Cloud | Standard plan and above | Pro plan and above | Pro plan and above | Enterprise plan |
+| Self-hosted, open source | No | No | No | No |
+| Self-hosted, Enterprise Edition | Yes | Yes | Yes | Yes |
 
-## How Analytics Work
+Analytics is part of the [Enterprise Edition](/enterprise). Open source instances don't collect or store any analytics. Analytics data is only visible to organization admins: users whose role can update the organization (the Admin role by default, or a custom role with that permission).
 
-Events are tracked as users interact with the platform: viewing activities, completing courses, submitting assignments, and more. These events are aggregated into dashboards accessible from the admin panel.
+## How it works
 
-## Accessing Analytics
+Analytics runs inside the LearnHouse API and stores events in the main PostgreSQL database. Nothing is sent to a third-party analytics service.
 
-Administrators can access the global analytics dashboard from the organization admin panel. Analytics data is scoped to the current organization, so each organization sees only its own data.
+1. The web app sends browsing events (page, course and activity views, searches, podcast plays and more) in small batches to `POST /api/v1/signals/batch`. The path is neutral on purpose, so ad blockers don't drop learners from your numbers. Visitors who aren't signed in are counted for public events only. Time spent, video progress and AI assistant use are only recorded for signed-in members. Only known event names and properties are accepted, and bots are ignored.
+2. The API records server-side events itself when something happens: enrollments, completions, assignment and quiz submissions, grading, sign-ups, logins, certificates, discussions, payments, live sessions, messages and more.
+3. A background job in the API refreshes daily summaries every 5 minutes and deletes events past the organization's retention period once a day.
 
-<Callout>
-Analytics uses event caching for performance. Data may take a short time to reflect the most recent activity.
-</Callout>
+Each event carries the organization, the user (or an anonymous visitor ID) and a session ID. Time spent on a lesson is capped at 4 hours per event.
+
+Query results are cached in Redis to keep the dashboards fast: 1 minute for overview and course widgets, 5 minutes for advanced widgets, 30 seconds for detail views. The **Live Now** counter is never cached. If Redis is down, queries go straight to PostgreSQL.
+
+## Privacy
+
+- **No cookies.** Visitors are not tracked with cookies.
+- **No stored IP addresses.** A visitor who isn't signed in is counted with a hash that changes every day, so the same person can't be followed across days or across organizations. Signed-in users who aren't members of the organization are counted the same way.
+- **Country only.** The country comes from a geo header your CDN or proxy adds (`cf-ipcountry`, `x-vercel-ip-country`, `cloudfront-viewer-country` or `x-country-code`). LearnHouse never looks up IP addresses.
+
+## Settings
+
+Admins can change how their organization's analytics are collected and kept under **Organization** → **Analytics** (`/dash/org/settings/analytics`). The analytics dashboard header also shows how long data is kept, with a link to this tab. The same settings are available through `GET` and `PUT /api/v1/analytics/settings`.
+
+| Setting | What it does |
+| --- | --- |
+| **Data retention** | How long events are kept: 90 days, 6 months or 1 year (the default). On the Enterprise plan: 2, 3, 5 or 7 years. Shortening it deletes older data at the next nightly cleanup. |
+| **Count visitors who aren't signed in** | Count page and course views from people without an account. On by default. |
+| **Store visitor country** | Record the country a visit comes from. On by default. |
+| **Leave admins and maintainers out of stats** | Leave out browsing by people who manage the organization, so your own testing doesn't skew the numbers. Off by default. |
+
+On the Enterprise plan, admins can also download every stored event as CSV with **Download raw events (CSV)** on the same tab, or with `GET /api/v1/analytics/export/events`.
+
+## Setting up analytics on a self-hosted instance
+
+There is nothing to set up beyond the [Enterprise Edition](/enterprise) license: the database migrations create the analytics tables, and the API starts collecting as soon as the license is active. The summary and retention job runs inside the API. Set `LEARNHOUSE_ANALYTICS_MAINTENANCE=false` only if you run that job somewhere else.
+
+### Migrating from Tinybird
+
+Earlier versions stored analytics in Tinybird. To keep that history (Tinybird kept 365 days), run the import once from `apps/api` on the API host, after the migrations:
+
+```bash
+LEARNHOUSE_TINYBIRD_API_URL=https://api.europe-west2.gcp.tinybird.co \
+LEARNHOUSE_TINYBIRD_READ_TOKEN=your-read-token \
+python ee/scripts/import_tinybird_analytics.py [--days 365] [--dry-run]
+```
+
+It works one day at a time and skips days it has already imported, so you can stop it and run it again. Unknown events and properties are dropped and IP addresses are not carried over. Once it finishes, you can remove the Tinybird variables and your Tinybird workspace.
+
+See [Environment Variables](/self-hosting/configuration/environment-variables) for the full list.

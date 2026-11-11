@@ -15,7 +15,6 @@ for _stream in (sys.stdout, sys.stderr):
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 import typer
 from config.config import get_learnhouse_config
@@ -26,6 +25,8 @@ from src.services.setup.setup import (
     install_create_organization_user,
     install_default_elements,
 )
+
+from src.core.migrations import ensure_schema
 
 cli = typer.Typer()
 
@@ -48,6 +49,46 @@ def _to_sync_url(url: str) -> str:
 
 
 @cli.command()
+def migrate(
+    status: Annotated[bool, typer.Option("--status", help="Only show the database and code revisions")] = False,
+    strict: Annotated[bool, typer.Option("--strict", help="Fail if the models needed schema the migrations didn't provide (CI)")] = False,
+):
+    """Bring the database schema to this version of LearnHouse.
+
+    The API does this on startup unless LEARNHOUSE_AUTO_MIGRATE=false; run it
+    yourself to migrate ahead of a deploy (the Kubernetes chart does) or to
+    check where a database stands.
+    """
+    from src.core.migrations import SchemaMigrationError, current_revisions, head_revisions, sync_database_url
+
+    if status:
+        engine = create_engine(sync_database_url())
+        try:
+            with engine.connect() as connection:
+                current = current_revisions(connection)
+        finally:
+            engine.dispose()
+        heads = head_revisions()
+        print(f"database: {', '.join(current) or 'not stamped'}")
+        print(f"code:     {', '.join(heads)}")
+        raise typer.Exit(code=0 if current == heads else 1)
+
+    try:
+        report = ensure_schema()
+    except SchemaMigrationError as exc:
+        print(f"Migration failed: {exc}")
+        raise typer.Exit(code=1)
+    print(report.summary())
+    for item in report.reconciled:
+        print(f"  added {item}")
+    for item in report.skipped:
+        print(f"  differs {item}")
+    if strict and report.state == "stamped" and (report.reconciled or report.skipped):
+        print("The models and the migrations disagree: add a migration for the changes above.")
+        raise typer.Exit(code=1)
+
+
+@cli.command()
 def install(
     short: Annotated[bool, typer.Option(help="Install with predefined values")] = False
 ):
@@ -64,10 +105,9 @@ async def _install_async(short: bool) -> None:
     learnhouse_config = get_learnhouse_config()
     sql_url = learnhouse_config.database_config.sql_connection_string  # type: ignore
 
-    # Schema DDL runs on a sync engine (SQLModel.metadata.create_all is sync).
-    sync_engine = create_engine(_to_sync_url(sql_url), echo=False, pool_pre_ping=True)
-    SQLModel.metadata.create_all(sync_engine)
-    sync_engine.dispose()
+    # Same schema step the API runs on startup: creates and stamps a new
+    # database, migrates an existing one.
+    ensure_schema(_to_sync_url(sql_url))
 
     # The install_* coroutines use sqlmodel.ext.asyncio.session.AsyncSession.
     # expire_on_commit=False keeps already-loaded attributes accessible after

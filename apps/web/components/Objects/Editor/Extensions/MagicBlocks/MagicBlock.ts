@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import { v4 as uuidv4 } from 'uuid'
 import dynamic from 'next/dynamic'
 
@@ -32,9 +32,6 @@ export default Node.create({
       htmlContent: {
         default: null,
       },
-      iterationCount: {
-        default: 0,
-      },
       title: {
         default: 'Interactive Element',
       },
@@ -64,7 +61,7 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(MagicBlockComponent as any)
+    return lhNodeView(MagicBlockComponent as any)
   },
 
   onCreate() {

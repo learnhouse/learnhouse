@@ -1,0 +1,61 @@
+---
+description: "Sell LearnHouse content through Gumroad, Paddle, Shopify or invoices, then grant, revoke or check buyer access from Zapier, Make or your backend."
+---
+
+# Sell with Any Tool
+
+Already selling on Gumroad, Paddle, Lemon Squeezy, Shopify, or by invoice? Keep doing that. LearnHouse only needs to know who paid, and you can tell it from Zapier, Make, n8n or your own backend.
+
+## Set up
+
+1. Create a product with **Your own checkout** (and paste your checkout link) or **Invite only**.
+2. Under **Developers → API Access**, create an API token with the **Payments** create, read and delete rights.
+3. When a payment clears, call the grant endpoint with the buyer's email.
+
+Find a product's `offer_uuid` in its link (**Products** → **Link** on the product card). All endpoints live under `/api/v1/payments/{org_id}`.
+
+**Payments** → **Settings** shows these steps with your organization ID filled in, and ready-to-copy examples for granting, revoking and checking access.
+
+<img src="/img/pages/payments/sell-with-any-tool.webp" alt="The Sell with any tool section of Payment settings, with three setup steps and a grant access request example" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+## Grant access
+
+```bash
+curl -X POST https://your-learnhouse/api/v1/payments/{org_id}/access \
+  -H "Authorization: Bearer $LEARNHOUSE_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "offer_uuid": "offer_...",
+    "email": "buyer@example.com",
+    "external_ref": "gumroad_sale_123",
+    "amount_paid": 49,
+    "currency": "USD"
+  }'
+```
+
+You can name the person by `email` or `user_id`. If the email has no account yet, the response has `"state": "pending_signup"`, and the person gets an invitation unless you send `"send_invite": false`. Granting the same person the same product twice does nothing.
+
+`external_ref`, `note`, `amount_paid` and `currency` are optional. `amount_paid` feeds your sales numbers.
+
+## Other endpoints
+
+| Method and path | What it does |
+|---|---|
+| `POST /access/bulk` | Grant one product to up to 500 emails, and to every member of a `usergroup_id`. |
+| `PUT /access-rules` | Make a chapter or lesson a free preview (`{"resource_uuid": "activity_...", "rule": "free_preview"}`) or put it back (`"included"`). |
+| `GET /courses/{course_uuid}/my-access` | For a course page: which lessons are open, locked or free previews for the caller. |
+| `PUT /offers/{offer_id}/usergroups` | Set the user groups a product's buyers join (`usergroup_ids`). |
+| `GET /access` | List customers. Filters: `offer_uuid`, `status` (`active`, `ended`, `pending_signup`), `source`, `q`, `page`, `limit`. |
+| `GET /access/check` | Whether an `email` or `user_id` has access to an `offer_uuid`, or to a `resource_uuid` through any product. |
+| `DELETE /access/{access_uuid}` | Revoke access. |
+| `GET /access/export` | The customer list as CSV. |
+| `GET /stats` | Revenue, customers and sales over the last 30 days. |
+
+## Webhooks
+
+Subscribe a [webhook](/platform/automations/webhooks) (**Developers → Automations**) to keep your other tools in sync:
+
+- `payment_access_granted`: someone got access (a Stripe purchase, a free claim, or a grant).
+- `payment_access_revoked`: someone lost access (cancelled, refunded, disputed or revoked).
+
+Both send the user (`user_uuid`, `email`, `username`), the offer (`offer_uuid`, `name`), and the access (`access_uuid`, `status`, `source`). See the [Event Catalogue](/platform/automations/events#payments) for the full payloads.

@@ -1,0 +1,59 @@
+---
+description: "See every email LearnHouse sends for accounts, invitations, drip chapters, unread messages and live sessions, how it is branded and how to unsubscribe."
+---
+
+import { Callout } from '@/components/mdx'
+
+# Emails
+
+LearnHouse sends email for account and membership events, and for a few learning events that members can control.
+
+## Account and membership emails
+
+| Email | Sent when |
+| --- | --- |
+| Account created | Someone signs up |
+| Email verification | A new account must confirm its address (LearnHouse Cloud), or the user asks for a new link |
+| Magic login link | A member asks to sign in with a [magic link](/platform/users/authentication) |
+| Password reset | A member uses **Forgot password?** |
+| Invitation | An admin [invites someone by email](/platform/users/members-and-invites#inviting-people-by-email) |
+| Joined organization | An existing account becomes a member of another organization. New signups get the account created email instead. |
+| Role changed | An admin changes a member's role |
+| Email changed | The address on an account is changed. The notice goes to the previous address. |
+| Organization created or deleted | You create an organization, or an organization you administer is deleted |
+| Account deleted | An account is deleted |
+
+These emails can't be turned off. They carry your organization's branding:
+
+- **Sender name**: the **Email Sender Name** from [organization settings](/platform/organizations/settings#general). The sending address stays the platform's own, so SPF and DKIM keep working. If you leave it empty, emails come from "LearnHouse".
+- **Language**: your organization's **Default Language**.
+- **Logo and color**: your square logo (or your wide logo if there is no square one) and your primary color from **Branding**.
+- **"Powered by LearnHouse"** line: follows your watermark setting on LearnHouse Cloud and the Enterprise Edition. Open source instances always show it.
+
+## Learning and activity emails
+
+These carry the same branding, and each one can be turned off:
+
+| Email | Sent when | How to turn it off |
+| --- | --- | --- |
+| Chapter unlocked | A scheduled chapter of a course opens for an enrolled learner. One email per learner and course, from a job that runs every hour. | Off unless the course turns on **Email learners when a chapter opens**. See [Drip content](/platform/courses/drip-content). |
+| Unread messages | A member has [messages](/platform/messages) they haven't read for a while (1 hour by default). One summary email covers every conversation. | Each member chooses in their Messages settings. See [Messages settings](/platform/messages#settings). |
+| Live session reminders | The day before and 15 minutes before a [live session](/enterprise/live-sessions), and when it starts, for people who RSVP'd and the host. | Per session with **Reminders**. Admins pick which reminders are sent under **Settings** → **Reminders** in live sessions. |
+
+## Tips for organization admins (LearnHouse Cloud)
+
+On LearnHouse Cloud, organization admins also receive occasional tips about their organization: for example a nudge to publish a course still in draft, a note that a published course has no learners yet, a heads-up when the organization nears a plan limit, or a message to celebrate the first enrollment or completion. Learners never receive these.
+
+- They are sent once a day, at most 2 per week per admin, and at least 48 hours apart.
+- Most are skipped when the organization has been active in the last 3 days.
+- Self-hosted instances don't send them.
+
+### Unsubscribing
+
+Every tip email has an unsubscribe link. It opens a page that asks you to confirm (**Confirm unsubscribe**), so a mail scanner opening the link can't unsubscribe you by accident. Mail clients that support one-click unsubscribe can also use it directly. Unsubscribing stops these tips only: account emails such as password resets and invitations still arrive.
+
+Addresses that hard-bounce or report a tip as spam stop receiving tips automatically.
+
+<Callout type="info">
+Self-hosted instances need an email provider to send any of the emails above. See [Email configuration](/self-hosting/configuration/email).
+</Callout>

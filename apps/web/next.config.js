@@ -51,18 +51,21 @@ const turbopackRoot =
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
   // Required by PostHog's reverse-proxy rewrites below so the trailing-slash
-  // handling on /ingest/* doesn't 308-redirect ingestion requests.
+  // handling on /lhrel/* doesn't 308-redirect ingestion requests.
   skipTrailingSlashRedirect: true,
   async rewrites() {
     return [
       // PostHog reverse proxy (EU cloud), served same-origin so adblockers
-      // don't strip ingestion. The client SDK points at api_host: '/ingest'.
+      // don't strip ingestion. The client SDK points at api_host: '/lhrel'.
+      // Not PostHog's suggested '/ingest': uBlock Origin and AdGuard lists
+      // block '/ingest/*ip=' (the SDK adds ip= to its requests), so that path
+      // lost every visitor running them. '/lhrel' matches no filter list.
       {
-        source: '/ingest/static/:path*',
+        source: '/lhrel/static/:path*',
         destination: 'https://eu-assets.i.posthog.com/static/:path*',
       },
       {
-        source: '/ingest/:path*',
+        source: '/lhrel/:path*',
         destination: 'https://eu.i.posthog.com/:path*',
       },
     ]
@@ -84,6 +87,30 @@ const nextConfig = {
           { key: 'X-Download-Options', value: 'noopen' },
         ],
       },
+      // Un-hashed files from public/. Next serves them with max-age=0, so every
+      // page view revalidated each logo and icon. They can change on deploy, so
+      // a day plus background revalidation, never immutable. api/, _next/ and
+      // the relays are excluded: media proxied through /api is not ours to cache.
+      {
+        source: '/:path((?!api/|_next/|lhrel/|monitoring).*\\.(?:png|svg|ico|jpg|jpeg|webp))',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+        ],
+      },
+      {
+        source: '/:file(dir-init\\.js|embed-bg\\.js)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' },
+        ],
+      },
+      // Rewritten from the environment at container start (server-wrapper.js),
+      // so keep it short-lived.
+      {
+        source: '/runtime-config.js',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=600' },
+        ],
+      },
       {
         source: '/embed/:orgslug/course/:courseuuid/activity/:path*',
         headers: [
@@ -95,6 +122,17 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: 'frame-ancestors *',
           },
+        ],
+      },
+      {
+        // LTI: an LMS shows the course picker (deep linking) and the launch
+        // landing page inside its own iframe, from whatever LMS host the org
+        // registered. /lti/link stays unframeable — it asks a signed-in user to
+        // confirm an account link, the one LTI page worth clickjacking.
+        source: '/lti/:page(select|launch)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
         ],
       },
       {
@@ -161,6 +199,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: [
       '@phosphor-icons/react',
+      '@icons-pack/react-simple-icons',
       'framer-motion',
       'lucide-react',
       '@emoji-mart/react',
@@ -194,9 +233,14 @@ const nextConfig = {
       'react-katex',
     ],
   },
-  // Ensure consistent build IDs across multiple pods in Kubernetes
+  // The build id is how Next spots a tab still running an older deploy: on a
+  // mismatch it does a full page load instead of splicing new chunks into the
+  // old runtime. A fixed id hid every deploy, so open tabs crashed with
+  // "x is not a function" after each release. Pods share one image, so Next's
+  // per-build default is already consistent; CI pins it to the commit so
+  // per-arch builds agree too.
   generateBuildId: async () => {
-    return process.env.BUILD_ID || 'learnhouse-production'
+    return process.env.BUILD_ID || null
   },
 }
 

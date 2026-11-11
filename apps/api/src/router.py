@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends
 from src.routers import admin as admin_router_module
-from src.routers import analytics as analytics_router_module
-from src.routers import audit as audit_router_module
 from src.routers import code_execution
 from src.routers import code_submissions
 from src.routers import health
@@ -9,12 +7,16 @@ from src.routers import demo as demo_router_module
 from src.routers import instance
 from src.routers import plans
 from src.routers import usergroups
+from src.routers import editor_templates as editor_templates_router_module
+from src.routers import editor_variables as editor_variables_router_module
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import mfa as mfa_router_module
 from src.routers import monitoring
 from src.routers import nudges as nudges_router_module
 from src.routers import stream
 from src.routers import api_tokens
+from src.routers import mcp_oauth
+from src.routers import calendar as calendar_router_module
 from src.routers import webhooks
 from src.routers.integrations import zapier as zapier_integration
 from src.routers.ai import ai, magicblocks, courseplanning, rag, images, quiz, assignment_gen, scenario, audio
@@ -25,6 +27,8 @@ from src.routers.orgs import packs
 from src.routers.orgs import org_plan
 from src.routers.courses import chapters, courses, assignments, certifications
 from src.routers.folders import folders as folders_router_module
+from src.routers.paths import paths as paths_router_module
+from src.routers.messaging import messaging as messaging_router_module
 from src.routers.media import media as media_router_module
 from src.routers.courses import migration as migration_router_module
 from src.routers.communities import communities as communities_router_module
@@ -45,7 +49,7 @@ from src.security.api_token_utils import (
     require_authenticated_user_or_api_token,
     require_non_api_token_user,
 )
-from src.security.features_utils.plan_check import require_plan, require_plan_for_boards, require_plan_for_certifications, require_plan_for_community, require_plan_for_usergroups, require_plan_for_playgrounds
+from src.security.features_utils.plan_check import require_plan, require_plan_for_boards, require_plan_for_certifications, require_plan_for_community, require_plan_for_usergroups, require_plan_for_playgrounds, require_plan_for_paths
 
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -115,6 +119,7 @@ v1_router.include_router(
     tags=["api-tokens"],
     dependencies=[Depends(require_authenticated_user), Depends(require_plan("pro", "API Access"))]
 )
+v1_router.include_router(mcp_oauth.router, prefix="/mcp", tags=["mcp"])
 v1_router.include_router(
     webhooks.router,
     prefix="/orgs",
@@ -220,10 +225,38 @@ v1_router.include_router(
 v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
 v1_router.include_router(
+    editor_templates_router_module.router,
+    prefix="/editor-templates",
+    tags=["editor-templates"],
+    dependencies=[Depends(require_authenticated_user)],
+)
+v1_router.include_router(
+    editor_variables_router_module.router,
+    prefix="/editor-variables",
+    tags=["editor-variables"],
+    dependencies=[Depends(require_authenticated_user)],
+)
+v1_router.include_router(
     folders_router_module.router, prefix="/folders", tags=["folders"]
 )
 v1_router.include_router(
     media_router_module.router, prefix="/media", tags=["media"]
+)
+# Certificate verification first, so /paths/certificates/... never reads as
+# a path uuid, and outside the plan gate (see the router module).
+v1_router.include_router(
+    paths_router_module.certificates_router, prefix="/paths", tags=["paths"]
+)
+v1_router.include_router(
+    paths_router_module.router,
+    prefix="/paths",
+    tags=["paths"],
+    dependencies=[Depends(require_plan_for_paths("pro", "Paths"))],
+)
+# Messaging gates itself per org (feature + membership) inside the service,
+# since most routes only name a conversation, message or agent.
+v1_router.include_router(
+    messaging_router_module.router, prefix="/messaging", tags=["messaging"]
 )
 v1_router.include_router(
     communities_router_module.router,
@@ -262,6 +295,14 @@ v1_router.include_router(
     boards_router_module.internal_router,
     prefix="/boards",
     tags=["boards-internal"],
+)
+v1_router.include_router(
+    calendar_router_module.router,
+    prefix="/calendar",
+    tags=["calendar"],
+    # Personal data only: a real session is required (no anonymous callers,
+    # no API tokens). Every source applies its own per-item access checks.
+    dependencies=[Depends(require_authenticated_user)],
 )
 v1_router.include_router(
     trail.router,
@@ -342,20 +383,8 @@ v1_router.include_router(
     dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
 )
 
-v1_router.include_router(
-    analytics_router_module.router,
-    prefix="/analytics",
-    tags=["analytics"],
-    dependencies=[Depends(require_authenticated_user)],
-)
-
-# Per-student audit & analytics (org-admin only; enforced inside the router)
-v1_router.include_router(
-    audit_router_module.router,
-    prefix="/audit",
-    tags=["audit"],
-    dependencies=[Depends(require_authenticated_user)],
-)
+# Org analytics (dashboards, the browser beacon, settings, the per-student
+# audit) is mounted by EE.
 
 v1_router.include_router(
     code_execution.router,

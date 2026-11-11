@@ -1,0 +1,24 @@
+---
+description: "Create Stripe promotion codes in LearnHouse payments, set percent or amount discounts, usage limits and expiry, and turn codes on for specific products."
+---
+
+# Promotion Codes
+
+Promotion codes give buyers a discount at Stripe Checkout. They live in your connected Stripe account, so you need Stripe connected to use them.
+
+## Create a code
+
+Under **Payments → Discounts**, click **New code** and set:
+
+- **Code**: what buyers type, such as `LAUNCH20`.
+- **Discount**: a percent off, or an amount off in one currency.
+- **On subscriptions**: whether the discount applies to the first payment only, for a number of months, or forever.
+- **Max uses** and **Expires** (both optional).
+
+## Let buyers use codes
+
+Promotion codes only show up at checkout for products that have **Accept promotion codes at checkout** turned on (Products → Edit → Price).
+
+## Turn a code off
+
+Click **Turn off**. The code stops working for new purchases. Stripe never deletes promotion codes, so it stays in your list.

@@ -147,29 +147,29 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
 
   // Block type labels for user-friendly display
   const BLOCK_TYPE_LABELS: Record<string, string> = {
-    blockQuiz: 'Quiz',
-    blockImage: 'Image',
-    blockVideo: 'Video',
-    blockPDF: 'PDF',
-    blockLibrary: 'Library Item',
-    blockEmbed: 'Embed',
-    blockMathEquation: 'Math Equation',
-    blockWebPreview: 'Web Preview',
-    blockUser: 'User',
-    blockMagic: 'Magic Block',
-    scenarios: 'Scenarios',
-    calloutInfo: 'Info Callout',
-    calloutWarning: 'Warning Callout',
-    badge: 'Badge',
-    button: 'Button',
-    flipcard: 'Flashcard',
-    flipcardGrid: 'Flashcard Grid',
-    codeBlock: 'Code Block',
-    blockquote: 'Quote',
-    table: 'Table',
-    bulletList: 'Bullet List',
-    orderedList: 'Numbered List',
-    heading: 'Heading',
+    blockQuiz: t('editor.ai_panel.block_types.quiz'),
+    blockImage: t('editor.ai_panel.block_types.image'),
+    blockVideo: t('editor.ai_panel.block_types.video'),
+    blockPDF: t('editor.ai_panel.block_types.pdf'),
+    blockLibrary: t('editor.ai_panel.block_types.library'),
+    blockEmbed: t('editor.ai_panel.block_types.embed'),
+    blockMathEquation: t('editor.ai_panel.block_types.math_equation'),
+    blockWebPreview: t('editor.ai_panel.block_types.web_preview'),
+    blockUser: t('editor.ai_panel.block_types.user'),
+    blockMagic: t('editor.ai_panel.block_types.magic_block'),
+    scenarios: t('editor.ai_panel.block_types.scenarios'),
+    calloutInfo: t('editor.ai_panel.block_types.callout_info'),
+    calloutWarning: t('editor.ai_panel.block_types.callout_warning'),
+    badge: t('editor.ai_panel.block_types.badge'),
+    button: t('editor.ai_panel.block_types.button'),
+    flipcard: t('editor.ai_panel.block_types.flipcard'),
+    flipcardGrid: t('editor.ai_panel.block_types.flipcard_grid'),
+    codeBlock: t('editor.ai_panel.block_types.code_block'),
+    blockquote: t('editor.ai_panel.block_types.blockquote'),
+    table: t('editor.ai_panel.block_types.table'),
+    bulletList: t('editor.ai_panel.block_types.bullet_list'),
+    orderedList: t('editor.ai_panel.block_types.ordered_list'),
+    heading: t('editor.ai_panel.block_types.heading'),
   }
 
   // Block types that are "interesting" to highlight (not just paragraphs)
@@ -962,7 +962,10 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                     {(() => {
                       const sel = aiEditorState.persistentSelection
                       if (sel && props.editor) {
-                        const text = props.editor.state.doc.textBetween(sel.from, sel.to)
+                        // The stored range can outlive an AI edit that shortened the doc
+                        const size = props.editor.state.doc.content.size
+                        const from = Math.min(sel.from, size)
+                        const text = props.editor.state.doc.textBetween(from, Math.min(Math.max(sel.to, from), size))
                         return text.length > 50 ? `"${text.slice(0, 50)}..."` : `"${text}"`
                       }
                       return ''

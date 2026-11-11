@@ -380,6 +380,21 @@ def _make_additional_files_zip(
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+# Submission fields Judge0 returns base64-encoded. Without base64 it refuses
+# any submission whose output is not valid UTF-8.
+_JUDGE0_ENCODED_FIELDS = ("stdout", "stderr", "compile_output", "message")
+
+
+def _b64encode(text: str) -> str:
+    return base64.b64encode(text.encode()).decode("ascii")
+
+
+def _b64decode(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    return base64.b64decode(value).decode("utf-8", errors="replace")
+
+
 async def _submit_single(
     judge0_cfg,
     language_id: int,
@@ -388,11 +403,11 @@ async def _submit_single(
     additional_files: Optional[str] = None,
 ) -> dict:
     """Single submission with wait=true."""
-    url = f"{judge0_cfg.api_url}/submissions?wait=true"
+    url = f"{judge0_cfg.api_url}/submissions?base64_encoded=true&wait=true"
     payload = {
         "language_id": language_id,
-        "source_code": source_code,
-        "stdin": stdin,
+        "source_code": _b64encode(source_code),
+        "stdin": _b64encode(stdin),
     }
     if additional_files:
         payload["additional_files"] = additional_files
@@ -404,7 +419,11 @@ async def _submit_single(
         if resp.status_code not in (200, 201):
             logger.error(f"Judge0 error: {resp.text}")
             raise HTTPException(status_code=resp.status_code, detail=f"Judge0 error: {resp.text}")
-        return resp.json()
+        result = resp.json()
+    for field in _JUDGE0_ENCODED_FIELDS:
+        if field in result:
+            result[field] = _b64decode(result[field])
+    return result
 
 
 @router.post(

@@ -21,6 +21,23 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
 import AIMarkdownRenderer from './AIMarkdownRenderer'
 import AIFollowUpSuggestions from './AIFollowUpSuggestions'
+import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+
+// Phones (<768px, the shell's breakpoint) can't spare a 380px column for the
+// side panel, so it floats above the bottom bar instead.
+const PHONE_QUERY = '(max-width: 767px)'
+const subscribePhone = (onChange: () => void) => {
+  const mql = window.matchMedia(PHONE_QUERY)
+  mql.addEventListener('change', onChange)
+  return () => mql.removeEventListener('change', onChange)
+}
+function useIsPhone() {
+  return React.useSyncExternalStore(
+    subscribePhone,
+    () => window.matchMedia(PHONE_QUERY).matches,
+    () => false
+  )
+}
 
 type AIActivityAskProps = {
   activity: any
@@ -32,6 +49,7 @@ function AIActivityAsk(props: AIActivityAskProps) {
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
   const dispatchAIChatBot = useAIChatBotDispatch() as any
   const { mode } = useAIPanelMode()
+  const { track } = useLHAnalytics('learner')
 
   useEffect(() => {
     if (is_ai_feature_enabled) {
@@ -40,6 +58,7 @@ function AIActivityAsk(props: AIActivityAskProps) {
   }, [is_ai_feature_enabled])
 
   const handleOpenAI = () => {
+    track(AnalyticsEvent.AiAssistantOpened, { surface: 'activity' })
     if (mode === 'hover') {
       dispatchAIChatBot({ type: 'setIsModalOpen' })
     } else {
@@ -289,7 +308,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                 background:
                   'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)',
               }}
-              className={`bg-black z-[10000] shadow-lg ring-1 ring-inset ring-white/10 text-white p-4 backdrop-blur-md transition-all duration-300 flex flex-col rounded-2xl max-w-(--breakpoint-2xl) w-10/12 mx-auto fixed bottom-4 left-1/2 transform -translate-x-1/2 ${
+              className={`bg-black z-[10000] shadow-lg ring-1 ring-inset ring-white/10 text-white p-4 backdrop-blur-md transition-all duration-300 flex flex-col rounded-2xl max-w-(--breakpoint-2xl) w-10/12 max-md:w-[calc(100%-16px)] mx-auto fixed bottom-4 max-md:bottom-[calc(var(--lh-mobile-nav-h)+8px)] left-1/2 transform -translate-x-1/2 ${
                 aiChatBotState.isFullscreen
                   ? 'h-[80vh]'
                   : 'h-[350px]'
@@ -303,14 +322,14 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                       dispatchAIChatBot({ type: 'switchToSideMode' })
                     }}
                     className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
-                    title="Switch to side mode"
+                    title={t('ai.switch_to_side_mode')}
                   >
                     <PanelRightOpen size={18} />
                   </button>
                   <button
                     onClick={toggleFullscreen}
                     className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
-                    title={aiChatBotState.isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                    title={aiChatBotState.isFullscreen ? t('ai.exit_fullscreen') : t('ai.fullscreen')}
                   >
                     {aiChatBotState.isFullscreen ? (
                       <Minimize2 size={18} />
@@ -504,7 +523,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
               )}
               {aiChatBotState.error.isError && (
                 <div className={`flex items-center justify-center ${aiChatBotState.isFullscreen ? 'flex-1' : 'h-[237px]'}`}>
-                  <div className="flex flex-col mx-auto w-[600px] space-y-2 p-5 rounded-lg bg-red-500/20 outline outline-1 outline-red-500">
+                  <div className="flex flex-col mx-auto w-full max-w-[600px] space-y-2 p-5 rounded-lg bg-red-500/20 outline outline-1 outline-red-500">
                     <AlertTriangle size={20} className="text-red-500" />
                     <div className="flex flex-col">
                       <h3 className="font-semibold text-red-200">
@@ -717,6 +736,7 @@ function AISidePanelInline(props: AISidePanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const [isSecondaryBarVisible, setIsSecondaryBarVisible] = React.useState(false)
+  const isPhone = useIsPhone()
 
   const isInputDisabled = aiChatBotState?.isWaitingForResponse || aiChatBotState?.isStreaming
   const inputClass = isInputDisabled
@@ -902,10 +922,15 @@ function AISidePanelInline(props: AISidePanelProps) {
       style={{
         background:
           'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)',
-        height: panelHeight,
-        top: topPosition,
+        ...(isPhone
+          ? { height: 'min(70dvh, 560px)' }
+          : { height: panelHeight, top: topPosition }),
       }}
-      className="sticky w-[380px] shrink-0 nice-shadow ring-1 ring-inset ring-white/10 text-white p-4 backdrop-blur-md flex flex-col rounded-xl transition-all duration-300"
+      className={`${
+        isPhone
+          ? 'fixed inset-x-2 bottom-[calc(var(--lh-mobile-nav-h)+8px)] z-[9998] rounded-2xl'
+          : 'sticky w-[380px] shrink-0 rounded-xl'
+      } nice-shadow ring-1 ring-inset ring-white/10 text-white p-4 backdrop-blur-md flex flex-col transition-all duration-300`}
     >
           {/* Header */}
           <div className="flex flex-row-reverse pb-3 justify-between items-center">
@@ -916,7 +941,7 @@ function AISidePanelInline(props: AISidePanelProps) {
                   dispatchAIChatBot({ type: 'switchToHoverMode' })
                 }}
                 className="text-white/50 hover:text-white/70 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center transition-colors"
-                title="Switch to hover mode"
+                title={t('ai.switch_to_hover_mode')}
               >
                 <PanelTop size={18} />
               </button>

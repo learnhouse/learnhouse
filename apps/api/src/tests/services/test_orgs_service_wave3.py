@@ -1081,8 +1081,8 @@ class TestOrgConfigBranchesWave3:
         assert stored.config["admin_toggles"]["members"]["signup_mode"] == "inviteOnly"
         assert stored.config["admin_toggles"]["ai"]["disabled"] is False
         assert stored.config["admin_toggles"]["ai"]["copilot_enabled"] is False
-        assert stored.config["admin_toggles"]["communities"]["disabled"] is False
-        assert stored.config["admin_toggles"]["payments"]["disabled"] is True
+        assert stored.config["admin_toggles"]["communities"]["org_disabled"] is False
+        assert stored.config["admin_toggles"]["payments"]["org_disabled"] is True
 
 
 class TestOrgRbacWave3:
@@ -1222,7 +1222,50 @@ class TestOrgRbacWave3:
             select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
         )).scalars().first()
         assert result == {"detail": "Analytics configuration updated"}
-        assert stored.config["admin_toggles"]["analytics"]["disabled"] is False
+        assert stored.config["admin_toggles"]["analytics"]["org_disabled"] is False
+        # The superadmin kill switch is not touched by the org's own toggle.
+        assert "disabled" not in stored.config["admin_toggles"]["analytics"]
+
+    @pytest.mark.asyncio
+    async def test_update_org_feature_toggle_writes_org_choice(self, mock_request, db, org, admin_user):
+        from src.services.orgs.orgs import update_org_feature_toggle
+
+        await _make_org_config(
+            db,
+            org,
+            {
+                "config_version": "2.0",
+                "customization": {},
+                "admin_toggles": {"live_sessions": {"disabled": True}},
+            },
+        )
+
+        with patch(
+            "src.services.orgs.orgs.rbac_check",
+            new_callable=AsyncMock,
+            return_value=True,
+        ):
+            await update_org_feature_toggle(
+                mock_request, "live_sessions", False, org.id, admin_user, db,
+            )
+
+        stored = (await db.execute(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        )).scalars().first()
+        assert stored.config["admin_toggles"]["live_sessions"] == {
+            "disabled": True,
+            "org_disabled": True,
+        }
+
+    @pytest.mark.asyncio
+    async def test_update_org_feature_toggle_rejects_unknown_feature(self, mock_request, db, org, admin_user):
+        from src.services.orgs.orgs import update_org_feature_toggle
+
+        with pytest.raises(HTTPException) as exc_info:
+            await update_org_feature_toggle(
+                mock_request, "sso", False, org.id, admin_user, db,
+            )
+        assert exc_info.value.status_code == 400
 
 
 class TestUpdateOrgWithConfigNoAuthMissingOrg:

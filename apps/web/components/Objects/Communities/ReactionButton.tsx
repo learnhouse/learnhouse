@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { SmilePlus } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   getReactions,
@@ -30,6 +31,7 @@ interface ReactionButtonProps {
 }
 
 export function ReactionButton({ discussionUuid, compact = false }: ReactionButtonProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
@@ -121,7 +123,7 @@ export function ReactionButton({ discussionUuid, compact = false }: ReactionButt
               className={`inline-flex items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-500 hover:bg-gray-50 transition-colors ${
                 compact ? 'w-7 h-7' : 'w-8 h-8'
               }`}
-              title="Add reaction"
+              title={t('communities.reaction.add')}
             >
               <SmilePlus size={compact ? 14 : 16} />
             </button>

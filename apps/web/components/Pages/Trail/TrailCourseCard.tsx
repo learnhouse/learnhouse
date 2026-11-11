@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface TrailCourseCardProps {
   course: any
@@ -143,7 +144,7 @@ function TrailCourseCard(props: TrailCourseCardProps) {
         className="block relative aspect-video overflow-hidden bg-gray-50"
       >
         {props.course.thumbnail_image && org?.org_uuid ? (
-          <img
+          <ThumbnailImage
             src={getCourseThumbnailMediaDirectory(
               org.org_uuid,
               props.course.course_uuid,

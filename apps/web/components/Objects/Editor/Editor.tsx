@@ -30,7 +30,8 @@ import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
 import AudioBlock from './Extensions/Audio/AudioBlock'
-import { Eye, Monitor, History, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
+import { Eye, History, AlertTriangle, RefreshCw, Loader2, LayoutTemplate, UserRoundSearch } from 'lucide-react'
+import EditorActionMenu from './Toolbar/EditorActionMenu'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import H5PBlock from './Extensions/H5P/H5PBlock'
@@ -63,19 +64,26 @@ import Flipcard from './Extensions/Flipcard/Flipcard'
 import FlipcardGrid from './Extensions/Flipcard/FlipcardGrid'
 import Scenarios from './Extensions/Scenarios/Scenarios'
 import CodePlayground from './Extensions/CodePlayground/CodePlayground'
-import { useMediaQuery } from 'usehooks-ts'
 import UserAvatar from '../UserAvatar'
 import UserBlock from './Extensions/Users/UserBlock'
 import DragHandle from './Extensions/DragHandle/DragHandle'
 import { SlashCommands } from './Extensions/SlashCommands'
 import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
+import ConditionalBlock from './Extensions/Dynamic/ConditionalBlock'
+import DynamicVariable from './Extensions/Dynamic/DynamicVariable'
+import VariableSuggestion from './Extensions/Dynamic/VariableSuggestion'
+import { CommunityTag, CommunityTagSuggestion } from '@components/Objects/Communities/Tags/CommunityTag'
+import { DynamicActivityContext, DynamicReachProvider } from './Extensions/Dynamic/DynamicReach'
+import { EDITOR_EVENTS } from './Templates/templateContent'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
 const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
 const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
 const ActivitySwitcher = dynamic(() => import('./ActivitySwitcher'), { ssr: false, loading: () => null })
+const ViewAsPreview = dynamic(() => import('./Extensions/Dynamic/ViewAsPreview'), { ssr: false, loading: () => null })
+const TemplatesModal = dynamic(() => import('./Templates/TemplatesModal'), { ssr: false, loading: () => null })
 import { usePlan } from '@components/Hooks/usePlan'
 import {
   createBeforeUnloadHandler,
@@ -83,6 +91,9 @@ import {
   hasEditorContentChanged,
   shouldGuardNavigationClick,
 } from './unsavedChangesGuard'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
+import OrgSquareLogo, { OrgInitial } from '@components/Objects/Org/OrgSquareLogo'
 
 interface ConflictInfo {
   hasConflict: boolean
@@ -125,6 +136,25 @@ function Editor(props: EditorProps) {
   const [showMergeModal, setShowMergeModal] = React.useState(false)
   const [remoteContent, setRemoteContent] = React.useState<any>(null)
   const [isLoadingRemote, setIsLoadingRemote] = React.useState(false)
+
+  // Dynamic content dialogs
+  const [showViewAs, setShowViewAs] = React.useState(false)
+  const [templatesMode, setTemplatesMode] = React.useState<'insert' | 'save' | null>(null)
+
+  // The slash menu can't reach this component, so it opens these by event.
+  React.useEffect(() => {
+    const openTemplates = () => setTemplatesMode('insert')
+    const saveTemplate = () => setTemplatesMode('save')
+    const viewAs = () => setShowViewAs(true)
+    window.addEventListener(EDITOR_EVENTS.openTemplates, openTemplates)
+    window.addEventListener(EDITOR_EVENTS.saveTemplate, saveTemplate)
+    window.addEventListener(EDITOR_EVENTS.viewAs, viewAs)
+    return () => {
+      window.removeEventListener(EDITOR_EVENTS.openTemplates, openTemplates)
+      window.removeEventListener(EDITOR_EVENTS.saveTemplate, saveTemplate)
+      window.removeEventListener(EDITOR_EVENTS.viewAs, viewAs)
+    }
+  }, [])
 
   // Get feature flags from resolved_features (API is source of truth)
   const orgContext = useOrg() as any
@@ -202,6 +232,11 @@ function Editor(props: EditorProps) {
         getAccessToken,
       }),
       MagicBlock.configure({ editable: true, activity: stableActivity }),
+      ConditionalBlock,
+      DynamicVariable,
+      VariableSuggestion,
+      CommunityTag,
+      CommunityTagSuggestion,
       AIStreamingMark,
       AISelectionHighlight,
     ],
@@ -416,21 +451,6 @@ function Editor(props: EditorProps) {
     }
   }, [editor, props.setContent, markEditorContentSaved])
 
-  const isMobile = useMediaQuery('(max-width: 767px)')
-  if (isMobile) {
-    // TODO: Work on a better editor mobile experience
-    return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl font-bold mb-4">{t('editor.desktop_only')}</h2>
-          <Monitor className='mx-auto my-5' size={60} />
-          <p>{t('editor.desktop_only_message')}</p>
-          <p>{t('editor.switch_to_desktop')}</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="activity-editor-page">
       {/* Version History Panel: only mount when first opened so the chunk
@@ -463,6 +483,22 @@ function Editor(props: EditorProps) {
       )}
 
       <CourseProvider courseuuid={props.course.course_uuid} initialCourseStructure={props.course}>
+      <DynamicActivityContext.Provider value={props.activity.activity_uuid}>
+          {editor && showViewAs && (
+            <ViewAsPreview
+              activity={props.activity}
+              getContent={() => editor.getJSON()}
+              onClose={() => setShowViewAs(false)}
+            />
+          )}
+          {editor && templatesMode && (
+            <TemplatesModal
+              mode={templatesMode}
+              editor={editor}
+              activity={props.activity}
+              onClose={() => setTemplatesMode(null)}
+            />
+          )}
           <div className="activity-editor-top">
             <ActivitySwitcher
               course={props.course}
@@ -473,10 +509,16 @@ function Editor(props: EditorProps) {
             <div className="activity-editor-doc-section">
               <div className="activity-editor-info-wrapper">
                 <Link href="/">
-                  <EditorLearnHouseLogo />
+                  {isWhiteLabelPlan(currentPlan) ? (
+                    <div className="rounded-md w-[25px] h-[25px] overflow-hidden bg-white ring-1 ring-black/10">
+                      <OrgSquareLogo org={orgContext} wideInsetClassName="p-0.5" fallback={<OrgInitial org={orgContext} className="text-[11px]" />} />
+                    </div>
+                  ) : (
+                    <EditorLearnHouseLogo />
+                  )}
                 </Link>
                 <Link target="_blank" href={`/course/${course_uuid}`}>
-                  <img
+                  <ThumbnailImage
                     className="activity-editor-info-thumbnail"
                     src={`${props.course.thumbnail_image ? getCourseThumbnailMediaDirectory(
                       props.org?.org_uuid,
@@ -496,55 +538,69 @@ function Editor(props: EditorProps) {
               </div>
             </div>
             <div className="activity-editor-users-section space-x-2">
-              <div>
-                <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer">
-                  {isButtonAvailable && canUseAI && (
-                    <div
-                      onClick={() => {
-                        if (!aiEditorState.isSidePanelOpen) {
-                          track(AnalyticsEvent.AiEditorPanelOpened)
-                        }
-                        dispatchAIEditor({
-                          type: aiEditorState.isSidePanelOpen
-                            ? 'setSidePanelClose'
-                            : 'setSidePanelOpen',
-                        })
-                      }}
-                      style={{
-                        background:
-                          'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
-                      }}
-                      className="rounded-md px-3 py-2 drop-shadow-md flex  items-center space-x-1.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105"
-                    >
-                      {' '}
-                      <i>
-                        <Image
-                          className=""
-                          width={20}
-                          src={learnhouseAI_icon}
-                          alt=""
-                        />
-                      </i>{' '}
-                      <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
-                    </div>
-                  )}
-                  {isButtonAvailable && !canUseAI && (
-                    <div
-                      className="rounded-md px-3 py-2 drop-shadow-md flex items-center space-x-1.5 text-sm text-gray-400 bg-gray-200 cursor-not-allowed opacity-70"
-                    >
-                      <i>
-                        <Image
-                          className="opacity-50 grayscale"
-                          width={20}
-                          src={learnhouseAI_icon}
-                          alt=""
-                        />
-                      </i>
-                      <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
-                      <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.ai?.required_plan || 'standard') as PlanLevel} size="sm" />
-                    </div>
-                  )}
+              {/* Writing helpers */}
+              <div className="flex items-center gap-2">
+                <div>
+                  <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer">
+                    {isButtonAvailable && canUseAI && (
+                      <div
+                        onClick={() => {
+                          if (!aiEditorState.isSidePanelOpen) {
+                            track(AnalyticsEvent.AiEditorPanelOpened)
+                            track(AnalyticsEvent.AiAssistantOpened, { surface: 'editor' })
+                          }
+                          dispatchAIEditor({
+                            type: aiEditorState.isSidePanelOpen
+                              ? 'setSidePanelClose'
+                              : 'setSidePanelOpen',
+                          })
+                        }}
+                        style={{
+                          background:
+                            'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
+                        }}
+                        className="rounded-md px-3 py-2 drop-shadow-md flex  items-center space-x-1.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105"
+                      >
+                        {' '}
+                        <i>
+                          <Image
+                            className=""
+                            width={20}
+                            src={learnhouseAI_icon}
+                            alt=""
+                          />
+                        </i>{' '}
+                        <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
+                      </div>
+                    )}
+                    {isButtonAvailable && !canUseAI && (
+                      <div
+                        className="rounded-md px-3 py-2 drop-shadow-md flex items-center space-x-1.5 text-sm text-gray-400 bg-gray-200 cursor-not-allowed opacity-70"
+                      >
+                        <i>
+                          <Image
+                            className="opacity-50 grayscale"
+                            width={20}
+                            src={learnhouseAI_icon}
+                            alt=""
+                          />
+                        </i>
+                        <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
+                        <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.ai?.required_plan || 'standard') as PlanLevel} size="sm" />
+                      </div>
+                    )}
+                  </div>
                 </div>
+                <ToolTip content={t('editor.templates.title', 'Templates')}>
+                  <div
+                    className="flex bg-neutral-100 hover:bg-neutral-200 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-neutral-600 rounded-lg hover:cursor-pointer"
+                    role="button"
+                    aria-label={t('editor.templates.title', 'Templates')}
+                    onClick={() => setTemplatesMode('insert')}
+                  >
+                    <LayoutTemplate size={15} />
+                  </div>
+                </ToolTip>
               </div>
               <DividerVerticalIcon
                 style={{
@@ -554,34 +610,41 @@ function Editor(props: EditorProps) {
                   opacity: '0.5',
                 }}
               />
-              <div className="activity-editor-left-options space-x-2 ">
-                {/* Version History Button */}
-                {canUseVersioning ? (
-                  <ToolTip content={t('editor.versioning.version_history')}>
-                    <div
-                      className="flex bg-neutral-100 hover:bg-neutral-200 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-neutral-600 rounded-lg hover:cursor-pointer"
-                      onClick={() => setShowVersionHistory(true)}
+              <div className="activity-editor-left-options gap-2">
+                {/* Preview opens the learner view; its caret holds "View as" */}
+                <div className="flex rounded-lg shadow-sm">
+                  <ToolTip content={t('editor.preview')}>
+                    <Link
+                      target="_blank"
+                      href={`/course/${course_uuid}/activity/${activity_uuid}`}
                     >
-                      <History size={15} />
-                    </div>
+                      <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm text-neutral-100 rounded-s-lg hover:cursor-pointer">
+                        <Eye className="mx-auto items-center" size={15} />
+                      </div>
+                    </Link>
                   </ToolTip>
-                ) : (
-                  <ToolTip content={t('editor.versioning.version_history')}>
-                    <div className="flex bg-gray-100 h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-gray-400 rounded-lg cursor-not-allowed opacity-70 gap-1.5">
-                      <History size={15} className="opacity-50" />
-                      <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.versioning?.required_plan || 'pro') as PlanLevel} size="sm" />
-                    </div>
-                  </ToolTip>
-                )}
+                  <EditorActionMenu
+                    label={t('editor.more_preview_options', 'More preview options')}
+                    className="bg-neutral-600 hover:bg-neutral-700 text-neutral-100 border-s border-neutral-500"
+                    items={[
+                      {
+                        key: 'view_as',
+                        label: t('editor.dynamic.view_as', 'View as'),
+                        icon: <UserRoundSearch size={14} />,
+                        onSelect: () => setShowViewAs(true),
+                      },
+                    ]}
+                  />
+                </div>
 
-                {/* Save Button with Conflict Detection */}
-                <div className="relative">
+                {/* Save with conflict detection; its caret holds version history */}
+                <div className="relative flex rounded-lg shadow-sm">
                   <div
                     className={`${
                       conflictInfo?.hasConflict
                         ? 'bg-amber-500 hover:bg-amber-600'
                         : 'bg-sky-600 hover:bg-sky-700'
-                    } transition-all ease-linear px-3 py-2 font-black text-sm shadow-sm text-white rounded-lg hover:cursor-pointer flex items-center gap-1.5`}
+                    } transition-all ease-linear h-9 px-3 py-2 font-black text-sm text-white rounded-s-lg hover:cursor-pointer flex items-center gap-1.5`}
                     onClick={() => handleSave(false)}
                     onMouseEnter={handleSaveButtonHover}
                   >
@@ -593,7 +656,26 @@ function Editor(props: EditorProps) {
                     )}
                     {t('editor.save')}
                   </div>
-
+                  <EditorActionMenu
+                    label={t('editor.more_save_options', 'More save options')}
+                    className={`${
+                      conflictInfo?.hasConflict
+                        ? 'bg-amber-500 hover:bg-amber-600 border-amber-400'
+                        : 'bg-sky-600 hover:bg-sky-700 border-sky-500'
+                    } text-white border-s`}
+                    items={[
+                      {
+                        key: 'version_history',
+                        label: t('editor.versioning.version_history'),
+                        icon: <History size={14} />,
+                        disabled: !canUseVersioning,
+                        badge: canUseVersioning ? undefined : (
+                          <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.versioning?.required_plan || 'pro') as PlanLevel} size="sm" />
+                        ),
+                        onSelect: () => setShowVersionHistory(true),
+                      },
+                    ]}
+                  />
                   {/* Conflict Modal */}
                   {showConflictModal && conflictInfo?.hasConflict && (
                     <div className="absolute top-full end-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
@@ -635,16 +717,6 @@ function Editor(props: EditorProps) {
                     </div>
                   )}
                 </div>
-                <ToolTip content={t('editor.preview')}>
-                  <Link
-                    target="_blank"
-                    href={`/course/${course_uuid}/activity/${activity_uuid}`}
-                  >
-                    <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-neutral-100 rounded-lg hover:cursor-pointer">
-                      <Eye className="mx-auto items-center" size={15} />
-                    </div>
-                  </Link>
-                </ToolTip>
               </div>
               <DividerVerticalIcon
                 style={{
@@ -670,12 +742,16 @@ function Editor(props: EditorProps) {
             delay: 0.5,
           }}
           exit={{ opacity: 0 }}
-          className="flex gap-5"
+          // Phone layout (sticky top bar, edge-to-edge page) lives in
+          // styles/mobile-dashboard.css under .activity-editor-body.
+          className="activity-editor-body flex gap-5"
           style={{ position: 'relative', margin: '0 40px' }}
         >
           <div className="activity-editor-content-wrapper" style={{ flex: 1, margin: 0, marginTop: '97px' }}>
             <AIEditorToolkit activity={props.activity} editor={editor} />
-            <EditorContent editor={editor} />
+            <DynamicReachProvider editor={editor} activityUuid={props.activity.activity_uuid}>
+              <EditorContent editor={editor} />
+            </DynamicReachProvider>
           </div>
 
           {/* AI Editor Side Panel */}
@@ -687,6 +763,7 @@ function Editor(props: EditorProps) {
             />
           )}
         </motion.div>
+      </DynamicActivityContext.Provider>
       </CourseProvider>
     </div>
   )

@@ -1,0 +1,89 @@
+---
+description: Chat in LearnHouse Messages with direct messages, group chats and course announcements, build AI agents that answer from your courses and set reminders.
+---
+
+import { Callout } from '@/components/mdx'
+
+# Messages
+
+Messages is where members of your organization talk to each other and to AI agents. It has direct messages, group chats, course announcements, and agents such as **Copilot** that answer from your course content.
+
+<Callout type="info">
+Messages is included in every LearnHouse Cloud plan. On self-hosted instances it is part of the [Enterprise Edition](/enterprise). Members must be signed in to use it.
+</Callout>
+
+Open it from the **Messages** button in the organization's menu, or go to `/messages`. A chat dock also sits at the bottom of every page: open a conversation from it without leaving the lesson you are on, and minimize chats into small heads you can reopen later.
+
+## Conversations
+
+| Kind | What it is |
+| --- | --- |
+| **Direct message** | A private chat between two members. |
+| **Group** | A chat with several members. The group's owner and admins can rename it and add people; anyone can leave. |
+| **Course announcements** | A one-way channel for everyone enrolled in a course. Only the course team and admins can post. |
+| **Agent chat** | Your own chat with an AI agent. |
+
+Click **New message**, pick one person to start a direct message, or pick several to start a group. Inside a conversation you can:
+
+- React to messages with emoji, reply, edit or delete your own messages.
+- See who is typing, who is online, and who has read your message.
+- Share a course: it shows as a card that opens the course. Courses also have a **Share in Messages** button, and member profiles a **Message** button.
+- Search your conversations.
+
+### Course announcements
+
+Course creators, maintainers, contributors and admins can message everyone in a course at once. Click **Message everyone in a course**, pick the course (it shows how many people it reaches), write the announcement, and optionally attach the course card. Learners receive it in the course's announcement channel and can't reply there.
+
+## Agents
+
+An agent is an AI assistant you can chat with in Messages. It answers from the [indexed](/platform/ai#indexing-courses-for-ai) course content of your organization, and only from courses the person asking can read. Answers cite their sources: click a source to jump to the lesson it came from.
+
+Agents can also answer with interactive blocks: quizzes, flashcards, charts, mind maps, timelines and exercises.
+
+### Copilot
+
+Every organization has a built-in agent called **Copilot**. It answers from every course you can access and adds its own general knowledge, clearly marked. Admins can edit its look and instructions, but can't delete it. The old Copilot page now opens Messages.
+
+### Building your own agent
+
+Open the agents gallery in Messages and create an agent. Choose:
+
+| Setting | Options |
+| --- | --- |
+| **Name, emoji and colors** | How the agent looks in chats. |
+| **Tone** | Friendly, Concise, Socratic tutor, Expert or Playful. |
+| **Instructions** | What it should do, for example "Quiz me after each answer" or "Answer in French". |
+| **Knowledge** | **Course content only** sticks to what your courses say. **Courses + general knowledge** adds the model's own knowledge. |
+| **Courses** | All courses, or a few selected ones. |
+| **Visibility** | **Only me**, or **Everyone in the org** (admins only). |
+
+Each member can create up to 25 agents.
+
+### Agents in group chats
+
+Mention an agent in a group chat to have it answer there. Everyone in the group sees the answer as it is written. In a group, an agent only uses content that every member of the group can read.
+
+### Credits
+
+Each agent reply uses 2 of your organization's [AI credits](/platform/ai#ai-credits). Agents need **Enable AI Features** and **AI Copilot** to be on in the [AI settings](/platform/ai#turning-ai-on); turning **AI Copilot** off turns off every agent.
+
+## Reminders
+
+Ask any agent to remind you about something ("remind me to review chapter 3 tomorrow at 9"), or use **Remind me** on any message and pick a time. When it is due, the reminder arrives as a message in your chat with the agent, with a link back to the original message. You can list and cancel your upcoming reminders in Messages.
+
+Reminders can be set up to a year ahead, and each member can have up to 50 upcoming ones.
+
+## Settings
+
+Open **Messages settings** to control how you show up and when you are notified.
+
+| Setting | Options |
+| --- | --- |
+| **Status** | A short status message, with an optional time to clear it. |
+| **Availability** | Automatic (online while Messages is open), Away, Do not disturb (no sounds or desktop alerts) or Invisible. |
+| **Email me about unread messages** | All messages, Direct & mentions (the default) or Off. You get one summary email, never one per message. |
+| **Send after a message is unread for** | 15 minutes, 1 hour (the default), 4 hours or a day. |
+| **Course announcements** | Whether announcements are included in emails. |
+| **Desktop notifications and sounds** | Alerts when the tab is in the background. |
+| **Read receipts and typing indicator** | Whether others see when you have read a message or are typing. |
+| **Direct messages from anyone** | When off, only admins can start a new chat with you. |

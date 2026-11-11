@@ -5,14 +5,14 @@ coverage:
   status:
     project:
       default:
-        target: 90%
-        threshold: 1%
+        target: 100%
+        threshold: 0%
         flags:
           - api
     patch:
       default:
-        target: 90%
-        threshold: 1%
+        target: 100%
+        threshold: 0%
         flags:
           - api
         if_ci_failed: success

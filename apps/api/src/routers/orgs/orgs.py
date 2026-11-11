@@ -52,6 +52,7 @@ from src.services.orgs.orgs import (
     update_org_podcasts_config,
     update_org_boards_config,
     update_org_playgrounds_config,
+    update_org_feature_toggle,
     update_org_color_config,
     update_org_font_config,
     update_org_footer_text_config,
@@ -72,6 +73,7 @@ from src.services.orgs.orgs import (
     update_org_square_logo,
 )
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
+from src.security.session_context import refuse_lms_session
 
 
 router = APIRouter()
@@ -102,6 +104,7 @@ async def api_create_org(
     """
     Create new organization
     """
+    refuse_lms_session()
     return await create_org(request, org_object, current_user, db_session)
 
 
@@ -126,6 +129,7 @@ async def api_create_org_withconfig(
     """
     Create new organization
     """
+    refuse_lms_session()
     # SECURITY: create_org_with_config() persists the client-supplied config
     # verbatim. The config carries the org's billing plan (cloud.plan), so a
     # self-service caller could otherwise mint a free "enterprise"/"pro" org and
@@ -260,6 +264,7 @@ async def api_join_an_org(
     """
     Get single Org by ID
     """
+    refuse_lms_session()
     # SECURITY: the downstream join_org() trusts the body-supplied user_id and
     # joins THAT user into the org without verifying it is the caller. Without
     # this guard any authenticated user could force-add (or, on an "open" org,
@@ -429,6 +434,7 @@ async def api_leave_org(
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
+    refuse_lms_session()
     return await leave_org(request, org_id, db_session, current_user)
 
 
@@ -697,6 +703,38 @@ async def api_update_org_playgrounds_config(
     """
     return await update_org_playgrounds_config(
         request, playgrounds_enabled, org_id, current_user, db_session
+    )
+
+
+@feature_config_router.put(
+    "/{org_id}/config/features/{feature}",
+    summary="Turn an organization feature on or off",
+    description=(
+        "Turn one optional feature (boards, communities, folders, live_sessions, "
+        "paths, payments, playgrounds, podcasts) on or off for the organization. "
+        "A feature the plan does not include stays unavailable. Admin only."
+    ),
+    responses={
+        200: {"description": "Feature configuration updated."},
+        400: {"description": "Feature cannot be toggled"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_feature_toggle(
+    request: Request,
+    org_id: int,
+    feature: str,
+    enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Turn an optional organization feature on or off (admin-only)
+    """
+    return await update_org_feature_toggle(
+        request, feature, enabled, org_id, current_user, db_session
     )
 
 

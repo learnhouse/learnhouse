@@ -1,77 +1,33 @@
 ---
-title: Custom Features & Webhooks
-description: Extend LearnHouse beyond the official frontend. Authenticate with API tokens, create and query content programmatically, and react to events with webhooks.
+title: "Custom Features with the API"
+description: "Drive LearnHouse from your own scripts with an API token: create courses and chapters, search content and find every endpoint in the API Reference."
 ---
 
-import { Callout } from 'nextra/components'
-import GuideCards from '../../../components/GuideCards/GuideCards'
+import { Callout } from '@/components/mdx'
 
-# Custom Features & Webhooks
+# Custom Features with the API
 
-The [build guide](/guides/build-learning-platform) showed how to *read* the API as a frontend. This guide is about going further: driving LearnHouse **programmatically**. You'll create and manage content from your own scripts and services, and react to what happens inside LearnHouse with **webhooks**.
+The [build guide](/guides/build-learning-platform) showed how to *read* the API as a frontend. This guide is about going further: driving LearnHouse **programmatically**. You'll create and manage content from your own scripts and services. To react to what happens inside LearnHouse, pair it with [webhooks](/platform/automations/webhooks).
 
-<GuideCards set="custom" />
+## Authenticate with an API token
 
-## Two ways to authenticate
-
-| | User session (JWT) | API token |
-| --- | --- | --- |
-| **For** | Acting *as a logged-in user* (a frontend) | Server-to-server automation, scripts, integrations |
-| **How** | `POST /api/v1/auth/login` → bearer token | A long-lived token created in org settings |
-| **Prefix** | a JWT | `lh_…` |
-| **Plan** | any | **Pro** |
-
-For everything in this guide, use an **API token**. It's a single bearer credential you attach to every request:
+For everything in this guide, use an **API token** (`lh_…`). Create one in the dashboard under **Developers** → **API Access**, give it only the rights your script needs, and send it as a bearer token on every request:
 
 ```bash
 curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/page/1/limit/10" \
   -H "Authorization: Bearer lh_your_api_token_here"
 ```
 
-<Callout type="warning">
-API tokens work on resource routes (courses, chapters, activities, collections…) but **not** on routes that require a real user session: `/users/*`, `/orgs/*`, `/roles/*`, and **webhook management** all reject `lh_` tokens with `403`. Use a courses read to smoke-test a token.
-</Callout>
-
-### Creating an API token
-
-API tokens are a **Pro** feature. Create one in your organization settings, or via the API itself (with a user session that has `roles` permissions):
-
-```bash
-curl -X POST "http://localhost:1338/api/v1/orgs/{org_id}/api-tokens" \
-  -H "Authorization: Bearer <user_jwt>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "My integration",
-    "description": "Server-side automation",
-    "expires_at": null
-  }'
-```
-
-The response includes the **full token exactly once**. Store it securely, because it can't be retrieved again:
-
-```json
-{
-  "token": "lh_8f3c…the only time you'll see this…",
-  "token_uuid": "apitoken_…",
-  "name": "My integration",
-  "token_prefix": "lh_8f3c4d2a",
-  "org_id": 1
-}
-```
-
-<Callout type="info">
-Tokens support fine-grained permissions via a `rights` object (per-resource read/write scopes) and an optional `expires_at`. Set `rights` to grant a token only the access it needs. The full schema is on the interactive Swagger UI at `http://localhost:1338/docs` (development mode). List, revoke, and regenerate tokens under `/api/v1/orgs/{org_id}/api-tokens`.
-</Callout>
+[Authentication](/reference/guides/authentication) covers the rest: token rights, how long tokens last, and which endpoint groups are session-only and refuse tokens with `403`. On LearnHouse Cloud, API tokens need the Pro plan or higher.
 
 ## Request conventions
 
 A few things that are true across the whole API:
 
 - **Base path**: every endpoint is under `/api/v1/`.
-- **Auth**: `Authorization: Bearer <token>` (JWT or `lh_` token).
 - **Reads are JSON**: `GET` returns JSON; lists are plain arrays unless documented otherwise.
-- **Writes are often multipart**: create/update endpoints that can take a file (courses, activities, avatars) accept `multipart/form-data`, not JSON. Endpoints without files (collections, trails, users) take JSON.
-- **Errors**: non-2xx responses are `{ "detail": "..." }`. Always read `detail`.
+- **Writes are often multipart**: create/update endpoints that can take a file (courses, activities, avatars) accept `multipart/form-data`, not JSON. Endpoints without files (chapters, folders, trails) take JSON.
+- **Errors**: non-2xx responses carry a `detail` field. See [Errors](/reference/guides/errors).
 - **UUIDs vs ids**: resources expose a stable `{resource}_uuid` (e.g. `course_…`, `activity_…`); numeric `id`s are used by a few routes (notably `org_id`).
 
 ## Recipe: create a course programmatically
@@ -88,7 +44,7 @@ curl -X POST "http://localhost:1338/api/v1/courses/?org_id=1" \
 ```
 
 <Callout type="info">
-`name`, `description`, and `about` are all required on course creation. Omitting `about` returns `422`. Creating courses, chapters, and activities requires a role with create permission (Admin / Maintainer / Instructor), not a plain member account.
+`name`, `description`, `about` and `public` are all required on course creation. Omitting one returns `422`. Creating courses, chapters, and activities requires a role with create permission (Admin / Maintainer / Instructor), not a plain member account.
 </Callout>
 
 Then add structure: a chapter (JSON), then activities inside it:
@@ -117,22 +73,16 @@ curl "http://localhost:1338/api/v1/courses/org_slug/{org_slug}/search?query=pyth
   -H "Authorization: Bearer lh_your_api_token"
 ```
 
-## Discoverability: the OpenAPI spec
+## Find every endpoint
 
-Because the API is built with FastAPI, a complete machine-readable spec is available:
-
-- **OpenAPI JSON**: `http://localhost:1338/openapi.json` (served on all instances)
-- **Swagger UI**: `http://localhost:1338/docs` (development mode only)
-- **ReDoc**: `http://localhost:1338/redoc` (development mode only)
-
-Point a client generator at `openapi.json` to produce a typed SDK in your language of choice.
+The [API Reference](/reference) lists every endpoint with its schema, the token right it needs and examples. If you write JavaScript or TypeScript, the [SDK](/developers/sdk) gives you typed calls for the same endpoints.
 
 <Callout type="info">
-The interactive HTML docs (`/docs` and `/redoc`) are served in **development mode only**. The raw `/openapi.json` spec is generated by FastAPI and available on all instances.
+On your own instance, the raw OpenAPI document (`/openapi.json`), Swagger UI (`/docs`) and ReDoc (`/redoc`) are served only in development mode (`LEARNHOUSE_DEVELOPMENT_MODE=true`). Production instances do not expose them.
 </Callout>
 
 ## Next: react to events
 
-Polling the API to find out "did anyone finish a course?" is wasteful. **Webhooks** push those events to you the moment they happen: enrollment, completion, signups, and dozens more.
+Polling the API to find out "did anyone finish a course?" is wasteful. **Webhooks** push those events to you the moment they happen: enrollment, completion, signups, and [dozens more](/platform/automations/events).
 
-→ **[Consume webhooks](/guides/custom-features/webhooks)**
+See **[Webhooks](/platform/automations/webhooks)** to set one up and verify its signatures.

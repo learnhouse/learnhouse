@@ -1,7 +1,8 @@
 'use client'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Loader2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
+import { BookOpenCheck, CheckCircle, Circle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Loader2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
+import DripGate from '@components/Objects/Courses/DripGate'
 import dynamic from 'next/dynamic'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
@@ -30,16 +31,18 @@ import CourseAccessError from '@components/Objects/Courses/CourseAccessError/Cou
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useMediaQuery, useWindowSize } from 'usehooks-ts'
-import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
+import PaidCourseActivityDisclaimer from '@ee/components/Payments/PaidCourseActivityDisclaimer'
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterDropdown'
 import ActivityShareDropdown from '@components/Pages/Activity/ActivityShareDropdown'
 import FixedActivitySecondaryBar from '@components/Pages/Activity/FixedActivitySecondaryBar'
+import { ASSIGNMENT_SUBMIT_EVENT } from '@components/Objects/Activities/Assignment/assignmentUI'
+import MobileActivityBar from '@components/Pages/Activity/MobileActivityBar'
 import CourseEndView from '@components/Pages/Activity/CourseEndView'
 import { motion, AnimatePresence } from 'motion/react'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { BookCopy } from 'lucide-react'
+import { BookCopy, ChevronLeft as BackIcon } from 'lucide-react'
 import MiniInfoTooltip from '@components/Objects/MiniInfoTooltip'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -69,6 +72,7 @@ const ScormActivity = lazy(() => import('@ee/components/Activities/ScormActivity
 const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
 const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
 const ResourceActivity = lazy(() => import('@components/Objects/Activities/Resource/ResourceActivity'))
+const LiveSessionActivity = lazy(() => import('@ee/components/LiveSessions/LiveSessionActivity'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -147,6 +151,8 @@ interface ActivityActionsProps {
   trailData?: any
   /** Dark styling, for the video theater band. */
   dark?: boolean
+  /** Phone activity bar presentation. */
+  compact?: boolean
 }
 
 // Custom hook for activity position
@@ -176,7 +182,7 @@ function useActivityPosition(course: any, activityId: string) {
   }, [course, activityId]);
 }
 
-function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true, trailData, dark = false }: ActivityActionsProps) {
+function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true, trailData, dark = false, compact = false }: ActivityActionsProps) {
 
   const { t: _t } = useTranslation();
   const _org = useOrg() as any;
@@ -197,19 +203,22 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment, sh
                 orgslug={orgslug}
                 trailData={trailData}
                 dark={dark}
+                compact={compact}
               />
             </>
           )}
           {activity.activity_type == 'TYPE_ASSIGNMENT' && (
             <>
               <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
-                <AssignmentTools
-                  assignment={assignment}
-                  activity={activity}
-                  activityid={activityid}
-                  course={course}
-                  orgslug={orgslug}
-                />
+                <div className={compact ? 'lh-assign-compact' : 'contents'}>
+                  <AssignmentTools
+                    assignment={assignment}
+                    activity={activity}
+                    activityid={activityid}
+                    course={course}
+                    orgslug={orgslug}
+                  />
+                </div>
               </AssignmentSubmissionProvider>
             </>
           )}
@@ -260,7 +269,11 @@ function ActivityClient(props: ActivityClientProps) {
   const [bgColor, setBgColor] = React.useState('bg-white nice-shadow')
   const [assignment, setAssignment] = React.useState(null) as any;
   const [_markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
-  const [isFocusMode, setIsFocusMode] = React.useState(false);
+  const [focusModePref, setIsFocusMode] = React.useState(false);
+  // Focus mode is a desktop layout; a phone already reads one column with
+  // its own bars, so a preference saved on desktop doesn't carry over.
+  const isPhone = useMediaQuery('(max-width: 767px)');
+  const isFocusMode = focusModePref && !isPhone;
   const isInitialRender = useRef(true);
   const { contributorStatus } = useContributorStatus(courseuuid);
   const router = useRouter();
@@ -288,6 +301,7 @@ function ActivityClient(props: ActivityClientProps) {
           track(AnalyticsEvent.TimeOnActivity, {
             activity_uuid: activityUuidForTracking,
             course_uuid: courseUuidForTracking,
+            activity_type: activityTypeForTracking,
             seconds_spent: seconds,
           })
         }
@@ -375,6 +389,12 @@ function ActivityClient(props: ActivityClientProps) {
         return (
           <Suspense fallback={<LoadingFallback />}>
             <ScormActivity course={course} activity={activity} />
+          </Suspense>
+        );
+      case 'TYPE_LIVE_SESSION':
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <LiveSessionActivity activity={activity} orgslug={orgslug} />
           </Suspense>
         );
       default:
@@ -488,14 +508,14 @@ function ActivityClient(props: ActivityClientProps) {
   // Save focus mode to localStorage
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('globalFocusMode', isFocusMode.toString());
+      localStorage.setItem('globalFocusMode', focusModePref.toString());
       // Dispatch custom event for focus mode change
       window.dispatchEvent(new CustomEvent('focusModeChange', { 
-        detail: { isFocusMode } 
+        detail: { isFocusMode: focusModePref } 
       }));
       isInitialRender.current = false;
     }
-  }, [isFocusMode]);
+  }, [focusModePref]);
 
   function getChapterNameByActivityId(course: any, activity_id: any) {
     for (let i = 0; i < course.chapters.length; i++) {
@@ -522,11 +542,12 @@ function ActivityClient(props: ActivityClientProps) {
     }
     else if (activity.activity_type == 'TYPE_ASSIGNMENT') {
       setMarkStatusButtonActive(false);
-      setBgColor(isFocusMode ? 'bg-white' : 'bg-white nice-shadow');
+      // The assignment lays out its own cards (overview, one per task, hand-in).
+      setBgColor('');
       getAssignmentUI();
     }
-    else if (activity.activity_type == 'TYPE_VIDEO') {
-      // The player is the whole surface; no dark card around it.
+    else if (activity.activity_type == 'TYPE_VIDEO' || activity.activity_type == 'TYPE_LIVE_SESSION') {
+      // The player (or the session card) is the whole surface; no dark card around it.
       setBgColor('');
     }
     else {
@@ -592,6 +613,17 @@ function ActivityClient(props: ActivityClientProps) {
   const chapterNameFromCourse = allActivities[currentIndex]?.chapterName ?? ''
   const displayName = activity?.name ?? activityNameFromCourse
   const displayActivityType = allActivities[currentIndex]?.activity_type
+
+  if (activity?.is_locked && activity?.drip_reason) {
+    return (
+      <DripGate
+        activityName={displayName}
+        dripReason={activity.drip_reason}
+        dripUnlockAt={activity.drip_unlock_at}
+        courseHref={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+      />
+    )
+  }
 
   if (activity?.is_locked) {
     const isAuthenticated = session?.status === 'authenticated'
@@ -714,7 +746,7 @@ function ActivityClient(props: ActivityClientProps) {
                               href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
                             >
                               <img
-                                className="w-[60px] h-[34px] rounded-md drop-shadow-md"
+                                className="w-[60px] h-[34px] shrink-0 rounded-md drop-shadow-md object-cover"
                                 src={course.thumbnail_image
                                   ? getCourseThumbnailMediaDirectory(
                                       org?.org_uuid,
@@ -785,13 +817,13 @@ function ActivityClient(props: ActivityClientProps) {
                       {activity && activity.published == true && (
                         <>
                           {activity.content.paid_access == false ? (
-                            <PaidCourseActivityDisclaimer course={course} />
+                            <PaidCourseActivityDisclaimer course={course} activity={activity} />
                           ) : (
                             <motion.div
                               initial={isInitialRender.current ? false : { scale: 0.95, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
                               transition={{ delay: 0.3 }}
-                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? '' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
+                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : (activity.activity_type === 'TYPE_VIDEO' || activity.activity_type === 'TYPE_LIVE_SESSION') ? '' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
                             >
                               {/* Activity Types */}
                               <div className={activity.activity_type === 'TYPE_SCORM' ? 'overflow-hidden' : ''}>
@@ -897,7 +929,26 @@ function ActivityClient(props: ActivityClientProps) {
                   />
                 ) : (
                   <div className="space-y-4 pt-0 relative">
-                    <div className="pt-2 pb-3 sm:pb-6">
+                    {/* Phones: one back row to the course instead of the
+                        breadcrumb trail and the course header below. */}
+                    <Link
+                      href={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
+                      className="sm:hidden lh-press -ms-1 flex items-center gap-2 min-h-[44px] pe-2 min-w-0"
+                    >
+                      <BackIcon size={20} className="shrink-0 text-gray-500 rtl:rotate-180" />
+                      <img
+                        className="w-[44px] h-[25px] shrink-0 rounded object-cover ring-1 ring-black/5"
+                        src={course.thumbnail_image
+                          ? getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)
+                          : '/empty_thumbnail.png'}
+                        onError={(e) => {
+                          if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'
+                        }}
+                        alt=""
+                      />
+                      <span className="truncate text-sm font-semibold text-gray-700">{course.name}</span>
+                    </Link>
+                    <div className="hidden sm:block pt-2 pb-6">
                       <Breadcrumbs items={[
                         { label: t('courses.courses'), href: getUriWithOrg(orgslug, '/courses'), icon: <BookCopy size={14} /> },
                         { label: course.name, href: getUriWithOrg(orgslug, `/course/${courseuuid}`) },
@@ -905,14 +956,14 @@ function ActivityClient(props: ActivityClientProps) {
                       ]} />
                     </div>
                     <div className="space-y-3 sm:space-y-4 activity-info-section relative" style={{ zIndex: 'var(--z-content)' }}>
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                        <div className="hidden sm:flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                           <div className="flex space-x-4 sm:space-x-6 items-center">
                             <div className="flex shrink-0">
                               <Link
                                 href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
                               >
                                 <img
-                                  className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] rounded-md drop-shadow-md"
+                                  className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] shrink-0 rounded-md drop-shadow-md object-cover"
                                   src={course.thumbnail_image
                                     ? getCourseThumbnailMediaDirectory(
                                         org?.org_uuid,
@@ -961,10 +1012,10 @@ function ActivityClient(props: ActivityClientProps) {
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-3">
                           <div className="flex flex-1 items-center space-x-3 min-w-0">
                             <div className="flex flex-col -space-y-1 min-w-0">
-                              <p className="font-bold text-gray-700 text-xs sm:text-md">
+                              <p className="font-bold text-gray-700 text-xs sm:text-md max-sm:font-semibold max-sm:text-gray-500 max-sm:text-[11px] max-sm:uppercase max-sm:tracking-wide">
                                 {getChapterNameByActivityId(course, activity?.id) ?? chapterNameFromCourse}
                               </p>
-                              <h1 className="font-bold text-gray-950 text-base sm:text-2xl">
+                              <h1 className="font-bold text-gray-950 text-base sm:text-2xl max-sm:text-[22px] max-sm:leading-tight max-sm:pt-1">
                                 {displayName}
                               </h1>
                               {/* Authors and Dates Section */}
@@ -1031,13 +1082,13 @@ function ActivityClient(props: ActivityClientProps) {
                                   </div>
                                 )}
                                 {/* Dates */}
-                                <div className="flex flex-wrap items-center text-xs text-gray-500 gap-1 sm:gap-2">
+                                <div className="hidden sm:flex flex-wrap items-center text-xs text-gray-500 gap-1 sm:gap-2">
                                   <span>
                                     {t('courses.created_on')} {formatDate(course.creation_date, i18n.language, { dateStyle: undefined, year: 'numeric', month: 'long', day: 'numeric' })}
                                   </span>
                                   <span className="mx-1">•</span>
                                   <span>
-                                    {t('courses.last_updated')} {getRelativeTime(new Date(course.updated_at || course.last_updated || course.creation_date))}
+                                    {t('courses.last_updated')} {getRelativeTime(new Date(course.update_date || course.creation_date))}
                                   </span>
                                 </div>
                               </div>
@@ -1085,7 +1136,7 @@ function ActivityClient(props: ActivityClientProps) {
                       ) : activity.published == true ? (
                         <>
                           {activity.content.paid_access == false ? (
-                            <PaidCourseActivityDisclaimer course={course} />
+                            <PaidCourseActivityDisclaimer course={course} activity={activity} />
                           ) : (
                             // Video activities sit on a dark theater band (theater.css).
                             <div className={activity.activity_type === 'TYPE_VIDEO' ? 'lh-theater-band py-8 sm:py-12' : ''}>
@@ -1105,11 +1156,11 @@ function ActivityClient(props: ActivityClientProps) {
                               </button>
                             )}
                             <div className="flex gap-6">
-                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? '' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
+                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : activity.activity_type === 'TYPE_VIDEO' ? 'max-sm:-mx-4' : activity.activity_type === 'TYPE_LIVE_SESSION' ? '' : activity.activity_type === 'TYPE_ASSIGNMENT' ? 'pt-2 sm:pt-0' : activity.activity_type === 'TYPE_DYNAMIC' ? '-mx-4 sm:mx-0 px-4 py-5 sm:p-7 rounded-none sm:rounded-lg max-sm:shadow-none max-sm:outline-none max-sm:border-y max-sm:border-black/[0.05]' : activity.activity_type === 'TYPE_DOCUMENT' ? '-mx-4 sm:mx-0 px-3 py-4 sm:p-7 rounded-none sm:rounded-lg max-sm:bg-neutral-100! max-sm:shadow-none max-sm:outline-none' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
                                 {activity.activity_type !== 'TYPE_VIDEO' && (
                                 <button
                                   onClick={() => setIsFocusMode(true)}
-                                  className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 end-2' : 'top-4 end-4'} hidden sm:flex bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
+                                  className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 end-2' : activity.activity_type === 'TYPE_ASSIGNMENT' ? '-top-5 -end-3' : 'top-4 end-4'} hidden sm:flex bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
                                   style={{ zIndex: 'var(--z-interactive)' }}
                                   title={t('activities.focus_mode')}
                                 >
@@ -1132,9 +1183,11 @@ function ActivityClient(props: ActivityClientProps) {
                         </>
                       ) : null}
 
-                      {/* Activity Actions below the content box */}
-                      {activity && activity.published == true && activity.content.paid_access != false && (
-                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-4 w-full gap-2 sm:gap-0">
+                      {/* Activity Actions below the content box. Phones get the
+                          bottom bar instead; only one is mounted so the actions
+                          (and an assignment's submit / grade dialogs) exist once. */}
+                      {!isPhone && activity && activity.published == true && activity.content.paid_access != false && (
+                        <div className="flex flex-row justify-between items-center mt-4 w-full">
                           <div className="order-1 sm:order-none">
                             <PreviousActivityButton
                               course={course}
@@ -1174,8 +1227,31 @@ function ActivityClient(props: ActivityClientProps) {
                           dark={activity.activity_type === 'TYPE_VIDEO'}
                         />
                       )}
-                      
-                      <div style={{ height: '100px' }}></div>
+
+                      {/* Phones: prev / outline / action / next within thumb reach. */}
+                      {isPhone && activity && activity.published == true && activity.content.paid_access != false && (
+                        <MobileActivityBar
+                          course={course}
+                          currentActivityId={activityid}
+                          orgslug={orgslug}
+                          trailData={trailData}
+                          dark={activity.activity_type === 'TYPE_VIDEO'}
+                        >
+                          <ActivityActions
+                            activity={activity}
+                            activityid={activityid}
+                            course={course}
+                            orgslug={orgslug}
+                            assignment={assignment}
+                            showNavigation={false}
+                            trailData={trailData}
+                            dark={activity.activity_type === 'TYPE_VIDEO'}
+                            compact
+                          />
+                        </MobileActivityBar>
+                      )}
+
+                      <div className="h-6 sm:h-[100px]"></div>
                     </div>
                 )}
               </GeneralWrapperStyled>
@@ -1197,6 +1273,8 @@ export function MarkStatus(props: {
   orgslug: string,
   trailData: any
   dark?: boolean
+  /** Single-line pill for the phone activity bar; no first-run tooltips. */
+  compact?: boolean
 }) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -1437,6 +1515,39 @@ export function MarkStatus(props: {
   // Don't show progress tracking for non-members
   if (!isUserPartOfTheOrg) {
     return null;
+  }
+
+  if (props.compact) {
+    const done = !!isActivityCompleted()
+    const pill = 'lh-press flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors'
+    return done ? (
+      <ConfirmationModal
+        confirmationButtonText={t('activities.unmark_activity')}
+        confirmationMessage={t('activities.unmark_activity_confirm')}
+        dialogTitle={t('activities.unmark_activity_title')}
+        dialogTrigger={
+          <button
+            type="button"
+            className={`${pill} ${props.dark ? 'bg-teal-400/15 text-teal-300' : 'bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-200'}`}
+          >
+            <CheckCircle size={18} />
+            {t('common.completed')}
+          </button>
+        }
+        functionToExecute={unmarkActivityAsCompleteFront}
+        status="warning"
+      />
+    ) : (
+      <button
+        type="button"
+        onClick={!isLoading ? markActivityAsCompleteFront : undefined}
+        disabled={isLoading}
+        className={`${pill} bg-teal-600 text-white shadow-sm shadow-teal-900/20 ${isLoading ? 'opacity-80' : ''}`}
+      >
+        {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Circle size={18} />}
+        {isLoading ? t('activities.marking') : t('common.complete')}
+      </button>
+    )
   }
 
   return (
@@ -1892,6 +2003,7 @@ function AssignmentTools(props: {
         }
         functionToExecute={submitForGradingUI}
         status="info"
+        openOnEvent={ASSIGNMENT_SUBMIT_EVENT}
       />
     )
   }
@@ -2197,10 +2309,7 @@ function AssignmentTools(props: {
                                 <span>{t('assignments.retry_assignment_last')}</span>
                               ) : (
                                 <span>
-                                  {t('assignments.retry_assignment_remaining', {
-                                    remaining: attemptsRemaining,
-                                    plural: attemptsRemaining === 1 ? '' : 's',
-                                  })}
+                                  {t('assignments.retry_assignment_remaining', { count: attemptsRemaining })}
                                 </span>
                               )}
                             </p>

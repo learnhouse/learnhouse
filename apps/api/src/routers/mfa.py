@@ -26,7 +26,7 @@ from src.security.auth import (
     get_authenticated_user,
     revoke_user_sessions_before,
 )
-from src.security.session_context import carry_session_claims
+from src.security.session_context import carry_session_claims, refuse_lms_session
 from src.security.security import security_verify_password
 from src.services.auth.mfa import (
     build_provisioning_uri,
@@ -46,6 +46,7 @@ from src.services.auth.session import (
     decode_mfa_pending_provenance,
     mfa_pending_token_usable,
     mint_session_tokens,
+    track_login,
     spend_mfa_pending_token,
 )
 from src.services.orgs.auth_policy import auth_policy_exception, evaluate_org_auth
@@ -155,6 +156,18 @@ def _rotate_sessions(request: Request, response: Response, user: User) -> dict:
     }
 
 
+async def _disconnect_ai_apps(db_session: AsyncSession, user_id: int) -> None:
+    """A change to how the account signs in also signs out its AI apps; the
+    member reconnects them under the new rules."""
+    from src.services.mcp.oauth import revoke_member_grants
+
+    try:
+        await revoke_member_grants(db_session, user_id)
+        await db_session.commit()
+    except Exception:  # pragma: no cover - never fail the 2FA change on this
+        await db_session.rollback()
+
+
 def _check_mfa_rate_limit(request: Request, scope: str, identifier: str) -> None:
     """Throttle code submission. Keyed on both the account and the source IP so
     neither a single account nor a single host can be used to grind codes."""
@@ -220,6 +233,7 @@ async def api_mfa_setup(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+    refuse_lms_session()
     _verify_password_if_set(user, form.password)
 
     existing = await get_user_mfa(db_session, user.id)
@@ -277,6 +291,7 @@ async def api_mfa_confirm(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+    refuse_lms_session()
     _check_mfa_rate_limit(request, "confirm", str(user.id))
 
     mfa = await get_user_mfa(db_session, user.id)
@@ -320,6 +335,7 @@ async def api_mfa_confirm(
 
     codes = await replace_backup_codes(db_session, user.id)
     tokens = _rotate_sessions(request, response, user)
+    await _disconnect_ai_apps(db_session, user.id)
     return {"enabled": True, "backup_codes": codes, "tokens": tokens}
 
 
@@ -338,6 +354,7 @@ async def api_mfa_disable(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+    refuse_lms_session()
     _check_mfa_rate_limit(request, "disable", str(user.id))
     _verify_password_if_set(user, form.password)
 
@@ -367,6 +384,7 @@ async def api_mfa_disable(
 
     await disable_mfa(db_session, user.id)
     tokens = _rotate_sessions(request, response, user)
+    await _disconnect_ai_apps(db_session, user.id)
     return {"enabled": False, "tokens": tokens}
 
 
@@ -383,6 +401,7 @@ async def api_mfa_regenerate_backup_codes(
     current_user=Depends(get_authenticated_user),
 ):
     user = await _require_human_user(current_user, db_session)
+    refuse_lms_session()
     _check_mfa_rate_limit(request, "regen", str(user.id))
 
     mfa = await get_user_mfa(db_session, user.id)
@@ -510,6 +529,7 @@ async def api_login_mfa(
             detail={"code": "MFA_SESSION_EXPIRED", "message": "Please sign in again."},
         )
 
+    await track_login(user.id, pending_amr, pending_org_id)
     set_auth_cookies(response, result.access_token, result.refresh_token, request)
 
     return {
@@ -919,4 +939,5 @@ async def api_org_reset_member_mfa(
     # Whoever lost (or stole) the device may still hold a session; the member
     # signs in again and re-enrolls.
     revoke_user_sessions_before(user_id)
+    await _disconnect_ai_apps(db_session, user_id)
     return {"reset": True, "user_id": user_id, "had_factor": had_factor}

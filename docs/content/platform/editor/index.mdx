@@ -1,15 +1,84 @@
+---
+description: "Write Dynamic Page lessons in the LearnHouse block editor: use the slash menu and toolbar, keep version history, resolve edit conflicts and edit with AI."
+---
+
+import { Callout } from '@/components/mdx'
+
 # Editor
 
-LearnHouse includes a block-based WYSIWYG editor for creating course content. It works like Notion: you build pages by stacking and arranging content blocks.
+Dynamic Page activities are written in a block-based editor. You build a page by stacking blocks (text, images, quizzes, code challenges, embeds) and rearranging them.
 
-## Key Features
+To open it, go to a course in the dashboard, open the **Content** tab and click **Edit Page** on a Dynamic Page activity. The editor only works on a desktop browser. On a phone it shows **Desktop Only**.
 
-- **Block-based editing**: Each piece of content (paragraph, image, code snippet) is an independent block that you can move, duplicate, or delete.
-- **Rich formatting**: Full text formatting including bold, italic, links, and inline code.
-- **Drag and drop**: Rearrange blocks by dragging them into the desired position.
-- **Slash commands**: Type `/` to quickly insert any block type.
+<img src="/img/pages/editor/slash-menu.webp" alt="The editor with the slash menu open, listing Paragraph and heading blocks under Text" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+## Writing
+
+- **Slash menu**: type `/` to insert any block. See [Blocks](/platform/editor/blocks) for the full list.
+- **Toolbar**: see below.
+- **Paste or drop files**: images, MP4 or WebM videos and PDFs dropped or pasted into the page are uploaded and become blocks.
+- **Drag handle**: hover a block and drag the handle on its left to move it.
+- **Activity switcher**: jump to another activity of the same course without leaving the editor. If you have unsaved changes, you are asked to save first.
+
+## The toolbar
+
+Related tools are grouped into dropdown menus, so the toolbar stays on one or two rows. From left to right:
+
+| Tool | What it holds |
+| --- | --- |
+| Undo, Redo, Bold, Italic, Strikethrough, **Link** | Single buttons. |
+| Text style | **Paragraph** or **Heading 1** to **Heading 6**. |
+| **List** | **Bullet List** and **Ordered List**. |
+| **Table** | Insert a 3 by 3 table, add a row below, add a column to the right, delete the current row or column. |
+| **Callout** | **Info**, **Warning**, **Tip**, **Success** or **Error**. |
+| Media buttons | **Image**, **Video**, **Audio**, **PDF Document** and **Library**, each its own button. |
+| Embed menu | **External Object (Embed)**, **YouTube Video** and **Web Preview**. |
+| **Math Equation (LaTeX)** | Single button. |
+| **Code Block** | **Code Block** and **Code Playground**. |
+| Interactive buttons | **Interactive Quiz**, **Flipcard**, **Interactive Scenarios** and **H5P Interactive Content**. |
+| **Elements** | **Divider**, **Badges**, **Button** and **User**. |
+| **Personalize** | Variables, conditional content and community tags. See [Dynamic Content](/platform/editor/dynamic-content). |
+| **Magic Block (AI Generated)** | Inserts an AI-generated interactive block. Greyed out when AI is not available to your organization. |
+
+Click a menu to open it. Clicking outside or pressing `Esc` closes it.
+
+## Templates
+
+The **Templates** button in the editor header opens your organization's saved blocks and pages, plus ready-made starters. Type `/` and pick **Save as template** to save a selection or a page. See [Templates](/platform/editor/dynamic-content#templates).
+
+## Saving and version history
+
+Click **Save** to save the page. Every save creates a new version of the activity.
+
+To see older versions, open the menu on the right of **Save** (**More save options**) and click **Version History**. You can preview any saved version and click **Restore this version** to go back to it. Up to 20 versions are kept per activity.
+
+If another teacher saved the same page while you were editing, the save button turns amber and LearnHouse asks which version to keep:
+
+| Option | What happens |
+| --- | --- |
+| **Keep my version** | Your content replaces theirs. |
+| **Keep their version** | Your unsaved changes are dropped. |
+| **Keep both** | Your content is kept, with their changes added below. |
+
+<Callout>
+On LearnHouse Cloud, Version History needs the Pro plan or higher. Self-hosted instances do not apply plan restrictions to it.
+</Callout>
+
+## AI Editor
+
+Click **AI Editor** in the editor header to open a chat panel that edits the page with you. Select a block to focus the request on it, or ask about the whole page. Quick actions include **Improve writing**, **Add examples**, **Simplify**, **Expand**, **Add quiz**, **Translate**, **Add summary**, **Add tip** and **Add definition**.
+
+<img src="/img/pages/editor/ai-editor-panel.webp" alt="The AI Editor panel open next to a lesson, with suggested prompts and the quick actions" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+Each message uses one AI credit. See [AI for Teachers](/platform/ai/for-teachers).
+
+## Preview
+
+Click the preview button (the eye icon) to open the activity as learners see it, in a new tab. The menu next to it holds **View as**, which shows the page for a given learner profile when it uses [dynamic content](/platform/editor/dynamic-content#previewing-with-view-as).
 
 ## Learn More
 
-- [Available Blocks](/platform/editor/blocks): See all the block types you can use.
-- [H5P Interactive Content](/platform/editor/h5p): Embed H5P activities hosted on your own H5P provider.
+- [Blocks](/platform/editor/blocks): every block type and its options.
+- [Dynamic Content & Templates](/platform/editor/dynamic-content): variables, conditional blocks, community tags and reusable templates.
+- [H5P Interactive Content](/platform/editor/h5p): embed H5P activities hosted on your own H5P provider.
+- [Code Execution](/platform/code-execution): the Code Playground block.

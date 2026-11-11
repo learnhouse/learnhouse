@@ -6,6 +6,7 @@ and httpx AsyncClient for router tests. All integration tests use an
 in-memory SQLite database with JSONB-to-JSON remapping.
 """
 
+import copy
 import os
 import sys
 
@@ -46,7 +47,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from sqlalchemy import JSON
+from sqlalchemy import JSON, create_engine
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -165,21 +166,90 @@ USER_RIGHTS = Rights(
 # Database fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture
-async def engine():
-    """In-memory async SQLite engine with JSONB-to-JSON remapping."""
+_schema_cache: dict[frozenset[str], str] = {}
+
+
+def _sqlite_schema_script() -> str:
+    """The DDL that ``metadata.create_all`` emits on SQLite, as one script.
+
+    ``create_all`` compiles every table and probes for its existence one
+    statement at a time, which costs ~100ms per call. Every test that touches
+    the database used to pay that, and it was most of the suite's runtime.
+    Running it once on a throwaway sync engine and replaying what SQLite stored
+    gives each test an identical schema for a few milliseconds.
+
+    Keyed on the registered table names: model modules imported lazily by a
+    test add tables to the metadata, and the next engine must include them.
+    """
     for table in SQLModel.metadata.tables.values():
         for col in table.columns:
             if isinstance(col.type, JSONB):
                 col.type = JSON()
 
+    key = frozenset(SQLModel.metadata.tables)
+    script = _schema_cache.get(key)
+    if script is None:
+        sync_engine = create_engine("sqlite://")
+        SQLModel.metadata.create_all(sync_engine)
+        with sync_engine.connect() as conn:
+            rows = conn.exec_driver_sql(
+                "SELECT sql FROM sqlite_master "
+                "WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%' ORDER BY rowid"
+            ).all()
+        sync_engine.dispose()
+        script = ";\n".join(row[0] for row in rows) + ";"
+        _schema_cache[key] = script
+    return script
+
+
+async def create_test_engine():
+    """In-memory async SQLite engine with the full schema already created."""
+    script = _sqlite_schema_script()
     eng = create_async_engine(
         "sqlite+aiosqlite://",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    async with eng.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+    async with eng.connect() as conn:
+        raw = await conn.get_raw_connection()
+        await raw.driver_connection.executescript(script)
+    return eng
+
+
+_data_snapshots: dict[str, tuple[str, object]] = {}
+
+
+async def build_once(engine, db, key: str, build):
+    """Run ``build(db)`` once per test process and replay its rows afterwards.
+
+    For fixtures that write thousands of rows through the real code (the demo
+    sync takes ~10s), every test after the first gets the same database
+    contents from a SQL dump in milliseconds. Returns a deep copy of what
+    ``build`` returned. Must be called before the session has done anything
+    else, since the replay runs on the engine's single connection.
+    """
+    cached = _data_snapshots.get(key)
+    if cached is None:
+        result = await build(db)
+        async with engine.connect() as conn:
+            raw = await conn.get_raw_connection()
+            statements = [s async for s in raw.driver_connection.iterdump()]
+        # The schema is already there on a fresh engine; keep only the rows.
+        rows = "\n".join(s for s in statements if not s.startswith("CREATE "))
+        _data_snapshots[key] = (rows, result)
+        return result
+
+    rows, result = cached
+    async with engine.connect() as conn:
+        raw = await conn.get_raw_connection()
+        await raw.driver_connection.executescript(rows)
+    return copy.deepcopy(result)
+
+
+@pytest.fixture
+async def engine():
+    """In-memory async SQLite engine with JSONB-to-JSON remapping."""
+    eng = await create_test_engine()
     yield eng
     await eng.dispose()
 
@@ -494,6 +564,25 @@ def no_legacy_link_markers():
 
 
 @pytest.fixture(autouse=True)
+def analytics_queue():
+    """Collect the events ``track()`` sends instead of handing them to EE.
+
+    ``track()`` forwards every event to the Enterprise Edition, which stores
+    it. Here each call is kept as a dict of its arguments (``event_name``,
+    ``org_id``, ``user_id``, ``properties``...), in order, for tests that want
+    to look at them; nothing reaches EE even when it is installed. The EE
+    suite overrides this fixture with one that yields its writer's queue.
+    """
+    queue: list[dict] = []
+
+    async def record(**event) -> None:
+        queue.append(event)
+
+    with patch("src.services.analytics.analytics.track_ee_analytics_event", new=record):
+        yield queue
+
+
+@pytest.fixture(autouse=True)
 def rag_dispatch():
     """Keep content saves from starting real AI indexing runs.
 
@@ -503,6 +592,20 @@ def rag_dispatch():
     """
     with patch("src.services.ai.rag.queue._dispatch") as dispatch:
         yield dispatch
+
+
+@pytest.fixture(autouse=True)
+def no_ai_acting_user():
+    """Start every test with no AI acting user.
+
+    ``enforce_ai_rate_limit`` records the caller in a ContextVar. A sync test
+    that calls it sets the variable in the main thread's context, where it
+    stays for every later test on that worker; the AI credit tests then hit
+    the demo-visitor branch and fail depending on test order.
+    """
+    from src.services.security.rate_limiting import ai_acting_user
+
+    ai_acting_user.set(None)
 
 
 @pytest.fixture

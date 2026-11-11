@@ -18,7 +18,9 @@ export function useTrail(orgId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.trail.org(orgId!),
     queryFn: () => fetchTrail(orgId!, accessToken),
-    enabled: !!orgId,
+    // The trail is per-user: without a token it can only 401, which is what
+    // every anonymous visitor to a course or activity page used to fire.
+    enabled: !!orgId && !!accessToken,
     staleTime: 30_000,
   })
 }

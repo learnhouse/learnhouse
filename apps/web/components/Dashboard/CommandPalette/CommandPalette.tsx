@@ -25,6 +25,8 @@ import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { isFeatureAvailable } from '@services/plans/plans'
 import { normalizeForSearch } from '@/lib/search/normalize'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { usePlan } from '@components/Hooks/usePlan'
+import { isWhiteLabelPlan } from '@components/Hooks/useLearnHouseBranding'
 
 const CONTENT_TYPE_ICON: Record<ContentResultType, SearchMeta['icon']> = {
   course: BookOpen,
@@ -59,6 +61,7 @@ function usePagesFiltered(): SearchMeta[] {
   return useMemo(
     () =>
       dashboardPages.filter((p) => {
+        if (p.available && !p.available()) return false
         if (!p.featureKey) return true
         const rf = resolvedFeatures?.[p.featureKey]
         if (rf) return rf.enabled
@@ -84,6 +87,7 @@ function groupContentResults(results: ContentResult[]): Record<ContentResultType
 export default function CommandPalette() {
   const { t } = useTranslation()
   const { open, setOpen } = useCommandPalette()
+  const isWhiteLabel = isWhiteLabelPlan(usePlan())
   const router = useRouter()
   const { track } = useLHAnalytics('dashboard')
   const [query, setQuery] = useState('')
@@ -186,7 +190,7 @@ export default function CommandPalette() {
         />
         <DialogPrimitive.Content
           aria-label={t('dashboard.search.placeholder')}
-          className="fixed left-1/2 top-[10%] flex w-[94vw] max-w-[760px] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/85 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl backdrop-saturate-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out"
+          className="fixed left-1/2 top-[calc(12px+env(safe-area-inset-top))] sm:top-[10%] flex w-[94vw] max-w-[760px] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/95 sm:bg-black/85 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl backdrop-saturate-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out"
           style={{ zIndex: 'var(--z-modal)' as any }}
           onOpenAutoFocus={(e) => {
             e.preventDefault()
@@ -250,13 +254,15 @@ export default function CommandPalette() {
                   className="w-full bg-transparent text-[18px] sm:text-[22px] font-medium leading-tight tracking-tight text-white outline-none placeholder:font-medium placeholder:text-white/35"
                 />
               </div>
-              <img
-                src="/lrn-dash.svg"
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 select-none opacity-90"
-              />
+              {!isWhiteLabel && (
+                <img
+                  src="/lrn-dash.svg"
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 select-none opacity-90"
+                />
+              )}
             </div>
 
             {/* Divider */}
@@ -289,12 +295,12 @@ export default function CommandPalette() {
             </Command.List>
 
             {/* Footer */}
-            <div className="flex items-center gap-3 sm:gap-5 border-t border-white/[0.06] bg-black/20 px-4 sm:px-7 py-3 text-[12px] text-white/40">
-              <FooterHint label="Navigate" keys={['↑', '↓']} />
-              <FooterHint label="Open" keys={['↵']} />
+            <div className="hidden [@media(hover:hover)]:flex items-center gap-3 sm:gap-5 border-t border-white/[0.06] bg-black/20 px-4 sm:px-7 py-3 text-[12px] text-white/40">
+              <FooterHint label={t('search.palette.keys.navigate')} keys={['↑', '↓']} />
+              <FooterHint label={t('search.palette.keys.open')} keys={['↵']} />
               <span className="hidden sm:contents">
-                <FooterHint label="New tab" keys={['⌘', '↵']} />
-                <FooterHint label="Close" keys={['esc']} />
+                <FooterHint label={t('search.palette.keys.new_tab')} keys={['⌘', '↵']} />
+                <FooterHint label={t('search.palette.keys.close')} keys={['esc']} />
               </span>
             </div>
           </Command>

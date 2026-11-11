@@ -454,7 +454,7 @@ function CoursesHome(params: CourseProps) {
         ]} />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4">
           <div className="flex items-center space-x-4">
-            <h1 className="text-3xl font-bold mb-4 sm:mb-0">{t('dashboard.courses.title')}</h1>
+            <h1 className="text-3xl font-bold mb-3 sm:mb-0">{t('dashboard.courses.title')}</h1>
           </div>
           <AuthenticatedClientElement
             checkMethod="roles"
@@ -524,7 +524,7 @@ function CoursesHome(params: CourseProps) {
       {/* Search, Usergroup Filter, and Selection Controls */}
       {allCourses.length > 0 && (
         <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
             {/* Search Input */}
             <div className="relative w-full sm:w-80">
               <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -587,7 +587,7 @@ function CoursesHome(params: CourseProps) {
               ressourceType="courses"
               orgId={orgId!}
             >
-              <div className="flex items-center gap-2 ms-auto">
+              <div className="flex flex-wrap items-center gap-2 sm:ms-auto">
                 <span className="text-sm font-medium text-gray-500 px-2">
                   {t('courses.selected_count', { count: selectedCourses.size })}
                 </span>

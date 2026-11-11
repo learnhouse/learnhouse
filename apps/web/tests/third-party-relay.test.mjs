@@ -1,4 +1,4 @@
-// The PostHog (/ingest) and Sentry (/monitoring) relays are external rewrites:
+// The PostHog (/lhrel) and Sentry (/monitoring) relays are external rewrites:
 // whatever request headers reach them are forwarded to the third party. The
 // proxy strips the session cookies and Authorization first.
 
@@ -9,13 +9,13 @@ import { isThirdPartyRelayPath, withoutCredentialHeaders } from "../lib/thirdPar
 
 describe("isThirdPartyRelayPath", () => {
   test("matches the relay prefixes", () => {
-    for (const p of ["/ingest", "/ingest/e/", "/ingest/static/array.js", "/monitoring", "/monitoring/"]) {
+    for (const p of ["/lhrel", "/lhrel/e/", "/lhrel/static/array.js", "/monitoring", "/monitoring/"]) {
       expect(isThirdPartyRelayPath(p)).toBe(true);
     }
   });
 
   test("leaves look-alike app paths alone", () => {
-    for (const p of ["/ingestion", "/monitoring-dashboard", "/course/ingest", "/"]) {
+    for (const p of ["/lhrelay", "/monitoring-dashboard", "/course/lhrel", "/ingest", "/"]) {
       expect(isThirdPartyRelayPath(p)).toBe(false);
     }
   });

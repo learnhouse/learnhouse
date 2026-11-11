@@ -24,4 +24,6 @@ export interface SearchMeta {
   featureKey?: string
   featureDefaultDisabled?: boolean
   requiresOrgAdmin?: boolean
+  /** Hides the entry when it returns false (e.g. Enterprise-only pages). */
+  available?: () => boolean
 }

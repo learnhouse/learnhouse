@@ -1,26 +1,70 @@
-import { Callout } from 'nextra/components'
+---
+title: SCORM
+description: Import SCORM 1.2 and 2004 packages into LearnHouse courses, check package size limits, and see how completion, scores and results are tracked.
+---
+
+import { Callout } from '@/components/mdx'
 
 # SCORM
 
 <Callout>
-SCORM support requires an Enterprise plan.
+SCORM needs the Enterprise plan on LearnHouse Cloud, or the [Enterprise Edition](/enterprise) when self-hosted.
+<PlanCta plan="Enterprise" />
 </Callout>
 
-LearnHouse supports importing SCORM (Sharable Content Object Reference Model) packages, the industry standard format for e-learning content. You can import content from authoring tools like Articulate Storyline, Adobe Captivate, or iSpring and run it inside your courses.
+LearnHouse imports SCORM (Sharable Content Object Reference Model) packages, the standard export format of e-learning authoring tools such as Articulate Storyline, Adobe Captivate and iSpring, and runs them inside your courses.
 
-## Supported Versions
+## Supported versions
 
-- **SCORM 1.2**: the most widely supported version.
-- **SCORM 2004**: a newer version with more sequencing options.
+- **SCORM 1.2**
+- **SCORM 2004**
 
-## Importing Packages
+LearnHouse reads the version from the package manifest. Packages that don't declare one are treated as SCORM 1.2.
 
-1. Upload a SCORM `.zip` package to a course.
-2. LearnHouse analyzes the package and detects the version, title, and SCOs.
-3. Assign SCOs to chapters and import. Each SCO becomes a course activity.
+## Adding a package to a course
 
-You can also import a package as a new course. LearnHouse builds the course structure from the package contents.
+1. In the course editor, add a new activity and choose **Scorm** ("SCORM-compliant learning package").
+2. Upload the **SCORM Package (.zip)** and click **Analyze Package**. LearnHouse detects the version, the title and the SCOs (the launchable units inside the package).
+3. Name the activity and pick the chapter. Each SCO becomes its own activity.
+
+## Importing a package as a new course
+
+On the **Courses** page of the dashboard, choose **Import SCORM** ("Import a SCORM package to create a new course").
+
+1. **Upload SCORM Package**, then click **Analyze Package**.
+2. **Configure**: fill in the **Course Details** and **Assign Activities to Chapters**.
+3. Click **Create Course**.
+
+## Package limits
+
+| Limit | Default | Variable (self-hosted) |
+| --- | --- | --- |
+| Package size | 5 GB | `LEARNHOUSE_SCORM_MAX_PACKAGE_SIZE_MB` |
+| Largest single file in the package | 2 GB | `LEARNHOUSE_SCORM_MAX_FILE_SIZE_MB` |
+| Total uncompressed size | 25 GB | `LEARNHOUSE_SCORM_MAX_UNCOMPRESSED_MB` |
+| Files in the package | 50,000 | |
+| Manifest (`imsmanifest.xml`) size | 5 MB | |
+| How long an analyzed package waits to be imported | 120 minutes | `LEARNHOUSE_SCORM_TEMP_TTL_MINUTES` |
+
+Sizes in the variables are in megabytes.
 
 ## Tracking
 
-Imported SCORM content reports progress back to LearnHouse, including completion status, scores, time spent, and bookmarking for resume support.
+SCORM content reports back to LearnHouse while the learner works through it:
+
+- Completion status (not attempted, incomplete, completed, passed, failed)
+- Success status (passed, failed, unknown)
+- Score (raw, minimum, maximum and scaled)
+- Session time and total time
+- Bookmark location and suspend data, so learners can resume where they left off
+
+When a SCO reports completed or passed, the activity counts as done in the learner's course progress.
+
+## Results
+
+To see how learners did, open the SCORM activity's edit dialog. The results table shows each **Learner** with their **Completion**, **Success**, **Score** and **Time**.
+
+## Access and search
+
+- SCORM activities follow the same access rules as other activities, including paid courses and locked chapters.
+- The title and the visible text of each SCO's launch page are indexed for AI search.

@@ -1,6 +1,6 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
-import { Books, FolderSimple, ChatsCircle, Headphones, Cube, ShoppingBag } from '@phosphor-icons/react'
+import { Books, FolderSimple, ChatsCircle, Headphones, Cube, ShoppingBag, Steps, VideoCamera } from '@phosphor-icons/react'
 import { menuIcon } from '@components/Objects/Menus/menuIcons'
 import Link from 'next/link'
 import React from 'react'
@@ -18,20 +18,35 @@ type Builtin = { feature: string; link: string; labelKey: string; Icon: any }
 
 const BUILTIN: Record<string, Builtin> = {
   courses: { feature: 'courses', link: '/courses', labelKey: 'courses.courses', Icon: Books },
+  paths: { feature: 'paths', link: '/paths', labelKey: 'paths.title', Icon: Steps },
   library: { feature: 'folders', link: '/library', labelKey: 'library.library', Icon: FolderSimple },
   podcasts: { feature: 'podcasts', link: '/podcasts', labelKey: 'podcasts.podcasts', Icon: Headphones },
+  live: { feature: 'live_sessions', link: '/live', labelKey: 'live_sessions.nav', Icon: VideoCamera },
   communities: { feature: 'communities', link: '/communities', labelKey: 'communities.title', Icon: ChatsCircle },
   playgrounds: { feature: 'playgrounds', link: '/playgrounds', labelKey: 'common.playgrounds', Icon: Cube },
   store: { feature: 'payments', link: '/store', labelKey: 'common.store', Icon: ShoppingBag },
 }
 
 // Default order when an org has no custom menu config.
-const DEFAULT_ORDER = ['courses', 'library', 'podcasts', 'communities', 'playgrounds', 'store']
+const DEFAULT_ORDER = ['courses', 'paths', 'library', 'podcasts', 'live', 'communities', 'playgrounds', 'store']
 
-function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
+export type OrgMenuItem = {
+  key: string
+  label: string
+  Icon: any
+  href: string
+  external: boolean
+  shortcut?: string
+}
+
+/**
+ * The org's navigation entries: its custom menu config when it has one, else
+ * the enabled features in the default order. Shared by the desktop header and
+ * the phone tab bar / More sheet so both always list the same pages.
+ */
+export function useOrgMenuItems(orgslug: string): OrgMenuItem[] {
   const { t } = useTranslation()
   const org = useOrg() as any
-  const colors = getMenuColorClasses(props.primaryColor || '')
 
   const rf = org?.config?.config?.resolved_features
   const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
@@ -45,7 +60,7 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
       ? [...configItems].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       : DEFAULT_ORDER.map((type, i) => ({ type, enabled: true, order: i, label: '', url: '' }))
 
-  const rendered = source
+  return source
     .map((item: any) => {
       if (item.type === 'custom') {
         if (!item.enabled || !item.url) return null
@@ -54,7 +69,7 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
           key: `custom-${item.url}`,
           label: item.label || item.url,
           Icon: menuIcon(item.icon),
-          href: external ? item.url : getUriWithOrg(props.orgslug, item.url),
+          href: external ? item.url : getUriWithOrg(orgslug, item.url),
           external,
         }
       }
@@ -66,20 +81,28 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
         key: item.type,
         label: item.label || t(meta.labelKey),
         Icon: meta.Icon,
-        href: getUriWithOrg(props.orgslug, meta.link),
+        href: getUriWithOrg(orgslug, meta.link),
         external: false,
         shortcut: CHORD_BY_TYPE[item.type],
       }
     })
-    .filter(Boolean) as any[]
+    .filter(Boolean) as OrgMenuItem[]
+}
+
+function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
+  const { t } = useTranslation()
+  const colors = getMenuColorClasses(props.primaryColor || '')
+  const rendered = useOrgMenuItems(props.orgslug)
 
   return (
     <div className="ps-1">
-      <ul className="flex space-x-5">
+      <ul className="flex space-x-4 xl:space-x-5">
         {rendered.map((it) => {
+          // Icons only until xl: with labels, a full menu pushes the search
+          // and account controls out of a small laptop's header.
           const content = (
-            <li className={`flex space-x-2 items-center ${colors.text} font-semibold`}>
-              <it.Icon size={20} weight="fill" /> <span>{it.label}</span>
+            <li className={`flex space-x-2 items-center ${colors.text} font-semibold`} title={it.label}>
+              <it.Icon size={20} weight="fill" aria-hidden /> <span className="sr-only xl:not-sr-only">{it.label}</span>
             </li>
           )
           if (it.external) {

@@ -23,6 +23,8 @@ from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
 from src.services.utils.upload_content import upload_file
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 
 _SUPERADMIN_PLAYGROUND_RIGHTS = {
@@ -175,6 +177,12 @@ async def _check_read_access(
     raise HTTPException(status_code=403, detail="Access denied to this playground")
 
 
+def _sold_as(playground: Playground) -> str:
+    """Offers name playgrounds by a typed uuid; the stored one is bare."""
+    uuid = playground.playground_uuid
+    return uuid if uuid.startswith("playground_") else f"playground_{uuid}"
+
+
 async def _check_draft_access(
     playground: Playground,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -251,6 +259,12 @@ async def create_playground(
     await db_session.commit()
     await db_session.refresh(playground)
 
+    await track(
+        event_name=analytics_events.PLAYGROUND_CREATED,
+        org_id=org_id,
+        user_id=acting_user_id,
+        properties={"playground_uuid": playground.playground_uuid},
+    )
     await dispatch_webhooks(
         event_name="playground_created",
         org_id=org_id,
@@ -277,6 +291,8 @@ async def get_playground(
         raise HTTPException(status_code=404, detail="Playground not found")
 
     await _check_read_access(playground, current_user, db_session)
+    from src.core.ee_hooks import require_ee_resource_paid_access
+    await require_ee_resource_paid_access(request, db_session, current_user, _sold_as(playground))
 
     if not isinstance(current_user, AnonymousUser):
         await _enforce_member_mfa(
@@ -375,9 +391,17 @@ async def list_org_playgrounds(
         )).scalars().all()
         authors_map = {u.id: u for u in authors}
 
+    # Sold playgrounds stay listed (people need to find what to buy), without
+    # their content for anyone who has not bought them.
+    from src.core.ee_hooks import is_ee_resource_locked
+
     result: List[PlaygroundRead] = []
     for pg in allowed:
         read = PlaygroundRead.model_validate(pg)
+        if not is_admin and pg.created_by != user_id and await is_ee_resource_locked(
+            request, db_session, current_user, _sold_as(pg)
+        ):
+            read.html_content = None
         if org:
             read.org_uuid = org.org_uuid
             read.org_slug = org.slug
@@ -501,6 +525,9 @@ async def duplicate_playground(
     # A copy hands the caller the source's full content, so the caller must be
     # able to read the source exactly as get_playground would let them.
     await _check_read_access(playground, current_user, db_session)
+    # Copying a sold playground would hand out what it sells.
+    from src.core.ee_hooks import require_ee_resource_paid_access
+    await require_ee_resource_paid_access(request, db_session, current_user, _sold_as(playground))
     await _check_draft_access(playground, current_user, db_session)
 
     now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()

@@ -6,6 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.chapter_activities import ChapterActivity
 from fastapi import HTTPException, Request, status
 from src.db.courses.activities import Activity, ActivityTypeEnum
+from src.db.courses.chapters import Chapter
 from src.db.courses.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
@@ -21,6 +22,7 @@ from src.services.analytics import events as analytics_events
 from src.services.audit.audit import record_audit_event
 from src.db.user_audit_events import UserAuditEventType
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.core.ee_hooks import notify_ee_learner_progress
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.org_auth import require_org_membership
 from src.services.courses.activities.access import verify_activity_reader_access
@@ -233,9 +235,12 @@ async def add_activity_to_trail(
 
     # Activity and course in one round trip; the outer join keeps the distinct
     # "Course not found" answer for an activity whose course is gone.
+    # The parent chapter rides along for the reader gate's lock check.
     statement = (
-        select(Activity, Course)
+        select(Activity, Course, Chapter)
         .outerjoin(Course, Course.id == Activity.course_id)  # type: ignore[arg-type]
+        .outerjoin(ChapterActivity, ChapterActivity.activity_id == Activity.id)  # type: ignore[arg-type]
+        .outerjoin(Chapter, Chapter.id == ChapterActivity.chapter_id)  # type: ignore[arg-type]
         .where(Activity.activity_uuid == activity_uuid)
     )
     row = (await db_session.execute(statement)).first()
@@ -244,7 +249,7 @@ async def add_activity_to_trail(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found"
         )
-    activity, course = row
+    activity, course, parent_chapter = row
 
     # An assignment is completed by its submission/grading flow, never by a
     # learner self-marking it done.
@@ -261,7 +266,9 @@ async def add_activity_to_trail(
 
     # Completing an activity leads to the certificate: only an activity the
     # learner may actually consume (published, paid for, unlocked) counts.
-    await verify_activity_reader_access(request, activity, course, user, db_session)
+    await verify_activity_reader_access(
+        request, activity, course, user, db_session, parent_chapter=parent_chapter
+    )
 
     trail = await check_trail_presence(
         org_id=course.org_id,
@@ -286,8 +293,9 @@ async def add_activity_to_trail(
             update_date=str(datetime.now()),
         )
         db_session.add(trailrun)
+        # No refresh: the insert returns the id and the session keeps the rest
+        # loaded across the commit (expire_on_commit=False).
         await db_session.commit()
-        await db_session.refresh(trailrun)
 
     statement = select(TrailStep).where(
         TrailStep.trailrun_id == trailrun.id, TrailStep.activity_id == activity.id, TrailStep.user_id == user.id
@@ -311,7 +319,6 @@ async def add_activity_to_trail(
         )
         db_session.add(trailstep)
         await db_session.commit()
-        await db_session.refresh(trailstep)
 
     # Only track on first completion to avoid duplicates on re-visits
     if is_new_completion:
@@ -376,6 +383,9 @@ async def add_activity_to_trail(
         # match reality. Kept OUTSIDE the certificate try/except above so a
         # cert failure never leaves a completed course stuck "in progress".
         await sync_trailrun_status(user.id, course.id, db_session)
+
+    if is_new_completion and course.id:
+        notify_ee_learner_progress(user.id, course.id)
 
     if course_was_completed:
         await track(
@@ -460,6 +470,7 @@ async def remove_activity_from_trail(
         # in-progress so counts stay accurate.
         if course.id:
             await sync_trailrun_status(user.id, course.id, db_session)
+            notify_ee_learner_progress(user.id, course.id)
 
     # Get updated trail data
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
@@ -609,6 +620,16 @@ async def remove_course_from_trail(
         )
     )
     await db_session.commit()
+    notify_ee_learner_progress(user.id, course.id)
+
+    # Only a real enrollment that was removed counts as leaving the course.
+    if trail_run:
+        await track(
+            event_name=analytics_events.COURSE_LEFT,
+            org_id=course.org_id,
+            user_id=user.id,
+            properties={"course_uuid": course.course_uuid},
+        )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
     trail_runs_raw = (await db_session.execute(statement)).scalars().all()

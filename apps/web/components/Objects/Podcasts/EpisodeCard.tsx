@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { PodcastEpisode, Podcast } from '@services/podcasts/podcasts'
 import { formatDuration } from '@services/podcasts/episodes'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
@@ -8,6 +9,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getEpisodeThumbnailMediaDirectory, getPodcastThumbnailMediaDirectory } from '@services/media/media'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { Play, Pause, Clock } from 'lucide-react'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 interface EpisodeCardProps {
   episode: PodcastEpisode
@@ -16,6 +18,7 @@ interface EpisodeCardProps {
 }
 
 export default function EpisodeCard({ episode, podcast, showThumbnail = true }: EpisodeCardProps) {
+  const { t } = useTranslation()
   const { state, playEpisode, togglePlay } = usePodcastPlayer()
   const org = useOrg() as any
   const { track } = useLHAnalytics('learner')
@@ -56,13 +59,13 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
   return (
     <div
       data-kbd-item=""
-      className={`group flex items-center gap-4 p-4 rounded-lg transition-colors cursor-pointer ${
+      className={`group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition-colors cursor-pointer active:bg-gray-100 ${
         isCurrentEpisode ? 'bg-gray-100' : 'hover:bg-gray-50'
       }`}
       onClick={handlePlay}
     >
       {/* Episode number */}
-      <div className="flex-shrink-0 w-8 text-center">
+      <div className={`flex-shrink-0 w-6 sm:w-8 text-center ${showThumbnail ? 'max-sm:hidden' : ''}`}>
         <span className="text-sm font-bold text-gray-400">
           {episode.episode_number}
         </span>
@@ -71,8 +74,8 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
       {/* Thumbnail */}
       {showThumbnail && (
         <div className="flex-shrink-0 relative">
-          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200">
-            <img
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-gray-200">
+            <ThumbnailImage
               src={thumbnailUrl}
               alt={episode.title}
               className="w-full h-full object-cover"
@@ -95,11 +98,11 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
 
       {/* Episode info */}
       <div className="flex-1 min-w-0">
-        <h4 className={`font-semibold truncate ${isCurrentEpisode ? 'text-gray-900' : 'text-gray-800'}`}>
+        <h4 className={`font-semibold max-sm:line-clamp-2 max-sm:leading-snug sm:truncate ${isCurrentEpisode ? 'text-gray-900' : 'text-gray-800'}`}>
           {episode.title}
         </h4>
         {episode.description && (
-          <p className="text-sm text-gray-500 line-clamp-2 mt-0.5">
+          <p className="text-sm text-gray-500 line-clamp-1 sm:line-clamp-2 mt-0.5">
             {episode.description}
           </p>
         )}
@@ -110,7 +113,7 @@ export default function EpisodeCard({ episode, podcast, showThumbnail = true }: 
           </span>
           {!episode.published && (
             <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-medium">
-              Unpublished
+              {t('podcasts.unpublished')}
             </span>
           )}
         </div>

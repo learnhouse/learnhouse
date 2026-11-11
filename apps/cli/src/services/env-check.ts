@@ -147,7 +147,12 @@ function appendToEnvFile(filePath: string, newVars: Map<string, string>): void {
 
   const dir = path.dirname(filePath)
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-  fs.writeFileSync(filePath, content)
+  // These files hold secrets (JWT secret, collab key): owner-only. `mode`
+  // only applies on create, so tighten an existing file too.
+  fs.writeFileSync(filePath, content, { mode: 0o600 })
+  try {
+    fs.chmodSync(filePath, 0o600)
+  } catch { /* not supported on this filesystem (e.g. Windows) */ }
 }
 
 function resolveDefault(v: EnvVar): string {

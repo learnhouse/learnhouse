@@ -51,11 +51,16 @@ export interface AuthedUser {
  *
  * Returns the authenticated user, or a 401 `NextResponse` to return directly.
  */
-export async function authenticateUser(): Promise<AuthedUser | NextResponse> {
+export async function authenticateUser(
+  bearerToken?: string,
+): Promise<AuthedUser | NextResponse> {
   const unauthorized = () =>
     NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  // The cookie wins; a bearer token is only a fallback for pages where the
+  // cookie isn't sent (custom domains). Either way it is checked against the
+  // backend session below, and a header can't be forged cross-site.
+  const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value || bearerToken;
   if (!token) return unauthorized();
 
   let session: any;
@@ -114,8 +119,9 @@ export function canManageOrgBilling(
  */
 export async function requireOrgBillingAccess(
   orgId: string | number,
+  bearerToken?: string,
 ): Promise<{ user: AuthedUser } | { error: NextResponse }> {
-  const user = await authenticateUser();
+  const user = await authenticateUser(bearerToken);
   if (user instanceof NextResponse) return { error: user };
   if (!canManageOrgBilling(user, orgId)) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };

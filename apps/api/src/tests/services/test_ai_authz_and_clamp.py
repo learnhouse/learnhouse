@@ -298,6 +298,61 @@ class TestActivityChatAuthorization:
         assert response.message == "sure"
         reserve.assert_awaited_once()
 
+    @pytest.mark.parametrize("quota", [True, False])
+    async def test_non_streaming_start_ai_failure_is_a_clean_503(
+        self, db, org, course, activity, org_config, mock_request, regular_user, caplog, quota
+    ):
+        """A spent provider budget tells the user so and logs a warning; any
+        other failure keeps the generic message and logs an error."""
+        import logging
+
+        from pydantic_ai.exceptions import ModelHTTPError
+
+        from src.services.ai.llm.errors import AI_QUOTA_MESSAGE
+
+        failure = (
+            ModelHTTPError(429, "gemini", {"error": {"message": "exceeded its monthly spending cap"}})
+            if quota
+            else ValueError("boom")
+        )
+        chat_obj = StartActivityAIChatSession(
+            activity_uuid="activity_test", message="explain this"
+        )
+
+        with patch.object(
+            ai_service, "can_read_activity", new_callable=AsyncMock
+        ), patch(
+            RATE_LIMIT_PATH
+        ), patch.object(
+            ai_service, "reserve_ai_credit", new_callable=AsyncMock
+        ), patch.object(
+            ai_service, "refund_ai_credit"
+        ) as refund, patch.object(
+            ai_service, "structure_activity_content_by_type", return_value=[]
+        ), patch.object(
+            ai_service,
+            "serialize_activity_text_to_ai_comprehensible_text",
+            return_value="course context",
+        ), patch.object(
+            ai_service, "model_for_tier", return_value="test-model"
+        ), patch.object(
+            ai_service,
+            "get_chat_session_history",
+            return_value={"aichat_uuid": "chat_1", "message_history": []},
+        ), patch.object(
+            ai_service, "ask_ai", new_callable=AsyncMock, side_effect=failure
+        ), caplog.at_level(logging.WARNING, logger=ai_service.logger.name):
+            with pytest.raises(HTTPException) as exc:
+                await ai_service.ai_start_activity_chat_session(
+                    mock_request, chat_obj, regular_user, db
+                )
+
+        assert exc.value.status_code == 503
+        assert exc.value.detail["code"] == "AI_UNAVAILABLE"
+        assert (exc.value.detail["message"] == AI_QUOTA_MESSAGE) is quota
+        assert caplog.records[-1].levelno == (logging.WARNING if quota else logging.ERROR)
+        refund.assert_called_once()
+
 
 # ---------------------------------------------------------------------------
 # F32: editor AI authorization

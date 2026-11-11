@@ -273,10 +273,10 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
 
     if (isLoading) {
         return (
-            <div className="flex flex-col w-full h-full custom-dots-bg overflow-y-auto">
-                <div className="px-10 pt-6 pb-10 flex flex-col space-y-4 animate-pulse">
+            <div className="flex flex-col w-full min-w-0 lg:h-full lg:overflow-y-auto">
+                <div className="px-4 sm:px-6 lg:px-10 pt-5 sm:pt-6 pb-10 flex flex-col space-y-4 animate-pulse">
                     {/* KPI row skeleton */}
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         {[1, 2, 3, 4].map((i) => (
                             <div key={i} className="bg-white nice-shadow rounded-xl px-4 py-3.5 space-y-3">
                                 <div className="w-8 h-8 bg-gray-100 rounded-lg" />
@@ -288,7 +288,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                         ))}
                     </div>
                     {/* Charts skeleton */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                         {[1, 2].map((i) => (
                             <div key={i} className="bg-white nice-shadow rounded-xl p-4 h-64" />
                         ))}
@@ -300,8 +300,8 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
 
     if (isEmpty) {
         return (
-            <div className="flex flex-col w-full h-full custom-dots-bg">
-                <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
+            <div className="flex flex-col w-full min-w-0 lg:h-full">
+                <div className="flex flex-col items-center justify-center h-full py-16 px-6 text-gray-400 gap-3">
                     <div className="bg-gray-100 rounded-2xl p-4">
                         <BarChart3 size={28} />
                     </div>
@@ -313,10 +313,10 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
     }
 
     return (
-        <div className="flex flex-col w-full h-full custom-dots-bg overflow-y-auto">
-            <div className="px-10 pt-6 pb-10 flex flex-col space-y-4">
+        <div className="flex flex-col w-full min-w-0 lg:h-full lg:overflow-y-auto">
+            <div className="px-4 sm:px-6 lg:px-10 pt-5 sm:pt-6 pb-10 flex flex-col space-y-4">
                 {/* KPI row */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <KpiCard
                         icon={<Target size={14} className="text-indigo-600" />}
                         iconBg="bg-indigo-50"
@@ -354,7 +354,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                 </div>
 
                 {/* Secondary metrics strip */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <MiniStat
                         icon={<ChevronsUp size={12} />}
                         label={t('dashboard.assignments.analytics.mini.highest')}
@@ -382,7 +382,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                 </div>
 
                 {/* Grade distribution + Submission timeline */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     <ChartCard
                         icon={<BarChart3 size={14} />}
                         title={t('dashboard.assignments.analytics.distribution.title')}
@@ -550,7 +550,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                 </ChartCard>
 
                 {/* Top performers + Needs attention */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     <ChartCard
                         icon={<Trophy size={14} />}
                         title={t('dashboard.assignments.analytics.top.title')}

@@ -140,7 +140,7 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
       )}
 
       {/* Reply Input */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-3 sm:p-4 border-t border-gray-100">
         {isLocked ? (
           <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-md">
             <Lock size={14} className="text-amber-600" />
@@ -176,7 +176,7 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
                   aria-label={t('communities.comments.write_reply')}
                   placeholder={t('communities.comments.write_reply')}
                   rows={isFocused || newComment ? 2 : 1}
-                  className="w-full px-3 py-2 text-sm bg-transparent outline-none resize-none placeholder:text-gray-400"
+                  className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm bg-transparent outline-none resize-none placeholder:text-gray-400"
                 />
 
                 {(isFocused || newComment) && (
@@ -184,7 +184,7 @@ export function CommentSection({ discussionUuid, communityUuid, isLocked = false
                     <button
                       type="submit"
                       disabled={!newComment.trim() || isSubmitting}
-                      className="px-3 py-1 text-xs font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      className="px-4 py-2 sm:px-3 sm:py-1 text-sm sm:text-xs font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                     >
                       {isSubmitting ? (
                         <Loader2 size={12} className="animate-spin" />

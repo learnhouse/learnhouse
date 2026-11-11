@@ -1,8 +1,14 @@
-import { Callout } from 'nextra/components'
+---
+description: Choose where a self-hosted LearnHouse instance stores uploaded content, either a local Docker volume or S3-compatible storage such as AWS S3, R2 or MinIO.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Content Storage
 
 LearnHouse supports two storage backends for uploaded content such as images, videos, and documents.
+
+<CloudCta variant="selfhost">LearnHouse Cloud stores your media for you.</CloudCta>
 
 ## Storage Options
 
@@ -14,7 +20,7 @@ By default, uploaded content is stored on the local filesystem using a Docker vo
 LEARNHOUSE_CONTENT_DELIVERY_TYPE=filesystem
 ```
 
-Content is persisted in a Docker volume, so it survives container restarts. The `learnhouse backup` command includes filesystem content in its backups.
+Content is persisted in a named Docker volume (`learnhouse_content_<id>` in `docker-compose.yml`, mounted at `/app/api/content` in the app container), so it survives container restarts and recreation. The `learnhouse backup` command includes filesystem content in its backups.
 
 ### S3-Compatible Storage
 
@@ -31,15 +37,20 @@ LEARNHOUSE_S3_API_BUCKET_NAME=learnhouse-content
 LEARNHOUSE_S3_API_ENDPOINT_URL=https://s3.amazonaws.com
 ```
 
-After updating your storage configuration, restart your instance:
+For providers that check the region (AWS S3, MinIO), also set it. The default, `auto`, suits Cloudflare R2:
+
+```env
+LEARNHOUSE_S3_API_REGION=eu-west-1
+```
+
+After updating your storage configuration, apply it (this recreates the containers whose configuration changed):
 
 ```bash
-learnhouse stop
-learnhouse start
+npx learnhouse start
 ```
 
 <Callout type="info">
-When using S3-compatible storage, make sure the bucket exists and the credentials have read/write permissions. For AWS S3, credentials are typically provided via standard AWS environment variables or instance roles.
+Make sure the bucket exists and the credentials have read/write permissions. The API uses the standard AWS credential chain, so set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `.env`, or use an instance role.
 </Callout>
 
 ## Choosing a Storage Backend

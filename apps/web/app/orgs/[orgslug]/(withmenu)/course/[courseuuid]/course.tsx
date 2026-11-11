@@ -10,14 +10,14 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import {
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock, Globe, Package, Puzzle } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock, Globe, Package, Puzzle, Gem, Eye, CalendarPlus, Radio } from 'lucide-react'
+import { getMyCourseAccess } from '@ee/services/payments/access'
 import { MarkdownLogo } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import { useMediaQuery } from 'usehooks-ts'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
-import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
+import CoursePaths from '@components/Objects/Courses/CoursePaths/CoursePaths'
 import LinkifiedText from '@components/Objects/StyledElements/LinkifiedText/LinkifiedText'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -27,11 +27,15 @@ import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
 import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
+import { ShareCourseInMessagesButton } from '@components/Messaging/EntryButtons'
 import CourseAccessError from '@components/Objects/Courses/CourseAccessError/CourseAccessError'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import { Keys } from '@components/Objects/Shortcuts/Kbd'
+import DripBadge, { DripIcon, DripUntilBadge, useDripLabel } from '@components/Objects/Courses/DripBadge'
+import { buildIcs } from '@/lib/drip'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -44,10 +48,18 @@ const CourseClient = (props: any) => {
   const serverError = props.serverError
   const org = useOrg() as any
   const _router = useRouter()
-  const isMobile = useMediaQuery('(max-width: 768px)')
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient()
+  // Which lessons are sold and not bought yet, and which are free previews.
+  const { data: paidAccessRes } = useQuery({
+    queryKey: [...queryKeys.payments.myCourseAccess(org?.id, `course_${courseuuid}`), !!access_token],
+    queryFn: () => getMyCourseAccess(org.id, `course_${courseuuid}`, access_token),
+    enabled: !!(org?.id && courseuuid),
+    staleTime: 30_000,
+    retry: false,
+  })
+  const paidState: Record<string, string> = paidAccessRes?.success && paidAccessRes.data?.sold ? paidAccessRes.data.activities : {}
 
   const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useQuery({
     queryKey: queryKeys.courses.meta(courseuuid),
@@ -63,6 +75,29 @@ const CourseClient = (props: any) => {
 
   // Keyboard: `e` opens every chapter, or folds them all once they are open.
   const chapters: any[] = course?.chapters ?? []
+  const dripLabel = useDripLabel()
+  // First chapter the drip schedule still holds back, for the "next up" banner.
+  const nextDrip = chapters.find((chapter: any) => chapter.drip_locked && chapter.drip_reason !== 'closed')
+  // Releases with a known date, for the "Add to calendar" download.
+  const datedReleases = chapters.filter((chapter: any) => chapter.drip_locked && chapter.drip_unlock_at)
+  const downloadReleaseCalendar = () => {
+    const courseUrl = typeof window !== 'undefined' ? window.location.href.split('#')[0] : undefined
+    const ics = buildIcs(
+      course?.name ?? '',
+      datedReleases.map((chapter: any) => ({
+        uid: chapter.chapter_uuid,
+        title: t('course.drip.calendar_event', { defaultValue: '{{chapter}} opens · {{course}}', chapter: chapter.name, course: course?.name }),
+        start: new Date(chapter.drip_unlock_at),
+        url: courseUrl,
+      }))
+    )
+    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${(course?.name ?? 'course').replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}-schedule.ics`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
   const allChaptersExpanded = chapters.length > 0 && chapters.every(
     (chapter: any, idx: number) => expandedChapters[chapter.chapter_uuid] ?? idx === 0,
   )
@@ -230,6 +265,8 @@ const CourseClient = (props: any) => {
         return t('activities.assignment')
       case 'TYPE_SCORM':
         return t('activities.scorm')
+      case 'TYPE_LIVE_SESSION':
+        return t('activities.live_session')
       case 'TYPE_CUSTOM':
         return t('activities.custom')
       default:
@@ -251,6 +288,8 @@ const CourseClient = (props: any) => {
         return <Backpack size={size} />
       case 'TYPE_SCORM':
         return <Package size={size} />
+      case 'TYPE_LIVE_SESSION':
+        return <Radio size={size} />
       case 'TYPE_CUSTOM':
         return <Puzzle size={size} />
       default:
@@ -342,21 +381,25 @@ const CourseClient = (props: any) => {
       {!course || !org ? null : (
         <>
           <GeneralWrapperStyled>
-            <div className="pb-4">
+            <div className="hidden sm:block pb-4">
               <Breadcrumbs items={[
                 { label: t('courses.courses'), href: getUriWithOrg(orgslug, '/courses'), icon: <BookCopy size={14} /> },
                 { label: course.name }
               ]} />
             </div>
             <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-              <h1 className="text-3xl md:text-3xl font-bold" dir="auto">{course.name}</h1>
-              <CourseShare
-                courseName={course.name}
-                courseUrl={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
-              />
+              <h1 className="text-3xl max-sm:text-[26px] max-sm:leading-tight font-bold" dir="auto">{course.name}</h1>
+              <div className="flex items-center gap-2">
+                <ShareCourseInMessagesButton orgslug={orgslug} courseUuid={`course_${courseuuid}`} />
+                <CourseShare
+                  courseUuid={course.course_uuid}
+                  courseName={course.name}
+                  courseUrl={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
+                />
+              </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-8 pt-2">
+            <div className="flex flex-col md:flex-row gap-5 md:gap-8 pt-2">
               <div className="w-full md:w-3/4 space-y-4">
                 {(() => {
                   const showVideo = course.thumbnail_type === 'video' || (course.thumbnail_type === 'both' && activeThumbnailType === 'video');
@@ -364,7 +407,7 @@ const CourseClient = (props: any) => {
 
                   if (showVideo && course.thumbnail_video) {
                     return (
-                      <div className="relative inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px]">
+                      <div className="relative inset-0 ring-1 ring-inset ring-black/10 max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none max-sm:ring-0 max-sm:shadow-none rounded-lg shadow-xl w-full aspect-video sm:aspect-auto sm:h-[200px] md:h-[400px]">
                         {course.thumbnail_type === 'both' && (
                           <div className="absolute top-3 end-3 z-10">
                             <div className="bg-black/20 backdrop-blur-sm rounded-lg p-1 flex space-x-1">
@@ -400,7 +443,7 @@ const CourseClient = (props: any) => {
                               course?.course_uuid,
                               course?.thumbnail_video
                             )}
-                            className="w-full h-full bg-black rounded-lg"
+                            className="w-full h-full bg-black sm:rounded-lg"
                             controls
                             autoPlay
                             muted
@@ -412,23 +455,12 @@ const CourseClient = (props: any) => {
                     );
                   } else if (showImage && course.thumbnail_image) {
                     return (
-                      <div className="relative inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px] bg-cover bg-center"
-                        style={{
-                          backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-                            org?.org_uuid,
-                            course?.course_uuid,
-                            course?.thumbnail_image
-                          )})`,
-                        }}
-                      >
-                        {/* Hidden img with fetchpriority="high" so the browser fetches this LCP image immediately */}
-                        { }
-                        <img
+                      <div className="relative overflow-hidden ring-1 ring-black/10 max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none max-sm:ring-0 max-sm:shadow-none rounded-lg shadow-xl w-full aspect-video sm:aspect-auto sm:h-[200px] md:h-[400px] bg-gray-50">
+                        <ThumbnailImage
                           src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_image)}
-                          alt=""
-                          aria-hidden="true"
                           fetchPriority="high"
-                          className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                          loading="eager"
+                          className="absolute inset-0 w-full h-full"
                         />
                         {course.thumbnail_type === 'both' && (
                           <div className="absolute top-3 end-3 z-10">
@@ -463,7 +495,7 @@ const CourseClient = (props: any) => {
                   } else {
                     return (
                       <div
-                        className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-full h-[400px] bg-cover bg-center"
+                        className="inset-0 ring-1 ring-inset ring-black/10 max-sm:-mx-4 max-sm:w-auto max-sm:rounded-none rounded-lg shadow-xl relative w-full aspect-video sm:aspect-auto sm:h-[400px] bg-cover bg-center"
                         style={{
                           backgroundImage: `url('/empty_thumbnail.png')`,
                           backgroundSize: 'auto',
@@ -501,6 +533,8 @@ const CourseClient = (props: any) => {
               <div className='course_metadata_right w-full md:w-1/4 space-y-4'>
                 {/* Actions Box */}
                 <CoursesActions courseuuid={courseuuid} orgslug={orgslug} course={course} trailData={trailData} />
+
+                <CoursePaths courseUuid={course.course_uuid} orgslug={orgslug} />
                 
                 {/* Authors & Updates Box */}
                 <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
@@ -571,6 +605,39 @@ const CourseClient = (props: any) => {
                   </button>
                 )}
               </div>
+              {nextDrip && (
+                <div
+                  data-testid="drip-banner"
+                  className="mb-3 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm text-amber-800"
+                >
+                  <div className="w-8 h-8 rounded-md bg-white border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                    <DripIcon reason={nextDrip.drip_reason} size={16} />
+                  </div>
+                  <div className="min-w-0 grow">
+                    <div className="font-semibold">
+                      {t('course.drip.banner_title', 'New chapters are released over time')}
+                    </div>
+                    <div className="text-amber-700/90 truncate">
+                      {t('course.drip.banner_next', {
+                        defaultValue: 'Next up: {{name}}. {{when}}',
+                        name: nextDrip.name,
+                        when: [dripLabel(nextDrip).label, dripLabel(nextDrip).detail].filter(Boolean).join(' · '),
+                      })}
+                    </div>
+                  </div>
+                  {datedReleases.length > 0 && (
+                    <button
+                      type="button"
+                      data-testid="drip-calendar"
+                      onClick={downloadReleaseCalendar}
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-white border border-amber-200 px-2.5 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors"
+                    >
+                      <CalendarPlus size={14} />
+                      <span className="hidden sm:inline">{t('course.drip.add_to_calendar', 'Add to calendar')}</span>
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
                 {(course.chapters ?? []).map((chapter: any, idx: number) => {
                   const isExpanded = expandedChapters[chapter.chapter_uuid] ?? (idx === 0); // Default to expanded for first chapter
@@ -602,7 +669,11 @@ const CourseClient = (props: any) => {
                               {idx + 1}
                             </span>
                             <h3 className="text-lg font-bold leading-tight truncate min-w-0 sm:text-base md:text-lg" style={{lineHeight: '1.2'}}>{chapter.name}</h3>
-                            {chapter.is_locked && (
+                            {chapter.drip_locked ? (
+                              <DripBadge className="ms-2" drip_reason={chapter.drip_reason} drip_unlock_at={chapter.drip_unlock_at} drip_closes_at={chapter.drip_closes_at} />
+                            ) : chapter.drip_closes_at && !chapter.is_locked ? (
+                              <DripUntilBadge className="ms-2" closesAt={chapter.drip_closes_at} />
+                            ) : chapter.is_locked && (
                               <span className="ms-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-semibold">
                                 <Lock size={10} />
                                 {t('course.locked', 'Locked')}
@@ -619,10 +690,15 @@ const CourseClient = (props: any) => {
                         <div className="">
                           {chapter.activities.map((activity: any) => {
                             const locked = !!activity.is_locked
+                            const dripped = locked && !!chapter.drip_locked
                             const RowInner = (
                               <div className="flex space-x-3 items-center">
                                 <div className="flex items-center">
-                                  {locked ? (
+                                  {dripped ? (
+                                    <div className="text-amber-500">
+                                      <DripIcon reason={chapter.drip_reason} size={14} />
+                                    </div>
+                                  ) : locked ? (
                                     <div className="text-rose-400">
                                       <Lock size={14} className="stroke-[2]" />
                                     </div>
@@ -640,10 +716,22 @@ const CourseClient = (props: any) => {
                                 <div className="flex flex-col grow">
                                   <div className="flex items-center space-x-2 w-full">
                                     <p className={`font-semibold transition-colors ${locked ? 'text-neutral-400' : 'text-neutral-600 group-hover:text-neutral-800'}`}>{activity.name}</p>
-                                    {locked && (
+                                    {locked && !dripped && (
                                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-semibold">
                                         <Lock size={10} />
                                         {t('course.locked', 'Locked')}
+                                      </span>
+                                    )}
+                                    {!locked && paidState[activity.activity_uuid] === 'locked' && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-semibold">
+                                        <Gem size={10} />
+                                        {t('payments.paid_lesson', 'Paid')}
+                                      </span>
+                                    )}
+                                    {!locked && paidState[activity.activity_uuid] === 'free_preview' && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold">
+                                        <Eye size={10} />
+                                        {t('payments.free_preview', 'Free preview')}
                                       </span>
                                     )}
                                     {!locked && isActivityCurrent(activity) && (
@@ -668,7 +756,9 @@ const CourseClient = (props: any) => {
                                 <div
                                   key={activity.activity_uuid}
                                   className="block activity-container px-4 py-4 cursor-not-allowed select-none"
-                                  title={t('course.activity_locked_hint', 'Sign in or join the right user group to unlock this.')}
+                                  title={dripped
+                                    ? dripLabel(chapter).label
+                                    : t('course.activity_locked_hint', 'Sign in or join the right user group to unlock this.')}
                                 >
                                   {RowInner}
                                 </div>
@@ -705,10 +795,8 @@ const CourseClient = (props: any) => {
             </Suspense>
           </GeneralWrapperStyled>
 
-          {/* Mobile Actions Box */}
-          {isMobile && (
-            <CourseActionsMobile courseuuid={courseuuid} orgslug={orgslug} course={course} trailData={trailData} />
-          )}
+          {/* Room for the start / continue button docked on phones. */}
+          <div className="md:hidden h-16" />
         </>
       )}
     </>

@@ -24,6 +24,7 @@ import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbna
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { asArray } from '@services/utils/ts/requests'
+import { MessageUserButton } from '@components/Messaging/EntryButtons'
 
 interface UserProfileClientProps {
   userData: any;
@@ -98,17 +99,17 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-4 md:py-8 max-md:px-4">
       {/* Banner */}
-      <div className="h-48 w-full bg-gray-100 rounded-t-xl mb-0 relative overflow-hidden">
+      <div className="h-28 md:h-48 w-full bg-gray-100 rounded-t-xl mb-0 relative overflow-hidden">
         {/* Optional banner content */}
       </div>
       
       {/* Profile Content */}
-      <div className="bg-white rounded-b-xl nice-shadow p-8 relative">
-        {/* Avatar Positioned on the banner */}
-        <div className="absolute -top-24 start-8">
-          <div className="rounded-xl overflow-hidden shadow-lg border-4 border-white">
+      <div className="bg-white rounded-b-xl nice-shadow p-5 md:p-8 relative">
+        {/* Avatar Positioned on the banner (96px on phones; the inline size needs !) */}
+        <div className="absolute -top-14 start-5 md:-top-24 md:start-8">
+          <div className="rounded-xl overflow-hidden shadow-lg border-4 border-white max-md:[&_img]:size-24!">
             <UserAvatar
               width={150}
               avatar_url={userData.avatar_image ? getUserAvatarMediaDirectory(userData.user_uuid, userData.avatar_image) : ''}
@@ -121,7 +122,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
         </div>
 
         {/* Affiliation Logos */}
-        <div className="absolute -top-12 end-8 flex items-center gap-4">
+        <div className="absolute -top-8 end-5 md:-top-12 md:end-8 flex items-center gap-2 md:gap-4">
           {profile.sections?.map((section: any) => (
             section.type === 'affiliation' && section.affiliations?.map((affiliation: any, index: number) => (
               affiliation.logoUrl && (
@@ -129,7 +130,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                   <img 
                     src={affiliation.logoUrl} 
                     alt={affiliation.name}
-                    className="w-16 h-16 object-contain"
+                    className="w-10 h-10 md:w-16 md:h-16 object-contain"
                     title={affiliation.name}
                   />
                 </div>
@@ -139,14 +140,17 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
         </div>
 
         {/* Profile Content with right padding to avoid overlap */}
-        <div className="mt-20 md:mt-14">
-          <div className="flex flex-col md:flex-row gap-12">
+        <div className="mt-12 md:mt-14">
+          <div className="flex flex-col md:flex-row gap-8 md:gap-12">
             {/* Left column with details - aligned with avatar */}
             <div className="w-full md:w-1/6 ps-2">
               {/* Name */}
-              <h1 className="text-[32px] font-bold mb-8">
+              <h1 className="text-2xl md:text-[32px] font-bold mb-3 md:mb-4">
                 {userData.first_name} {userData.last_name}
               </h1>
+              <div className="mb-6 md:mb-8">
+                <MessageUserButton userUuid={userData.user_uuid} userId={userData.id} />
+              </div>
 
               {/* Details */}
               <div className="flex flex-col space-y-3">

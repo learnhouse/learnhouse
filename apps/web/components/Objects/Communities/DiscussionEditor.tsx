@@ -8,6 +8,8 @@ import Youtube from '@tiptap/extension-youtube'
 import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, List, ListOrdered, Heading2, Quote, MonitorPlay } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { extractYoutubeVideoId, stripRichContent, youtubeWatchUrl } from './richContent'
+import { CommunityTag, CommunityTagSuggestion } from './Tags/CommunityTag'
+import { useTaggableCommunities } from './Tags/communityTags'
 
 interface DiscussionEditorProps {
   content: any
@@ -50,14 +52,17 @@ const ToolbarButton = ({
 export function DiscussionEditor({
   content,
   onChange,
-  placeholder = 'Write your discussion...',
+  placeholder,
   editable = true,
   minHeight = '150px',
   allowRichContent = false,
 }: DiscussionEditorProps) {
   const { t } = useTranslation()
+  const communities = useTaggableCommunities()
   const editor = useEditor({
     extensions: [
+      CommunityTag,
+      CommunityTagSuggestion,
       StarterKit.configure({
         // Disable link since we configure it separately below
         link: false,
@@ -92,7 +97,7 @@ export function DiscussionEditor({
         },
       }),
       Placeholder.configure({
-        placeholder,
+        placeholder: placeholder ?? t('communities.editor.placeholder'),
       }),
       ...(allowRichContent
         ? [
@@ -120,6 +125,12 @@ export function DiscussionEditor({
       onChange(json)
     },
   }, [allowRichContent])
+
+  // "#" autocomplete lists the org's communities.
+  React.useEffect(() => {
+    const storage = (editor?.storage as any)?.communityTagSuggestion
+    if (storage) storage.communities = communities
+  }, [editor, communities])
 
   if (!editor) {
     return null
@@ -163,28 +174,28 @@ export function DiscussionEditor({
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBold().run()}
               isActive={editor.isActive('bold')}
-              title="Bold (Ctrl+B)"
+              title={t('communities.editor.bold')}
             >
               <Bold size={16} />
             </ToolbarButton>
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleItalic().run()}
               isActive={editor.isActive('italic')}
-              title="Italic (Ctrl+I)"
+              title={t('communities.editor.italic')}
             >
               <Italic size={16} />
             </ToolbarButton>
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleStrike().run()}
               isActive={editor.isActive('strike')}
-              title="Strikethrough"
+              title={t('communities.editor.strikethrough')}
             >
               <Strikethrough size={16} />
             </ToolbarButton>
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleCode().run()}
               isActive={editor.isActive('code')}
-              title="Inline Code"
+              title={t('communities.editor.inline_code')}
             >
               <Code size={16} />
             </ToolbarButton>
@@ -194,28 +205,28 @@ export function DiscussionEditor({
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
               isActive={editor.isActive('heading', { level: 2 })}
-              title="Heading"
+              title={t('communities.editor.heading')}
             >
               <Heading2 size={16} />
             </ToolbarButton>
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBulletList().run()}
               isActive={editor.isActive('bulletList')}
-              title="Bullet List"
+              title={t('communities.editor.bullet_list')}
             >
               <List size={16} />
             </ToolbarButton>
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
               isActive={editor.isActive('orderedList')}
-              title="Numbered List"
+              title={t('communities.editor.numbered_list')}
             >
               <ListOrdered size={16} />
             </ToolbarButton>
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
               isActive={editor.isActive('blockquote')}
-              title="Quote"
+              title={t('communities.editor.quote')}
             >
               <Quote size={16} />
             </ToolbarButton>
@@ -225,7 +236,7 @@ export function DiscussionEditor({
             <ToolbarButton
               onClick={setLink}
               isActive={editor.isActive('link')}
-              title="Add Link"
+              title={t('communities.editor.add_link')}
             >
               <LinkIcon size={16} />
             </ToolbarButton>

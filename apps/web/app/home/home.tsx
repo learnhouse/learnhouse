@@ -1,6 +1,6 @@
 'use client'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { canManageOrgFromSession } from '@components/Hooks/useAdminStatus'
+import { canManageOrgFromSession, seesPlatformHubFromSession } from '@components/Hooks/useAdminStatus'
 import { useLHAnalytics } from '@services/analytics/useLHAnalytics'
 import { AnalyticsEvent } from '@services/analytics/events'
 import DemoEntryCard from '@components/Objects/Demo/DemoEntryCard'
@@ -9,10 +9,10 @@ import { getAPIUrl, getUriWithOrg, getLEARNHOUSE_PLATFORM_URL_VAL } from '@servi
 import { apiFetch } from '@services/utils/ts/requests'
 import { signOut } from '@components/Contexts/AuthContext'
 import OrgSquareLogo from '@components/Objects/Org/OrgSquareLogo'
-import { deleteOrganizationFromBackend, leaveOrg } from '@services/organizations/orgs'
-import { ChevronRight, Languages, Check, LogOut, Settings, TentTree, LogIn, Plus, MoreVertical, CreditCard, Trash2, AlertTriangle } from 'lucide-react'
+import { deleteOrganization, leaveOrg } from '@services/organizations/orgs'
+import { ChevronRight, Languages, Check, LogOut, Settings, LogIn, Plus, MoreVertical, CreditCard, Trash2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useSyncExternalStore } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -40,6 +40,8 @@ import {
 } from '@components/ui/dialog'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 
+const noSubscription = () => () => {}
+
 function HomeClient() {
   const { t, i18n } = useTranslation()
   const session = useLHSession() as any
@@ -47,7 +49,10 @@ function HomeClient() {
   const access_token = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
   const isLoading = session?.status === 'loading'
-  const platformUrl = getLEARNHOUSE_PLATFORM_URL_VAL()
+  // The platform URL is runtime config the browser reads; this page is
+  // prerendered without it. Read it through useSyncExternalStore so hydration
+  // matches the server HTML, then the link appears.
+  const platformUrl = useSyncExternalStore(noSubscription, getLEARNHOUSE_PLATFORM_URL_VAL, () => '')
 
   const { data: orgs, isLoading: orgsLoading } = useQuery({
     queryKey: ['orgs', 'user'],
@@ -61,6 +66,16 @@ function HomeClient() {
       router.replace('/login')
     }
   }, [isLoading, isAuthenticated, router])
+
+  // The hub is for people who run a LearnHouse (and prospects who only tried
+  // the demo). Someone who only joined schools as a member gets a plain list of
+  // them: no demo, and creating an organization is a quiet link.
+  // Right after sign-in the session can carry `roles: []` until the full
+  // session lands; not knowing yet keeps the full hub.
+  const roles: any[] = session?.data?.roles || []
+  const managesAnyOrg = roles.length === 0 || seesPlatformHubFromSession(session)
+  // A user with no organization is sent to /new; show the skeleton meanwhile.
+  const leaving = isAuthenticated && Array.isArray(orgs) && orgs.length === 0
 
   // A brand-new (org-less) user has no orgs yet, so send them straight to create
   // their first org rather than a confusing empty hub. Mirrors the platform's
@@ -182,7 +197,7 @@ function HomeClient() {
 
             {/* Org list */}
             <div className="w-full space-y-2.5">
-              {(isLoading || (isAuthenticated && orgsLoading)) && (
+              {(isLoading || (isAuthenticated && orgsLoading) || leaving) && (
                 <>
                   {[0, 1, 2].map((i) => (
                     <div
@@ -203,23 +218,16 @@ function HomeClient() {
                 </Link>
               )}
 
-              {isAuthenticated && orgs && orgs.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-14 px-6 bg-white rounded-2xl nice-shadow">
-                  <TentTree className="text-black/10" size={64} />
-                  <p className="mt-4 text-sm font-semibold text-black/50 text-center">
-                    {t('common.no_orgs_message')}
-                  </p>
-                </div>
-              )}
 
               {isAuthenticated &&
                 orgs &&
+                !leaving &&
                 orgs.map((org: any) => (
                   <OrgRow key={org.id ?? org.slug} org={org} access_token={access_token} />
                 ))}
 
               {/* Create organization: prominent entry into the hub */}
-              {isAuthenticated && orgs && (
+              {isAuthenticated && orgs && managesAnyOrg && !leaving && (
                 <Link
                   href="/new"
                   className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gray-900 text-white rounded-2xl font-semibold text-sm nice-shadow hover:bg-gray-800 transition-colors"
@@ -230,7 +238,19 @@ function HomeClient() {
               )}
 
               {/* Renders nothing when this instance has no demo. */}
-              {isAuthenticated && <DemoEntryCard className="mt-1" />}
+              {isAuthenticated && managesAnyOrg && <DemoEntryCard className="mt-1" />}
+
+              {/* Members can still start their own, without it competing with
+                  the schools they came for. */}
+              {isAuthenticated && orgs && !managesAnyOrg && !leaving && (
+                <Link
+                  href="/new"
+                  className="w-full flex items-center justify-center gap-1.5 pt-3 text-xs font-medium text-black/35 hover:text-black/70 transition-colors"
+                >
+                  <Plus size={13} />
+                  {t('common.start_your_own_organization', { defaultValue: 'Start your own organization' })}
+                </Link>
+              )}
             </div>
 
             {/* Footer */}
@@ -281,7 +301,7 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
     setError(null)
     track(AnalyticsEvent.OrgDeleteInitiated, { slug: org.slug })
     try {
-      await deleteOrganizationFromBackend(org.id, access_token)
+      await deleteOrganization(org.id, access_token)
       track(AnalyticsEvent.OrgDeleted, { slug: org.slug })
       await queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
       setConfirmOpen(false)
@@ -379,16 +399,20 @@ function OrgRow({ org, access_token }: { org: any; access_token: string }) {
               </Link>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem asChild>
-            <Link
-              href={getUriWithOrg(org.slug, '/dash/org/settings/general')}
-              className="flex items-center space-x-2"
-            >
-              <Settings size={14} />
-              <span>{t('common.settings', { defaultValue: 'Settings' })}</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          {canManageOrg && (
+            <>
+              <DropdownMenuItem asChild>
+                <Link
+                  href={getUriWithOrg(org.slug, '/dash/org/settings/general')}
+                  className="flex items-center space-x-2"
+                >
+                  <Settings size={14} />
+                  <span>{t('common.settings', { defaultValue: 'Settings' })}</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           {canManageOrg ? (
             // Admins can delete the whole organization.
             <DropdownMenuItem

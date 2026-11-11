@@ -10,9 +10,12 @@ import {
   Cube,
   FolderSimple,
   Headphones,
+  VideoCamera,
   ChartBar,
   Code,
+  Steps,
 } from '@phosphor-icons/react'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
 
 export interface DashboardMenuItem {
   id: string
@@ -23,6 +26,8 @@ export interface DashboardMenuItem {
   featureKey?: string
   /** If true, the feature defaults to disabled (must be explicitly enabled). */
   defaultDisabled?: boolean
+  /** Hides the item when it returns false (e.g. Enterprise-only pages). */
+  available?: () => boolean
 }
 
 export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
@@ -45,6 +50,13 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     labelKey: 'common.assignments',
   },
   {
+    id: 'paths',
+    href: '/dash/paths',
+    icon: Steps,
+    labelKey: 'paths.title',
+    featureKey: 'paths',
+  },
+  {
     id: 'library',
     href: '/dash/library',
     icon: FolderSimple,
@@ -64,6 +76,13 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     icon: Headphones,
     labelKey: 'podcasts.podcasts',
     featureKey: 'podcasts',
+  },
+  {
+    id: 'live_sessions',
+    href: '/dash/live-sessions',
+    icon: VideoCamera,
+    labelKey: 'live_sessions.title',
+    featureKey: 'live_sessions',
   },
   {
     id: 'boards',
@@ -105,6 +124,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     href: '/dash/analytics',
     icon: ChartBar,
     labelKey: 'common.analytics',
+    available: isOrgAnalyticsAvailable,
   },
   {
     id: 'developers',

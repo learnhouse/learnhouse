@@ -16,7 +16,7 @@ import { usePlan } from '@components/Hooks/usePlan'
 import { Switch } from '@components/ui/switch'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import {
-  Books, FolderSimple, Headphones, ChatsCircle, Cube, ShoppingBag,
+  Books, FolderSimple, Headphones, ChatsCircle, Cube, ShoppingBag, Steps, VideoCamera,
   DotsSixVertical, Lock, Trash, Plus, FloppyDisk, CaretDown,
 } from '@phosphor-icons/react'
 import { MENU_ICONS, MENU_ICON_NAMES, menuIcon, DEFAULT_MENU_ICON } from '@components/Objects/Menus/menuIcons'
@@ -25,13 +25,15 @@ type BuiltinMeta = { feature: string; link: string; labelKey: string; Icon: any 
 
 const BUILTIN_META: Record<string, BuiltinMeta> = {
   courses: { feature: 'courses', link: '/courses', labelKey: 'courses.courses', Icon: Books },
+  paths: { feature: 'paths', link: '/paths', labelKey: 'paths.title', Icon: Steps },
   library: { feature: 'folders', link: '/library', labelKey: 'library.library', Icon: FolderSimple },
   podcasts: { feature: 'podcasts', link: '/podcasts', labelKey: 'podcasts.podcasts', Icon: Headphones },
+  live: { feature: 'live_sessions', link: '/live', labelKey: 'live_sessions.nav', Icon: VideoCamera },
   communities: { feature: 'communities', link: '/communities', labelKey: 'communities.title', Icon: ChatsCircle },
   playgrounds: { feature: 'playgrounds', link: '/playgrounds', labelKey: 'common.playgrounds', Icon: Cube },
   store: { feature: 'payments', link: '/store', labelKey: 'common.store', Icon: ShoppingBag },
 }
-const BUILTIN_ORDER = ['courses', 'library', 'podcasts', 'communities', 'playgrounds', 'store']
+const BUILTIN_ORDER = ['courses', 'paths', 'library', 'podcasts', 'live', 'communities', 'playgrounds', 'store']
 
 function defaultLabel(type: string, t: any): string {
   return BUILTIN_META[type] ? t(BUILTIN_META[type].labelKey) : ''
@@ -53,6 +55,7 @@ function IconPicker({
   onChange: (_name: string) => void
   disabled?: boolean
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [coords, setCoords] = useState<{ left: number; top: number }>({ left: 0, top: 0 })
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -108,8 +111,8 @@ function IconPicker({
         type="button"
         disabled={disabled}
         onClick={toggle}
-        aria-label="Change icon"
-        title="Change icon"
+        aria-label={t('dashboard.organization.menu.change_icon')}
+        title={t('dashboard.organization.menu.change_icon')}
         className={`relative p-2 bg-white rounded-lg nice-shadow hover:bg-gray-50 transition-colors disabled:opacity-50 ${open ? 'ring-2 ring-black/10' : ''}`}
       >
         {/* eslint-disable-next-line react-hooks/static-components */}
@@ -257,7 +260,7 @@ const OrgEditMenu: React.FC = () => {
   return (
     <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
       <div className="pt-0.5">
-        <div className="flex items-center justify-between bg-gray-50 px-5 py-3 mx-3 my-3 rounded-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 px-4 sm:px-5 py-3 mx-3 my-3 rounded-md">
           <div className="flex flex-col -space-y-1">
             <h1 className="font-bold text-xl text-gray-800">{t('dashboard.organization.menu.title')}</h1>
             <h2 className="text-gray-500 text-md">{t('dashboard.organization.menu.subtitle')}</h2>
@@ -265,7 +268,7 @@ const OrgEditMenu: React.FC = () => {
           <button
             onClick={save}
             disabled={!canEdit || saving || !dirty}
-            className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white nice-shadow hover:bg-neutral-800 transition-colors disabled:opacity-40"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-black px-4 py-2.5 sm:py-2 text-sm font-semibold text-white nice-shadow hover:bg-neutral-800 transition-colors disabled:opacity-40"
           >
             <FloppyDisk size={16} weight="bold" />
             <span>{t('dashboard.organization.menu.save')}</span>
@@ -319,7 +322,7 @@ const OrgEditMenu: React.FC = () => {
                           {...prov.draggableProps}
                           className={`flex items-center gap-3 bg-gray-50/60 rounded-lg p-3 nice-shadow ${snap.isDragging ? 'bg-white shadow-lg' : ''} ${grayed ? 'opacity-60 grayscale' : ''}`}
                         >
-                          <button {...prov.dragHandleProps} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing" aria-label="Reorder">
+                          <button {...prov.dragHandleProps} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing" aria-label={t('dashboard.organization.menu.reorder')}>
                             <DotsSixVertical size={18} weight="bold" />
                           </button>
                           {isCustom ? (
@@ -367,7 +370,7 @@ const OrgEditMenu: React.FC = () => {
                             )}
                           </div>
                           {isCustom && (
-                            <button onClick={() => removeItem(index)} className="text-gray-400 hover:text-rose-600 p-1" aria-label="Remove">
+                            <button onClick={() => removeItem(index)} className="text-gray-400 hover:text-rose-600 p-1" aria-label={t('dashboard.organization.menu.remove')}>
                               <Trash size={16} />
                             </button>
                           )}

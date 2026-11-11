@@ -1,30 +1,32 @@
-import { Callout } from 'nextra/components'
+---
+description: Set up a domain and SSL for self-hosted LearnHouse with automatic Let's Encrypt certificates or your own reverse proxy, and set the cookie domain.
+---
+
+import { Callout } from '@/components/mdx'
 
 # SSL and Domain Setup
 
 Securing your LearnHouse instance with SSL is strongly recommended for production deployments. This guide covers domain configuration and SSL setup options.
 
-## Domain Configuration
-
-Set your domain in the `.env` file:
-
-```env
-LEARNHOUSE_DOMAIN=learn.example.com
-LEARNHOUSE_SSL=true
-LEARNHOUSE_COOKIE_DOMAIN=.example.com
-```
+<CloudCta variant="selfhost">LearnHouse Cloud handles certificates for you, custom domains included.</CloudCta>
 
 Make sure your DNS records point to the server running LearnHouse before enabling SSL.
 
-## Using a Reverse Proxy
+## Option 1: Automatic SSL with the setup wizard
 
-The recommended approach for SSL termination is to place a reverse proxy in front of LearnHouse. This gives you flexibility in certificate management and allows you to serve other applications on the same server.
+The setup wizard can handle certificates for you. When you enter a domain other than `localhost`, choose **Automatic SSL (Let's Encrypt via Caddy)** and enter an email address for Let's Encrypt notices.
+
+The generated stack then runs Caddy instead of nginx. Caddy listens on port 80 (for the certificate challenge and redirects) and on the HTTPS port you chose (default 443), obtains a certificate for your domain, and renews it automatically. Certificates are stored in a Docker volume, so they survive restarts.
+
+Both ports must be free on the server and reachable from the internet.
+
+## Option 2: Your own reverse proxy
+
+Choose **I'll handle SSL myself** in the wizard when TLS ends in a proxy you run (or a service like Cloudflare). LearnHouse then serves plain HTTP on the port you picked, and the generated URLs use `https://`. Point your proxy at that port.
 
 ### Caddy
 
-Caddy automatically obtains and renews Let's Encrypt certificates. Create a `Caddyfile`:
-
-```
+```text title="Caddyfile"
 learn.example.com {
     reverse_proxy localhost:80
 }
@@ -32,7 +34,7 @@ learn.example.com {
 
 ### Nginx
 
-An example nginx configuration with Let's Encrypt (via Certbot):
+An example nginx configuration with Let's Encrypt (via Certbot). The `/collab` path carries WebSocket traffic for real-time editing, so the proxy must pass the upgrade headers:
 
 ```nginx
 server {
@@ -42,8 +44,13 @@ server {
     ssl_certificate /etc/letsencrypt/live/learn.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/learn.example.com/privkey.pem;
 
+    client_max_body_size 6G;
+
     location / {
         proxy_pass http://localhost:80;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -58,25 +65,33 @@ server {
 }
 ```
 
+`client_max_body_size 6G` matches the upload limit of the nginx inside the LearnHouse container, so large video uploads are not cut off by your proxy.
+
 ### Traefik
 
-If you use Traefik as your reverse proxy, you can configure it to route traffic to LearnHouse and handle Let's Encrypt certificates automatically through its built-in ACME support.
+If you use Traefik as your reverse proxy, route your domain to the LearnHouse port and let Traefik handle Let's Encrypt certificates through its built-in ACME support.
 
-## Let's Encrypt
+## Variables to check
 
-For free, automated SSL certificates, use Let's Encrypt with one of the reverse proxy options above:
+The setup wizard writes the domain-related variables for you. If you configure SSL by hand, or add it later, check these in `.env`:
 
-- **Caddy** handles Let's Encrypt automatically with zero configuration.
-- **Nginx** works with [Certbot](https://certbot.eff.org/) for automated certificate issuance and renewal.
-- **Traefik** has built-in ACME/Let's Encrypt support.
+| Variable | Value for HTTPS |
+| --- | --- |
+| `NEXT_PUBLIC_LEARNHOUSE_HTTPS` | `true` (the web app only accepts lowercase `true`) |
+| `NEXT_PUBLIC_LEARNHOUSE_API_URL`, `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL`, `NEXTAUTH_URL` | `https://` URLs |
+| `NEXT_PUBLIC_COLLAB_URL` | `wss://learn.example.com/collab` |
+| `LEARNHOUSE_SSL` | `true`. The wizard does not write this one. The API uses it for links it builds outside a request, for example in background emails. |
+| `LEARNHOUSE_ALLOWED_REGEXP` | A pattern for your own domain, for example `^https://(?:[a-z0-9-]+\.)*example\.com$`. The default matches any origin. |
 
 <Callout type="warning">
-When enabling SSL, update all related configuration to use `https://` URLs, including `LEARNHOUSE_ALLOWED_ORIGINS` and `NEXTAUTH_URL`.
+To switch an existing installation from HTTP to HTTPS, or to another domain, re-run `npx learnhouse setup` on the same installation instead of editing the URLs one by one. The wizard regenerates every URL, the cookie domain and the proxy configuration, and keeps your data and secrets.
 </Callout>
 
 ## Cookie Domain
 
 The `LEARNHOUSE_COOKIE_DOMAIN` variable controls which domain cookies are scoped to. This is important for authentication to work correctly.
 
-- For a single domain like `learn.example.com`, set it to `.example.com`
-- Using a leading dot (`.example.com`) allows cookies to work across subdomains, which is required if you use multi-organization mode with subdomains
+- The setup wizard sets it to `.<top domain>`, for example `.example.com` for `learn.example.com`, and to `.localhost` for local installs
+- A leading dot (`.example.com`) lets cookies work across subdomains, which is required if you use multi-organization mode with subdomains
+- Outside development mode, the API logs a warning for a parent cookie domain such as `.example.com`, because every subdomain then shares the session cookie. Set `LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD=true` to acknowledge it. A single-label value such as `.com` stops the API from starting.
+- The wizard uses the last two labels of your domain. For a domain under a two-part suffix such as `learn.school.co.uk`, that gives `.co.uk`; set `LEARNHOUSE_COOKIE_DOMAIN` to `.school.co.uk` or `learn.school.co.uk` instead.

@@ -142,8 +142,20 @@ export const isOnCustomDomain = (): boolean => {
   return !isSubdomainOf(hostname, domain) && !isSameHost(hostname, domain) && !isLocalhostCheck(hostname)
 }
 
+// Optional server-only backend base (e.g. `http://learnhouse-api-svc:80/`, same
+// shape as NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL). When set, server-side fetches
+// reach the API over the internal network instead of going back out through the
+// public load balancer. Never exposed to the browser.
+const getInternalBackendUrl = (): string | null => {
+  if (typeof window !== 'undefined') return null
+  const value = process.env.LEARNHOUSE_INTERNAL_API_URL
+  return value ? value.replace(/\/+$/, '') : null
+}
+
 // Derive API URL from backend URL (with backward compat for NEXT_PUBLIC_LEARNHOUSE_API_URL)
 const deriveAPIUrl = (): string => {
+  const internalBackendUrl = getInternalBackendUrl()
+  if (internalBackendUrl) return `${internalBackendUrl}/api/v1/`
   // Backward compat: if explicit API URL is set, use it
   const explicitApiUrl = getConfig('NEXT_PUBLIC_LEARNHOUSE_API_URL')
   if (explicitApiUrl) return explicitApiUrl
@@ -404,6 +416,19 @@ export const getMainDomainUri = (path: string) => {
   const domain = getLEARNHOUSE_DOMAIN()
   return `${protocol}${domain}${path}`
 }
+
+/**
+ * The "go home" escape hatch for error and info screens. With several orgs it
+ * is the platform hub on the main domain: on an org host /home is that org's
+ * own page, which may be the very page that failed. Client-side only (reads
+ * the tenancy cookie).
+ */
+export const getPlatformHomeUri = () =>
+  isMultiOrgModeEnabled()
+    // The page's own protocol: the root layout may have failed before the
+    // runtime config (and its HTTPS flag) loaded.
+    ? `${window.location.protocol}//${getLEARNHOUSE_DOMAIN()}/home`
+    : getUriWithoutOrg('/home')
 
 export type DeploymentMode = 'saas' | 'oss' | 'ee'
 

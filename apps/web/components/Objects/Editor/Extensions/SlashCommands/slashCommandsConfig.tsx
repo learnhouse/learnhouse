@@ -1,5 +1,12 @@
 import {
   AlertCircle,
+  Braces,
+  CalendarClock,
+  SplitSquareHorizontal,
+  Users,
+  LayoutTemplate,
+  Save,
+  Split,
   BadgeHelp,
   Code,
   CodeSquare,
@@ -35,15 +42,19 @@ import lrnaiIcon from 'public/lrnai_icon.png'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import { SlashCommandItem, SlashCommandCategory } from './types'
 import React from 'react'
+import i18n from '@/lib/i18n'
 import { searchMatchesAny, normalizeForSearch } from '@/lib/search/normalize'
+import { EDITOR_EVENTS, emitEditorEvent } from '../../Templates/templateContent'
+import { presetById } from '../Dynamic/dynamicRules'
 
-export const categoryLabels: Record<SlashCommandCategory, string> = {
-  text: 'Text',
-  media: 'Media',
-  interactive: 'Interactive',
-  callouts: 'Callouts',
-  ui: 'UI Elements',
-  tables: 'Tables',
+export const categoryLabelKeys: Record<SlashCommandCategory, string> = {
+  text: 'editor.slash_menu.categories.text',
+  media: 'editor.slash_menu.categories.media',
+  interactive: 'editor.slash_menu.categories.interactive',
+  callouts: 'editor.slash_menu.categories.callouts',
+  dynamic: 'editor.slash_menu.categories.dynamic',
+  ui: 'editor.slash_menu.categories.ui',
+  tables: 'editor.slash_menu.categories.tables',
 }
 
 export const categoryOrder: SlashCommandCategory[] = [
@@ -51,6 +62,7 @@ export const categoryOrder: SlashCommandCategory[] = [
   'media',
   'interactive',
   'callouts',
+  'dynamic',
   'ui',
   'tables',
 ]
@@ -61,6 +73,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'paragraph',
     title: 'Paragraph',
     description: 'Plain text paragraph',
+    titleKey: 'editor.slash_menu.items.paragraph.title',
+    descriptionKey: 'editor.slash_menu.items.paragraph.description',
     icon: <Pilcrow size={18} />,
     category: 'text',
     keywords: ['paragraph', 'text', 'plain', 'normal'],
@@ -72,6 +86,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading1',
     title: 'Heading 1',
     description: 'Large section heading',
+    titleKey: 'editor.slash_menu.items.heading1.title',
+    descriptionKey: 'editor.slash_menu.items.heading1.description',
     icon: <Heading1 size={18} />,
     category: 'text',
     keywords: ['heading', 'h1', 'title', 'large'],
@@ -83,6 +99,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading2',
     title: 'Heading 2',
     description: 'Medium section heading',
+    titleKey: 'editor.slash_menu.items.heading2.title',
+    descriptionKey: 'editor.slash_menu.items.heading2.description',
     icon: <Heading2 size={18} />,
     category: 'text',
     keywords: ['heading', 'h2', 'subtitle', 'medium'],
@@ -94,6 +112,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading3',
     title: 'Heading 3',
     description: 'Small section heading',
+    titleKey: 'editor.slash_menu.items.heading3.title',
+    descriptionKey: 'editor.slash_menu.items.heading3.description',
     icon: <Heading3 size={18} />,
     category: 'text',
     keywords: ['heading', 'h3', 'small'],
@@ -105,6 +125,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading4',
     title: 'Heading 4',
     description: 'Section heading level 4',
+    titleKey: 'editor.slash_menu.items.heading4.title',
+    descriptionKey: 'editor.slash_menu.items.heading4.description',
     icon: <Heading4 size={18} />,
     category: 'text',
     keywords: ['heading', 'h4'],
@@ -116,6 +138,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading5',
     title: 'Heading 5',
     description: 'Section heading level 5',
+    titleKey: 'editor.slash_menu.items.heading5.title',
+    descriptionKey: 'editor.slash_menu.items.heading5.description',
     icon: <Heading5 size={18} />,
     category: 'text',
     keywords: ['heading', 'h5'],
@@ -127,6 +151,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading6',
     title: 'Heading 6',
     description: 'Section heading level 6',
+    titleKey: 'editor.slash_menu.items.heading6.title',
+    descriptionKey: 'editor.slash_menu.items.heading6.description',
     icon: <Heading6 size={18} />,
     category: 'text',
     keywords: ['heading', 'h6'],
@@ -138,6 +164,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'bulletList',
     title: 'Bullet List',
     description: 'Unordered list with bullet points',
+    titleKey: 'editor.slash_menu.items.bullet_list.title',
+    descriptionKey: 'editor.slash_menu.items.bullet_list.description',
     icon: <List size={18} />,
     category: 'text',
     keywords: ['bullet', 'list', 'unordered', 'ul'],
@@ -149,6 +177,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'orderedList',
     title: 'Ordered List',
     description: 'Numbered list',
+    titleKey: 'editor.slash_menu.items.ordered_list.title',
+    descriptionKey: 'editor.slash_menu.items.ordered_list.description',
     icon: <ListOrdered size={18} />,
     category: 'text',
     keywords: ['ordered', 'list', 'numbered', 'ol'],
@@ -160,6 +190,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'codeBlock',
     title: 'Code Block',
     description: 'Code snippet with syntax highlighting',
+    titleKey: 'editor.slash_menu.items.code_block.title',
+    descriptionKey: 'editor.slash_menu.items.code_block.description',
     icon: <Code size={18} />,
     category: 'text',
     keywords: ['code', 'snippet', 'programming', 'syntax'],
@@ -173,6 +205,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'image',
     title: 'Image',
     description: 'Upload or embed an image',
+    titleKey: 'editor.slash_menu.items.image.title',
+    descriptionKey: 'editor.slash_menu.items.image.description',
     icon: <ImagePlus size={18} />,
     category: 'media',
     keywords: ['image', 'picture', 'photo', 'upload'],
@@ -184,6 +218,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'video',
     title: 'Video',
     description: 'Upload or embed a video',
+    titleKey: 'editor.slash_menu.items.video.title',
+    descriptionKey: 'editor.slash_menu.items.video.description',
     icon: <Video size={18} />,
     category: 'media',
     keywords: ['video', 'movie', 'upload', 'embed'],
@@ -195,6 +231,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'youtube',
     title: 'YouTube',
     description: 'Embed a YouTube video',
+    titleKey: 'editor.slash_menu.items.youtube.title',
+    descriptionKey: 'editor.slash_menu.items.youtube.description',
     icon: <SiYoutube size={18} />,
     category: 'media',
     keywords: ['youtube', 'video', 'embed', 'stream'],
@@ -206,6 +244,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'pdf',
     title: 'PDF',
     description: 'Embed a PDF document',
+    titleKey: 'editor.slash_menu.items.pdf.title',
+    descriptionKey: 'editor.slash_menu.items.pdf.description',
     icon: <FileText size={18} />,
     category: 'media',
     keywords: ['pdf', 'document', 'file', 'embed'],
@@ -217,6 +257,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'audio',
     title: 'Audio',
     description: 'Upload audio or embed a podcast',
+    titleKey: 'editor.slash_menu.items.audio.title',
+    descriptionKey: 'editor.slash_menu.items.audio.description',
     icon: <Headphones size={18} />,
     category: 'media',
     keywords: ['audio', 'music', 'sound', 'podcast', 'mp3', 'episode'],
@@ -228,6 +270,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'library',
     title: 'Library',
     description: 'Insert a file or resource from your Library',
+    titleKey: 'editor.slash_menu.items.library.title',
+    descriptionKey: 'editor.slash_menu.items.library.description',
     icon: <Library size={18} />,
     category: 'media',
     keywords: ['library', 'file', 'media', 'resource', 'reuse', 'existing', 'folder'],
@@ -241,7 +285,9 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'magicBlock',
     title: 'Magic Block',
     description: 'Generate interactive content with AI',
-    icon: <div style={{ background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)' }} className="p-1 rounded-md"><Image src={lrnaiIcon} alt="Magic Block" width={14} height={14} className="outline outline-1 outline-neutral-200/20 rounded" /></div>,
+    titleKey: 'editor.slash_menu.items.magic_block.title',
+    descriptionKey: 'editor.slash_menu.items.magic_block.description',
+    icon: <div style={{ background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)' }} className="p-1 rounded-md"><Image src={lrnaiIcon} alt={i18n.t('editor.blocks.magic_block_content.title')} width={14} height={14} className="outline outline-1 outline-neutral-200/20 rounded" /></div>,
     category: 'interactive',
     keywords: ['magic', 'ai', 'interactive', 'simulation', 'chart', 'generate', 'create'],
     command: (editor) => {
@@ -253,6 +299,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'quiz',
     title: 'Quiz',
     description: 'Add an interactive quiz',
+    titleKey: 'editor.slash_menu.items.quiz.title',
+    descriptionKey: 'editor.slash_menu.items.quiz.description',
     icon: <BadgeHelp size={18} />,
     category: 'interactive',
     keywords: ['quiz', 'question', 'test', 'interactive'],
@@ -264,6 +312,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'h5p',
     title: 'H5P',
     description: 'Embed interactive H5P content by URL',
+    titleKey: 'editor.slash_menu.items.h5p.title',
+    descriptionKey: 'editor.slash_menu.items.h5p.description',
     icon: <Puzzle size={18} />,
     category: 'interactive',
     keywords: ['h5p', 'interactive', 'embed', 'lumi', 'moodle', 'hvp', 'activity'],
@@ -275,6 +325,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'mathEquation',
     title: 'Math Equation',
     description: 'Add a LaTeX math equation',
+    titleKey: 'editor.slash_menu.items.math_equation.title',
+    descriptionKey: 'editor.slash_menu.items.math_equation.description',
     icon: <Sigma size={18} />,
     category: 'interactive',
     keywords: ['math', 'equation', 'latex', 'formula'],
@@ -286,6 +338,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'webPreview',
     title: 'Web Preview',
     description: 'Preview a web page',
+    titleKey: 'editor.slash_menu.items.web_preview.title',
+    descriptionKey: 'editor.slash_menu.items.web_preview.description',
     icon: <Globe size={18} />,
     category: 'interactive',
     keywords: ['web', 'preview', 'link', 'website', 'url'],
@@ -297,6 +351,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'flipcard',
     title: 'Flipcard',
     description: 'Add a flashcard for learning',
+    titleKey: 'editor.slash_menu.items.flipcard.title',
+    descriptionKey: 'editor.slash_menu.items.flipcard.description',
     icon: <RotateCw size={18} />,
     category: 'interactive',
     keywords: ['flipcard', 'flashcard', 'card', 'memory', 'learning'],
@@ -317,6 +373,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'flipcardGrid',
     title: 'Flashcard Grid',
     description: 'Lay several flashcards out side by side',
+    titleKey: 'editor.slash_menu.items.flipcard_grid.title',
+    descriptionKey: 'editor.slash_menu.items.flipcard_grid.description',
     icon: <Grid2x2 size={18} />,
     category: 'interactive',
     keywords: ['flipcard', 'flashcard', 'grid', 'columns', 'row', 'horizontal', 'deck'],
@@ -339,6 +397,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'codePlayground',
     title: 'Code Playground',
     description: 'Add a coding challenge with test cases',
+    titleKey: 'editor.slash_menu.items.code_playground.title',
+    descriptionKey: 'editor.slash_menu.items.code_playground.description',
     icon: <CodeSquare size={18} />,
     category: 'interactive',
     keywords: ['code', 'playground', 'coding', 'challenge', 'judge', 'execute', 'run', 'programming'],
@@ -367,6 +427,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'scenarios',
     title: 'Scenarios',
     description: 'Add interactive branching scenarios',
+    titleKey: 'editor.slash_menu.items.scenarios.title',
+    descriptionKey: 'editor.slash_menu.items.scenarios.description',
     icon: <GitBranch size={18} />,
     category: 'interactive',
     keywords: ['scenarios', 'branching', 'interactive', 'choice', 'story'],
@@ -415,6 +477,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'callout',
     title: 'Callout',
     description: 'Info, warning, tip, success or error block',
+    titleKey: 'editor.slash_menu.items.callout.title',
+    descriptionKey: 'editor.slash_menu.items.callout.description',
     icon: <AlertCircle size={18} />,
     category: 'callouts',
     keywords: ['callout', 'info', 'warning', 'tip', 'success', 'error', 'note', 'alert'],
@@ -432,6 +496,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'divider',
     title: 'Divider',
     description: 'Horizontal line to separate sections',
+    titleKey: 'editor.slash_menu.items.divider.title',
+    descriptionKey: 'editor.slash_menu.items.divider.description',
     icon: <Minus size={18} />,
     category: 'ui',
     keywords: ['divider', 'separator', 'rule', 'line', 'hr', 'horizontal', 'break', 'split'],
@@ -443,6 +509,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'badge',
     title: 'Badge',
     description: 'Add a badge element',
+    titleKey: 'editor.slash_menu.items.badge.title',
+    descriptionKey: 'editor.slash_menu.items.badge.description',
     icon: <Tags size={18} />,
     category: 'ui',
     keywords: ['badge', 'tag', 'label', 'chip'],
@@ -457,6 +525,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'button',
     title: 'Button',
     description: 'Add a clickable button',
+    titleKey: 'editor.slash_menu.items.button.title',
+    descriptionKey: 'editor.slash_menu.items.button.description',
     icon: <MousePointerClick size={18} />,
     category: 'ui',
     keywords: ['button', 'click', 'action', 'cta'],
@@ -471,6 +541,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'user',
     title: 'User',
     description: 'Reference a user',
+    titleKey: 'editor.slash_menu.items.user.title',
+    descriptionKey: 'editor.slash_menu.items.user.description',
     icon: <User size={18} />,
     category: 'ui',
     keywords: ['user', 'mention', 'person', 'profile'],
@@ -482,6 +554,8 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'embed',
     title: 'Embed',
     description: 'Embed external content',
+    titleKey: 'editor.slash_menu.items.embed.title',
+    descriptionKey: 'editor.slash_menu.items.embed.description',
     icon: <Cuboid size={18} />,
     category: 'ui',
     keywords: ['embed', 'external', 'iframe', 'widget'],
@@ -490,11 +564,108 @@ export const slashCommands: SlashCommandItem[] = [
     },
   },
 
+  // Dynamic content category
+  {
+    id: 'variable',
+    title: 'Variable',
+    description: "Learner's name, course name, progress…",
+    titleKey: 'editor.slash_menu.items.variable.title',
+    descriptionKey: 'editor.slash_menu.items.variable.description',
+    icon: <Braces size={18} />,
+    category: 'dynamic',
+    keywords: ['variable', 'placeholder', 'name', 'personalize', 'dynamic', 'template', '{{'],
+    command: (editor) => {
+      editor.chain().focus().insertDynamicVariable().run()
+    },
+  },
+  {
+    id: 'conditional',
+    title: 'Conditional content',
+    description: 'Show blocks only to some learners',
+    titleKey: 'editor.slash_menu.items.conditional.title',
+    descriptionKey: 'editor.slash_menu.items.conditional.description',
+    icon: <Split size={18} />,
+    category: 'dynamic',
+    keywords: ['conditional', 'condition', 'rule', 'audience', 'group', 'show', 'hide', 'personalize', 'drip'],
+    command: (editor) => {
+      editor.chain().focus().insertConditionalBlock().run()
+    },
+  },
+  {
+    id: 'show-to-group',
+    title: 'Show to a group',
+    description: 'Content only members of a user group see',
+    titleKey: 'editor.slash_menu.items.show_to_group.title',
+    descriptionKey: 'editor.slash_menu.items.show_to_group.description',
+    icon: <Users size={18} />,
+    category: 'dynamic',
+    keywords: ['group', 'team', 'audience', 'members', 'only', 'restrict', 'personalize'],
+    command: (editor) => {
+      const preset = presetById('group')!
+      editor.chain().focus().insertConditionalBlock({ rules: preset.rules(), openRules: true }).run()
+    },
+  },
+  {
+    id: 'drip',
+    title: 'Unlock later',
+    description: 'Show content after days in the course',
+    titleKey: 'editor.slash_menu.items.drip.title',
+    descriptionKey: 'editor.slash_menu.items.drip.description',
+    icon: <CalendarClock size={18} />,
+    category: 'dynamic',
+    keywords: ['drip', 'unlock', 'later', 'schedule', 'days', 'week', 'release'],
+    command: (editor) => {
+      const preset = presetById('drip')!
+      editor
+        .chain()
+        .focus()
+        .insertConditionalBlock({ rules: preset.rules(), hiddenMessage: preset.hiddenMessage, label: 'After a week', openRules: true })
+        .run()
+    },
+  },
+  {
+    id: 'ab-test',
+    title: 'A/B test',
+    description: 'Two versions, each shown to half of learners',
+    titleKey: 'editor.slash_menu.items.ab_test.title',
+    descriptionKey: 'editor.slash_menu.items.ab_test.description',
+    icon: <SplitSquareHorizontal size={18} />,
+    category: 'dynamic',
+    keywords: ['ab', 'a/b', 'test', 'experiment', 'variant', 'split', 'version'],
+    command: (editor) => {
+      editor.chain().focus().insertABTest().run()
+    },
+  },
+  {
+    id: 'insert-template',
+    title: 'Insert template',
+    description: 'Reuse saved blocks or pages',
+    titleKey: 'editor.slash_menu.items.insert_template.title',
+    descriptionKey: 'editor.slash_menu.items.insert_template.description',
+    icon: <LayoutTemplate size={18} />,
+    category: 'dynamic',
+    keywords: ['template', 'reuse', 'snippet', 'saved', 'library'],
+    command: () => emitEditorEvent(EDITOR_EVENTS.openTemplates),
+  },
+  {
+    id: 'save-template',
+    title: 'Save as template',
+    description: 'Save the selection or page for reuse',
+    titleKey: 'editor.slash_menu.items.save_template.title',
+    descriptionKey: 'editor.slash_menu.items.save_template.description',
+    icon: <Save size={18} />,
+    category: 'dynamic',
+    keywords: ['template', 'save', 'reuse', 'snippet'],
+    command: () => emitEditorEvent(EDITOR_EVENTS.saveTemplate),
+  },
+
   // Tables category
   {
     id: 'table',
     title: 'Table',
     description: 'Insert a 3x3 table',
+    titleKey: 'editor.slash_menu.items.table.title',
+    descriptionKey: 'editor.slash_menu.items.table.description',
     icon: <Table size={18} />,
     category: 'tables',
     keywords: ['table', 'grid', 'rows', 'columns', 'data'],
@@ -505,13 +676,16 @@ export const slashCommands: SlashCommandItem[] = [
 ]
 
 export function filterCommands(query: string): SlashCommandItem[] {
-  if (!query) return slashCommands
-
-  return slashCommands.filter(
-    (item) =>
-      searchMatchesAny([item.title, item.description], query) ||
-      item.keywords.some((keyword) => normalizeForSearch(keyword).includes(normalizeForSearch(query)))
-  )
+  const matches = query
+    ? slashCommands.filter(
+        (item) =>
+          searchMatchesAny([item.title, item.description, i18n.t(item.titleKey), i18n.t(item.descriptionKey)], query) ||
+          item.keywords.some((keyword) => normalizeForSearch(keyword).includes(normalizeForSearch(query)))
+      )
+    : slashCommands
+  // The menu draws items grouped by category but picks them by position in
+  // this list (keyboard and click), so return them in that same order.
+  return categoryOrder.flatMap((category) => matches.filter((item) => item.category === category))
 }
 
 export function groupCommandsByCategory(

@@ -5,6 +5,13 @@
 
 @import 'tailwindcss';
 
+/* Phone layout: the app shell (bottom tab bar, sheets, touch behaviour) and
+   the per-area overrides that keep content inside a phone-width viewport. */
+@import "./mobile.css";
+@import "./mobile-activities.css";
+@import "./mobile-dashboard.css";
+@import "./mobile-pages.css";
+
 /* EE components (apps/web/ee) are gitignored, so automatic source detection
    skips them. Scan them explicitly. */
 @source '../ee';
@@ -19,6 +26,23 @@
 }
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Full-page loader entrance (replaces motion in PageLoading, which sits in the
+   root bundle): opacity 0 -> 0.5 -> 1 over 0.6s, then a soft scale-in. */
+@keyframes page-loading-opacity {
+  0% { opacity: 0; }
+  60% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+@keyframes page-loading-scale {
+  from { transform: scale(0.95); }
+  to { transform: scale(1); }
+}
+.animate-page-loading-in {
+  animation:
+    page-loading-opacity 0.6s linear both,
+    page-loading-scale 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
 }
 
 /* Board load animations */
@@ -1619,6 +1643,14 @@
 }
 .editor-tool-btn-media:hover { background: rgba(139, 92, 246, 0.12); }
 
+.editor-tool-btn-dynamic {
+  background: rgba(192, 38, 211, 0.06);
+  color: rgb(162, 28, 175);
+  outline: 1px solid rgba(192, 38, 211, 0.12);
+}
+.editor-tool-btn-dynamic:hover { background: rgba(192, 38, 211, 0.12); }
+.editor-tool-btn-dynamic.is-active { background: rgba(192, 38, 211, 0.18); }
+
 .editor-tool-btn-math {
   background: rgba(251, 146, 60, 0.06);
   color: rgb(234, 88, 12);
@@ -1862,6 +1894,7 @@
 .editor-menu-item .label {
   font-size: 12px;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 /* ─── Activity Editor Layout (styled-components migration) ─── */

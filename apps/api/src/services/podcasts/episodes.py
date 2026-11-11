@@ -2,6 +2,7 @@ from typing import List
 from uuid import uuid4
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.organizations import Organization
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
@@ -22,6 +23,8 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.features_utils.usage import check_feature_access
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 from src.security.superadmin import is_user_superadmin
 
 
@@ -96,6 +99,7 @@ async def get_episode(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.READ)
+    await require_ee_resource_paid_access(request, db_session, current_user, podcast.podcast_uuid)
 
     # Check if episode is published
     if not episode.published:
@@ -167,7 +171,30 @@ async def get_episodes_by_podcast(
 
     episodes = (await db_session.execute(query)).scalars().all()
 
-    return [PodcastEpisodeRead(**episode.model_dump()) for episode in episodes]
+    # A sold podcast still lists its episodes to people who have not bought
+    # it (that is what they are buying), just without the audio.
+    from src.core.ee_hooks import is_ee_resource_locked
+    locked = await is_ee_resource_locked(request, db_session, current_user, podcast.podcast_uuid)
+    return [
+        PodcastEpisodeRead(**{**episode.model_dump(), **({"audio_file": ""} if locked else {})})
+        for episode in episodes
+    ]
+
+
+async def _track_episode_published(
+    podcast: Podcast,
+    episode: PodcastEpisode,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+) -> None:
+    await track(
+        event_name=analytics_events.PODCAST_EPISODE_PUBLISHED,
+        org_id=podcast.org_id,
+        user_id=resolve_acting_user_id(current_user),
+        properties={
+            "podcast_uuid": podcast.podcast_uuid,
+            "episode_uuid": episode.episode_uuid,
+        },
+    )
 
 
 async def create_episode(
@@ -240,6 +267,9 @@ async def create_episode(
     await db_session.commit()
     await db_session.refresh(episode)
 
+    if episode.published:
+        await _track_episode_published(podcast, episode, current_user)
+
     await dispatch_webhooks(
         event_name="podcast_episode_created",
         org_id=podcast.org_id,
@@ -285,6 +315,8 @@ async def update_episode(
     # Same plan gate as adding an episode
     await check_feature_access("podcasts", podcast.org_id, db_session)
 
+    was_published = bool(episode.published)
+
     # Update only the fields that were passed in
     # Skip empty strings for file fields to prevent accidental clearing
     file_fields = {'audio_file', 'thumbnail_image'}
@@ -300,6 +332,9 @@ async def update_episode(
     db_session.add(episode)
     await db_session.commit()
     await db_session.refresh(episode)
+
+    if episode.published and not was_published:
+        await _track_episode_published(podcast, episode, current_user)
 
     return PodcastEpisodeRead(**episode.model_dump())
 

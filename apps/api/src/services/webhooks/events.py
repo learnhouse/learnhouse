@@ -112,6 +112,26 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "reason": "string",
         },
     },
+    "path_enrolled": {
+        "category": "Learning Progress",
+        "description": "Triggered when a user starts a learning path",
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "path": {"path_uuid": "string", "name": "string"},
+        },
+    },
+    "path_completed": {
+        "category": "Learning Progress",
+        "description": (
+            "Triggered when a user finishes every required course of a learning "
+            "path. Carries the path certificate when the path awards one"
+        ),
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "path": {"path_uuid": "string", "name": "string"},
+            "certificate": {"certificate_uuid": "string"},
+        },
+    },
     # ── User & access ────────────────────────────────────────────────
     "user_signed_up": {
         "category": "User & Access",
@@ -419,6 +439,25 @@ WEBHOOK_EVENTS: dict[str, dict] = {
         "description": "Triggered when the organization payments configuration is updated",
         "data_schema": {
             "payments_enabled": "boolean",
+        },
+    },
+    # ── Payments ─────────────────────────────────────────────────────
+    "payment_access_granted": {
+        "category": "Payments",
+        "description": "Triggered when someone gets access through an offer: a Stripe purchase, a free claim, or a grant from the dashboard or the API",
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "offer": {"offer_uuid": "string", "name": "string"},
+            "access": {"access_uuid": "string", "status": "string", "source": "string"},
+        },
+    },
+    "payment_access_revoked": {
+        "category": "Payments",
+        "description": "Triggered when someone loses access to an offer: a cancelled subscription, a refund, a dispute, or a revoke",
+        "data_schema": {
+            "user": {"user_uuid": "string", "email": "string", "username": "string"},
+            "offer": {"offer_uuid": "string", "name": "string"},
+            "access": {"access_uuid": "string", "status": "string", "source": "string"},
         },
     },
 }

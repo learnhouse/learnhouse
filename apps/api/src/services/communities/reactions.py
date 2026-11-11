@@ -5,6 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
+from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
@@ -17,6 +18,8 @@ from src.security.rbac import check_resource_access, AccessAction, authorization
 from src.services.communities.moderation import get_community_settings
 from src.services.communities.access import require_community_participant
 from src.security.auth import resolve_acting_user_id
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 
 async def get_reactions(
@@ -51,6 +54,7 @@ async def get_reactions(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     # Get all reactions for this discussion
     reactions_statement = select(DiscussionReaction).where(
@@ -146,6 +150,7 @@ async def toggle_reaction(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     reactor_id = await require_community_participant(current_user, community, db_session)
 
@@ -182,4 +187,14 @@ async def toggle_reaction(
         )
         db_session.add(reaction)
         await db_session.commit()
+        await track(
+            event_name=analytics_events.REACTION_ADDED,
+            org_id=community.org_id,
+            user_id=reactor_id,
+            properties={
+                "community_uuid": community.community_uuid,
+                "discussion_uuid": discussion.discussion_uuid,
+                "reaction": emoji[:32],
+            },
+        )
         return {"action": "added", "emoji": emoji}

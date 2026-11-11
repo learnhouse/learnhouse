@@ -1,46 +1,77 @@
-import { Callout } from 'nextra/components'
+---
+description: Learn how assignment grades are calculated, choose a grading type, use automatic grading, review submissions, give feedback and finalize learner grades.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Grading & Submissions
 
-LearnHouse has a grading workflow for teachers to review and score student submissions.
+## How a grade is calculated
 
-## Submission Flow
+Each task is scored out of 100. The assignment grade is the average of its task scores, as a percentage. The **Grading Type** only changes how that percentage is shown to learners.
 
-1. A teacher creates an assignment with one or more tasks (file upload or quiz).
-2. Students complete each task and submit their work.
-3. The teacher reviews submissions and assigns grades per task.
-4. Grades are aggregated at the assignment level and reflected in the student's Trail.
+## Grading types
 
-## Grade Types
+| Grading Type | Shown as | Passes by default at |
+| --- | --- | --- |
+| **Alphabet** | A (90% and up), B (80%), C (70%), D (60%), F | 60% |
+| **Numeric** | A score from 0 to 100 | 50% |
+| **Percentage** | A percentage | 50% |
+| **Pass / Fail** | Pass or fail | 50% |
+| **GPA Scale** | A 4.0 scale, from 4.0 (93% and up) down to 0.0 | 60% |
 
-Each assignment can be graded using one of three scales:
+Set **Passing threshold** in the assignment settings to use a different pass mark.
 
-- **Numeric**: raw number score (for example, 87 / 100).
-- **Percentage**: score expressed as a percentage.
-- **Alphabet**: letter grades (A, B, C, …).
+## Automatic grading
 
-## Grading Options
+Quiz, Form, Code, Short answer and Number answer tasks are graded automatically. File submission tasks always need a teacher.
 
-- **Task-level grading**: Assign a score to each individual task within an assignment.
-- **Assignment-level grading**: Review and finalize the overall assignment grade.
-- **Bulk review**: View all submissions for a task across students to compare and grade efficiently.
+With **Automatic grading** turned on, a learner's submission is graded and the activity is marked complete the moment they submit. This is only possible when the assignment has no File submission task. You can still change the grade by hand afterwards.
 
-## Submission Status
+Without it, open the submission and click **Run Auto-grade** on a task to score it.
 
-Each submission moves through a clear set of states so teachers can see at a glance where every learner stands:
+## The Submissions tab
 
-- **Not Submitted**: the student has not yet turned the task in.
-- **Pending**: the student has saved work in progress.
-- **Submitted**: the student has submitted and is awaiting a grade.
-- **Late**: submitted after the deadline.
-- **Graded**: the teacher has reviewed the submission and recorded a grade.
+The **Submissions** tab lists every learner who started or submitted the assignment, with their status:
+
+| Status | Meaning |
+| --- | --- |
+| **In progress** | The learner has saved work but not submitted. |
+| **Submitted** | Submitted and waiting for a grade. |
+| **Late** | Submitted after the due date. |
+| **Graded** | A grade has been recorded. |
+
+Search by name or email, filter by status, and sort by **Date submitted**, **Student name**, **Status**, **Grade**, **Needs grading first**, **Late submissions first** or **Recently graded first**.
+
+<img src="/img/pages/assignments/assignment-submissions.webp" alt="The Submissions tab with counts for total, late, submitted and graded, and an Evaluate button on each learner" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+## Grading a submission
+
+Click **Evaluate** on a submission. For each task you see what the learner handed in, the task's hint and reference document, and the current grade.
+
+- Enter a score out of 100, or use **Full**, **Half** or **Zero**.
+- Add a note for the task. It is saved with the grade.
+- For a file submission, download the file, review it, and enter the grade.
+- Write **Overall feedback** for the whole submission. The learner sees it next to their grade.
+
+<img src="/img/pages/assignments/assignment-evaluate.webp" alt="The Evaluate dialog showing the current grade, Passing, and a quiz task with each answer marked true or false" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+The header shows the **Current grade** and whether it is **Passing** or **Not passing**. Then pick an action:
+
+| Action | What it does |
+| --- | --- |
+| **Set final grade** | Calculates and saves the grade without completing the activity. |
+| **Finalize & Complete** | Sets the final grade and marks the activity as done for the learner. |
+| **Reject Assignment** | Deletes the submission so the learner can submit again. |
 
 <Callout>
-Submissions are tied to the student's Trail, so all grading data contributes to the overall course progress view.
+Graded assignments count toward [course certificates](/platform/certifications): every graded assignment must be passed before a certificate is issued.
 </Callout>
+
+## Retries
+
+With **Allow retries** on, a learner whose submission is graded can click **Try again**. Their answers are wiped, the attempt counter goes up, and the next grade replaces the previous one. No history of earlier attempts is kept. **Maximum attempts** caps the total, with `0` meaning unlimited.
 
 ## Not grading at all
 
-An assignment can opt out of this workflow entirely. See
-[Formative Assessment](/platform/assignments/formative): the learner hands work
-in, receives the model answer, and no grade is ever recorded.
+An assignment can opt out of grading entirely. See [Formative Assessment](/platform/assignments/formative): the learner hands work in, receives the model answer, and no grade is ever recorded.

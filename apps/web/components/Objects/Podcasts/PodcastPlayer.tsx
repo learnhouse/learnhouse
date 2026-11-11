@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { formatDuration } from '@services/podcasts/episodes'
 import WaveSurfer from 'wavesurfer.js'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 export default function PodcastPlayer() {
   const { state, togglePlay, seekTo, setVolume, closePlayer, toggleMinimize, audioRef } = usePodcastPlayer()
@@ -196,21 +197,22 @@ export default function PodcastPlayer() {
         preload="metadata"
       />
 
-      {/* Player UI */}
+      {/* Player UI. On phones it sits on the tab bar, and the expanded player
+          wraps into two rows: episode + window buttons, then transport + waveform. */}
       <div
-        className={`fixed bottom-0 start-0 end-0 bg-white border-t border-gray-200 shadow-lg transition-all duration-300 z-50 ${
-          isMinimized ? 'h-16' : 'h-24'
+        className={`fixed bottom-[var(--lh-mobile-nav-h)] md:bottom-0 start-0 end-0 bg-white border-t border-gray-200 shadow-lg transition-all duration-300 z-50 ${
+          isMinimized ? 'h-16' : 'md:h-24'
         }`}
       >
-        <div className="h-full max-w-7xl mx-auto px-4 flex items-center gap-4">
+        <div className={`h-full max-w-7xl mx-auto px-3 md:px-4 flex items-center md:gap-4 ${isMinimized ? 'gap-3' : 'flex-wrap md:flex-nowrap gap-x-3 gap-y-1 py-2.5 md:py-0'}`}>
           {/* Thumbnail */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 order-1 md:order-none">
             <div
               className={`bg-gray-200 rounded-lg overflow-hidden ${
-                isMinimized ? 'w-10 h-10' : 'w-16 h-16'
+                isMinimized ? 'w-10 h-10' : 'w-12 h-12 md:w-16 md:h-16'
               }`}
             >
-              <img
+              <ThumbnailImage
                 src={thumbnailUrl}
                 alt={currentEpisode.title}
                 className="w-full h-full object-cover"
@@ -219,7 +221,7 @@ export default function PodcastPlayer() {
           </div>
 
           {/* Episode info */}
-          <div className={`flex-shrink-0 min-w-0 ${isMinimized ? 'max-w-[120px]' : 'w-48'}`}>
+          <div className={`min-w-0 flex-1 md:flex-none order-2 md:order-none ${isMinimized ? 'md:max-w-[120px]' : 'md:w-48'}`}>
             <h4 className="text-sm font-semibold text-gray-900 truncate">
               {currentEpisode.title}
             </h4>
@@ -229,12 +231,14 @@ export default function PodcastPlayer() {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-1">
+          {/* Phone-only line break before the transport row */}
+          {!isMinimized && <div className="basis-full h-0 order-4 md:hidden" />}
+          <div className={`flex items-center gap-1 md:order-none ${isMinimized ? 'order-3' : 'order-5'}`}>
             {!isMinimized && (
               <button
                 onClick={skipBackward}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title="Skip back 15s"
+                title={t('media.audio.skip_back')}
               >
                 <SkipBack size={18} className="text-gray-600" />
               </button>
@@ -243,7 +247,7 @@ export default function PodcastPlayer() {
             <button
               onClick={togglePlay}
               className={`rounded-full bg-gray-900 hover:bg-gray-800 transition-colors ${
-                isMinimized ? 'p-2' : 'p-3'
+                isMinimized ? 'p-2.5 md:p-2' : 'p-3'
               }`}
             >
               {isPlaying ? (
@@ -257,7 +261,7 @@ export default function PodcastPlayer() {
               <button
                 onClick={skipForward}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title="Skip forward 15s"
+                title={t('media.audio.skip_forward')}
               >
                 <SkipForward size={18} className="text-gray-600" />
               </button>
@@ -266,27 +270,27 @@ export default function PodcastPlayer() {
 
           {/* Waveform / Progress */}
           {isMinimized ? (
-            <div className="flex-1 flex items-center gap-2 min-w-0">
+            <div className="hidden md:flex flex-1 items-center gap-2 min-w-0">
               <div ref={miniWaveformRef} className="flex-1 cursor-pointer min-w-[100px]" />
               <span className="text-xs text-gray-500 flex-shrink-0 tabular-nums">
                 {formatDuration(Math.floor(currentTime))}
               </span>
             </div>
           ) : (
-            <div className="flex-1 flex items-center gap-3">
-              <span className="text-xs text-gray-500 w-12 text-end tabular-nums">
+            <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3 order-6 md:order-none">
+              <span className="text-xs text-gray-500 md:w-12 text-end tabular-nums">
                 {formatDuration(Math.floor(currentTime))}
               </span>
               <div ref={waveformRef} className="flex-1 cursor-pointer" />
-              <span className="text-xs text-gray-500 w-12 tabular-nums">
+              <span className="text-xs text-gray-500 md:w-12 tabular-nums">
                 {formatDuration(Math.floor(duration))}
               </span>
             </div>
           )}
 
-          {/* Volume control (expanded only) */}
+          {/* Volume control (expanded only; phones use their volume buttons) */}
           {!isMinimized && (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={toggleMute}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -314,11 +318,11 @@ export default function PodcastPlayer() {
           )}
 
           {/* Minimize/Close buttons */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className={`flex items-center md:gap-1 flex-shrink-0 md:order-none ${isMinimized ? 'order-4' : 'order-3'}`}>
             <button
               onClick={toggleMinimize}
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title={isMinimized ? 'Expand' : 'Minimize'}
+              title={isMinimized ? t('common.expand') : t('podcasts.player.minimize')}
             >
               {isMinimized ? (
                 <Maximize2 size={16} className="text-gray-600" />
@@ -329,7 +333,7 @@ export default function PodcastPlayer() {
             <button
               onClick={closePlayer}
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title="Close"
+              title={t('common.close')}
             >
               <X size={isMinimized ? 16 : 18} className="text-gray-600" />
             </button>

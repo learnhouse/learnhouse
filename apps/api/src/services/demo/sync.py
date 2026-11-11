@@ -111,6 +111,10 @@ logger = logging.getLogger(__name__)
 LEARNER_ROLE_ID = 4
 
 
+class DemoSlugTakenError(RuntimeError):
+    """The demo slug belongs to an organization that is not the demo."""
+
+
 class _Sweep(NamedTuple):
     """One entry in the drift table: a model, its uuid column, its registry kind.
 
@@ -227,9 +231,9 @@ def _demo_org_config() -> dict:
       visitor cannot buy a subscription for a shared sandbox.
 
     Analytics is enabled because it is part of pro and a prospect should see
-    the page exists; it is backed by Tinybird, which the demo does not write
-    to, so it will look sparse unless the deployment has Tinybird configured.
-    That is a known and deliberate limitation rather than an oversight.
+    the page exists. The seed writes no analytics events, so the charts only
+    fill in with what visitors actually do in the demo. That is a known and
+    deliberate limitation rather than an oversight.
     """
     return {
         "config_version": "2.0",
@@ -515,7 +519,7 @@ async def _sync_org(
             # Refusing rather than taking it over: the slug may belong to a real
             # organization on this install, and converting someone's org into
             # the demo would delete its content as drift on the next tick.
-            raise RuntimeError(
+            raise DemoSlugTakenError(
                 f"organization {slug!r} already exists and is not a demo org; "
                 f"set LEARNHOUSE_DEMO_SLUG to something else"
             )
@@ -2684,7 +2688,7 @@ async def _delete_unowned_org_drift(
     NULL org_id by design (a connection is not an organization's event), so
     they are not the demo's rows to delete, and a sweep matching NULL would be
     writing outside the demo org. The dossier that exposed them is scoped in
-    routers/audit.py instead, which is where the leak actually was.
+    the EE audit router instead, which is where the leak actually was.
     """
     from src.security.rbac.constants import ADMIN_ROLE_ID
 

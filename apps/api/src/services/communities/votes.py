@@ -7,6 +7,7 @@ from sqlalchemy import update as sql_update
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, Request
 
+from src.core.ee_hooks import require_ee_resource_paid_access
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
@@ -15,6 +16,8 @@ from src.security.rbac import check_resource_access, AccessAction, authorization
 from src.services.webhooks.dispatch import dispatch_webhooks
 from src.services.communities.access import require_community_participant
 from src.security.auth import resolve_acting_user_id
+from src.services.analytics import events as analytics_events
+from src.services.analytics.analytics import track
 
 
 async def upvote_discussion(
@@ -53,6 +56,7 @@ async def upvote_discussion(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+    await require_ee_resource_paid_access(request, db_session, current_user, community.community_uuid)
 
     voter_id = await require_community_participant(current_user, community, db_session)
 
@@ -91,6 +95,16 @@ async def upvote_discussion(
 
     await db_session.refresh(vote)
     await db_session.refresh(discussion)
+
+    await track(
+        event_name=analytics_events.DISCUSSION_UPVOTED,
+        org_id=community.org_id,
+        user_id=voter_id,
+        properties={
+            "community_uuid": community.community_uuid,
+            "discussion_uuid": discussion.discussion_uuid,
+        },
+    )
 
     await dispatch_webhooks(
         event_name="discussion_vote_cast",

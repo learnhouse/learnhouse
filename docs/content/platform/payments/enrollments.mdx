@@ -1,29 +1,46 @@
-# Enrollments & Checkout
+---
+description: "Manage who has access to your paid LearnHouse products: customer statuses, granting access by email or user group, revoking access and exporting customers."
+---
 
-Enrollments track student access to paid content. When a student completes a purchase, an enrollment record is created that grants them access to the associated courses.
+# Customers & Access
 
-## Checkout Flow
+The **Customers** tab lists everyone who has, had, or has been invited to access, whatever way they got it. Search by name or email, and filter by product and status.
 
-1. A student selects an offer from the storefront or course page.
-2. They are redirected to a Stripe-hosted checkout page.
-3. On successful payment, an enrollment is created automatically.
-4. The student gains immediate access to the purchased courses.
+<img src="/img/pages/payments/customers.webp" alt="The Customers tab with each customer's product, status, source, amount paid and date" width={1600} height={900} style={{ borderRadius: 10 }} />
 
-## Enrollment Statuses
+## Statuses
 
-| Status | Description |
+| Status | Meaning |
 |---|---|
-| Pending | Payment initiated but not yet confirmed. |
-| Completed | One-time payment successful, access granted. |
-| Active | Subscription is active, access granted. |
-| Cancelled | Subscription cancelled, access revoked. |
-| Failed | Payment failed. |
-| Refunded | Payment refunded, access revoked. |
+| Has access | Paid, claimed, or was granted access. |
+| Invited | Granted by email to someone without an account yet. Access unlocks when they sign up with that email and verify it. |
+| Ended | The subscription was cancelled, access was revoked, or a dispute was opened. |
+| Refunded | The payment was fully refunded. |
 
-## Billing Portal
+Each row also shows where the access came from: **Stripe**, **Free claim**, **Added by hand**, or **API**.
 
-Students with active subscriptions can access a Stripe billing portal to manage their payment methods, view invoices, and cancel or update their subscriptions.
+## Grant access
 
-## Stripe Dashboard
+Click **Grant access**, pick a product, and paste one email or hundreds. If an email has no account yet, that person gets an invitation (you can turn this off), and their access is waiting when they sign up. People who already have an account in another organization are added to yours as regular members.
 
-Administrators can view an overview of charges, subscriptions, and customers directly from the LearnHouse admin panel without needing to log into Stripe separately.
+You can also grant a product to everyone in a user group at once, for example a whole team or a cohort. Add an optional **Note** to remember why.
+
+<img src="/img/pages/payments/grant-access.webp" alt="The Grant access dialog with a product, a list of emails, an optional user group, a note and the invitation switch" width={1600} height={900} style={{ borderRadius: 10 }} />
+
+Use this for sales made elsewhere, gifts, team plans and partners. No payment is taken.
+
+## Revoke access
+
+Revoking ends access right away. It doesn't refund a Stripe payment or cancel a Stripe subscription. Do those in Stripe.
+
+## Export
+
+**Export** downloads the current list (with its product and status filters) as a CSV file.
+
+## Buyers' side
+
+Learners see what they bought under **Account → Purchases**. Stripe subscribers can manage their payment method, invoices and cancellation in the Stripe billing portal.
+
+## Stripe statuses
+
+Stripe purchases are kept in sync through webhooks: a paid checkout grants access, a cancelled subscription ends it, a full refund or a dispute revokes it, and a failed payment never revokes access that was already paid for.

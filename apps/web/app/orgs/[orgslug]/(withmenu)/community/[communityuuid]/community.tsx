@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { CommunitySidebar } from '@components/Objects/Communities/CommunitySidebar'
@@ -8,7 +9,6 @@ import { MessageCircle } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import { CommunityActionsMobile } from '@components/Objects/Communities/CommunityActionsMobile'
 import { DiscussionList } from '@components/Objects/Communities/DiscussionList'
-import { CreateDiscussionModal } from '@components/Objects/Modals/Communities/CreateDiscussionModal'
 import { Community } from '@services/communities/communities'
 import { isRichContentAllowed } from '@components/Objects/Communities/richContent'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
@@ -18,6 +18,13 @@ import { useTranslation } from 'react-i18next'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { useShortcut } from '@/lib/shortcuts/ShortcutsContext'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
+import ResourcePaywall, { useResourcePaywall } from '@ee/components/Payments/ResourcePaywall'
+
+// The editor (tiptap) behind it only matters once someone starts a discussion.
+const CreateDiscussionModal = dynamic(
+  () => import('@components/Objects/Modals/Communities/CreateDiscussionModal').then((m) => m.CreateDiscussionModal),
+  { ssr: false }
+)
 
 interface CommunityClientProps {
   community: Community
@@ -30,9 +37,16 @@ const CommunityClient = ({
   community,
   initialDiscussions,
   orgslug,
+  org_id,
 }: CommunityClientProps) => {
   const [isCreateDiscussionModalOpen, setIsCreateDiscussionModalOpen] = useState(false)
+  // Mounted on first open and kept, so closing still animates out.
+  const [createModalMounted, setCreateModalMounted] = useState(false)
+  if (isCreateDiscussionModalOpen && !createModalMounted) setCreateModalMounted(true)
   const isMobile = useMediaQuery('(max-width: 768px)')
+  // People who have not bought a sold community can't post in it.
+  const { locked } = useResourcePaywall(org_id, community.community_uuid)
+  const openCreateDiscussion = locked ? undefined : () => setIsCreateDiscussionModalOpen(true)
   const { t } = useTranslation()
   const { canCreateDiscussion } = useCommunityRights(community.community_uuid)
   useShortcut(
@@ -42,6 +56,7 @@ const CommunityClient = ({
   )
 
   useTrackView(AnalyticsEvent.CommunityViewed, {
+    community_uuid: community.community_uuid,
     is_public: community.public,
     initial_discussion_count: initialDiscussions.length,
   })
@@ -67,7 +82,7 @@ const CommunityClient = ({
                 community={community}
                 discussionCount={initialDiscussions.length}
                 orgslug={orgslug}
-                onCreateDiscussion={() => setIsCreateDiscussionModalOpen(true)}
+                onCreateDiscussion={openCreateDiscussion}
               />
             </div>
           </div>
@@ -84,15 +99,17 @@ const CommunityClient = ({
               )}
             </div>
 
-            {/* Discussions List */}
-            <div className="bg-white nice-shadow rounded-lg overflow-hidden">
-              <DiscussionList
-                communityUuid={community.community_uuid}
-                orgslug={orgslug}
-                onCreateClick={() => setIsCreateDiscussionModalOpen(true)}
-                initialDiscussions={initialDiscussions}
-              />
-            </div>
+            {/* Discussions List, or what unlocks it when the community is sold */}
+            <ResourcePaywall orgId={org_id} orgslug={orgslug} resourceUuid={community.community_uuid} resourceName={community.name}>
+              <div className="bg-white nice-shadow rounded-lg overflow-hidden">
+                <DiscussionList
+                  communityUuid={community.community_uuid}
+                  orgslug={orgslug}
+                  onCreateClick={() => setIsCreateDiscussionModalOpen(true)}
+                  initialDiscussions={initialDiscussions}
+                />
+              </div>
+            </ResourcePaywall>
           </div>
         </div>
 
@@ -105,18 +122,20 @@ const CommunityClient = ({
         <CommunityActionsMobile
           community={community}
           orgslug={orgslug}
-          onCreateDiscussion={() => setIsCreateDiscussionModalOpen(true)}
+          onCreateDiscussion={openCreateDiscussion}
         />
       )}
 
       {/* Modals */}
-      <CreateDiscussionModal
-        isOpen={isCreateDiscussionModalOpen}
-        onClose={() => setIsCreateDiscussionModalOpen(false)}
-        allowRichContent={isRichContentAllowed(community)}
-        communityUuid={community.community_uuid}
-        orgSlug={orgslug}
-      />
+      {createModalMounted && (
+        <CreateDiscussionModal
+          isOpen={isCreateDiscussionModalOpen}
+          onClose={() => setIsCreateDiscussionModalOpen(false)}
+          allowRichContent={isRichContentAllowed(community)}
+          communityUuid={community.community_uuid}
+          orgSlug={orgslug}
+        />
+      )}
     </>
   )
 }

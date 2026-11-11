@@ -1,15 +1,12 @@
-import { useMDXComponents as getDocsMDXComponents } from 'nextra-theme-docs'
-import Wrapper from './components/Wrapper/Wrapper'
 import CodeBlock from './components/CodeBlock/CodeBlock'
 import { Table, Thead, Tbody, Tr, Th, Td } from './components/Table/Table'
+import YouTube from './components/YouTube/YouTube'
+import { Callout, Steps, Tabs } from './components/mdx'
+import { CloudCta, PlanCta } from './components/cta'
 
-const docsComponents = getDocsMDXComponents()
-
-export function useMDXComponents(components) {
+// Elements and components every MDX page can use without importing them.
+export function getMDXComponents(components) {
   return {
-    ...docsComponents,
-    ...components,
-    wrapper: Wrapper,
     pre: CodeBlock,
     table: Table,
     thead: Thead,
@@ -17,5 +14,12 @@ export function useMDXComponents(components) {
     tr: Tr,
     th: Th,
     td: Td,
+    YouTube,
+    Callout,
+    Steps,
+    Tabs,
+    CloudCta,
+    PlanCta,
+    ...components,
   }
 }

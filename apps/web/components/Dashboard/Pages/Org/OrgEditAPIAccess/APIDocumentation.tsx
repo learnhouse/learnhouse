@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@components/ui/button'
 import { Input } from '@components/ui/input'
 import { Textarea } from '@components/ui/textarea'
@@ -93,7 +94,7 @@ const METHOD_COLORS: Record<string, string> = {
 
 // Tags with custom labels shown next to the group name
 const TAG_LABELS: Record<string, string> = {
-  admin: 'Headless',
+  admin: 'dashboard.organization.api_access.docs.tag_headless',
 }
 
 // Priority order: tags listed here appear first (in this order), rest sorted alphabetically
@@ -118,8 +119,10 @@ const ALLOWED_API_TAGS = [
 ]
 
 const APIDocumentation: React.FC = () => {
-  const _session = useLHSession() as any
+  const { t } = useTranslation()
+  const session = useLHSession() as any
   const org = useOrg() as any
+  const accessToken = session?.data?.tokens?.access_token
   const [spec, setSpec] = useState<OpenAPISpec | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -146,14 +149,16 @@ const APIDocumentation: React.FC = () => {
   const [showExpectedResponses, setShowExpectedResponses] = useState(false)
 
   useEffect(() => {
-    loadSpec()
-  }, [])
+    if (org?.id && accessToken) {
+      loadSpec()
+    }
+  }, [org?.id, accessToken])
 
   const loadSpec = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchOpenAPISpec()
+      const data = await fetchOpenAPISpec(org.id, accessToken)
       setSpec(data)
       // Expand admin group by default if it exists, otherwise first group
       if (data.paths) {
@@ -165,7 +170,7 @@ const APIDocumentation: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load API documentation')
+      setError(err.message || t('dashboard.organization.api_access.docs.load_failed'))
     } finally {
       setLoading(false)
     }
@@ -440,7 +445,7 @@ const APIDocumentation: React.FC = () => {
   const copyCurl = async () => {
     await navigator.clipboard.writeText(generateCurl())
     setCopiedCurl(true)
-    toast.success('cURL command copied')
+    toast.success(t('dashboard.organization.api_access.docs.curl_copied'))
     setTimeout(() => setCopiedCurl(false), 2000)
   }
 
@@ -495,7 +500,7 @@ const APIDocumentation: React.FC = () => {
     } catch (err: any) {
       setResponse({
         status: 0,
-        statusText: 'Error',
+        statusText: t('dashboard.organization.api_access.docs.error'),
         data: { error: err.message },
         time: 0,
       })
@@ -509,7 +514,7 @@ const APIDocumentation: React.FC = () => {
       <div className="pb-4">
         <div className="flex justify-center items-center py-12">
           <RefreshCw className="animate-spin text-gray-400 me-2" size={24} />
-          <span className="text-gray-500">Loading API documentation...</span>
+          <span className="text-gray-500">{t('dashboard.organization.api_access.docs.loading')}</span>
         </div>
       </div>
     )
@@ -522,7 +527,7 @@ const APIDocumentation: React.FC = () => {
           <p className="text-red-500 mb-4">{error}</p>
           <Button onClick={loadSpec} variant="outline">
             <RefreshCw size={16} className="me-2" />
-            Retry
+            {t('common.retry')}
           </Button>
         </div>
       </div>
@@ -539,18 +544,18 @@ const APIDocumentation: React.FC = () => {
         <div className="mb-6">
           <Label htmlFor="apiToken" className="flex items-center gap-2 mb-2">
             <Code size={16} />
-            API Token (for testing)
+            {t('dashboard.organization.api_access.docs.token_label')}
           </Label>
           <Input
             id="apiToken"
             type="password"
             value={apiToken}
             onChange={(e) => setApiToken(e.target.value)}
-            placeholder="Enter your API token (lh_...)"
+            placeholder={t('dashboard.organization.api_access.docs.token_placeholder')}
             className="font-mono"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Enter an API token to authenticate your test requests
+            {t('dashboard.organization.api_access.docs.token_hint')}
           </p>
         </div>
 
@@ -561,7 +566,7 @@ const APIDocumentation: React.FC = () => {
               <div className="relative">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <Input
-                  placeholder="Search endpoints..."
+                  placeholder={t('dashboard.organization.api_access.docs.search_placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="ps-10"
@@ -581,7 +586,7 @@ const APIDocumentation: React.FC = () => {
                       {TAG_LABELS[group.tag.toLowerCase()] && (
                         <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
                           <Monitor size={10} className="me-1" />
-                          {TAG_LABELS[group.tag.toLowerCase()]}
+                          {t(TAG_LABELS[group.tag.toLowerCase()])}
                         </Badge>
                       )}
                     </div>
@@ -666,7 +671,7 @@ const APIDocumentation: React.FC = () => {
                 {selectedEndpoint.details.parameters &&
                   selectedEndpoint.details.parameters.length > 0 && (
                     <div className="p-4 border-b">
-                      <Label className="mb-2 block">Parameters</Label>
+                      <Label className="mb-2 block">{t('dashboard.organization.api_access.docs.parameters')}</Label>
                       <div className="space-y-2">
                         {selectedEndpoint.details.parameters.map((param: any) => (
                           <div key={param.name}>
@@ -677,7 +682,7 @@ const APIDocumentation: React.FC = () => {
                               </Badge>
                               {param.required && (
                                 <Badge variant="destructive" className="text-xs">
-                                  required
+                                  {t('dashboard.organization.api_access.docs.required')}
                                 </Badge>
                               )}
                               {param.schema?.type && (
@@ -708,7 +713,7 @@ const APIDocumentation: React.FC = () => {
                 {selectedEndpoint.method !== 'GET' && (
                   <div className="p-4 border-b">
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="block">Request Body (JSON)</Label>
+                      <Label className="block">{t('dashboard.organization.api_access.docs.request_body')}</Label>
                       {selectedEndpoint.details.requestBody?.content?.['application/json']?.schema && (
                         <span className="text-xs text-gray-400 font-mono">
                           {getSchemaTypeLabel(selectedEndpoint.details.requestBody.content['application/json'].schema)}
@@ -759,12 +764,12 @@ const APIDocumentation: React.FC = () => {
                     {isExecuting ? (
                       <>
                         <RefreshCw size={16} className="me-2 animate-spin" />
-                        Executing...
+                        {t('dashboard.organization.api_access.docs.executing')}
                       </>
                     ) : (
                       <>
                         <Play size={16} className="me-2" />
-                        Send Request
+                        {t('dashboard.organization.api_access.docs.send_request')}
                       </>
                     )}
                   </Button>
@@ -779,7 +784,7 @@ const APIDocumentation: React.FC = () => {
 
                 {/* Response */}
                 <div className="p-4 border-b">
-                  <Label className="mb-2 block">Response</Label>
+                  <Label className="mb-2 block">{t('dashboard.organization.api_access.docs.response')}</Label>
                   {response ? (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
@@ -805,7 +810,7 @@ const APIDocumentation: React.FC = () => {
                   ) : (
                     <div className="text-center py-6 text-gray-400">
                       <BookOpen size={24} className="mx-auto mb-1 opacity-50" />
-                      <p className="text-sm">Send a request to see the response</p>
+                      <p className="text-sm">{t('dashboard.organization.api_access.docs.no_response')}</p>
                     </div>
                   )}
                 </div>
@@ -817,7 +822,7 @@ const APIDocumentation: React.FC = () => {
                       onClick={() => setShowExpectedResponses(!showExpectedResponses)}
                       className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
                     >
-                      <Label className="cursor-pointer text-gray-500">Expected Responses</Label>
+                      <Label className="cursor-pointer text-gray-500">{t('dashboard.organization.api_access.docs.expected_responses')}</Label>
                       <div className="flex items-center gap-1.5">
                         {Object.keys(selectedEndpoint.details.responses).map((code) => (
                           <Badge
@@ -903,8 +908,8 @@ const APIDocumentation: React.FC = () => {
               <div className="flex items-center justify-center h-full py-12 text-gray-400">
                 <div className="text-center">
                   <Code size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>Select an endpoint to view details</p>
-                  <p className="text-sm">and test API calls</p>
+                  <p>{t('dashboard.organization.api_access.docs.select_endpoint')}</p>
+                  <p className="text-sm">{t('dashboard.organization.api_access.docs.select_endpoint_hint')}</p>
                 </div>
               </div>
             )}

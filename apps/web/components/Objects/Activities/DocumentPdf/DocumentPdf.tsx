@@ -4,6 +4,7 @@ import { ArrowsOut, ArrowsIn, DownloadSimple } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import React from 'react'
 import { positiveIntParam } from '@/lib/copilot/sources'
+import PdfMobileReader from './PdfMobileReader'
 
 // Filename for the saved copy: the activity's name, so learners don't end up
 // with a folder of opaque upload ids.
@@ -13,6 +14,17 @@ function downloadName(activity: any) {
 }
 
 const noSubscription = () => () => {}
+
+// Touch-first devices can't show a PDF in an iframe; they get the pdf.js
+// reader. Unknown (null) during the server render and hydration.
+const TOUCH_QUERY = '(hover: none) and (pointer: coarse)'
+const subscribeTouch = (onChange: () => void) => {
+  const mql = window.matchMedia(TOUCH_QUERY)
+  mql.addEventListener('change', onChange)
+  return () => mql.removeEventListener('change', onChange)
+}
+const getTouch = () => window.matchMedia(TOUCH_QUERY).matches
+const getTouchServer = () => null
 
 function DocumentPdfActivity({
   activity,
@@ -43,6 +55,7 @@ function DocumentPdfActivity({
   // Read through useSyncExternalStore so the server render and hydration agree.
   const search = React.useSyncExternalStore(noSubscription, () => window.location.search, () => '')
   const linkedPage = positiveIntParam(search, 'page')
+  const isTouch = React.useSyncExternalStore<boolean | null>(subscribeTouch, getTouch, getTouchServer)
 
   React.useEffect(() => {
     const onChange = () => setIsFullscreen(document.fullscreenElement === containerRef.current)
@@ -100,6 +113,27 @@ function DocumentPdfActivity({
       }
     }
     if (pdfUrl) window.open(pdfUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  // Hold the space until we know which reader fits, so a phone never starts
+  // loading the iframe it can't display.
+  if (isTouch === null) {
+    return <div className={className ?? 'aspect-[3/4] w-full animate-pulse rounded-xl bg-neutral-100 sm:m-8 sm:mt-14'} />
+  }
+
+  if (isTouch && pdfUrl) {
+    return (
+      <div className={className ? `${className} overflow-hidden p-2` : 'w-full'}>
+        <PdfMobileReader
+          key={pdfUrl}
+          url={pdfUrl}
+          name={activity?.name || t('editor.blocks.pdf_block.document_title')}
+          initialPage={linkedPage}
+          onDownload={handleDownload}
+          fillHeight={!!className}
+        />
+      </div>
+    )
   }
 
   const controlClass =

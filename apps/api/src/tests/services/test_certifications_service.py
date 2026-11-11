@@ -1355,6 +1355,13 @@ class TestCertificateLookup:
         )
         assert result["certification"].certification_uuid == certification.certification_uuid
         assert result["course"]["course_uuid"] == course.course_uuid
+        # The holder is named (the certificate prints it) and nothing more.
+        assert result["user"] == {
+            "user_uuid": "user_regular",
+            "username": "regular",
+            "first_name": "Regular",
+            "last_name": "User",
+        }
 
     @pytest.mark.asyncio
     async def test_get_certificate_by_user_certification_uuid_missing_certificate(
@@ -1454,6 +1461,22 @@ class TestGetAllUserCertificates:
         assert result[0]["certification"].certification_uuid == certification.certification_uuid
         assert result[0]["course"]["course_uuid"] == course.course_uuid
         assert result[0]["user"]["user_uuid"] == regular_user.user_uuid
+
+    @pytest.mark.asyncio
+    async def test_session_held_to_another_org_lists_none(self, db, course, regular_user, mock_request):
+        """A session an LMS launch started (or one on a custom domain) only
+        sees its own org's certificates."""
+        from src.security.session_context import SessionProvenance, set_session_provenance
+
+        certification = await _create_certification(db, course, cert_uuid="cert_held")
+        await _create_certificate_user(db, certification, regular_user)
+        try:
+            set_session_provenance(SessionProvenance(amr="lti", org_id=course.org_id + 99))
+            assert await get_all_user_certificates(mock_request, regular_user, db) == []
+            set_session_provenance(SessionProvenance(amr="lti", org_id=course.org_id))
+            assert len(await get_all_user_certificates(mock_request, regular_user, db)) == 1
+        finally:
+            set_session_provenance(None)
 
     @pytest.mark.asyncio
     async def test_get_all_user_certificates_empty(self, db, admin_user, mock_request):

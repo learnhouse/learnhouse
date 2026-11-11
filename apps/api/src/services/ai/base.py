@@ -7,6 +7,7 @@ import json
 
 from config.config import get_learnhouse_config
 from src.services.ai.llm import generate, generate_stream, model_for_tier
+from src.services.ai.llm.errors import log_ai_failure
 
 logger = logging.getLogger(__name__)
 
@@ -170,37 +171,6 @@ def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uu
         logger.error("Failed to save chat session meta: %s", e, exc_info=True)
 
 
-def update_chat_session_meta(aichat_uuid: str, user_id: int, title: Optional[str] = None, favorite: Optional[bool] = None) -> Optional[dict]:
-    """Update title and/or favorite flag on a session. Returns updated meta or None."""
-    r = _get_redis()
-    if not r:
-        return None
-    try:
-        meta_key = f"chat_meta:{aichat_uuid}"
-        meta_data = r.get(meta_key)
-        if not meta_data:
-            return None
-        meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
-        if meta.get("user_id") != user_id:
-            return None
-
-        if title is not None:
-            meta["title"] = title
-        if favorite is not None:
-            meta["favorite"] = favorite
-
-        ttl = r.ttl(meta_key)
-        if ttl and ttl > 0:
-            r.setex(meta_key, ttl, json.dumps(meta))
-        else:
-            r.setex(meta_key, CHAT_TTL, json.dumps(meta))
-
-        return meta
-    except Exception as e:
-        logger.error("Failed to update chat session meta: %s", e, exc_info=True)
-        return None
-
-
 def chat_session_belongs_to_user(aichat_uuid: str, user_id: int) -> bool:
     """Return True if the chat session is owned by ``user_id``.
 
@@ -224,122 +194,6 @@ def chat_session_belongs_to_user(aichat_uuid: str, user_id: int) -> bool:
         return False
 
 
-def get_user_chat_sessions(user_id: int, org_id: Optional[int] = None) -> list[dict]:
-    """Return all chat sessions for a user, newest first. Optionally filter by org_id."""
-    r = _get_redis()
-    if not r:
-        return []
-    try:
-        # Get all session UUIDs from sorted set, newest first
-        members = r.zrevrange(f"user_chats:{user_id}", 0, -1)
-        if not members:
-            return []
-
-        # Decode all UUIDs upfront
-        uuid_strs = [
-            m.decode("utf-8") if isinstance(m, bytes) else m for m in members
-        ]
-
-        # Batch-fetch all metadata in a single MGET call (avoids N+1 round-trips)
-        meta_keys = [f"chat_meta:{u}" for u in uuid_strs]
-        meta_values = r.mget(meta_keys)
-
-        sessions = []
-        expired_uuids = []
-        for uuid_str, meta_data in zip(uuid_strs, meta_values):
-            if not meta_data:
-                expired_uuids.append(uuid_str)
-                continue
-            meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
-            # Filter by org_id if provided
-            if org_id is not None and meta.get("org_id") != org_id:
-                continue
-            sessions.append(meta)
-
-        # Clean up expired entries from the sorted set
-        if expired_uuids:
-            r.zrem(f"user_chats:{user_id}", *expired_uuids)
-
-        return sessions
-    except Exception as e:
-        logger.error("Failed to get user chat sessions: %s", e, exc_info=True)
-        return []
-
-
-def get_chat_messages(aichat_uuid: str, user_id: int) -> Optional[list[dict]]:
-    """Get messages for a chat session, validating ownership. Returns None if not owned."""
-    r = _get_redis()
-    if not r:
-        return None
-    try:
-        # Validate ownership
-        meta_data = r.get(f"chat_meta:{aichat_uuid}")
-        if not meta_data:
-            return None
-        meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
-        if meta.get("user_id") != user_id:
-            return None
-
-        # Get messages
-        history_data = r.get(f"chat_history:{aichat_uuid}")
-        if not history_data:
-            return []
-        return json.loads(history_data.decode("utf-8") if isinstance(history_data, bytes) else history_data)
-    except Exception as e:
-        logger.error("Failed to get chat messages: %s", e, exc_info=True)
-        return None
-
-
-def delete_chat_session(aichat_uuid: str, user_id: int) -> bool:
-    """Delete a chat session and its metadata. Returns True if deleted."""
-    r = _get_redis()
-    if not r:
-        return False
-    try:
-        # Validate ownership
-        meta_data = r.get(f"chat_meta:{aichat_uuid}")
-        if not meta_data:
-            return False
-        meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
-        if meta.get("user_id") != user_id:
-            return False
-
-        r.delete(f"chat_history:{aichat_uuid}", f"chat_meta:{aichat_uuid}")
-        r.zrem(f"user_chats:{user_id}", aichat_uuid)
-        return True
-    except Exception as e:
-        logger.error("Failed to delete chat session: %s", e, exc_info=True)
-        return False
-
-
-async def generate_chat_title(user_message: str, ai_response: str) -> str:
-    """Generate a short summarized title for a chat session using the fast model tier."""
-    try:
-        prompt = (
-            "Summarize this conversation into a very short title (max 6 words). "
-            "Output ONLY the title, nothing else. No quotes, no punctuation at the end.\n\n"
-            f"User: {user_message[:300]}\n"
-            f"Assistant: {ai_response[:300]}"
-        )
-        text = await generate(
-            model_name=model_for_tier("fast"),
-            user_prompt=prompt,
-            max_tokens=30,
-            temperature=0.3,
-        )
-        if text:
-            title = text.strip().strip('"\'').strip()
-            if title:
-                return title[:60]
-    except Exception as e:
-        logger.error("Failed to generate chat title: %s", e, exc_info=True)
-    # Fallback to truncated message
-    fallback = user_message[:50].strip()
-    if len(user_message) > 50:
-        fallback += "..."
-    return fallback
-
-
 async def ask_ai_stream(
     question: str,
     message_history: Any,
@@ -360,7 +214,7 @@ async def ask_ai_stream(
         ):
             yield chunk
     except Exception as e:
-        logger.error("ask_ai_stream failed: %s", e, exc_info=True)
+        log_ai_failure(logger, e, "ask_ai_stream failed")
         raise
 
 

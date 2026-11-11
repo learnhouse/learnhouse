@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { Terminal, KeyIcon, Zap, Globe, Search, Shield, LucideIcon } from 'lucide-react'
+import { Terminal, KeyIcon, Zap, Globe, Search, Shield, Plug, LucideIcon } from 'lucide-react'
 import React, { useEffect, use } from 'react'
 import { motion } from 'motion/react'
 import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/OrgEditAPIAccess'
@@ -9,6 +9,8 @@ import OrgEditAutomations from '@components/Dashboard/Pages/Org/OrgEditAutomatio
 import OrgEditDomains from '@components/Dashboard/Pages/Org/OrgEditDomains/OrgEditDomains'
 import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
 import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
+import OrgEditMCP from '@components/Dashboard/Pages/Org/OrgEditMCP/OrgEditMCP'
+import OrgEditLTI from '@ee/components/LTI/OrgEditLTI'
 import { useTranslation } from 'react-i18next'
 import { PlanLevel, isFeatureAvailable } from '@services/plans/plans'
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
@@ -26,11 +28,13 @@ interface TabConfig {
 }
 
 const getDevTabs = (t: any): TabConfig[] => [
+  { id: 'mcp', label: t('dashboard.organization.settings.tabs.mcp'), icon: Plug },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api', { defaultValue: 'API Access' }), icon: KeyIcon, requiredPlan: 'pro' },
   { id: 'automations', label: t('dashboard.organization.settings.tabs.automations', { defaultValue: 'Automations' }), icon: Zap, requiredPlan: 'pro' },
   { id: 'domains', label: t('dashboard.organization.settings.tabs.domains', { defaultValue: 'Domains' }), icon: Globe, requiredPlan: 'pro' },
   { id: 'seo', label: 'SEO', icon: Search, requiredPlan: 'standard' },
   { id: 'sso', label: t('dashboard.organization.settings.tabs.sso', { defaultValue: 'SSO' }), icon: Shield, requiredPlan: 'enterprise' },
+  { id: 'lti', label: t('lti.admin.tab'), icon: Plug, requiredPlan: 'enterprise' },
 ]
 
 function DevelopersPage(props: { params: Promise<DevParams> }) {
@@ -45,7 +49,10 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
   const DEV_TABS = getDevTabs(t).filter((tab) => isFeatureAvailable(tab.id))
 
   function handleLabels() {
-    if (params.subpage == 'api') {
+    if (params.subpage == 'mcp') {
+      setH1Label(t('dashboard.organization.settings.pages.mcp.title'))
+      setH2Label(t('dashboard.organization.settings.pages.mcp.subtitle'))
+    } else if (params.subpage == 'api') {
       setH1Label(t('dashboard.organization.settings.pages.api.title', { defaultValue: 'API Access' }))
       setH2Label(t('dashboard.organization.settings.pages.api.subtitle', { defaultValue: 'Manage API tokens and access' }))
     } else if (params.subpage == 'automations') {
@@ -60,6 +67,9 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
     } else if (params.subpage == 'sso') {
       setH1Label(t('dashboard.organization.settings.pages.sso.title', { defaultValue: 'Single Sign-On' }))
       setH2Label(t('dashboard.organization.settings.pages.sso.subtitle', { defaultValue: 'Configure SSO for your organization' }))
+    } else if (params.subpage == 'lti') {
+      setH1Label(t('lti.admin.page_title'))
+      setH2Label(t('lti.admin.page_subtitle'))
     }
   }
 
@@ -80,17 +90,17 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
       <div className="ps-4 pe-4 sm:ps-10 sm:pe-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
-        <div className="pt-6 pb-4">
+        <div className="pt-4 pb-1 sm:pt-6 sm:pb-4">
           <Breadcrumbs items={[
             { label: t('dashboard.developers.breadcrumb', { defaultValue: 'Developers' }), href: '/dash/developers/api', icon: <Terminal size={14} /> }
           ]} />
         </div>
-        <div className="my-2 py-2">
+        <div className="py-2 sm:my-2">
           <div className="w-full flex flex-col space-y-1 min-w-0">
-            <div className="pt-3 flex font-bold text-3xl sm:text-4xl tracking-tighter truncate">
+            <div className="sm:pt-3 flex font-bold text-2xl sm:text-4xl tracking-tighter truncate">
               {H1Label}
             </div>
-            <div className="flex font-medium text-gray-400 text-md truncate">
+            <div className="hidden sm:flex font-medium text-gray-400 text-md truncate">
               {H2Label}
             </div>
           </div>
@@ -105,11 +115,13 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
         className="flex-1 overflow-y-auto"
       >
+        {params.subpage == 'mcp' ? <OrgEditMCP /> : ''}
         {params.subpage == 'api' ? <OrgEditAPIAccess /> : ''}
         {params.subpage == 'automations' ? <OrgEditAutomations /> : ''}
         {params.subpage == 'domains' ? <OrgEditDomains /> : ''}
         {params.subpage == 'seo' ? <OrgEditSEO /> : ''}
         {params.subpage == 'sso' ? <OrgEditSSO /> : ''}
+        {params.subpage == 'lti' ? <OrgEditLTI /> : ''}
       </motion.div>
     </div>
   )

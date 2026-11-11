@@ -1,4 +1,8 @@
-import { Callout } from 'nextra/components'
+---
+description: Generate AI closed captions for uploaded videos, translate them into up to 15 languages, create video chapters and see how many AI credits captions use.
+---
+
+import { Callout } from '@/components/mdx'
 
 # AI Video Captions
 
@@ -20,13 +24,13 @@ To configure them:
 
 1. Open the new-video dialog (or edit a hosted-video activity).
 2. In the **AI Closed Captions** panel, turn on **Generate with AI**.
-3. Pick the **spoken language** of the video, or leave it on **Auto-detect**.
-4. Choose the **caption languages** you want. You can:
+3. Pick the **Spoken language** of the video, or leave it on **Auto-detect**.
+4. Choose the **Caption languages** you want, up to 15. You can:
    - select any of the platform's built-in languages, and/or
-   - **add a custom language** by entering its code (e.g. `sw` for Swahili, `es-419` for Latin-American Spanish) and a display name.
-5. Click **Generate captions**.
+   - add a custom language by entering its **Custom code** (for example `sw` for Swahili, or `es-419` for Latin-American Spanish) and a **Name**.
+5. In the new-video dialog, create the activity as usual. When editing an existing activity, click **Generate captions**.
 
-Generation runs in the background. Each language shows a status (**queued → processing → ready**), and captions appear in the player's subtitles/CC menu as soon as they're ready. You can close the editor and come back later; you don't need to keep it open.
+Generation runs in the background. Each language shows its own status (queued, processing, ready, or failed), and captions appear in the player's subtitles/CC menu as soon as they're ready. You can close the editor and come back later; you don't need to keep it open.
 
 ## How it works
 
@@ -35,7 +39,15 @@ Generation runs in the background. Each language shows a status (**queued → pr
 3. Each requested language is translated from that transcript, preserving the timings.
 4. The finished tracks are stored alongside the video and served to the player.
 
-Long videos are transcribed in segments and stitched back together, so a two-hour lecture works the same as a two-minute clip.
+Long videos are transcribed in 10-minute segments and stitched back together, so a two-hour lecture works the same as a two-minute clip. Videos up to about 10 hours are supported.
+
+The transcript is also added to the course's AI search index, so the [AI assistant](/platform/ai) can answer questions about what is said in the video.
+
+## AI Chapters
+
+Once captions exist, the **AI Chapters** panel in the video activity's edit dialog can split the video into chapters. Click **Generate chapters** to have them written from the captions, adjust the times and titles, or use **Add chapter** to add your own, then **Save chapters**. Chapters are also generated automatically after captions finish. Learners see them on the video timeline and as a list under the player.
+
+Generating chapters uses 1 AI credit.
 
 ## Playback
 
@@ -43,11 +55,12 @@ Once at least one language is ready, learners get a **CC / subtitles button** in
 
 ## AI usage & credits
 
-Caption generation uses your organization's **AI credits**, the same pool used by the AI chat and course tools.
+Caption generation uses your organization's **AI credits**, the same pool used by the AI chat and course tools. Self-hosted instances have no credit limit.
 
-- The cost scales with the video's length and the number of languages you request (roughly one credit per ~10 minutes of audio, plus one per translated language).
-- If your organization has AI disabled or has run out of credits, you'll be told when you try to generate, and nothing is charged in that case.
-- If the source language is among your chosen languages, it is reused directly and not re-translated (saving a credit).
+- One credit per started 10 minutes of audio, plus one per translated language, with a minimum of 1.
+- If the source language is among your chosen languages, it is reused directly and not re-translated, so it costs nothing extra.
+- If the video was already transcribed for AI search, only the translations are charged.
+- If your organization has AI disabled or no credits left, generation is refused. If a job starts but can't complete, it is marked failed and the credits it reserved are returned.
 
 <Callout type="warning">
   AI captions are a strong first draft, but automatic transcription and translation
@@ -65,7 +78,7 @@ Caption generation uses your organization's **AI credits**, the same pool used b
 Captions are available automatically wherever these are in place. There is no extra
 feature flag:
 
-- A configured AI provider (Gemini by default; see the AI settings) with the AI
-  feature enabled for the organization.
+- A configured AI provider (Gemini by default; see [AI Setup](/self-hosting/configuration/ai-setup)) with AI
+  enabled for the organization.
 - `ffmpeg` available to the API (already included in the official image).
 - Redis (used to queue and process caption jobs).

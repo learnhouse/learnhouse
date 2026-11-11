@@ -28,6 +28,7 @@ import {
   Package,
   Pencil,
   Puzzle,
+  Radio,
   Save,
   Sparkles,
   Trash2,
@@ -55,12 +56,15 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
 import { ActivityPreviewHoverCard } from '@components/Objects/Activities/ActivityPreview/ActivityPreview'
+import AtlasAttachButton from '@ee/components/Atlas/AtlasAttachButton'
 
 type ActivitiyElementProps = {
   orgslug: string
   activity: any
   activityIndex: any
   course_uuid: string
+  chapter_id?: number
+  chapter_name?: string
   isSelected?: boolean
   onToggleSelect?: () => void
   selectionMode?: boolean
@@ -232,6 +236,9 @@ function ActivityElement(props: ActivitiyElementProps) {
       `/course/${course?.courseStructure.course_uuid.replace('course_', '')}/activity/${props.activity.activity_uuid.replace('activity_', '')}/edit`
     : props.activity.activity_type === 'TYPE_ASSIGNMENT'
     ? getUriWithOrg(org?.slug || props.orgslug, '') + `/dash/assignments/${assignmentUUID}`
+    : props.activity.activity_type === 'TYPE_LIVE_SESSION' && props.activity.content?.live_session_uuid
+    ? getUriWithOrg(org?.slug || props.orgslug, '') +
+      `/dash/live-sessions/session/${String(props.activity.content.live_session_uuid).replace(/^livesession_/, '')}/general`
     : null
 
   const previewHref = getUriWithOrg(props.orgslug, '') +
@@ -245,7 +252,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className={`flex items-center gap-3 py-2.5 px-3 my-2 w-full rounded-lg text-gray-500
+          className={`flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1.5 py-2.5 px-3 my-2 w-full rounded-lg text-gray-500
             ${snapshot.isDragging
               ? 'nice-shadow bg-white ring-2 ring-blue-500/20 z-drag-overlay rotate-1 scale-[1.02]'
               : props.isSelected
@@ -272,7 +279,7 @@ function ActivityElement(props: ActivitiyElementProps) {
           {/* Drag Handle */}
           <div
             {...provided.dragHandleProps}
-            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 transition-colors"
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 transition-colors p-1.5 -m-1.5 sm:p-0 sm:m-0 touch-none"
           >
             <GripVertical size={18} />
           </div>
@@ -322,11 +329,24 @@ function ActivityElement(props: ActivitiyElementProps) {
                 </p>
               </ActivityPreviewHoverCard>
             )}
+            {!props.selectionMode && (
+              <AtlasAttachButton
+                reference={{
+                  type: 'activity',
+                  uuid: props.activity.activity_uuid,
+                  name: props.activity.name,
+                  parent_course_uuid: props.course_uuid,
+                  parent_chapter_id: props.chapter_id,
+                  parent_chapter_name: props.chapter_name,
+                  activity_type: props.activity.activity_type,
+                }}
+              />
+            )}
           </div>
 
-          {/* Status badge + quick actions */}
+          {/* Status badge + quick actions; their own row under the name on phones */}
           {!props.selectionMode && (
-            <div className="flex items-center gap-2 flex-shrink-0 ms-auto">
+            <div className="flex items-center gap-2 flex-shrink-0 ms-auto basis-full sm:basis-auto justify-between sm:justify-start ps-[3.75rem] sm:ps-0">
               <button
                 onClick={changePublicStatus}
                 disabled={isPublishing}
@@ -356,7 +376,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                     : t('dashboard.courses.structure.activity.status.draft')}
                 </span>
               </button>
-              <div className="w-px h-5 bg-gray-200/80 mx-1" />
+              <div className="hidden sm:block w-px h-5 bg-gray-200/80 mx-1" />
               <div className="flex items-center gap-1">
               {props.activity.activity_type === 'TYPE_VIDEO' ? (
                 <Modal
@@ -364,8 +384,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   onOpenChange={() => setEditVideoModalOpen(!editVideoModalOpen)}
                   minHeight="no-min"
                   minWidth="md"
-                  dialogTitle="Edit Video Activity"
-                  dialogDescription="Update the video source, URL, or playback settings."
+                  dialogTitle={t('dashboard.courses.structure.activity.edit_modals.video_title')}
+                  dialogDescription={t('dashboard.courses.structure.activity.edit_modals.video_description')}
                   dialogContent={
                     <EditVideoActivityModal
                       activity={props.activity}
@@ -376,8 +396,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   }
                   dialogTrigger={
                     <button
-                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                      title="Edit video"
+                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title={t('dashboard.courses.structure.activity.edit_modals.video_button')}
                     >
                       <FilePenLine size={15} />
                     </button>
@@ -389,8 +409,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   onOpenChange={() => setEditDocumentModalOpen(!editDocumentModalOpen)}
                   minHeight="no-min"
                   minWidth="md"
-                  dialogTitle="Edit Document Activity"
-                  dialogDescription="Update the document name or replace the PDF file."
+                  dialogTitle={t('dashboard.courses.structure.activity.edit_modals.document_title')}
+                  dialogDescription={t('dashboard.courses.structure.activity.edit_modals.document_description')}
                   dialogContent={
                     <EditDocumentActivityModal
                       activity={props.activity}
@@ -401,8 +421,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   }
                   dialogTrigger={
                     <button
-                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                      title="Edit document"
+                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title={t('dashboard.courses.structure.activity.edit_modals.document_button')}
                     >
                       <FilePenLine size={15} />
                     </button>
@@ -414,8 +434,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   onOpenChange={() => setEditScormModalOpen(!editScormModalOpen)}
                   minHeight="no-min"
                   minWidth="md"
-                  dialogTitle="Edit SCORM Activity"
-                  dialogDescription="Update the SCORM activity name."
+                  dialogTitle={t('dashboard.courses.structure.activity.edit_modals.scorm_title')}
+                  dialogDescription={t('dashboard.courses.structure.activity.edit_modals.scorm_description')}
                   dialogContent={
                     <EditScormActivityModal
                       activity={props.activity}
@@ -426,8 +446,8 @@ function ActivityElement(props: ActivitiyElementProps) {
                   }
                   dialogTrigger={
                     <button
-                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                      title="Edit SCORM activity"
+                      className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title={t('dashboard.courses.structure.activity.edit_modals.scorm_button')}
                     >
                       <FilePenLine size={15} />
                     </button>
@@ -437,24 +457,26 @@ function ActivityElement(props: ActivitiyElementProps) {
                 <ToolTip
                   content={props.activity.activity_type === 'TYPE_ASSIGNMENT'
                     ? t('dashboard.courses.structure.actions.edit_assignment')
+                    : props.activity.activity_type === 'TYPE_LIVE_SESSION'
+                    ? t('dashboard.courses.structure.actions.manage_live_session')
                     : t('dashboard.courses.structure.actions.edit_page')}
                   side="top"
                 >
                   <Link
                     href={editHref}
                     target="_blank"
-                    className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                   >
                     <FilePenLine size={15} />
                   </Link>
                 </ToolTip>
               ) : (
-                <div className="h-7 w-7" />
+                <div className="h-9 w-9 sm:h-7 sm:w-7" />
               )}
               <ToolTip content={t('dashboard.courses.structure.actions.preview_activity')} side="top">
                 <Link
                   href={previewHref}
-                  className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 >
                   <Eye size={15} />
                 </Link>
@@ -466,10 +488,11 @@ function ActivityElement(props: ActivitiyElementProps) {
                 addUserGroup={addActivityUserGroup}
                 removeUserGroup={removeActivityUserGroup}
                 resourceNoun="activity"
+                paid={{ courseUuid: props.course_uuid, resourceUuid: props.activity.activity_uuid, resourceName: props.activity.name }}
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <button className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
                     <MoreVertical size={16} />
                   </button>
                 </DropdownMenuTrigger>
@@ -541,6 +564,10 @@ const ACTIVITIES = {
   'TYPE_SCORM': {
     displayNameKey: 'scorm',
     Icon: Package
+  },
+  'TYPE_LIVE_SESSION': {
+    displayNameKey: 'livesession',
+    Icon: Radio
   },
   'TYPE_CUSTOM': {
     displayNameKey: 'custom',

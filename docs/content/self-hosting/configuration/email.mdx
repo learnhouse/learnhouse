@@ -1,8 +1,14 @@
-import { Callout } from 'nextra/components'
+---
+description: Set up email for a self-hosted LearnHouse instance with Resend or any SMTP server, and set the sender address and display name for outgoing mail.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Email Configuration
 
 LearnHouse supports two email providers for transactional email delivery: **Resend** and **SMTP**. Email is used for user invitations, password resets, and system notifications.
+
+<CloudCta variant="selfhost">LearnHouse Cloud sends invitations and notifications without a mail provider to set up.</CloudCta>
 
 ## Choosing a Provider
 
@@ -55,12 +61,13 @@ LEARNHOUSE_SYSTEM_EMAIL_ADDRESS=noreply@example.com
 
 ## Applying Changes
 
-After updating your email configuration, restart your instance:
+After updating your email configuration, apply it (this recreates the containers whose configuration changed):
 
 ```bash
-learnhouse stop
-learnhouse start
+npx learnhouse start
 ```
+
+You can also set these variables with `npx learnhouse env`, which offers to restart services when you are done.
 
 ## System Email Address
 

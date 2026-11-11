@@ -3,6 +3,8 @@
 Regression guard for the phishing-relay incident where an attacker planted a
 phishing URL in their username and relayed it via invites.
 """
+import time
+
 import pytest
 
 from src.services.security.profile_validation import (
@@ -110,3 +112,36 @@ def test_looks_like_email_rejects_malformed_and_control_chars():
     assert _looks_like_email("a@b.com" + "x" * 260) is False  # too long
     assert _looks_like_email("a\n@test.com") is False  # control char
     assert _looks_like_email("a:b@test.com") is False  # colon (Redis key shaping)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "x" * 20_000,
+        "a-" * 10_000,
+        "a1" * 10_000,
+        "a." * 10_000,
+        "word " * 4_000,
+    ],
+)
+def test_contains_url_is_linear_on_long_link_free_text(value):
+    # Long runs used to make every pattern retry from each character, so a
+    # 2,000-character signup answer took about a second.
+    start = time.perf_counter()
+    assert contains_url(value) is False
+    assert time.perf_counter() - start < 0.5
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "1http://evil.io",
+        "9+git+ssh://host",
+        "pre-evil.com",
+        "x" * 5_000 + " https://evil.io",
+        "x" * 5_000 + ".com",
+        "aaaa-evil dot com",
+    ],
+)
+def test_contains_url_still_finds_links_inside_long_runs(value):
+    assert contains_url(value) is True

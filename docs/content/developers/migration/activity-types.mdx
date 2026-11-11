@@ -1,10 +1,15 @@
-import { Callout } from 'nextra/components'
+---
+title: Activity Types Reference
+description: Look up the content JSON each LearnHouse activity type expects, from Tiptap dynamic pages and media uploads to assignments, custom and SCORM.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Activity Types Reference
 
 Every activity in LearnHouse is described by two enums and one JSON `content` blob:
 
-- `activity_type`: one of `TYPE_DYNAMIC`, `TYPE_VIDEO`, `TYPE_DOCUMENT`, `TYPE_ASSIGNMENT`, `TYPE_CUSTOM`, `TYPE_SCORM`.
+- `activity_type`: one of `TYPE_DYNAMIC`, `TYPE_VIDEO`, `TYPE_DOCUMENT`, `TYPE_ASSIGNMENT`, `TYPE_CUSTOM`, `TYPE_SCORM`, `TYPE_LIVE_SESSION`.
 - `activity_sub_type`: a more specific variant within the type (e.g. `SUBTYPE_VIDEO_YOUTUBE` vs `SUBTYPE_VIDEO_HOSTED`).
 - `content`: a JSON object whose shape depends on the sub-type.
 
@@ -76,20 +81,20 @@ The root must be `{ "type": "doc", "content": [...] }`. Each child is a block no
 
 #### Valid TipTap block types
 
-The API validates dynamic-page content against this whitelist (unknown types are accepted but logged):
+These are the node types the page editor renders. The activity API stores `content` as given and does not reject unknown types, but a node the editor does not know is not shown to learners.
 
 ```
 paragraph, heading, bulletList, orderedList, listItem,
 codeBlock, table, tableRow, tableHeader, tableCell,
 horizontalRule, hardBreak, text,
 
-calloutInfo, calloutWarning,
-blockImage, blockVideo, blockPDF, blockAudio, blockMathEquation,
-blockEmbed, blockQuiz, blockUser, blockWebPreview,
-flipcard, scenarios, button, badge
+callout, calloutInfo, calloutWarning,
+blockImage, blockVideo, blockPDF, blockAudio, blockLibrary, blockMathEquation,
+blockEmbed, blockH5P, blockQuiz, blockCode, blockMagic, blockUser, blockWebPreview,
+flipcard, flipcardGrid, scenarios, button, badge
 ```
 
-The `block*` types correspond to LearnHouse's custom node extensions. Standard TipTap block types (`paragraph`, `heading`, etc.) behave as in any TipTap editor.
+The `block*` types and the other non-standard names correspond to LearnHouse's custom node extensions. `callout` (with `attrs.type` set to `info`, `warning`, `tip`, `success` or `error`) is the current callout node; `calloutInfo` and `calloutWarning` are older forms that still render. `blockCode` is the Code Playground block. Standard TipTap block types (`paragraph`, `heading`, etc.) behave as in any TipTap editor. See [Blocks](/platform/editor/blocks) for what each block does.
 
 #### Inline marks
 
@@ -230,6 +235,22 @@ Renders an arbitrary URL inside an iframe (Google Docs, Notion, Figma, etc.):
 ```
 
 The embedded site must allow iframe embedding (`X-Frame-Options` / `Content-Security-Policy`). LearnHouse cannot work around a destination's frame-blocking headers.
+
+### Library resource (`SUBTYPE_DYNAMIC_RESOURCE`)
+
+Shows a file or other resource from the organization's [Library](/platform/courses/library) as a lesson. `content` points at the resource:
+
+```json
+{
+  "name": "Reading pack",
+  "chapter_id": 7,
+  "activity_type": "TYPE_DYNAMIC",
+  "activity_sub_type": "SUBTYPE_DYNAMIC_RESOURCE",
+  "content": { "resource_uuid": "<uuid of the Library resource>", "resource_type": "<its type>" }
+}
+```
+
+The resource must already exist in the Library. Create it there first, then reference it.
 
 ## Video activities
 
@@ -417,10 +438,10 @@ Without tasks, the assignment renders the description but has no submission UI. 
 | `max_grade_value` | int | No (default `100`) | Tasks are graded out of this value; new code uses `100` everywhere |
 | `reference_file` | string | No | Reference document URL or filename |
 
-Task types (`assignment_type`): `FILE_SUBMISSION`, `QUIZ`, `FORM`, `CODE`, `SHORT_ANSWER`, `NUMBER_ANSWER`, `OTHER`. Each task type interprets `contents` differently, so the safest path for unknown types is `{}`. See the `/api/v1/assignments/` endpoint group in Swagger UI for the per-type contents schema.
+Task types (`assignment_type`): `FILE_SUBMISSION`, `QUIZ`, `FORM`, `CODE`, `SHORT_ANSWER`, `NUMBER_ANSWER`, `CUSTOM`, `OTHER`. Each task type interprets `contents` differently, so the safest path for unknown types is `{}`. `CUSTOM` stores any JSON you send and is graded by hand; see [Headless Assignments](/developers/api/headless-assignments). The per-type schemas are in the [Assignments endpoints](/reference/assignments).
 
 <Callout type="warning">
-**Assignments require authentication to view**, even on a public course. The `/api/v1/assignments/*` router has a router-level `Depends(require_authenticated_user)` that returns `401` for anonymous requests, so an unauthenticated viewer of a public course sees an **empty panel** where the assignment widget would be. The course outline still lists the assignment activity, but the assignment's title, description, due date, tasks and submission UI only appear after login. There is no public read mode for assignments today. If learners need to read the assignment description without signing in, surface it in a sibling dynamic page instead.
+**Assignments require authentication to view**, even on a public course. Every `/api/v1/assignments/*` endpoint returns `401` for anonymous requests, so an unauthenticated viewer of a public course sees an **empty panel** where the assignment widget would be. The course outline still lists the assignment activity, but the assignment's title, description, due date, tasks and submission UI only appear after login. There is no public read mode for assignments today. If learners need to read the assignment description without signing in, surface it in a sibling dynamic page instead.
 </Callout>
 
 ## Custom
@@ -447,7 +468,13 @@ A free-form activity. `content` is any JSON object you want. The platform stores
 
 `activity_type: "TYPE_SCORM"`, sub-types `SUBTYPE_SCORM_12` and `SUBTYPE_SCORM_2004`.
 
-SCORM packages are uploaded through the editor UI. The manifest (`imsmanifest.xml`) is parsed, files are extracted to storage, and the `content` is populated with launch metadata. Programmatic creation of SCORM activities is not currently exposed as a documented public endpoint; check the Swagger UI on a development instance for the latest interface.
+SCORM is part of the [Enterprise Edition](/enterprise/scorm). Packages are uploaded through the editor UI. The manifest (`imsmanifest.xml`) is parsed, files are extracted to storage, and the `content` is populated with launch metadata. Programmatic creation of SCORM activities is not exposed as a documented public endpoint.
+
+## Live sessions
+
+`activity_type: "TYPE_LIVE_SESSION"`, `activity_sub_type: "SUBTYPE_LIVE_SESSION"`.
+
+Created when you schedule a [live session](/enterprise/live-sessions) for a course (Enterprise). Don't create these directly during a migration.
 
 ## The full enum (verbatim)
 
@@ -461,6 +488,7 @@ class ActivityTypeEnum(str, Enum):
     TYPE_ASSIGNMENT = "TYPE_ASSIGNMENT"
     TYPE_CUSTOM = "TYPE_CUSTOM"
     TYPE_SCORM = "TYPE_SCORM"
+    TYPE_LIVE_SESSION = "TYPE_LIVE_SESSION"
 
 
 class ActivitySubTypeEnum(str, Enum):
@@ -468,6 +496,7 @@ class ActivitySubTypeEnum(str, Enum):
     SUBTYPE_DYNAMIC_PAGE = "SUBTYPE_DYNAMIC_PAGE"
     SUBTYPE_DYNAMIC_MARKDOWN = "SUBTYPE_DYNAMIC_MARKDOWN"
     SUBTYPE_DYNAMIC_EMBED = "SUBTYPE_DYNAMIC_EMBED"
+    SUBTYPE_DYNAMIC_RESOURCE = "SUBTYPE_DYNAMIC_RESOURCE"
     # Video
     SUBTYPE_VIDEO_YOUTUBE = "SUBTYPE_VIDEO_YOUTUBE"
     SUBTYPE_VIDEO_HOSTED = "SUBTYPE_VIDEO_HOSTED"
@@ -481,6 +510,8 @@ class ActivitySubTypeEnum(str, Enum):
     # SCORM
     SUBTYPE_SCORM_12 = "SUBTYPE_SCORM_12"
     SUBTYPE_SCORM_2004 = "SUBTYPE_SCORM_2004"
+    # Live session
+    SUBTYPE_LIVE_SESSION = "SUBTYPE_LIVE_SESSION"
 
 
 class ActivityLockType(str, Enum):

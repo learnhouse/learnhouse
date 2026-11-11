@@ -155,6 +155,36 @@ class TestMethodGate:
         _prov(amr="api_token", org_id=org.id)
         await enforce_org_auth_policy(db, regular_user.id, org.id)
 
+    async def test_lti_session_is_admitted_by_its_own_org(self, db, org, regular_user):
+        # Registering the LMS is the org's opt-in; its launches are not one of
+        # the admin-selectable sign-in methods.
+        await _set_auth_policy(db, org.id, allowed_auth_methods=["sso"])
+        _prov(amr="lti", org_id=org.id)
+        await enforce_org_auth_policy(db, regular_user.id, org.id)
+
+    async def test_lti_session_from_another_org_is_refused(self, db, org, regular_user):
+        from fastapi import HTTPException
+
+        await _set_auth_policy(db, org.id, allowed_auth_methods=["sso"])
+        _prov(amr="lti", org_id=org.id + 999)
+        with pytest.raises(HTTPException) as exc:
+            await enforce_org_auth_policy(db, regular_user.id, org.id)
+        assert exc.value.detail["code"] == METHOD_NOT_ALLOWED_CODE
+
+    async def test_lti_session_never_reaches_another_org_even_with_sharing_on(self, db, org, regular_user):
+        """An LMS one org runs must not sign anyone in to their other orgs,
+        even under the default policy (all methods, sharing on)."""
+        from fastapi import HTTPException
+
+        _prov(amr="lti", org_id=org.id + 999)
+        with pytest.raises(HTTPException) as exc:
+            await enforce_org_auth_policy(db, regular_user.id, org.id)
+        assert exc.value.detail["code"] == SESSION_NOT_BOUND_CODE
+
+    async def test_lti_session_is_admitted_by_its_own_org_under_default_policy(self, db, org, regular_user):
+        _prov(amr="lti", org_id=org.id)
+        await enforce_org_auth_policy(db, regular_user.id, org.id)
+
 
 @pytest.mark.asyncio
 class TestSharingGate:

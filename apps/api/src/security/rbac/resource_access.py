@@ -19,6 +19,7 @@ Access Rules:
 import logging
 from typing import Union, Optional
 from fastapi import HTTPException, Request, status
+from sqlalchemy import inspect as sa_inspect
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -28,6 +29,7 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.security.rbac.types import AccessAction, AccessContext, AccessDecision, ResourceConfig
 from src.security.rbac.config import get_resource_config, RESOURCE_CONFIGS
+from src.security.org_scope import get_org_scope
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles,
     authorization_verify_based_on_org_admin_status,
@@ -72,6 +74,55 @@ class ResourceAccessChecker:
         self._parent_uuid_cache: dict[str, Optional[str]] = {}
         self._folder_trees: dict = {}
         self._viewer_folder_grants: Optional[tuple] = None
+        # Admin status depends on the org alone, so a listing of one org's
+        # items needs it once rather than once per item.
+        self._org_admin_cache: dict[int, bool] = {}
+
+    async def prime(self, resources: list, uuid_field: str) -> None:
+        """Seed the caches for rows a listing already loaded in bulk.
+
+        A listing checks every item it shows; without this each check refetched
+        its row and the caller's authorship of it one item at a time.
+        """
+        uuids = []
+        for resource in resources:
+            resource_uuid = getattr(resource, uuid_field)
+            self._resource_cache.setdefault(resource_uuid, resource)
+            uuids.append(resource_uuid)
+
+        user_id = self._get_user_id()
+        pending = [u for u in uuids if u not in self._author_cache]
+        if user_id == 0 or not pending:
+            return
+
+        authored = set(
+            (await self.db_session.execute(
+                select(ResourceAuthor.resource_uuid).where(
+                    ResourceAuthor.resource_uuid.in_(pending),
+                    ResourceAuthor.user_id == user_id,
+                    ResourceAuthor.authorship.in_([
+                        ResourceAuthorshipEnum.CREATOR,
+                        ResourceAuthorshipEnum.MAINTAINER,
+                        ResourceAuthorshipEnum.CONTRIBUTOR,
+                    ]),
+                    ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
+                )
+            )).scalars().all()
+        )
+        from src.security.org_auth import is_org_member
+
+        # Same rule as _is_resource_author, membership resolved once per org.
+        member_by_org: dict[int, bool] = {}
+        for resource_uuid in pending:
+            if resource_uuid not in authored:
+                self._author_cache[resource_uuid] = False
+                continue
+            org_id = getattr(self._resource_cache.get(resource_uuid), "org_id", None)
+            if org_id is None:
+                continue
+            if org_id not in member_by_org:
+                member_by_org[org_id] = await is_org_member(user_id, org_id, self.db_session)
+            self._author_cache[resource_uuid] = member_by_org[org_id]
 
     async def check_access(
         self,
@@ -111,6 +162,22 @@ class ResourceAccessChecker:
                 action=action.value,
                 context=context.value,
             )
+
+        # A caller bound to one organization (an app connected over MCP, the
+        # in-app agent) never reaches another organization's resources, even
+        # when the member behind it belongs there too. Checked before every
+        # bypass below: the boundary is the caller's, not the member's.
+        scope = get_org_scope()
+        if scope is not None:
+            owner = await self._resource_org_id(resource_uuid, config)
+            if owner is not None and owner != scope:
+                return AccessDecision(
+                    allowed=False,
+                    reason="This resource belongs to another organization",
+                    resource_uuid=resource_uuid,
+                    action=action.value,
+                    context=context.value,
+                )
 
         # Superadmin bypass: platform admins act on any tenant without an org
         # membership row. The flag is loaded onto PublicUser by get_current_user
@@ -293,7 +360,7 @@ class ResourceAccessChecker:
         user_id = self._get_user_id()
         is_public, is_published = await self._is_public_and_published(resource_uuid, config)
 
-        logger.info(f"[ACCESS_CHECK] resource_uuid={resource_uuid}, user_id={user_id}, is_public={is_public}, is_published={is_published}")
+        logger.debug("[ACCESS_CHECK] resource_uuid=%s, user_id=%s, is_public=%s, is_published=%s", resource_uuid, user_id, is_public, is_published)
 
         # Rule 1: Public + published = OK for everyone
         if config.has_published_field:
@@ -321,7 +388,7 @@ class ResourceAccessChecker:
         # Rule 2: Check authorship (if supported)
         if config.supports_authorship:
             is_author = await self._is_resource_author(resource_uuid)
-            logger.info(f"[ACCESS_CHECK] Rule 2 - is_author={is_author}")
+            logger.debug("[ACCESS_CHECK] Rule 2 - is_author=%s", is_author)
             if is_author:
                 return AccessDecision(
                     allowed=True,
@@ -369,7 +436,7 @@ class ResourceAccessChecker:
             has_usergroup_access = await self._check_usergroup_membership(resource_uuid, is_public)
             if has_usergroup_access and await self._blocked_by_enclosing_folder(resource_uuid, config):
                 has_usergroup_access = False
-            logger.info(f"[ACCESS_CHECK] Rule 5 - has_usergroup_access={has_usergroup_access}, is_published={is_published}")
+            logger.debug("[ACCESS_CHECK] Rule 5 - has_usergroup_access=%s, is_published=%s", has_usergroup_access, is_published)
 
             # For resources with published field, UserGroup access requires published=True
             if config.has_published_field:
@@ -892,9 +959,15 @@ class ResourceAccessChecker:
         if cached is not None:
             return cached
 
-        result = await authorization_verify_based_on_org_admin_status(
-            self.request, user_id, "read", resource_uuid, self.db_session
-        )
+        org_id = getattr(self._resource_cache.get(resource_uuid), "org_id", None)
+        if org_id is not None and org_id in self._org_admin_cache:
+            result = self._org_admin_cache[org_id]
+        else:
+            result = await authorization_verify_based_on_org_admin_status(
+                self.request, user_id, "read", resource_uuid, self.db_session
+            )
+            if org_id is not None:
+                self._org_admin_cache[org_id] = result
         self._admin_cache[resource_uuid] = result
         return result
 
@@ -957,6 +1030,16 @@ class ResourceAccessChecker:
         if not config:
             return True
 
+        org_id = await self._resource_org_id(resource_uuid, config)
+        if org_id is None:
+            return True
+
+        from src.security.org_auth import is_org_member
+
+        return await is_org_member(user_id, org_id, self.db_session)
+
+    async def _resource_org_id(self, resource_uuid: str, config: ResourceConfig) -> Optional[int]:
+        """The organization that owns a resource, or None when unknown."""
         resource = await self._get_resource(resource_uuid, config)
         org_id = getattr(resource, "org_id", None) if resource else None
 
@@ -969,13 +1052,7 @@ class ResourceAccessChecker:
                 if parent_config:
                     parent = await self._get_resource(parent_uuid, parent_config)
                     org_id = getattr(parent, "org_id", None) if parent else None
-
-        if org_id is None:
-            return True
-
-        from src.security.org_auth import is_org_member
-
-        return await is_org_member(user_id, org_id, self.db_session)
+        return org_id
 
     async def _get_resource(self, resource_uuid: str, config: ResourceConfig):
         """Get the resource from the database with caching."""
@@ -983,66 +1060,91 @@ class ResourceAccessChecker:
             return self._resource_cache[resource_uuid]
 
         resource = None
-
-        # Primary resources
-        if config.resource_type == "courses":
-            from src.db.courses.courses import Course
-            statement = select(Course).where(Course.course_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "podcasts":
-            from src.db.podcasts.podcasts import Podcast
-            statement = select(Podcast).where(Podcast.podcast_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "communities":
-            from src.db.communities.communities import Community
-            statement = select(Community).where(Community.community_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "folders":
-            from src.db.folders.folders import Folder
-            statement = select(Folder).where(Folder.folder_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "media":
-            from src.db.media.media import Media
-            statement = select(Media).where(Media.media_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "boards":
-            from src.db.boards import Board
-            statement = select(Board).where(Board.board_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "playgrounds":
-            from src.db.playgrounds import Playground
-            statement = select(Playground).where(Playground.playground_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        # Child resources
-        elif config.resource_type == "coursechapters":
-            from src.db.courses.chapters import Chapter
-            statement = select(Chapter).where(Chapter.chapter_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "activities":
-            from src.db.courses.activities import Activity
-            statement = select(Activity).where(Activity.activity_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "episodes":
-            from src.db.podcasts.episodes import PodcastEpisode
-            statement = select(PodcastEpisode).where(PodcastEpisode.episode_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
-
-        elif config.resource_type == "discussions":
-            from src.db.communities.discussions import Discussion
-            statement = select(Discussion).where(Discussion.discussion_uuid == resource_uuid)
-            resource = (await self.db_session.execute(statement)).scalars().first()
+        located = _resource_model(config.resource_type)
+        if located is not None:
+            model, uuid_field = located
+            # Endpoints usually load the row before checking access to it.
+            # Selecting it again would return that same instance anyway, so
+            # take it from the session and save the round trip.
+            resource = _loaded_in_session(self.db_session, model, uuid_field, resource_uuid)
+            if resource is None:
+                statement = select(model).where(getattr(model, uuid_field) == resource_uuid)
+                resource = (await self.db_session.execute(statement)).scalars().first()
 
         self._resource_cache[resource_uuid] = resource
         return resource
+
+
+def _resource_model(resource_type: str):
+    """The model and uuid column for an RBAC resource type, or None."""
+    if resource_type == "courses":
+        from src.db.courses.courses import Course
+        return Course, "course_uuid"
+    if resource_type == "podcasts":
+        from src.db.podcasts.podcasts import Podcast
+        return Podcast, "podcast_uuid"
+    if resource_type == "communities":
+        from src.db.communities.communities import Community
+        return Community, "community_uuid"
+    if resource_type == "folders":
+        from src.db.folders.folders import Folder
+        return Folder, "folder_uuid"
+    if resource_type == "media":
+        from src.db.media.media import Media
+        return Media, "media_uuid"
+    if resource_type == "boards":
+        from src.db.boards import Board
+        return Board, "board_uuid"
+    if resource_type == "playgrounds":
+        from src.db.playgrounds import Playground
+        return Playground, "playground_uuid"
+    # Child resources
+    if resource_type == "coursechapters":
+        from src.db.courses.chapters import Chapter
+        return Chapter, "chapter_uuid"
+    if resource_type == "activities":
+        from src.db.courses.activities import Activity
+        return Activity, "activity_uuid"
+    if resource_type == "episodes":
+        from src.db.podcasts.episodes import PodcastEpisode
+        return PodcastEpisode, "episode_uuid"
+    if resource_type == "discussions":
+        from src.db.communities.discussions import Discussion
+        return Discussion, "discussion_uuid"
+    return None
+
+
+def _loaded_in_session(db_session, model, uuid_field: str, resource_uuid: str):
+    """A live, fully loaded ``model`` row with that uuid already in the session.
+
+    Only rows whose attributes are all loaded qualify: touching an expired
+    attribute would lazy-load it, which async sessions can't do.
+    """
+    try:
+        candidates = list(db_session.sync_session.identity_map.values())
+        # Deleted in this session but not flushed yet: a SELECT would flush
+        # the delete first and find nothing.
+        pending_deletes = db_session.sync_session.deleted
+    except Exception:
+        # Not a real AsyncSession (e.g. a test double); just query.
+        return None
+    columns = None
+    for obj in candidates:
+        if type(obj) is not model:
+            continue
+        if columns is None:
+            columns = {attr.key for attr in sa_inspect(model).column_attrs}
+        state = sa_inspect(obj)
+        if (
+            state.deleted
+            or state.was_deleted
+            or obj in pending_deletes
+            or columns & (state.unloaded | state.expired_attributes)
+        ):
+            continue
+        if state.dict.get(uuid_field) == resource_uuid:
+            return obj
+    return None
 
 
 # Convenience functions for quick access checks
@@ -1075,6 +1177,17 @@ def _get_request_checker(
         # request.state may be unavailable in non-HTTP contexts (tests, tasks)
         pass
     return checker
+
+
+async def prime_resource_access(
+    request: Request,
+    db_session: AsyncSession,
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+    resources: list,
+    uuid_field: str,
+) -> None:
+    """Seed this request's access checks with rows a listing loaded in bulk."""
+    await _get_request_checker(request, db_session, current_user).prime(resources, uuid_field)
 
 
 async def check_resource_access(

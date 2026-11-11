@@ -42,6 +42,8 @@ async def check_element_type(element_uuid):
         return "boards"
     elif element_uuid.startswith("playground_"):
         return "playgrounds"
+    elif element_uuid.startswith("livesession_"):
+        return "live_sessions"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -109,6 +111,46 @@ async def get_id_identifier_of_element(element_uuid):
 
 
 async def get_element_organization_id(
+    element_uuid: str,
+    db_session: AsyncSession,
+) -> Optional[int]:
+    """Get the organization ID that an element belongs to (see
+    ``_lookup_element_organization_id``).
+
+    A request's admin, role and token checks all ask this about the same
+    element, so the answer is memoized per session. Only found orgs are
+    remembered: an element created later in the session must still resolve.
+    """
+    element_type = await check_element_type(element_uuid)
+    # Placeholder uuids ("course_x", "user_x") name no row; don't query for one.
+    if element_uuid.endswith("_x"):
+        return None
+    cache = getattr(db_session, "_element_org_cache", None)
+    if not isinstance(cache, dict):
+        cache = {}
+        try:
+            db_session._element_org_cache = cache
+        except Exception:
+            pass
+    # A row this session already loaded carries the answer, and reflects any
+    # change made to it during the request.
+    from src.security.rbac.resource_access import _loaded_in_session, _resource_model
+
+    located = _resource_model(element_type)
+    if located is not None:
+        model, uuid_field = located
+        row = _loaded_in_session(db_session, model, uuid_field, element_uuid)
+        if row is not None and getattr(row, "org_id", None) is not None:
+            return row.org_id
+    if element_uuid in cache:
+        return cache[element_uuid]
+    org_id = await _lookup_element_organization_id(element_uuid, db_session)
+    if org_id is not None:
+        cache[element_uuid] = org_id
+    return org_id
+
+
+async def _lookup_element_organization_id(
     element_uuid: str,
     db_session: AsyncSession,
 ) -> Optional[int]:

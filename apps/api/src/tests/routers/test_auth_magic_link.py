@@ -311,6 +311,22 @@ class TestMagicLinkVerify:
         assert body["tokens"]["access_token"]
         cookies_mock.assert_called_once()
 
+    async def test_unproven_address_drops_idp_links(self, client, db, verified_user):
+        """The magic link proves the inbox: links an org's IdP or LMS made
+        while the address was unproven don't survive the owner's sign-in."""
+        for verified, calls in ((True, 0), (False, 1)):
+            verified_user.email_verified = verified
+            db.add(verified_user)
+            await db.commit()
+            drop = AsyncMock()
+            with patch(
+                "src.services.auth.magic_login.consume_magic_login_token",
+                return_value=(verified_user.email, None),
+            ), patch("src.services.auth.utils._drop_unverified_sso_links", drop):
+                response = await client.post("/api/v1/auth/magic-link/verify", json={"token": "good-token"})
+            assert response.status_code == 200
+            assert drop.await_count == calls
+
     async def test_mfa_required_branch(self, client, db, verified_user):
         await _enroll_confirmed(db, verified_user.id)
         with patch(

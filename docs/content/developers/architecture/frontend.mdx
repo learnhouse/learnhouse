@@ -1,12 +1,17 @@
+---
+title: "Frontend Architecture"
+description: "Learn how the LearnHouse Next.js 16 frontend is built: React 19, the App Router, Tiptap editor, runtime config and how it talks to the API."
+---
+
 # Frontend Architecture
 
 The LearnHouse frontend is a **Next.js 16** application located at `apps/web` in the project. It is the main user interface for learners, instructors, and administrators.
 
 ## Technology Stack
 
-- **Next.js 16.2.3** with the App Router (standalone output)
-- **React 19.2.5** with Server Components
-- **TypeScript 6.0.2**
+- **Next.js 16** with the App Router (standalone output)
+- **React 19** with Server Components
+- **TypeScript 6**
 - **TailwindCSS v4** for styling
 - **Bun** as the package manager
 - **Turbopack** for development builds (`next dev --turbopack`)
@@ -14,10 +19,10 @@ The LearnHouse frontend is a **Next.js 16** application located at `apps/web` in
 
 ## Key Dependencies
 
-- **@tiptap/core**: Block-based rich text editor
+- **@tiptap/core**: Block-based rich text editor (Tiptap 3)
 - **@radix-ui**: Accessible, unstyled UI primitives
-- **@hocuspocus/provider**: Real-time collaboration client
-- **yjs**: CRDT library for conflict-free collaborative editing
+- **@hocuspocus/provider**: Real-time collaboration client for boards
+- **yjs**: CRDT library for conflict-free collaborative editing on boards
 - **@codemirror**: Code editor component
 - **recharts**: Charting and data visualization
 - **formik / yup**: Form handling and validation
@@ -25,7 +30,8 @@ The LearnHouse frontend is a **Next.js 16** application located at `apps/web` in
 - **i18next**: Internationalization
 - **wavesurfer.js**: Audio/podcast player
 - **jspdf / html2canvas**: Certificate generation
-- **unsplash-js**: Unsplash image integration
+
+Exact versions are in `apps/web/package.json` and `bun.lock`.
 
 ## App Router
 
@@ -38,7 +44,11 @@ The frontend uses the Next.js App Router, which enables:
 
 ## Authentication
 
-Authentication is handled via **JWT tokens** issued by the FastAPI backend. On login, the backend sets an `access_token_cookie` (HS256, 8-hour expiry) that the frontend attaches to API requests. Protected routes check for a valid session before rendering.
+Authentication is handled via **JWT tokens** issued by the FastAPI backend. On login, the backend sets an `LH_access` cookie (8-hour expiry) and an `LH_refresh` cookie (30 days by default, renewed on each refresh). Protected routes check for a valid session before rendering.
+
+## Runtime Configuration
+
+The web app ships as a prebuilt image, so `NEXT_PUBLIC_*` values can't be baked in at build time. When the container starts, `server-wrapper.js` collects every `NEXT_PUBLIC_*` variable (plus `LEARNHOUSE_PLATFORM_URL`) into `runtime-config.json` for the server and `public/runtime-config.js` (`window.__RUNTIME_CONFIG__`) for the browser. Code reads them through `getConfig()` in `services/config/config.ts`, which falls back to `process.env` on the server.
 
 ## Communication with the Backend
 

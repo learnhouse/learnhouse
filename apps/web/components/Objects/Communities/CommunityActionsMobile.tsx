@@ -2,6 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Plus, Settings, MessageCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Community } from '@services/communities/communities'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { getUriWithOrg } from '@services/config/config'
@@ -17,11 +18,13 @@ export function CommunityActionsMobile({
   orgslug,
   onCreateDiscussion,
 }: CommunityActionsMobileProps) {
+  const { t } = useTranslation()
   const { canManageCommunity, canCreateDiscussion } = useCommunityRights(community.community_uuid)
 
   return (
-    <nav aria-label="Community mobile actions" className="fixed bottom-0 start-0 end-0 z-50 md:hidden">
-      <div className="mx-3 mb-4 bg-white/95 backdrop-blur-sm rounded-xl nice-shadow p-3">
+    // Floats just above the phone tab bar (--lh-mobile-nav-h is 0 without one).
+    <nav aria-label={t('communities.actions.mobile_actions')} className="fixed bottom-[calc(max(var(--lh-mobile-nav-h),var(--lh-safe-bottom))+0.5rem)] start-0 end-0 z-50 md:hidden">
+      <div className="mx-3 bg-white/95 backdrop-blur-sm rounded-2xl nice-shadow p-2.5">
         <div className="flex items-center gap-3">
           {/* Community Icon */}
           <div className="flex-shrink-0 w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -32,7 +35,7 @@ export function CommunityActionsMobile({
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-900 truncate text-sm">{community.name}</p>
             <p className="text-xs text-gray-400">
-              {community.public ? 'Public' : 'Private'}
+              {community.public ? t('communities.public') : t('communities.private')}
             </p>
           </div>
 
@@ -41,8 +44,8 @@ export function CommunityActionsMobile({
             {canManageCommunity && (
               <Link
                 href={getUriWithOrg(orgslug, '/dash/communities')}
-                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                aria-label="Manage community"
+                className="w-11 h-11 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                aria-label={t('communities.actions.manage_community_label')}
               >
                 <Settings size={16} className="text-gray-600" />
               </Link>
@@ -50,10 +53,10 @@ export function CommunityActionsMobile({
             {canCreateDiscussion && onCreateDiscussion && (
               <button
                 onClick={onCreateDiscussion}
-                className="flex items-center gap-1.5 px-3 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-1.5 px-4 h-11 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl transition-colors text-sm font-medium"
               >
                 <Plus size={14} />
-                New
+                {t('communities.actions.new')}
               </button>
             )}
           </div>

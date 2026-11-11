@@ -6,6 +6,8 @@ export interface SlashCommandItem {
   id: string
   title: string
   description: string
+  titleKey: string
+  descriptionKey: string
   icon: ReactNode
   category: SlashCommandCategory
   keywords: string[]
@@ -18,6 +20,7 @@ export type SlashCommandCategory =
   | 'media'
   | 'interactive'
   | 'callouts'
+  | 'dynamic'
   | 'ui'
   | 'tables'
 

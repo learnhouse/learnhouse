@@ -55,7 +55,7 @@ export default function LibraryHeader({
     <div className="flex flex-col space-y-2 pt-6">
       <Breadcrumbs items={[{ label: t('library.library'), href: '/dash/library', icon: <FolderSimple size={14} /> }]} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h1 className="pt-3 font-bold text-4xl">{t('library.library')}</h1>
+        <h1 className="pt-3 font-bold text-3xl sm:text-4xl">{t('library.library')}</h1>
         <AuthenticatedClientElement checkMethod="roles" action="create" ressourceType={'folders' as any} orgId={org_id}>
           <div className="flex items-center gap-2">
             <Modal
@@ -65,7 +65,7 @@ export default function LibraryHeader({
               minWidth="lg"
               dialogTitle={t('library.add_content')}
               dialogContent={<AddContentModal folderUuid={folderUuid} orgslug={orgslug} closeModal={() => setAddContentOpen(false)} onChanged={onChanged} />}
-              dialogTrigger={<button className={SECONDARY_BTN}><Plus size={16} /><span>{t('library.add_content')}</span></button>}
+              dialogTrigger={<button className={SECONDARY_BTN} aria-label={t('library.add_content')}><Plus size={16} /><span className="hidden sm:inline">{t('library.add_content')}</span></button>}
             />
             <Modal
               isDialogOpen={uploadOpen}
@@ -74,7 +74,7 @@ export default function LibraryHeader({
               minWidth="lg"
               dialogTitle={t('media.upload_media')}
               dialogContent={<UploadMediaModal orgslug={orgslug} folderUuid={folderUuid} closeModal={() => setUploadOpen(false)} onChanged={onChanged} />}
-              dialogTrigger={<button className={SECONDARY_BTN}><UploadSimple size={16} /><span>{t('media.upload_media')}</span></button>}
+              dialogTrigger={<button className={SECONDARY_BTN} aria-label={t('media.upload_media')}><UploadSimple size={16} /><span className="hidden sm:inline">{t('media.upload_media')}</span></button>}
             />
             <Modal
               isDialogOpen={newFolderOpen}
@@ -101,7 +101,7 @@ export default function LibraryHeader({
             className="w-full ps-9 pe-8 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 placeholder:text-gray-400"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label="Clear search">
+            <button onClick={() => setQuery('')} className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={t('library.clear_search')}>
               <X size={14} />
             </button>
           )}

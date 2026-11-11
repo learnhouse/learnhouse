@@ -7,15 +7,16 @@ import path from 'node:path'
 // throws, exercising the "Archive creation failed" path (which the real-tar
 // suite can't reach without a genuinely broken filesystem).
 vi.mock('node:child_process', () => ({
-  execSync: vi.fn((cmd: string) => {
-    if (String(cmd).includes('tar -czf')) throw new Error('disk full')
+  execFileSync: vi.fn((file: string, args: string[] = []) => {
+    if (file === 'tar' && args[0] === '-czf') throw new Error('disk full')
     return Buffer.from('')
   }),
 }))
 const dockerMock = vi.hoisted(() => ({
-  isContainerRunning: vi.fn(() => true),
-  autoDetectDeploymentId: vi.fn(() => 'dep1'),
-  dockerExecToFile: vi.fn((_c: string, _cmd: string, out: string) => fs.writeFileSync(out, 'SELECT 1;')),
+  composeServiceContainer: vi.fn(() => 'cid-db'),
+  dockerComposeStop: vi.fn(),
+  dockerComposeUp: vi.fn(),
+  dockerExecToFile: vi.fn((_c: string, _cmd: string[], out: string) => fs.writeFileSync(out, 'SELECT 1;')),
   dockerExecFromFile: vi.fn(),
 }))
 vi.mock('../src/services/docker.js', () => dockerMock)
@@ -60,6 +61,20 @@ describe('backup: archive creation failure', () => {
   })
 
   it('exits when the tar archive step fails', async () => {
-    await expect(backupCommand()).rejects.toBeInstanceOf(ProcessExit) // dump ok, archive fails → exit(1)
+    await expect(backupCommand()).rejects.toMatchObject({ code: 1 }) // dump ok, archive fails → exit(1)
+    // the staging folder and the partial archive are cleaned up
+    const backups = path.join(installDir, 'backups')
+    expect(fs.readdirSync(backups)).toEqual([])
+  })
+
+  it('cleans up BEFORE exiting (a real process.exit skips pending finally blocks)', async () => {
+    const backups = path.join(installDir, 'backups')
+    let leftAtExit: string[] | null = null
+    vi.mocked(process.exit).mockImplementation(((c?: number) => {
+      leftAtExit = fs.readdirSync(backups) // what a real exit would leave behind
+      throw new ProcessExit(c ?? 0)
+    }) as never)
+    await expect(backupCommand()).rejects.toMatchObject({ code: 1 })
+    expect(leftAtExit).toEqual([])
   })
 })

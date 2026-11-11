@@ -3,6 +3,7 @@ import { useAssignmentSubmission, useAssignmentTaskSubmissions } from '@componen
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
+import { answerInputClass } from '@components/Objects/Activities/Assignment/assignmentUI'
 import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Info, Minus, Plus, PlusCircle, X, Type } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -58,6 +59,11 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
     const submissionIsGraded = Array.isArray(assignmentSubmission)
         && assignmentSubmission.length > 0
         && assignmentSubmission[0].submission_status === 'GRADED';
+    // Handed in (SUBMITTED) or graded: answers can no longer be saved, so
+    // they can't be edited either; typing would only look like it worked.
+    const answersLocked = submissionIsGraded || (Array.isArray(assignmentSubmission)
+        && assignmentSubmission.length > 0
+        && assignmentSubmission[0].submission_status === 'SUBMITTED');
     const showCorrectAnswers = view === 'student'
         && submissionIsGraded
         && !!assignment?.assignment_object?.show_correct_answers;
@@ -79,7 +85,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                 questionText: '', 
                 questionUUID: 'question_' + uuidv4(), 
                 blanks: [{ 
-                    placeholder: 'Enter the correct answer', 
+                    placeholder: t('dashboard.assignments.editor.task_editor.form.default_blank_placeholder'), 
                     correctAnswer: '', 
                     hint: '',
                     blankUUID: 'blank_' + uuidv4() 
@@ -120,7 +126,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
     const addBlank = (qIndex: number) => {
         const updatedQuestions = [...questions];
         updatedQuestions[qIndex].blanks.push({ 
-            placeholder: 'Enter the correct answer', 
+            placeholder: t('dashboard.assignments.editor.task_editor.form.default_blank_placeholder'), 
             correctAnswer: '', 
             hint: '',
             blankUUID: 'blank_' + uuidv4() 
@@ -134,7 +140,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
             updatedQuestions[qIndex].blanks.splice(bIndex, 1);
             setQuestions(updatedQuestions);
         } else {
-            toast.error('Cannot delete the last blank. At least one blank is required.');
+            toast.error(t('dashboard.assignments.editor.task_editor.form.last_blank'));
         }
     };
 
@@ -143,7 +149,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
             questionText: '', 
             questionUUID: 'question_' + uuidv4(), 
             blanks: [{ 
-                placeholder: 'Enter the correct answer', 
+                placeholder: t('dashboard.assignments.editor.task_editor.form.default_blank_placeholder'), 
                 correctAnswer: '', 
                 hint: '',
                 blankUUID: 'blank_' + uuidv4() 
@@ -235,7 +241,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
 
     const submitFC = async (opts?: { silent?: boolean }) => {
         if (userSubmissions.submissions.length === 0) {
-            if (!opts?.silent) toast.error('Please fill in at least one blank before submitting.');
+            if (!opts?.silent) toast.error(t('dashboard.assignments.editor.task_editor.form.fill_one_blank'));
             return false;
         }
 
@@ -254,7 +260,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
         );
 
         if (res.success) {
-            if (!opts?.silent) toast.success('Form submitted successfully!');
+            if (!opts?.silent) toast.success(t('dashboard.assignments.editor.task_editor.form.submitted'));
             const savedUUID = res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid;
             // Baseline = exactly what we sent. Live = the LATEST answers (from
             // prev), never reverted to the call-time snapshot, so any edit made
@@ -279,14 +285,14 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
             return true;
         } else {
             console.error('Submission error:', res);
-            if (!opts?.silent) toast.error('Error submitting form, please retry later.');
+            if (!opts?.silent) toast.error(t('dashboard.assignments.editor.task_editor.form.submit_error'));
             return false;
         }
     };
 
     const gradeCustomFC = async (grade: number, feedback?: string) => {
         if (!user_id) {
-            toast.error('User ID is required for grading.');
+            toast.error(t('dashboard.assignments.editor.grading.user_id_required'));
             return;
         }
         // There must be an existing submission row to grade. Without this guard
@@ -314,7 +320,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
 
     const gradeFC = async () => {
         if (!user_id) {
-            toast.error('User ID is required for grading.');
+            toast.error(t('dashboard.assignments.editor.grading.user_id_required'));
             return;
         }
 
@@ -355,9 +361,9 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
         const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
         if (res.success) {
             getAssignmentTaskSubmissionFromIdentifiedUserUI();
-            toast.success(`Task graded successfully with ${finalGrade} points (${correctAnswers}/${totalBlanks} correct)`);
+            toast.success(t('dashboard.assignments.editor.task_editor.form.graded_success_detail', { grade: finalGrade, correct: correctAnswers, total: totalBlanks }));
         } else {
-            toast.error('Error grading task, please retry later.');
+            toast.error(t('dashboard.assignments.editor.grading.graded_error'));
         }
     };
 
@@ -473,7 +479,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                 questionText: '', 
                 questionUUID: 'question_' + uuidv4(), 
                 blanks: [{ 
-                    placeholder: 'Enter the correct answer', 
+                    placeholder: t('dashboard.assignments.editor.task_editor.form.default_blank_placeholder'), 
                     correctAnswer: '', 
                     hint: '',
                     blankUUID: 'blank_' + uuidv4() 
@@ -502,13 +508,13 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
             >
                 {view === 'grading' && (
                     <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                        <h3 className="text-sm font-semibold text-gray-800 mb-2">Submission Summary</h3>
+                        <h3 className="text-sm font-semibold text-gray-800 mb-2">{t('dashboard.assignments.editor.task_editor.form.summary_title')}</h3>
                         <div className="grid grid-cols-3 gap-4 text-sm">
                             <div className="text-center">
                                 <div className="text-lg font-bold text-blue-600">
                                     {questions.flatMap(q => q.blanks).length}
                                 </div>
-                                <div className="text-gray-600">Total Blanks</div>
+                                <div className="text-gray-600">{t('dashboard.assignments.editor.task_editor.form.total_blanks')}</div>
                             </div>
                             <div className="text-center">
                                 <div className="text-lg font-bold text-green-600">
@@ -517,7 +523,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                         return userAnswer && userAnswer.answer.toLowerCase().trim() === blank.correctAnswer.toLowerCase().trim();
                                     }).length}
                                 </div>
-                                <div className="text-gray-600">Correct</div>
+                                <div className="text-gray-600">{t('dashboard.assignments.editor.task_editor.form.correct')}</div>
                             </div>
                             <div className="text-center">
                                 <div className="text-lg font-bold text-red-600">
@@ -526,7 +532,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                         return userAnswer && userAnswer.answer.toLowerCase().trim() === blank.correctAnswer.toLowerCase().trim();
                                     }).length}
                                 </div>
-                                <div className="text-gray-600">Incorrect</div>
+                                <div className="text-gray-600">{t('dashboard.assignments.editor.task_editor.form.incorrect')}</div>
                             </div>
                         </div>
                     </div>
@@ -539,9 +545,13 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                     <input
                                         value={question.questionText}
                                         onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
-                                        placeholder="Enter your question with blanks (use ___ for blanks)"
+                                        placeholder={t('dashboard.assignments.editor.task_editor.form.question_placeholder')}
                                         className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                     />
+                                ) : view === 'student' ? (
+                                    <p className="w-full text-[15px] font-semibold leading-snug text-neutral-900">
+                                        {question.questionText}
+                                    </p>
                                 ) : (
                                     <p className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold">
                                         {question.questionText}
@@ -559,10 +569,39 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
 
                             {/* Blanks section */}
                             <div className="flex flex-col space-y-2">
-                                {question.blanks.map((blank, bIndex) => (
+                                {question.blanks.map((blank, bIndex) => view === 'student' ? (
+                                    // Learner: a plain labelled field per blank.
+                                    <div key={bIndex} className="flex flex-col gap-1.5">
+                                        <input
+                                            value={userSubmissions.submissions?.find(
+                                                (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
+                                            )?.answer || ''}
+                                            onChange={(e) => !answersLocked && handleUserAnswerChange(question.questionUUID!, blank.blankUUID!, e.target.value)}
+                                            onBlur={(e) => !answersLocked && handleUserAnswerBlur(question.questionUUID!, blank.blankUUID!, e.target.value)}
+                                            onPaste={handlePaste}
+                                            readOnly={answersLocked}
+                                            placeholder={blank.placeholder}
+                                            aria-label={blank.placeholder || question.questionText}
+                                            data-blank-id={blank.blankUUID}
+                                            className={answerInputClass}
+                                        />
+                                        {/* Nothing at all when this blank's key was withheld:
+                                            an empty "Expected answer:" is worse than nothing. */}
+                                        {revealAnswerKey && typeof blank.correctAnswer === 'string' && (
+                                            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700">
+                                                <Check size={11} />
+                                                <span className="font-semibold">{t('assignments.form.expected_answer')}:</span>
+                                                <span>{blank.correctAnswer}</span>
+                                            </span>
+                                        )}
+                                        {blank.hint && (
+                                            <p className="text-xs text-sky-700">💡 {blank.hint}</p>
+                                        )}
+                                    </div>
+                                ) : (
                                     <div key={bIndex} className="flex">
-                                        <div className={"blank-item outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 min-h-[40px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow " + (view == 'student' ? 'active:scale-105' : '')}>
-                                            <div className="font-bold text-base flex items-center justify-center h-full w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
+                                        <div className="blank-item outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 min-h-[40px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow">
+                                            <div className="font-bold text-base flex flex-none items-center justify-center self-stretch w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
                                                 <Type size={14} />
                                             </div>
                                             {view === 'teacher' ? (
@@ -570,13 +609,13 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                                     <input
                                                         value={blank.placeholder}
                                                         onChange={(e) => handleBlankChange(qIndex, bIndex, 'placeholder', e.target.value)}
-                                                        placeholder="Placeholder text for the blank"
+                                                        placeholder={t('dashboard.assignments.editor.task_editor.form.blank_placeholder')}
                                                         className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                                     />
                                                     <input
                                                         value={blank.correctAnswer}
                                                         onChange={(e) => handleBlankChange(qIndex, bIndex, 'correctAnswer', e.target.value)}
-                                                        placeholder="Correct answer"
+                                                        placeholder={t('dashboard.assignments.editor.task_editor.form.correct_answer')}
                                                         className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-lime-50 border-2 border-lime-200 rounded-md border-dotted text-sm font-bold"
                                                     />
                                                     <input
@@ -598,7 +637,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                                         />
                                                     </div>
                                                     <div className="mx-2 text-xs text-gray-600">
-                                                        <span className="font-semibold">Expected:</span> {blank.correctAnswer}
+                                                        <span className="font-semibold">{t('dashboard.assignments.editor.task_editor.form.expected')}</span> {blank.correctAnswer}
                                                     </div>
                                                     {blank.hint && (
                                                         <div className="mx-2 text-xs text-blue-600 italic">💡 {blank.hint}</div>
@@ -616,7 +655,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                                         readOnly={submissionIsGraded}
                                                         placeholder={blank.placeholder}
                                                         data-blank-id={blank.blankUUID}
-                                                        className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
+                                                        className="w-full mx-2 px-3 pe-6 py-2 md:py-0 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
                                                     />
                                                     {/* Render nothing at all when this blank's key
                                                         was withheld; the learner still sees their
@@ -657,30 +696,13 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                                                     )?.answer?.toLowerCase().trim() === blank.correctAnswer.toLowerCase().trim() ? (
                                                         <>
                                                             <Check size={12} className="mx-auto" />
-                                                            <p className="mx-auto font-bold text-xs">Correct</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.form.correct')}</p>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <X size={12} className="mx-auto" />
-                                                            <p className="mx-auto font-bold text-xs">Incorrect</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.form.incorrect')}</p>
                                                         </>
-                                                    )}
-                                                </div>
-                                            )}
-                                            {view === 'student' && (
-                                                <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
-                                                    userSubmissions.submissions.find(
-                                                        (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
-                                                    )?.answer?.trim()
-                                                        ? "bg-green-200/60 text-green-500"
-                                                        : "bg-slate-200/60 text-slate-500"
-                                                } text-sm transition-all ease-linear`}>
-                                                    {userSubmissions.submissions.find(
-                                                        (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
-                                                    )?.answer?.trim() ? (
-                                                        <Check size={12} className="mx-auto" />
-                                                    ) : (
-                                                        <X size={12} className="mx-auto" />
                                                     )}
                                                 </div>
                                             )}
@@ -709,7 +731,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
                             onClick={addQuestion}
                         >
                             <PlusCircle size={14} className="inline-block" />
-                            <span>Add Question</span>
+                            <span>{t('dashboard.assignments.editor.task_editor.form.add_question')}</span>
                         </div>
                     </div>
                 )}
@@ -720,7 +742,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskFor
     return (
         <div className='flex flex-row space-x-2 text-sm items-center'>
             <Info size={12} />
-            <p>No questions found</p>
+            <p>{t('dashboard.assignments.editor.task_editor.quiz.no_questions')}</p>
         </div>
     );
 }

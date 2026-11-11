@@ -1,41 +1,37 @@
-import { Callout } from 'nextra/components'
+---
+title: "WorkOS"
+description: "Connect LearnHouse SSO through WorkOS for SAML or OIDC: set the instance credentials, then let your IT team finish setup in the WorkOS portal."
+---
+
+import { Callout } from '@/components/mdx'
 
 # WorkOS
 
-WorkOS provides enterprise SSO through a unified API that supports both SAML and OIDC identity providers. It includes an admin portal that lets organization admins configure their identity provider without developer involvement.
+[WorkOS](https://workos.com) brokers SSO for many identity providers through one integration, over SAML or OIDC. Its hosted setup portal lets your IT team configure the identity provider connection themselves.
 
 <Callout>
-Requires `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` environment variables to be set.
+WorkOS is only offered when the instance has WorkOS credentials. Without them, the provider shows as "(Not configured)" and cannot be selected.
 </Callout>
 
-## Features
+## Instance setup (self-hosted)
 
-- **Admin Portal**: WorkOS provides a hosted portal where organization admins can set up and manage their IdP connection directly.
-- **SAML & OIDC**: supports both protocols through a single integration.
-- **Auto User Provisioning**: creates LearnHouse accounts from IdP profiles.
-- **Domain Restrictions**: restrict access to specific email domains.
-- **Default Role Assignment**: assign a default role to newly provisioned users.
-
-## Configuration
-
-| Field | Required | Description |
-|---|---|---|
-| `organization_id` | Yes (or `connection_id`) | WorkOS Organization ID, created automatically or via the Admin Portal. |
-| `connection_id` | Yes (or `organization_id`) | WorkOS Connection ID, typically managed via the Admin Portal. |
-
-You need either an `organization_id` (for organization-level SSO) or a `connection_id` (for a specific connection). In most cases, you'll use the `organization_id` and let admins configure the connection through the Admin Portal.
-
-## Environment Variables
+Set these on the API:
 
 | Variable | Description |
-|---|---|
-| `WORKOS_API_KEY` | Your WorkOS API key. |
-| `WORKOS_CLIENT_ID` | Your WorkOS Client ID. |
+| --- | --- |
+| `WORKOS_API_KEY` | Your WorkOS API key |
+| `WORKOS_CLIENT_ID` | Your WorkOS Client ID |
 
-## Setup Steps
+Add LearnHouse's [callback URL](/enterprise/sso#callback-url) as a redirect URI in your WorkOS dashboard.
 
-1. Create a [WorkOS account](https://workos.com) and obtain your API key and Client ID.
-2. Set the `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` environment variables in your LearnHouse deployment.
-3. In the organization settings, select **WorkOS** as the SSO provider.
-4. Use the Admin Portal link to configure the identity provider connection (SAML or OIDC).
-5. Users with matching email domains can now log in via SSO.
+## Organization setup
+
+1. Go to **Developers** → **SSO** and choose **WorkOS** as the **SSO Provider**.
+2. Fill in the **WorkOS Organization ID** (`org_...`) if you have one. It is also generated automatically when you configure SSO through the setup portal.
+3. Set **Enable SSO**, **Allowed Email Domains** and **Auto-provision Users** (see [SSO options](/enterprise/sso#setting-up-sso)), then click **Save Configuration**.
+4. After saving, click **Configure Identity Provider**. It opens the WorkOS setup portal, where you or your IT team connect the identity provider (Okta, Microsoft Entra ID, Google Workspace, a generic SAML provider and so on).
+5. Members can now use **Sign in with SSO** on your login page.
+
+<Callout type="info">
+The API also accepts a WorkOS `connection_id` instead of an organization ID, for a single specific connection. The dashboard only exposes the organization ID.
+</Callout>

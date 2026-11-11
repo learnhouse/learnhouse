@@ -1,0 +1,95 @@
+name: API Migrations
+permissions:
+  contents: read
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "apps/api/**"
+  pull_request:
+    paths:
+      - "apps/api/**"
+
+# See api-lint.yaml: one live run per PR, dev runs always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# The unit tests run on SQLite, which hides everything Postgres-specific about
+# a schema change. These run the real `cli.py migrate` (the step the API runs
+# on startup) against Postgres, the way each kind of install meets a release.
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: learnhouse
+          POSTGRES_PASSWORD: learnhouse
+          POSTGRES_DB: learnhouse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U learnhouse"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      LEARNHOUSE_SQL_CONNECTION_STRING: postgresql://learnhouse:learnhouse@localhost:5432/learnhouse
+      LEARNHOUSE_AUTH_JWT_SECRET_KEY: ci-only-not-a-secret-ci-only-not-a-secret
+      PGPASSWORD: learnhouse
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.13.7"
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+
+      - name: Install dependencies
+        run: uv sync
+        working-directory: apps/api
+
+      - name: New install (empty database)
+        working-directory: apps/api
+        run: |
+          uv run python cli.py migrate --strict
+          uv run python cli.py migrate --status
+
+      - name: Upgrade from the base branch
+        # The path every existing install takes: the previous release's
+        # schema, stamped, then this branch's migrations. --strict fails
+        # when a model changed without a migration.
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          psql -h localhost -U learnhouse -d postgres -c "DROP DATABASE learnhouse WITH (FORCE)" -c "CREATE DATABASE learnhouse"
+          git worktree add --detach /tmp/base "$BASE_SHA"
+          (cd /tmp/base/apps/api && "$GITHUB_WORKSPACE/apps/api/.venv/bin/python" "$GITHUB_WORKSPACE/apps/api/scripts/ci_schema_baseline.py")
+          cd apps/api
+          uv run python cli.py migrate --strict
+          uv run python cli.py migrate --status
+
+      - name: Upgrade an install that was never stamped
+        # Installs made by create_all before migrations ran on startup: the
+        # base schema without its alembic_version row.
+        if: github.event_name == 'pull_request'
+        run: |
+          psql -h localhost -U learnhouse -d learnhouse -c "DROP TABLE alembic_version" -c "ALTER TABLE course DROP COLUMN IF EXISTS about"
+          cd apps/api
+          uv run python cli.py migrate | tee /tmp/unstamped.log
+          grep -q "schema unstamped" /tmp/unstamped.log
+          grep -q "added column course.about" /tmp/unstamped.log
+          uv run python cli.py migrate --status

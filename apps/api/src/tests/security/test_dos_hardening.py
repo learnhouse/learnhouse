@@ -100,7 +100,7 @@ class TestSubmissionUpload:
         from src.services.courses.activities.uploads.sub_file import upload_submission_file
 
         with pytest.raises(HTTPException) as exc:
-            await upload_submission_file(_upload(name), "a", "o", "c", "as", "t")
+            await upload_submission_file(_upload(name), "a", "o", "c", "as", "t", 7)
         assert exc.value.status_code == 415
 
     async def test_oversized_document_rejected(self):
@@ -108,7 +108,7 @@ class TestSubmissionUpload:
 
         big = _upload("essay.pdf", size=sub_file.SUBMISSION_MAX_SIZE + 1)
         with pytest.raises(HTTPException) as exc:
-            await sub_file.upload_submission_file(big, "a", "o", "c", "as", "t")
+            await sub_file.upload_submission_file(big, "a", "o", "c", "as", "t", 7)
         assert exc.value.status_code == 413
 
     async def test_small_pdf_accepted(self):
@@ -116,9 +116,9 @@ class TestSubmissionUpload:
 
         with patch("src.services.utils.upload_content.upload_content", new=AsyncMock()):
             name = await sub_file.upload_submission_file(
-                _upload("essay.pdf"), "a", "o", "c", "as", "t"
+                _upload("essay.pdf"), "a", "o", "c", "as", "t", 7
             )
-        assert name.endswith(".pdf")
+        assert name.endswith("_submission_u7.pdf")
 
     async def test_router_rate_limits_uploads(self, mock_request, admin_user):
         from src.routers.courses import assignments as router_mod
@@ -247,13 +247,6 @@ class TestListClamps:
 # ---------------------------------------------------------------------------
 
 class TestAISchemaLimits:
-    def test_rag_chat_message_capped(self):
-        from src.routers.ai.rag import RAGChatRequest
-
-        RAGChatRequest(message="x" * 8000)
-        with pytest.raises(ValidationError):
-            RAGChatRequest(message="x" * 8001)
-
     def test_activity_chat_message_capped(self):
         from src.services.ai.schemas.ai import SendActivityAIChatMessage, StartActivityAIChatSession
 

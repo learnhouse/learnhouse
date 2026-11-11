@@ -97,6 +97,11 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
     const submissionIsGraded = Array.isArray(assignmentSubmission)
         && assignmentSubmission.length > 0
         && assignmentSubmission[0].submission_status === 'GRADED';
+    // Handed in (SUBMITTED) or graded: answers can no longer be saved, so
+    // they can't be edited either; typing would only look like it worked.
+    const answersLocked = submissionIsGraded || (Array.isArray(assignmentSubmission)
+        && assignmentSubmission.length > 0
+        && assignmentSubmission[0].submission_status === 'SUBMITTED');
     const showCorrectAnswers = view === 'student'
         && submissionIsGraded
         && !!assignment?.assignment_object?.show_correct_answers;
@@ -135,7 +140,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             updatedQuestions[qIndex].options.splice(oIndex, 1);
             setQuestions(updatedQuestions);
         } else {
-            toast.error('Cannot delete the last option. At least one option is required.');
+            toast.error(t('dashboard.assignments.editor.task_editor.quiz.last_option'));
         }
     };
 
@@ -571,9 +576,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
             if (res.success) {
                 getAssignmentTaskSubmissionFromIdentifiedUserUI();
-                toast.success(`Task graded successfully with ${finalGrade} points`);
+                toast.success(t('dashboard.assignments.editor.grading.graded_success', { grade: finalGrade }));
             } else {
-                toast.error('Error grading task, please retry later.');
+                toast.error(t('dashboard.assignments.editor.grading.graded_error'));
             }
         }
     }
@@ -658,9 +663,13 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                     <input
                                         value={question.questionText}
                                         onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
-                                        placeholder="Question"
+                                        placeholder={t('dashboard.assignments.editor.task_editor.quiz.question')}
                                         className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                     />
+                                ) : view === 'student' ? (
+                                    <p className="w-full text-[15px] font-semibold leading-snug text-neutral-900">
+                                        {question.questionText}
+                                    </p>
                                 ) : (
                                     <p className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold">
                                         {question.questionText}
@@ -708,7 +717,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                 </div>
                             )}
                             {view !== 'teacher' && !isSingleResponse && (
-                                <p className="px-1 text-[11px] font-bold text-slate-500 flex items-center space-x-1">
+                                <p className={`text-[11px] font-bold text-slate-500 flex items-center space-x-1 ${view === 'student' ? 'pb-1' : 'px-1'}`}>
                                     <ListChecks size={11} />
                                     <span>{t('assignments.quiz.select_all_that_apply')}</span>
                                 </p>
@@ -718,27 +727,25 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                 role={view === 'student' ? (isSingleResponse ? 'radiogroup' : 'group') : undefined}
                                 aria-label={view === 'student' ? optionsGroupLabel : undefined}
                             >
-                                {question.options.map((option, oIndex) => (
+                                {question.options.map((option, oIndex) => view === 'student' ? (
+                                    <StudentQuizOption
+                                        key={oIndex}
+                                        letter={String.fromCharCode(65 + oIndex)}
+                                        text={option.text}
+                                        single={isSingleResponse}
+                                        selected={isOptionSelected(question.questionUUID, option.optionUUID)}
+                                        locked={answersLocked}
+                                        verdict={revealAnswerKey ? (option.assigned_right_answer ? 'correct' : 'wrong') : undefined}
+                                        onChoose={() => chooseOption(qIndex, oIndex)}
+                                        correctLabel={t('assignments.quiz.correct_answer')}
+                                        incorrectLabel={t('assignments.quiz.incorrect_answer')}
+                                    />
+                                ) : (
                                     <div className="flex" key={oIndex}>
                                         <div
-                                            onClick={() => view === 'student' && !submissionIsGraded && chooseOption(qIndex, oIndex)}
-                                            // The option rows stay divs (rewriting them as native
-                                            // inputs is a much bigger change), so they carry the
-                                            // radio/checkbox roles and keyboard activation by hand.
-                                            role={view === 'student' ? (isSingleResponse ? 'radio' : 'checkbox') : undefined}
-                                            aria-checked={view === 'student' ? isOptionSelected(question.questionUUID, option.optionUUID) : undefined}
-                                            aria-disabled={view === 'student' && submissionIsGraded ? true : undefined}
-                                            tabIndex={view === 'student' && !submissionIsGraded ? 0 : undefined}
-                                            onKeyDown={(e) => {
-                                                if (view !== 'student' || submissionIsGraded) return;
-                                                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-                                                    e.preventDefault();
-                                                    chooseOption(qIndex, oIndex);
-                                                }
-                                            }}
-                                            className={"answer outline outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow " + (view == 'student' && !submissionIsGraded ? 'cursor-pointer active:scale-110 focus-visible:outline-slate-400' : '')}
+                                            className="answer outline outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow h-[30px]"
                                         >
-                                            <div className="font-bold text-base flex items-center h-full w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
+                                            <div className="font-bold text-base flex flex-none items-center self-stretch w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
                                                 <p className="mx-auto font-bold text-sm">{String.fromCharCode(65 + oIndex)}</p>
                                             </div>
                                             {view === 'teacher' ? (
@@ -746,7 +753,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                     type="text"
                                                     value={option.text}
                                                     onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-                                                    placeholder="Option"
+                                                    placeholder={t('dashboard.assignments.editor.task_editor.quiz.option')}
                                                     className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                                 />
                                             ) : (
@@ -763,9 +770,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                     >
                                                         {option.assigned_right_answer ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
                                                         {option.assigned_right_answer ? (
-                                                            <p className="mx-auto font-bold text-xs">True</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.quiz.true')}</p>
                                                         ) : (
-                                                            <p className="mx-auto font-bold text-xs">False</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.quiz.false')}</p>
                                                         )}
                                                     </div>
                                                     <div
@@ -784,77 +791,13 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                                                     >
                                                         {option.assigned_right_answer ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
                                                         {option.assigned_right_answer ? (
-                                                            <p className="mx-auto font-bold text-xs">Marked as True</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.quiz.marked_true')}</p>
                                                         ) : (
-                                                            <p className="mx-auto font-bold text-xs">Marked as False</p>
+                                                            <p className="mx-auto font-bold text-xs">{t('dashboard.assignments.editor.task_editor.quiz.marked_false')}</p>
                                                         )}
                                                     </div>
 
                                                 </>
-                                            )}
-                                            {/* Verdict badge. Only options the learner actually
-                                                chose get a right/wrong verdict; the option that
-                                                WAS correct is highlighted separately so they can
-                                                still learn from the review. Untouched wrong
-                                                options get no badge at all; previously every
-                                                option was labelled, which read as "you got all
-                                                of these wrong". */}
-                                            {view === 'student' && revealAnswerKey && (() => {
-                                                const selected = isOptionSelected(question.questionUUID, option.optionUUID);
-                                                const correct = !!option.assigned_right_answer;
-                                                if (!selected && !correct) return null;
-                                                if (selected && correct) {
-                                                    return (
-                                                        <div className="w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg bg-emerald-50 text-emerald-700">
-                                                            <Check size={10} />
-                                                            <p className='font-bold'>{t('assignments.quiz.correct_answer')}</p>
-                                                        </div>
-                                                    );
-                                                }
-                                                if (selected && !correct) {
-                                                    return (
-                                                        <div className="w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg bg-rose-50 text-rose-600">
-                                                            <X size={10} />
-                                                            <p className='font-bold'>{t('assignments.quiz.incorrect_answer')}</p>
-                                                        </div>
-                                                    );
-                                                }
-                                                // Correct but not chosen: show what the answer was.
-                                                return (
-                                                    <div className="w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg bg-emerald-50/70 text-emerald-700 border border-emerald-200">
-                                                        <Check size={10} />
-                                                        <p className='font-bold'>{t('assignments.quiz.correct_answer')}</p>
-                                                    </div>
-                                                );
-                                            })()}
-                                            {view === 'student' && (
-                                                <div
-                                                    // Shape is the affordance: a circle means pick
-                                                    // one, a square means select all that apply.
-                                                    // The row above owns the role/aria state, so
-                                                    // this is decorative to a screen reader.
-                                                    aria-hidden="true"
-                                                    className={`w-[20px] flex-none flex items-center h-[20px] ${isSingleResponse ? 'rounded-full' : 'rounded-md'} ${
-                                                        isOptionSelected(question.questionUUID, option.optionUUID)
-                                                            ? "bg-green-200/60 text-green-500 hover:bg-green-300"
-                                                            : "bg-slate-200/60 text-slate-500 hover:bg-slate-300"
-                                                    } text-sm transition-all ease-linear ${submissionIsGraded ? '' : 'cursor-pointer'}`}
-                                                    onClick={(e) => {
-                                                        // The whole row already handles the click;
-                                                        // letting this one bubble ran chooseOption twice.
-                                                        e.stopPropagation();
-                                                        if (!submissionIsGraded) chooseOption(qIndex, oIndex);
-                                                    }}
-                                                >
-                                                    {isOptionSelected(question.questionUUID, option.optionUUID) ? (
-                                                        <Check size={12} className="mx-auto" />
-                                                    ) : (
-                                                        // While answering this is an empty checkbox. After grading a
-                                                        // cross here would look like a verdict on an option the
-                                                        // learner never picked, so leave it blank.
-                                                        !submissionIsGraded && <X size={12} className="mx-auto" />
-                                                    )}
-                                                </div>
                                             )}
                                             {view === 'grading' && (
                                                 // Marks what the LEARNER chose. The answer key is already
@@ -897,7 +840,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
                             onClick={addQuestion}
                         >
                             <PlusCircle size={14} className="inline-block" />
-                            <span>Add Question</span>
+                            <span>{t('dashboard.assignments.editor.task_editor.quiz.add_question')}</span>
                         </div>
                     </div>
                 )}
@@ -907,9 +850,85 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id, onGraded }: TaskQui
     else {
         return <div className='flex flex-row space-x-2 text-sm items-center'>
             <Info size={12} />
-            <p>No questions found</p>
+            <p>{t('dashboard.assignments.editor.task_editor.quiz.no_questions')}</p>
         </div>;
     }
+}
+
+// One answer choice as the learner sees it: a full-width row with its letter,
+// the option text and a radio/checkbox mark. After grading (when the key is
+// revealed) chosen rows turn green or red and a missed right answer is outlined.
+function StudentQuizOption(props: {
+    letter: string
+    text: string
+    single: boolean
+    selected: boolean
+    locked: boolean
+    verdict?: 'correct' | 'wrong'
+    onChoose: () => void
+    correctLabel: string
+    incorrectLabel: string
+}) {
+    const { letter, text, single, selected, locked, verdict, onChoose } = props
+    const chosenRight = verdict === 'correct' && selected
+    const chosenWrong = verdict === 'wrong' && selected
+    const missedRight = verdict === 'correct' && !selected
+    const tone = chosenRight
+        ? 'border-emerald-400 bg-emerald-50/70'
+        : chosenWrong
+            ? 'border-rose-300 bg-rose-50/70'
+            : missedRight
+                ? 'border-emerald-300 border-dashed bg-white'
+                : selected
+                    ? 'border-teal-500 bg-teal-50/60 ring-1 ring-teal-500'
+                    : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50'
+    const chip = chosenRight
+        ? 'bg-emerald-500 text-white'
+        : chosenWrong
+            ? 'bg-rose-500 text-white'
+            : selected
+                ? 'bg-teal-600 text-white'
+                : 'bg-neutral-100 text-neutral-600'
+    const mark = chosenWrong ? 'border-rose-500 bg-rose-500 text-white'
+        : selected ? (chosenRight ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-teal-600 bg-teal-600 text-white')
+            : 'border-neutral-300 bg-white'
+
+    return (
+        <div
+            role={single ? 'radio' : 'checkbox'}
+            aria-checked={selected}
+            aria-disabled={locked || undefined}
+            tabIndex={locked ? undefined : 0}
+            onClick={() => { if (!locked) onChoose() }}
+            onKeyDown={(e) => {
+                if (locked) return
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault()
+                    onChoose()
+                }
+            }}
+            className={`flex w-full min-h-[52px] md:min-h-[48px] items-center gap-3 rounded-xl border px-3 py-2.5 text-start transition-colors outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40 ${tone} ${locked ? '' : 'cursor-pointer select-none active:scale-[0.99]'}`}
+        >
+            <span className={`flex h-7 w-7 flex-none items-center justify-center rounded-lg text-xs font-bold transition-colors ${chip}`}>{letter}</span>
+            <span className='flex-1 min-w-0 text-[15px] md:text-sm font-medium leading-snug text-neutral-800 break-words'>{text}</span>
+            {(chosenRight || missedRight) && (
+                <span className='flex flex-none items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700'>
+                    <Check size={11} />{props.correctLabel}
+                </span>
+            )}
+            {chosenWrong && (
+                <span className='flex flex-none items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700'>
+                    <X size={11} />{props.incorrectLabel}
+                </span>
+            )}
+            <span
+                aria-hidden='true'
+                className={`flex h-5 w-5 flex-none items-center justify-center border-2 transition-colors ${single ? 'rounded-full' : 'rounded-md'} ${mark}`}
+            >
+                {selected && (single ? <span className='h-2 w-2 rounded-full bg-white' /> : <Check size={12} strokeWidth={3} />)}
+            </span>
+        </div>
+    )
 }
 
 export default TaskQuizObject;

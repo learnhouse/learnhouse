@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -398,6 +398,9 @@ function SearchPage() {
   const [inputValue, setInputValue] = useState(urlQuery)
   const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS)
   const [isLoading, setIsLoading] = useState(false)
+  // Last query reported to org analytics, so paging through results or
+  // re-rendering doesn't count the same search again.
+  const reportedQuery = useRef<string | null>(null)
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setInputValue(urlQuery), [urlQuery])
@@ -445,10 +448,17 @@ function SearchPage() {
       .then((response) => {
         if (cancelled) return
         const data = response?.data ?? {}
-        setResults({
-          ...EMPTY_RESULTS,
-          ...data,
-        })
+        const merged = { ...EMPTY_RESULTS, ...data }
+        setResults(merged)
+        const query = urlQuery.trim()
+        if (reportedQuery.current !== query) {
+          reportedQuery.current = query
+          track(AnalyticsEvent.SearchQuery, {
+            query,
+            results_count: sections.reduce((sum, s) => sum + s.total(merged), 0),
+            surface: 'search_page',
+          })
+        }
       })
       .catch((err) => {
         console.error('Search failed:', err)
@@ -461,7 +471,7 @@ function SearchPage() {
     return () => {
       cancelled = true
     }
-  }, [urlQuery, urlPage, org?.slug, session?.data?.tokens?.access_token])
+  }, [urlQuery, urlPage, org?.slug, session?.data?.tokens?.access_token, track])
 
   const totalResults = useMemo(
     () => sections.reduce((sum, s) => sum + s.total(results), 0),
@@ -666,6 +676,11 @@ function ResourceCard({
             src={imageUrl}
             alt={title}
             className="w-full h-full object-cover"
+            // A course whose thumbnail file is gone would otherwise show its
+            // alt text in a grey box.
+            onError={(e) => {
+              if (!e.currentTarget.src.endsWith('/empty_thumbnail.png')) e.currentTarget.src = '/empty_thumbnail.png'
+            }}
           />
         ) : (
           <FallbackIcon size={28} className="text-black/30" />

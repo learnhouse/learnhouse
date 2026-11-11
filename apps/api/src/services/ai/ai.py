@@ -22,7 +22,9 @@ from src.services.ai.base import (
     save_message_to_history,
 )
 from src.services.ai.llm import model_for_tier
+from src.services.ai.llm.errors import ai_error_message, is_quota_error
 from src.services.ai.rag.access import can_read_activity
+from src.services.courses.activities.dynamic_context import render_for_reader
 
 from src.services.ai.schemas.ai import (
     ActivityAIChatSessionResponse,
@@ -35,6 +37,34 @@ from src.services.courses.activities.utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+async def track_ai_message(
+    org_id: int | None,
+    user_id: int | None,
+    surface: str,
+    model: str,
+    course_uuid: str | None = None,
+    activity_uuid: str | None = None,
+) -> None:
+    """``ai_message_sent`` once a chat turn got an answer (failed or empty turns
+    are refunded and not counted)."""
+    if not org_id:
+        return
+    from src.services.analytics import events as analytics_events
+    from src.services.analytics.analytics import track
+
+    properties = {"surface": surface, "model": model}
+    if course_uuid:
+        properties["course_uuid"] = course_uuid
+    if activity_uuid:
+        properties["activity_uuid"] = activity_uuid
+    await track(
+        event_name=analytics_events.AI_MESSAGE_SENT,
+        org_id=org_id,
+        user_id=user_id or 0,
+        properties=properties,
+    )
 
 
 async def _authorize_activity_ai_access(
@@ -173,8 +203,12 @@ async def ai_start_activity_chat_session(
     # Reserve credit atomically before the AI call; refund below on failure.
     await reserve_ai_credit(org.id, db_session)
 
-    # Get Activity Content Blocks
-    content = activity.content
+    # Get Activity Content Blocks, as this reader sees them: the model must
+    # not quote a conditional block the learner can't see.
+    content = await render_for_reader(
+        request, activity.content, course=course, current_user=current_user,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+    )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
     structured = structure_activity_content_by_type(content)
@@ -223,8 +257,10 @@ async def ai_start_activity_chat_session(
     except Exception as e:
         # Refund the credit we reserved up-front since the AI call failed.
         refund_ai_credit(org.id)
-        logger.error("AI service error in ai_start_activity_chat_session: %s", e)
-        raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
+        (logger.warning if is_quota_error(e) else logger.error)(
+            "AI service error in ai_start_activity_chat_session: %s", e
+        )
+        raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": ai_error_message(e, "AI service is temporarily unavailable")})
 
     # Save the message exchange to history (and record who owns the session)
     save_message_to_history(
@@ -234,6 +270,14 @@ async def ai_start_activity_chat_session(
         user_id=resolve_acting_user_id(current_user),
         course_uuid=course.course_uuid,
         org_id=course.org_id,
+    )
+    await track_ai_message(
+        course.org_id,
+        resolve_acting_user_id(current_user),
+        "activity_chat",
+        ai_model,
+        course_uuid=course.course_uuid,
+        activity_uuid=activity.activity_uuid,
     )
 
     return ActivityAIChatSessionResponse(
@@ -325,8 +369,12 @@ async def ai_send_activity_chat_message(
     # Reserve credit atomically before the AI call; refund below on failure.
     await reserve_ai_credit(course.org_id, db_session)
 
-    # Get Activity Content Blocks
-    content = activity.content
+    # Get Activity Content Blocks, as this reader sees them: the model must
+    # not quote a conditional block the learner can't see.
+    content = await render_for_reader(
+        request, activity.content, course=course, current_user=current_user,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+    )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
     structured = structure_activity_content_by_type(content)
@@ -383,6 +431,14 @@ async def ai_send_activity_chat_message(
         user_id=resolve_acting_user_id(current_user),
         course_uuid=course.course_uuid,
         org_id=course.org_id,
+    )
+    await track_ai_message(
+        course.org_id,
+        resolve_acting_user_id(current_user),
+        "activity_chat",
+        ai_model,
+        course_uuid=course.course_uuid,
+        activity_uuid=activity.activity_uuid,
     )
 
     return ActivityAIChatSessionResponse(
@@ -472,8 +528,12 @@ async def _get_activity_and_course_info(
         request, course, activity, org.id, current_user, db_session
     )
 
-    # Get Activity Content Blocks
-    content = activity.content
+    # Get Activity Content Blocks, as this reader sees them: the model must
+    # not quote a conditional block the learner can't see.
+    content = await render_for_reader(
+        request, activity.content, course=course, current_user=current_user,
+        db_session=db_session, activity_name=activity.name, activity_uuid=activity.activity_uuid,
+    )
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
     structured = structure_activity_content_by_type(content)

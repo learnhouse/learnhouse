@@ -10,6 +10,7 @@ import { getCourse } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getUriWithOrg } from '@services/config/config'
 import { ArrowLeft, BookOpen, Layers, FolderPlus, ChevronRight, PlusCircle, Backpack } from 'lucide-react'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 const cleanCourseUuid = (u: string) => u?.replace(/^course_/, '') ?? u
 
@@ -63,7 +64,7 @@ export default function NewAssignmentModal({
     : null
 
   const rowBtn =
-    'w-full flex items-center gap-3 rounded-xl border border-gray-100 bg-white nice-shadow px-4 py-3 text-start hover:bg-gray-50/60 transition-colors'
+    'w-full flex items-center gap-3 rounded-xl border border-neutral-100 bg-white px-4 py-3 text-start hover:border-neutral-200 hover:bg-neutral-50 transition-colors'
 
   const content = (
     <div className="space-y-4">
@@ -88,11 +89,9 @@ export default function NewAssignmentModal({
                   className={rowBtn}
                 >
                   {c.thumbnail_image ? (
-                    <div
-                      className="w-[52px] h-[30px] rounded-md ring-1 ring-inset ring-black/10 bg-cover flex-none"
-                      style={{
-                        backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, c.course_uuid, c.thumbnail_image)})`,
-                      }}
+                    <ThumbnailImage
+                      src={getCourseThumbnailMediaDirectory(org?.org_uuid, c.course_uuid, c.thumbnail_image)}
+                      className="w-[52px] h-[30px] rounded-md ring-1 ring-black/10 flex-none"
                     />
                   ) : (
                     <div className="w-[52px] h-[30px] rounded-md ring-1 ring-inset ring-black/10 bg-gray-100 flex-none" />
@@ -147,7 +146,7 @@ export default function NewAssignmentModal({
                   }}
                   className={rowBtn}
                 >
-                  <span className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center flex-none">
+                  <span className="w-7 h-7 rounded-lg bg-neutral-100 text-neutral-600 text-xs font-bold flex items-center justify-center flex-none tabular-nums">
                     {i + 1}
                   </span>
                   <span className="flex-1 min-w-0 truncate font-semibold text-gray-800">
@@ -216,13 +215,14 @@ function StepHint({ icon, text }: { icon: React.ReactNode; text: string }) {
 }
 
 function BackRow({ onClick, label }: { onClick: () => void; label?: string }) {
+  const { t } = useTranslation()
   return (
     <button
       onClick={onClick}
       className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors"
     >
       <ArrowLeft size={14} />
-      <span className="truncate max-w-[220px]">{label || 'Back'}</span>
+      <span className="truncate max-w-[220px]">{label || t('common.back')}</span>
     </button>
   )
 }
@@ -250,7 +250,7 @@ function EmptyCta({
       <Link
         href={href}
         onClick={onNavigate}
-        className="mt-1 inline-flex items-center gap-1.5 bg-black text-white text-sm font-semibold rounded-lg px-4 py-2 hover:bg-gray-800 transition-colors"
+        className="mt-1 inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 transition-colors"
       >
         <PlusCircle size={15} />
         {cta}

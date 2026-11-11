@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Headphones,
   Pause,
@@ -28,6 +29,7 @@ export function formatTime(seconds: number): string {
 }
 
 function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
+  const { t } = useTranslation()
   const audioRef = React.useRef<HTMLAudioElement>(null)
   const progressRef = React.useRef<HTMLDivElement>(null)
   const [isPlaying, setIsPlaying] = React.useState(false)
@@ -42,15 +44,21 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
     if (!audio) return
 
     const onTimeUpdate = () => setCurrentTime(audio.currentTime)
-    const onLoadedMetadata = () => setDuration(audio.duration)
+    const onLoadedMetadata = () => {
+      if (Number.isFinite(audio.duration)) setDuration(audio.duration)
+    }
     const onEnded = () => setIsPlaying(false)
 
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('loadedmetadata', onLoadedMetadata)
+    audio.addEventListener('durationchange', onLoadedMetadata)
     audio.addEventListener('ended', onEnded)
+    // A cached file can finish loading its metadata before this effect runs.
+    onLoadedMetadata()
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate)
       audio.removeEventListener('loadedmetadata', onLoadedMetadata)
+      audio.removeEventListener('durationchange', onLoadedMetadata)
       audio.removeEventListener('ended', onEnded)
     }
   }, [src])
@@ -112,14 +120,15 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         </div>
       )}
 
-      {/* Player controls */}
-      <div className="px-4 py-3 flex items-center gap-3">
+      {/* Player controls. Phones: the scrubber gets its own full-width row
+          above centered transport buttons; volume is left to the hardware. */}
+      <div className="px-4 py-3 flex items-center gap-3 max-md:flex-wrap max-md:justify-center max-md:gap-x-5">
         {/* Skip back */}
         <button
           type="button"
           onClick={() => skip(-15)}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
-          title="Skip back 15s"
+          className="lh-press p-1.5 max-md:p-2.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
+          title={t('media.audio.skip_back')}
         >
           <SkipBack size={16} className="text-gray-600" />
         </button>
@@ -128,7 +137,7 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         <button
           type="button"
           onClick={togglePlay}
-          className="rounded-full bg-gray-900 hover:bg-gray-800 p-2.5 transition-colors outline-none"
+          className="lh-press rounded-full bg-gray-900 hover:bg-gray-800 p-2.5 max-md:p-3.5 transition-colors outline-none"
         >
           {isPlaying ? (
             <Pause size={16} className="text-white" fill="white" />
@@ -141,13 +150,14 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         <button
           type="button"
           onClick={() => skip(15)}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
-          title="Skip forward 15s"
+          className="lh-press p-1.5 max-md:p-2.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
+          title={t('media.audio.skip_forward')}
         >
           <SkipForward size={16} className="text-gray-600" />
         </button>
 
         {/* Time + Progress */}
+        <div className="flex flex-1 items-center gap-3 min-w-0 max-md:order-first max-md:basis-full">
         <span className="text-xs text-gray-500 w-10 text-end tabular-nums flex-shrink-0">
           {formatTime(currentTime)}
         </span>
@@ -160,14 +170,14 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
           // Under RTL the fill would run one way and the thumb the other.
           // Audio transport is left-to-right everywhere, same as the video player.
           dir="ltr"
-          className="flex-1 h-1.5 bg-gray-200 rounded-full cursor-pointer relative group"
+          className="flex-1 h-1.5 max-md:h-2 bg-gray-200 rounded-full cursor-pointer relative group"
         >
           <div
             className="h-full bg-gray-900 rounded-full transition-all duration-100"
             style={{ width: `${progress}%` }}
           />
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-900 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-900 rounded-full opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity"
             style={{ left: `calc(${progress}% - 6px)` }}
           />
         </div>
@@ -175,12 +185,13 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         <span className="text-xs text-gray-500 w-10 tabular-nums flex-shrink-0">
           {formatTime(duration)}
         </span>
+        </div>
 
         {/* Volume */}
         <button
           type="button"
           onClick={toggleMute}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
+          className="max-md:hidden p-1.5 rounded-full hover:bg-gray-100 transition-colors outline-none"
         >
           {isMuted || volume === 0 ? (
             <VolumeX size={16} className="text-gray-600" />
@@ -195,7 +206,7 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
           step="0.01"
           value={volume}
           onChange={handleVolumeChange}
-          className="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"
+          className="max-md:hidden w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"
         />
       </div>
     </div>

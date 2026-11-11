@@ -1,4 +1,8 @@
-import { Callout } from 'nextra/components'
+---
+description: Install LearnHouse on your own server in a few minutes. Run the setup wizard with npx or a one-line installer, start the stack and log in.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Quick Install
 
@@ -13,7 +17,7 @@ npx learnhouse@latest setup
 ```
 
 <Callout type="info">
-You can also use the one-line installer scripts if you prefer:
+You can also use the one-line installer scripts. They install Docker and Node.js if they are missing, then launch the setup wizard.
 
 **macOS / Linux:**
 ```bash
@@ -26,48 +30,57 @@ irm https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli/instal
 ```
 </Callout>
 
-The wizard will prompt you for:
+The wizard prompts you for:
 
-- **Domain configuration**: your domain name or localhost for local development
-- **Database settings**: PostgreSQL configuration (defaults are provided)
-- **Admin credentials**: email and password for the initial admin account
-- **Optional features**: AI features, email delivery, and more
+- **Edition and release channel**: Community or Enterprise, stable or dev
+- **Installation name**: files go in `~/.learnhouse/<name>`
+- **Domain configuration**: your domain name or `localhost`, HTTPS mode, and port
+- **Database and Redis**: in Docker (the defaults) or external services
+- **Organization**: name and URL slug
+- **Admin credentials**: email and password for the first admin account
+- **Optional features**: AI, email, S3 storage, and Google OAuth
 
-The wizard generates `docker-compose.yml`, `.env`, `learnhouse.config.json`, and an nginx or Caddy configuration based on your choices. Most options have defaults. You can press Enter to accept them and adjust settings later.
+The wizard generates `docker-compose.yml`, `.env`, `learnhouse.config.json`, and an nginx or Caddy configuration. Most options have defaults; press Enter to accept them and adjust settings later. See [Setup Wizard](/cli/setup-wizard) for every step.
+
+### Non-interactive setup
+
+For scripts, cloud-init or CI, use `--ci`. The admin password is required:
+
+```bash
+LEARNHOUSE_ADMIN_PASSWORD=change-me-please npx learnhouse@latest setup --ci \
+  --domain learn.yourdomain.com \
+  --admin-email admin@yourdomain.com
+```
+
+See [`setup` flags](/cli/commands#setup) for every option.
 
 ## Step 2: Start LearnHouse
 
-Once setup is complete, start all services:
+At the end of the wizard, accept **Start LearnHouse now?**. The CLI pulls the images, starts the containers, and waits up to 3 minutes for LearnHouse to respond. This typically takes one to two minutes on the first launch.
+
+If you declined, start it later:
 
 ```bash
 npx learnhouse start
 ```
 
-The CLI will pull the required Docker images (on first run), create the containers, and start all services. This typically takes one to two minutes on first launch.
-
 ## Step 3: Access LearnHouse
 
-Once all services are running, access LearnHouse at your configured domain or:
-
-- **http://localhost** (if using the default local configuration)
+Once all services are running, open your configured domain, or **http://localhost** for a local install. The CLI prints the URL when setup finishes.
 
 Log in with the admin credentials you provided during setup.
-
-<Callout type="warning">
-Change the default admin password after your first login. The initial credentials are intended only for the first setup. Navigate to your account settings to update your password.
-</Callout>
 
 ## Verifying the Installation
 
 Run the built-in diagnostics to check that everything is working:
 
 ```bash
-learnhouse doctor
+npx learnhouse doctor
 ```
 
-This command checks Docker, container health, port availability, DNS resolution, and disk space, then reports any issues it finds.
+This checks Docker, container state and restarts, the HTTP port, DNS resolution, disk space, recent log errors, and your `.env` file, then reports any issues it finds.
 
-You can also verify the health endpoint directly:
+You can also check the health endpoint directly. It returns `true` with status `200` when the API can reach the database:
 
 ```bash
 curl http://localhost/api/v1/health
@@ -75,5 +88,5 @@ curl http://localhost/api/v1/health
 
 ## Next Steps
 
-- [CLI Reference](/self-hosting/installation/cli-reference): Learn all available CLI commands.
-- [Configuration](/self-hosting/configuration): Customize your instance with environment variables, AI, email, and more.
+- [CLI Commands](/cli/commands): learn all available CLI commands.
+- [Configuration](/self-hosting/configuration): customize your instance with environment variables, AI, email, and more.

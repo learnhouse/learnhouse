@@ -211,7 +211,9 @@ class TestPlaygroundsService:
         with patch(
             "src.services.playgrounds.playgrounds.dispatch_webhooks",
             new_callable=AsyncMock,
-        ):
+        ), patch(
+            "src.services.playgrounds.playgrounds.track", new_callable=AsyncMock
+        ) as mock_track:
             created = await create_playground(
                 mock_request,
                 org.id,
@@ -219,6 +221,12 @@ class TestPlaygroundsService:
                 admin_user,
                 db,
             )
+        mock_track.assert_awaited_once_with(
+            event_name="playground_created",
+            org_id=org.id,
+            user_id=admin_user.id,
+            properties={"playground_uuid": created.playground_uuid},
+        )
 
         public_pg = await _make_playground(
             db,

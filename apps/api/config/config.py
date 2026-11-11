@@ -77,6 +77,22 @@ class AIConfig(BaseModel):
     # LEARNHOUSE_AI_TTS_MODEL; defaults to `gemini-2.5-flash-preview-tts`. All
     # Gemini TTS models are currently preview, so keep this configurable.
     tts_model: str | None = None
+    # Model used by the Atlas dashboard agent (resolved by the provider-agnostic
+    # LLM layer). Defaults to a fast tier because tool-use latency adds up fast;
+    # override via LEARNHOUSE_ATLAS_MODEL for harder reasoning tasks.
+    atlas_model: str | None = None
+
+
+class MCPConfig(BaseModel):
+    # The MCP server mounted at /mcp on the API, for external agents (Claude,
+    # ChatGPT, Cursor, ...). On by default: every call acts as a signed-in
+    # member (OAuth) or an API token, so it can do no more than that member or
+    # token already can. LEARNHOUSE_MCP_ENABLED=false turns the endpoint off.
+    enabled: bool = True
+    # Public URL of the endpoint, e.g. https://api.example.com/mcp. OAuth
+    # tokens are bound to it, so set it whenever a proxy rewrites the host or
+    # scheme. Derived from each request when unset.
+    public_url: str | None = None
 
 
 class S3ApiConfig(BaseModel):
@@ -153,6 +169,7 @@ class LearnHouseConfig(BaseModel):
     redis_config: RedisConfig
     security_config: SecurityConfig
     ai_config: AIConfig
+    mcp_config: MCPConfig = MCPConfig()
     mailing_config: MailingConfig
     payments_config: InternalPaymentsConfig
     tinybird_config: TinybirdConfig | None
@@ -526,7 +543,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
         else yaml_config.get("mailing_config", {}).get("smtp_use_tls", True)
     )
 
-    # Tinybird config, auto-enabled when API URL is set
+    # Legacy Tinybird credentials: only read by the Enterprise one-time import of old
+    # analytics data. Analytics itself no longer uses Tinybird.
     env_tinybird_api_url = os.environ.get("LEARNHOUSE_TINYBIRD_API_URL")
     env_tinybird_ingest_token = os.environ.get("LEARNHOUSE_TINYBIRD_INGEST_TOKEN")
     env_tinybird_read_token = os.environ.get("LEARNHOUSE_TINYBIRD_READ_TOKEN")
@@ -662,6 +680,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
     )
 
     # AI Config
+    env_atlas_model = os.environ.get("LEARNHOUSE_ATLAS_MODEL")
+    atlas_model = env_atlas_model or yaml_config.get("ai_config", {}).get(
+        "atlas_model"
+    )
+
     ai_config = AIConfig(
         is_ai_enabled=bool(is_ai_enabled),
         provider=ai_provider,
@@ -676,6 +699,17 @@ def get_learnhouse_config() -> LearnHouseConfig:
         gemini_api_key=gemini_api_key,
         image_model=ai_image_model,
         tts_model=ai_tts_model,
+        atlas_model=atlas_model,
+    )
+
+    mcp_yaml = yaml_config.get("mcp_config", {}) or {}
+    mcp_config = MCPConfig(
+        enabled=_env_bool(
+            os.environ.get("LEARNHOUSE_MCP_ENABLED"), mcp_yaml.get("enabled", True)
+        ),
+        public_url=(
+            os.environ.get("LEARNHOUSE_MCP_PUBLIC_URL") or mcp_yaml.get("public_url") or None
+        ),
     )
 
     # Surface missing internal-service keys at boot rather than at first
@@ -737,6 +771,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         database_config=database_config,
         security_config=SecurityConfig(auth_jwt_secret_key=auth_jwt_secret_key),
         ai_config=ai_config,
+        mcp_config=mcp_config,
         redis_config=RedisConfig(redis_connection_string=redis_connection_string),
         mailing_config=MailingConfig(
             email_provider=email_provider,

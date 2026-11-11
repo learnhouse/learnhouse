@@ -60,7 +60,7 @@ class TestCourseListCache:
 
     def test_invalidate_courses_cache_covers_delete_paths(self):
         redis_client = Mock()
-        redis_client.keys.return_value = [b"courses_cache:list:org-1:1:10"]
+        redis_client.scan_iter.return_value = iter([b"courses_cache:list:org-1:1:10"])
 
         with patch(
             "src.services.courses.cache.get_redis_client",
@@ -68,13 +68,15 @@ class TestCourseListCache:
         ), patch("src.services.courses.cache.logger.debug") as mock_debug:
             invalidate_courses_cache("org-1")
 
-            redis_client.keys.return_value = []
+            redis_client.scan_iter.return_value = iter([])
             invalidate_courses_cache("org-1")
 
-            redis_client.keys.side_effect = RuntimeError("boom")
+            redis_client.scan_iter.side_effect = RuntimeError("boom")
             invalidate_courses_cache("org-1")
 
         redis_client.delete.assert_called_once_with(b"courses_cache:list:org-1:1:10")
+        redis_client.scan_iter.assert_called_with(match="courses_cache:list:org-1:*", count=500)
+        redis_client.keys.assert_not_called()
         mock_debug.assert_called_once()
 
     def test_invalidate_courses_cache_returns_quickly_when_redis_is_unavailable(self):

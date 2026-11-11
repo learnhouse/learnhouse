@@ -7,11 +7,12 @@ from src.core.events.autoinstall import auto_install
 from src.core.events.content import check_content_directory
 from src.core.events.database import close_database, connect_to_db
 from src.core.events.logs import create_logs_dir, init_logging
-from src.core.ee_hooks import run_ee_startup
+from src.core.ee_hooks import run_ee_shutdown, run_ee_startup
 
 logger = logging.getLogger(__name__)
 
 _cleanup_task = None
+_mcp_lifespan_stack = None
 
 
 async def _periodic_migration_cleanup():
@@ -43,13 +44,14 @@ def startup_app(app: FastAPI) -> Callable:
         learnhouse_config: LearnHouseConfig = get_learnhouse_config()
         app.learnhouse_config = learnhouse_config  # type: ignore
 
-        # Connect to database
-        await connect_to_db(app)
-
         # Send application logs to stdout. Until this runs, the root logger
         # has no handler and Python's fallback drops everything below WARNING,
         # so every logger.info in the codebase is invisible in production.
+        # Before the database: the schema step logs what it migrated.
         init_logging()
+
+        # Connect to database (and bring its schema to this version)
+        await connect_to_db(app)
 
         # Create logs directory
         await create_logs_dir()
@@ -73,6 +75,16 @@ def startup_app(app: FastAPI) -> Callable:
         # external scheduler. No-op unless enabled; never raises.
         from src.services.nudges.scheduler import start_scheduler
         start_scheduler()
+
+        # Hourly "chapter is open" emails for courses with drip content and
+        # notifications on. Never raises.
+        from src.services.courses.drip_scheduler import start_scheduler as start_drip_scheduler
+        start_drip_scheduler()
+
+        # Emails about messages that stayed unread (default: after an hour).
+        # Never raises.
+        from src.services.messaging.scheduler import start_scheduler as start_messaging_emails
+        start_messaging_emails()
 
         # The shared demo organization refreshes itself on an interval, so the
         # feature needs no external scheduler. No-op unless
@@ -101,6 +113,18 @@ def startup_app(app: FastAPI) -> Callable:
         # video chapters) for whatever slipped through.
         from src.services.backfill.scheduler import start_scheduler as start_backfill
         start_backfill()
+        # Start the embedded MCP session manager when enabled. Starlette
+        # mounts don't run sub-app lifespans, so the manager's run()
+        # context is entered here and closed in shutdown_app — without it
+        # every /mcp request fails with an uninitialized task group.
+        mcp_manager = getattr(getattr(app, "state", None), "mcp_session_manager", None)
+        if mcp_manager is not None:
+            from contextlib import AsyncExitStack
+
+            global _mcp_lifespan_stack
+            _mcp_lifespan_stack = AsyncExitStack()
+            await _mcp_lifespan_stack.enter_async_context(mcp_manager.run())
+            logger.info("Embedded MCP server started on /mcp")
 
         # Start Enterprise Edition Startup tasks if available
         run_ee_startup(app)
@@ -138,9 +162,24 @@ def shutdown_app(app: FastAPI) -> Callable:
         # Stop the daily nudge tick.
         from src.services.nudges.scheduler import stop_scheduler
         await stop_scheduler()
+        from src.services.courses.drip_scheduler import stop_scheduler as stop_drip_scheduler
+        await stop_drip_scheduler()
+        from src.services.messaging.scheduler import stop_scheduler as stop_messaging_emails
+        await stop_messaging_emails()
         # Stop the demo refresh tick.
         from src.services.demo.scheduler import stop_scheduler as stop_demo_scheduler
         await stop_demo_scheduler()
+        # Let EE stop its background work and write what it still holds
+        # (queued analytics events). Never raises.
+        await run_ee_shutdown(app)
+        # Close the embedded MCP session manager (started in startup_app).
+        global _mcp_lifespan_stack
+        if _mcp_lifespan_stack is not None:
+            try:
+                await _mcp_lifespan_stack.aclose()
+            except Exception:  # pragma: no cover - defensive shutdown
+                logger.exception("MCP session manager shutdown failed")
+            _mcp_lifespan_stack = None
         await close_database(app)
 
     return close_app

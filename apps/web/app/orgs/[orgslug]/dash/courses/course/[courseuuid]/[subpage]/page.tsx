@@ -3,22 +3,27 @@ import React, { use, useEffect } from 'react';
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'motion/react'
-import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search } from 'lucide-react'
+import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search, CalendarClock } from 'lucide-react'
 import { ChartBar } from '@phosphor-icons/react'
-import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
-import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
-import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
-import EditCourseContributors from '@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'
-import EditCourseCertification from '@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'
-import EditCourseSEO from '@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'
 import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
 import { getUriWithOrg } from '@services/config/config';
 import { useTranslation } from 'react-i18next';
 import { PlanLevel } from '@services/plans/plans';
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate';
-import CourseAnalyticsTab from '@components/Dashboard/Analytics/Course/CourseAnalyticsTab';
 import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar';
+import dynamic from 'next/dynamic'
+import { isOrgAnalyticsAvailable } from '@ee/components/Analytics/availability'
+
+// One chunk per tab: only the open tab's code (charts, editors) is loaded.
+const EditCourseStructure = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'))
+const EditCourseGeneral = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'))
+const EditCourseAccess = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'))
+const EditCourseContributors = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'))
+const EditCourseCertification = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'))
+const EditCourseSEO = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'))
+const EditCourseSchedule = dynamic(() => import('@components/Dashboard/Pages/Course/EditCourseSchedule/EditCourseSchedule'))
+const CourseAnalyticsTab = dynamic(() => import('@ee/components/Analytics/Dashboard/Course/CourseAnalyticsTab'))
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -40,7 +45,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   const { hasPermission, isLoading: rightsLoading } = useCourseRights(courseuuid)
 
   // Define tab configurations with their required permissions
-  const tabs = [
+  const allTabs = [
     {
       key: 'general',
       label: t('dashboard.courses.settings.tabs.general'),
@@ -54,6 +59,14 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
       icon: GalleryVerticalEnd,
       href: `/dash/courses/course/${params.courseuuid}/content`,
       requiredPermission: 'update_content' as const
+    },
+    {
+      key: 'schedule',
+      label: t('dashboard.courses.settings.tabs.schedule', 'Schedule'),
+      icon: CalendarClock,
+      href: `/dash/courses/course/${params.courseuuid}/schedule`,
+      requiredPermission: 'update' as const,
+      requiresPlan: 'standard' as PlanLevel
     },
     {
       key: 'access',
@@ -94,6 +107,8 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
       requiresPlan: 'pro' as PlanLevel
     }
   ]
+  // Course analytics ship with Enterprise Edition; the tab is hidden without it.
+  const tabs = allTabs.filter((tab) => tab.key !== 'analytics' || isOrgAnalyticsAvailable())
 
   // Filter tabs based on permissions
   const visibleTabs = tabs.filter(tab => hasPermission(tab.requiredPermission))
@@ -174,6 +189,11 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
             ) : null}
             {!rightsLoading && params.subpage == 'general' && hasPermission('update') ? (
               <EditCourseGeneral orgslug={params.orgslug} />
+            ) : null}
+            {!rightsLoading && params.subpage == 'schedule' && hasPermission('update') ? (
+              <FeatureGate feature="drip">
+                <EditCourseSchedule orgslug={params.orgslug} />
+              </FeatureGate>
             ) : null}
             {!rightsLoading && params.subpage == 'access' && hasPermission('manage_access') ? (
               <EditCourseAccess orgslug={params.orgslug} />

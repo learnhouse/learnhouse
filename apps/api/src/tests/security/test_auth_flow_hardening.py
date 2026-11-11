@@ -114,6 +114,13 @@ class TestVerificationTokenBoundToEmail:
         verified, _ = await self._verify(db, mock_request, user, "mixed@test.com ")
         assert verified.email_verified is True
 
+    async def test_verifying_drops_idp_links_made_while_unproven(self, db, mock_request):
+        user = await _make_user(db, 52, "owner@test.com", email_verified=False)
+        drop = AsyncMock()
+        with patch("src.services.auth.utils._drop_unverified_sso_links", drop):
+            await self._verify(db, mock_request, user, "owner@test.com")
+        drop.assert_awaited_once()
+
     async def test_invalidate_without_org_clears_every_org(self):
         from src.services.users.email_verification import invalidate_verification_tokens
 

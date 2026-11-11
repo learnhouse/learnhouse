@@ -1,12 +1,17 @@
 'use client'
 import React, { useState } from 'react'
-import { WarningCircle, Globe, FloppyDisk, SpinnerGap } from '@phosphor-icons/react'
+import { WarningCircle, Globe, FloppyDisk, SpinnerGap, ArrowSquareOut } from '@phosphor-icons/react'
 import { updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { toEmbedUrl } from '@/lib/media/embedUrl'
 import { useUrlEmbedSandbox } from '@/lib/media/useUrlEmbedSandbox'
 import { safeExternalUrl } from '@services/security/url'
+import { useTranslation } from 'react-i18next'
+
+// Video hosts letterbox well at 16:9; documents, forms and slides are made for
+// a taller frame, which matters on a portrait phone.
+const VIDEO_EMBED = /(youtube(-nocookie)?\.com|youtu\.be|vimeo\.com|loom\.com|wistia\.(com|net)|dailymotion\.com)/i
 
 interface EmbedActivityProps {
   activity: any
@@ -15,6 +20,7 @@ interface EmbedActivityProps {
 }
 
 function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const embedUrl = activity.content?.embed_url || ''
@@ -26,7 +32,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
   const handleSaveUrl = async () => {
     const validatedUrl = safeExternalUrl(editUrl)
     if (!validatedUrl) {
-      toast.error('Enter a valid http:// or https:// URL')
+      toast.error(t('activities.embed_activity.invalid_url'))
       return
     }
     setSaving(true)
@@ -36,10 +42,10 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
         activity.activity_uuid,
         access_token
       )
-      toast.success('Embed URL updated')
+      toast.success(t('activities.embed_activity.updated'))
       setError(false)
     } catch {
-      toast.error('Failed to update URL')
+      toast.error(t('activities.embed_activity.update_failed'))
     } finally {
       setSaving(false)
     }
@@ -53,13 +59,13 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <WarningCircle size={40} className="text-red-400" />
-        <p className="text-sm text-gray-600">No embed URL configured</p>
+        <p className="text-sm text-gray-600">{t('activities.embed_activity.no_url')}</p>
       </div>
     )
   }
 
   return (
-    <div className="w-full px-6 py-6" style={style}>
+    <div className="w-full px-0 py-1 sm:px-6 sm:py-6" style={style}>
       {editable && (
         <div className="mb-6 flex items-center gap-3">
           <Globe size={20} weight="duotone" className="text-cyan-400 flex-shrink-0" />
@@ -80,13 +86,30 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
             ) : (
               <FloppyDisk size={16} />
             )}
-            Save
+            {t('common.save')}
           </button>
         </div>
       )}
 
+      {displayUrl && !editable && !VIDEO_EMBED.test(iframeSrc) && (
+        // Embedded pages are cramped on a phone; offer the real thing too.
+        <div className="md:hidden mb-3 flex justify-end">
+          <a
+            href={displayUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="lh-press inline-flex h-11 items-center gap-1.5 rounded-full bg-gray-100 px-4 text-sm font-medium text-gray-700"
+          >
+            <ArrowSquareOut size={16} />
+            {t('activities.resource.open')}
+          </a>
+        </div>
+      )}
+
       {displayUrl ? (
-        <div className="w-full rounded-xl overflow-hidden nice-shadow" style={{ aspectRatio: '16/9' }}>
+        <div
+          className={`w-full rounded-xl overflow-hidden nice-shadow aspect-video ${VIDEO_EMBED.test(iframeSrc) ? '' : 'max-md:aspect-[4/5]'}`}
+        >
           {iframeSandbox && <iframe
             src={iframeSrc}
             className="w-full h-full border-0"
@@ -98,7 +121,7 @@ function EmbedActivity({ activity, editable = false, style }: EmbedActivityProps
       ) : (
         <div className="flex flex-col items-center justify-center py-20 gap-3 rounded-xl border-2 border-dashed border-gray-200">
           <Globe size={32} weight="duotone" className="text-gray-300" />
-          <p className="text-sm text-gray-400">Enter an embed URL above to preview</p>
+          <p className="text-sm text-gray-400">{t('activities.embed_activity.enter_url_hint')}</p>
         </div>
       )}
     </div>

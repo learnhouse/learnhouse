@@ -1,4 +1,9 @@
-import { Callout } from 'nextra/components'
+---
+title: Development Environment Setup
+description: Set up a local LearnHouse development environment with one CLI command that starts PostgreSQL, Redis, the API, the web app and the collab server.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Development Environment Setup
 
@@ -9,7 +14,7 @@ The LearnHouse CLI sets up and runs the entire development environment with a si
 Make sure you have the following installed before proceeding:
 
 - **Docker** (with Docker Compose v2)
-- **Node.js 18+**
+- **Node.js 22+** (to run the CLI with `npx`)
 - **[Bun](https://bun.sh/)**: used to install and run the web and collab workspaces
 - **[uv](https://docs.astral.sh/uv/)**: used to manage and run the Python API
 
@@ -18,7 +23,7 @@ Make sure Docker has at least **4GB of RAM** allocated. You can check and adjust
 </Callout>
 
 <Callout type="info">
-`npx learnhouse dev` runs `bun install` and `uv sync` to install project dependencies, but it does **not** install `bun` or `uv` themselves. Install them on your host first.
+`npx learnhouse dev` runs `bun install` and `uv sync` to install project dependencies, but it does **not** install `bun` or `uv` themselves. It checks for both and stops with an install link if either is missing.
 </Callout>
 
 ## Setup Steps
@@ -31,11 +36,14 @@ git clone https://github.com/learnhouse/learnhouse && cd learnhouse && npx learn
 
 That single command handles everything:
 
-- **Starts backing services**: PostgreSQL and Redis are launched via Docker Compose.
-- **Installs dependencies**: Python dependencies are installed via `uv` and JavaScript dependencies via `bun`, all automatically.
+- **Checks env files**: if `apps/api/.env`, `apps/web/.env.local` or `apps/collab/.env` lack a required variable, it offers to write development defaults (including matching secrets for the API and the collaboration server).
+- **Starts backing services**: PostgreSQL and Redis are launched via Docker Compose. On the first run it asks for the admin email and password.
+- **Installs dependencies**: Python dependencies via `uv` and JavaScript dependencies via `bun`, when they are not installed yet.
 - **Starts the API**: The FastAPI backend starts on port 1338 with hot reload.
 - **Starts the frontend**: The Next.js development server starts with `--turbopack` and hot reload.
-- **Starts the collaboration server**: The Hocuspocus collaboration server starts via `tsx watch`.
+- **Starts the collaboration server**: The Hocuspocus collaboration server starts via `tsx watch` on port 4000.
+
+See [Dev Mode](/cli/dev-mode) for the full startup flow, the keyboard controls, and how to run with Enterprise code (`--ee`).
 
 All services are coordinated automatically so you do not need to manage them individually.
 
@@ -55,10 +63,15 @@ The Swagger UI at `/docs` is only available in development mode. Production inst
 
 ## Stopping the Environment
 
-Press `Ctrl+C` in the terminal where `npx learnhouse dev` is running to stop all services.
+Press `q` or `Ctrl+C` in the terminal where `npx learnhouse dev` is running to stop the API, web and collab servers. The PostgreSQL and Redis containers keep running for the next session. To stop them:
+
+```bash
+docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down
+```
 
 ## Troubleshooting
 
 - **Port conflicts**: Make sure ports 3000 (web), 1338 (API), 4000 (collab), 5432 (Postgres), and 6379 (Redis) are not in use by other applications.
 - **Docker not running**: Ensure the Docker daemon is started before running `npx learnhouse dev`.
-- **Dependency issues**: The CLI installs all dependencies automatically. If you encounter issues, try deleting `node_modules` and `.venv` directories and re-running `npx learnhouse dev`.
+- **Dependency issues**: The CLI only installs dependencies when `node_modules` (web, collab) or `.venv` (API) is missing. After pulling changes that touch dependencies, run `bun install` or `uv sync` yourself, or delete those directories and re-run `npx learnhouse dev`.
+- **Lockfile errors in CI**: after changing a `package.json` or `apps/api/pyproject.toml`, run `scripts/lockfiles.sh` to regenerate every lockfile. CI runs `scripts/lockfiles.sh --check`.

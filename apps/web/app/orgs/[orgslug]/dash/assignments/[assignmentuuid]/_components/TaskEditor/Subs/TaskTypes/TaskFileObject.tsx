@@ -297,7 +297,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
             {view === 'teacher' && (
                 <div className='flex flex-col sm:flex-row py-5 sm:py-6 text-xs sm:text-sm justify-center mx-auto space-y-2 sm:space-y-0 sm:space-x-3 text-slate-600 px-4 sm:px-2 text-center sm:text-start bg-slate-50 rounded-lg border border-slate-100'>
                     <Info size={18} className="mx-auto sm:mx-0 text-slate-500" />
-                    <p>User will be able to submit a file for this task, you'll be able to review it in the Submissions Tab</p>
+                    <p>{t('dashboard.assignments.editor.task_editor.file.teacher_hint')}</p>
                 </div>
             )}
             {view === 'custom-grading' && (
@@ -331,113 +331,97 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID, onGr
                     )}
                 </div>
             )}
-            {view === 'student' && (
-                <>
-                    <div className="w-full bg-white rounded-lg border border-gray-100 min-h-[200px] shadow-xs px-4 sm:px-6 py-5 sm:py-6">
-                        <div className="flex flex-col justify-center items-center h-full w-full">
-                            <div className="flex flex-col justify-center items-center w-full max-w-full">
-                                <div className="flex flex-col justify-center items-center w-full">
-                                    {error && (
-                                        <div className="flex justify-center bg-red-50 border border-red-100 rounded-md text-red-600 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto mb-4">
-                                            <div className="text-xs sm:text-sm font-medium">{error}</div>
-                                        </div>
-                                    )}
-                                </div>
-                                {localUploadFile && !isLoading && (
-                                    <div className='flex flex-col rounded-lg bg-white text-gray-500 shadow-xs border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mt-3'>
-                                        <div className='absolute top-0 end-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-xs'>
-                                            <Cloud size={14} />
-                                        </div>
+            {view === 'student' && (() => {
+                const inputId = 'fileInput_' + assignmentTaskUUID
+                const fileName = localUploadFile?.name
+                    ?? (userSubmissions.fileUUID ? `${userSubmissions.fileUUID.slice(0, 8)}…${userSubmissions.fileUUID.slice(-4)}` : null)
+                const canUpload = !!access_token && canStudentSave && !isLoading
+                const pick = () => document.getElementById(inputId)?.click()
+                return (
+                    <div className='flex flex-col gap-3'>
+                        {error && (
+                            <div className='rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700'>{error}</div>
+                        )}
+                        <input type='file' id={inputId} className='hidden' onChange={handleFileChange} disabled={!canUpload} />
 
-                                        <div className='flex space-x-2 mt-2 items-center'>
-                                            <File size={18} className="text-emerald-500" />
-                                            <div className='font-medium text-xs sm:text-sm uppercase break-all'>
-                                                {localUploadFile.name.length > 20 
-                                                    ? `${localUploadFile.name.slice(0, 10)}...${localUploadFile.name.slice(-10)}`
-                                                    : localUploadFile.name}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                {userSubmissions.fileUUID && !isLoading && !localUploadFile && (
-                                    <div className='flex flex-col rounded-lg bg-white text-gray-500 shadow-xs border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mt-3'>
-                                        <div className='absolute top-0 end-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-xs'>
-                                            <Cloud size={14} />
-                                        </div>
-
-                                        <div className='flex space-x-2 mt-2 items-center'>
-                                            <File size={18} className="text-emerald-500" />
-                                            <div className='font-medium text-xs sm:text-sm uppercase break-all'>
-                                                {`${userSubmissions.fileUUID.slice(0, 8)}...${userSubmissions.fileUUID.slice(-4)}`}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className='flex flex-col sm:flex-row pt-5 font-medium space-y-1 sm:space-y-0 sm:space-x-2 text-xs items-center text-slate-500 text-center sm:text-start bg-slate-50 rounded-lg px-3 py-2 mt-5 border border-slate-100 w-full sm:w-auto'>
-                                    <Info size={15} className="mx-auto sm:mx-0 text-slate-400" />
-                                    <p>{t('dashboard.assignments.editor.task_editor.general.allowed_formats')}</p>
+                        {fileName && !isLoading ? (
+                            // Uploaded: one row with the file and a way to replace it.
+                            <div className='flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3'>
+                                <span className='flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-teal-50 text-teal-600'>
+                                    <File size={18} />
+                                </span>
+                                <div className='min-w-0 flex-1'>
+                                    <p className='truncate text-sm font-semibold text-neutral-900'>{fileName}</p>
+                                    <p className='flex items-center gap-1 text-xs text-neutral-500'>
+                                        <Cloud size={12} className='text-teal-600' />
+                                        {t('dashboard.assignments.editor.task_editor.file.uploaded', { defaultValue: 'Uploaded' })}
+                                    </p>
                                 </div>
-                                {!access_token ? (
-                                    <div className="flex justify-center items-center w-full mt-5">
-                                        <div className="flex justify-center bg-amber-50 border border-amber-100 rounded-md text-amber-600 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto">
-                                            <Info size={15} className="text-amber-500" />
-                                            <div className="text-xs sm:text-sm font-medium">{t('dashboard.assignments.editor.task_editor.general.sign_in_required')}</div>
-                                        </div>
-                                    </div>
-                                ) : isLoading ? (
-                                    <div className="flex justify-center items-center w-full mt-5">
-                                        <input
-                                            type="file"
-                                            id="fileInput"
-                                            style={{ display: 'none' }}
-                                            onChange={handleFileChange}
-                                        />
-                                        <div className="font-medium animate-pulse antialiased items-center bg-slate-100 text-slate-600 text-xs sm:text-sm rounded-md px-4 sm:px-5 py-2.5 flex">
-                                            <Loader size={15} className="me-2" />
-                                            <span>Loading</span>
-                                        </div>
-                                    </div>
-                                ) : !canStudentSave ? (
-                                    // Locked: uploading now would look successful
-                                    // but could never be persisted (auto-save is
-                                    // off once SUBMITTED/GRADED), so the teacher
-                                    // would keep grading the previous file.
-                                    <div className="flex justify-center items-center w-full mt-5">
-                                        <div className="flex justify-center bg-slate-50 border border-slate-200 rounded-md text-slate-500 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto">
-                                            <Lock size={15} className="text-slate-400" />
-                                            <div className="text-xs sm:text-sm font-medium">
-                                                {submissionIsGraded
-                                                    ? t('dashboard.assignments.editor.task_editor.general.upload_locked_graded', {
-                                                        defaultValue: 'This submission has been graded; your file can no longer be changed.',
-                                                    })
-                                                    : t('dashboard.assignments.editor.task_editor.general.upload_locked_submitted', {
-                                                        defaultValue: 'You have submitted this assignment; your file can no longer be changed.',
-                                                    })}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex justify-center items-center w-full mt-5">
-                                        <input
-                                            type="file"
-                                            id={"fileInput_" + assignmentTaskUUID}
-                                            style={{ display: 'none' }}
-                                            onChange={handleFileChange}
-                                        />
-                                        <button
-                                            className="font-medium antialiased items-center text-white text-xs sm:text-sm rounded-md px-4 sm:px-5 py-2.5 flex bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-xs"
-                                            onClick={() => document.getElementById("fileInput_" + assignmentTaskUUID)?.click()}
-                                        >
-                                            <UploadCloud size={15} className="me-2" />
-                                            <span>Submit File</span>
-                                        </button>
-                                    </div>
+                                {canUpload && (
+                                    <button type='button' onClick={pick} className='h-9 flex-none rounded-xl bg-neutral-100 px-3 text-xs font-semibold text-neutral-800 transition-colors hover:bg-neutral-200'>
+                                        {t('dashboard.assignments.editor.task_editor.file.replace', { defaultValue: 'Replace' })}
+                                    </button>
                                 )}
                             </div>
-                        </div>
+                        ) : access_token && !canStudentSave ? (
+                            // Handed in without a file: nothing to drop anything into any more.
+                            <div className='flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-500'>
+                                <span className='flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-white text-neutral-400'>
+                                    <File size={18} />
+                                </span>
+                                {t('dashboard.assignments.editor.task_editor.file.no_file', { defaultValue: 'No file submitted' })}
+                            </div>
+                        ) : (
+                            // Empty: a drop zone that is also one big button.
+                            <button
+                                type='button'
+                                disabled={!canUpload}
+                                onClick={pick}
+                                onDragOver={(e) => { if (canUpload) e.preventDefault() }}
+                                onDrop={(e) => {
+                                    if (!canUpload) return
+                                    e.preventDefault()
+                                    if (e.dataTransfer.files?.length) handleFileChange({ target: { files: e.dataTransfer.files } })
+                                }}
+                                className='flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-7 text-center transition-colors enabled:hover:border-teal-400 enabled:hover:bg-teal-50/40 disabled:cursor-not-allowed'
+                            >
+                                <span className='flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-500 nice-shadow'>
+                                    {isLoading ? <Loader size={18} className='animate-spin' /> : <UploadCloud size={18} />}
+                                </span>
+                                <span className='text-sm font-semibold text-neutral-900'>
+                                    {isLoading
+                                        ? t('dashboard.assignments.editor.task_editor.general.loading')
+                                        : t('dashboard.assignments.editor.task_editor.file.submit_file')}
+                                </span>
+                                <span className='text-xs text-neutral-500'>{t('dashboard.assignments.editor.task_editor.general.allowed_formats')}</span>
+                            </button>
+                        )}
+
+                        {!access_token && (
+                            <p className='flex items-center gap-1.5 text-xs font-medium text-amber-700'>
+                                <Info size={13} />
+                                {t('dashboard.assignments.editor.task_editor.general.sign_in_required')}
+                            </p>
+                        )}
+                        {access_token && !canStudentSave && (
+                            // Locked: uploading now would look successful but could
+                            // never be persisted (auto-save is off once
+                            // SUBMITTED/GRADED), so the teacher would keep grading
+                            // the previous file.
+                            <p className='flex items-center gap-1.5 text-xs font-medium text-neutral-500'>
+                                <Lock size={13} />
+                                {submissionIsGraded
+                                    ? t('dashboard.assignments.editor.task_editor.general.upload_locked_graded', {
+                                        defaultValue: 'This submission has been graded; your file can no longer be changed.',
+                                    })
+                                    : t('dashboard.assignments.editor.task_editor.general.upload_locked_submitted', {
+                                        defaultValue: 'You have submitted this assignment; your file can no longer be changed.',
+                                    })}
+                            </p>
+                        )}
                     </div>
-                </>
-            )}
+                )
+            })()}
         </AssignmentBoxUI>
     )
 }

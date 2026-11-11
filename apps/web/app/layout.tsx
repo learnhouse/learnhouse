@@ -1,5 +1,6 @@
 import '../styles/globals.css'
 import React from 'react'
+import type { Metadata, Viewport } from 'next'
 import Providers from '@components/Providers'
 import { Wix_Madefor_Text, Tajawal } from 'next/font/google'
 
@@ -26,7 +27,25 @@ const tajawal = Tajawal({
   weight: ['300', '400', '500', '700', '800'],
   display: 'swap',
   variable: '--font-arabic',
+  // Only RTL/Arabic screens use it, so don't make every visitor download it.
+  preload: false,
 })
+
+// viewport-fit=cover lets the phone shell paint under the notch and home
+// indicator; the bars pad themselves with env(safe-area-inset-*). Pinch zoom
+// stays enabled: inputs are 16px on phones so focusing one never auto-zooms.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#ffffff',
+}
+
+// Saved to the home screen, the app opens without browser chrome.
+export const metadata: Metadata = {
+  appleWebApp: { capable: true, statusBarStyle: 'default' },
+  formatDetection: { telephone: false },
+}
 
 export default function RootLayout({
   children,

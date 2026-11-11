@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   useRef,
 } from 'react'
 import {
@@ -15,6 +16,7 @@ import {
 } from '@services/config/config'
 import { isSubdomainOf, isSameHost, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
 import { safeRedirectUrl } from '@services/auth/redirects'
+import i18n from '@/lib/i18n'
 import { safeExternalUrl } from '@services/security/url'
 import { AUTH_EXPIRED_EVENT, AUTH_REFRESHED_EVENT } from '@/lib/auth/events'
 
@@ -677,7 +679,7 @@ export function SessionProvider({
             ok: false,
             error: JSON.stringify({
               code: errorData?.code || 'UNKNOWN_ERROR',
-              message: errorData?.message || 'Verification failed',
+              message: errorData?.message || i18n.t('auth.errors.verification_failed'),
               retry_after: errorData?.retry_after,
             }),
             url: null,
@@ -688,7 +690,7 @@ export function SessionProvider({
         if (!data.tokens?.access_token) {
           return {
             ok: false,
-            error: JSON.stringify({ code: 'INVALID_RESPONSE', message: 'Invalid server response' }),
+            error: JSON.stringify({ code: 'INVALID_RESPONSE', message: i18n.t('auth.errors.invalid_response') }),
             url: null,
             status: 500,
           }
@@ -699,7 +701,7 @@ export function SessionProvider({
         console.error('MFA verification error:', error)
         return {
           ok: false,
-          error: JSON.stringify({ code: 'NETWORK_ERROR', message: 'Could not reach the server' }),
+          error: JSON.stringify({ code: 'NETWORK_ERROR', message: i18n.t('auth.errors.network') }),
           url: null,
           status: 0,
         }
@@ -780,7 +782,7 @@ export function SessionProvider({
             ok: false,
             error: JSON.stringify({
               code: errorData?.code || 'UNKNOWN_ERROR',
-              message: errorData?.message || 'This link is no longer valid.',
+              message: errorData?.message || i18n.t('auth.errors.link_invalid'),
             }),
             url: null,
             status: response.status,
@@ -804,7 +806,7 @@ export function SessionProvider({
         if (!data.tokens?.access_token) {
           return {
             ok: false,
-            error: JSON.stringify({ code: 'INVALID_RESPONSE', message: 'Invalid server response' }),
+            error: JSON.stringify({ code: 'INVALID_RESPONSE', message: i18n.t('auth.errors.invalid_response') }),
             url: null,
             status: 500,
           }
@@ -818,7 +820,7 @@ export function SessionProvider({
         console.error('Magic link verification error:', error)
         return {
           ok: false,
-          error: JSON.stringify({ code: 'NETWORK_ERROR', message: 'Could not reach the server' }),
+          error: JSON.stringify({ code: 'NETWORK_ERROR', message: i18n.t('auth.errors.network') }),
           url: null,
           status: 0,
         }
@@ -917,7 +919,7 @@ export function SessionProvider({
               ok: false,
               error: JSON.stringify({
                 code: errorData?.code || 'UNKNOWN_ERROR',
-                message: errorData?.message || 'Login failed',
+                message: errorData?.message || i18n.t('auth.errors.login_failed'),
                 email: errorData?.email,
                 retry_after: errorData?.retry_after,
               }),
@@ -944,7 +946,7 @@ export function SessionProvider({
           if (!data.tokens?.access_token) {
             return {
               ok: false,
-              error: JSON.stringify({ code: 'INVALID_RESPONSE', message: 'Invalid server response' }),
+              error: JSON.stringify({ code: 'INVALID_RESPONSE', message: i18n.t('auth.errors.invalid_response') }),
               url: null,
               status: 500,
             }
@@ -998,7 +1000,7 @@ export function SessionProvider({
             console.error('Google OAuth initiation failed:', errorData)
             return {
               ok: false,
-              error: errorData.error || 'Google OAuth not configured',
+              error: errorData.error || i18n.t('auth.errors.google_not_configured'),
               url: null,
               status: authResponse.status,
             }
@@ -1021,7 +1023,7 @@ export function SessionProvider({
         console.error('Sign in error:', error)
         return {
           ok: false,
-          error: error.message || 'Sign in failed',
+          error: error.message || i18n.t('auth.errors.sign_in_failed'),
           url: null,
           status: 500,
         }
@@ -1129,17 +1131,32 @@ export function SessionProvider({
     }
   }, [applySessionFromToken, handleSignOut, hasSessionMarker])
 
-  const contextValue: AuthContextValue = {
-    session,
-    status,
-    accessToken,
-    refreshSession,
-    signIn: handleSignIn,
-    signOut: handleSignOut,
-    completeMfaLogin,
-    requestMagicLink,
-    completeMagicLink,
-  }
+  // Memoized so consumers only re-render when auth state actually changes,
+  // not on every render of the provider.
+  const contextValue: AuthContextValue = useMemo(
+    () => ({
+      session,
+      status,
+      accessToken,
+      refreshSession,
+      signIn: handleSignIn,
+      signOut: handleSignOut,
+      completeMfaLogin,
+      requestMagicLink,
+      completeMagicLink,
+    }),
+    [
+      session,
+      status,
+      accessToken,
+      refreshSession,
+      handleSignIn,
+      handleSignOut,
+      completeMfaLogin,
+      requestMagicLink,
+      completeMagicLink,
+    ]
+  )
 
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
@@ -1149,23 +1166,29 @@ export function SessionProvider({
 // useSession hook - matches NextAuth's API exactly
 export function useSession(): UseSessionReturn {
   const context = useContext(AuthContext)
+  const refreshSession = context?.refreshSession
 
-  if (!context) {
-    // Return unauthenticated state if used outside provider
-    return {
-      data: null,
-      status: 'unauthenticated',
-      update: async () => {},
-    }
-  }
-
-  return {
-    data: context.session,
-    status: context.status,
-    update: async (force?: boolean) => {
-      await context.refreshSession(force)
+  // Stable across renders so callers can put it in effect deps.
+  const update = useCallback(
+    async (force?: boolean) => {
+      await refreshSession?.(force)
     },
-  }
+    [refreshSession]
+  )
+
+  const session = context?.session ?? null
+  const status: SessionStatus = context ? context.status : 'unauthenticated'
+
+  // Same object until the session or status changes, so context consumers
+  // downstream (LHSessionProvider) don't re-render on every parent render.
+  return useMemo(
+    () => ({
+      data: session,
+      status,
+      update,
+    }),
+    [session, status, update]
+  )
 }
 
 // Decode the payload half of a server-signed OAuth state (`payload.sig`,
@@ -1271,7 +1294,7 @@ export async function signIn(
       console.error('Google OAuth initiation failed:', errorData)
       return {
         ok: false,
-        error: errorData.error || 'Google OAuth not configured',
+        error: errorData.error || i18n.t('auth.errors.google_not_configured'),
         url: null,
         status: authResponse.status,
       }

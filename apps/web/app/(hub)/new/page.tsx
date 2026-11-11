@@ -42,13 +42,14 @@ import {
 } from '@phosphor-icons/react'
 
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { hasManagingRoleFromSession } from '@components/Hooks/useAdminStatus'
 import { signOut } from '@components/Contexts/AuthContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import DemoEntryCard from '@components/Objects/Demo/DemoEntryCard'
 import { createNewOrganization } from '@services/organizations/orgs'
 import { useLHAnalytics } from '@services/analytics/useLHAnalytics'
 import { AnalyticsEvent } from '@services/analytics/events'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getAPIUrl, getCustomDomainFromContext, getLEARNHOUSE_DOMAIN_VAL, getUriWithOrg } from '@services/config/config'
 import { apiFetch } from '@services/utils/ts/requests'
 import {
   DropdownMenu,
@@ -672,7 +673,11 @@ function CreateOrgSuccess({ slug, t }: { slug: string; t: any }) {
     } catch {
       /* non-fatal: the existing session cookie still carries over */
     }
-    window.location.href = getUriWithOrg(slug, '/dash/onboarding')
+    // getUriWithOrg stays relative on a custom domain (that host is another
+    // org's), so build the new org's own subdomain URL there.
+    window.location.href = getCustomDomainFromContext()
+      ? `${window.location.protocol}//${slug}.${getLEARNHOUSE_DOMAIN_VAL()}/dash/onboarding`
+      : getUriWithOrg(slug, '/dash/onboarding')
   }
 
   return (
@@ -760,6 +765,8 @@ export default function CreateNewOrgPage() {
 
   // Load the user's existing orgs to detect whether they already have a free org
   // (which makes the free plan unavailable, mirroring the platform's 1-free-org cap).
+  // Only orgs they run count: being a member of a school on the free plan must
+  // not stop someone from starting their own, and the demo makes everyone admin.
   const { data: orgs } = useQuery({
     queryKey: ['orgs', 'user'],
     queryFn: () => apiFetch(`${getAPIUrl()}orgs/user/page/1/limit/50`, access_token),
@@ -768,6 +775,7 @@ export default function CreateNewOrgPage() {
   })
   const hasFreeOrg = Array.isArray(orgs)
     ? orgs.some((o: any) => {
+        if (o.is_demo || !hasManagingRoleFromSession(session, o.id)) return false
         const plan = o.config?.config?.plan ?? o.config?.config?.cloud?.plan ?? 'free'
         return plan === 'free'
       })
@@ -984,7 +992,7 @@ export default function CreateNewOrgPage() {
               {isAuthenticated && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button aria-label="User menu" className="rounded-full">
+                    <button aria-label={t('hub_new.user_menu', { defaultValue: 'User menu' })} className="rounded-full">
                       <UserAvatar border="border-2" rounded="rounded-full" width={34} />
                     </button>
                   </DropdownMenuTrigger>

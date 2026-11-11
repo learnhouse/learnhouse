@@ -138,6 +138,32 @@ class TestManualGradeOverridePreserved:
         assert submission.overall_feedback == "Credit for reasoning"
 
 
+class TestGradeNotifiesEE:
+    async def test_grading_tells_ee_the_learner_progressed(
+        self, db, org, course, chapter, activity, regular_user
+    ):
+        # EE forwards grades to external gradebooks (LTI); it must hear about
+        # every grade, including bulk regrades that skip the webhook.
+        assignment, submission = await _setup(
+            db, org, course, chapter, activity, regular_user,
+            student_answer="5", stored_grade=100, manually_graded=True,
+        )
+        with patch(_PATCH_DISPATCH, new_callable=AsyncMock), patch(
+            "src.services.courses.activities.assignments.notify_ee_learner_progress"
+        ) as notify:
+            await _apply_grade_and_finalize(
+                assignment=assignment,
+                course=course,
+                user_id=regular_user.id,
+                assignment_user_submission=submission,
+                db_session=db,
+                overall_feedback=None,
+                auto_graded=False,
+                dispatch_webhook=False,
+            )
+        notify.assert_called_once_with(regular_user.id, course.id)
+
+
 class TestAutoGradeStillReverifies:
     async def test_auto_grade_overwrites_tampered_grade(
         self, db, org, course, chapter, activity, regular_user
@@ -313,7 +339,9 @@ class TestQuizManualOverride:
             db, org, course, chapter, activity, regular_user,
             stored_grade=100, manually_graded=False,
         )
-        with patch(_PATCH_DISPATCH, new_callable=AsyncMock):
+        with patch(_PATCH_DISPATCH, new_callable=AsyncMock), patch(
+            "src.services.courses.activities.assignments.track", new_callable=AsyncMock
+        ) as mock_track:
             computed = await _apply_grade_and_finalize(
                 assignment=assignment,
                 course=course,
@@ -324,6 +352,21 @@ class TestQuizManualOverride:
             )
         assert computed["grade"] == 67
         assert computed["percentage"] == 67.0
+        events = {c.kwargs["event_name"]: c.kwargs for c in mock_track.await_args_list}
+        assert events["assignment_graded"]["user_id"] == regular_user.id
+        assert events["assignment_graded"]["properties"] == {
+            "course_uuid": course.course_uuid,
+            "assignment_uuid": assignment.assignment_uuid,
+            "grade": 67,
+            "max_grade": 100,
+            "passed": computed["passed"],
+        }
+        assert events["quiz_submitted"]["properties"] == {
+            "course_uuid": course.course_uuid,
+            "score": 67,
+            "max_score": 100,
+            "passed": computed["tasks"][0]["passed"],
+        }
 
 
 # ---------------------------------------------------------------------------

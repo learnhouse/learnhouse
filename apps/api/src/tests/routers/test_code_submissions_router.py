@@ -1,5 +1,7 @@
 """Router tests for src/routers/code_submissions.py."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -50,12 +52,24 @@ class TestCodeSubmissionsRouter:
             "execution_time_ms": 12,
         }
 
-        response = await client.post(
-            "/api/v1/code/submissions/save",
-            json=body,
-        )
+        with patch(
+            "src.routers.code_submissions.track", new_callable=AsyncMock
+        ) as mock_track:
+            response = await client.post(
+                "/api/v1/code/submissions/save",
+                json=body,
+            )
         assert response.status_code == 200
         assert response.json()["source_code"] == body["source_code"]
+        mock_track.assert_awaited_once()
+        kwargs = mock_track.await_args.kwargs
+        assert kwargs["event_name"] == "code_submitted"
+        assert kwargs["org_id"] == activity.org_id
+        assert kwargs["properties"]["activity_uuid"] == "activity_test"
+        assert kwargs["properties"]["passed"] is True
+        assert kwargs["properties"]["tests_passed"] == 1
+        assert kwargs["properties"]["tests_total"] == 1
+        assert isinstance(kwargs["properties"]["language"], str)
 
         response = await client.get(
             "/api/v1/code/submissions/history",

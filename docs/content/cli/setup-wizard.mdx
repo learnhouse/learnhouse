@@ -1,107 +1,120 @@
-import { Callout } from 'nextra/components'
+---
+description: Walk through the LearnHouse setup wizard step by step, from edition, domain and HTTPS to database, Redis, organization, admin and features.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Setup Wizard
 
-The setup wizard (`npx learnhouse@latest setup`) is an interactive 6-step process that generates a complete Docker Compose deployment. You can go back and edit any step before confirming.
+The setup wizard (`npx learnhouse@latest setup`) generates a complete Docker Compose deployment. You can go back to the previous step after each step, and edit any step from the summary before confirming.
+
+The wizard needs a terminal. For scripts and CI, use `setup --ci` with flags instead (see [Commands](/cli/commands#setup)). For the install steps around the wizard, see [Quick Install](/self-hosting/installation/quick-install).
+
+## Before the steps
+
+1. **Edition**: choose **Community** (free, single organization) or **Enterprise** (license key; SSO, payments, multi-tenant). Pass `--edition` to skip this question. The rest of this page covers the Community edition.
+2. **Prerequisites**: the CLI checks that Docker is installed, the Docker daemon is running, and the `docker compose` plugin works.
+3. **Release channel**:
+   - **Stable** (recommended): the newest versioned release of `ghcr.io/learnhouse/app`, or `:latest` if no versioned image can be found
+   - **Dev**: the latest development build (`ghcr.io/learnhouse/app:dev`)
 
 ## Step 1: Install Directory
 
-Choose where the deployment files will be created.
+Choose a name for the installation. Installations live in `~/.learnhouse/<name>` (default name: `default`).
 
-- **Default**: `./learnhouse`
-- The directory is created if it doesn't exist
+- Names start with a letter or digit and use only letters, digits, `.`, `_` or `-` (up to 64 characters)
+- Names that Windows reserves (`con`, `prn`, `aux`, `nul`, `com1` to `com9`, `lpt1` to `lpt9`) and names ending in a dot are rejected
+- If the directory already holds an installation, the wizard asks whether to reconfigure it. Reconfiguring keeps the deployment ID, database password, secrets and app image.
 
 ## Step 2: Domain Configuration
 
-Configure your hostname and HTTPS settings.
-
-- **Domain**: hostname or IP address (default: `localhost`)
-- **HTTPS options** (non-localhost only):
-  - **Automatic SSL** (recommended): Uses Let's Encrypt via Caddy. Requires a valid domain and ports 80/443.
-  - **Manual SSL**: You handle the reverse proxy or Cloudflare. LearnHouse runs on HTTP internally.
+- **Domain**: hostname (default: `localhost`)
+- **HTTPS** (only asked for a domain other than `localhost`):
+  - **Automatic SSL** (recommended): Let's Encrypt certificates through Caddy. The wizard asks for an email address for Let's Encrypt notices.
+  - **I'll handle SSL myself**: you terminate TLS in your own reverse proxy or a service like Cloudflare. LearnHouse runs on plain HTTP behind it, and the generated URLs use `https://`.
   - **No HTTPS**: HTTP only (not recommended for production)
-- **Port**: Automatically set based on SSL choice (443 for auto SSL, 80 for HTTP)
+- **Port**: with automatic SSL, the HTTPS port (default `443`; Caddy also listens on `80` for redirects). Otherwise the HTTP port (default `80`). If port 80 is taken, the wizard suggests a free one such as `8080`, and it refuses a port above 1024 that is already in use.
 
 ## Step 3: Database & Redis
 
-Choose local Docker containers or connect to external services.
-
 ### PostgreSQL
 
-- **Local Docker** (recommended):
-  - Uses `pgvector/pgvector:pg16` (PostgreSQL 16 with the pgvector extension, used for AI/RAG features when enabled)
-  - Password is auto-generated
-- **External**: Provide a connection string (`postgresql://user:pass@host:5432/db`). The wizard tests connectivity before proceeding.
+- **Create a new database (Docker)** (recommended). The wizard then asks for the image:
+  - **PostgreSQL with AI capabilities** (recommended): enables the AI course chatbot (RAG)
+  - **Standard PostgreSQL**
+
+  Both currently use `pgvector/pgvector:pg16`. The user is `learnhouse`, the host is `db:5432`, and a random password is generated and saved in `.env` as `POSTGRES_PASSWORD` (it is not printed).
+- **Use an external database**: enter a connection string starting with `postgresql://` or `postgres://`. The wizard checks that the host and port are reachable before continuing.
 
 ### Redis
 
-- **Local Docker** (recommended): Uses `redis:7.2.3-alpine`
-- **External**: Provide a connection string. The wizard tests connectivity before proceeding.
+- **Create a new Redis instance (Docker)** (recommended): `redis:7.4-alpine`
+- **Use an external Redis**: enter a connection string starting with `redis://` or `rediss://`. The wizard checks that it is reachable.
 
-## Step 4: Organization
+## Step 4: Organization Setup
 
-Set your organization name (e.g., "My School"). This creates the initial organization in the database.
+- **Organization name** (default: `My School`)
+- **Organization slug**, used in URLs like `/orgs/<slug>` (default: `default`). Lowercase letters, digits and single hyphens, up to 63 characters. Keep `default` unless you need a custom slug.
 
 ## Step 5: Admin Account
 
-Create the first admin user with email and password (minimum 8 characters).
+Create the first admin user:
+
+- **Email**: must use a real domain. Reserved domains (`example.com`, `example.net`, `example.org`) and TLDs (`.local`, `.localhost`, `.test`, `.invalid`, `.example`) are rejected, because the API would not create an admin for them.
+- **Password**: at least 8 characters
 
 ## Step 6: Optional Features
 
-Enable any of the following integrations:
+Select any of these integrations:
 
-| Feature | Required Configuration |
+| Feature | What the wizard asks for |
 | --- | --- |
 | **AI (Gemini)** | Gemini API key |
-| **Email (Resend)** | Resend API key + system email address |
-| **Email (SMTP)** | Host, port, username, password, TLS toggle + system email |
-| **S3 Storage** | Bucket name, endpoint URL (optional for AWS) |
-| **Google OAuth** | Client ID + Client Secret |
-| **Unsplash** | Access Key |
+| **Email (Resend or SMTP)** | Provider; a Resend API key, or SMTP host, port (default `587`), username, password and TLS toggle; then the system "From" address |
+| **S3 Storage** | Bucket name and endpoint URL (leave empty for AWS S3) |
+| **Google OAuth** | Client ID and Client Secret |
+
+API keys and secrets are entered without echo. To use another AI provider, edit `.env` after setup (see [AI Setup](/self-hosting/configuration/ai-setup)).
 
 ## Confirmation
 
-After completing all steps, the wizard shows a summary of your configuration. You can:
+The wizard shows a summary of your configuration. You can:
 
-- **Proceed**: Generate files and optionally start the deployment
-- **Edit**: Go back and change any step
-- **Cancel**: Abort without generating anything
+- **Proceed**: generate the files
+- **Edit**: go back and change any step
+- **Cancel**: stop without generating anything
+
+It then asks **Start LearnHouse now?** If you accept, it runs `docker compose up -d`, waits up to 3 minutes for `/api/v1/health` to respond, and checks that your organization was created. If you decline, start it later with `npx learnhouse start`.
 
 ## Generated Files
 
-After confirmation, the wizard creates:
-
-```
-{installDir}/
+```text
+~/.learnhouse/<name>/
 ├── docker-compose.yml        # Service definitions
-├── .env                      # All configuration variables
-├── learnhouse.config.json    # CLI metadata
+├── .env                      # All configuration variables (owner-only permissions)
+├── learnhouse.config.json    # CLI metadata (deployment ID, domain, port, channel, edition)
 └── extra/
-    ├── Caddyfile             # If auto-SSL enabled
-    └── nginx.prod.conf       # If manual SSL or HTTP
+    ├── Caddyfile             # If automatic SSL is enabled
+    └── nginx.prod.conf       # Otherwise
 ```
 
 ## Docker Services
 
-Each deployment gets a unique 8-character ID for container and network isolation.
+Each deployment gets a unique 8-character ID used in the compose project name (`learnhouse-<id>`), container names, volumes and network.
 
-| Service | Image | Purpose |
-| --- | --- | --- |
-| `learnhouse-app-{id}` | `ghcr.io/learnhouse/app:latest` (or `:dev`) | Next.js + FastAPI application |
-| `learnhouse-db-{id}` | `pgvector/pgvector:pg16` | PostgreSQL database |
-| `learnhouse-redis-{id}` | `redis:7.2.3-alpine` | Redis cache |
-| `learnhouse-caddy-{id}` | `caddy:2-alpine` | Reverse proxy with auto-SSL |
-| `learnhouse-nginx-{id}` | `nginx:alpine` | Reverse proxy (no auto-SSL) |
+| Service | Container | Image | Purpose |
+| --- | --- | --- | --- |
+| `learnhouse-app` | `learnhouse-app-<id>` | `ghcr.io/learnhouse/app:<tag>` | Web app, API and collaboration server |
+| `db` | `learnhouse-db-<id>` | `pgvector/pgvector:pg16` | PostgreSQL (omitted with an external database) |
+| `redis` | `learnhouse-redis-<id>` | `redis:7.4-alpine` | Redis (omitted with an external Redis) |
+| `caddy` | `learnhouse-caddy-<id>` | `caddy:2.11-alpine` | Reverse proxy with automatic SSL |
+| `nginx` | `learnhouse-nginx-<id>` | `nginx:1.30-alpine` | Reverse proxy without automatic SSL |
+| `ssr-fwd` | `learnhouse-ssr-fwd-<id>` | `alpine/socat:1.8.1.3` | Only on plain HTTP with a port other than 80: forwards that port to the app inside its container so server-side requests reach it |
+
+Named volumes, declared in `docker-compose.yml`, hold the database (`learnhouse_db_data_<id>`), Redis data (`learnhouse_redis_data_<id>`), uploaded content (`learnhouse_content_<id>`, not created when S3 is enabled) and Caddy certificates. Docker prefixes them with the project name, so `docker volume ls` shows names like `learnhouse-<id>_learnhouse_db_data_<id>`.
+
+Third-party images are pinned to a minor version, so patch releases arrive when images are pulled and new minor versions arrive with a CLI release.
 
 <Callout type="info">
-The wizard optionally starts the deployment and waits up to 3 minutes for the health check (`/api/v1/health`) to pass before showing your credentials and URL.
+To move to a newer LearnHouse version after setup, use [`npx learnhouse update`](/cli/commands#update), or `npx learnhouse update --to <version>` to pin a version.
 </Callout>
-
-## Release Channels
-
-During setup you choose a release channel:
-
-- **Stable**: Recommended for production (pulls `ghcr.io/learnhouse/app:latest`)
-- **Dev**: Bleeding edge, latest features (pulls `ghcr.io/learnhouse/app:dev`)
-
-To pin to a specific image tag after setup, use `learnhouse update --version <tag>`.

@@ -31,7 +31,8 @@ function CopyButton({ getText }) {
   )
 }
 
-export default function CodeBlock({ children, 'data-filename': filename, 'data-language': language, ...props }) {
+export default function CodeBlock({ children, 'data-filename': dataFilename, title, 'data-language': language, ...props }) {
+  const filename = dataFilename ?? title
   const codeRef = useRef(null)
 
   const getText = useCallback(() => {

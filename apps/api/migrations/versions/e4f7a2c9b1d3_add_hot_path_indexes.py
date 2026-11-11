@@ -1,0 +1,82 @@
+"""Add indexes for hot read paths that only existed on the models
+
+The models declare these indexes, so a database built by ``create_all`` has
+them, but no migration ever created them. Databases that grew through
+migrations can therefore be missing them, and the lookups they serve run on
+every lesson read:
+
+- ``chapteractivity.activity_id``: finding a lesson's chapter (lock and drip
+  checks, completion, content files). The unique ``(chapter_id, activity_id)``
+  index leads with ``chapter_id`` and doesn't help.
+- ``organizationconfig.org_id``: the org config read on almost every request.
+- ``userorganization (user_id, org_id)``: membership, role and admin checks.
+- ``trail (user_id, org_id)``: the learner's trail on every progress read.
+
+An index is only created when no existing index already starts with the same
+columns, whatever its name, so databases that were indexed by hand don't get
+a duplicate. On Postgres, when the app runs the migration, the indexes are
+handed to it and built with CREATE INDEX CONCURRENTLY after the migration
+transaction commits, so writes to these tables aren't blocked while they build.
+
+Revision ID: e4f7a2c9b1d3
+Revises: 8d1f2c3b4a5e
+Create Date: 2026-11-03 00:00:00.000000
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = 'e4f7a2c9b1d3'
+down_revision: Union[str, None] = '8d1f2c3b4a5e'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+# (index name as declared on the model, table, columns)
+HOT_PATH_INDEXES = (
+    ("ix_chapteractivity_activity_id", "chapteractivity", ["activity_id"]),
+    ("ix_organizationconfig_org_id", "organizationconfig", ["org_id"]),
+    ("ix_userorg_user_org", "userorganization", ["user_id", "org_id"]),
+    ("ix_trail_user_org", "trail", ["user_id", "org_id"]),
+)
+
+
+def _covered(inspector, table: str, columns: list[str]) -> bool:
+    """True if some index (or unique constraint) on ``table`` leads with ``columns``."""
+    existing = [ix["column_names"] for ix in inspector.get_indexes(table)]
+    existing += [uq["column_names"] for uq in inspector.get_unique_constraints(table)]
+    pk = inspector.get_pk_constraint(table).get("constrained_columns") or []
+    if pk:
+        existing.append(pk)
+    return any(list(cols[: len(columns)]) == columns for cols in existing)
+
+
+def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    tables = set(inspector.get_table_names())
+
+    # Set by the app's migration runner (src/core/migrations.py); absent when
+    # alembic is run by hand.
+    deferred = op.get_context().config.attributes.get("deferred_indexes")
+    if bind.dialect.name != "postgresql":
+        deferred = None
+
+    for name, table, columns in HOT_PATH_INDEXES:
+        if table not in tables or _covered(inspector, table, columns):
+            continue
+        if deferred is not None:
+            deferred.append((name, table, columns))
+        else:
+            op.create_index(name, table, columns)
+
+
+def downgrade() -> None:
+    # Left in place on purpose: a database built by create_all has the same
+    # indexes under the same names, and dropping them there would remove
+    # indexes this migration never created.
+    pass

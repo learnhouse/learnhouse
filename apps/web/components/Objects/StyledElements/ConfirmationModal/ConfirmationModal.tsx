@@ -13,11 +13,19 @@ type ModalParams = {
   dialogTrigger?: React.ReactNode
   status?: 'warning' | 'info'
   buttonid?: string
+  /** Window event that opens the modal, for a second trigger rendered elsewhere on the page. */
+  openOnEvent?: string
 }
 
 const ConfirmationModal = (params: ModalParams) => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isPending, setIsPending] = React.useState(false)
+  React.useEffect(() => {
+    if (!params.openOnEvent) return
+    const open = () => setIsDialogOpen(true)
+    window.addEventListener(params.openOnEvent, open)
+    return () => window.removeEventListener(params.openOnEvent!, open)
+  }, [params.openOnEvent])
   const isWarning = params.status === 'warning'
   const iconColors = isWarning ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
   const buttonColors = isWarning

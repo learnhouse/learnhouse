@@ -1,8 +1,10 @@
+import { cache } from 'react'
 import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
   errorHandling,
+  fetchWithRetry,
   getResponseMetadata,
 } from '@services/utils/ts/requests'
 
@@ -32,17 +34,45 @@ export async function deleteOrganizationFromBackend(
   return res
 }
 
+// Delete an organization from the UI. On SaaS this goes through the billing
+// route, which also cancels the org's Stripe subscriptions so a deleted org
+// stops being charged. Deployments without SaaS billing don't serve that route
+// (404), so the backend is called directly there.
+export async function deleteOrganization(org_id: number | string, access_token: string) {
+  const result = await fetch('/api/billing/delete-org', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${access_token}`,
+    },
+    body: JSON.stringify({ orgId: org_id }),
+  })
+  if (result.status === 404) {
+    return deleteOrganizationFromBackend(org_id, access_token)
+  }
+  return errorHandling(result)
+}
+
+// One org lookup per server request. The layout's metadata, the page's
+// metadata and the page body each ask for the org, and every call is no-store,
+// so a single page view used to hit /orgs/slug three or four times in a row.
+// cache() dedupes within a request on the server; in the browser it's a
+// pass-through. Keyed on primitives only, since callers pass a fresh `next`
+// object each time (it was never sent anyway: no-store wins).
+const fetchOrgBySlug = cache(async (org_slug: string, access_token?: string) => {
+  const result = await fetchWithRetry(
+    `${getAPIUrl()}orgs/slug/${org_slug}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  return errorHandling(result)
+})
+
 export async function getOrganizationContextInfo(
   org_slug: any,
-  next: any,
+  _next: any,
   access_token?: string
 ) {
-  const result = await fetch(
-    `${getAPIUrl()}orgs/slug/${org_slug}`,
-    RequestBodyWithAuthHeader('GET', null, next, access_token)
-  )
-  const res = await errorHandling(result)
-  return res
+  return fetchOrgBySlug(String(org_slug), access_token)
 }
 
 export async function getOrganizationContextInfoWithUUID(
@@ -58,25 +88,26 @@ export async function getOrganizationContextInfoWithUUID(
   return res
 }
 
-export async function getOrganizationContextInfoWithoutCredentials(
-  org_slug: any,
-  _next?: any
-) {
+const fetchOrgBySlugWithoutCredentials = cache(async (org_slug: string) => {
   // Never use the Next.js fetch cache; the backend has its own Redis cache
   // which is invalidated on org config changes. Relying on Next's tag-based
   // revalidation was unreliable across pods and left users with stale data
   // for up to 60s after an admin changed settings like the signup method.
-  let HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
-  let options: any = {
+  const options: RequestInit = {
     method: 'GET',
-    headers: HeadersConfig,
+    headers: new Headers({ 'Content-Type': 'application/json' }),
     redirect: 'follow',
     cache: 'no-store',
   }
+  const result = await fetchWithRetry(`${getAPIUrl()}orgs/slug/${org_slug}`, options)
+  return errorHandling(result)
+})
 
-  const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, options)
-  const res = await errorHandling(result)
-  return res
+export async function getOrganizationContextInfoWithoutCredentials(
+  org_slug: any,
+  _next?: any
+) {
+  return fetchOrgBySlugWithoutCredentials(String(org_slug))
 }
 
 export function getOrganizationContextInfoNoAsync(

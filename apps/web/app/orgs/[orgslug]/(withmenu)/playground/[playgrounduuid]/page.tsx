@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation'
 import { getServerSession } from '@/lib/auth/server'
 import { getPlayground } from '@services/playgrounds/playgrounds'
 import PlaygroundViewClient from './view'
+import ResourcePaywall from '@ee/components/Payments/ResourcePaywall'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
 
 type PageParams = Promise<{ orgslug: string; playgrounduuid: string }>
 
@@ -27,7 +30,19 @@ export default async function PlaygroundViewPage({ params }: { params: PageParam
   let playground
   try {
     playground = await getPlayground(playgrounduuid, access_token ?? undefined)
-  } catch {
+  } catch (error: any) {
+    // Sold through a product the viewer has not bought: show what unlocks it.
+    if (error?.status === 402) {
+      const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
+      const resourceUuid = playgrounduuid.startsWith('playground_') ? playgrounduuid : `playground_${playgrounduuid}`
+      return (
+        <GeneralWrapperStyled>
+          <div className="max-w-2xl mx-auto pt-6">
+            <ResourcePaywall orgId={org?.id} orgslug={orgslug} resourceUuid={resourceUuid}>{null}</ResourcePaywall>
+          </div>
+        </GeneralWrapperStyled>
+      )
+    }
     notFound()
   }
 

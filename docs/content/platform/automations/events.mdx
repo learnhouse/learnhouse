@@ -1,13 +1,17 @@
-import { Callout } from 'nextra/components'
+---
+description: "Browse every LearnHouse webhook event, from course completions and sign-ups to payments and community posts, with the data payload each one sends."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Event Catalogue
 
 Every event that can fire from LearnHouse, grouped by category. Each event delivers the same envelope (`event`, `delivery_id`, `timestamp`, `org_id`, `data`). Only the shape of `data` varies.
 
 <Callout type="info">
-The event registry is the single source of truth. At runtime, dispatched payloads are validated against these schemas and any drift is logged as a warning. You can also fetch the live registry from your LearnHouse instance:
+The event registry is the single source of truth. At runtime, dispatched payloads are validated against these schemas and any drift is logged as a warning. You can also fetch the live registry from your LearnHouse instance while signed in:
 ```http
-GET /api/v1/{org_id}/webhooks/events
+GET /api/v1/orgs/{org_id}/webhooks/events
 ```
 </Callout>
 
@@ -15,7 +19,7 @@ GET /api/v1/{org_id}/webhooks/events
 
 ### `ping`
 
-Test event sent to verify endpoint connectivity. Fired by the **Send test event** button and the `POST /webhooks/{uuid}/test` endpoint.
+Test event sent to verify endpoint connectivity. Fired by the **Send test event** button and the `POST /api/v1/orgs/{org_id}/webhooks/{webhook_uuid}/test` endpoint.
 
 ```json
 { "message": "string" }
@@ -25,7 +29,7 @@ Test event sent to verify endpoint connectivity. Fired by the **Send test event*
 
 ### `course_completed`
 
-Triggered when a user completes every activity in a course.
+Triggered when a user completes all activities in a course.
 
 ```json
 {
@@ -36,7 +40,7 @@ Triggered when a user completes every activity in a course.
 
 ### `course_enrolled`
 
-Triggered when a user enrols in a course.
+Triggered when a user enrolls in a course.
 
 ```json
 {
@@ -63,22 +67,32 @@ Triggered when a user submits an assignment.
 
 ```json
 {
-  "user":       { "user_uuid": "string", "email": "string", "username": "string" },
-  "assignment": { "assignment_uuid": "string" },
-  "course":     { "course_uuid": "string", "name": "string" }
+  "user":           { "user_uuid": "string", "email": "string", "username": "string" },
+  "assignment":     { "assignment_uuid": "string" },
+  "course":         { "course_uuid": "string", "name": "string" },
+  "attempt_number": "integer"
 }
 ```
 
 ### `assignment_graded`
 
-Triggered when an instructor grades an assignment submission.
+Triggered when an assignment submission is graded (by an instructor or auto-grading).
 
 ```json
 {
   "user_id": "integer",
   "assignment_uuid": "string",
   "course_uuid": "string",
-  "grade": "integer"
+  "grade": "integer",
+  "max_grade": "integer",
+  "percentage": "number",
+  "display_grade": "string",
+  "letter_grade": "string",
+  "points_summary": "string",
+  "passed": "boolean",
+  "grading_type": "string",
+  "overall_feedback": "string",
+  "auto_graded": "boolean"
 }
 ```
 
@@ -94,6 +108,42 @@ Triggered when a user receives a certificate.
 }
 ```
 
+### `certificate_revoked`
+
+Triggered when a previously issued certificate is revoked (e.g. a gating assignment was regraded below the pass threshold, or the learner reset/retried a completed assignment).
+
+```json
+{
+  "user":        { "user_uuid": "string", "email": "string", "username": "string" },
+  "course":      { "course_uuid": "string", "name": "string" },
+  "certificate": { "user_certification_uuid": "string" },
+  "reason": "string"
+}
+```
+
+### `path_enrolled`
+
+Triggered when a user starts a [learning path](/platform/paths).
+
+```json
+{
+  "user": { "user_uuid": "string", "email": "string", "username": "string" },
+  "path": { "path_uuid": "string", "name": "string" }
+}
+```
+
+### `path_completed`
+
+Triggered when a user finishes a learning path: every required course plus the electives the path asks for. `certificate_uuid` holds the path certificate ID when the path awards one, and is empty otherwise.
+
+```json
+{
+  "user":        { "user_uuid": "string", "email": "string", "username": "string" },
+  "path":        { "path_uuid": "string", "name": "string" },
+  "certificate": { "certificate_uuid": "string" }
+}
+```
+
 ## User & access
 
 ### `user_signed_up`
@@ -102,13 +152,7 @@ Triggered when a new user signs up for the organization.
 
 ```json
 {
-  "user": {
-    "user_uuid": "string",
-    "email": "string",
-    "username": "string",
-    "first_name": "string",
-    "last_name": "string"
-  },
+  "user":          { "user_uuid": "string", "email": "string", "username": "string", "first_name": "string", "last_name": "string" },
   "signup_method": "string"
 }
 ```
@@ -126,12 +170,16 @@ Triggered when a user verifies their email address.
 Triggered when a user's role is changed in the organization.
 
 ```json
-{ "user_id": "integer", "org_id": "integer", "new_role_uuid": "string" }
+{
+  "user_id": "integer",
+  "org_id": "integer",
+  "new_role_uuid": "string"
+}
 ```
 
 ### `user_invited_to_org`
 
-Triggered when users are invited to the organization. A single event is fired per invite batch.
+Triggered when users are invited to the organization.
 
 ```json
 {
@@ -157,7 +205,11 @@ Triggered when a user is removed from the organization.
 Triggered when a new course is created.
 
 ```json
-{ "course_uuid": "string", "name": "string", "org_id": "integer" }
+{
+  "course_uuid": "string",
+  "name": "string",
+  "org_id": "integer"
+}
 ```
 
 ### `course_published`
@@ -165,7 +217,11 @@ Triggered when a new course is created.
 Triggered when a course is published or unpublished.
 
 ```json
-{ "course_uuid": "string", "name": "string", "published": "boolean" }
+{
+  "course_uuid": "string",
+  "name": "string",
+  "published": "boolean"
+}
 ```
 
 ### `course_deleted`
@@ -191,7 +247,11 @@ Triggered when an announcement is posted to a course.
 Triggered when an activity version snapshot is created.
 
 ```json
-{ "activity_id": "integer", "version_number": "integer", "created_by_id": "integer" }
+{
+  "activity_id": "integer",
+  "version_number": "integer",
+  "created_by_id": "integer"
+}
 ```
 
 ### `activity_version_restored`
@@ -222,12 +282,28 @@ Triggered when contributors are removed from a course.
 { "course_uuid": "string", "contributors": "list[object]" }
 ```
 
-### `collection_created`
+### `folder_created`
 
-Triggered when a new course collection is created.
+Triggered when a new folder is created.
 
 ```json
-{ "collection_uuid": "string", "name": "string" }
+{ "folder_uuid": "string", "name": "string" }
+```
+
+### `folder_updated`
+
+Triggered when a folder is updated.
+
+```json
+{ "folder_uuid": "string", "name": "string" }
+```
+
+### `folder_deleted`
+
+Triggered when a folder is deleted.
+
+```json
+{ "folder_uuid": "string", "name": "string" }
 ```
 
 ### `podcast_episode_created`
@@ -250,7 +326,11 @@ Triggered when a new podcast episode is added.
 Triggered when a new whiteboard is created.
 
 ```json
-{ "board_uuid": "string", "name": "string", "created_by": "integer" }
+{
+  "board_uuid": "string",
+  "name": "string",
+  "created_by": "integer"
+}
 ```
 
 ### `board_member_added`
@@ -258,7 +338,11 @@ Triggered when a new whiteboard is created.
 Triggered when a member is added to a whiteboard.
 
 ```json
-{ "board_uuid": "string", "user_id": "integer", "role": "string" }
+{
+  "board_uuid": "string",
+  "user_id": "integer",
+  "role": "string"
+}
 ```
 
 ### `playground_created`
@@ -266,7 +350,11 @@ Triggered when a member is added to a whiteboard.
 Triggered when a new playground is created.
 
 ```json
-{ "playground_uuid": "string", "name": "string", "created_by": "integer" }
+{
+  "playground_uuid": "string",
+  "name": "string",
+  "created_by": "integer"
+}
 ```
 
 ## Community
@@ -327,7 +415,11 @@ Triggered when a discussion is locked or unlocked.
 Triggered when a user upvotes a discussion.
 
 ```json
-{ "discussion_uuid": "string", "user_id": "integer", "upvote_count": "integer" }
+{
+  "discussion_uuid": "string",
+  "user_id": "integer",
+  "upvote_count": "integer"
+}
 ```
 
 ## Groups
@@ -423,4 +515,30 @@ Triggered when the organization payments configuration is updated.
 
 ```json
 { "payments_enabled": "boolean" }
+```
+
+## Payments
+
+### `payment_access_granted`
+
+Triggered when someone gets access through an offer: a Stripe purchase, a free claim, or a grant from the dashboard or the API.
+
+```json
+{
+  "user":   { "user_uuid": "string", "email": "string", "username": "string" },
+  "offer":  { "offer_uuid": "string", "name": "string" },
+  "access": { "access_uuid": "string", "status": "string", "source": "string" }
+}
+```
+
+### `payment_access_revoked`
+
+Triggered when someone loses access to an offer: a cancelled subscription, a refund, a dispute, or a revoke.
+
+```json
+{
+  "user":   { "user_uuid": "string", "email": "string", "username": "string" },
+  "offer":  { "offer_uuid": "string", "name": "string" },
+  "access": { "access_uuid": "string", "status": "string", "source": "string" }
+}
 ```
