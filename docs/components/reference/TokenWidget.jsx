@@ -68,7 +68,7 @@ export default function TokenWidget({ compact = false }) {
           <input
             type={visible ? 'text' : 'password'}
             className="lhr-token-input"
-            placeholder="Paste an lh_ token"
+            placeholder="lh_ token"
             aria-label="API token"
             value={draft}
             autoComplete="off"

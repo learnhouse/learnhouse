@@ -1,6 +1,7 @@
 import { Wix_Madefor_Text } from 'next/font/google'
 import '../styles.css'
 import CustomNavbar from '../components/Navbar/Navbar'
+import SectionMain from '../components/site/SectionMain'
 import CustomFooter from '../components/Footer/Footer'
 import PostHogProvider from '../components/Analytics/PostHogProvider'
 import { getLatestVersions } from '../lib/releases'
@@ -80,7 +81,7 @@ export default async function RootLayout({ children }) {
       <body>
         <PostHogProvider>
           <CustomNavbar version={version} />
-          <main className="lh-main">{children}</main>
+          <SectionMain>{children}</SectionMain>
           <CustomFooter />
         </PostHogProvider>
       </body>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Search from '../Search/Search'
@@ -13,6 +13,18 @@ function Navbar({ version }) {
   const pathname = usePathname()
   const current = activeTab(pathname)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const tabsRef = useRef(null)
+
+  // On narrow screens the tab row scrolls; keep the active tab in view.
+  useEffect(() => {
+    const row = tabsRef.current
+    const active = row?.querySelector('.lh-navbar-tab-active')
+    if (!row || !active) return
+    const left = active.getBoundingClientRect().left - row.getBoundingClientRect().left + row.scrollLeft
+    if (left < row.scrollLeft || left + active.offsetWidth > row.scrollLeft + row.clientWidth) {
+      row.scrollLeft = left - (row.clientWidth - active.offsetWidth) / 2
+    }
+  }, [current.key])
 
   // Close the drawer whenever the route changes.
   useEffect(() => setMobileMenuOpen(false), [pathname])
@@ -74,7 +86,7 @@ function Navbar({ version }) {
           </div>
         </div>
 
-        <nav className="lh-navbar-tabs" aria-label="Documentation sections">
+        <nav ref={tabsRef} className="lh-navbar-tabs" aria-label="Documentation sections">
           <div className="lh-navbar-tabs-inner">
             {TABS.map(({ key, href, label, icon: Icon }) => (
               <Link
