@@ -7,6 +7,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.db.communities.communities import Community, CommunityCreate, CommunityUpdate
+from src.db.communities.discussion_comments import DiscussionComment
 from src.db.communities.discussions import Discussion, DiscussionUpdate
 from src.db.communities.discussion_votes import DiscussionVote
 from src.db.courses.courses import Course
@@ -24,8 +25,10 @@ from src.services.communities.communities import (
     unlink_community_from_course,
     update_community,
 )
+from src.services.communities.comments import get_comment_count
 from src.services.communities.discussions import (
     DiscussionSortBy,
+    _comment_counts,
     calculate_hot_score,
     create_discussion,
     delete_discussion,
@@ -700,6 +703,84 @@ class TestDiscussionsService:
         assert hot[0].is_pinned is True
         assert empty == []
         assert deleted == {"detail": "Discussion deleted"}
+
+    @pytest.mark.asyncio
+    async def test_comment_count_on_list_and_detail(
+        self, db, org, admin_user, mock_request
+    ):
+        """comment_count matches GET /discussions/{uuid}/comments/count,
+        including 0 for a discussion without comments, and the list fills it
+        with one grouped query for the whole page."""
+        community = await _make_community(db, org)
+        other_community = await _make_community(
+            db, org, id=31, community_uuid="community_other"
+        )
+        busy = await _make_discussion(
+            db, community, org, admin_user.id, id=40, discussion_uuid="discussion_busy"
+        )
+        single = await _make_discussion(
+            db, community, org, admin_user.id, id=41, discussion_uuid="discussion_single"
+        )
+        quiet = await _make_discussion(
+            db, community, org, admin_user.id, id=42, discussion_uuid="discussion_quiet"
+        )
+        elsewhere = await _make_discussion(
+            db,
+            other_community,
+            org,
+            admin_user.id,
+            id=43,
+            discussion_uuid="discussion_elsewhere",
+        )
+        for i, discussion in enumerate([busy, busy, busy, single, elsewhere]):
+            db.add(
+                DiscussionComment(
+                    discussion_id=discussion.id,
+                    author_id=admin_user.id,
+                    content="Comment",
+                    comment_uuid=f"comment_{i}",
+                    creation_date="2024-01-01",
+                    update_date="2024-01-01",
+                )
+            )
+        await db.commit()
+
+        counts_spy = AsyncMock(wraps=_comment_counts)
+        with patch(
+            "src.services.communities.discussions.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.comments.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.discussions._comment_counts", counts_spy
+        ):
+            listed = await get_discussions_by_community(
+                mock_request, community.community_uuid, admin_user, db
+            )
+            assert counts_spy.await_count == 1
+            details = {
+                d.discussion_uuid: await get_discussion(
+                    mock_request, d.discussion_uuid, admin_user, db
+                )
+                for d in (busy, single, quiet)
+            }
+            endpoint_counts = {
+                d.discussion_uuid: await get_comment_count(
+                    mock_request, d.discussion_uuid, admin_user, db
+                )
+                for d in (busy, single, quiet)
+            }
+
+        expected = {
+            "discussion_busy": 3,
+            "discussion_single": 1,
+            "discussion_quiet": 0,
+        }
+        assert {d.discussion_uuid: d.comment_count for d in listed} == expected
+        assert {k: v.comment_count for k, v in details.items()} == expected
+        assert endpoint_counts == expected
+        assert await _comment_counts(db, []) == {}
 
     @pytest.mark.asyncio
     async def test_discussion_error_paths(self, db, org, admin_user, regular_user, mock_request):
