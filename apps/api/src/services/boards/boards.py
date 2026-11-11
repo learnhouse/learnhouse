@@ -8,6 +8,7 @@ from src.db.boards import (
     Board,
     BoardCreate,
     BoardRead,
+    BoardReadWithRole,
     BoardUpdate,
     BoardMember,
     BoardMemberCreate,
@@ -108,7 +109,7 @@ async def get_boards_by_org(
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
-) -> List[BoardRead]:
+) -> List[BoardReadWithRole]:
     # Require org membership before listing boards; prevents unauthenticated
     # and cross-org enumeration of boards.
     await require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
@@ -137,8 +138,24 @@ async def get_boards_by_org(
     )).all()
     counts = {row[0]: row[1] for row in count_rows}
 
+    # The caller's own member role on every listed board, in one query. Org
+    # membership was required above, so each member row counts the way
+    # check_board_membership counts it.
+    role_rows = (await db_session.execute(
+        select(BoardMember.board_id, BoardMember.role)
+        .where(
+            col(BoardMember.board_id).in_(board_ids),
+            BoardMember.user_id == current_user.id,
+        )
+    )).all()
+    roles = {row[0]: row[1] for row in role_rows}
+
     return [
-        BoardRead(**b.model_dump(exclude={"ydoc_state"}), member_count=counts.get(b.id, 0))
+        BoardReadWithRole(
+            **b.model_dump(exclude={"ydoc_state"}),
+            member_count=counts.get(b.id, 0),
+            my_role=roles.get(b.id),
+        )
         for b in boards
     ]
 

@@ -8,6 +8,7 @@ from src.core.events.database import get_db_session
 from src.db.boards import (
     BoardCreate,
     BoardRead,
+    BoardReadWithRole,
     BoardUpdate,
     BoardMemberCreate,
     BoardMemberBatchCreate,
@@ -73,11 +74,11 @@ async def api_create_board(
 
 @router.get(
     "/org/{org_id}",
-    response_model=List[BoardRead],
+    response_model=List[BoardReadWithRole],
     summary="List boards for an organization",
-    description="List all boards in the given organization that the current user is a member of or allowed to see.",
+    description="List all boards in the given organization that the current user is a member of or allowed to see. Each board includes `my_role`, the caller's member role (`owner`, `editor` or `viewer`, as `GET /boards/{board_uuid}/membership` reports it), or null when the caller has no member record.",
     responses={
-        200: {"description": "List of boards accessible to the current user.", "model": List[BoardRead]},
+        200: {"description": "List of boards accessible to the current user.", "model": List[BoardReadWithRole]},
         401: {"description": "Authentication required"},
         403: {"description": "Access denied to this organization"},
     },
@@ -87,7 +88,7 @@ async def api_get_boards_by_org(
     org_id: int,
     db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
-) -> List[BoardRead]:
+) -> List[BoardReadWithRole]:
     return await get_boards_by_org(request, org_id, current_user, db_session)
 
 

@@ -1479,6 +1479,61 @@ class TestGetAllUserCertificates:
             set_session_provenance(None)
 
     @pytest.mark.asyncio
+    async def test_org_id_filters_to_that_orgs_courses(
+        self, db, org, other_org, course, regular_user, mock_request
+    ):
+        """With org_id only certificates from that org's courses come back;
+        without it, every org's certificates are listed."""
+        other_course = Course(
+            id=2,
+            name="Other Course",
+            description="",
+            public=True,
+            published=True,
+            open_to_contributors=False,
+            org_id=other_org.id,
+            course_uuid="course_other",
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(other_course)
+        await db.commit()
+        cert_here = await _create_certification(db, course, cert_id=1, cert_uuid="cert_here")
+        cert_there = await _create_certification(
+            db, other_course, cert_id=2, cert_uuid="cert_there"
+        )
+        await _create_certificate_user(db, cert_here, regular_user)
+        await _create_certificate_user(
+            db,
+            cert_there,
+            regular_user,
+            cert_user_id=2,
+            user_certification_uuid="AB-20240101-TEST-002",
+        )
+
+        everything = await get_all_user_certificates(mock_request, regular_user, db)
+        assert {r["course"]["course_uuid"] for r in everything} == {
+            "course_test",
+            "course_other",
+        }
+
+        scoped = await get_all_user_certificates(
+            mock_request, regular_user, db, org_id=org.id
+        )
+        assert [r["course"]["course_uuid"] for r in scoped] == ["course_test"]
+        assert scoped[0]["course"]["org_id"] == org.id
+
+        other = await get_all_user_certificates(
+            mock_request, regular_user, db, org_id=other_org.id
+        )
+        assert [r["course"]["org_id"] for r in other] == [other_org.id]
+
+        assert (
+            await get_all_user_certificates(mock_request, regular_user, db, org_id=999)
+            == []
+        )
+
+    @pytest.mark.asyncio
     async def test_get_all_user_certificates_empty(self, db, admin_user, mock_request):
         result = await get_all_user_certificates(
             mock_request,

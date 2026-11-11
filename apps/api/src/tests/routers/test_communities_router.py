@@ -224,9 +224,16 @@ class TestCommunitiesRouter:
             response = await client.get("/api/v1/discussions/d1/reactions")
         assert response.status_code == 200
 
-        with patch("src.routers.communities.discussions.toggle_reaction", new_callable=AsyncMock, return_value={"toggled": True}):
+        with patch("src.routers.communities.discussions.toggle_reaction", new_callable=AsyncMock, return_value={"toggled": True}) as toggle:
             response = await client.post("/api/v1/discussions/d1/reactions", json={"emoji": "👍"})
         assert response.status_code == 200
+        assert toggle.await_args.kwargs == {"active": None}
+
+        with patch("src.routers.communities.discussions.toggle_reaction", new_callable=AsyncMock, return_value={"action": "added", "emoji": "👍"}) as toggle:
+            response = await client.post("/api/v1/discussions/d1/reactions", json={"emoji": "👍", "active": True})
+        assert response.status_code == 200
+        assert toggle.await_args.args[2] == "👍"
+        assert toggle.await_args.kwargs == {"active": True}
 
     async def test_create_community_with_course_id_validation(self, client, db, org):
         """Covers communities router lines 68-80: when course_id is supplied on
