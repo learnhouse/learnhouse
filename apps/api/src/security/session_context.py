@@ -49,7 +49,7 @@ def _legacy_session_grace() -> timedelta:
 LEGACY_SESSION_GRACE = _legacy_session_grace()
 
 # JWT claim names carried on session tokens.
-AMR_CLAIM = "amr"       # authentication method: password | magic_login | google | sso | lti | api_token
+AMR_CLAIM = "amr"       # authentication method: password | magic_login | google | sso | lti | embed | api_token
 SORG_CLAIM = "sorg"     # id of the org the session was established for (int), or absent
 LEGACY_GRACE_CLAIM = "lgc"  # unix seconds after which a method-less session stops being admitted
 # Present (true) on a session signed in on an org's own custom domain. The org
@@ -69,6 +69,15 @@ AUTH_METHOD_API_TOKEN = "api_token"
 # admin-selectable method: the org opts in by registering the platform, and
 # the session is only exempt from the method policy inside that org.
 AUTH_METHOD_LTI = "lti"
+# A short-lived session a host app minted with an org API token for one of
+# the org's learners, to sign the embed components (@learnhouse/react, vue) in
+# as that learner. The org opts in by holding the token; the session is held
+# to that org, limited to the embed routes (src.security.embed_session) and can
+# never touch the account itself.
+AUTH_METHOD_EMBED = "embed"
+# Sessions another system started on the org's behalf. They count only inside
+# the org in ``sorg`` and are refused on account-security routes.
+ORG_HELD_AUTH_METHODS = (AUTH_METHOD_LTI, AUTH_METHOD_EMBED)
 
 # The methods an org admin can allow/disallow (api_token is never in this set).
 POLICY_AUTH_METHODS = (
@@ -164,20 +173,31 @@ def refuse_lms_session() -> None:
                 "message": "Sign in to LearnHouse directly to change your account settings.",
             },
         )
+    # An embed session is the same kind of delegated sign-in (a host app vouched
+    # for the learner), so it never reaches the account either. The embed route
+    # allowlist already keeps it off these routes; this is the second wall.
+    if provenance is not None and provenance.amr == AUTH_METHOD_EMBED:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "EMBED_SESSION_NOT_ALLOWED",
+                "message": "Sign in to LearnHouse directly to change your account settings.",
+            },
+        )
 
 
 def held_org_id() -> Optional[int]:
     """The org a session is held to, or None.
 
-    Sessions an LMS launch started, and sessions signed in on an org's custom
-    domain, only count inside that org. Org-scoped routes enforce it through
+    Sessions an LMS launch or a host app's embed started, and sessions signed
+    in on an org's custom domain, only count inside that org. Org-scoped routes enforce it through
     the org auth policy; routes that read "my things across orgs" narrow to
     this org instead.
     """
     provenance = get_session_provenance()
     if provenance is None or provenance.org_id is None:
         return None
-    if provenance.amr == AUTH_METHOD_LTI or provenance.custom_domain:
+    if provenance.amr in ORG_HELD_AUTH_METHODS or provenance.custom_domain:
         return provenance.org_id
     return None
 

@@ -17,7 +17,7 @@ export const RENDERABLE_ACTIVITY_TYPES = ['TYPE_DYNAMIC', 'TYPE_VIDEO', 'TYPE_DO
 
 // Minimal course context: courseStructure must be populated so that block
 // components (Image, Video, Audio, PDF) can resolve media URLs.
-function StandaloneCourseProvider({ children, course }: { children: ReactNode; course: any }) {
+export function StandaloneCourseProvider({ children, course }: { children: ReactNode; course: any }) {
   const minimalState = {
     courseStructure: course,
     courseOrder: null,

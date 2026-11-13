@@ -11,8 +11,10 @@ import type { LearnHouseActivityProps, LearnHouseEvent, LearnHouseProviderProps 
 
 export const TAG_NAME = 'learnhouse-activity'
 
-// Attribute → property. Everything else (activity, content, client, getToken,
-// user, transformContent) is property-only.
+// Attribute → property. Everything else (activity, content, client, getSession,
+// getToken, user, transformContent) is property-only. `session` is both: the
+// attribute takes the token string, the property also takes the minted
+// session object.
 const STRING_ATTRS = {
   'activity-id': 'activityId',
   'activity-name': 'activityName',
@@ -21,8 +23,10 @@ const STRING_ATTRS = {
   'media-url': 'mediaUrl',
   'site-url': 'siteUrl',
   'org-id': 'orgId',
+  session: 'session',
   token: 'token',
   locale: 'locale',
+  completion: 'completion',
   dir: 'dir',
   'link-target': 'linkTarget',
 } as const
@@ -42,6 +46,7 @@ const PROPERTIES = [
   ...Object.values(BOOLEAN_ATTRS),
   'activity',
   'client',
+  'getSession',
   'getToken',
   'user',
   'transformContent',
@@ -150,6 +155,7 @@ export class LearnHouseActivityElement extends Base {
       hideBlocks: v.hideBlocks,
       linkTarget: v.linkTarget,
       trackCompletion: v.trackCompletion,
+      completion: v.completion,
       showTitle: v.showTitle,
       showPoweredBy: v.showPoweredBy,
       unstyled: v.unstyled,
@@ -180,6 +186,8 @@ export class LearnHouseActivityElement extends Base {
       mediaUrl: v.mediaUrl,
       siteUrl: v.siteUrl,
       client: v.client,
+      session: v.session,
+      getSession: v.getSession,
       token: v.token,
       getToken: v.getToken,
       user: v.user,

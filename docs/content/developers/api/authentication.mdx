@@ -53,6 +53,25 @@ Logins are rate-limited by IP, and repeated failed attempts can temporarily lock
 
 The two-factor management endpoints (`/api/v1/auth/mfa/...`) are listed in the [API Reference](/reference/auth).
 
+### Embed sessions
+
+A server holding an API token can mint a short-lived session for one of the org's learners, for the embed components
+(`@learnhouse/react`, `@learnhouse/vue`) to act as that learner in a browser:
+
+```bash
+curl -X POST https://learn.example.com/api/v1/admin/your-school/auth/embed-session \
+  -H "Authorization: Bearer lh_…" -H "Content-Type: application/json" \
+  -d '{ "user_id": 42, "ttl_seconds": 900 }'
+```
+
+It returns `access_token`, `expires_in`, `expires_at` (Unix seconds), `user_id`, `user_uuid` and `org_id`. The token
+needs the **Users: update** permission. Sessions last 15 minutes by default (60 to 3600 seconds), have no refresh
+token, work only inside the org and only on the routes the embed components use (other routes answer `403`), and
+can't change the account. Admins, maintainers and accounts in other organizations are refused. Like LTI launches,
+they are exempt from the org's sign-in method and two-factor rules inside that org, since the server minting them
+vouches for the learner. See
+[Signed-in learners](/developers/react/learners).
+
 ## API tokens
 
 <Callout type="info">

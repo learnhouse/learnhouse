@@ -10,6 +10,12 @@ export type * from './types'
 export declare const LearnHouseActivity: FC<LearnHouseActivityProps>
 export declare const LearnHouseProvider: FC<LearnHouseProviderProps>
 export declare function useLearnHouseClient(): LearnHouseClient
+/** The current learner session of the nearest provider. */
+export declare function useLearnHouseSession(): {
+  data: { user?: Record<string, any>; roles?: any[]; tokens?: { access_token?: string; expiry?: number } } | null
+  status: 'loading' | 'authenticated' | 'unauthenticated'
+  update: () => Promise<void>
+}
 export declare function themeToStyle(theme?: LearnHouseTheme): CSSProperties
 export declare const SUPPORTED_LOCALES: string[]
 export declare const VERSION: string

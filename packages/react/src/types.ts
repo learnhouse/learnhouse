@@ -1,5 +1,8 @@
 import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import type { LearnHouseClient } from '@learnhouse/sdk'
+import type { GetLearnHouseSession, LearnHouseSessionInput } from '@learnhouse/sdk'
+
+export type { GetLearnHouseSession, LearnHouseSessionInput }
 
 /** A TipTap / ProseMirror JSON document, as stored in a LearnHouse dynamic activity. */
 export interface ActivityDocument {
@@ -55,6 +58,10 @@ export type LearnHouseEvent =
   | { type: 'resize'; width: number; height: number }
   | { type: 'visible'; ratio: number }
   | { type: 'complete'; activityId?: string }
+  /** The learner's completion of the activity changed (saved to their LearnHouse progress). */
+  | { type: 'progress'; activityId: string; completed: boolean }
+  /** The session ran out and no new one could be fetched; the components act signed out. */
+  | { type: 'session_expired' }
   | { type: 'analytics'; name: string; surface?: string; [key: string]: unknown }
 
 /** Props passed to a block override in `components`. `Default` renders the built-in block. */
@@ -88,7 +95,14 @@ export interface LearnHouseActivityProps {
   // ── Where from (defaults to the nearest LearnHouseProvider) ────────────
   /** Base URL of the LearnHouse instance, e.g. `https://learn.acme.com`. */
   baseUrl?: string
-  /** A user access token. Never pass an `lh_` API token to the browser. */
+  /**
+   * The learner session (an embed session minted on your server), used when
+   * rendering without a provider. Never pass an `lh_` API token to the browser.
+   */
+  session?: LearnHouseSessionInput | null
+  /** Fetches a new learner session from your server; called before the current one expires. */
+  getSession?: GetLearnHouseSession
+  /** @deprecated Use `session`. A user access token. */
   token?: string
   /** Org uuid for media URLs when rendering `content` without fetching. */
   orgId?: string
@@ -127,6 +141,13 @@ export interface LearnHouseActivityProps {
   onLinkClick?: (href: string, event: MouseEvent) => boolean | void
   /** Fire `complete` when the end of the activity scrolls into view. */
   trackCompletion?: boolean
+  /**
+   * How a signed-in learner completes the activity (saved to their progress):
+   * `button` shows a "Mark as complete" toggle (default with a session),
+   * `scroll` marks it complete when the end scrolls into view, `none` leaves
+   * it to you. Assignments complete by being submitted. Ignored without a session.
+   */
+  completion?: 'button' | 'scroll' | 'none'
 
   // ── Language ───────────────────────────────────────────────────────────
   /** UI language of the blocks (`en`, `fr`, `ar`…). Defaults to the provider's, then `en`. */
@@ -156,8 +177,21 @@ export interface LearnHouseProviderProps {
   mediaUrl?: string
   /** Bring your own @learnhouse/sdk client (shared cache, custom fetch, hooks). */
   client?: LearnHouseClient
-  /** A user access token, or a function returning one (refreshed on demand). */
+  /**
+   * The learner session: an embed session minted on your server with
+   * `client.embed.createSession()` (the object, or just its `access_token`).
+   * Without one, the components are read-only and anonymous.
+   */
+  session?: LearnHouseSessionInput | null
+  /**
+   * Fetches a new learner session from your server. Called on mount when no
+   * `session` is given, shortly before each session expires, and once when the
+   * API answers 401.
+   */
+  getSession?: GetLearnHouseSession
+  /** @deprecated Use `session`. A user access token. */
   token?: string
+  /** @deprecated Use `getSession`. Called before every request for a user access token. */
   getToken?: () => string | null | undefined | Promise<string | null | undefined>
   /** The signed-in user, for blocks that personalise (user block, dynamic variables). */
   user?: Record<string, any>
