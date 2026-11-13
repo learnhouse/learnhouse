@@ -36,7 +36,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/learnhouse/learnhouse.git",
+    "url": "git+https://github.com/learnhouse/learnhouse.git",
     "directory": "packages/react"
   },
   "homepage": "https://learnhouse.app",
@@ -101,8 +101,6 @@
     "@tiptap/starter-kit": "3.32.3",
     "@tiptap/static-renderer": "3.32.3",
     "@tiptap/suggestion": "3.32.3",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
     "@uiw/codemirror-theme-tokyo-night": "^4.25.12",
     "@uiw/react-codemirror": "^4.25.12",
     "@videojs/hlsjs-video": "^10.3.0",
@@ -132,7 +130,6 @@
     "swr": "^2.5.1",
     "tailwind-merge": "^3.7.0",
     "tippy.js": "^6.3.7",
-    "typescript": "6.0.3",
     "usehooks-ts": "^3.1.1",
     "uuid": "^14.0.3"
   },
