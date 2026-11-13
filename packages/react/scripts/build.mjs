@@ -227,6 +227,11 @@ async function buildJs({ write = true } = {}) {
   return result.metafile
 }
 
+/** Packages only a compiler reads; never a runtime dependency of dist/. */
+export function isBuildOnly(name) {
+  return name === 'typescript' || name.startsWith('@types/')
+}
+
 /** Third-party packages the bundle imports, with the versions apps/web pins. */
 export async function externalDependencies(metafile) {
   const webPkg = JSON.parse(await readFile(path.join(webDir, 'package.json'), 'utf8'))
@@ -257,12 +262,16 @@ export async function externalDependencies(metafile) {
   }
   // Peers of those packages that the web app installs too (@videojs/react's
   // optional HLS adapter, @tiptap/pm…): consumers need the same pairs.
+  // Type packages and the compiler are peers too (i18next wants typescript,
+  // @tiptap/react wants @types/react) but nothing loads them at runtime, so
+  // they stay out: TypeScript users already have their own.
   for (const name of Object.keys(deps)) {
     const manifest = path.join(webDir, 'node_modules', name, 'package.json')
     if (!existsSync(manifest)) continue
     const { peerDependencies = {} } = JSON.parse(await readFile(manifest, 'utf8'))
     for (const peer of Object.keys(peerDependencies)) {
-      if (peer !== 'react' && peer !== 'react-dom' && webDeps[peer] && !deps[peer]) deps[peer] = webDeps[peer]
+      if (peer === 'react' || peer === 'react-dom' || isBuildOnly(peer)) continue
+      if (webDeps[peer] && !deps[peer]) deps[peer] = webDeps[peer]
     }
   }
   return { deps: Object.fromEntries(Object.entries(deps).sort(([a], [b]) => a.localeCompare(b))), missing }
