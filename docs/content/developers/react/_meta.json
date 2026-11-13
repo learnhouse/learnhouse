@@ -1,6 +1,7 @@
 {
   "index": "Quickstart",
   "customization": "Customization",
+  "learners": "Signed-in Learners",
   "events": "Events",
   "localization": "Localization",
   "frameworks": "Next.js & Vite",

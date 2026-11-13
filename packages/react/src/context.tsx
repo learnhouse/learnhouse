@@ -7,6 +7,8 @@ export interface LearnHouseInternal {
   baseUrl: string
   session: UseSessionReturn
   emit: (event: LearnHouseEvent) => void
+  /** A valid access token (refreshing the session first if needed), or null. */
+  getAccessToken: () => Promise<string | null>
 }
 
 const anonymous: UseSessionReturn = {
@@ -20,6 +22,7 @@ export const LearnHouseInternalContext = createContext<LearnHouseInternal>({
   baseUrl: '',
   session: anonymous,
   emit: () => {},
+  getAccessToken: async () => null,
 })
 
 export const useLearnHouseInternal = () => useContext(LearnHouseInternalContext)

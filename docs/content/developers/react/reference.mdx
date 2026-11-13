@@ -24,7 +24,9 @@ Pass one of `activityId`, `activityName` + `courseId`, `activity` or `content`.
 | Prop | Type | |
 | --- | --- | --- |
 | `baseUrl` | `string` | The instance's API address. Not needed inside `LearnHouseProvider` |
-| `token` | `string` | A user access token. Never an `lh_` API token |
+| `session` | `LearnHouseSessionInput` | A learner session, when there is no provider. See [Signed-in learners](/developers/react/learners) |
+| `getSession` | `() => LearnHouseSessionInput \| Promise<…>` | Fetches a new session from your server, when there is no provider |
+| `token` | `string` | Deprecated: use `session` |
 | `orgId` | `string` | Org uuid, for media blocks when rendering `content` without fetching |
 | `siteUrl` | `string` | The LearnHouse site's address, for the "Made with LearnHouse" link |
 
@@ -57,6 +59,7 @@ Pass one of `activityId`, `activityName` + `courseId`, `activity` or `content`.
 | `linkTarget` | `'_blank' \| '_self' \| '_parent' \| '_top'` | `'_blank'` | Where links open |
 | `onLinkClick` | `(href, event) => boolean \| void` | | Return `false` to cancel the navigation |
 | `trackCompletion` | `boolean` | `false` | Emit `complete` when the end scrolls into view |
+| `completion` | `'button' \| 'scroll' \| 'none'` | `'button'` | With a session: how the learner completes the activity. [Completion](/developers/react/learners#completion) |
 
 ### Language
 
@@ -83,8 +86,9 @@ Pass one of `activityId`, `activityName` + `courseId`, `activity` or `content`.
 | `baseUrl` | `string` | **Required.** The instance's API address |
 | `mediaUrl` | `string` | Where files are served from, if not `baseUrl` (a CDN or bucket) |
 | `client` | `LearnHouseClient` | Your own `@learnhouse/sdk` client (shared hooks, custom `fetch`) |
-| `token` | `string` | A user access token |
-| `getToken` | `() => string \| null \| Promise<string \| null>` | Called for each request; use it for tokens that refresh |
+| `session` | `LearnHouseSessionInput` | A learner session minted on your server (the object or its `access_token`) |
+| `getSession` | `() => LearnHouseSessionInput \| Promise<…>` | Fetches a new learner session: on mount without `session`, before expiry, and on a 401 |
+| `token`, `getToken` | | Deprecated: use `session` and `getSession` |
 | `user` | `object` | The signed-in user, for blocks that personalise |
 | `siteUrl` | `string` | The LearnHouse site's address |
 | `theme`, `locale`, `messages`, `linkTarget` | | Defaults for every activity below |
@@ -97,6 +101,7 @@ import {
   LearnHouseActivity,
   LearnHouseProvider,
   useLearnHouseClient, // the provider's @learnhouse/sdk client
+  useLearnHouseSession, // the provider's learner session: status, data.user
   SUPPORTED_LOCALES,
   themeToStyle,        // theme object → CSS variables, for your own wrappers
   VERSION,             // the LearnHouse release this build matches
@@ -111,11 +116,14 @@ import type {
   LearnHouseEvent,
   BlockOverrideProps,
   MarkOverrideProps,
+  LearnHouseSessionInput,
+  GetLearnHouseSession,
 } from '@learnhouse/react'
 ```
 
 ## Limits
 
 - One LearnHouse instance per page: media URLs follow the most recently mounted provider's `baseUrl`.
-- Assignments, SCORM packages and other activity types that need the course player aren't rendered; `errorFallback`
-  is shown instead. Pages, videos, PDFs, markdown and embedded-URL activities are.
+- Assignments render only for a [signed-in learner](/developers/react/learners). SCORM packages and other activity
+  types that need the course player aren't rendered; `errorFallback` is shown instead. Pages, videos, PDFs, markdown
+  and embedded-URL activities are.

@@ -3,13 +3,15 @@
 import type { LearnHouseClient } from '@learnhouse/sdk'
 import type {
   ActivityDocument,
+  GetLearnHouseSession,
   LearnHouseActivityData,
+  LearnHouseSessionInput,
   LearnHouseActivityProps,
   LearnHouseEvent,
   LearnHouseTheme,
 } from './types'
 
-export type { ActivityDocument, LearnHouseActivityData, LearnHouseEvent, LearnHouseTheme }
+export type { ActivityDocument, GetLearnHouseSession, LearnHouseActivityData, LearnHouseEvent, LearnHouseSessionInput, LearnHouseTheme }
 
 /** `detail` of the cancelable `lh-link-click` event. Call `preventDefault()` on the event to stop the navigation. */
 export interface LearnHouseLinkClickDetail {
@@ -30,6 +32,8 @@ export interface LearnHouseActivityElementEventMap {
   'lh-resize': CustomEvent<Extract<LearnHouseEvent, { type: 'resize' }>>
   'lh-visible': CustomEvent<Extract<LearnHouseEvent, { type: 'visible' }>>
   'lh-complete': CustomEvent<Extract<LearnHouseEvent, { type: 'complete' }>>
+  'lh-progress': CustomEvent<Extract<LearnHouseEvent, { type: 'progress' }>>
+  'lh-session-expired': CustomEvent<Extract<LearnHouseEvent, { type: 'session_expired' }>>
   'lh-analytics': CustomEvent<Extract<LearnHouseEvent, { type: 'analytics' }>>
 }
 
@@ -43,8 +47,17 @@ export declare class LearnHouseActivityElement extends HTMLElement {
   mediaUrl?: string
   siteUrl?: string
   orgId?: string
-  /** A user access token. Never pass an `lh_` API token to the browser. */
+  /**
+   * The learner session: an embed session minted on your server (the object,
+   * or its `access_token`; the `session` attribute takes the token string).
+   * Never pass an `lh_` API token to the browser.
+   */
+  session?: LearnHouseSessionInput | null
+  /** Fetches a new learner session from your server before the current one expires. */
+  getSession?: GetLearnHouseSession
+  /** @deprecated Use `session`. */
   token?: string
+  /** @deprecated Use `getSession`. */
   getToken?: () => string | null | undefined | Promise<string | null | undefined>
   client?: LearnHouseClient
   user?: Record<string, any>
@@ -54,6 +67,8 @@ export declare class LearnHouseActivityElement extends HTMLElement {
   hideBlocks?: string[]
   linkTarget?: LearnHouseActivityProps['linkTarget']
   trackCompletion?: boolean
+  /** `button` (default with a session), `scroll` or `none`. */
+  completion?: LearnHouseActivityProps['completion']
   showTitle?: boolean
   showPoweredBy?: boolean
   unstyled?: boolean

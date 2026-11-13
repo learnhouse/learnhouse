@@ -34,7 +34,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.services.orgs.org_config_lookup import get_session_org_config
 from src.security.session_context import (
     AUTH_METHOD_API_TOKEN,
-    AUTH_METHOD_LTI,
+    ORG_HELD_AUTH_METHODS,
     POLICY_AUTH_METHODS,
     SessionProvenance,
     get_session_provenance,
@@ -142,9 +142,10 @@ async def evaluate_org_auth(
             domain_bound = provenance.custom_domain and provenance.org_id is not None
             # An LTI launch session is held to the org that registered the LMS
             # the same way: an LMS that org runs must never sign anyone in to
-            # their other organizations.
+            # their other organizations. An embed session a host app minted
+            # with the org's API token is held to that org for the same reason.
             domain_bound = domain_bound or (
-                provenance.amr == AUTH_METHOD_LTI and provenance.org_id is not None
+                provenance.amr in ORG_HELD_AUTH_METHODS and provenance.org_id is not None
             )
 
             # Fast path: default config (all methods, sharing on) is a pure no-op,
@@ -167,8 +168,10 @@ async def evaluate_org_auth(
                 # the LMS (sorg): registering the platform is that org's
                 # opt-in. Anywhere else it is held to the policy like any
                 # other session.
+                # Embed sessions likewise: the org minted them with its own
+                # API token.
                 lti_home_org = (
-                    provenance.amr == AUTH_METHOD_LTI and provenance.org_id == org_id
+                    provenance.amr in ORG_HELD_AUTH_METHODS and provenance.org_id == org_id
                 )
                 allowed = set(policy.allowed_auth_methods)
                 # A session with no ``amr`` means "we don't know how this
