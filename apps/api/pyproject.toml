@@ -30,7 +30,7 @@ dependencies = [
     "sqlmodel==0.0.44",
     "tiktoken==0.14.0",
     "uvicorn==0.54.0",
-    "typer==0.29.0",
+    "typer==0.29.1",
     "alembic==1.20.1",
     "alembic-postgresql-enum==1.11.1",
     "sqlalchemy-utils==0.43.0",
