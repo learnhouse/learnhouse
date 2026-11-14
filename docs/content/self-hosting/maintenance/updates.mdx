@@ -1,8 +1,14 @@
-import { Callout } from 'nextra/components'
+---
+description: Update a self-hosted LearnHouse instance with npx learnhouse update, learn how database migrations run, and roll back to an earlier version.
+---
+
+import { Callout } from '@/components/mdx'
 
 # Updates
 
 Update LearnHouse regularly to get the latest features, bug fixes, and security patches.
+
+<CloudCta variant="selfhost">LearnHouse Cloud runs updates for you.</CloudCta>
 
 ## Updating LearnHouse
 
@@ -67,8 +73,8 @@ npx learnhouse doctor
 
 LearnHouse uses [Alembic](https://alembic.sqlalchemy.org/) to evolve the database schema between versions, and applies it for you:
 
-- `learnhouse update` migrates the database before the new version starts, and prompts for it afterwards (skip the prompt with `--migrate` or `--no-migrate`).
-- The API checks the schema every time it starts, and migrates it if needed. Updates done by hand with `docker compose pull && docker compose up -d` are covered too, and so is answering **No** at the prompt.
+- `learnhouse update` migrates the database before the new version starts, and checks it again once the new version is up. `--no-migrate` skips both.
+- The API checks the schema every time it starts, and migrates it if needed. Updates done by hand with `docker compose pull && docker compose up -d`, or with `--no-migrate`, are covered too.
 
 On startup the API:
 
@@ -78,7 +84,7 @@ On startup the API:
 
 When several API containers start at once, they take turns: one migrates, the others wait for it. If a migration fails, the whole change is rolled back and the API refuses to start, rather than serving errors against a half-updated database. Restore the backup the update made, or fix the cause, then start it again.
 
-To run the same step yourself, or to see where a database stands:
+To run the same step yourself, or to see where a database stands, run these from the installation directory:
 
 ```bash
 # Migrate now
@@ -93,6 +99,7 @@ Set `LEARNHOUSE_AUTO_MIGRATE=false` in your `.env` if you prefer to run migratio
 ### Installations without Alembic history
 
 Early LearnHouse installs created their schema with SQLAlchemy's `create_all`, without Alembic tracking. `learnhouse update` stamps them at the version they were running before applying any migration, so only the new changes run. An install updated another way gets its missing tables and columns added by the API on its first start, as described above.
+
 ## When an Update Fails
 
 `update` never leaves the site down on purpose:

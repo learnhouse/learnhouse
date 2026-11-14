@@ -3657,7 +3657,8 @@
     "tasks_count_one": "{{count}}টি কাজ",
     "tasks_count_other": "{{count}}টি কাজ",
     "ai_graded_badge": "AI দিয়ে গ্রেড করা হয়েছে",
-    "ai_graded_hint": "আপনার শিক্ষকের AI সহকারী তাঁর নির্দেশনা অনুযায়ী এই কাজটি গ্রেড করেছে।"
+    "ai_graded_hint": "আপনার শিক্ষকের AI সহকারী তাঁর নির্দেশনা অনুযায়ী এই কাজটি গ্রেড করেছে।",
+    "not_available": "এই অ্যাসাইনমেন্টটি উপলব্ধ নয়।"
   },
   "certificate": {
     "certificate": "শংসাপত্র",

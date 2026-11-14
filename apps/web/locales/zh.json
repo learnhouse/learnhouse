@@ -3640,7 +3640,8 @@
     "retry_assignment_remaining_one": "本次之后，您还有 {{count}} 次尝试机会。",
     "tasks_count_one": "{{count}} 项任务",
     "ai_graded_badge": "已用 AI 评分",
-    "ai_graded_hint": "老师的 AI 助手根据其评分说明对这份作业进行了评分。"
+    "ai_graded_hint": "老师的 AI 助手根据其评分说明对这份作业进行了评分。",
+    "not_available": "此作业不可用。"
   },
   "certificate": {
     "certificate": "证书",

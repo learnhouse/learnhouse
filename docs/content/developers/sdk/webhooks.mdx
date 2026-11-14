@@ -1,0 +1,139 @@
+---
+title: SDK Webhooks
+description: "Verify LearnHouse webhook signatures with @learnhouse/sdk, turn deliveries into typed events, and skip duplicate or replayed deliveries."
+---
+
+import { Callout, Tabs } from '@/components/mdx'
+
+# Webhooks
+
+LearnHouse can send events like `course_completed` to your server as signed `POST` requests. Set up an endpoint first;
+see [Webhooks](/platform/automations/webhooks). The SDK checks the signature and gives you the event.
+
+## Handle a delivery
+
+`parseWebhook` takes the raw body, the request headers and your endpoint's signing secret (`whsec_…`). It returns the
+event, or throws a `LearnHouseError` when the signature or the body is wrong.
+
+<Tabs items={['Next.js', 'Express']}>
+<Tabs.Tab>
+
+```ts title="app/api/webhooks/learnhouse/route.ts"
+import { isLearnHouseError, parseWebhook } from '@learnhouse/sdk'
+
+export async function POST(req: Request) {
+  try {
+    const { event, deliveryId, data } = await parseWebhook({
+      payload: await req.text(), // the raw body: never req.json()
+      headers: req.headers,
+      secret: process.env.LEARNHOUSE_WEBHOOK_SECRET!,
+    })
+    if (event === 'course_completed') {
+      // handle it, keyed by deliveryId
+    }
+    return Response.json({ received: true })
+  } catch (err) {
+    if (isLearnHouseError(err)) return Response.json({ error: err.code }, { status: err.status })
+    throw err
+  }
+}
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```ts
+import express from 'express'
+import { isLearnHouseError, parseWebhook } from '@learnhouse/sdk'
+
+const app = express()
+
+// express.raw keeps the body as bytes. express.json() would break the signature.
+app.post('/webhooks/learnhouse', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const { event, data } = await parseWebhook({
+      payload: req.body, // a Buffer
+      headers: req.headers,
+      secret: process.env.LEARNHOUSE_WEBHOOK_SECRET!,
+    })
+    console.log(event, data)
+    res.json({ received: true })
+  } catch (err) {
+    if (isLearnHouseError(err)) return res.status(err.status).json({ error: err.code })
+    throw err
+  }
+})
+```
+
+</Tabs.Tab>
+</Tabs>
+
+The event has these fields, all read from the signed body:
+
+| Field | |
+| --- | --- |
+| `event` | The event name, e.g. `course_completed`. See the [Event Catalogue](/platform/automations/events) |
+| `deliveryId` | The delivery's id (`dlv_…`). Retries of one delivery share it |
+| `timestamp` | When LearnHouse first tried the delivery, in ISO 8601 UTC |
+| `orgId` | The organization the event belongs to |
+| `data` | The event's payload. Pass a type to describe it: `parseWebhook<MyEvent>(…)` |
+
+When it throws, answer with `err.status`:
+
+| `err.code` | `err.status` | Cause |
+| --- | --- | --- |
+| `INVALID_SIGNATURE` | `401` | The `X-Webhook-Signature` header is missing or does not match |
+| `INVALID_PAYLOAD` | `400` | The body is signed but is not a LearnHouse event |
+
+`payload` can be a string, a `Uint8Array` (a Node `Buffer` is one) or an `ArrayBuffer`. Headers can be a `Headers`
+object or a plain object like Node's `req.headers`. Header names are matched without regard to case.
+
+<Callout type="warning">
+  Pass the body exactly as it arrived. Parsing the JSON and turning it back into a string changes the bytes, and the
+  signature no longer matches.
+</Callout>
+
+## Check the signature only
+
+`verifyWebhookSignature` resolves to `true` or `false` and never throws for a bad signature:
+
+```ts
+import { verifyWebhookSignature } from '@learnhouse/sdk'
+
+const ok = await verifyWebhookSignature({
+  payload: rawBody,
+  signature: req.headers.get('x-webhook-signature'),
+  secret: process.env.LEARNHOUSE_WEBHOOK_SECRET!,
+})
+```
+
+It computes the HMAC-SHA256 of the body with your secret and compares it in constant time.
+
+## Duplicates and replays
+
+The signature covers the body only. There is no separate signed timestamp header, so a captured request stays valid if
+someone sends it again. Guard against that, and against normal retries, with the delivery id:
+
+1. Store each `deliveryId` you have handled, for example in a table with a unique key.
+2. When a `deliveryId` comes back, return `200` and do nothing else.
+
+LearnHouse tries a delivery up to 3 times within about half a minute, with the same body each time. That makes the
+signed `timestamp` a useful second check: reject deliveries older than a few minutes, and you only need to keep
+delivery ids for that long.
+
+```ts
+const age = Date.now() - Date.parse(timestamp)
+if (age > 5 * 60_000) return Response.json({ error: 'stale' }, { status: 400 })
+```
+
+## Runtimes
+
+The helpers use Web Crypto (`crypto.subtle`), so they work in Node 19 and later, Bun, Deno and edge runtimes such as
+Cloudflare Workers and Vercel Edge. On Node 18, set it up once before you verify:
+
+```ts
+import { webcrypto } from 'node:crypto'
+globalThis.crypto ??= webcrypto as Crypto
+```
+
+Verify webhooks on a server only. Your signing secret must never reach a browser or an app.

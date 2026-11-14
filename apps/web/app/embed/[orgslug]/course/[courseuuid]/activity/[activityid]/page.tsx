@@ -1,21 +1,17 @@
 import EmbedActivityClient from './EmbedActivityClient'
+import { parseEmbedOptions } from '@/lib/embed/protocol'
 
 type PageProps = {
   params: Promise<{ orgslug: string; courseuuid: string; activityid: string }>
-  searchParams: Promise<{ bgcolor?: string }>
-}
-
-const HEX_COLOR_RE = /^[0-9a-fA-F]{3,8}$/
-
-function sanitizeBgColor(raw: string | undefined): string | null {
-  if (!raw) return null
-  return HEX_COLOR_RE.test(raw) ? `#${raw}` : null
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function EmbedActivityPage({ params, searchParams }: PageProps) {
   const { orgslug, courseuuid, activityid } = await params
   const sp = await searchParams
-  const bgcolor = sanitizeBgColor(sp.bgcolor)
+  const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? null
+  // Only the background is needed here, to paint it before hydration.
+  const { bgcolor } = parseEmbedOptions({ get: (name) => first(sp[name]) }, [])
 
   return (
     <>
@@ -24,7 +20,6 @@ export default async function EmbedActivityPage({ params, searchParams }: PagePr
         activityId={activityid}
         courseuuid={courseuuid}
         orgslug={orgslug}
-        bgcolor={bgcolor}
       />
     </>
   )

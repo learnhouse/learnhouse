@@ -50,6 +50,7 @@ def _rights_for(required) -> dict:
 # (method, path, json body, rights the route requires)
 WRITE_ROUTES = [
     ("POST", f"/{ORG}/auth/token", {"user_id": USER}, [("users", "update")]),
+    ("POST", f"/{ORG}/auth/embed-session", {"user_id": USER}, [("users", "update")]),
     ("POST", f"/{ORG}/auth/magic-link", {"user_id": USER}, [("users", "update")]),
     (
         "POST", f"/{ORG}/users",

@@ -3640,7 +3640,8 @@
     "retry_assignment_remaining_one": "この後、あと {{count}} 回挑戦できます。",
     "tasks_count_one": "課題 {{count}} 件",
     "ai_graded_badge": "AI採点済み",
-    "ai_graded_hint": "先生のAIアシスタントが、先生の指示に基づいてこの課題を採点しました。"
+    "ai_graded_hint": "先生のAIアシスタントが、先生の指示に基づいてこの課題を採点しました。",
+    "not_available": "この課題は利用できません。"
   },
   "certificate": {
     "certificate": "修了証",

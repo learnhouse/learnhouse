@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 
 import InfoCalloutComponent from './InfoCalloutComponent'
 
@@ -24,6 +24,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(InfoCalloutComponent)
+    return lhNodeView(InfoCalloutComponent)
   },
 })

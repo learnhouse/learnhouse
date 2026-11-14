@@ -3720,7 +3720,8 @@
     "tasks_count_many": "{{count}} tâches",
     "tasks_count_other": "{{count}} tâches",
     "ai_graded_badge": "Noté avec l'IA",
-    "ai_graded_hint": "L'assistant IA de votre enseignant a noté ce travail à partir de ses consignes."
+    "ai_graded_hint": "L'assistant IA de votre enseignant a noté ce travail à partir de ses consignes.",
+    "not_available": "Ce devoir n'est pas disponible."
   },
   "certificate": {
     "certificate": "Certificat",

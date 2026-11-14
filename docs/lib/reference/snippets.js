@@ -1,4 +1,4 @@
-import { TOKEN_PLACEHOLDER } from './config'
+import { API_BASE_URL, TOKEN_PLACEHOLDER } from './config'
 import { isBinaryField } from './resolve'
 
 /**
@@ -39,6 +39,9 @@ export function buildSnippets({
   contentType = null,
   bodyExample = null,
   bodyFields = [],
+  path = null,
+  pathParams = [],
+  queryParams = [],
 }) {
   const hasBody =
     bodyExample !== null &&
@@ -53,6 +56,9 @@ export function buildSnippets({
     curl: buildCurl({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }),
     js: buildJs({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }),
     python: buildPython({ method, url, auth, authValue, contentType, bodyExample, binaryNames, hasBody }),
+    ...(path
+      ? { sdk: buildSdk({ method, path, pathParams, queryParams, auth, authValue, contentType, bodyExample, binaryNames, hasBody }) }
+      : {}),
   }
 }
 
@@ -210,5 +216,81 @@ function buildPython({ method, url, auth, authValue, contentType, bodyExample, b
   lines.push(...callArgs)
   lines.push(`)`)
   lines.push(`print(res.json())`)
+  return lines.join('\n')
+}
+
+// ── @learnhouse/sdk ─────────────────────────────────────────────────────────
+
+// Routes the SDK's generated types leave out (see packages/sdk/scripts/generate.mjs).
+// They are still callable, untyped, through lh.request().
+export const SDK_UNTYPED_PREFIXES = [
+  '/api/v1/internal',
+  '/api/v1/cloud_internal',
+  '/api/v1/dev',
+  '/api/v1/demo',
+  '/api/v1/ee',
+  '/api/v1/admin',
+]
+
+function jsLiteral(value, indent) {
+  const pad = ' '.repeat(indent)
+  return JSON.stringify(value, null, 2)
+    .split('\n')
+    .map((l, i) => (i === 0 ? l : pad + l))
+    .join('\n')
+}
+
+// `{ course_uuid: "course_…", page: 1 }`: params are flat, so keep them on one line.
+function paramObject(rows) {
+  const key = (k) => (/^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k))
+  return `{ ${rows.map((r) => `${key(r.name)}: ${JSON.stringify(r.example ?? '')}`).join(', ')} }`
+}
+
+function buildSdk({ method, path, pathParams, queryParams, auth, authValue, contentType, bodyExample, binaryNames, hasBody }) {
+  const typed = !SDK_UNTYPED_PREFIXES.some((p) => path.startsWith(p))
+  const lines = [`import { createClient } from "@learnhouse/sdk";`, '']
+  const clientOpts = [`baseUrl: ${JSON.stringify(API_BASE_URL)}`]
+  if (auth) clientOpts.push(`token: "${authValue}"`)
+  lines.push(`const lh = createClient({ ${clientOpts.join(', ')} });`, '')
+
+  const opts = []
+  const params = []
+  if (pathParams.length) params.push(`    path: ${paramObject(pathParams)},`)
+  const requiredQuery = queryParams.filter((q) => q.required)
+  if (requiredQuery.length) params.push(`    query: ${paramObject(requiredQuery)},`)
+  if (params.length) opts.push(`  params: {\n${params.join('\n')}\n  },`)
+
+  if (hasBody) {
+    if (contentType === 'multipart/form-data') {
+      const formLines = ['const form = new FormData();']
+      for (const [key, value] of Object.entries(bodyExample)) {
+        if (binaryNames.has(key)) {
+          formLines.push(`form.append("${key}", file); // your File or Blob`)
+        } else {
+          const v = typeof value === 'object' && value !== null ? JSON.stringify(value) : value
+          formLines.push(`form.append("${key}", ${JSON.stringify(String(v))});`)
+        }
+      }
+      lines.push(...formLines, '')
+      opts.push(`  body: form,`)
+    } else if (contentType === 'application/x-www-form-urlencoded') {
+      opts.push(`  bodyType: "form",`)
+      opts.push(`  body: ${jsLiteral(bodyExample, 2)},`)
+    } else {
+      opts.push(`  body: ${jsLiteral(bodyExample, 2)},`)
+    }
+  }
+
+  const call = typed
+    ? `lh.${method}(${JSON.stringify(path)}${opts.length ? ', {' : ''}`
+    : `lh.request(${JSON.stringify(method)}, ${JSON.stringify(path)}${opts.length ? ', {' : ''}`
+  if (opts.length) {
+    lines.push(`const data = await ${call}`)
+    lines.push(...opts)
+    lines.push(`});`)
+  } else {
+    lines.push(`const data = await ${call});`)
+  }
+  lines.push(`console.log(data);`)
   return lines.join('\n')
 }

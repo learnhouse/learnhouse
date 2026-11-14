@@ -3638,7 +3638,8 @@
     "retry_assignment_remaining_one": "Anda memiliki {{count}} percobaan lagi setelah ini.",
     "tasks_count_one": "{{count}} tugas",
     "ai_graded_badge": "Dinilai dengan AI",
-    "ai_graded_hint": "Asisten AI guru Anda menilai tugas ini berdasarkan instruksi guru."
+    "ai_graded_hint": "Asisten AI guru Anda menilai tugas ini berdasarkan instruksi guru.",
+    "not_available": "Tugas ini tidak tersedia."
   },
   "certificate": {
     "certificate": "Sertifikat",

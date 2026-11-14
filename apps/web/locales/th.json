@@ -3638,7 +3638,8 @@
     "retry_assignment_remaining_one": "หลังจากครั้งนี้ คุณจะเหลืออีก {{count}} ครั้ง",
     "tasks_count_one": "{{count}} งาน",
     "ai_graded_badge": "ตรวจโดย AI",
-    "ai_graded_hint": "ผู้ช่วย AI ของครูตรวจงานชิ้นนี้ตามคำแนะนำของครู"
+    "ai_graded_hint": "ผู้ช่วย AI ของครูตรวจงานชิ้นนี้ตามคำแนะนำของครู",
+    "not_available": "งานนี้ไม่พร้อมใช้งาน"
   },
   "certificate": {
     "certificate": "ใบประกาศนียบัตร",

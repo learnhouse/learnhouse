@@ -3657,7 +3657,8 @@
     "tasks_count_one": "{{count}} görev",
     "tasks_count_other": "{{count}} görev",
     "ai_graded_badge": "Yapay zekâ ile notlandırıldı",
-    "ai_graded_hint": "Öğretmeninizin yapay zekâ asistanı bu çalışmayı onun yönergelerine göre notlandırdı."
+    "ai_graded_hint": "Öğretmeninizin yapay zekâ asistanı bu çalışmayı onun yönergelerine göre notlandırdı.",
+    "not_available": "Bu ödev kullanılamıyor."
   },
   "certificate": {
     "certificate": "Sertifika",

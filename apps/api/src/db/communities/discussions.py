@@ -104,6 +104,12 @@ class DiscussionReadWithVoteStatus(DiscussionReadWithAuthor):
     has_voted: bool = False
 
 
+class DiscussionReadWithCounts(DiscussionReadWithVoteStatus):
+    """Read model for the discussion list and detail endpoints."""
+
+    comment_count: int = 0
+
+
 class DiscussionLabelInfo(SQLModel):
     id: str
     name: str

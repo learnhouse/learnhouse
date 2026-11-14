@@ -3638,7 +3638,8 @@
     "retry_assignment_remaining_one": "Sau lần này bạn còn {{count}} lượt thử.",
     "tasks_count_one": "{{count}} nhiệm vụ",
     "ai_graded_badge": "Đã chấm bằng AI",
-    "ai_graded_hint": "Trợ lý AI của giáo viên đã chấm bài này theo hướng dẫn của họ."
+    "ai_graded_hint": "Trợ lý AI của giáo viên đã chấm bài này theo hướng dẫn của họ.",
+    "not_available": "Bài tập này không khả dụng."
   },
   "certificate": {
     "certificate": "Chứng chỉ",

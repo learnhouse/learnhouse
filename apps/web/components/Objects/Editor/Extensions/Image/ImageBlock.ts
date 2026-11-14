@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
+import { lhNodeView } from '@components/Objects/Editor/core/nodeView'
 import dynamic from 'next/dynamic'
 import { IMAGE_EXTRA_ATTRS } from '../../Blocks/schema/blockAttrs'
 
@@ -54,6 +54,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ImageBlockComponent as any)
+    return lhNodeView(ImageBlockComponent as any)
   },
 })

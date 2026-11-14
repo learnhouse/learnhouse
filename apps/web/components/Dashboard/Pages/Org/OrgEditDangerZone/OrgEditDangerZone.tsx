@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast'
 import { Warning, Trash, UserMinus, Eraser, LockSimple } from '@phosphor-icons/react'
 import { Trans, useTranslation } from 'react-i18next'
 import {
-  deleteOrganizationFromBackend,
+  deleteOrganization,
   removeAllUsersFromOrg,
   wipeOrgContent,
 } from '@services/organizations/orgs'
@@ -82,7 +82,7 @@ const OrgEditDangerZone: React.FC = () => {
     setIsDeletingOrg(true)
     const loadingToast = toast.loading(t('dashboard.organization.danger_zone.deleting_org'))
     try {
-      await deleteOrganizationFromBackend(org.id, access_token)
+      await deleteOrganization(org.id, access_token)
       toast.success(t('dashboard.organization.danger_zone.org_deleted'), { id: loadingToast })
       // The org no longer exists; send the user back to the root so they land
       // on org selection / login rather than a broken dashboard.

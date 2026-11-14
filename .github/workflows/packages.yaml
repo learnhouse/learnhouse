@@ -1,0 +1,62 @@
+name: Packages Tests
+permissions:
+  contents: read
+
+# @learnhouse/react is compiled from apps/web source, so web changes can break
+# it (and @learnhouse/vue, which wraps it) too; the SDK's types come from the API.
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "packages/**"
+      - "apps/web/components/**"
+      - "apps/web/services/**"
+      - "apps/web/lib/**"
+      - "apps/web/styles/**"
+      - "apps/web/locales/**"
+      - "apps/web/package.json"
+  pull_request:
+    paths:
+      - "packages/**"
+      - "apps/web/components/**"
+      - "apps/web/services/**"
+      - "apps/web/lib/**"
+      - "apps/web/styles/**"
+      - "apps/web/locales/**"
+      - "apps/web/package.json"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version-file: .bun-version
+
+      # The react package bundles web source and its CSS build scans it.
+      - name: Install web dependencies
+        run: bun install --frozen-lockfile
+        working-directory: apps/web
+
+      - name: Install package dependencies
+        run: bun install --frozen-lockfile
+        working-directory: packages
+
+      - name: Build
+        run: bun run build
+        working-directory: packages
+
+      - name: Test
+        run: bun run test
+        working-directory: packages
+
+      - name: Type-check
+        run: bun run --cwd sdk typecheck && bun run --cwd react typecheck && bun run --cwd vue typecheck
+        working-directory: packages

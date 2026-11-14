@@ -1,6 +1,11 @@
-import { Callout } from 'nextra/components'
+---
+title: API Tokens and Sessions
+description: Create and manage LearnHouse API tokens, choose their permissions, and sign in with user sessions, refresh cookies and two-factor codes.
+---
 
-# API Authentication
+import { Callout } from '@/components/mdx'
+
+# API Tokens and Sessions
 
 The LearnHouse API accepts two kinds of credentials:
 
@@ -24,7 +29,7 @@ curl http://localhost:1338/api/v1/users/profile \
   -H "Authorization: Bearer <access_token>"
 ```
 
-Browsers get the same tokens as `HttpOnly` cookies: `LH_access` (8 hours) and `LH_refresh` (30 days of inactivity). `GET /api/v1/auth/refresh` issues a new access token from the refresh cookie.
+Browsers get the same tokens as `HttpOnly` cookies: `LH_access` (8 hours) and `LH_refresh` (30 days of inactivity; self-hosted instances can change this with `LEARNHOUSE_AUTH_REFRESH_TOKEN_DAYS`, minimum 14). `GET /api/v1/auth/refresh` issues a new access token from the refresh cookie.
 
 If the account has two-factor authentication, `/auth/login` answers `{ "mfa_required": true, "mfa_token": "..." }` instead. Send that `mfa_token` with a 6-digit `code` from the authenticator app (or a backup code with `is_backup_code: true`) to `POST /api/v1/auth/login/mfa` within 5 minutes to get the session.
 
@@ -47,6 +52,25 @@ Logins are rate-limited by IP, and repeated failed attempts can temporarily lock
 | `POST` | `/api/v1/auth/resend-verification` | Resend the verification email |
 
 The two-factor management endpoints (`/api/v1/auth/mfa/...`) are listed in the [API Reference](/reference/auth).
+
+### Embed sessions
+
+A server holding an API token can mint a short-lived session for one of the org's learners, for the embed components
+(`@learnhouse/react`, `@learnhouse/vue`) to act as that learner in a browser:
+
+```bash
+curl -X POST https://learn.example.com/api/v1/admin/your-school/auth/embed-session \
+  -H "Authorization: Bearer lh_…" -H "Content-Type: application/json" \
+  -d '{ "user_id": 42, "ttl_seconds": 900 }'
+```
+
+It returns `access_token`, `expires_in`, `expires_at` (Unix seconds), `user_id`, `user_uuid` and `org_id`. The token
+needs the **Users: update** permission. Sessions last 15 minutes by default (60 to 3600 seconds), have no refresh
+token, work only inside the org and only on the routes the embed components use (other routes answer `403`), and
+can't change the account. Admins, maintainers and accounts in other organizations are refused. Like LTI launches,
+they are exempt from the org's sign-in method and two-factor rules inside that org, since the server minting them
+vouches for the learner. See
+[Signed-in learners](/developers/react/learners).
 
 ## API tokens
 
@@ -110,4 +134,4 @@ Creating and regenerating tokens is limited to 10 per hour per IP address.
 
 ### What tokens cannot do
 
-Tokens only work on the content and admin endpoints listed above, plus the [Zapier endpoints](/platform/automations/zapier). They are refused by organization settings, user accounts, roles, API token management, webhooks, analytics, AI, boards, playgrounds, audit logs, SCORM and code execution endpoints. Use a user session for those.
+Tokens only work on the content and admin endpoints listed above, plus the [Zapier endpoints](/platform/automations/zapier) and the [MCP server](/platform/ai/connect-ai-apps) for AI apps. They are refused by organization settings, user accounts, roles, API token management, webhooks, analytics, AI, boards, playgrounds, audit logs, SCORM and code execution endpoints. Use a user session for those.

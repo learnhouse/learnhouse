@@ -3657,7 +3657,8 @@
     "tasks_count_one": "{{count}} Aufgabe",
     "tasks_count_other": "{{count}} Aufgaben",
     "ai_graded_badge": "Mit KI bewertet",
-    "ai_graded_hint": "Der KI-Assistent deiner Lehrkraft hat diese Arbeit anhand ihrer Vorgaben bewertet."
+    "ai_graded_hint": "Der KI-Assistent deiner Lehrkraft hat diese Arbeit anhand ihrer Vorgaben bewertet.",
+    "not_available": "Diese Aufgabe ist nicht verfügbar."
   },
   "certificate": {
     "certificate": "Zertifikat",

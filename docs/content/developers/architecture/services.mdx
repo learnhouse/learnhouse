@@ -1,3 +1,8 @@
+---
+title: "Supporting Services"
+description: "Configure the services LearnHouse runs alongside its apps: PostgreSQL with pgvector, Redis, the Hocuspocus collaboration server and the reverse proxy."
+---
+
 # Supporting Services
 
 LearnHouse relies on several supporting services that run alongside the main applications.
@@ -35,7 +40,7 @@ The API reads its connection from `LEARNHOUSE_REDIS_CONNECTION_STRING` and the c
 
 ## Hocuspocus (Collaboration Server)
 
-The Hocuspocus server, located at `apps/collab`, provides real-time collaborative editing capabilities. It is a Node.js + TypeScript application (run via `tsx` in dev) built on [Hocuspocus](https://hocuspocus.dev/) 4, which uses the Yjs CRDT library under the hood. It connects to Redis via `ioredis`.
+The Hocuspocus server, located at `apps/collab`, provides real-time collaboration on [boards](/platform/boards). Each board is one shared document. It is a Node.js + TypeScript application (run with `tsx watch` in dev, and from its compiled build in the app image) built on [Hocuspocus](https://hocuspocus.dev/) 4, which uses the Yjs CRDT library under the hood. It connects to Redis via `ioredis`.
 
 **Default port:** `4000` (configurable via `COLLAB_PORT` env var)
 
@@ -52,7 +57,7 @@ The server refuses to start when `LEARNHOUSE_AUTH_JWT_SECRET_KEY` or `COLLAB_INT
 
 ### Authentication
 
-The Collab server performs JWT verification using the same secret as the API backend. On connection, it verifies board membership by making a request to the API.
+The Collab server performs JWT verification using the same secret as the API backend. On connection, it verifies board membership by making a request to the API. People who may only view a board (for example on a public board) get a read-only connection. Open connections re-check their access every minute and are closed when it is gone.
 
 ### Persistence
 
@@ -63,7 +68,7 @@ Document state follows a two-tier persistence strategy:
 
 ### Rate Limiting and Capacity
 
-- **Max 10 concurrent users** per board (`MAX_BOARD_USERS`)
+- **Seats per board**: 10 editors and 10 read-only viewers at once (`MAX_BOARD_EDITORS`, `MAX_BOARD_VIEWERS`), and at most 2 sessions per board on one connection
 - **HTTP rate limiting** of 30 plain HTTP requests per IP per minute (`RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS`)
 - **WebSocket limits**: 300 new sockets per IP per minute, 200 open sockets per IP, and 2,000 unauthenticated sockets in total. A socket must authenticate within 10 seconds.
 - **Size limits**: 2 MB per message and 5 MB per document (`MAX_MESSAGE_BYTES`, `MAX_YDOC_BYTES`)

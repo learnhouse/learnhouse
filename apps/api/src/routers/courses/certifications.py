@@ -204,14 +204,20 @@ async def api_get_certificate_by_user_certification_uuid(
 @router.get(
     "/user/all",
     summary="List my certificates",
-    description="Get every certificate awarded to the current user across all courses, with complete linked information.",
+    description=(
+        "Get every certificate awarded to the current user across all courses, with complete linked information. "
+        "Pass `org_id` to list only certificates whose course belongs to that organization."
+    ),
     responses={
-        200: {"description": "All certificates awarded to the current user."},
+        200: {"description": "Certificates awarded to the current user, optionally limited to one organization."},
     },
 )
 async def api_get_all_user_certificates(
     request: Request,
     lang: Optional[str] = Query(None, max_length=200, description="Preferred languages: the course name comes back in the first published one."),
+    org_id: Optional[int] = Query(
+        None, description="Only return certificates for courses in this organization."
+    ),
     current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
     db_session: AsyncSession = Depends(get_db_session),
 ) -> List[dict]:
@@ -219,5 +225,5 @@ async def api_get_all_user_certificates(
     Get all certificates obtained by the current user with complete linked information
     """
     return await get_all_user_certificates(
-        request, current_user, db_session, lang=lang
+        request, current_user, db_session, lang=lang, org_id=org_id
     ) 

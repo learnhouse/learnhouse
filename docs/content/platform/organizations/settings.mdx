@@ -1,8 +1,12 @@
-import { Callout } from 'nextra/components'
+---
+description: "Configure your LearnHouse organization settings, from name, branding and public menu to optional features, AI, analytics retention and the danger zone."
+---
+
+import { Callout } from '@/components/mdx'
 
 # Organization Settings
 
-Organization settings live under **Organization** in the dashboard (`/dash/org/settings`). It opens on **Overview**. The tabs are **Overview**, **General**, **Branding**, **Menu**, **AI**, **Other** and **Danger Zone**, plus **Analytics** and **Integrations** on the Enterprise Edition.
+Organization settings live under **Organization** in the dashboard (`/dash/org/settings`). It opens on **Overview**. The tabs are **Overview**, **General**, **Branding**, **Menu**, **AI**, **Other** and **Danger Zone**, plus **Analytics** when [analytics](/platform/analytics) is available (Enterprise Edition or LearnHouse Cloud) and **Integrations** on the Enterprise Edition.
 
 <YouTube video="guide-10" />
 
@@ -54,7 +58,7 @@ Your logo is shown with a link to **Branding**, where you change it.
 
 ### Features
 
-Switch optional features on or off, grouped by area: **Content** (Paths, Library, Podcasts, Boards, Plays), **Engagement** (Communities, Live sessions, Newsletter) and **Selling** (Payments). **Editor** holds **Live collaboration & autosave**, the default for every activity (each activity can override it). A feature that is off disappears from the navigation. Features your plan does not include show **Needs** and the plan, with a link to **Overview** → **Features**. Old links to the **Features** tab open this section.
+Switch optional features on or off, grouped by area: **Content** (Paths, Library, Podcasts, Boards, Plays), **Engagement** (Communities, Live sessions, Newsletter) and **Selling** (Payments). **Editor** holds **Live collaboration & autosave**, the default for every activity (each activity can override it). A feature that is off disappears from the navigation. Features your plan does not include show **Needs** and the plan, with a link to **Overview** → **Features**. Old links to the **Features** tab open this section. A feature turned off by the platform administrator shows "Turned off by the platform administrator" and its switch is locked. Only organization admins can change these switches.
 
 ### Footer
 
@@ -142,6 +146,10 @@ This sets the screen learners see after they finish a course. A live **Preview**
 Turn **Enable AI Features** on or off for the whole organization, and switch **AI Copilot** on or off. **AI Copilot** controls Copilot and the other [agents](/platform/messages#agents) in Messages. Editor assistance and AI learning activities follow the main switch. Only admins can change these. See [AI](/platform/ai) for what each feature does.
 
 On LearnHouse Cloud, the AI tab is shown from the Standard plan up.
+
+## Analytics
+
+**Analytics** sets how long your organization's analytics data is kept and what is collected: **Data retention**, counting visitors who aren't signed in, storing the visitor's country and leaving admins and maintainers out of stats. On the Enterprise plan you can also download every stored event as CSV. See [Analytics settings](/platform/analytics#settings).
 
 ## Other
 
