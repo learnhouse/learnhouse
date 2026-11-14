@@ -179,15 +179,6 @@ These jobs run inside the API process. Most of them need Redis.
 | `LEARNHOUSE_DRIP_EMAILS_DISABLED` | Any value turns off the hourly job that emails learners when drip content unlocks. | any value or unset | unset (job runs) | API |
 | `LEARNHOUSE_MESSAGING_EMAILS_DISABLED` | Any value turns off the job that emails unread messages and delivers reminders. | any value or unset | unset (job runs) | API |
 
-## Demo organization
-
-| Variable | Description | Type | Default / required | Used by |
-| --- | --- | --- | --- | --- |
-| `LEARNHOUSE_DEMO_ENABLED` | Turn on the shared demo organization. Accepts `true`/`1`/`yes`/`on`. | boolean | `false` | API |
-| `LEARNHOUSE_DEMO_SLUG` | Slug of the demo organization. | slug string | `demo` | API |
-| `LEARNHOUSE_DEMO_REFRESH_MINUTES` | Minutes between demo resets. | integer | `10` | API |
-| `LEARNHOUSE_DEMO_NO_SCHEDULER` | Turn off the built-in reset schedule, for example to run the API's `demo-sync` command from your own cron. | boolean | `false` | API |
-
 ## Code execution
 
 | Variable | Description | Type | Default / required | Used by |

@@ -187,7 +187,7 @@ const nextConfig = {
     return config
   },
   // `next dev` refuses cross-origin requests for its own chunks. A local
-  // multi-tenant run (DEMO_STACK.md) serves orgs from <slug>.lvh.me, so allow
+  // multi-tenant run serves orgs from <slug>.lvh.me, so allow
   // that family of hosts. Dev-only; ignored by `next build`/`next start`.
   allowedDevOrigins: ['lvh.me', '*.lvh.me'],
   output: 'standalone',

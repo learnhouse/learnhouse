@@ -40,7 +40,7 @@ The platform consists of four applications backed by two core services:
 - **Collab (Hocuspocus)**: A WebSocket server that powers real-time collaboration on [boards](/platform/boards), with JWT authentication, Redis persistence and per-board seat limits.
 - **CLI (Commander)**: A command-line tool that deploys and manages self-hosted instances and runs the local development environment.
 
-The API also runs background work inside its own process: AI search indexing, video transcoding to HLS (when enabled), AI captions, scheduled backfills and the demo organization reset. These jobs use Redis as their queue.
+The API also runs background work inside its own process: AI search indexing, video transcoding to HLS (when enabled), AI captions and scheduled backfills. These jobs use Redis as their queue.
 
 <ArchitectureDiagram />
 

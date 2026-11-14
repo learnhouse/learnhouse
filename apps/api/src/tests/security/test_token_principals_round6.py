@@ -213,15 +213,6 @@ class TestSuperadminTokenGates:
 
         assert resolve_acting_user_id(self._sa()) == 5
 
-    async def test_demo_enter_rejects_tokens(self, db):
-        from src.routers.demo import enter_demo
-
-        with patch("src.routers.demo.flags.demo_enabled", return_value=True):
-            for principal in (self._sa(), _token()):
-                with pytest.raises(HTTPException) as exc:
-                    await enter_demo(db_session=db, current_user=principal)
-                assert exc.value.status_code == 403
-
     async def test_my_certificate_routes_reject_tokens(self):
         import inspect
         from src.routers.courses import certifications as router
