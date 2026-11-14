@@ -80,6 +80,9 @@ export type CourseAction =
   | { type: 'setCourseStructure'; payload: any }
   | { type: 'setCourseOrder'; payload: any }
   | { type: 'updateField'; payload: { field: string; value: any } } // New: granular field update
+  // Server-confirmed change (publish toggle, rename already saved): update the
+  // structure without marking anything unsaved.
+  | { type: 'patchStructure'; payload: Partial<any> }
   | { type: 'mergePendingChanges'; payload: Partial<any> } // New: merge pending changes
   | { type: 'setUnsyncedChanges'; payload: Partial<any> } // Immediate changes buffer
   | { type: 'clearUnsyncedChanges' }
@@ -100,6 +103,13 @@ export function CourseProvider({
   courseuuid,
   withUnpublishedActivities = false,
   initialCourseStructure,
+  // Shown instead of the children when the course is gone (404), for
+  // example deleted in another tab while this editor was open.
+  notFoundFallback,
+  // Learner pages: the content language list (useContentLanguage), so the
+  // structure (chapter/activity names) comes in the language being read.
+  // Editors never pass it and keep the source texts.
+  lang,
 }: any) {
   const { t } = useTranslation()
   const session = useLHSession() as any
@@ -118,7 +128,7 @@ export function CourseProvider({
   // queryKeys.courses.meta so invalidations from save actions land correctly.
   const queryKey = withUnpublishedActivities
     ? ['course', cleanUuid, 'meta', 'withUnpublished']
-    : queryKeys.courses.meta(cleanUuid)
+    : queryKeys.courses.meta(cleanUuid, lang || undefined)
 
   const { data: courseStructureData, error } = useQuery({
     queryKey,
@@ -126,7 +136,7 @@ export function CourseProvider({
       cleanUuid,
       {},
       access_token,
-      withUnpublishedActivities ? { withUnpublishedActivities: true } : { slim: true }
+      withUnpublishedActivities ? { withUnpublishedActivities: true } : { slim: true, lang: lang || undefined }
     ),
     enabled: session?.status !== 'loading',
     staleTime: 60_000,
@@ -193,6 +203,9 @@ export function CourseProvider({
   // error (network, 500) we show a subtle inline message.
   if (error) {
     const status = (error as any)?.status
+    if (status === 404 && notFoundFallback) {
+      return <>{notFoundFallback}</>
+    }
     if (status === 403 || status === 404) {
       // Still render the provider so children can call useCourse() without throwing;
       // they'll see isLoading:false and courseStructure as the stub, and the parent
@@ -305,6 +318,12 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
           [action.payload.field]: action.payload.value,
         },
         isSaved: false,
+      }
+
+    case 'patchStructure':
+      return {
+        ...state,
+        courseStructure: { ...state.courseStructure, ...action.payload },
       }
 
     case 'mergePendingChanges': {

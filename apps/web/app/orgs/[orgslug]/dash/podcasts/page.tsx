@@ -1,8 +1,6 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import React from 'react'
-import { getServerSession } from '@/lib/auth/server'
-import { getOrgPodcasts } from '@services/podcasts/podcasts'
 import PodcastsDashClient from './client'
 
 type MetadataProps = {
@@ -27,35 +25,17 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   }
 }
 
+// The list loads on the client (React Query), not here: a server fetch made
+// every visit wait on the API before the page could even start to show, and
+// its result could not be reused across visits.
 async function PodcastsDashPage(params: any) {
   const orgslug = (await params.params).orgslug
   const org = await getOrganizationContextInfo(orgslug, {
     revalidate: 120,
     tags: ['organizations'],
   })
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
 
-  let podcasts = []
-  try {
-    podcasts = await getOrgPodcasts(
-      orgslug,
-      { revalidate: 0, tags: ['podcasts'] },
-      access_token ? access_token : undefined,
-      true // include_unpublished for dashboard
-    )
-  } catch (error) {
-    console.error('Failed to fetch podcasts:', error)
-    podcasts = []
-  }
-
-  return (
-    <PodcastsDashClient
-      org_id={org.id}
-      orgslug={orgslug}
-      podcasts={podcasts || []}
-    />
-  )
+  return <PodcastsDashClient org_id={org.id} orgslug={orgslug} />
 }
 
 export default PodcastsDashPage

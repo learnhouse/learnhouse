@@ -13,6 +13,7 @@ from src.db.communities.discussions import (
     DiscussionUpdate,
     DiscussionPinUpdate,
     DiscussionLockUpdate,
+    DiscussionAnswerUpdate,
     DiscussionLabelInfo,
     DISCUSSION_LABELS,
 )
@@ -36,6 +37,7 @@ from src.services.communities.discussions import (
     delete_discussion,
     pin_discussion,
     lock_discussion,
+    set_discussion_answer,
     DiscussionSortBy,
 )
 from src.services.communities.votes import (
@@ -53,6 +55,10 @@ from src.services.communities.comments import (
 from src.services.communities.comment_votes import (
     upvote_comment,
     remove_comment_upvote,
+)
+from src.services.communities.activity import (
+    DiscussionActivity,
+    get_community_discussions_activity,
 )
 from src.services.communities.reactions import (
     get_reactions,
@@ -189,6 +195,32 @@ async def api_get_discussions_by_community(
 
 
 @router.get(
+    "/communities/{community_uuid}/discussions/activity",
+    response_model=List[DiscussionActivity],
+    summary="Reply activity for a community's discussions",
+    description="Return the reply count and latest reply date of every discussion in a community, in one call. Same access as listing the community's discussions.",
+    responses={
+        200: {"description": "Activity per discussion.", "model": List[DiscussionActivity]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User does not have access to this community"},
+        404: {"description": "Community not found"},
+    },
+)
+async def api_get_community_discussions_activity(
+    request: Request,
+    community_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> List[DiscussionActivity]:
+    """
+    Reply count and last reply date per discussion of a community.
+    """
+    return await get_community_discussions_activity(
+        request, community_uuid, current_user, db_session
+    )
+
+
+@router.get(
     "/discussions/{discussion_uuid}",
     response_model=DiscussionReadWithVoteStatus,
     summary="Get a discussion",
@@ -292,6 +324,33 @@ async def api_lock_discussion(
     """
     return await lock_discussion(
         request, discussion_uuid, lock_data.is_locked, current_user, db_session
+    )
+
+
+@router.put(
+    "/discussions/{discussion_uuid}/answer",
+    response_model=DiscussionReadWithVoteStatus,
+    summary="Mark or clear the answer of a discussion",
+    description="Mark one reply of the discussion as its answer, or clear it with a null comment_uuid. Allowed for the discussion author (while they may still post) and community moderators.",
+    responses={
+        200: {"description": "Answer updated.", "model": DiscussionReadWithVoteStatus},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is neither the author nor a moderator"},
+        404: {"description": "Discussion or reply not found"},
+    },
+)
+async def api_set_discussion_answer(
+    request: Request,
+    discussion_uuid: str,
+    answer_data: DiscussionAnswerUpdate,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> DiscussionReadWithVoteStatus:
+    """
+    Mark or clear the accepted answer of a discussion.
+    """
+    return await set_discussion_answer(
+        request, discussion_uuid, answer_data.comment_uuid, current_user, db_session
     )
 
 

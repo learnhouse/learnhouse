@@ -10,13 +10,16 @@ type MetadataProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-const VALID_SUBPAGES = ['general', 'profile', 'security', 'purchases', 'ai-apps']
+const VALID_SUBPAGES = ['general', 'profile', 'security', 'notifications', 'appearance', 'notes', 'purchases', 'ai-apps']
 
 const getSubpageTitle = (subpage: string): string => {
   const titles: Record<string, string> = {
-    'general': 'General Settings',
-    'profile': 'Profile Builder',
+    'general': 'Profile',
+    'profile': 'Profile',
     'security': 'Security',
+    'notifications': 'Notifications',
+    'appearance': 'Appearance',
+    'notes': 'My notes',
     'purchases': 'Purchases',
     'ai-apps': 'AI apps',
   }
@@ -70,6 +73,12 @@ const AccountSubPage = async (props: { params: Promise<{ orgslug: string; subpag
   // Redirect to general if invalid subpage
   if (!VALID_SUBPAGES.includes(params.subpage)) {
     redirect('/account/general')
+  }
+
+  // The public profile builder is now the second sub-tab of the Profile
+  // section; keep the old URL working (header menu, search, bookmarks).
+  if (params.subpage === 'profile') {
+    redirect('/account/general?section=public')
   }
 
   const org = await getOrganizationContextInfo(params.orgslug, {

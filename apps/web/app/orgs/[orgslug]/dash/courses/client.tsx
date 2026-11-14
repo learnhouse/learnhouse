@@ -1,413 +1,292 @@
 'use client'
-import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
-import CourseCreationTypeSelector from '@components/Objects/Modals/Course/Create/CourseCreationTypeSelector'
-import AICourseCreationModal from '@components/Objects/Modals/Course/Create/AICourse/AICourseCreationModal'
-import { BookCopy, Search, X, Trash2, Users, Info } from 'lucide-react'
-import ScormCourseImport from '@ee/components/Modals/ScormCourseImport'
-import { ImportTypeSelector, LearnHouseCourseImport, LmsCourseImport } from '@components/Objects/Modals/Course/Import'
-import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
-import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { useSearchParams, useRouter } from 'next/navigation'
-import React, { useState, useMemo } from 'react'
-import useAdminStatus from '@components/Hooks/useAdminStatus'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { Download, Copy } from 'lucide-react'
+import React, { useDeferredValue, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
-import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { ArrowsDownUp, Books, CheckCircle, Copy, DownloadSimple, Eye, EyeSlash, Tray, Lock, Plus, Trash, Users } from '@phosphor-icons/react'
+import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY_SM,
+  BulkActionBar,
+  BulkActionButton,
+  ConfirmDialog,
+  DashPageHeader,
+  EmptyState,
+  SearchInput,
+  SegmentedControl,
+  StatCard,
+  ToolbarSelect,
+  ViewToggle,
+  useStoredState,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { getAPIUrl } from '@services/config/config'
+import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
+import { cloneCourse, deleteCourseFromBackend, getAllOrgCourses, updateCourse } from '@services/courses/courses'
 import { exportCoursesBatch, downloadBlob, ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
-import { RequestBodyWithAuthHeader, asArray } from '@services/utils/ts/requests'
+import { asArray } from '@services/utils/ts/requests'
 import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query/keys'
-import toast from 'react-hot-toast'
-import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
-import { usePlan } from '@components/Hooks/usePlan'
 import { searchMatchesAny } from '@/lib/search/normalize'
-import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
-import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
+import { queryKeys } from '@/lib/query/keys'
+import { DashCourse, runPool, usePatchCourseInCache } from './_components/courseActions'
+import {
+  COURSE_ROW_GRID,
+  COURSE_TABLE_GRID,
+  CourseCard,
+  CourseCardSkeleton,
+  CourseRow,
+  CourseRowSkeleton,
+} from './_components/courseItems'
+import CourseCreationModals from './_components/CourseCreationModals'
 
-type CourseProps = {
-  orgslug: string
+type StatusFilter = 'all' | 'published' | 'drafts'
+type VisibilityFilter = 'all' | 'public' | 'private'
+type SortKey = 'updated' | 'newest' | 'oldest' | 'name'
+
+const SORT_KEYS = ['updated', 'newest', 'oldest', 'name'] as const
+const VIEW_MODES = ['grid', 'list'] as const
+const PAGE_SIZE = 24
+
+const timeOf = (value?: string) => {
+  const time = value ? new Date(value).getTime() : NaN
+  return isNaN(time) ? 0 : time
 }
 
-function CoursesHome(params: CourseProps) {
-  const { t } = useTranslation()
-  const { track } = useLHAnalytics('dashboard')
+function sortCourses(courses: DashCourse[], sort: SortKey, locale: string) {
+  const sorted = [...courses]
+  switch (sort) {
+    case 'name':
+      return sorted.sort((a, b) => a.name.localeCompare(b.name, locale, { sensitivity: 'base' }))
+    case 'newest':
+      return sorted.sort((a, b) => timeOf(b.creation_date) - timeOf(a.creation_date))
+    case 'oldest':
+      return sorted.sort((a, b) => timeOf(a.creation_date) - timeOf(b.creation_date))
+    default:
+      return sorted.sort((a, b) => timeOf(b.update_date) - timeOf(a.update_date))
+  }
+}
+
+function CoursesHome({ orgslug }: { orgslug: string }) {
+  const { t, i18n } = useTranslation()
   const searchParams = useSearchParams()
-  const isCreatingCourse = searchParams.get('new') ? true : false
-  const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
-  const [importCourseModal, setImportCourseModal] = React.useState(false)
-  const [importType, setImportType] = React.useState<'select' | 'scorm' | 'learnhouse' | 'lms'>('select')
-  const [creationType, setCreationType] = React.useState<'select' | 'scratch' | 'ai'>('select')
-  const [aiCourseModalOpen, setAiCourseModalOpen] = React.useState(false)
-  const orgslug = params.orgslug
-  const { isAdmin: isUserAdmin } = useAdminStatus()
+  const queryClient = useQueryClient()
   const org = useOrg() as any
   const orgId = org?.id as number | undefined
-  const currentPlan = usePlan()
   const session = useLHSession() as any
-  const access_token = session.data?.tokens?.access_token
+  const accessToken = session?.data?.tokens?.access_token
+  const { isAdmin: isAdminStatus } = useAdminStatus()
+  const isAdmin = !!isAdminStatus
+  const patchCourses = usePatchCourseInCache(orgslug)
 
-  // Check if courses feature is enabled
-  const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
-  const queryClient = useQueryClient()
+  const isCoursesEnabled =
+    org?.config?.config?.resolved_features?.courses?.enabled ??
+    org?.config?.config?.features?.courses?.enabled !== false
 
-  // TanStack Query for courses: cached on the client, instant on return visits
-  const { data: coursesData, isLoading: isCoursesLoading } = useQuery({
-    queryKey: queryKeys.courses.list(orgslug),
-    queryFn: async () => {
-      const url = `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true`
-      const res = await fetch(url, RequestBodyWithAuthHeader('GET', null, null, access_token))
-      if (!res.ok) throw new Error('Failed to fetch courses')
-      return res.json()
-    },
-    enabled: isCoursesEnabled && !!access_token,
+  const { data: coursesData, isLoading } = useQuery({
+    queryKey: queryKeys.courses.dashAll(orgslug),
+    queryFn: () => getAllOrgCourses(orgslug, accessToken),
+    enabled: isCoursesEnabled && !!accessToken,
     staleTime: 60_000,
   })
+  const allCourses: DashCourse[] = useMemo(() => coursesData ?? [], [coursesData])
 
-  // Course count feeds the plan's usage numbers, and those drive the "limit
-  // reached" banner and the disabled New Course button. Refreshing only the list
-  // left an org that had just deleted a course still locked out of creating one
-  // until the usage query happened to go stale.
-  const mutateCourses = () => {
+  const { data: usageData } = useQuery<OrgUsageResponse>({
+    queryKey: queryKeys.org.usage(orgId!),
+    queryFn: () => orgUsageFetcher(`${getAPIUrl()}orgs/${orgId}/usage`, accessToken),
+    enabled: !!accessToken && !!orgId,
+    staleTime: 60_000,
+  })
+  const courseLimitReached = usageData?.features?.courses?.limit_reached ?? false
+  const courseLimit = usageData?.features?.courses?.limit ?? 0
+
+  // The course count feeds the plan usage numbers, which drive the "limit
+  // reached" state of the New Course button, so refresh both together.
+  const refresh = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })
     if (orgId) queryClient.invalidateQueries({ queryKey: queryKeys.org.usage(orgId) })
   }
 
-  const allCourses = coursesData ?? []
-
-  // Fetch usage limits from backend
-  const { data: usageData } = useQuery<OrgUsageResponse>({
-    queryKey: queryKeys.org.usage(orgId!),
-    queryFn: () => orgUsageFetcher(`${getAPIUrl()}orgs/${orgId}/usage`, access_token),
-    enabled: !!access_token && !!orgId,
+  // ---- usergroup filter (only when the plan includes usergroups) ----
+  const usergroupsAvailable = org?.config?.config?.resolved_features?.usergroups?.enabled ?? false
+  const [usergroupId, setUsergroupId] = useStoredState<string>('lh_course_usergroup_filter', '')
+  const { data: usergroups = [] } = useQuery({
+    queryKey: ['usergroups', orgId],
+    queryFn: async () => asArray(await getUserGroups(orgId!, accessToken)),
+    enabled: usergroupsAvailable && !!accessToken && !!orgId,
+    staleTime: 5 * 60_000,
+  })
+  // A saved group that no longer exists is ignored rather than filtering
+  // everything out.
+  const activeUsergroupId = usergroups.some((ug: any) => String(ug.id) === usergroupId) ? usergroupId : ''
+  const { data: usergroupResources } = useQuery({
+    queryKey: ['usergroups', orgId, activeUsergroupId, 'resources'],
+    queryFn: async () => new Set<string>(asArray(await getUserGroupResources(activeUsergroupId, orgId!, accessToken))),
+    enabled: !!activeUsergroupId && !!accessToken && !!orgId,
     staleTime: 60_000,
   })
 
-  // Check course creation limit from backend
-  const courseLimitReached = usageData?.features?.courses?.limit_reached ?? false
-  const courseLimit = usageData?.features?.courses?.limit ?? 0
+  // ---- filters ----
+  const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
+  const [status, setStatus] = useState<StatusFilter>('all')
+  const [visibility, setVisibility] = useState<VisibilityFilter>('all')
+  const [sort, setSort] = useStoredState<SortKey>('lh_dash_courses_sort', 'updated', SORT_KEYS)
+  const [view, setView] = useStoredState<'grid' | 'list'>('lh_dash_courses_view', 'grid', VIEW_MODES)
 
-  // Usergroup filter, shown only when the org's plan actually includes
-  // usergroups (a standard+ feature per the backend), via resolved features.
-  const usergroupsAvailable = org?.config?.config?.resolved_features?.usergroups?.enabled ?? false
-  const [usergroups, setUsergroups] = useState<any[]>([])
-  const [selectedUsergroupId, setSelectedUsergroupId] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('lh_course_usergroup_filter') || ''
+  const stats = useMemo(
+    () => ({
+      total: allCourses.length,
+      published: allCourses.filter((c) => c.published).length,
+      drafts: allCourses.filter((c) => !c.published).length,
+      private: allCourses.filter((c) => !c.public).length,
+    }),
+    [allCourses]
+  )
+
+  const filtered = useMemo(() => {
+    let list = allCourses
+    if (activeUsergroupId && usergroupResources) list = list.filter((c) => usergroupResources.has(c.course_uuid))
+    if (status === 'published') list = list.filter((c) => c.published)
+    if (status === 'drafts') list = list.filter((c) => !c.published)
+    if (visibility === 'public') list = list.filter((c) => c.public)
+    if (visibility === 'private') list = list.filter((c) => !c.public)
+    if (deferredSearch.trim()) {
+      list = list.filter((c) => searchMatchesAny([c.name, c.description, c.tags], deferredSearch))
     }
-    return ''
-  })
-  const [usergroupResourceUuids, setUsergroupResourceUuids] = useState<Set<string> | null>(null)
-  const [showUsergroupInfo, setShowUsergroupInfo] = useState(false)
+    return sortCourses(list, sort, i18n.language)
+  }, [allCourses, activeUsergroupId, usergroupResources, status, visibility, deferredSearch, sort, i18n.language])
 
-  // Fetch usergroups
-  React.useEffect(() => {
-    if (!usergroupsAvailable || !access_token || !orgId) return
-    getUserGroups(orgId, access_token)
-      .then((res: any) => {
-        const list = asArray(res)
-        setUsergroups(list)
-        // Clear saved selection if the usergroup no longer exists
-        if (selectedUsergroupId && !list.some((ug: any) => String(ug.id) === selectedUsergroupId)) {
-          setSelectedUsergroupId('')
-          localStorage.removeItem('lh_course_usergroup_filter')
-        }
-      })
-      .catch(() => setUsergroups([]))
-  }, [usergroupsAvailable, access_token, orgId])
-
-  // Fetch resource UUIDs for selected usergroup
-  React.useEffect(() => {
-    if (!selectedUsergroupId || !access_token || !orgId) {
-      setUsergroupResourceUuids(null)
-      return
-    }
-    getUserGroupResources(selectedUsergroupId, orgId, access_token)
-      .then((res: any) => {
-        const uuids = asArray(res)
-        setUsergroupResourceUuids(new Set(uuids))
-      })
-      .catch(() => setUsergroupResourceUuids(null))
-  }, [selectedUsergroupId, access_token, orgId])
-
-  const handleUsergroupChange = (value: string) => {
-    setSelectedUsergroupId(value)
-    if (value) {
-      localStorage.setItem('lh_course_usergroup_filter', value)
-    } else {
-      localStorage.removeItem('lh_course_usergroup_filter')
-    }
+  const hasActiveFilters = !!search || status !== 'all' || visibility !== 'all' || !!activeUsergroupId
+  const clearFilters = () => {
+    setSearch('')
+    setStatus('all')
+    setVisibility('all')
+    setUsergroupId('')
   }
 
-  // Search state
-  const [searchQuery, setSearchQuery] = useState('')
-
-  // Filter courses based on search and usergroup (client-side)
-  const filteredCourses = useMemo(() => {
-    let courses = allCourses
-
-    // Usergroup filter
-    if (usergroupResourceUuids) {
-      courses = courses.filter((course: any) => usergroupResourceUuids.has(course.course_uuid))
-    }
-
-    // Search filter
-    if (searchQuery.trim()) {
-      courses = courses.filter((course: any) =>
-        searchMatchesAny([course.name, course.description, course.tags], searchQuery)
-      )
-    }
-
-    return courses
-  }, [allCourses, searchQuery, usergroupResourceUuids])
-
-  const {
-    currentPage,
-    totalPages,
-    paginatedItems: paginatedCourses,
-    pageNumbers,
-    goToPage: goToCatalogPage,
-    resetPage,
-  } = useCatalogPagination(filteredCourses)
-
-  // Reset to page 1 when search or filter changes
+  const { currentPage, totalPages, paginatedItems, pageNumbers, goToPage, resetPage } = useCatalogPagination(
+    filtered,
+    PAGE_SIZE
+  )
   React.useEffect(() => {
     resetPage()
-  }, [searchQuery, selectedUsergroupId, resetPage])
+  }, [deferredSearch, status, visibility, activeUsergroupId, sort, resetPage])
 
-  // Selection state
-  const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set())
+  // ---- selection ----
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const lastToggled = React.useRef<string | null>(null)
+  // Drop selections that the filters no longer show, so bulk actions only
+  // ever touch courses the user can see.
+  const visibleSelected = useMemo(() => {
+    const visible = new Set(filtered.map((c) => c.course_uuid))
+    return new Set([...selected].filter((uuid) => visible.has(uuid)))
+  }, [selected, filtered])
+  const selectedCourses = useMemo(
+    () => filtered.filter((c) => visibleSelected.has(c.course_uuid)),
+    [filtered, visibleSelected]
+  )
 
-  async function closeNewCourseModal() {
-    setNewCourseModal(false)
-    setCreationType('select')
-    mutateCourses()
-  }
-
-  const router = useRouter()
-
-  const handleCreationTypeSelect = (type: 'scratch' | 'ai' | 'migrate') => {
-    track(AnalyticsEvent.CourseCreationTypeSelected, { creation_type: type })
-    if (type === 'ai') {
-      setNewCourseModal(false)
-      setAiCourseModalOpen(true)
-    } else if (type === 'migrate') {
-      setNewCourseModal(false)
-      router.push(getUriWithOrg(orgslug, '/dash/courses/migrate'))
-    } else {
-      setCreationType('scratch')
-    }
-  }
-
-  const closeAICourseModal = () => {
-    setAiCourseModalOpen(false)
-    setCreationType('select')
-    mutateCourses()
-  }
-
-  const getNewCourseModalContent = () => {
-    switch (creationType) {
-      case 'scratch':
-        return (
-          <CreateCourseModal
-            closeModal={closeNewCourseModal}
-            orgslug={orgslug}
-          />
-        )
-      default:
-        return <CourseCreationTypeSelector onSelectType={handleCreationTypeSelect} currentPlan={currentPlan} />
-    }
-  }
-
-  const getNewCourseModalTitle = () => {
-    switch (creationType) {
-      case 'scratch':
-        return t('dashboard.courses.create_course')
-      default:
-        return t('courses.create.choose_type')
-    }
-  }
-
-  const getNewCourseModalDescription = () => {
-    switch (creationType) {
-      case 'scratch':
-        return t('dashboard.courses.create_new_course')
-      default:
-        return t('courses.create.choose_type_description')
-    }
-  }
-
-  async function closeImportCourseModal() {
-    setImportCourseModal(false)
-    setImportType('select')
-    mutateCourses()
-  }
-
-  const handleImportTypeSelect = (type: 'scorm' | 'learnhouse' | 'lms') => {
-    setImportType(type)
-  }
-
-  const getImportModalContent = () => {
-    switch (importType) {
-      case 'scorm':
-        return (
-          <FeatureGate feature="scorm" orgslug={orgslug} context="dashboard">
-            <ScormCourseImport
-              orgId={orgId!}
-              orgslug={orgslug}
-              closeModal={closeImportCourseModal}
-            />
-          </FeatureGate>
-        )
-      case 'learnhouse':
-        return (
-          <LearnHouseCourseImport
-            orgId={orgId!}
-            orgslug={orgslug}
-            closeModal={closeImportCourseModal}
-          />
-        )
-      case 'lms':
-        return (
-          <LmsCourseImport
-            orgId={orgId!}
-            orgslug={orgslug}
-            closeModal={closeImportCourseModal}
-          />
-        )
-      default:
-        return <ImportTypeSelector onSelectType={handleImportTypeSelect} currentPlan={currentPlan} />
-    }
-  }
-
-  const getImportModalTitle = () => {
-    switch (importType) {
-      case 'scorm':
-        return t('dashboard.courses.import_scorm')
-      case 'learnhouse':
-        return t('dashboard.courses.import_learnhouse')
-      case 'lms':
-        return t('dashboard.courses.import_lms')
-      default:
-        return t('dashboard.courses.import_course')
-    }
-  }
-
-  const getImportModalDescription = () => {
-    switch (importType) {
-      case 'scorm':
-        return t('dashboard.courses.import_scorm_description')
-      case 'learnhouse':
-        return t('dashboard.courses.import_learnhouse_description')
-      case 'lms':
-        return t('dashboard.courses.import_lms_description')
-      default:
-        return t('dashboard.courses.import_select_type')
-    }
-  }
-
-  // Toggle course selection
-  const toggleCourseSelection = (courseUuid: string) => {
-    const newSelection = new Set(selectedCourses)
-    if (newSelection.has(courseUuid)) {
-      newSelection.delete(courseUuid)
-    } else {
-      newSelection.add(courseUuid)
-    }
-    setSelectedCourses(newSelection)
-  }
-
-  // Select all visible courses (on current page)
-  const selectAllCourses = () => {
-    const allCourseUuids = paginatedCourses.map((course: any) => course.course_uuid)
-    setSelectedCourses(new Set(allCourseUuids))
-  }
-
-  // Clear selection
-  const clearSelection = () => {
-    setSelectedCourses(new Set())
-  }
-
-  // Bulk delete courses
-  const bulkDeleteCourses = async () => {
-    const toastId = toast.loading(t('courses.deleting_courses', { count: selectedCourses.size }))
-    let successCount = 0
-    let errorCount = 0
-
-    for (const courseUuid of selectedCourses) {
-      try {
-        await deleteCourseFromBackend(courseUuid, access_token)
-        successCount++
-      } catch (_error) {
-        errorCount++
-      }
-    }
-
-    toast.dismiss(toastId)
-    if (errorCount === 0) {
-      toast.success(t('courses.courses_deleted_success', { count: successCount }))
-    } else {
-      toast.error(t('courses.courses_deleted_partial', { success: successCount, error: errorCount }))
-    }
-
-    clearSelection()
-    mutateCourses()
-  }
-
-  // Bulk clone courses
-  const bulkCloneCourses = async () => {
-    const toastId = toast.loading(t('courses.cloning_courses', { count: selectedCourses.size }))
-    let successCount = 0
-    let errorCount = 0
-
-    for (const courseUuid of selectedCourses) {
-      try {
-        const result = await cloneCourse(courseUuid, access_token)
-        if (result.success) {
-          successCount++
-        } else {
-          errorCount++
+  const toggleSelect = (uuid: string, shiftKey: boolean) => {
+    // Read the anchor now: the updater below runs later, after the ref moved.
+    const anchor = lastToggled.current
+    setSelected((prev) => {
+      const next = new Set(prev)
+      // Shift-click selects the whole run on the current page.
+      if (shiftKey && anchor) {
+        const uuids = paginatedItems.map((c) => c.course_uuid)
+        const from = uuids.indexOf(anchor)
+        const to = uuids.indexOf(uuid)
+        if (from !== -1 && to !== -1) {
+          const [a, b] = from < to ? [from, to] : [to, from]
+          uuids.slice(a, b + 1).forEach((u) => next.add(u))
+          return next
         }
-      } catch (_error) {
-        errorCount++
       }
-    }
+      if (next.has(uuid)) next.delete(uuid)
+      else next.add(uuid)
+      return next
+    })
+    lastToggled.current = uuid
+  }
+  const clearSelection = () => setSelected(new Set())
+  const pageUuids = paginatedItems.map((c) => c.course_uuid)
+  const pageAllSelected = pageUuids.length > 0 && pageUuids.every((u) => visibleSelected.has(u))
+  const togglePageSelection = () =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (pageAllSelected) pageUuids.forEach((u) => next.delete(u))
+      else pageUuids.forEach((u) => next.add(u))
+      return next
+    })
 
-    toast.dismiss(toastId)
-    if (errorCount === 0) {
-      toast.success(t('courses.courses_cloned_success', { count: successCount }))
+  // ---- bulk actions ----
+  const [bulkConfirm, setBulkConfirm] = useState<'delete' | 'clone' | null>(null)
+  const count = selectedCourses.length
+
+  const bulkPublish = async (published: boolean) => {
+    const uuids = selectedCourses.map((c) => c.course_uuid)
+    const rollback = patchCourses(uuids, { published })
+    const { failed } = await runPool(uuids, async (uuid) => {
+      await updateCourse(uuid, { published }, accessToken)
+      return true
+    })
+    if (failed) {
+      rollback()
+      toast.error(t('dashboard.courses.home.bulk_partial', { count: failed }))
     } else {
-      toast.error(t('courses.courses_cloned_partial', { success: successCount, error: errorCount }))
+      toast.success(
+        published
+          ? t('dashboard.courses.home.bulk_published', { count: uuids.length })
+          : t('dashboard.courses.home.bulk_unpublished', { count: uuids.length })
+      )
     }
-
     clearSelection()
-    mutateCourses()
+    refresh()
   }
 
-  // Bulk export courses
-  const bulkExportCourses = async () => {
-    const count = selectedCourses.size
-    const toastId = exportToast.start('batch', undefined, count)
+  const bulkDelete = async () => {
+    const toastId = toast.loading(t('courses.deleting_courses', { count }))
+    const { ok, failed } = await runPool(selectedCourses, async (c) => {
+      await deleteCourseFromBackend(c.course_uuid, accessToken)
+      return true
+    })
+    if (failed === 0) toast.success(t('courses.courses_deleted_success', { count: ok }), { id: toastId })
+    else toast.error(t('courses.courses_deleted_partial', { success: ok, error: failed }), { id: toastId })
+    clearSelection()
+    refresh()
+  }
 
+  const bulkClone = async () => {
+    const toastId = toast.loading(t('courses.cloning_courses', { count }))
+    const { ok, failed } = await runPool(
+      selectedCourses,
+      async (c) => !!(await cloneCourse(c.course_uuid, accessToken))?.success,
+      2
+    )
+    if (failed === 0) toast.success(t('courses.courses_cloned_success', { count: ok }), { id: toastId })
+    else toast.error(t('courses.courses_cloned_partial', { success: ok, error: failed }), { id: toastId })
+    clearSelection()
+    refresh()
+  }
+
+  const bulkExport = async () => {
+    const toastId = exportToast.start('batch', undefined, count)
     try {
       const blob = await exportCoursesBatch(
-        Array.from(selectedCourses),
-        access_token,
-        (progress, status) => {
-          exportToast.update(toastId, status as ExportStatus, progress, undefined, count, 'batch')
+        selectedCourses.map((c) => c.course_uuid),
+        accessToken,
+        (progress, exportStatus) => {
+          exportToast.update(toastId, exportStatus as ExportStatus, progress, undefined, count, 'batch')
         }
       )
-      const timestamp = new Date().toISOString().split('T')[0]
-      downloadBlob(blob, `learnhouse-courses-export-${timestamp}.zip`)
+      downloadBlob(blob, `learnhouse-courses-export-${new Date().toISOString().split('T')[0]}.zip`)
       exportToast.complete(toastId, undefined, count, 'batch')
     } catch (error: any) {
       exportToast.error(toastId, error.message || t('courses.courses_exported_error'), undefined, count, 'batch')
@@ -415,327 +294,313 @@ function CoursesHome(params: CourseProps) {
     clearSelection()
   }
 
-  // Pagination handlers
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      goToCatalogPage(page)
-      setSelectedCourses(new Set())
-    }
-  }
+  // ---- creation modals ----
+  const [createOpen, setCreateOpen] = useState(() => !!searchParams.get('new'))
 
-  if (isCoursesLoading) {
-    return (
-      <div className="h-full w-full bg-[#f8f8f8] ps-4 pe-4 sm:ps-10 sm:pe-10">
-        <div className="mb-6 pt-6 animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-32 mb-6" />
-          <div className="h-8 bg-gray-200 rounded w-48 mb-8" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                <div className="h-[131px] bg-gray-200" />
-                <div className="p-3 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const newCourseButton = (
+    <button
+      type="button"
+      onClick={() => setCreateOpen(true)}
+      disabled={courseLimitReached}
+      className={BTN_PRIMARY}
+    >
+      <Plus size={16} />
+      {t('courses.new_course')}
+    </button>
+  )
+
+  const loading = isLoading || (!coursesData && !!accessToken && isCoursesEnabled)
 
   return (
     <FeatureGate feature="courses" orgslug={orgslug} context="dashboard">
-    <div className="h-full w-full bg-[#f8f8f8] ps-4 pe-4 sm:ps-10 sm:pe-10">
-      <div className="mb-6 pt-6">
-        <Breadcrumbs items={[
-          { label: t('courses.courses'), href: '/dash/courses', icon: <BookCopy size={14} /> }
-        ]} />
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-3xl font-bold mb-3 sm:mb-0">{t('dashboard.courses.title')}</h1>
-          </div>
-          <AuthenticatedClientElement
-            checkMethod="roles"
-            action="create"
-            ressourceType="courses"
-            orgId={orgId!}
-          >
-            <div className="flex items-center space-x-2">
-              {courseLimitReached && (
-                <div className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
-                  {t('dashboard.courses.limit_reached', { limit: courseLimit })}
-                </div>
-              )}
-              <Modal
-                isDialogOpen={importCourseModal}
-                onOpenChange={(open) => {
-                  if (courseLimitReached) return
-                  setImportCourseModal(open)
-                  if (!open) setImportType('select')
-                }}
-                minHeight="no-min"
-                dialogTitle={getImportModalTitle()}
-                dialogDescription={getImportModalDescription()}
-                dialogContent={getImportModalContent()}
-                dialogTrigger={
-                  <button
-                    disabled={courseLimitReached}
-                    className={`rounded-lg bg-black transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center ${
-                      courseLimitReached ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-                    }`}
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>{t('dashboard.courses.import_course')}</span>
-                  </button>
-                }
-              />
-              <Modal
-                isDialogOpen={newCourseModal}
-                onOpenChange={(open) => {
-                  if (courseLimitReached) return
-                  setNewCourseModal(open)
-                  if (!open) setCreationType('select')
-                }}
-                minHeight={creationType === 'select' ? 'no-min' : 'md'}
-                minWidth={creationType === 'select' ? 'md' : 'lg'}
-                dialogContent={getNewCourseModalContent()}
-                dialogTitle={getNewCourseModalTitle()}
-                dialogDescription={getNewCourseModalDescription()}
-                dialogTrigger={
-                  <button disabled={courseLimitReached}>
-                    <NewCourseButton disabled={courseLimitReached} />
-                  </button>
-                }
-              />
-              <AICourseCreationModal
-                isOpen={aiCourseModalOpen}
-                onClose={closeAICourseModal}
-                orgId={orgId!}
-                orgslug={orgslug}
-                accessToken={access_token}
-              />
-            </div>
-          </AuthenticatedClientElement>
-        </div>
-      </div>
-
-      {/* Search, Usergroup Filter, and Selection Controls */}
-      {allCourses.length > 0 && (
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
-            {/* Search Input */}
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('courses.search_courses')}
-                className="w-full ps-10 pe-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute end-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Usergroup Filter */}
-            {usergroupsAvailable && usergroups.length > 0 && (
-              <div className="relative flex items-center gap-1.5">
-                <div className="relative">
-                  <Users className="absolute start-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-                  <select
-                    value={selectedUsergroupId}
-                    onChange={(e) => handleUsergroupChange(e.target.value)}
-                    className="ps-8 pe-8 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0 appearance-none cursor-pointer min-w-[160px]"
-                  >
-                    <option value="">{t('courses.usergroup_filter.all_courses')}</option>
-                    {usergroups.map((ug: any) => (
-                      <option key={ug.id} value={String(ug.id)}>
-                        {ug.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <button
-                  onClick={() => setShowUsergroupInfo(!showUsergroupInfo)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
-                >
-                  <Info className="w-3.5 h-3.5" />
-                </button>
-                {showUsergroupInfo && (
-                  <div className="absolute top-full start-0 mt-2 z-50 w-72 bg-white nice-shadow rounded-lg p-3 border border-gray-100">
-                    <p className="text-xs font-semibold text-gray-700 mb-1">{t('courses.usergroup_filter.info_title')}</p>
-                    <p className="text-xs text-gray-500 leading-relaxed">{t('courses.usergroup_filter.info_description')}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Bulk Actions - shown when items selected */}
-          {selectedCourses.size > 0 && (
-            <AuthenticatedClientElement
-              checkMethod="roles"
-              action="update"
-              ressourceType="courses"
-              orgId={orgId!}
-            >
-              <div className="flex flex-wrap items-center gap-2 sm:ms-auto">
-                <span className="text-sm font-medium text-gray-500 px-2">
-                  {t('courses.selected_count', { count: selectedCourses.size })}
-                </span>
-                <button
-                  onClick={selectAllCourses}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors"
-                >
-                  <span>{t('courses.select_all')}</span>
-                </button>
-                <button
-                  onClick={clearSelection}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  <span>{t('courses.clear_selection')}</span>
-                </button>
-                <ConfirmationModal
-                  confirmationButtonText={t('courses.clone_selected')}
-                  confirmationMessage={t('courses.clone_selected_confirm', { count: selectedCourses.size })}
-                  dialogTitle={t('courses.clone_courses_title')}
-                  dialogTrigger={
-                    <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors">
-                      <Copy className="w-4 h-4" />
-                      <span>{t('courses.clone_selected')}</span>
-                    </button>
-                  }
-                  functionToExecute={bulkCloneCourses}
-                  status="info"
+      <div className="flex w-full">
+        <div className="px-4 sm:px-10 pb-24 flex flex-col gap-5 w-full min-w-0">
+          <DashPageHeader
+            breadcrumbs={[{ label: t('courses.courses'), href: '/dash/courses', icon: <Books size={14} /> }]}
+            title={t('dashboard.courses.title')}
+            subtitle={t('dashboard.courses.home.subtitle')}
+            actions={
+              <AuthenticatedClientElement checkMethod="roles" action="create" ressourceType="courses" orgId={orgId!}>
+                <CourseCreationModals
+                  orgslug={orgslug}
+                  orgId={orgId!}
+                  open={createOpen}
+                  onOpenChange={setCreateOpen}
+                  limitReached={courseLimitReached}
+                  limit={courseLimit}
+                  onCreated={refresh}
+                  newCourseButton={newCourseButton}
                 />
-                <button
-                  onClick={bulkExportCourses}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>{t('courses.export_selected')}</span>
-                </button>
-                <ConfirmationModal
-                  confirmationButtonText={t('courses.delete_selected')}
-                  confirmationMessage={t('courses.delete_selected_confirm', { count: selectedCourses.size })}
-                  dialogTitle={t('courses.delete_courses_title')}
-                  dialogTrigger={
-                    <button className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 bg-white nice-shadow rounded-lg transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                      <span>{t('courses.delete_selected')}</span>
-                    </button>
-                  }
-                  functionToExecute={bulkDeleteCourses}
-                  status="warning"
-                />
-              </div>
-            </AuthenticatedClientElement>
-          )}
-        </div>
-      )}
-
-      {/* Search Results Info */}
-      {searchQuery && (
-        <div className="mb-4 text-sm text-gray-500">
-          {t('courses.search_results', { count: filteredCourses.length, query: searchQuery })}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {paginatedCourses.map((course: any) => (
-          <CourseThumbnail
-            key={course.course_uuid}
-            customLink={`/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`}
-            course={course}
-            orgslug={orgslug}
-            isDashboard={true}
-            isSelected={selectedCourses.has(course.course_uuid)}
-            onToggleSelect={toggleCourseSelection}
+              </AuthenticatedClientElement>
+            }
           />
-        ))}
-        {filteredCourses.length === 0 && searchQuery && (
-          <div className="col-span-full flex justify-center items-center py-8">
-            <div className="text-center">
-              <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-600 mb-2">
-                {t('courses.no_search_results')}
-              </h2>
-              <p className="text-gray-400">
-                {t('courses.try_different_search')}
-              </p>
+
+          {/* Stats double as quick filters */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <StatCard
+              icon={<Books size={16} />}
+              iconClass="bg-neutral-100 text-neutral-600"
+              label={t('dashboard.courses.home.stats.total')}
+              value={loading ? null : stats.total}
+              active={!hasActiveFilters}
+              onClick={clearFilters}
+            />
+            <StatCard
+              icon={<CheckCircle size={16} />}
+              iconClass="bg-emerald-50 text-emerald-600"
+              label={t('dashboard.courses.home.stats.published')}
+              value={loading ? null : stats.published}
+              active={status === 'published'}
+              onClick={() => setStatus(status === 'published' ? 'all' : 'published')}
+            />
+            <StatCard
+              icon={<EyeSlash size={16} />}
+              iconClass="bg-amber-50 text-amber-600"
+              label={t('dashboard.courses.home.stats.drafts')}
+              value={loading ? null : stats.drafts}
+              active={status === 'drafts'}
+              onClick={() => setStatus(status === 'drafts' ? 'all' : 'drafts')}
+            />
+            <StatCard
+              icon={<Lock size={16} />}
+              iconClass="bg-violet-50 text-violet-600"
+              label={t('dashboard.courses.home.stats.private')}
+              value={loading ? null : stats.private}
+              active={visibility === 'private'}
+              onClick={() => setVisibility(visibility === 'private' ? 'all' : 'private')}
+            />
+          </div>
+
+          {/* Toolbar */}
+          <div className="flex flex-col xl:flex-row gap-3 xl:items-center">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder={t('courses.search_courses')}
+              className="xl:max-w-md"
+            />
+            <div className="flex flex-wrap items-center gap-2 xl:ms-auto">
+              <SegmentedControl<StatusFilter>
+                value={status}
+                onChange={setStatus}
+                ariaLabel={t('dashboard.courses.home.status_filter')}
+                options={[
+                  { key: 'all', label: t('dashboard.courses.home.filters.all') },
+                  { key: 'published', label: t('dashboard.courses.home.filters.published') },
+                  { key: 'drafts', label: t('dashboard.courses.home.filters.drafts') },
+                ]}
+              />
+              <ToolbarSelect
+                value={visibility}
+                onChange={(v) => setVisibility(v as VisibilityFilter)}
+                ariaLabel={t('dashboard.courses.home.visibility_filter')}
+                options={[
+                  { value: 'all', label: t('dashboard.courses.home.filters.any_visibility') },
+                  { value: 'public', label: t('courses.public') },
+                  { value: 'private', label: t('courses.private') },
+                ]}
+              />
+              {usergroupsAvailable && usergroups.length > 0 && (
+                <ToolbarSelect
+                  value={activeUsergroupId}
+                  onChange={setUsergroupId}
+                  ariaLabel={t('courses.usergroup_filter.info_title')}
+                  icon={<Users size={14} />}
+                  options={[
+                    { value: '', label: t('courses.usergroup_filter.all_courses') },
+                    ...usergroups.map((ug: any) => ({ value: String(ug.id), label: ug.name })),
+                  ]}
+                />
+              )}
+              <ToolbarSelect
+                value={sort}
+                onChange={(v) => setSort(v as SortKey)}
+                ariaLabel={t('dashboard.courses.home.sort_label')}
+                icon={<ArrowsDownUp size={14} />}
+                options={[
+                  { value: 'updated', label: t('dashboard.courses.home.sort.updated') },
+                  { value: 'newest', label: t('dashboard.courses.home.sort.newest') },
+                  { value: 'oldest', label: t('dashboard.courses.home.sort.oldest') },
+                  { value: 'name', label: t('dashboard.courses.home.sort.name') },
+                ]}
+              />
+              <ViewToggle value={view} onChange={setView} />
             </div>
           </div>
-        )}
-        {allCourses.length === 0 && !searchQuery && (
-          <div className="col-span-full flex justify-center items-center py-8">
-            <div className="text-center">
-              <div className="mb-4">
-                <svg
-                  width="120"
-                  height="120"
-                  viewBox="0 0 295 295"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="mx-auto"
-                >
-                  {/* ... SVG content ... */}
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-600 mb-2">
-                {t('dashboard.courses.no_courses')}
-              </h2>
-              <p className="text-lg text-gray-400">
-                {isUserAdmin ? (
-                  t('dashboard.courses.create_course_placeholder')
-                ) : (
-                  t('dashboard.courses.no_courses_available')
-                )}
-              </p>
-              {isUserAdmin && !courseLimitReached && (
-                <div className="mt-6">
-                  <AuthenticatedClientElement
-                    action="create"
-                    ressourceType="courses"
-                    checkMethod="roles"
-                    orgId={orgId!}
-                  >
-                    <button onClick={() => setNewCourseModal(true)}>
-                      <NewCourseButton />
-                    </button>
-                  </AuthenticatedClientElement>
-                </div>
+
+          {/* Results line */}
+          {!loading && allCourses.length > 0 && (
+            <div className="flex items-center justify-between gap-3 -mt-1 text-xs text-neutral-500">
+              <span className="tabular-nums">
+                {t('dashboard.courses.home.showing_count', { shown: filtered.length, total: allCourses.length })}
+              </span>
+              {hasActiveFilters && (
+                <button type="button" onClick={clearFilters} className="font-semibold text-neutral-700 hover:text-neutral-900">
+                  {t('dashboard.courses.home.clear_filters')}
+                </button>
               )}
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Content */}
+          {loading ? (
+            view === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <CourseCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl nice-shadow overflow-hidden divide-y divide-neutral-100">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <CourseRowSkeleton key={i} />
+                ))}
+              </div>
+            )
+          ) : filtered.length === 0 ? (
+            <div className="bg-white rounded-2xl nice-shadow">
+              {hasActiveFilters ? (
+                <EmptyState
+                  icon={<Tray size={22} />}
+                  title={t('courses.no_search_results')}
+                  description={t('courses.try_different_search')}
+                  action={
+                    <button type="button" onClick={clearFilters} className={BTN_SECONDARY_SM}>
+                      {t('dashboard.courses.home.clear_filters')}
+                    </button>
+                  }
+                />
+              ) : (
+                <EmptyState
+                  icon={<Books size={22} />}
+                  title={t('dashboard.courses.no_courses')}
+                  description={
+                    isAdmin ? t('dashboard.courses.create_course_placeholder') : t('dashboard.courses.no_courses_available')
+                  }
+                  action={
+                    isAdmin && !courseLimitReached ? (
+                      <AuthenticatedClientElement checkMethod="roles" action="create" ressourceType="courses" orgId={orgId!}>
+                        <div className="mt-1">{newCourseButton}</div>
+                      </AuthenticatedClientElement>
+                    ) : undefined
+                  }
+                />
+              )}
+            </div>
+          ) : view === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {paginatedItems.map((course) => (
+                <CourseCard
+                  key={course.course_uuid}
+                  course={course}
+                  orgslug={orgslug}
+                  orgUuid={org?.org_uuid}
+                  selected={visibleSelected.has(course.course_uuid)}
+                  selectable={isAdmin}
+                  onToggleSelect={toggleSelect}
+                  onChanged={refresh}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={`bg-white rounded-2xl nice-shadow overflow-hidden ${COURSE_TABLE_GRID}`}>
+              <div className={`hidden ${COURSE_ROW_GRID} px-5 py-3 border-b border-neutral-100 text-xs font-medium text-neutral-500`}>
+                <span className="flex items-center">
+                  {isAdmin ? (
+                    <input
+                      type="checkbox"
+                      checked={pageAllSelected}
+                      onChange={togglePageSelection}
+                      aria-label={t('courses.select_all')}
+                      className="w-4 h-4 rounded border-neutral-300 accent-neutral-900 cursor-pointer"
+                    />
+                  ) : (
+                    <span className="w-5" />
+                  )}
+                </span>
+                <span>{t('dashboard.courses.home.columns.course')}</span>
+                <span>{t('common.status')}</span>
+                <span>{t('dashboard.courses.home.columns.visibility')}</span>
+                <span>{t('dashboard.courses.home.columns.authors')}</span>
+                <span>{t('dashboard.courses.home.columns.updated')}</span>
+                <span className="sr-only">{t('courses.actions')}</span>
+              </div>
+              <ul className={`divide-y divide-neutral-100 ${COURSE_ROW_GRID}`}>
+                {paginatedItems.map((course) => (
+                  <CourseRow
+                    key={course.course_uuid}
+                    course={course}
+                    orgslug={orgslug}
+                    orgUuid={org?.org_uuid}
+                    selected={visibleSelected.has(course.course_uuid)}
+                    selectable={isAdmin}
+                    onToggleSelect={toggleSelect}
+                    onChanged={refresh}
+                  />
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <CatalogPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageNumbers={pageNumbers}
+            onPageChange={(page) => page >= 1 && page <= totalPages && goToPage(page)}
+            previousLabel={t('pagination.previous')}
+            nextLabel={t('pagination.next')}
+            className="mt-2"
+          />
+        </div>
       </div>
 
-      <CatalogPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        pageNumbers={pageNumbers}
-        onPageChange={goToPage}
-        previousLabel={t('pagination.previous')}
-        nextLabel={t('pagination.next')}
-        className="mt-8 mb-6"
-      />
+      <AuthenticatedClientElement checkMethod="roles" action="update" ressourceType="courses" orgId={orgId!}>
+        <BulkActionBar
+          count={count}
+          label={t('courses.selected_count', { count })}
+          onClear={clearSelection}
+        >
+          {count < filtered.length && (
+            <BulkActionButton
+              icon={<CheckCircle size={14} />}
+              label={t('dashboard.courses.home.select_all_count', { count: filtered.length })}
+              onClick={() => setSelected(new Set(filtered.map((c) => c.course_uuid)))}
+            />
+          )}
+          <BulkActionButton icon={<Eye size={14} />} label={t('dashboard.courses.home.publish')} onClick={() => bulkPublish(true)} />
+          <BulkActionButton
+            icon={<EyeSlash size={14} />}
+            label={t('dashboard.courses.home.unpublish')}
+            onClick={() => bulkPublish(false)}
+          />
+          <BulkActionButton icon={<Copy size={14} />} label={t('courses.clone_selected')} onClick={() => setBulkConfirm('clone')} />
+          <BulkActionButton icon={<DownloadSimple size={14} />} label={t('courses.export_selected')} onClick={bulkExport} />
+          <BulkActionButton
+            icon={<Trash size={14} />}
+            label={t('courses.delete_selected')}
+            onClick={() => setBulkConfirm('delete')}
+            danger
+          />
+        </BulkActionBar>
+      </AuthenticatedClientElement>
 
-      {/* Pagination info */}
-      {totalPages > 1 && (
-        <div className="mb-6 text-center text-sm text-gray-500">
-          {t('pagination.showing_page', { current: currentPage, total: totalPages })}
-        </div>
-      )}
-    </div>
+      <ConfirmDialog
+        open={bulkConfirm === 'delete'}
+        onOpenChange={(open) => !open && setBulkConfirm(null)}
+        title={t('courses.delete_courses_title')}
+        message={t('courses.delete_selected_confirm', { count })}
+        confirmLabel={t('courses.delete_selected')}
+        onConfirm={bulkDelete}
+      />
+      <ConfirmDialog
+        open={bulkConfirm === 'clone'}
+        onOpenChange={(open) => !open && setBulkConfirm(null)}
+        title={t('courses.clone_courses_title')}
+        message={t('courses.clone_selected_confirm', { count })}
+        confirmLabel={t('courses.clone_selected')}
+        tone="info"
+        onConfirm={bulkClone}
+      />
     </FeatureGate>
   )
 }

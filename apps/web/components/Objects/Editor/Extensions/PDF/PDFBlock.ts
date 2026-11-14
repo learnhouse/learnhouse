@@ -1,6 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import dynamic from 'next/dynamic'
+import { PDF_EXTRA_ATTRS } from '../../Blocks/schema/blockAttrs'
 
 const PDFBlockComponent = dynamic(() => import('./PDFBlockComponent'), {
   ssr: false,
@@ -21,6 +22,8 @@ export default Node.create({
       pdfHeight: {
         default: null,
       },
+      // Added by the blocks redesign; optional, defaults keep old content as-is.
+      ...PDF_EXTRA_ATTRS,
     }
   },
 

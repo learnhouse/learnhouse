@@ -1,5 +1,5 @@
 import json
-from typing import Optional, TYPE_CHECKING
+from typing import Literal, Optional, TYPE_CHECKING
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlmodel import Field, SQLModel
@@ -98,6 +98,28 @@ class UserRead(UserBase):
     last_login_at: Optional[str] = None
     signup_method: Optional[str] = None
     is_superadmin: bool = False
+    # The signed-in user's own interface choices (theme…), see UserPreferences.
+    ui_preferences: Optional[dict] = None
+
+
+UiTheme = Literal["light", "dark"]
+
+
+class UserPreferences(BaseModel):
+    """Interface preferences that follow the user across browsers and devices.
+
+    Only what the client may set is modelled; unknown keys in the stored blob
+    are ignored on read. ``theme`` is None until the user picks one (the web
+    app then keeps the per-browser choice, light by default).
+    """
+
+    theme: Optional[UiTheme] = None
+
+
+class UserPreferencesUpdate(BaseModel):
+    """A partial update: only the fields sent are changed."""
+
+    theme: Optional[UiTheme] = None
 
 
 class UserReadPublic(SQLModel):
@@ -189,6 +211,9 @@ class UserRoleWithOrg(BaseModel):
 class UserSession(BaseModel):
     user: UserRead
     roles: list[UserRoleWithOrg]
+    # Set only while an impersonation acts as this user: who, in
+    # which org, in which mode, until when (drives the web app's banner).
+    impersonation: Optional[dict] = None
 
 
 class AnonymousUser(SQLModel):
@@ -248,6 +273,9 @@ class User(UserBase, table=True):
     signup_method: Optional[str] = None
     is_superadmin: bool = Field(default=False)
     password_changed_at: Optional[datetime] = Field(default=None)
+    # Interface preferences (UserPreferences); kept out of UserBase so the
+    # profile update endpoint can't write it.
+    ui_preferences: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
     creation_date: str = ""
     update_date: str = ""
 

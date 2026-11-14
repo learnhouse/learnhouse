@@ -209,8 +209,15 @@ async def is_org_mfa_blocking(db_session: AsyncSession, user_id: int, org_id: in
 
         # Most orgs don't require 2FA. The policy read is shared with the
         # auth-method gate, so checking it first skips the user lookup for them.
+        from src.security.impersonation import current_impersonation
+
+        impersonation = current_impersonation()
+        # An impersonation acts for a member who never signed in here: their
+        # second factor is not the one being proven (the impersonator's own
+        # sign-in is), so the org's 2FA requirement can't apply to it.
+        supported = impersonation is not None and impersonation.target_user_id == user_id
         policy = await get_org_mfa_policy(db_session, org_id)
-        if policy.require_2fa and not await is_user_superadmin(user_id, db_session):
+        if policy.require_2fa and not supported and not await is_user_superadmin(user_id, db_session):
             user = (
                 await db_session.execute(select(User).where(User.id == user_id))
             ).scalars().first()

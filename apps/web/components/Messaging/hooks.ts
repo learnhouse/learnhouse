@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getOrgCourses } from '@services/courses/courses'
+import { getAllOrgCourses } from '@services/courses/courses'
 import {
   getBroadcastTargets,
   getDirectory,
@@ -63,9 +63,8 @@ export function useOrgCourses(orgslug: string, enabledFlag = true) {
   return useQuery({
     queryKey: ['messaging', 'org-courses', orgslug],
     queryFn: async () => {
-      const res = await getOrgCourses(orgslug, null, token)
-      const list = Array.isArray(res) ? res : res?.courses || res?.data || []
-      return list as OrgCourse[]
+      const res = await getAllOrgCourses(orgslug, token, false)
+      return (Array.isArray(res) ? res : []) as OrgCourse[]
     },
     enabled: enabledFlag && Boolean(orgslug && token),
     staleTime: 5 * 60_000,

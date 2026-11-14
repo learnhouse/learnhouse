@@ -460,6 +460,31 @@ WEBHOOK_EVENTS: dict[str, dict] = {
             "access": {"access_uuid": "string", "status": "string", "source": "string"},
         },
     },
+    # ── Newsletter ───────────────────────────────────────────────────
+    "newsletter_subscribed": {
+        "category": "Newsletter",
+        "description": "Triggered when an address joins a newsletter: a confirmed signup, a member opting in, an import, or a purchase",
+        "data_schema": {
+            "newsletter": {"newsletter_uuid": "string", "name": "string"},
+            "subscriber": {"subscriber_uuid": "string", "email": "string", "user_uuid": "string|null", "source": "string"},
+        },
+    },
+    "newsletter_unsubscribed": {
+        "category": "Newsletter",
+        "description": "Triggered when a subscriber leaves a newsletter: an unsubscribe, a bounce, a spam complaint, or an ended purchase",
+        "data_schema": {
+            "newsletter": {"newsletter_uuid": "string", "name": "string"},
+            "subscriber": {"subscriber_uuid": "string", "email": "string", "user_uuid": "string|null", "reason": "string"},
+        },
+    },
+    "newsletter_campaign_sent": {
+        "category": "Newsletter",
+        "description": "Triggered when a campaign has finished sending to its whole audience",
+        "data_schema": {
+            "newsletter": {"newsletter_uuid": "string", "name": "string"},
+            "campaign": {"campaign_uuid": "string", "subject": "string", "recipients": "integer", "sent": "integer", "skipped": "integer"},
+        },
+    },
 }
 
 

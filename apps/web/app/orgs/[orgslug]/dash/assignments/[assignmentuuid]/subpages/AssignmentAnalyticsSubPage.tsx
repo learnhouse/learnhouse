@@ -6,23 +6,7 @@ import { getUserAvatarMediaDirectory } from '@services/media/media';
 import { apiFetch } from '@services/utils/ts/requests';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
-import {
-    Activity,
-    Award,
-    BarChart3,
-    CheckCircle2,
-    ChevronsUp,
-    Clock,
-    Flame,
-    LineChart as LineChartIcon,
-    Medal,
-    MessagesSquare,
-    Minus,
-    Sparkles,
-    Target,
-    TrendingUp,
-    Trophy,
-} from 'lucide-react';
+import { Pulse, SealCheck, ChartBar, CheckCircle, CaretDoubleUp, Clock, Fire, ChartLine, Medal, ChatsCircle, Minus, Sparkle, Target, TrendUp, Trophy } from '@phosphor-icons/react'
 import React, { useMemo } from 'react';
 import {
     Area,
@@ -38,6 +22,7 @@ import {
     YAxis,
 } from 'recharts';
 import { useTranslation } from 'react-i18next';
+import { EmptyState, SectionCard } from '@components/Dashboard/Shared/DashKit/DashKit';
 
 type Submission = {
     assignmentusersubmission_uuid: string;
@@ -290,7 +275,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                     {/* Charts skeleton */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                         {[1, 2].map((i) => (
-                            <div key={i} className="bg-white nice-shadow rounded-xl p-4 h-64" />
+                            <div key={i} className="bg-white nice-shadow rounded-2xl p-4 h-64" />
                         ))}
                     </div>
                 </div>
@@ -301,12 +286,14 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
     if (isEmpty) {
         return (
             <div className="flex flex-col w-full min-w-0 lg:h-full">
-                <div className="flex flex-col items-center justify-center h-full py-16 px-6 text-gray-400 gap-3">
-                    <div className="bg-gray-100 rounded-2xl p-4">
-                        <BarChart3 size={28} />
+                <div className="px-4 sm:px-6 lg:px-10 pt-5 sm:pt-6 pb-10">
+                    <div className="bg-white nice-shadow rounded-2xl">
+                        <EmptyState
+                            icon={<ChartBar size={22} />}
+                            title={t('dashboard.assignments.analytics.empty.title')}
+                            description={t('dashboard.assignments.analytics.empty.description')}
+                        />
                     </div>
-                    <p className="text-sm font-semibold">{t('dashboard.assignments.analytics.empty.title')}</p>
-                    <p className="text-xs text-gray-400 max-w-sm text-center">{t('dashboard.assignments.analytics.empty.description')}</p>
                 </div>
             </div>
         );
@@ -318,21 +305,21 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                 {/* KPI row */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <KpiCard
-                        icon={<Target size={14} className="text-indigo-600" />}
+                        icon={<Target size={16} className="text-indigo-600" />}
                         iconBg="bg-indigo-50"
                         label={t('dashboard.assignments.analytics.kpis.average')}
                         value={noGraded ? 'n/a' : avgFmt.primary}
                         sub={noGraded ? undefined : avgFmt.secondary}
                     />
                     <KpiCard
-                        icon={<Minus size={14} className="text-sky-600" />}
+                        icon={<Minus size={16} className="text-sky-600" />}
                         iconBg="bg-sky-50"
                         label={t('dashboard.assignments.analytics.kpis.median')}
                         value={noGraded ? 'n/a' : medianFmt.primary}
                         sub={noGraded ? undefined : medianFmt.secondary}
                     />
                     <KpiCard
-                        icon={<Award size={14} className="text-emerald-600" />}
+                        icon={<SealCheck size={16} className="text-emerald-600" />}
                         iconBg="bg-emerald-50"
                         label={t('dashboard.assignments.analytics.kpis.pass_rate')}
                         value={noGraded ? 'n/a' : `${Math.round(stats.passRate)}%`}
@@ -342,7 +329,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                         })}
                     />
                     <KpiCard
-                        icon={<Clock size={14} className="text-amber-600" />}
+                        icon={<Clock size={16} className="text-amber-600" />}
                         iconBg="bg-amber-50"
                         label={t('dashboard.assignments.analytics.kpis.on_time')}
                         value={stats.total === 0 ? 'n/a' : `${Math.round(stats.onTimeRate)}%`}
@@ -356,25 +343,25 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                 {/* Secondary metrics strip */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <MiniStat
-                        icon={<ChevronsUp size={12} />}
+                        icon={<CaretDoubleUp size={12} />}
                         label={t('dashboard.assignments.analytics.mini.highest')}
                         value={noGraded ? 'n/a' : formatMini(highestFmt)}
                         tone="emerald"
                     />
                     <MiniStat
-                        icon={<TrendingUp size={12} className="rotate-180" />}
+                        icon={<TrendUp size={12} className="rotate-180" />}
                         label={t('dashboard.assignments.analytics.mini.lowest')}
                         value={noGraded ? 'n/a' : formatMini(lowestFmt)}
                         tone="rose"
                     />
                     <MiniStat
-                        icon={<Activity size={12} />}
+                        icon={<Pulse size={12} />}
                         label={t('dashboard.assignments.analytics.mini.spread')}
                         value={noGraded ? 'n/a' : `${Math.round(stats.spread)}%`}
                         tone="violet"
                     />
                     <MiniStat
-                        icon={<MessagesSquare size={12} />}
+                        icon={<ChatsCircle size={12} />}
                         label={t('dashboard.assignments.analytics.mini.feedback')}
                         value={noGraded ? 'n/a' : `${Math.round(stats.feedbackRate)}%`}
                         tone="sky"
@@ -384,7 +371,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                 {/* Grade distribution + Submission timeline */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     <ChartCard
-                        icon={<BarChart3 size={14} />}
+                        icon={<ChartBar size={18} />}
                         title={t('dashboard.assignments.analytics.distribution.title')}
                         subtitle={t('dashboard.assignments.analytics.distribution.subtitle')}
                     >
@@ -416,7 +403,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                     </ChartCard>
 
                     <ChartCard
-                        icon={<LineChartIcon size={14} />}
+                        icon={<ChartLine size={18} />}
                         title={t('dashboard.assignments.analytics.timeline.title')}
                         subtitle={t('dashboard.assignments.analytics.timeline.subtitle')}
                     >
@@ -470,7 +457,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                                         type="monotone"
                                         dataKey="submitted"
                                         stroke="#6366f1"
-                                        strokeWidth={2}
+                                       
                                         fill="url(#submittedGrad)"
                                         name={t('dashboard.assignments.analytics.timeline.submitted')}
                                         dot={{ r: 3, strokeWidth: 0, fill: '#6366f1' }}
@@ -479,7 +466,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                                         type="monotone"
                                         dataKey="graded"
                                         stroke="#10b981"
-                                        strokeWidth={2}
+                                       
                                         fill="url(#gradedGrad)"
                                         name={t('dashboard.assignments.analytics.timeline.graded')}
                                         dot={{ r: 3, strokeWidth: 0, fill: '#10b981' }}
@@ -492,7 +479,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
 
                 {/* Task difficulty */}
                 <ChartCard
-                    icon={<Flame size={14} />}
+                    icon={<Fire size={18} />}
                     title={t('dashboard.assignments.analytics.tasks.title')}
                     subtitle={t('dashboard.assignments.analytics.tasks.subtitle')}
                 >
@@ -552,7 +539,7 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                 {/* Top performers + Needs attention */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     <ChartCard
-                        icon={<Trophy size={14} />}
+                        icon={<Trophy size={18} />}
                         title={t('dashboard.assignments.analytics.top.title')}
                         subtitle={t('dashboard.assignments.analytics.top.subtitle')}
                     >
@@ -574,13 +561,13 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
                     </ChartCard>
 
                     <ChartCard
-                        icon={<Sparkles size={14} />}
+                        icon={<Sparkle size={18} />}
                         title={t('dashboard.assignments.analytics.attention.title')}
                         subtitle={t('dashboard.assignments.analytics.attention.subtitle')}
                     >
                         {strugglingStudents.length === 0 ? (
                             <div className="flex items-center justify-center h-40 text-xs text-gray-400 font-medium flex-col gap-2">
-                                <CheckCircle2 size={20} className="text-emerald-400" />
+                                <CheckCircle size={20} className="text-emerald-400" />
                                 <span>{t('dashboard.assignments.analytics.attention.empty')}</span>
                             </div>
                         ) : (
@@ -618,19 +605,15 @@ function KpiCard({
     hint?: string;
 }) {
     return (
-        <div className="bg-white nice-shadow rounded-xl px-4 py-3.5 flex flex-col space-y-2">
-            <div className="flex items-center justify-between">
-                <div className={`${iconBg} rounded-lg p-1.5`}>{icon}</div>
-                {hint && (
-                    <span className="text-[9px] uppercase tracking-wider font-semibold text-gray-300">
-                        {hint}
-                    </span>
-                )}
-            </div>
-            <div>
-                <p className="text-[10px] uppercase tracking-wide font-semibold text-gray-400">{label}</p>
-                <p className="text-2xl font-bold text-gray-900 leading-tight">{value}</p>
-                {sub && <p className="text-[11px] text-gray-400 font-medium -mt-0.5">{sub}</p>}
+        <div className="bg-white nice-shadow rounded-2xl px-4 py-3.5 flex items-start gap-3 min-w-0">
+            <div className={`${iconBg} w-9 h-9 rounded-xl flex items-center justify-center shrink-0`}>{icon}</div>
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-neutral-500 truncate">{label}</p>
+                    {hint && <span className="text-[10px] font-semibold text-neutral-300">{hint}</span>}
+                </div>
+                <p className="text-xl font-bold text-neutral-900 tabular-nums leading-tight">{value}</p>
+                {sub && <p className="text-xs text-neutral-400 truncate">{sub}</p>}
             </div>
         </div>
     );
@@ -656,13 +639,13 @@ function MiniStat({
 }) {
     const style = TONE_STYLES[tone];
     return (
-        <div className={`bg-white nice-shadow rounded-xl px-3 py-2.5 flex items-center gap-2.5`}>
-            <div className={`${style.bg} ${style.text} rounded-md p-1.5 ring-1 ring-inset ${style.ring}`}>
+        <div className="bg-white nice-shadow rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 min-w-0">
+            <div className={`${style.bg} ${style.text} w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ring-1 ring-inset ${style.ring}`}>
                 {icon}
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase tracking-wide font-semibold text-gray-400 truncate">{label}</p>
-                <p className="text-sm font-bold text-gray-900 -mt-0.5 truncate">{value}</p>
+                <p className="text-xs text-neutral-500 truncate">{label}</p>
+                <p className="text-sm font-bold text-neutral-900 tabular-nums truncate">{value}</p>
             </div>
         </div>
     );
@@ -680,18 +663,9 @@ function ChartCard({
     children: React.ReactNode;
 }) {
     return (
-        <div className="bg-white nice-shadow rounded-xl p-4 flex flex-col">
-            <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                    <div className="bg-gray-100 rounded-md p-1.5 text-gray-600">{icon}</div>
-                    <div className="flex flex-col">
-                        <h3 className="text-sm font-bold text-gray-800 leading-tight">{title}</h3>
-                        {subtitle && <p className="text-[11px] text-gray-400 font-medium">{subtitle}</p>}
-                    </div>
-                </div>
-            </div>
+        <SectionCard icon={icon} title={title} description={subtitle} className="flex flex-col" bodyClassName="p-4 pt-3">
             {children}
-        </div>
+        </SectionCard>
     );
 }
 

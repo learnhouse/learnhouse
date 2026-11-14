@@ -8,6 +8,8 @@ from src.services.orgs.invites import (
     get_invite_codes,
 )
 from src.services.orgs.join import JoinOrg, join_org
+from src.services.orgs.member_enrollments import MemberEnrollmentResult, enroll_org_member
+from src.services.orgs.member_profiles import parse_attribute_filters
 from src.services.orgs.users import (
     export_organization_users_csv,
     get_list_of_invited_users,
@@ -73,6 +75,7 @@ from src.services.orgs.orgs import (
     update_org_square_logo,
 )
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
+from src.services.orgs.theme import update_org_theme_config
 from src.security.session_context import refuse_lms_session
 
 
@@ -227,6 +230,11 @@ async def api_get_org_users(
     sort_order: Optional[Literal["asc", "desc"]] = Query(default="desc", description="Sort order for join date"),
     role_id: Optional[int] = Query(default=None, description="Filter by role ID"),
     status: Optional[Literal["verified", "unverified"]] = Query(default=None, description="Filter by verification status"),
+    department: Optional[str] = Query(default=None, max_length=200, description="Filter by department (people data)"),
+    manager_id: Optional[int] = Query(default=None, description="Only this manager's direct and indirect reports"),
+    no_manager: bool = Query(default=False, description="Only members without a manager"),
+    my_reports: bool = Query(default=False, description="Only the caller's direct and indirect reports"),
+    attribute: list[str] = Query(default=[], max_length=5, description="Custom people attribute filters, as key=value"),
     current_user: PublicUser = Depends(get_authenticated_user),
     db_session: AsyncSession = Depends(get_db_session),
 ):
@@ -241,6 +249,8 @@ async def api_get_org_users(
     return await get_organization_users(
         request, org_id, db_session, current_user, page, limit, search,
         usergroup_id, usergroup_filter, sort_order or "desc", role_id, status,
+        department=department, manager_id=manager_id, no_manager=no_manager, my_reports=my_reports,
+        attributes=parse_attribute_filters(attribute),
     )
 
 
@@ -305,6 +315,36 @@ async def api_update_user_role(
     return await update_user_role(
         request, org_id, user_id, role_uuid, db_session, current_user
     )
+
+
+@router.post(
+    "/{org_id}/users/{user_id}/enrollments/{course_uuid}",
+    response_model=MemberEnrollmentResult,
+    summary="Enroll a member in a course",
+    description=(
+        "Enroll a member of the organization in one of its courses on their behalf, "
+        "from a signed-in admin or maintainer session. API tokens use the admin "
+        "enrollments endpoint instead."
+    ),
+    responses={
+        200: {"description": "Member enrolled.", "model": MemberEnrollmentResult},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an admin or maintainer of this organization"},
+        404: {"description": "User is not a member, or course not found in this organization"},
+        409: {"description": "User is already enrolled in this course"},
+    },
+)
+async def api_enroll_org_member(
+    org_id: int,
+    user_id: int,
+    course_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> MemberEnrollmentResult:
+    """
+    Enroll a member in a course
+    """
+    return await enroll_org_member(org_id, user_id, course_uuid, current_user, db_session)
 
 
 @router.delete(
@@ -787,6 +827,38 @@ async def api_update_org_font_config(
     """
     return await update_org_font_config(
         request, font, org_id, current_user, db_session
+    )
+
+
+@router.put(
+    "/{org_id}/config/theme",
+    summary="Update organization theme",
+    description=(
+        "Save the learner-facing theme in one write: brand color, body font and the "
+        "theme options (accent, header style, corner radius, heading font, button and "
+        "card style, density, background). Colors must be hex, fonts Google Fonts "
+        "family names, everything else one of the documented values."
+    ),
+    responses={
+        200: {"description": "Theme configuration updated."},
+        400: {"description": "Invalid theme, such as a non-hex color or an unknown option"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_theme_config(
+    request: Request,
+    org_id: int,
+    theme_config: dict,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Update organization theme (admin-only)
+    """
+    return await update_org_theme_config(
+        request, theme_config, org_id, current_user, db_session
     )
 
 
@@ -1623,10 +1695,15 @@ async def api_delete_org(
 
 @router.put(
     "/{org_id}/landing",
-    summary="Update organization landing page",
-    description="Update the organization's landing page content object.",
+    summary="Update organization landing page (classic format)",
+    description=(
+        "Kept for older clients. A classic landing object (`enabled`, `sections`, `settings`) is converted "
+        "into a page builder document and published as the home page; the response includes that page. "
+        "New integrations use the `/landing` routes or the landing tools."
+    ),
+    deprecated=True,
     responses={
-        200: {"description": "Landing page updated."},
+        200: {"description": "Converted and published; returns the home page."},
         401: {"description": "Not authenticated"},
         403: {"description": "Caller is not an organization administrator"},
         404: {"description": "Organization not found"},

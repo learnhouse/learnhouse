@@ -1,0 +1,70 @@
+/* Collaborative editing: other people's carets and selections. */
+
+.lh-collab-caret {
+  position: relative;
+  margin-inline: -1px;
+  border-inline-start: 2px solid var(--lh-caret);
+  pointer-events: none;
+  word-break: normal;
+}
+
+.lh-collab-caret__label {
+  position: absolute;
+  bottom: 100%;
+  inset-inline-start: -2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px 1px 2px;
+  border-radius: 6px 6px 6px 0;
+  background: var(--lh-caret);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  user-select: none;
+  /* Shown while the person types, then fades (the widget is redrawn when
+     their caret moves, which restarts the animation). */
+  animation: lh-collab-label-fade 0.35s ease-out 2.6s forwards;
+}
+
+.lh-collab-caret:hover .lh-collab-caret__label,
+.lh-collab-caret--ping .lh-collab-caret__label {
+  animation: none;
+  opacity: 1;
+}
+
+.lh-collab-caret__avatar,
+.lh-collab-caret__initials {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.lh-collab-caret__initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(255 255 255 / 0.25);
+  font-size: 8px;
+}
+
+.lh-collab-selection {
+  background-color: color-mix(in srgb, var(--lh-caret) 18%, transparent);
+  border-radius: 2px;
+}
+
+@keyframes lh-collab-label-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-collab-caret__label {
+    animation-duration: 0s;
+  }
+}

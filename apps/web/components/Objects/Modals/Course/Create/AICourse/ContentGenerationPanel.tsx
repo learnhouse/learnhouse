@@ -1,11 +1,10 @@
 'use client'
 import React from 'react'
-import { Loader2, BookOpen, FileText, Sparkles, Check, ChevronDown, ChevronRight, Play, RotateCcw } from 'lucide-react'
+import { CircleNotch, BookOpen, FileText, Check, CaretDown, CaretRight, Play, ArrowCounterClockwise } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
-import Image from 'next/image'
-import lrnaiIcon from 'public/lrnai_icon.png'
+import { AIMark } from '@components/Objects/AI/AIBrand'
 import type { CreatedChapter } from '@services/ai/courseplanning'
 import {
   generateActivityContent,
@@ -239,9 +238,9 @@ function ContentGenerationPanel({
             )}
           >
             {isAnyGenerating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <CircleNotch className="w-4 h-4 animate-spin" />
             ) : (
-              <Sparkles className="w-4 h-4" />
+              <AIMark size={16} alt="" />
             )}
             {t('courses.create.ai.generate_all')}
           </button>
@@ -261,9 +260,9 @@ function ContentGenerationPanel({
               onClick={() => toggleChapter(chapterIndex)}
             >
               {expandedChapters.has(chapterIndex) ? (
-                <ChevronDown className="w-4 h-4 text-white/50" />
+                <CaretDown className="w-4 h-4 text-white/50" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-white/50" />
+                <CaretRight className="w-4 h-4 text-white/50" />
               )}
               <BookOpen className="w-4 h-4 text-purple-400" />
               <span className="flex-1 text-sm font-medium text-white">
@@ -325,7 +324,7 @@ function ContentGenerationPanel({
                         </div>
                       ) : isGenerating ? (
                         <div className="flex items-center gap-1 text-purple-400">
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <CircleNotch className="w-4 h-4 animate-spin" />
                           <span className="text-xs">{t('courses.create.ai.generating_short')}</span>
                         </div>
                       ) : hasError ? (
@@ -338,7 +337,7 @@ function ContentGenerationPanel({
                           )}
                           className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-xs text-red-300 hover:text-red-200 transition-colors ring-1 ring-inset ring-red-500/20"
                         >
-                          <RotateCcw className="w-3 h-3" />
+                          <ArrowCounterClockwise className="w-3 h-3" />
                           {t('courses.create.ai.retry')}
                         </button>
                       ) : (

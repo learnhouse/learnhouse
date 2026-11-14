@@ -1,13 +1,16 @@
 'use client'
-import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight, ChevronDown, Trophy, Package, Puzzle, Globe, Radio } from 'lucide-react'
-import { MarkdownLogo } from '@phosphor-icons/react'
-import React, { useMemo, memo, useState, useRef, useEffect, useCallback } from 'react'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
-import { getUriWithOrg } from '@services/config/config'
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
+import { CaretDown, CaretLeft, CaretRight, Check, Flag, ListBullets, LockSimple, Trophy } from '@phosphor-icons/react'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
+import { getUriWithOrg } from '@services/config/config'
 import { useCourseCertification } from '@components/Hooks/useCourseCertification'
+import { ChapterEmoji, getChapterEmoji } from '@components/Objects/Courses/ChapterEmoji/ChapterEmoji'
+import { useCourseProgress, type ProgressActivity, type ProgressChapter } from './courseProgress'
+import { ActivityTypeGlyph, CourseOutlineList, StatusMark } from './CourseOutlineList'
 
 interface Props {
   course: any
@@ -18,299 +21,166 @@ interface Props {
   trailData?: any
 }
 
-// Helper functions
-function getActivityTypeLabel(activityType: string, t: any, activitySubType?: string): string {
-  if (activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN') return t('activities.markdown')
-  if (activitySubType === 'SUBTYPE_DYNAMIC_EMBED') return t('activities.embed')
-  switch (activityType) {
-    case 'TYPE_VIDEO':
-      return t('activities.video')
-    case 'TYPE_DOCUMENT':
-      return t('activities.document')
-    case 'TYPE_DYNAMIC':
-      return t('activities.interactive')
-    case 'TYPE_ASSIGNMENT':
-      return t('activities.assignment')
-    case 'TYPE_SCORM':
-      return t('activities.scorm')
-    case 'TYPE_LIVE_SESSION':
-      return t('activities.live_session')
-    case 'TYPE_CUSTOM':
-      return t('activities.custom')
-    default:
-      return t('common.unknown')
-  }
+// A chapter that isn't the current one, with more activities than this, is
+// drawn as one bar filled to its progress instead of one segment each, so a
+// long chapter never turns into hairlines. The current chapter always shows
+// every activity (up to MAX_SEGMENTS).
+const MAX_SEGMENTS_COLLAPSED = 12
+const MAX_SEGMENTS = 60
+// Minimum widths keep segments readable; past what fits, the track scrolls.
+const SEGMENT_MIN = 7
+const SEGMENT_MIN_ACTIVE = 14
+
+const NAV_BTN =
+  'h-8 w-8 shrink-0 inline-flex items-center justify-center rounded-lg text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 disabled:opacity-35 disabled:pointer-events-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20'
+
+function TooltipCard({ children }: { children: React.ReactNode }) {
+  return <div className="bg-white rounded-xl nice-shadow py-2.5 px-3 min-w-[200px] max-w-[280px] animate-in fade-in duration-150">{children}</div>
 }
 
-function getActivityTypeBadgeColor(activityType: string): string {
-  switch (activityType) {
-    case 'TYPE_VIDEO':
-      return 'bg-blue-100 text-blue-700'
-    case 'TYPE_DOCUMENT':
-      return 'bg-purple-100 text-purple-700'
-    case 'TYPE_DYNAMIC':
-      return 'bg-green-100 text-green-700'
-    case 'TYPE_ASSIGNMENT':
-      return 'bg-orange-100 text-orange-700'
-    case 'TYPE_SCORM':
-      return 'bg-indigo-100 text-indigo-700'
-    case 'TYPE_LIVE_SESSION':
-      return 'bg-red-100 text-red-700'
-    case 'TYPE_CUSTOM':
-      return 'bg-pink-100 text-pink-700'
-    default:
-      return 'bg-gray-100 text-gray-700'
-  }
+function useStatusLabel() {
+  const { t } = useTranslation()
+  return (item: ProgressActivity) =>
+    item.current
+      ? t('activities.current_activity')
+      : item.done
+        ? t('common.completed')
+        : item.locked
+          ? t('activities.progress.locked', 'Locked')
+          : t('activities.not_started')
 }
 
-// Memoized activity type icon component
-const ActivityTypeIcon = memo(({ activityType, activitySubType }: { activityType: string; activitySubType?: string }) => {
-  if (activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN') return <MarkdownLogo size={16} className="text-gray-400" />
-  if (activitySubType === 'SUBTYPE_DYNAMIC_EMBED') return <Globe size={16} className="text-gray-400" />
-  switch (activityType) {
-    case 'TYPE_VIDEO':
-      return <Video size={16} className="text-gray-400" />
-    case 'TYPE_DOCUMENT':
-      return <FileText size={16} className="text-gray-400" />
-    case 'TYPE_DYNAMIC':
-      return <Layers size={16} className="text-gray-400" />
-    case 'TYPE_ASSIGNMENT':
-      return <BookOpenCheck size={16} className="text-gray-400" />
-    case 'TYPE_SCORM':
-      return <Package size={16} className="text-gray-400" />
-    case 'TYPE_LIVE_SESSION':
-      return <Radio size={16} className="text-gray-400" />
-    case 'TYPE_CUSTOM':
-      return <Puzzle size={16} className="text-gray-400" />
-    default:
-      return <FileText size={16} className="text-gray-400" />
-  }
-});
-
-ActivityTypeIcon.displayName = 'ActivityTypeIcon';
-
-// Memoized activity tooltip content
-const ActivityTooltipContent = memo(({ 
-  activity, 
-  isDone, 
-  isCurrent 
-}: { 
-  activity: any, 
-  isDone: boolean, 
-  isCurrent: boolean 
-}) => {
-  const { t } = useTranslation();
+function ActivityTip({ item, ch }: { item: ProgressActivity; ch: ProgressChapter }) {
+  const { t } = useTranslation()
+  const status = useStatusLabel()
   return (
-  <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
-    <div className="flex items-center gap-2">
-      <ActivityTypeIcon activityType={activity.activity_type} activitySubType={activity.activity_sub_type} />
-      <span className="text-sm text-gray-700">{activity.name}</span>
-      {isDone && (
-        <span className="ms-auto text-gray-400">
-          <Check size={14} />
-        </span>
-      )}
-    </div>
-    <div className="flex items-center gap-2 mt-2">
-      <span className={`text-xs px-2 py-0.5 rounded-full ${getActivityTypeBadgeColor(activity.activity_type)}`}>
-        {getActivityTypeLabel(activity.activity_type, t, activity.activity_sub_type)}
-      </span>
-      <span className="text-xs text-gray-400">
-        {isCurrent ? t('activities.current_activity') : isDone ? t('common.completed') : t('activities.not_started')}
-      </span>
-    </div>
-  </div>
-  );
-});
-
-ActivityTooltipContent.displayName = 'ActivityTooltipContent';
-
-// Add new memoized component for chapter tooltip
-const ChapterTooltipContent = memo(({ 
-  chapter,
-  chapterNumber,
-  totalActivities,
-  completedActivities 
-}: { 
-  chapter: any,
-  chapterNumber: number,
-  totalActivities: number,
-  completedActivities: number
-}) => {
-  const { t } = useTranslation();
-  return (
-  <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-gray-900">{t('courses.chapter')} {chapterNumber}</span>
-      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
-        {completedActivities}/{totalActivities} {t('common.completed')}
-      </span>
-    </div>
-    <div className="mt-1">
-      <span className="text-sm text-gray-700">{chapter.name}</span>
-    </div>
-  </div>
-  );
-});
-
-ChapterTooltipContent.displayName = 'ChapterTooltipContent';
-
-// Add certification badge component
-const CertificationBadge = memo(({ 
-  courseid,
-  orgslug,
-  isCompleted 
-}: { 
-  courseid: string,
-  orgslug: string,
-  isCompleted: boolean 
-}) => {
-  const { t } = useTranslation();
-  return (
-  <ToolTip
-    sideOffset={8}
-    unstyled
-    content={
-      <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
-        <div className="flex items-center gap-2">
-          <Trophy size={16} className="text-yellow-500" />
-          <span className="text-sm font-medium text-gray-900">
-            {isCompleted ? t('courses.course_completed_exclamation') : t('courses.course_completion')}
-          </span>
-        </div>
-        <div className="mt-1">
-          <span className="text-sm text-gray-700">
-            {isCompleted 
-              ? t('certificate.view_certificate')
-              : t('courses.unlock_certificate_message')
-            }
-          </span>
+    <TooltipCard>
+      <p className="text-xs text-neutral-400 truncate">
+        {t('activities.progress.chapter_n', { defaultValue: 'Chapter {{n}}', n: ch.index + 1 })} ·{' '}
+        <ChapterEmoji chapter={ch.chapter} />
+        {ch.chapter?.name}
+      </p>
+      <div className="mt-1 flex items-start gap-2">
+        <StatusMark item={item} size={16} />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-neutral-900 leading-snug">{item.activity.name}</p>
+          <p className="mt-0.5 flex items-center gap-1 text-xs text-neutral-500">
+            <ActivityTypeGlyph activity={item.activity} size={12} />
+            {status(item)}
+          </p>
         </div>
       </div>
-    }
-  >
-    <Link
-      href={`${getUriWithOrg(orgslug, '')}/course/${courseid}/activity/end`}
-      prefetch={false}
-      className={`shrink-0 flex items-center cursor-pointer focus:outline-none transition-all ${
-        isCompleted ? 'opacity-100' : 'opacity-40 cursor-not-allowed'
-      }`}
-    >
-      <div className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] rounded-full flex items-center justify-center text-xs font-medium transition-all border-2 border-white ${
-        isCompleted
-          ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-          : 'bg-gray-200 text-gray-400'
-      }`}>
-        <Trophy size={10} />
-      </div>
-    </Link>
-  </ToolTip>
-)});
-
-CertificationBadge.displayName = 'CertificationBadge';
-
-// Mobile chapter selector dropdown
-const MobileChapterSelector = memo(({
-  chapters,
-  currentChapterIndex,
-  orgslug,
-  courseid,
-  isActivityDone,
-  isActivityCurrent,
-  t,
-}: {
-  chapters: any[]
-  currentChapterIndex: number
-  orgslug: string
-  courseid: string
-  isActivityDone: (_activity: any) => boolean
-  isActivityCurrent: (_activity: any) => boolean
-  t: any
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const handleClose = useCallback(() => setIsOpen(false), [])
-
-  useEffect(() => {
-    if (!isOpen) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        handleClose()
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen, handleClose])
-
-  return (
-    <div ref={dropdownRef} className="relative">
-      <button
-        onClick={() => setIsOpen((v) => !v)}
-        className="flex items-center gap-0.5 text-[10px] text-gray-500 font-medium hover:text-gray-700 transition-colors"
-      >
-        <span>{t('courses.chapter')} {currentChapterIndex + 1}/{chapters.length}</span>
-        <ChevronDown size={10} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {isOpen && (
-        <div
-          className="absolute top-full start-0 mt-2 bg-white rounded-lg nice-shadow py-1.5 min-w-[220px] max-h-[60vh] overflow-y-auto"
-          style={{ zIndex: 'var(--z-dropdown)' }}
-        >
-          {chapters.map((chapter: any, chapterIdx: number) => {
-            const completedInChapter = chapter.activities.filter((a: any) => isActivityDone(a)).length
-            const isCurrentChapter = chapterIdx === currentChapterIndex
-
-            return (
-              <div key={chapter.id}>
-                <div className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide ${isCurrentChapter ? 'text-teal-600' : 'text-gray-400'}`}>
-                  {t('courses.chapter')} {chapterIdx + 1}: {completedInChapter}/{chapter.activities.length}
-                </div>
-                {chapter.activities.map((activity: any) => {
-                  const isDone = isActivityDone(activity)
-                  const isCurrent = isActivityCurrent(activity)
-                  const activityId = activity.activity_uuid.replace('activity_', '')
-
-                  return (
-                    <Link
-                      key={activity.activity_uuid}
-                      href={getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`}
-                      prefetch={false}
-                      onClick={handleClose}
-                      className={`flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
-                        isCurrent
-                          ? 'bg-gray-50 text-gray-900 font-medium'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className={`w-[6px] h-[6px] rounded-full shrink-0 ${
-                        isDone ? 'bg-teal-500' : isCurrent ? 'bg-gray-500 animate-pulse' : 'bg-zinc-200'
-                      }`} />
-                      <ActivityTypeIcon activityType={activity.activity_type} activitySubType={activity.activity_sub_type} />
-                      <span className="truncate">{activity.name}</span>
-                      {isDone && <Check size={12} className="text-teal-500 ms-auto shrink-0" />}
-                    </Link>
-                  )
-                })}
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
+    </TooltipCard>
   )
-});
+}
 
-MobileChapterSelector.displayName = 'MobileChapterSelector';
+function ChapterTip({ ch }: { ch: ProgressChapter }) {
+  const { t } = useTranslation()
+  return (
+    <TooltipCard>
+      <p className="text-xs text-neutral-400">{t('activities.progress.chapter_n', { defaultValue: 'Chapter {{n}}', n: ch.index + 1 })}</p>
+      <p className="text-sm font-medium text-neutral-900 leading-snug">
+        <ChapterEmoji chapter={ch.chapter} />
+        {ch.chapter?.name}
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        <div className="h-1.5 flex-1 rounded-full bg-neutral-100 overflow-hidden">
+          <div className="lh-t-progress h-full bg-teal-500" style={{ width: `${ch.total ? (ch.completed / ch.total) * 100 : 0}%` }} />
+        </div>
+        <span className="text-xs text-neutral-500 tabular-nums">
+          {t('activities.progress.chapter_done', { defaultValue: '{{done}} of {{total}} done', done: ch.completed, total: ch.total })}
+        </span>
+      </div>
+    </TooltipCard>
+  )
+}
 
+// The chapter circle that opens every chapter on the line, as in the original
+// navigator: its number (or emoji), a tick once the chapter is done, a lock
+// when it is locked. The current chapter's circle is larger and dark.
+function ChapterMarker({ ch, active }: { ch: ProgressChapter; active: boolean }) {
+  const complete = ch.total > 0 && ch.completed === ch.total
+  const emoji = getChapterEmoji(ch.chapter)
+  const tone = complete
+    ? 'lh-t-solid bg-teal-500 text-white shadow-[0_0_0_1px_rgba(13,148,136,0.35)]'
+    : active
+      ? 'lh-t-solid bg-neutral-900 text-white shadow-[0_0_0_3px_rgba(23,23,23,0.1)]'
+      : 'bg-white text-neutral-500 shadow-[0_1px_1px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.08)]'
+  return (
+    <span
+      className={`relative z-[1] shrink-0 rounded-full flex items-center justify-center font-bold tabular-nums transition-transform ${
+        active ? 'w-7 h-7 text-[11px]' : 'w-[22px] h-[22px] text-[10px]'
+      } ${tone}`}
+    >
+      {complete ? (
+        <Check size={active ? 13 : 11} weight="bold" />
+      ) : emoji ? (
+        <span aria-hidden="true" className={active ? 'text-[13px] leading-none' : 'text-[11px] leading-none'}>{emoji}</span>
+      ) : ch.locked && !active ? (
+        <LockSimple size={10} weight="bold" />
+      ) : (
+        ch.index + 1
+      )}
+    </span>
+  )
+}
+
+// The trophy at the end of the track: the course-end / certificate view.
+function CertificationBadge({ href, isCompleted }: { href: string; isCompleted: boolean }) {
+  const { t } = useTranslation()
+  return (
+    <ToolTip
+      sideOffset={8}
+      unstyled
+      content={
+        <TooltipCard>
+          <p className="text-sm font-medium text-neutral-900">
+            {isCompleted ? t('courses.course_completed_exclamation') : t('courses.course_completion')}
+          </p>
+          <p className="mt-0.5 text-xs text-neutral-500">
+            {isCompleted ? t('certificate.view_certificate') : t('courses.unlock_certificate_message')}
+          </p>
+        </TooltipCard>
+      }
+    >
+      <Link
+        href={href}
+        prefetch={false}
+        aria-label={isCompleted ? t('certificate.view_certificate') : t('courses.course_completion')}
+        className={`h-5 w-5 shrink-0 rounded-full inline-flex items-center justify-center transition-colors ${
+          isCompleted ? 'bg-amber-400 text-white hover:bg-amber-500' : 'bg-white text-neutral-400 ring-1 ring-inset ring-neutral-300'
+        }`}
+      >
+        <Trophy size={11} weight="fill" />
+      </Link>
+    </ToolTip>
+  )
+}
+
+// The course progress strip on the activity page (and the course page once
+// the learner has started).
+//
+// Line 1 says where you are in words: "Chapter 2 of 5 · <emoji> name" and
+// "Activity 3 of 7", with the full outline one click away.
+// Line 2 is the track, one group per chapter, each opened by a numbered
+// marker. The current chapter sits in a tinted pill with one segment per
+// activity (the current one raised and ringed). Other chapters show small
+// segments, or collapse to their marker alone in long courses.
 function ActivityIndicators(props: Props) {
-  const { t } = useTranslation();
-  const course = props.course
-  const orgslug = props.orgslug
-  const courseid = props.course_uuid.replace('course_', '')
-  const enableNavigation = props.enableNavigation || false
+  const { t } = useTranslation()
   const router = useRouter()
+  const status = useStatusLabel()
+  const [outlineOpen, setOutlineOpen] = useState(false)
+  const trackRef = useRef<HTMLOListElement>(null)
+  const enableNavigation = props.enableNavigation || false
+  const courseid = props.course_uuid.replace('course_', '')
+
+  const model = useCourseProgress({
+    course: props.course,
+    trailData: props.trailData,
+    orgslug: props.orgslug,
+    currentActivityId: props.current_activity,
+  })
 
   // The trophy promises a certificate, so it only makes sense on a course that
   // actually has certification. A definitive "no certification" hides it; a
@@ -318,308 +188,256 @@ function ActivityIndicators(props: Props) {
   const { isEnabled: certificationEnabled, isUnknown: certificationUnknown } =
     useCourseCertification(props.course_uuid)
   const showCertificationBadge = certificationEnabled || certificationUnknown
+  const endHref = getUriWithOrg(props.orgslug, '') + `/course/${courseid}/activity/end`
 
-  const done_activity_style = 'bg-teal-500 hover:bg-teal-600'
-  const black_activity_style = 'bg-zinc-200/80 hover:bg-zinc-300'
-  const current_activity_style = 'bg-gray-500 animate-pulse hover:bg-gray-600'
-
-  // Flatten all activities for navigation and rendering
-  const allActivities = useMemo(() => {
-    return course.chapters.flatMap((chapter: any) =>
-      chapter.activities.map((activity: any) => ({
-        ...activity,
-        chapterId: chapter.id
-      }))
-    )
-  }, [course.chapters])
-
-  // Find current activity index
-  const currentActivityIndex = useMemo(() => {
-    if (!props.current_activity) return -1
-    return allActivities.findIndex((activity: any) =>
-      activity.activity_uuid.replace('activity_', '') === props.current_activity
-    )
-  }, [allActivities, props.current_activity])
-
-  // Memoize activity status checks
-  const isActivityDone = useMemo(() => (activity: any) => {
-    // Clean up course UUID by removing 'course_' prefix if it exists
-    const cleanCourseUuid = course.course_uuid?.replace('course_', '');
-
-    let run = props.trailData?.runs?.find(
-      (run: any) => {
-        const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
-        return cleanRunCourseUuid === cleanCourseUuid;
-      }
-    );
-
-    if (run) {
-      return run.steps.find(
-        (step: any) => step.activity_id === activity.id && step.complete === true
-      );
+  const focus = model.focusChapter
+  // Many chapters: the line scrolls sideways. Keep the current chapter in
+  // view (scrolling the track only, never the page) and fade the edges that
+  // have more to show.
+  const focusIndex = focus?.index ?? -1
+  const [fade, setFade] = useState({ start: false, end: false, rtl: false })
+  const updateFade = useCallback(() => {
+    const el = trackRef.current
+    if (!el) return
+    const offset = Math.abs(el.scrollLeft)
+    setFade({
+      start: offset > 2,
+      end: offset + el.clientWidth < el.scrollWidth - 2,
+      rtl: getComputedStyle(el).direction === 'rtl',
+    })
+  }, [])
+  useEffect(() => {
+    const track = trackRef.current
+    const item = track?.querySelector('[data-focus-chapter]') as HTMLElement | null
+    if (track && item && track.scrollWidth > track.clientWidth) {
+      const tr = track.getBoundingClientRect()
+      const i = item.getBoundingClientRect()
+      track.scrollBy({ left: i.left + i.width / 2 - (tr.left + tr.width / 2) })
     }
-    return false;
-  }, [props.trailData, course.course_uuid]);
+    updateFade()
+  }, [focusIndex, updateFade])
+  useEffect(() => {
+    const el = trackRef.current
+    if (!el) return
+    const ro = new ResizeObserver(updateFade)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [updateFade])
 
-  const isActivityCurrent = useMemo(() => (activity: any) => {
-    let activity_uuid = activity.activity_uuid.replace('activity_', '')
-    if (props.current_activity && props.current_activity == activity_uuid) {
-      return true
-    }
-    return false
-  }, [props.current_activity]);
+  if (!focus) return null
+  const hasCurrent = model.currentIndex >= 0
+  const chapterCount = model.chapters.length
+  const emoji = getChapterEmoji(focus.chapter)
 
-  const getActivityClass = useMemo(() => (activity: any) => {
-    const isCurrent = isActivityCurrent(activity)
-    if (isActivityDone(activity)) {
-      return `${done_activity_style}`
-    }
-    if (isCurrent) {
-      return `${current_activity_style}`
-    }
-    return `${black_activity_style}`
-  }, [isActivityDone, isActivityCurrent]);
-
-  // Keep the allActivities array for navigation purposes only
-  const navigateToPrevious = () => {
-    if (currentActivityIndex > 0) {
-      const prevActivity = allActivities[currentActivityIndex - 1]
-      const activityId = prevActivity.activity_uuid.replace('activity_', '')
-      router.push(getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`)
-    }
+  const goPrev = () => model.prev && router.push(model.prev.href)
+  const goNext = () => {
+    if (model.next) router.push(model.next.href)
+    else if (model.isLast) router.push(endHref)
   }
 
-  const isOnLastActivity =
-    allActivities.length > 0 && currentActivityIndex === allActivities.length - 1
+  const chapterOf = t('activities.progress.chapter_n_of', {
+    defaultValue: 'Chapter {{n}} of {{total}}',
+    n: focus.index + 1,
+    total: chapterCount,
+  })
+  const activityOf = hasCurrent
+    ? t('activities.progress.activity_n_of', {
+        defaultValue: 'Activity {{n}} of {{total}}',
+        n: model.positionInChapter + 1,
+        total: focus.total,
+      })
+    : t('activities.progress.chapter_done', { defaultValue: '{{done}} of {{total}} done', done: focus.completed, total: focus.total })
+  const overall = t('activities.progress.overall', {
+    defaultValue: '{{done}} of {{total}} done',
+    done: model.completedCount,
+    total: model.total,
+  })
 
-  const navigateToNext = () => {
-    if (currentActivityIndex < allActivities.length - 1) {
-      const nextActivity = allActivities[currentActivityIndex + 1]
-      const activityId = nextActivity.activity_uuid.replace('activity_', '')
-      router.push(getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`)
-    } else if (isOnLastActivity) {
-      // Same destination as the trophy badge: the course-end/certificate view.
-      router.push(getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/end`)
-    }
-  }
-
-  // Add function to count completed activities in a chapter
-  const getChapterProgress = useMemo(() => (chapterActivities: any[]) => {
-    return chapterActivities.reduce((acc, activity) => {
-      return acc + (isActivityDone(activity) ? 1 : 0)
-    }, 0)
-  }, [isActivityDone]);
-
-  // Check if all activities are completed
-  const isCourseCompleted = useMemo(() => {
-    const totalActivities = allActivities.length;
-    const completedActivities = allActivities.filter((activity: any) => isActivityDone(activity)).length;
-    return totalActivities > 0 && completedActivities === totalActivities;
-  }, [allActivities, isActivityDone]);
-
-  // Computed values for mobile compact view
-  const completedCount = useMemo(() => {
-    return allActivities.filter((activity: any) => isActivityDone(activity)).length;
-  }, [allActivities, isActivityDone]);
-
-  const totalCount = allActivities.length;
-  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
-
-  // Find which chapter the current activity belongs to
-  const currentChapterIndex = useMemo(() => {
-    if (!props.current_activity) return 0
-    for (let i = 0; i < course.chapters.length; i++) {
-      const chapter = course.chapters[i]
-      const found = chapter.activities.find((a: any) =>
-        a.activity_uuid.replace('activity_', '') === props.current_activity
-      )
-      if (found) return i
-    }
-    return 0
-  }, [course.chapters, props.current_activity]);
+  // One activity on the line. Done = teal, current = dark and raised,
+  // not started = light grey with a faint inset, locked = paler still.
+  const segment = (item: ProgressActivity, ch: ProgressChapter, active: boolean) => (
+    <ToolTip key={item.activity.activity_uuid} sideOffset={8} unstyled content={<ActivityTip item={item} ch={ch} />}>
+      <Link
+        href={item.href}
+        prefetch={false}
+        aria-current={item.current ? 'step' : undefined}
+        aria-label={`${item.activity.name}, ${status(item)}`}
+        className="group/seg flex-1 flex items-center h-6 focus-visible:outline-none"
+        style={{ minWidth: active ? SEGMENT_MIN_ACTIVE : SEGMENT_MIN }}
+      >
+        <span
+          className={`block w-full transition-all group-focus-visible/seg:ring-2 group-focus-visible/seg:ring-neutral-900/30 ${
+            item.current
+              ? 'lh-t-progress h-[11px] rounded-full bg-neutral-900 shadow-[0_0_0_2px_#fff,0_0_0_4px_rgba(23,23,23,0.12)]'
+              : item.done
+                ? `lh-t-progress-soft ${active ? 'h-2' : 'h-[7px]'} bg-teal-500 group-hover/seg:bg-teal-600`
+                : item.locked
+                  ? `${active ? 'h-2' : 'h-[7px]'} bg-neutral-100`
+                  : `${active ? 'h-2 bg-neutral-300/80' : 'h-[7px] bg-neutral-200'} group-hover/seg:bg-neutral-400`
+          }`}
+        />
+      </Link>
+    </ToolTip>
+  )
 
   return (
-    <>
-      {/* Mobile compact view */}
-      <div className="flex sm:hidden items-center gap-2">
+    <nav aria-label={t('activities.progress.label', 'Course progress')} className="w-full min-w-0" data-course-progress="">
+      {/* Line 1: where you are, in words. */}
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
         {enableNavigation && (
           <button
-            onClick={navigateToPrevious}
-            disabled={currentActivityIndex <= 0}
-            className="p-1.5 rounded-full bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-            aria-label={t('activities.previous_activity')}
+            type="button"
+            onClick={goPrev}
+            disabled={!model.prev}
+            className={NAV_BTN}
+            aria-label={model.prev ? `${t('activities.previous_activity')}: ${model.prev.activity.name}` : t('activities.previous_activity')}
           >
-            <ChevronLeft size={16} className="text-gray-500" />
+            <CaretLeft size={16} weight="bold" className="rtl:rotate-180" />
           </button>
         )}
 
-        <div className="flex-1 flex flex-col gap-1.5 min-w-0 relative">
-          <div className="flex items-center justify-between text-[10px] text-gray-500 font-medium px-0.5">
-            <MobileChapterSelector
-              chapters={course.chapters}
-              currentChapterIndex={currentChapterIndex}
-              orgslug={orgslug}
-              courseid={courseid}
-              isActivityDone={isActivityDone}
-              isActivityCurrent={isActivityCurrent}
-              t={t}
-            />
-            <span>{completedCount}/{totalCount}</span>
-          </div>
-          <div className="w-full bg-zinc-200/80 rounded-full h-[6px] overflow-hidden">
-            <div
-              className="h-full bg-teal-500 rounded-full transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+        <div className="min-w-0 flex-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-neutral-400 tabular-nums">{chapterOf}</span>
+          <span className="min-w-0 truncate text-sm font-semibold text-neutral-900">
+            {emoji && (
+              <span aria-hidden="true" className="me-1">
+                {emoji}
+              </span>
+            )}
+            {focus.chapter?.name}
+          </span>
+          <span className="shrink-0 text-xs text-neutral-500 tabular-nums">· {activityOf}</span>
         </div>
 
-        {showCertificationBadge && (
-          <CertificationBadge
-            courseid={courseid}
-            orgslug={orgslug}
-            isCompleted={isCourseCompleted}
-          />
-        )}
+        <span className="hidden md:inline shrink-0 text-xs text-neutral-400 tabular-nums">{overall}</span>
+
+        <Popover open={outlineOpen} onOpenChange={setOutlineOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              className="shrink-0 inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20"
+            >
+              <ListBullets size={15} weight="bold" />
+              <span className="hidden sm:inline">{t('activities.progress.all_chapters', 'All chapters')}</span>
+              <CaretDown size={11} weight="bold" className={`transition-transform ${outlineOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" sideOffset={8} className="w-[min(92vw,380px)] p-0 overflow-hidden rounded-xl border-0 bg-white nice-shadow">
+            <div className="px-4 pt-3.5 pb-3 border-b border-neutral-100">
+              <p className="text-sm font-semibold text-neutral-900 truncate">{props.course?.name}</p>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100">
+                  <div className="lh-t-progress h-full rounded-full bg-teal-500" style={{ width: `${model.percent}%` }} />
+                </div>
+                <span className="text-xs font-medium tabular-nums text-neutral-500">{overall}</span>
+              </div>
+            </div>
+            <div className="max-h-[min(65vh,520px)] overflow-y-auto overscroll-contain">
+              <CourseOutlineList model={model} onNavigate={() => setOutlineOpen(false)} />
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {enableNavigation && (
           <button
-            onClick={navigateToNext}
-            disabled={currentActivityIndex > allActivities.length - 1}
-            className="p-1.5 rounded-full bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-            aria-label={t('activities.next_activity')}
+            type="button"
+            onClick={goNext}
+            disabled={!model.next && !model.isLast}
+            className={NAV_BTN}
+            aria-label={model.next ? `${t('activities.next_activity')}: ${model.next.activity.name}` : t('course.finish_course', 'Finish course')}
           >
-            <ChevronRight size={16} className="text-gray-500" />
+            {model.isLast ? <Flag size={15} weight="fill" /> : <CaretRight size={16} weight="bold" className="rtl:rotate-180" />}
           </button>
         )}
       </div>
 
-      {/* Desktop full view */}
-      <div className="hidden sm:flex items-center gap-4">
-        {enableNavigation && (
-          <button
-            onClick={navigateToPrevious}
-            disabled={currentActivityIndex <= 0}
-            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-            aria-label={t('activities.previous_activity')}
-          >
-            <ChevronLeft size={18} className="text-gray-600" />
-          </button>
-        )}
+      {/* Line 2: the line. Each chapter is a circle followed by one segment
+          per activity, glued together as in the original navigator. Flex
+          order follows the writing direction, so RTL reads right to left. */}
+      <div
+        className="relative mt-2"
+        style={
+          fade.start || fade.end
+            ? {
+                maskImage: `linear-gradient(to ${fade.rtl ? 'left' : 'right'}, ${fade.start ? 'transparent' : '#000'} 0, #000 28px, #000 calc(100% - 28px), ${fade.end ? 'transparent' : '#000'} 100%)`,
+                WebkitMaskImage: `linear-gradient(to ${fade.rtl ? 'left' : 'right'}, ${fade.start ? 'transparent' : '#000'} 0, #000 28px, #000 calc(100% - 28px), ${fade.end ? 'transparent' : '#000'} 100%)`,
+              }
+            : undefined
+        }
+      >
+        <ol
+          ref={trackRef}
+          onScroll={updateFade}
+          className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
+          aria-label={t('activities.progress.track_label', 'Chapters and activities')}
+        >
+          {model.chapters.map((ch) => {
+            const active = ch.index === focus.index
+            const chapterLabel = `${t('activities.progress.chapter_n', { defaultValue: 'Chapter {{n}}', n: ch.index + 1 })}: ${ch.chapter?.name ?? ''}, ${t('activities.progress.chapter_done', { defaultValue: '{{done}} of {{total}} done', done: ch.completed, total: ch.total })}`
+            const marker = (
+              <ToolTip sideOffset={8} unstyled content={<ChapterTip ch={ch} />}>
+                {ch.firstHref ? (
+                  <Link
+                    href={ch.firstHref}
+                    prefetch={false}
+                    aria-label={chapterLabel}
+                    className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/30"
+                  >
+                    <ChapterMarker ch={ch} active={active} />
+                  </Link>
+                ) : (
+                  <span aria-label={chapterLabel}>
+                    <ChapterMarker ch={ch} active={active} />
+                  </span>
+                )}
+              </ToolTip>
+            )
 
-        <div className="flex items-center w-full min-w-0 overflow-x-auto scrollbar-hide gap-2">
-          {course.chapters.map((chapter: any, chapterIndex: number) => {
-            const completedActivities = getChapterProgress(chapter.activities);
-            const isChapterComplete = completedActivities === chapter.activities.length;
-            const firstActivity = chapter.activities[0];
-            const firstActivityId = firstActivity?.activity_uuid?.replace('activity_', '');
-            const chapterLinkHref =
-              firstActivityId
-                ? getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${firstActivityId}`
-                : undefined;
-
+            const collapsed = (!active && ch.total > MAX_SEGMENTS_COLLAPSED) || ch.total > MAX_SEGMENTS
+            const pct = ch.total ? (ch.completed / ch.total) * 100 : 0
+            const markerPos = active && model.positionInChapter >= 0 ? ((model.positionInChapter + 0.5) / ch.total) * 100 : null
+            // Width follows the number of activities; the current chapter
+            // gets extra room so its segments read clearly.
+            const weight = Math.max(collapsed ? Math.min(ch.total, MAX_SEGMENTS_COLLAPSED) : ch.total, 1) * (active ? 2 : 1)
+            const minWidth =
+              (active ? 28 : 22) +
+              (ch.total === 0 ? 0 : collapsed ? 48 : ch.total * ((active ? SEGMENT_MIN_ACTIVE : SEGMENT_MIN) + 2))
             return (
-              <div key={chapter.id} className="flex-1 flex items-center min-w-0">
-                {/* Chapter circle, glued to the left of the bar */}
-                <ToolTip
-                  sideOffset={8}
-                  unstyled
-                  content={
-                    <ChapterTooltipContent
-                      chapter={chapter}
-                      chapterNumber={chapterIndex + 1}
-                      totalActivities={chapter.activities.length}
-                      completedActivities={completedActivities}
-                    />
-                  }
-                >
-                  {chapterLinkHref ? (
-                    <Link href={chapterLinkHref} prefetch={false} className="relative z-10 shrink-0 flex items-center cursor-pointer focus:outline-none">
-                      <div className={`w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-bold transition-all border-2 border-white ${
-                        isChapterComplete
-                          ? 'bg-teal-500 text-white'
-                          : 'bg-gray-200 text-gray-500'
-                      }`}>
-                        {chapterIndex + 1}
-                      </div>
-                    </Link>
+              <li
+                key={ch.chapter?.id ?? ch.index}
+                aria-current={active && hasCurrent ? 'location' : undefined}
+                data-focus-chapter={active ? '' : undefined}
+                className="flex items-center"
+                style={{ flexGrow: weight, flexBasis: 0, minWidth }}
+              >
+                {marker}
+                {ch.total > 0 &&
+                  (collapsed ? (
+                    <span className="relative flex-1 h-[7px] -ms-1 rounded-e-full bg-neutral-200 overflow-hidden">
+                      <span className="lh-t-progress absolute inset-y-0 start-0 bg-teal-500" style={{ width: `${pct}%` }} />
+                      {markerPos !== null && (
+                        <span className="lh-t-progress absolute inset-y-0 w-2 -ms-1 rounded-full bg-neutral-900" style={{ insetInlineStart: `${markerPos}%` }} />
+                      )}
+                    </span>
                   ) : (
-                    <div className="relative z-10 shrink-0 flex items-center cursor-not-allowed">
-                      <div className={`w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-bold transition-all border-2 border-white ${
-                        isChapterComplete
-                          ? 'bg-teal-500 text-white'
-                          : 'bg-gray-200 text-gray-500'
-                      }`}>
-                        {chapterIndex + 1}
-                      </div>
-                    </div>
-                  )}
-                </ToolTip>
-
-                {/* Activity segments, glued to circle, flush together */}
-                <div className="flex-1 flex items-center min-w-0 -ms-[4px]">
-                  {chapter.activities.map((activity: any, activityIndex: number) => {
-                    const isDone = isActivityDone(activity)
-                    const isCurrent = isActivityCurrent(activity)
-                    const isLast = activityIndex === chapter.activities.length - 1
-                    return (
-                      <ToolTip
-                        sideOffset={8}
-                        unstyled
-                        content={
-                          <ActivityTooltipContent
-                            activity={activity}
-                            isDone={isDone}
-                            isCurrent={isCurrent}
-                          />
-                        }
-                        key={activity.activity_uuid}
-                      >
-                        <Link
-                          prefetch={false}
-                          href={
-                            getUriWithOrg(orgslug, '') +
-                            `/course/${courseid}/activity/${activity.activity_uuid.replace(
-                              'activity_',
-                              ''
-                            )}`
-                          }
-                          className={`${isCurrent ? 'flex-2' : 'flex-1'} min-w-[12px] ${!isLast ? 'border-e-[1.5px] border-white' : ''}`}
-                        >
-                          <div
-                            className={`h-[7px] ${getActivityClass(activity)} ${isLast ? 'rounded-e-full' : ''} transition-all hover:brightness-110`}
-                          ></div>
-                        </Link>
-                      </ToolTip>
-                    )
-                  })}
-                </div>
-              </div>
+                    // Segments start under the circle's edge so the chapter
+                    // and its activities read as one piece of the line.
+                    <span className="flex-1 min-w-0 flex items-center gap-[2px] -ms-1 [&>*:last-child>span]:rounded-e-full [&>*:not(:last-child)>span:not([class*='rounded-full'])]:rounded-[1px]">
+                      {ch.activities.map((item) => segment(item, ch, active))}
+                    </span>
+                  ))}
+              </li>
             )
           })}
-
-          {/* Certification Badge */}
           {showCertificationBadge && (
-            <CertificationBadge
-              courseid={courseid}
-              orgslug={orgslug}
-              isCompleted={isCourseCompleted}
-            />
+            <li className="shrink-0 flex items-center ps-1">
+              <CertificationBadge href={endHref} isCompleted={model.isCourseCompleted} />
+            </li>
           )}
-        </div>
-
-        {enableNavigation && (
-          <button
-            onClick={navigateToNext}
-            disabled={currentActivityIndex > allActivities.length - 1}
-            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-            aria-label={t('activities.next_activity')}
-          >
-            <ChevronRight size={18} className="text-gray-600" />
-          </button>
-        )}
+        </ol>
       </div>
-    </>
+    </nav>
   )
 }
 

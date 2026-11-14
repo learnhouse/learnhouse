@@ -1412,6 +1412,10 @@ async def remove_user_from_org_admin(
     from src.services.mcp.oauth import revoke_member_grants
 
     await revoke_member_grants(db_session, user_id, token_user.org_id)
+    # Private notes live as long as the membership does.
+    from src.services.courses.activities.learner_notes import purge_member_notes
+
+    await purge_member_notes(db_session, token_user.org_id, [user_id])
     await db_session.commit()
 
     try:

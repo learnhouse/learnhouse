@@ -25,7 +25,7 @@ def _hit(course):
 @pytest.fixture
 def ai_calls():
     with patch("src.services.security.rate_limiting.enforce_ai_rate_limit") as rate, \
-         patch.object(rag_router, "reserve_ai_credit", new_callable=AsyncMock) as reserve, \
+         patch("src.security.features_utils.usage.reserve_ai_credit", new_callable=AsyncMock) as reserve, \
          patch("src.security.features_utils.usage.refund_ai_credit") as refund, \
          patch.object(rag_router, "search_course_content", new_callable=AsyncMock) as search:
         yield SimpleNamespace(rate=rate, reserve=reserve, refund=refund, search=search)
@@ -180,3 +180,9 @@ class TestIndex:
                 )
         assert exc.value.status_code == 403
         run.assert_not_awaited()
+
+
+@pytest.fixture(autouse=True)
+def _ai_credit_store(ai_credit_spy):
+    """Fake credit store + usage ledger for metered AI charges (conftest)."""
+    yield ai_credit_spy

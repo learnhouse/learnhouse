@@ -1,11 +1,9 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { buildListMetadata } from '@/lib/seo/pageMetadata'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunities } from '@services/communities/communities'
-import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
-import { JsonLd } from '@components/SEO/JsonLd'
 import CommunitiesClient from './communities'
 
 type MetadataProps = {
@@ -13,60 +11,10 @@ type MetadataProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
-  const params = await props.params
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
-
-  const seoConfig = getOrgSeoConfig(org)
-
-  const ogImageUrl = seoConfig.default_og_image
-    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
-    : null
-  const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const title = buildPageTitle('Communities', org.name, seoConfig)
-  const description = seoConfig.default_meta_description || `Discussion communities from ${org.name}`
-  const canonical = await getServerCanonicalUrl(params.orgslug, '/communities')
-
-  return {
-    title,
-    description,
-    robots: {
-      index: !seoConfig.noindex_communities,
-      follow: true,
-      nocache: true,
-      googleBot: {
-        index: !seoConfig.noindex_communities,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      images: [
-        {
-          url: imageUrl,
-          width: 800,
-          height: 600,
-          alt: org.name,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [imageUrl],
-      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
-    },
-  }
+export async function generateMetadata(props: { params: Promise<{ orgslug: string }> }): Promise<Metadata> {
+  const { orgslug } = await props.params
+  const ctx = await getSeoContext(orgslug)
+  return buildListMetadata({ ctx, name: 'Communities', path: '/communities', description: ctx.seo.default_meta_description || `Discussion communities from ${ctx.org?.name}`, keywords: undefined })
 }
 
 const CommunitiesPage = async (params: any) => {
@@ -95,14 +43,9 @@ const CommunitiesPage = async (params: any) => {
     communities = []
   }
 
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
-    { name: 'Communities', url: await getServerCanonicalUrl(orgslug, '/communities') },
-  ])
 
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd} />
       <CommunitiesClient
         communities={communities || []}
         orgslug={orgslug}

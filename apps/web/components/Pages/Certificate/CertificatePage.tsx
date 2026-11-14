@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUserCertificates } from '@services/courses/certifications';
+import { useContentLanguage } from '@/hooks/useContentLanguage'
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
 import { ArrowLeft, Download, Share2, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
@@ -53,6 +54,8 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
     return sessionFull || s?.username || '';
   };
   const learnerName = getLearnerName();
+  // Course name in the learner's content language when a translation is published.
+  const contentLang = useContentLanguage();
 
   // Fetch user certificate
   useEffect(() => {
@@ -72,7 +75,8 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
         const result = await getUserCertificates(
           `course_${cleanCourseId}`,
           org.id,
-          session.data.tokens.access_token
+          session.data.tokens.access_token,
+          contentLang.lang || undefined
         );
 
         if (result.success && result.data && result.data.length > 0) {
@@ -88,8 +92,8 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
       }
     };
 
-    fetchCertificate();
-  }, [courseid, session?.data?.tokens?.access_token, org?.id]);
+    if (contentLang.ready) fetchCertificate();
+  }, [courseid, session?.data?.tokens?.access_token, org?.id, contentLang.lang, contentLang.ready]);
 
 
 
@@ -207,7 +211,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
             <p className="text-red-600 mb-4">{error}</p>
             <Link
               href={getUriWithOrg(orgslug, '') + `/course/${courseid}`}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
+              className="lh-t-btn inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>{t('courses.back_to_course')}</span>
@@ -229,7 +233,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
             </p>
             <Link
               href={getUriWithOrg(orgslug, '') + `/course/${courseid}`}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
+              className="lh-t-btn inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>{t('courses.back_to_course')}</span>

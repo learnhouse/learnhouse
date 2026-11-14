@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getServerSession } from '@/lib/auth/server'
-import PlaygroundsClient from './playgrounds'
-import { getOrgPlaygrounds } from '@services/playgrounds/playgrounds'
+import PlaygroundsClient from '@ee/components/Plays/Pages/PlaysCatalogPage'
+import { getOrgPlaygrounds } from '@ee/services/plays/playgrounds'
 
 type PageParams = Promise<{ orgslug: string }>
 
@@ -10,8 +10,8 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
   const { orgslug } = await params
   const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
   return {
-    title: `Playgrounds | ${org?.name || 'Organization'}`,
-    description: `Interactive AI-generated experiences from ${org?.name || 'this organization'}`,
+    title: `Plays | ${org?.name || 'Organization'}`,
+    description: `Step-by-step interactive activities from ${org?.name || 'this organization'}`,
   }
 }
 

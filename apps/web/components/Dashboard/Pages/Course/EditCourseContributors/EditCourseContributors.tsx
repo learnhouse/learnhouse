@@ -1,10 +1,9 @@
-import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext'
+import { useCourseFieldSync } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { bulkAddContributors, bulkRemoveContributors, editContributor, getCourseContributors } from '@services/courses/courses'
 import { searchOrgContent } from '@services/search/search'
-import { Check, ChevronDown, Search, UserPen, Users } from 'lucide-react'
+import { Check, CaretDown, Trash, UserGear, UserPlus, Users, UsersThree, Handshake } from '@phosphor-icons/react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -24,11 +23,16 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
 import UserAvatar from '@components/Objects/UserAvatar'
-import { Input } from '@/components/ui/input'
 import { useDebounce } from '@/hooks/useDebounce'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
+import { Button, Chip, ConfirmDialog, SearchInput, SectionCard } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { ChoiceTile, EditorPage, EditorSkeleton, ErrorNotice, SelectBox } from '../courseEditorUi'
+import { useSectionDraft } from '../courseEditorSave'
+
+const DROPDOWN_TRIGGER =
+    'inline-flex h-8 w-[160px] items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed'
+const TH = 'text-xs font-semibold text-neutral-500'
 
 type EditCourseContributorsProps = {
     orgslug: string
@@ -87,10 +91,10 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
     const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
-    const course = useCourse() as any;
-    const { isLoading, courseStructure } = course as any;
-    const dispatchCourse = useCourseDispatch() as any;
+    const { syncChanges, isLoading, courseStructure } = useCourseFieldSync('editCourseContributors');
     const org = useOrg() as any;
+    const [confirmOpen, setConfirmOpen] = useState<boolean | null>(null);
+    const [confirmRemove, setConfirmRemove] = useState(false);
 
     const queryClient = useQueryClient()
 
@@ -126,21 +130,36 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
         nonCreatorContributors.length > 0 &&
         selectedContributors.length === nonCreatorContributors.length;
 
-    // The "open to contributors" flag is owned by the course store; read it
-    // directly so the UI always mirrors the canonical course structure.
+    // The "open to contributors" flag is a course field: staged in the course
+    // store and sent by the header Save.
     const isOpenToContributors: boolean | undefined = courseStructure?.open_to_contributors;
 
-    // Toggle the flag by writing back to the course store (was previously a
-    // local-state mirror + sync effect). Only dispatch when the value changes.
     const setIsOpenToContributors = (value: boolean) => {
         if (isLoading || !courseStructure) return;
         if (courseStructure.open_to_contributors === value) return;
-        dispatchCourse({ type: 'setIsNotSaved' });
-        dispatchCourse({
-            type: 'setCourseStructure',
-            payload: { ...courseStructure, open_to_contributors: value },
-        });
+        syncChanges({ open_to_contributors: value }, true);
     };
+
+    // Role and status edits are staged per contributor (keyed by user_id) and
+    // sent by the header Save. Adding and removing people are actions.
+    type RoleEdit = { authorship: ContributorRole; authorship_status: ContributorStatus };
+    const roleDraft = useSectionDraft<Record<string, RoleEdit>>('contributors', {
+        label: t('dashboard.courses.editor.contributors.roles_section'),
+        tab: 'contributors',
+        save: async (edits: Record<string, RoleEdit>) => {
+            const failed: string[] = [];
+            for (const [userId, edit] of Object.entries(edits)) {
+                const res = await editContributor(courseStructure.course_uuid, userId, edit.authorship, edit.authorship_status, access_token);
+                if (!(res.status === 200 && res.data?.status === 'success')) {
+                    failed.push(typeof res.data?.detail === 'string' ? res.data.detail : userId);
+                }
+            }
+            await queryClient.invalidateQueries({ queryKey: queryKeys.courses.contributors(courseStructure.course_uuid) });
+            if (failed.length > 0) throw new Error(failed.join(', '));
+        },
+    });
+    const roleEdits = roleDraft.value ?? {};
+    const withEdits = (c: Contributor): Contributor => (roleEdits[c.user_id] ? { ...c, ...roleEdits[c.user_id] } : c);
 
     useEffect(() => {
         const searchUsers = async () => {
@@ -219,49 +238,42 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
         }
     };
 
-    const updateContributor = async (contributorId: string, data: { authorship?: ContributorRole; authorship_status?: ContributorStatus }) => {
-        try {
-            // Find the current contributor to get their current values
-            const currentContributor = contributors?.find(c => c.user_id === contributorId);
-            if (!currentContributor) return;
-
-            // Don't allow editing if the user is a CREATOR
-            if (currentContributor.authorship === 'CREATOR') {
-                toast.error(t('dashboard.courses.contributors.toasts.cannot_modify_creator'));
-                return;
-            }
-
-            // Always send both values in the request
-            const updatedData = {
-                authorship: data.authorship || currentContributor.authorship,
-                authorship_status: data.authorship_status || currentContributor.authorship_status
-            };
-
-            const res = await editContributor(courseStructure.course_uuid, contributorId, updatedData.authorship, updatedData.authorship_status, access_token);
-            if (res.status === 200 && res.data?.status === 'success') {
-                toast.success(res.data.detail || t('dashboard.courses.contributors.toasts.update_success'));
-                queryClient.invalidateQueries({ queryKey: queryKeys.courses.contributors(courseStructure.course_uuid) });
-            } else {
-                toast.error(t('dashboard.courses.contributors.toasts.update_error', { detail: res.data?.detail || t('dashboard.courses.contributors.toasts.update_failed') }));
-            }
-        } catch (_error) {
-            toast.error(t('dashboard.courses.contributors.toasts.update_failed'));
+    const updateContributor = (contributorId: string, data: { authorship?: ContributorRole; authorship_status?: ContributorStatus }) => {
+        const original = contributors?.find(c => c.user_id === contributorId);
+        if (!original) return;
+        // Don't allow editing if the user is a CREATOR
+        if (original.authorship === 'CREATOR') {
+            toast.error(t('dashboard.courses.contributors.toasts.cannot_modify_creator'));
+            return;
         }
+        const current = withEdits(original);
+        const next: RoleEdit = {
+            authorship: data.authorship || current.authorship,
+            authorship_status: data.authorship_status || current.authorship_status,
+        };
+        const edits = { ...roleEdits };
+        if (next.authorship === original.authorship && next.authorship_status === original.authorship_status) {
+            delete edits[contributorId];
+        } else {
+            edits[contributorId] = next;
+        }
+        if (Object.keys(edits).length === 0) roleDraft.clear();
+        else roleDraft.set(edits);
     };
 
     const RoleDropdown = ({ contributor }: { contributor: Contributor }) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button
-                    variant="outline"
-                    className="w-[200px] justify-between"
+                <button
+                    type="button"
+                    className={`${DROPDOWN_TRIGGER} bg-white text-neutral-700 ring-1 ring-inset ring-neutral-200 hover:ring-neutral-300`}
                     disabled={contributor.authorship === 'CREATOR'}
                 >
                     {t(`dashboard.courses.contributors.roles.${contributor.authorship.toLowerCase()}`)}
-                    <ChevronDown className="ms-2 h-4 w-4 text-muted-foreground" />
-                </Button>
+                    <CaretDown className="h-3.5 w-3.5 opacity-60" />
+                </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuContent align="end" className="w-[180px]">
                 {['CONTRIBUTOR', 'MAINTAINER', 'REPORTER'].map((role) => (
                     <DropdownMenuItem
                         key={role}
@@ -279,16 +291,16 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
     const StatusDropdown = ({ contributor }: { contributor: Contributor }) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button
-                    variant="outline"
-                    className={`w-[200px] justify-between ${getStatusStyle(contributor.authorship_status)}`}
+                <button
+                    type="button"
+                    className={`${DROPDOWN_TRIGGER} ${getStatusStyle(contributor.authorship_status)}`}
                     disabled={contributor.authorship === 'CREATOR'}
                 >
                     {t(`dashboard.courses.contributors.statuses.${contributor.authorship_status.toLowerCase()}`)}
-                    <ChevronDown className="ms-2 h-4 w-4" />
-                </Button>
+                    <CaretDown className="h-3.5 w-3.5 opacity-60" />
+                </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuContent align="end" className="w-[180px]">
                 {['ACTIVE', 'INACTIVE', 'PENDING'].map((status) => (
                     <DropdownMenuItem
                         key={status}
@@ -306,13 +318,13 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
     const getStatusStyle = (status: ContributorStatus) => {
         switch (status) {
             case 'ACTIVE':
-                return 'bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800';
+                return 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100';
             case 'INACTIVE':
-                return 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-800';
+                return 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200';
             case 'PENDING':
-                return 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100 hover:text-yellow-800';
+                return 'bg-amber-50 text-amber-700 hover:bg-amber-100';
             default:
-                return 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-800';
+                return 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200';
         }
     };
 
@@ -353,6 +365,11 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
             
             if (response.status === 200) {
                 toast.success(t('dashboard.courses.contributors.toasts.remove_success', { count: selectedContributors.length }));
+                // Drop staged role edits for people who are gone.
+                const edits = { ...roleEdits };
+                selectedContributors.forEach((id) => delete edits[id]);
+                if (Object.keys(edits).length === 0) roleDraft.clear();
+                else roleDraft.set(edits);
                 // Refresh contributors list
                 queryClient.invalidateQueries({ queryKey: queryKeys.courses.contributors(courseStructure.course_uuid) });
                 // Clear selection
@@ -365,350 +382,322 @@ function EditCourseContributors(_props: EditCourseContributorsProps) {
 
     if (isLoading || !courseStructure) {
         return (
-            <div>
-                <div className="h-6" />
-                <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
-                    <div className="animate-pulse space-y-4">
-                        {/* Header block */}
-                        <div className="bg-gray-50 px-5 py-3 rounded-md space-y-2">
-                            <div className="h-5 bg-gray-200 rounded w-48" />
-                            <div className="h-3.5 bg-gray-100 rounded w-72" />
-                        </div>
-                        {/* Open/closed to contributors cards */}
-                        <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
-                            <div className="w-full h-[200px] bg-gray-100 rounded-lg" />
-                            <div className="w-full h-[200px] bg-gray-100 rounded-lg" />
-                        </div>
-                        {/* Search input */}
-                        <div className="h-10 bg-gray-100 rounded-lg w-full" />
-                        {/* Table skeleton */}
-                        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                            {/* Table header */}
-                            <div className="flex items-center gap-4 px-4 py-3 border-b border-gray-100">
-                                <div className="w-4 h-4 bg-gray-200 rounded" />
-                                <div className="w-8 h-8 bg-gray-200 rounded" />
-                                <div className="flex-1 h-3.5 bg-gray-200 rounded w-24" />
-                                <div className="h-3.5 bg-gray-100 rounded w-20" />
-                                <div className="h-3.5 bg-gray-100 rounded w-28" />
-                                <div className="h-3.5 bg-gray-100 rounded w-24" />
-                                <div className="h-3.5 bg-gray-100 rounded w-20" />
-                                <div className="h-3.5 bg-gray-100 rounded w-16" />
-                            </div>
-                            {/* Table rows */}
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-gray-50">
-                                    <div className="w-4 h-4 bg-gray-100 rounded" />
-                                    <div className="w-8 h-8 bg-gray-100 rounded" />
-                                    <div className="flex-1 h-3.5 bg-gray-100 rounded w-32" />
-                                    <div className="h-3.5 bg-gray-100 rounded w-24" />
-                                    <div className="h-3.5 bg-gray-100 rounded w-36" />
-                                    <div className="h-8 bg-gray-100 rounded-md w-[200px]" />
-                                    <div className="h-8 bg-gray-100 rounded-md w-[200px]" />
-                                    <div className="h-3.5 bg-gray-100 rounded w-20" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <EditorPage width="wide">
+                <EditorSkeleton sections={2} rows={2} />
+            </EditorPage>
         );
     }
 
     return (
-        <div>
-            {courseStructure && (
-                <div>
-                    <div className="h-6"></div>
-                    <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
-                        <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                            <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('dashboard.courses.contributors.title')}</h1>
-                            <h2 className="text-gray-500 text-xs sm:text-sm">
-                                {t('dashboard.courses.contributors.subtitle')}
-                            </h2>
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mx-auto mb-3">
-                            <ConfirmationModal
-                                confirmationButtonText={t('dashboard.courses.contributors.open_to_contributors.confirmation_button')}
-                                confirmationMessage={t('dashboard.courses.contributors.open_to_contributors.confirmation_message')}
-                                dialogTitle={t('dashboard.courses.contributors.open_to_contributors.confirmation_title')}
-                                dialogTrigger={
-                                    <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
-                                        {isOpenToContributors && (
-                                            <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
-                                                {t('dashboard.courses.contributors.open_to_contributors.active')}
-                                            </div>
-                                        )}
-                                        <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
-                                            <UserPen className="text-slate-400" size={32} />
-                                            <div className="text-xl sm:text-2xl text-slate-700 font-bold">
-                                                {t('dashboard.courses.contributors.open_to_contributors.title')}
-                                            </div>
-                                            <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
-                                                {t('dashboard.courses.contributors.open_to_contributors.description')}
+        <EditorPage width="wide">
+            {roleDraft.error && <ErrorNotice>{roleDraft.error}</ErrorNotice>}
+            <SectionCard
+                icon={<Handshake size={18} />}
+                title={t('dashboard.courses.contributors.title')}
+                description={t('dashboard.courses.contributors.subtitle')}
+            >
+                <div role="radiogroup" aria-label={t('dashboard.courses.contributors.title')} className="grid sm:grid-cols-2 gap-3">
+                    <ChoiceTile
+                        icon={UserGear}
+                        title={t('dashboard.courses.contributors.open_to_contributors.title')}
+                        description={t('dashboard.courses.contributors.open_to_contributors.description')}
+                        selected={!!isOpenToContributors}
+                        activeLabel={t('dashboard.courses.contributors.open_to_contributors.active')}
+                        tabIndex={0}
+                        onClick={() => !isOpenToContributors && setConfirmOpen(true)}
+                        onKeyDown={(e) => {
+                            if ((e.key === 'Enter' || e.key === ' ') && !isOpenToContributors) {
+                                e.preventDefault()
+                                setConfirmOpen(true)
+                            }
+                        }}
+                    />
+                    <ChoiceTile
+                        icon={Users}
+                        title={t('dashboard.courses.contributors.closed_to_contributors.title')}
+                        description={t('dashboard.courses.contributors.closed_to_contributors.description')}
+                        selected={!isOpenToContributors}
+                        activeLabel={t('dashboard.courses.contributors.closed_to_contributors.active')}
+                        tabIndex={0}
+                        onClick={() => isOpenToContributors && setConfirmOpen(false)}
+                        onKeyDown={(e) => {
+                            if ((e.key === 'Enter' || e.key === ' ') && isOpenToContributors) {
+                                e.preventDefault()
+                                setConfirmOpen(false)
+                            }
+                        }}
+                    />
+                </div>
+                <ConfirmDialog
+                    open={confirmOpen !== null}
+                    onOpenChange={(open) => !open && setConfirmOpen(null)}
+                    tone="info"
+                    title={
+                        confirmOpen
+                            ? t('dashboard.courses.contributors.open_to_contributors.confirmation_title')
+                            : t('dashboard.courses.contributors.closed_to_contributors.confirmation_title')
+                    }
+                    message={
+                        <>
+                            {confirmOpen
+                                ? t('dashboard.courses.contributors.open_to_contributors.confirmation_message')
+                                : t('dashboard.courses.contributors.closed_to_contributors.confirmation_message')}{' '}
+                            {t('dashboard.courses.editor.save.applies_on_save')}
+                        </>
+                    }
+                    confirmLabel={
+                        confirmOpen
+                            ? t('dashboard.courses.contributors.open_to_contributors.confirmation_button')
+                            : t('dashboard.courses.contributors.closed_to_contributors.confirmation_button')
+                    }
+                    onConfirm={() => {
+                        if (confirmOpen !== null) setIsOpenToContributors(confirmOpen)
+                    }}
+                />
+            </SectionCard>
+
+            <SectionCard
+                icon={<UsersThree size={18} />}
+                title={t('dashboard.courses.editor.contributors.people_title')}
+                description={t('dashboard.courses.editor.contributors.people_description')}
+                bodyClassName="p-5 space-y-4"
+                actions={
+                    Array.isArray(contributors) && contributors.length > 0 ? (
+                        <Chip tone="neutral">
+                            {t('dashboard.courses.editor.contributors.count', { count: contributors.length })}
+                        </Chip>
+                    ) : undefined
+                }
+            >
+                <div className="relative">
+                    <SearchInput
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        placeholder={t('dashboard.courses.contributors.search.placeholder')}
+                    />
+                    {searchQuery && (
+                        <div className="mt-2 bg-white rounded-xl ring-1 ring-inset ring-neutral-200 divide-y divide-neutral-100 overflow-hidden">
+                            {isSearching ? (
+                                <div className="p-4 text-center text-sm text-neutral-500">
+                                    {t('dashboard.courses.contributors.search.searching')}
+                                </div>
+                            ) : searchResults && searchResults.length > 0 ? (
+                                <>
+                                    {selectedUsers.length > 0 && (
+                                        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-neutral-50">
+                                            <span className="text-sm font-medium text-neutral-700">
+                                                {t('dashboard.courses.contributors.actions.selected_users', { count: selectedUsers.length })}
+                                            </span>
+                                            <div className="flex gap-2">
+                                                <Button size="sm" onClick={() => setSelectedUsers([])}>
+                                                    {t('dashboard.courses.contributors.actions.clear')}
+                                                </Button>
+                                                <Button size="sm" variant="primary" icon={<UserPlus size={13} />} onClick={handleAddContributors}>
+                                                    {t('dashboard.courses.contributors.actions.add_selected')}
+                                                </Button>
                                             </div>
                                         </div>
-                                    </div>
-                                }
-                                functionToExecute={() => setIsOpenToContributors(true)}
-                                status="info"
-                            />
-                            <ConfirmationModal
-                                confirmationButtonText={t('dashboard.courses.contributors.closed_to_contributors.confirmation_button')}
-                                confirmationMessage={t('dashboard.courses.contributors.closed_to_contributors.confirmation_message')}
-                                dialogTitle={t('dashboard.courses.contributors.closed_to_contributors.confirmation_title')}
-                                dialogTrigger={
-                                    <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
-                                        {!isOpenToContributors && (
-                                            <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
-                                                {t('dashboard.courses.contributors.closed_to_contributors.active')}
-                                            </div>
-                                        )}
-                                        <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
-                                            <Users className="text-slate-400" size={32} />
-                                            <div className="text-xl sm:text-2xl text-slate-700 font-bold">
-                                                {t('dashboard.courses.contributors.closed_to_contributors.title')}
-                                            </div>
-                                            <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
-                                                {t('dashboard.courses.contributors.closed_to_contributors.description')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                functionToExecute={() => setIsOpenToContributors(false)}
-                                status="info"
-                            />
-                        </div>
-                        <div className="space-y-4">
-                            <div className="relative">
-                                <Search className="absolute start-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder={t('dashboard.courses.contributors.search.placeholder')}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="ps-8"
-                                />
-                            </div>
-                            {searchQuery && (
-                                <div className="bg-white rounded-xl nice-shadow divide-y">
-                                    {isSearching ? (
-                                        <div className="p-4 text-center text-sm text-gray-500">
-                                            {t('dashboard.courses.contributors.search.searching')}
-                                        </div>
-                                    ) : searchResults && searchResults.length > 0 ? (
-                                        <>
-                                            {selectedUsers.length > 0 && (
-                                                <div className="p-3 bg-gray-100">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm text-gray-700">
-                                                            {t('dashboard.courses.contributors.actions.selected_users', { count: selectedUsers.length })}
-                                                        </span>
-                                                        <div className="flex gap-2">
-                                                            <Button
-                                                                onClick={() => setSelectedUsers([])}
-                                                                variant="outline"
-                                                                className="text-sm"
-                                                            >
-                                                                {t('dashboard.courses.contributors.actions.clear')}
-                                                            </Button>
-                                                            <Button
-                                                                onClick={handleAddContributors}
-                                                                className="bg-gray-900 text-white hover:bg-gray-800 text-sm"
-                                                            >
-                                                                {t('dashboard.courses.contributors.actions.add_selected')}
-                                                            </Button>
+                                    )}
+                                    {searchResults.map((user) => {
+                                        const isSelected = selectedUsers.includes(user.username);
+                                        const isExistingContributor = contributors?.some(
+                                            c => c.user.username === user.username
+                                        );
+
+                                        return (
+                                            <div
+                                                key={user.username}
+                                                className={`flex items-center justify-between gap-3 px-4 py-3 ${
+                                                    isSelected ? 'bg-neutral-50' : ''
+                                                } ${!isExistingContributor ? 'cursor-pointer hover:bg-neutral-50' : ''} transition-colors`}
+                                                onClick={(e) => {
+                                                    // Don't handle click if it's on a checkbox
+                                                    if (e.target instanceof HTMLElement && e.target.closest('input[type="checkbox"]')) {
+                                                        return;
+                                                    }
+                                                    if (!isExistingContributor) {
+                                                        handleUserSelect(user.username);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                        <SelectBox
+                                                            checked={isSelected || false}
+                                                            onClick={() => !isExistingContributor && handleUserSelect(user.username)}
+                                                            disabled={isExistingContributor}
+                                                        />
+                                                    </div>
+                                                    <UserAvatar
+                                                        width={36}
+                                                        avatar_url={user.avatar_url}
+                                                        predefined_avatar={user.avatar_image ? undefined : 'empty'}
+                                                        userId={user.id.toString()}
+                                                        showProfilePopup
+                                                        rounded="rounded-full"
+                                                        backgroundColor="bg-gray-100"
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <div className="text-sm font-semibold text-neutral-900 truncate">
+                                                            {user.first_name} {user.last_name}
+                                                        </div>
+                                                        <div className="text-xs text-neutral-500 truncate">
+                                                            @{user.username}
                                                         </div>
                                                     </div>
                                                 </div>
-                                            )}
-                                            {searchResults.map((user) => {
-                                                const isSelected = selectedUsers.includes(user.username);
-                                                const isExistingContributor = contributors?.some(
-                                                    c => c.user.username === user.username
-                                                );
-
-                                                return (
-                                                    <div
-                                                        key={user.username}
-                                                        className={`flex items-center justify-between p-4 ${
-                                                            isSelected ? 'bg-gray-100' : ''
-                                                        } ${!isExistingContributor ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors`}
-                                                        onClick={(e) => {
-                                                            // Don't handle click if it's on a checkbox
-                                                            if (e.target instanceof HTMLElement && e.target.closest('input[type="checkbox"]')) {
-                                                                return;
-                                                            }
-                                                            if (!isExistingContributor) {
-                                                                handleUserSelect(user.username);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <div className="flex items-center space-x-3">
-                                                            <div onClick={(e) => e.stopPropagation()}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={isSelected || false}
-                                                                    onChange={() => !isExistingContributor && handleUserSelect(user.username)}
-                                                                    disabled={isExistingContributor}
-                                                                    className="h-4 w-4 rounded border-gray-300 text-gray-600 focus:ring-gray-500 disabled:opacity-50"
-                                                                />
-                                                            </div>
-                                                            <UserAvatar
-                                                                width={40}
-                                                                avatar_url={user.avatar_url}
-                                                                predefined_avatar={user.avatar_image ? undefined : 'empty'}
-                                                                userId={user.id.toString()}
-                                                                showProfilePopup
-                                                                rounded="rounded-full"
-                                                                backgroundColor="bg-gray-100"
-                                                            />
-                                                            <div>
-                                                                <div className="font-medium text-gray-900">
-                                                                    {user.first_name} {user.last_name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-500">
-                                                                    @{user.username}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        {isExistingContributor && (
-                                                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                                                                {t('dashboard.courses.contributors.actions.already_contributor')}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </>
-                                    ) : (
-                                        <div className="p-4 text-center text-sm text-gray-500">
-                                            {t('dashboard.courses.contributors.search.no_results')}
-                                        </div>
-                                    )}
+                                                {isExistingContributor && (
+                                                    <Chip tone="neutral">
+                                                        {t('dashboard.courses.contributors.actions.already_contributor')}
+                                                    </Chip>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </>
+                            ) : (
+                                <div className="p-4 text-center text-sm text-neutral-500">
+                                    {t('dashboard.courses.contributors.search.no_results')}
                                 </div>
                             )}
-                            <div className="bg-white rounded-xl nice-shadow">
-                                {selectedContributors.length > 0 && (
-                                    <div className="p-3 bg-gray-100 rounded-t-xl border-b">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-700">
-                                                {t('dashboard.courses.contributors.actions.selected_contributors', { count: selectedContributors.length })}
-                                            </span>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    onClick={() => setSelectedContributors([])}
-                                                    variant="outline"
-                                                    className="text-sm"
-                                                >
-                                                    {t('dashboard.courses.contributors.actions.clear')}
-                                                </Button>
-                                                <Button
-                                                    onClick={handleBulkRemove}
-                                                    className="bg-red-600 text-white hover:bg-red-700 text-sm"
-                                                >
-                                                    {t('dashboard.courses.contributors.actions.remove_selected')}
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="max-h-[600px] overflow-y-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-[30px]">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={masterCheckboxChecked}
-                                                        onChange={(e) => {
-                                                            if (contributors) {
-                                                                if (e.target.checked) {
-                                                                    // Select all non-creator contributors
-                                                                    setSelectedContributors(
-                                                                        nonCreatorContributors.map(c => c.user_id)
-                                                                    );
-                                                                } else {
-                                                                    setSelectedContributors([]);
-                                                                }
-                                                            }
-                                                        }}
-                                                        className="h-4 w-4 rounded border-gray-300 text-gray-600 focus:ring-gray-500"
-                                                    />
-                                                </TableHead>
-                                                <TableHead className="w-[50px]"></TableHead>
-                                                <TableHead>{t('dashboard.courses.contributors.table.name')}</TableHead>
-                                                <TableHead>{t('dashboard.courses.contributors.table.username')}</TableHead>
-                                                <TableHead>{t('dashboard.courses.contributors.table.email')}</TableHead>
-                                                <TableHead>{t('dashboard.courses.contributors.table.role')}</TableHead>
-                                                <TableHead>{t('dashboard.courses.contributors.table.status')}</TableHead>
-                                                <TableHead>{t('dashboard.courses.contributors.table.added_on')}</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {sortContributors(contributors)?.map((contributor) => (
-                                                <TableRow 
-                                                    key={`${contributor.user_id}-${contributor.id}`}
-                                                    className={`${selectedContributors.includes(contributor.user_id) ? 'bg-gray-50' : ''} ${contributor.authorship !== 'CREATOR' ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-                                                    onClick={(e) => {
-                                                        // Don't handle click if it's on a dropdown or checkbox
-                                                        if (
-                                                            e.target instanceof HTMLElement && 
-                                                            (e.target.closest('button') || 
-                                                             e.target.closest('input[type="checkbox"]'))
-                                                        ) {
-                                                            return;
-                                                        }
-                                                        if (contributor.authorship !== 'CREATOR') {
-                                                            handleContributorSelect(contributor.user_id);
-                                                        }
-                                                    }}
-                                                >
-                                                    <TableCell onClick={(e) => e.stopPropagation()}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedContributors.includes(contributor.user_id)}
-                                                            onChange={() => handleContributorSelect(contributor.user_id)}
-                                                            disabled={contributor.authorship === 'CREATOR'}
-                                                            className="h-4 w-4 rounded border-gray-300 text-gray-600 focus:ring-gray-500 disabled:opacity-50"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <UserAvatar
-                                                            width={30}
-                                                            border='border-2'
-                                                            avatar_url={contributor.user.avatar_image ? getUserAvatarMediaDirectory(contributor.user.user_uuid, contributor.user.avatar_image) : ''}
-                                                            rounded="rounded"
-                                                            predefined_avatar={contributor.user.avatar_image === '' ? 'empty' : undefined}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {contributor.user.first_name} {contributor.user.last_name}
-                                                    </TableCell>
-                                                    <TableCell className="text-gray-500">
-                                                        @{contributor.user.username}
-                                                    </TableCell>
-                                                    <TableCell className="text-gray-500">
-                                                        {contributor.user.email}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <RoleDropdown contributor={contributor} />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusDropdown contributor={contributor} />
-                                                    </TableCell>
-                                                    <TableCell className="text-gray-500 text-sm">
-                                                        {formatDate(contributor.creation_date)}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {selectedContributors.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-neutral-900 text-white ps-4 pe-1.5 py-1.5">
+                        <span className="text-sm font-semibold tabular-nums">
+                            {t('dashboard.courses.contributors.actions.selected_contributors', { count: selectedContributors.length })}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedContributors([])}
+                                className="h-8 px-3 rounded-lg text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                            >
+                                {t('dashboard.courses.contributors.actions.clear')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setConfirmRemove(true)}
+                                className="h-8 px-3 rounded-lg text-xs font-semibold text-rose-300 hover:text-white hover:bg-rose-500/80 transition-colors inline-flex items-center gap-1.5"
+                            >
+                                <Trash size={13} />
+                                {t('dashboard.courses.contributors.actions.remove_selected')}
+                            </button>
                         </div>
                     </div>
+                )}
+
+                <ConfirmDialog
+                    open={confirmRemove}
+                    onOpenChange={setConfirmRemove}
+                    title={t('dashboard.courses.editor.contributors.remove_title', { count: selectedContributors.length })}
+                    message={t('dashboard.courses.editor.contributors.remove_message')}
+                    confirmLabel={t('dashboard.courses.contributors.actions.remove_selected')}
+                    onConfirm={handleBulkRemove}
+                />
+
+                <div className="max-h-[600px] overflow-auto rounded-xl ring-1 ring-inset ring-neutral-200">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="bg-neutral-50/80 hover:bg-neutral-50/80">
+                                <TableHead className="w-[40px]">
+                                    <SelectBox
+                                        checked={masterCheckboxChecked}
+                                        disabled={nonCreatorContributors.length === 0}
+                                        onClick={() => {
+                                            if (contributors) {
+                                                if (!masterCheckboxChecked) {
+                                                    // Select all non-creator contributors
+                                                    setSelectedContributors(
+                                                        nonCreatorContributors.map(c => c.user_id)
+                                                    );
+                                                } else {
+                                                    setSelectedContributors([]);
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
+                                <TableHead className={TH}>{t('dashboard.courses.contributors.table.name')}</TableHead>
+                                <TableHead className={TH}>{t('dashboard.courses.contributors.table.username')}</TableHead>
+                                <TableHead className={TH}>{t('dashboard.courses.contributors.table.email')}</TableHead>
+                                <TableHead className={TH}>{t('dashboard.courses.contributors.table.role')}</TableHead>
+                                <TableHead className={TH}>{t('dashboard.courses.contributors.table.status')}</TableHead>
+                                <TableHead className={TH}>{t('dashboard.courses.contributors.table.added_on')}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {sortContributors(contributors).map(withEdits).map((contributor) => (
+                                <TableRow
+                                    key={`${contributor.user_id}-${contributor.id}`}
+                                    className={`${selectedContributors.includes(contributor.user_id) ? 'bg-neutral-50' : ''} ${contributor.authorship !== 'CREATOR' ? 'cursor-pointer hover:bg-neutral-50' : ''}`}
+                                    onClick={(e) => {
+                                        // Don't handle click if it's on a dropdown or checkbox
+                                        if (
+                                            e.target instanceof HTMLElement &&
+                                            (e.target.closest('button') ||
+                                             e.target.closest('input[type="checkbox"]'))
+                                        ) {
+                                            return;
+                                        }
+                                        if (contributor.authorship !== 'CREATOR') {
+                                            handleContributorSelect(contributor.user_id);
+                                        }
+                                    }}
+                                >
+                                    <TableCell onClick={(e) => e.stopPropagation()}>
+                                        <SelectBox
+                                            checked={selectedContributors.includes(contributor.user_id)}
+                                            onClick={() => handleContributorSelect(contributor.user_id)}
+                                            disabled={contributor.authorship === 'CREATOR'}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <UserAvatar
+                                            width={30}
+                                            border='border-2'
+                                            avatar_url={contributor.user.avatar_image ? getUserAvatarMediaDirectory(contributor.user.user_uuid, contributor.user.avatar_image) : ''}
+                                            rounded="rounded-full"
+                                            predefined_avatar={contributor.user.avatar_image === '' ? 'empty' : undefined}
+                                        />
+                                    </TableCell>
+                                    <TableCell className="font-semibold text-neutral-900">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            {contributor.user.first_name} {contributor.user.last_name}
+                                            {roleEdits[contributor.user_id] && (
+                                                <span
+                                                    className="w-1.5 h-1.5 rounded-full bg-amber-400"
+                                                    title={t('dashboard.courses.save.unsaved')}
+                                                    aria-label={t('dashboard.courses.save.unsaved')}
+                                                />
+                                            )}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-neutral-500">
+                                        @{contributor.user.username}
+                                    </TableCell>
+                                    <TableCell className="text-neutral-500">
+                                        {contributor.user.email}
+                                    </TableCell>
+                                    <TableCell>
+                                        <RoleDropdown contributor={contributor} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <StatusDropdown contributor={contributor} />
+                                    </TableCell>
+                                    <TableCell className="text-neutral-500 text-sm tabular-nums">
+                                        {formatDate(contributor.creation_date)}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </div>
-            )}
-        </div>
+            </SectionCard>
+        </EditorPage>
     );
 }
 

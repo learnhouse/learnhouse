@@ -3,17 +3,27 @@ import {
   Palette,
   Storefront,
   Compass,
-  Robot,
   Globe,
   Lightning,
   Key,
   Lock,
   ChartBar,
   DotsThree,
+  ToggleRight,
 } from '@phosphor-icons/react'
+import { AIMarkIcon } from '@components/Objects/AI/AIBrand'
 import type { SearchMeta } from '@/lib/dashboard-search/types'
 
 export const searchMetas: SearchMeta[] = [
+  {
+    id: 'dash.org.overview',
+    titleKey: 'dashboard.organization.settings.tabs.overview',
+    descriptionKey: 'dashboard.search.entries.org_billing.description',
+    keywordsKey: 'dashboard.search.entries.org_billing.keywords',
+    icon: ChartBar,
+    href: '/dash/org/settings/overview',
+    group: 'settings',
+  },
   {
     id: 'dash.org.general',
     titleKey: 'dashboard.organization.settings.tabs.general',
@@ -38,7 +48,7 @@ export const searchMetas: SearchMeta[] = [
     descriptionKey: 'dashboard.search.entries.org_landing.description',
     keywordsKey: 'dashboard.search.entries.org_landing.keywords',
     icon: Storefront,
-    href: '/dash/org/settings/landing',
+    href: '/dash/website',
     group: 'settings',
   },
   {
@@ -55,7 +65,7 @@ export const searchMetas: SearchMeta[] = [
     titleKey: 'dashboard.organization.settings.tabs.ai',
     descriptionKey: 'dashboard.search.entries.org_ai.description',
     keywordsKey: 'dashboard.search.entries.org_ai.keywords',
-    icon: Robot,
+    icon: AIMarkIcon,
     href: '/dash/org/settings/ai',
     group: 'settings',
   },
@@ -96,12 +106,12 @@ export const searchMetas: SearchMeta[] = [
     group: 'settings',
   },
   {
-    id: 'dash.org.usage',
-    titleKey: 'dashboard.organization.settings.tabs.usage',
-    descriptionKey: 'dashboard.search.entries.org_billing.description',
-    keywordsKey: 'dashboard.search.entries.org_billing.keywords',
-    icon: ChartBar,
-    href: '/dash/org/settings/usage',
+    id: 'dash.org.features',
+    titleKey: 'dashboard.organization.settings.tabs.features',
+    descriptionKey: 'dashboard.search.entries.org_features.description',
+    keywordsKey: 'dashboard.search.entries.org_features.keywords',
+    icon: ToggleRight,
+    href: '/dash/org/settings/general#features',
     group: 'settings',
   },
   {

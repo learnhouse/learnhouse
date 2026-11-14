@@ -47,101 +47,49 @@ interface CourseAuthorsProps {
   authors: Author[]
 }
 
-const MultipleAuthors = ({ authors, isMobile }: { authors: Author[], isMobile: boolean }) => {
+// Authors as a compact row: small overlapping avatars, then names.
+const MultipleAuthors = ({ authors }: { authors: Author[], isMobile?: boolean }) => {
   const { t } = useTranslation()
-  const displayedAvatars = authors.slice(0, 3)
-  const displayedNames = authors.slice(0, 2)
-  const remainingCount = Math.max(0, authors.length - 3)
-  
-  // Consistent sizes for both avatars and badge
-  const avatarSize = isMobile ? 72 : 86
-  const borderSize = "border-4"
+  const displayedAvatars = authors.slice(0, 4)
+  const remainingCount = Math.max(0, authors.length - displayedAvatars.length)
+  const nameOf = (author: Author) =>
+    author.user.first_name && author.user.last_name
+      ? `${author.user.first_name} ${author.user.last_name}`
+      : `@${author.user.username}`
 
+  if (authors.length === 0) return null
   return (
-    <div className="flex flex-col items-center space-y-4 px-2 py-2">
-      <div className="text-[12px] text-neutral-400 font-semibold self-start">{t('courses.authors_and_updates')} </div>
-      
-      {/* Avatars row */}
-      <div className="flex justify-center -space-x-6 relative">
+    <div className="flex items-center gap-3">
+      <div className="flex items-center -space-x-2 rtl:space-x-reverse shrink-0">
         {displayedAvatars.map((author, index) => (
-          <div
-            key={author.user.user_uuid}
-            className="relative"
-            style={{ zIndex: displayedAvatars.length - index }}
-          >
-            <div className="ring-white">
-              <UserAvatar
-                border={borderSize}
-                rounded='rounded-full'
-                avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
-                predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
-                width={avatarSize}
-                showProfilePopup={true}
-                userId={author.user.id}
-              />
-            </div>
+          <div key={author.user.user_uuid} className="relative" style={{ zIndex: displayedAvatars.length - index }}>
+            <UserAvatar
+              border="border-2"
+              rounded="rounded-full"
+              avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
+              predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
+              width={36}
+              showProfilePopup={true}
+              userId={author.user.id}
+            />
           </div>
         ))}
         {remainingCount > 0 && (
-          <div 
-            className="relative"
-            style={{ zIndex: 0 }}
-          >
-            <div 
-              className="flex items-center justify-center bg-neutral-100 text-neutral-600 font-medium rounded-full border-4 border-white shadow-sm"
-              style={{ 
-                width: `${avatarSize}px`, 
-                height: `${avatarSize}px`,
-                fontSize: isMobile ? '14px' : '16px'
-              }}
-            >
-              +{remainingCount}
-            </div>
-          </div>
+          <span className="relative w-9 h-9 rounded-full border-2 border-white bg-neutral-100 text-neutral-600 text-xs font-semibold flex items-center justify-center">
+            +{remainingCount}
+          </span>
         )}
       </div>
-
-      {/* Names row - improved display logic */}
-      <div className="text-center mt-2">
-        <div className="text-sm font-medium text-neutral-800">
-          {authors.length === 1 ? (
-            <span>
-              {authors[0].user.first_name && authors[0].user.last_name
-                ? `${authors[0].user.first_name} ${authors[0].user.last_name}`
-                : `@${authors[0].user.username}`}
-            </span>
-          ) : (
-            <>
-              {displayedNames.map((author, index) => (
-                <span key={author.user.user_uuid}>
-                  {author.user.first_name && author.user.last_name
-                    ? `${author.user.first_name} ${author.user.last_name}`
-                    : `@${author.user.username}`}
-                  {index === 0 && authors.length > 1 && index < displayedNames.length - 1 && " & "}
-                </span>
-              ))}
-              {authors.length > 2 && (
-                <span className="text-neutral-500 ms-1">
-                  & {t('courses.and_x_more', { count: authors.length - 2 })}
-                </span>
-              )}
-            </>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-neutral-900 truncate">
+          {authors.slice(0, 2).map(nameOf).join(' & ')}
+          {authors.length > 2 && (
+            <span className="font-normal text-neutral-500"> {t('courses.and_x_more', { count: authors.length - 2 })}</span>
           )}
-        </div>
-        <div className="text-xs text-neutral-500 mt-0.5">
-          {authors.length === 1 ? (
-            <span>@{authors[0].user.username}</span>
-          ) : (
-            <>
-              {displayedNames.map((author, index) => (
-                <span key={author.user.user_uuid}>
-                  @{author.user.username}
-                  {index === 0 && authors.length > 1 && index < displayedNames.length - 1 && " & "}
-                </span>
-              ))}
-            </>
-          )}
-        </div>
+        </p>
+        <p className="text-xs text-neutral-500 truncate">
+          {authors.slice(0, 2).map((a) => `@${a.user.username}`).join(' · ')}
+        </p>
       </div>
     </div>
   )
@@ -169,8 +117,8 @@ const UpdatesSection = () => {
   })
 
   return (
-    <div className="mt-2 pt-2">
-      <div className="flex justify-between items-center mb-4">
+    <div className="mt-4 pt-4 border-t border-neutral-100">
+      <div className="flex justify-between items-center mb-3">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             {/* Feed readers fetch anonymously, so only public courses have a feed. */}

@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Loader2, AlertTriangle } from 'lucide-react'
+import { WarningCircle } from '@phosphor-icons/react'
+import { AuthStatus, AuthStatusScreen, authButtonClass } from '@components/Auth/AuthUI'
 import { safeInternalPath } from '@services/security/url'
 import { useTranslation } from 'react-i18next'
 
@@ -75,36 +76,34 @@ function TokenExchangeInner() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-red-100 rounded-full">
-              <AlertTriangle className="w-10 h-10 text-red-600" />
-            </div>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">{t('auth.token_exchange.title')}</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <a
-            href="/login"
-            className="inline-block px-6 py-2.5 bg-black text-white rounded-lg hover:bg-black/90 transition-colors text-sm font-semibold"
-          >
+      <AuthStatusScreen>
+        <AuthStatus
+          tone="danger"
+          icon={<WarningCircle size={22} weight="duotone" />}
+          title={t('auth.token_exchange.title')}
+          description={error}
+        >
+          <a href="/login" className={authButtonClass('primary')}>
             {t('auth.token_exchange.go_to_login')}
           </a>
-        </div>
-      </div>
+        </AuthStatus>
+      </AuthStatusScreen>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <Loader2 className="w-10 h-10 text-gray-600 animate-spin" />
-        </div>
-        <h1 className="text-lg font-semibold text-gray-800 mb-1">{t('auth.token_exchange.signing_in')}</h1>
-        <p className="text-gray-500 text-sm">{t('auth.token_exchange.setting_up')}</p>
-      </div>
-    </div>
+    <AuthStatusScreen>
+      <AuthStatus loading title={t('auth.token_exchange.signing_in')} description={t('auth.token_exchange.setting_up')} />
+    </AuthStatusScreen>
+  )
+}
+
+function TokenExchangeFallback() {
+  const { t } = useTranslation()
+  return (
+    <AuthStatusScreen>
+      <AuthStatus loading title={t('auth.token_exchange.signing_in')} />
+    </AuthStatusScreen>
   )
 }
 
@@ -112,9 +111,7 @@ export default function TokenExchangePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <Loader2 className="w-10 h-10 text-gray-600 animate-spin" />
-        </div>
+        <TokenExchangeFallback />
       }
     >
       <TokenExchangeInner />

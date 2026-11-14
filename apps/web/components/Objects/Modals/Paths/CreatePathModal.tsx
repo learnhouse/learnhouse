@@ -1,19 +1,27 @@
 'use client'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Formik, Form, Field, ErrorMessage } from 'formik'
+import { Formik, Form, Field } from 'formik'
 import * as Yup from 'yup'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { createPath, removePathPrefix } from '@services/paths/paths'
 import { getUriWithOrg } from '@services/config/config'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { Loader2 } from 'lucide-react'
+import { Globe, CircleNotch, Lock, Circuitry } from '@phosphor-icons/react'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import toast from 'react-hot-toast'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  ChoiceCard,
+  FieldLabel,
+  INPUT,
+  TEXTAREA,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
 
 interface CreatePathModalProps {
   isOpen: boolean
@@ -21,6 +29,8 @@ interface CreatePathModalProps {
   orgId: number
   orgSlug: string
 }
+
+type Values = { name: string; description: string; public: boolean }
 
 export function CreatePathModal({ isOpen, onClose, orgId, orgSlug }: CreatePathModalProps) {
   const { t } = useTranslation()
@@ -41,7 +51,7 @@ export function CreatePathModal({ isOpen, onClose, orgId, orgSlug }: CreatePathM
     public: Yup.boolean(),
   })
 
-  const handleSubmit = async (values: { name: string; description: string; public: boolean }) => {
+  const handleSubmit = async (values: Values) => {
     setIsSubmitting(true)
     try {
       const result = await createPath(
@@ -72,72 +82,79 @@ export function CreatePathModal({ isOpen, onClose, orgId, orgSlug }: CreatePathM
     <Modal
       isDialogOpen={isOpen}
       onOpenChange={(open) => !open && onClose()}
-      dialogTitle={t('paths.modals.create.title')}
+      dialogTitle={
+        <span className="flex items-center gap-2">
+          <Circuitry size={20} className="text-violet-500" />
+          {t('paths.modals.create.title')}
+        </span>
+      }
       dialogDescription={t('paths.modals.create.description')}
       minWidth="sm"
       dialogContent={
-        <Formik
+        <Formik<Values>
           initialValues={{ name: '', description: '', public: true }}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ isValid, dirty }) => (
-            <Form className="space-y-6">
+          {({ isValid, dirty, values, errors, touched, setFieldValue }) => (
+            <Form className="space-y-5">
               <div>
-                <label htmlFor="path-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('paths.form.name')} *
-                </label>
+                <FieldLabel error={touched.name ? errors.name : undefined}>
+                  {t('paths.form.name')} <span className="text-rose-500">*</span>
+                </FieldLabel>
                 <Field
                   type="text"
                   name="name"
-                  id="path-name"
+                  autoFocus
+                  aria-label={t('paths.form.name')}
                   placeholder={t('paths.form.name_placeholder')}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none transition-all"
+                  className={INPUT}
                 />
-                <ErrorMessage name="name" component="p" className="mt-1 text-sm text-red-500" />
               </div>
 
               <div>
-                <label htmlFor="path-description" className="block text-sm font-medium text-gray-700 mb-1">
+                <FieldLabel
+                  error={touched.description ? errors.description : undefined}
+                  hint={`${values.description.length}/500`}
+                >
                   {t('paths.form.description')}
-                </label>
+                </FieldLabel>
                 <Field
                   as="textarea"
                   name="description"
-                  id="path-description"
                   rows={3}
+                  aria-label={t('paths.form.description')}
                   placeholder={t('paths.form.description_placeholder')}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none transition-all resize-none"
+                  className={TEXTAREA}
                 />
-                <ErrorMessage name="description" component="p" className="mt-1 text-sm text-red-500" />
               </div>
 
-              <div className="flex items-center gap-3">
-                <Field
-                  type="checkbox"
-                  name="public"
-                  id="path-public"
-                  className="w-4 h-4 text-black rounded border-gray-300 focus:ring-black/20"
-                />
-                <label htmlFor="path-public" className="text-sm text-gray-700">
-                  {t('paths.form.public_label')}
-                </label>
+              <div>
+                <FieldLabel>{t('paths.form.visibility')}</FieldLabel>
+                <div role="radiogroup" aria-label={t('paths.form.visibility')} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <ChoiceCard
+                    selected={values.public}
+                    onClick={() => setFieldValue('public', true)}
+                    icon={<Globe size={18} />}
+                    title={t('paths.form.public')}
+                    description={t('paths.form.public_label')}
+                  />
+                  <ChoiceCard
+                    selected={!values.public}
+                    onClick={() => setFieldValue('public', false)}
+                    icon={<Lock size={18} />}
+                    title={t('paths.dashboard.create.private')}
+                    description={t('paths.dashboard.create.private_hint')}
+                  />
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
+              <div className="flex justify-end gap-2 pt-4 border-t border-neutral-100">
+                <button type="button" onClick={onClose} className={BTN_SECONDARY}>
                   {t('common.cancel')}
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !isValid || !dirty}
-                  className="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+                <button type="submit" disabled={isSubmitting || !isValid || !dirty} className={BTN_PRIMARY}>
+                  {isSubmitting && <CircleNotch size={16} className="animate-spin" />}
                   {t('paths.modals.create.submit')}
                 </button>
               </div>

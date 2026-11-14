@@ -17,6 +17,7 @@ Access Rules:
 """
 
 import logging
+from datetime import datetime, timezone
 from typing import Union, Optional
 from fastapi import HTTPException, Request, status
 from sqlalchemy import inspect as sa_inspect
@@ -24,6 +25,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.users import AnonymousUser, PublicUser, APITokenUser, SuperadminAPITokenUser
+from src.security.superadmin import superadmin_org_bypass_blocked
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
@@ -36,6 +38,14 @@ from src.security.rbac.rbac import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _window_open(starts_at, expires_at, now: datetime) -> bool:
+    """Is a group link's access window open? (No dates = always.)"""
+    def aware(dt):
+        return dt if dt is None or dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    starts_at, expires_at = aware(starts_at), aware(expires_at)
+    return (starts_at is None or starts_at <= now) and (expires_at is None or expires_at > now)
 
 
 class ResourceAccessChecker:
@@ -183,7 +193,11 @@ class ResourceAccessChecker:
         # membership row. The flag is loaded onto PublicUser by get_current_user
         # so this is a free attribute read, no DB hit. API tokens and anonymous
         # users carry no superadmin flag and continue through the normal path.
-        if isinstance(self.current_user, PublicUser) and self.current_user.is_superadmin:
+        if (
+            isinstance(self.current_user, PublicUser)
+            and self.current_user.is_superadmin
+            and not superadmin_org_bypass_blocked(self.current_user.id)
+        ):
             return AccessDecision(
                 allowed=True,
                 reason="Superadmin access",
@@ -1003,13 +1017,24 @@ class ResourceAccessChecker:
             self._usergroup_cache[cache_key] = allowed
             return allowed
 
-        # Check if user is a member of any linked UserGroup
-        usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
-        membership_stmt = select(UserGroupUser).where(
-            UserGroupUser.usergroup_id.in_(usergroup_ids),
-            UserGroupUser.user_id == user_id
-        )
-        membership = (await self.db_session.execute(membership_stmt)).scalars().first()
+        # Check if user is a member of any linked UserGroup. Every link keeps
+        # the resource restricted, but only links whose access window is open
+        # grant access, and only to memberships that have not expired.
+        from src.services.usergroups.windows import ugu_current
+
+        now = datetime.now(timezone.utc)
+        usergroup_ids = [
+            ugr.usergroup_id for ugr in usergroup_resources
+            if _window_open(getattr(ugr, "starts_at", None), getattr(ugr, "expires_at", None), now)
+        ]
+        membership = None
+        if usergroup_ids:
+            membership_stmt = select(UserGroupUser).where(
+                UserGroupUser.usergroup_id.in_(usergroup_ids),
+                UserGroupUser.user_id == user_id,
+                ugu_current(now),
+            )
+            membership = (await self.db_session.execute(membership_stmt)).scalars().first()
 
         result = membership is not None and await self._is_member_of_resource_org(
             resource_uuid, user_id
@@ -1093,11 +1118,13 @@ def _resource_model(resource_type: str):
         from src.db.media.media import Media
         return Media, "media_uuid"
     if resource_type == "boards":
-        from src.db.boards import Board
-        return Board, "board_uuid"
+        from src.core.ee_hooks import get_ee_module
+        boards = get_ee_module("ee.db.boards")  # Boards are EE-only
+        return (boards.Board, "board_uuid") if boards is not None else None
     if resource_type == "playgrounds":
-        from src.db.playgrounds import Playground
-        return Playground, "playground_uuid"
+        from src.core.ee_hooks import get_ee_module
+        playgrounds = get_ee_module("ee.db.playgrounds")  # Plays are EE-only
+        return (playgrounds.Playground, "playground_uuid") if playgrounds is not None else None
     # Child resources
     if resource_type == "coursechapters":
         from src.db.courses.chapters import Chapter

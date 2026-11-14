@@ -1,17 +1,8 @@
 'use client'
-import { Input } from "@components/ui/input"
-import { Textarea } from "@components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
-import FormLayout, {
-  FormField,
-  FormLabelAndMessage,
-} from '@components/Objects/StyledElements/Form/Form'
-import * as Form from '@radix-ui/react-form'
 import { createNewCourse } from '@services/courses/courses'
 import { createChapter } from '@services/courses/chapters'
-import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
-import React, { useEffect } from 'react'
-import { BarLoader } from 'react-spinners'
+import { useOrg } from '@components/Contexts/OrgContext'
+import React from 'react'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
@@ -20,12 +11,20 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import {  UploadCloud, Clipboard } from 'lucide-react'
+import { Clipboard, Globe, ImageSquare, CircleNotch, Lock, CloudArrowUp, X } from '@phosphor-icons/react'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
 import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
 import { useTranslation } from "react-i18next"
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import { useUpgradeModal } from '@components/Dashboard/Shared/PlanRestricted/UpgradeModalContext'
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  ChoiceCard,
+  FieldLabel,
+  INPUT,
+  TEXTAREA,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
 
 const _validationSchema = Yup.object().shape({
   name: Yup.string()
@@ -39,13 +38,15 @@ const _validationSchema = Yup.object().shape({
   thumbnail: Yup.mixed().nullable()
 })
 
-function CreateCourseModal({ closeModal, orgslug }: any) {
+function CreateCourseModal({ closeModal, orgslug, onCancel }: any) {
   const { t } = useTranslation()
   const { track } = useLHAnalytics('dashboard')
   const router = useRouter()
   const session = useLHSession() as any
   const queryClient = useQueryClient()
-  const [orgId, setOrgId] = React.useState(null) as any
+  // The org is already in context; no need to refetch it just for its id.
+  const org = useOrg() as any
+  const orgId = org?.id
   const [isUploading, setIsUploading] = React.useState(false)
   // A free org that hits its course limit gets the shared upgrade paywall.
   const { handlePlanLimit } = useUpgradeModal()
@@ -154,20 +155,6 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     }
   })
 
-  const getOrgMetadata = async () => {
-    const org = await getOrganizationContextInfoWithoutCredentials(orgslug, {
-      revalidate: 360,
-      tags: ['organizations'],
-    })
-    setOrgId(org.id)
-  }
-
-  useEffect(() => {
-    if (orgslug) {
-      getOrgMetadata()
-    }
-  }, [orgslug])
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -220,154 +207,199 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     }
   }
 
+  const [isDragging, setIsDragging] = React.useState(false)
+  const thumbnailFile = formik.values.thumbnail as File | null
+  const thumbnailPreview = React.useMemo(
+    () => (thumbnailFile ? URL.createObjectURL(thumbnailFile) : null),
+    [thumbnailFile]
+  )
+  React.useEffect(() => () => {
+    if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+  }, [thumbnailPreview])
+
+  const acceptImage = (file?: File | null) => {
+    if (file && file.type.startsWith('image/')) formik.setFieldValue('thumbnail', file)
+  }
+
+  // Pasting an image anywhere in the form sets it as the thumbnail.
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith('image/'))
+    const file = item?.getAsFile()
+    if (file) {
+      e.preventDefault()
+      acceptImage(file)
+    }
+  }
+
+  const fieldError = (name: 'name' | 'description') =>
+    formik.touched[name] && formik.errors[name] ? (formik.errors[name] as string) : undefined
+
   return (
-    <FormLayout onSubmit={formik.handleSubmit} >
-      <FormField name="name">
-        <FormLabelAndMessage
-          label={t('courses.course_name')}
-          message={formik.errors.name}
-        />
-        <Form.Control asChild>
-          <Input
-            onChange={formik.handleChange}
-            value={formik.values.name}
-            type="text"
-            required
-          />
-        </Form.Control>
-      </FormField>
+    <form onSubmit={formik.handleSubmit} onPaste={handlePaste} className="flex flex-col gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_260px] gap-5">
+        <div className="flex flex-col gap-4 min-w-0">
+          <label className="block">
+            <FieldLabel error={fieldError('name')} hint={`${formik.values.name.length}/100`}>
+              {t('courses.course_name')}
+            </FieldLabel>
+            <input
+              name="name"
+              autoFocus
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              maxLength={100}
+              placeholder={t('dashboard.courses.home.name_placeholder')}
+              className={INPUT}
+            />
+          </label>
+          <label className="block">
+            <FieldLabel error={fieldError('description')}>{t('library.description')}</FieldLabel>
+            <textarea
+              name="description"
+              rows={4}
+              value={formik.values.description}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder={t('dashboard.courses.home.description_placeholder')}
+              className={TEXTAREA}
+            />
+          </label>
+        </div>
 
-      <FormField name="description">
-        <FormLabelAndMessage
-          label={t('library.description')}
-          message={formik.errors.description}
-        />
-        <Form.Control asChild>
-          <Textarea
-            onChange={formik.handleChange}
-            value={formik.values.description}
-            required
+        <div className="flex flex-col">
+          <FieldLabel>{t('courses.course_thumbnail')}</FieldLabel>
+          <input
+            type="file"
+            id="fileInput"
+            className="hidden"
+            onChange={handleFileChange}
+            accept="image/jpeg,image/png,image/webp,image/gif"
           />
-        </Form.Control>
-      </FormField>
-
-      <FormField name="thumbnail">
-        <FormLabelAndMessage
-          label={t('courses.course_thumbnail')}
-          message={formik.errors.thumbnail}
-        />
-        <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
-          <div className="flex flex-col justify-center items-center h-full">
-            <div className="flex flex-col justify-center items-center">
-              {formik.values.thumbnail ? (
+          <div
+            onDragOver={(e) => {
+              e.preventDefault()
+              setIsDragging(true)
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault()
+              setIsDragging(false)
+              acceptImage(e.dataTransfer.files?.[0])
+            }}
+            className={`relative aspect-video rounded-xl overflow-hidden transition-all ${
+              isDragging
+                ? 'ring-2 ring-neutral-900 bg-neutral-50'
+                : thumbnailPreview
+                  ? 'ring-1 ring-black/5'
+                  : 'border-2 border-dashed border-neutral-200 bg-neutral-50 hover:bg-neutral-100'
+            }`}
+          >
+            {thumbnailPreview ? (
+              <>
                 <img
-                  src={URL.createObjectURL(formik.values.thumbnail)}
-                  className={`${isUploading ? 'animate-pulse' : ''} shadow-sm w-[200px] h-[100px] rounded-md object-cover`}
-                />
-              ) : (
-                <img
-                  src="/empty_thumbnail.png"
-                  className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200 object-cover"
-                />
-              )}
-              <div className="flex justify-center items-center space-x-2">
-                <input
-                  type="file"
-                  id="fileInput"
-                  style={{ display: 'none' }}
-                  onChange={handleFileChange}
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  src={thumbnailPreview}
+                  alt=""
+                  className={`w-full h-full object-cover ${isUploading ? 'animate-pulse' : ''}`}
                 />
                 <button
                   type="button"
-                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
-                  onClick={() => document.getElementById('fileInput')?.click()}
+                  onClick={() => formik.setFieldValue('thumbnail', null)}
+                  aria-label={t('common.remove')}
+                  className="absolute top-2 end-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
                 >
-                  <UploadCloud size={16} className="me-2" />
-                  <span>{t('courses.upload_image')}</span>
+                  <X size={14} />
                 </button>
-                <button
-                  type="button"
-                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
-                  onClick={handlePasteFromClipboard}
-                >
-                  <Clipboard size={16} className="me-2" />
-                  <span>{t('courses.paste_from_clipboard')}</span>
-                </button>
-                <AIImageButton
-                  onSelect={handleRemoteImageSelect}
-                  onSelectFile={handleAIImageFile}
-                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex gap-2"
-                />
-              </div>
-            </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => document.getElementById('fileInput')?.click()}
+                className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-neutral-500"
+              >
+                <ImageSquare size={22} className="text-neutral-400" />
+                <span className="text-xs font-semibold text-neutral-700">{t('dashboard.courses.home.drop_image')}</span>
+                <span className="text-[11px] text-neutral-400">{t('dashboard.courses.home.drop_image_hint')}</span>
+              </button>
+            )}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-1">
+            <button
+              type="button"
+              onClick={() => document.getElementById('fileInput')?.click()}
+              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+            >
+              <CloudArrowUp size={14} />
+              {t('courses.upload_image')}
+            </button>
+            <button
+              type="button"
+              onClick={handlePasteFromClipboard}
+              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+            >
+              <Clipboard size={14} />
+              {t('courses.paste_from_clipboard')}
+            </button>
+            <AIImageButton
+              onSelect={handleRemoteImageSelect}
+              onSelectFile={handleAIImageFile}
+              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+            />
           </div>
         </div>
-      </FormField>
+      </div>
 
-			<FormField name="learnings">
-				<FormLabelAndMessage
-					label={t('courses.course_learnings')}
-					message={formik.errors.learnings}
-				/>
-				<FormTagInput
-					placeholder={t('courses.enter_to_add')}
-					value={formik.values.learnings}
-					onChange={(value) => formik.setFieldValue('learnings', value)}
-					error={formik.errors.learnings}
-				/>
-			</FormField>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <FieldLabel hint={t('courses.enter_to_add')}>{t('courses.course_learnings')}</FieldLabel>
+          <FormTagInput
+            placeholder={t('courses.enter_to_add')}
+            value={formik.values.learnings}
+            onChange={(value) => formik.setFieldValue('learnings', value)}
+            error={formik.errors.learnings}
+          />
+        </div>
+        <div>
+          <FieldLabel hint={t('courses.enter_to_add')}>{t('courses.course_tags')}</FieldLabel>
+          <FormTagInput
+            placeholder={t('courses.enter_to_add')}
+            value={formik.values.tags}
+            onChange={(value) => formik.setFieldValue('tags', value)}
+            error={formik.errors.tags}
+          />
+        </div>
+      </div>
 
-			<FormField name="tags">
-				<FormLabelAndMessage
-					label={t('courses.course_tags')}
-					message={formik.errors.tags}
-				/>
-				<FormTagInput
-					placeholder={t('courses.enter_to_add')}
-					value={formik.values.tags}
-					onChange={(value) => formik.setFieldValue('tags', value)}
-					error={formik.errors.tags}
-				/>
-			</FormField>
+      <div>
+        <FieldLabel>{t('courses.course_visibility')}</FieldLabel>
+        <div role="radiogroup" className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <ChoiceCard
+            selected={formik.values.visibility}
+            onClick={() => formik.setFieldValue('visibility', true)}
+            icon={<Globe size={18} />}
+            title={t('courses.public')}
+            description={t('courses.public_desc')}
+          />
+          <ChoiceCard
+            selected={!formik.values.visibility}
+            onClick={() => formik.setFieldValue('visibility', false)}
+            icon={<Lock size={18} />}
+            title={t('courses.private')}
+            description={t('courses.private_desc')}
+          />
+        </div>
+      </div>
 
-      <FormField name="visibility">
-        <FormLabelAndMessage
-          label={t('courses.course_visibility')}
-          message={formik.errors.visibility}
-        />
-        <Select
-          value={formik.values.visibility.toString()}
-          onValueChange={(value) => formik.setFieldValue('visibility', value === 'true')}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={t('courses.select_visibility')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="true">{t('courses.public')} ({t('courses.public_desc')})</SelectItem>
-            <SelectItem value="false">{t('courses.private')} ({t('courses.private_desc')})</SelectItem>
-          </SelectContent>
-        </Select>
-      </FormField>
-
-      <div className="flex justify-end mt-6">
-        <button
-          type="submit"
-          disabled={formik.isSubmitting}
-          className="px-4 py-2 bg-black text-white text-sm font-bold rounded-md"
-        >
-          {formik.isSubmitting ? (
-            <BarLoader
-              cssOverride={{ borderRadius: 60 }}
-              width={60}
-              color="#ffffff"
-            />
-          ) : (
-            t('courses.create_course_btn')
-          )}
+      <div className="flex items-center justify-end gap-2 pt-4 border-t border-neutral-100">
+        <button type="button" onClick={onCancel ?? closeModal} disabled={formik.isSubmitting} className={BTN_SECONDARY}>
+          {t('common.cancel')}
+        </button>
+        <button type="submit" disabled={formik.isSubmitting || !orgId} className={BTN_PRIMARY}>
+          {formik.isSubmitting && <CircleNotch size={15} className="animate-spin" />}
+          {t('courses.create_course_btn')}
         </button>
       </div>
-    </FormLayout>
+    </form>
   )
 }
 

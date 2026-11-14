@@ -6,6 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request, status
 
+from src.core.ee_hooks import audit_event
 from src.db.api_tokens import (
     APIToken,
     APITokenCreate,
@@ -107,6 +108,17 @@ def verify_token(provided_token: str, stored_hash: str) -> bool:
     """
     return security_verify_token(provided_token, stored_hash)
 
+
+
+def _audit_fields(token) -> dict:
+    """What an audit log entry compares on a token (never its hash)."""
+    return {
+        "name": token.name,
+        "description": token.description,
+        "rights": token.rights,
+        "expires_at": str(token.expires_at) if token.expires_at else None,
+        "is_active": token.is_active,
+    }
 
 async def create_api_token(
     request: Request,
@@ -212,6 +224,11 @@ async def create_api_token(
     db_session.add(api_token)
     await db_session.commit()
     await db_session.refresh(api_token)
+    audit_event(
+        request, action="security.api_token.created", org_id=org_id, actor=current_user,
+        target_type="api_token", target_id=api_token.token_uuid, target_name=api_token.name,
+        before={}, after=_audit_fields(api_token),
+    )
 
     # Return the created response with the full token (only time it's shown!)
     return APITokenCreatedResponse(
@@ -333,6 +350,7 @@ async def update_api_token(
         user_rights = user_role.rights if user_role else None
         await validate_rights_structure(token_data.rights, user_rights)
 
+    before = _audit_fields(token)
     # Update fields
     update_data = token_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -346,6 +364,11 @@ async def update_api_token(
     db_session.add(token)
     await db_session.commit()
     await db_session.refresh(token)
+    audit_event(
+        request, action="security.api_token.updated", org_id=org_id, actor=current_user,
+        target_type="api_token", target_id=token.token_uuid, target_name=token.name,
+        before=before, after=_audit_fields(token),
+    )
 
     return APITokenRead(**token.model_dump())
 
@@ -384,6 +407,10 @@ async def revoke_api_token(
 
     db_session.add(token)
     await db_session.commit()
+    audit_event(
+        request, action="security.api_token.revoked", org_id=org_id, actor=current_user,
+        target_type="api_token", target_id=token.token_uuid, target_name=token.name,
+    )
 
     return {"message": "API token revoked successfully"}
 
@@ -448,6 +475,10 @@ async def regenerate_api_token(
     db_session.add(token)
     await db_session.commit()
     await db_session.refresh(token)
+    audit_event(
+        request, action="security.api_token.regenerated", org_id=org_id, actor=current_user,
+        target_type="api_token", target_id=token.token_uuid, target_name=token.name,
+    )
 
     # Return with the new full token
     return APITokenCreatedResponse(
@@ -648,6 +679,10 @@ _TOKEN_BUCKET_CAPS = {
     "certifications": "courses",
     "payments": "organizations",
     "search": "courses",
+    # Newsletter lists, audiences and campaigns (EE): org-level data.
+    "newsletter": "organizations",
+    # CRM integrations (EE): status, mapping, syncs. Org-level data.
+    "crm": "organizations",
 }
 
 

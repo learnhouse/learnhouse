@@ -84,11 +84,20 @@ export default function OrgSquareLogo({
   // A media host without CORS rejects the load outright; fall back to a plain
   // image so the logo still shows on screen, even if the PDF can't include it.
   const [corsFailed, setCorsFailed] = React.useState(false)
+  // Logo files that failed to load (deleted, wrong host): skip to the next
+  // option instead of letting the app-wide image guard paint its dark
+  // placeholder in place of a brand mark.
+  const [broken, setBroken] = React.useState<string[]>([])
   const cors = crossOrigin && !corsFailed ? crossOrigin : undefined
-  const onError = cors ? () => setCorsFailed(true) : undefined
   const toSrc = (url: string) => (cors ? corsSafeUrl(url) : url)
-  const square = getOrgSquareLogoUrl(org)
-  const wide = getOrgWideLogoUrl(org)
+  const onErrorFor = (url: string) => () => {
+    if (cors) setCorsFailed(true)
+    else setBroken((prev) => (prev.includes(url) ? prev : [...prev, url]))
+  }
+  const squareUrl = getOrgSquareLogoUrl(org)
+  const wideUrl = getOrgWideLogoUrl(org)
+  const square = squareUrl && !broken.includes(squareUrl) ? squareUrl : null
+  const wide = wideUrl && !broken.includes(wideUrl) ? wideUrl : null
   const label = alt ?? org?.name ?? ''
 
   if (square) {
@@ -97,7 +106,8 @@ export default function OrgSquareLogo({
         src={toSrc(square)}
         alt={label}
         crossOrigin={cors}
-        onError={onError}
+        onError={onErrorFor(square)}
+        data-no-image-fallback=""
         className={cn('w-full h-full object-cover', className)}
       />
     )
@@ -108,7 +118,8 @@ export default function OrgSquareLogo({
         src={toSrc(wide)}
         alt={label}
         crossOrigin={cors}
-        onError={onError}
+        onError={onErrorFor(wide)}
+        data-no-image-fallback=""
         className={cn('w-full h-full object-contain', wideInsetClassName, className)}
       />
     )

@@ -1,5 +1,1 @@
-import PageLoading from '@components/Objects/Loaders/PageLoading'
-
-export default function Loading() {
-  return <PageLoading />
-}
+export { BoardLoading as default } from '@ee/app/boards/BoardStates'

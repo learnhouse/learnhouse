@@ -58,3 +58,52 @@ export function rankPages<T extends PageSearchText>(pages: T[], query: string): 
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .map((entry) => entry.page)
 }
+
+export interface HighlightPart {
+  text: string
+  match: boolean
+}
+
+/**
+ * Split `text` into plain and matched runs for every query term, so a result
+ * can show why it matched. Overlapping hits merge into one run. Matching is
+ * case-insensitive; when lowercasing changes the string's length (a few
+ * scripts do) offsets would drift, so the text comes back unmarked instead.
+ */
+export function highlightParts(text: string | null | undefined, query: string | null | undefined): HighlightPart[] {
+  const source = text ?? ''
+  const terms = queryTerms(query)
+  if (!source || terms.length === 0) return source ? [{ text: source, match: false }] : []
+  const haystack = source.normalize('NFC').toLowerCase()
+  if (haystack.length !== source.length) return [{ text: source, match: false }]
+
+  const ranges: Array<[number, number]> = []
+  for (const term of terms) {
+    let from = 0
+    while (from <= haystack.length - term.length) {
+      const at = haystack.indexOf(term, from)
+      if (at === -1) break
+      ranges.push([at, at + term.length])
+      from = at + term.length
+    }
+  }
+  if (ranges.length === 0) return [{ text: source, match: false }]
+
+  ranges.sort((a, b) => a[0] - b[0])
+  const merged: Array<[number, number]> = []
+  for (const [start, end] of ranges) {
+    const last = merged[merged.length - 1]
+    if (last && start <= last[1]) last[1] = Math.max(last[1], end)
+    else merged.push([start, end])
+  }
+
+  const parts: HighlightPart[] = []
+  let cursor = 0
+  for (const [start, end] of merged) {
+    if (start > cursor) parts.push({ text: source.slice(cursor, start), match: false })
+    parts.push({ text: source.slice(start, end), match: true })
+    cursor = end
+  }
+  if (cursor < source.length) parts.push({ text: source.slice(cursor), match: false })
+  return parts
+}

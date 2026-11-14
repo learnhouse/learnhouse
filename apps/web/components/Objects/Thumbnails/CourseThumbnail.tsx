@@ -7,17 +7,17 @@ import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import type { ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
-import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { getCourseMetadata } from '@services/courses/courses'
-import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy, Download, CheckSquare, Square, Lock } from 'lucide-react'
+import { ArrowRight, BookOpen, Copy, DownloadSimple, DotsThree, PencilSimpleLine, SlidersHorizontal, CheckSquare, Square, Lock } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useRouter } from 'next/navigation'
+import { prefetchRouteFull } from '@/lib/navigation/prefetchRoute'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import React from 'react'
 import toast from 'react-hot-toast'
-import UserAvatar from '@components/Objects/UserAvatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,9 +25,12 @@ import {
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
 import { useTranslation } from 'react-i18next'
-import { formatDate } from '@/lib/format'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
-import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
+import CourseCard from '@components/Objects/Thumbnails/CourseCard'
+import { Chip } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { coursePath } from '@/lib/seo/paths'
+import { useContentLanguage } from '@/hooks/useContentLanguage'
+import { CourseLanguageBadges } from '@components/Objects/Courses/ContentLanguage/ContentLanguage'
 
 // Admin-only; course cards are mostly seen by learners.
 const ManageAccessPopover = dynamic(() => import('@components/Dashboard/Library/ManageAccessPopover'), { ssr: false })
@@ -68,11 +71,13 @@ type PropsType = {
 export const removeCoursePrefix = (course_uuid: string) => course_uuid.replace('course_', '')
 
 function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isSelected = false, onToggleSelect, isPriority = false }: PropsType) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const queryClient = useQueryClient()
+  const router = useRouter()
   const { track } = useLHAnalytics('learner')
+  const { lang: contentLang } = useContentLanguage()
 
   const cleanUuid = removeCoursePrefix(course.course_uuid)
 
@@ -83,11 +88,17 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
     })
   }
 
-  // Prefetch course meta on hover so the course page feels instant
+  // Prefetch the course page and its meta on hover so opening it is instant.
+  // The course route is client-rendered (no data in its payload), so a full
+  // prefetch can't go stale. Not for dashboard cards, whose link differs.
   const handleMouseEnter = () => {
+    if (!customLink && !isDashboard) prefetchRouteFull(router, getUriWithOrg(orgslug, coursePath(course)))
+    // Learner cards warm the course in the content language the course page
+    // will ask for; dashboard cards keep the source version.
+    const lang = isDashboard ? undefined : contentLang || undefined
     queryClient.prefetchQuery({
-      queryKey: queryKeys.courses.meta(cleanUuid),
-      queryFn: () => getCourseMetadata(cleanUuid, {}, session?.data?.tokens?.access_token, { slim: true }),
+      queryKey: queryKeys.courses.meta(cleanUuid, lang),
+      queryFn: () => getCourseMetadata(cleanUuid, {}, session?.data?.tokens?.access_token, { slim: true, lang }),
       staleTime: 60_000,
     })
   }
@@ -97,11 +108,6 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
     e.stopPropagation()
     onToggleSelect?.(course.course_uuid)
   }
-
-  const activeAuthors = course.authors?.filter(author => author.authorship_status === 'ACTIVE') || []
-  const displayedAuthors = activeAuthors.slice(0, 3)
-  const hasMoreAuthors = activeAuthors.length > 3
-  const remainingAuthorsCount = activeAuthors.length - 3
 
   const deleteCourse = async () => {
     const toastId = toast.loading(t('courses.deleting_course'))
@@ -153,131 +159,59 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
     }
   }
 
-  const thumbnailImage = course.thumbnail_image
-    ? getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)
-    : '/empty_thumbnail.png'
-
-  const courseLink = customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)
+  const courseLink = customLink ? customLink : getUriWithOrg(orgslug, coursePath(course))
 
   return (
-    <div data-kbd-item="" onMouseEnter={handleMouseEnter} className={`group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01] ${isSelected ? 'ring-2 ring-black ring-offset-2' : ''}`}>
-      {/* Selection checkbox - visible on hover or when selected (dashboard only) */}
-      {isDashboard && onToggleSelect && (
-        <button
-          onClick={handleSelectClick}
-          aria-label={isSelected ? t('courses.deselect_course') : t('courses.select_course')}
-          className={`absolute top-2 start-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
-            isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`}
-        >
-          {isSelected ? (
-            <CheckSquare className="w-4 h-4 text-black" />
-          ) : (
-            <Square className="w-4 h-4 text-gray-500" />
-          )}
-        </button>
-      )}
-
-      {/* Options menu - visible on hover or when dropdown is open */}
-      <AdminEditOptions
-        course={course}
-        orgSlug={orgslug}
-        deleteCourse={deleteCourse}
-        cloneCourse={handleCloneCourse}
-        exportCourse={handleExportCourse}
-        isDashboard={isDashboard}
-      />
-
-      <Link prefetch={false} href={courseLink} onClick={handleCardOpen} className="block relative aspect-video overflow-hidden bg-gray-50">
-        <ThumbnailImage
-          src={thumbnailImage}
-          fetchPriority={isPriority ? 'high' : undefined}
-          loading={isPriority ? 'eager' : 'lazy'}
-          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-        {isDashboard && (
-          <div className="absolute bottom-2 start-2">
-            {course.published ? (
-              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 rounded-full">
-                {t('courses.published')}
-              </span>
-            ) : (
-              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-yellow-100 text-yellow-700 rounded-full">
-                {t('courses.unpublished')}
-              </span>
-            )}
-          </div>
-        )}
-      </Link>
-
-      <div className="p-3 flex flex-col space-y-1.5">
-        <div className="flex items-start justify-between">
-          <Link
-            prefetch={false}
-            href={courseLink}
-            onClick={handleCardOpen}
-            className="text-base font-bold text-gray-900 leading-tight hover:text-black transition-colors line-clamp-1"
-           dir="auto">
-            {course.name}
-          </Link>
-        </div>
-        
-        {course.description && (
-          <p className="text-[11px] text-gray-500 line-clamp-2 min-h-[1.5rem]">
-            {course.description}
-          </p>
-        )}
-
-        <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            {displayedAuthors.length > 0 && (
-              <div className="flex -space-x-2 items-center">
-                {displayedAuthors.map((author, index) => (
-                  <div 
-                    key={author.user.user_uuid} 
-                    className="relative"
-                    style={{ zIndex: displayedAuthors.length - index }}
-                  >
-                    <UserAvatar
-                      border="border-2"
-                      rounded="rounded-full"
-                      avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
-                      predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
-                      width={20}
-                      showProfilePopup={true}
-                      userId={author.user.id}
-                    />
-                  </div>
-                ))}
-                {hasMoreAuthors && (
-                  <div className="relative z-0">
-                    <div className="flex items-center justify-center w-[20px] h-[20px] text-[8px] font-bold text-gray-600 bg-gray-100 border-2 border-white rounded-full">
-                      +{remainingAuthorsCount}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {course.update_date && (
-              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                {formatDate(course.update_date, i18n.language, { dateStyle: undefined, month: 'short', day: 'numeric' })}
-              </span>
-            )}
-          </div>
-          
-          <Link
-            prefetch={false}
-            href={courseLink}
-            onClick={handleCardOpen}
-            className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
+    <CourseCard
+      course={course}
+      orgUuid={org?.org_uuid}
+      href={courseLink}
+      selected={isSelected}
+      priority={isPriority}
+      onOpen={handleCardOpen}
+      onWarm={handleMouseEnter}
+      badges={
+        isDashboard ? (
+          <Chip tone={course.published ? 'emerald' : 'neutral'}>
+            {course.published ? t('courses.published') : t('courses.unpublished')}
+          </Chip>
+        ) : (
+          // "EN · FR" when the course has published translations; nothing otherwise.
+          <CourseLanguageBadges course={course} />
+        )
+      }
+      topStart={
+        isDashboard && onToggleSelect ? (
+          <button
+            onClick={handleSelectClick}
+            aria-label={isSelected ? t('courses.deselect_course') : t('courses.select_course')}
+            className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white transition-all shadow-sm"
           >
-            {t('courses.start_learning')}
-          </Link>
-        </div>
-      </div>
-    </div>
+            {isSelected ? <CheckSquare size={16} weight="fill" className="text-neutral-900" /> : <Square size={16} className="text-neutral-500" />}
+          </button>
+        ) : undefined
+      }
+      topEnd={
+        <AdminEditOptions
+          course={course}
+          orgSlug={orgslug}
+          deleteCourse={deleteCourse}
+          cloneCourse={handleCloneCourse}
+          exportCourse={handleExportCourse}
+        />
+      }
+      footerEnd={
+        <Link
+          prefetch={false}
+          href={courseLink}
+          onClick={handleCardOpen}
+          className="lh-t-link inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs font-semibold text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+        >
+          {t('courses.start_learning')}
+          <ArrowRight size={12} weight="bold" className="rtl:rotate-180" />
+        </Link>
+      }
+    />
   )
 }
 
@@ -300,24 +234,22 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
       checkMethod="roles"
       orgId={course.org_id}
     >
-      <div className={`absolute top-2 end-2 z-20 transition-opacity ${
-        isDashboard && !isOpen ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
-      }`}>
+      <div data-dashboard={isDashboard || undefined}>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
-            <button aria-label={t('courses.actions')} className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
-              <MoreVertical size={18} className="text-gray-700" />
+            <button aria-label={t('courses.actions')} className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 data-[state=open]:bg-neutral-100 transition-colors">
+              <DotsThree size={18} weight="bold" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuItem asChild>
               <Link prefetch={false} href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`)} className="flex items-center cursor-pointer">
-                <FilePenLine className="me-2 h-4 w-4" /> {t('courses.edit_content')}
+                <PencilSimpleLine className="me-2 h-4 w-4" /> {t('courses.edit_content')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link prefetch={false} href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)} className="flex items-center cursor-pointer">
-                <Settings2 className="me-2 h-4 w-4" /> {t('common.settings')}
+                <SlidersHorizontal className="me-2 h-4 w-4" /> {t('common.settings')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -339,7 +271,7 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
                 onClick={exportCourse}
                 className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
               >
-                <Download className="me-2 h-4 w-4" /> {t('courses.export_course')}
+                <DownloadSimple className="me-2 h-4 w-4" /> {t('courses.export_course')}
               </button>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -357,7 +289,7 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
                 dialogTitle={t('courses.delete_course_title', { name: course.name })}
                 dialogTrigger={
                   <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    <BookMinus className="me-2 h-4 w-4" /> {t('courses.delete_course')}
+                    <BookOpen className="me-2 h-4 w-4" /> {t('courses.delete_course')}
                   </button>
                 }
                 functionToExecute={deleteCourse}

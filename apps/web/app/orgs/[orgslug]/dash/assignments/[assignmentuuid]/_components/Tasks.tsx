@@ -1,6 +1,7 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
-import { Code2, FileUp, GripVertical, Hash, ListTodo, Pencil, Plus, Sparkles, Type } from 'lucide-react';
+import { Code, FileArrowUp, DotsSixVertical, Hash, ListChecks, PencilSimple, Plus, TextT } from '@phosphor-icons/react'
+import { AIButton, AIMark } from '@components/Objects/AI/AIBrand'
 import React, { useEffect } from 'react'
 import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd'
 import { useQueryClient } from '@tanstack/react-query'
@@ -13,17 +14,17 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { queryKeys } from '@/lib/query/keys'
 import { moveTask, sortTasksByOrder } from '@/lib/assignments/taskOrder'
 import { reorderAssignmentTasks } from '@services/courses/assignments'
-import { BTN_PRIMARY, BTN_SECONDARY } from '../../_components/assignmentUi'
+import { BTN_PRIMARY } from '../../_components/assignmentUi'
 
 // The API caps an assignment at this many tasks; past it the add actions hide.
 export const MAX_TASKS = 10
 
 export const TASK_TYPE_META: Record<string, { label: string; labelKey?: string; Icon: React.ComponentType<{ size?: number; className?: string }> }> = {
-    QUIZ: { label: 'Quiz', labelKey: 'dashboard.assignments.editor.task_type_labels.quiz', Icon: ListTodo },
-    FILE_SUBMISSION: { label: 'File upload', labelKey: 'dashboard.assignments.editor.task_type_labels.file_submission', Icon: FileUp },
-    FORM: { label: 'Form', labelKey: 'dashboard.assignments.editor.task_type_labels.form', Icon: Type },
-    CODE: { label: 'Code', labelKey: 'dashboard.assignments.editor.task_type_labels.code', Icon: Code2 },
-    SHORT_ANSWER: { label: 'Short answer', labelKey: 'dashboard.assignments.editor.task_type_labels.short_answer', Icon: Pencil },
+    QUIZ: { label: 'Quiz', labelKey: 'dashboard.assignments.editor.task_type_labels.quiz', Icon: ListChecks },
+    FILE_SUBMISSION: { label: 'File upload', labelKey: 'dashboard.assignments.editor.task_type_labels.file_submission', Icon: FileArrowUp },
+    FORM: { label: 'Form', labelKey: 'dashboard.assignments.editor.task_type_labels.form', Icon: TextT },
+    CODE: { label: 'Code', labelKey: 'dashboard.assignments.editor.task_type_labels.code', Icon: Code },
+    SHORT_ANSWER: { label: 'Short answer', labelKey: 'dashboard.assignments.editor.task_type_labels.short_answer', Icon: PencilSimple },
     NUMBER_ANSWER: { label: 'Number', labelKey: 'dashboard.assignments.editor.task_type_labels.number_answer', Icon: Hash },
 }
 
@@ -40,8 +41,8 @@ export function TaskCreateActions({ assignment_uuid, layout = 'stack' }: { assig
             <Modal
                 isDialogOpen={isNewTaskModalOpen}
                 onOpenChange={setIsNewTaskModalOpen}
-                minHeight='no-min'
-                minWidth='md'
+                size='lg'
+                icon={<Plus size={16} />}
                 dialogContent={
                     <NewTaskModal assignment_uuid={assignment_uuid} closeModal={setIsNewTaskModalOpen} />
                 }
@@ -49,7 +50,7 @@ export function TaskCreateActions({ assignment_uuid, layout = 'stack' }: { assig
                 dialogDescription={t('dashboard.assignments.editor.add_task_modal.description')}
                 dialogTrigger={
                     <button type='button' className={`${BTN_PRIMARY} w-full ${layout === 'row' ? 'sm:w-auto' : ''}`}>
-                        <Plus size={16} />
+                        <Plus size={14} weight='bold' />
                         <span className='truncate'>{t('dashboard.assignments.editor.add_task')}</span>
                     </button>
                 }
@@ -57,8 +58,8 @@ export function TaskCreateActions({ assignment_uuid, layout = 'stack' }: { assig
             <Modal
                 isDialogOpen={isGenerateAIModalOpen}
                 onOpenChange={setIsGenerateAIModalOpen}
-                minHeight='no-min'
-                minWidth='md'
+                size='xl'
+                icon={<AIMark size={32} alt='' />}
                 dialogContent={
                     <GenerateTasksAIModal
                         assignment_uuid={assignment_uuid}
@@ -68,10 +69,9 @@ export function TaskCreateActions({ assignment_uuid, layout = 'stack' }: { assig
                 dialogTitle={t('dashboard.assignments.editor.generate_ai_modal.title', 'Generate tasks with AI')}
                 dialogDescription={t('dashboard.assignments.editor.generate_ai_modal.description', 'Describe what you want and preview tasks grounded on the course content before adding them.')}
                 dialogTrigger={
-                    <button type='button' className={`${BTN_SECONDARY} w-full ${layout === 'row' ? 'sm:w-auto' : ''}`}>
-                        <Sparkles size={16} className='text-violet-500' />
+                    <AIButton variant='soft' className={`w-full ${layout === 'row' ? 'sm:w-auto' : ''}`}>
                         <span className='truncate'>{t('dashboard.assignments.editor.generate_ai', 'Generate tasks with AI')}</span>
-                    </button>
+                    </AIButton>
                 }
             />
         </div>
@@ -160,7 +160,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
                     className='flex flex-col'
                 >
                 {tasks.map((task: any, index: number) => {
-                    const meta = TASK_TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: Type }
+                    const meta = TASK_TYPE_META[task.assignment_type] ?? { label: task.assignment_type, Icon: TextT }
                     const Icon = meta.Icon
                     const isSelected = task.assignment_task_uuid === selectedUUID
 
@@ -211,7 +211,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
                                 </span>
                             )}
                             {tasks.length > 1 && (
-                                <GripVertical
+                                <DotsSixVertical
                                     size={14}
                                     className='shrink-0 -ms-1 text-neutral-300 opacity-60 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity'
                                     aria-label={t('dashboard.assignments.editor.drag_to_reorder', 'Drag to reorder')}

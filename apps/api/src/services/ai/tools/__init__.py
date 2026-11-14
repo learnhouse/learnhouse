@@ -47,6 +47,7 @@ __all__ = [
     "ToolSpec",
     "ToolRegistry",
     "build_registry",
+    "get_mcp_registry",
     "get_registry",
     "known_toolsets",
     "make_synthetic_request",
@@ -72,6 +73,9 @@ class ToolModule:
     # Plan feature gating every tool of the module, unless a spec sets its own.
     feature: str | None = None
     specs: tuple[ToolSpec, ...] | None = None
+    # Offered on MCP only (get_mcp_registry), not to the in-app agent: tools
+    # for outside assistants that would only crowd Atlas's own tool list.
+    mcp_only: bool = False
 
     @property
     def name(self) -> str:
@@ -100,18 +104,38 @@ TOOL_MODULES: tuple[ToolModule, ...] = (
     ToolModule("course_replace", "advanced"),
     ToolModule("course_audit", "advanced"),
     ToolModule("course_admin", "advanced"),
+    ToolModule("drip", "advanced"),
+    ToolModule("translations", "advanced"),
     ToolModule("assignments", "teaching"),
     ToolModule("learners", "teaching"),
     ToolModule("course_stats", "teaching"),
+    ToolModule("enrollments", "teaching"),
     ToolModule("paths", "paths", "paths"),
     ToolModule("library", "library"),
+    ToolModule("podcasts", "library", "podcasts"),
     ToolModule("communities", "communities", "communities"),
-    ToolModule("playgrounds", "playgrounds", "playgrounds"),
-    ToolModule("boards", "boards", "boards"),
     ToolModule("users", "people"),
     ToolModule("usergroups", "people", "usergroups"),
+    ToolModule("usergroups_plus", "people", "usergroups"),
     ToolModule("roles", "people", "roles"),
     ToolModule("org", "org"),
+    ToolModule("seo", "org"),
+    # The landing page builder: read, design and publish org pages.
+    ToolModule("landing", "landing"),
+    # Course building for outside assistants (MCP only): one-call builds,
+    # typed blocks, imports and the quality loop.
+    ToolModule("course_build", "build", mcp_only=True),
+    ToolModule("course_import", "build", mcp_only=True),
+    ToolModule("course_quality", "build", mcp_only=True),
+    # Feature coverage (opt-in toolsets, see OPT_IN_TOOLSETS): podcasts are
+    # in "library" above, webhooks/integrations, AI credits and signup
+    # fields. Boards (and their drawing tools) come from EE.
+    ToolModule("webhooks", "integrations", "webhooks"),
+    ToolModule("ai_credits", "org"),
+    ToolModule("signup_fields", "people"),
+    # The caller's own notifications (signed-in only) and the org's routing
+    # of admin notifications.
+    ToolModule("notifications", "org"),
 )
 
 TOOLSET_OF_MODULE = {m.name: m.toolset for m in TOOL_MODULES}
@@ -122,6 +146,7 @@ CORE_TOOLS = {"get_course", "get_activity_content"}
 
 _extensions: list[ToolModule] = []
 _registry: ToolRegistry | None = None
+_mcp_registry: tuple[int, ToolRegistry] | None = None
 
 
 def register_tool_module(module: ToolModule) -> None:
@@ -176,12 +201,15 @@ def _ee_modules() -> list[ToolModule]:
     return found
 
 
-def build_registry(extra: Iterable[ToolModule] | None = None) -> ToolRegistry:
+def build_registry(extra: Iterable[ToolModule] | None = None, *, mcp: bool = False) -> ToolRegistry:
     """Assemble the full tool registry (fresh instance): built-in modules,
-    then registered extensions, EE and installed plugins, then `extra`."""
+    then registered extensions, EE and installed plugins, then `extra`.
+    MCP-only modules are left out unless `mcp`."""
     registry = ToolRegistry()
     modules = [*TOOL_MODULES, *_extensions, *_ee_modules(), *_entry_point_modules(), *(extra or ())]
     for module in modules:
+        if module.mcp_only and not mcp:
+            continue
         try:
             specs = module.load_specs()
         except Exception:
@@ -216,8 +244,32 @@ def _finish_spec(spec: ToolSpec, feature: str | None, toolset: str) -> ToolSpec:
 
 
 def get_registry() -> ToolRegistry:
-    """Process-wide singleton registry."""
+    """Process-wide singleton registry (the in-app agent's tools)."""
     global _registry
     if _registry is None:
         _registry = build_registry()
     return _registry
+
+
+def get_mcp_registry() -> ToolRegistry:
+    """The MCP server's registry: every agent tool plus the MCP-only modules.
+    Rebuilt whenever the agent registry is (a module registered later)."""
+    global _mcp_registry
+    base = get_registry()
+    if _mcp_registry is None or _mcp_registry[0] != id(base):
+        registry = ToolRegistry()
+        registry.register_all(base.specs())
+        for module in (*TOOL_MODULES, *_extensions):
+            if module.mcp_only:
+                registry.register_all([_finish_spec(s, module.feature, module.toolset) for s in module.load_specs()])
+        _mcp_registry = (id(base), registry)
+    return _mcp_registry[1]
+
+
+# Feature toolsets a client asks for by name (?toolsets=live,payments): left
+# out of the default MCP listing and of Atlas's default menu so neither is
+# flooded. EE modules bring most of them (live, payments, companies,
+# affiliates, hr, automation, security, scorm); "integrations" is OSS.
+OPT_IN_TOOLSETS = frozenset({
+    "integrations", "live", "payments", "companies", "affiliates", "hr", "automation", "security", "scorm",
+})

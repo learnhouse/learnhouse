@@ -1,174 +1,159 @@
-import { NodeViewWrapper } from '@tiptap/react'
-import React, { useEffect } from 'react'
+import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
+import React from 'react'
 import { Resizable } from 're-resizable'
-import { Image, DownloadSimple, TextAlignLeft, TextAlignCenter, TextAlignRight, ArrowsOut, UploadSimple, CircleNotch, WarningCircle } from '@phosphor-icons/react'
+import {
+  Image as ImageIcon,
+  DownloadSimple,
+  TextAlignLeft,
+  TextAlignCenter,
+  TextAlignRight,
+  ArrowsOut,
+  ArrowsClockwise,
+  ArrowsHorizontal,
+  LinkSimple,
+  Trash,
+  TextT,
+} from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
-import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useTranslation } from 'react-i18next'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
+import {
+  BlockChrome,
+  BlockPopover,
+  BlockToolbarButton,
+  BlockToolbarDivider,
+  CommitInput,
+  Segmented,
+  SettingsField,
+} from '../../Blocks/ui/BlockChrome'
+import BlockCaption from '../../Blocks/ui/BlockCaption'
+import MediaSourcePicker from '../../Blocks/ui/MediaSourcePicker'
+import { useBlockUpload } from '../../Blocks/media/useBlockUpload'
+import { acceptFor } from '../../Blocks/media/mediaKinds'
+import { fetchRemoteFile, UrlImportError } from '../../Blocks/media/urlImport'
+import { normalizeUserUrl } from '../../Blocks/embeds/embedProviders'
+import { libraryMediaNodeAttrs } from '../../Blocks/media/librarySnapshot'
+import { uploadErrorText } from '../../Blocks/media/uploadMessages'
+import { deleteBlock, pickFile, replaceBlock } from '../../Blocks/nodeViewUtils'
+import {
+  IMAGE_WIDTH_PRESETS,
+  imageWidthPresetOf,
+  resolveImageView,
+  safeHref,
+} from '../../Blocks/schema/blockAttrs'
 
-const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral'
 const withUtm = (url?: string | null) => (url ? `${url}${UNSPLASH_UTM}` : '')
 
-function ImageBlockComponent(props: any) {
+const ALIGN_CLASS = { left: 'items-start', center: 'items-center', right: 'items-end' } as const
+
+function ImageBlockComponent(props: NodeViewProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const course = useCourse() as any
   const editorState = useEditorProvider() as any
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-
+  const access_token = session?.data?.tokens?.access_token
   const isEditable = editorState.isEditable
-  const [, setImage] = React.useState<File | null>(null)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [isDragging, setIsDragging] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-  const [progress, setProgress] = React.useState(0)
-  const [blockObject, setblockObject] = React.useState(
-    props.node.attrs.blockObject
-  )
-  const [imageSize, setImageSize] = React.useState({
-    width: props.node.attrs.size ? props.node.attrs.size.width : 300,
-  })
-  const [alignment, setAlignment] = React.useState(props.node.attrs.alignment || 'center')
+  const attrs = props.node.attrs
+  const activity = (props.extension.options as any).activity
+
+  // Everything shown comes from the node attrs (the shared document), so undo
+  // and collaborators' edits show up. Only transient UI lives in React state.
+  const view = resolveImageView(attrs)
+  const blockObject = attrs.blockObject
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [linkOpen, setLinkOpen] = React.useState(false)
+  const [altOpen, setAltOpen] = React.useState(false)
+  const [widthOpen, setWidthOpen] = React.useState(false)
 
-  const unsplashUrl: string | null = props.node.attrs.unsplash_url || null
-  const unsplashPhotographerName: string | null = props.node.attrs.unsplash_photographer_name || null
-  const unsplashPhotographerUrl: string | null = props.node.attrs.unsplash_photographer_url || null
-  const unsplashPhotoUrl: string | null = props.node.attrs.unsplash_photo_url || null
+  const upload = useBlockUpload({
+    kind: 'image',
+    activityUuid: activity?.activity_uuid,
+    accessToken: access_token,
+    onUploaded: (object) => {
+      // A fresh upload replaces any remote (Unsplash/AI/link) source.
+      props.updateAttributes({
+        blockObject: object,
+        unsplash_url: null,
+        unsplash_photographer_name: null,
+        unsplash_photographer_url: null,
+        unsplash_photo_url: null,
+        size: attrs.size ?? { width: 560 },
+      })
+    },
+  })
 
-  const fileId = blockObject
+  const unsplashUrl: string | null = attrs.unsplash_url || null
+  const unsplashPhotographerName: string | null = attrs.unsplash_photographer_name || null
+  const unsplashPhotographerUrl: string | null = attrs.unsplash_photographer_url || null
+  const unsplashPhotoUrl: string | null = attrs.unsplash_photo_url || null
+
+  const fileId = blockObject?.content
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setImage(file)
-      setError(null)
-      handleUpload(file)
-    }
-  }
-
-  const handleUpload = async (file: File) => {
-    if (!access_token) return
-    setIsLoading(true)
-    setProgress(0)
-    setError(null)
-    try {
-      let object = await uploadNewImageFile(
-        file,
-        props.extension.options.activity.activity_uuid,
-        access_token,
-        (p) => setProgress(p)
+  const uploadedImageUrl = blockObject?.content
+    ? getActivityBlockMediaDirectory(
+        org?.org_uuid,
+        course?.courseStructure?.course_uuid,
+        blockObject.content.activity_uuid || activity?.activity_uuid,
+        blockObject.block_uuid,
+        fileId || '',
+        'imageBlock'
       )
-      setProgress(100)
-      setblockObject(object)
-      props.updateAttributes({
-        blockObject: object,
-        size: imageSize,
-        alignment: alignment,
-      })
-      setImage(null)
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Upload failed, please try again'
-      setError(errorMessage)
-      toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed, please try again: ${errorMessage}`)
-    } finally {
-      setIsLoading(false)
-      setProgress(0)
-    }
-  }
+    : null
 
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file && ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
-      setImage(file)
-      handleUpload(file)
-    }
-  }
+  const imageUrl = unsplashUrl || uploadedImageUrl
 
   const handleDownload = () => {
-    if (!fileId) return;
+    if (!fileId || !uploadedImageUrl) return
+    const link = document.createElement('a')
+    link.href = uploadedImageUrl
+    link.download = `image-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'jpg'}`
+    link.setAttribute('download', '')
+    link.setAttribute('target', '_blank')
+    link.setAttribute('rel', 'noopener noreferrer')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
-    const imageUrl = getActivityBlockMediaDirectory(
-      org?.org_uuid,
-      course?.courseStructure?.course_uuid,
-      blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
-      blockObject.block_uuid,
-      fileId,
-      'imageBlock'
-    );
-
-    const link = document.createElement('a');
-    link.href = imageUrl || '';
-    link.download = `image-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'jpg'}`;
-    link.setAttribute('download', '');
-    link.setAttribute('target', '_blank');
-    link.setAttribute('rel', 'noopener noreferrer');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleExpand = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleAlignmentChange = (newAlignment: string) => {
-    setAlignment(newAlignment);
+  // Remote (generated or linked) images are stored under the same
+  // `unsplash_url` attr the renderer already reads; no photographer credit.
+  const setRemoteImage = (url: string) => {
     props.updateAttributes({
-      alignment: newAlignment,
-    });
-  };
-
-  const uploadedImageUrl = blockObject ? getActivityBlockMediaDirectory(
-    org?.org_uuid,
-    course?.courseStructure?.course_uuid,
-    blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
-    blockObject.block_uuid,
-    fileId || '',
-    'imageBlock'
-  ) : null;
-
-  const imageUrl = unsplashUrl || uploadedImageUrl;
-
-  // Remote (generated) images are stored under the same `unsplash_url` attr
-  // the renderer already reads; no photographer credit applies to them.
-  const handleRemoteImageSelect = (url: string) => {
-    props.updateAttributes({
+      blockObject: null,
       unsplash_url: url,
       unsplash_photographer_name: '',
       unsplash_photographer_url: '',
       unsplash_photo_url: '',
-      size: imageSize,
-      alignment: alignment,
+      size: attrs.size ?? { width: 560 },
     })
+  }
+
+  const importFromUrl = async (input: string): Promise<string | void> => {
+    const url = normalizeUserUrl(input)
+    if (!url) return uploadErrorText(t, { code: 'url' })
+    try {
+      const file = await fetchRemoteFile(url, 'image')
+      upload.start(file)
+    } catch (err) {
+      if (err instanceof UrlImportError && err.code === 'blocked') {
+        // The site won't let us copy the file; show it from the link instead.
+        setRemoteImage(url)
+        toast(t('editor.blocks_v2.image_linked', 'This site blocks copying, so the image is shown from its link.'))
+        return
+      }
+      if (err instanceof UrlImportError) return uploadErrorText(t, { code: err.code, kind: 'image', error: err.message })
+      return uploadErrorText(t, { code: 'server', error: (err as any)?.message })
+    }
   }
 
   const unsplashCredit = unsplashUrl && unsplashPhotographerName ? (
@@ -192,290 +177,335 @@ function ImageBlockComponent(props: any) {
         Unsplash
       </a>
     </p>
-  ) : null;
+  ) : null
 
-  useEffect(() => {}, [course, org])
+  const viewerModal = imageUrl ? (
+    <Modal
+      isDialogOpen={isModalOpen}
+      onOpenChange={setIsModalOpen}
+      dialogTitle={view.caption || t('editor.blocks.image_block.viewer_title')}
+      minWidth="lg"
+      minHeight="lg"
+      dialogContent={
+        <div className="w-full flex flex-col items-center justify-center">
+          <img
+            src={imageUrl}
+            alt={view.alt}
+            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
+          />
+          {unsplashCredit}
+        </div>
+      }
+    />
+  ) : null
 
-  const getItemsAlignmentClass = () => {
-    switch (alignment) {
-      case 'left':
-        return 'items-start';
-      case 'right':
-        return 'items-end';
-      default:
-        return 'items-center';
-    }
-  };
-
-  // Activity view mode - show only the image without block wrapper
-  if (!isEditable && imageUrl) {
-    const viewFrameStyle: React.CSSProperties = { width: imageSize.width, maxWidth: '100%' };
+  // ─── Learner view: the image only, as before, plus caption/link/alt ───
+  if (!isEditable) {
+    if (!imageUrl) return null
+    const viewFrameStyle: React.CSSProperties = { width: view.width, maxWidth: '100%' }
     // On a phone, anything sized like a picture (not an icon or logo) spans the
     // column; a few pixels short of full width just reads as a mistake there.
-    const phoneFullWidth = Number(imageSize.width) >= 240 ? 'max-md:!w-full' : '';
+    const phoneFullWidth = typeof view.width === 'number' && view.width >= 240 ? 'max-md:!w-full' : ''
+    const img = (
+      <img
+        src={imageUrl}
+        alt={view.alt}
+        onClick={() => {
+          // On touch screens tapping the picture opens the viewer, since the
+          // hover controls never show there. A linked image follows its link.
+          if (!view.href && view.lightbox && window.matchMedia('(hover: none)').matches) setIsModalOpen(true)
+        }}
+        className="rounded-lg max-md:rounded-xl max-w-full h-auto w-full"
+      />
+    )
     return (
       <>
         <NodeViewWrapper className="block-image w-full">
-          <div className={`w-full flex flex-col ${getItemsAlignmentClass()}`}>
+          <div className={`w-full flex flex-col ${ALIGN_CLASS[view.alignment]}`}>
             <div className={`relative group ${phoneFullWidth}`} style={viewFrameStyle}>
-              {/* On touch screens tapping the picture opens the viewer, since
-                  the hover controls below never show there. Desktop keeps them. */}
-              <img
-                src={imageUrl}
-                alt=""
-                onClick={() => {
-                  if (window.matchMedia('(hover: none)').matches) handleExpand()
-                }}
-                className="rounded-lg max-md:rounded-xl max-w-full h-auto w-full"
-              />
-              <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={handleExpand}
-                  className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                  title={t('editor.blocks.image_block.expand_image')}
-                >
-                  <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
-                </button>
-                {blockObject && (
+              {view.href ? (
+                <a href={view.href} target="_blank" rel="noopener noreferrer" className="block">
+                  {img}
+                </a>
+              ) : (
+                img
+              )}
+              {view.lightbox && (
+                <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={handleDownload}
+                    onClick={() => setIsModalOpen(true)}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                    title={t('editor.blocks.image_block.download_image')}
+                    title={t('editor.blocks.image_block.expand_image')}
                   >
-                    <DownloadSimple weight="duotone" className="w-4 h-4 text-white" />
+                    <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
                   </button>
-                )}
-              </div>
+                  {blockObject && (
+                    <button
+                      onClick={handleDownload}
+                      className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+                      title={t('editor.blocks.image_block.download_image')}
+                    >
+                      <DownloadSimple weight="duotone" className="w-4 h-4 text-white" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             {unsplashCredit && (
               <div className={phoneFullWidth} style={viewFrameStyle}>
                 {unsplashCredit}
               </div>
             )}
+            <BlockCaption value={view.caption} editable={false} className={phoneFullWidth} style={viewFrameStyle} />
           </div>
         </NodeViewWrapper>
-
-        <Modal
-          isDialogOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          dialogTitle={t('editor.blocks.image_block.viewer_title')}
-          minWidth="lg"
-          minHeight="lg"
-          dialogContent={
-            <div className="w-full flex flex-col items-center justify-center">
-              <img
-                src={imageUrl}
-                alt=""
-                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
-              />
-              {unsplashCredit}
-            </div>
-          }
-        />
+        {view.lightbox && viewerModal}
       </>
     )
   }
 
-  // Activity view mode - no image available
-  if (!isEditable && !imageUrl) {
-    return null
+  // ─── Editor: empty ───
+  if (!imageUrl) {
+    return (
+      <NodeViewWrapper className="block-image w-full">
+        <BlockChrome tone="media"
+          selected={props.selected}
+          label={<><ImageIcon size={11} weight="bold" />{t('editor.blocks.image')}</>}
+          toolbar={
+            <BlockToolbarButton label={t('common.delete', 'Delete')} tone="danger" onClick={() => deleteBlock(props)}>
+              <Trash size={14} />
+            </BlockToolbarButton>
+          }
+        >
+          <MediaSourcePicker
+            kind="image"
+            icon={<ImageIcon size={20} weight="duotone" />}
+            title={t('editor.blocks_v2.image_title', 'Add an image')}
+            onFile={(f) => upload.start(f)}
+            onUrl={importFromUrl}
+            urlPlaceholder={t('editor.blocks_v2.image_link_placeholder', 'Paste an image link…')}
+            onLibrarySelect={(r) => replaceBlock(props as any, { type: 'blockLibrary', attrs: libraryMediaNodeAttrs(r) })}
+            extra={
+              <AIImageButton
+                variant="chip"
+                onSelect={setRemoteImage}
+                onSelectFile={(file) => {
+                  upload.start(file)
+                }}
+              />
+            }
+            task={upload.task}
+            rejection={upload.rejection}
+            onCancel={upload.cancel}
+            onRetry={upload.retry}
+            onDismiss={upload.dismiss}
+          />
+        </BlockChrome>
+      </NodeViewWrapper>
+    )
   }
 
+  // ─── Editor: image ───
+  const setAlignment = (alignment: 'left' | 'center' | 'right') => props.updateAttributes({ alignment })
+  const widthPreset = imageWidthPresetOf(attrs)
+  const replacing = upload.task
+
+  const toolbar = (
+    <>
+      <BlockToolbarButton label={t('editor.blocks.common.align_left')} active={view.alignment === 'left'} onClick={() => setAlignment('left')}>
+        <TextAlignLeft size={14} />
+      </BlockToolbarButton>
+      <BlockToolbarButton label={t('editor.blocks.common.align_center')} active={view.alignment === 'center'} onClick={() => setAlignment('center')}>
+        <TextAlignCenter size={14} />
+      </BlockToolbarButton>
+      <BlockToolbarButton label={t('editor.blocks.common.align_right')} active={view.alignment === 'right'} onClick={() => setAlignment('right')}>
+        <TextAlignRight size={14} />
+      </BlockToolbarButton>
+      <BlockToolbarDivider />
+      <BlockPopover
+        open={widthOpen}
+        onOpenChange={setWidthOpen}
+        title={t('editor.blocks.common.size', 'Size')}
+        width={260}
+        trigger={
+          <BlockToolbarButton label={t('editor.blocks.common.size', 'Size')}>
+            <ArrowsHorizontal size={14} />
+          </BlockToolbarButton>
+        }
+      >
+        <Segmented
+          ariaLabel={t('editor.blocks.common.size', 'Size')}
+          value={widthPreset}
+          onChange={(id) => {
+            const preset = IMAGE_WIDTH_PRESETS.find((p) => p.id === id)
+            if (preset) props.updateAttributes({ size: { width: preset.width } })
+          }}
+          options={[
+            { value: 'small', label: 'S', title: t('editor.blocks.common.small', 'Small') },
+            { value: 'medium', label: 'M', title: t('editor.blocks.common.medium', 'Medium') },
+            { value: 'large', label: 'L', title: t('editor.blocks.common.large', 'Large') },
+            { value: 'full', label: t('editor.blocks_v2.full', 'Full'), title: t('editor.blocks.common.full_width', 'Full width') },
+          ]}
+        />
+        <p className="text-[11px] text-neutral-400">{t('editor.blocks_v2.drag_to_resize', 'Or drag the handle on the image’s edge.')}</p>
+      </BlockPopover>
+      <BlockPopover
+        open={altOpen}
+        onOpenChange={setAltOpen}
+        title={t('editor.blocks_v2.alt_text', 'Alt text')}
+        trigger={
+          <BlockToolbarButton label={t('editor.blocks_v2.alt_text', 'Alt text')} active={!!view.alt}>
+            <TextT size={14} />
+          </BlockToolbarButton>
+        }
+      >
+        <SettingsField
+          label={t('editor.blocks_v2.alt_text_label', 'Describe the image')}
+          hint={t('editor.blocks_v2.alt_text_hint', 'Read aloud by screen readers. Leave empty for purely decorative images.')}
+        >
+          <CommitInput
+            multiline
+            value={view.alt}
+            onCommit={(v) => props.updateAttributes({ alt: v.trim().slice(0, 500) })}
+            placeholder={t('editor.blocks_v2.alt_text_placeholder', 'A bar chart showing…')}
+            aria-label={t('editor.blocks_v2.alt_text', 'Alt text')}
+          />
+        </SettingsField>
+      </BlockPopover>
+      <BlockPopover
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
+        title={t('editor.blocks_v2.link', 'Link')}
+        trigger={
+          <BlockToolbarButton label={t('editor.blocks_v2.link', 'Link')} active={!!view.href}>
+            <LinkSimple size={14} />
+          </BlockToolbarButton>
+        }
+      >
+        <SettingsField
+          label={t('editor.blocks_v2.link_label', 'Open this link when clicked')}
+          hint={t('editor.blocks_v2.link_hint', 'Opens in a new tab. Leave empty for no link.')}
+        >
+          <CommitInput
+            value={attrs.href || ''}
+            type="url"
+            onCommit={(v) => {
+              const href = v.trim() ? safeHref(normalizeUserUrl(v) || v) : null
+              props.updateAttributes({ href })
+              if (v.trim() && !href) toast.error(uploadErrorText(t, { code: 'url' }))
+            }}
+            placeholder="https://"
+            aria-label={t('editor.blocks_v2.link', 'Link')}
+          />
+        </SettingsField>
+        <label className="flex items-center justify-between gap-3 text-xs text-neutral-600">
+          <span>{t('editor.blocks_v2.lightbox', 'Learners can expand the image')}</span>
+          <input
+            type="checkbox"
+            className="h-4 w-4 accent-neutral-900"
+            checked={view.lightbox}
+            onChange={(e) => props.updateAttributes({ lightbox: e.target.checked })}
+          />
+        </label>
+      </BlockPopover>
+      <BlockToolbarDivider />
+      <BlockToolbarButton label={t('editor.blocks_v2.replace', 'Replace')} onClick={() => pickFile(acceptFor('image'), (f) => upload.start(f))}>
+        <ArrowsClockwise size={14} />
+      </BlockToolbarButton>
+      <BlockToolbarButton label={t('editor.blocks.image_block.expand_image')} onClick={() => setIsModalOpen(true)}>
+        <ArrowsOut size={14} />
+      </BlockToolbarButton>
+      <BlockToolbarButton label={t('common.delete', 'Delete')} tone="danger" onClick={() => deleteBlock(props)}>
+        <Trash size={14} />
+      </BlockToolbarButton>
+    </>
+  )
+
+  const frameWidth = view.width
   return (
     <>
       <NodeViewWrapper className="block-image w-full">
-        <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
-          {/* Header */}
-          <div className="flex items-center gap-2 mb-3">
-            {/* eslint-disable-next-line jsx-a11y/alt-text -- `Image` is a phosphor-icons icon, not an <img> element */}
-            <Image weight="duotone" className="text-neutral-400" size={16} />
-            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              {t('editor.blocks.image')}
-            </span>
-          </div>
-
-          {/* Upload Zone - shown when no image */}
-          {!blockObject && !unsplashUrl && isEditable && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                onDragEnter={handleDragEnter}
-                onDragOver={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`
-                  border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[160px]
-                  ${
-                    error
-                      ? 'border-red-300 bg-red-50/30 hover:border-red-400 hover:bg-red-50/50'
-                      : isDragging
-                      ? 'border-neutral-400 bg-neutral-100'
-                      : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'
-                  }
-                `}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleImageChange}
-                  accept={SUPPORTED_FILES}
-                  className="hidden"
+        <BlockChrome tone="media"
+          selected={props.selected}
+          forceToolbar={widthOpen || altOpen || linkOpen}
+          label={<><ImageIcon size={11} weight="bold" />{t('editor.blocks.image')}</>}
+          toolbar={toolbar}
+          className="p-1"
+        >
+          <div className={`w-full flex flex-col ${ALIGN_CLASS[view.alignment]}`}>
+            <Resizable
+              key={String(frameWidth)}
+              defaultSize={{ width: frameWidth, height: 'auto' }}
+              handleStyles={{
+                right: {
+                  position: 'absolute',
+                  width: 6,
+                  height: 40,
+                  top: 'calc(50% - 20px)',
+                  right: -10,
+                  borderRadius: 20,
+                  cursor: 'col-resize',
+                  backgroundColor: '#a3a3a3',
+                },
+              }}
+              handleClasses={{ right: 'opacity-0 group-hover/block:opacity-100 transition-opacity' }}
+              style={{ maxWidth: '100%', position: 'relative' }}
+              maxWidth="100%"
+              minWidth={120}
+              enable={{ right: true }}
+              onResizeStop={(_e, _direction, ref) => {
+                const parentWidth = ref.parentElement?.clientWidth || 1000
+                const width = Math.round(Math.min(ref.offsetWidth, parentWidth))
+                props.updateAttributes({ size: { width: width >= parentWidth - 2 ? '100%' : width } })
+              }}
+            >
+              <div className="relative">
+                <img
+                  src={imageUrl}
+                  alt={view.alt}
+                  className="rounded-lg max-w-full h-auto"
+                  style={{ width: '100%' }}
+                  draggable={false}
                 />
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
-                    <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')} {progress}%</p>
-                    <div
-                      className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
-                      role="progressbar"
-                      aria-valuenow={progress}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                    >
-                      <div
-                        className="h-full bg-blue-500 rounded-full transition-all duration-200"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <UploadSimple weight="duotone" className="w-7 h-7 mx-auto text-neutral-400" />
-                    <div>
-                      <p className="text-sm font-medium text-neutral-700">
-                        {t('editor.blocks.image_block.drop_or_browse')}
-                      </p>
-                      <p className="text-xs text-neutral-500 mt-1">
-                        {t('editor.blocks.image_block.supported_formats')}
-                      </p>
-                    </div>
+                {replacing && (
+                  <div className="absolute inset-x-2 bottom-2">
+                    <MediaSourcePicker
+                      kind="image"
+                      icon={<ImageIcon size={18} />}
+                      title=""
+                      onFile={() => {}}
+                      task={replacing}
+                      onCancel={upload.cancel}
+                      onRetry={upload.retry}
+                      onDismiss={upload.dismiss}
+                    />
                   </div>
                 )}
+                {view.href && (
+                  <span className="absolute bottom-2 start-2 inline-flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                    <LinkSimple size={10} weight="bold" />
+                    {(() => { try { return new URL(view.href).hostname } catch { return view.href } })()}
+                  </span>
+                )}
               </div>
-              <AIImageButton
-                onSelect={handleRemoteImageSelect}
-                className="border border-neutral-200 rounded-lg text-center cursor-pointer transition-all flex flex-col gap-2 items-center justify-center min-h-[160px] p-6 bg-white hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed outline-none text-sm font-medium text-neutral-700"
-              />
-            </div>
-          )}
-
-          {/* Error display */}
-          {error && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-              <WarningCircle weight="duotone" size={16} />
-              {error}
-            </div>
-          )}
-
-          {/* Image display - edit mode */}
-          {imageUrl && isEditable && (
-            <div className={`w-full flex flex-col ${getItemsAlignmentClass()}`}>
-              <Resizable
-                defaultSize={{ width: imageSize.width, height: '100%' }}
-                handleStyles={{
-                  right: {
-                    position: 'unset',
-                    width: 7,
-                    height: 30,
-                    borderRadius: 20,
-                    cursor: 'col-resize',
-                    backgroundColor: '#94a3b8',
-                    margin: 'auto',
-                    marginLeft: 5,
-                  },
-                }}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '100%',
-                  maxWidth: '100%',
-                }}
-                maxWidth="100%"
-                minWidth={200}
-                enable={{ right: true }}
-                onResizeStop={(e, direction, ref, d) => {
-                  const newWidth = Math.min(imageSize.width + d.width, ref.parentElement?.clientWidth || 1000);
-                  props.updateAttributes({
-                    size: {
-                      width: newWidth,
-                    },
-                  })
-                  setImageSize({
-                    width: newWidth,
-                  })
-                }}
-              >
-                <div className="relative">
-                  <img
-                    src={imageUrl || ''}
-                    alt=""
-                    className="rounded-lg nice-shadow max-w-full h-auto"
-                    style={{ width: '100%' }}
-                  />
-                  <div className="absolute top-2 end-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-80 hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleAlignmentChange('left')}
-                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'left' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
-                      title={t('editor.blocks.common.align_left')}
-                    >
-                      <TextAlignLeft weight="duotone" size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleAlignmentChange('center')}
-                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'center' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
-                      title={t('editor.blocks.common.align_center')}
-                    >
-                      <TextAlignCenter weight="duotone" size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleAlignmentChange('right')}
-                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'right' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
-                      title={t('editor.blocks.common.align_right')}
-                    >
-                      <TextAlignRight weight="duotone" size={14} />
-                    </button>
-                    <div className="w-px h-4 bg-neutral-200 mx-0.5"></div>
-                    <button
-                      onClick={handleExpand}
-                      className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 transition-colors outline-none"
-                      title={t('editor.blocks.image_block.expand_image')}
-                    >
-                      <ArrowsOut weight="duotone" size={14} />
-                    </button>
-                  </div>
-                </div>
-              </Resizable>
-              {unsplashCredit && (
-                <div style={{ width: imageSize.width, maxWidth: '100%' }}>
-                  {unsplashCredit}
-                </div>
-              )}
-            </div>
-          )}
-
-        </div>
+            </Resizable>
+            {unsplashCredit && <div style={{ width: frameWidth, maxWidth: '100%' }}>{unsplashCredit}</div>}
+            <BlockCaption
+              value={view.caption}
+              editable
+              selected={props.selected}
+              onCommit={(caption) => props.updateAttributes({ caption })}
+              style={{ width: frameWidth, maxWidth: '100%' }}
+            />
+            {upload.rejection && (
+              <p role="alert" className="mt-1 text-xs text-rose-600">
+                {uploadErrorText(t, { code: upload.rejection.code, kind: 'image', fileSize: upload.rejection.fileSize })}
+              </p>
+            )}
+          </div>
+        </BlockChrome>
       </NodeViewWrapper>
-
-      {imageUrl && (
-        <Modal
-          isDialogOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          dialogTitle={t('editor.blocks.image_block.viewer_title')}
-          minWidth="lg"
-          minHeight="lg"
-          dialogContent={
-            <div className="w-full flex flex-col items-center justify-center">
-              <img
-                src={imageUrl}
-                alt=""
-                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
-              />
-              {unsplashCredit}
-            </div>
-          }
-        />
-      )}
+      {viewerModal}
     </>
   )
 }

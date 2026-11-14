@@ -1298,6 +1298,74 @@ class TestGetAssignmentsFromCourse:
         assert len(result) == 1
         assert result[0].assignment_uuid == assignment.assignment_uuid
 
+    async def _add_submission(self, db, assignment, user_id, status):
+        db.add(AssignmentUserSubmission(
+            assignment_id=assignment.id,
+            user_id=user_id,
+            assignmentusersubmission_uuid=f"assignmentusersubmission_{uuid4()}",
+            submission_status=status,
+            grade=0,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        ))
+        await db.commit()
+
+    async def test_instructor_gets_submission_counts(
+        self, mock_request, db, course, assignment, admin_user, regular_user
+    ):
+        await self._add_submission(db, assignment, admin_user.id, AssignmentUserSubmissionStatus.LATE)
+        await self._add_submission(db, assignment, regular_user.id, AssignmentUserSubmissionStatus.GRADED)
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), patch(
+            "src.services.courses.activities.assignments._is_assignment_instructor",
+            new_callable=AsyncMock,
+            return_value=True,
+        ):
+            result = await get_assignments_from_course(
+                mock_request, course.course_uuid, admin_user, db
+            )
+        assert result[0].course_uuid == course.course_uuid
+        assert result[0].activity_uuid is not None
+        assert result[0].submission_counts == {
+            "total": 2,
+            "to_grade": 1,
+            "graded": 1,
+            "late": 1,
+            "pending": 0,
+            "not_submitted": 0,
+        }
+
+    async def test_instructor_counts_are_zero_without_submissions(
+        self, mock_request, db, course, assignment, admin_user
+    ):
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), patch(
+            "src.services.courses.activities.assignments._is_assignment_instructor",
+            new_callable=AsyncMock,
+            return_value=True,
+        ):
+            result = await get_assignments_from_course(
+                mock_request, course.course_uuid, admin_user, db
+            )
+        assert result[0].submission_counts["total"] == 0
+        assert result[0].submission_counts["to_grade"] == 0
+
+    async def test_learner_gets_no_submission_counts(
+        self, mock_request, db, course, assignment, regular_user
+    ):
+        await self._add_submission(db, assignment, regular_user.id, AssignmentUserSubmissionStatus.SUBMITTED)
+        with patch(_PATCH_RBAC, new_callable=AsyncMock), patch(
+            "src.services.courses.activities.assignments._is_assignment_instructor",
+            new_callable=AsyncMock,
+            return_value=False,
+        ), patch(
+            "src.services.courses.activities.assignments.verify_activity_reader_access",
+            new_callable=AsyncMock,
+        ):
+            result = await get_assignments_from_course(
+                mock_request, course.course_uuid, regular_user, db
+            )
+        assert len(result) == 1
+        assert result[0].submission_counts is None
+
 
 # ---------------------------------------------------------------------------
 # put_assignment_task_reference_file

@@ -1,18 +1,24 @@
-import { NodeViewWrapper } from '@tiptap/react'
-import React, { useEffect } from 'react'
-import { FileText, DownloadSimple, ArrowsOut, UploadSimple, CircleNotch, WarningCircle, DotsSix } from '@phosphor-icons/react'
-import toast from 'react-hot-toast'
-import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
+import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
+import React from 'react'
+import { FileText, DownloadSimple, ArrowsOut, DotsSix, ArrowsClockwise, ArrowsVertical, Trash } from '@phosphor-icons/react'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useTranslation } from 'react-i18next'
-
-const SUPPORTED_FILES = constructAcceptValue(['pdf'])
+import { BlockChrome, BlockPopover, BlockToolbarButton, BlockToolbarDivider, Segmented } from '../../Blocks/ui/BlockChrome'
+import BlockCaption from '../../Blocks/ui/BlockCaption'
+import MediaSourcePicker from '../../Blocks/ui/MediaSourcePicker'
+import { useBlockUpload } from '../../Blocks/media/useBlockUpload'
+import { acceptFor } from '../../Blocks/media/mediaKinds'
+import { fetchRemoteFile, UrlImportError } from '../../Blocks/media/urlImport'
+import { normalizeUserUrl } from '../../Blocks/embeds/embedProviders'
+import { libraryMediaNodeAttrs } from '../../Blocks/media/librarySnapshot'
+import { uploadErrorText } from '../../Blocks/media/uploadMessages'
+import { deleteBlock, pickFile, replaceBlock } from '../../Blocks/nodeViewUtils'
+import { PDF_HEIGHT_PRESETS } from '../../Blocks/schema/blockAttrs'
 
 // Same reading size the PDF activity uses, capped to the viewport so the whole
 // page fits on a laptop. Authors can drag it taller or shorter per block.
@@ -20,93 +26,56 @@ const DEFAULT_PDF_HEIGHT = 'min(80vh, 900px)'
 const MIN_PDF_HEIGHT = 200
 const MAX_PDF_HEIGHT = 2000
 
-function PDFBlockComponent(props: any) {
+function PDFBlockComponent(props: NodeViewProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const course = useCourse() as any
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
-  const [pdf, setPDF] = React.useState<File | null>(null)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [blockObject, setblockObject] = React.useState(
-    props.node.attrs.blockObject
-  )
-  const [isModalOpen, setIsModalOpen] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-  const [progress, setProgress] = React.useState(0)
-  // Read from the node, not local state, so undo and collaborators' resizes show.
-  const pdfHeight: number | null = props.node.attrs.pdfHeight ?? null
-  const [isResizing, setIsResizing] = React.useState(false)
-  const frameRef = React.useRef<HTMLDivElement>(null)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const fileId = blockObject
-    ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
-    : null
+  const access_token = session?.data?.tokens?.access_token
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
+  const activity = (props.extension.options as any).activity
 
-  const handlePDFChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setPDF(file)
-      setError(null)
-    }
-  }
+  // Read from the node, not local state, so undo and collaborators' edits show.
+  const blockObject = props.node.attrs.blockObject
+  const pdfHeight: number | null = props.node.attrs.pdfHeight ?? null
+  const caption: string = props.node.attrs.caption || ''
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [heightOpen, setHeightOpen] = React.useState(false)
+  const [isResizing, setIsResizing] = React.useState(false)
+  const frameRef = React.useRef<HTMLDivElement>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!pdf) return
-    setIsLoading(true)
-    setProgress(0)
-    setError(null)
-    try {
-      let object = await uploadNewPDFFile(
-        pdf,
-        props.extension.options.activity.activity_uuid, access_token,
-        (p) => setProgress(p)
+  const upload = useBlockUpload({
+    kind: 'pdf',
+    activityUuid: activity?.activity_uuid,
+    accessToken: access_token,
+    onUploaded: (object) => props.updateAttributes({ blockObject: object }),
+  })
+
+  const fileId = blockObject?.content ? `${blockObject.content.file_id}.${blockObject.content.file_format}` : null
+  const pdfUrl = blockObject?.content
+    ? getActivityBlockMediaDirectory(
+        org?.org_uuid,
+        course?.courseStructure?.course_uuid,
+        blockObject.content.activity_uuid || activity?.activity_uuid,
+        blockObject.block_uuid,
+        fileId || '',
+        'pdfBlock'
       )
-      setProgress(100)
-      setblockObject(object)
-      props.updateAttributes({
-        blockObject: object,
-      })
-      setPDF(null)
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Upload failed, please try again'
-      setError(errorMessage)
-      toast.error(errorMessage.includes('Upload failed') ? errorMessage : `Upload failed, please try again: ${errorMessage}`)
-    } finally {
-      setIsLoading(false)
-      setProgress(0)
-    }
-  }
+    : null
 
   const handleDownload = () => {
-    if (!fileId) return;
-
-    const pdfUrl = getActivityBlockMediaDirectory(
-      org?.org_uuid,
-      course?.courseStructure.course_uuid,
-      blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
-      blockObject.block_uuid,
-      fileId,
-      'pdfBlock'
-    );
-
-    const link = document.createElement('a');
-    link.href = pdfUrl || '';
-    link.download = `document-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'pdf'}`;
-    link.setAttribute('download', '');
-    link.setAttribute('target', '_blank');
-    link.setAttribute('rel', 'noopener noreferrer');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleExpand = () => {
-    setIsModalOpen(true);
-  };
+    if (!pdfUrl) return
+    const link = document.createElement('a')
+    link.href = pdfUrl
+    link.download = `document-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'pdf'}`
+    link.setAttribute('download', '')
+    link.setAttribute('target', '_blank')
+    link.setAttribute('rel', 'noopener noreferrer')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   // Pointer capture keeps the drag on the handle even when the cursor crosses
   // an iframe (this PDF or another block's), which would otherwise swallow
@@ -121,7 +90,6 @@ function PDFBlockComponent(props: any) {
     let height = startHeight
     handle.setPointerCapture(pointerId)
     setIsResizing(true)
-
     const handleMove = (e: PointerEvent) => {
       height = Math.min(MAX_PDF_HEIGHT, Math.max(MIN_PDF_HEIGHT, startHeight + e.clientY - startY))
       if (frameRef.current) frameRef.current.style.height = `${height}px`
@@ -141,22 +109,30 @@ function PDFBlockComponent(props: any) {
 
   const frameStyle = { height: pdfHeight ? `${pdfHeight}px` : DEFAULT_PDF_HEIGHT }
 
-  const pdfUrl = blockObject ? getActivityBlockMediaDirectory(
-    org?.org_uuid,
-    course?.courseStructure.course_uuid,
-    blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
-    blockObject.block_uuid,
-    fileId || '',
-    'pdfBlock'
-  ) : null;
+  const documentModal = pdfUrl ? (
+    <Modal
+      isDialogOpen={isModalOpen}
+      onOpenChange={setIsModalOpen}
+      dialogTitle={caption || t('editor.blocks.pdf_block.document_title')}
+      minWidth="xl"
+      minHeight="xl"
+      dialogContent={
+        <div className="w-full h-[80vh]">
+          <iframe
+            className="w-full h-full rounded-lg shadow-lg border"
+            src={pdfUrl}
+            title={t('editor.blocks.pdf_block.document_title')}
+          />
+        </div>
+      }
+    />
+  ) : null
 
-  useEffect(() => { }, [course, org])
-
-  // View mode without PDF
+  // ─── Learner view ───
   if (!isEditable && !blockObject) {
     return (
       <NodeViewWrapper className="block-pdf">
-        <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
+        <div data-lhb-panel="" className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
           <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
             <FileText weight="duotone" className="text-neutral-300" size={32} />
             <p className="text-neutral-500">{t('editor.blocks.pdf_block.no_pdf')}</p>
@@ -166,8 +142,8 @@ function PDFBlockComponent(props: any) {
     )
   }
 
-  // View mode with PDF
-  if (!isEditable && blockObject && pdfUrl) {
+  if (!isEditable) {
+    if (!pdfUrl) return null
     return (
       <>
         <NodeViewWrapper className="block-pdf">
@@ -176,11 +152,11 @@ function PDFBlockComponent(props: any) {
               style={frameStyle}
               className="w-full rounded-lg nice-shadow bg-white"
               src={pdfUrl}
-              title={t('editor.blocks.pdf_block.document_title')}
+              title={caption || t('editor.blocks.pdf_block.document_title')}
             />
             <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
-                onClick={handleExpand}
+                onClick={() => setIsModalOpen(true)}
                 className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                 title={t('editor.blocks.pdf_block.expand_pdf')}
               >
@@ -195,167 +171,126 @@ function PDFBlockComponent(props: any) {
               </button>
             </div>
           </div>
+          <BlockCaption value={caption} editable={false} />
         </NodeViewWrapper>
-
-        <Modal
-          isDialogOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          dialogTitle={t('editor.blocks.pdf_block.document_title')}
-          minWidth="xl"
-          minHeight="xl"
-          dialogContent={
-            <div className="w-full h-[80vh]">
-              <iframe
-                className="w-full h-full rounded-lg shadow-lg border"
-                src={pdfUrl}
-                title={t('editor.blocks.pdf_block.document_title')}
-              />
-            </div>
-          }
-        />
+        {documentModal}
       </>
     )
   }
 
-  // Edit mode
+  const label = <><FileText size={11} weight="bold" />{t('editor.blocks.pdf')}</>
+  const deleteButton = (
+    <BlockToolbarButton label={t('common.delete', 'Delete')} tone="danger" onClick={() => deleteBlock(props)}>
+      <Trash size={14} />
+    </BlockToolbarButton>
+  )
+
+  // ─── Editor: empty ───
+  if (!blockObject || !pdfUrl) {
+    const importFromUrl = async (input: string): Promise<string | void> => {
+      const url = normalizeUserUrl(input)
+      if (!url) return uploadErrorText(t, { code: 'url' })
+      try {
+        upload.start(await fetchRemoteFile(url, 'pdf'))
+      } catch (err) {
+        if (err instanceof UrlImportError) return uploadErrorText(t, { code: err.code, kind: 'pdf', error: err.message })
+        return uploadErrorText(t, { code: 'server', error: (err as any)?.message })
+      }
+    }
+    return (
+      <NodeViewWrapper className="block-pdf">
+        <BlockChrome tone="document" selected={props.selected} label={label} toolbar={deleteButton}>
+          <MediaSourcePicker
+            kind="pdf" tone="document"
+            icon={<FileText size={20} weight="duotone" />}
+            title={t('editor.blocks_v2.pdf_title', 'Add a PDF')}
+            onFile={(f) => upload.start(f)}
+            onUrl={importFromUrl}
+            urlPlaceholder={t('editor.blocks_v2.pdf_link_placeholder', 'Paste a link to a PDF…')}
+            onLibrarySelect={(r) => replaceBlock(props as any, { type: 'blockLibrary', attrs: libraryMediaNodeAttrs(r) })}
+            task={upload.task}
+            rejection={upload.rejection}
+            onCancel={upload.cancel}
+            onRetry={upload.retry}
+            onDismiss={upload.dismiss}
+          />
+        </BlockChrome>
+      </NodeViewWrapper>
+    )
+  }
+
+  // ─── Editor: document ───
+  const heightPreset = PDF_HEIGHT_PRESETS.find((p) => p.height === pdfHeight)?.id ?? (pdfHeight ? null : 'auto')
+  const toolbar = (
+    <>
+      <BlockPopover
+        open={heightOpen}
+        onOpenChange={setHeightOpen}
+        title={t('editor.blocks_v2.preview_height', 'Preview height')}
+        width={300}
+        trigger={<BlockToolbarButton label={t('editor.blocks_v2.preview_height', 'Preview height')}><ArrowsVertical size={14} /></BlockToolbarButton>}
+      >
+        <Segmented
+          ariaLabel={t('editor.blocks_v2.preview_height', 'Preview height')}
+          value={heightPreset}
+          onChange={(id) => props.updateAttributes({ pdfHeight: PDF_HEIGHT_PRESETS.find((p) => p.id === id)?.height ?? null })}
+          options={[
+            { value: 'auto', label: t('editor.blocks_v2.height_auto', 'Fit') },
+            { value: 'short', label: t('editor.blocks_v2.height_short', 'Short') },
+            { value: 'medium', label: t('editor.blocks.common.medium', 'Medium') },
+            { value: 'tall', label: t('editor.blocks_v2.height_tall', 'Tall') },
+          ]}
+        />
+        <p className="text-[11px] text-neutral-400">{t('editor.blocks_v2.pdf_drag_hint', 'Or drag the bar under the document.')}</p>
+      </BlockPopover>
+      <BlockToolbarDivider />
+      <BlockToolbarButton label={t('editor.blocks_v2.replace', 'Replace')} onClick={() => pickFile(acceptFor('pdf'), (f) => upload.start(f))}>
+        <ArrowsClockwise size={14} />
+      </BlockToolbarButton>
+      <BlockToolbarButton label={t('editor.blocks.pdf_block.expand_pdf')} onClick={() => setIsModalOpen(true)}>
+        <ArrowsOut size={14} />
+      </BlockToolbarButton>
+      <BlockToolbarButton label={t('editor.blocks.pdf_block.download_pdf')} onClick={handleDownload}>
+        <DownloadSimple size={14} />
+      </BlockToolbarButton>
+      {deleteButton}
+    </>
+  )
+
   return (
     <>
       <NodeViewWrapper className="block-pdf">
-        <div className="bg-neutral-50 rounded-xl px-5 py-4 transition-all ease-linear">
-          {/* Header */}
-          <div className="flex items-center gap-2 mb-3">
-            <FileText weight="duotone" className="text-neutral-400" size={16} />
-            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              {t('editor.blocks.pdf')}
-            </span>
+        <BlockChrome tone="document" selected={props.selected} forceToolbar={heightOpen} label={label} toolbar={toolbar} className="p-1">
+          <div ref={frameRef} className="relative" style={frameStyle}>
+            {/* Inline height: the editor's global `iframe { height: 440px }` outranks h-full. */}
+            <iframe
+              style={{ height: '100%' }}
+              className={`w-full rounded-lg nice-shadow bg-white ${isResizing ? 'pointer-events-none' : ''}`}
+              src={pdfUrl}
+              title={t('editor.blocks.pdf_block.document_title')}
+            />
+            <div
+              className="absolute start-0 end-0 bottom-0 h-4 cursor-ns-resize touch-none flex items-center justify-center bg-white/70 hover:bg-white/90 rounded-b-lg transition-opacity"
+              onPointerDown={handleResizeStart}
+              title={t('editor.blocks.pdf_block.resize_pdf')}
+            >
+              <DotsSix weight="duotone" size={16} className="text-neutral-500" />
+            </div>
           </div>
-
-          {/* Upload Zone - shown when no PDF */}
-          {!blockObject && (
-            <form onSubmit={handleSubmit}>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
-                  error
-                    ? 'border-red-300 bg-red-50/30 hover:border-red-400 hover:bg-red-50/50'
-                    : 'border-neutral-200 bg-white hover:border-blue-400 hover:bg-blue-50/50'
-                }`}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handlePDFChange}
-                  accept={SUPPORTED_FILES}
-                  className="hidden"
-                />
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                    <p className="text-sm text-neutral-600">{t('editor.blocks.pdf_block.uploading')} {progress}%</p>
-                    <div
-                      className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden"
-                      role="progressbar"
-                      aria-valuenow={progress}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                    >
-                      <div
-                        className="h-full bg-blue-500 rounded-full transition-all duration-200"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <UploadSimple weight="duotone" className="w-8 h-8 mx-auto text-neutral-400" />
-                    <div>
-                      <p className="text-sm font-medium text-neutral-700">
-                        {pdf ? pdf.name : t('editor.blocks.pdf_block.drop_or_browse')}
-                      </p>
-                      <p className="text-xs text-neutral-500 mt-1">
-                        {t('editor.blocks.pdf_block.supported_formats')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-              {pdf && (
-                <div className="mt-3 flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-800 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
-                  >
-                    <UploadSimple weight="duotone" size={14} />
-                    {t('editor.blocks.pdf_block.upload_pdf')}
-                  </button>
-                </div>
-              )}
-              {error && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-                  <WarningCircle weight="duotone" size={16} />
-                  {error}
-                </div>
-              )}
-            </form>
-          )}
-
-          {/* PDF Preview */}
-          {blockObject && pdfUrl && (
-            <div ref={frameRef} className="relative" style={frameStyle}>
-              {/* Inline height: the editor's global `iframe { height: 440px }` outranks h-full. */}
-              <iframe
-                style={{ height: '100%' }}
-                className={`w-full rounded-lg nice-shadow bg-white ${isResizing ? 'pointer-events-none' : ''}`}
-                src={pdfUrl}
-                title={t('editor.blocks.pdf_block.document_title')}
-              />
-              <div
-                className="absolute start-0 end-0 bottom-0 h-4 cursor-ns-resize touch-none flex items-center justify-center bg-white/70 hover:bg-white/90 rounded-b-lg transition-opacity"
-                onPointerDown={handleResizeStart}
-                title={t('editor.blocks.pdf_block.resize_pdf')}
-              >
-                <DotsSix weight="duotone" size={16} className="text-neutral-500" />
-              </div>
-              <div className="absolute top-2 end-2 flex gap-1">
-                <button
-                  onClick={handleExpand}
-                  className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                  title={t('editor.blocks.pdf_block.expand_pdf')}
-                >
-                  <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
-                </button>
-                <button
-                  onClick={handleDownload}
-                  className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                  title={t('editor.blocks.pdf_block.download_pdf')}
-                >
-                  <DownloadSimple weight="duotone" className="w-4 h-4 text-white" />
-                </button>
-              </div>
+          {upload.task && (
+            <div className="mt-2">
+              <MediaSourcePicker kind="pdf" tone="document" icon={<FileText size={18} />} title="" onFile={() => {}} task={upload.task} onCancel={upload.cancel} onRetry={upload.retry} onDismiss={upload.dismiss} />
             </div>
           )}
-        </div>
+          {upload.rejection && (
+            <p role="alert" className="mt-1 text-xs text-rose-600">
+              {uploadErrorText(t, { code: upload.rejection.code, kind: 'pdf', fileSize: upload.rejection.fileSize })}
+            </p>
+          )}
+          <BlockCaption value={caption} editable selected={props.selected} onCommit={(value) => props.updateAttributes({ caption: value })} />
+        </BlockChrome>
       </NodeViewWrapper>
-
-      {blockObject && pdfUrl && (
-        <Modal
-          isDialogOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          dialogTitle={t('editor.blocks.pdf_block.document_title')}
-          minWidth="xl"
-          minHeight="xl"
-          dialogContent={
-            <div className="w-full h-[80vh]">
-              <iframe
-                className="w-full h-full rounded-lg shadow-lg border"
-                src={pdfUrl}
-                title={t('editor.blocks.pdf_block.document_title')}
-              />
-            </div>
-          }
-        />
-      )}
+      {documentModal}
     </>
   )
 }

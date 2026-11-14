@@ -11,8 +11,8 @@ import pytest
 from sqlmodel import select
 
 from src.db.roles import Role
-from src.services.ai.tools import org as org_tools
 from src.services.ai.tools.targets import describe_target
+from src.services.landing.schema import check_href
 from src.tests.conftest import USER_RIGHTS
 from src.tests.services.ai_tools.test_people_org import (  # noqa: F401
     _ctx,
@@ -51,11 +51,12 @@ async def test_refused_role_escalation_is_not_saved_by_a_later_commit(registry, 
     ["javascript:alert(1)", " JavaScript:x", "java\tscript:x", "\x01javascript:x", "jav\nascript:x", "da\rta:text/html,x"],
 )
 def test_landing_links_cannot_hide_a_script_scheme(link):
-    assert org_tools._unsafe_strings({"sections": [{"buttons": [{"href": link}]}]})
+    with pytest.raises(ValueError):
+        check_href(link)
 
 
 def test_landing_links_keep_ordinary_urls():
-    assert not org_tools._unsafe_strings(["https://example.com/a b", "/courses", "mailto:hi@example.com"])
+    assert [check_href(v) for v in ("https://example.com/a", "/courses", "mailto:hi@example.com", "#pricing")]
 
 
 async def test_approval_target_names_the_role_being_granted(db, org, admin_user, setup):

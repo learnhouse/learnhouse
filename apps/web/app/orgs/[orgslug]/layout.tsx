@@ -1,4 +1,5 @@
 import type React from 'react'
+import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import OrgLanguageSync from '@components/Contexts/OrgLanguageSync'
@@ -10,6 +11,8 @@ import CompleteSignupFields from '@components/Auth/CompleteSignupFields'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgFaviconMediaDirectory } from '@services/media/media'
 import { orgScriptsAllowedOnRequest } from '@/lib/orgScripts'
+import AffiliateRefCapture from '@ee/components/Payments/Affiliates/AffiliateRefCapture'
+import DemoInstanceBar from '@ee/components/DemoInstance/DemoInstanceBar'
 
 export async function generateMetadata({
   params,
@@ -36,6 +39,8 @@ export async function generateMetadata({
 
 export default async function RootLayout(props: {
   children: React.ReactNode
+  /** Parallel route: JSON-LD for the current public page (see ./@seo). */
+  seo: React.ReactNode
   params: Promise<{ orgslug: string }>
 }) {
   const params = await props.params
@@ -43,12 +48,21 @@ export default async function RootLayout(props: {
 
   return (
     <div>
+      {/* Structured data lives outside the client-rendered page tree so it is
+          in the server HTML; Suspense keeps it from delaying the first byte. */}
+      <Suspense fallback={null}>{props.seo}</Suspense>
       <OrgProvider orgslug={params.orgslug}>
         <OrgLanguageSync />
         <NextTopLoader color="#2e2e2e" initialPosition={0.3} height={4} easing={'ease'} speed={500} showSpinner={false} />
         <Toast />
         <CompleteSignupFields />
+        {/* ?ref=CODE visits: counted and kept for the affiliate program (EE). */}
+        <Suspense fallback={null}>
+          <AffiliateRefCapture />
+        </Suspense>
         {props.children}
+        {/* Demo instances only (EE): days left, checklist, usage tracking. */}
+        <DemoInstanceBar />
         <Footer allowOrgScripts={allowOrgScripts} />
       </OrgProvider>
     </div>

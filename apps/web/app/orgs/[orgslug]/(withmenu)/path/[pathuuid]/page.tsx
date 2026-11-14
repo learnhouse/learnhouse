@@ -1,42 +1,47 @@
 import { Metadata } from 'next'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { notFound } from 'next/navigation'
 import { getPath } from '@services/paths/paths'
 import { getPathThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { resolveForPage } from '@/lib/seo/resolve.server'
+import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
 import PathClient from './path'
 
 type PageParams = Promise<{ orgslug: string; pathuuid: string }>
 
 export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
   const { orgslug, pathuuid } = await params
+  const { uuid, resolved } = await resolveForPage(orgslug, 'path', pathuuid, (k) => `/path/${k}`)
   const session = await getServerSession()
-  const [org, path] = await Promise.all([
-    getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] }),
-    getPath(`path_${pathuuid}`, session?.tokens?.access_token, { revalidate: 120, tags: ['paths'] }).catch(() => null),
+  let status: number | undefined
+  const [ctx, path] = await Promise.all([
+    getSeoContext(orgslug),
+    getPath(`path_${uuid}`, session?.tokens?.access_token, { revalidate: 120, tags: ['paths'] }).catch((e: any) => {
+      status = e?.status
+      return null
+    }),
   ])
-  const seoConfig = getOrgSeoConfig(org)
   if (!path) {
-    return { title: buildPageTitle('Path', org?.name || 'Organization', seoConfig), robots: { index: false } }
+    if (!resolved && status === 404) notFound()
+    return noindexMetadata(ctx.org?.name || 'Path')
   }
-  const title = buildPageTitle(path.name, org?.name || 'Organization', seoConfig)
-  const description = path.description || `A learning path from ${org?.name}`
-  const image = path.thumbnail_image
-    ? getPathThumbnailMediaDirectory(org.org_uuid, path.path_uuid, path.thumbnail_image)
-    : undefined
-
-  return {
-    title,
-    description,
-    robots: { index: path.public, follow: path.public },
-    alternates: { canonical: await getServerCanonicalUrl(orgslug, `/path/${pathuuid}`) },
-    openGraph: { title, description, type: 'website', ...(image && { images: [{ url: image, alt: path.name }] }) },
-    twitter: { card: 'summary_large_image', title, description, ...(image && { images: [image] }) },
-  }
+  const key = path.slug || uuid
+  return buildResourceMetadata({
+    ctx,
+    name: path.name,
+    description: path.description || path.about || `A learning path from ${ctx.org?.name}`,
+    canonical: await ctx.url(`/path/${key}`),
+    seo: path.seo,
+    thumbnail: path.thumbnail_image ? getPathThumbnailMediaDirectory(ctx.org?.org_uuid, path.path_uuid, path.thumbnail_image) : undefined,
+    generatedImage: await ctx.url(`/og/path/${key}`),
+    indexable: !!path.public && !!path.published && !resolved?.restricted,
+    modifiedTime: path.update_date,
+  })
 }
 
 export default async function PathPage({ params }: { params: PageParams }) {
   const { orgslug, pathuuid } = await params
-  return <PathClient orgslug={orgslug} pathuuid={pathuuid} />
+  const { uuid } = await resolveForPage(orgslug, 'path', pathuuid, (k) => `/path/${k}`)
+  return <PathClient orgslug={orgslug} pathuuid={uuid} />
 }

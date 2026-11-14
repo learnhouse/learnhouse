@@ -1,8 +1,9 @@
 import { getAPIUrl } from './services/config/config'
-import { NextResponse } from 'next/server'
+import { NextResponse, userAgent } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
 import { isThirdPartyRelayPath, withoutCredentialHeaders } from './lib/thirdPartyRelay'
+import { landingDecision } from './lib/seo/legacyRedirect'
 
 // =============================================================================
 // Tenancy
@@ -658,6 +659,16 @@ export default async function proxy(req: NextRequest) {
   // 11. Tenant-scoped rewrite: the catch-all that puts us under /orgs/{slug}
   // -------------------------------------------------------------------------
   const resolved = await resolveTenant(req, instance)
+  // SEO: uuid URLs of resources with a slug (and, for crawlers, old slugs)
+  // 308 to the slug URL; crawlers get a real 404 for missing resources.
+  const landing = await landingDecision(getAPIUrl(), resolved.slug, pathname, { isBot: userAgent(req).isBot })
+  if (landing && 'redirect' in landing) {
+    return NextResponse.redirect(new URL(`${landing.redirect}${search}`, req.url), 308)
+  }
+  if (landing && 'notFound' in landing) {
+    // No route matches this path, so Next renders the 404 page with a 404 status.
+    return NextResponse.rewrite(new URL(`/orgs/${resolved.slug}/_missing${pathname}`, req.url))
+  }
   const requestHeaders = tenantRequestHeaders(req, resolved, instance)
   // `${search}` is load-bearing: a rewrite destination built from an absolute
   // path drops the base URL's query, and Next treats the destination's search

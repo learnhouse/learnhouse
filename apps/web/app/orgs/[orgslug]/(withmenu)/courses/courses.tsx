@@ -1,5 +1,8 @@
 'use client'
-import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
+import dynamic from 'next/dynamic'
+// Admin-only and opened from a button: its form code (formik, yup, the upgrade
+// modal) stays out of the catalog's first download.
+const CreateCourseModal = dynamic(() => import('@components/Objects/Modals/Course/Create/CreateCourse'))
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import React, { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -10,7 +13,7 @@ import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useTranslation } from 'react-i18next'
-import { BookCopy, Search, X, Users, Info, LogIn } from 'lucide-react'
+import { BookCopy, Search, X, Users, Info, LogIn, Languages } from 'lucide-react'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
@@ -23,6 +26,11 @@ import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
 import CatalogPagination, { useCatalogPagination } from '@components/Objects/Catalog/CatalogPagination'
 import ListShortcuts from '@components/Objects/Shortcuts/ListShortcuts'
 import { asArray } from '@services/utils/ts/requests'
+import { useContentLanguage } from '@/hooks/useContentLanguage'
+import { courseLocales } from '@/lib/contentLanguage'
+import { localeNativeName } from '@services/courses/translations'
+import RequiredTrainingSection from '@ee/components/HR/Training/RequiredTrainingSection'
+import RequiredTrainingBadge, { useRequiredTrainingMap } from '@ee/components/HR/Training/RequiredTrainingBadge'
 
 interface CourseProps {
   orgslug: string
@@ -40,9 +48,37 @@ function Courses(props: CourseProps) {
   const access_token = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
   const { track } = useLHAnalytics('learner')
-  const { data: coursesData, isLoading: coursesLoading } = useCourses(orgslug)
+  // Names and descriptions in the learner's content language (published
+  // translations), plus an optional "available in" language filter.
+  const contentLang = useContentLanguage()
+  // The member's required training per course (EE; empty otherwise).
+  const required = useRequiredTrainingMap()
+  const [languageFilter, setLanguageFilter] = useState('')
+  const { data: coursesData, isLoading: coursesQueryLoading } = useCourses(orgslug, {
+    lang: contentLang.lang || undefined,
+    enabled: contentLang.ready,
+  })
+  const { data: languageCourses, isLoading: languageLoading } = useCourses(orgslug, {
+    lang: contentLang.lang || undefined,
+    language: languageFilter || undefined,
+    enabled: contentLang.ready && !!languageFilter,
+  })
+  const coursesLoading = coursesQueryLoading || (!contentLang.ready && !coursesData)
 
-  const allCourses = coursesData || []
+  const baseCourses: any[] = useMemo(() => (Array.isArray(coursesData) ? coursesData : []), [coursesData])
+  // Languages offered by the loaded courses (default + published translations).
+  const languageOptions = useMemo(() => {
+    const set = new Set<string>()
+    for (const c of baseCourses) for (const l of courseLocales(c)) set.add(l)
+    return Array.from(set).sort((a, b) => localeNativeName(a).localeCompare(localeNativeName(b)))
+  }, [baseCourses])
+  const hasLanguageChoice = languageOptions.length > 1 && baseCourses.some((c) => courseLocales(c).length > 1)
+  const allCourses: any[] = useMemo(() => {
+    if (!languageFilter) return baseCourses
+    const list = Array.isArray(languageCourses) ? languageCourses : languageLoading ? baseCourses : []
+    // The API filters with `language=`; keep only matching ones in case it doesn't.
+    return list.filter((c: any) => courseLocales(c).includes(languageFilter))
+  }, [languageFilter, languageCourses, languageLoading, baseCourses])
 
   // Usergroup filter, shown only when the org's plan actually includes
   // usergroups (a standard+ feature per the backend), via resolved features.
@@ -147,7 +183,7 @@ function Courses(props: CourseProps) {
   // Reset to page 1 when search or filter changes
   React.useEffect(() => {
     resetPage()
-  }, [searchQuery, selectedUsergroupId, resetPage])
+  }, [searchQuery, selectedUsergroupId, languageFilter, resetPage])
 
   async function closeNewCourseModal() {
     setNewCourseModal(false)
@@ -166,7 +202,7 @@ function Courses(props: CourseProps) {
             {/* Search bar placeholder */}
             <div className="h-10 bg-gray-200 rounded-lg w-full sm:w-80 mb-4" />
             {/* Course card grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="lh-t-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="rounded-xl overflow-hidden">
                   {/* Thumbnail area */}
@@ -195,6 +231,7 @@ function Courses(props: CourseProps) {
           hasNextPage={currentPage < totalPages}
           hasPrevPage={currentPage > 1}
         />
+        <RequiredTrainingSection orgslug={orgslug} variant="compact" />
         <div className="flex flex-col space-y-2 mb-2">
           <div className="flex items-center justify-between">
             <TypeOfContentTitle title={t('courses.courses')} type="cou" />
@@ -227,7 +264,7 @@ function Courses(props: CourseProps) {
           </div>
 
           {/* Search and Usergroup Filter */}
-          {allCourses.length > 0 && (
+          {baseCourses.length > 0 && (
             <div className="flex items-center gap-3 mb-4 flex-wrap">
               <div className="relative w-full sm:w-80">
                 <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -249,15 +286,37 @@ function Courses(props: CourseProps) {
                 )}
               </div>
 
+              {/* Language filter: only when some course has another language. */}
+              {hasLanguageChoice && (
+                <div className="relative">
+                  <Languages className="absolute start-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                  <select
+                    data-testid="course-language-filter"
+                    value={languageFilter}
+                    onChange={(e) => setLanguageFilter(e.target.value)}
+                    aria-label={t('courses.i18n.language_filter', 'Language')}
+                    className="ps-8 pe-8 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0 appearance-none cursor-pointer min-w-[150px]"
+                  >
+                    <option value="">{t('courses.i18n.all_languages', 'All languages')}</option>
+                    {languageOptions.map((locale) => (
+                      <option key={locale} value={locale} lang={locale}>
+                        {localeNativeName(locale)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Usergroup Filter */}
               {usergroupsAvailable && usergroups.length > 0 && (
-                <div className="relative flex items-center gap-1.5">
-                  <div className="relative">
+                <div className="relative flex items-center gap-1.5 max-w-full min-w-0">
+                  <div className="relative min-w-0">
                     <Users className="absolute start-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                    {/* Long group names would push the row past a phone screen. */}
                     <select
                       value={selectedUsergroupId}
                       onChange={(e) => handleUsergroupChange(e.target.value)}
-                      className="ps-8 pe-8 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0 appearance-none cursor-pointer min-w-[160px]"
+                      className="max-w-full truncate ps-8 pe-8 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0 appearance-none cursor-pointer min-w-[160px]"
                     >
                       <option value="">{t('courses.usergroup_filter.all_courses')}</option>
                       {usergroups.map((ug: any) => (
@@ -269,12 +328,12 @@ function Courses(props: CourseProps) {
                   </div>
                   <button
                     onClick={() => setShowUsergroupInfo(!showUsergroupInfo)}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
+                    className="shrink-0 p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
                   >
                     <Info className="w-3.5 h-3.5" />
                   </button>
                   {showUsergroupInfo && (
-                    <div className="absolute top-full start-0 mt-2 z-50 w-72 bg-white nice-shadow rounded-lg p-3 border border-gray-100">
+                    <div className="absolute top-full start-0 mt-2 z-50 w-72 max-w-[calc(100vw-2rem)] bg-white nice-shadow rounded-lg p-3 border border-gray-100">
                       <p className="text-xs font-semibold text-gray-700 mb-1">{t('courses.usergroup_filter.info_title')}</p>
                       <p className="text-xs text-gray-500 leading-relaxed">{t('courses.usergroup_filter.info_description')}</p>
                     </div>
@@ -291,13 +350,18 @@ function Courses(props: CourseProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="lh-t-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {paginatedCourses.map((course: any, index: number) => (
-              <div key={course.course_uuid} className="">
+              <div key={course.course_uuid} className="relative">
                 <CourseThumbnail course={course} orgslug={orgslug} isPriority={currentPage === 1 && index < 3} />
+                {required.has(course.course_uuid) && (
+                  <div className="absolute top-2 start-2 z-10 pointer-events-none">
+                    <RequiredTrainingBadge row={required.get(course.course_uuid)} />
+                  </div>
+                )}
               </div>
             ))}
-            {filteredCourses.length === 0 && searchQuery && (
+            {filteredCourses.length === 0 && (searchQuery || languageFilter) && baseCourses.length > 0 && (
               <div className="col-span-full flex flex-col justify-center items-center py-12 px-4">
                 <Search className="w-12 h-12 text-gray-300 mb-4" />
                 <h2 className="text-xl font-semibold text-gray-600 mb-2">
@@ -308,7 +372,7 @@ function Courses(props: CourseProps) {
                 </p>
               </div>
             )}
-            {allCourses.length === 0 && !searchQuery && (
+            {baseCourses.length === 0 && !searchQuery && (
               <div className="col-span-full flex flex-col justify-center items-center py-12 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
                 <div className="p-4 bg-white rounded-full nice-shadow mb-4">
                   {isAuthenticated ? (
@@ -342,7 +406,7 @@ function Courses(props: CourseProps) {
                 {!isAuthenticated && (
                   <Link
                     href={getUriWithOrg(orgslug, '/login')}
-                    className="inline-flex items-center gap-2 justify-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
+                    className="lh-t-btn inline-flex items-center gap-2 justify-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
                   >
                     <LogIn size={16} />
                     {t('auth.sign_in', 'Sign in')}

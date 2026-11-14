@@ -81,6 +81,9 @@ class AIConfig(BaseModel):
     # LLM layer). Defaults to a fast tier because tool-use latency adds up fast;
     # override via LEARNHOUSE_ATLAS_MODEL for harder reasoning tasks.
     atlas_model: str | None = None
+    # Atlas thinking effort (minimal, low, medium, high; unset = the
+    # provider's default). Lower effort answers sooner; see LEARNHOUSE_ATLAS_THINKING.
+    atlas_thinking: str | None = None
 
 
 class MCPConfig(BaseModel):
@@ -236,15 +239,57 @@ def _load_yaml_config(yaml_path: str) -> dict:
     return parsed
 
 
+# The last config built, with the inputs it was built from: (yaml dict, env).
+_config_cache: Optional[tuple] = None
+_dotenv_loaded = False
+
+
 def get_learnhouse_config() -> LearnHouseConfig:
+    """The LearnHouse config, rebuilt only when its inputs change.
 
-    load_dotenv()
+    It is read several times per request (auth, CSRF, plan checks, Redis), and
+    building it reads ~100 environment variables and constructs a dozen
+    models, ~0.4 ms each time. Its only inputs are config.yaml (already
+    memoised on mtime by ``_load_yaml_config``) and the environment, so the
+    built object is reused for as long as both are unchanged: a changed
+    variable (a deploy, or a test's ``monkeypatch.setenv``) builds a fresh one
+    on the next call, exactly as before. Callers treat it as read-only.
 
-    # Get the YAML file
+    ``.env`` is loaded on the first call. ``load_dotenv`` never overrides a
+    variable that is already set, so loading it again on every call only
+    repeated the file search (a directory walk and a read each time).
+    """
+    global _config_cache, _dotenv_loaded
+    if not _dotenv_loaded:
+        load_dotenv()
+        _dotenv_loaded = True
+
     yaml_path = os.path.join(os.path.dirname(__file__), "config.yaml")
-
     yaml_config = _load_yaml_config(yaml_path)
+    env = _environ_snapshot()
+    cached = _config_cache
+    # Identity on the yaml dict: _load_yaml_config returns the same object
+    # until the file changes (the cache entry holds it, so its id can't be
+    # reused by a newer parse).
+    if cached is not None and cached[0] is yaml_config and cached[1] == env:
+        return cached[2]
+    config = _build_learnhouse_config(yaml_config)
+    _config_cache = (yaml_config, env, config)
+    return config
 
+
+def _environ_snapshot() -> dict:
+    """A cheap, comparable copy of the environment.
+
+    CPython keeps the raw (bytes) mapping behind os.environ; copying and
+    comparing it costs well under a microsecond, against ~30 µs for decoding
+    every item through the public mapping.
+    """
+    raw = getattr(os.environ, "_data", None)
+    return dict(raw) if isinstance(raw, dict) else dict(os.environ)
+
+
+def _build_learnhouse_config(yaml_config: dict) -> LearnHouseConfig:
     # General Config
 
     # Development Mode
@@ -685,6 +730,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "atlas_model"
     )
 
+    atlas_thinking = os.environ.get("LEARNHOUSE_ATLAS_THINKING") or yaml_config.get(
+        "ai_config", {}
+    ).get("atlas_thinking")
+
     ai_config = AIConfig(
         is_ai_enabled=bool(is_ai_enabled),
         provider=ai_provider,
@@ -700,6 +749,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         image_model=ai_image_model,
         tts_model=ai_tts_model,
         atlas_model=atlas_model,
+        atlas_thinking=atlas_thinking,
     )
 
     mcp_yaml = yaml_config.get("mcp_config", {}) or {}

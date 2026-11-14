@@ -7,10 +7,12 @@ import { getUriWithOrg } from '@services/config/config'
 import { useSitePages } from '@/lib/site-search/useSitePages'
 import { useShortcut, useShortcuts } from '@/lib/shortcuts/ShortcutsContext'
 import { useSiteCommandPalette } from '@components/Objects/Search/SiteCommandPaletteContext'
+import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
 
 /**
  * Registers the shortcuts that exist on every learner page: `?` for the
- * help sheet, `/` for search, and one `g …` chord per navigable page from
+ * help sheet, `/` for search, `t t` for Light / Dark, and one `g …` chord
+ * per navigable page from
  * the site registry (so a page the org hid or the visitor cannot open has
  * no chord either).
  */
@@ -22,6 +24,7 @@ export default function GlobalShortcuts() {
   const pages = useSitePages()
   const { register, setHelpOpen, helpOpen } = useShortcuts()
   const { setOpen: setPaletteOpen } = useSiteCommandPalette()
+  const { colorScheme, toggleColorScheme } = useColorScheme()
 
   useShortcut({
     id: 'global.help',
@@ -38,6 +41,15 @@ export default function GlobalShortcuts() {
     label: t('shortcuts.open_search'),
     group: 'global',
     run: () => setPaletteOpen(true),
+  })
+
+  // Light / Dark, also offered as a palette action.
+  useShortcut({
+    id: 'global.theme',
+    keys: 't t',
+    label: colorScheme === 'dark' ? t('common.switch_to_light') : t('common.switch_to_dark'),
+    group: 'page',
+    run: toggleColorScheme,
   })
 
   useEffect(() => {

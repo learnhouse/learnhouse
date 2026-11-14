@@ -8,13 +8,15 @@ re-enqueue) but for caption generation: resolve the hosted video → extract aud
 
 Design mirrors ``hls_jobs`` deliberately so both pipelines behave identically under
 pod churn. Reuses the AI layer (``src.services.ai.llm``) and org credit metering
-(``reserve_ai_credit``/``refund_ai_credit``).
+(``src.services.ai.metering``: reserved, metered, settled; refunded on failure).
 """
 from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import os
+import uuid
 import tempfile
 from datetime import datetime, timezone
 from typing import Optional
@@ -48,6 +50,9 @@ REDIS_QUEUE_KEY = "learnhouse:captions:queue"
 # Cleared when the job finishes; the TTL covers a worker dying mid-job.
 QUEUED_MARKER_PREFIX = "caption_queued:"
 QUEUED_MARKER_TTL_SECONDS = 60 * 60
+# Charge token per caption request (see enqueue / _charge_key).
+JOB_TOKEN_PREFIX = "captions:job_token:"
+JOB_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60
 JOB_TIMEOUT_SECONDS = 40 * 60
 CONSUMER_POLL_SECONDS = 2
 STALE_PROCESSING_SECONDS = 20 * 60
@@ -137,9 +142,24 @@ def enqueue(activity_uuid: str) -> None:
         ):
             logger.info("Captions: %s already queued; skipping", activity_uuid)
             return
+        # A fresh request gets a new charge token; the reaper's re-enqueue of a
+        # crashed job keeps it, so a retried job is never charged twice.
+        client.set(f"{JOB_TOKEN_PREFIX}{activity_uuid}", uuid.uuid4().hex, ex=JOB_TOKEN_TTL_SECONDS)
         client.rpush(REDIS_QUEUE_KEY, activity_uuid)
     except Exception as e:
         logger.warning("Captions: could not enqueue %s: %s", activity_uuid, e)
+
+
+def _charge_key(activity_uuid: str) -> str:
+    """Idempotency key of this caption job's AI charge (see enqueue)."""
+    token = None
+    try:
+        client = get_redis_client()
+        raw = client.get(f"{JOB_TOKEN_PREFIX}{activity_uuid}") if client else None
+        token = raw.decode() if isinstance(raw, (bytes, bytearray)) else raw
+    except Exception:
+        token = None
+    return f"captions:{activity_uuid}:{token or uuid.uuid4().hex}"
 
 
 def _clear_queued_marker(client, activity_uuid: str) -> None:
@@ -237,15 +257,12 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
     await _patch_captions(activity_uuid, status="processing", error=None)
 
     # Credit metering + generation are deferred to the LLM layer; import lazily.
-    from src.security.features_utils.usage import (
-        check_feature_enabled,
-        refund_ai_credit,
-        reserve_ai_credit,
-    )
+    from src.security.features_utils.usage import check_feature_enabled
+    from src.services.ai import metering
     from src.services.ai.llm import model_for_tier
 
     model_name = model_for_tier("standard")
-    reserved = 0
+    meter = None
     need_translation = [
         t for t in targets
         if not (source_language != "auto" and t["code"] == source_language)
@@ -259,7 +276,8 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
         with tempfile.TemporaryDirectory() as td:
             if existing_transcript:
                 chunks = []
-                cost = max(1, len(need_translation))
+                # No transcription: one credit per language to translate.
+                charge = {"minimum": max(1, len(need_translation))}
             else:
                 # 1. Download source video + extract audio.
                 local_src = os.path.join(td, os.path.basename(info["filename"]))
@@ -273,44 +291,52 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
                     await _patch_captions(activity_uuid, status="failed", error="audio_extract_failed")
                     return False
                 duration = await cap.probe_duration(local_src)
-                # Cost scales with duration + number of languages that need a
-                # real translation.
-                cost = cap.estimate_credits(duration, len(need_translation))
+                # Charged per started minute of video (transcription); the
+                # reservation also covers the languages to translate, and the
+                # job settles on its real usage.
+                minutes = max(1, math.ceil((duration or 0) / 60))
+                charge = {
+                    "units": minutes,
+                    "estimate": minutes + len(need_translation) * math.ceil(minutes / 2),
+                }
 
             # 2. Credit gate (feature + atomic reserve).
             async with _async_session_factory() as db:
                 await check_feature_enabled("ai", org_id, db)
-                await reserve_ai_credit(org_id, db, amount=cost)
-            reserved = cost
+                meter = await metering.start(
+                    "captions", org_id=org_id, db=db, charge_key=_charge_key(activity_uuid), **charge
+                )
 
-            # 3. Transcribe once (source language).
-            source_vtt = existing_transcript or await cap.transcribe_to_vtt(chunks, model_name, source_language)
+            # 3. Transcribe once (source language). Every model call below is
+            # metered on this job's charge.
+            with metering.use_meter(meter):
+                source_vtt = existing_transcript or await cap.transcribe_to_vtt(chunks, model_name, source_language)
 
-            # 4. Produce a VTT per target language (translate unless it IS the source).
-            out_dir = os.path.join(td, "captions")
-            os.makedirs(out_dir, exist_ok=True)
-            done = 0
-            for t in targets:
-                code = t["code"]
-                await _set_lang_status(activity_uuid, code, "processing")
-                try:
-                    if source_language != "auto" and code == source_language:
-                        vtt = source_vtt
-                    else:
-                        vtt = await cap.translate_vtt(source_vtt, t.get("label") or code, model_name)
-                    vtt_path = _vtt_path(out_dir, code)
-                    with open(vtt_path, "w", encoding="utf-8") as f:
-                        f.write(vtt)
-                    await _set_lang_status(activity_uuid, code, "ready")
-                    done += 1
-                except Exception as e:  # one language failing must not sink the rest
-                    logger.error("Captions: %s lang %s failed: %s", activity_uuid, code, e)
-                    await _set_lang_status(activity_uuid, code, "failed")
+            with metering.use_meter(meter):
+                # 4. Produce a VTT per target language (translate unless it IS the source).
+                out_dir = os.path.join(td, "captions")
+                os.makedirs(out_dir, exist_ok=True)
+                done = 0
+                for t in targets:
+                    code = t["code"]
+                    await _set_lang_status(activity_uuid, code, "processing")
+                    try:
+                        if source_language != "auto" and code == source_language:
+                            vtt = source_vtt
+                        else:
+                            vtt = await cap.translate_vtt(source_vtt, t.get("label") or code, model_name)
+                        vtt_path = _vtt_path(out_dir, code)
+                        with open(vtt_path, "w", encoding="utf-8") as f:
+                            f.write(vtt)
+                        await _set_lang_status(activity_uuid, code, "ready")
+                        done += 1
+                    except Exception as e:  # one language failing must not sink the rest
+                        logger.error("Captions: %s lang %s failed: %s", activity_uuid, code, e)
+                        await _set_lang_status(activity_uuid, code, "failed")
 
             if done == 0:
                 await _patch_captions(activity_uuid, status="failed", error="all_languages_failed")
-                if reserved:
-                    refund_ai_credit(org_id, amount=reserved)
+                await meter.settle(failed=True)
                 return False
 
             # 5. Upload the produced VTTs to R2 (or copy locally in filesystem mode).
@@ -322,10 +348,10 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
                 ok = True
             if not ok:
                 await _patch_captions(activity_uuid, status="failed", error="upload_failed")
-                if reserved:
-                    refund_ai_credit(org_id, amount=reserved)
+                await meter.settle(failed=True)
                 return False
 
+        await meter.settle()
         await _patch_captions(
             activity_uuid,
             status="ready" if done == len(targets) else "partial",
@@ -343,18 +369,21 @@ async def generate_activity_captions(activity_uuid: str) -> bool:
             logger.exception("Chapters after captions failed for %s", activity_uuid)
         return True
     except HTTPException as e:
-        # e.g. AI disabled or quota exceeded (reserve raises 403): do NOT refund
-        # (nothing was reserved on a 403), record a clear status.
+        # e.g. AI disabled, quota exceeded (reserve raises 403) or this job's
+        # charge already taken (409, a retried job): nothing to refund, record
+        # a clear status.
         detail = getattr(e, "detail", "ai_error")
         await _patch_captions(activity_uuid, status="failed", error=str(detail)[:200])
         return False
     except asyncio.CancelledError:
+        if meter is not None and not meter.settled:
+            await meter.settle(failed=True)
         raise
     except Exception as e:
         logger.error("Captions job crashed for %s: %s", activity_uuid, e)
         await _patch_captions(activity_uuid, status="failed", error="exception")
-        if reserved:
-            refund_ai_credit(org_id, amount=reserved)
+        if meter is not None and not meter.settled:
+            await meter.settle(failed=True)
         return False
 
 

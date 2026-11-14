@@ -7,21 +7,21 @@ import { apiFetch } from '@services/utils/ts/requests';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query/keys';
 import {
-    AlertTriangle,
-    ArrowUpDown,
+    ArrowCounterClockwise,
+    ArrowsDownUp,
+    CaretLeft,
+    CaretRight,
     Check,
-    CheckCircle2,
-    ChevronDown,
+    CheckCircle,
+    CaretDown,
     CircleDashed,
     Clock,
     Hourglass,
-    Inbox,
-    RotateCcw,
-    Search,
-    SendHorizonal,
+    PaperPlaneRight,
+    Tray,
     Users,
-    X,
-} from 'lucide-react';
+    Warning,
+} from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 import EvaluateAssignment from './Modals/EvaluateAssignment';
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
@@ -29,8 +29,11 @@ import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/Assign
 import AssignmentSubmissionProvider from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/lib/format';
-import { BTN_PRIMARY_SM, BTN_SECONDARY_SM, Chip, type ChipTone } from '../../_components/assignmentUi';
+import { Chip, type ChipTone } from '../../_components/assignmentUi';
+import { Button, EmptyState, SearchInput, SegmentedControl, StatCard, buttonClass } from '@components/Dashboard/Shared/DashKit/DashKit';
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics';
+import { BulkAIGradeButton } from '../_components/AIGrading';
+import { AIChip } from '@components/Objects/AI/AIBrand';
 
 type SortField =
     | 'date'             // when the student submitted
@@ -41,7 +44,7 @@ type SortField =
     | 'late_first'       // LATE submissions at the top
     | 'recently_graded'; // GRADED first, then sorted by submission date
 type SortDirection = 'asc' | 'desc';
-type StatusFilter = 'ALL' | 'LATE' | 'SUBMITTED' | 'GRADED' | 'PENDING' | 'NOT_SUBMITTED';
+type StatusFilter = 'ALL' | 'TO_GRADE' | 'LATE' | 'SUBMITTED' | 'GRADED' | 'PENDING' | 'NOT_SUBMITTED';
 
 // The submissions endpoint is paginated server-side (`limit` defaults to 50,
 // caps at 500) and answers with a bare array (no total, no cursor). Requesting
@@ -57,7 +60,7 @@ const SUBMISSIONS_FETCH_CAP = SUBMISSIONS_PAGE_SIZE * SUBMISSIONS_MAX_PAGES;
 // Fetch every page of an assignment's submissions. When the returned array is
 // exactly SUBMISSIONS_FETCH_CAP long we bailed on the page guard rather than on
 // a short page, which is what the UI uses to warn about truncation.
-async function fetchAllAssignmentSubmissions(assignment_uuid: string, access_token: string) {
+export async function fetchAllAssignmentSubmissions(assignment_uuid: string, access_token: string) {
     const all: any[] = [];
     for (let page = 0; page < SUBMISSIONS_MAX_PAGES; page++) {
         const url = `${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`
@@ -127,9 +130,12 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
 
     const statusFilters: { key: StatusFilter; label: string; count: number; icon: React.ReactNode }[] = [
         { key: 'ALL', label: t('dashboard.assignments.submissions.filters.all'), count: stats.total, icon: <Users size={14} /> },
-        { key: 'SUBMITTED', label: t('dashboard.assignments.submissions.status.submitted'), count: stats.submitted, icon: <SendHorizonal size={14} /> },
+        // Reached from the "To grade" stat card; shown while selected so the
+        // control always reflects the active filter.
+        ...(statusFilter === 'TO_GRADE' ? [{ key: 'TO_GRADE' as StatusFilter, label: t('dashboard.assignments.submissions.stats.to_grade'), count: stats.submitted + stats.late, icon: <Tray size={14} /> }] : []),
+        { key: 'SUBMITTED', label: t('dashboard.assignments.submissions.status.submitted'), count: stats.submitted, icon: <PaperPlaneRight size={14} /> },
         { key: 'LATE', label: t('dashboard.assignments.submissions.status.late'), count: stats.late, icon: <Clock size={14} /> },
-        { key: 'GRADED', label: t('dashboard.assignments.submissions.status.graded'), count: stats.graded, icon: <CheckCircle2 size={14} /> },
+        { key: 'GRADED', label: t('dashboard.assignments.submissions.status.graded'), count: stats.graded, icon: <CheckCircle size={14} /> },
         // Only surfaced when they actually occur; most assignments have none of
         // these and the toolbar is already crowded. Kept visible while selected
         // so the pill can never vanish and strand the user on an empty list.
@@ -148,85 +154,69 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
     ];
 
     const toGrade = stats.submitted + stats.late;
+    const assignmentCtx = useAssignments() as any;
 
     return (
         <div className="flex flex-col w-full min-w-0 lg:h-full lg:overflow-y-auto">
             <div className="w-full px-4 sm:px-6 lg:px-10 pt-5 sm:pt-6 pb-10 flex flex-col gap-4">
-                {/* Stats */}
+                {/* Stats (click one to filter the list by it) */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <SubmissionStat
+                    <StatCard
                         icon={<Users size={16} />}
                         iconClass="bg-neutral-100 text-neutral-600"
                         label={t('dashboard.assignments.submissions.stats.total')}
                         value={assignmentSubmissions ? stats.total : null}
+                        active={statusFilter === 'ALL'}
+                        onClick={() => setStatusFilter('ALL')}
                     />
-                    <SubmissionStat
-                        icon={<SendHorizonal size={16} />}
+                    <StatCard
+                        icon={<PaperPlaneRight size={16} />}
                         iconClass="bg-amber-50 text-amber-600"
                         label={t('dashboard.assignments.submissions.stats.to_grade')}
                         value={assignmentSubmissions ? toGrade : null}
-                        highlight={toGrade > 0}
+                        active={statusFilter === 'TO_GRADE'}
+                        onClick={() => setStatusFilter(statusFilter === 'TO_GRADE' ? 'ALL' : 'TO_GRADE')}
                     />
-                    <SubmissionStat
+                    <StatCard
                         icon={<Clock size={16} />}
                         iconClass="bg-rose-50 text-rose-600"
                         label={t('dashboard.assignments.submissions.status.late')}
                         value={assignmentSubmissions ? stats.late : null}
+                        active={statusFilter === 'LATE'}
+                        onClick={() => setStatusFilter(statusFilter === 'LATE' ? 'ALL' : 'LATE')}
                     />
-                    <SubmissionStat
-                        icon={<CheckCircle2 size={16} />}
+                    <StatCard
+                        icon={<CheckCircle size={16} />}
                         iconClass="bg-emerald-50 text-emerald-600"
                         label={t('dashboard.assignments.submissions.status.graded')}
                         value={assignmentSubmissions ? stats.graded : null}
+                        active={statusFilter === 'GRADED'}
+                        onClick={() => setStatusFilter(statusFilter === 'GRADED' ? 'ALL' : 'GRADED')}
                     />
                 </div>
 
                 {/* Toolbar */}
                 <div className="flex flex-col xl:flex-row xl:items-center gap-3">
-                    {/* Search */}
-                    <div className="relative flex-1 min-w-0 xl:max-w-sm">
-                        <Search size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t('dashboard.assignments.submissions.search_placeholder')}
-                            className="w-full h-10 ps-10 pe-9 text-sm bg-white nice-shadow rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900/10 placeholder:text-neutral-400"
-                        />
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery('')}
-                                aria-label={t('dashboard.assignments.home.clear_search')}
-                                className="absolute end-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
-                            >
-                                <X size={14} />
-                            </button>
-                        )}
-                    </div>
+                    <SearchInput
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        placeholder={t('dashboard.assignments.submissions.search_placeholder')}
+                        className="xl:max-w-sm"
+                    />
 
                     <div className="flex items-center gap-2 min-w-0">
                         {/* Status filter (scrolls sideways on narrow screens) */}
                         <div className="min-w-0 flex-1 xl:flex-none overflow-x-auto scrollbar-hide">
-                            <div className="inline-flex items-center rounded-xl bg-neutral-200/60 p-1" role="tablist">
-                                {statusFilters.map((filter) => {
-                                    const active = statusFilter === filter.key;
-                                    return (
-                                        <button
-                                            key={filter.key}
-                                            role="tab"
-                                            aria-selected={active}
-                                            onClick={() => setStatusFilter(filter.key)}
-                                            className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
-                                                active ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-800'
-                                            }`}
-                                        >
-                                            {filter.icon}
-                                            <span>{filter.label}</span>
-                                            <span className={`tabular-nums ${active ? 'text-neutral-500' : 'text-neutral-400'}`}>{filter.count}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <SegmentedControl
+                                value={statusFilter}
+                                onChange={setStatusFilter}
+                                ariaLabel={t('common.status')}
+                                options={statusFilters.map((filter) => ({
+                                    key: filter.key,
+                                    label: <>{filter.icon}<span>{filter.label}</span></>,
+                                    count: filter.count,
+                                }))}
+                            />
                         </div>
 
                         {/* Sort */}
@@ -235,11 +225,11 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
                                 aria-haspopup="menu"
                                 aria-expanded={sortDropdownOpen}
-                                className="flex items-center gap-1.5 h-10 px-3 text-xs font-semibold text-neutral-700 bg-white nice-shadow rounded-xl hover:text-neutral-900 transition-colors"
+                                className={buttonClass('secondary', 'md')}
                             >
-                                <ArrowUpDown size={14} />
+                                <ArrowsDownUp size={14} />
                                 <span className="hidden sm:inline">{sortOptions.find((o) => o.field === sortField)?.label ?? t('dashboard.assignments.submissions.sort.label')}</span>
-                                <ChevronDown size={14} className={`transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} />
+                                <CaretDown size={14} className={`transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
                             {sortDropdownOpen && (
                                 <>
@@ -281,9 +271,19 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                     </div>
                 </div>
 
+                {toGrade > 0 && (
+                    <div className="flex flex-wrap items-center justify-end gap-2 -mt-1">
+                        <BulkAIGradeButton
+                            assignment={assignmentCtx?.assignment_object}
+                            accessToken={access_token}
+                            rawAssignmentUuid={assignment_uuid}
+                        />
+                    </div>
+                )}
+
                 {isTruncated && (
                     <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 text-amber-800 text-sm font-medium">
-                        <AlertTriangle size={16} className="shrink-0" />
+                        <Warning size={16} className="shrink-0" />
                         <span>
                             {t('dashboard.assignments.submissions.truncated_warning', {
                                 max: SUBMISSIONS_FETCH_CAP,
@@ -301,34 +301,6 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                     sortField={sortField}
                     sortDirection={sortDirection}
                 />
-            </div>
-        </div>
-    );
-}
-
-function SubmissionStat({
-    icon,
-    iconClass,
-    label,
-    value,
-    highlight = false,
-}: {
-    icon: React.ReactNode;
-    iconClass: string;
-    label: string;
-    value: number | null;
-    highlight?: boolean;
-}) {
-    return (
-        <div className={`flex items-center gap-3 bg-white nice-shadow rounded-2xl px-4 py-3.5 min-w-0 ${highlight ? 'ring-1 ring-amber-200' : ''}`}>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>{icon}</div>
-            <div className="min-w-0">
-                <p className="text-xs text-neutral-500 truncate">{label}</p>
-                {value === null ? (
-                    <div className="mt-1 h-5 w-8 rounded bg-neutral-100 animate-pulse" />
-                ) : (
-                    <p className="text-xl font-bold text-neutral-900 tabular-nums leading-tight">{value}</p>
-                )}
             </div>
         </div>
     );
@@ -356,6 +328,11 @@ function SubmissionsList({
     sortDirection: SortDirection;
 }) {
     const { t } = useTranslation();
+    const { track } = useLHAnalytics('dashboard');
+    // Index into `filtered` of the submission being evaluated. The dialog
+    // lives here, not in each row, so it can step to the previous / next
+    // learner without closing.
+    const [evaluatingIndex, setEvaluatingIndex] = useState<number | null>(null);
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
 
@@ -427,7 +404,9 @@ function SubmissionsList({
 
     const filtered = submissions
         .filter((s: any) => {
-            if (statusFilter !== 'ALL' && s.submission_status !== statusFilter) return false;
+            if (statusFilter === 'TO_GRADE') {
+                if (s.submission_status !== 'SUBMITTED' && s.submission_status !== 'LATE') return false;
+            } else if (statusFilter !== 'ALL' && s.submission_status !== statusFilter) return false;
             return matchesSearch(s);
         })
         .sort((a: any, b: any) => {
@@ -481,16 +460,23 @@ function SubmissionsList({
             return sortDirection === 'asc' ? cmp : -cmp;
         });
 
+    const openEvaluate = (index: number) => {
+        const submission = filtered[index];
+        track(AnalyticsEvent.SubmissionEvaluateOpened, {
+            submission_status: submission?.submission_status,
+            attempt_number: submission?.attempt_number ?? 1,
+        })
+        setEvaluatingIndex(index)
+    };
+
     if (filtered.length === 0) {
         return (
-            <div className="bg-white nice-shadow rounded-2xl flex flex-col items-center justify-center text-center py-16 px-6 gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-400 flex items-center justify-center">
-                    <Inbox size={22} />
-                </div>
-                <p className="text-base font-semibold text-neutral-900">{t('dashboard.assignments.submissions.empty')}</p>
-                {submissions.length === 0 && (
-                    <p className="text-sm text-neutral-500 max-w-sm">{t('dashboard.assignments.submissions.empty_description')}</p>
-                )}
+            <div className="bg-white nice-shadow rounded-2xl">
+                <EmptyState
+                    icon={<Tray size={22} />}
+                    title={t('dashboard.assignments.submissions.empty')}
+                    description={submissions.length === 0 ? t('dashboard.assignments.submissions.empty_description') : undefined}
+                />
             </div>
         );
     }
@@ -506,74 +492,63 @@ function SubmissionsList({
                 <span className="sr-only">{t('dashboard.assignments.home.columns.actions')}</span>
             </div>
             <ul className={`divide-y divide-neutral-100 ${SUB_ROW_GRID}`}>
-                {filtered.map((submission: any) => (
+                {filtered.map((submission: any, index: number) => (
                     <SubmissionRow
                         key={submission.assignmentusersubmission_uuid || submission.id}
                         submission={submission}
-                        assignment_uuid={assignment_uuid}
                         user={usersById.get(submission.user_id)}
+                        onEvaluate={() => openEvaluate(index)}
                     />
                 ))}
             </ul>
+            <EvaluateDialog
+                submissions={filtered}
+                index={evaluatingIndex}
+                usersById={usersById}
+                assignment_uuid={assignment_uuid}
+                onIndexChange={setEvaluatingIndex}
+            />
         </div>
     );
 }
 
+// Every status the API can return is listed explicitly. The old fallback
+// to SUBMITTED painted a mid-retry PENDING row with the amber "Submitted"
+// badge, so a teacher would open Evaluate on a student who had submitted
+// nothing and grading it would zero their in-flight retry. Unrecognised
+// statuses degrade to a neutral chip that shows the raw value.
+export function submissionStatus(t: (key: string, opts?: any) => string, value: string): { label: string; tone: ChipTone; icon: React.ReactNode } {
+    const config: Record<string, { label: string; tone: ChipTone; icon: React.ReactNode }> = {
+        LATE: { label: t('dashboard.assignments.submissions.status.late'), tone: 'rose', icon: <Clock size={12} /> },
+        SUBMITTED: { label: t('dashboard.assignments.submissions.status.submitted'), tone: 'amber', icon: <PaperPlaneRight size={12} /> },
+        GRADED: { label: t('dashboard.assignments.submissions.status.graded'), tone: 'emerald', icon: <CheckCircle size={12} /> },
+        PENDING: { label: t('dashboard.assignments.submissions.status.pending', { defaultValue: 'In progress' }), tone: 'neutral', icon: <Hourglass size={12} /> },
+        NOT_SUBMITTED: { label: t('dashboard.assignments.submissions.preview.not_submitted'), tone: 'neutral', icon: <CircleDashed size={12} /> },
+    };
+    return config[value] || { label: value || t('common.unknown'), tone: 'neutral', icon: <CircleDashed size={12} /> };
+}
+
+// What the row and the evaluate dialog show: full name, else @username.
+export function rowDisplayName(user: any) {
+    return user?.first_name && user?.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : user?.username
+            ? `@${user.username}`
+            : '...';
+}
+
 function SubmissionRow({
-    assignment_uuid,
     submission,
     user,
+    onEvaluate,
 }: {
-    assignment_uuid: string;
     submission: any;
     user: any;
+    onEvaluate: () => void;
 }) {
     const { t, i18n } = useTranslation();
-    const { track } = useLHAnalytics('dashboard');
-    const assignment = useAssignments() as any;
-    const [gradeModalOpen, setGradeModalOpen] = useState(false);
 
-    // Every status the API can return is listed explicitly. The old fallback
-    // to SUBMITTED painted a mid-retry PENDING row with the amber "Submitted"
-    // badge, so a teacher would open Evaluate on a student who had submitted
-    // nothing and grading it would zero their in-flight retry. It also broke
-    // the filter, which compares the real status and therefore hid the very
-    // row that claimed to be "Submitted".
-    const statusConfig: Record<string, { label: string; tone: ChipTone; icon: React.ReactNode }> = {
-        LATE: {
-            label: t('dashboard.assignments.submissions.status.late'),
-            tone: 'rose',
-            icon: <Clock size={12} />,
-        },
-        SUBMITTED: {
-            label: t('dashboard.assignments.submissions.status.submitted'),
-            tone: 'amber',
-            icon: <SendHorizonal size={12} />,
-        },
-        GRADED: {
-            label: t('dashboard.assignments.submissions.status.graded'),
-            tone: 'emerald',
-            icon: <CheckCircle2 size={12} />,
-        },
-        PENDING: {
-            label: t('dashboard.assignments.submissions.status.pending', { defaultValue: 'In progress' }),
-            tone: 'neutral',
-            icon: <Hourglass size={12} />,
-        },
-        NOT_SUBMITTED: {
-            label: t('dashboard.assignments.submissions.preview.not_submitted'),
-            tone: 'neutral',
-            icon: <CircleDashed size={12} />,
-        },
-    };
-
-    // Unrecognised statuses degrade to a neutral chip that shows the raw value
-    // rather than claiming the student submitted.
-    const status = statusConfig[submission.submission_status] || {
-        label: submission.submission_status || t('common.unknown'),
-        tone: 'neutral' as ChipTone,
-        icon: <CircleDashed size={12} />,
-    };
+    const status = submissionStatus(t, submission.submission_status);
     const submittedDate = new Date(submission.creation_date);
     // 'en-UK' was not a valid locale tag (the UK is en-GB), so this silently
     // fell back to the browser default regardless of the UI language.
@@ -589,12 +564,17 @@ function SubmissionRow({
         minute: '2-digit',
     });
 
-    const displayName = user?.first_name && user?.last_name
-        ? `${user.first_name} ${user.last_name}`
-        : user?.username
-            ? `@${user.username}`
-            : '...';
+    const displayName = rowDisplayName(user);
     const needsGrading = submission.submission_status === 'SUBMITTED' || submission.submission_status === 'LATE';
+    // Where the learner's AI grade stands (graders only; absent otherwise).
+    const aiChipLabel: Record<string, string> = {
+        DRAFT: t('dashboard.assignments.ai_grading.list.draft'),
+        APPLIED: t('dashboard.assignments.ai_grading.list.applied'),
+        FAILED: t('dashboard.assignments.ai_grading.list.failed'),
+    };
+    const aiChip = submission.ai_grade_status && aiChipLabel[submission.ai_grade_status]
+        ? <AIChip tone="soft">{aiChipLabel[submission.ai_grade_status]}</AIChip>
+        : null;
     const attempt = submission.attempt_number || 1;
 
     // Grade: show the computed display_grade (e.g. "B", "85/100", "Pass") so
@@ -613,26 +593,20 @@ function SubmissionRow({
         <span className="text-sm text-neutral-300" aria-hidden>—</span>
     );
 
-    // One trigger per layout (compact row / desktop cell); both open the same
-    // controlled dialog below, the same path the old DialogTrigger took.
-    const openEvaluate = () => {
-        track(AnalyticsEvent.SubmissionEvaluateOpened, {
-            submission_status: submission.submission_status,
-            attempt_number: submission.attempt_number ?? 1,
-        })
-        setGradeModalOpen(true)
-    };
+    // One trigger per layout (compact row / desktop cell); both open the
+    // shared evaluate dialog owned by the list.
+    const openEvaluate = onEvaluate;
     const evaluateButton = (
-        <button
-            type="button"
+        <Button
+            size="sm"
+            variant={needsGrading ? 'primary' : 'secondary'}
+            icon={needsGrading ? <Check size={13} /> : undefined}
             onClick={openEvaluate}
-            className={needsGrading ? BTN_PRIMARY_SM : BTN_SECONDARY_SM}
         >
-            {needsGrading ? <Check size={14} /> : null}
             {needsGrading
                 ? t('dashboard.assignments.submissions.evaluate')
                 : t('dashboard.assignments.submissions.review')}
-        </button>
+        </Button>
     );
 
     return (
@@ -659,8 +633,9 @@ function SubmissionRow({
                 <div className="min-w-0 flex-1 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-neutral-500">
                     <span className="tabular-nums">{dateStr} · {timeStr}</span>
                     {attempt > 1 && (
-                        <Chip tone="sky" icon={<RotateCcw size={12} />}>{t('assignments.attempt_count', { current: attempt })}</Chip>
+                        <Chip tone="sky" icon={<ArrowCounterClockwise size={12} />}>{t('assignments.attempt_count', { current: attempt })}</Chip>
                     )}
+                    {aiChip}
                     {submission.submission_status === 'GRADED' && gradeCell}
                 </div>
                 <span className="shrink-0">{evaluateButton}</span>
@@ -675,15 +650,16 @@ function SubmissionRow({
             {/* Attempt */}
             <div className="hidden xl:block">
                 {attempt > 1 ? (
-                    <Chip tone="sky" icon={<RotateCcw size={12} />} className="tabular-nums">{attempt}</Chip>
+                    <Chip tone="sky" icon={<ArrowCounterClockwise size={12} />} className="tabular-nums">{attempt}</Chip>
                 ) : (
                     <span className="text-sm text-neutral-700 tabular-nums">{attempt}</span>
                 )}
             </div>
 
             {/* Status */}
-            <div className="hidden xl:block">
+            <div className="hidden xl:flex xl:flex-wrap xl:items-center xl:gap-1.5">
                 <Chip tone={status.tone} icon={status.icon}>{status.label}</Chip>
+                {aiChip}
             </div>
 
             {/* Grade */}
@@ -692,37 +668,98 @@ function SubmissionRow({
             {/* Evaluate (desktop cell) */}
             <div className="hidden xl:flex xl:justify-end">{evaluateButton}</div>
 
-            <Modal
-                isDialogOpen={gradeModalOpen}
-                onOpenChange={(open: boolean) => {
-                    if (open && !gradeModalOpen) {
-                        track(AnalyticsEvent.SubmissionEvaluateOpened, {
-                            submission_status: submission.submission_status,
-                            attempt_number: submission.attempt_number ?? 1,
-                        })
-                    }
-                    setGradeModalOpen(open)
-                }}
-                minHeight="lg"
-                minWidth="lg"
-                dialogContent={
-                    <AssignmentProvider assignment_uuid={'assignment_' + assignment_uuid}>
+        </li>
+    );
+}
+
+export function EvaluateDialog({
+    submissions,
+    index,
+    usersById,
+    assignment_uuid,
+    onIndexChange,
+}: {
+    submissions: any[];
+    index: number | null;
+    usersById: Map<any, any>;
+    assignment_uuid: string;
+    onIndexChange: (index: number | null) => void;
+}) {
+    const { t, i18n } = useTranslation();
+    const assignment = useAssignments() as any;
+    const submission = index !== null ? submissions[index] : null;
+    const user = submission ? usersById.get(submission.user_id) : null;
+    const status = submission ? submissionStatus(t, submission.submission_status) : null;
+    const total = submissions.length;
+    const attempt = submission?.attempt_number || 1;
+    const submitted = submission?.creation_date
+        ? formatDate(new Date(submission.creation_date), i18n.language, { dateStyle: undefined, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : null;
+
+    const step = (delta: number) => {
+        if (index === null) return;
+        const next = index + delta;
+        if (next >= 0 && next < total) onIndexChange(next);
+    };
+
+    const navBtn = 'w-8 h-8 inline-flex items-center justify-center rounded-lg text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors disabled:opacity-30 disabled:pointer-events-none';
+
+    return (
+        <Modal
+            isDialogOpen={index !== null && !!submission}
+            onOpenChange={(open: boolean) => { if (!open) onIndexChange(null) }}
+            noPadding
+            customWidth="md:w-[1180px]"
+            customHeight="md:h-[88vh]"
+            icon={
+                <UserAvatar
+                    avatar_url={getUserAvatarMediaDirectory(user?.user_uuid, user?.avatar_image)}
+                    predefined_avatar={user?.avatar_image ? undefined : 'empty'}
+                    width={32}
+                    rounded="rounded-lg"
+                />
+            }
+            dialogTitle={t('dashboard.assignments.submissions.evaluate_modal.title_name', { name: rowDisplayName(user) })}
+            dialogDescription={
+                <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="truncate max-w-[280px]">{assignment?.assignment_object?.title || t('dashboard.assignments.submissions.evaluate_modal.description')}</span>
+                    {submitted && <span className="text-neutral-300">·</span>}
+                    {submitted && <span className="tabular-nums">{submitted}</span>}
+                    {attempt > 1 && (
+                        <Chip tone="sky" icon={<ArrowCounterClockwise size={12} />} className="tabular-nums">
+                            {t('assignments.attempt_count', { current: attempt })}
+                        </Chip>
+                    )}
+                    {status && <Chip tone={status.tone} icon={status.icon}>{status.label}</Chip>}
+                </span>
+            }
+            headerActions={
+                total > 1 ? (
+                    <div className="flex items-center gap-0.5 rounded-xl bg-neutral-100/80 p-0.5">
+                        <button type="button" onClick={() => step(-1)} disabled={!index} aria-label={t('dashboard.assignments.submissions.evaluate_modal.previous')} title={t('dashboard.assignments.submissions.evaluate_modal.previous')} className={navBtn}>
+                            <CaretLeft size={15} weight="bold" className="rtl:rotate-180" />
+                        </button>
+                        <span className="px-1.5 text-xs font-semibold text-neutral-500 tabular-nums">
+                            {t('dashboard.assignments.submissions.evaluate_modal.position', { current: (index ?? 0) + 1, total })}
+                        </span>
+                        <button type="button" onClick={() => step(1)} disabled={index === null || index >= total - 1} aria-label={t('dashboard.assignments.submissions.evaluate_modal.next')} title={t('dashboard.assignments.submissions.evaluate_modal.next')} className={navBtn}>
+                            <CaretRight size={15} weight="bold" className="rtl:rotate-180" />
+                        </button>
+                    </div>
+                ) : undefined
+            }
+            dialogContent={
+                submission ? (
+                    <AssignmentProvider key={submission.user_id} assignment_uuid={'assignment_' + assignment_uuid}>
                         <AssignmentsTaskProvider>
                             <AssignmentSubmissionProvider assignment_uuid={'assignment_' + assignment_uuid}>
-                                <EvaluateAssignment
-                                    user_id={submission.user_id}
-                                    user={user}
-                                    submission={submission}
-                                    statusChip={<Chip tone={status.tone} icon={status.icon}>{status.label}</Chip>}
-                                />
+                                <EvaluateAssignment user_id={submission.user_id} submission={submission} />
                             </AssignmentSubmissionProvider>
                         </AssignmentsTaskProvider>
                     </AssignmentProvider>
-                }
-                dialogTitle={t('dashboard.assignments.submissions.evaluate_modal.title_name', { name: displayName })}
-                dialogDescription={assignment?.assignment_object?.title || t('dashboard.assignments.submissions.evaluate_modal.description')}
-            />
-        </li>
+                ) : null
+            }
+        />
     );
 }
 

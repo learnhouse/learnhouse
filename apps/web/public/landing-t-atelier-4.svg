@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-label="Torn paper collage">
+<rect width="300" height="400" fill="#f2efe9"/>
+<path d="M20 40l120-10 10 30-8 40 20 60-140 10z" fill="#ffcf3f"/>
+<path d="M120 120l150-20 10 90-30 20 10 60-150 10-10-80z" fill="#2f54eb"/>
+<path d="M30 240l130-6 6 40-10 20 14 70-150 10z" fill="#e2401c"/>
+<path d="M170 300l110-10v90l-120 6z" fill="#111"/>
+<circle cx="220" cy="70" r="30" fill="none" stroke="#111" stroke-width="3"/>
+</svg>

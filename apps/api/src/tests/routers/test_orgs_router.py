@@ -285,6 +285,19 @@ class TestOrgUserEndpoints:
         assert response.status_code == 200
         assert response.json()["detail"] == "updated"
 
+    async def test_enroll_org_member(self, client, admin_user):
+        with patch(
+            "src.routers.orgs.orgs.enroll_org_member",
+            new_callable=AsyncMock,
+            return_value={"user_id": 2, "course_uuid": "course_test", "enrolled": True},
+        ) as enroll:
+            response = await client.post("/api/v1/orgs/1/users/2/enrollments/course_test")
+
+        assert response.status_code == 200
+        assert response.json() == {"user_id": 2, "course_uuid": "course_test", "enrolled": True}
+        args = enroll.call_args.args
+        assert args[:4] == (1, 2, "course_test", admin_user)
+
     async def test_remove_batch_users_from_org(self, client):
         with patch(
             "src.routers.orgs.orgs.remove_batch_users_from_org",

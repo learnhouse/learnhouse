@@ -1,20 +1,30 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import '@videojs/react/video/skin.css'
 import './player.css'
 import { I18nProvider } from '@videojs/react/i18n'
-import { HlsJsVideo } from '@videojs/react/media/hlsjs-video'
 import { usePlayer, Video, VideoPlayer, VideoSkin } from '@videojs/react/video'
 import { PauseIcon, PlayIcon } from '@videojs/react/icons'
 import {
   buildChaptersVtt,
   buildThumbnailsVtt,
   shouldSendHlsCredentials,
+  spriteFrameStyle,
   type CaptionTrack,
   type VideoChapter,
 } from './videoSource'
 import { useShowLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
+
+// hls.js is ~half a megabyte; MP4 and embed activities never need it, so the
+// adapter (and hls.js with it) only loads once an HLS source renders.
+const loadHlsJsVideo = () => import('@videojs/react/media/hlsjs-video')
+const HlsJsVideo = lazy(() => loadHlsJsVideo().then((m) => ({ default: m.HlsJsVideo })))
+
+/** Start fetching the HLS adapter early (e.g. while the activity loads). */
+export function preloadHlsAdapter() {
+  void loadHlsJsVideo()
+}
 
 interface VideoDetails {
   startTime?: number
@@ -54,6 +64,23 @@ interface LearnHousePlayerProps {
   details?: VideoDetails
   onReady?: () => void
   poster?: string
+  /**
+   * Instant placeholder shown until the first frame decodes: background
+   * styles (e.g. one storyboard frame), drawn soft so a tiny frame reads well.
+   * Falls back to a frame of `thumbnails`, then to `posterImageUrl`.
+   */
+  posterStyle?: React.CSSProperties | null
+  /** Image drawn blurred behind the play badge when there is no frame (e.g. the course thumbnail). */
+  posterImageUrl?: string | null
+  /**
+   * Initial preload. `none` downloads nothing while the player is off screen;
+   * once it scrolls into view (or the viewer hovers, focuses or touches it)
+   * it warms up to `metadata`: an MP4's first frame and index, or an HLS
+   * stream's first segment at the lowest rendition. Play then starts at once
+   * without ever fetching the whole video up front. Data Saver and 2G
+   * connections wait for intent. Defaults to `metadata`.
+   */
+  preload?: 'none' | 'metadata' | 'auto'
   /** Shown at the top of the player while the controls are visible. */
   title?: string
   /** Hover-scrub preview sprite config (HLS only). */
@@ -83,8 +110,14 @@ const LOAD_WATCHDOG_MS = 15000
 
 // Send the auth cookie only to our API playlist/key endpoints (RBAC); presigned
 // R2 segment requests must stay uncredentialed (R2 CORS).
+//
+// Start low, climb fast: the first segment comes from the lowest rendition
+// (startLevel 0), so the one segment warmed before play is small and the first
+// frame is ready on press. ABR moves up from the second segment on, once real
+// throughput is measured; player-size capping keeps the ceiling sensible.
 const HLS_ENGINE = {
   hlsJs: {
+    startLevel: 0,
     xhrSetup: (xhr: XMLHttpRequest, url: string) => {
       if (shouldSendHlsCredentials(url)) xhr.withCredentials = true
     },
@@ -93,16 +126,58 @@ const HLS_ENGINE = {
 
 // Fill the aspect-video parent with 20px corners (the skin's default is 28px).
 // `contain` letterboxes non-16:9 uploads instead of cropping them (the skin's
-// default is `cover`). The frosted control bar and menus get a dark tint under
-// the blur so they stay legible over bright footage.
+// default is `cover`). Dark chrome: the frosted control bar and menus sit on a
+// near-black tint under the blur, so they read the same over bright footage,
+// on the dark theater band and in focus mode.
 const SKIN_STYLE = {
   width: '100%',
   height: '100%',
   '--media-border-radius': '20px',
-  '--media-border-color': 'oklch(100% 0 0 / 0.1)',
+  '--media-border-color': 'oklch(100% 0 0 / 0.08)',
   '--media-object-fit': 'contain',
-  '--media-popover': 'oklch(0% 0 0 / 0.35)',
+  '--media-background': 'oklch(9% 0 0)',
+  '--media-controls': 'oklch(12% 0 0 / 0.62)',
+  '--media-popover': 'oklch(14% 0 0 / 0.82)',
+  '--media-muted': 'oklch(100% 0 0 / 0.18)',
 } as React.CSSProperties
+
+/**
+ * Placeholder over the player until the first frame is on screen: a soft
+ * storyboard frame (or blurred image) with a play badge, so the player has a
+ * face before any video byte arrives. Clicks fall through to the skin's
+ * tap-to-play surface.
+ */
+function PosterLayer({ style, imageUrl, frameReady }: { style?: React.CSSProperties | null; imageUrl?: string | null; frameReady: boolean }) {
+  const started = usePlayer((s) => s.started)
+  const error = usePlayer((s) => s.error)
+  const visible = !started && !frameReady && !error
+  const backdrop = style
+    ? style
+    : imageUrl
+      ? { backgroundImage: `url("${imageUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
+      : null
+  return (
+    <div
+      aria-hidden="true"
+      className={`lh-player-poster @container pointer-events-none absolute inset-0 z-[14] overflow-hidden rounded-[inherit] bg-[#0d0d0e] transition-opacity duration-300 motion-reduce:transition-none ${
+        visible ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      {backdrop && (
+        <div
+          className={`absolute -inset-6 bg-no-repeat ${style ? 'blur-[14px] opacity-90' : 'blur-[28px] opacity-45'}`}
+          style={backdrop}
+        />
+      )}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgb(0_0_0/0.55))]" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="grid size-16 place-items-center rounded-full bg-white/15 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_8px_24px_rgb(0_0_0/0.35)] ring-1 ring-white/20 backdrop-blur-md @3xl:size-20">
+          <PlayIcon className="size-7 translate-x-[1px] @3xl:size-8" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function NavCard({ item, align, interactive }: { item: PlayerNavItem; align: 'start' | 'end'; interactive: boolean }) {
   const preview = item.previewStyle
@@ -234,6 +309,9 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   details,
   onReady,
   poster,
+  posterStyle,
+  posterImageUrl,
+  preload = 'metadata',
   title,
   thumbnails,
   captions,
@@ -243,18 +321,53 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   chapters,
   onVideoElement,
 }) => {
-  const mediaRef = useRef<HTMLVideoElement>(null)
+  const mediaRef = useRef<HTMLVideoElement | null>(null)
+  // The element as state too: the HLS adapter mounts lazily, after the first
+  // commit, so effects that attach tracks or listeners key off the element.
+  const [mediaEl, setMediaEl] = useState<HTMLVideoElement | null>(null)
+  const setMediaRef = React.useCallback((el: HTMLVideoElement | null) => {
+    mediaRef.current = el
+    setMediaEl(el)
+  }, [])
   const [fellBack, setFellBack] = useState(false)
   const resumeAtRef = useRef(0)
   const startAppliedRef = useRef(false)
   const metaLoadedRef = useRef(false)
   const [loadedCaptions, setLoadedCaptions] = useState<LoadedCaption[]>([])
+  // `preload="none"` waits for intent: hovering, focusing or touching the
+  // player warms it up to `metadata` (first frame + a little buffer), so the
+  // press that follows plays almost at once without fetching on page load.
+  const [warm, setWarm] = useState(false)
+  const [frameReady, setFrameReady] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  // Warm up as soon as the player is on screen, unless the connection asks
+  // us to spare data (then only intent warms it).
+  useEffect(() => {
+    if (preload !== 'none' || warm) return
+    const el = rootRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection
+    if (conn?.saveData || /(^|-)2g$/.test(conn?.effectiveType || '')) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return
+        io.disconnect()
+        setWarm(true)
+      },
+      { threshold: 0.25 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [preload, warm])
+  const effectivePreload = preload === 'none' && (warm || details?.autoplay) ? 'metadata' : preload
+  const warmUp = preload === 'none' && !warm ? () => setWarm(true) : undefined
 
   const playingHls = isHls && !fellBack
   const canFallBack = isHls && !!fallbackSrc && !fellBack
 
   useEffect(() => {
     setFellBack(false)
+    setFrameReady(false)
     resumeAtRef.current = 0
     startAppliedRef.current = false
     metaLoadedRef.current = false
@@ -267,14 +380,17 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
     setFellBack(true)
   }
 
+  // Armed only once media loading has begun: with `preload="none"` nothing
+  // loads until intent, and an idle player must not fall back to the MP4.
+  const loadingStarted = effectivePreload !== 'none'
   useEffect(() => {
-    if (!canFallBack) return
+    if (!canFallBack || !loadingStarted) return
     const timer = setTimeout(() => {
       if (!metaLoadedRef.current) fallBack()
     }, LOAD_WATCHDOG_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canFallBack, src])
+  }, [canFallBack, src, loadingStarted])
 
   // Fetch each ready VTT with credentials (RBAC) into a blob URL, since a
   // cross-origin <track src> can't carry the cookie on private courses.
@@ -331,7 +447,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   // not drawing them.
   const ambientRef = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
-    const video = mediaRef.current
+    const video = mediaEl
     const ctx = ambientRef.current?.getContext('2d')
     if (!ambient || !video || !ctx) return
     let timer: ReturnType<typeof setInterval> | undefined
@@ -366,13 +482,13 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       video.removeEventListener('seeked', draw)
       video.removeEventListener('loadeddata', draw)
     }
-  }, [ambient, playingHls])
+  }, [ambient, mediaEl])
 
   // Casual-download deterrent (cosmetic; segments are AES-128 encrypted
   // server-side). Picture-in-picture stays enabled.
   useEffect(() => {
-    mediaRef.current?.setAttribute('controlsList', 'nodownload')
-  }, [playingHls])
+    mediaEl?.setAttribute('controlsList', 'nodownload')
+  }, [mediaEl])
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     metaLoadedRef.current = true
@@ -395,22 +511,27 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
     : undefined
 
   const mediaProps = {
-    ref: mediaRef,
+    ref: setMediaRef,
     playsInline: true,
-    preload: 'metadata' as const,
+    preload: effectivePreload,
     autoPlay: !!details?.autoplay,
     muted: !!details?.muted,
     onLoadedMetadata: handleLoadedMetadata,
+    onLoadedData: () => setFrameReady(true),
     onTimeUpdate: handleTimeUpdate,
     onError: canFallBack ? fallBack : undefined,
   }
+
+  // Poster: the caller's frame, else a storyboard frame, else a blurred image.
+  const posterFrame = posterStyle ?? (thumbnails?.url ? spriteFrameStyle(thumbnails, 0.1) : null)
+  const showPosterLayer = preload === 'none' && !poster
 
   // Tracks go onto the <video> imperatively rather than as React children:
   // the player manages the media element's track list itself, and React
   // inserting a late caption <track> next to one the player has touched
   // throws `insertBefore` and takes the whole activity page down.
   useEffect(() => {
-    const video = mediaRef.current
+    const video = mediaEl
     if (!video || !loadedCaptions.length) return
     const els = loadedCaptions.map((c) => {
       const el = document.createElement('track')
@@ -422,13 +543,13 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       return el
     })
     return () => els.forEach((el) => el.remove())
-  }, [loadedCaptions, playingHls])
+  }, [loadedCaptions, mediaEl])
 
   // Chapters: the skin splits the time slider at each cue of a default
   // chapters track and shows the chapter title while scrubbing.
   const chaptersKey = (chapters || []).map((c) => `${c.start}:${c.title}`).join('|')
   useEffect(() => {
-    const video = mediaRef.current
+    const video = mediaEl
     const vtt = chapters ? buildChaptersVtt(chapters) : null
     if (!video || !vtt) return
     const url = URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }))
@@ -442,15 +563,15 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
       URL.revokeObjectURL(url)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chaptersKey, playingHls])
+  }, [chaptersKey, mediaEl])
 
   useEffect(() => {
-    onVideoElement?.(mediaRef.current)
+    onVideoElement?.(mediaEl)
     return () => onVideoElement?.(null)
-  }, [onVideoElement, playingHls])
+  }, [onVideoElement, mediaEl])
 
   useEffect(() => {
-    const video = mediaRef.current
+    const video = mediaEl
     if (!video || !thumbnailsVttUrl) return
     const el = document.createElement('track')
     el.kind = 'metadata'
@@ -459,15 +580,22 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
     el.default = true
     video.appendChild(el)
     return () => el.remove()
-  }, [thumbnailsVttUrl, playingHls])
+  }, [thumbnailsVttUrl, mediaEl])
 
   return (
     // dir="ltr": transport controls read left-to-right everywhere; labels still
     // follow the page language through the i18n provider.
+    // data-shortcuts-ignore: the skin owns its keys (j/k/l seek, arrows, f,
+    // space); page shortcuts must not also fire while the player has focus.
     <div
+      ref={rootRef}
       dir="ltr"
+      data-shortcuts-ignore=""
       className="learnhouse-player relative isolate w-full h-full"
       onContextMenu={(e) => e.preventDefault()}
+      onPointerEnter={warmUp}
+      onTouchStart={warmUp}
+      onFocusCapture={warmUp}
     >
       {ambient && (
         <canvas
@@ -482,17 +610,22 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
         <VideoPlayer poster={poster || ''} title={title || ''}>
           <VideoSkin style={SKIN_STYLE}>
             {playingHls ? (
-              <HlsJsVideo
-                {...mediaProps}
-                source={{
-                  src,
-                  type: 'application/vnd.apple.mpegurl',
-                  preferPlayback: 'mse',
-                  engine: HLS_ENGINE,
-                }}
-              />
+              <Suspense fallback={null}>
+                <HlsJsVideo
+                  {...mediaProps}
+                  source={{
+                    src,
+                    type: 'application/vnd.apple.mpegurl',
+                    preferPlayback: 'mse',
+                    engine: HLS_ENGINE,
+                  }}
+                />
+              </Suspense>
             ) : (
               <Video {...mediaProps} src={fellBack ? fallbackSrc : src} />
+            )}
+            {showPosterLayer && (
+              <PosterLayer style={posterFrame} imageUrl={posterImageUrl} frameReady={frameReady} />
             )}
             {(prevItem || nextItem) && (
               <PausedOverlay prev={prevItem} next={nextItem} />

@@ -1,10 +1,9 @@
 'use client'
-import FolderThumbnail from '@components/Objects/Thumbnails/FolderThumbnail'
-import LibraryItemCard from '@components/Dashboard/Library/LibraryItemCard'
-import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
-import { getUriWithOrg } from '@services/config/config'
-import { removeFolderContent, removeOrgRootContent } from '@services/folders/folders'
+import LibraryGrid from '@components/Dashboard/Library/LibraryGrid'
+import { LibraryGridSkeleton, LibraryListSkeleton } from '@components/Dashboard/Library/libraryItems'
+import { removeFolderContent, removeOrgRootContent, deleteFolder } from '@services/folders/folders'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { Button, EmptyState, type ViewMode } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { FolderSimple, MagnifyingGlass } from '@phosphor-icons/react'
 import React from 'react'
 import toast from 'react-hot-toast'
@@ -15,27 +14,30 @@ type Props = {
   isLoading: boolean
   orgslug: string
   org_id: number
+  view: ViewMode
   onChanged: () => void
+  onClear: () => void
 }
 
+// Where a result lives, since search spans the whole library.
 function ContextPath({ path }: { path: any[] }) {
   const { t } = useTranslation()
   const names = [t('library.library'), ...(path || []).map((p: any) => p.name)]
   return (
-    <div className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 min-w-0">
-      <FolderSimple size={11} weight="fill" className="flex-shrink-0" />
-      <span className="truncate">{names.join('  /  ')}</span>
-    </div>
+    <span className="mt-1 flex items-center gap-1 text-[11px] text-neutral-400 min-w-0">
+      <FolderSimple size={11} weight="fill" className="shrink-0" />
+      <span className="truncate">{names.join(' / ')}</span>
+    </span>
   )
 }
 
-export default function LibrarySearchResults({ results, isLoading, orgslug, org_id, onChanged }: Props) {
+export default function LibrarySearchResults({ results, isLoading, orgslug, org_id, view, onChanged, onClear }: Props) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  const folders = results?.folders || []
-  const items = results?.items || []
+  const folders = results?.folders ?? []
+  const items = results?.items ?? []
 
   const removeItem = async (item: any) => {
     try {
@@ -49,60 +51,46 @@ export default function LibrarySearchResults({ results, isLoading, orgslug, org_
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 animate-pulse">
-        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="bg-white rounded-xl nice-shadow h-16" />)}
-      </div>
-    )
+  const removeFolder = async (folder: any) => {
+    try {
+      await deleteFolder(folder.folder_uuid, access_token)
+      toast.success(t('library.folder_deleted_success'))
+      onChanged()
+    } catch {
+      toast.error(t('library.folder_deleted_error'))
+    }
   }
+
+  if (isLoading && !results) return view === 'grid' ? <LibraryGridSkeleton /> : <LibraryListSkeleton />
 
   if (folders.length === 0 && items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-        <div className="bg-gray-100 rounded-2xl p-4 text-gray-400">
-          <MagnifyingGlass size={28} weight="duotone" />
-        </div>
-        <p className="text-sm font-semibold text-gray-500">{t('library.no_results')}</p>
+      <div className="bg-white rounded-2xl nice-shadow">
+        <EmptyState
+          icon={<MagnifyingGlass size={22} />}
+          title={t('library.no_results')}
+          description={t('library.dash.no_results_description')}
+          action={
+            <Button size="sm" onClick={onClear}>
+              {t('library.clear_search')}
+            </Button>
+          }
+        />
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-7">
-      {folders.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-start">
-          {folders.map((folder: any) => (
-            <div key={folder.folder_uuid} className="flex flex-col">
-              <FolderThumbnail folder={folder} orgslug={orgslug} org_id={org_id} isDashboard onChanged={onChanged} />
-              <ContextPath path={folder.path} />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {items.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-start">
-          {items.map((item: any) => {
-            const resource = item.resource || {}
-            return (
-              <div key={`${item.resource_uuid}-${(item.path || []).map((p: any) => p.folder_uuid).join('-')}`} className="flex flex-col">
-                {item.resource_type === 'courses' ? (
-                  <CourseThumbnail
-                    course={resource}
-                    orgslug={orgslug}
-                    isDashboard
-                    customLink={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(resource.course_uuid || item.resource_uuid)}/general`)}
-                  />
-                ) : (
-                  <LibraryItemCard item={item} orgslug={orgslug} org_id={org_id} onRemove={() => removeItem(item)} />
-                )}
-                <ContextPath path={item.path} />
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
+    <LibraryGrid
+      folders={folders}
+      items={items}
+      orgslug={orgslug}
+      org_id={org_id}
+      view={view}
+      onChanged={onChanged}
+      onRemoveItem={removeItem}
+      onDeleteFolder={removeFolder}
+      contextFor={(entry) => <ContextPath path={entry.path} />}
+    />
   )
 }

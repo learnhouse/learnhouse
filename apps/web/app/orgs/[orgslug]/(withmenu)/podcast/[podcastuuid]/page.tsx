@@ -1,12 +1,11 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPodcastMeta, PodcastMeta } from '@services/podcasts/podcasts'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getPodcastThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
+import { getPodcastThumbnailMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
-import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
-import { JsonLd } from '@components/SEO/JsonLd'
+import { getSeoContext } from '@/lib/seo/context.server'
+import { resolveForPage } from '@/lib/seo/resolve.server'
+import { buildResourceMetadata, noindexMetadata } from '@/lib/seo/pageMetadata'
 import PodcastClient from './podcast'
 
 type PageParams = Promise<{
@@ -14,119 +13,52 @@ type PageParams = Promise<{
   podcastuuid: string
 }>
 
-export async function generateMetadata({
-  params,
-}: {
-  params: PageParams
-}): Promise<Metadata> {
-  const { orgslug, podcastuuid } = await params
+async function loadPodcast(uuid: string): Promise<{ meta: PodcastMeta | null; status?: number; token?: string }> {
   const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
-
-  let podcastMeta: PodcastMeta | null = null
+  const token = session?.tokens?.access_token
   try {
-    podcastMeta = await getPodcastMeta(
-      `podcast_${podcastuuid}`,
-      { revalidate: 120, tags: ['podcasts'] },
-      access_token
-    )
-  } catch (error) {
-    console.error('Error fetching podcast metadata:', error)
+    const meta = await getPodcastMeta(`podcast_${uuid}`, { revalidate: 120, tags: ['podcasts'] }, token)
+    return { meta, token }
+  } catch (error: any) {
+    return { meta: null, status: error?.status, token }
   }
+}
 
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
+export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
+  const { orgslug, podcastuuid } = await params
+  const { uuid, resolved } = await resolveForPage(orgslug, 'podcast', podcastuuid, (k) => `/podcast/${k}`)
+  const [ctx, { meta }] = await Promise.all([getSeoContext(orgslug), loadPodcast(uuid)])
+  const podcast = meta?.podcast
+  if (!podcast) return noindexMetadata(ctx.org?.name || 'Podcast')
+  const key = podcast.slug || uuid
+  return buildResourceMetadata({
+    ctx,
+    name: podcast.name,
+    description: podcast.description || `Listen to this podcast from ${ctx.org?.name || 'this organization'}`,
+    canonical: await ctx.url(`/podcast/${key}`),
+    seo: podcast.seo,
+    thumbnail: podcast.thumbnail_image
+      ? getPodcastThumbnailMediaDirectory(ctx.org?.org_uuid, podcast.podcast_uuid, podcast.thumbnail_image)
+      : undefined,
+    generatedImage: await ctx.url(`/og/podcast/${key}`),
+    ogType: 'music.playlist',
+    indexable: !!podcast.public && !!podcast.published && !resolved?.restricted,
+    keywords: podcast.tags || `${ctx.org?.name}, podcast, audio, learning`,
+    modifiedTime: podcast.update_date,
   })
-
-  const seoConfig = getOrgSeoConfig(org)
-
-  const title = buildPageTitle(podcastMeta?.podcast?.name || 'Podcast', org?.name || 'Organization', seoConfig)
-  const description = podcastMeta?.podcast?.description || seoConfig.default_meta_description || `Listen to this podcast from ${org?.name || 'this organization'}`
-  const ogImageUrl = seoConfig.default_og_image
-    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
-    : undefined
-  const imageUrl = podcastMeta?.podcast?.thumbnail_image
-    ? getPodcastThumbnailMediaDirectory(
-        org?.org_uuid,
-        `podcast_${podcastuuid}`,
-        podcastMeta.podcast.thumbnail_image
-      )
-    : ogImageUrl
-  const canonical = await getServerCanonicalUrl(orgslug, `/podcast/${podcastuuid}`)
-
-  return {
-    title,
-    description,
-    keywords: podcastMeta?.podcast?.tags || `${org?.name}, podcast, audio, learning`,
-    robots: {
-      index: true,
-      follow: true,
-      nocache: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      ...(imageUrl && {
-        images: [
-          {
-            url: imageUrl,
-            width: 800,
-            height: 600,
-            alt: podcastMeta?.podcast?.name || 'Podcast',
-          },
-        ],
-      }),
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      ...(imageUrl && { images: [imageUrl] }),
-      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
-    },
-  }
 }
 
 export default async function PodcastPage({ params }: { params: PageParams }) {
   const { orgslug, podcastuuid } = await params
-  const [session, org] = await Promise.all([
-    getServerSession(),
-    getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
-  ])
-  const access_token = session?.tokens?.access_token
-
-  let podcastMeta: PodcastMeta | null = null
-  let fetchError: { status?: number } | null = null
-  try {
-    podcastMeta = await getPodcastMeta(
-      `podcast_${podcastuuid}`,
-      { revalidate: 120, tags: ['podcasts'] },
-      access_token
-    )
-  } catch (error: any) {
-    fetchError = { status: error?.status }
-    console.error('Error fetching podcast:', error)
-  }
+  const { uuid } = await resolveForPage(orgslug, 'podcast', podcastuuid, (k) => `/podcast/${k}`)
+  const [ctx, { meta, status, token }] = await Promise.all([getSeoContext(orgslug), loadPodcast(uuid)])
 
   // Missing, or denied-to-anon: 404 so non-public podcasts aren't enumerable.
-  if (!podcastMeta && (!fetchError || !access_token)) {
+  if (!meta && (status === undefined || status === 404 || !token)) {
     notFound()
   }
 
-  if (!podcastMeta) {
+  if (!meta) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <p className="text-gray-500">You do not have permission to view this podcast.</p>
@@ -134,40 +66,13 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
     )
   }
 
-  const podcastJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'PodcastSeries',
-    name: podcastMeta.podcast.name,
-    description: podcastMeta.podcast.description,
-    url: await getServerCanonicalUrl(orgslug, `/podcast/${podcastuuid}`),
-    provider: {
-      '@type': 'Organization',
-      name: org?.name,
-    },
-    episode: (podcastMeta.episodes || []).map((ep: any) => ({
-      '@type': 'PodcastEpisode',
-      name: ep.name,
-      description: ep.description,
-    })),
-  }
-
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
-    { name: 'Podcasts', url: await getServerCanonicalUrl(orgslug, '/podcasts') },
-    { name: podcastMeta.podcast.name, url: await getServerCanonicalUrl(orgslug, `/podcast/${podcastuuid}`) },
-  ])
-
   return (
-    <>
-      <JsonLd data={breadcrumbJsonLd} />
-      <JsonLd data={podcastJsonLd} />
-      <PodcastClient
-        orgslug={orgslug}
-        org_id={org?.id || 0}
-        podcastUuid={`podcast_${podcastuuid}`}
-        initialPodcast={podcastMeta.podcast}
-        initialEpisodes={podcastMeta.episodes}
-      />
-    </>
+    <PodcastClient
+      orgslug={orgslug}
+      org_id={ctx.org?.id || 0}
+      podcastUuid={meta.podcast.podcast_uuid}
+      initialPodcast={meta.podcast}
+      initialEpisodes={meta.episodes}
+    />
   )
 }

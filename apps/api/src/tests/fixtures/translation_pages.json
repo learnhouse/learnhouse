@@ -1,0 +1,1967 @@
+{
+ "activity_39fa8a06-17de-40ec-87e8-781d3e12d4dc": {
+  "name": "Legacy blocks",
+  "content": {
+   "type": "doc",
+   "content": [
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "From: What customers really want"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Most people who contact a support team are not looking for a perfect experience. They want their problem understood, a fair outcome, a reasonable wait and to be treated with respect. When one of these is missing, even a correct answer can leave a customer unhappy."
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 3
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Why the first contact matters"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Customers form their opinion of your company in the first minute of a conversation. Greeting them by name, confirming what they need and telling them what happens next does more for satisfaction than any script. If you cannot solve the issue right away, say so early and explain the next step.",
+       "marks": [
+        {
+         "type": "comment",
+         "attrs": {
+          "threadId": "thread_e7230ced-1071-4c1e-a149-1525ccc75984"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Throughout this course we will come back to these four needs. Every technique you learn is a way to meet one of them more reliably."
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "From: Your Kitebase dashboard"
+      }
+     ]
+    },
+    {
+     "type": "blockLibrary",
+     "attrs": {
+      "display": "inline"
+     }
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Your Kitebase dashboard"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Everything about your store lives in one place: orders, products and payouts. Here is a two minute tour."
+      }
+     ]
+    },
+    {
+     "type": "blockVideo",
+     "attrs": {
+      "blockObject": {
+       "id": 1,
+       "block_type": "BLOCK_VIDEO",
+       "content": {
+        "file_id": "4a550125-4fb3-45d6-8791-2bcc6484a5fe_block_d75165e2-41ac-4d8d-9510-cf7190cec2f0",
+        "file_format": "mp4",
+        "file_name": "storefront.mp4",
+        "file_size": 386971,
+        "file_type": "video/mp4",
+        "activity_uuid": "activity_b98a50dd-d7d3-4a4e-bde2-dcbe38dcdb4b"
+       },
+       "org_id": 1,
+       "course_id": 4,
+       "chapter_id": null,
+       "activity_id": 13,
+       "block_uuid": "block_6b902389-7205-4101-8eeb-43b4db7e645d",
+       "creation_date": "2026-10-30 21:06:41.245352",
+       "update_date": "2026-10-30 21:06:41.245360"
+      },
+      "caption": ""
+     }
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 3
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Check your understanding"
+      }
+     ]
+    },
+    {
+     "type": "blockQuiz",
+     "attrs": {
+      "quizId": "quiz_dash",
+      "questions": [
+       {
+        "question_id": "quiz_dash_q1",
+        "question": "Where do you see new orders?",
+        "type": "multiple_choice",
+        "answers": [
+         {
+          "answer_id": "quiz_dash_a0",
+          "answer": "Orders tab",
+          "correct": true
+         },
+         {
+          "answer_id": "quiz_dash_a1",
+          "answer": "Settings",
+          "correct": false
+         },
+         {
+          "answer_id": "quiz_dash_a2",
+          "answer": "Theme editorklklklkl",
+          "correct": false
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "From: When a card is declined"
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "When a card is declined"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Most declines are not fraud. The bank said no for a reason it shares as a decline code, and the customer can usually fix it in a minute.",
+       "marks": [
+        {
+         "type": "textEffect",
+         "attrs": {
+          "effect": "gradient-sunset"
+         }
+        },
+        {
+         "type": "highlight",
+         "attrs": {
+          "color": "amber",
+          "style": "underline"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Before you reply to a customer, listen to how our support team handles the three most common codes:"
+      }
+     ]
+    },
+    {
+     "type": "blockAudio",
+     "attrs": {
+      "blockObject": {
+       "source_type": "episode",
+       "episode": {
+        "podcast_uuid": "podcast_58df0baa-7787-48d8-9f84-2ff9fa22e39f",
+        "episode_uuid": "episode_38f77257-31a0-4893-9fbb-d4d19d2f246c",
+        "audio_file": "50c06cc9-99af-433f-bc88-dbed1bcff872_audio.mp3",
+        "title": "Why did this payment fail?"
+       },
+       "size": "medium"
+      },
+      "caption": "",
+      "transcript": ""
+     }
+    },
+    {
+     "type": "blockImage",
+     "attrs": {
+      "blockObject": {
+       "id": 24,
+       "block_type": "BLOCK_IMAGE",
+       "content": {
+        "file_id": "fdb8de8c-dc04-4b21-bbf4-7afa0990fc11_block_2a935893-e5cc-43c4-9bcb-578d50b930fc",
+        "file_format": "png",
+        "file_name": "Bat-Swarmed Emblem at Sunset.png",
+        "file_size": 1702155,
+        "file_type": "image/png",
+        "activity_uuid": "activity_39fa8a06-17de-40ec-87e8-781d3e12d4dc"
+       },
+       "org_id": 1,
+       "course_id": 183,
+       "chapter_id": null,
+       "activity_id": 501,
+       "block_uuid": "block_b6987a38-bc5b-416a-b2d0-3da7ef0ec11f",
+       "creation_date": "2026-11-09 16:11:15.513854",
+       "update_date": "2026-11-09 16:11:15.513871"
+      },
+      "size": {
+       "width": 361
+      },
+      "alignment": "center",
+      "alt": "",
+      "caption": "",
+      "lightbox": true
+     }
+    },
+    {
+     "type": "blockAudio",
+     "attrs": {
+      "blockObject": {
+       "source_type": "podcast",
+       "podcast": {
+        "podcast_uuid": "podcast_58df0baa-7787-48d8-9f84-2ff9fa22e39f",
+        "name": "Checkout Clinic"
+       },
+       "size": "full"
+      },
+      "caption": "",
+      "transcript": ""
+     }
+    },
+    {
+     "type": "paragraph"
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "From: Your orders page"
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Your orders page"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Every order lands here the moment a customer pays. Open one to see items, payment and shipping in one place."
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "attrs": {
+      "type": "tip",
+      "dismissible": false
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Filter by status to find orders that still need to ship."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 3
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Key terms"
+      }
+     ]
+    },
+    {
+     "type": "flipcardGrid",
+     "attrs": {
+      "columns": 3
+     },
+     "content": [
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Fulfilled",
+        "answer": "Every item has shipped.",
+        "color": "blue",
+        "alignment": "center",
+        "size": "medium",
+        "style": "solid"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "On hold",
+        "answer": "Payment is still being reviewed.",
+        "color": "orange",
+        "alignment": "center",
+        "size": "medium",
+        "style": "solid"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Partially refunded",
+        "answer": "Some of the payment went back to the customer.",
+        "color": "green",
+        "alignment": "center",
+        "size": "large",
+        "style": "solid"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "",
+        "answer": "",
+        "color": "red",
+        "alignment": "center",
+        "size": "large",
+        "style": "soft"
+       }
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 3
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Order total"
+      }
+     ]
+    },
+    {
+     "type": "blockMathEquation",
+     "attrs": {
+      "math_equation": "total = subtotal + shipping + tax - discount"
+     }
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 3
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Fetch orders from the API"
+      }
+     ]
+    },
+    {
+     "type": "codeBlock",
+     "attrs": {
+      "language": "javascript"
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "const orders = await kitebase.orders.list({ status: 'paid' })"
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "From: Crafting a Clear Return Policy"
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 1
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Crafting a Clear Return Policy"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "A well-crafted return policy is one of your most powerful tools as a Kitebase seller. It doesn't just dictate how you handle unwanted items; it acts as a primary trust signal for potential buyers. A transparent, easy-to-understand policy reduces purchase hesitation, minimizes buyer-seller disputes, and ultimately protects your business's bottom line."
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "The Three Pillars of a Solid Policy"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "To set clear buyer expectations and avoid confusion, every Kitebase return policy must explicitly address three core elements:"
+      }
+     ]
+    },
+    {
+     "type": "flipcardGrid",
+     "attrs": {
+      "columns": 3
+     },
+     "content": [
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Return Window",
+        "answer": "The exact timeframe a buyer has to initiate a return request after receiving the item.",
+        "color": "blue",
+        "alignment": "center",
+        "size": "medium"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Item Condition",
+        "answer": "The physical state the item must be in to qualify for a full or partial refund.",
+        "color": "green",
+        "alignment": "center",
+        "size": "medium"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Restocking Fees",
+        "answer": "Any percentage or flat fee deducted from the refund to cover the seller's return processing costs.",
+        "color": "orange",
+        "alignment": "center",
+        "size": "medium"
+       }
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "1. Defining Your Return Window"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Your return window is the ticking clock that starts the moment a package is marked as \"Delivered.\" Standard ecommerce return windows are typically 14, 30, or 60 days. When choosing your window, consider the nature of your products. High-value electronics might require a shorter window (14 days) to prevent depreciation, while apparel often benefits from a longer window (30 days) to encourage buyers to try items on."
+      }
+     ]
+    },
+    {
+     "type": "calloutInfo",
+     "content": [
+      {
+       "type": "text",
+       "text": "Best Practice: Kitebase data shows that sellers offering a 30-day return window see a 15% higher conversion rate compared to those offering only 14 days."
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "2. Specifying Acceptable Item Conditions"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Ambiguity in item condition requirements is the leading cause of refund disputes. Avoid vague terms like \"good condition\" or \"mostly unused.\" Instead, use highly specific language tailored to your product category. For example:"
+      }
+     ]
+    },
+    {
+     "type": "bulletList",
+     "content": [
+      {
+       "type": "listItem",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Apparel & Fashion:",
+           "marks": [
+            {
+             "type": "bold"
+            }
+           ]
+          },
+          {
+           "type": "text",
+           "text": " \"Items must be returned unwashed, unworn, and with all original manufacturer tags still attached.\""
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "listItem",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Electronics:",
+           "marks": [
+            {
+             "type": "bold"
+            }
+           ]
+          },
+          {
+           "type": "text",
+           "text": " \"Devices must be factory reset, free of scratches, and include all original cables and manuals in the original packaging.\""
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "listItem",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Health & Beauty:",
+           "marks": [
+            {
+             "type": "bold"
+            }
+           ]
+          },
+          {
+           "type": "text",
+           "text": " \"For health and safety reasons, products must remain unopened with the original factory safety seal intact.\""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "3. Implementing Restocking Fees"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "Restocking fees help you recover costs associated with testing, repackaging, and restocking returned inventory. While they protect your margins, they can also deter buyers if they feel hidden or excessively punitive."
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "If you choose to implement a restocking fee, clearly state the percentage (e.g., \"A 10% restocking fee applies to all opened electronics\"). Keep in mind that restocking fees should generally be waived if the item arrived defective or if the wrong item was shipped by mistake."
+      }
+     ]
+    },
+    {
+     "type": "calloutWarning",
+     "content": [
+      {
+       "type": "text",
+       "text": "Kitebase Policy Alert: You cannot apply a restocking fee retroactively. Any potential fees MUST be explicitly stated in your shop's return policy and visible on the product listing prior to the buyer completing their purchase."
+      }
+     ]
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Knowledge Check"
+      }
+     ]
+    },
+    {
+     "type": "blockQuiz",
+     "attrs": {
+      "quizId": "quiz-kb-returns-1",
+      "questions": [
+       {
+        "question_id": "q1-kb-ret",
+        "question": "Which of the following is the BEST example of a clear item condition requirement for an apparel return?",
+        "type": "multiple_choice",
+        "answers": [
+         {
+          "answer_id": "a1-q1-kb-ret",
+          "answer": "The item must be in pretty good shape.",
+          "correct": false
+         },
+         {
+          "answer_id": "a2-q1-kb-ret",
+          "answer": "The item must not look like it was worn outside.",
+          "correct": false
+         },
+         {
+          "answer_id": "a3-q1-kb-ret",
+          "answer": "The item must be unwashed, unworn, and have all original tags attached.",
+          "correct": true
+         },
+         {
+          "answer_id": "a4-q1-kb-ret",
+          "answer": "Return the item exactly as you found it.",
+          "correct": false
+         }
+        ]
+       },
+       {
+        "question_id": "q2-kb-ret",
+        "question": "What is a strict Kitebase requirement regarding the use of restocking fees?",
+        "type": "multiple_choice",
+        "answers": [
+         {
+          "answer_id": "a1-q2-kb-ret",
+          "answer": "They must be explicitly stated on the product listing prior to purchase.",
+          "correct": true
+         },
+         {
+          "answer_id": "a2-q2-kb-ret",
+          "answer": "They can only be charged if the buyer initiates the return after 30 days.",
+          "correct": false
+         },
+         {
+          "answer_id": "a3-q2-kb-ret",
+          "answer": "They must always be a flat rate of $5.00.",
+          "correct": false
+         },
+         {
+          "answer_id": "a4-q2-kb-ret",
+          "answer": "They can be added after the item is returned if it requires extra cleaning.",
+          "correct": false
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "type": "heading",
+     "attrs": {
+      "level": 2
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Legacy embed"
+      }
+     ]
+    },
+    {
+     "type": "blockVideo",
+     "attrs": {
+      "caption": "",
+      "blockObject": {
+       "id": 43,
+       "block_type": "BLOCK_VIDEO",
+       "content": {
+        "file_id": "00321469-fc92-4129-8191-0c9d958b4f3c_block_8c7c1092-a8bb-482e-b371-6eb72676f437",
+        "file_format": "mp4",
+        "file_name": "whiteboards-demo.mp4",
+        "file_size": 10704852,
+        "file_type": "video/mp4",
+        "activity_uuid": "activity_39fa8a06-17de-40ec-87e8-781d3e12d4dc"
+       },
+       "org_id": 1,
+       "course_id": 183,
+       "chapter_id": null,
+       "activity_id": 501,
+       "block_uuid": "block_d930a470-e5aa-412a-973e-8111f394de13",
+       "creation_date": "2026-11-09 18:23:26.306414",
+       "update_date": "2026-11-09 18:23:26.306424",
+       "size": "medium"
+      },
+      "chapters": [
+       {
+        "start": 10,
+        "title": "sdsdds"
+       }
+      ]
+     }
+    },
+    {
+     "type": "blockEmbed",
+     "attrs": {
+      "embedUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "embedType": "url",
+      "embedHeight": 300,
+      "embedWidth": "100%",
+      "alignment": "left",
+      "caption": ""
+     }
+    },
+    {
+     "type": "paragraph"
+    }
+   ]
+  }
+ },
+ "activity_4958800b-46c4-4b10-8533-4d35bf228d4e": {
+  "name": "Block gallery",
+  "content": {
+   "type": "doc",
+   "content": [
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§image"
+      }
+     ]
+    },
+    {
+     "type": "blockImage",
+     "attrs": {
+      "blockObject": {
+       "block_uuid": "block_6cd5ebfa-e6fe-452a-a585-792e232e6fe8",
+       "content": {
+        "file_id": "136745c3-e12d-417d-a3b3-967497baf188_block_3ad13041-bac4-4452-8d07-ddc20bab2213",
+        "file_format": "png",
+        "file_name": "screenshot.png",
+        "file_size": 14567,
+        "file_type": "image/png",
+        "activity_uuid": "activity_858c5999-8d39-403a-8979-9435c08217b8"
+       }
+      },
+      "size": {
+       "width": 560
+      },
+      "alignment": "center",
+      "unsplash_url": null,
+      "unsplash_photographer_name": null,
+      "unsplash_photographer_url": null,
+      "unsplash_photo_url": null,
+      "alt": "Example",
+      "caption": "A caption under the image",
+      "href": null,
+      "lightbox": true
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§video"
+      }
+     ]
+    },
+    {
+     "type": "blockVideo",
+     "attrs": {
+      "blockObject": {
+       "block_uuid": "block_4ceee755-694c-446b-b0c0-1ae185bb3949",
+       "content": {
+        "file_id": "d166abab-9c31-4ca9-931d-7c4099fe81f9_block_a85f2e97-c93a-4f58-b5d5-2445f4e4a72c",
+        "file_format": "mp4",
+        "file_name": "clip.mp4",
+        "file_size": 1924452,
+        "file_type": "video/mp4",
+        "activity_uuid": "activity_858c5999-8d39-403a-8979-9435c08217b8",
+        "transcript": {
+         "source": "d166abab-9c31-4ca9-931d-7c4099fe81f9_block_a85f2e97-c93a-4f58-b5d5-2445f4e4a72c.mp4",
+         "status": "failed",
+         "error": "exception",
+         "updated_at": "2026-11-09T15:18:18.698965+00:00"
+        }
+       },
+       "size": "medium"
+      },
+      "caption": "Course creation walkthrough",
+      "startTime": 3,
+      "chapters": [
+       {
+        "start": 0,
+        "title": "Intro"
+       },
+       {
+        "start": 5,
+        "title": "Create"
+       }
+      ]
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§audio"
+      }
+     ]
+    },
+    {
+     "type": "blockAudio",
+     "attrs": {
+      "blockObject": {
+       "source_type": "episode",
+       "episode": {
+        "podcast_uuid": "podcast_58df0baa-7787-48d8-9f84-2ff9fa22e39f",
+        "episode_uuid": "episode_38f77257-31a0-4893-9fbb-d4d19d2f246c",
+        "audio_file": "50c06cc9-99af-433f-bc88-dbed1bcff872_audio.mp3",
+        "title": "Why did this payment fail?"
+       },
+       "size": "medium"
+      },
+      "caption": "Episode from the support podcast",
+      "transcript": "Host: Why did this payment fail?\nGuest: Usually the card issuer declined it."
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§pdf"
+      }
+     ]
+    },
+    {
+     "type": "blockPDF",
+     "attrs": {
+      "blockObject": {
+       "block_uuid": "block_5a82df67-d0e5-4226-b4cb-f26170f55829",
+       "content": {
+        "file_id": "47f632f1-a0a1-42db-a292-fd3b3fd77454_block_994336c0-9160-4794-8a00-16e3f2aaaf86",
+        "file_format": "pdf",
+        "file_name": "shipping-handbook.pdf",
+        "file_size": 1025,
+        "file_type": "application/pdf",
+        "activity_uuid": "activity_858c5999-8d39-403a-8979-9435c08217b8"
+       }
+      },
+      "pdfHeight": 480,
+      "caption": "Shipping handbook"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§embed"
+      }
+     ]
+    },
+    {
+     "type": "blockEmbed",
+     "attrs": {
+      "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0",
+      "embedCode": null,
+      "embedType": "url",
+      "embedHeight": 300,
+      "embedAspectRatio": 1.7777777777777777,
+      "embedWidth": "100%",
+      "alignment": "left",
+      "embedSourceUrl": "https://youtu.be/dQw4w9WgXcQ",
+      "embedProvider": "youtube",
+      "caption": "Embedded from YouTube"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§callout"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "attrs": {
+      "type": "tip",
+      "dismissible": false,
+      "icon": "rocket"
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Ship small, ship often."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§code"
+      }
+     ]
+    },
+    {
+     "type": "codeBlock",
+     "attrs": {
+      "language": "python",
+      "filename": "cart.py"
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "def total(items):\n    return sum(i.price for i in items)"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§table"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "content": [
+      {
+       "type": "tableRow",
+       "content": [
+        {
+         "type": "tableHeader",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Instead of"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "tableHeader",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Try"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableRow",
+       "content": [
+        {
+         "type": "tableCell",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "\"That's not my department.\""
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "tableCell",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "\"Let me get you to the right person and stay on the line.\""
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableRow",
+       "content": [
+        {
+         "type": "tableCell",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "\"You need to...\""
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "tableCell",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "\"The quickest way to fix this is to...\""
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableRow",
+       "content": [
+        {
+         "type": "tableCell",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "\"Calm down.\""
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "tableCell",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "\"I can see why this is frustrating.\""
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tableRow",
+       "content": [
+        {
+         "type": "tableCell",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "\"It's our policy.\""
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "tableCell",
+         "attrs": {
+          "colspan": 1,
+          "rowspan": 1,
+          "colwidth": null,
+          "align": null
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "\"We do this because... Here's what I can offer.\""
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§divider"
+      }
+     ]
+    },
+    {
+     "type": "horizontalRule",
+     "attrs": {
+      "variant": "dots"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§toggle"
+      }
+     ]
+    },
+    {
+     "type": "toggleBlock",
+     "attrs": {
+      "summary": "Show the worked solution",
+      "defaultOpen": false
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Multiply both sides by two."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§quiz"
+      }
+     ]
+    },
+    {
+     "type": "blockQuiz",
+     "attrs": {
+      "quizId": "quiz_dash",
+      "questions": [
+       {
+        "question_id": "quiz_dash_q1",
+        "question": "Where do you see new orders?",
+        "type": "multiple_choice",
+        "answers": [
+         {
+          "answer_id": "quiz_dash_a0",
+          "answer": "Orders tab",
+          "correct": true
+         },
+         {
+          "answer_id": "quiz_dash_a1",
+          "answer": "Settings",
+          "correct": false
+         },
+         {
+          "answer_id": "quiz_dash_a2",
+          "answer": "Theme editor",
+          "correct": false
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§flipcard"
+      }
+     ]
+    },
+    {
+     "type": "flipcard",
+     "attrs": {
+      "question": "What is a chargeback?",
+      "answer": "A forced refund from the bank.",
+      "color": "blue",
+      "alignment": "center",
+      "size": "medium"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§flipcard-grid"
+      }
+     ]
+    },
+    {
+     "type": "flipcardGrid",
+     "attrs": {
+      "columns": 3
+     },
+     "content": [
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Return Window",
+        "answer": "The exact timeframe a buyer has to initiate a return request after receiving the item.",
+        "color": "blue",
+        "alignment": "center",
+        "size": "medium"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Item Condition",
+        "answer": "The physical state the item must be in to qualify for a full or partial refund.",
+        "color": "green",
+        "alignment": "center",
+        "size": "medium"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Restocking Fees",
+        "answer": "Any percentage or flat fee deducted from the refund to cover the seller's return processing costs.",
+        "color": "orange",
+        "alignment": "center",
+        "size": "medium"
+       }
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§scenarios"
+      }
+     ]
+    },
+    {
+     "type": "scenarios",
+     "attrs": {
+      "title": "Interactive Scenario",
+      "scenarios": [
+       {
+        "id": "1",
+        "text": "A customer asks for a refund after 40 days. What do you do?",
+        "imageUrl": "",
+        "options": [
+         {
+          "id": "o1",
+          "text": "Explain the 30-day policy",
+          "nextScenarioId": "2"
+         },
+         {
+          "id": "o2",
+          "text": "Refund anyway",
+          "nextScenarioId": null
+         }
+        ]
+       },
+       {
+        "id": "2",
+        "text": "They accept a store credit. Well done.",
+        "imageUrl": "",
+        "options": []
+       }
+      ],
+      "currentScenarioId": "1"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§math"
+      }
+     ]
+    },
+    {
+     "type": "blockMathEquation",
+     "attrs": {
+      "math_equation": "total = subtotal + shipping + tax - discount"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§button"
+      }
+     ]
+    },
+    {
+     "type": "button",
+     "attrs": {
+      "emoji": "🔗",
+      "link": "",
+      "color": "blue",
+      "alignment": "left"
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "Open the dashboard"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§badge"
+      }
+     ]
+    },
+    {
+     "type": "badge",
+     "attrs": {
+      "color": "sky",
+      "emoji": "💡"
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "New"
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§user"
+      }
+     ]
+    },
+    {
+     "type": "blockUser",
+     "attrs": {
+      "user_id": ""
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§web-preview"
+      }
+     ]
+    },
+    {
+     "type": "blockWebPreview",
+     "attrs": {
+      "url": "https://www.learnhouse.app",
+      "title": "LearnHouse",
+      "description": "The open source learning platform",
+      "og_image": "",
+      "favicon": "",
+      "og_type": null,
+      "og_url": null,
+      "alignment": "left",
+      "buttonLabel": "Visit Site",
+      "showButton": false,
+      "openInPopup": false
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§h5p"
+      }
+     ]
+    },
+    {
+     "type": "blockH5P",
+     "attrs": {
+      "h5pUrl": "",
+      "height": 400,
+      "title": "",
+      "sizeMode": "auto"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§code-playground"
+      }
+     ]
+    },
+    {
+     "type": "blockCode",
+     "attrs": {
+      "mode": "advanced",
+      "languageId": 71,
+      "languageName": "Python 3",
+      "starterCode": "# Write your code here\nprint(\"hi\")\n",
+      "testCases": [],
+      "description": "",
+      "hints": [],
+      "difficulty": "medium",
+      "solutionCode": "",
+      "maxAttemptsBeforeReveal": 3,
+      "timeComplexity": "",
+      "spaceComplexity": "",
+      "timeLimitMs": 10000,
+      "sqliteDbPath": "",
+      "sqliteDbName": "",
+      "timedMode": false,
+      "timedDurationMs": 300000,
+      "additionalFiles": []
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§magic"
+      }
+     ]
+    },
+    {
+     "type": "blockMagic",
+     "attrs": {
+      "blockUuid": "magic_4f0fc176-6c8b-44e3-8907-09551f644647",
+      "sessionUuid": null,
+      "htmlContent": null,
+      "title": "Interactive Element",
+      "height": 400
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§library"
+      }
+     ]
+    },
+    {
+     "type": "blockLibrary",
+     "attrs": {
+      "resourceUuid": "a786c8a9-c43d-45f7-9b72-3b46dbd0a897",
+      "resourceType": "playground",
+      "snapshot": {
+       "name": "Payout date calculator"
+      },
+      "display": "embed"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§conditional"
+      }
+     ]
+    },
+    {
+     "type": "conditionalBlock",
+     "attrs": {
+      "rules": {
+       "match": "all",
+       "conditions": []
+      },
+      "hiddenMessage": "",
+      "openRules": null,
+      "label": ""
+     },
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Only some learners see this."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "paragraph"
+    }
+   ]
+  }
+ },
+ "activity_49538d11-b4f7-483d-a3ca-2bab33bd6679": {
+  "name": "Quiz and flipcards QA",
+  "content": {
+   "type": "doc",
+   "content": [
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§quiz-legacy"
+      }
+     ]
+    },
+    {
+     "type": "blockQuiz",
+     "attrs": {
+      "quizId": "c3_payout_quiz",
+      "questions": [
+       {
+        "question_id": "c3q1",
+        "question": "How long does your first payout take to arrive?",
+        "type": "multiple_choice",
+        "response_type": "single",
+        "answers": [
+         {
+          "answer_id": "c3q1a",
+          "answer": "7 days after your first sale",
+          "correct": true
+         },
+         {
+          "answer_id": "c3q1b",
+          "answer": "Instantly",
+          "correct": false
+         },
+         {
+          "answer_id": "c3q1c",
+          "answer": "At the end of the month",
+          "correct": false
+         }
+        ]
+       },
+       {
+        "question_id": "c3q2",
+        "question": "What does Kitebase need before it can pay you out?",
+        "type": "multiple_choice",
+        "response_type": "multiple",
+        "answers": [
+         {
+          "answer_id": "c3q2a",
+          "answer": "A verified bank account",
+          "correct": true
+         },
+         {
+          "answer_id": "c3q2b",
+          "answer": "Your business tax ID",
+          "correct": true
+         },
+         {
+          "answer_id": "c3q2c",
+          "answer": "A custom domain",
+          "correct": false
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§quiz-rich"
+      }
+     ]
+    },
+    {
+     "type": "blockQuiz",
+     "attrs": {
+      "quizId": "rich_quiz",
+      "questions": [
+       {
+        "question_id": "rc3q1",
+        "question": "How long does your first payout take to arrive? (A)",
+        "type": "multiple_choice",
+        "response_type": "single",
+        "answers": [
+         {
+          "answer_id": "rc3q1a",
+          "answer": "7 days after your first sale",
+          "correct": true,
+          "feedback": "Right: that is the rule."
+         },
+         {
+          "answer_id": "rc3q1b",
+          "answer": "Instantly",
+          "correct": false,
+          "feedback": "Not quite."
+         },
+         {
+          "answer_id": "rc3q1c",
+          "answer": "At the end of the month",
+          "correct": false,
+          "feedback": "Not quite."
+         }
+        ],
+        "explanation": "Payouts wait 7 days after the first sale so refunds can clear."
+       },
+       {
+        "question_id": "rc3q2",
+        "question": "What does Kitebase need before it can pay you out?",
+        "type": "multiple_choice",
+        "response_type": "multiple",
+        "answers": [
+         {
+          "answer_id": "rc3q2a",
+          "answer": "A verified bank account",
+          "correct": true,
+          "feedback": "Right: that is the rule."
+         },
+         {
+          "answer_id": "rc3q2b",
+          "answer": "Your business tax ID",
+          "correct": true,
+          "feedback": "Right: that is the rule."
+         },
+         {
+          "answer_id": "rc3q2c",
+          "answer": "A custom domain (B)",
+          "correct": false,
+          "feedback": "Not quite."
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "maxAttempts": 2,
+       "shuffleAnswers": true
+      }
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§quiz-empty"
+      }
+     ]
+    },
+    {
+     "type": "blockQuiz",
+     "attrs": {
+      "questions": []
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§flipcard"
+      }
+     ]
+    },
+    {
+     "type": "flipcard",
+     "attrs": {
+      "question": "Front by A",
+      "answer": "A forced refund from the bank.",
+      "color": "pink",
+      "style": "solid",
+      "alignment": "center",
+      "size": "medium"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§flipcard-soft"
+      }
+     ]
+    },
+    {
+     "type": "flipcard",
+     "attrs": {
+      "question": "Net revenue",
+      "answer": "Gross sales minus refunds, discounts and fees.",
+      "color": "pink",
+      "alignment": "left",
+      "size": "large",
+      "style": "soft"
+     }
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "§grid"
+      }
+     ]
+    },
+    {
+     "type": "flipcardGrid",
+     "attrs": {
+      "columns": 3
+     },
+     "content": [
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Return Window",
+        "answer": "The exact timeframe a buyer has to initiate a return request after receiving the item.",
+        "color": "blue",
+        "alignment": "center",
+        "size": "medium"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Item Condition",
+        "answer": "The physical state the item must be in to qualify for a full or partial refund.",
+        "color": "green",
+        "alignment": "center",
+        "size": "medium"
+       }
+      },
+      {
+       "type": "flipcard",
+       "attrs": {
+        "question": "Restocking Fees",
+        "answer": "Any percentage or flat fee deducted from the refund to cover the seller's return processing costs.",
+        "color": "orange",
+        "alignment": "center",
+        "size": "medium"
+       }
+      }
+     ]
+    },
+    {
+     "type": "paragraph",
+     "content": [
+      {
+       "type": "text",
+       "text": "end"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

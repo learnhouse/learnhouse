@@ -1,7 +1,7 @@
 'use client'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, CheckCircle, Loader2, Mail, Ticket, UserPlus, X } from 'lucide-react'
+import { CircleNotch, EnvelopeSimple, Ticket, UserPlus } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import OpenSignUpComponent from './OpenSignup'
@@ -13,9 +13,8 @@ import { getDeploymentMode, getUriWithOrg } from '@services/config/config'
 import { getErrorMessage } from '@services/utils/ts/errorMessage'
 import { useTranslation } from 'react-i18next'
 import AuthLayout from '@components/Auth/AuthLayout'
-import FormLayout, {
-  FormField,
-} from '@components/Objects/StyledElements/Form/Form'
+import { AUTH_INPUT, AuthButton, AuthHeading, AuthLabel, AuthNotice } from '@components/Auth/AuthUI'
+import FormLayout from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 
 interface SignUpClientProps {
@@ -74,8 +73,8 @@ function SignUpClient(props: SignUpClientProps) {
       {session.status === 'loading' && (
         // Don't flash the open/invite signup form while the session is still
         // resolving; a logged-in user would otherwise briefly see it.
-        <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-          <Loader2 size={22} className="animate-spin text-black/30" />
+        <div className="flex justify-center py-16" role="status" aria-label={t('common.loading')}>
+          <CircleNotch size={22} className="animate-spin text-neutral-400" />
         </div>
       )}
       {session.status !== 'loading' && joinMethod == 'open' &&
@@ -84,23 +83,19 @@ function SignUpClient(props: SignUpClientProps) {
             <LoggedInJoinScreen inviteCode={inviteCode} org={props.org} />
           ) : (
             // Signed in on the org-less apex; the effect above redirects them.
-            <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-              <Loader2 size={22} className="animate-spin text-black/30" />
+            <div className="flex justify-center py-16" role="status" aria-label={t('common.loading')}>
+              <CircleNotch size={22} className="animate-spin text-neutral-400" />
             </div>
           )
         ) : (
-          <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-            <OpenSignUpComponent org={props.org} />
-          </div>
+          <OpenSignUpComponent org={props.org} />
         ))}
       {session.status !== 'loading' && joinMethod == 'inviteOnly' &&
         (inviteCode ? (
           session.status == 'authenticated' ? (
             <LoggedInJoinScreen inviteCode={inviteCode} org={props.org} />
           ) : (
-            <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-              <InviteOnlySignUpComponent inviteCode={inviteCode} org={props.org} />
-            </div>
+            <InviteOnlySignUpComponent inviteCode={inviteCode} org={props.org} />
           )
         ) : (
           <NoTokenScreen org={props.org} />
@@ -164,75 +159,41 @@ const LoggedInJoinScreen = ({ inviteCode, org }: JoinScreenProps) => {
     }
   }
 
+  const user = session.data?.user
   return (
     <>
-      {/* Message Top Bar */}
       {showMessage && (error || success) && (
-        <div className={`
-          mx-6 md:mx-12 lg:mx-20 mt-6 rounded-xl border px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200
-          ${error ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}
-        `}>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            {error ? <AlertTriangle size={18} className="shrink-0" /> : <CheckCircle size={18} className="shrink-0" />}
-            <span className="text-sm font-medium">{error || success}</span>
-          </div>
-          <button
-            onClick={() => setShowMessage(false)}
-            className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0 opacity-60 hover:opacity-100"
-          >
-            <X size={18} />
-          </button>
-        </div>
+        <AuthNotice tone={error ? 'danger' : 'success'} onDismiss={() => setShowMessage(false)} className="mb-6">
+          {error || success}
+        </AuthNotice>
       )}
 
-      <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-        <div className="w-full max-w-[420px] py-10">
-          {/* Header */}
-          <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.join_organization')}</h1>
-          <p className="mt-2 text-black/45 text-[15px] font-medium">{t('auth.join_organization_desc')}</p>
+      <AuthHeading title={t('auth.join_organization')} description={t('auth.join_organization_desc')} />
 
-          {/* Join Card */}
-          <div className="mt-8 flex flex-col items-center gap-6">
-            {/* User Info */}
-            <div className="flex items-center gap-3">
-              <UserAvatar rounded="rounded-xl" border="border-2" width={48} />
-              <div>
-                <p className="font-semibold text-black">{session.data?.user?.first_name} {session.data?.user?.last_name}</p>
-                <p className="text-sm text-black/45">@{session.data?.user?.username}</p>
-              </div>
-            </div>
-
-            {/* Organization Info */}
-            <div className="w-full text-center py-4 bg-neutral-50 rounded-lg border border-neutral-200">
-              <p className="text-sm text-black/45 mb-1">{t('auth.joining')}</p>
-              <p className="font-semibold text-black text-lg">{activeOrg?.name}</p>
-            </div>
-
-            {/* Join Button or Verification Warning */}
-            {session.data?.user?.email_verified === false ? (
-              <div className="w-full bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-                <Mail size={24} className="mx-auto mb-2 text-amber-600" />
-                <p className="font-semibold text-amber-800 mb-1">{t('auth.email_verification_required')}</p>
-                <p className="text-sm text-amber-700">{t('auth.email_verification_required_join')}</p>
-              </div>
-            ) : (
-              <button
-                onClick={join}
-                disabled={isSubmitting}
-                className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none transition-all disabled:opacity-50 gap-2"
-              >
-                {isSubmitting ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <>
-                    <UserPlus size={18} />
-                    {t('auth.join_organization')}
-                  </>
-                )}
-              </button>
-            )}
+      <div className="mt-7 rounded-2xl ring-1 ring-inset ring-neutral-200/80 overflow-hidden">
+        <div className="flex items-center gap-3 p-4 min-w-0">
+          <UserAvatar rounded="rounded-xl" width={40} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-neutral-900">{user?.first_name} {user?.last_name}</p>
+            <p className="truncate text-xs text-neutral-500">@{user?.username}</p>
           </div>
         </div>
+        <div className="flex items-center gap-3 border-t border-neutral-100 bg-neutral-50/70 px-4 py-3 min-w-0">
+          <span className="text-xs text-neutral-500 shrink-0">{t('auth.joining')}</span>
+          <span className="ms-auto truncate text-sm font-semibold text-neutral-900">{activeOrg?.name}</span>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        {user?.email_verified === false ? (
+          <AuthNotice tone="warning" icon={<EnvelopeSimple size={16} weight="fill" />} title={t('auth.email_verification_required')}>
+            {t('auth.email_verification_required_join')}
+          </AuthNotice>
+        ) : (
+          <AuthButton type="button" onClick={join} loading={isSubmitting} icon={<UserPlus size={16} />}>
+            {t('auth.join_organization')}
+          </AuthButton>
+        )}
       </div>
     </>
   )
@@ -299,69 +260,37 @@ const NoTokenScreen = ({ org }: NoTokenScreenProps) => {
 
   return (
     <>
-      {/* Message Top Bar */}
       {showMessage && (error || success) && (
-        <div className={`
-          mx-6 md:mx-12 lg:mx-20 mt-6 rounded-xl border px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200
-          ${error ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}
-        `}>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            {error ? <AlertTriangle size={18} className="shrink-0" /> : <CheckCircle size={18} className="shrink-0" />}
-            <span className="text-sm font-medium">{error || success}</span>
-          </div>
-          <button
-            onClick={() => setShowMessage(false)}
-            className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0 opacity-60 hover:opacity-100"
-          >
-            <X size={18} />
-          </button>
-        </div>
+        <AuthNotice tone={error ? 'danger' : 'success'} onDismiss={() => setShowMessage(false)} className="mb-6">
+          {error || success}
+        </AuthNotice>
       )}
 
-      <div className="flex-1 flex items-center justify-center px-6 md:px-12 lg:px-20">
-        <div className="w-full max-w-[420px] py-10">
-          {/* Header */}
-          <h1 className="text-[28px] md:text-[32px] font-black text-black tracking-tight leading-tight">{t('auth.invite_required')}</h1>
-          <p className="mt-2 text-black/45 text-[15px] font-medium">{t('auth.invite_required_desc', { org: activeOrg?.name })}</p>
+      <AuthHeading title={t('auth.invite_required')} description={t('auth.invite_required_desc', { org: activeOrg?.name })} />
 
-          {/* Invite Code Form */}
-          <div className="mt-8">
-            <FormLayout onSubmit={validateCode}>
-              <FormField name="invite_code">
-                <div className="flex items-center space-x-2 mb-1.5">
-                  <Form.Label className="grow text-[13px] font-semibold text-black/70">{t('auth.invite_code')}</Form.Label>
-                </div>
-                <Form.Control asChild>
-                  <input
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    value={inviteCode}
-                    type="text"
-                    placeholder={t('auth.enter_invite_code')}
-                    required
-                    className="box-border w-full bg-neutral-50 text-black rounded-lg px-4 border border-neutral-200 inline-flex h-[44px] appearance-none items-center focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-neutral-400 transition-all placeholder:text-black/25 text-sm"
-                  />
-                </Form.Control>
-              </FormField>
+      <FormLayout onSubmit={validateCode} className="mt-7 flex flex-col gap-4">
+        <Form.Field name="invite_code" className="grid">
+          <AuthLabel>{t('auth.invite_code')}</AuthLabel>
+          <Form.Control asChild>
+            <input
+              onChange={(e) => setInviteCode(e.target.value)}
+              value={inviteCode}
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder={t('auth.enter_invite_code')}
+              required
+              className={AUTH_INPUT}
+            />
+          </Form.Control>
+        </Form.Field>
 
-              <Form.Submit asChild>
-                <button
-                  disabled={isSubmitting || !inviteCode.trim()}
-                  className="box-border w-full inline-flex h-[44px] rounded-lg items-center justify-center bg-black hover:bg-black/85 text-white px-[15px] font-bold text-[14px] leading-none mt-2 transition-all disabled:opacity-50 gap-2"
-                >
-                  {isSubmitting ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <>
-                      <Ticket size={18} />
-                      {t('auth.validate_invite')}
-                    </>
-                  )}
-                </button>
-              </Form.Submit>
-            </FormLayout>
-          </div>
-        </div>
-      </div>
+        <Form.Submit asChild>
+          <AuthButton loading={isSubmitting} disabled={!inviteCode.trim()} icon={<Ticket size={16} />} className="mt-1">
+            {t('auth.validate_invite')}
+          </AuthButton>
+        </Form.Submit>
+      </FormLayout>
     </>
   )
 }

@@ -1,6 +1,7 @@
-"""Email learners when a scheduled chapter opens for them.
+"""Tell learners when a scheduled chapter opens for them.
 
-Opt-in per course (``drip_settings.notify_email``). The scheduler runs this
+Every timed release gets a notification inbox row (and a push to the mobile
+app). The email is opt-in per course (``drip_settings.notify_email``). The scheduler runs this
 every hour; for each enrolled learner it looks for chapters on a time rule
 (a delay or a date) that opened within the last ``NOTIFY_WINDOW``, and sends
 one email per learner and course naming them.
@@ -47,6 +48,7 @@ NOTIFY_WINDOW = timedelta(days=2)
 class DripNotifyStats:
     courses: int = 0
     emails: int = 0
+    notified: int = 0
     chapters: int = 0
     failed: int = 0
 
@@ -80,8 +82,9 @@ async def run_drip_notifications(db_session: AsyncSession, now: Optional[datetim
 
     for course in candidates:
         settings = course_drip_settings(course)
-        if settings is None or not settings.notify_email:
+        if settings is None:
             continue
+        email = bool(settings.notify_email)
         chapters = await _ordered_chapters(course.id, db_session)
         timed = {c.id for c in chapters if _timed(c.rule)}
         if not timed:
@@ -104,18 +107,20 @@ async def run_drip_notifications(db_session: AsyncSession, now: Optional[datetim
         if not learners:
             continue
 
-        org = await db_session.get(Organization, course.org_id)
-        org_config = (await db_session.execute(
-            select(OrganizationConfig).where(OrganizationConfig.org_id == course.org_id)
-        )).scalars().first()
-
         # Imported here: these pull in org services that import course modules.
-        from src.services.email.branding import resolve_org_email_branding
-        from src.services.nudges.links import org_base_url, public_course_url
-        from src.services.users.emails import send_drip_unlocked_email
+        from src.services.notifications.events import notify_chapters_unlocked
 
-        branding = resolve_org_email_branding(org, org_config, None)
-        cta_url = public_course_url(await org_base_url(org.slug, db_session, org.id), course.course_uuid)
+        if email:
+            from src.services.email.branding import resolve_org_email_branding
+            from src.services.nudges.links import org_base_url, public_course_url
+            from src.services.users.emails import send_drip_unlocked_email
+
+            org = await db_session.get(Organization, course.org_id)
+            org_config = (await db_session.execute(
+                select(OrganizationConfig).where(OrganizationConfig.org_id == course.org_id)
+            )).scalars().first()
+            branding = resolve_org_email_branding(org, org_config, None)
+            cta_url = public_course_url(await org_base_url(org.slug, db_session, org.id), course.course_uuid)
 
         for learner in learners:
             states = await drip_states_for_user(course, settings, chapters, activity_ids, learner.id, db_session, now)
@@ -129,6 +134,13 @@ async def run_drip_notifications(db_session: AsyncSession, now: Optional[datetim
                 and now - NOTIFY_WINDOW < state.opened_at <= now
             ]
             if not opened or not await _claim(db_session, course, learner.id, opened, now):
+                continue
+            # The inbox (and push) hears about every timed release; the email
+            # stays opt-in per course.
+            if await notify_chapters_unlocked(db_session, learner.id, course, opened, [names[cid] for cid in opened]):
+                stats.notified += 1
+            if not email:
+                stats.chapters += len(opened)
                 continue
             try:
                 send_drip_unlocked_email(

@@ -41,10 +41,15 @@ export function useCourseRights(courseuuid: string) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
+  // Callers pass either "course_<id>" or the bare id; key by the bare id so
+  // they all share one entry (with the editor warm-up in the courses list
+  // too), instead of asking for the same rights twice. The endpoint itself
+  // only knows the prefixed form.
+  const cleanUuid = (courseuuid || '').replace(/^course_/, '')
   const { data: rights, error, isLoading } = useQuery<CourseRights>({
-    queryKey: queryKeys.courses.rights(courseuuid),
-    queryFn: () => getCourseRights(courseuuid, access_token),
-    enabled: !!courseuuid && !!access_token,
+    queryKey: queryKeys.courses.rights(cleanUuid),
+    queryFn: () => getCourseRights(`course_${cleanUuid}`, access_token),
+    enabled: !!cleanUuid && !!access_token,
     staleTime: 60_000,
   })
 

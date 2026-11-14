@@ -2,9 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Editor } from '@tiptap/core'
-import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
-import Image from 'next/image'
-import { BookOpen, FormInput, Languages, MoreVertical } from 'lucide-react'
+import { AIMark, AI_DARK_SURFACE } from '@components/Objects/AI/AIBrand'
+import { BookOpen, Textbox, Translate, DotsThreeVertical } from '@phosphor-icons/react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
   AIChatBotStateTypes,
@@ -147,22 +146,16 @@ function AICanvaToolkit(props: AICanvaToolkitProps) {
     >
       <div
         style={{
-          background:
-            'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgba(2, 1, 25, 0.98)',
+          background: AI_DARK_SURFACE,
         }}
         className="py-1 h-10 px-2 w-max text-white rounded-xl shadow-md cursor-pointer flex items-center space-x-2 antialiased animate-in fade-in-0 zoom-in-95 duration-200"
       >
         <div className="flex w-full space-x-2 font-bold text-white/80">
-          <Image
-            className="outline-1 outline-neutral-200/10 rounded-lg"
-            width={24}
-            src={learnhouseAI_icon}
-            alt=""
-          />
+          <AIMark size={24} alt="" />
           <div>AI</div>
         </div>
         <div>
-          <MoreVertical className="text-white/50" size={12} />
+          <DotsThreeVertical className="text-white/50" size={12} />
         </div>
         <div className="flex space-x-2">
           <AIActionButton
@@ -320,8 +313,8 @@ function AIActionButton(props: {
           className="flex space-x-1.5 items-center bg-white/10 px-2 py-0.5 rounded-md outline-1 outline-neutral-200/20 text-sm font-semibold text-white/70 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
         >
           {props.label === 'Explain' && <BookOpen size={16} />}
-          {props.label === 'Summarize' && <FormInput size={16} />}
-          {props.label === 'Translate' && <Languages size={16} />}
+          {props.label === 'Summarize' && <Textbox size={16} />}
+          {props.label === 'Translate' && <Translate size={16} />}
           {props.label === 'Examples' && (
             <div className="text-white/50">{t('ai.toolkit.examples_short')}</div>
           )}

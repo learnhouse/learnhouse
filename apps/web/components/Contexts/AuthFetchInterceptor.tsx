@@ -4,6 +4,13 @@ import { useEffect } from 'react'
 import { getAPIUrl } from '@services/config/config'
 import { dispatchAuthExpired, dispatchAuthRefreshed } from '@/lib/auth/events'
 import { hasSessionMarker } from '@services/auth/sessionMarker'
+import {
+  activeImpersonation,
+  authRefreshUrl,
+  dispatchImpersonationEnded,
+  dispatchImpersonationRefused,
+  impersonationCode,
+} from '@/lib/auth/impersonation'
 
 const AUTH_RETRY_HEADER = 'X-LH-Auth-Retry'
 
@@ -44,13 +51,18 @@ export default function AuthFetchInterceptor() {
 
       refreshPromise = (async () => {
         try {
-          const response = await originalFetch('/api/auth/refresh', {
+          const response = await originalFetch(authRefreshUrl(), {
             method: 'GET',
             credentials: 'include',
             headers: {
               [AUTH_RETRY_HEADER]: '1',
             },
           })
+
+          if (response.status === 410) {
+            dispatchImpersonationEnded('ended')
+            return null
+          }
 
           if (!response.ok) {
             return null
@@ -85,6 +97,25 @@ export default function AuthFetchInterceptor() {
       const hasRetried = headers.get(AUTH_RETRY_HEADER) === '1'
 
       const response = await originalFetch(input, init)
+
+      // Inside an impersonation: a refused write shows the banner's notice,
+      // and a spent session goes back to the console (never a sign-out).
+      if (
+        activeImpersonation()
+        && url
+        && isApiRequest(url)
+        && (response.status === 403 || response.status === 401)
+      ) {
+        const code = impersonationCode(await response.clone().json().catch(() => null))
+        if (code === 'IMPERSONATION_ENDED') {
+          dispatchImpersonationEnded('ended')
+          return response
+        }
+        // Only what the person did (a write) gets the notice; a page's own
+        // background reads that the session may not make stay quiet.
+        const method = (init?.method || 'GET').toUpperCase()
+        if (code && method !== 'GET' && method !== 'HEAD') dispatchImpersonationRefused(code)
+      }
 
       if (
         !url ||

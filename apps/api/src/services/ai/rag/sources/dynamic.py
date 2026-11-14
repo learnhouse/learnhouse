@@ -9,6 +9,7 @@ from sqlmodel import select
 from src.db.courses.activities import Activity, ActivityTypeEnum
 from src.db.courses.blocks import Block, BlockTypeEnum
 from src.services.courses.activities.dynamic_content import strip_dynamic_content
+from src.services.courses.activities.comment_marks import strip_comment_marks
 from src.services.ai.rag.media import Media, status_of, transcript_segments
 from src.services.ai.rag.sources import SourceContext, source
 from src.services.ai.rag.formats import (
@@ -41,7 +42,7 @@ async def extract(activity: Activity, ctx: SourceContext) -> list[Segment]:
     # The index is shared by every reader, so it only holds what every reader
     # sees: conditional blocks and variables are left out.
     segments = [Segment(
-        text=extract_text_from_prosemirror(strip_dynamic_content(activity.content)),
+        text=extract_text_from_prosemirror(strip_comment_marks(strip_dynamic_content(activity.content))),
         source_type=SourceType.PAGE,
     )]
     blocks = (await ctx.db.execute(

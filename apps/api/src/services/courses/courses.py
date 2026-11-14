@@ -1,12 +1,14 @@
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 import json
 import logging
 from sqlmodel import select, or_, and_, func
 from sqlalchemy import true as sa_true
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.ee_hooks import audit_event
 from src.core.ee_hooks import notify_ee_course_content_changed
 from src.db.usergroup_resources import UserGroupResource
+from src.services.usergroups.windows import ugr_granting, ugu_current
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
 from src.db.organization_config import OrganizationConfig
@@ -21,6 +23,7 @@ from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, Reso
 from src.db.users import PublicUser, AnonymousUser, User, UserReadAuthor, APITokenUser
 from src.db.courses.courses import (
     Course,
+    CourseCompletionConfig,
     CourseCreate,
     CourseRead,
     CourseUpdate,
@@ -50,9 +53,45 @@ from src.services.webhooks.dispatch import dispatch_webhooks
 from src.services.analytics import events as analytics_events
 from src.services.analytics.analytics import track
 from fastapi import HTTPException, Request, UploadFile, status
+from pydantic import ValidationError
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_course_extra_metadata(meta: dict) -> dict:
+    """Validate the keys of a course's extra_metadata that the app renders.
+
+    ``course_end`` drives the learner's completion screen (links included), so
+    it goes through the same allowlist as the org-level config: unsafe links
+    are a 400, strings are stripped and unknown keys dropped. ``None`` is left
+    alone (it clears the key on update). Other keys stay free-form headless
+    metadata.
+    """
+    course_end = meta.get("course_end")
+    if course_end is None:
+        return meta
+    try:
+        config = CourseCompletionConfig.model_validate(course_end)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid course_end: {exc.errors()[0]['msg']}",
+        )
+    return {**meta, "course_end": config.model_dump()}
+
+
+def _validate_course_seo(seo: dict) -> dict:
+    """Validate ``course.seo`` against the shared SEO schema (400 on bad input)."""
+    from src.db.seo import clean_seo
+
+    try:
+        return clean_seo(seo)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid seo: {exc.errors()[0]['msg']}",
+        )
 
 
 def _is_bare_filename(value: str) -> bool:
@@ -64,6 +103,15 @@ def _is_bare_filename(value: str) -> bool:
         return False
     return value not in (".", "..") and not value.startswith(".")
 
+
+
+def _audit_value(value):
+    """A course attribute as an audit log diff value (JSON-friendly)."""
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json")
+    if isinstance(value, (str, int, float, bool, dict, list)) or value is None:
+        return value
+    return str(value)
 
 async def get_course(
     request: Request,
@@ -287,9 +335,13 @@ async def get_courses_orgslug(
     page: int = 1,
     limit: int = 10,
     include_unpublished: bool = False,
+    language: Optional[str] = None,
 ) -> List[CourseRead]:
     # Cap limit to prevent excessive DB reads
     limit = min(limit, 100)
+    from src.services.courses.translations.locales import normalize_locale
+
+    language = normalize_locale(language) if language else None
 
     # Resolve API tokens to their creator so membership / ResourceAuthor
     # filters run against a real user_id rather than the token id (0).
@@ -297,7 +349,7 @@ async def get_courses_orgslug(
 
     # For anonymous users viewing public courses, try Redis cache first
     is_anon = isinstance(current_user, AnonymousUser)
-    if is_anon and not include_unpublished:
+    if is_anon and not include_unpublished and not language:
         from src.services.courses.cache import get_cached_courses_list
         cached = get_cached_courses_list(org_slug, page, limit)
         if cached is not None:
@@ -374,7 +426,9 @@ async def get_courses_orgslug(
                 .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
                 .outerjoin(UserGroupUser, and_(
                     UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                    UserGroupUser.user_id == acting_user_id
+                    UserGroupUser.user_id == acting_user_id,
+                    ugr_granting(),
+                    ugu_current(),
                 ))
                 .outerjoin(ResourceAuthor, and_(
                     ResourceAuthor.resource_uuid == Course.course_uuid,
@@ -395,6 +449,13 @@ async def get_courses_orgslug(
                     ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
                 ))
             )
+
+    if language:
+        # Courses available in that language: written in it, or with a
+        # published language version in it (same base language counts).
+        from src.services.courses.translations.filters import available_in_language
+
+        query = query.where(available_in_language(language))
 
     # Apply ordering and pagination; only use DISTINCT when outerjoins may produce duplicates
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
@@ -447,7 +508,7 @@ async def get_courses_orgslug(
         course_reads.append(course_read)
 
     # Cache the result for anonymous public views
-    if is_anon and not include_unpublished and course_reads:
+    if is_anon and not include_unpublished and not language and course_reads:
         from src.services.courses.cache import set_cached_courses_list
         set_cached_courses_list(
             org_slug, page, limit,
@@ -500,7 +561,9 @@ async def get_courses_count_orgslug(
             .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
             .outerjoin(UserGroupUser, and_(
                 UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                UserGroupUser.user_id == acting_user_id
+                UserGroupUser.user_id == acting_user_id,
+                ugr_granting(),
+                ugu_current(),
             ))
             .outerjoin(ResourceAuthor, and_(
                 ResourceAuthor.resource_uuid == Course.course_uuid,
@@ -570,6 +633,8 @@ def accessible_courses_filter(
         .where(
             UserGroupResource.resource_uuid == Course.course_uuid,
             UserGroupUser.user_id == acting_user_id,
+            ugr_granting(),
+            ugu_current(),
         )
         .exists()
     )
@@ -627,8 +692,28 @@ async def search_courses(
         Course.learnings,
         Course.tags,
     ]
+    # Published language versions are searched too (multilingual courses),
+    # so a learner finds a course by its title in their language.
+    from src.db.courses.translations import CourseTranslation, TranslationStatus
+
+    translated_columns = [
+        CourseTranslation.name, CourseTranslation.description, CourseTranslation.about,
+        CourseTranslation.learnings, CourseTranslation.tags,
+    ]
+
+    def _translated_match(pattern: str):
+        return Course.id.in_(  # type: ignore[union-attr]
+            select(CourseTranslation.course_id).where(
+                CourseTranslation.status == TranslationStatus.PUBLISHED.value,
+                or_(*(c.ilike(pattern, escape=LIKE_ESCAPE_CHAR) for c in translated_columns)),  # type: ignore[union-attr]
+            )
+        )
+
     term_filters = [
-        or_(*(column.ilike(pattern, escape=LIKE_ESCAPE_CHAR) for column in searched_columns))  # type: ignore[attr-defined]
+        or_(
+            *(column.ilike(pattern, escape=LIKE_ESCAPE_CHAR) for column in searched_columns),  # type: ignore[attr-defined]
+            _translated_match(pattern),
+        )
         for pattern in patterns
     ]
 
@@ -733,6 +818,8 @@ async def create_course(
     - Course creation is subject to organization limits and permissions
     """
     course = Course.model_validate(course_object)
+    if course.extra_metadata:
+        course.extra_metadata = _validate_course_extra_metadata(course.extra_metadata)
 
     # SECURITY: Check if user has permission to create courses in this organization
     # Since this is a new course, we need to check organization-level permissions
@@ -799,6 +886,11 @@ async def create_course(
         await db_session.rollback()
         raise
     index_course(course.id)
+    audit_event(
+        request, action="course.created", org_id=course.org_id, actor=current_user,
+        target_type="course", target_id=course.course_uuid, target_name=course.name,
+        details={"published": bool(course.published)},
+    )
 
     # Get course authors with their roles
     authors_statement = (
@@ -1011,13 +1103,31 @@ async def update_course(
                 detail=f"Invalid {field}",
             )
 
+    # Validate before touching the row so a bad completion screen config
+    # rejects the whole update.
+    incoming_metadata = (
+        _validate_course_extra_metadata(course_object.extra_metadata)
+        if course_object.extra_metadata is not None
+        else None
+    )
+    if course_object.seo is not None:
+        course_object.seo = _validate_course_seo(course_object.seo)
+
     # Track published state before update for webhook
     old_published = course.published
+    audit_fields = [k for k, v in vars(course_object).items() if v is not None]
+    course_before = {k: _audit_value(getattr(course, k, None)) for k in audit_fields}
 
     # Update only the fields that were passed in
     for var, value in vars(course_object).items():
-        if value is not None:
+        if value is not None and var != "extra_metadata":
             setattr(course, var, value)
+
+    # extra_metadata is merged key by key so saving one key (say the
+    # completion screen) keeps the others. A None value removes its key.
+    if incoming_metadata is not None:
+        merged = {**(course.extra_metadata or {}), **incoming_metadata}
+        course.extra_metadata = {k: v for k, v in merged.items() if v is not None} or None
 
     # Complete the course object
     course.update_date = str(datetime.now())
@@ -1027,6 +1137,15 @@ async def update_course(
     await db_session.refresh(course)
     index_course(course.id)
     notify_ee_course_content_changed(course.id)
+    publish_changed = course_object.published is not None and course.published != old_published
+    audit_event(
+        request,
+        action=("course.published" if course.published else "course.unpublished") if publish_changed else "course.updated",
+        org_id=course.org_id, actor=current_user,
+        target_type="course", target_id=course.course_uuid, target_name=course.name,
+        before=course_before,
+        after={k: _audit_value(getattr(course, k, None)) for k in audit_fields},
+    )
 
     # Dispatch webhook if published state changed
     if course_object.published is not None and course.published != old_published:
@@ -1158,6 +1277,10 @@ async def delete_course(
 
     await db_session.delete(course)
     await db_session.commit()
+    audit_event(
+        request, action="course.deleted", org_id=course_org_id, actor=current_user,
+        target_type="course", target_id=course_uuid_val, target_name=course_name_val,
+    )
 
     # Best effort: the course is already gone, a failed landing cleanup must not
     # turn the delete into a 500.
@@ -1368,6 +1491,7 @@ async def clone_activity(
         list_directory,
         rewrite_sqlite_db_paths,
     )
+    from src.services.courses.activities.comment_marks import strip_comment_marks
     from src.db.courses.activities import Activity
     from src.db.courses.blocks import Block
     from src.db.courses.chapter_activities import ChapterActivity
@@ -1375,7 +1499,8 @@ async def clone_activity(
     new_activity_uuid = f"activity_{uuid4()}"
 
     # Clone activity content (will update file references for blocks)
-    new_content = dict(original_activity.content) if original_activity.content else {}
+    # A copy starts without the original's comment threads, so drop their anchors.
+    new_content = dict(strip_comment_marks(original_activity.content)) if original_activity.content else {}
     new_details = dict(original_activity.details) if original_activity.details else {}
     # Code blocks keep their SQLite database's full storage key.
     new_content = rewrite_sqlite_db_paths(
@@ -1790,6 +1915,11 @@ async def clone_course(
     ]
 
     course_read = CourseRead(**new_course.model_dump(), authors=authors)
+    audit_event(
+        request, action="course.cloned", org_id=new_course.org_id, actor=current_user,
+        target_type="course", target_id=new_course.course_uuid, target_name=new_course.name,
+        details={"source_course_uuid": course_uuid},
+    )
 
     return CourseRead.model_validate(course_read)
 

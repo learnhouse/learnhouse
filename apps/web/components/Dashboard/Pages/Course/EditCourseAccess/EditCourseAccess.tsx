@@ -1,93 +1,28 @@
 import { useCourseFieldSync, useCourse } from '@components/Contexts/CourseContext'
 import LinkToUserGroup from '@components/Objects/Modals/Dash/EditCourseAccess/LinkToUserGroup'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getAPIUrl } from '@services/config/config'
 import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import { apiFetch } from '@services/utils/ts/requests'
-import { Check, Globe, SquareUserRound, Users, X } from 'lucide-react'
+import { Eye, Globe, LinkSimple, UsersThree, Users, X } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { useLHAnalytics, AnalyticsEvent } from '@services/analytics'
+import { Button, Chip, ConfirmDialog, EmptyState, SectionCard } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { ChoiceTile, ChoiceTileSkeleton, EditorPage } from '../courseEditorUi'
+import CourseLinkedCompanies from '@ee/components/Companies/CourseLinkedCompanies'
 
 type EditCourseAccessProps = {
     orgslug: string
     course_uuid?: string
 }
 
-// forwardRef so Radix Dialog.Trigger asChild can pass onClick/ref through
-type AccessCardProps = {
-    icon: React.ElementType
-    title: string
-    description: string
-    selected: boolean
-} & React.HTMLAttributes<HTMLDivElement>
-
-const AccessCard = React.forwardRef<HTMLDivElement, AccessCardProps>(
-    function AccessCard({ icon: Icon, title, description, selected, className, ...rest }, ref) {
-        const { t } = useTranslation()
-        return (
-            <div
-                ref={ref}
-                {...rest}
-                className={`
-                    relative w-full rounded-xl p-6 cursor-pointer select-none
-                    flex flex-col items-center justify-center text-center
-                    transition-all duration-150
-                    ${selected
-                        ? 'bg-white border border-indigo-200 ring-1 ring-indigo-100 shadow-xs'
-                        : 'bg-gray-50/80 border border-gray-100 hover:bg-gray-50 hover:border-gray-200'
-                    }
-                    ${className || ''}
-                `}
-                style={{ minHeight: 180 }}
-            >
-                {selected && (
-                    <div className="absolute top-3 end-3 flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full ps-1 pe-2 py-0.5">
-                        <span className="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center">
-                            <Check size={10} strokeWidth={3.5} className="text-white" />
-                        </span>
-                        <span>{t('access.active')}</span>
-                    </div>
-                )}
-
-                <div
-                    className={`
-                        w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-150
-                        ${selected ? 'bg-indigo-50 text-indigo-600' : 'bg-white border border-gray-100 text-gray-400'}
-                    `}
-                >
-                    <Icon size={24} strokeWidth={1.75} />
-                </div>
-                <div className={`mt-4 text-base sm:text-lg font-bold tracking-tight ${selected ? 'text-gray-900' : 'text-gray-600'}`}>
-                    {title}
-                </div>
-                <div className="mt-1 text-xs sm:text-sm text-gray-400 leading-snug max-w-[420px]">
-                    {description}
-                </div>
-            </div>
-        )
-    }
-)
-
-function SkeletonCard() {
-    return (
-        <div
-            className="w-full rounded-xl bg-gray-50/80 border border-gray-100 animate-pulse flex flex-col items-center justify-center p-6"
-            style={{ minHeight: 180 }}
-        >
-            <div className="w-12 h-12 rounded-xl bg-gray-100" />
-            <div className="mt-4 h-4 w-28 rounded bg-gray-100" />
-            <div className="mt-2 h-3 w-48 rounded bg-gray-100" />
-        </div>
-    )
-}
-
+// Visibility is a course field: picking one stages it, and the header Save
+// sends it. Linking or unlinking a user group is an action that applies at once.
 function EditCourseAccess(_props: EditCourseAccessProps) {
     const { t } = useTranslation()
     const { track } = useLHAnalytics('dashboard')
@@ -95,14 +30,8 @@ function EditCourseAccess(_props: EditCourseAccessProps) {
     const access_token = session?.data?.tokens?.access_token;
     const org = useOrg() as any;
 
-    const {
-        syncChanges,
-        courseStructure,
-        isLoading,
-        isSaving,
-    } = useCourseFieldSync('editCourseAccess');
-
-    const _queryClient = useQueryClient()
+    const { syncChanges, courseStructure, isLoading, isSaving } = useCourseFieldSync('editCourseAccess');
+    const [confirming, setConfirming] = useState<boolean | null>(null)
 
     const { data: usergroups } = useQuery({
         queryKey: queryKeys.courseUsergroups.resources(courseStructure?.course_uuid ?? '', org?.id ?? 0),
@@ -114,130 +43,112 @@ function EditCourseAccess(_props: EditCourseAccessProps) {
         staleTime: 60_000,
     });
 
-    const [isClientPublic, setIsClientPublic] = useState<boolean | undefined>(undefined);
-    const hasInitializedRef = useRef(false);
-    const previousPublicRef = useRef<boolean | undefined>(undefined);
+    // The course store holds the staged value (pending edits are merged into
+    // courseStructure), so it survives tab switches.
+    const isPublic: boolean | undefined = isLoading ? undefined : courseStructure?.public
 
-    useEffect(() => {
-        if (!isLoading && courseStructure?.public !== undefined && !hasInitializedRef.current) {
-            setIsClientPublic(courseStructure.public);
-            previousPublicRef.current = courseStructure.public;
-            hasInitializedRef.current = true;
-        }
-    }, [isLoading, courseStructure?.public]);
-
-    useEffect(() => {
-        if (!hasInitializedRef.current || isLoading || isSaving) return;
-        if (isClientPublic === undefined) return;
-        if (isClientPublic === previousPublicRef.current) return;
-
-        syncChanges({ public: isClientPublic }, true);
-        previousPublicRef.current = isClientPublic;
-    }, [isClientPublic, isLoading, isSaving, syncChanges]);
-
-    // useCourseFieldSync flushes pending edits on unmount.
-
-    const handleSetPublic = useCallback((value: boolean) => {
-        setIsClientPublic(value);
-        track(AnalyticsEvent.CourseAccessChanged, { new_access: value ? 'public' : 'users_only' });
-    }, [track]);
+    const applyVisibility = (value: boolean) => {
+        syncChanges({ public: value }, true)
+        track(AnalyticsEvent.CourseAccessChanged, { new_access: value ? 'public' : 'users_only' })
+    }
 
     if (!courseStructure) return null;
 
-    const isReady = isClientPublic !== undefined;
+    const isReady = isPublic !== undefined;
 
     return (
-        <div>
-            <div className="h-6" />
-            <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs">
-
-                {/* Header, matches OrgUsers header */}
-                <div className="px-6 py-5 border-b border-gray-100">
-                    <h1 className="font-bold text-xl text-gray-800">
-                        {t('dashboard.courses.access.title')}
-                    </h1>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                        {t('dashboard.courses.access.subtitle')}
-                    </p>
+        <EditorPage>
+            <SectionCard
+                icon={<Eye size={18} />}
+                title={t('dashboard.courses.access.title')}
+                description={t('dashboard.courses.access.subtitle')}
+            >
+                <div
+                    role="radiogroup"
+                    aria-label={t('dashboard.courses.access.title')}
+                    className={`grid sm:grid-cols-2 gap-3 transition-opacity duration-200 ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}
+                >
+                    {!isReady ? (
+                        <>
+                            <ChoiceTileSkeleton />
+                            <ChoiceTileSkeleton />
+                        </>
+                    ) : (
+                        <>
+                            <ChoiceTile
+                                icon={Globe}
+                                title={t('dashboard.courses.access.public.title')}
+                                description={t('dashboard.courses.access.public.description')}
+                                selected={isPublic === true}
+                                activeLabel={t('access.active')}
+                                tabIndex={0}
+                                onClick={() => isPublic !== true && setConfirming(true)}
+                                onKeyDown={(e) => {
+                                    if ((e.key === 'Enter' || e.key === ' ') && isPublic !== true) {
+                                        e.preventDefault()
+                                        setConfirming(true)
+                                    }
+                                }}
+                            />
+                            <ChoiceTile
+                                icon={Users}
+                                title={t('dashboard.courses.access.users_only.title')}
+                                description={t('dashboard.courses.access.users_only.description')}
+                                selected={isPublic === false}
+                                activeLabel={t('access.active')}
+                                tabIndex={0}
+                                onClick={() => isPublic !== false && setConfirming(false)}
+                                onKeyDown={(e) => {
+                                    if ((e.key === 'Enter' || e.key === ' ') && isPublic !== false) {
+                                        e.preventDefault()
+                                        setConfirming(false)
+                                    }
+                                }}
+                            />
+                        </>
+                    )}
                 </div>
+            </SectionCard>
 
-                {/* Access type cards */}
-                <div className="px-6 py-5 border-b border-gray-100">
-                    <div className={`flex flex-col sm:flex-row gap-3 transition-opacity duration-200 ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
-                        {!isReady ? (
-                            <>
-                                <SkeletonCard />
-                                <SkeletonCard />
-                            </>
-                        ) : (
-                            <>
-                                {/* Public */}
-                                {isClientPublic === true ? (
-                                    <AccessCard
-                                        icon={Globe}
-                                        title={t('dashboard.courses.access.public.title')}
-                                        description={t('dashboard.courses.access.public.description')}
-                                        selected
-                                    />
-                                ) : (
-                                    <ConfirmationModal
-                                        confirmationButtonText={t('dashboard.courses.access.public.confirmation_button')}
-                                        confirmationMessage={t('dashboard.courses.access.public.confirmation_message')}
-                                        dialogTitle={t('dashboard.courses.access.public.confirmation_title')}
-                                        dialogTrigger={
-                                            <AccessCard
-                                                icon={Globe}
-                                                title={t('dashboard.courses.access.public.title')}
-                                                description={t('dashboard.courses.access.public.description')}
-                                                selected={false}
-                                            />
-                                        }
-                                        functionToExecute={() => handleSetPublic(true)}
-                                        status="info"
-                                    />
-                                )}
+            <ConfirmDialog
+                open={confirming !== null}
+                onOpenChange={(open) => !open && setConfirming(null)}
+                tone="info"
+                title={
+                    confirming
+                        ? t('dashboard.courses.access.public.confirmation_title')
+                        : t('dashboard.courses.access.users_only.confirmation_title')
+                }
+                message={
+                    <>
+                        {confirming
+                            ? t('dashboard.courses.access.public.confirmation_message')
+                            : t('dashboard.courses.access.users_only.confirmation_message')}{' '}
+                        {t('dashboard.courses.editor.save.applies_on_save')}
+                    </>
+                }
+                confirmLabel={
+                    confirming
+                        ? t('dashboard.courses.access.public.confirmation_button')
+                        : t('dashboard.courses.access.users_only.confirmation_button')
+                }
+                onConfirm={() => {
+                    if (confirming !== null) applyVisibility(confirming)
+                }}
+            />
 
-                                {/* UsersOnly */}
-                                {isClientPublic === false ? (
-                                    <AccessCard
-                                        icon={Users}
-                                        title={t('dashboard.courses.access.users_only.title')}
-                                        description={t('dashboard.courses.access.users_only.description')}
-                                        selected
-                                    />
-                                ) : (
-                                    <ConfirmationModal
-                                        confirmationButtonText={t('dashboard.courses.access.users_only.confirmation_button')}
-                                        confirmationMessage={t('dashboard.courses.access.users_only.confirmation_message')}
-                                        dialogTitle={t('dashboard.courses.access.users_only.confirmation_title')}
-                                        dialogTrigger={
-                                            <AccessCard
-                                                icon={Users}
-                                                title={t('dashboard.courses.access.users_only.title')}
-                                                description={t('dashboard.courses.access.users_only.description')}
-                                                selected={false}
-                                            />
-                                        }
-                                        functionToExecute={() => handleSetPublic(false)}
-                                        status="info"
-                                    />
-                                )}
-                            </>
-                        )}
-                    </div>
-                </div>
+            {isPublic === false && <UserGroupsSection usergroups={Array.isArray(usergroups) ? usergroups : []} />}
 
-                {/* User groups (Users-table styled) */}
-                {isClientPublic === false && <UserGroupsSection usergroups={usergroups} />}
-            </div>
-        </div>
+            <CourseLinkedCompanies courseUuid={courseStructure.course_uuid} orgslug={_props.orgslug} />
+        </EditorPage>
     );
 }
 
 function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
     const { t } = useTranslation()
     const course = useCourse() as any;
-    const [userGroupModal, setUserGroupModal] = useState(false);
+    const [linkOpen, setLinkOpen] = useState(false);
+    const [unlinking, setUnlinking] = useState<any | null>(null);
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const org = useOrg() as any;
@@ -257,124 +168,91 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                     queryKey: queryKeys.courseUsergroups.resources(course.courseStructure.course_uuid, org.id),
                 });
             } else {
-                toast.error(t('dashboard.courses.access.usergroups.toasts.link_error', { status: res.status, detail: res.data.detail }));
+                toast.error(t('dashboard.courses.access.usergroups.toasts.link_error', { status: res.status, detail: res.data?.detail }));
             }
         } catch {
             toast.error(t('dashboard.courses.access.usergroups.toasts.unlink_error'));
         }
     };
 
-    const hasGroups = usergroups && usergroups.length > 0;
+    const hasGroups = usergroups.length > 0;
+    const linkButton = (
+        <Button variant={hasGroups ? 'secondary' : 'primary'} icon={<LinkSimple size={14} />} onClick={() => setLinkOpen(true)}>
+            {t('dashboard.courses.editor.usergroups.link_action')}
+        </Button>
+    )
 
     return (
-        <>
-            {/* Section header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-                <div className="flex-1">
-                    <h2 className="font-bold text-xl text-gray-800">
-                        {t('dashboard.courses.access.usergroups.title')}
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                        {t('dashboard.courses.access.usergroups.subtitle')}
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
+        <SectionCard
+            icon={<UsersThree size={18} />}
+            title={t('dashboard.courses.editor.usergroups.title')}
+            description={t('dashboard.courses.editor.usergroups.description')}
+            bodyClassName={hasGroups ? 'px-2 pb-2 pt-3' : 'p-0'}
+            actions={
+                <>
                     {hasGroups && (
-                        <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
-                            {usergroups.length} {usergroups.length === 1 ? 'group' : 'groups'}
-                        </div>
+                        <Chip tone="neutral">
+                            {t('dashboard.courses.editor.access.group_count', { count: usergroups.length })}
+                        </Chip>
                     )}
-                    <Modal
-                        isDialogOpen={userGroupModal}
-                        onOpenChange={() => setUserGroupModal(!userGroupModal)}
-                        minHeight="no-min"
-                        minWidth="md"
-                        dialogContent={<LinkToUserGroup setUserGroupModal={setUserGroupModal} />}
-                        dialogTitle={t('dashboard.courses.access.usergroups.modals.link_title')}
-                        dialogDescription={t('dashboard.courses.access.usergroups.modals.link_description')}
-                        dialogTrigger={
-                            <button className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 transition-all">
-                                <SquareUserRound className="w-4 h-4" />
-                                <span>{t('dashboard.courses.access.usergroups.actions.link_to_usergroup')}</span>
-                            </button>
-                        }
-                    />
-                </div>
-            </div>
-
-            {/* Table / Empty state */}
-            <div className="relative">
-                {hasGroups ? (
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-gray-100">
-                                <th className="text-start text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
-                                    {t('dashboard.courses.access.usergroups.table.name')}
-                                </th>
-                                <th className="text-end text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
-                                    {t('dashboard.courses.access.usergroups.table.actions')}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {usergroups.map((usergroup: any) => (
-                                <tr
-                                    key={usergroup.invite_code_uuid}
-                                    className="hover:bg-gray-50 transition-colors"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center flex-shrink-0">
-                                                <Users className="w-4 h-4" />
-                                            </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="font-semibold text-gray-800 text-sm truncate">
-                                                    {usergroup.name}
-                                                </span>
-                                                {usergroup.description && (
-                                                    <span className="text-xs text-gray-400 truncate">
-                                                        {usergroup.description}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-end">
-                                        <ConfirmationModal
-                                            confirmationButtonText={t('dashboard.courses.access.usergroups.modals.unlink_button')}
-                                            confirmationMessage={t('dashboard.courses.access.usergroups.modals.unlink_message')}
-                                            dialogTitle={t('dashboard.courses.access.usergroups.modals.unlink_title')}
-                                            dialogTrigger={
-                                                <button
-                                                    className="inline-flex items-center gap-1.5 h-8 px-3 bg-white text-gray-600 hover:bg-rose-50 hover:text-rose-600 rounded-md text-xs font-medium nice-shadow transition-all"
-                                                    title={t('dashboard.courses.access.usergroups.actions.delete_link')}
-                                                >
-                                                    <X className="w-3.5 h-3.5" />
-                                                    <span>{t('dashboard.courses.access.usergroups.actions.delete_link')}</span>
-                                                </button>
-                                            }
-                                            functionToExecute={() => removeUserGroupLink(usergroup.id)}
-                                            status="warning"
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <div className="py-16 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="bg-gray-100 p-4 rounded-full">
-                                <Users className="w-8 h-8 text-gray-400" />
+                    {hasGroups && linkButton}
+                </>
+            }
+        >
+            {hasGroups ? (
+                <ul className="divide-y divide-neutral-100">
+                    {usergroups.map((usergroup: any) => (
+                        <li
+                            key={usergroup.usergroup_uuid ?? usergroup.id}
+                            className="flex items-center justify-between gap-3 px-3 py-3 rounded-xl hover:bg-neutral-50 transition-colors"
+                        >
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+                                    <Users size={16} />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="font-semibold text-neutral-900 text-sm truncate">{usergroup.name}</span>
+                                    {usergroup.description && (
+                                        <span className="text-xs text-neutral-500 truncate">{usergroup.description}</span>
+                                    )}
+                                </div>
                             </div>
-                            <p className="text-gray-400 text-sm font-medium max-w-sm">
-                                {t('dashboard.courses.access.usergroups.subtitle')}
-                            </p>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </>
+                            <Button
+                                variant="danger-ghost"
+                                size="sm"
+                                icon={<X size={13} />}
+                                onClick={() => setUnlinking(usergroup)}
+                                title={t('dashboard.courses.editor.usergroups.unlink')}
+                            >
+                                <span className="hidden sm:inline">{t('dashboard.courses.editor.usergroups.unlink')}</span>
+                            </Button>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <EmptyState
+                    icon={<UsersThree size={22} />}
+                    title={t('dashboard.courses.editor.usergroups.empty_title')}
+                    description={t('dashboard.courses.editor.usergroups.empty_description')}
+                    action={linkButton}
+                />
+            )}
+
+            <LinkToUserGroup
+                open={linkOpen}
+                onOpenChange={setLinkOpen}
+                linkedIds={usergroups.map((g: any) => g.id)}
+            />
+
+            <ConfirmDialog
+                open={unlinking !== null}
+                onOpenChange={(open) => !open && setUnlinking(null)}
+                title={t('dashboard.courses.access.usergroups.modals.unlink_title')}
+                message={t('dashboard.courses.editor.usergroups.unlink_message', { name: unlinking?.name ?? '' })}
+                confirmLabel={t('dashboard.courses.editor.usergroups.unlink')}
+                onConfirm={() => unlinking && removeUserGroupLink(unlinking.id)}
+            />
+        </SectionCard>
     );
 }
 

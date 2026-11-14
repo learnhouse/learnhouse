@@ -382,7 +382,7 @@ async def test_create_course_pages_take_rich_fences(registry, db, org, admin_use
     assert page_ref["rich_blocks"] == {"blockQuiz": 1, "flipcardGrid": 1, "blockEmbed": 1}
     row = (await db.execute(select(Activity))).scalars().one()
     assert [n["type"] for n in row.content["content"]] == ["heading", "blockQuiz", "flipcardGrid", "blockEmbed"]
-    assert row.content["content"][3]["attrs"]["embedUrl"] == "https://www.youtube.com/embed/aqz-KE-bpKQ"
+    assert row.content["content"][3]["attrs"]["embedUrl"] == "https://www.youtube.com/embed/aqz-KE-bpKQ?rel=0"
 
 
 async def test_create_course_limits(registry, db, org, admin_user):

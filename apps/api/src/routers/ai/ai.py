@@ -16,6 +16,7 @@ from src.services.ai.editor import (
     editor_ai_start_chat_session_stream,
     editor_ai_send_message_stream,
 )
+from src.services.ai import metering
 from src.services.ai.base import ask_ai_stream, save_message_to_history, generate_follow_up_suggestions
 from src.services.ai.llm.errors import ai_error_message, log_ai_failure
 from src.services.ai.schemas.ai import (
@@ -88,7 +89,16 @@ async def api_ai_send_activity_chat_message(
     )
 
 
-async def activity_chat_event_generator(
+async def activity_chat_event_generator(*args, meter=None, **kwargs):
+    """SSE for an activity chat stream, its model calls metered on ``meter``
+    (the follow-up suggestions included). After them a ``credits`` event says
+    what the turn charged; a stream that produced nothing is refunded."""
+    with metering.use_meter(meter):
+        async for frame in _activity_chat_frames(*args, meter=meter, **kwargs):
+            yield frame
+
+
+async def _activity_chat_frames(
     stream_generator,
     aichat_uuid: str,
     activity_uuid: str,
@@ -98,16 +108,16 @@ async def activity_chat_event_generator(
     org_id: int | None = None,
     user_id: int | None = None,
     course_uuid: str | None = None,
+    meter=None,
 ):
     """Convert async generator to SSE format with follow-up suggestions.
 
-    Credits are reserved by the caller before the stream is created. If the
-    stream dies before producing any model output (upstream error, client
-    disconnect, cancellation) we refund one credit so a flaky connection
+    Credits are reserved by the caller before the stream is created (``meter``).
+    If the stream dies before producing any model output (upstream error, client
+    disconnect, cancellation) the charge is refunded so a flaky connection
     doesn't silently drain the org's quota.
     """
     import asyncio
-    from src.security.features_utils.usage import refund_ai_credit
 
     full_response = ""
     stream_failed = False
@@ -143,6 +153,10 @@ async def activity_chat_event_generator(
         if follow_ups:
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
+        if meter is not None:
+            credits = await meter.settle(failed=not full_response)
+            yield f"data: {json.dumps({'type': 'credits', 'credits': credits})}\n\n"
+
     except asyncio.CancelledError:
         # Client disconnect / server shutdown. Do NOT force a refund here: if
         # the model already produced output the credit was legitimately spent.
@@ -156,12 +170,12 @@ async def activity_chat_event_generator(
         message = ai_error_message(e, "An internal error occurred while processing the AI chat request.")
         yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
     finally:
-        # Refund credit if the model produced nothing useful.
-        if org_id is not None and (stream_failed or not full_response):
+        # Settle what is left: refunded if the model produced nothing useful.
+        if meter is not None and not meter.settled:
             try:
-                refund_ai_credit(org_id, 1)
+                await meter.settle(failed=stream_failed or not full_response)
             except Exception:
-                logger.debug("AI credit refund failed", exc_info=True)
+                logger.debug("AI credit settlement failed", exc_info=True)
 
 
 @router.post(
@@ -211,6 +225,7 @@ async def api_ai_start_activity_chat_session_stream(
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
             user_id=resolve_acting_user_id(current_user),
+            meter=context.get("meter"),
             course_uuid=getattr(context.get("course", None), "course_uuid", None),
         ),
         media_type="text/event-stream",
@@ -269,6 +284,7 @@ async def api_ai_send_activity_chat_message_stream(
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
             user_id=resolve_acting_user_id(current_user),
+            meter=context.get("meter"),
             course_uuid=getattr(context.get("course", None), "course_uuid", None),
         ),
         media_type="text/event-stream",
@@ -289,10 +305,16 @@ CONTENT_START_MARKER = "<<<CONTENT>>>"
 CONTENT_END_MARKER = "<<<END_CONTENT>>>"
 
 import asyncio  # noqa: E402
-from src.security.features_utils.usage import refund_ai_credit  # noqa: E402
 
 
-async def editor_chat_event_generator(
+async def editor_chat_event_generator(*args, meter=None, **kwargs):
+    """SSE for an editor AI stream, metered on ``meter`` (see activity chat)."""
+    with metering.use_meter(meter):
+        async for frame in _editor_chat_frames(*args, meter=meter, **kwargs):
+            yield frame
+
+
+async def _editor_chat_frames(
     stream_generator,
     aichat_uuid: str,
     activity_uuid: str,
@@ -301,6 +323,7 @@ async def editor_chat_event_generator(
     ai_model: str,
     org_id: int | None = None,
     user_id: int | None = None,
+    meter=None,
 ):
     """
     Convert async generator to SSE format for editor AI chat.
@@ -431,6 +454,10 @@ async def editor_chat_event_generator(
         if follow_ups:
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
+        if meter is not None:
+            credits = await meter.settle(failed=not full_response)
+            yield f"data: {json.dumps({'type': 'credits', 'credits': credits})}\n\n"
+
     except asyncio.CancelledError:
         # Client disconnect / cancellation. Do NOT force a refund here: if the
         # model already produced output the credit was legitimately spent. The
@@ -444,11 +471,11 @@ async def editor_chat_event_generator(
         message = ai_error_message(e, "An internal error occurred while processing the AI request.")
         yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
     finally:
-        if org_id is not None and (stream_failed or not full_response):
+        if meter is not None and not meter.settled:
             try:
-                refund_ai_credit(org_id, 1)
+                await meter.settle(failed=stream_failed or not full_response)
             except Exception:
-                logger.debug("AI credit refund failed", exc_info=True)
+                logger.debug("AI credit settlement failed", exc_info=True)
 
 
 @router.post(
@@ -498,6 +525,7 @@ async def api_editor_ai_start_chat_session_stream(
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
             user_id=resolve_acting_user_id(current_user),
+            meter=context.get("meter"),
         ),
         media_type="text/event-stream",
         headers={
@@ -555,6 +583,7 @@ async def api_editor_ai_send_message_stream(
             context["ai_model"],
             org_id=getattr(context.get("course", None), "org_id", None),
             user_id=resolve_acting_user_id(current_user),
+            meter=context.get("meter"),
         ),
         media_type="text/event-stream",
         headers={

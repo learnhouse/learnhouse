@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { Cross2Icon } from "@radix-ui/react-icons"
+import { X } from '@phosphor-icons/react'
 import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
@@ -32,10 +32,10 @@ const DialogCloseButton = () => {
   const { t } = useTranslation()
   return (
     <DialogPrimitive.Close
-      className="absolute end-4 top-4 p-1.5 max-md:p-2 rounded-lg max-md:rounded-full bg-gray-100/80 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none"
+      className="absolute end-4 top-4 w-8 h-8 inline-flex items-center justify-center rounded-lg max-md:rounded-full text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20 disabled:pointer-events-none"
       aria-label={t('modal.close_dialog')}
     >
-      <Cross2Icon className="h-4 w-4" />
+      <X className="h-4 w-4" weight="bold" />
       <span className="sr-only">{t('common.close')}</span>
     </DialogPrimitive.Close>
   )
@@ -109,8 +109,8 @@ const SheetHandle = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElemen
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { hideClose?: boolean }
+>(({ className, children, hideClose, ...props }, ref) => {
   const contentRef = React.useRef<HTMLDivElement | null>(null)
   const setRefs = React.useCallback(
     (node: HTMLDivElement | null) => {
@@ -150,14 +150,14 @@ const DialogContent = React.forwardRef<
         }
       }}
       className={cn(
-        "lh-modal-content fixed left-[50%] top-[50%] grid w-full max-w-lg gap-0 border border-gray-200/80 bg-white shadow-2xl shadow-black/10 rounded-2xl",
+        "lh-modal-content fixed left-[50%] top-[50%] grid w-full max-w-lg gap-0 bg-white rounded-2xl ring-1 ring-black/5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.28),0_2px_6px_rgba(0,0,0,0.04)]",
         className
       )}
       {...props}
     >
       <SheetHandle contentRef={contentRef} />
       {children}
-      <DialogCloseButton />
+      {!hideClose && <DialogCloseButton />}
     </DialogPrimitive.Content>
   </DialogPortal>
   )

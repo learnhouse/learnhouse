@@ -1,17 +1,7 @@
 'use client'
 import React, { useState } from 'react'
-import {
-  Boxes,
-  ExternalLink,
-  X,
-  Plus,
-  BookOpen,
-  Users,
-  UserCheck,
-  ShieldCheck,
-  Sparkles,
-  Zap,
-} from 'lucide-react'
+import { Cube, ArrowSquareOut, X, Plus, BookOpen, Users, UserCheck, ShieldCheck, Lightning } from '@phosphor-icons/react'
+import { AIMark } from '@components/Objects/AI/AIBrand'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { planName, planNameByLabel, featureLabel, featureBadge, packLabel } from '../../_billing/planText'
@@ -203,7 +193,7 @@ export default function PlanUsage({
             onClick={handleManageBilling}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-black/[0.08] text-black/60 rounded-xl text-[13px] font-semibold hover:bg-black/[0.03] transition-colors flex-shrink-0"
           >
-            <ExternalLink size={13} />
+            <ArrowSquareOut size={13} />
             {t('billing.billing', { defaultValue: 'Billing' })}
           </button>
         )}
@@ -254,7 +244,7 @@ export default function PlanUsage({
               onClick={onSwitch}
               className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[13px] font-semibold hover:bg-black/80 transition-colors flex-shrink-0"
             >
-              <Boxes size={14} />
+              <Cube size={14} />
               {t('billing.upgrade', { defaultValue: 'Upgrade' })}
             </button>
           </div>
@@ -344,7 +334,7 @@ export default function PlanUsage({
                 onClick={onSwitch}
                 className="flex items-center gap-1.5 text-[12px] font-semibold text-black/50 hover:text-black/70 transition-colors"
               >
-                <Boxes size={12} />
+                <Cube size={12} />
                 {t('billing.change_plan', { defaultValue: 'Change plan' })}
               </button>
               {!subscription.cancelAtPeriodEnd && currentPlanId !== 'free' && (
@@ -552,7 +542,7 @@ export default function PlanUsage({
                 <div className="px-6 py-6 bg-white">
                   <UsageBar
                     label={t('billing.ai_credits', { defaultValue: 'AI Credits' })}
-                    icon={<Sparkles size={14} className="text-violet-600" />}
+                    icon={<AIMark size={16} alt="" />}
                     usage={aiCredits.used_credits}
                     limit={aiCredits.total_credits === 'unlimited' ? 'unlimited' : aiCredits.total_credits}
                     color="bg-violet-50"
@@ -633,7 +623,7 @@ export default function PlanUsage({
                               <div className="flex items-center gap-3">
                                 <div className={`p-1.5 rounded-lg ${isAI ? 'bg-violet-50' : 'bg-emerald-50'}`}>
                                   {isAI ? (
-                                    <Zap size={14} className="text-violet-600" />
+                                    <Lightning size={14} className="text-violet-600" />
                                   ) : (
                                     <Users size={14} className="text-emerald-600" />
                                   )}
@@ -684,7 +674,7 @@ export default function PlanUsage({
                     <div className="flex items-center gap-3">
                       <div className={`p-1.5 rounded-lg ${pack.type === 'ai_credits' ? 'bg-violet-50' : 'bg-emerald-50'}`}>
                         {pack.type === 'ai_credits' ? (
-                          <Zap size={14} className="text-violet-600" />
+                          <Lightning size={14} className="text-violet-600" />
                         ) : (
                           <Users size={14} className="text-emerald-600" />
                         )}
@@ -730,7 +720,7 @@ export default function PlanUsage({
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-xl ${disclaimerPack.type === 'ai_credits' ? 'bg-violet-50' : 'bg-emerald-50'}`}>
                       {disclaimerPack.type === 'ai_credits' ? (
-                        <Zap size={18} className="text-violet-600" />
+                        <Lightning size={18} className="text-violet-600" />
                       ) : (
                         <Users size={18} className="text-emerald-600" />
                       )}
@@ -807,7 +797,7 @@ export default function PlanUsage({
                   onClick={handleConfirmPurchase}
                   className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-xl text-[13px] font-semibold hover:bg-black/80 transition-colors"
                 >
-                  <ExternalLink size={13} />
+                  <ArrowSquareOut size={13} />
                   {t('billing.continue_to_payment', { defaultValue: 'Continue to payment' })}
                 </button>
               </div>

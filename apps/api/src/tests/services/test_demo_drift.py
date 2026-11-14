@@ -289,14 +289,9 @@ async def test_votes_and_reactions_are_swept(db, demo_org, visitor):
     from src.db.communities.discussion_reactions import DiscussionReaction
     from src.db.communities.discussion_votes import DiscussionVote
     from src.db.communities.discussions import Discussion
-    from src.db.playground_reactions import PlaygroundReaction
-    from src.db.playgrounds import Playground
 
     discussion = (await db.execute(select(Discussion).limit(1))).scalars().first()
     comment = (await db.execute(select(DiscussionComment).limit(1))).scalars().first()
-    playground = (
-        await db.execute(select(Playground).where(Playground.org_id == demo_org.id).limit(1))
-    ).scalars().first()
 
     db.add(
         DiscussionVote(
@@ -316,23 +311,16 @@ async def test_votes_and_reactions_are_swept(db, demo_org, visitor):
             vote_uuid="cvote_v", creation_date="2026-08-09",
         )
     )
-    db.add(
-        PlaygroundReaction(
-            playground_id=playground.id, user_id=visitor.id, emoji="👏",
-            reaction_uuid="preaction_v", creation_date="2026-08-09",
-        )
-    )
     await db.commit()
 
     stats = await sync_demo(db, today=EPOCH_DAY)
 
-    for model in (
-        DiscussionVote, DiscussionReaction, DiscussionCommentVote, PlaygroundReaction
-    ):
+    # Play reactions are swept too when EE is present (ee/tests).
+    for model in (DiscussionVote, DiscussionReaction, DiscussionCommentVote):
         left = (await db.execute(select(func.count()).select_from(model))).scalar_one()
         assert left == 0, f"{model.__name__} survived the refresh"
 
-    assert stats.drift_deleted >= 4
+    assert stats.drift_deleted >= 3
 
 
 # ---------------------------------------------------------------------------

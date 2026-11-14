@@ -11,8 +11,10 @@ import { useTranslation } from 'react-i18next'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
-import { ShieldAlert, BrainCircuit, MessageCircle, Pencil, Sparkles, Info } from 'lucide-react'
-import Image from 'next/image'
+import { ShieldWarning, ChatCircleDots, PencilSimple, Student, Info } from '@phosphor-icons/react'
+import { AIMark } from '@components/Objects/AI/AIBrand'
+import { Chip, SectionCard, SettingRow } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { Notice } from '@components/Dashboard/Pages/Org/OrgSettingsShared/orgSettingsUi'
 
 const OrgEditAI: React.FC = () => {
   const { t } = useTranslation()
@@ -86,131 +88,94 @@ const OrgEditAI: React.FC = () => {
     }
   }
 
+  const disabled = isUpdating || !canEditOrgSettings
+
   return (
     <FeatureGate feature="ai" allowWhenDisabled>
-      <div className="sm:mx-10 mx-0 space-y-4">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Image
-            src="/learnhouse_ai_simple_colored.png"
-            alt="LearnHouse AI"
-            width={28}
-            height={28}
-          />
-          <div>
-            <h1 className="font-bold text-lg text-gray-800">
-              {t('dashboard.organization.ai.title')}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {t('dashboard.organization.ai.subtitle')}
-            </p>
-          </div>
-        </div>
-
+      <div className="flex flex-col gap-5">
         {/* Admin-only warning */}
         {!canEditOrgSettings && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200/80">
-            <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0" />
-            <p className="text-sm text-amber-800">
-              {t('dashboard.organization.ai.admin_only')}
-            </p>
-          </div>
+          <Notice tone="amber" icon={<ShieldWarning size={16} />}>
+            {t('dashboard.organization.ai.admin_only')}
+          </Notice>
         )}
 
         {/* Off-state notice, only once the org has loaded so it never flashes */}
         {org && !aiEnabled && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200/80">
-            <Info className="w-4 h-4 text-gray-500 flex-shrink-0" />
-            <p className="text-sm text-gray-600">
-              {t('dashboard.organization.ai.currently_disabled')}
-            </p>
-          </div>
+          <Notice tone="neutral" icon={<Info size={16} />}>
+            {t('dashboard.organization.ai.currently_disabled')}
+          </Notice>
         )}
 
-        {/* Main AI toggle */}
-        <SettingRow
-          icon={<BrainCircuit className="w-4 h-4" />}
-          title={t('dashboard.organization.ai.enable_ai')}
-          description={t('dashboard.organization.ai.enable_ai_description')}
-          checked={aiEnabled}
-          onToggle={(checked) => {
-            setAiEnabled(checked)
-            updateAIConfig({ ai_enabled: checked })
-          }}
-          disabled={isUpdating || !canEditOrgSettings}
-        />
-
-        {/* Sub-features (only when AI is enabled) */}
-        {aiEnabled && (
-          <div className="space-y-3 ps-4 border-s-2 border-gray-100 ms-2">
+        <SectionCard
+          icon={<AIMark variant="app" size={20} alt="" />}
+          title={t('dashboard.organization.ai.title')}
+          description={t('dashboard.organization.ai.subtitle')}
+          actions={
+            org ? (
+              <Chip tone={aiEnabled ? 'emerald' : 'neutral'}>
+                {aiEnabled
+                  ? t('dashboard.organization.settings_ui.status_on')
+                  : t('dashboard.organization.settings_ui.status_off')}
+              </Chip>
+            ) : undefined
+          }
+        >
+          <div className="divide-y divide-neutral-100">
             <SettingRow
-              icon={<MessageCircle className="w-4 h-4" />}
-              title={t('dashboard.organization.ai.ai_copilot')}
-              description={t('dashboard.organization.ai.ai_copilot_description')}
-              checked={copilotEnabled}
-              onToggle={(checked) => {
-                setCopilotEnabled(checked)
-                updateAIConfig({ copilot_enabled: checked })
-              }}
-              disabled={isUpdating || !canEditOrgSettings}
+              icon={<AIMark size={18} alt="" />}
+              title={<label htmlFor="ai-enabled" className="cursor-pointer">{t('dashboard.organization.ai.enable_ai')}</label>}
+              description={t('dashboard.organization.ai.enable_ai_description')}
+              control={
+                <Switch
+                  id="ai-enabled"
+                  checked={aiEnabled}
+                  onCheckedChange={(checked) => {
+                    setAiEnabled(checked)
+                    updateAIConfig({ ai_enabled: checked })
+                  }}
+                  disabled={disabled}
+                />
+              }
             />
 
-            <SettingRow
-              icon={<Pencil className="w-4 h-4" />}
-              title={t('dashboard.organization.ai.feature_editor')}
-              description={t('dashboard.organization.ai.feature_editor_description')}
-              checked={true}
-              disabled={true}
-              alwaysOn
-            />
-
-            <SettingRow
-              icon={<Sparkles className="w-4 h-4" />}
-              title={t('dashboard.organization.ai.feature_activity')}
-              description={t('dashboard.organization.ai.feature_activity_description')}
-              checked={true}
-              disabled={true}
-              alwaysOn
-            />
+            {/* Sub-features (only when AI is enabled) */}
+            {aiEnabled && (
+              <>
+                <SettingRow
+                  icon={<ChatCircleDots size={18} />}
+                  title={<label htmlFor="ai-copilot" className="cursor-pointer">{t('dashboard.organization.ai.ai_copilot')}</label>}
+                  description={t('dashboard.organization.ai.ai_copilot_description')}
+                  control={
+                    <Switch
+                      id="ai-copilot"
+                      checked={copilotEnabled}
+                      onCheckedChange={(checked) => {
+                        setCopilotEnabled(checked)
+                        updateAIConfig({ copilot_enabled: checked })
+                      }}
+                      disabled={disabled}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={<PencilSimple size={18} />}
+                  title={t('dashboard.organization.ai.feature_editor')}
+                  description={t('dashboard.organization.ai.feature_editor_description')}
+                  control={<Chip>{t('dashboard.organization.ai.always_on')}</Chip>}
+                />
+                <SettingRow
+                  icon={<Student size={18} />}
+                  title={t('dashboard.organization.ai.feature_activity')}
+                  description={t('dashboard.organization.ai.feature_activity_description')}
+                  control={<Chip>{t('dashboard.organization.ai.always_on')}</Chip>}
+                />
+              </>
+            )}
           </div>
-        )}
+        </SectionCard>
       </div>
     </FeatureGate>
-  )
-}
-
-function SettingRow({ icon, title, description, checked, onToggle, disabled, alwaysOn }: {
-  icon: React.ReactNode
-  title: string
-  description: string
-  checked: boolean
-  onToggle?: (checked: boolean) => void
-  disabled?: boolean
-  alwaysOn?: boolean
-}) {
-  const { t } = useTranslation()
-  return (
-    <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-white nice-shadow">
-      <div className="flex gap-3 min-w-0">
-        <div className="flex-shrink-0 mt-0.5 text-gray-400">{icon}</div>
-        <div className="space-y-0.5 min-w-0">
-          <h4 className="text-sm font-medium text-gray-800">{title}</h4>
-          <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
-        </div>
-      </div>
-      {alwaysOn ? (
-        <span className="flex-shrink-0 text-[11px] font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md mt-0.5">
-          {t('dashboard.organization.ai.always_on')}
-        </span>
-      ) : (
-        <Switch
-          checked={checked}
-          onCheckedChange={onToggle}
-          disabled={disabled}
-          className="flex-shrink-0 mt-0.5"
-        />
-      )}
-    </div>
   )
 }
 

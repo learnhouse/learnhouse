@@ -11,7 +11,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import HTTPException
 
-from src.db.boards import Board
 from src.db.courses.courses import Course
 from src.db.folders.folder_content import FolderContent
 from src.db.folders.folders import Folder
@@ -19,7 +18,6 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroups import UserGroup
 from src.services.folders.folders import (
     get_folders,
-    get_org_root_items,
     move_folder_content,
     search_library,
 )
@@ -59,29 +57,6 @@ async def test_get_folders_hides_usergroup_restricted_folders(
 
     assert [f.folder_uuid for f in member_view] == ["folder_open"]
     assert {f.folder_uuid for f in admin_view} == {"folder_open", "folder_staff"}
-
-
-@pytest.mark.asyncio
-async def test_root_items_gate_boards_and_strip_ydoc(
-    db, org, admin_user, regular_user, mock_request
-):
-    for id_, uuid in ((1, "board_open"), (2, "board_staff")):
-        db.add(Board(
-            # A private board with no linked UserGroup belongs to its members
-            # only, so the board every member sees is a public one.
-            id=id_, name=uuid, public=uuid == "board_open", org_id=org.id, board_uuid=uuid,
-            created_by=admin_user.id, ydoc_state=b"secret", creation_date=_now(), update_date=_now(),
-        ))
-        db.add(FolderContent(folder_id=None, resource_uuid=uuid, org_id=org.id, position=id_))
-    await db.commit()
-    await _restrict_to_group(db, org, "board_staff")
-
-    member_items = await get_org_root_items(mock_request, str(org.id), regular_user, db)
-    admin_items = await get_org_root_items(mock_request, str(org.id), admin_user, db)
-
-    assert [i.resource_uuid for i in member_items] == ["board_open"]
-    assert {i.resource_uuid for i in admin_items} == {"board_open", "board_staff"}
-    assert "ydoc_state" not in member_items[0].resource
 
 
 @pytest.mark.asyncio
@@ -143,25 +118,18 @@ async def test_get_folder_hides_usergroup_restricted_subfolders(
 
 
 @pytest.mark.asyncio
-async def test_search_library_hides_restricted_folders_and_boards(
+async def test_search_library_hides_restricted_folders(
     db, org, admin_user, regular_user, mock_request
 ):
     db.add(_folder(40, "folder_secret_plans", org))
-    db.add(Board(
-        id=7, name="secret board", public=False, org_id=org.id, board_uuid="board_secret",
-        created_by=admin_user.id, creation_date=_now(), update_date=_now(),
-    ))
-    db.add(FolderContent(folder_id=None, resource_uuid="board_secret", org_id=org.id, position=0))
     await db.commit()
     await _restrict_to_group(db, org, "folder_secret_plans")
-    await _restrict_to_group(db, org, "board_secret")
 
     member = await search_library(mock_request, str(org.id), "secret", regular_user, db)
     admin = await search_library(mock_request, str(org.id), "secret", admin_user, db)
 
     assert member == {"folders": [], "items": []}
     assert [f["folder_uuid"] for f in admin["folders"]] == ["folder_secret_plans"]
-    assert [i["resource_uuid"] for i in admin["items"]] == ["board_secret"]
 
 
 @pytest.mark.asyncio

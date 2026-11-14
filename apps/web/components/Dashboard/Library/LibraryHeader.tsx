@@ -1,124 +1,95 @@
 'use client'
-import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import CreateFolderModal from '@components/Dashboard/Library/CreateFolderModal'
 import UploadMediaModal from '@components/Dashboard/Library/UploadMediaModal'
 import AddContentModal from '@components/Dashboard/Library/AddContentModal'
-import { FilterPill, PRIMARY_BTN, SECONDARY_BTN } from '@components/Dashboard/Library/LibraryToolbar'
-import FolderSortDropdown, { type FolderSortMode } from '@components/Dashboard/Library/FolderSortDropdown'
-import {
-  FolderSimple,
-  MagnifyingGlass,
-  X,
-  Plus,
-  UploadSimple,
-  FolderSimplePlus,
-} from '@phosphor-icons/react'
+import { Button, DashPageHeader } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { FolderSimplePlus, Plus, UploadSimple } from '@phosphor-icons/react'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 export type FilterKey = 'all' | 'folders' | 'courses' | 'media'
+
+export type LibraryDialog = 'folder' | 'upload' | 'content' | null
 
 type Props = {
   orgslug: string
   org_id: number
   /** Current folder uuid; undefined = library root. New content targets this. */
   folderUuid?: string
-  query: string
-  setQuery: (_v: string) => void
-  filter: FilterKey
-  setFilter: (_f: FilterKey) => void
-  sortMode: FolderSortMode
-  setSortMode: (_m: FolderSortMode) => void
+  breadcrumbs: { label: string; href: string; icon?: React.ReactNode }[]
+  title: React.ReactNode
+  subtitle?: React.ReactNode
+  /** Folder-level actions shown before the create buttons. */
+  extraActions?: React.ReactNode
   onChanged: () => void
+  /** Lets an empty state open the same dialogs. */
+  dialog: LibraryDialog
+  setDialog: (_d: LibraryDialog) => void
 }
 
 export default function LibraryHeader({
   orgslug,
   org_id,
   folderUuid,
-  query,
-  setQuery,
-  filter,
-  setFilter,
-  sortMode,
-  setSortMode,
+  breadcrumbs,
+  title,
+  subtitle,
+  extraActions,
   onChanged,
+  dialog,
+  setDialog,
 }: Props) {
   const { t } = useTranslation()
-  const [newFolderOpen, setNewFolderOpen] = React.useState(false)
-  const [uploadOpen, setUploadOpen] = React.useState(false)
-  const [addContentOpen, setAddContentOpen] = React.useState(false)
+  const close = (open: boolean) => !open && setDialog(null)
 
   return (
-    <div className="flex flex-col space-y-2 pt-6">
-      <Breadcrumbs items={[{ label: t('library.library'), href: '/dash/library', icon: <FolderSimple size={14} /> }]} />
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h1 className="pt-3 font-bold text-3xl sm:text-4xl">{t('library.library')}</h1>
-        <AuthenticatedClientElement checkMethod="roles" action="create" ressourceType={'folders' as any} orgId={org_id}>
-          <div className="flex items-center gap-2">
-            <Modal
-              isDialogOpen={addContentOpen}
-              onOpenChange={setAddContentOpen}
-              minHeight="no-min"
-              minWidth="lg"
-              dialogTitle={t('library.add_content')}
-              dialogContent={<AddContentModal folderUuid={folderUuid} orgslug={orgslug} closeModal={() => setAddContentOpen(false)} onChanged={onChanged} />}
-              dialogTrigger={<button className={SECONDARY_BTN} aria-label={t('library.add_content')}><Plus size={16} /><span className="hidden sm:inline">{t('library.add_content')}</span></button>}
-            />
-            <Modal
-              isDialogOpen={uploadOpen}
-              onOpenChange={setUploadOpen}
-              minHeight="no-min"
-              minWidth="lg"
-              dialogTitle={t('media.upload_media')}
-              dialogContent={<UploadMediaModal orgslug={orgslug} folderUuid={folderUuid} closeModal={() => setUploadOpen(false)} onChanged={onChanged} />}
-              dialogTrigger={<button className={SECONDARY_BTN} aria-label={t('media.upload_media')}><UploadSimple size={16} /><span className="hidden sm:inline">{t('media.upload_media')}</span></button>}
-            />
-            <Modal
-              isDialogOpen={newFolderOpen}
-              onOpenChange={setNewFolderOpen}
-              minHeight="no-min"
-              minWidth="md"
-              dialogTitle={t('library.create_folder')}
-              dialogContent={<CreateFolderModal orgslug={orgslug} parentFolderUuid={folderUuid} closeModal={() => setNewFolderOpen(false)} onChanged={onChanged} />}
-              dialogTrigger={<button className={PRIMARY_BTN}><FolderSimplePlus size={16} weight="bold" /><span>{t('library.new_folder')}</span></button>}
-            />
-          </div>
-        </AuthenticatedClientElement>
-      </div>
-
-      {/* Search + filters */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center pt-1">
-        <div className="relative flex-1 max-w-md">
-          <MagnifyingGlass size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('library.search')}
-            className="w-full ps-9 pe-8 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 placeholder:text-gray-400"
-          />
-          {query && (
-            <button onClick={() => setQuery('')} className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={t('library.clear_search')}>
-              <X size={14} />
-            </button>
-          )}
-        </div>
-        <div className="flex gap-1.5 flex-wrap">
-          <FilterPill label={t('library.filters.all')} active={filter === 'all'} activeClass="bg-neutral-700 text-white" onClick={() => setFilter('all')} />
-          <FilterPill label={t('library.folders')} active={filter === 'folders'} activeClass="bg-violet-600 text-white" onClick={() => setFilter('folders')} />
-          <FilterPill label={t('library.tabs.courses')} active={filter === 'courses'} activeClass="bg-blue-600 text-white" onClick={() => setFilter('courses')} />
-          <FilterPill label={t('media.media')} active={filter === 'media'} activeClass="bg-amber-500 text-white" onClick={() => setFilter('media')} />
-        </div>
-        <AuthenticatedClientElement checkMethod="roles" action="update" ressourceType={'folders' as any} orgId={org_id}>
-          <div className="sm:ms-auto">
-            <FolderSortDropdown value={sortMode} onChange={setSortMode} />
-          </div>
-        </AuthenticatedClientElement>
-      </div>
-    </div>
+    <>
+      <DashPageHeader
+        breadcrumbs={breadcrumbs}
+        title={title}
+        subtitle={subtitle}
+        actions={
+          <>
+            {extraActions}
+            <AuthenticatedClientElement checkMethod="roles" action="create" ressourceType={'folders' as any} orgId={org_id}>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button onClick={() => setDialog('content')} icon={<Plus size={14} />} aria-label={t('library.add_content')}>
+                  <span className="hidden sm:inline">{t('library.add_content')}</span>
+                </Button>
+                <Button onClick={() => setDialog('upload')} icon={<UploadSimple size={14} />} aria-label={t('media.upload_media')}>
+                  <span className="hidden sm:inline">{t('media.upload_media')}</span>
+                </Button>
+                <Button variant="primary" onClick={() => setDialog('folder')} icon={<FolderSimplePlus size={14} />}>
+                  {folderUuid ? t('library.dash.new_subfolder') : t('library.new_folder')}
+                </Button>
+              </div>
+            </AuthenticatedClientElement>
+          </>
+        }
+      />
+      <AddContentModal
+        open={dialog === 'content'}
+        onOpenChange={close}
+        folderUuid={folderUuid}
+        orgslug={orgslug}
+        onChanged={onChanged}
+      />
+      <UploadMediaModal
+        open={dialog === 'upload'}
+        onOpenChange={close}
+        folderUuid={folderUuid}
+        orgslug={orgslug}
+        onChanged={onChanged}
+      />
+      <CreateFolderModal
+        open={dialog === 'folder'}
+        onOpenChange={close}
+        parentFolderUuid={folderUuid}
+        orgslug={orgslug}
+        onChanged={onChanged}
+      />
+    </>
   )
 }
 
@@ -128,7 +99,6 @@ export default function LibraryHeader({
 export { sortLibrary } from '@lib/library/sort'
 
 // Shared client-side filtering used by both root and folder views.
-const _RESOURCE_TYPES = ['podcasts', 'communities', 'boards', 'playgrounds']
 export function filterLibrary(folders: any[], items: any[], query: string, filter: FilterKey) {
   const q = query.trim().toLowerCase()
   const showFolders = filter === 'all' || filter === 'folders'

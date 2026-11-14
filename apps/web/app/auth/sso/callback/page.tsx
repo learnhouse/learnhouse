@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { handleSSOCallback, SSOError, getErrorMessage, ssoContinueUrl } from '@services/auth/sso'
 import { useAuth } from '@components/Contexts/AuthContext'
-import { Shield, AlertTriangle, Loader2, Info, Copy, Check } from 'lucide-react'
+import { Check, Copy, Info, WarningCircle } from '@phosphor-icons/react'
+import { AuthNotice, AuthStatus, AuthStatusScreen, authButtonClass } from '@components/Auth/AuthUI'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 
@@ -167,22 +168,9 @@ export default function SSOCallbackPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="relative">
-              <Shield className="w-16 h-16 text-indigo-600" />
-              <Loader2 className="w-6 h-6 text-indigo-600 absolute -bottom-1 -end-1 animate-spin" />
-            </div>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">
-            {t('auth.sso_callback.authenticating')}
-          </h1>
-          <p className="text-gray-500">
-            {t('auth.sso_callback.please_wait')}
-          </p>
-        </div>
-      </div>
+      <AuthStatusScreen>
+        <AuthStatus loading title={t('auth.sso_callback.authenticating')} description={t('auth.sso_callback.please_wait')} />
+      </AuthStatusScreen>
     )
   }
 
@@ -196,59 +184,52 @@ export default function SSOCallbackPage() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-lg mx-auto p-6">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-red-100 rounded-full">
-              <AlertTriangle className="w-12 h-12 text-red-600" />
+      <AuthStatusScreen wide>
+        <AuthStatus
+          tone="danger"
+          icon={<WarningCircle size={22} weight="duotone" />}
+          title={t('auth.sso_callback.auth_failed')}
+          description={error?.message}
+        >
+          {(error?.errorCode && error.errorCode !== 'unknown_error') || error?.provider ? (
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+              {error?.errorCode && error.errorCode !== 'unknown_error' && (
+                <span className="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 font-mono text-rose-700 ring-1 ring-inset ring-rose-600/10" dir="ltr">
+                  {error.errorCode}
+                </span>
+              )}
+              {error?.provider && (
+                <span className="text-neutral-500">
+                  {t('auth.sso_callback.provider')}: {error.provider}
+                </span>
+              )}
             </div>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">
-            {t('auth.sso_callback.auth_failed')}
-          </h1>
+          ) : null}
 
-          {/* Main error message */}
-          <p className="text-gray-600 mb-4">{error?.message}</p>
-
-          {/* Error code badge */}
-          {error?.errorCode && error.errorCode !== 'unknown_error' && (
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm mb-4">
-              <span className="font-mono">{error.errorCode}</span>
-            </div>
-          )}
-
-          {/* Provider info */}
-          {error?.provider && (
-            <p className="text-sm text-gray-500 mb-4">
-              Provider: {error.provider}
-            </p>
-          )}
-
-          {/* Technical details expandable */}
           {error?.technicalDetails && (
-            <div className="mb-6">
+            <div className="text-start">
               <button
+                type="button"
                 onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
-                className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                aria-expanded={showTechnicalDetails}
+                className="mx-auto flex items-center gap-1.5 text-[13px] font-medium text-neutral-500 hover:text-neutral-900 transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20"
               >
-                <Info className="w-4 h-4" />
-                {showTechnicalDetails ? 'Hide' : 'Show'} technical details
+                <Info size={14} aria-hidden="true" />
+                {showTechnicalDetails ? t('auth.sso_callback.hide_details') : t('auth.sso_callback.show_details')}
               </button>
 
               {showTechnicalDetails && (
-                <div className="mt-2 p-3 bg-gray-100 rounded-md text-start relative">
+                <div className="relative mt-2 rounded-xl bg-neutral-50 p-3 pe-10 ring-1 ring-inset ring-neutral-900/[0.06]">
                   <button
+                    type="button"
                     onClick={copyToClipboard}
-                    className="absolute top-2 end-2 p-1 text-gray-400 hover:text-gray-600"
-                    title={t('auth.sso_callback.copy_details')}
+                    className="absolute top-2 end-2 rounded-md p-1 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100"
+                    title={copied ? t('auth.sso_callback.copied') : t('auth.sso_callback.copy_details')}
+                    aria-label={copied ? t('auth.sso_callback.copied') : t('auth.sso_callback.copy_details')}
                   >
-                    {copied ? (
-                      <Check className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
+                    {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
                   </button>
-                  <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap overflow-x-auto">
+                  <pre className="whitespace-pre-wrap break-all font-mono text-xs text-neutral-700" dir="ltr">
                     {error.technicalDetails}
                   </pre>
                 </div>
@@ -256,80 +237,53 @@ export default function SSOCallbackPage() {
             </div>
           )}
 
-          {/* Helpful tips based on error code */}
           {error?.errorCode === 'access_denied' && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
-              <p className="text-sm text-amber-800">
-                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.access_denied')}
-              </p>
-            </div>
+            <AuthNotice tone="warning" className="text-start">
+              <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.access_denied')}
+            </AuthNotice>
           )}
 
           {error?.errorCode === 'invalid_state' && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
-              <p className="text-sm text-amber-800">
-                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.invalid_state')}
-              </p>
-            </div>
+            <AuthNotice tone="warning" className="text-start">
+              <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.invalid_state')}
+            </AuthNotice>
           )}
 
           {error?.errorCode === 'domain_not_allowed' && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
-              <p className="text-sm text-amber-800">
-                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.domain_not_allowed')}
-              </p>
-            </div>
+            <AuthNotice tone="warning" className="text-start">
+              <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.domain_not_allowed')}
+            </AuthNotice>
           )}
 
           {(error?.errorCode === 'auto_provision_disabled' || error?.errorCode === 'user_not_found') && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
-              <p className="text-sm text-amber-800">
-                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.auto_provision_disabled')}
-              </p>
-            </div>
+            <AuthNotice tone="warning" className="text-start">
+              <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.auto_provision_disabled')}
+            </AuthNotice>
           )}
 
           {error?.errorCode === 'sso_misconfigured' && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
-              <p className="text-sm text-amber-800">
-                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.sso_misconfigured')}
-              </p>
-            </div>
+            <AuthNotice tone="warning" className="text-start">
+              <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.sso_misconfigured')}
+            </AuthNotice>
           )}
 
-          <div className="space-y-3">
-            <Link
-              href="/login"
-              className="block w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-            >
+          <div className="mt-2 flex flex-col gap-2.5">
+            <Link href="/login" className={authButtonClass('primary')}>
               {t('auth.sso_callback.try_again')}
             </Link>
-            <Link
-              href="/"
-              className="block w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-            >
+            <Link href="/" className={authButtonClass('secondary')}>
               {t('auth.sso_callback.go_home')}
             </Link>
           </div>
-        </div>
-      </div>
+        </AuthStatus>
+      </AuthStatusScreen>
     )
   }
 
   // Success state - redirecting
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <Shield className="w-16 h-16 text-green-600" />
-        </div>
-        <h1 className="text-xl font-semibold text-gray-800 mb-2">
-          {t('auth.sso_callback.success')}
-        </h1>
-        <p className="text-gray-500">
-          {t('auth.sso_callback.redirecting')}
-        </p>
-      </div>
-    </div>
+    <AuthStatusScreen>
+      <AuthStatus tone="success" loading title={t('auth.sso_callback.success')} description={t('auth.sso_callback.redirecting')} />
+    </AuthStatusScreen>
   )
 }

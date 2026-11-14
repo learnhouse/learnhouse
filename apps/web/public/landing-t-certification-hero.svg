@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label="Digital certificate with verification">
+<rect width="640" height="420" fill="#ffffff"/>
+<rect x="16" y="16" width="608" height="388" fill="none" stroke="#e5e1d8" stroke-width="2"/>
+<rect x="28" y="28" width="584" height="364" fill="none" stroke="#b8913a" stroke-width="1"/>
+<text x="320" y="92" text-anchor="middle" font-family="Georgia, serif" font-size="14" letter-spacing="5" fill="#56607a">THIS CERTIFIES THAT</text>
+<text x="320" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="38" fill="#111a2c">Jordan A. Ellis</text>
+<text x="320" y="190" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#56607a">has met the requirements of the</text>
+<text x="320" y="222" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#142850">Professional Certification</text>
+<circle cx="520" cy="310" r="48" fill="#142850"/><circle cx="520" cy="310" r="40" fill="none" stroke="#d9b86c" stroke-dasharray="2 4"/>
+<path d="M520 284l8 16 18 3-13 12 3 18-16-9-16 9 3-18-13-12 18-3z" fill="#d9b86c"/>
+<rect x="80" y="310" width="150" height="1.5" fill="#111a2c" opacity=".5"/><text x="80" y="334" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#56607a">Registrar</text>
+<rect x="80" y="352" width="210" height="24" rx="4" fill="#f5f3ee"/><text x="90" y="368" font-family="monospace" font-size="11" fill="#142850">ID 4827-PRO-2026 · verified ✓</text>
+</svg>

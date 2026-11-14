@@ -1,472 +1,285 @@
 'use client'
+import React from 'react'
+import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { DotsThree, Eye, Globe, Lock, PencilSimple, Plus, Shield, ShieldCheck, Trash, UserGear } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import AddRole from '@components/Objects/Modals/Dash/OrgRoles/AddRole'
 import EditRole from '@components/Objects/Modals/Dash/OrgRoles/EditRole'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import RolePermissionsMatrix from '@components/Objects/Modals/Dash/OrgRoles/RolePermissionsMatrix'
+import {
+    TOTAL_PERMISSIONS,
+    countEnabled,
+    countFlags,
+    isSystemRole,
+    normalizeRights,
+} from '@components/Objects/Modals/Dash/OrgRoles/roleRights'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import {
+    Button,
+    Chip,
+    ConfirmDialog,
+    EmptyState,
+    SectionCard,
+    SegmentedControl,
+} from '@components/Dashboard/Shared/DashKit/DashKit'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@components/ui/dropdown-menu'
 import { getAPIUrl } from '@services/config/config'
 import { deleteRole } from '@services/roles/roles'
 import { apiFetch } from '@services/utils/ts/requests'
 import { PlanLevel } from '@services/plans/plans'
-import { Pencil, Shield, X, Globe, Lock, Eye, Check, XCircle } from 'lucide-react'
-import React from 'react'
-import toast from 'react-hot-toast'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { useTranslation } from 'react-i18next'
 import { usePlan } from '@components/Hooks/usePlan'
+
+type RoleFilter = 'all' | 'custom' | 'system'
+const ITEM = 'flex items-center gap-2 cursor-pointer'
+
+function RoleRowSkeleton() {
+    return (
+        <div className="flex items-center gap-3 px-5 py-4 animate-pulse">
+            <div className="w-9 h-9 rounded-xl bg-neutral-100" />
+            <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-40 rounded bg-neutral-100" />
+                <div className="h-3 w-64 max-w-full rounded bg-neutral-100" />
+            </div>
+            <div className="hidden sm:block h-6 w-24 rounded-full bg-neutral-100" />
+        </div>
+    )
+}
 
 function OrgRoles() {
     const { t } = useTranslation()
     const org = useOrg() as any
     const session = useLHSession() as any
-    const access_token = session?.data?.tokens?.access_token;
+    const access_token = session?.data?.tokens?.access_token
     const queryClient = useQueryClient()
     const currentPlan = usePlan()
     const rf = org?.config?.config?.resolved_features
     const canCreateRoles = rf?.roles?.enabled === true
-    const [createRoleModal, setCreateRoleModal] = React.useState(false)
-    const [editRoleModal, setEditRoleModal] = React.useState(false)
-    const [viewRightsModal, setViewRightsModal] = React.useState(false)
-    const [selectedRole, setSelectedRole] = React.useState(null) as any
 
-    const { data: roles, isLoading: isRolesLoading } = useQuery({
-        queryKey: queryKeys.org.roles(org?.id),
+    const [filter, setFilter] = React.useState<RoleFilter>('all')
+    const [createOpen, setCreateOpen] = React.useState(false)
+    const [editing, setEditing] = React.useState<any>(null)
+    const [viewing, setViewing] = React.useState<any>(null)
+    const [deleting, setDeleting] = React.useState<any>(null)
+
+    const rolesKey = queryKeys.org.roles(org?.id)
+    const { data, isLoading } = useQuery({
+        queryKey: rolesKey,
         queryFn: () => apiFetch(`${getAPIUrl()}roles/org/${org.id}`, access_token),
         enabled: !!org?.id && !!access_token,
         staleTime: 60_000,
     })
+    const roles: any[] = React.useMemo(() => (Array.isArray(data) ? data : []), [data])
 
-    const deleteRoleUI = async (role_id: any) => {
-        const toastId = toast.loading(t('dashboard.users.roles.toasts.deleting'));
-        const res = await deleteRole(role_id, org.id, access_token)
+    const counts = React.useMemo(() => {
+        const system = roles.filter(isSystemRole).length
+        return { all: roles.length, system, custom: roles.length - system }
+    }, [roles])
+
+    const visible = roles.filter((role) => {
+        if (filter === 'system') return isSystemRole(role)
+        if (filter === 'custom') return !isSystemRole(role)
+        return true
+    })
+
+    // Optimistic: the row goes away at once and comes back if the API refuses.
+    const removeRole = async (role: any) => {
+        const previous = queryClient.getQueryData(rolesKey)
+        queryClient.setQueryData(rolesKey, (old: any) => (Array.isArray(old) ? old.filter((r: any) => r.id !== role.id) : old))
+        const res = await deleteRole(role.id, org.id, access_token)
         if (res.status === 200) {
-            queryClient.invalidateQueries({ queryKey: queryKeys.org.roles(org.id) })
-            toast.success(t('dashboard.users.roles.toasts.delete_success'), {id:toastId})
-        }
-        else {
-            toast.error(t('dashboard.users.roles.toasts.delete_error'), {id:toastId})
+            toast.success(t('dashboard.users.roles.toasts.delete_success'))
+            queryClient.invalidateQueries({ queryKey: rolesKey })
+        } else {
+            queryClient.setQueryData(rolesKey, previous)
+            toast.error(t('dashboard.users.roles.toasts.delete_error'))
         }
     }
 
-    const handleEditRoleModal = (role: any) => {
-        setSelectedRole(role)
-        setEditRoleModal(!editRoleModal)
-    }
-
-    const handleViewRightsModal = (role: any) => {
-        setSelectedRole(role)
-        setViewRightsModal(!viewRightsModal)
-    }
-
-    const formatActionName = (action: string) => {
-        return action
-            .replace('action_', '')
-            .split('_')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ')
-    }
-
-    const formatResourceName = (resource: string) => {
-        const resourceNames: { [key: string]: string } = {
-            courses: t('dashboard.users.roles.rights.resources.courses'),
-            users: t('dashboard.users.roles.rights.resources.users'),
-            usergroups: t('dashboard.users.roles.rights.resources.usergroups'),
-            folders: t('dashboard.users.roles.rights.resources.folders'),
-            media: t('dashboard.users.roles.rights.resources.media'),
-            organizations: t('dashboard.users.roles.rights.resources.organizations'),
-            coursechapters: t('dashboard.users.roles.rights.resources.coursechapters'),
-            activities: t('dashboard.users.roles.rights.resources.activities'),
-            roles: t('dashboard.users.roles.rights.resources.roles'),
-            dashboard: t('dashboard.users.roles.rights.resources.dashboard'),
-        }
-        return resourceNames[resource] || resource.charAt(0).toUpperCase() + resource.slice(1)
-    }
-
-    const RightsDetailView = ({ rights }: { rights: any }) => {
-        if (!rights || Object.keys(rights).length === 0) {
-            return (
-                <div className="text-center py-8 text-gray-500">
-                    {t('dashboard.users.roles.no_permissions')}
-                </div>
-            )
-        }
-
-        return (
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                {Object.entries(rights).map(([resource, actions]: [string, any]) => (
-                    <div key={resource} className="border border-gray-200 rounded-lg overflow-hidden">
-                        <div className="bg-gray-50 px-4 py-2 font-medium text-gray-700 border-b border-gray-200">
-                            {formatResourceName(resource)}
-                        </div>
-                        <div className="p-3">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {Object.entries(actions).map(([action, enabled]: [string, any]) => (
-                                    <div
-                                        key={action}
-                                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm ${
-                                            enabled
-                                                ? 'bg-green-50 text-green-700'
-                                                : 'bg-gray-50 text-gray-400'
-                                        }`}
-                                    >
-                                        {enabled ? (
-                                            <Check className="w-4 h-4 text-green-600" />
-                                        ) : (
-                                            <XCircle className="w-4 h-4 text-gray-300" />
-                                        )}
-                                        <span>{formatActionName(action)}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )
-    }
-
-    const getRightsSummary = (rights: any) => {
-        if (!rights) return t('dashboard.users.roles.no_permissions')
-
-        const totalPermissions = Object.keys(rights).reduce((acc, key) => {
-            if (typeof rights[key] === 'object') {
-                return acc + Object.keys(rights[key]).filter(k => rights[key][k] === true).length
-            }
-            return acc
-        }, 0)
-
-        return t('dashboard.users.roles.permissions_count', { count: totalPermissions })
-    }
-
-    // Check if a role is system-wide (TYPE_GLOBAL or role_uuid starts with role_global_)
-    const isSystemRole = (role: any) => {
-        // Check for role_type field first
-        if (role.role_type === 'TYPE_GLOBAL') {
-            return true
-        }
-
-        // Check for role_uuid starting with role_global_
-        if (role.role_uuid && role.role_uuid.startsWith('role_global_')) {
-            return true
-        }
-
-        // Check for common system role IDs (1-4 are typically system roles)
-        if (role.id && [1, 2, 3, 4].includes(role.id)) {
-            return true
-        }
-
-        // Check if the role name indicates it's a system role
-        if (role.name && ['Admin', 'Maintainer', 'Instructor', 'User'].includes(role.name)) {
-            return true
-        }
-
-        return false
-    }
+    const newRoleButton = canCreateRoles ? (
+        <Button variant="primary" icon={<Plus size={14} weight="bold" />} onClick={() => setCreateOpen(true)}>
+            {t('dashboard.users.roles.actions.create')}
+        </Button>
+    ) : (
+        <span className="inline-flex items-center gap-2">
+            <Button variant="secondary" icon={<Lock size={14} />} disabled>
+                {t('dashboard.users.roles.actions.create')}
+            </Button>
+            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.roles?.required_plan || 'pro') as PlanLevel} />
+        </span>
+    )
 
     return (
         <FeatureGate feature="roles">
-            <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
-                {/* Header */}
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
-                    <div className="flex-1 min-w-0">
-                        <h1 className="font-bold text-xl text-gray-800">{t('dashboard.users.roles.title')}</h1>
-                        <p className="text-sm text-gray-500 mt-0.5">{t('dashboard.users.roles.subtitle')}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {canCreateRoles ? (
-                            <Modal
-                                isDialogOpen={createRoleModal}
-                                onOpenChange={() => setCreateRoleModal(!createRoleModal)}
-                                minHeight="no-min"
-                                minWidth='xl'
-                                customWidth="max-w-7xl"
-                                dialogContent={<AddRole setCreateRoleModal={setCreateRoleModal} />}
-                                dialogTitle={t('dashboard.users.roles.modals.create.title')}
-                                dialogDescription={t('dashboard.users.roles.modals.create.description')}
-                                dialogTrigger={
-                                    <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-                                        <Shield className="w-4 h-4" />
-                                        <span>{t('dashboard.users.roles.actions.create')}</span>
-                                    </button>
+            <div className="flex flex-col gap-5">
+                <SectionCard
+                    icon={<UserGear size={18} />}
+                    title={t('dashboard.users.roles.title')}
+                    description={t('dashboard.users.dash.roles.description')}
+                    actions={newRoleButton}
+                    bodyClassName="pt-4"
+                >
+                    {roles.length > 0 && (
+                        <div className="px-5 pb-3 overflow-x-auto scrollbar-hide">
+                            <SegmentedControl<RoleFilter>
+                                value={filter}
+                                onChange={setFilter}
+                                ariaLabel={t('dashboard.users.dash.roles.filter_label')}
+                                options={[
+                                    { key: 'all', label: t('dashboard.users.dash.roles.filters.all'), count: counts.all },
+                                    { key: 'custom', label: t('dashboard.users.dash.roles.filters.custom'), count: counts.custom },
+                                    { key: 'system', label: t('dashboard.users.dash.roles.filters.system'), count: counts.system },
+                                ]}
+                            />
+                        </div>
+                    )}
+
+                    <div className="border-t border-neutral-100 divide-y divide-neutral-100">
+                        {isLoading ? (
+                            [0, 1, 2, 3].map((i) => <RoleRowSkeleton key={i} />)
+                        ) : visible.length === 0 ? (
+                            <EmptyState
+                                icon={<Shield size={22} />}
+                                title={
+                                    filter === 'custom'
+                                        ? t('dashboard.users.dash.roles.empty_custom_title')
+                                        : t('dashboard.users.dash.roles.empty_title')
                                 }
+                                description={t('dashboard.users.dash.roles.empty_description')}
+                                action={canCreateRoles ? <div className="mt-1">{newRoleButton}</div> : undefined}
                             />
                         ) : (
-                            <div className="flex items-center gap-2">
-                                <button disabled className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed">
-                                    <Lock className="w-4 h-4" />
-                                    <span>{t('dashboard.users.roles.actions.create')}</span>
-                                </button>
-                                <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.roles?.required_plan || 'pro') as PlanLevel} />
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Mobile view - Cards */}
-                <div className="block sm:hidden space-y-3">
-                    {isRolesLoading ? (
-                        <div className="animate-pulse space-y-3">
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="h-4 bg-gray-100 rounded w-28" />
-                                        <div className="h-5 bg-gray-100 rounded w-20" />
-                                    </div>
-                                    <div className="h-4 bg-gray-100 rounded w-full" />
-                                    <div className="flex gap-2">
-                                        <div className="h-8 bg-gray-100 rounded flex-1" />
-                                        <div className="h-8 bg-gray-100 rounded flex-1" />
-                                        <div className="h-8 bg-gray-100 rounded flex-1" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : null}
-                    {roles?.map((role: any) => {
-                        const isSystem = isSystemRole(role)
-                        return (
-                            <div key={role.id} className="bg-gray-50 rounded-lg p-4 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <Shield className="w-4 h-4 text-gray-400" />
-                                        <span className="font-medium text-sm">{role.name}</span>
-                                        {isSystem && (
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                <Globe className="w-3 h-3 me-1" />
-                                                {t('dashboard.users.roles.system_wide')}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {getRightsSummary(role.rights)}
-                                    </span>
-                                </div>
-                                <p className="text-gray-600 text-sm">{role.description || t('dashboard.users.roles.no_description')}</p>
-                                <div className="flex space-x-2">
-                                    <Modal
-                                        isDialogOpen={
-                                            viewRightsModal &&
-                                            selectedRole?.id === role.id
-                                        }
-                                        onOpenChange={() =>
-                                            handleViewRightsModal(role)
-                                        }
-                                        minHeight="md"
-                                        minWidth='lg'
-                                        dialogContent={
-                                            <RightsDetailView rights={role.rights} />
-                                        }
-                                        dialogTitle={t('dashboard.users.roles.modals.view_rights.title', { roleName: role.name })}
-                                        dialogDescription={t('dashboard.users.roles.modals.view_rights.description')}
-                                        dialogTrigger={
-                                            <button className="flex-1 flex justify-center items-center gap-1.5 h-8 px-3 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-md text-xs font-semibold transition-all">
-                                                <Eye className="w-4 h-4" />
-                                                <span>{t('dashboard.users.roles.actions.view_rights')}</span>
-                                            </button>
-                                        }
-                                    />
-                                    {!isSystem ? (
-                                        <>
-                                            <Modal
-                                                isDialogOpen={
-                                                    editRoleModal &&
-                                                    selectedRole?.id === role.id
-                                                }
-                                                onOpenChange={() =>
-                                                    handleEditRoleModal(role)
-                                                }
-                                                minHeight="lg"
-                                                minWidth='xl'
-                                                customWidth="max-w-7xl"
-                                                dialogContent={
-                                                    <EditRole
-                                                        role={role}
-                                                        setEditRoleModal={setEditRoleModal}
-                                                    />
-                                                }
-                                                dialogTitle={t('dashboard.users.roles.modals.edit.title')}
-                                                dialogDescription={t('dashboard.users.roles.modals.edit.description')}
-                                                dialogTrigger={
-                                                    <button className="flex-1 flex justify-center items-center gap-1.5 h-8 px-3 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-md text-xs font-semibold transition-all">
-                                                        <Pencil className="w-4 h-4" />
-                                                        <span>{t('dashboard.users.roles.actions.edit')}</span>
-                                                    </button>
-                                                }
-                                            />
-                                            <ConfirmationModal
-                                                confirmationButtonText={t('dashboard.users.roles.modals.delete.button')}
-                                                confirmationMessage={t('dashboard.users.roles.modals.delete.message')}
-                                                dialogTitle={t('dashboard.users.roles.modals.delete.title')}
-                                                dialogTrigger={
-                                                    <button className="flex-1 flex justify-center items-center gap-1.5 h-8 px-3 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-md text-xs font-semibold transition-all">
-                                                        <X className="w-4 h-4" />
-                                                        <span>{t('dashboard.users.roles.actions.delete')}</span>
-                                                    </button>
-                                                }
-                                                functionToExecute={() => {
-                                                    deleteRoleUI(role.id)
-                                                }}
-                                                status="warning"
-                                            />
-                                        </>
-                                    ) : null}
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
-
-                {/* Desktop view - Table */}
-                <div className="hidden sm:block overflow-x-auto">
-                    {isRolesLoading ? (
-                        <div className="animate-pulse space-y-2">
-                            <div className="h-9 bg-gray-100 rounded w-full" />
-                            {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="flex gap-4 px-4 py-3 border-b border-gray-100">
-                                    <div className="h-4 bg-gray-100 rounded w-32" />
-                                    <div className="h-4 bg-gray-100 rounded w-48" />
-                                    <div className="h-5 bg-gray-100 rounded w-24" />
-                                    <div className="flex gap-2">
-                                        <div className="h-7 bg-gray-100 rounded w-20" />
-                                        <div className="h-7 bg-gray-100 rounded w-14" />
-                                        <div className="h-7 bg-gray-100 rounded w-14" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                    <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
-                        <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
-                            <tr className="font-bolder text-sm">
-                                <th className="py-3 px-4">{t('dashboard.users.roles.table.role_name')}</th>
-                                <th className="py-3 px-4">{t('dashboard.users.roles.table.description')}</th>
-                                <th className="py-3 px-4">{t('dashboard.users.roles.table.permissions')}</th>
-                                <th className="py-3 px-4">{t('dashboard.users.roles.table.actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {roles?.map((role: any) => {
-                                const isSystem = isSystemRole(role)
+                            visible.map((role) => {
+                                const system = isSystemRole(role)
+                                const enabled = countEnabled(role.rights)
+                                const open = () => (system ? setViewing(role) : setEditing(role))
                                 return (
-                                    <tr key={role.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <Shield className="w-4 h-4 text-gray-400" />
-                                                <span className="font-semibold text-gray-800 text-sm">{role.name}</span>
-                                                {isSystem && (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                                                        <Globe className="w-3 h-3" />
+                                    <div key={role.id} className="group flex items-center gap-3 px-5 py-3.5 hover:bg-neutral-50/70 transition-colors">
+                                        <div
+                                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                                                system ? 'bg-violet-50 text-violet-600' : 'bg-neutral-100 text-neutral-600'
+                                            }`}
+                                        >
+                                            {system ? <ShieldCheck size={17} /> : <Shield size={17} />}
+                                        </div>
+                                        <button type="button" onClick={open} className="min-w-0 flex-1 text-start">
+                                            <span className="flex items-center gap-2 min-w-0">
+                                                <span className="text-sm font-semibold text-neutral-900 truncate group-hover:underline underline-offset-2" dir="auto">
+                                                    {role.name}
+                                                </span>
+                                                {system ? (
+                                                    <Chip tone="violet" icon={<Globe size={11} />}>
                                                         {t('dashboard.users.roles.system_wide')}
-                                                    </span>
+                                                    </Chip>
+                                                ) : (
+                                                    <Chip tone="neutral">{t('dashboard.users.dash.roles.custom')}</Chip>
                                                 )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">{role.description || t('dashboard.users.roles.no_description')}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                                                {getRightsSummary(role.rights)}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-end">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Modal
-                                                    isDialogOpen={viewRightsModal && selectedRole?.id === role.id}
-                                                    onOpenChange={() => handleViewRightsModal(role)}
-                                                    minHeight="md"
-                                                    minWidth='lg'
-                                                    dialogContent={<RightsDetailView rights={role.rights} />}
-                                                    dialogTitle={t('dashboard.users.roles.modals.view_rights.title', { roleName: role.name })}
-                                                    dialogDescription={t('dashboard.users.roles.modals.view_rights.description')}
-                                                    dialogTrigger={
-                                                        <button className="flex items-center gap-1.5 h-8 px-3 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-md text-xs font-semibold transition-all">
-                                                            <Eye className="w-3.5 h-3.5" />
-                                                            <span>{t('dashboard.users.roles.actions.view_rights')}</span>
-                                                        </button>
-                                                    }
+                                            <span className="block text-xs text-neutral-500 truncate mt-0.5" dir="auto">
+                                                {role.description || t('dashboard.users.roles.no_description')}
+                                            </span>
+                                        </button>
+                                        <div className="hidden sm:flex flex-col items-end gap-1 w-36 shrink-0">
+                                            <span className="text-xs font-medium text-neutral-600 tabular-nums">
+                                                {t('dashboard.users.roles.permissions_count', { count: enabled })}
+                                            </span>
+                                            <span className="h-1.5 w-full rounded-full bg-neutral-100 overflow-hidden">
+                                                <span
+                                                    className="block h-full rounded-full bg-neutral-800"
+                                                    style={{ width: `${Math.min(100, Math.round((enabled / Math.max(1, countFlags(role.rights) || TOTAL_PERMISSIONS)) * 100))}%` }}
                                                 />
-                                                {!isSystem && (
+                                            </span>
+                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button
+                                                    type="button"
+                                                    aria-label={t('dashboard.users.roles.table.actions')}
+                                                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 data-[state=open]:bg-neutral-100 transition-colors shrink-0"
+                                                >
+                                                    <DotsThree size={18} weight="bold" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5">
+                                                <DropdownMenuItem onSelect={() => setViewing(role)} className={ITEM}>
+                                                    <Eye size={15} /> {t('dashboard.users.roles.actions.view_rights')}
+                                                </DropdownMenuItem>
+                                                {!system && (
                                                     <>
-                                                        <Modal
-                                                            isDialogOpen={editRoleModal && selectedRole?.id === role.id}
-                                                            onOpenChange={() => handleEditRoleModal(role)}
-                                                            minHeight="lg"
-                                                            minWidth='xl'
-                                                            customWidth="max-w-7xl"
-                                                            dialogContent={<EditRole role={role} setEditRoleModal={setEditRoleModal} />}
-                                                            dialogTitle={t('dashboard.users.roles.modals.edit.title')}
-                                                            dialogDescription={t('dashboard.users.roles.modals.edit.description')}
-                                                            dialogTrigger={
-                                                                <button className="flex items-center gap-1.5 h-8 px-3 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-md text-xs font-semibold transition-all">
-                                                                    <Pencil className="w-3.5 h-3.5" />
-                                                                    <span>{t('dashboard.users.roles.actions.edit')}</span>
-                                                                </button>
-                                                            }
-                                                        />
-                                                        <ConfirmationModal
-                                                            confirmationButtonText={t('dashboard.users.roles.modals.delete.button')}
-                                                            confirmationMessage={t('dashboard.users.roles.modals.delete.message')}
-                                                            dialogTitle={t('dashboard.users.roles.modals.delete.title')}
-                                                            dialogTrigger={
-                                                                <button className="flex items-center gap-1.5 h-8 px-3 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-md text-xs font-semibold transition-all">
-                                                                    <X className="w-3.5 h-3.5" />
-                                                                    <span>{t('dashboard.users.roles.actions.delete')}</span>
-                                                                </button>
-                                                            }
-                                                            functionToExecute={() => deleteRoleUI(role.id)}
-                                                            status="warning"
-                                                        />
+                                                        <DropdownMenuItem onSelect={() => setEditing(role)} className={ITEM}>
+                                                            <PencilSimple size={15} /> {t('dashboard.users.roles.actions.edit')}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem
+                                                            onSelect={() => setDeleting(role)}
+                                                            className={`${ITEM} text-rose-600 focus:text-rose-700 focus:bg-rose-50`}
+                                                        >
+                                                            <Trash size={15} /> {t('dashboard.users.roles.actions.delete')}
+                                                        </DropdownMenuItem>
                                                     </>
                                                 )}
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 )
-                            })}
-                        </tbody>
-                    </table>
-                    )}
-                </div>
-
-                <div className='flex justify-end mt-3 me-2'>
-                    {canCreateRoles ? (
-                        <Modal
-                            isDialogOpen={createRoleModal}
-                            onOpenChange={() => setCreateRoleModal(!createRoleModal)}
-                            minHeight="no-min"
-                            minWidth='xl'
-                            customWidth="max-w-7xl"
-                            dialogContent={
-                                <AddRole
-                                    setCreateRoleModal={setCreateRoleModal}
-                                />
-                            }
-                            dialogTitle={t('dashboard.users.roles.modals.create.title')}
-                            dialogDescription={t('dashboard.users.roles.modals.create.description')}
-                            dialogTrigger={
-                                <button className="flex space-x-2 hover:cursor-pointer p-2 sm:p-1 sm:px-3 bg-black rounded-md font-bold items-center text-sm text-white w-full sm:w-auto justify-center hover:bg-gray-800 transition-colors shadow-sm">
-                                    <Shield className="w-4 h-4" />
-                                    <span>{t('dashboard.users.roles.actions.create')}</span>
-                                </button>
-                            }
-                        />
-                    ) : (
-                        <div className="flex items-center space-x-2">
-                            <button
-                                disabled
-                                className="flex space-x-2 p-2 sm:p-1 sm:px-3 bg-gray-300 rounded-md font-bold items-center text-sm text-gray-500 w-full sm:w-auto justify-center cursor-not-allowed"
-                            >
-                                <Lock className="w-4 h-4" />
-                                <span>{t('dashboard.users.roles.actions.create')}</span>
-                            </button>
-                            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.roles?.required_plan || 'pro') as PlanLevel} />
-                        </div>
-                    )}
-                </div>
+                            })
+                        )}
+                    </div>
+                </SectionCard>
             </div>
+
+            {canCreateRoles && <AddRole open={createOpen} onOpenChange={setCreateOpen} />}
+            <EditRole role={editing} open={!!editing} onOpenChange={(o) => !o && setEditing(null)} />
+
+            <Modal
+                isDialogOpen={!!viewing}
+                onOpenChange={(o) => !o && setViewing(null)}
+                size="lg"
+                icon={<Eye size={16} />}
+                dialogTitle={viewing ? t('dashboard.users.roles.modals.view_rights.title', { roleName: viewing.name }) : ''}
+                dialogDescription={t('dashboard.users.roles.modals.view_rights.description')}
+                footer={
+                    <>
+                        {viewing && !isSystemRole(viewing) && (
+                            <Button
+                                variant="secondary"
+                                icon={<PencilSimple size={14} />}
+                                onClick={() => {
+                                    const role = viewing
+                                    setViewing(null)
+                                    setEditing(role)
+                                }}
+                            >
+                                {t('dashboard.users.roles.actions.edit')}
+                            </Button>
+                        )}
+                        <Button variant="primary" onClick={() => setViewing(null)}>
+                            {t('common.close')}
+                        </Button>
+                    </>
+                }
+                dialogContent={viewing ? <RolePermissionsMatrix rights={normalizeRights(viewing.rights)} /> : null}
+            />
+
+            <ConfirmDialog
+                open={!!deleting}
+                onOpenChange={(o) => !o && setDeleting(null)}
+                title={t('dashboard.users.roles.modals.delete.title')}
+                message={t('dashboard.users.roles.modals.delete.message')}
+                confirmLabel={t('dashboard.users.roles.modals.delete.button')}
+                onConfirm={() => deleting && removeRole(deleting)}
+            />
         </FeatureGate>
     )
 }

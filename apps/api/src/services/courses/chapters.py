@@ -4,6 +4,7 @@ from uuid import uuid4
 from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.ee_hooks import audit_event
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
 from src.security.auth import resolve_acting_user_id
 from src.db.courses.course_chapters import CourseChapter
@@ -97,6 +98,11 @@ async def create_chapter(
     db_session.add(course_chapter)
     await db_session.commit()
     index_course(course.id)
+    audit_event(
+        request, action="chapter.created", org_id=chapter.org_id, actor=current_user,
+        target_type="chapter", target_id=chapter.chapter_uuid, target_name=chapter.name,
+        details={"course_uuid": course.course_uuid, "course_name": course.name},
+    )
 
     return chapter_read
 
@@ -184,17 +190,32 @@ async def update_chapter(
 
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
+    chapter_fields = [k for k, v in vars(chapter_object).items() if v is not None and k not in ("org_id", "course_id")]
+    chapter_before = {k: getattr(chapter, k, None) for k in chapter_fields}
     # Update only the fields that were passed in
     for var, value in vars(chapter_object).items():
-        if var in ("org_id", "course_id"):
+        if var in ("org_id", "course_id", "extra_metadata"):
             continue
         if value is not None:
             setattr(chapter, var, value)
+
+    # extra_metadata is merged key by key so a client that sets one key (say
+    # the chapter emoji) keeps the others. A key sent as null is removed.
+    if chapter_object.extra_metadata is not None:
+        merged = {**(chapter.extra_metadata or {}), **chapter_object.extra_metadata}
+        # A new dict, so SQLAlchemy sees the JSONB column change.
+        chapter.extra_metadata = {k: v for k, v in merged.items() if v is not None} or None
 
     chapter.update_date = str(datetime.now())
 
     await db_session.commit()
     await db_session.refresh(chapter)
+    audit_event(
+        request, action="chapter.updated", org_id=chapter.org_id, actor=current_user,
+        target_type="chapter", target_id=chapter.chapter_uuid, target_name=chapter.name,
+        before=chapter_before, after={k: getattr(chapter, k, None) for k in chapter_fields},
+        details={"course_uuid": course.course_uuid, "course_name": course.name},
+    )
     # Activities carry their chapter's name, so a rename re-indexes them too.
     await enqueue_course(chapter.course_id, db_session)
 
@@ -267,8 +288,14 @@ async def delete_chapter(
         await db_session.delete(chapter_activity)
 
     # Delete the chapter
+    deleted_chapter = (chapter.org_id, chapter.chapter_uuid, chapter.name)
     await db_session.delete(chapter)
     await db_session.commit()
+    audit_event(
+        request, action="chapter.deleted", org_id=deleted_chapter[0], actor=current_user,
+        target_type="chapter", target_id=deleted_chapter[1], target_name=deleted_chapter[2],
+        details={"course_uuid": course.course_uuid, "course_name": course.name},
+    )
     await enqueue_course(course.id, db_session)
     notify_ee_course_content_changed(course.id)
 
@@ -550,8 +577,10 @@ async def _render_dynamic_chapter_content(
     request: Request | None,
 ) -> None:
     """The full tree carries activity content, so conditional blocks resolve
-    here too (see dynamic_content). One context serves the whole course."""
+    here too (see dynamic_content), and editor comment marks are dropped. One
+    context serves the whole course."""
     from src.services.courses.activities.access import can_edit_course
+    from src.services.courses.activities.comment_marks import has_comment_marks
     from src.services.courses.activities.dynamic_content import has_dynamic_content
     from src.services.courses.activities.dynamic_context import (
         build_render_context,
@@ -562,7 +591,8 @@ async def _render_dynamic_chapter_content(
         activity
         for chapter in chapters
         for activity in chapter.activities
-        if not activity.is_locked and has_dynamic_content(activity.content)
+        if not activity.is_locked
+        and (has_dynamic_content(activity.content) or has_comment_marks(activity.content))
     ]
     if not dynamic:
         return
@@ -793,6 +823,11 @@ async def reorder_chapters_and_activities(
         if (ca.chapter_id, ca.activity_id) not in activities_to_keep:
             await db_session.delete(ca)
     await db_session.commit()
+    audit_event(
+        request, action="content.reordered", org_id=course.org_id, actor=current_user,
+        target_type="course", target_id=course.course_uuid, target_name=course.name,
+        details={"chapters": len(chapters_order.chapter_order_by_ids)},
+    )
     await enqueue_course(course.id, db_session)
 
     return {"detail": "Chapters and activities reordered successfully"}

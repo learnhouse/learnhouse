@@ -1,3 +1,4 @@
+import re
 from typing import Literal, Optional
 from pydantic import BaseModel, field_validator
 from sqlalchemy import JSON, BigInteger, Column, ForeignKey
@@ -242,13 +243,55 @@ class GeneralCustomization(BaseModel):
     email_sender_name: str = ""
 
 
+_VERIFICATION_RE = re.compile(r"^[A-Za-z0-9_\-=:.]*$")
+_ORG_SCHEMA_TYPES = ("", "EducationalOrganization", "Organization", "CollegeOrUniversity", "School", "OnlineBusiness", "Corporation")
+
+
 class SeoOrgConfig(BaseModel):
     default_meta_title_suffix: str = ""
+    # "%s" is replaced with the page name; wins over the suffix when set.
+    default_title_template: str = Field(default="", max_length=120)
     default_meta_description: str = ""
     default_og_image: str = ""
     google_site_verification: str = ""
+    bing_site_verification: str = ""
+    yandex_verification: str = ""
+    pinterest_verification: str = ""
     twitter_handle: str = ""
     noindex_communities: bool = False
+    # Hide the whole org from search engines (noindex everywhere, robots.txt
+    # Disallow: /, empty sitemap).
+    indexing_disabled: bool = False
+    # Extra robots.txt directives, one per line (filtered when served).
+    robots_extra_rules: str = Field(default="", max_length=2000)
+    organization_type: str = ""
+
+    @field_validator("google_site_verification", "bing_site_verification", "yandex_verification", "pinterest_verification")
+    @classmethod
+    def _verification_code(cls, value: str) -> str:
+        value = (value or "").strip()
+        # People paste the whole <meta> tag: keep only its content value.
+        match = re.search(r'content=["\']([^"\']*)["\']', value)
+        if match:
+            value = match.group(1).strip()
+        if len(value) > 200 or not _VERIFICATION_RE.match(value):
+            raise ValueError("Verification codes may only contain letters, digits and - _ = : .")
+        return value
+
+    @field_validator("default_title_template")
+    @classmethod
+    def _title_template(cls, value: str) -> str:
+        value = (value or "").strip()
+        if value and "%s" not in value:
+            raise ValueError("The title template must contain %s")
+        return value
+
+    @field_validator("organization_type")
+    @classmethod
+    def _org_type(cls, value: str) -> str:
+        if value not in _ORG_SCHEMA_TYPES:
+            raise ValueError("Unsupported organization type")
+        return value
 
 
 class MenuLinkItem(BaseModel):
@@ -272,6 +315,19 @@ class MenuConfig(BaseModel):
 # ============================================================================
 
 SignupFieldType = Literal["text", "textarea", "select", "checkbox", "number", "date"]
+# Where an answer is also saved in the member's people data (org_member_profile):
+# one of its columns, the manager (the answer is the manager's email) or a
+# custom attribute stored under the field's key.
+SignupPeopleField = Literal[
+    "department", "title", "employee_id", "location", "cost_center", "manager_email", "attribute"
+]
+# The profile columns an answer can fill, and the field types that fit them.
+SIGNUP_PEOPLE_COLUMNS = ("department", "title", "employee_id", "location", "cost_center")
+SIGNUP_PEOPLE_FIELD_TYPES: dict[str, tuple[str, ...]] = {
+    **{column: ("text", "select", "number") for column in SIGNUP_PEOPLE_COLUMNS},
+    "manager_email": ("text",),
+    "attribute": ("text", "textarea", "select", "checkbox", "number", "date"),
+}
 
 
 class SignupFieldItem(BaseModel):
@@ -303,11 +359,25 @@ class SignupFieldItem(BaseModel):
     # number only.
     min_value: Optional[float] = None
     max_value: Optional[float] = None
+    # Also save the answer to the member's people data (people data feature).
+    people_field: Optional[SignupPeopleField] = None
 
 
 class SignupFieldsConfig(BaseModel):
     # Empty means the signup form renders exactly as it did before this feature.
     fields: list[SignupFieldItem] = Field(default_factory=list)
+
+
+def safe_course_end_link(value: str, field_name: str = "button_link") -> str:
+    """Allow only an internal path ("/courses") or an absolute http(s) URL, so a
+    stored completion-screen link can never become a javascript: href."""
+    if not value:
+        return value
+    if value.startswith("/") and not value.startswith("//"):
+        return value
+    if value.lower().startswith(("http://", "https://")):
+        return value
+    raise ValueError(f"{field_name} must be an internal path or an http(s) URL")
 
 
 class CourseEndConfig(BaseModel):
@@ -327,13 +397,124 @@ class CourseEndConfig(BaseModel):
     @field_validator("button_link")
     @classmethod
     def _safe_link(cls, value: str) -> str:
-        if not value:
-            return value
-        if value.startswith("/") and not value.startswith("//"):
-            return value
-        if value.lower().startswith(("http://", "https://")):
-            return value
-        raise ValueError("button_link must be an internal path or an http(s) URL")
+        return safe_course_end_link(value)
+
+
+# ============================================================================
+# Theme (learner-facing look). Every value here ends up in a CSS custom
+# property, a data attribute or a Google Fonts URL, so each field is either an
+# enum, a strict hex color or an allowlisted font name. Defaults reproduce the
+# look orgs had before the theme existed.
+# ============================================================================
+
+_HEX_COLOR_RE = re.compile(r"^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
+# Google Fonts family names are letters, digits and single spaces (the whole
+# catalog matches), which keeps the value inert in CSS and in a URL.
+_FONT_NAME_RE = re.compile(r"^[A-Za-z0-9]+( [A-Za-z0-9]+)*$")
+FONT_NAME_MAX_LENGTH = 64
+
+
+def normalize_theme_color(value: str, field_name: str = "color") -> str:
+    """``#rrggbb`` (lowercase) for a hex color, ``""`` for empty, else ValueError."""
+    value = (value or "").strip()
+    if not value:
+        return ""
+    match = _HEX_COLOR_RE.match(value)
+    if not match:
+        raise ValueError(f"{field_name} must be a hex color like #1d4ed8")
+    digits = match.group(1).lower()
+    if len(digits) == 3:
+        digits = "".join(ch * 2 for ch in digits)
+    return f"#{digits}"
+
+
+def validate_font_name(value: str, field_name: str = "font") -> str:
+    """A Google Fonts family name, or ``""`` for the platform default."""
+    value = " ".join((value or "").split())
+    if not value:
+        return ""
+    if len(value) > FONT_NAME_MAX_LENGTH or not _FONT_NAME_RE.match(value):
+        raise ValueError(f"{field_name} must be a font family name (letters, digits and spaces)")
+    return value
+
+
+ThemePreset = Literal[
+    "", "custom", "classic", "ocean", "forest", "midnight", "sunset", "orchid", "slate", "sand",
+    # Added with the theme studio: fuller looks (palette, type, shape, layout).
+    "atelier", "harbor", "grove", "noir", "ember", "linen", "citrus", "glacier",
+]
+
+
+class ThemeCustomization(BaseModel):
+    preset: ThemePreset = ""
+    # Buttons, links, progress and chips: the platform's neutral look, the
+    # brand color (customization.general.color) or a separate accent.
+    accent_mode: Literal["neutral", "brand", "custom"] = "neutral"
+    accent_color: str = ""
+    # "brand" paints the header in the brand color, white when there is none.
+    header_style: Literal["brand", "white", "dark", "glass"] = "brand"
+    radius: Literal["none", "sharp", "soft", "round"] = "soft"
+    # Empty heading font means headings use the body font.
+    heading_font: str = ""
+    button_style: Literal["solid", "soft", "outline"] = "solid"
+    card_style: Literal["shadow", "border", "flat"] = "shadow"
+    density: Literal["comfortable", "compact"] = "comfortable"
+    # "tint" is the brand color at 5% (nothing without a brand color).
+    background: Literal["tint", "plain", "pattern", "grid", "gradient"] = "tint"
+
+    # Theme studio options. Every default reproduces the look above, so a
+    # theme saved before they existed renders exactly as it did.
+    # A second brand color: soft fills, gradients, the gradient background.
+    secondary_color: str = ""
+    # Tints the grays (page, borders, muted text) warm or cool.
+    neutral: Literal["neutral", "warm", "cool"] = "neutral"
+    # Heading sizes and weight on learner pages.
+    type_scale: Literal["compact", "default", "large"] = "default"
+    heading_weight: Literal["", "500", "600", "700", "800"] = ""
+    # Buttons follow the corner radius ("auto") or get their own shape.
+    button_shape: Literal["auto", "square", "rounded", "pill"] = "auto"
+    # How much cards lift off the page.
+    elevation: Literal["flat", "default", "lifted"] = "default"
+    link_style: Literal["accent", "underline", "subtle"] = "accent"
+    header_layout: Literal["standard", "centered", "minimal"] = "standard"
+    footer_style: Literal["simple", "centered", "bar"] = "simple"
+    # Course thumbnails and other pictures in cards.
+    image_style: Literal["default", "rounded", "framed", "muted"] = "default"
+    # Public pages and the visitor's dark mode: "visitor" follows the
+    # visitor's choice (pages the org designed in the builder keep their own
+    # colors unless they define a dark palette); "light" always shows the
+    # org's light look.
+    public_scheme: Literal["visitor", "light"] = "visitor"
+    # The accent in dark mode ("" lifts the light accent automatically).
+    dark_accent: str = ""
+
+    @field_validator("accent_color", "secondary_color", "dark_accent")
+    @classmethod
+    def _accent_hex(cls, value: str, info) -> str:
+        return normalize_theme_color(value, info.field_name)
+
+    @field_validator("heading_font")
+    @classmethod
+    def _heading_font(cls, value: str) -> str:
+        return validate_font_name(value, "heading_font")
+
+
+class OrgThemeUpdate(BaseModel):
+    """One save from the Branding settings: brand color, body font, theme."""
+
+    color: str = ""
+    font: str = ""
+    theme: ThemeCustomization = ThemeCustomization()
+
+    @field_validator("color")
+    @classmethod
+    def _color_hex(cls, value: str) -> str:
+        return normalize_theme_color(value, "color")
+
+    @field_validator("font")
+    @classmethod
+    def _font(cls, value: str) -> str:
+        return validate_font_name(value, "font")
 
 
 class CustomizationConfig(BaseModel):
@@ -344,6 +525,7 @@ class CustomizationConfig(BaseModel):
     menu: MenuConfig = MenuConfig()
     signup_fields: SignupFieldsConfig = SignupFieldsConfig()
     course_end: CourseEndConfig = CourseEndConfig()
+    theme: ThemeCustomization = ThemeCustomization()
 
 
 # ============================================================================

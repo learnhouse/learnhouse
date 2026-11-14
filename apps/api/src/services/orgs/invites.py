@@ -14,6 +14,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config.config import get_learnhouse_config
+from src.core.ee_hooks import audit_event
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.usergroups import UserGroup
@@ -183,6 +184,11 @@ async def create_invite_code(
         org_id=org_id,
         user_id=resolve_acting_user_id(current_user),
         properties={"invite_method": "invite_code"},
+    )
+    audit_event(
+        request, action="members.invite_code.created", org_id=org_id, actor=current_user,
+        target_type="invite_code", target_id=inviteCodeObject.get("invite_code_uuid"),
+        details={k: inviteCodeObject.get(k) for k in ("usergroup_id", "expiration_date") if inviteCodeObject.get(k)},
     )
 
     return inviteCodeObject
@@ -374,6 +380,10 @@ async def delete_invite_code(
             status_code=404,
             detail="Invite code not found",
         )
+    audit_event(
+        request, action="members.invite_code.deleted", org_id=org_id, actor=current_user,
+        target_type="invite_code", target_id=invite_code_uuid,
+    )
 
     return keys
 

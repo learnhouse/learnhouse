@@ -16,17 +16,22 @@ from src.services.ai.tools.base import ActionTier, ToolOutcome, ToolSpec
 from src.security.org_scope import org_scope
 from src.services.ai.tools import known_toolsets
 from src.services.ai.tools.registry import ToolRegistry, resolve_names, run_tool
+from src.services.ai.tools.progress import progress_reporter
 from src.services.mcp import approvals, audit
+from src.services.mcp import discovery as disc
 from src.services.mcp import server as srv
 from src.security.features_utils.resolve import resolve_feature
-from src.services.mcp.prompts import PROMPTS, prompt_allowed, prompt_listing, render_prompt
+from src.services.mcp.prompts import PROMPTS, STATIC_KINDS, prompt_allowed, prompt_listing, render_prompt
 from src.services.mcp.resources import (
     FIRST_PAGE,
     MAX_COMPLETIONS,
     RESOURCES,
     TEMPLATE_ARGS,
+    TEMPLATE_VALUES,
+    complete_static,
     completion_values,
     parse_uri,
+    static_text,
 )
 
 logger = logging.getLogger(__name__)
@@ -154,28 +159,139 @@ _CONSUME_ERRORS = {
 }
 
 
+class _ProgressPump:
+    """Bridges the tools' synchronous report_progress to MCP progress
+    notifications (sent only when the client asked, with a progressToken)."""
+
+    def __init__(self, session: Any):
+        self.session = session
+        self.tasks: list[Any] = []
+
+    def __call__(self, done: int, total: int, label: str | None) -> None:
+        import asyncio
+
+        try:
+            self.tasks.append(asyncio.get_running_loop().create_task(self.session.report_progress(done, total, label)))
+        except Exception:  # pragma: no cover - no loop means nothing to report to
+            pass
+
+
+def _pump(ctx: Any) -> _ProgressPump | None:
+    session = getattr(ctx, "session", None)
+    if session is None or not hasattr(session, "report_progress") or not _progress_token(ctx):
+        return None
+    return _ProgressPump(session)
+
+
+def _progress_token(ctx: Any) -> Any:
+    meta = getattr(ctx, "meta", None)
+    return meta.get("progress_token") or meta.get("progressToken") if isinstance(meta, dict) else None
+
+
+async def _flush_progress(pump: _ProgressPump | None) -> None:
+    import asyncio
+
+    if pump is None or not pump.tasks:
+        return
+    await asyncio.gather(*pump.tasks, return_exceptions=True)
+
+
+async def _log(ctx: Any, level: str, data: Any) -> None:
+    """A notifications/message entry for clients that show server logs
+    (dropped on JSON responses and when the client did not opt in)."""
+    session = getattr(ctx, "session", None)
+    send = getattr(session, "send_log_message", None) if session is not None else None
+    if send is None:
+        return
+    try:
+        await send(level, data, logger="learnhouse", related_request_id=getattr(ctx, "request_id", None))
+    except Exception:
+        logger.debug("mcp: log message not delivered", exc_info=True)
+
+
+def invalid_fields(spec: ToolSpec, arguments: dict[str, Any]) -> list[dict] | None:
+    """Each bad argument with what is wrong and, for a fixed set, the values
+    allowed, so the model can fix every field in one retry."""
+    try:
+        spec.params_model.model_validate(arguments)
+    except ValidationError as e:
+        fields = []
+        for err in e.errors()[:8]:
+            entry: dict[str, Any] = {
+                "field": ".".join(str(p) for p in err.get("loc", ())) or "(arguments)",
+                "problem": err.get("msg", ""),
+            }
+            ctx_ = err.get("ctx") or {}
+            if "expected" in ctx_:
+                entry["allowed"] = ctx_["expected"]
+            elif err.get("type") == "extra_forbidden":
+                entry["problem"] = "unknown argument; remove it"
+            fields.append(entry)
+        return fields
+    return None
+
+
 class Handlers:
     def __init__(self, registry: ToolRegistry):
         self.registry = registry
 
     # ─── tools ────────────────────────────────────────────────────────────
 
+    async def _callable_specs(self, principal: MCPPrincipal) -> tuple[list[ToolSpec], dict, Any] | None:
+        """Every tool this connection may call (listed or not), with the org
+        config and role rights; None when the org is gone or MCP is off."""
+        async with _async_session_factory() as db_session:
+            org, config = await srv.load_org_and_config(db_session, principal.org_id)
+            if org is None or not srv.mcp_allowed(config):
+                return None
+            org_id = org.id
+            role_rights = await srv.member_role_rights(principal, org_id, db_session)
+        specs = [s for s in self.registry.specs() if srv.spec_visible(s, principal, config, org_id, None, role_rights)]
+        return specs, config, role_rights
+
+    def _listed(self, ctx: Any, specs: list[ToolSpec]) -> list[ToolSpec]:
+        toolsets = srv.requested_toolsets(getattr(ctx, "request", None), known_toolsets(self.registry))
+        return [s for s in specs if toolsets is None or (s.toolset or "core") in toolsets]
+
     async def list_tools(self, ctx: Any, params: Any) -> types.ListToolsResult:
         principal = _principal(ctx)
         if principal is None or _rate_limited(principal):
             return types.ListToolsResult(tools=[])
-        toolsets = srv.requested_toolsets(getattr(ctx, "request", None), known_toolsets(self.registry))
-        async with _async_session_factory() as db_session:
-            org, config = await srv.load_org_and_config(db_session, principal.org_id)
-            if org is None or not srv.mcp_allowed(config):
-                return types.ListToolsResult(tools=[])
-            role_rights = await srv.member_role_rights(principal, org.id, db_session)
-        tools = [
-            srv.tool_definition(spec)
-            for spec in self.registry.specs()
-            if srv.spec_visible(spec, principal, config, org.id, toolsets, role_rights)
-        ]
-        return types.ListToolsResult(tools=tools)
+        found = await self._callable_specs(principal)
+        if found is None:
+            return types.ListToolsResult(tools=[])
+        tools = disc.meta_tool_definitions() + [srv.tool_definition(spec) for spec in self._listed(ctx, found[0])]
+        try:
+            page, nxt = disc.paginate(tools, getattr(params, "cursor", None), disc.TOOLS_PAGE)
+        except (ValueError, KeyError, TypeError):
+            raise MCPError(_INVALID_PARAMS, "Invalid cursor: pass nextCursor exactly as returned.")
+        return types.ListToolsResult(tools=page, next_cursor=nxt)
+
+    async def _search_tools(self, ctx: Any, principal: MCPPrincipal, arguments: dict) -> types.CallToolResult:
+        found = await self._callable_specs(principal)
+        if found is None:
+            return srv.error_result("mcp_disabled", "AI app connections are turned off for this organization")
+        specs = found[0]
+        listed = {s.name for s in self._listed(ctx, specs)}
+        query = arguments.get("query")
+        toolset = arguments.get("toolset")
+        limit = arguments.get("limit", 10)
+        if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 50:
+            return srv.error_result("invalid_args", "limit must be a whole number from 1 to 50", fields=[{"field": "limit", "problem": "1 to 50"}])
+        known = sorted({s.toolset or "core" for s in specs})
+        if toolset is not None and toolset not in known:
+            return srv.error_result(
+                "invalid_args", f"Unknown toolset '{toolset}'.",
+                fields=[{"field": "toolset", "problem": "unknown toolset", "allowed": known}],
+            )
+        try:
+            result = disc.search(
+                specs, listed, query if isinstance(query, str) else None, toolset,
+                arguments.get("include_schema", True) is not False, limit, arguments.get("cursor"), srv.tool_definition,
+            )
+        except (ValueError, KeyError, TypeError):
+            return srv.error_result("invalid_cursor", "Invalid cursor.")
+        return srv.success_result(result)
 
     async def _approval(
         self, ctx: Any, params: types.CallToolRequestParams, principal: MCPPrincipal,
@@ -219,9 +335,29 @@ class Handlers:
         principal = _principal(ctx)
         if principal is None:
             return srv.error_result("unauthenticated", "Sign in to use LearnHouse tools")
+        if params.name == disc.SEARCH_TOOLS:
+            if _rate_limited(principal):
+                return srv.error_result("rate_limited", "Too many calls in the last minute")
+            return await self._search_tools(ctx, principal, dict(params.arguments or {}))
+        if params.name == disc.INVOKE_TOOL:
+            args = dict(params.arguments or {})
+            name, inner = args.get("name"), args.get("arguments", {})
+            if not isinstance(name, str) or name in disc.META_TOOLS or not isinstance(inner, dict):
+                return srv.error_result(
+                    "invalid_args", "invoke_tool needs name (a tool from search_tools, not a meta tool) and arguments (an object).",
+                    fields=[{"field": "name", "problem": "required tool name"}],
+                )
+            # Dispatched exactly like a direct call: same checks, approvals bound to the real tool.
+            params = params.model_copy(update={"name": name, "arguments": inner})
         spec = self.registry.get(params.name)
         if spec is None:
-            return srv.error_result("unknown_tool", f"Unknown tool: {params.name}")
+            import difflib
+
+            close = difflib.get_close_matches(params.name, [s.name for s in self.registry.specs()], n=3, cutoff=0.6)
+            return srv.error_result(
+                "unknown_tool", f"Unknown tool: {params.name}",
+                did_you_mean=close or None,
+            )
         arguments = dict(params.arguments or {})
         call = approvals.call_args(arguments)
 
@@ -266,7 +402,10 @@ class Handlers:
 
             tool_ctx.approved = approved
             try:
-                outcome = await run_tool(self.registry, spec.name, call, tool_ctx)
+                pump = _pump(ctx)
+                with progress_reporter(pump):
+                    outcome = await run_tool(self.registry, spec.name, call, tool_ctx)
+                await _flush_progress(pump)
                 if outcome.status == "executed":
                     await db_session.commit()
                 else:
@@ -292,7 +431,11 @@ class Handlers:
         if outcome.status == "executed":
             if resolved and isinstance(outcome.result, dict):
                 outcome.result.setdefault("resolved", resolved)
+            if spec.tier is not ActionTier.READ and isinstance(outcome.result, dict) and outcome.result.get("summary"):
+                await _log(ctx, "info", {"tool": spec.name, "summary": outcome.result["summary"]})
             return srv.success_result(outcome.result)
+        if outcome.denied_code == "invalid_args":
+            return srv.error_result("invalid_args", outcome.reason or "Invalid arguments", fields=invalid_fields(spec, call))
         return srv.error_result(outcome.denied_code or "denied", outcome.reason or "Denied")
 
     async def _ask_approval(
@@ -398,8 +541,17 @@ class Handlers:
                         name=resource.kind,
                         title=resource.title,
                         description=resource.description,
-                        mime_type="application/json",
+                        mime_type=resource.mime_type,
                     )
+                )
+                continue
+            if resource.values:
+                listed.extend(
+                    types.Resource(
+                        uri=resource.uri(value), name=f"{resource.kind}/{value}",
+                        title=f"{resource.title}: {value}", description=resource.description, mime_type=resource.mime_type,
+                    )
+                    for value in resource.values
                 )
                 continue
             if resource.listed_by is None:
@@ -421,7 +573,11 @@ class Handlers:
                             mime_type="application/json",
                         )
                     )
-        return types.ListResourcesResult(resources=listed)
+        try:
+            page, nxt = disc.paginate(listed, getattr(params, "cursor", None), disc.RESOURCES_PAGE)
+        except (ValueError, KeyError, TypeError):
+            raise MCPError(_INVALID_PARAMS, "Invalid cursor: pass nextCursor exactly as returned.")
+        return types.ListResourcesResult(resources=page, next_cursor=nxt)
 
     async def list_resource_templates(
         self, ctx: Any, params: Any
@@ -433,7 +589,7 @@ class Handlers:
                     name=resource.kind,
                     title=resource.title,
                     description=resource.description,
-                    mime_type="application/json",
+                    mime_type=resource.mime_type,
                 )
                 for resource in RESOURCES.values()
                 if resource.template
@@ -451,14 +607,46 @@ class Handlers:
         if parsed is None:
             raise MCPError(_INVALID_PARAMS, f"Unknown resource: {uri}")
         resource, ident = parsed
-        data = await self._read_tool(principal, resource.tool, resource.tool_args(ident))
+        if resource.reader == "static":
+            if await self._open_org(principal) is None:
+                raise MCPError(_RESOURCE_NOT_FOUND, "Resource not available")
+            try:
+                text = static_text(resource, ident)
+            except KeyError:
+                raise MCPError(_RESOURCE_NOT_FOUND, f"Unknown {resource.kind}: {ident}. Known: {', '.join(resource.values)}")
+        elif resource.reader == "branding":
+            text = srv.text_result(await self._branding(principal))
+        else:
+            data = await self._read_tool(principal, resource.tool, resource.tool_args(ident))
+            if resource.mime_type == "text/markdown" and isinstance(data, dict) and isinstance(data.get("markdown"), str):
+                text = data["markdown"]
+            else:
+                text = srv.text_result(data)
         return types.ReadResourceResult(
-            contents=[
-                types.TextResourceContents(
-                    uri=uri, mime_type="application/json", text=srv.text_result(data)
-                )
-            ]
+            contents=[types.TextResourceContents(uri=uri, mime_type=resource.mime_type, text=text)]
         )
+
+    async def _branding(self, principal: MCPPrincipal) -> dict:
+        from src.services.orgs.theme import read_org_theme, resolve_org_theme_summary
+
+        if _rate_limited(principal):
+            raise MCPError(_RESOURCE_NOT_FOUND, "Too many calls in the last minute")
+        async with _async_session_factory() as db_session:
+            org, config = await srv.load_org_and_config(db_session, principal.org_id)
+            if org is None or not srv.mcp_allowed(config):
+                raise MCPError(_RESOURCE_NOT_FOUND, "Resource not available")
+            summary = resolve_org_theme_summary(config)
+            general = ((config.get("customization") or {}).get("general") or config.get("general") or {}) if isinstance(config, dict) else {}
+            return {
+                "name": org.name,
+                "description": org.description,
+                "has_logo": bool(org.logo_image),
+                "brand_color": summary["brand_color"],
+                "accent_color": summary["accent_color"],
+                "font": general.get("font") if isinstance(general, dict) else None,
+                "theme": read_org_theme(config).model_dump(),
+                "use": "Match widgets (blockMagic HTML), callout choices and images to these colors and this tone.",
+            }
 
     # ─── prompts ──────────────────────────────────────────────────────────
 
@@ -480,7 +668,11 @@ class Handlers:
 
     async def list_prompts(self, ctx: Any, params: Any) -> types.ListPromptsResult:
         allowed = await self._prompt_filter(_principal(ctx))
-        return types.ListPromptsResult(prompts=prompt_listing(allowed))
+        try:
+            page, nxt = disc.paginate(prompt_listing(allowed), getattr(params, "cursor", None), disc.PROMPTS_PAGE)
+        except (ValueError, KeyError, TypeError):
+            raise MCPError(_INVALID_PARAMS, "Invalid cursor: pass nextCursor exactly as returned.")
+        return types.ListPromptsResult(prompts=page, next_cursor=nxt)
 
     async def get_prompt(self, ctx: Any, params: types.GetPromptRequestParams) -> types.GetPromptResult:
         prompt = PROMPTS.get(params.name)
@@ -503,12 +695,18 @@ class Handlers:
             return empty
         ref, argument = params.ref, params.argument
         kind, by = None, "name"
+        fixed: tuple[str, ...] = ()
         if isinstance(ref, types.PromptReference):
             prompt = PROMPTS.get(ref.name)
             arg = next((a for a in (prompt.args if prompt else ()) if a.name == argument.name), None)
             kind = arg.kind if arg else None
+            fixed = STATIC_KINDS.get(kind or "", ())
         elif isinstance(ref, types.ResourceTemplateReference):
             kind, by = TEMPLATE_ARGS.get(argument.name), "uuid"
+            fixed = TEMPLATE_VALUES.get(argument.name, ())
+        if fixed:
+            values = complete_static(fixed, argument.value)
+            return types.CompleteResult(completion=types.Completion(values=values, total=len(values), has_more=False))
         if kind is None:
             return empty
         typed = (argument.value or "").strip()

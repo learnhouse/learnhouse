@@ -248,7 +248,9 @@ class TestRecordActivity:
         async def _spy_insert(*a, **k):
             called["db"] = True
 
-        with _mode("ee"), patch.object(activity, "_insert_activity_row", _spy_insert):
+        # No Redis: a day-key left by an earlier run would skip the insert.
+        with _mode("ee"), patch.object(activity, "_insert_activity_row", _spy_insert), \
+                patch.object(activity, "get_redis_client", return_value=None):
             await activity.record_user_activity(1, org_id=ORG)
         assert called["db"] is True
 

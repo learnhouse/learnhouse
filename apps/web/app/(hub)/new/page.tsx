@@ -5,52 +5,47 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import { dirMultiplier, directionForLanguage } from '@/lib/direction'
-import { useFormik } from 'formik'
-import * as Form from '@radix-ui/react-form'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
 import {
-  ArrowRight,
   ArrowLeft,
+  ArrowRight,
   Check,
+  CheckCircle,
+  CircleNotch,
   Info,
-  CircleNotch as Loader,
-  User,
-  Users,
-  Buildings as Building2,
-  GraduationCap,
-  Laptop,
-  Code,
-  Palette,
-  MusicNotes as Music,
-  Robot as Bot,
-  BookOpen,
-  Atom,
-  TrendUp as TrendingUp,
-  Heart,
-  Camera,
-  Pencil,
-  Translate as Languages,
-  GameController as Gamepad2,
-  Briefcase,
-  ShoppingBag,
-  Megaphone,
-  Globe,
-  Storefront as Store,
-  SignOut as LogOut,
+  PencilSimple,
+  SignOut,
+  Sparkle,
+  Browser,
+  FileDashed,
 } from '@phosphor-icons/react'
 
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { hasManagingRoleFromSession } from '@components/Hooks/useAdminStatus'
 import { signOut } from '@components/Contexts/AuthContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import DemoEntryCard from '@components/Objects/Demo/DemoEntryCard'
-import { createNewOrganization } from '@services/organizations/orgs'
+import PendingInvites from '@components/Onboarding/PendingInvites'
+import { INTENTS } from '@components/Dashboard/Onboarding/onboardingCopy'
 import { useLHAnalytics } from '@services/analytics/useLHAnalytics'
 import { AnalyticsEvent } from '@services/analytics/events'
-import { getAPIUrl, getCustomDomainFromContext, getLEARNHOUSE_DOMAIN_VAL, getUriWithOrg } from '@services/config/config'
-import { apiFetch } from '@services/utils/ts/requests'
+import {
+  getCustomDomainFromContext,
+  getLEARNHOUSE_DOMAIN_VAL,
+  getUpgradeUrl,
+  getUriWithOrg,
+} from '@services/config/config'
+import { detailMessage } from '@services/utils/ts/requests'
+import {
+  applyStarter,
+  checkSlug,
+  createOrgWithOnboarding,
+  getHubSummary,
+  onboardingKeys,
+  recordOnboardingEvent,
+  type OnboardingGoal,
+  type SlugCheck,
+} from '@services/onboarding/onboarding'
+import { Button, INPUT } from '@/design'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,940 +55,460 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
 
-import {
-  findPlan,
-  isPaidPlan,
-  type Billing,
-  type PlanId,
-  type PricesResponse,
-} from '../_billing/plans'
-import { fetchPrices } from '../billing/_lib/billingClient'
-import PricingCards from './_components/PricingCards'
-import PlanSummaryCard from './_components/PlanSummaryCard'
+type Step = 'goal' | 'name' | 'start'
+const STEPS: Step[] = ['goal', 'name', 'start']
 
-// ── Constants ───────────────────────────────────────────────────────────────
-
-type UseType = 'personal' | 'organization' | null
-type Step = 'use-type' | 'usage' | 'choose-plan' | 'create-org' | 'success'
-
-const RESERVED_SLUGS = ['learnhouse', 'graphicmade', 'sweave', 'cname']
-const RESTRICTED_WORDS = ['sex', 'test']
-
-const STEP_NUMBER: Record<Step, number> = {
-  'use-type': 1,
-  usage: 2,
-  'choose-plan': 3,
-  'create-org': 4,
-  success: 4,
+// Template each goal starts from (mirrors services/onboarding/goals.py), for
+// the name shown on the "start from a template" card.
+const GOAL_TEMPLATE: Record<OnboardingGoal | 'none', string> = {
+  sell: 'coach',
+  team: 'corporate',
+  school: 'university',
+  customers: 'partner',
+  community: 'membership',
+  none: 'academy',
 }
-const TOTAL_STEPS = 4
 
-// ── Animation ─────────────────────────────────────────────────────────────────
-
-// `dir` is the step direction (+1 forward, -1 back), not text direction. The
-// custom prop passed at the call site already folds in the text direction, so
-// "forward" always slides toward the inline end.
 const slide = {
-  enter: (dir: number) => ({ opacity: 0, x: dir * 24, filter: 'blur(3px)' }),
-  center: { opacity: 1, x: 0, filter: 'blur(0px)' },
-  exit: (dir: number) => ({ opacity: 0, x: dir * -24, filter: 'blur(3px)' }),
+  enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
 }
-const trans = { duration: 0.26, ease: [0.4, 0, 0.2, 1] as any }
+const trans = { duration: 0.24, ease: [0.4, 0, 0.2, 1] as any }
 
-// Map a backend error to a human-readable message, never leaking the raw
-// FastAPI validation payload (e.g. `[{"type":"missing","loc":["body","email"]}]`)
-// into the UI. `errorHandling` JSON.stringifies non-string `detail`, so guard
-// against both stringified-JSON messages and structured `detail` arrays/objects.
-function friendlyCreateError(e: any, fallback: string): string {
-  const detail = e?.detail
-  // FastAPI 422: detail is an array of {loc, msg, type}
-  if (Array.isArray(detail)) {
-    const first = detail[0]
-    const field = Array.isArray(first?.loc) ? first.loc[first.loc.length - 1] : undefined
-    if (field && first?.msg) return `${String(field)}: ${first.msg}`
-    return fallback
-  }
-  if (detail && typeof detail === 'object') {
-    if (typeof detail.message === 'string') return detail.message
-    return fallback
-  }
-  const msg = typeof e?.message === 'string' ? e.message.trim() : ''
-  // A JSON-stringified payload leaked through as the message; don't show it raw.
-  if (!msg || msg.startsWith('[') || msg.startsWith('{')) return fallback
-  return msg
-}
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 20)
-}
-
-// ── Small UI atoms ────────────────────────────────────────────────────────────
-
-function StepPills({ current }: { current: number }) {
+function StepDots({ current }: { current: number }) {
   return (
-    <div className="flex items-center gap-1.5">
-      {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-        <motion.div
+    <div className="flex items-center justify-center gap-1.5" aria-hidden>
+      {STEPS.map((_, i) => (
+        <motion.span
           key={i}
-          className="h-1.5 rounded-full"
+          className="h-1.5 rounded-full bg-neutral-200"
           initial={false}
-          animate={{
-            width: i + 1 === current ? 24 : 7,
-            backgroundColor: i + 1 <= current ? '#111827' : '#e5e7eb',
-          }}
-          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          animate={{ width: i === current ? 24 : 7, backgroundColor: i <= current ? '#111827' : '#e5e7eb' }}
+          transition={{ duration: 0.3 }}
         />
       ))}
-      <span className="ms-1 text-xs text-gray-400 tabular-nums">
-        {current}/{TOTAL_STEPS}
-      </span>
     </div>
   )
 }
 
-function OptionChip({
-  selected,
-  onClick,
-  Icon,
-  label,
-}: {
-  selected: boolean
-  onClick: () => void
-  Icon: React.ElementType
-  label: string
-}) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileTap={{ scale: 0.96 }}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer
-        ${selected ? 'bg-gray-900 text-white shadow-md shadow-gray-900/10' : 'bg-white nice-shadow text-gray-700 hover:shadow-md'}`}
-    >
-      <Icon size={15} weight="duotone" className={selected ? 'text-white' : 'text-gray-400'} />
-      {label}
-      {selected && (
-        <motion.span
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center"
-        >
-          <Check size={9} className="text-white" />
-        </motion.span>
-      )}
-    </motion.button>
-  )
+function useDebounced<T>(value: T, ms: number) {
+  const [v, setV] = useState(value)
+  useEffect(() => {
+    const id = setTimeout(() => setV(value), ms)
+    return () => clearTimeout(id)
+  }, [value, ms])
+  return v
 }
 
-function TeamCard({
-  selected,
-  onClick,
-  Icon,
-  label,
-}: {
-  selected: boolean
-  onClick: () => void
-  Icon: React.ElementType
-  label: string
-}) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileTap={{ scale: 0.96 }}
-      className={`flex-1 flex flex-col items-center gap-2 py-4 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer
-        ${selected ? 'bg-gray-900 text-white shadow-md shadow-gray-900/10' : 'bg-white nice-shadow text-gray-600 hover:shadow-md'}`}
-    >
-      <Icon size={18} weight="duotone" className={selected ? 'text-white' : 'text-gray-400'} />
-      <span className={`text-xs font-semibold whitespace-nowrap ${selected ? 'text-white' : 'text-gray-700'}`}>
-        {label}
-      </span>
-    </motion.button>
-  )
+/** Where the new org lives, from the apex or from another org's custom domain. */
+function orgUrl(slug: string, path: string) {
+  return getCustomDomainFromContext()
+    ? `${window.location.protocol}//${slug}.${getLEARNHOUSE_DOMAIN_VAL()}${path}`
+    : getUriWithOrg(slug, path)
 }
 
-// ── Step 1: use-type ──────────────────────────────────────────────────────────
+// ── Step 1: goal ────────────────────────────────────────────────────────────
 
-function StepUseType({
-  useType,
-  onSelect,
-  t,
-}: {
-  useType: UseType
-  onSelect: (_ut: UseType) => void
-  t: any
-}) {
-  const options = [
-    {
-      id: 'personal' as UseType,
-      label: t('hub_new.useType.personal.label', { defaultValue: 'Personal' }),
-      subtitle: t('hub_new.useType.personal.subtitle', {
-        defaultValue: 'Learn and build your own space.',
-      }),
-      Icon: User,
-      badge: t('hub_new.useType.personal.badge', { defaultValue: 'New' }),
-      cases: [
-        {
-          Icon: GraduationCap,
-          title: t('hub_new.useCases.personal.title', { defaultValue: 'Self learning' }),
-          description: t('hub_new.useCases.personal.description', {
-            defaultValue: 'Organize courses for yourself.',
-          }),
-        },
-      ],
-    },
-    {
-      id: 'organization' as UseType,
-      label: t('hub_new.useType.organization.label', { defaultValue: 'Organization' }),
-      subtitle: t('hub_new.useType.organization.subtitle', {
-        defaultValue: 'Teach a team, school or audience.',
-      }),
-      Icon: Building2,
-      badge: null as string | null,
-      cases: [
-        {
-          Icon: Store,
-          title: t('hub_new.useCases.creators.title', { defaultValue: 'Creators' }),
-          description: t('hub_new.useCases.creators.description', {
-            defaultValue: 'Sell courses to your audience.',
-          }),
-        },
-        {
-          Icon: Briefcase,
-          title: t('hub_new.useCases.business.title', { defaultValue: 'Business' }),
-          description: t('hub_new.useCases.business.description', {
-            defaultValue: 'Train your employees.',
-          }),
-        },
-      ],
-    },
-  ]
+function GoalStep({ goal, onPick, onSkip }: { goal: OnboardingGoal | null; onPick: (_g: OnboardingGoal) => void; onSkip: () => void }) {
+  const { t } = useTranslation()
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-      {options.map((opt) => {
-        const selected = useType === opt.id
-        return (
-          <motion.button
-            key={opt.id}
-            type="button"
-            onClick={() => onSelect(opt.id)}
-            whileTap={{ scale: 0.985 }}
-            className={`w-full h-full text-start px-6 py-6 rounded-2xl transition-all duration-200 cursor-pointer flex flex-col
-              ${selected ? 'bg-gray-900 ring-2 ring-gray-900 shadow-lg shadow-gray-900/20' : 'bg-white nice-shadow hover:shadow-lg hover:shadow-gray-200/60'}`}
-          >
-            <div className="flex items-start justify-between mb-5">
-              <div className={`p-2.5 rounded-xl ${selected ? 'bg-white/10' : 'bg-gray-50'}`}>
-                <opt.Icon size={22} weight="duotone" className={selected ? 'text-white' : 'text-gray-500'} />
-              </div>
-              <motion.div
-                initial={false}
-                animate={selected ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm"
-              >
-                <Check size={11} className="text-gray-900" />
-              </motion.div>
-            </div>
-            <div
-              className={`font-black text-lg tracking-tight leading-tight mb-1 flex items-baseline gap-2 ${selected ? 'text-white' : 'text-gray-900'}`}
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2" role="radiogroup" aria-label={t('onb2.new.goal_title')}>
+        {INTENTS.map((it) => {
+          const on = goal === it.id
+          return (
+            <motion.button
+              key={it.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              data-goal={it.id}
+              whileTap={{ scale: 0.985 }}
+              onClick={() => onPick(it.id)}
+              className={[
+                'group relative flex items-start gap-3 rounded-2xl bg-white p-4 text-start transition-all',
+                on ? 'ring-2 ring-neutral-900' : 'nice-shadow hover:shadow-md',
+              ].join(' ')}
             >
-              {opt.label}
-              {opt.badge && (
-                <span
-                  className={`px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide rounded-md border relative -top-px ${selected ? 'border-white/25 text-white/50' : 'border-black/25 text-black/40'}`}
-                >
-                  {opt.badge}
-                </span>
-              )}
-            </div>
-            <p className={`text-xs leading-relaxed mb-5 ${selected ? 'text-white/50' : 'text-gray-400'}`}>
-              {opt.subtitle}
-            </p>
-            <div className="flex flex-col gap-1 mt-auto">
-              {opt.cases.map((c, idx) => (
-                <div key={idx} className="flex items-start gap-2 px-1 py-0.5">
-                  <c.Icon
-                    size={13}
-                    weight="duotone"
-                    className={`flex-shrink-0 mt-0.5 ${selected ? 'text-white/50' : 'text-gray-400'}`}
-                  />
-                  <div className="flex flex-col gap-0">
-                    <span
-                      className={`text-[12px] font-semibold leading-tight block ${selected ? 'text-white/90' : 'text-gray-700'}`}
-                    >
-                      {c.title}
-                    </span>
-                    <span
-                      className={`text-[11px] leading-snug mt-0.5 block ${selected ? 'text-white/40' : 'text-gray-400'}`}
-                    >
-                      {c.description}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.button>
-        )
-      })}
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-50 text-neutral-700">
+                <it.icon size={20} weight="duotone" />
+              </span>
+              <span className="min-w-0 pe-5">
+                <span className="block text-sm font-semibold text-neutral-900">{t(`onboarding.intent.${it.id}.label`)}</span>
+                <span className="mt-0.5 block text-xs leading-snug text-neutral-500">{t(`onboarding.intent.${it.id}.hint`)}</span>
+              </span>
+              <ArrowRight
+                size={14}
+                weight="bold"
+                className="absolute end-4 top-1/2 -translate-y-1/2 text-neutral-300 transition-colors group-hover:text-neutral-700 rtl:rotate-180"
+              />
+            </motion.button>
+          )
+        })}
+      </div>
+      <button type="button" onClick={onSkip} className="mx-auto text-xs text-neutral-400 underline-offset-2 hover:text-neutral-600 hover:underline">
+        {t('onb2.new.goal_skip')}
+      </button>
+      <DemoEntryCard className="mt-2" />
     </div>
   )
 }
 
-// ── Step 2: usage questionnaire (local-only, gates Continue) ───────────────────
+// ── Step 2: name (the address follows) ──────────────────────────────────────
 
-function StepUsagePersonal({
-  goals,
-  onChange,
-  t,
-}: {
-  goals: string[]
-  onChange: (_g: string[]) => void
-  t: any
-}) {
-  const PERSONAL_GOALS = [
-    { id: 'learn_skills', label: t('hub_new.personalGoals.learnSkills', { defaultValue: 'Learn skills' }), Icon: GraduationCap },
-    { id: 'teach_others', label: t('hub_new.personalGoals.teachOthers', { defaultValue: 'Teach others' }), Icon: Laptop },
-    { id: 'coding', label: t('hub_new.personalGoals.coding', { defaultValue: 'Coding' }), Icon: Code },
-    { id: 'creative', label: t('hub_new.personalGoals.creative', { defaultValue: 'Creative' }), Icon: Palette },
-    { id: 'music', label: t('hub_new.personalGoals.music', { defaultValue: 'Music' }), Icon: Music },
-    { id: 'ai', label: t('hub_new.personalGoals.ai', { defaultValue: 'AI' }), Icon: Bot },
-    { id: 'literature', label: t('hub_new.personalGoals.literature', { defaultValue: 'Literature' }), Icon: BookOpen },
-    { id: 'science', label: t('hub_new.personalGoals.science', { defaultValue: 'Science' }), Icon: Atom },
-    { id: 'business', label: t('hub_new.personalGoals.business', { defaultValue: 'Business' }), Icon: TrendingUp },
-    { id: 'health', label: t('hub_new.personalGoals.health', { defaultValue: 'Health' }), Icon: Heart },
-    { id: 'photography', label: t('hub_new.personalGoals.photography', { defaultValue: 'Photography' }), Icon: Camera },
-    { id: 'writing', label: t('hub_new.personalGoals.writing', { defaultValue: 'Writing' }), Icon: Pencil },
-    { id: 'languages', label: t('hub_new.personalGoals.languages', { defaultValue: 'Languages' }), Icon: Languages },
-    { id: 'gaming', label: t('hub_new.personalGoals.gaming', { defaultValue: 'Gaming' }), Icon: Gamepad2 },
-  ]
-  const toggle = (id: string) => {
-    onChange(goals.includes(id) ? goals.filter((g) => g !== id) : [...goals, id])
-  }
-  return (
-    <div className="bg-white nice-shadow rounded-2xl p-6">
-      <p className="text-sm font-semibold text-gray-800 mb-1">
-        {t('hub_new.personalUsage.title', { defaultValue: 'What would you like to learn?' })}
-      </p>
-      <p className="text-xs text-gray-400 mb-4">
-        {t('hub_new.personalUsage.subtitle', { defaultValue: 'Pick all that apply.' })}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {PERSONAL_GOALS.map((g) => (
-          <OptionChip key={g.id} selected={goals.includes(g.id)} onClick={() => toggle(g.id)} Icon={g.Icon} label={g.label} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function StepUsageOrg({
-  data,
-  onChange,
-  t,
-}: {
-  data: { teamSize: string; useCase: string }
-  onChange: (_d: { teamSize: string; useCase: string }) => void
-  t: any
-}) {
-  const TEAM_SIZES = [
-    { id: 'solo', label: t('hub_new.teamSizes.solo', { defaultValue: 'Solo' }), Icon: User },
-    { id: '2-10', label: t('hub_new.teamSizes.2-10', { defaultValue: '2–10' }), Icon: Users },
-    { id: '11-50', label: t('hub_new.teamSizes.11-50', { defaultValue: '11–50' }), Icon: Users },
-    { id: '51-200', label: t('hub_new.teamSizes.51-200', { defaultValue: '51–200' }), Icon: Users },
-    { id: '200+', label: t('hub_new.teamSizes.200plus', { defaultValue: '200+' }), Icon: Building2 },
-  ]
-  const ORG_USE_CASES = [
-    { id: 'employee_training', label: t('hub_new.orgUseCases.employeeTraining', { defaultValue: 'Employee training' }), Icon: Briefcase },
-    { id: 'online_courses', label: t('hub_new.orgUseCases.onlineCourses', { defaultValue: 'Online courses' }), Icon: ShoppingBag },
-    { id: 'customer_education', label: t('hub_new.orgUseCases.customerEducation', { defaultValue: 'Customer education' }), Icon: Megaphone },
-    { id: 'academic_programs', label: t('hub_new.orgUseCases.academicPrograms', { defaultValue: 'Academic programs' }), Icon: GraduationCap },
-    { id: 'developer_docs', label: t('hub_new.orgUseCases.developerDocs', { defaultValue: 'Developer docs' }), Icon: Code },
-    { id: 'community_learning', label: t('hub_new.orgUseCases.communityLearning', { defaultValue: 'Community learning' }), Icon: Globe },
-  ]
-  return (
-    <div className="space-y-4">
-      <div className="bg-white nice-shadow rounded-2xl p-6">
-        <p className="text-sm font-semibold text-gray-800 mb-4">
-          {t('hub_new.orgUsage.teamSizeTitle', { defaultValue: 'How big is your team?' })}
-        </p>
-        <div className="flex gap-2">
-          {TEAM_SIZES.map((s) => (
-            <TeamCard
-              key={s.id}
-              selected={data.teamSize === s.id}
-              onClick={() => onChange({ ...data, teamSize: s.id })}
-              Icon={s.Icon}
-              label={s.label}
-            />
-          ))}
-        </div>
-      </div>
-      <div className="bg-white nice-shadow rounded-2xl p-6">
-        <p className="text-sm font-semibold text-gray-800 mb-4">
-          {t('hub_new.orgUsage.useCaseTitle', { defaultValue: 'What will you use it for?' })}
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {ORG_USE_CASES.map((c) => (
-            <OptionChip
-              key={c.id}
-              selected={data.useCase === c.id}
-              onClick={() => onChange({ ...data, useCase: c.id })}
-              Icon={c.Icon}
-              label={c.label}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Step 4: create org form + plan summary ────────────────────────────────────
-
-const FormLabelAndMessage = ({ label, message }: { label: string; message?: string }) => (
-  <div className="flex items-center justify-between mb-2">
-    <Form.Label className="text-[13px] font-semibold text-black/50">{label}</Form.Label>
-    {message && (
-      <div className="flex items-center gap-1 text-red-500/80 text-[11px] font-medium">
-        <Info size={9} />
-        <span>{message}</span>
-      </div>
-    )}
-  </div>
-)
-
-function TestHint({ t }: { t: any }) {
-  return (
-    <div className="mt-2.5 flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-xl px-3.5 py-3">
-      <Info size={13} className="text-amber-500 flex-shrink-0 mt-0.5" />
-      <div className="text-[12px] leading-relaxed text-amber-800">
-        <span className="font-semibold">{t('hub_new.createOrg.testHint.title', { defaultValue: 'Looking to test?' })}</span>{' '}
-        <span className="text-amber-700">
-          {t('hub_new.createOrg.testHint.body', { defaultValue: 'Try a' })}{' '}
-          <span className="font-semibold">
-            {t('hub_new.createOrg.testHint.link', { defaultValue: 'different name' })}
-          </span>{' '}
-          {t('hub_new.createOrg.testHint.suffix', { defaultValue: 'for your organization.' })}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-function CreateOrgForm({
-  planId,
-  billing,
-  prices,
+function NameStep({
+  token,
   submitting,
   error,
+  onBack,
   onSubmit,
-  t,
 }: {
-  planId: PlanId | null
-  billing: Billing
-  prices?: PricesResponse | null
+  token?: string
   submitting: boolean
-  error: string
-  onSubmit: (_values: { name: string; description: string; slug: string }) => void
-  t: any
+  error: { message: string; capReached?: boolean } | null
+  onBack: () => void
+  onSubmit: (_v: { name: string; slug: string }) => void
 }) {
+  const { t } = useTranslation()
+  const { track } = useLHAnalytics('hub')
+  const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
+  const [editing, setEditing] = useState(false)
   const slugEdited = useRef(false)
+  const nameRef = useRef<HTMLInputElement>(null)
+  const debouncedName = useDebounced(name.trim(), 300)
+  const debouncedSlug = useDebounced(slug.trim().toLowerCase(), 300)
+  const domain = getLEARNHOUSE_DOMAIN_VAL()
 
-  const validate = (values: any) => {
-    const errors: any = {}
-    if (!values.name) errors.name = t('hub_new.createOrg.validation.required', { defaultValue: 'Required' })
-    else if (/test/i.test(values.name)) errors.name = 'test_hint'
-    if (!values.slug) errors.slug = t('hub_new.createOrg.validation.required', { defaultValue: 'Required' })
-    else if (values.slug !== values.slug.toLowerCase())
-      errors.slug = t('hub_new.createOrg.validation.lowercase', { defaultValue: 'Lowercase only' })
-    else if (values.slug.match(/[^a-z0-9-]/))
-      errors.slug = t('hub_new.createOrg.validation.noSpecialChars', { defaultValue: 'Letters, numbers, dashes only' })
-    else if (values.slug.includes('test')) errors.slug = 'test_hint'
-    else if (RESERVED_SLUGS.includes(values.slug))
-      errors.slug = t('hub_new.createOrg.validation.reserved', { defaultValue: 'This slug is reserved' })
-    else if (RESTRICTED_WORDS.some((w) => values.slug.includes(w)))
-      errors.slug = t('hub_new.createOrg.validation.reserved', { defaultValue: 'This slug is reserved' })
-    else if (values.slug.length > 20)
-      errors.slug = t('hub_new.createOrg.validation.maxLength', { defaultValue: 'Max 20 characters' })
-    return errors
-  }
+  useEffect(() => nameRef.current?.focus(), [])
 
-  const formik = useFormik({
-    initialValues: { name: '', description: '', slug: '' },
-    validate,
-    onSubmit: (values) => onSubmit({ name: values.name, description: values.description, slug: values.slug }),
+  const check = useQuery<SlugCheck>({
+    queryKey: ['onboarding', 'slug', debouncedName, slugEdited.current ? debouncedSlug : ''],
+    queryFn: () => checkSlug(token, debouncedName || 'academy', slugEdited.current ? debouncedSlug : undefined),
+    enabled: !!token && (!!debouncedName || (slugEdited.current && !!debouncedSlug)),
+    staleTime: 10_000,
   })
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    formik.handleChange(e)
-    if (!slugEdited.current) {
-      formik.setFieldValue('slug', slugify(e.target.value))
-    }
-  }
+  // Until the admin types their own, the address is the free one nearest the name.
+  useEffect(() => {
+    if (!slugEdited.current && check.data?.suggestion) setSlug(check.data.suggestion)
+  }, [check.data?.suggestion])
 
-  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    slugEdited.current = true
-    formik.handleChange(e)
-  }
-
-  const inputCls =
-    'w-full bg-white nice-shadow text-[14px] text-black/80 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/[0.06] transition-all placeholder:text-black/20'
-  const hasErrors = Object.keys(formik.errors).length > 0
-  const needsPayment = planId ? isPaidPlan(planId) && planId !== 'enterprise' : false
+  const checking = check.isFetching || debouncedName !== name.trim() || (slugEdited.current && debouncedSlug !== slug.trim().toLowerCase())
+  const problem = slugEdited.current && check.data && !check.data.available ? check.data.reason : null
+  const canSubmit = !!name.trim() && !!slug && !problem && !checking && !submitting
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-5 items-start">
-      <div className="bg-white nice-shadow rounded-2xl p-7">
+    <form
+      className="flex flex-col gap-4"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (canSubmit) onSubmit({ name: name.trim(), slug })
+      }}
+    >
+      <div className="rounded-2xl bg-white p-5 nice-shadow sm:p-6">
         {error && (
-          <div className="flex items-center gap-2.5 bg-red-50 rounded-xl px-4 py-3 mb-5 text-red-600 border border-red-100">
-            <Info size={14} className="flex-shrink-0" />
-            <span className="text-[13px] font-medium">{error}</span>
+          <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 px-3.5 py-3 text-sm text-rose-700" role="alert">
+            <Info size={15} className="mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <p>{error.message}</p>
+              {error.capReached && (
+                <Link href="/home" className="mt-1 inline-block font-semibold underline underline-offset-2">
+                  {t('onb2.new.cap_manage')}
+                </Link>
+              )}
+            </div>
           </div>
         )}
-        <Form.Root onSubmit={formik.handleSubmit} className="space-y-5">
-          <Form.Field name="name">
-            <FormLabelAndMessage
-              label={t('hub_new.createOrg.fields.name', { defaultValue: 'Organization name' })}
-              message={formik.errors.name === 'test_hint' ? undefined : (formik.errors.name as string)}
-            />
-            <Form.Control asChild>
-              <input
-                className={inputCls}
-                onChange={handleNameChange}
-                value={formik.values.name}
-                type="text"
-                placeholder={t('hub_new.createOrg.placeholders.name', { defaultValue: 'Acme Academy' })}
-                required
-              />
-            </Form.Control>
-            {formik.errors.name === 'test_hint' && <TestHint t={t} />}
-          </Form.Field>
-
-          <Form.Field name="description">
-            <FormLabelAndMessage
-              label={t('hub_new.createOrg.fields.description', { defaultValue: 'Description (optional)' })}
-            />
-            <Form.Control asChild>
-              <input
-                className={inputCls}
-                onChange={formik.handleChange}
-                value={formik.values.description}
-                type="text"
-                placeholder={t('hub_new.createOrg.placeholders.description', {
-                  defaultValue: 'What is your organization about?',
-                })}
-              />
-            </Form.Control>
-          </Form.Field>
-
-          <Form.Field name="slug">
-            <FormLabelAndMessage
-              label={t('hub_new.createOrg.fields.slug', { defaultValue: 'Address' })}
-              message={formik.errors.slug === 'test_hint' ? undefined : (formik.errors.slug as string)}
-            />
-            <div className="flex items-center rounded-xl overflow-hidden nice-shadow focus-within:ring-2 focus-within:ring-black/[0.06] transition-all">
-              <Form.Control asChild>
-                <input
-                  className="flex-1 bg-white text-[14px] text-black/80 px-4 py-3 focus:outline-none placeholder:text-black/20"
-                  onChange={handleSlugChange}
-                  value={formik.values.slug}
-                  placeholder="your-org"
-                  type="text"
-                  required
-                />
-              </Form.Control>
-              <span className="px-4 py-3 bg-gray-50 text-black/25 border-s border-gray-100 shrink-0 text-[13px] font-medium select-none">
-                .learnhouse.io
-              </span>
-            </div>
-            {formik.errors.slug === 'test_hint' && <TestHint t={t} />}
-          </Form.Field>
-
-          <Form.Submit asChild>
-            <motion.button
-              disabled={hasErrors || submitting}
-              whileTap={hasErrors || submitting ? {} : { scale: 0.98 }}
-              className={`w-full flex items-center justify-center gap-2 text-[14px] font-semibold py-3 rounded-xl transition-colors mt-1 ${
-                hasErrors || submitting
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-900 hover:bg-gray-800 text-white cursor-pointer'
-              }`}
-            >
-              {submitting ? (
-                <>
-                  <Loader size={15} className="animate-spin" />
-                  {t('hub_new.createOrg.submitting', { defaultValue: 'Creating…' })}
-                </>
-              ) : (
-                <>
-                  {needsPayment
-                    ? t('hub_new.createOrg.submitPaid', { defaultValue: 'Create & continue to payment' })
-                    : t('hub_new.createOrg.submit', { defaultValue: 'Create organization' })}
-                  <ArrowRight size={15} data-dir-flip />
-                </>
-              )}
-            </motion.button>
-          </Form.Submit>
-        </Form.Root>
-      </div>
-      {planId && (
-        <PlanSummaryCard
-          planId={planId}
-          billing={billing}
-          priceOverrides={prices?.plans}
-          planLimits={prices?.limits}
+        <label htmlFor="org-name" className="mb-1.5 block text-sm font-semibold text-neutral-800">
+          {t('onb2.new.name_label')}
+        </label>
+        <input
+          id="org-name"
+          ref={nameRef}
+          name="name"
+          value={name}
+          maxLength={100}
+          autoComplete="organization"
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t('onb2.new.name_placeholder')}
+          className={`${INPUT} h-11 text-[15px]`}
         />
-      )}
-    </div>
-  )
-}
 
-// ── Success (cross-domain handoff into the new org app) ────────────────────────
-
-function CreateOrgSuccess({ slug, t }: { slug: string; t: any }) {
-  const [going, setGoing] = useState(false)
-
-  const handleGoToOrg = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    if (going) return
-    setGoing(true)
-    // Single-domain (.io) consolidation: the apex and the org subdomain share
-    // the .{top_domain}-scoped session cookie, so the session already covers the
-    // subdomain; no cross-domain code-mint/token-exchange handoff is needed.
-    // Refresh once to mint a fresh access token, then land on the new org's
-    // onboarding (the first page for a brand-new org).
-    try {
-      await fetch('/api/auth/refresh', { credentials: 'include' })
-    } catch {
-      /* non-fatal: the existing session cookie still carries over */
-    }
-    // getUriWithOrg stays relative on a custom domain (that host is another
-    // org's), so build the new org's own subdomain URL there.
-    window.location.href = getCustomDomainFromContext()
-      ? `${window.location.protocol}//${slug}.${getLEARNHOUSE_DOMAIN_VAL()}/dash/onboarding`
-      : getUriWithOrg(slug, '/dash/onboarding')
-  }
-
-  return (
-    <div className="flex flex-col items-center py-10 text-center">
-      <motion.div
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4"
-      >
-        <Check size={32} className="text-emerald-600" />
-      </motion.div>
-      <h2 className="text-xl font-bold text-gray-900 mb-2">
-        {t('hub_new.success.title', { defaultValue: 'Your organization is ready' })}
-      </h2>
-      <p className="text-sm text-gray-500 mb-6">
-        {t('hub_new.success.description', { defaultValue: 'Jump in and start building your courses.' })}
-      </p>
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleGoToOrg}
-          disabled={going}
-          className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {going ? (
-            <>
-              <Loader size={15} className="animate-spin" />
-              {t('hub_new.success.goToOrg', { defaultValue: 'Go to organization' })}
-            </>
+        <div className="mt-3 min-h-[28px] text-sm" aria-live="polite">
+          {!editing ? (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-neutral-500">
+              <span>{t('onb2.new.address')}</span>
+              <span className="font-medium text-neutral-900" data-testid="org-address" dir="ltr">
+                {slug || 'your-academy'}.{domain}
+              </span>
+              {name.trim() &&
+                (checking ? (
+                  <CircleNotch size={13} className="animate-spin text-neutral-400" />
+                ) : slug ? (
+                  <CheckCircle size={14} weight="fill" className="text-emerald-600" aria-label={t('onb2.new.available')} />
+                ) : null)}
+              <button type="button" onClick={() => setEditing(true)} className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 hover:text-neutral-900">
+                <PencilSimple size={12} />
+                {t('onb2.new.change')}
+              </button>
+            </div>
           ) : (
-            <>
-              {t('hub_new.success.goToOrg', { defaultValue: 'Go to organization' })}
-              <ArrowRight size={15} data-dir-flip />
-            </>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center overflow-hidden rounded-xl ring-1 ring-inset ring-neutral-200 focus-within:ring-2 focus-within:ring-neutral-900/15" dir="ltr">
+                <input
+                  name="slug"
+                  value={slug}
+                  maxLength={40}
+                  onChange={(e) => {
+                    slugEdited.current = true
+                    track(AnalyticsEvent.OnboardingSlugEdited, {})
+                    setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                  }}
+                  className="h-9 min-w-0 flex-1 bg-white px-3 text-sm focus:outline-none"
+                  aria-label={t('onb2.new.address')}
+                />
+                <span className="shrink-0 border-s border-neutral-100 bg-neutral-50 px-3 py-2 text-xs text-neutral-400">.{domain}</span>
+              </div>
+              {problem ? (
+                <p className="text-xs text-rose-600">
+                  {t(`onb2.new.slug_${problem}`)}{' '}
+                  {check.data?.suggestion && (
+                    <button
+                      type="button"
+                      className="font-semibold underline underline-offset-2"
+                      onClick={() => {
+                        setSlug(check.data!.suggestion)
+                      }}
+                    >
+                      {t('onb2.new.use_suggestion', { slug: check.data.suggestion })}
+                    </button>
+                  )}
+                </p>
+              ) : (
+                <p className="text-xs text-neutral-400">{t('onb2.new.slug_hint')}</p>
+              )}
+            </div>
           )}
-        </button>
-        <Link
-          href="/home"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-100 transition-colors"
-        >
-          {t('hub_new.success.cta', { defaultValue: 'Back to organizations' })}
-        </Link>
+        </div>
+
+        <Button type="submit" variant="primary" size="lg" className="mt-5 w-full justify-center" loading={submitting} disabled={!canSubmit}>
+          {submitting ? t('onb2.new.creating') : t('onb2.new.create')}
+          {!submitting && <ArrowRight size={15} weight="bold" className="rtl:rotate-180" />}
+        </Button>
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-neutral-400">
+          <Check size={12} weight="bold" className="text-emerald-600" />
+          {t('onb2.new.free_note')}
+        </p>
       </div>
+      <button type="button" onClick={onBack} className="inline-flex w-fit items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800">
+        <ArrowLeft size={14} className="rtl:rotate-180" />
+        {t('hub_new.navigation.back')}
+      </button>
+    </form>
+  )
+}
+
+// ── Step 3: how to start ────────────────────────────────────────────────────
+
+function StartStep({
+  goal,
+  busy,
+  onTemplate,
+  onBlank,
+}: {
+  goal: OnboardingGoal | null
+  busy: 'template' | 'blank' | null
+  onTemplate: () => void
+  onBlank: () => void
+}) {
+  const { t } = useTranslation()
+  const template = GOAL_TEMPLATE[goal ?? 'none']
+  const card =
+    'relative flex w-full items-start gap-4 rounded-2xl bg-white p-5 text-start nice-shadow transition-all hover:shadow-md disabled:opacity-60'
+  return (
+    <div className="flex flex-col gap-3">
+      <button type="button" className={`${card} ring-2 ring-neutral-900`} onClick={onTemplate} disabled={!!busy} data-start="template">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
+          {busy === 'template' ? <CircleNotch size={20} className="animate-spin" /> : <Browser size={20} weight="duotone" />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-neutral-900">{t('onb2.new.start_template')}</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold text-white">
+              <Sparkle size={9} weight="fill" />
+              {t('onb2.plans.recommended')}
+            </span>
+          </span>
+          <span className="mt-1 block text-xs leading-relaxed text-neutral-500">
+            {t('onb2.new.start_template_desc', { template: t(`landingBuilder.templates.${template}.name`) })}
+          </span>
+        </span>
+      </button>
+      <button type="button" className={card} onClick={onBlank} disabled={!!busy} data-start="blank">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
+          {busy === 'blank' ? <CircleNotch size={20} className="animate-spin" /> : <FileDashed size={20} weight="duotone" />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-neutral-900">{t('onb2.new.start_blank')}</span>
+          <span className="mt-1 block text-xs leading-relaxed text-neutral-500">{t('onb2.new.start_blank_desc')}</span>
+        </span>
+      </button>
     </div>
   )
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Page ────────────────────────────────────────────────────────────────────
 
 export default function CreateNewOrgPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const router = useRouter()
   const queryClient = useQueryClient()
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
+  const token = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
   const isLoading = session?.status === 'loading'
   const { track } = useLHAnalytics('hub')
 
+  const [step, setStep] = useState<Step>('goal')
+  const [dir, setDir] = useState(1)
+  const [goal, setGoal] = useState<OnboardingGoal | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<{ message: string; capReached?: boolean } | null>(null)
+  const [created, setCreated] = useState<{ id: number; slug: string } | null>(null)
+  const [starting, setStarting] = useState<'template' | 'blank' | null>(null)
+  // A plan picked on the pricing page before signing up (?plan=standard).
+  const [planIntent, setPlanIntent] = useState<string | null>(null)
+
   useEffect(() => {
-    track(AnalyticsEvent.OnboardingStarted)
+    setPlanIntent(new URLSearchParams(window.location.search).get('plan'))
+    track(AnalyticsEvent.OnboardingStarted, { version: 2 })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const [step, setStep] = useState<Step>('use-type')
-  const [dir, setDir] = useState<1 | -1>(1)
-  // Fold text direction into the slide axis so a "next" step always moves
-  // toward the inline end, mirroring in Arabic.
-  const slideAxis = dirMultiplier(directionForLanguage(i18n.language))
-  const [useType, setUseType] = useState<UseType>(null)
-  const [personalGoals, setPersonalGoals] = useState<string[]>([])
-  const [orgUsage, setOrgUsage] = useState({ teamSize: '', useCase: '' })
-  const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
-  const [billing, setBilling] = useState<Billing>('monthly')
-  const [createdSlug, setCreatedSlug] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-
-  // Redirect unauthenticated users (same effect as app/home/home.tsx).
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/login')
-    }
+    if (!isLoading && !isAuthenticated) router.replace('/login')
   }, [isLoading, isAuthenticated, router])
 
-  // Load the user's existing orgs to detect whether they already have a free org
-  // (which makes the free plan unavailable, mirroring the platform's 1-free-org cap).
-  // Only orgs they run count: being a member of a school on the free plan must
-  // not stop someone from starting their own, and the demo makes everyone admin.
-  const { data: orgs } = useQuery({
-    queryKey: ['orgs', 'user'],
-    queryFn: () => apiFetch(`${getAPIUrl()}orgs/user/page/1/limit/50`, access_token),
-    enabled: isAuthenticated,
-    staleTime: 60_000,
+  const hub = useQuery({
+    queryKey: onboardingKeys.hub(),
+    queryFn: () => getHubSummary(token),
+    enabled: isAuthenticated && !!token,
+    staleTime: 30_000,
   })
-  const hasFreeOrg = Array.isArray(orgs)
-    ? orgs.some((o: any) => {
-        if (o.is_demo || !hasManagingRoleFromSession(session, o.id)) return false
-        const plan = o.config?.config?.plan ?? o.config?.config?.cloud?.plan ?? 'free'
-        return plan === 'free'
-      })
-    : false
+  const invites = hub.data?.invites ?? []
 
-  // Live Stripe prices/limits overlay (same source as the billing hub). Falls
-  // back to the static canonical catalog when the endpoint is unavailable.
-  const { data: prices, isLoading: pricesLoading } = useQuery({
-    queryKey: ['billing', 'prices'],
-    queryFn: () => fetchPrices(),
-    staleTime: 5 * 60_000,
-  })
-
-  const canAdvanceUsage =
-    useType === 'personal'
-      ? personalGoals.length > 0
-      : orgUsage.teamSize !== '' && orgUsage.useCase !== ''
-
-  const handleSelectPlan = (planId: PlanId, b: Billing) => {
-    track(AnalyticsEvent.OnboardingPlanSelected, { plan: planId, billing: b, use_type: useType })
-    setSelectedPlan(planId)
-    setBilling(b)
-    setDir(1)
-    setStep('create-org')
+  const go = (next: Step, direction = 1) => {
+    setDir(direction)
+    setStep(next)
   }
 
-  const handleCreate = async (values: { name: string; description: string; slug: string }) => {
-    if (submitting) return
-    setSubmitting(true)
-    setError('')
-    track(AnalyticsEvent.OrgCreateSubmitted, { plan: selectedPlan, billing, use_type: useType })
-    const toastId = toast.loading(t('hub_new.toast.creating', { defaultValue: 'Creating organization…' }))
-    try {
-      const newOrg = await createNewOrganization(
-        {
-          name: values.name,
-          description: values.description,
-          slug: values.slug,
-          email: session?.data?.user?.email ?? '',
-          logo_image: '',
-        },
-        access_token
-      )
-      const newSlug = newOrg?.slug ?? values.slug
-      track(AnalyticsEvent.OrgCreated, { plan: selectedPlan, billing, use_type: useType, slug: newSlug })
+  const pickGoal = (g: OnboardingGoal | null) => {
+    setGoal(g)
+    track(AnalyticsEvent.OnboardingGoalSelected, { goal: g ?? 'none' })
+    go('name')
+  }
 
-      // The creator is now an admin of this org, so record them in the marketing
-      // audience (Loops), along with the onboarding choices as contact
-      // properties (use_types, chosen_plans, …). Fire-and-forget & SaaS-gated
-      // server-side; the email is taken from the verified session there.
+  const create = async ({ name, slug }: { name: string; slug: string }) => {
+    setSubmitting(true)
+    setError(null)
+    track(AnalyticsEvent.OrgCreateSubmitted, { goal: goal ?? 'none', version: 2 })
+    try {
+      const res = await createOrgWithOnboarding(token, { name, slug, goal })
+      const org = res.org
+      track(AnalyticsEvent.OrgCreated, { goal: goal ?? 'none', slug: org.slug, version: 2 })
+      // Marketing audience (Loops), as before: SaaS-gated server-side, email from the session.
       void fetch('/api/loops/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          orgSlug: newSlug,
-          onboarding: {
-            use_types: useType || undefined,
-            chosen_plans: selectedPlan || undefined,
-            billing_cycles: billing || undefined,
-            personal_goals: useType === 'personal' && personalGoals.length ? personalGoals.join(',') : undefined,
-            team_sizes: useType === 'organization' ? orgUsage.teamSize || undefined : undefined,
-            use_cases: useType === 'organization' ? orgUsage.useCase || undefined : undefined,
-            onboarding_completed: true,
-          },
-        }),
+        body: JSON.stringify({ orgSlug: org.slug, onboarding: { use_cases: goal || undefined, onboarding_completed: true } }),
       }).catch(() => {})
-
-      // Refresh session and invalidate the cached org list so the new org appears.
       try {
         await session?.update?.(true)
       } catch {
         /* no-op */
       }
       queryClient.invalidateQueries({ queryKey: ['orgs', 'user'] })
-      toast.dismiss(toastId)
-      toast.success(t('hub_new.toast.created', { defaultValue: 'Organization created!' }))
-
-      const plan = findPlan(selectedPlan ?? '')
-      const needsCheckout = plan && isPaidPlan(plan.id) && plan.id !== 'enterprise'
-      if (needsCheckout) {
-        track(AnalyticsEvent.PlanCheckoutInitiated, { plan: selectedPlan, billing, slug: newSlug, source: 'onboarding' })
-        try {
-          const res = await fetch('/api/billing/checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              plan: selectedPlan,
-              billing,
-              orgId: newOrg.id,
-              orgSlug: newSlug,
-            }),
-            credentials: 'include',
-          })
-          const data = await res.json().catch(() => null)
-          if (res.ok && data?.url) {
-            window.location.href = data.url
-            return
-          }
-          toast.error(
-            t('hub_new.toast.checkoutFailed', {
-              defaultValue: 'Organization created. You can upgrade from Plan & Usage.',
-            })
-          )
-        } catch {
-          toast.error(
-            t('hub_new.toast.checkoutFailed', {
-              defaultValue: 'Organization created. You can upgrade from Plan & Usage.',
-            })
-          )
-        }
-      }
-      setCreatedSlug(newSlug)
-      setDir(1)
-      setStep('success')
+      queryClient.invalidateQueries({ queryKey: onboardingKeys.hub() })
+      setCreated({ id: org.id, slug: org.slug })
+      go('start')
     } catch (e: any) {
-      toast.dismiss(toastId)
-      const fallback = t('hub_new.toast.failed', { defaultValue: 'Failed to create organization' })
-      const msg = friendlyCreateError(e, fallback)
-      track(AnalyticsEvent.OrgCreateFailed, { plan: selectedPlan, use_type: useType, error: msg })
-      toast.error(msg)
-      setError(msg)
+      const detail = e?.detail
+      const fallback = t('hub_new.toast.failed')
+      if (e?.status === 409 && detail?.suggestion) {
+        setError({ message: t('onb2.new.slug_taken_retry', { slug: detail.suggestion }) })
+      } else if (e?.status === 403) {
+        setError({ message: detailMessage(detail, fallback), capReached: true })
+      } else {
+        setError({ message: detailMessage(detail, fallback) })
+      }
+      track(AnalyticsEvent.OrgCreateFailed, { goal: goal ?? 'none', status: e?.status ?? 0 })
     } finally {
       setSubmitting(false)
     }
   }
 
-  // Navigation helpers
-  const goBack = () => {
-    setDir(-1)
-    if (step === 'usage') setStep('use-type')
-    else if (step === 'choose-plan') setStep('usage')
-    else if (step === 'create-org') setStep('choose-plan')
-  }
-  const advance = () => {
-    setDir(1)
-    if (step === 'use-type' && useType) setStep('usage')
-    else if (step === 'usage' && canAdvanceUsage) setStep('choose-plan')
-  }
-  const skip = () => {
-    setDir(1)
-    setStep('choose-plan')
+  const enterOrg = async () => {
+    if (!created) return
+    // The dashboard opens on the welcome tour, then the launch plan.
+    try {
+      await fetch('/api/auth/refresh', { credentials: 'include' })
+    } catch {
+      /* the shared session cookie still carries over */
+    }
+    const paid = planIntent && planIntent !== 'free' ? getUpgradeUrl(created.slug, planIntent) : null
+    window.location.href = paid || orgUrl(created.slug, '/dash')
   }
 
-  const stepNumber = STEP_NUMBER[step]
-  const isWide = step === 'choose-plan' || step === 'create-org'
-  const showSkip = step === 'use-type' || step === 'usage'
-  const showNav = step === 'use-type' || step === 'usage'
-  const showBack = step !== 'use-type' && step !== 'success'
-  const canContinue = step === 'use-type' ? useType !== null : canAdvanceUsage
-
-  const META: Record<Step, { title: string; subtitle: string }> = {
-    'use-type': {
-      title: t('hub_new.steps.useType.title', { defaultValue: 'What are you creating?' }),
-      subtitle: t('hub_new.steps.useType.subtitle', { defaultValue: 'This helps us tailor your space.' }),
-    },
-    usage: {
-      title: t('hub_new.steps.usage.title', { defaultValue: 'Tell us a bit more' }),
-      subtitle: t('hub_new.steps.usage.subtitle', { defaultValue: 'So we can recommend the right setup.' }),
-    },
-    'choose-plan': {
-      title: t('hub_new.steps.choosePlan.title', { defaultValue: 'Choose a plan' }),
-      subtitle: t('hub_new.steps.choosePlan.subtitle', { defaultValue: 'You can change this anytime.' }),
-    },
-    'create-org': {
-      title: t('hub_new.steps.createOrg.title', { defaultValue: 'Name your organization' }),
-      subtitle: t('hub_new.steps.createOrg.subtitle', { defaultValue: 'Pick a name and a web address.' }),
-    },
-    success: {
-      title: t('hub_new.steps.success.title', { defaultValue: 'All set' }),
-      subtitle: '',
-    },
+  const start = async (kind: 'template' | 'blank') => {
+    if (!created || starting) return
+    setStarting(kind)
+    track(AnalyticsEvent.OnboardingStarterChosen, { kind, goal: goal ?? 'none' })
+    if (kind === 'template') {
+      await applyStarter(token, created.id).catch(() => null)
+    } else {
+      await recordOnboardingEvent(token, created.id, 'starter_skipped').catch(() => {})
+    }
+    await enterOrg()
   }
-  const meta = META[step]
 
+  const index = STEPS.indexOf(step)
+  const meta: Record<Step, { title: string; subtitle: string }> = {
+    goal: { title: t('onb2.new.goal_title'), subtitle: t('onb2.new.goal_subtitle') },
+    name: { title: t('onb2.new.name_title'), subtitle: t('onb2.new.name_subtitle') },
+    start: { title: t('onb2.new.start_title'), subtitle: t('onb2.new.start_subtitle') },
+  }
   const showLoader = isLoading || (isAuthenticated && !session?.data)
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-white">
       <div className="relative min-h-screen">
-        {/* Blueprint grid, fades in from bottom */}
         <div
-          className="absolute inset-0 pointer-events-none z-0"
+          className="pointer-events-none absolute inset-0 z-0"
           style={{
-            backgroundImage: `
-              linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px),
-              linear-gradient(rgba(0,0,0,0.018) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0,0,0,0.018) 1px, transparent 1px)
-            `,
-            backgroundSize: '80px 80px, 80px 80px, 16px 16px, 16px 16px',
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px',
             maskImage: 'linear-gradient(to top, black 0%, transparent 60%)',
             WebkitMaskImage: 'linear-gradient(to top, black 0%, transparent 60%)',
           }}
         />
-
-        <div className="relative z-10 min-h-screen flex flex-col items-center py-8 px-4">
-          {/* Top bar */}
-          <div className="w-full max-w-5xl mb-10 grid grid-cols-3 items-center">
-            <Link
-              href="/home"
-              className="flex items-center gap-1.5 text-sm font-semibold text-black/35 hover:text-black transition-colors w-fit"
-            >
-              <ArrowLeft size={14} data-dir-flip />
-              {t('hub_new.topBar.back', { defaultValue: 'Organizations' })}
+        <div className="relative z-10 flex min-h-screen flex-col items-center px-4 py-6 sm:py-8">
+          <div className="mb-8 grid w-full max-w-3xl grid-cols-3 items-center sm:mb-10">
+            <Link href="/home" className="flex w-fit items-center gap-1.5 text-sm font-semibold text-black/35 transition-colors hover:text-black">
+              <ArrowLeft size={14} className="rtl:rotate-180" />
+              <span className="hidden sm:inline">{t('hub_new.topBar.back')}</span>
             </Link>
             <div className="flex justify-center">
-              <Link href="/home">
-                { }
-                <img src="/lrn.svg" alt="LearnHouse" width={40} height={40} className="opacity-90" />
-              </Link>
+              <img src="/lrn.svg" alt="LearnHouse" width={36} height={36} className="opacity-90 lh-dark-invert" />
             </div>
             <div className="flex justify-end">
               {isAuthenticated && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button aria-label={t('hub_new.user_menu', { defaultValue: 'User menu' })} className="rounded-full">
-                      <UserAvatar border="border-2" rounded="rounded-full" width={34} />
+                    <button aria-label={t('hub_new.user_menu')} className="rounded-full">
+                      <UserAvatar border="border-2" rounded="rounded-full" width={32} />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end">
@@ -1008,10 +523,10 @@ export default function CreateNewOrgPage() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => signOut({ redirect: true, callbackUrl: '/login' })}
-                      className="flex items-center space-x-2 text-red-600 focus:text-red-600"
+                      className="flex items-center gap-2 text-red-600 focus:text-red-600"
                     >
-                      <LogOut size={16} />
-                      <span>{t('user.sign_out', { defaultValue: 'Sign out' })}</span>
+                      <SignOut size={16} />
+                      <span>{t('user.sign_out')}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1019,152 +534,33 @@ export default function CreateNewOrgPage() {
             </div>
           </div>
 
-          <div className={`w-full transition-all duration-300 ${isWide ? 'max-w-5xl' : 'max-w-xl'}`}>
+          <div className="w-full max-w-xl">
             {showLoader ? (
               <div className="space-y-3">
-                <div className="h-40 w-full rounded-2xl bg-black/[0.03] animate-pulse" />
-                <div className="h-40 w-full rounded-2xl bg-black/[0.03] animate-pulse" />
+                <div className="h-24 w-full animate-pulse rounded-2xl bg-black/[0.03]" />
+                <div className="h-40 w-full animate-pulse rounded-2xl bg-black/[0.03]" />
               </div>
             ) : (
               <>
-                {/* Header */}
-                <AnimatePresence mode="wait" custom={dir * slideAxis}>
-                  <motion.div
-                    key={`hdr-${step}`}
-                    custom={dir * slideAxis}
-                    variants={slide}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={trans}
-                    className="text-center mb-8"
-                  >
-                    <div className="flex justify-center mb-5">
-                      <StepPills current={stepNumber} />
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">{meta.title}</h1>
-                    {meta.subtitle && (
-                      <p className="text-sm text-gray-500 max-w-sm mx-auto leading-relaxed">{meta.subtitle}</p>
+                {step !== 'start' && <PendingInvites invites={invites} unverified={hub.data?.email_verified === false} className="mb-6" />}
+                <AnimatePresence mode="wait" custom={dir}>
+                  <motion.div key={`hdr-${step}`} custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={trans} className="mb-6 text-center">
+                    <StepDots current={index} />
+                    <h1 className="mt-5 text-2xl font-bold tracking-tight text-neutral-900">{meta[step].title}</h1>
+                    <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-neutral-500">{meta[step].subtitle}</p>
+                  </motion.div>
+                </AnimatePresence>
+                <AnimatePresence mode="wait" custom={dir}>
+                  <motion.div key={`body-${step}`} custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={trans}>
+                    {step === 'goal' && <GoalStep goal={goal} onPick={pickGoal} onSkip={() => pickGoal(null)} />}
+                    {step === 'name' && (
+                      <NameStep token={token} submitting={submitting} error={error} onBack={() => go('goal', -1)} onSubmit={create} />
+                    )}
+                    {step === 'start' && (
+                      <StartStep goal={goal} busy={starting} onTemplate={() => start('template')} onBlank={() => start('blank')} />
                     )}
                   </motion.div>
                 </AnimatePresence>
-
-                {/* Body */}
-                <AnimatePresence mode="wait" custom={dir * slideAxis}>
-                  <motion.div
-                    key={`body-${step}`}
-                    custom={dir * slideAxis}
-                    variants={slide}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={trans}
-                  >
-                    {step === 'use-type' && (
-                      <>
-                        <StepUseType useType={useType} onSelect={setUseType} t={t} />
-                        {/* A side path, not a wizard step: creating a real
-                            organization is untouched by it, and the card
-                            renders nothing when the instance has no demo. */}
-                        <DemoEntryCard className="mt-6" />
-                      </>
-                    )}
-                    {step === 'usage' && useType === 'personal' && (
-                      <StepUsagePersonal goals={personalGoals} onChange={setPersonalGoals} t={t} />
-                    )}
-                    {step === 'usage' && useType === 'organization' && (
-                      <StepUsageOrg data={orgUsage} onChange={setOrgUsage} t={t} />
-                    )}
-                    {step === 'choose-plan' && (
-                      <PricingCards
-                        defaultPlanType={useType === 'personal' ? 'personal' : 'general'}
-                        defaultBilling="annual"
-                        showEnterprise
-                        priceOverrides={prices?.plans}
-                        planLimits={prices?.limits}
-                        pricesLoading={pricesLoading}
-                        onSelect={handleSelectPlan}
-                        renderCta={
-                          hasFreeOrg
-                            ? (plan) =>
-                                plan.id === 'free' ? (
-                                  <span className="block w-full text-center px-5 py-2.5 rounded-lg text-[14px] font-bold bg-black/[0.04] text-black/30 cursor-not-allowed">
-                                    {t('hub_new.freeLimit', { defaultValue: '1 free org limit reached' })}
-                                  </span>
-                                ) : null
-                            : undefined
-                        }
-                      />
-                    )}
-                    {step === 'create-org' && (
-                      <CreateOrgForm
-                        planId={selectedPlan}
-                        billing={billing}
-                        prices={prices}
-                        submitting={submitting}
-                        error={error}
-                        onSubmit={handleCreate}
-                        t={t}
-                      />
-                    )}
-                    {step === 'success' && createdSlug && <CreateOrgSuccess slug={createdSlug} t={t} />}
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Navigation */}
-                {(showNav || (showBack && step === 'create-org')) && (
-                  <div className={`flex items-center mt-6 ${showBack ? 'justify-between' : 'justify-end'}`}>
-                    {showBack && (
-                      <button
-                        onClick={goBack}
-                        className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
-                      >
-                        <ArrowLeft size={14} data-dir-flip />
-                        {t('hub_new.navigation.back', { defaultValue: 'Back' })}
-                      </button>
-                    )}
-                    {showNav && (
-                      <motion.button
-                        onClick={advance}
-                        disabled={!canContinue}
-                        whileTap={canContinue ? { scale: 0.97 } : {}}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                          canContinue
-                            ? 'bg-gray-900 text-white hover:bg-gray-800 nice-shadow cursor-pointer'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        {t('hub_new.navigation.continue', { defaultValue: 'Continue' })}
-                        <ArrowRight size={15} data-dir-flip />
-                      </motion.button>
-                    )}
-                  </div>
-                )}
-
-                {/* Back-only row for choose-plan (cards carry their own CTA) */}
-                {step === 'choose-plan' && (
-                  <div className="flex items-center mt-6 justify-start">
-                    <button
-                      onClick={goBack}
-                      className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
-                    >
-                      <ArrowLeft size={14} data-dir-flip />
-                      {t('hub_new.navigation.back', { defaultValue: 'Back' })}
-                    </button>
-                  </div>
-                )}
-
-                {/* Skip */}
-                {showSkip && (
-                  <p className="text-center mt-3">
-                    <button
-                      onClick={skip}
-                      className="text-xs text-gray-400 hover:text-gray-500 transition-colors hover:underline underline-offset-2 cursor-pointer"
-                    >
-                      {t('hub_new.navigation.skip', { defaultValue: 'Skip' })}
-                    </button>
-                  </p>
-                )}
               </>
             )}
           </div>

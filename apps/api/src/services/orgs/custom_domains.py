@@ -14,6 +14,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request, status
 
+from src.core.ee_hooks import audit_event
 from src.db.custom_domains import (
     CustomDomain,
     CustomDomainCreate,
@@ -447,6 +448,11 @@ async def add_custom_domain(
     db_session.add(custom_domain)
     await db_session.commit()
     await db_session.refresh(custom_domain)
+    audit_event(
+        request, action="org.domain.added", org_id=org_id, actor=current_user,
+        target_type="domain", target_id=custom_domain.domain_uuid, target_name=custom_domain.domain,
+        details={"status": custom_domain.status},
+    )
 
     return CustomDomainRead(**custom_domain.model_dump())
 
@@ -612,6 +618,11 @@ async def verify_custom_domain(
     # Verify DNS
     success, message = await verify_domain_dns(domain, db_session, organization.slug)
 
+    audit_event(
+        request, action="org.domain.verified" if success else "org.domain.verify_failed", org_id=org_id,
+        actor=current_user, target_type="domain", target_id=domain.domain_uuid, target_name=domain.domain,
+        outcome="success" if success else "failed", reason=None if success else str(message)[:200],
+    )
     if success:
         return {"success": True, "message": message, "status": domain.status}
     else:
@@ -652,8 +663,13 @@ async def delete_custom_domain(
         )
 
     # Delete the domain
+    removed = (domain.domain_uuid, domain.domain)
     await db_session.delete(domain)
     await db_session.commit()
+    audit_event(
+        request, action="org.domain.removed", org_id=org_id, actor=current_user,
+        target_type="domain", target_id=removed[0], target_name=removed[1],
+    )
 
     return {"message": "Custom domain deleted successfully"}
 

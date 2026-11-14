@@ -68,6 +68,7 @@ _TYPE_NAMES = {
     ActivityTypeEnum.TYPE_DOCUMENT.value: "document",
     ActivityTypeEnum.TYPE_ASSIGNMENT.value: "assignment",
     ActivityTypeEnum.TYPE_SCORM.value: "scorm",
+    ActivityTypeEnum.TYPE_PLAY.value: "play",
     ActivityTypeEnum.TYPE_CUSTOM.value: "custom",
 }
 _DYNAMIC_NAMES = {
@@ -370,8 +371,17 @@ async def _update_chapter(ctx: ToolContext, p: UpdateChapterParams):
         patch["lock_type"] = LockType(p.lock)
     if not patch:
         raise HTTPException(status_code=400, detail="Nothing to change: pass name, description or lock.")
+    previous = {
+        "name": chapter.name,
+        "description": chapter.description or "",
+        "lock": getattr(chapter.lock_type, "value", chapter.lock_type),
+    }
     updated = await update_chapter(ctx.request, ChapterUpdate(**patch), chapter.id, ctx.user, ctx.db_session)
     fields = ", ".join(sorted(k if k != "lock_type" else "lock" for k in patch))
+    undo_args = {"chapter_uuid": chapter.chapter_uuid}
+    for key in patch:
+        name = "lock" if key == "lock_type" else key
+        undo_args[name] = previous[name]
     return changed(
         f"Updated chapter '{updated.name}' ({fields}).",
         chapter=refs.ref(
@@ -381,6 +391,7 @@ async def _update_chapter(ctx: ToolContext, p: UpdateChapterParams):
             lock=getattr(updated.lock_type, "value", updated.lock_type),
         ),
         course=await course_ref(ctx, course),
+        undo={"tool": "update_chapter", "args": undo_args},
     )
 
 
@@ -529,7 +540,23 @@ async def _move_course_items(ctx: ToolContext, p: MoveCourseItemsParams):
         f"Applied {len(p.moves)} move(s) in '{course.name}'.",
         course=await course_ref(ctx, course),
         outline=(await outline(ctx, course, editor=True))["chapters"],
+        undo=_restore_order(course, before, chapters, activities) if order != before else None,
     )
+
+
+def _restore_order(course: Course, before: Order, chapters: dict, activities: dict) -> dict | None:
+    """The move_course_items call that puts every chapter and activity back
+    where it was, or None when that takes more moves than one call allows."""
+    chapter_uuid = {cid: uuid for uuid, cid in chapters.items()}
+    activity_uuid = {aid: uuid for uuid, aid in activities.items()}
+    moves: list[dict] = []
+    for i, (cid, acts) in enumerate(before):
+        moves.append({"item_uuid": chapter_uuid[cid], "position": i})
+        for j, aid in enumerate(acts):
+            moves.append({"item_uuid": activity_uuid[aid], "to_chapter_uuid": chapter_uuid[cid], "position": j})
+    if len(moves) > MAX_MOVES:
+        return None
+    return {"tool": "move_course_items", "args": {"course_uuid": course.course_uuid, "moves": moves}}
 
 
 # ─── specs ───────────────────────────────────────────────────────────────────

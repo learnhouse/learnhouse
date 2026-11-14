@@ -101,3 +101,54 @@ async def test_chapter_read_round_trips_extra_metadata(
 
     assert fetched.id == created.id
     assert fetched.extra_metadata == {"nested": {"k": [1, 2, 3]}, "flag": True}
+
+
+@pytest.mark.asyncio
+async def test_update_chapter_merges_extra_metadata(
+    db, org, course, chapter, admin_user, mock_request, bypass_rbac
+):
+    chapter.extra_metadata = {"prior": "value"}
+    db.add(chapter)
+    await db.commit()
+
+    updated = await update_chapter(
+        mock_request,
+        ChapterUpdate(extra_metadata={"emoji": "🚀"}),
+        chapter.id,
+        admin_user,
+        db,
+    )
+    assert updated.extra_metadata == {"prior": "value", "emoji": "🚀"}
+
+    # A null value removes just that key.
+    cleared = await update_chapter(
+        mock_request,
+        ChapterUpdate(extra_metadata={"emoji": None}),
+        chapter.id,
+        admin_user,
+        db,
+    )
+    assert cleared.extra_metadata == {"prior": "value"}
+
+
+@pytest.mark.asyncio
+async def test_chapter_emoji_comes_back_in_course_meta(
+    db, org, course, chapter, admin_user, mock_request, bypass_rbac
+):
+    from src.services.courses.chapters import get_course_chapters
+
+    await update_chapter(
+        mock_request,
+        ChapterUpdate(extra_metadata={"emoji": "📦"}),
+        chapter.id,
+        admin_user,
+        db,
+    )
+
+    # Both the slim tree (learner pages) and the full tree (editor) carry it.
+    for slim in (True, False):
+        chapters = await get_course_chapters(
+            mock_request, course.id, db, admin_user, with_unpublished_activities=True, slim=slim
+        )
+        match = next(c for c in chapters if c.id == chapter.id)
+        assert match.extra_metadata == {"emoji": "📦"}

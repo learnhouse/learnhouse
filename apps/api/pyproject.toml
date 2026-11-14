@@ -52,6 +52,8 @@ dependencies = [
     "regex==2026.9.29",
     "mcp==2.3.0",
     "fakeredis==2.40.0",
+    "mailchecker>=6",
+    "pycrdt>=0.14.13",
 ]
 
 [tool.ruff]
@@ -63,6 +65,7 @@ asyncio_default_fixture_loop_scope = "function"
 markers = [
     "asyncio: mark test as async",
     "ollama: live test that requires a local Ollama server (opt-in; skipped if unreachable)",
+    "atlas_eval: live Atlas eval against a running API and the real model (opt-in: ATLAS_EVALS=1)",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",

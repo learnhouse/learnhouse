@@ -55,6 +55,7 @@ class Podcast(PodcastBase, table=True):
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
     )
     podcast_uuid: str = ""
+    slug: Optional[str] = Field(default=None, max_length=100)
     creation_date: str = ""
     update_date: str = ""
     seo: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
@@ -81,6 +82,7 @@ class PodcastRead(PodcastBase):
     org_id: int = Field(default=None, foreign_key="organization.id")
     authors: List[AuthorWithRole]
     podcast_uuid: str
+    slug: Optional[str] = None
     creation_date: str
     update_date: str
     thumbnail_image: Optional[str] = Field(default="")

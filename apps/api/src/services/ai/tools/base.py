@@ -94,6 +94,13 @@ class ToolContext:
     # A person approved this exact call (MCP approval flow). Tools marked
     # `approval` refuse to run in `execute` mode without it.
     approved: bool = False
+    # The caller's own policy cleared this call, not a person (Atlas Auto
+    # mode). In-call approvals about course state then pass; ones that need
+    # a person (outside links, someone else's words) still stop.
+    policy_approved: bool = False
+    # Tiers this caller may run at all (e.g. a scheduled Atlas agent limited
+    # to reading). None allows every tier; the pipeline refuses the rest.
+    allowed_tiers: frozenset[str] | None = None
 
     def with_mode(self, mode: ToolMode) -> "ToolContext":
         return replace(self, mode=mode)
@@ -201,9 +208,14 @@ class ToolDenied(Exception):
         self.reason = reason
 
 
-def require_approval(ctx: "ToolContext", reason: str) -> None:
-    """Stop here unless a person approved this call."""
-    if not ctx.approved:
+def require_approval(ctx: "ToolContext", reason: str, *, person: bool = False) -> None:
+    """Stop here unless this call is approved. `person=True` needs a person's
+    yes; the caller's policy clearing the call (policy_approved) is not one."""
+    if person:
+        allowed = ctx.approved and not ctx.policy_approved
+    else:
+        allowed = ctx.approved or ctx.policy_approved
+    if not allowed:
         raise ApprovalNeeded(reason)
 
 

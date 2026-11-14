@@ -571,7 +571,6 @@ class TestOrgCreationAndListingWave3:
                         text_color="dark",
                     ),
                 )),
-                (update_org_landing, ({"headline": "Hello"},)),
                 (update_org_seo_config, (
                     SeoOrgConfig(
                         default_meta_title_suffix="Suffix",
@@ -584,6 +583,9 @@ class TestOrgCreationAndListingWave3:
                 with pytest.raises(HTTPException) as exc_info:
                     await func(mock_request, *args, org.id, admin_user, db)
                 assert exc_info.value.status_code == 404
+            # A classic landing PUT needs no config: it publishes the default home page.
+            out = await update_org_landing(mock_request, {"headline": "Hello"}, org.id, admin_user, db)
+            assert out["page"]["published_version"] == 1
 
     @pytest.mark.asyncio
     async def test_api_token_dict_rights_update_allowed_and_denied(
@@ -909,7 +911,7 @@ class TestOrgConfigBranchesWave3:
         assert stored.config["general"]["font"] == "Inter"
         assert stored.config["general"]["watermark"] is False
         assert stored.config["general"]["auth_branding"]["welcome_message"] == "Welcome"
-        assert stored.config["landing"] == {"hero": "Hello"}
+        assert stored.config.get("landing") in (None, {})
         assert stored.config["seo"]["default_meta_description"] == "SEO desc"
         assert stored.config["features"]["members"]["signup_mode"] == "inviteOnly"
         assert "model" not in stored.config["features"]["ai"]
@@ -1076,7 +1078,7 @@ class TestOrgConfigBranchesWave3:
         assert stored.config["customization"]["general"]["font"] == "Manrope"
         assert stored.config["customization"]["general"]["watermark"] is True
         assert stored.config["customization"]["auth_branding"]["welcome_message"] == "Welcome v2"
-        assert stored.config["customization"]["landing"] == {"headline": "Hello v2"}
+        assert (stored.config["customization"].get("landing") or {}) == {}
         assert stored.config["customization"]["seo"]["default_meta_description"] == "SEO v2"
         assert stored.config["admin_toggles"]["members"]["signup_mode"] == "inviteOnly"
         assert stored.config["admin_toggles"]["ai"]["disabled"] is False

@@ -62,6 +62,10 @@ async def create_update(
         },
     )
 
+    from src.services.notifications.events import notify_course_update
+
+    await notify_course_update(db_session, course.id, update.id, getattr(current_user, "id", None))
+
     return CourseUpdateRead(**update.model_dump())
 
 

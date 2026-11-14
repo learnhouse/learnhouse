@@ -36,6 +36,14 @@ async def notify_user_joined_org(
     Best-effort: every failure is swallowed and logged. Joining an
     organization must never fail because a mail server is down.
     """
+    # A new member can match smart group rules or an auto-join domain.
+    from src.services.usergroups.sync import on_member_event
+
+    on_member_event(org_id, getattr(user, "id", None))
+    if user is not None:
+        from src.services.feature_notifications import notify_member_joined
+
+        await notify_member_joined(db_session, org_id, user)
     try:
         if not user or not getattr(user, "email", None):
             return

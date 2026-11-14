@@ -44,7 +44,7 @@ export function PasswordStrengthIndicator({
         {
             id: 'special',
             label: t('auth.password_req_special'),
-            validator: (pwd: string) => /[!@#$%^&*()_+\-=\[\]{}|;':",./<>?]/.test(pwd),
+            validator: (pwd: string) => /[!@#$%^&*()_+\-=[\]{}|;':",./<>?]/.test(pwd),
         },
     ], [t])
 
@@ -80,7 +80,7 @@ export function PasswordStrengthIndicator({
             {/* Strength bar */}
             <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">{t('auth.password_strength')}</span>
+                    <span className="text-neutral-500">{t('auth.password_strength')}</span>
                     <span className={`font-medium ${
                         strengthPercentage <= 40 ? 'text-red-600' :
                         strengthPercentage <= 60 ? 'text-orange-600' :
@@ -90,7 +90,7 @@ export function PasswordStrengthIndicator({
                         {getStrengthLabel()}
                     </span>
                 </div>
-                <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-1 w-full bg-neutral-100 rounded-full overflow-hidden">
                     <div
                         className={`h-full transition-all duration-300 ${getStrengthColor()}`}
                         style={{ width: `${strengthPercentage}%` }}
@@ -107,7 +107,7 @@ export function PasswordStrengthIndicator({
                             <li
                                 key={req.id}
                                 className={`flex items-center gap-1.5 ${
-                                    isValid ? 'text-green-600' : 'text-gray-500'
+                                    isValid ? 'text-emerald-600' : 'text-neutral-400'
                                 }`}
                             >
                                 {isValid ? (
@@ -143,7 +143,7 @@ export function validatePasswordStrength(password: string): {
     if (!/[0-9]/.test(password)) {
         errors.push('Password must contain at least one number')
     }
-    if (!/[!@#$%^&*()_+\-=\[\]{}|;':",./<>?]/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=[\]{}|;':",./<>?]/.test(password)) {
         errors.push('Password must contain at least one special character')
     }
 

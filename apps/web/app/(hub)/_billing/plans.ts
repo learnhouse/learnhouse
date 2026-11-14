@@ -160,7 +160,7 @@ export const GENERAL_PLANS: Plan[] = [
       { label: "10 Admin seats", limitKey: "admin_seats" },
       { label: "Advanced AI", badge: "3,000 Credits", badgeLimitKey: "ai_credits" },
       { label: "Certifications" },
-      { label: "Playgrounds" },
+      { label: "Plays" },
       { label: "Boards" },
       { label: "Custom Domains" },
       { label: "Versioning" },
@@ -188,7 +188,6 @@ export const PERSONAL_PLANS: Plan[] = [
       { label: "1 Member", limitKey: "members" },
       { label: "Standard AI", badge: "500 Credits", badgeLimitKey: "ai_credits" },
       { label: "Boards" },
-      { label: "Playgrounds" },
     ],
   },
   {

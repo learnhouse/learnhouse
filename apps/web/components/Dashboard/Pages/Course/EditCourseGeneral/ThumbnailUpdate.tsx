@@ -2,15 +2,18 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { updateCourseThumbnail } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { ArrowBigUpDash, UploadCloud, Image as ImageIcon, Video } from 'lucide-react'
+import { ArrowFatLinesUp, CloudArrowUp, Image as ImageIcon, VideoCamera } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@lib/query/keys'
 import AIImageButton from '@components/Objects/AI/AIImageButton'
+import { aiButtonClass } from '@components/Objects/AI/AIBrand'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { SafeImage, SafeVideo } from '@components/Objects/SafeImage'
+import { BTN_SECONDARY, Chip, SegmentedControl } from '@components/Dashboard/Shared/DashKit/DashKit'
+import ThumbnailImage from '@components/Objects/Thumbnails/ThumbnailImage'
 
 const MAX_FILE_SIZE = 8_000_000; // 8MB for images
 const MAX_VIDEO_FILE_SIZE = 100_000_000; // 100MB for videos
@@ -183,7 +186,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
             course.courseStructure.course_uuid,
             course.courseStructure.thumbnail_image
           )
-        : '/empty_thumbnail.png';
+        : null;
     } else {
       return course.courseStructure.thumbnail_video
         ? getCourseThumbnailMediaDirectory(
@@ -195,72 +198,61 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
     }
   };
 
+  const previewClass = 'w-full aspect-video object-cover rounded-xl ring-1 ring-black/5 bg-neutral-100'
+
   const renderThumbnailPreview = () => {
     if (localThumbnail) {
-      if (localThumbnail.type === 'video') {
-        return (
-          <div className="max-w-[480px] mx-auto">
-            <SafeVideo
-              src={localThumbnail.url}
-              className={`${isLoading ? 'animate-pulse' : ''} w-full aspect-video object-cover rounded-lg border border-gray-200`}
-              controls
-            />
-          </div>
-        );
-      } else {
-        return (
-          <div className="max-w-[480px] mx-auto">
-            <SafeImage
-              src={localThumbnail.url}
-              alt={t('dashboard.courses.general.thumbnail.preview_alt')}
-              className={`${isLoading ? 'animate-pulse' : ''} w-full aspect-video object-cover rounded-lg border border-gray-200`}
-            />
-          </div>
-        );
-      }
+      return localThumbnail.type === 'video' ? (
+        <SafeVideo
+          src={localThumbnail.url}
+          className={`${isLoading ? 'animate-pulse' : ''} ${previewClass}`}
+          controls
+        />
+      ) : (
+        <SafeImage
+          src={localThumbnail.url}
+          alt={t('dashboard.courses.general.thumbnail.preview_alt')}
+          className={`${isLoading ? 'animate-pulse' : ''} ${previewClass}`}
+        />
+      );
     }
 
     const currentThumbnailUrl = getThumbnailUrl(activeTab);
     if (activeTab === 'video' && currentThumbnailUrl) {
+      return <SafeVideo src={currentThumbnailUrl} className={previewClass} controls />;
+    } else if (activeTab === 'image') {
+      // ThumbnailImage shows the default placeholder when there is no image
+      // or the file is missing, instead of a broken <img> with alt text.
       return (
-        <div className="max-w-[480px] mx-auto">
-          <SafeVideo
-            src={currentThumbnailUrl}
-            className="w-full aspect-video object-cover rounded-lg border border-gray-200"
-            controls
-          />
-        </div>
-      );
-    } else if (currentThumbnailUrl) {
-      return (
-        <div className="max-w-[480px] mx-auto">
-          <SafeImage
-            src={currentThumbnailUrl}
-            alt={t('dashboard.courses.general.thumbnail.current_alt')}
-            className="w-full aspect-video object-cover rounded-lg border border-gray-200"
-          />
-        </div>
+        <ThumbnailImage
+          src={currentThumbnailUrl}
+          loading="eager"
+          alt={t('dashboard.courses.general.thumbnail.current_alt')}
+          className={previewClass}
+        />
       );
     }
 
-    return null;
+    // No video uploaded yet: an empty frame keeps the layout steady.
+    return (
+      <div className={`${previewClass} flex items-center justify-center text-neutral-300`}>
+        <VideoCamera size={28} />
+      </div>
+    );
   };
 
   const renderTabContent = () => {
     if (isLoading) {
       return (
-        <div className="flex justify-center items-center mt-4">
-          <div className="font-medium text-sm text-green-800 bg-green-50 rounded-full px-4 py-2 flex items-center">
-            <ArrowBigUpDash size={16} className="me-2 animate-bounce" />
-            {t('dashboard.courses.communities.thumbnail.uploading')}
-          </div>
-        </div>
+        <Chip tone="emerald" icon={<ArrowFatLinesUp size={14} className="animate-bounce" />}>
+          {t('dashboard.courses.communities.thumbnail.uploading')}
+        </Chip>
       );
     }
 
     if (activeTab === 'image') {
       return (
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-wrap gap-2">
           <input
             ref={imageInputRef}
             type="file"
@@ -270,23 +262,25 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
           />
           <button
             type="button"
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className={BTN_SECONDARY}
             onClick={() => imageInputRef.current?.click()}
           >
-            <UploadCloud size={16} />
+            <CloudArrowUp size={16} />
             {t('dashboard.courses.general.thumbnail.upload_image')}
           </button>
+          {/* Its own generator (pick a style, choose among results) stays
+              here: Atlas's "Generate a thumbnail" sets one for you instead. */}
           <AIImageButton
             onSelect={handleRemoteImageSelect}
             onSelectFile={handleAIImageFile}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className={aiButtonClass('soft', 'md')}
           />
         </div>
       );
     }
 
     return (
-      <div className="flex gap-2 mt-4">
+      <div className="flex flex-wrap gap-2">
         <input
           ref={videoInputRef}
           type="file"
@@ -296,10 +290,10 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
         />
         <button
           type="button"
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className={BTN_SECONDARY}
           onClick={() => videoInputRef.current?.click()}
         >
-          <Video size={16} />
+          <VideoCamera size={16} />
           {t('dashboard.courses.general.thumbnail.upload_video')}
         </button>
       </div>
@@ -307,45 +301,42 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
   };
 
   return (
-    <div className="w-full bg-white rounded-xl">
-      {/* Tabs Navigation */}
-      {thumbnailType === 'both' && (
-        <div className="flex border-b border-gray-100">
-          <button
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === 'image'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-            onClick={() => setActiveTab('image')}
-          >
-            <ImageIcon size={16} />
-            {t('dashboard.courses.general.thumbnail.tabs.image')}
-          </button>
-          <button
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === 'video'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-            onClick={() => setActiveTab('video')}
-          >
-            <Video size={16} />
-            {t('dashboard.courses.general.thumbnail.tabs.video')}
-          </button>
-        </div>
-      )}
-
-      <div className="p-6">
-        <div className="space-y-6">
-          {renderThumbnailPreview()}
-          {renderTabContent()}
-          
-          <p className="text-sm text-gray-500">
-            {activeTab === 'image' && t('dashboard.courses.general.thumbnail.supported_formats.image')}
-            {activeTab === 'video' && t('dashboard.courses.general.thumbnail.supported_formats.video')}
-          </p>
-        </div>
+    <div className="w-full flex flex-col md:flex-row gap-5">
+      <div className="w-full md:w-[360px] shrink-0">{renderThumbnailPreview()}</div>
+      <div className="flex flex-col gap-4 min-w-0">
+        {thumbnailType === 'both' && (
+          <SegmentedControl
+            value={activeTab}
+            onChange={setActiveTab}
+            options={[
+              {
+                key: 'image',
+                label: (
+                  <>
+                    <ImageIcon size={14} />
+                    {t('dashboard.courses.general.thumbnail.tabs.image')}
+                  </>
+                ),
+              },
+              {
+                key: 'video',
+                label: (
+                  <>
+                    <VideoCamera size={14} />
+                    {t('dashboard.courses.general.thumbnail.tabs.video')}
+                  </>
+                ),
+              },
+            ]}
+          />
+        )}
+        {renderTabContent()}
+        <p className="text-xs text-neutral-400">
+          {activeTab === 'image' && t('dashboard.courses.general.thumbnail.supported_formats.image')}
+          {activeTab === 'video' && t('dashboard.courses.general.thumbnail.supported_formats.video')}
+        </p>
+        {/* Uploads are actions, not form state: they apply without the header Save. */}
+        <p className="text-xs text-neutral-400">{t('dashboard.courses.editor.general.thumbnail_saves_now')}</p>
       </div>
     </div>
   )

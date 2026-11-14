@@ -29,7 +29,7 @@ from src.db.messaging import (
     MessageReaction,
     MessagingProfile,
 )
-from src.db.organization_config import OrganizationConfig
+from src.services.orgs.org_config_lookup import get_session_org_config
 from src.db.resource_authors import (
     ResourceAuthor,
     ResourceAuthorshipEnum,
@@ -146,9 +146,9 @@ class BroadcastCreate(BaseModel):
 
 
 async def _org_config(org_id: int, db: AsyncSession) -> Optional[dict]:
-    row = (await db.execute(
-        select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    )).scalars().first()
+    # Shares the per-session row with the MFA and auth-method gates, so a
+    # request reads the org config once instead of once per gate.
+    row = await get_session_org_config(db, org_id)
     return row.config if row else None
 
 
@@ -843,6 +843,9 @@ async def post_message(
         [m.user_id for m in members],
         {"type": "message.new", "conversation_uuid": conv.conversation_uuid, "message": payload},
     )
+    from src.services.notifications.events import notify_new_message
+
+    await notify_new_message(db, conv.id, msg.id)
     return msg
 
 
@@ -973,6 +976,14 @@ async def mark_read(conversation_uuid: str, body: ReadUpdate, user: User, db: As
             "user_id": user.id,
             "message_id": target,
         })
+        # Caught up: the conversation's inbox notification is read too.
+        latest = target if not body.message_uuid else (await db.execute(
+            select(func.max(Message.id)).where(Message.conversation_id == conv.id)
+        )).scalar()
+        if latest is not None and target >= latest:
+            from src.services.notifications.events import clear_conversation
+
+            await clear_conversation(db, user.id, conv.id)
     return {"last_read_message_id": me.last_read_message_id}
 
 
@@ -1126,8 +1137,11 @@ async def presence_for(org_id: int, user_ids: list[int], user: User, db: AsyncSe
     return [presence_view(uid, profiles.get(uid), uid in online) for uid in allowed]
 
 
-async def get_my_status(org_id: int, user: User, db: AsyncSession) -> dict:
-    await require_messaging(org_id, user.id, db)
+async def get_my_status(org_id: int, user: User, db: AsyncSession, *, gated: bool = False) -> dict:
+    """The caller's own presence and preferences. ``gated`` skips the access
+    check when the caller just ran :func:`require_messaging` itself."""
+    if not gated:
+        await require_messaging(org_id, user.id, db)
     profile = await _profile(user.id, db)
     view = presence_view(user.id, profile, realtime.is_online(org_id, user.id))
     defaults = MessagingProfile(user_id=user.id)

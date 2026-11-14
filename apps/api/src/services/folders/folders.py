@@ -144,18 +144,24 @@ def _resource_registry():
     from src.db.courses.courses import Course
     from src.db.podcasts.podcasts import Podcast
     from src.db.communities.communities import Community
-    from src.db.boards import Board
-    from src.db.playgrounds import Playground
     from src.db.media.media import Media
+    from src.core.ee_hooks import get_ee_module
 
-    return {
+    registry = {
         "course_": ("courses", Course, "course_uuid"),
         "podcast_": ("podcasts", Podcast, "podcast_uuid"),
         "community_": ("communities", Community, "community_uuid"),
-        "board_": ("boards", Board, "board_uuid"),
-        "playground_": ("playgrounds", Playground, "playground_uuid"),
         "media_": ("media", Media, "media_uuid"),
     }
+    # Boards are an EE feature: without EE a board_ uuid is unknown.
+    boards = get_ee_module("ee.db.boards")
+    if boards is not None:
+        registry["board_"] = ("boards", boards.Board, "board_uuid")
+    # Plays are an EE feature: without EE a playground_ uuid is unknown.
+    playgrounds = get_ee_module("ee.db.playgrounds")
+    if playgrounds is not None:
+        registry["playground_"] = ("playgrounds", playgrounds.Playground, "playground_uuid")
+    return registry
 
 
 def _public_resource_dump(resource) -> dict:
@@ -166,16 +172,17 @@ def _public_resource_dump(resource) -> dict:
     key is that the client can never derive a storage path (bytes are only
     reachable via GET /media/{uuid}/file).
     """
-    from src.db.boards import Board, BoardRead
+    from src.core.ee_hooks import get_ee_module
     from src.db.communities.communities import Community
     from src.db.media.media import Media, MediaRead
     from src.services.communities.communities import community_read
 
     if isinstance(resource, Media):
         return MediaRead.model_validate(resource, from_attributes=True).model_dump()
-    if isinstance(resource, Board):
+    boards = get_ee_module("ee.db.boards")  # only an EE install has boards
+    if boards is not None and isinstance(resource, boards.Board):
         # The table row carries the raw collaborative document (ydoc_state).
-        return BoardRead.model_validate(resource, from_attributes=True).model_dump()
+        return boards.BoardRead.model_validate(resource, from_attributes=True).model_dump()
     if isinstance(resource, Community):
         # The moderators' word list is not for readers.
         return community_read(resource).model_dump()
@@ -207,10 +214,13 @@ async def _can_read_item(
     service's own rule, which also keeps private boards with no linked
     UserGroup to their members."""
     if resource_type == "boards":
-        from src.services.boards.boards import _check_board_read
+        from src.core.ee_hooks import get_ee_module
 
+        # Boards only resolve with EE (see _resource_registry), so its
+        # boards service is there whenever a board reaches this point.
+        board_service = get_ee_module("ee.services.boards.boards")
         try:
-            return await _check_board_read(
+            return await board_service._check_board_read(
                 request, resource, current_user, db_session, raise_on_deny=False
             )
         except HTTPException:

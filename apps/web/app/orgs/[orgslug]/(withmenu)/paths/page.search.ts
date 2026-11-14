@@ -1,4 +1,4 @@
-import { Steps } from '@phosphor-icons/react'
+import { Circuitry } from '@phosphor-icons/react'
 import type { SitePageMeta } from '@/lib/site-search/types'
 
 export const sitePage: SitePageMeta = {
@@ -6,7 +6,7 @@ export const sitePage: SitePageMeta = {
   titleKey: 'paths.title',
   descriptionKey: 'search.palette.entries.paths.description',
   keywordsKey: 'search.palette.entries.paths.keywords',
-  icon: Steps,
+  icon: Circuitry,
   href: '/paths',
   shortcut: 'g r',
   featureKey: 'paths',

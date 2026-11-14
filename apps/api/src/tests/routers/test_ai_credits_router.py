@@ -314,3 +314,18 @@ class TestAICreditsOSSGate:
             response = await client.get(f"/api/v1/orgs/{org.id}/ai-credits")
         assert response.status_code == 200
         assert response.json()["remaining_credits"] == 100
+
+
+async def test_mutators_apply_the_ee_platform_role(client, org):
+    """On EE a superadmin whose platform role lacks orgs.plan is refused."""
+    from types import SimpleNamespace
+
+    hooks = SimpleNamespace(platform_permission_denied=AsyncMock(return_value=True))
+    with patch("src.routers.orgs.ai_credits.is_user_superadmin", new_callable=AsyncMock, return_value=True), \
+            patch("src.core.ee_hooks.get_ee_hooks", return_value=hooks):
+        for path, body in (("add", {"amount": 5}), ("set", {"amount": 5}), ("reset", None)):
+            r = await client.post(f"/api/v1/orgs/{org.id}/ai-credits/{path}", json=body)
+            assert r.status_code == 403
+            assert r.json()["detail"] == "Your platform role can't change AI credits"
+    hooks.platform_permission_denied.assert_awaited()
+    assert hooks.platform_permission_denied.await_args.args[2] == "orgs.plan"

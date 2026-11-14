@@ -1,4 +1,4 @@
-import { Cube } from '@phosphor-icons/react'
+import { Lightning } from '@phosphor-icons/react'
 import type { SitePageMeta } from '@/lib/site-search/types'
 
 export const sitePage: SitePageMeta = {
@@ -6,7 +6,7 @@ export const sitePage: SitePageMeta = {
   titleKey: 'common.playgrounds',
   descriptionKey: 'search.palette.entries.playgrounds.description',
   keywordsKey: 'search.palette.entries.playgrounds.keywords',
-  icon: Cube,
+  icon: Lightning,
   href: '/playgrounds',
   shortcut: 'g y',
   featureKey: 'playgrounds',

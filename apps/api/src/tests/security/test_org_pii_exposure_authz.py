@@ -4,7 +4,8 @@ F9:  GET /orgs/{org_id}/invites/users leaked every pending invitee's email
       address to anyone, including unauthenticated callers, because the only
       gate was ``rbac_check(..., "read", ...)`` which short-circuits to True.
 F29: GET /playgrounds/{uuid}/usergroups returned another tenant's cohort
-      names and usergroup uuids to any authenticated principal.
+      names and usergroup uuids to any authenticated principal (Plays are
+      EE: ee/tests/test_plays_core.py).
 F35: GET /search/org_slug/{slug} serialized user hits with ``UserRead``,
       handing every org member the full PII projection (email,
       ``extra_metadata`` signup-field answers, ``is_superadmin``).
@@ -20,14 +21,10 @@ from httpx import ASGITransport, AsyncClient
 from sqlmodel import select
 
 from src.core.events.database import get_db_session
-from src.db.playgrounds import Playground, PlaygroundAccessType
-from src.db.usergroup_resources import UserGroupResource
-from src.db.usergroups import UserGroup
 from src.db.users import PublicUser, User
 from src.routers.search import router as search_router
 from src.security.auth import get_current_user
 from src.services.orgs.users import get_list_of_invited_users
-from src.services.playgrounds.playgrounds import get_playground_usergroups
 from src.services.search.search import search_across_org
 
 REDIS_URL = "redis://test"
@@ -182,118 +179,6 @@ class TestInvitedUsersListAuthz:
             )
 
         assert [item["email"] for item in invited] == ["c@test.com"]
-
-
-# ---------------------------------------------------------------------------
-# F29: playground usergroup listing
-# ---------------------------------------------------------------------------
-
-
-async def _playground_with_usergroup(db, org, owner_id):
-    playground = Playground(
-        org_id=org.id,
-        name="Authz Playground",
-        description="Desc",
-        thumbnail_image="",
-        access_type=PlaygroundAccessType.AUTHENTICATED,
-        published=True,
-        html_content="<div></div>",
-        playground_uuid="pg_authz",
-        created_by=owner_id,
-        creation_date="2024-01-01",
-        update_date="2024-01-01",
-    )
-    usergroup = UserGroup(
-        org_id=org.id,
-        name="Secret Cohort",
-        description="Internal cohort",
-        usergroup_uuid="ug_authz",
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
-    db.add(playground)
-    db.add(usergroup)
-    await db.commit()
-    await db.refresh(usergroup)
-
-    db.add(
-        UserGroupResource(
-            usergroup_id=usergroup.id,
-            resource_uuid=playground.playground_uuid,
-            org_id=org.id,
-            creation_date=str(datetime.now()),
-            update_date=str(datetime.now()),
-        )
-    )
-    await db.commit()
-    return playground, usergroup
-
-
-class TestPlaygroundUsergroupsAuthz:
-    async def test_anonymous_caller_is_refused(
-        self, mock_request, db, org, admin_user, anonymous_user
-    ):
-        playground, _ = await _playground_with_usergroup(db, org, admin_user.id)
-
-        with pytest.raises(HTTPException) as exc:
-            await get_playground_usergroups(
-                mock_request, playground.playground_uuid, anonymous_user, db
-            )
-
-        assert exc.value.status_code == 401
-
-    async def test_non_member_is_refused(
-        self, mock_request, db, org, admin_user
-    ):
-        playground, _ = await _playground_with_usergroup(db, org, admin_user.id)
-        outsider = await _outsider(db)
-
-        # AUTHENTICATED access type, so _check_read_access lets them through;
-        # the new rights gate is what refuses the cross-tenant read.
-        with pytest.raises(HTTPException) as exc:
-            await get_playground_usergroups(
-                mock_request, playground.playground_uuid, outsider, db
-            )
-
-        assert exc.value.status_code == 403
-
-    async def test_member_without_update_rights_is_refused(
-        self, mock_request, db, org, admin_user, regular_user
-    ):
-        playground, _ = await _playground_with_usergroup(db, org, admin_user.id)
-
-        with pytest.raises(HTTPException) as exc:
-            await get_playground_usergroups(
-                mock_request, playground.playground_uuid, regular_user, db
-            )
-
-        assert exc.value.status_code == 403
-
-    async def test_authorized_caller_still_gets_the_usergroups(
-        self, mock_request, db, org, admin_user
-    ):
-        playground, usergroup = await _playground_with_usergroup(
-            db, org, admin_user.id
-        )
-
-        listed = await get_playground_usergroups(
-            mock_request, playground.playground_uuid, admin_user, db
-        )
-
-        assert [item["usergroup_uuid"] for item in listed] == [
-            usergroup.usergroup_uuid
-        ]
-        assert listed[0]["name"] == "Secret Cohort"
-
-    async def test_missing_playground_still_404s(
-        self, mock_request, db, org, admin_user
-    ):
-        with pytest.raises(HTTPException) as exc:
-            await get_playground_usergroups(
-                mock_request, "pg_does_not_exist", admin_user, db
-            )
-
-        assert exc.value.status_code == 404
 
 
 # ---------------------------------------------------------------------------

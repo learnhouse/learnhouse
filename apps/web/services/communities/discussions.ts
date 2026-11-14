@@ -37,6 +37,8 @@ export interface Discussion {
   edit_count: number
   is_pinned: boolean
   is_locked: boolean
+  /** Id of the reply marked as the answer, if any (older APIs omit it). */
+  answer_comment_id?: number | null
   creation_date: string
   update_date: string
 }
@@ -206,6 +208,39 @@ export async function lockDiscussion(
   )
   const res = await errorHandling(result)
   return res
+}
+
+// Mark a reply as the answer (thread author or moderator), or clear it with null.
+export async function setDiscussionAnswer(
+  discussion_uuid: string,
+  comment_uuid: string | null,
+  access_token: string
+): Promise<DiscussionWithAuthor> {
+  const result: any = await fetch(
+    `${getAPIUrl()}discussions/${discussion_uuid}/answer`,
+    RequestBodyWithAuthHeader('PUT', { comment_uuid }, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
+// Reply count and last reply date for every thread of a community.
+export interface DiscussionActivity {
+  discussion_uuid: string
+  comment_count: number
+  last_comment_date: string | null
+}
+
+export async function getDiscussionsActivity(
+  community_uuid: string,
+  access_token?: string
+): Promise<DiscussionActivity[]> {
+  const result: any = await fetch(
+    `${getAPIUrl()}communities/${community_uuid}/discussions/activity`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return Array.isArray(res) ? res : []
 }
 
 export async function deleteDiscussion(

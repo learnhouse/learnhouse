@@ -1,5 +1,6 @@
 'use client'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import EditorBlockFrame from '../../Blocks/ui/EditorBlockFrame'
 import { useTranslation } from 'react-i18next'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import {
@@ -9,6 +10,21 @@ import {
   CheckCircle,
   XCircle,
   X,
+  PushPin,
+  Star,
+  Fire,
+  Target,
+  Question,
+  BookOpen,
+  Brain,
+  Rocket,
+  Flag,
+  Heart,
+  Clock,
+  ShieldCheck,
+  Megaphone,
+  NotePencil,
+  GraduationCap,
 } from '@phosphor-icons/react'
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -67,6 +83,43 @@ const CALLOUT_TYPES: Record<
   },
 }
 
+// Icons an author can pick instead of the type's default (stored by key).
+export const CALLOUT_ICONS: Record<string, React.ElementType> = {
+  info: Info,
+  warning: Warning,
+  lightbulb: Lightbulb,
+  check: CheckCircle,
+  error: XCircle,
+  pin: PushPin,
+  star: Star,
+  fire: Fire,
+  target: Target,
+  question: Question,
+  book: BookOpen,
+  brain: Brain,
+  rocket: Rocket,
+  flag: Flag,
+  heart: Heart,
+  clock: Clock,
+  shield: ShieldCheck,
+  megaphone: Megaphone,
+  note: NotePencil,
+  graduation: GraduationCap,
+}
+const CALLOUT_EMOJIS = ['💡', '⚠️', '📌', '✅', '❗', '🔥', '📝', '🎯', '🚀', '🧠', '👉', '🎉']
+
+/** The icon a callout shows: a picked icon/emoji, else its type's icon. */
+function CalloutIcon({ icon, Fallback, size = 18 }: { icon: string | null; Fallback: React.ElementType; size?: number }) {
+  if (icon && CALLOUT_ICONS[icon]) {
+    const Picked = CALLOUT_ICONS[icon]
+    return <Picked size={size} weight="fill" />
+  }
+  if (icon && !/^[a-z]+$/.test(icon)) {
+    return <span aria-hidden className="inline-block text-center leading-none" style={{ fontSize: size - 1, width: size }}>{icon}</span>
+  }
+  return <Fallback size={size} weight="fill" />
+}
+
 function resolveType(node: any): CalloutType {
   if (node.type.name === 'calloutInfo') return 'info'
   if (node.type.name === 'calloutWarning') return 'warning'
@@ -83,6 +136,7 @@ function CalloutComponent(props: any) {
   const iconBtnRef = useRef<HTMLButtonElement>(null)
 
   const dismissible = props.node?.attrs?.dismissible || false
+  const pickedIcon: string | null = props.node?.type?.name === 'callout' ? props.node?.attrs?.icon || null : null
   const calloutType = resolveType(props.node)
   const config = CALLOUT_TYPES[calloutType]
   const { Icon } = config
@@ -132,6 +186,7 @@ function CalloutComponent(props: any) {
 
   return (
     <NodeViewWrapper>
+    <EditorBlockFrame editable={isEditable} node={props.node} editor={props.editor} getPos={props.getPos} selected={props.selected} tone="info" editableContent>
       <div
         className={`w-full flex relative my-4 items-start rounded-xl shadow-inner gap-3 py-3 px-4 ${config.bg} ${config.text} ${isEditable ? 'ring-1 ring-inset ring-black/[0.06]' : ''}`}
         contentEditable={isEditable || undefined}
@@ -152,11 +207,11 @@ function CalloutComponent(props: any) {
               className={`${config.iconColor} mt-[3px] hover:opacity-70 transition-opacity cursor-pointer`}
               title={t('editor.blocks.callout_block.change_type')}
             >
-              <Icon size={18} weight="fill" />
+              <CalloutIcon icon={pickedIcon} Fallback={Icon} />
             </button>
           ) : (
             <span className={`${config.iconColor} mt-[3px] block`}>
-              <Icon size={18} weight="fill" />
+              <CalloutIcon icon={pickedIcon} Fallback={Icon} />
             </span>
           )}
 
@@ -165,7 +220,7 @@ function CalloutComponent(props: any) {
             <div
               ref={pickerRef}
               contentEditable={false}
-              className="absolute top-8 start-0 z-50 bg-white rounded-xl shadow-lg ring-1 ring-black/10 py-1.5 min-w-[140px] overflow-hidden"
+              className="absolute top-8 start-0 z-50 bg-white rounded-xl shadow-lg ring-1 ring-black/10 py-1.5 w-[228px] overflow-hidden"
             >
               {(Object.entries(CALLOUT_TYPES) as [CalloutType, typeof CALLOUT_TYPES[CalloutType]][]).map(
                 ([type, cfg]) => {
@@ -192,6 +247,73 @@ function CalloutComponent(props: any) {
                   )
                 }
               )}
+              {props.node?.type?.name === 'callout' && (
+                <>
+                  <div className="mx-3 my-1.5 h-px bg-gray-100" />
+                  <div className="px-3 pb-1 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                    {t('editor.blocks_v2.callout_icon', 'Icon')}
+                  </div>
+                  <div className="grid grid-cols-6 gap-0.5 px-2 pb-1">
+                    {Object.entries(CALLOUT_ICONS).map(([key, PickIcon]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        title={key}
+                        aria-label={key}
+                        aria-pressed={pickedIcon === key}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          props.updateAttributes({ icon: key })
+                        }}
+                        className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${pickedIcon === key ? 'bg-gray-900 text-white' : `${config.iconColor} hover:bg-gray-100`}`}
+                      >
+                        <PickIcon size={15} weight="fill" />
+                      </button>
+                    ))}
+                    {CALLOUT_EMOJIS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        aria-pressed={pickedIcon === emoji}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          props.updateAttributes({ icon: emoji })
+                        }}
+                        className={`flex h-7 w-7 items-center justify-center rounded-md text-[15px] transition-colors ${pickedIcon === emoji ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                  {pickedIcon && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        props.updateAttributes({ icon: null })
+                      }}
+                      className="mx-2 mb-1 w-[calc(100%-1rem)] rounded-md px-2 py-1 text-start text-xs text-gray-500 hover:bg-gray-50"
+                    >
+                      {t('editor.blocks_v2.callout_icon_reset', 'Use the default icon')}
+                    </button>
+                  )}
+                  <label
+                    className="mx-2 mb-1 flex items-center justify-between gap-3 rounded-md px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <span>{t('editor.blocks_v2.callout_dismissible', 'Learners can dismiss it')}</span>
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 accent-gray-900"
+                      checked={!!dismissible}
+                      onChange={(e) => props.updateAttributes({ dismissible: e.target.checked })}
+                    />
+                  </label>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -212,6 +334,7 @@ function CalloutComponent(props: any) {
           </button>
         )}
       </div>
+    </EditorBlockFrame>
     </NodeViewWrapper>
   )
 }

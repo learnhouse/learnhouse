@@ -188,6 +188,7 @@ async def test_refresh_replay_outside_grace_window_revokes(client):
          patch("src.routers.auth._is_token_revoked_for_user", return_value=False), \
          patch("src.routers.auth._mark_refresh_jti_used", return_value=False), \
          patch("src.routers.auth._get_refresh_grace", return_value=None), \
+         patch("src.routers.auth._get_refresh_successor", return_value=None), \
          patch("asyncio.sleep", new_callable=AsyncMock), \
          patch("src.routers.auth.revoke_user_sessions_before") as revoke_mock:
         response = await client.get(

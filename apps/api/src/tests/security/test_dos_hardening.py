@@ -95,8 +95,10 @@ def _upload(name, data=b"%PDF-1.4 test", size=None):
 
 
 class TestSubmissionUpload:
+    # Audio/video are accepted for AI-graded spoken answers, but only when the
+    # bytes really are media: a PDF renamed .mp4 is still refused.
     @pytest.mark.parametrize("name", ["clip.mp4", "movie.webm", "pkg.sqlite", "a.mp3"])
-    async def test_video_and_other_types_rejected(self, name):
+    async def test_mismatched_and_other_types_rejected(self, name):
         from src.services.courses.activities.uploads.sub_file import upload_submission_file
 
         with pytest.raises(HTTPException) as exc:
@@ -107,6 +109,21 @@ class TestSubmissionUpload:
         from src.services.courses.activities.uploads import sub_file
 
         big = _upload("essay.pdf", size=sub_file.SUBMISSION_MAX_SIZE + 1)
+        with pytest.raises(HTTPException) as exc:
+            await sub_file.upload_submission_file(big, "a", "o", "c", "as", "t", 7)
+        assert exc.value.status_code == 413
+
+    async def test_media_gets_the_larger_cap(self):
+        from src.services.courses.activities.uploads import sub_file
+
+        assert sub_file.submission_max_size("talk.MP4") == sub_file.SUBMISSION_MEDIA_MAX_SIZE
+        assert sub_file.submission_max_size("essay.pdf") == sub_file.SUBMISSION_MAX_SIZE
+        assert sub_file.submission_max_size(None) == sub_file.SUBMISSION_MAX_SIZE
+        mp3 = b"ID3\x03\x00\x00\x00\x00\x00\x00" + b"\x00" * 64
+        with patch("src.services.utils.upload_content.upload_content", new=AsyncMock()):
+            name = await sub_file.upload_submission_file(_upload("answer.mp3", data=mp3), "a", "o", "c", "as", "t", 7)
+        assert name.endswith("_submission_u7.mp3")
+        big = _upload("answer.mp3", data=mp3, size=sub_file.SUBMISSION_MEDIA_MAX_SIZE + 1)
         with pytest.raises(HTTPException) as exc:
             await sub_file.upload_submission_file(big, "a", "o", "c", "as", "t", 7)
         assert exc.value.status_code == 413

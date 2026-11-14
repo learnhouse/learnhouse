@@ -2,7 +2,19 @@ import '../styles/globals.css'
 import React from 'react'
 import type { Metadata, Viewport } from 'next'
 import Providers from '@components/Providers'
+import ImageFallbackGuard from '@components/Utils/ImageFallbackGuard'
 import { Wix_Madefor_Text, Tajawal } from 'next/font/google'
+import { dirInitScript, embedBgScript, runtimeConfigScript, themeInitScript, translateGuardScript } from '@/lib/headScripts'
+
+// A blocking head script, inline when its source could be read, else the
+// original synchronous tag.
+function HeadScript({ file, text }: { file: string; text: string | null }) {
+  if (text === null) {
+    // eslint-disable-next-line @next/next/no-sync-scripts
+    return <script src={file} />
+  }
+  return <script dangerouslySetInnerHTML={{ __html: text }} />
+}
 
 const wixMadeforText = Wix_Madefor_Text({
   subsets: ['latin'],
@@ -63,21 +75,25 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Synchronous script: sets <html lang/dir> before body paints so an
-            RTL locale never flashes an LTR layout. Must run first. */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script src="/dir-init.js" />
-        {/* Synchronous script: blocks parsing to guarantee window.__RUNTIME_CONFIG__ exists before any JS runs.
-            Next.js <Script strategy="beforeInteractive"> is not truly blocking in all browsers (Safari). */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script src="/runtime-config.js" />
-        {/* Prevent white flash on embed routes: set html+body bg before body is painted.
-            Reads the optional ?bgcolor param (hex-validated) or defaults to dark. */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script src="/embed-bg.js" />
+        {/* Run before the body paints and before hydration, in this order:
+            dir-init sets <html lang/dir> so an RTL locale never flashes LTR;
+            theme-init sets <html data-theme="dark"> for a user who picked
+            dark (manual only, never the OS), so dark never flashes white;
+            runtime-config must define window.__RUNTIME_CONFIG__ before any
+            app JS; embed-bg paints embed routes dark before first paint;
+            translate-guard keeps browser page translation from crashing React.
+            Inlined (see lib/headScripts.ts): as separate <script src> they were
+            blocking round trips each before the first paint. A file that can't be
+            read falls back to the old synchronous tag, same order. */}
+        <HeadScript file="/dir-init.js" text={dirInitScript()} />
+        <HeadScript file="/theme-init.js" text={themeInitScript()} />
+        <HeadScript file="/runtime-config.js" text={runtimeConfigScript()} />
+        <HeadScript file="/embed-bg.js" text={embedBgScript()} />
+        <HeadScript file="/translate-guard.js" text={translateGuardScript()} />
       </head>
       <body suppressHydrationWarning>
         <Providers>
+          <ImageFallbackGuard />
           <main className="animate-fade-in">
             {children}
           </main>

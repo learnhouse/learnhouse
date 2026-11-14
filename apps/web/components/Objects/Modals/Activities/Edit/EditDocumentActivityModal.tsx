@@ -1,13 +1,13 @@
 'use client'
 import React, { useState } from 'react'
-import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
-import { FileText } from '@phosphor-icons/react'
 import { constructAcceptValue } from '@/lib/constants'
 import { updateDocumentActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
+import { INPUT } from '@components/Dashboard/Shared/DashKit/DashKit'
+import { FilePicker, ModalFormActions, useModalFormId } from '../activityFormKit'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 
@@ -20,6 +20,7 @@ interface EditDocumentActivityModalProps {
 
 function EditDocumentActivityModal({ activity, courseUuid, orgSlug, onClose }: EditDocumentActivityModalProps) {
   const { t } = useTranslation()
+  const formId = useModalFormId()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -55,61 +56,34 @@ function EditDocumentActivityModal({ activity, courseUuid, orgSlug, onClose }: E
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div
-        className="relative flex items-center justify-center h-20 rounded-xl overflow-hidden"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(167,243,208,0.25) 8px, rgba(167,243,208,0.25) 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(167,243,208,0.25) 8px, rgba(167,243,208,0.25) 9px)',
-        }}
-      >
-        <span className="flex items-center gap-2 bg-white nice-shadow rounded-full px-4 py-1.5 text-sm font-medium text-gray-600">
-          <FileText size={18} weight="duotone" className="text-emerald-400" />
-          {t('activities.edit_modal.pdf_document')}
-        </span>
-      </div>
+    <form id={formId} onSubmit={handleSubmit} className="space-y-4">
 
-      <div className="rounded-xl nice-shadow p-4 space-y-4">
+      <div className="rounded-xl ring-1 ring-inset ring-neutral-200 p-4 space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">{t('activities.modal.activity_name')}</label>
+          <label className="text-sm font-semibold text-neutral-800">{t('activities.modal.activity_name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             type="text"
             required
             placeholder={t('activities.modal.enter_name')}
-            className="w-full h-9 px-3 text-sm rounded-lg bg-gray-50 border border-gray-200 outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-colors"
+            className={INPUT}
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">{t('activities.edit_modal.replace_pdf')}</label>
-          <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
-            <FileText size={14} weight="duotone" />
-            <span>{t('activities.edit_modal.keep_current_file')}</span>
-          </div>
-          <input
-            type="file"
+          <label className="text-sm font-semibold text-neutral-800">{t('activities.edit_modal.replace_pdf')}</label>
+          <FilePicker
             accept={SUPPORTED_FILES}
-            onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
-            className="w-full text-sm text-gray-500 file:me-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition-colors"
+            file={pdfFile}
+            onChange={setPdfFile}
+            title={t('dashboard.courses.editor.activity_form.pdf_title')}
+            hint={t('activities.edit_modal.keep_current_file')}
           />
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-        >
-          {isSubmitting ? (
-            <LearnHouseSpinner size={18} className="[&>div]:border-t-white" />
-          ) : (
-            t('common.save_changes')
-          )}
-        </button>
-      </div>
+      <ModalFormActions submitting={isSubmitting} canSubmit={!!name.trim()} label={t('common.save_changes')} />
     </form>
   )
 }
