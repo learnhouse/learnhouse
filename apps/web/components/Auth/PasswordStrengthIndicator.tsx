@@ -42,7 +42,7 @@ const PASSWORD_RULES: PasswordRule[] = [
         id: 'special',
         labelKey: 'auth.password_req_special',
         error: 'Password must contain at least one special character',
-        test: (pwd) => /[!@#$%^&*()_+\-=\[\]{}|;':",./<>?]/.test(pwd),
+        test: (pwd) => /[!@#$%^&*()_+\-=[\]{}|;':",./<>?]/.test(pwd),
     },
 ]
 
