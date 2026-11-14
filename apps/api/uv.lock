@@ -899,7 +899,7 @@ requires-dist = [
     { name = "tiktoken", specifier = "==0.14.0" },
     { name = "typer", specifier = "==0.27.3" },
     { name = "uvicorn", specifier = "==0.54.0" },
-    { name = "workos", specifier = "==10.7.0" },
+    { name = "workos", specifier = "==10.8.0" },
 ]
 
 [[package]]
@@ -1955,14 +1955,14 @@ wheels = [
 
 [[package]]
 name = "workos"
-version = "10.7.0"
+version = "10.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
     { name = "httpx2" },
     { name = "pyjwt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8c/a2/c03923e1868ccdab4ed0bfbc4346628645b8461e4909286c8150d0a34132/workos-10.7.0.tar.gz", hash = "sha256:0cebd74c59c0e04422ff1c24edd11f8dec2aaccf3c150ab8cf1e7c6ccdbb36fb", size = 396743, upload-time = "2026-11-04T16:53:44.311Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/78/f7025e6ae9fc49fe614dcf8f53cebb93470df962925cbb7ab6cffab74c3b/workos-10.8.0.tar.gz", hash = "sha256:146cd00a31c9e511c9f229763ac58815cdf44227664dd89a20ec2c9d5ebc7a3b", size = 428560, upload-time = "2026-11-05T19:59:45.1Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/0b/1fb6980bf0a4cd2bb4fb037021aaacd5e8c7d0e59b79c1f7ad7f7a3bea09/workos-10.7.0-py3-none-any.whl", hash = "sha256:f6390bdebea8a5b2aecf388a29f69f319a22a87a7040aaa6df213e16990a3495", size = 989738, upload-time = "2026-11-04T16:53:42.965Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/3a/d91c97898163898c60769dcb448f5557fbc319c338c0c4f7046d29e2ef10/workos-10.8.0-py3-none-any.whl", hash = "sha256:94d7f86d2ebefd92dc43c1fc0e980c88a98675b15dba42ba8f4c0e6f429419a7", size = 1026777, upload-time = "2026-11-05T19:59:43.716Z" },
 ]
